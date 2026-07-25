@@ -1,15 +1,25 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ShieldOff, XCircle, Clock, CheckCircle2 } from 'lucide-react'
 
-interface RevokedInfo {
-  reason: string
-  status: 'revoked' | 'suspended' | 'tampered' | string
+interface StatusResult {
+  allowed?: boolean
+  status?:  'active' | 'revoked' | 'suspended' | 'tampered' | 'unknown' | string
+  reason?:  string
 }
 
-// Visual + copy for each blocked state. `hint` is the customer-facing explanation;
-// the raw `reason` from the server is shown underneath as a secondary detail.
+interface BlockedInfo {
+  status: string
+  reason: string
+}
+
+// How often the running app re-checks its own license status. Kept short so a
+// revoke / suspend / reactivate from the admin panel shows up almost instantly.
+const POLL_MS = 3000
+
+// Visual + copy for each blocked state. `hint` is the customer-facing message;
+// the raw server `reason` is shown underneath as a secondary detail.
 const STATUS_CONFIG: Record<
   string,
   { icon: typeof XCircle; color: string; ring: string; title: string; hint: string }
@@ -38,41 +48,93 @@ const STATUS_CONFIG: Record<
 }
 
 export default function LicenseRevokedOverlay() {
-  const [info,        setInfo]        = useState<RevokedInfo | null>(null)
+  const [info,        setInfo]        = useState<BlockedInfo | null>(null)
   const [reactivated, setReactivated] = useState(false)
-  // Tracks the live blocked state so the reactivation event is only honoured
-  // when the app was actually blocked (avoids a stray "reactivated" flash).
+
+  // Live blocked flag — lets us fire "reactivated" only after a real block, and
+  // prevents the reactivation timer from clearing a fresh re-block.
   const blockedRef = useRef(false)
 
-  // ── Subscribe to Electron license events ────────────────────────────────────
+  // ── Central state machine, shared by polling AND Electron IPC ────────────────
+  const applyStatus = useCallback((res: StatusResult | null) => {
+    if (!res) return
+
+    if (res.allowed === false) {
+      // Blocked: revoked / suspended / tampered
+      const status = String(res.status ?? 'revoked')
+      const reason = String(res.reason ?? '')
+      blockedRef.current = true
+      setReactivated(false)
+      setInfo(prev =>
+        prev && prev.status === status && prev.reason === reason ? prev : { status, reason }
+      )
+    } else if (res.status === 'active') {
+      // Confirmed active — only a reactivation if we were actually blocked.
+      // Never triggered by the fail-open "unknown" status.
+      if (blockedRef.current) {
+        blockedRef.current = false
+        setReactivated(true)
+      }
+    }
+    // status 'unknown' (no cookie / not registered / DB fail-open) → keep state
+  }, [])
+
+  // ── Continuous self-check: works in Electron AND on the web, near-instant ────
+  useEffect(() => {
+    let alive = true
+
+    async function poll() {
+      try {
+        const r = await fetch('/api/license/status', {
+          cache:       'no-store',
+          credentials: 'same-origin',
+        })
+        if (!r.ok) return
+        const data = (await r.json()) as StatusResult
+        if (alive) applyStatus(data)
+      } catch {
+        /* offline / transient — fail-open, keep current state */
+      }
+    }
+
+    poll() // immediate check on mount
+    const id = setInterval(poll, POLL_MS)
+
+    // Also re-check the moment the window/tab is focused for instant feedback.
+    const onFocus = () => poll()
+    const onVisible = () => { if (document.visibilityState === 'visible') poll() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      alive = false
+      clearInterval(id)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [applyStatus])
+
+  // ── Electron IPC — instant triggers, also cover a remote license server ──────
   useEffect(() => {
     const electronAPI = (window as any).electronAPI
     if (!electronAPI) return
-
     const cleanups: Array<() => void> = []
 
     if (electronAPI.onLicenseRevoked) {
       cleanups.push(
-        electronAPI.onLicenseRevoked((data: RevokedInfo) => {
-          blockedRef.current = true
-          setReactivated(false)
-          setInfo(data)
-        })
+        electronAPI.onLicenseRevoked((d: StatusResult) =>
+          applyStatus({ allowed: false, status: d?.status ?? 'revoked', reason: d?.reason })
+        )
       )
     }
-
     if (electronAPI.onLicenseReactivated) {
       cleanups.push(
-        electronAPI.onLicenseReactivated(() => {
-          if (!blockedRef.current) return   // wasn't blocked → nothing to lift
-          blockedRef.current = false
-          setReactivated(true)
-        })
+        electronAPI.onLicenseReactivated(() => applyStatus({ allowed: true, status: 'active' }))
       )
     }
 
     return () => cleanups.forEach(fn => { try { fn() } catch { /* ignore */ } })
-  }, [])
+  }, [applyStatus])
 
   // ── While blocked, swallow keyboard input so global shortcuts (F5 reload,
   //    Ctrl+N…) can't be used behind the overlay. Lifted once reactivated. ─────
@@ -83,13 +145,13 @@ export default function LicenseRevokedOverlay() {
     return () => window.removeEventListener('keydown', block, true)
   }, [info, reactivated])
 
-  // ── After reactivation, show the confirmation briefly, then let the user
-  //    resume exactly where they were by removing the overlay entirely. ────────
+  // ── After reactivation: show confirmation briefly, then remove the overlay so
+  //    the user resumes exactly where they left off (unless re-blocked meanwhile).
   useEffect(() => {
     if (!reactivated) return
     const t = setTimeout(() => {
-      setInfo(null)
       setReactivated(false)
+      if (!blockedRef.current) setInfo(null)
     }, 3200)
     return () => clearTimeout(t)
   }, [reactivated])
