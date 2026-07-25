@@ -1,0 +1,49 @@
+# Next.js
+.next/
+out/
+build/
+
+# Dependencies
+node_modules/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+prisma/prisma/
+prisma/*.db
+# Template DB is committed so Windows builds don't need prisma db push
+!prisma/garageflow-template.db
+
+# Electron build output
+dist/
+
+# License signing keys — CRITICAL: NEVER commit private.pem
+keys/private.pem
+keys/*.pem
+
+# Generated icons (keep SVG source, not binaries)
+# icon.ico
+# icon.png
+icon.icns
+
+# App logs
+*.log
+.claude/
+
+# Runtime update files (admin-published installer + metadata)
+gf_update.json
+/updates/
+/dev.db

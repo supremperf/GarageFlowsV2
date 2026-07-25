@@ -1,0 +1,57 @@
+export const dynamic = "force-dynamic"
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
+import { jwtVerify } from 'jose'
+import { portalSecret } from '@/lib/portal-secret'
+import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
+
+export async function GET(_req: Request, { params }: { params: { token: string } }) {
+  try {
+    const { payload } = await jwtVerify(params.token, portalSecret())
+    if (payload.typ !== 'portal' || typeof payload.jobId !== 'string') {
+      return NextResponse.json({ error: 'Token invalide' }, { status: 403 })
+    }
+
+    const job = await prisma.job.findUnique({
+      where: { id: payload.jobId },
+      include: {
+        mechanic: { select: { name: true, avatar: true, color: true } },
+        photos: { select: { id: true, phase: true, caption: true, base64: true, photoPath: true, createdAt: true } },
+        quotes: {
+          where: { status: { not: 'draft' } },
+          include: { lines: true },
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+        garage: { select: { name: true, phone: true, email: true, logoBase64: true, logoPath: true } },
+      },
+    })
+    if (!job) return NextResponse.json({ error: 'Introuvable' }, { status: 404 })
+
+    const rawQuote = job.quotes[0] ?? null
+    const quote = rawQuote
+      ? {
+          ...rawQuote,
+          totalHT:  roundCents(calcTotalHT(rawQuote.lines)),
+          totalTTC: roundCents(calcTotalTTC(rawQuote.lines, rawQuote.taxRate)),
+        }
+      : null
+
+    return NextResponse.json({
+      customerName: job.customerName,
+      vehicleModel: job.vehicleModel,
+      licensePlate: job.licensePlate,
+      status: job.status,
+      date: job.date,
+      startTime: job.startTime,
+      repairType: job.repairType,
+      notes: job.notes,
+      mechanic: job.mechanic,
+      photos: job.photos,
+      quote,
+      garage: job.garage,
+    })
+  } catch {
+    return NextResponse.json({ error: 'Token invalide ou expiré' }, { status: 403 })
+  }
+}
