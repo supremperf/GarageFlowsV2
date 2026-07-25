@@ -179,7 +179,7 @@ npm start
 pip install cryptography
 python scripts/keygen.py --init          # génère keys/private.pem (À GARDER SECRET)
 # coller la clé publique affichée dans src/lib/license/public-key.ts et electron/main.js
-python scripts/keygen_ui.pyw             # GUI → onglet Serveur : URL + LICENSE_ADMIN_API_KEY
+python scripts/keygen_ui.py              # GUI (ou: npm run keygen) → onglet Serveur : URL + LICENSE_ADMIN_API_KEY
 ```
 
 **C. Logiciel client (build .exe)**

@@ -927,3 +927,13 @@ class App(tk.Tk):
                 "Allez dans l'onglet  🔑 Clés ECC  et cliquez\n"
                 "'Initialiser les clés' pour commencer.",
             )
+
+
+# ── Point d'entrée ────────────────────────────────────────────────────────────
+def main():
+    app = App()
+    app.mainloop()
+
+
+if __name__ == "__main__":
+    main()

@@ -29,6 +29,8 @@
     "electron:dev": "cross-env ELECTRON_DEV=1 electron .",
     "dist": "npm run build && node scripts/post-build.js && electron-builder --win --x64",
     "dist:win": "npm run dist",
+    "keygen": "python scripts/keygen_ui.py",
+    "keygen:gui": "python scripts/keygen_ui.py",
     "license:gen": "python scripts\\keygen.py --gen",
     "test": "vitest run",
     "test:watch": "vitest",
