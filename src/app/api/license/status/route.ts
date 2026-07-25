@@ -1,30 +1,28 @@
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 /**
  * GET /api/license/status
  *
- * Lightweight, cookie-based revocation check polled continuously by the running
- * app (renderer). Unlike POST /api/license/check it needs no request body: the
- * licenseId is read from the signed `gf_session` cookie, so the client never has
- * to know its own licenseId. This works identically in Electron and on the web.
+ * Cookie-based validation used by the running renderer. The licenseId is read
+ * from the signed gf_session cookie, so the client never needs to know it.
+ * Delegates to the same authoritative evaluation as /api/license/check.
  *
- * Returns: { allowed: boolean; status: 'active'|'revoked'|'suspended'|'tampered'|'unknown'; reason? }
+ * Returns: { allowed, status: 'active'|'revoked'|'suspended'|'expired'|'unknown', reason? }
  *
- * Fail-open: anything indeterminate (no cookie, bad JWT, record not found, DB
- * error) returns allowed=true so a legitimate user is never locked out by a
- * transient problem. Only an explicit revoked/suspended/tampered DB state blocks.
+ * Fail-open on anything indeterminate (no cookie, bad JWT, infra error) so a
+ * transient problem never locks out a legitimate user. Only an explicit
+ * revoked/suspended/expired verdict blocks.
  */
-
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
-import { prisma } from '@/lib/db'
-import { verifyRecordMac } from '@/lib/license/record-mac'
 import { getSessionSecretBytes } from '@/lib/security/session'
+import { validateById } from '@/lib/license/service'
+import { clientIp } from '@/lib/api-helpers'
 
 const OK_UNKNOWN = { allowed: true, status: 'unknown' as const }
 
 export async function GET(req: NextRequest) {
-  // ── Resolve licenseId from the signed session cookie ────────────────────────
   const raw = req.cookies.get('gf_session')?.value
   if (!raw) return NextResponse.json(OK_UNKNOWN)
 
@@ -37,40 +35,11 @@ export async function GET(req: NextRequest) {
   }
   if (!licenseId) return NextResponse.json(OK_UNKNOWN)
 
- // ── Look up the current status in the DB ────────────────────────────────────
-try {
-  const record = await prisma.licenseKey.findUnique({
-    where: { licenseId },
-  })
-
-  if (!record) return NextResponse.json(OK_UNKNOWN)
-    const mac = verifyRecordMac(record)
-    if (mac.tampered) {
-      return NextResponse.json({
-        allowed: false,
-        status:  'tampered',
-        reason:  'Intégrité de la base de données compromise.',
-      })
-    }
-
-    if (record.status === 'revoked') {
-      return NextResponse.json({
-        allowed: false,
-        status:  'revoked',
-        reason:  'Cette licence a été révoquée.',
-      })
-    }
-    if (record.status === 'suspended') {
-      return NextResponse.json({
-        allowed: false,
-        status:  'suspended',
-        reason:  'Cette licence est temporairement suspendue.',
-      })
-    }
-
-    return NextResponse.json({ allowed: true, status: 'active' })
+  try {
+    const verdict = await validateById(licenseId, { ip: clientIp(req) })
+    return NextResponse.json(verdict)
   } catch (err) {
-    console.error('[license/status] DB error (fail-open):', err)
+    console.error('[license/status] error (fail-open):', (err as { code?: string })?.code ?? 'unknown')
     return NextResponse.json(OK_UNKNOWN)
   }
 }

@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { headers, cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
 import { getSessionSecretBytes } from '@/lib/security/session'
+import { checkAdminApiKey, extractAdminApiKey } from '@/lib/security/api-key'
 
 // ─── In-memory rate limiter ────────────────────────────────────────────────
 // Buckets: { key -> { count, resetAt } }
@@ -106,4 +107,31 @@ export async function isAdminSession(): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+export type AdminAuth = { ok: true } | { ok: false; status: number; error: string }
+
+/**
+ * Authorize a license-admin request. Accepts EITHER a valid admin API key
+ * (Keygen, header `x-gf-key` / Bearer) OR an admin browser session
+ * (gf_session JWT with typ=admin). The two mechanisms are independent secrets.
+ */
+export async function requireLicenseAdmin(req: Request): Promise<AdminAuth> {
+  // If an API key was supplied, it must be valid (constant-time).
+  if (extractAdminApiKey(req)) {
+    const c = checkAdminApiKey(req)
+    return c.ok ? { ok: true } : { ok: false, status: c.status, error: c.error }
+  }
+  // Otherwise fall back to an authenticated admin browser session.
+  if (await isAdminSession()) return { ok: true }
+  return { ok: false, status: 403, error: 'Accès refusé — authentification admin requise.' }
+}
+
+/** First forwarded client IP (best-effort) for audit logging. */
+export function clientIp(req: Request): string | null {
+  return (
+    req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+    req.headers.get('x-real-ip') ||
+    null
+  )
 }

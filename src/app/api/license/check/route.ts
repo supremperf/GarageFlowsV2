@@ -1,79 +1,55 @@
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 /**
- * POST /api/license/check
- * Periodic revocation check — called after initial activation to detect revocations.
+ * GET  /api/license/check?licenseId=...
+ * POST /api/license/check   { licenseId }
  *
- * Body:    { licenseId: string }
- * Returns: { allowed: boolean; status?: string; reason?: string }
+ * Periodic validation heartbeat used by running clients. The central server is
+ * authoritative: it returns a definitive verdict.
+ *   - found     → { allowed, status: active|revoked|suspended|expired }
+ *   - not found → { allowed: false, status: 'unknown' }  (server has no such license)
  *
- * Fail-open: if the DB is unavailable, we return allowed=true so Electron
- * can work fully offline without losing functionality.
+ * A CLIENT distinguishes this definitive answer from a NETWORK failure (no
+ * response at all) — on a network failure it keeps its cached state (grace
+ * window), so the server always has the last word without desyncing offline.
  */
-
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { verifyRecordMac } from '@/lib/license/record-mac'
+import { validateById } from '@/lib/license/service'
+import { clientIp } from '@/lib/api-helpers'
+import { rateLimit } from '@/lib/rate-limit'
 
-export async function POST(req: NextRequest) {
-  let licenseId: string
-  try {
-    const body = await req.json()
-    licenseId  = String(body.licenseId ?? '').trim()
-  } catch {
-    return NextResponse.json({ allowed: false, reason: 'Requête invalide' }, { status: 400 })
-  }
-
+async function handle(licenseId: string, req: NextRequest) {
   if (!licenseId) {
-    return NextResponse.json({ allowed: false, reason: 'licenseId manquant' }, { status: 400 })
+    return NextResponse.json({ allowed: false, status: 'unknown', reason: 'licenseId manquant' }, { status: 400 })
   }
-
+  const ip = clientIp(req) ?? 'local'
+  if (!rateLimit(`lic-check:${ip}`, 120, 60).ok) {
+    return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
+  }
   try {
-    const record = await prisma.licenseKey.findUnique({ where: { licenseId } })
-
-    if (!record) {
-      // Not in DB yet — allowed (will be registered on next full activation)
-      return NextResponse.json({ allowed: true, status: 'unknown' })
-    }
-
-    // DB integrity check — detect SQLite tampering
-    const mac = verifyRecordMac(record)
-    if (mac.tampered) {
-      console.error('[license/check] DB integrity FAILED for lid:', record.licenseId)
-      return NextResponse.json({
-        allowed: false,
-        status:  'tampered',
-        reason:  'Intégrité de la base de données compromise.',
-      })
-    }
-    if (mac.missing) {
-      console.warn('[license/check] No MAC for lid:', record.licenseId, '(legacy record)')
-    }
-
-    if (record.status === 'revoked') {
-      return NextResponse.json({
-        allowed: false,
-        status:  'revoked',
-        reason:  'Cette licence a été révoquée.',
-      })
-    }
-    if (record.status === 'suspended') {
-      return NextResponse.json({
-        allowed: false,
-        status:  'suspended',
-        reason:  'Cette licence est temporairement suspendue.',
-      })
-    }
-
-    // Still active — bump lastSeenAt
-    await prisma.licenseKey.update({
-      where: { id: record.id },
-      data:  { lastSeenAt: new Date() },
-    })
-
-    return NextResponse.json({ allowed: true, status: 'active' })
+    const verdict = await validateById(licenseId, { ip })
+    return NextResponse.json(verdict)
   } catch (err) {
-    console.error('[license/check] DB error (fail-open):', err)
+    // DB/infra error → indeterminate. Fail-open so a transient server problem
+    // never locks out a legitimate client; the next check re-evaluates.
+    console.error('[license/check] error:', (err as { code?: string })?.code ?? 'unknown')
     return NextResponse.json({ allowed: true, status: 'unknown' })
   }
+}
+
+export async function GET(req: NextRequest) {
+  const licenseId = (req.nextUrl.searchParams.get('licenseId') ?? '').trim()
+  return handle(licenseId, req)
+}
+
+export async function POST(req: NextRequest) {
+  let licenseId = ''
+  try {
+    const body = await req.json()
+    licenseId = String(body.licenseId ?? '').trim()
+  } catch {
+    return NextResponse.json({ allowed: false, status: 'unknown', reason: 'Requête invalide' }, { status: 400 })
+  }
+  return handle(licenseId, req)
 }

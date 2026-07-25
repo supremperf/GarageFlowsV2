@@ -549,25 +549,8 @@ export const MIGRATIONS: Migration[] = [
     "ipAddress" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 )` },
-  { id: '074_ensure_licensekey_table', sql: `CREATE TABLE IF NOT EXISTS "LicenseKey" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "licenseId" TEXT NOT NULL,
-    "token" TEXT NOT NULL,
-    "customerId" TEXT NOT NULL,
-    "licenseType" TEXT NOT NULL,
-    "expiryAt" DATETIME NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'active',
-    "isAdmin" BOOLEAN NOT NULL DEFAULT false,
-    "seats" INTEGER NOT NULL DEFAULT 1,
-    "hwid" TEXT,
-    "label" TEXT,
-    "notes" TEXT,
-    "recordMac" TEXT,
-    "activatedAt" DATETIME,
-    "revokedAt" DATETIME,
-    "lastSeenAt" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
-)` },
+  // NOTE: migration 074 (local "LicenseKey" table) was removed — licenses are
+  // no longer stored in the local SQLite DB. They live on the central
+  // PostgreSQL license server (prisma/license.prisma).
   { id: '075_reminder_scheduled_time', sql: 'ALTER TABLE "Reminder" ADD COLUMN "scheduledTime" TEXT' },
 ]

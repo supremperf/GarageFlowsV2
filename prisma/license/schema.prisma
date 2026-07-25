@@ -1,0 +1,75 @@
+// ══════════════════════════════════════════════════════════════════════════════
+// CENTRAL LICENSE DATABASE — PostgreSQL
+//
+// Single source of truth for ALL GarageFlow licenses. SEPARATE from the local
+// garage business data (prisma/schema.prisma / SQLite) and generated to its own
+// client. The Keygen and every desktop client reach this DB ONLY through the
+// server's HTTPS API — never directly, never as a local copy.
+//
+// Generate:   npm run license:generate
+// Migrate:    npm run license:migrate         (prisma migrate deploy)
+// New migr.:  npm run license:migrate:dev      (prisma migrate dev)
+// ══════════════════════════════════════════════════════════════════════════════
+
+generator licenseClient {
+  provider      = "prisma-client-js"
+  output        = "../../src/generated/license-client"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("LICENSE_DATABASE_URL")
+}
+
+/// One license. `licenseId` (the token's `lid`) is the stable external key used
+/// by the Keygen, the API, and every client. `token` is the full signed GF2
+/// token. Both are unique so a license can never be registered twice.
+model LicenseKey {
+  id          String   @id @default(cuid())
+  licenseId   String   @unique // UUID from the token payload (lid)
+  token       String   @unique // full GF2.<h>.<p>.<s> signed token
+  customerId  String // customer identifier string
+  licenseType String // trial | premium | enterprise | admin
+  status      String   @default("active") // active | revoked | suspended
+  expiryAt    DateTime // expiry (from token exp)
+  seats       Int      @default(1)
+  isAdmin     Boolean  @default(false)
+  hwid        String? // optional hardware binding (SHA-256 hex)
+  label       String? // customer / garage display name
+  notes       String?
+
+  activatedAt DateTime? // first successful activation
+  revokedAt   DateTime? // when it was revoked
+  lastSeenAt  DateTime? // last successful validation heartbeat
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events LicenseEvent[]
+
+  @@index([status])
+  @@index([customerId])
+  @@index([expiryAt])
+  @@index([hwid])
+  @@index([status, expiryAt])
+}
+
+/// Audit trail of every lifecycle action on a license. Used for traceability
+/// and to reason about sync between server / keygen / software. Cascades on
+/// license deletion.
+model LicenseEvent {
+  id         String     @id @default(cuid())
+  licenseId  String
+  license    LicenseKey @relation(fields: [licenseId], references: [licenseId], onDelete: Cascade)
+  action     String // created | activated | validated | revoked | suspended | reactivated | renewed | hwid_changed | expired | deleted
+  fromStatus String?
+  toStatus   String?
+  ip         String?
+  hwid       String?
+  detail     String?
+  createdAt  DateTime   @default(now())
+
+  @@index([licenseId, createdAt])
+  @@index([action, createdAt])
+}

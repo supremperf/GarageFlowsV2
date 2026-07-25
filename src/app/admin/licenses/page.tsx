@@ -5,8 +5,9 @@
  * Access is enforced server-side by the middleware (signed gf_session JWT with
  * typ=admin). The API routes verify isAdminSession() independently.
  *
- * v2: ECC P-256 licenses. Key generation is server-side (private key never
- * leaves the server). The Generate modal calls POST /api/admin/licenses/generate.
+ * v2: ECC P-256 licenses on the central server. The Generate modal calls
+ * POST /api/admin/licenses/create; status/label/delete use the /revoke,
+ * /update and /delete routes (all keyed by licenseId).
  */
 
 import { useState, useEffect, useCallback, FormEvent } from 'react'
@@ -24,7 +25,7 @@ import toast, { Toaster } from 'react-hot-toast'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 interface LicenseRecord {
-  id:          number
+  id:          string
   licenseId:   string
   token:       string
   customerId:  string
@@ -115,7 +116,7 @@ function GenerateModal({
     if (!customerId.trim()) { toast.error('ID client requis'); return }
     setGenerating(true)
     try {
-      const res = await fetch('/api/admin/licenses/generate', {
+      const res = await fetch('/api/admin/licenses/create', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
@@ -266,8 +267,8 @@ function GenerateModal({
 // ─── Key Row ───────────────────────────────────────────────────────────────────
 function KeyRow({ item, onUpdate, onDelete }: {
   item:     LicenseRecord
-  onUpdate: (id: number, data: Partial<LicenseRecord>) => void
-  onDelete: (id: number) => void
+  onUpdate: (licenseId: string, data: Partial<LicenseRecord>) => void
+  onDelete: (licenseId: string) => void
 }) {
   const [editingLabel, setEditingLabel] = useState(false)
   const [labelVal,     setLabelVal]     = useState(item.label ?? '')
@@ -276,25 +277,39 @@ function KeyRow({ item, onUpdate, onDelete }: {
 
   const expired = item.expiryAt ? new Date(item.expiryAt) < new Date() : false
 
-  async function patch(data: object) {
+  async function callUpdate(data: object) {
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/licenses/${item.id}`, {
-        method:  'PATCH',
+      const res = await fetch('/api/admin/licenses/update', {
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(data),
+        body:    JSON.stringify({ licenseId: item.licenseId, ...data }),
       })
-      if (res.ok) onUpdate(item.id, await res.json())
+      if (res.ok) onUpdate(item.licenseId, await res.json())
+      return res.ok
     } finally { setLoading(false) }
   }
 
   async function patchStatus(status: 'active' | 'revoked' | 'suspended') {
-    await patch({ status })
-    toast.success(status === 'active' ? 'Réactivée' : status === 'revoked' ? 'Révoquée' : 'Suspendue')
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/licenses/revoke', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ licenseId: item.licenseId, status }),
+      })
+      if (res.ok) {
+        onUpdate(item.licenseId, { status })
+        toast.success(status === 'active' ? 'Réactivée' : status === 'revoked' ? 'Révoquée' : 'Suspendue')
+      } else {
+        const d = await res.json().catch(() => ({}))
+        toast.error(d.error ?? 'Erreur')
+      }
+    } finally { setLoading(false) }
   }
 
   async function saveLabel() {
-    await patch({ label: labelVal || null })
+    await callUpdate({ label: labelVal || null })
     setEditingLabel(false)
     toast.success('Étiquette mise à jour')
   }
@@ -303,8 +318,12 @@ function KeyRow({ item, onUpdate, onDelete }: {
     if (!confirm('Supprimer cette licence définitivement ?')) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/licenses/${item.id}`, { method: 'DELETE' })
-      if (res.ok) { onDelete(item.id); toast.success('Supprimée') }
+      const res = await fetch('/api/admin/licenses/delete', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ licenseId: item.licenseId }),
+      })
+      if (res.ok) { onDelete(item.licenseId); toast.success('Supprimée') }
     } finally { setLoading(false) }
   }
 
@@ -500,8 +519,8 @@ export default function AdminLicensesPage() {
 
   useEffect(() => { if (authorized) fetchKeys() }, [authorized, fetchKeys])
 
-  function handleUpdate(id: number, data: Partial<LicenseRecord>) {
-    setKeys(prev => prev.map(k => k.id === id ? { ...k, ...data } : k))
+  function handleUpdate(licenseId: string, data: Partial<LicenseRecord>) {
+    setKeys(prev => prev.map(k => k.licenseId === licenseId ? { ...k, ...data } : k))
   }
 
   function exportCSV() {
@@ -634,9 +653,9 @@ export default function AdminLicensesPage() {
         ) : (
           <div className="space-y-2">
             {filtered.map(item => (
-              <KeyRow key={item.id} item={item}
+              <KeyRow key={item.licenseId} item={item}
                 onUpdate={handleUpdate}
-                onDelete={id => setKeys(prev => prev.filter(k => k.id !== id))} />
+                onDelete={licenseId => setKeys(prev => prev.filter(k => k.licenseId !== licenseId))} />
             ))}
             <p className="text-[10px] text-slate-700 text-center pt-2">
               {filtered.length} licence{filtered.length !== 1 ? 's' : ''}

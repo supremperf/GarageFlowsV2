@@ -403,27 +403,9 @@ model InspectionItem {
   sortOrder    Int        @default(0)
 }
 
-// ─── License keys v2 — ECC / ECDSA-SHA256 ────────────────────────────────────
-model LicenseKey {
-  id          Int       @id @default(autoincrement())
-  licenseId   String    @unique // UUID from token payload (lid field)
-  token       String    @unique // full GF2.xxx.xxx.xxx token (for display/copy)
-  customerId  String // customer identifier string
-  licenseType String // trial | premium | enterprise | admin
-  expiryAt    DateTime // expiry date from payload exp field
-  status      String    @default("active") // active | revoked | suspended
-  isAdmin     Boolean   @default(false)
-  seats       Int       @default(1)
-  hwid        String? // optional hardware binding hash
-  label       String? // customer name / garage name
-  notes       String?
-  recordMac   String? // HMAC-SHA256 over security-critical fields (see record-mac.ts)
-  activatedAt DateTime?
-  revokedAt   DateTime?
-  lastSeenAt  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
+// NOTE: Licenses are NOT stored in this local garage database anymore. They
+// live on the central PostgreSQL server (prisma/license.prisma) — the single
+// source of truth. Clients validate over HTTPS; they never hold license state.
 
 // ─── Maintenance reminders ────────────────────────────────────────────────────
 model Reminder {
