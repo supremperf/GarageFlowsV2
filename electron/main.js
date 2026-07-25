@@ -78,6 +78,11 @@ app.setAppUserModelId('com.garageflow.app')
 
 const IS_DEV      = process.env.ELECTRON_DEV === '1'
 const PORT        = 4028
+
+// Central license server — the SINGLE source of truth. The desktop validates
+// here over HTTPS; it never holds license authority locally. Overridable via
+// GF_LICENSE_SERVER for staging/self-hosting.
+const LICENSE_SERVER = (process.env.GF_LICENSE_SERVER || 'https://app.garageflows.fr').replace(/\/+$/, '')
 const APP_DATA    = app.getPath('userData')
 const DB_PATH     = path.join(APP_DATA, 'garageflow.db')
 const LIC_PATH    = path.join(APP_DATA, 'gf_license.dat')   // AES-GCM encrypted
@@ -278,21 +283,10 @@ function hwidMatches(stored, current) {
 // ── License storage (AES-256-GCM, key derived from HWID via PBKDF2) ──────────
 
 const LIC_SALT     = 'GarageFlow-License-Storage-Salt-v2'
-const DB_MAC_SALT  = 'GarageFlow-DB-MAC-Salt-v1'
 
 function deriveStorageKey() {
   const hwid = getHwid()
   return crypto.pbkdf2Sync(hwid, LIC_SALT, 100_000, 32, 'sha256')
-}
-
-/**
- * Derive a machine-specific secret for DB record MAC verification.
- * Fewer PBKDF2 iterations than storage key (this is called once at startup, not
- * on every request). The secret is passed to Next.js via GF_DB_MAC_SECRET env.
- */
-function deriveDbMacSecret() {
-  const hwid = getHwid()
-  return crypto.pbkdf2Sync(hwid, DB_MAC_SALT, 10_000, 32, 'sha256').toString('hex')
 }
 
 function saveLicense(token, payload) {
@@ -502,17 +496,14 @@ function setupDatabase() {
 
 }
 
-// ── Periodic license revocation check (adaptive: 2 min active / 20 s blocked) ─
-// Checks the LOCAL Next.js API first, then an optional REMOTE license server
-// (GF_LICENSE_SERVER env var, e.g. https://admin.garageflow.example.com).
-// Fail-open on ALL network errors so offline use continues working.
-//
-// Behaviour when the status changes:
-//   • revoked / suspended / tampered → the app STAYS OPEN and the renderer shows
-//     a persistent blocking overlay (no auto-quit). The customer sees exactly why
-//     access is blocked and keeps their unsaved work.
-//   • reactivated (status back to "active") → the renderer is told to lift the
-//     overlay so the user resumes right where they left off.
+// ── Periodic license check against the CENTRAL server (adaptive: 2 min / 20 s) ─
+// LICENSE_SERVER is the SINGLE source of truth. On a definitive "not allowed"
+// verdict (revoked / suspended / expired / unknown) the app STAYS OPEN and the
+// renderer shows a persistent blocking overlay — the customer keeps unsaved work
+// and is unblocked the instant it is reactivated. On a network failure (no
+// response) we keep the current state so offline use continues; the 48/72h
+// online-grace enforces reconnection over time. The server always has the last
+// word — there is no local license authority to fall back to.
 
 const LICENSE_CHECK_INTERVAL_MS = 2 * 60 * 1_000   // normal cadence: every 2 minutes
 const LICENSE_CHECK_BLOCKED_MS  = 20 * 1_000       // faster cadence while blocked → reactivation shows up quickly
@@ -547,64 +538,93 @@ function httpPost(url, body) {
   })
 }
 
+/**
+ * Validate a license id against the central server.
+ * @returns { reachable:false } on network failure, else
+ *          { reachable:true, allowed, status, reason }.
+ */
+async function serverValidate(licenseId) {
+  const res = await httpPost(`${LICENSE_SERVER}/api/license/check`, { licenseId })
+  if (!res) return { reachable: false }
+  return { reachable: true, allowed: res.allowed !== false, status: res.status ?? 'unknown', reason: res.reason }
+}
+
+/**
+ * Activate a signed token against the central server (authoritative).
+ * @returns { reachable:false } on network failure, else the server JSON
+ *          { ok, reason, licenseType, expiryAt, seats, isAdmin }.
+ */
+async function serverActivate(token, hwid) {
+  const res = await httpPost(`${LICENSE_SERVER}/api/license/activate`, { license: token, hwid })
+  if (!res) return { reachable: false }
+  return { reachable: true, ...res }
+}
+
 async function periodicLicenseCheck() {
   if (!activeLicense?.payload?.lid) return
-
   const licenseId = activeLicense.payload.lid
-  let result = null
 
-  // 1. Check remote license server (if configured) — authoritative
-  const remoteServer = process.env.GF_LICENSE_SERVER
-  if (remoteServer) {
-    try {
-      result = await httpPost(`${remoteServer.replace(/\/$/, '')}/api/license/check`, { licenseId })
-      if (result) log('[license/check] remote result:', JSON.stringify(result))
-    } catch (err) {
-      log('[license/check] remote server unreachable (fail-open):', err.message)
-    }
-  }
+  const v = await serverValidate(licenseId)
 
-  // 2. Fall back to local check
-  if (!result) {
-    try {
-      result = await httpPost(`http://127.0.0.1:${PORT}/api/license/check`, { licenseId })
-      if (result) log('[license/check] local result:', JSON.stringify(result))
-    } catch (err) {
-      log('[license/check] local check error (fail-open):', err.message)
-    }
-  }
+  // No response → indeterminate. Keep current state so a transient outage never
+  // locks out a legitimate user; long outages are handled by the online-grace.
+  if (!v.reachable) return
 
-  // No response at all (remote + local both unreachable) → indeterminate.
-  // Fail-open: keep the current state, never lock a legitimate user out offline.
-  if (!result) return
-
-  if (result.allowed === false) {
-    // ── Blocked: revoked / suspended / tampered ──────────────────────────────
-    // Do NOT quit. Keep the app open and tell the renderer to show a persistent
-    // blocking overlay, so the customer sees why access is blocked and can pick
-    // up instantly (without losing unsaved work) the moment it is reactivated.
-    const status = result.status ?? 'revoked'
-    const reason = result.reason ?? 'Licence révoquée ou suspendue.'
+  if (!v.allowed) {
+    // Definitive block: revoked / suspended / expired / unknown. Stay open and
+    // show the persistent overlay so the customer keeps unsaved work.
+    const status = v.status ?? 'revoked'
+    const reason = v.reason ?? 'Licence révoquée, suspendue ou expirée.'
     if (!licenseBlocked) log('SECURITY: access blocked —', status, '—', reason)
     licenseBlocked = true
     if (mainWindow && !mainWindow.isDestroyed()) {
-      // Re-sent on every blocked check so the overlay reappears even after an
-      // accidental page reload.
       mainWindow.webContents.send('license:revoked', { reason, status })
     }
-  } else if (result.status === 'active') {
-    // ── Confirmed active ─────────────────────────────────────────────────────
-    // Only treat as a reactivation on an explicit "active" status (never on the
-    // fail-open "unknown" status) and only when we were previously blocked.
-    if (licenseBlocked) {
-      licenseBlocked = false
-      log('License reactivated — lid:', licenseId)
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('license:reactivated', { status: 'active' })
-      }
+  } else if (licenseBlocked) {
+    // Server confirms active again → lift the overlay.
+    licenseBlocked = false
+    log('License reactivated — lid:', licenseId)
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('license:reactivated', { status: 'active' })
     }
   }
-  // status 'unknown' (record not yet registered / DB fail-open) → keep current state.
+}
+
+/**
+ * Resolve the license at startup. The CENTRAL server is authoritative; being
+ * offline is tolerated within the online-grace window (the app keeps working and
+ * the periodic check + 48/72h grace enforce reconnection). Returns the payload
+ * to run with, or null if the app must not start.
+ */
+async function resolveStartupLicense() {
+  const stored = checkStoredLicense()   // local ECC signature + expiry gate
+  if (stored) {
+    activeLicense = { token: loadLicense()?.token ?? '', payload: stored }
+    const v = await serverValidate(stored.lid)
+    if (v.reachable && !v.allowed) {
+      // Server says this license is revoked / suspended / expired / unknown.
+      log('Startup: server blocked license —', v.status, '—', v.reason)
+      await dialog.showMessageBox({
+        type:    'warning',
+        title:   'GarageFlow — Licence bloquée',
+        message: v.reason || 'Cette licence a été révoquée, suspendue ou a expiré.',
+        detail:  'Entrez une licence valide pour continuer.',
+        buttons: ['OK'],
+      }).catch(() => {})
+      const activated = await createLicenseWindow()
+      if (!activated || !activeLicense) return null
+      return activeLicense.payload
+    }
+    log('Stored license OK — lid:', stored.lid, '| type:', stored.typ,
+        '| server:', v.reachable ? (v.allowed ? 'active' : 'blocked') : 'offline(grace)')
+    return stored
+  }
+
+  // No stored license → must activate against the server.
+  log('No valid license — showing activation window')
+  const activated = await createLicenseWindow()
+  if (!activated || !activeLicense) return null
+  return activeLicense.payload
 }
 
 function startPeriodicLicenseCheck() {
@@ -1026,7 +1046,6 @@ function startNextServer() {
       // Use whatever secret the main process has loaded (from .env or fallback),
       // so JWTs minted by main.js and verified by Next.js always share the same secret.
       NEXTAUTH_SECRET:   process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR',
-      GF_DB_MAC_SECRET:         deriveDbMacSecret(),
       GF_INTERNAL_EXPORT_KEY:   INTERNAL_EXPORT_KEY,
       GF_PHOTOS_DIR:            PHOTOS_DIR,
       ELECTRON:                 '1',
@@ -1121,16 +1140,10 @@ function createLicenseWindow() {
       ipcMain.removeAllListeners('license-quit')
     }
 
-    ipcMain.on('license-submit', (event, token) => {
+    ipcMain.on('license-submit', async (event, token) => {
+      // 1. Local signature + expiry gate — fast reject of garbage tokens.
       const payload = verifyEccToken(token)
-      if (payload) {
-        saveLicense(token, payload)
-        activeLicense = { token, payload }
-        cleanup()
-        win.destroy()
-        resolve(true)
-      } else {
-        // Provide a human-readable reason
+      if (!payload) {
         const nowSec = Math.floor(Date.now() / 1000)
         let reason = 'Licence invalide ou modifiée'
         try {
@@ -1143,7 +1156,34 @@ function createLicenseWindow() {
           }
         } catch (_) {}
         event.sender.send('license-error', reason)
+        return
       }
+
+      // 2. Authoritative activation on the central server (existence / status /
+      //    expiry / HWID). The server is the source of truth — a validly signed
+      //    but unknown/revoked token is refused here.
+      let r
+      try {
+        r = await serverActivate(token, getHwid())
+      } catch (_) {
+        r = { reachable: false }
+      }
+      if (!r.reachable) {
+        event.sender.send('license-error',
+          'Connexion au serveur requise pour activer. Vérifiez votre connexion internet.')
+        return
+      }
+      if (!r.ok) {
+        event.sender.send('license-error', r.reason || 'Licence refusée par le serveur.')
+        return
+      }
+
+      // 3. Accepted by the server → persist an encrypted local copy + proceed.
+      saveLicense(token, payload)
+      activeLicense = { token, payload }
+      cleanup()
+      win.destroy()
+      resolve(true)
     })
 
     ipcMain.on('license-quit', () => {
@@ -1567,22 +1607,13 @@ app.whenReady().then(async () => {
   createSplash()
   setupDatabase()
 
-  // ── License check ──────────────────────────────────────────────────────────
+  // ── License check (central server is the source of truth) ──────────────────
   if (!IS_DEV) {
-    let payload = checkStoredLicense()
-
+    const payload = await resolveStartupLicense()
     if (!payload) {
-      log('No valid license — showing activation window')
-      const activated = await createLicenseWindow()
-      if (!activated || !activeLicense) {
-        log('Activation cancelled — quitting')
-        app.quit()
-        return
-      }
-      payload = activeLicense.payload
-    } else {
-      activeLicense = { token: loadLicense()?.token ?? '', payload }
-      log('Stored license OK — lid:', payload.lid, '| type:', payload.typ)
+      log('No valid license — quitting')
+      app.quit()
+      return
     }
 
     // Inject cookies so Next.js middleware is satisfied
