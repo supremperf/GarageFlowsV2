@@ -1,0 +1,364 @@
+"""
+GarageFlow License Keygen v2 — ECC P-256 / ECDSA-SHA256
+=========================================================
+
+Security design:
+  - Asymmetric cryptography (ECDSA with NIST P-256 / secp256r1)
+  - Only the private key can CREATE licenses — anyone can VERIFY them
+  - Licenses are signed JWT-like tokens:  GF2.<header>.<payload>.<sig>
+  - Watermark: each license embeds an opaque blob identifying the customer,
+    allowing forensic tracing if a cracked license appears online
+  - Hardware binding: optional HWID field locks a license to one machine
+  - Expiry + type enforcement (trial / premium / enterprise / admin)
+
+Usage (Windows — run from project root):
+  python scripts\keygen.py --init                                   # First time: generate key pair
+  python scripts\keygen.py --admin                                  # Generate admin license
+  python scripts\keygen.py --gen --customer CUST-001                # Single user license
+  python scripts\keygen.py --gen --customer CUST-001 --type trial --years 1
+  python scripts\keygen.py --batch 10 --type premium --years 2      # Bulk generation
+  python scripts\keygen.py --verify <token>                         # Verify any token
+  python scripts\keygen.py --hwid                                   # Print this machine's HWID
+
+Requirements (run once):
+  pip install cryptography
+"""
+
+import os, sys, json, base64, uuid, time, hashlib, argparse, getpass, platform
+from pathlib import Path
+
+# ── Dependency check ───────────────────────────────────────────────────────────
+try:
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.backends import default_backend
+except ImportError:
+    print("Missing dependency. Install with:  pip install cryptography")
+    sys.exit(1)
+
+# ── Paths ──────────────────────────────────────────────────────────────────────
+ROOT_DIR  = Path(__file__).resolve().parent.parent
+KEYS_DIR  = ROOT_DIR / "keys"
+PRIV_FILE = KEYS_DIR / "private.pem"
+PUB_FILE  = KEYS_DIR / "public.pem"
+
+# ── Token constants ────────────────────────────────────────────────────────────
+HEADER        = {"alg": "ES256", "typ": "GF-LIC", "v": 2}
+LICENSE_TYPES = frozenset(["trial", "premium", "enterprise", "admin"])
+
+# ── Base64url helpers ──────────────────────────────────────────────────────────
+def b64u_enc(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
+
+def b64u_dec(s: str) -> bytes:
+    pad = (4 - len(s) % 4) % 4
+    return base64.urlsafe_b64decode(s + "=" * pad)
+
+_HEADER_B64 = b64u_enc(json.dumps(HEADER, separators=(",", ":")).encode())
+
+# ── Key management ─────────────────────────────────────────────────────────────
+def cmd_init(passphrase):
+    KEYS_DIR.mkdir(exist_ok=True)
+    priv = ec.generate_private_key(ec.SECP256R1(), default_backend())
+    enc  = (serialization.BestAvailableEncryption(passphrase.encode())
+            if passphrase else serialization.NoEncryption())
+
+    priv_pem = priv.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=enc,
+    )
+    PRIV_FILE.write_bytes(priv_pem)
+    try:
+        PRIV_FILE.chmod(0o600)
+    except Exception:
+        pass
+
+    pub_pem = priv.public_key().public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    PUB_FILE.write_bytes(pub_pem)
+
+    print("\n" + "="*60)
+    print("  ECC P-256 key pair generated")
+    print("="*60)
+    print(f"  Private key : {PRIV_FILE}")
+    print(f"  Public key  : {PUB_FILE}")
+    print()
+    print("  CRITICAL — keep private.pem PRIVATE:")
+    print("  • Add  keys/  to .gitignore immediately")
+    print("  • Never commit private.pem to any repository")
+    print("  • Back it up in a secure offline location")
+    print()
+    pub_lines = pub_pem.decode().strip().splitlines()
+    inner = [l for l in pub_lines if not l.startswith("-----")]
+    print("  Paste into src\\lib\\license\\verify.ts  (_K array)")
+    print("  and into electron\\main.js  (_PK array):")
+    print()
+    for line in inner:
+        print(f"  '{line}',")
+    print("\n" + "="*60 + "\n")
+
+
+def _load_private(passphrase=None):
+    if not PRIV_FILE.exists():
+        print(f"Private key not found: {PRIV_FILE}")
+        print("Run:  python scripts/keygen.py --init")
+        sys.exit(1)
+    pw = passphrase.encode() if passphrase else None
+    return serialization.load_pem_private_key(
+        PRIV_FILE.read_bytes(), password=pw, backend=default_backend()
+    )
+
+def _load_public():
+    if not PUB_FILE.exists():
+        print(f"Public key not found: {PUB_FILE}")
+        sys.exit(1)
+    return serialization.load_pem_public_key(PUB_FILE.read_bytes(), backend=default_backend())
+
+# ── License signing ────────────────────────────────────────────────────────────
+def _sign(priv_key, payload: dict) -> str:
+    payload_b64   = b64u_enc(json.dumps(payload, separators=(",", ":")).encode())
+    signing_input = f"{_HEADER_B64}.{payload_b64}".encode()
+    sig           = priv_key.sign(signing_input, ec.ECDSA(hashes.SHA256()))
+    return f"GF2.{_HEADER_B64}.{payload_b64}.{b64u_enc(sig)}"
+
+
+def make_license(priv_key, customer_id: str, license_type: str,
+                 years=1, seats=1, hwid=None, label=None) -> dict:
+    if license_type not in LICENSE_TYPES:
+        raise ValueError(f"Invalid type. Choose from: {sorted(LICENSE_TYPES)}")
+
+    now = int(time.time())
+    exp = now + years * 365 * 24 * 3600
+
+    # Watermark: opaque forensic marker. Decode it later to identify leaks.
+    wm_raw = {"c": customer_id, "t": now, "r": os.urandom(6).hex(), "l": label or ""}
+    wm     = b64u_enc(json.dumps(wm_raw, separators=(",", ":")).encode())
+
+    payload = {
+        "lid":   str(uuid.uuid4()),
+        "cid":   customer_id,
+        "typ":   license_type,
+        "iss":   now,
+        "exp":   exp,
+        "seats": seats,
+        "wm":    wm,
+        "ver":   "2.0",
+    }
+    if hwid:
+        payload["hwid"] = hwid
+
+    return {
+        "token":      _sign(priv_key, payload),
+        "lid":        payload["lid"],
+        "cid":        customer_id,
+        "type":       license_type,
+        "issued_at":  time.strftime("%Y-%m-%d", time.gmtime(now)),
+        "expires_at": time.strftime("%Y-%m-%d", time.gmtime(exp)),
+        "seats":      seats,
+        "hwid":       hwid,
+        "label":      label,
+    }
+
+# ── Verification ───────────────────────────────────────────────────────────────
+def verify_token(token: str):
+    parts = token.strip().split(".")
+    if len(parts) != 4 or parts[0] != "GF2":
+        return None
+    _, header_b64, payload_b64, sig_b64 = parts
+    signing_input = f"{header_b64}.{payload_b64}".encode()
+    try:
+        _load_public().verify(b64u_dec(sig_b64), signing_input, ec.ECDSA(hashes.SHA256()))
+    except Exception:
+        return None
+    try:
+        return json.loads(b64u_dec(payload_b64).decode())
+    except Exception:
+        return None
+
+# ── HWID ───────────────────────────────────────────────────────────────────────
+def _disk_serial() -> str:
+    """Return the primary disk serial number, or '' on failure."""
+    try:
+        sys_name = platform.system()
+        if sys_name == "Windows":
+            import subprocess
+            out = subprocess.check_output(
+                ["wmic", "diskdrive", "get", "SerialNumber"],
+                timeout=5, stderr=subprocess.DEVNULL
+            ).decode(errors="ignore")
+            serials = [l.strip() for l in out.splitlines() if l.strip() and "SerialNumber" not in l]
+            return serials[0] if serials else ""
+        elif sys_name == "Darwin":
+            import subprocess
+            out = subprocess.check_output(
+                ["system_profiler", "SPStorageDataType", "-json"],
+                timeout=5, stderr=subprocess.DEVNULL
+            ).decode(errors="ignore")
+            import json as _json
+            data = _json.loads(out)
+            entries = data.get("SPStorageDataType", [])
+            if entries:
+                serial = entries[0].get("_deviceIdentifier") or entries[0].get("bsd_name", "")
+                return serial
+            return ""
+        else:
+            # Linux: try common sysfs paths
+            for dev in ("/sys/block/sda/device/serial",
+                        "/sys/block/nvme0n1/device/serial",
+                        "/sys/block/vda/device/serial"):
+                try:
+                    with open(dev) as f:
+                        return f.read().strip()
+                except OSError:
+                    continue
+            # Fallback: udevadm
+            import subprocess
+            for blk in ("sda", "nvme0n1", "vda"):
+                try:
+                    out = subprocess.check_output(
+                        ["udevadm", "info", "--query=property", f"--name=/dev/{blk}"],
+                        timeout=5, stderr=subprocess.DEVNULL
+                    ).decode(errors="ignore")
+                    for line in out.splitlines():
+                        if line.startswith("ID_SERIAL="):
+                            return line.split("=", 1)[1].strip()
+                except Exception:
+                    continue
+            return ""
+    except Exception:
+        return ""
+
+
+def get_hwid() -> str:
+    import socket, uuid as _uuid
+    cpu      = platform.processor() or platform.machine() or "unknown"
+    mac      = ":".join(
+        f"{((_uuid.getnode() >> (5-i)*8) & 0xff):02x}" for i in range(6)
+    )
+    plat     = f"{platform.system()}-{platform.machine()}"
+    hostname = hashlib.sha256(socket.gethostname().encode()).hexdigest()[:16]
+    disk     = _disk_serial()
+    combined = "||".join([cpu, mac, plat, hostname, disk])
+    return hashlib.sha256(combined.encode()).hexdigest()
+
+# ── Watermark decoder ─────────────────────────────────────────────────────────
+def decode_watermark(wm: str):
+    try:
+        raw = json.loads(b64u_dec(wm).decode())
+        return {
+            "customer":  raw.get("c"),
+            "label":     raw.get("l", ""),
+            "issued_at": time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(raw.get("t", 0))),
+            "nonce":     raw.get("r"),
+        }
+    except Exception:
+        return None
+
+# ── CLI ────────────────────────────────────────────────────────────────────────
+def main():
+    p = argparse.ArgumentParser(
+        description="GarageFlow License Keygen v2 — ECC P-256",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    p.add_argument("--init",       action="store_true")
+    p.add_argument("--passphrase", type=str)
+    p.add_argument("--gen",        action="store_true")
+    p.add_argument("--admin",      action="store_true")
+    p.add_argument("--verify",     type=str, metavar="TOKEN")
+    p.add_argument("--batch",      type=int, metavar="N")
+    p.add_argument("--hwid",       action="store_true")
+    p.add_argument("--watermark",  type=str, metavar="WM")
+    p.add_argument("--customer",   type=str)
+    p.add_argument("--type",       type=str, default="premium",
+                   choices=sorted(LICENSE_TYPES))
+    p.add_argument("--years",      type=int, default=1)
+    p.add_argument("--seats",      type=int, default=1)
+    p.add_argument("--bind-hwid",  type=str, default=None, metavar="HWID",
+                   dest="bind_hwid")
+    p.add_argument("--label",      type=str, default=None)
+    args = p.parse_args()
+
+    if args.hwid:
+        print(f"\nHWID: {get_hwid()}\n")
+        return
+
+    if args.init:
+        pp = args.passphrase
+        if pp is None:
+            pp = getpass.getpass("Passphrase (blank = no encryption): ") or None
+        cmd_init(pp)
+        return
+
+    if args.verify:
+        pl = verify_token(args.verify)
+        if pl is None:
+            print("\nINVALID — signature mismatch or malformed\n")
+            sys.exit(1)
+        now = int(time.time())
+        exp = pl.get("exp", 0)
+        print("\n" + "="*60)
+        print(f"  {'VALID' if exp >= now else 'VALID BUT EXPIRED'}")
+        print("="*60)
+        for k, v in pl.items():
+            if k == "wm":
+                wm = decode_watermark(v)
+                print(f"  wm → {wm}")
+            else:
+                val = time.strftime("%Y-%m-%d", time.gmtime(v)) if k in ("iss", "exp") else v
+                print(f"  {k:<8}: {val}")
+        print("="*60 + "\n")
+        return
+
+    if args.watermark:
+        print(json.dumps(decode_watermark(args.watermark), indent=2))
+        return
+
+    if args.admin:
+        pk   = _load_private(args.passphrase)
+        info = make_license(pk, "ADMIN", "admin", years=10, seats=999,
+                            label="GarageFlow Admin")
+        print("\n" + "="*70)
+        print("  ADMIN LICENSE")
+        print("="*70)
+        print(f"  {info['token']}")
+        print("-"*70)
+        print(f"  LID: {info['lid']}  |  expires: {info['expires_at']}")
+        print("="*70 + "\n")
+        return
+
+    if args.batch:
+        pk = _load_private(args.passphrase)
+        print(f"\nGenerating {args.batch} x {args.type} ({args.years}yr, {args.seats} seat(s))\n")
+        for i in range(args.batch):
+            cid  = args.customer or f"CUST-{i+1:04d}"
+            info = make_license(pk, cid, args.type, args.years, args.seats,
+                                args.bind_hwid, args.label)
+            print(f"[{i+1:>3}] {info['token']}")
+            print(f"      cid={info['cid']}  expires={info['expires_at']}  lid={info['lid']}\n")
+        return
+
+    if args.gen:
+        if not args.customer:
+            p.error("--customer required")
+        pk   = _load_private(args.passphrase)
+        info = make_license(pk, args.customer, args.type, args.years,
+                            args.seats, args.bind_hwid, args.label)
+        print("\n" + "="*70)
+        print("  LICENSE GENERATED")
+        print("="*70)
+        print(f"\n  {info['token']}\n")
+        print("-"*70)
+        for key in ("cid", "type", "seats", "issued_at", "expires_at", "hwid", "label", "lid"):
+            if info[key] is not None:
+                print(f"  {key:<12}: {info[key]}")
+        print("="*70 + "\n")
+        return
+
+    p.print_help()
+
+
+if __name__ == "__main__":
+    main()

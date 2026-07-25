@@ -1,0 +1,25 @@
+[
+  {
+    "lid": "59eaa25b-d32e-488d-b281-c53b2b463d41",
+    "token": "GF2.eyJhbGciOiJFUzI1NiIsInR5cCI6IkdGLUxJQyIsInYiOjJ9.eyJsaWQiOiI1OWVhYTI1Yi1kMzJlLTQ4OGQtYjI4MS1jNTNiMmI0NjNkNDEiLCJjaWQiOiJleDogQ1VTVC0wNDIgIFx1MjAxNCBsYWlzc2VyIHZpZGUgPSBhdXRvIiwidHlwIjoicHJlbWl1bSIsImlzcyI6MTc4NDk4OTA2OCwiZXhwIjoxODE2NTI1MDY4LCJzZWF0cyI6MSwid20iOiJleUpqSWpvaVpYZzZJRU5WVTFRdE1EUXlJQ0JjZFRJd01UUWdiR0ZwYzNObGNpQjJhV1JsSUQwZ1lYVjBieUlzSW5RaU9qRTNPRFE1T0Rrd05qZ3NJbklpT2lKbU1XWTBPVFl6WVdNMU0yVWlMQ0pzSWpvaWRHVnpkQ0F4SW4wIiwidmVyIjoiMi4wIn0.MEYCIQDsr5eKiCaQDT-RZgwchjRUWidCa2PxNNnuP00WShhjOgIhAKewCCS3JUlUlkgh6-DJJ_Icwg-pMK8gDBqX-cCseZaz",
+    "cid": "ex: CUST-042  — laisser vide = auto",
+    "type": "premium",
+    "label": "test 1",
+    "issued_at": "2026-07-25",
+    "expires_at": "2027-07-25",
+    "seats": 1,
+    "hwid": "",
+    "status": "active",
+    "client": {
+      "prenom": "test 1",
+      "nom": "",
+      "entreprise": "",
+      "email": "",
+      "tel": "",
+      "adresse": "",
+      "ville": ""
+    },
+    "created_at": "2026-07-25T16:17:48",
+    "revoked_at": null
+  }
+]

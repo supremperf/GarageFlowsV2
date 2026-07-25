@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GarageFlow — Activation</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:    #0a0f1e;
+      --card:  #111827;
+      --bdr:   rgba(255,255,255,0.08);
+      --bdr2:  rgba(255,255,255,0.12);
+      --text:  #f1f5f9;
+      --muted: #64748b;
+      --dim:   #334155;
+      --blue:  #3b82f6;
+      --red:   #ef4444;
+      --mono:  'Cascadia Code','Fira Code','Consolas',monospace;
+      --font:  -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    }
+    html, body { background:var(--bg); color:var(--text); font-family:var(--font);
+                 height:100%; user-select:none; -webkit-app-region:no-drag; }
+
+    /* Titlebar */
+    .tb { -webkit-app-region:drag; height:32px; background:#070d1b; display:flex;
+          align-items:center; justify-content:space-between; padding:0 12px;
+          border-bottom:1px solid var(--bdr); position:fixed; top:0; left:0; right:0; z-index:9; }
+    .tb-title { font-size:11px; color:var(--muted); font-weight:600; letter-spacing:.1em; text-transform:uppercase; }
+    .tb-close  { -webkit-app-region:no-drag; width:20px; height:20px; border-radius:50%;
+                 background:#ff5f57; border:none; cursor:pointer; color:transparent; font-size:10px; transition:.15s; }
+    .tb-close:hover { color:#500; }
+
+    .content { padding:52px 28px 20px; display:flex; flex-direction:column; align-items:center; }
+
+    .logo { width:52px; height:52px; background:linear-gradient(135deg,#1d4ed8,#1e40af); border-radius:14px;
+            display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:900;
+            color:#fff; box-shadow:0 8px 24px rgba(59,130,246,.35); margin-bottom:12px; letter-spacing:-1px; }
+    h1 { font-size:22px; font-weight:900; letter-spacing:-.5px; }
+    h1 span { color:#60a5fa; }
+    .tag { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.18em; margin-top:4px; margin-bottom:18px; }
+
+    .card { width:100%; background:var(--card); border:1px solid var(--bdr); border-radius:16px; padding:20px; }
+    .ch { display:flex; align-items:center; gap:10px; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--bdr); }
+    .ci { width:34px; height:34px; background:rgba(59,130,246,.15); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:15px; }
+    .ct { font-size:13px; font-weight:700; }
+    .cs { font-size:11px; color:var(--muted); margin-top:2px; }
+
+    label { display:block; font-size:11px; font-weight:600; color:var(--muted); margin-bottom:6px;
+            letter-spacing:.05em; text-transform:uppercase; }
+    textarea {
+      width:100%; padding:10px 12px; background:rgba(255,255,255,.04); border:1px solid var(--bdr2);
+      border-radius:10px; color:var(--text); font-family:var(--mono); font-size:10.5px;
+      line-height:1.6; resize:none; outline:none; height:88px; transition:.15s;
+    }
+    textarea::placeholder { color:var(--dim); }
+    textarea:focus { border-color:rgba(59,130,246,.4); box-shadow:0 0 0 3px rgba(59,130,246,.1); }
+    textarea.err   { border-color:rgba(239,68,68,.45); box-shadow:0 0 0 3px rgba(239,68,68,.1); }
+
+    .hint { font-size:10px; color:var(--dim); margin-top:6px; line-height:1.5; }
+    .hint code { font-family:var(--mono); color:var(--muted); background:rgba(255,255,255,.04); padding:1px 4px; border-radius:3px; }
+
+    .ebox { display:none; background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25);
+            border-radius:8px; padding:8px 12px; margin-top:10px; color:#fca5a5; font-size:11px; gap:6px; align-items:flex-start; }
+    .ebox.show { display:flex; }
+
+    .actions { display:flex; gap:8px; margin-top:12px; }
+    button { flex:1; padding:10px; border:none; border-radius:10px; font-family:var(--font);
+             font-size:12px; font-weight:600; cursor:pointer; transition:.15s;
+             display:flex; align-items:center; justify-content:center; gap:6px; }
+    button:active { transform:scale(.97); }
+    #btn-quit     { background:transparent; border:1px solid var(--bdr2); color:var(--muted); }
+    #btn-quit:hover { background:rgba(255,255,255,.05); color:var(--text); }
+    #btn-act      { background:var(--blue); color:#fff; }
+    #btn-act:hover:not(:disabled) { background:#2563eb; }
+    #btn-act:disabled { opacity:.35; cursor:not-allowed; }
+
+    .spin { width:13px; height:13px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff;
+            border-radius:50%; animation:s .7s linear infinite; }
+    @keyframes s { to { transform:rotate(360deg); } }
+
+    .help { margin-top:12px; text-align:center; font-size:11px; color:var(--dim); }
+    .help a { color:#60a5fa; text-decoration:none; }
+    .help a:hover { text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <div class="tb">
+    <span class="tb-title">GarageFlow · Activation</span>
+    <button class="tb-close" id="btn-x">✕</button>
+  </div>
+
+  <div class="content">
+    <div class="logo">GF</div>
+    <h1>Garage<span>Flow</span></h1>
+    <p class="tag">Activation de la licence</p>
+
+    <div class="card">
+      <div class="ch">
+        <div class="ci">🔐</div>
+        <div>
+          <div class="ct">Entrez votre clé de licence</div>
+          <div class="cs">Token ECC P-256 · fourni par votre revendeur</div>
+        </div>
+      </div>
+
+      <label for="tk">Clé de licence</label>
+      <textarea id="tk" spellcheck="false" autocomplete="off"
+        placeholder="GF2.eyJhbGciOiJFUzI1NiIsInR5cCI6IkdGLUxJQyIsInYiOjJ9..."></textarea>
+
+      <p class="hint">
+        Format&nbsp;: <code>GF2.&lt;header&gt;.&lt;payload&gt;.&lt;signature&gt;</code><br/>
+        Générez des clés avec&nbsp;: <code>python scripts\keygen.py --gen --customer MON-CLIENT</code>
+      </p>
+
+      <div class="ebox" id="ebox">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#f87171" stroke-width="2">
+          <circle cx="10" cy="10" r="9"/><line x1="10" y1="6" x2="10" y2="10"/>
+          <circle cx="10" cy="14" r=".5" fill="#f87171"/>
+        </svg>
+        <span id="emsg"></span>
+      </div>
+
+      <div class="actions">
+        <button id="btn-quit">Quitter</button>
+        <button id="btn-act" disabled>
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Activer GarageFlow
+        </button>
+      </div>
+    </div>
+
+    <p class="help">
+      Pas de licence ?&nbsp;
+      <a href="mailto:contact@garageflow.fr">contact@garageflow.fr</a>
+    </p>
+  </div>
+
+  <script>
+    const tk      = document.getElementById('tk')
+    const btnAct  = document.getElementById('btn-act')
+    const btnQuit = document.getElementById('btn-quit')
+    const btnX    = document.getElementById('btn-x')
+    const ebox    = document.getElementById('ebox')
+    const emsg    = document.getElementById('emsg')
+
+    function ok(v) { const t = v.trim(); return t.startsWith('GF2.') && t.split('.').length===4 && t.length>20 }
+
+    function showErr(msg) { emsg.textContent=msg; ebox.classList.add('show'); tk.classList.add('err') }
+    function clearErr()   { ebox.classList.remove('show'); tk.classList.remove('err') }
+
+    function setLoading(v) {
+      btnAct.disabled = v; btnQuit.disabled = v
+      btnAct.innerHTML = v
+        ? '<div class="spin"></div>Vérification…'
+        : '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Activer GarageFlow'
+    }
+
+    tk.addEventListener('input', () => { clearErr(); btnAct.disabled = !ok(tk.value) })
+
+    btnAct.addEventListener('click', () => {
+      const token = tk.value.trim()
+      if (!ok(token)) return
+      setLoading(true)
+      clearErr()
+      window.electronAPI.submitLicenseToken(token)
+    })
+
+    btnQuit.addEventListener('click', () => window.electronAPI.quitApp())
+    btnX.addEventListener('click',    () => window.electronAPI.quitApp())
+
+    window.electronAPI.onLicenseError(msg => { setLoading(false); showErr(msg) })
+
+    tk.focus()
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# Prevent git from doing CRLF conversion on binary files
+*.db        binary
+*.db-shm    binary
+*.db-wal    binary
+*.ico       binary
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.pdf       binary
+*.pem       binary
+*.exe       binary
+*.dll       binary
+*.node      binary

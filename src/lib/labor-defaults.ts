@@ -1,0 +1,18 @@
+export const LABOR_DEFAULTS = [
+  { name: "Vidange + filtre huile",      category: "Moteur",        durationMin: 30,  unitPrice: 49 },
+  { name: "Remplacement filtre à air",   category: "Moteur",        durationMin: 15,  unitPrice: 25 },
+  { name: "Remplacement kit distribution", category: "Moteur",      durationMin: 240, unitPrice: 350 },
+  { name: "Plaquettes de frein avant",   category: "Freinage",      durationMin: 45,  unitPrice: 80 },
+  { name: "Plaquettes de frein arrière", category: "Freinage",      durationMin: 45,  unitPrice: 75 },
+  { name: "Disques + plaquettes avant",  category: "Freinage",      durationMin: 90,  unitPrice: 160 },
+  { name: "Liquide de frein",            category: "Freinage",      durationMin: 20,  unitPrice: 35 },
+  { name: "Remplacement pneu (x1)",      category: "Pneumatiques",  durationMin: 20,  unitPrice: 20 },
+  { name: "Équilibrage (x4)",            category: "Pneumatiques",  durationMin: 30,  unitPrice: 40 },
+  { name: "Permutation pneus",           category: "Pneumatiques",  durationMin: 30,  unitPrice: 30 },
+  { name: "Batterie 12V",                category: "Électricité",   durationMin: 30,  unitPrice: 60 },
+  { name: "Ampoule feu avant",           category: "Électricité",   durationMin: 15,  unitPrice: 20 },
+  { name: "Diagnostic électronique",     category: "Électricité",   durationMin: 45,  unitPrice: 65 },
+  { name: "Révision générale",           category: "Autre",         durationMin: 120, unitPrice: 180 },
+  { name: "Contrôle pré-CT",             category: "Autre",         durationMin: 60,  unitPrice: 55 },
+  { name: "Géométrie",                   category: "Autre",         durationMin: 60,  unitPrice: 90 },
+]
