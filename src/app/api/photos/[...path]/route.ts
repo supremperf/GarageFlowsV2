@@ -11,13 +11,18 @@ export const GET = withAuth(async (_req: Request, { params }: { params: { path: 
     return NextResponse.json({ error: 'Photo storage not configured' }, { status: 501 })
   }
 
-  // Prevent path traversal — only allow alphanumerics, dashes, underscores, dots, slashes
-  const segments = (params.path ?? []).map(s => s.replace(/[^a-zA-Z0-9_\-./]/g, ''))
+  // Prevent path traversal — strip any "." segments (so "..", ".", "…") entirely,
+  // then keep only safe characters. This removes the "../" vector before joining.
+  const segments = (params.path ?? [])
+    .map(s => s.replace(/[^a-zA-Z0-9_\-.]/g, ''))
+    .filter(s => s && s !== '.' && s !== '..')
   const relative = segments.join('/')
 
-  // Extra guard: resolve and confirm the final path is still inside PHOTOS_DIR
-  const fullPath = path.resolve(PHOTOS_DIR, relative)
-  if (!fullPath.startsWith(path.resolve(PHOTOS_DIR))) {
+  // Extra guard: resolve and confirm the final path is strictly inside PHOTOS_DIR.
+  // Compare with a trailing separator so a sibling dir ("<root>-evil") can't match.
+  const root     = path.resolve(PHOTOS_DIR)
+  const fullPath = path.resolve(root, relative)
+  if (fullPath !== root && !fullPath.startsWith(root + path.sep)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
