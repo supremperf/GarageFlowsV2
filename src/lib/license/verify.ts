@@ -199,21 +199,3 @@ export function verifyHwid(storedHwid: string, currentHwid: string): boolean {
   }
   return false
 }
-
-/**
- * Decode and return the watermark embedded in a (already-verified) payload.
- * Used for forensic tracing: if a cracked license appears online, the watermark
- * identifies which customer it was issued to.
- */
-export function decodeWatermark(wm: string): { cid: string; label: string; issuedAt: Date } | null {
-  try {
-    const raw = JSON.parse(_b64urlDecode(wm).toString('utf8'))
-    return {
-      cid:      String(raw.c ?? ''),
-      label:    String(raw.l ?? ''),
-      issuedAt: new Date((raw.t ?? 0) * 1000),
-    }
-  } catch {
-    return null
-  }
-}
