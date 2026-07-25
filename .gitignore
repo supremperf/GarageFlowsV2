@@ -15,6 +15,10 @@ node_modules/
 *.tsbuildinfo
 next-env.d.ts
 
+# Python (keygen scripts)
+__pycache__/
+*.pyc
+
 # OS
 .DS_Store
 Thumbs.db
