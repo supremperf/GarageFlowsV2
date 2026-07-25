@@ -257,6 +257,63 @@ def decode_watermark(wm: str):
     except Exception:
         return None
 
+# ── Central server registration ────────────────────────────────────────────────
+SERVER_CFG_FILE = KEYS_DIR / "server_config.json"
+
+
+def _server_config(cli_url=None, cli_key=None):
+    """Resolve (url, api_key) from CLI flags, then keys/server_config.json."""
+    url, key = cli_url, cli_key
+    if (not url or not key) and SERVER_CFG_FILE.exists():
+        try:
+            cfg = json.loads(SERVER_CFG_FILE.read_text(encoding="utf-8"))
+            url = url or cfg.get("url", "")
+            key = key or cfg.get("api_key", "")
+        except Exception:
+            pass
+    return (url or "").rstrip("/"), (key or "")
+
+
+def _push_license(info: dict, url: str, api_key: str) -> tuple[bool, str]:
+    """Register a signed license on the central server. Returns (ok, message)."""
+    if not url or not api_key:
+        return False, "serveur non configuré (--server/--api-key ou keys/server_config.json)"
+    import urllib.request, urllib.error
+    body = json.dumps({"token": info["token"], "label": info.get("label") or ""}).encode()
+    req = urllib.request.Request(
+        url + "/api/admin/licenses/create",
+        data=body,
+        headers={"Content-Type": "application/json", "x-gf-key": api_key,
+                 "User-Agent": "GarageFlow-Keygen-CLI/2"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=8) as r:
+            r.read()
+            return True, "enregistrée sur le serveur central"
+    except urllib.error.HTTPError as e:
+        if e.code == 409:
+            return True, "déjà présente sur le serveur"
+        try:
+            return False, json.loads(e.read().decode()).get("error", f"HTTP {e.code}")
+        except Exception:
+            return False, f"HTTP {e.code}"
+    except Exception as exc:
+        return False, f"connexion impossible : {exc}"
+
+
+def _maybe_push(info: dict, args) -> None:
+    """Push a generated license to the server unless --no-push. Prints the result."""
+    if getattr(args, "no_push", False):
+        return
+    url, key = _server_config(getattr(args, "server", None), getattr(args, "api_key", None))
+    if not url or not key:
+        print("  serveur : non configuré (licence NON enregistrée — utilisez --server/--api-key)")
+        return
+    ok, msg = _push_license(info, url, key)
+    print(f"  serveur : {'OK' if ok else 'ECHEC'} — {msg}")
+
+
 # ── CLI ────────────────────────────────────────────────────────────────────────
 def main():
     p = argparse.ArgumentParser(
@@ -279,6 +336,12 @@ def main():
     p.add_argument("--bind-hwid",  type=str, default=None, metavar="HWID",
                    dest="bind_hwid")
     p.add_argument("--label",      type=str, default=None)
+    p.add_argument("--server",     type=str, default=None,
+                   help="URL du serveur central pour l'enregistrement automatique")
+    p.add_argument("--api-key",    type=str, default=None, dest="api_key",
+                   help="LICENSE_ADMIN_API_KEY du serveur")
+    p.add_argument("--no-push",    action="store_true", dest="no_push",
+                   help="Ne pas enregistrer la licence sur le serveur")
     args = p.parse_args()
 
     if args.hwid:
@@ -326,6 +389,7 @@ def main():
         print(f"  {info['token']}")
         print("-"*70)
         print(f"  LID: {info['lid']}  |  expires: {info['expires_at']}")
+        _maybe_push(info, args)
         print("="*70 + "\n")
         return
 
@@ -337,7 +401,9 @@ def main():
             info = make_license(pk, cid, args.type, args.years, args.seats,
                                 args.bind_hwid, args.label)
             print(f"[{i+1:>3}] {info['token']}")
-            print(f"      cid={info['cid']}  expires={info['expires_at']}  lid={info['lid']}\n")
+            print(f"      cid={info['cid']}  expires={info['expires_at']}  lid={info['lid']}")
+            _maybe_push(info, args)
+            print()
         return
 
     if args.gen:
@@ -354,6 +420,7 @@ def main():
         for key in ("cid", "type", "seats", "issued_at", "expires_at", "hwid", "label", "lid"):
             if info[key] is not None:
                 print(f"  {key:<12}: {info[key]}")
+        _maybe_push(info, args)
         print("="*70 + "\n")
         return
 

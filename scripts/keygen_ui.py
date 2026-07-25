@@ -72,47 +72,84 @@ def _frame(parent, bg=None, padx=0, pady=0):
     return tk.Frame(parent, bg=bg or parent.cget("bg"), padx=padx, pady=pady)
 
 
-# ── Remote API helper ────────────────────────────────────────────────────────
+# ── Remote API helpers ───────────────────────────────────────────────────────
+# The central server (app.garageflows.fr) is the single source of truth. The
+# Keygen SIGNS a license, then PUSHES it to the server, which verifies the
+# signature and persists it. The local JSON DB is only a convenience cache.
+
+def _client_summary(client: dict) -> str:
+    """Human-readable client label sent to the server as `notes`."""
+    parts = [client.get("prenom", ""), client.get("nom", ""), client.get("entreprise", "")]
+    name  = " ".join(p for p in parts if p).strip()
+    email = client.get("email", "")
+    return (name + (f" <{email}>" if email else "")).strip()
+
+
+def _post_json(url: str, api_key: str, body: dict, timeout: int = 8):
+    """POST JSON with the admin API key. Returns (status_code, parsed_json_or_None, error_str_or_None)."""
+    payload = _json.dumps(body).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "x-gf-key":     api_key,
+            "User-Agent":   "GarageFlow-KeygenGUI/2",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = _json.loads(resp.read().decode("utf-8"))
+            return resp.status, data, None
+    except urllib.error.HTTPError as e:
+        try:
+            data = _json.loads(e.read().decode("utf-8"))
+            return e.code, data, data.get("error", f"HTTP {e.code}")
+        except Exception:
+            return e.code, None, f"Erreur HTTP {e.code}"
+    except Exception as exc:
+        return None, None, f"Connexion impossible : {exc}"
+
+
+def _remote_create_license(server_url: str, api_key: str, info: dict, client: dict) -> tuple[bool, str]:
+    """Push a freshly-signed license to the central server. Returns (ok, message).
+    The server verifies the signature and derives type/expiry/seats/hwid from the token."""
+    if not server_url or not api_key:
+        return False, "Serveur ou clé API non configuré."
+    url = server_url.rstrip("/") + "/api/admin/licenses/create"
+    body = {
+        "token": info["token"],
+        "label": info.get("label") or "",
+        "notes": _client_summary(client),
+    }
+    code, _data, err = _post_json(url, api_key, body)
+    if code in (200, 201):
+        return True, "Licence enregistrée sur le serveur central."
+    if code == 409:
+        return True, "Licence déjà présente sur le serveur."
+    return False, err or "Réponse inattendue du serveur."
+
 
 def _remote_set_status(server_url: str, api_key: str, license_id: str, status: str) -> tuple[bool, str]:
     """Call GarageFlow admin API to update license status. Returns (ok, message)."""
     if not server_url or not api_key:
         return False, "Serveur ou clé API non configuré."
-    url = server_url.rstrip("/") + "/api/admin/licenses/revoke-by-key"
-    payload = _json.dumps({"licenseId": license_id, "status": status}).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=payload,
-        headers={
-            "Content-Type":  "application/json",
-            "x-gf-key":      api_key,
-            "User-Agent":    "GarageFlow-KeygenGUI/2",
-        },
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=8) as resp:
-            data = _json.loads(resp.read().decode("utf-8"))
-            if data.get("ok"):
-                return True, f"Statut mis à jour sur le serveur : {status}"
-            return False, data.get("error", "Réponse inattendue")
-    except urllib.error.HTTPError as e:
-        try:
-            body = _json.loads(e.read().decode("utf-8"))
-            return False, body.get("error", f"HTTP {e.code}")
-        except Exception:
-            return False, f"Erreur HTTP {e.code}"
-    except Exception as exc:
-        return False, f"Connexion impossible : {exc}"
+    url = server_url.rstrip("/") + "/api/admin/licenses/revoke"
+    code, data, err = _post_json(url, api_key, {"licenseId": license_id, "status": status})
+    if data and data.get("ok"):
+        return True, f"Statut mis à jour sur le serveur : {status}"
+    return False, err or "Réponse inattendue"
 
 
 # ── Onglet 1 — Générer ────────────────────────────────────────────────────────
 
 class TabGenerate(tk.Frame):
-    def __init__(self, master, on_generated=None):
+    def __init__(self, master, on_generated=None, get_server_cfg=None):
         super().__init__(master, bg=BG)
-        self.on_generated = on_generated
-        self._passphrase  = ""
+        self.on_generated    = on_generated
+        self._get_server_cfg = get_server_cfg or (lambda: ("", ""))
+        self._passphrase     = ""
         self._build()
 
     def _build(self):
@@ -305,6 +342,7 @@ class TabGenerate(tk.Frame):
 
         def _do():
             try:
+                # 1. Sign the license locally with the ECC private key.
                 pk   = core.load_private_key(self._passphrase)
                 info = core.make_license(pk, cid, raw_type, years, seats, hwid, label)
 
@@ -317,26 +355,51 @@ class TabGenerate(tk.Frame):
                     "adresse":    self.v_adresse.get().strip(),
                     "ville":      self.v_ville.get().strip(),
                 }
+
+                # 2. Push to the CENTRAL server (source of truth) and wait for
+                #    confirmation. The server verifies the signature + persists.
+                url, key = self._get_server_cfg()
+                if url and key:
+                    server_ok, server_msg = _remote_create_license(url, key, info, client)
+                else:
+                    server_ok, server_msg = False, "Serveur non configuré (onglet Serveur GarageFlow)."
+
+                # 3. Keep a LOCAL CACHE only (never the source of truth).
                 db.add_license(info, client)
 
-                self.after(0, lambda: self._on_success(info))
+                self.after(0, lambda: self._on_success(info, server_ok, server_msg))
             except Exception as exc:
-                self.after(0, lambda: messagebox.showerror("Erreur de signature", str(exc)))
+                self.after(0, lambda e=exc: messagebox.showerror("Erreur de signature", str(e)))
 
         threading.Thread(target=_do, daemon=True).start()
 
-    def _on_success(self, info):
+    def _on_success(self, info, server_ok: bool, server_msg: str):
         self.token_var.set(info["token"])
         if self.on_generated:
             self.on_generated(info)
-        messagebox.showinfo(
-            "Licence générée ✓",
-            f"Client  : {info['label']}\n"
-            f"Type    : {core.TYPE_LABELS.get(info['type'], info['type'])}\n"
-            f"Expiry  : {info['expires_at']}\n\n"
-            "Le token a été copié dans le champ résultat.\n"
-            "Retrouvez-la dans l'onglet Gérer les licences.",
-        )
+
+        if server_ok:
+            messagebox.showinfo(
+                "Licence générée et enregistrée ✓",
+                f"Client  : {info['label']}\n"
+                f"Type    : {core.TYPE_LABELS.get(info['type'], info['type'])}\n"
+                f"Expiry  : {info['expires_at']}\n\n"
+                f"✅ {server_msg}\n\n"
+                "Le token a été copié dans le champ résultat.",
+            )
+        else:
+            messagebox.showwarning(
+                "Licence signée — ⚠️ NON enregistrée sur le serveur",
+                f"Client  : {info['label']}\n"
+                f"Type    : {core.TYPE_LABELS.get(info['type'], info['type'])}\n"
+                f"Expiry  : {info['expires_at']}\n\n"
+                f"⚠️ {server_msg}\n\n"
+                "La licence a été signée et mise en cache local, mais le serveur\n"
+                "central (source de vérité) ne l'a PAS enregistrée. Tant qu'elle\n"
+                "n'est pas sur le serveur, le logiciel client refusera l'activation.\n\n"
+                "Configurez/vérifiez l'onglet « Serveur GarageFlow » puis régénérez,\n"
+                "ou réessayez l'enregistrement.",
+            )
 
     def _copy_token(self):
         t = self.token_var.get()
@@ -708,8 +771,8 @@ class TabServer(tk.Frame):
         _lbl(card, "ex: http://192.168.1.10:4028", fg=MUTED, font=("Segoe UI", 8)).pack(anchor="w")
         _entry(card, textvariable=self.v_url).pack(fill="x", ipady=4, pady=(2, 10))
 
-        _lbl(card, "Clé API (GARAGEFLOW_API_KEY du serveur)", fg=MUTED, font=FONTS).pack(anchor="w")
-        _lbl(card, "Trouvez cette valeur dans le fichier .env du serveur (variable GARAGEFLOW_API_KEY).",
+        _lbl(card, "Clé API admin (LICENSE_ADMIN_API_KEY du serveur)", fg=MUTED, font=FONTS).pack(anchor="w")
+        _lbl(card, "Variable LICENSE_ADMIN_API_KEY du .env du serveur — DISTINCTE du NEXTAUTH_SECRET.",
              fg=MUTED, font=("Segoe UI", 8)).pack(anchor="w")
         _entry(card, textvariable=self.v_key, show="•").pack(fill="x", ipady=4, pady=(2, 10))
 
@@ -727,12 +790,12 @@ class TabServer(tk.Frame):
         info.pack(fill="x", padx=20, pady=(0, 12))
         _lbl(info, "Comment ça fonctionne :", font=FONTB).pack(anchor="w")
         _lbl(info,
-             "1. L'admin installe GarageFlow et le lance comme serveur (LAN ou VPN).\n"
-             "2. Entrez l'URL et la clé API (NEXTAUTH_SECRET) ci-dessus.\n"
-             "3. Quand vous révoquez/suspendez une licence dans cet outil,\n"
-             "   le serveur GarageFlow est mis à jour immédiatement.\n"
-             "4. Les clients GarageFlow vérifient le serveur toutes les 2 minutes\n"
-             "   et sont bloqués en cas de révocation.",
+             "1. Le serveur central GarageFlow tourne (app.garageflows.fr) sur PostgreSQL.\n"
+             "2. Entrez son URL et la clé LICENSE_ADMIN_API_KEY ci-dessus.\n"
+             "3. À la génération, la licence est SIGNÉE puis ENVOYÉE au serveur\n"
+             "   (source de vérité) ; révocation/suspension y sont appliquées en direct.\n"
+             "4. Les logiciels GarageFlow vérifient le serveur toutes les 2 minutes\n"
+             "   et sont bloqués si la licence est révoquée, suspendue ou expirée.",
              fg=MUTED, font=FONTS, justify="left").pack(anchor="w", pady=(6, 0))
 
     def _save(self):
@@ -748,9 +811,10 @@ class TabServer(tk.Frame):
         self.lbl_result.config(text="⏳  Test en cours…", fg=MUTED)
 
         def _do():
-            # Ping the check endpoint with a dummy licenseId — should return 404 or OK (not 403)
+            # Ping the revoke endpoint with a dummy licenseId — should return 404 (unknown
+            # license = auth OK) or 403 (bad key). Never actually changes anything.
             import urllib.request, urllib.error, json as _j
-            test_url = url + "/api/admin/licenses/revoke-by-key"
+            test_url = url + "/api/admin/licenses/revoke"
             payload = _j.dumps({"licenseId": "__test_ping__", "status": "active"}).encode()
             req = urllib.request.Request(test_url, data=payload,
                 headers={"Content-Type": "application/json", "x-gf-key": key}, method="POST")
@@ -829,7 +893,8 @@ class App(tk.Tk):
         nb.pack(fill="both", expand=True, padx=0, pady=0)
 
         self.tab_server = TabServer(nb)
-        self.tab_gen    = TabGenerate(nb, on_generated=self._on_generated)
+        self.tab_gen    = TabGenerate(nb, on_generated=self._on_generated,
+                                      get_server_cfg=self.tab_server.get_config)
         self.tab_manage = TabManage(nb, get_server_cfg=self.tab_server.get_config)
         self.tab_keys   = TabKeys(nb, on_passphrase_change=self._set_passphrase)
 
