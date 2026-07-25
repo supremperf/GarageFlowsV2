@@ -2,8 +2,12 @@ import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/db'
 import bcrypt from 'bcryptjs'
+import { getSessionSecret } from '@/lib/security/session'
 
 export const authOptions: NextAuthOptions = {
+  // Explicit secret so signing/verification is deterministic across the app.
+  secret: getSessionSecret(),
+
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 jours
@@ -30,19 +34,12 @@ export const authOptions: NextAuthOptions = {
       },
 
       async authorize(credentials) {
-        console.log('====================================')
-        console.log('🔐 Nouvelle tentative de connexion')
-        console.log('Credentials reçues :', credentials)
-        console.log('====================================')
-
+        // SECURITY: never log credentials, password hashes, or PII.
         if (!credentials?.email || !credentials?.password) {
-          console.log('❌ Email ou mot de passe manquant')
           return null
         }
 
         const email = credentials.email.toLowerCase()
-
-        console.log('📧 Email recherché :', email)
 
         const user = await prisma.user.findUnique({
           where: {
@@ -54,30 +51,19 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!user) {
-          console.log('❌ Utilisateur introuvable')
+          // Compare against a dummy hash to reduce user-enumeration timing signal.
+          await bcrypt.compare(credentials.password, '$2a$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinva')
           return null
         }
-
-        console.log('✅ Utilisateur trouvé')
-        console.log('Nom :', user.name)
-        console.log('Email :', user.email)
-        console.log('Rôle :', user.role)
-        console.log('Garage :', user.garage?.name)
-        console.log('Hash enregistré :', user.password)
 
         const valid = await bcrypt.compare(
           credentials.password,
           user.password
         )
 
-        console.log('🔑 Résultat bcrypt.compare :', valid)
-
         if (!valid) {
-          console.log('❌ Mot de passe incorrect')
           return null
         }
-
-        console.log('✅ Connexion autorisée')
 
         return {
           id: user.id,

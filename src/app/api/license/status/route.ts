@@ -19,11 +19,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { prisma } from '@/lib/db'
 import { verifyRecordMac } from '@/lib/license/record-mac'
-
-function getJwtSecret(): Uint8Array {
-  const secret = process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR'
-  return new TextEncoder().encode(secret)
-}
+import { getSessionSecretBytes } from '@/lib/security/session'
 
 const OK_UNKNOWN = { allowed: true, status: 'unknown' as const }
 
@@ -34,7 +30,7 @@ export async function GET(req: NextRequest) {
 
   let licenseId = ''
   try {
-    const { payload } = await jwtVerify(raw, getJwtSecret())
+    const { payload } = await jwtVerify(raw, getSessionSecretBytes())
     licenseId = typeof payload.lid === 'string' ? payload.lid : ''
   } catch {
     return NextResponse.json(OK_UNKNOWN)
@@ -43,21 +39,9 @@ export async function GET(req: NextRequest) {
 
  // ── Look up the current status in the DB ────────────────────────────────────
 try {
-  console.log("====================================")
-  console.log("🔍 LICENSE STATUS")
-  console.log("Cookie trouvé :", !!raw)
-  console.log("LicenseId du JWT :", licenseId)
-
   const record = await prisma.licenseKey.findUnique({
     where: { licenseId },
   })
-
-  console.log("Record trouvé :", !!record)
-
-  if (record) {
-    console.log("Status DB :", record.status)
-    console.log("LicenseId DB :", record.licenseId)
-  }
 
   if (!record) return NextResponse.json(OK_UNKNOWN)
     const mac = verifyRecordMac(record)

@@ -23,13 +23,9 @@ import { verifyLicenseToken, verifyHwid } from '@/lib/license/verify'
 import { prisma } from '@/lib/db'
 import { computeRecordMac, verifyRecordMac } from '@/lib/license/record-mac'
 import { rateLimit } from '@/lib/rate-limit'
+import { getSessionSecretBytes } from '@/lib/security/session'
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365 * 5   // 5 years
-
-function getJwtSecret(): Uint8Array {
-  const secret = process.env.NEXTAUTH_SECRET ?? 'fallback-dev-secret-change-in-production'
-  return new TextEncoder().encode(secret)
-}
 
 export async function POST(req: NextRequest) {
   // ── Step 0: Rate limiting ───────────────────────────────────────────────────
@@ -136,7 +132,7 @@ export async function POST(req: NextRequest) {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('5y')
-    .sign(getJwtSecret())
+    .sign(getSessionSecretBytes())
 
   // ── Step 4: Set cookies via response headers ────────────────────────────────
   const res = NextResponse.json({

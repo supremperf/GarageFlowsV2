@@ -33,6 +33,8 @@ dist/
 # License signing keys — CRITICAL: NEVER commit private.pem
 keys/private.pem
 keys/*.pem
+# Keygen runtime/local files — hold secrets (API key) and customer PII
+keys/*.json
 
 # Generated icons (keep SVG source, not binaries)
 # icon.ico
