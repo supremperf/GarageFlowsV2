@@ -862,3 +862,11 @@ class App(tk.Tk):
                 "Allez dans l'onglet  🔑 Clés ECC  et cliquez\n"
                 "'Initialiser les clés' pour commencer.",
             )
+
+
+# ── Point d'entrée direct ──────────────────────────────────────────────────────
+# Le lanceur recommandé reste  python scripts/keygen_gui.py  (il affiche un
+# message clair si tkinter est absent). Ce bloc permet en plus de lancer
+# l'interface directement avec  python scripts/keygen_ui.py .
+if __name__ == "__main__":
+    App().mainloop()
