@@ -107,7 +107,9 @@ let mainWindow        = null
 let splashWindow      = null
 let nextServer        = null
 let backupTimer       = null
-let licenseTimer      = null   // periodic revocation check every 12h
+let licenseTimer      = null    // periodic revocation check (adaptive interval)
+let licenseBlocked    = false   // true while access is blocked (revoked/suspended/tampered)
+let licenseCheckStarted = false // guards against starting the poll loop twice
 let activeLicense     = null   // { token, payload } — set after validation
 let desktopExportTimer = null
 let onlineCheckTimer  = null   // periodic internet connectivity check
@@ -500,12 +502,20 @@ function setupDatabase() {
 
 }
 
-// ── Periodic license revocation check (every 2 min) ──────────────────────────
+// ── Periodic license revocation check (adaptive: 2 min active / 20 s blocked) ─
 // Checks the LOCAL Next.js API first, then an optional REMOTE license server
 // (GF_LICENSE_SERVER env var, e.g. https://admin.garageflow.example.com).
 // Fail-open on ALL network errors so offline use continues working.
+//
+// Behaviour when the status changes:
+//   • revoked / suspended / tampered → the app STAYS OPEN and the renderer shows
+//     a persistent blocking overlay (no auto-quit). The customer sees exactly why
+//     access is blocked and keeps their unsaved work.
+//   • reactivated (status back to "active") → the renderer is told to lift the
+//     overlay so the user resumes right where they left off.
 
-const LICENSE_CHECK_INTERVAL_MS = 2 * 60 * 1_000   // 2 minutes
+const LICENSE_CHECK_INTERVAL_MS = 2 * 60 * 1_000   // normal cadence: every 2 minutes
+const LICENSE_CHECK_BLOCKED_MS  = 20 * 1_000       // faster cadence while blocked → reactivation shows up quickly
 
 // Make an HTTP/HTTPS POST request, returns parsed JSON or null
 function httpPost(url, body) {
@@ -564,24 +574,56 @@ async function periodicLicenseCheck() {
     }
   }
 
-  if (result && result.allowed === false) {
+  // No response at all (remote + local both unreachable) → indeterminate.
+  // Fail-open: keep the current state, never lock a legitimate user out offline.
+  if (!result) return
+
+  if (result.allowed === false) {
+    // ── Blocked: revoked / suspended / tampered ──────────────────────────────
+    // Do NOT quit. Keep the app open and tell the renderer to show a persistent
+    // blocking overlay, so the customer sees why access is blocked and can pick
+    // up instantly (without losing unsaved work) the moment it is reactivated.
+    const status = result.status ?? 'revoked'
     const reason = result.reason ?? 'Licence révoquée ou suspendue.'
-    log('SECURITY: license check failed —', reason)
+    if (!licenseBlocked) log('SECURITY: access blocked —', status, '—', reason)
+    licenseBlocked = true
     if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('license:revoked', { reason, status: result.status ?? 'revoked' })
-      await new Promise(r => setTimeout(r, 3000))
+      // Re-sent on every blocked check so the overlay reappears even after an
+      // accidental page reload.
+      mainWindow.webContents.send('license:revoked', { reason, status })
     }
-    app.quit()
+  } else if (result.status === 'active') {
+    // ── Confirmed active ─────────────────────────────────────────────────────
+    // Only treat as a reactivation on an explicit "active" status (never on the
+    // fail-open "unknown" status) and only when we were previously blocked.
+    if (licenseBlocked) {
+      licenseBlocked = false
+      log('License reactivated — lid:', licenseId)
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('license:reactivated', { status: 'active' })
+      }
+    }
   }
+  // status 'unknown' (record not yet registered / DB fail-open) → keep current state.
 }
 
 function startPeriodicLicenseCheck() {
-  if (licenseTimer) return
-  // First check after 30s (give the server time to settle), then every 2min
+  if (licenseCheckStarted) return
+  licenseCheckStarted = true
+  // First check after 30s (give the server time to settle), then re-arm adaptively.
   setTimeout(() => {
-    periodicLicenseCheck()
-    licenseTimer = setInterval(periodicLicenseCheck, LICENSE_CHECK_INTERVAL_MS)
+    periodicLicenseCheck().catch(() => {}).finally(scheduleNextLicenseCheck)
   }, 30_000)
+}
+
+// Re-arm the next license check. Polls faster while access is blocked so a
+// reactivation is reflected quickly; returns to the normal cadence once active.
+function scheduleNextLicenseCheck() {
+  if (licenseTimer) { clearTimeout(licenseTimer); licenseTimer = null }
+  const delay = licenseBlocked ? LICENSE_CHECK_BLOCKED_MS : LICENSE_CHECK_INTERVAL_MS
+  licenseTimer = setTimeout(() => {
+    periodicLicenseCheck().catch(() => {}).finally(scheduleNextLicenseCheck)
+  }, delay)
 }
 
 // ── Internet connectivity / 48h grace period ──────────────────────────────────
@@ -1587,7 +1629,7 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', () => {
   if (backupTimer)       { clearInterval(backupTimer);         backupTimer       = null }
-  if (licenseTimer)      { clearInterval(licenseTimer);        licenseTimer      = null }
+  if (licenseTimer)      { clearTimeout(licenseTimer);         licenseTimer      = null }
   if (onlineCheckTimer)  { clearInterval(onlineCheckTimer);    onlineCheckTimer  = null }
   if (desktopExportTimer){ clearTimeout(desktopExportTimer);   desktopExportTimer = null }
   if (nextServer) {

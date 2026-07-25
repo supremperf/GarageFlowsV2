@@ -52,6 +52,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('license:revoked', (_e, info) => cb(info))
     return () => ipcRenderer.removeAllListeners('license:revoked')
   },
+  onLicenseReactivated: (cb) => {
+    ipcRenderer.on('license:reactivated', (_e, info) => cb(info))
+    return () => ipcRenderer.removeAllListeners('license:reactivated')
+  },
 
   // ── Updates ───────────────────────────────────────────────────────────────
   checkUpdates:   () => ipcRenderer.invoke('app:check-updates'),
