@@ -23,6 +23,7 @@ import LaborCatalogPanel from '@/components/LaborCatalogPanel'
 import WarrantyPanel from '@/components/WarrantyPanel'
 import LoanerPanel from '@/components/LoanerPanel'
 import LicenseRevokedOverlay from '@/components/LicenseRevokedOverlay'
+import UpdateModal from '@/components/UpdateModal'
 import { Loader2 } from 'lucide-react'
 import { GarageFlowIcon } from '@/components/GarageFlowLogo'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
@@ -314,6 +315,9 @@ export default function Home() {
 
       {/* License revocation overlay — shown when Electron sends license:revoked */}
       <LicenseRevokedOverlay />
+
+      {/* Fenêtre de mise à jour automatique (démarrage + toutes les heures) */}
+      <UpdateModal />
     </div>
   )
 }

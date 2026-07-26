@@ -71,6 +71,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('app:update-installing', handler)
     return () => ipcRenderer.removeListener('app:update-installing', handler)
   },
+  // Notification automatique (démarrage + toutes les heures) : une mise à jour existe.
+  onUpdateAvailable: (cb) => {
+    const handler = (_e, info) => cb(info)
+    ipcRenderer.on('app:update-available', handler)
+    return () => ipcRenderer.removeListener('app:update-available', handler)
+  },
+  // Erreur pendant le téléchargement/l'installation (ex. empreinte SHA-256 invalide).
+  onUpdateError: (cb) => {
+    const handler = (_e, msg) => cb(msg)
+    ipcRenderer.on('app:update-error', handler)
+    return () => ipcRenderer.removeListener('app:update-error', handler)
+  },
 
   // ── Online status ─────────────────────────────────────────────────────────
   getOnlineStatus: () => ipcRenderer.invoke('app:online-status'),
