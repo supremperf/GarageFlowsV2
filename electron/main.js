@@ -1703,6 +1703,50 @@ app.whenReady().then(async () => {
   log('IS_DEV:', IS_DEV)
   log('Platform:', process.platform, process.arch)
 
+  // ── Vérification d'intégrité (anti-altération) ────────────────────────────
+  // Production uniquement. Mode via GF_INTEGRITY_MODE : 'audit' (défaut, journalise
+  // sans bloquer) | 'enforce' (arrêt si un fichier critique est modifié/supprimé)
+  // | 'off'. Défaut prudent = 'audit' : passez à 'enforce' APRÈS avoir validé
+  // qu'un vrai build Windows démarre proprement (voir docs/SECURITY-HARDENING.md).
+  if (!IS_DEV) {
+    try {
+      const integrity = require('./integrity')
+      const mode = (process.env.GF_INTEGRITY_MODE || 'audit').toLowerCase()
+      if (mode !== 'off') {
+        const result = integrity.verify(process.resourcesPath)
+        if (!result.present) {
+          log('[integrity] aucun manifeste — vérification inactive')
+        } else if (result.ok) {
+          log('[integrity] OK —', result.checked, 'fichiers critiques vérifiés')
+        } else {
+          log('[integrity] ALTÉRATION détectée:', result.violations.join(', '))
+          if (mode === 'enforce') {
+            dialog.showErrorBox(
+              'GarageFlow — installation corrompue',
+              'Des fichiers essentiels de GarageFlow ont été modifiés, remplacés ou supprimés.\n\n' +
+                "Par sécurité, l'application ne peut pas démarrer.\n\n" +
+                "Veuillez réinstaller GarageFlow depuis l'installateur officiel.",
+            )
+            app.exit(1)
+            return
+          }
+        }
+        // Anti-débogueur : bloquant uniquement si explicitement activé (évite les
+        // faux positifs) via GF_ANTIDEBUG=1.
+        if (integrity.detectDebugger()) {
+          log('[integrity] débogueur/inspecteur détecté')
+          if (mode === 'enforce' && process.env.GF_ANTIDEBUG === '1') {
+            dialog.showErrorBox('GarageFlow', "Un outil de débogage a été détecté. Fermeture par sécurité.")
+            app.exit(1)
+            return
+          }
+        }
+      }
+    } catch (e) {
+      log('[integrity] erreur de vérification (non bloquante):', e.message)
+    }
+  }
+
   checkDebugger()
   setupIPC()
   createSplash()

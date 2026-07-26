@@ -83,6 +83,7 @@
     "appId": "com.garageflow.app",
     "productName": "GarageFlow",
     "copyright": "Copyright © 2026 GarageFlow",
+    "afterPack": "scripts/afterPack.js",
     "asar": true,
     "asarUnpack": [
       "node_modules/.prisma/client/query_engine-windows*",
