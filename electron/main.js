@@ -156,8 +156,9 @@ function sha256File(filePath) {
 }
 
 // Interroge le serveur central et renvoie un objet de mise à jour homogène.
-// Ordre : serveur central (/api/update/latest) → legacy (/api/admin/updates) →
-// fichier local admin → Releases GitHub (repli, non vérifiable).
+// Ordre : serveur central (/api/update/latest) → fichier local admin →
+// Releases GitHub (repli, non vérifiable). Si le serveur central répond
+// « pas de maj », on s'y fie (pas de repli GitHub qui ferait un faux positif).
 async function fetchLatestUpdate() {
   const currentVersion = app.getVersion()
 
@@ -184,25 +185,7 @@ async function fetchLatestUpdate() {
       }
       return { hasUpdate: false, currentVersion, source: 'central' }
     }
-
-    // Rétro-compat : ancien endpoint (format legacy).
-    const legacy = await httpGetJson(`${UPDATE_SERVER}/api/admin/updates`, 5000)
-    if (legacy?.hasUpdate && legacy.latestVersion && legacy.latestVersion !== currentVersion) {
-      return {
-        hasUpdate:     true,
-        currentVersion,
-        latestVersion: legacy.latestVersion,
-        releaseNotes:  legacy.releaseNotes ?? null,
-        downloadUrl:   legacy.releaseUrl ?? null,
-        releaseUrl:    legacy.releaseUrl ?? null,
-        sha256:        legacy.sha256 ?? null,
-        size:          legacy.fileSize ?? null,
-        fileName:      legacy.fileName ?? null,
-        mandatory:     Boolean(legacy.mandatory),
-        minVersion:    legacy.minVersion ?? null,
-        source:        'central-legacy',
-      }
-    }
+    // Serveur injoignable / réponse inattendue → on tente les replis ci-dessous.
   }
 
   // Fichier local publié par le serveur intégré (mono-poste / hors-ligne).
@@ -1546,12 +1529,20 @@ function setupIPC() {
     // avec ré-essais (backoff). Le serveur/CDN gère nativement le Range.
     function downloadOnce(startUrl) {
       return new Promise((resolve, reject) => {
+        let settled = false
         const doReq = (u, redirects) => {
-          if (redirects > 5) return reject(new Error('Trop de redirections'))
+          if (redirects > 5) { settled = true; return reject(new Error('Trop de redirections')) }
           const mod = u.startsWith('https') ? require('https') : http
           const existing = fs.existsSync(partPath) ? fs.statSync(partPath).size : 0
           const headers = { 'User-Agent': 'GarageFlow/' + app.getVersion() }
           if (existing > 0) headers['Range'] = `bytes=${existing}-`
+          let ws = null
+          const fail = (err) => {
+            if (settled) return
+            settled = true
+            if (ws) { try { ws.destroy() } catch (_) {} } // stoppe toute écriture en attente
+            reject(err)
+          }
           const req = mod.get(u, { timeout: 300_000, headers }, res => {
             if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
               res.resume(); doReq(res.headers.location, redirects + 1); return
@@ -1565,21 +1556,23 @@ function setupIPC() {
               append = false // le serveur ignore Range → on repart de zéro
               total = parseInt(res.headers['content-length'] || '0', 10)
             } else {
-              res.resume(); return reject(new Error('HTTP ' + res.statusCode))
+              res.resume(); return fail(new Error('HTTP ' + res.statusCode))
             }
             let received = append ? existing : 0
-            const ws = fs.createWriteStream(partPath, { flags: append ? 'a' : 'w' })
+            ws = fs.createWriteStream(partPath, { flags: append ? 'a' : 'w' })
             res.on('data', chunk => {
               received += chunk.length
               if (total) emit(Math.min(99, Math.round((received / total) * 100)))
             })
-            res.on('error', reject)
+            res.on('error', fail)
+            ws.on('error', fail)
+            // 'close' (et non 'finish') : le descripteur de fichier est libéré →
+            // le rename qui suit est sûr sous Windows.
+            ws.on('close', () => { if (!settled) { settled = true; resolve() } })
             res.pipe(ws)
-            ws.on('finish', () => ws.close(() => resolve()))
-            ws.on('error', reject)
           })
-          req.on('error', reject)
-          req.on('timeout', () => { req.destroy(); reject(new Error('Délai de téléchargement dépassé')) })
+          req.on('error', fail)
+          req.on('timeout', () => { req.destroy(); fail(new Error('Délai de téléchargement dépassé')) })
         }
         doReq(startUrl, 0)
       })
