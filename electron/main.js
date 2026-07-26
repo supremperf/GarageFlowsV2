@@ -117,9 +117,13 @@ let updateTimer       = null   // periodic app-update check (startup + hourly)
 let lastNotifiedUpdate = null  // version already announced to the renderer (anti-spam)
 
 // ── Central update server (source of truth for app releases) ──────────────────
-// Priorité : GF_UPDATE_SERVER, sinon le serveur de licences GF_LICENSE_SERVER
-// (app.garageflows.fr héberge les deux). Canal par défaut : « stable ».
-const UPDATE_SERVER  = (process.env.GF_UPDATE_SERVER || process.env.GF_LICENSE_SERVER || '').replace(/\/$/, '')
+// Priorité : GF_UPDATE_SERVER, sinon GF_LICENSE_SERVER, sinon l'URL officielle
+// par défaut (app.garageflows.fr héberge licences ET mises à jour). Le défaut
+// permet à l'app packagée de contacter le serveur SANS .env (non embarqué), tout
+// en restant surchargeable par variable d'environnement (dev/staging).
+// Canal par défaut : « stable ».
+const UPDATE_SERVER  = (process.env.GF_UPDATE_SERVER || process.env.GF_LICENSE_SERVER
+    || 'https://app.garageflows.fr').replace(/\/$/, '')
 const UPDATE_CHANNEL = process.env.GF_UPDATE_CHANNEL || 'stable'
 
 // ── App-update helpers ────────────────────────────────────────────────────────

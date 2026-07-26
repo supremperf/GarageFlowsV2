@@ -167,7 +167,8 @@ propose l'installation en un clic (fenêtre `UpdateModal`) :
   utilisateur** (`%APPDATA%\GarageFlow`) sont conservées.
 
 Publication et administration : voir le README de `garagesite3` et la page
-`/admin/updates`.
+`/admin/updates`. **Configuration complète** (variables serveur/client,
+endpoints, procédure de publication) : **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)**.
 
 ---
 
