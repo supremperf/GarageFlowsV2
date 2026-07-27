@@ -33,6 +33,8 @@ dist/
 # License signing keys — CRITICAL: NEVER commit private.pem
 keys/private.pem
 keys/*.pem
+# Keygen artefacts / secrets — ne jamais committer (contiennent des clés API / licences)
+keys/*.json
 
 # Generated icons (keep SVG source, not binaries)
 # icon.ico

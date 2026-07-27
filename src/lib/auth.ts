@@ -30,19 +30,13 @@ export const authOptions: NextAuthOptions = {
       },
 
       async authorize(credentials) {
-        console.log('====================================')
-        console.log('🔐 Nouvelle tentative de connexion')
-        console.log('Credentials reçues :', credentials)
-        console.log('====================================')
-
+        // SÉCURITÉ : ne jamais journaliser `credentials` ni `user.password`
+        // (mot de passe en clair / hash bcrypt = fuite RGPD + compromission de comptes).
         if (!credentials?.email || !credentials?.password) {
-          console.log('❌ Email ou mot de passe manquant')
           return null
         }
 
         const email = credentials.email.toLowerCase()
-
-        console.log('📧 Email recherché :', email)
 
         const user = await prisma.user.findUnique({
           where: {
@@ -54,30 +48,18 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!user) {
-          console.log('❌ Utilisateur introuvable')
+          // Message générique volontaire — ne pas révéler si l'email existe.
           return null
         }
-
-        console.log('✅ Utilisateur trouvé')
-        console.log('Nom :', user.name)
-        console.log('Email :', user.email)
-        console.log('Rôle :', user.role)
-        console.log('Garage :', user.garage?.name)
-        console.log('Hash enregistré :', user.password)
 
         const valid = await bcrypt.compare(
           credentials.password,
           user.password
         )
 
-        console.log('🔑 Résultat bcrypt.compare :', valid)
-
         if (!valid) {
-          console.log('❌ Mot de passe incorrect')
           return null
         }
-
-        console.log('✅ Connexion autorisée')
 
         return {
           id: user.id,
