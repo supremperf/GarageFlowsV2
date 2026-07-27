@@ -59,8 +59,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ── Updates ───────────────────────────────────────────────────────────────
   checkUpdates:   () => ipcRenderer.invoke('app:check-updates'),
-  installUpdate:  (url) => ipcRenderer.invoke('app:install-update', url),
-  downloadUpdate: (url) => ipcRenderer.invoke('app:install-update', url),
+  // arg: string (URL) OU { url, sha256, size } — l'empreinte est vérifiée avant exécution
+  installUpdate:  (arg) => ipcRenderer.invoke('app:install-update', arg),
+  downloadUpdate: (arg) => ipcRenderer.invoke('app:install-update', arg),
   onUpdateProgress: (cb) => {
     const handler = (_e, pct) => cb(pct)
     ipcRenderer.on('app:update-progress', handler)

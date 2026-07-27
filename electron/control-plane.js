@@ -66,6 +66,23 @@ function detectClockRollback(prevWall, nowWall, skewMs) {
   return nowWall < prevWall - Math.max(0, skewMs)
 }
 
+// ─── Vérification d'intégrité des mises à jour ────────────────────────────────
+/**
+ * Compare deux empreintes SHA-256 hexadécimales en temps constant (anti timing).
+ * Renvoie false si l'une est absente/malformée — jamais d'exception.
+ */
+function sha256HexEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false
+  const na = a.trim().toLowerCase()
+  const nb = b.trim().toLowerCase()
+  if (!/^[0-9a-f]{64}$/.test(na) || !/^[0-9a-f]{64}$/.test(nb)) return false
+  try {
+    return crypto.timingSafeEqual(Buffer.from(na, 'hex'), Buffer.from(nb, 'hex'))
+  } catch {
+    return false
+  }
+}
+
 // ─── File de crash bornée (offline-first) ─────────────────────────────────────
 /** Ajoute un élément en fin de file et borne la taille (garde les plus récents). */
 function pushBounded(list, item, max) {
@@ -81,5 +98,6 @@ module.exports = {
   topFrame,
   computeCrashFingerprint,
   detectClockRollback,
+  sha256HexEqual,
   pushBounded,
 }

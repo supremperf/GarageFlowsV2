@@ -44,6 +44,23 @@ describe('detectClockRollback', () => {
   })
 })
 
+describe('sha256HexEqual (vérification des mises à jour)', () => {
+  const a = 'a'.repeat(64)
+  it('égalité stricte (insensible à la casse / espaces)', () => {
+    expect(cp.sha256HexEqual(a, a.toUpperCase())).toBe(true)
+    expect(cp.sha256HexEqual(` ${a} `, a)).toBe(true)
+  })
+  it('rejette les empreintes différentes', () => {
+    expect(cp.sha256HexEqual(a, 'b'.repeat(64))).toBe(false)
+  })
+  it('rejette les entrées malformées ou absentes', () => {
+    expect(cp.sha256HexEqual(a, 'xyz')).toBe(false)
+    expect(cp.sha256HexEqual(a, '')).toBe(false)
+    expect(cp.sha256HexEqual(null as any, a)).toBe(false)
+    expect(cp.sha256HexEqual(a, a.slice(0, 63))).toBe(false)
+  })
+})
+
 describe('pushBounded', () => {
   it('borne la file en gardant les plus récents', () => {
     let list: number[] = []

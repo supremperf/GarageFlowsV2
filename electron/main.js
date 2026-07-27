@@ -1575,28 +1575,27 @@ function setupIPC() {
     try {
       const currentVersion = app.getVersion()
 
-      // 1. Check admin-published update (via GF_LICENSE_SERVER or local file)
+      // 1. Serveur officiel — /api/update/latest fournit l'empreinte SHA-256 et
+      //    l'URL de téléchargement signée (déploiement progressif pris en compte
+      //    via le HWID). L'empreinte est OBLIGATOIRE pour autoriser l'installation.
       const remoteServer = process.env.GF_LICENSE_SERVER
       if (remoteServer) {
-        const adminUpdate = await new Promise(resolve => {
-          const mod = remoteServer.startsWith('https') ? require('https') : http
-          mod.get(`${remoteServer.replace(/\/$/, '')}/api/admin/updates`, { timeout: 5000 }, res => {
-            let raw = ''
-            res.on('data', c => raw += c)
-            res.on('end',  () => { try { resolve(JSON.parse(raw)) } catch { resolve(null) } })
-          }).on('error', () => resolve(null)).on('timeout', () => resolve(null))
-        }).catch(() => null)
-        if (adminUpdate?.hasUpdate && adminUpdate.latestVersion) {
-          const hasUpdate = adminUpdate.latestVersion !== currentVersion
-          if (hasUpdate) return {
+        const base = remoteServer.replace(/\/$/, '')
+        const q = `?version=${encodeURIComponent(currentVersion)}`
+               + `&channel=${encodeURIComponent(UPDATE_CHANNEL)}`
+               + `&hwid=${encodeURIComponent(getHwid())}`
+        const latest = await httpGetJson(`${base}/api/update/latest${q}`).catch(() => null)
+        if (latest?.hasUpdate && latest.latest) {
+          const L = latest.latest
+          return {
             hasUpdate:     true,
-            latestVersion: adminUpdate.latestVersion,
-            // Fichier .exe téléversé par l'admin → URL directe téléchargeable in-app
-            releaseUrl:    adminUpdate.downloadPath
-              ? `${remoteServer.replace(/\/$/, '')}${adminUpdate.downloadPath}`
-              : (adminUpdate.releaseUrl ?? null),
-            releaseNotes:  adminUpdate.releaseNotes ?? null,
-            source:        'admin',
+            latestVersion: L.version,
+            releaseUrl:    L.downloadUrl ?? null,
+            sha256:        L.sha256 ?? null,   // empreinte vérifiée avant install
+            size:          L.size ?? null,
+            releaseNotes:  L.changelog ?? L.title ?? null,
+            mandatory:     !!latest.mandatory,
+            source:        'server',
           }
         }
       }
@@ -1708,7 +1707,12 @@ function setupIPC() {
   // ── Install update: download the .exe and run the installer ───────────────
   // Les données utilisateur sont dans userData (garageflow.db) → conservées.
   // L'installeur NSIS met à jour l'app en place sans toucher aux données.
-  ipcMain.handle('app:install-update', async (_event, url) => {
+  ipcMain.handle('app:install-update', async (_event, arg) => {
+    // Accepte une chaîne (URL) ou un objet { url, sha256, size }. L'empreinte
+    // SHA-256 est REQUISE pour exécuter l'installeur (voir vérification ci-dessous).
+    const url         = typeof arg === 'string' ? arg : (arg && arg.url)
+    const expectedSha = typeof arg === 'object' && arg ? (arg.sha256 || null) : null
+    const expectedSize= typeof arg === 'object' && arg ? (Number(arg.size) || null) : null
     if (!url || typeof url !== 'string') return { ok: false, reason: 'URL manquante' }
 
     const { spawn } = require('child_process')
@@ -1766,6 +1770,42 @@ function setupIPC() {
       emit(0)
       await download(url, 0)
       emit(100)
+
+      // ── VÉRIFICATION CRYPTOGRAPHIQUE OBLIGATOIRE avant toute exécution ───────
+      // On n'exécute JAMAIS un binaire téléchargé sans empreinte vérifiée : cela
+      // bloque l'attaque « URL malveillante → installeur piégé ». L'empreinte
+      // provient du serveur officiel (/api/update/latest), signée côté serveur.
+      const actualSha = await new Promise((resolve, reject) => {
+        try {
+          const h = crypto.createHash('sha256')
+          const rs = fs.createReadStream(destPath)
+          rs.on('data', d => h.update(d))
+          rs.on('end', () => resolve(h.digest('hex')))
+          rs.on('error', reject)
+        } catch (e) { reject(e) }
+      })
+
+      if (expectedSize && fs.existsSync(destPath) && fs.statSync(destPath).size !== expectedSize) {
+        try { fs.unlinkSync(destPath) } catch (_) {}
+        log('[install-update] SECURITY: size mismatch — refusing to run')
+        return { ok: false, reason: 'Taille du fichier inattendue — installation refusée.' }
+      }
+
+      if (!expectedSha) {
+        // Pas d'empreinte de confiance → on n'exécute pas. Repli navigateur (sûr).
+        try { fs.unlinkSync(destPath) } catch (_) {}
+        log('[install-update] SECURITY: no SHA-256 provided — refusing to run, opening browser')
+        shell.openExternal(url)
+        return { ok: true, method: 'browser-unverified', url }
+      }
+
+      if (!cp.sha256HexEqual(actualSha, expectedSha)) {
+        try { fs.unlinkSync(destPath) } catch (_) {}
+        log('[install-update] SECURITY: SHA-256 mismatch — refusing to run', `expected=${expectedSha}`, `actual=${actualSha}`)
+        reportCrash({ message: 'update_sha256_mismatch', fatal: false, kind: 'security' }).catch(() => {})
+        return { ok: false, reason: 'Signature de la mise à jour invalide — installation refusée pour votre sécurité.' }
+      }
+      log('[install-update] SHA-256 verified OK:', actualSha)
 
       // IMPORTANT : il faut FERMER GarageFlow avant que l'installeur ne s'exécute.
       // Sinon l'installeur NSIS ne peut pas remplacer le .exe / les fichiers
