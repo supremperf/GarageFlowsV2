@@ -101,9 +101,23 @@ const _PK = [
 ]
 const PUBLIC_KEY_PEM = _PK.join('\n')
 
+// ── Control-plane helpers (modules, crashs, clock-tamper, notifications) ──────
+const cp = require('./control-plane')
+
+const SETTINGS_PATH     = path.join(APP_DATA, 'gf_settings.json')       // crash consent, prefs
+const ENTITLEMENTS_PATH = path.join(APP_DATA, 'gf_entitlements.dat')    // AES-GCM (HWID key)
+const CRASH_QUEUE_PATH  = path.join(APP_DATA, 'gf_crash_queue.json')    // offline crash queue
+const TRUSTED_CLOCK_PATH= path.join(APP_DATA, 'gf_clock.json')          // trusted-time reference
+const UPDATE_CHANNEL    = (process.env.GF_UPDATE_CHANNEL || 'stable').trim() || 'stable'
+const CLOCK_SKEW_MS     = 15 * 60 * 1_000                               // 15 min tolerance
+
 // ── State ─────────────────────────────────────────────────────────────────────
 
 let mainWindow        = null
+let currentModules    = []      // effective module keys from the server (entitlements)
+let currentNotifs     = []      // notifications from the server
+let breadcrumbs       = []      // last user actions before a crash (bounded)
+let clockTampered     = false   // set when a backward clock jump is detected
 let splashWindow      = null
 let nextServer        = null
 let backupTimer       = null
@@ -338,6 +352,176 @@ function loadLicense() {
   }
 }
 
+// ── System info (télémétrie technique — jamais de donnée métier) ──────────────
+function getSystemInfo() {
+  const os = require('os')
+  return {
+    version: app.getVersion(),
+    os:      `${os.platform()} ${os.release()}`.slice(0, 60),
+    arch:    process.arch,
+    cpu:     (os.cpus()?.[0]?.model ?? 'unknown').trim().slice(0, 120),
+    ramMb:   Math.round(os.totalmem() / 1_048_576),
+  }
+}
+
+// ── Settings (consentement crash, préférences) ────────────────────────────────
+function readSettings() {
+  try { return JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')) } catch { return {} }
+}
+function writeSettings(patch) {
+  try {
+    const next = { ...readSettings(), ...patch }
+    fs.writeFileSync(SETTINGS_PATH, JSON.stringify(next), 'utf8')
+    return next
+  } catch (err) { log('writeSettings error:', err.message); return readSettings() }
+}
+/** Consentement crash — par défaut activé (peut être coupé dans les paramètres). */
+function crashConsent() {
+  const s = readSettings()
+  return s.crashConsent === undefined ? true : !!s.crashConsent
+}
+
+// ── Entitlements (modules) — cache chiffré, lié au HWID ───────────────────────
+function saveEntitlements(modules) {
+  try {
+    const key = deriveStorageKey()
+    const iv  = crypto.randomBytes(12)
+    const plain = JSON.stringify({ modules: Array.isArray(modules) ? modules : [], savedAt: Date.now() })
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv)
+    const enc = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()])
+    fs.writeFileSync(ENTITLEMENTS_PATH, Buffer.concat([iv, cipher.getAuthTag(), enc]))
+  } catch (err) { log('saveEntitlements error:', err.message) }
+}
+function loadEntitlements() {
+  try {
+    if (!fs.existsSync(ENTITLEMENTS_PATH)) return []
+    const buf = fs.readFileSync(ENTITLEMENTS_PATH)
+    if (buf.length <= 28) return []
+    const decipher = crypto.createDecipheriv('aes-256-gcm', deriveStorageKey(), buf.subarray(0, 12))
+    decipher.setAuthTag(buf.subarray(12, 28))
+    const plain = Buffer.concat([decipher.update(buf.subarray(28)), decipher.final()]).toString('utf8')
+    const data = JSON.parse(plain)
+    return Array.isArray(data.modules) ? data.modules : []
+  } catch { return [] }
+}
+function broadcastEntitlements() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('entitlements:update', { modules: currentModules })
+  }
+}
+
+// ── Trusted clock (anti recul d'horloge) ──────────────────────────────────────
+function readTrustedClock() {
+  try { return JSON.parse(fs.readFileSync(TRUSTED_CLOCK_PATH, 'utf8')) } catch { return null }
+}
+function writeTrustedClock(wall) {
+  try { fs.writeFileSync(TRUSTED_CLOCK_PATH, JSON.stringify({ wall }), 'utf8') } catch (_) {}
+}
+/**
+ * Vérifie que l'horloge n'a pas reculé depuis la dernière référence de confiance.
+ * Si un recul > tolérance est détecté, on journalise et on marque `clockTampered`
+ * (le mode hors ligne devient plus strict : on exige une reconnexion).
+ */
+function checkClockIntegrity() {
+  const now = Date.now()
+  const rec = readTrustedClock()
+  if (cp.detectClockRollback(rec?.wall ?? null, now, CLOCK_SKEW_MS)) {
+    if (!clockTampered) log('SECURITY: clock rollback detected — offline mode restricted')
+    clockTampered = true
+    reportCrash({ message: 'clock_rollback_detected', fatal: false, kind: 'security' }).catch(() => {})
+    return false
+  }
+  // Avance normale de l'horloge → on met à jour la référence (monotone croissante).
+  if (!rec || now > rec.wall) writeTrustedClock(now)
+  return true
+}
+
+// ── Crash reporting (offline-first, consentement requis) ──────────────────────
+function readCrashQueue() {
+  try { const q = JSON.parse(fs.readFileSync(CRASH_QUEUE_PATH, 'utf8')); return Array.isArray(q) ? q : [] } catch { return [] }
+}
+function writeCrashQueue(list) {
+  try { fs.writeFileSync(CRASH_QUEUE_PATH, JSON.stringify(list), 'utf8') } catch (_) {}
+}
+function pushBreadcrumb(action) {
+  breadcrumbs = cp.pushBounded(breadcrumbs, { t: Date.now(), a: String(action).slice(0, 120) }, 25)
+}
+
+/** Construit et met en file un rapport de crash, puis tente de le vider. */
+async function reportCrash({ message, stack, fatal = true, kind = 'crash' }) {
+  if (!crashConsent()) return
+  try {
+    const info = getSystemInfo()
+    const logsTail = (() => { try { return fs.readFileSync(LOG_PATH, 'utf8').slice(-4000) } catch { return null } })()
+    const payload = {
+      consent:     true,
+      licenseId:   activeLicense?.payload?.lid ?? null,
+      hwid:        getHwid(),
+      appVersion:  info.version,
+      channel:     UPDATE_CHANNEL,
+      os:          info.os,
+      arch:        info.arch,
+      cpu:         info.cpu,
+      ramMb:       info.ramMb,
+      message:     String(message || 'unknown').slice(0, 2000),
+      stack:       stack ? String(stack).slice(0, 20000) : null,
+      breadcrumbs: JSON.stringify(breadcrumbs).slice(0, 10000),
+      logs:        logsTail,
+      fatal:       !!fatal,
+      kind,
+    }
+    const queue = cp.pushBounded(readCrashQueue(), payload, 50)
+    writeCrashQueue(queue)
+    log(`[crash] queued (${kind}) — ${payload.message.slice(0, 80)}`)
+    await flushCrashQueue()
+  } catch (err) {
+    try { log('reportCrash error:', err.message) } catch (_) {}
+  }
+}
+
+/** Vide la file de crash vers le serveur (best-effort ; garde ce qui échoue). */
+async function flushCrashQueue() {
+  const base = cp.resolveRemoteBase(process.env)
+  if (!base) return
+  let queue = readCrashQueue()
+  if (queue.length === 0) return
+  const remaining = []
+  for (const item of queue) {
+    const res = await httpPost(`${base}/api/crash`, item).catch(() => null)
+    if (!(res && res.ok)) remaining.push(item)   // échec → on réessaiera plus tard
+  }
+  writeCrashQueue(remaining)
+  if (queue.length !== remaining.length) log(`[crash] flushed ${queue.length - remaining.length} report(s)`)
+}
+
+// ── Notifications (récupération + diffusion au renderer) ──────────────────────
+async function fetchNotifications() {
+  const base = cp.resolveRemoteBase(process.env)
+  const lid  = activeLicense?.payload?.lid
+  if (!base || !lid) return
+  const url = `${base}/api/notifications?licenseId=${encodeURIComponent(lid)}`
+          + `&version=${encodeURIComponent(app.getVersion())}&channel=${encodeURIComponent(UPDATE_CHANNEL)}`
+  const res = await httpGetJson(url).catch(() => null)
+  if (res && Array.isArray(res.notifications)) {
+    currentNotifs = res.notifications
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('notifications:update', { notifications: currentNotifs })
+    }
+  }
+}
+
+/** Register global crash handlers (main process). Never crashes the reporter. */
+function registerCrashHandlers() {
+  process.on('uncaughtException', (err) => {
+    try { log('[uncaughtException]', err?.message) } catch (_) {}
+    reportCrash({ message: err?.message || 'uncaughtException', stack: err?.stack, fatal: true }).catch(() => {})
+  })
+  process.on('unhandledRejection', (reason) => {
+    const err = reason instanceof Error ? reason : new Error(String(reason))
+    reportCrash({ message: err.message || 'unhandledRejection', stack: err.stack, fatal: false }).catch(() => {})
+  })
+}
+
 /**
  * Check stored license: decrypt → verify ECC → HWID tolerance check.
  * Returns the payload if still valid, null otherwise.
@@ -547,17 +731,46 @@ function httpPost(url, body) {
   })
 }
 
+// Make an HTTP/HTTPS GET request, returns parsed JSON or null (fail-open).
+function httpGetJson(url) {
+  return new Promise((resolve) => {
+    try {
+      const parsed = new URL(url)
+      const mod    = parsed.protocol === 'https:' ? require('https') : http
+      const req = mod.get(
+        {
+          hostname: parsed.hostname,
+          port:     parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+          path:     parsed.pathname + parsed.search,
+          timeout:  10_000,
+        },
+        res => {
+          let data = ''
+          res.on('data', chunk => { data += chunk })
+          res.on('end',  ()    => { try { resolve(JSON.parse(data)) } catch { resolve(null) } })
+        }
+      )
+      req.on('error',   () => resolve(null))
+      req.on('timeout', () => { req.destroy(); resolve(null) })
+    } catch { resolve(null) }
+  })
+}
+
 async function periodicLicenseCheck() {
   if (!activeLicense?.payload?.lid) return
 
   const licenseId = activeLicense.payload.lid
   let result = null
 
+  // Télémétrie technique jointe au heartbeat (jamais de donnée métier).
+  const info = getSystemInfo()
+  const body = { licenseId, version: info.version, os: info.os, arch: info.arch, hwid: getHwid() }
+
   // 1. Check remote license server (if configured) — authoritative
   const remoteServer = process.env.GF_LICENSE_SERVER
   if (remoteServer) {
     try {
-      result = await httpPost(`${remoteServer.replace(/\/$/, '')}/api/license/check`, { licenseId })
+      result = await httpPost(`${remoteServer.replace(/\/$/, '')}/api/license/check`, body)
       if (result) log('[license/check] remote result:', JSON.stringify(result))
     } catch (err) {
       log('[license/check] remote server unreachable (fail-open):', err.message)
@@ -567,7 +780,7 @@ async function periodicLicenseCheck() {
   // 2. Fall back to local check
   if (!result) {
     try {
-      result = await httpPost(`http://127.0.0.1:${PORT}/api/license/check`, { licenseId })
+      result = await httpPost(`http://127.0.0.1:${PORT}/api/license/check`, body)
       if (result) log('[license/check] local result:', JSON.stringify(result))
     } catch (err) {
       log('[license/check] local check error (fail-open):', err.message)
@@ -605,6 +818,21 @@ async function periodicLicenseCheck() {
     }
   }
   // status 'unknown' (record not yet registered / DB fail-open) → keep current state.
+
+  // ── Modules / droits (entitlements) — le serveur est la source de vérité ────
+  if (Array.isArray(result.modules)) {
+    const next = result.modules.slice().sort()
+    if (JSON.stringify(next) !== JSON.stringify(currentModules)) {
+      currentModules = next
+      saveEntitlements(currentModules)
+      broadcastEntitlements()
+      log('[entitlements] modules updated:', currentModules.join(', ') || '(none)')
+    }
+  }
+
+  // ── Notifications + envoi différé des crashs (best-effort) ─────────────────
+  fetchNotifications().catch(() => {})
+  flushCrashQueue().catch(() => {})
 }
 
 function startPeriodicLicenseCheck() {
@@ -658,6 +886,9 @@ async function enforceOnlineGracePeriod() {
   const online = await checkInternetConnectivity()
   if (online) {
     saveLastOnline()
+    // Une reconnexion rétablit la confiance sur l'horloge (nouvelle référence).
+    clockTampered = false
+    writeTrustedClock(Date.now())
     log('[online-check] connected — last_online updated')
     // Notify UI of online status
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -667,6 +898,8 @@ async function enforceOnlineGracePeriod() {
   }
 
   log('[online-check] offline — checking grace period')
+  // Anti-contournement : détecte un recul de l'horloge Windows.
+  checkClockIntegrity()
   const rec = readLastOnline()
   const lastOnlineTs = rec?.ts ?? 0
   const offlineMs = Date.now() - lastOnlineTs
@@ -675,14 +908,20 @@ async function enforceOnlineGracePeriod() {
     mainWindow.webContents.send('app:online-status', { online: false, offlineMs })
   }
 
-  if (offlineMs > LOCK_PERIOD_MS) {
-    log('[online-check] offline > 72h — locking app')
+  // Verrouillage si : hors ligne trop longtemps OU horloge incohérente (recul
+  // détecté / durée hors ligne négative) — impossible de gagner du temps en
+  // reculant la date Windows.
+  if (offlineMs > LOCK_PERIOD_MS || offlineMs < 0 || clockTampered) {
+    const why = clockTampered || offlineMs < 0
+      ? 'Incohérence de l\'horloge système détectée.'
+      : 'Votre logiciel est hors ligne depuis plus de 72 heures.'
+    log('[online-check] locking app —', clockTampered || offlineMs < 0 ? 'clock tamper' : 'offline > 72h')
     const { dialog: d } = require('electron')
     await d.showMessageBox(mainWindow ?? { webContents: null }, {
       type:    'error',
       title:   'GarageFlow — Connexion requise',
       message: 'GarageFlow nécessite une connexion internet.',
-      detail:  `Votre logiciel est hors ligne depuis plus de 72 heures.\nVeuillez connecter ce PC à internet pour continuer à utiliser GarageFlow.`,
+      detail:  `${why}\nVeuillez connecter ce PC à internet pour continuer à utiliser GarageFlow.`,
       buttons: ['Fermer'],
     }).catch(() => {})
     app.quit()
@@ -1196,6 +1435,11 @@ function createMainWindow() {
     })
   }
 
+  // Capture les crashs du process de rendu (page blanche / OOM du renderer).
+  mainWindow.webContents.on('render-process-gone', (_e, details) => {
+    reportCrash({ message: `render-process-gone: ${details?.reason || 'unknown'}`, fatal: true, kind: 'renderer' }).catch(() => {})
+  })
+
   const APP_URL = `http://127.0.0.1:${PORT}`
 
   // The standalone Next.js server + Prisma engine can take a while to accept
@@ -1422,6 +1666,45 @@ function setupIPC() {
     return null
   })
 
+  // ── Control-plane IPC (modules, notifications, crash consent, breadcrumbs) ──
+
+  // Modules autorisés (entitlements) — source de vérité serveur, cache HWID.
+  ipcMain.handle('app:entitlements', () => ({ modules: currentModules }))
+
+  // Notifications côté serveur (déjà ciblées pour cette licence).
+  ipcMain.handle('app:notifications', async () => {
+    await fetchNotifications().catch(() => {})
+    return { notifications: currentNotifs }
+  })
+  ipcMain.handle('app:ack-notification', async (_e, notificationId) => {
+    const base = cp.resolveRemoteBase(process.env)
+    const lid  = activeLicense?.payload?.lid
+    if (!base || !lid || !notificationId) return { ok: false }
+    const res = await httpPost(`${base}/api/notifications/ack`, {
+      licenseId: lid, notificationId, hwid: getHwid(),
+    }).catch(() => null)
+    return { ok: !!(res && res.ok) }
+  })
+
+  // Consentement au reporting de crash (RGPD — l'utilisateur maîtrise).
+  ipcMain.handle('app:crash-consent',     () => ({ consent: crashConsent() }))
+  ipcMain.handle('app:set-crash-consent', (_e, value) => {
+    writeSettings({ crashConsent: !!value })
+    return { consent: crashConsent() }
+  })
+
+  // Le renderer signale un crash / une erreur, et dépose des « miettes ».
+  ipcMain.handle('app:report-crash', async (_e, info) => {
+    await reportCrash({
+      message: info?.message || 'renderer_error',
+      stack:   info?.stack || null,
+      fatal:   info?.fatal ?? false,
+      kind:    'renderer',
+    })
+    return { ok: true }
+  })
+  ipcMain.on('app:breadcrumb', (_e, action) => { pushBreadcrumb(action) })
+
   // ── Install update: download the .exe and run the installer ───────────────
   // Les données utilisateur sont dans userData (garageflow.db) → conservées.
   // L'installeur NSIS met à jour l'app en place sans toucher aux données.
@@ -1563,6 +1846,9 @@ app.whenReady().then(async () => {
   log('Platform:', process.platform, process.arch)
 
   checkDebugger()
+  registerCrashHandlers()
+  checkClockIntegrity()
+  currentModules = loadEntitlements()
   setupIPC()
   createSplash()
   setupDatabase()
@@ -1612,6 +1898,12 @@ app.whenReady().then(async () => {
 
   // ── Open main window ──────────────────────────────────────────────────────
   createMainWindow()
+
+  // Diffuse les modules connus + récupère les notifications dès l'ouverture.
+  broadcastEntitlements()
+  if (!IS_DEV) {
+    setTimeout(() => { fetchNotifications().catch(() => {}); flushCrashQueue().catch(() => {}) }, 5_000)
+  }
 
   // ── Auto-backup ────────────────────────────────────────────────────────────
   runBackup()

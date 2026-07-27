@@ -79,6 +79,27 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeAllListeners('app:online-status')
   },
 
+  // ── Modules / droits (entitlements) ─────────────────────────────────────────
+  getEntitlements: () => ipcRenderer.invoke('app:entitlements'),
+  onEntitlements:  (cb) => {
+    ipcRenderer.on('entitlements:update', (_e, info) => cb(info))
+    return () => ipcRenderer.removeAllListeners('entitlements:update')
+  },
+
+  // ── Centre de notifications ─────────────────────────────────────────────────
+  getNotifications: () => ipcRenderer.invoke('app:notifications'),
+  onNotifications:  (cb) => {
+    ipcRenderer.on('notifications:update', (_e, info) => cb(info))
+    return () => ipcRenderer.removeAllListeners('notifications:update')
+  },
+  ackNotification: (id) => ipcRenderer.invoke('app:ack-notification', id),
+
+  // ── Crash reporting (avec consentement) ─────────────────────────────────────
+  getCrashConsent: ()      => ipcRenderer.invoke('app:crash-consent'),
+  setCrashConsent: (value) => ipcRenderer.invoke('app:set-crash-consent', value),
+  reportCrash:     (info)  => ipcRenderer.invoke('app:report-crash', info),
+  addBreadcrumb:   (action) => ipcRenderer.send('app:breadcrumb', action),
+
   // ── Utility ───────────────────────────────────────────────────────────────
   isElectron: true,
 })

@@ -161,6 +161,26 @@ L'installateur est généré dans `dist/`.
 
 ---
 
+## Plan de contrôle distant (modules, notifications, crashs, horloge)
+
+Le client est administrable à distance via le serveur officiel
+(`GF_LICENSE_SERVER`) :
+
+- **Modules / droits** reçus au heartbeat (`/api/license/check`), mis en cache
+  chiffré (HWID) et exposés au renderer via `useModule()` — ajout/retrait sans
+  réinstallation.
+- **Centre de notifications** in-app (bannières ciblées, notifications
+  obligatoires bloquantes).
+- **Crash reporting** avec consentement (file offline-first, empreinte de
+  regroupement partagée avec le serveur).
+- **Anti-recul d'horloge** : le mode hors ligne se verrouille si la date système
+  est reculée (impossible de contourner le délai).
+
+Détails : **[`docs/CONTROL_PLANE_CLIENT.md`](docs/CONTROL_PLANE_CLIENT.md)**.
+Côté serveur : voir le dépôt `garagesite3`, `docs/CONTROL_PLANE.md`.
+
+---
+
 ## Langues supportées
 
 Français · English · Español · Deutsch · Italiano · Português · Nederlands · Polski · Русский · العربية · 中文 · 日本語 · Türkçe · 한국어
