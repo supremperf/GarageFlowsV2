@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { jwtVerify } from 'jose'
 import { getToken } from 'next-auth/jwt'
+import { verifySessionJwt } from '@/lib/session-jwt'
+import { authSecret } from '@/lib/env'
 
 /**
  * GarageFlow middleware — page-level only (all /api/* are skipped)
@@ -10,25 +11,10 @@ import { getToken } from 'next-auth/jwt'
  *  3. License check — if no valid gf_session JWT → /license
  *  4. Auth check  — if not authenticated on protected page → /login
  *  5. Redirect authenticated user away from /login and /register → /
+ *
+ * The signed gf_session cookie is verified via the shared, rotation-aware
+ * {@link verifySessionJwt} — no local fallback secret.
  */
-
-function getJwtSecret(): Uint8Array {
-  const secret = process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR'
-  return new TextEncoder().encode(secret)
-}
-
-/** Verify the signed gf_session cookie. Returns payload or null on failure. */
-async function verifySessionJwt(req: NextRequest): Promise<{ typ: string; lid: string } | null> {
-  const raw = req.cookies.get('gf_session')?.value
-  if (!raw) return null
-  try {
-    const { payload } = await jwtVerify(raw, getJwtSecret())
-    if (typeof payload.typ !== 'string' || typeof payload.lid !== 'string') return null
-    return { typ: payload.typ, lid: payload.lid }
-  } catch {
-    return null
-  }
-}
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -44,9 +30,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
+  const sessionCookie = req.cookies.get('gf_session')?.value
+
   // ── 2. Admin routes — require signed JWT with typ=admin ───────────────────
   if (pathname.startsWith('/admin')) {
-    const session = await verifySessionJwt(req)
+    const session = await verifySessionJwt(sessionCookie)
     if (session?.typ !== 'admin') {
       return NextResponse.redirect(new URL('/license', req.url))
     }
@@ -54,7 +42,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // ── 3. License check ─────────────────────────────────────────────────────
-  const session = await verifySessionJwt(req)
+  const session = await verifySessionJwt(sessionCookie)
 
   if (pathname === '/license') {
     if (session) {
@@ -71,7 +59,7 @@ export async function middleware(req: NextRequest) {
 
   // ── 4. Auth check ─────────────────────────────────────────────────────────
   const isAuthPage = pathname === '/login' || pathname === '/register'
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  const token = await getToken({ req, secret: authSecret() })
 
   if (!token && !isAuthPage) {
     const loginUrl = new URL('/login', req.url)

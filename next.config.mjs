@@ -3,6 +3,9 @@ const nextConfig = {
   output: 'standalone',
   experimental: {
     outputFileTracingRoot: undefined,
+    // Enable src/instrumentation.ts — runs the critical-env startup gate
+    // (assertStartupEnv) so the server refuses to boot without its secrets.
+    instrumentationHook: true,
   },
 
   async headers() {

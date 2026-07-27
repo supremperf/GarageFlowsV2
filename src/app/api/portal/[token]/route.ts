@@ -1,14 +1,13 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { jwtVerify } from 'jose'
-import { portalSecret } from '@/lib/portal-secret'
+import { verifyPortalToken } from '@/lib/portal-secret'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
 
 export async function GET(_req: Request, { params }: { params: { token: string } }) {
   try {
-    const { payload } = await jwtVerify(params.token, portalSecret())
-    if (payload.typ !== 'portal' || typeof payload.jobId !== 'string') {
+    const payload = await verifyPortalToken(params.token)
+    if (!payload || payload.typ !== 'portal' || typeof payload.jobId !== 'string') {
       return NextResponse.json({ error: 'Token invalide' }, { status: 403 })
     }
 

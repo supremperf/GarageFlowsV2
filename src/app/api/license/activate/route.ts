@@ -18,18 +18,13 @@ export const dynamic = 'force-dynamic'
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { SignJWT } from 'jose'
 import { verifyLicenseToken, verifyHwid } from '@/lib/license/verify'
 import { prisma } from '@/lib/db'
 import { computeRecordMac, verifyRecordMac } from '@/lib/license/record-mac'
 import { rateLimit } from '@/lib/rate-limit'
+import { signSessionJwt } from '@/lib/session-jwt'
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365 * 5   // 5 years
-
-function getJwtSecret(): Uint8Array {
-  const secret = process.env.NEXTAUTH_SECRET ?? 'fallback-dev-secret-change-in-production'
-  return new TextEncoder().encode(secret)
-}
 
 export async function POST(req: NextRequest) {
   // ── Step 0: Rate limiting ───────────────────────────────────────────────────
@@ -132,11 +127,8 @@ export async function POST(req: NextRequest) {
 
   // ── Step 3: Build signed session JWT ────────────────────────────────────────
   // This JWT is stored HttpOnly and verified in middleware — prevents cookie tampering.
-  const sessionJwt = await new SignJWT({ typ: payload.typ, lid: payload.lid })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('5y')
-    .sign(getJwtSecret())
+  // Signed with the current NEXTAUTH_SECRET via the shared, rotation-aware helper.
+  const sessionJwt = await signSessionJwt({ typ: payload.typ, lid: payload.lid })
 
   // ── Step 4: Set cookies via response headers ────────────────────────────────
   const res = NextResponse.json({

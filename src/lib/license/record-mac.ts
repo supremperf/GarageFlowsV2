@@ -14,17 +14,21 @@
  */
 
 import crypto from 'crypto'
+import { isStrongSecret } from '@/lib/env'
 
 function getSecret(): string {
-  const s = process.env.GF_DB_MAC_SECRET
-  if (!s) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('[record-mac] GF_DB_MAC_SECRET must be set in production')
+  const s = process.env.GF_DB_MAC_SECRET?.trim()
+  if (process.env.NODE_ENV === 'production') {
+    // Production / packaged Electron must provide a strong secret — no fallback.
+    if (!isStrongSecret(s)) {
+      throw new Error('[record-mac] GF_DB_MAC_SECRET must be set to a strong value in production')
     }
-    // Dev fallback — never used in packaged Electron (which sets the env var)
-    return 'gf-dev-record-mac-insecure-fallback'
+    return s
   }
-  return s
+  // Dev only — a strong override is honoured, otherwise a clearly-labelled dev
+  // value keeps local tooling working. This branch is never reached in a packaged
+  // build (which always sets GF_DB_MAC_SECRET) or in production (guarded above).
+  return isStrongSecret(s) ? s : 'gf-dev-record-mac-insecure-fallback'
 }
 
 type RecordFields = {

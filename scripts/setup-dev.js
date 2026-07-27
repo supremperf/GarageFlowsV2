@@ -21,8 +21,9 @@
 
 'use strict'
 
-const fs   = require('fs')
-const path = require('path')
+const fs     = require('fs')
+const path   = require('path')
+const crypto = require('crypto')
 const { execFileSync } = require('child_process')
 
 const root      = path.resolve(__dirname, '..')
@@ -69,7 +70,7 @@ try {
         '# Généré automatiquement par setup-dev.js',
         `DATABASE_URL="${CORRECT_DB_URL}"`,
         'NEXTAUTH_URL="http://localhost:3000"',
-        'NEXTAUTH_SECRET="CHANGE_ME_run_openssl_rand_base64_32"',
+        `NEXTAUTH_SECRET="${crypto.randomBytes(32).toString('base64')}"`,
         '',
       ].join('\n'),
       'utf8'
@@ -80,6 +81,39 @@ try {
 } catch (err) {
   // Non-fatal — prisma generate does not need DATABASE_URL
   console.error('⚠️  Impossible de créer .env :', err.message)
+}
+
+// ── 1b. Guarantee a strong NEXTAUTH_SECRET ────────────────────────────────────
+// The app refuses to start without a strong secret (see src/lib/env.ts). Rather
+// than ship a committed default, generate a unique one on first setup and replace
+// any known placeholder / weak value that may have been copied from .env.example.
+try {
+  const WEAK = new Set([
+    'CHANGE_ME_run_openssl_rand_base64_32',
+    'CHANGE_ME_openssl_rand_base64_32',
+    'gf-electron-local-secret-2026-xK9mP3qR',
+    'fallback-dev-secret-change-in-production',
+    '3jvKZFYUKLjGTI/mneyeY0fUN/FNp9d1XzOgnOij7+I=',
+    'changeme', 'secret', 'password', 'default',
+  ])
+  if (fs.existsSync(envDst)) {
+    let content = fs.readFileSync(envDst, 'utf8')
+    const match = content.match(/^NEXTAUTH_SECRET\s*=\s*["']?([^"'\r\n]*)["']?\s*$/m)
+    const current = match ? match[1].trim() : ''
+    const needsSecret = !match || current.length < 16 || WEAK.has(current)
+    if (needsSecret) {
+      const generated = crypto.randomBytes(32).toString('base64')
+      if (match) {
+        content = content.replace(match[0], `NEXTAUTH_SECRET="${generated}"`)
+      } else {
+        content += `${content.endsWith('\n') ? '' : '\n'}NEXTAUTH_SECRET="${generated}"\n`
+      }
+      fs.writeFileSync(envDst, content, 'utf8')
+      console.log('🔐  NEXTAUTH_SECRET fort généré dans .env.')
+    }
+  }
+} catch (err) {
+  console.error('⚠️  Impossible de garantir NEXTAUTH_SECRET :', err.message)
 }
 
 // ── 2. Ensure prisma/ directory ───────────────────────────────────────────────

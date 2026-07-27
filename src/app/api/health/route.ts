@@ -1,32 +1,26 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
+import { isStrongSecret, validateCriticalEnv } from '@/lib/env'
 
-const KNOWN_DEFAULT_SECRETS = new Set([
-  'gf-electron-local-secret-2026-xK9mP3qR',
-  'fallback-dev-secret-change-in-production',
-  'changeme',
-  'secret',
-])
-
-// GET /api/health — lightweight startup check (no auth, no DB)
-// Returns env var presence and basic status so the UI can show
-// a helpful setup screen instead of a silent blue screen.
+/**
+ * GET /api/health — lightweight startup check (no auth).
+ *
+ * Returns critical-env status and a DB ping so the UI can show a helpful setup
+ * screen instead of a silent failure. The secret-strength logic is delegated to
+ * the central validator ({@link validateCriticalEnv} / {@link isStrongSecret}) so
+ * there is a single source of truth for what "properly configured" means.
+ */
 export async function GET() {
-  const isElectron = process.env.ELECTRON === '1'
-  const rawSecret = process.env.NEXTAUTH_SECRET ?? ''
-  const usingDefaultSecret = KNOWN_DEFAULT_SECRETS.has(rawSecret)
-
   const checks = {
     DATABASE_URL:    !!process.env.DATABASE_URL,
-    NEXTAUTH_SECRET: !!rawSecret,
+    // NEXTAUTH_SECRET must be present AND strong (not a known default).
+    NEXTAUTH_SECRET: isStrongSecret(process.env.NEXTAUTH_SECRET),
     NEXTAUTH_URL:    !!process.env.NEXTAUTH_URL,
   }
 
-  // In non-Electron (web) deployments, using the default secret is a security risk
-  const warnings: string[] = []
-  if (!isElectron && usingDefaultSecret) {
-    warnings.push('NEXTAUTH_SECRET uses a known default value — set a strong unique secret in production')
-  }
+  // Feature-secret warnings (Stripe/SMTP/portal misconfiguration) — advisory only.
+  const { issues } = validateCriticalEnv({ requireDbMac: false })
+  const warnings = issues.filter(i => i.level === 'warning').map(i => i.message)
 
   const missing = Object.entries(checks)
     .filter(([, ok]) => !ok)
@@ -37,11 +31,13 @@ export async function GET() {
       {
         ok: false,
         missing,
+        warnings: warnings.length ? warnings : undefined,
         fix: [
           'Créez un fichier .env à la racine du projet avec :',
           'DATABASE_URL="file:./dev.db"',
           'NEXTAUTH_URL="http://localhost:3000"',
-          'NEXTAUTH_SECRET="votre_secret_ici"',
+          '# Générez un secret fort : openssl rand -base64 32',
+          'NEXTAUTH_SECRET="<collez_le_secret_généré_ici>"',
           '',
           'Puis lancez : npx prisma db push',
         ].join('\n'),

@@ -16,50 +16,24 @@ export const dynamic = 'force-dynamic'
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { jwtVerify } from 'jose'
 import { prisma } from '@/lib/db'
 import { verifyRecordMac } from '@/lib/license/record-mac'
-
-function getJwtSecret(): Uint8Array {
-  const secret = process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR'
-  return new TextEncoder().encode(secret)
-}
+import { verifySessionJwt } from '@/lib/session-jwt'
+import { logger } from '@/lib/logger'
 
 const OK_UNKNOWN = { allowed: true, status: 'unknown' as const }
 
 export async function GET(req: NextRequest) {
-  // ── Resolve licenseId from the signed session cookie ────────────────────────
-  const raw = req.cookies.get('gf_session')?.value
-  if (!raw) return NextResponse.json(OK_UNKNOWN)
-
-  let licenseId = ''
-  try {
-    const { payload } = await jwtVerify(raw, getJwtSecret())
-    licenseId = typeof payload.lid === 'string' ? payload.lid : ''
-  } catch {
-    return NextResponse.json(OK_UNKNOWN)
-  }
+  // ── Resolve licenseId from the signed session cookie (rotation-aware) ───────
+  const claims = await verifySessionJwt(req.cookies.get('gf_session')?.value)
+  const licenseId = claims?.lid ?? ''
   if (!licenseId) return NextResponse.json(OK_UNKNOWN)
 
- // ── Look up the current status in the DB ────────────────────────────────────
-try {
-  console.log("====================================")
-  console.log("🔍 LICENSE STATUS")
-  console.log("Cookie trouvé :", !!raw)
-  console.log("LicenseId du JWT :", licenseId)
+  // ── Look up the current status in the DB ────────────────────────────────────
+  try {
+    const record = await prisma.licenseKey.findUnique({ where: { licenseId } })
+    if (!record) return NextResponse.json(OK_UNKNOWN)
 
-  const record = await prisma.licenseKey.findUnique({
-    where: { licenseId },
-  })
-
-  console.log("Record trouvé :", !!record)
-
-  if (record) {
-    console.log("Status DB :", record.status)
-    console.log("LicenseId DB :", record.licenseId)
-  }
-
-  if (!record) return NextResponse.json(OK_UNKNOWN)
     const mac = verifyRecordMac(record)
     if (mac.tampered) {
       return NextResponse.json({
@@ -86,7 +60,7 @@ try {
 
     return NextResponse.json({ allowed: true, status: 'active' })
   } catch (err) {
-    console.error('[license/status] DB error (fail-open):', err)
+    logger.error('[license/status] DB error (fail-open):', err)
     return NextResponse.json(OK_UNKNOWN)
   }
 }

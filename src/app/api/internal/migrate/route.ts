@@ -13,14 +13,10 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { MIGRATIONS } from '@/lib/migrations'
-
-function authorized(req: NextRequest): boolean {
-  const key = req.headers.get('x-internal-key')
-  return !!key && key === process.env.GF_INTERNAL_EXPORT_KEY
-}
+import { isInternalKeyValid } from '@/lib/internal-auth'
 
 export async function POST(req: NextRequest) {
-  if (!authorized(req)) {
+  if (!isInternalKeyValid(req.headers.get('x-internal-key'))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -52,8 +48,8 @@ export async function POST(req: NextRequest) {
         new Date().toISOString()
       )
       results.push({ id, sql, status: 'ok' })
-    } catch (err: any) {
-      results.push({ id, sql, status: 'error', error: err?.message ?? '' })
+    } catch (err) {
+      results.push({ id, sql, status: 'error', error: err instanceof Error ? err.message : String(err) })
     }
   }
 

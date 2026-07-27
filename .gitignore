@@ -30,6 +30,9 @@ prisma/*.db
 # Electron build output
 dist/
 
+# Test coverage
+coverage/
+
 # License signing keys — CRITICAL: NEVER commit private.pem
 keys/private.pem
 keys/*.pem

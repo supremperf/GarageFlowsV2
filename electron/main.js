@@ -43,10 +43,12 @@ try { process.stderr.on('error', () => {}) } catch (_) {}
       if (fs.existsSync(example)) {
         fs.copyFileSync(example, envFile)
       } else {
+        // Generate a strong, unique secret — never ship a hard-coded default.
+        const genSecret = crypto.randomBytes(32).toString('base64')
         fs.writeFileSync(envFile, [
           'DATABASE_URL="file:./dev.db"',
           'NEXTAUTH_URL="http://localhost:3000"',
-          'NEXTAUTH_SECRET="gf-electron-local-secret-2026-xK9mP3qR"',
+          `NEXTAUTH_SECRET="${genSecret}"`,
           '',
         ].join('\n'), 'utf8')
       }
@@ -116,6 +118,46 @@ let onlineCheckTimer  = null   // periodic internet connectivity check
 
 // One-time secret for internal API calls (export endpoint)
 const INTERNAL_EXPORT_KEY = crypto.randomBytes(32).toString('hex')
+
+// ── Session secret (NEXTAUTH_SECRET) ──────────────────────────────────────────
+// The signed gf_session cookie is minted here and verified by the Next.js server.
+// Both must share the SAME secret — and it must never be a hard-coded default, or
+// anyone could forge an admin session. Resolution order:
+//   1. A strong secret already provided via env / .env (respects operator config).
+//   2. Otherwise a strong, random, per-install secret persisted under userData,
+//      so it is stable across restarts (sessions survive) yet unique per machine.
+const SESSION_SECRET_FILE = path.join(APP_DATA, 'gf_session_secret.key')
+const WEAK_SECRETS = new Set([
+  'gf-electron-local-secret-2026-xK9mP3qR',
+  'fallback-dev-secret-change-in-production',
+  'fallback-portal-secret-change-in-production',
+  'CHANGE_ME_run_openssl_rand_base64_32',
+  'changeme', 'secret', 'password', 'default',
+  '3jvKZFYUKLjGTI/mneyeY0fUN/FNp9d1XzOgnOij7+I=',
+])
+function isStrongSecret(v) {
+  return typeof v === 'string' && v.trim().length >= 16 && !WEAK_SECRETS.has(v.trim())
+}
+function getOrCreatePersistedSecret() {
+  try {
+    if (fs.existsSync(SESSION_SECRET_FILE)) {
+      const s = fs.readFileSync(SESSION_SECRET_FILE, 'utf8').trim()
+      if (isStrongSecret(s)) return s
+    }
+  } catch (_) {}
+  const generated = crypto.randomBytes(32).toString('base64')
+  try {
+    fs.mkdirSync(path.dirname(SESSION_SECRET_FILE), { recursive: true })
+    fs.writeFileSync(SESSION_SECRET_FILE, generated, { mode: 0o600 })
+  } catch (e) { log('Failed to persist session secret:', e && e.message) }
+  return generated
+}
+// Resolve once; make it the canonical value both for cookie-minting here and for
+// the spawned Next.js server (injected into its env below).
+process.env.NEXTAUTH_SECRET =
+  isStrongSecret(process.env.NEXTAUTH_SECRET)
+    ? process.env.NEXTAUTH_SECRET.trim()
+    : getOrCreatePersistedSecret()
 
 // ── Online check state ────────────────────────────────────────────────────────
 const ONLINE_CHECK_FILE    = () => path.join(APP_DATA, 'last_online.json')
@@ -367,7 +409,8 @@ function checkStoredLicense() {
 // page request is allowed through the middleware gate.
 
 function createGfSessionJwt(typ, lid) {
-  const secret  = process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR'
+  // Resolved at startup to a strong, per-install secret (never a hard-coded default).
+  const secret  = process.env.NEXTAUTH_SECRET
   const now     = Math.floor(Date.now() / 1000)
   const exp     = now + 5 * 365 * 24 * 3600   // 5 years
 
@@ -1023,9 +1066,9 @@ function startNextServer() {
       HOSTNAME:          '0.0.0.0',
       NEXTAUTH_URL:      `http://127.0.0.1:${PORT}`,
       DATABASE_URL:      dbUrl,
-      // Use whatever secret the main process has loaded (from .env or fallback),
+      // Canonical strong secret resolved at startup (env/.env or persisted per-install),
       // so JWTs minted by main.js and verified by Next.js always share the same secret.
-      NEXTAUTH_SECRET:   process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR',
+      NEXTAUTH_SECRET:   process.env.NEXTAUTH_SECRET,
       GF_DB_MAC_SECRET:         deriveDbMacSecret(),
       GF_INTERNAL_EXPORT_KEY:   INTERNAL_EXPORT_KEY,
       GF_PHOTOS_DIR:            PHOTOS_DIR,

@@ -1,15 +1,14 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { jwtVerify } from 'jose'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
-import { portalSecret } from '@/lib/portal-secret'
+import { verifyPortalToken } from '@/lib/portal-secret'
 
 // GET — return quote data
 export async function GET(_req: Request, { params }: { params: { token: string } }) {
   try {
-    const { payload } = await jwtVerify(params.token, portalSecret())
-    if (payload.typ !== 'quote-sign' || typeof payload.quoteId !== 'string') {
+    const payload = await verifyPortalToken(params.token)
+    if (!payload || payload.typ !== 'quote-sign' || typeof payload.quoteId !== 'string') {
       return NextResponse.json({ error: 'Token invalide' }, { status: 403 })
     }
 
@@ -35,8 +34,8 @@ export async function GET(_req: Request, { params }: { params: { token: string }
 // POST — sign (accept or refuse)
 export async function POST(req: Request, { params }: { params: { token: string } }) {
   try {
-    const { payload } = await jwtVerify(params.token, portalSecret())
-    if (payload.typ !== 'quote-sign' || typeof payload.quoteId !== 'string') {
+    const payload = await verifyPortalToken(params.token)
+    if (!payload || payload.typ !== 'quote-sign' || typeof payload.quoteId !== 'string') {
       return NextResponse.json({ error: 'Token invalide' }, { status: 403 })
     }
 

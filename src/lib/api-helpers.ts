@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
 import { headers, cookies } from 'next/headers'
-import { jwtVerify } from 'jose'
+import { verifySessionJwt } from '@/lib/session-jwt'
 
 // ─── In-memory rate limiter ────────────────────────────────────────────────
 // Buckets: { key -> { count, resetAt } }
@@ -98,14 +98,6 @@ export const MAX_LOGO_BASE64_LENGTH = 4 * 1024 * 1024
  */
 export async function isAdminSession(): Promise<boolean> {
   const raw = cookies().get('gf_session')?.value
-  if (!raw) return false
-  try {
-    const secret = new TextEncoder().encode(
-      process.env.NEXTAUTH_SECRET ?? 'fallback-dev-secret-change-in-production'
-    )
-    const { payload } = await jwtVerify(raw, secret)
-    return payload.typ === 'admin'
-  } catch {
-    return false
-  }
+  const claims = await verifySessionJwt(raw)
+  return claims?.typ === 'admin'
 }
