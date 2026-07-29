@@ -172,3 +172,66 @@ describe('CatalogEngine resilience', () => {
     expect(results.filter((r) => r.article.id === dup.id)).toHaveLength(1)
   })
 })
+
+describe('text query spanning name and brand', () => {
+  it('matches when the words are split across the name and the brand', async () => {
+    // 'bosch' is only in the brand, 'plaquettes' only in the name.
+    const { results } = await engine().search({ text: 'bosch plaquettes' })
+    const hit = results.find((r) => r.article.id === 'a-bosch-bp308')
+    expect(hit).toBeDefined()
+    expect(hit!.matched).toContain('name')
+    expect(hit!.matched).toContain('brand')
+  })
+
+  it('still ranks an all-in-name match above a split match', async () => {
+    const { results } = await engine().search({ text: 'plaquettes' })
+    expect(results.every((r) => r.matched.includes('name'))).toBe(true)
+  })
+})
+
+describe('transitive cross-reference resolution', () => {
+  it('surfaces a second-hop equivalent article on reference search', async () => {
+    // FDB1330 (Ferodo) is equivalent to GDB1330 (Bosch xref) only transitively,
+    // via the shared OE number 425371 — Ferodo does not list GDB1330 itself.
+    const { results } = await engine().search({ reference: 'GDB1330' })
+    const ids = results.map((r) => r.article.id)
+    expect(ids).toContain('a-bosch-bp308')
+    expect(ids).toContain('a-ferodo-bp308')
+  })
+
+  it('finds a filter equivalent that does not carry the queried number', async () => {
+    // F026407274 (Bosch) ↔ W71280 (Mann) via shared OC90; Mann does not list F026407274.
+    const { results } = await engine().search({ reference: 'F026407274' })
+    expect(results.map((r) => r.article.id)).toContain('a-mann-w712')
+  })
+
+  it('returns the full transitive class from a second-hop OE number', async () => {
+    // HU7008Z lives only on the Mann filter; the class must still reach the Bosch one.
+    const { equivalents, articles } = await engine().equivalents('HU7008Z')
+    expect(equivalents).toContain('F026407274')
+    expect(articles.map((a) => a.id)).toContain('a-bosch-p3274')
+  })
+})
+
+describe('fitment edge cases (regression coverage)', () => {
+  const pads = SEED_ARTICLES.find((a) => a.id === 'a-bosch-bp308')!
+  const clio = SEED_ARTICLES.find((a) => a.id === 'a-trw-bpclio')!
+
+  it('matches a model loosely (either-way substring)', () => {
+    expect(fitsVehicle(clio.fitments, { make: 'Renault', model: 'Clio III', year: 2015 })).toBe(true)
+    expect(fitsVehicle(clio.fitments, { make: 'Renault', model: 'Clio Estate', year: 2015 })).toBe(true)
+    expect(fitsVehicle(clio.fitments, { make: 'Renault', model: 'Megane', year: 2015 })).toBe(false)
+  })
+
+  it('exposes loose model matches through the engine', async () => {
+    const { results } = await engine().compatible({ make: 'Renault', model: 'Clio III', year: 2015 })
+    expect(results.map((r) => r.article.id)).toContain('a-trw-bpclio')
+  })
+
+  it('treats year-range bounds as inclusive', () => {
+    expect(fitsVehicle(pads.fitments, { make: 'Peugeot', model: '308', year: 2007 })).toBe(true)
+    expect(fitsVehicle(pads.fitments, { make: 'Peugeot', model: '308', year: 2014 })).toBe(true)
+    expect(fitsVehicle(pads.fitments, { make: 'Peugeot', model: '308', year: 2006 })).toBe(false)
+    expect(fitsVehicle(pads.fitments, { make: 'Peugeot', model: '308', year: 2015 })).toBe(false)
+  })
+})

@@ -25,9 +25,12 @@ async function resolveVehicle(
   const make = params.get('make')?.trim()
   const model = params.get('model')?.trim() || null
   const yearRaw = params.get('year')
-  const year = yearRaw ? Number(yearRaw) : null
+  // Parse the year once, guarded — a non-numeric param must never reach the
+  // ranking engine as NaN (NaN != null skews fitment specificity).
+  const parsedYear = yearRaw != null && yearRaw !== '' ? Number(yearRaw) : NaN
+  const year = Number.isFinite(parsedYear) ? parsedYear : null
 
-  if (make) return { make, model, year: Number.isFinite(year as number) ? year : null }
+  if (make) return { make, model, year }
 
   const plate = params.get('plate')?.trim()
   if (plate) {
@@ -47,18 +50,22 @@ async function resolveVehicle(
   return undefined
 }
 
-/** Map each garage part reference (normalised) → total quantity on hand. */
+/**
+ * Map each garage part reference (normalised) → total quantity on hand.
+ * Aggregated in the database (groupBy) so it is correct regardless of how many
+ * parts a garage holds — no row cap, no ordering dependence.
+ */
 async function stockByRef(garageId: string): Promise<Map<string, number>> {
-  const parts = await prisma.part.findMany({
-    where: { garageId },
-    select: { reference: true, quantity: true },
-    take: 5000,
+  const grouped = await prisma.part.groupBy({
+    by: ['reference'],
+    where: { garageId, reference: { not: null } },
+    _sum: { quantity: true },
   })
   const map = new Map<string, number>()
-  for (const p of parts) {
-    const key = normalizeRef(p.reference)
+  for (const g of grouped) {
+    const key = normalizeRef(g.reference)
     if (!key) continue
-    map.set(key, (map.get(key) ?? 0) + p.quantity)
+    map.set(key, (map.get(key) ?? 0) + (g._sum.quantity ?? 0))
   }
   return map
 }

@@ -60,19 +60,22 @@ function scoreArticle(article: CatalogArticle, query: SearchQuery, ctx: RankCont
     }
   }
 
-  // ── Text term ──
+  // ── Text term — matched against name + brand combined, mirroring the
+  //    provider pre-filter so a query whose words span both fields (e.g.
+  //    « bosch plaquettes ») is not silently dropped. ──
   if (query.text && normalizeText(query.text)) {
     const t = normalizeText(query.text)
     const tokens = t.split(' ').filter(Boolean)
     const name = normalizeText(article.name)
     const brand = normalizeText(article.brand)
-    if (tokens.every((tok) => name.includes(tok))) {
-      score += name === t ? 6 : name.startsWith(t) ? 5 : 3
-      matched.push('name')
-      termMatched = true
-    } else if (tokens.every((tok) => brand.includes(tok))) {
-      score += 2
-      matched.push('brand')
+    const haystack = `${name} ${brand}`
+    if (tokens.every((tok) => haystack.includes(tok))) {
+      if (name === t) score += 6
+      else if (name.startsWith(t)) score += 5
+      else if (tokens.every((tok) => name.includes(tok))) score += 3
+      else score += 2 // tokens split across name & brand, or brand-only
+      if (tokens.some((tok) => name.includes(tok))) matched.push('name')
+      if (tokens.some((tok) => brand.includes(tok))) matched.push('brand')
       termMatched = true
     }
   }
