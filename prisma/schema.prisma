@@ -92,8 +92,23 @@ model Garage {
   loanerVehicles     LoanerVehicle[]
   loanerReservations LoanerReservation[]
   purchaseOrders     PurchaseOrder[]
+  vinSearches        VinSearch[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
+}
+
+// ─── VIN decode search history (Premium: décodage VIN intelligent) ────────────
+model VinSearch {
+  id         String   @id @default(cuid())
+  garageId   String
+  garage     Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  vin        String
+  resultJson String // serialized VinDecodeResult
+  source     String   @default("offline")
+  createdAt  DateTime @default(now())
+
+  @@index([garageId, createdAt])
+  @@index([garageId, vin])
 }
 
 // ─── User ────────────────────────────────────────────────────────────────────
