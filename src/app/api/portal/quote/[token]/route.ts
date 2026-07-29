@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
 import { verifyPortalToken } from '@/lib/portal-secret'
+import { recordSignature } from '@/lib/signature-store'
 
 // GET — return quote data
 export async function GET(_req: Request, { params }: { params: { token: string } }) {
@@ -39,12 +40,13 @@ export async function POST(req: Request, { params }: { params: { token: string }
       return NextResponse.json({ error: 'Token invalide' }, { status: 403 })
     }
 
-    const { action } = await req.json()  // 'accept' | 'refuse'
+    const body = await req.json()
+    const action = body.action as string  // 'accept' | 'refuse'
     if (!['accept', 'refuse'].includes(action)) {
       return NextResponse.json({ error: 'Action invalide' }, { status: 400 })
     }
 
-    const quote = await prisma.quote.findUnique({ where: { id: payload.quoteId } })
+    const quote = await prisma.quote.findUnique({ where: { id: payload.quoteId }, include: { lines: true } })
     if (!quote) return NextResponse.json({ error: 'Introuvable' }, { status: 404 })
     if (['accepted', 'refused', 'converted'].includes(quote.status)) {
       return NextResponse.json({ error: 'Ce devis a déjà été traité' }, { status: 409 })
@@ -53,7 +55,30 @@ export async function POST(req: Request, { params }: { params: { token: string }
     const newStatus = action === 'accept' ? 'accepted' : 'refused'
     await prisma.quote.update({ where: { id: payload.quoteId }, data: { status: newStatus } })
 
-    return NextResponse.json({ ok: true, status: newStatus })
+    // Tamper-evident signature record for the customer's decision (captures IP,
+    // browser and an optional drawn-signature / fingerprint from the portal).
+    const signature = await recordSignature({
+      req,
+      garageId: quote.garageId,
+      documentType: 'quote',
+      documentId: quote.id,
+      documentNumber: quote.number,
+      signerName: quote.clientName,
+      signerRole: 'client',
+      action: action === 'accept' ? 'accept' : 'refuse',
+      signatureData: typeof body.signatureData === 'string' ? body.signatureData : '',
+      fingerprint: typeof body.fingerprint === 'string' ? body.fingerprint : null,
+      content: {
+        number: quote.number,
+        clientName: quote.clientName,
+        licensePlate: quote.licensePlate,
+        vehicleModel: quote.vehicleModel,
+        taxRate: quote.taxRate,
+        lines: quote.lines.map(l => ({ description: l.description, quantity: l.quantity, unitPrice: l.unitPrice })),
+      },
+    })
+
+    return NextResponse.json({ ok: true, status: newStatus, signature: { id: signature.id, proofHash: signature.proofHash, signedAt: signature.signedAt } })
   } catch {
     return NextResponse.json({ error: 'Token invalide ou expiré' }, { status: 403 })
   }

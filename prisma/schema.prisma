@@ -92,6 +92,7 @@ model Garage {
   loanerVehicles     LoanerVehicle[]
   loanerReservations LoanerReservation[]
   purchaseOrders     PurchaseOrder[]
+  signatures         SignatureRecord[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -719,4 +720,35 @@ model LicenseLog {
   licenseId String
 
   license License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+}
+
+// ─── Electronic Signature Records (Phase 3) ───────────────────────────────────
+// Tamper-evident audit trail for every electronic signature (work order, quote,
+// restitution, contract). Beyond the drawn signature it captures the date/time,
+// IP, browser and an optional device fingerprint, plus two SHA-256 hashes:
+//   • contentHash — snapshot hash of the signed document content;
+//   • proofHash   — integrity proof over the whole evidence bundle.
+// See src/lib/signature.ts. Additive & non-breaking (existing signature columns
+// on WorkOrder are kept in sync for backward compatibility).
+model SignatureRecord {
+  id             String   @id @default(cuid())
+  garageId       String
+  garage         Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  documentType   String // work_order | quote | restitution | contract
+  documentId     String
+  documentNumber String?
+  signerName     String
+  signerRole     String   @default("client") // client | garage
+  action         String   @default("sign") // sign | accept | refuse
+  signatureData  String   @default("") // base64 PNG (empty for click-accept)
+  ipAddress      String?
+  userAgent      String?
+  fingerprint    String? // optional client-provided device fingerprint
+  contentHash    String // SHA-256 hex of the signed document content snapshot
+  proofHash      String // SHA-256 hex integrity proof over the evidence bundle
+  signedAt       DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@index([garageId])
+  @@index([documentType, documentId])
 }

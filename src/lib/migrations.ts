@@ -570,4 +570,25 @@ export const MIGRATIONS: Migration[] = [
     "updatedAt" DATETIME NOT NULL
 )` },
   { id: '075_reminder_scheduled_time', sql: 'ALTER TABLE "Reminder" ADD COLUMN "scheduledTime" TEXT' },
+  // ── Electronic signature audit trail (Phase 3) ───────────────────────────────
+  { id: '076_create_signature_record_table', sql: `CREATE TABLE IF NOT EXISTS "SignatureRecord" (
+    "id"             TEXT PRIMARY KEY NOT NULL,
+    "garageId"       TEXT NOT NULL,
+    "documentType"   TEXT NOT NULL,
+    "documentId"     TEXT NOT NULL,
+    "documentNumber" TEXT,
+    "signerName"     TEXT NOT NULL,
+    "signerRole"     TEXT NOT NULL DEFAULT 'client',
+    "action"         TEXT NOT NULL DEFAULT 'sign',
+    "signatureData"  TEXT NOT NULL DEFAULT '',
+    "ipAddress"      TEXT,
+    "userAgent"      TEXT,
+    "fingerprint"    TEXT,
+    "contentHash"    TEXT NOT NULL,
+    "proofHash"      TEXT NOT NULL,
+    "signedAt"       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt"      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )` },
+  { id: '077_signature_record_doc_index', sql: 'CREATE INDEX IF NOT EXISTS "SignatureRecord_documentType_documentId_idx" ON "SignatureRecord" ("documentType", "documentId")' },
+  { id: '078_signature_record_garage_index', sql: 'CREATE INDEX IF NOT EXISTS "SignatureRecord_garageId_idx" ON "SignatureRecord" ("garageId")' },
 ]
