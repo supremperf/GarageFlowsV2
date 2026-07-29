@@ -20,7 +20,7 @@ const TYPE_LABEL: Record<string, string> = {
   carte_grise: 'Carte grise', invoice: 'Facture', plate: 'Plaque', vin_plate: 'Plaque VIN', odometer: 'Compteur', unknown: 'Non reconnu',
 }
 
-export default function OcrPanel({ onClose }: { onClose: () => void }) {
+export default function OcrPanel({ onClose, onUseVehicle }: { onClose: () => void; onUseVehicle?: (preset: { licensePlate?: string; vehicleModel?: string }) => void }) {
   const [text, setText] = useState(SAMPLE)
   const [res, setRes] = useState<Result | null>(null)
   const [busy, setBusy] = useState(false)
@@ -97,6 +97,23 @@ export default function OcrPanel({ onClose }: { onClose: () => void }) {
             </div>
           </div>
         )}
+
+        {/* Confirmation-gated hand-off: pre-fill a new job with the decoded vehicle. */}
+        {res && onUseVehicle && (() => {
+          const g = (k: string) => res.fields.find((f) => f.key === k)?.value?.trim() || ''
+          const plate = g('plate')
+          const vehicleModel = [g('make'), g('model')].filter(Boolean).join(' ')
+          if (!plate && !vehicleModel) return null
+          return (
+            <div style={{ maxWidth: 960, margin: '12px auto 0', ...card, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <p style={{ fontSize: 14, fontWeight: 700, color: '#e8edf4' }}>Pré-remplir une intervention</p>
+                <p style={{ fontSize: 12.5, color: '#94a3b8', marginTop: 2 }}>{[plate, vehicleModel].filter(Boolean).join(' · ')} — rien n&apos;est enregistré : vous complétez et validez la fiche.</p>
+              </div>
+              <button onClick={() => onUseVehicle({ licensePlate: plate || undefined, vehicleModel: vehicleModel || undefined })} style={prefillBtn}><Car size={15} /> Créer l&apos;intervention</button>
+            </div>
+          )
+        })()}
       </div>
     </div>
   )
@@ -110,3 +127,4 @@ const card: React.CSSProperties = { background: 'rgba(255,255,255,0.03)', border
 const hdr: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }
 const analyzeBtn: React.CSSProperties = { marginTop: 12, width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: '#3b82f6', color: '#fff', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }
 const typePill: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 700, color: '#93c5fd', background: 'rgba(59,130,246,0.12)', padding: '3px 9px', borderRadius: 7 }
+const prefillBtn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 16px', borderRadius: 10, border: 'none', background: '#3b82f6', color: '#fff', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }

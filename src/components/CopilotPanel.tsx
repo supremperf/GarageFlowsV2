@@ -12,10 +12,11 @@ import { X, Sparkles, Send, ShieldCheck, User } from 'lucide-react'
 
 interface CopilotResponse {
   type: string
+  intent?: string
   message?: string
   phrasing?: string
   data?: unknown
-  action?: { confirmationRequired?: boolean; endpoint?: string; method?: string }
+  action?: { id?: string; confirmationRequired?: boolean; endpoint?: string; method?: string }
 }
 interface Msg { role: 'user' | 'ai'; text: string; res?: CopilotResponse; confirmed?: boolean }
 
@@ -25,7 +26,7 @@ const SUGGESTIONS = [
   'Crée un devis pour ce client',
 ]
 
-export default function CopilotPanel({ onClose }: { onClose: () => void }) {
+export default function CopilotPanel({ onClose, onAction }: { onClose: () => void; onAction?: (intent: string) => void }) {
   const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
@@ -54,7 +55,14 @@ export default function CopilotPanel({ onClose }: { onClose: () => void }) {
     }
   }
 
-  const confirm = (idx: number) => setMessages((m) => m.map((msg, i) => (i === idx ? { ...msg, confirmed: true } : msg)))
+  // Confirming an action proposal never writes here — it hands off to the real,
+  // fully-formed tool (where the user finalises and confirms the actual write).
+  const onConfirmAction = (idx: number) => {
+    const res = messages[idx]?.res
+    const intent = res?.intent ?? res?.action?.id
+    setMessages((m) => m.map((msg, i) => (i === idx ? { ...msg, confirmed: true } : msg)))
+    if (onAction && intent) onAction(intent)
+  }
 
   return (
     <div style={overlay}>
@@ -81,7 +89,7 @@ export default function CopilotPanel({ onClose }: { onClose: () => void }) {
               </div>
             </div>
           )}
-          {messages.map((m, i) => <Bubble key={i} m={m} onConfirm={() => confirm(i)} />)}
+          {messages.map((m, i) => <Bubble key={i} m={m} onConfirm={() => onConfirmAction(i)} />)}
           {busy && <div style={{ color: '#64748b', fontSize: 13, padding: '6px 42px' }}>Le Copilot réfléchit…</div>}
         </div>
       </div>
@@ -122,9 +130,9 @@ function Bubble({ m, onConfirm }: { m: Msg; onConfirm: () => void }) {
             </div>
             {!m.confirmed && (
               <>
-                <p style={{ fontSize: 11.5, color: '#64748b', margin: '6px 0 9px' }}>Le Copilot n&apos;écrit rien tant que vous n&apos;avez pas confirmé.</p>
+                <p style={{ fontSize: 11.5, color: '#64748b', margin: '6px 0 9px' }}>Le Copilot n&apos;exécute rien lui-même : en confirmant, vous ouvrez l&apos;outil dédié pour finaliser et valider l&apos;action.</p>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={onConfirm} style={btnPri}>✓ Confirmer</button>
+                  <button onClick={onConfirm} style={btnPri}>✓ Confirmer et ouvrir</button>
                   <button style={btnSec}>Annuler</button>
                 </div>
               </>

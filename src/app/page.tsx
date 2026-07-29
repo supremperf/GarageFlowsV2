@@ -100,6 +100,25 @@ export default function Home() {
     setSelectedDate(format(addDays(parseISO(selectedDate), 1), 'yyyy-MM-dd'))
   }, [selectedDate, setSelectedDate])
 
+  // Copilot proposes an action, then hands off to the real, fully-formed tool —
+  // it never fires an underspecified write itself.
+  const handleCopilotAction = useCallback((intent: string) => {
+    setIsCopilotOpen(false)
+    switch (intent) {
+      case 'create_appointment': openCreateModal(); break
+      case 'create_quote':       setIsBillingOpen(true); break
+      case 'order_parts':        setIsSuppliersOpen(true); break
+      case 'send_reminder':      setIsReminderPanelOpen(true); break
+      case 'generate_report':    setIsFinanceOpen(true); break
+    }
+  }, [openCreateModal])
+
+  // OCR decode → open the create-job modal pre-filled with the decoded vehicle.
+  const handleOcrVehicle = useCallback((preset: { licensePlate?: string; vehicleModel?: string }) => {
+    setIsOcrOpen(false)
+    openCreateModal(preset)
+  }, [openCreateModal])
+
   useKeyboardShortcuts({
     onNewJob:  () => openCreateModal(),
     // F5 : rafraîchit TOUT le logiciel (rechargement complet)
@@ -303,8 +322,8 @@ export default function Home() {
       {isLaborCatalogOpen     && <LaborCatalogPanel     onClose={() => setIsLaborCatalogOpen(false)} />}
       {isWarrantyPanelOpen    && <WarrantyPanel         onClose={() => setIsWarrantyPanelOpen(false)} />}
       {isLoanerPanelOpen      && <LoanerPanel           onClose={() => setIsLoanerPanelOpen(false)} />}
-      {isCopilotOpen          && <CopilotPanel          onClose={() => setIsCopilotOpen(false)} />}
-      {isOcrOpen              && <OcrPanel              onClose={() => setIsOcrOpen(false)} />}
+      {isCopilotOpen          && <CopilotPanel          onClose={() => setIsCopilotOpen(false)} onAction={handleCopilotAction} />}
+      {isOcrOpen              && <OcrPanel              onClose={() => setIsOcrOpen(false)} onUseVehicle={handleOcrVehicle} />}
       {isSuppliersOpen        && <SuppliersPanel        onClose={() => setIsSuppliersOpen(false)} />}
       {isCatalogOpen          && <CatalogPanel          onClose={() => setIsCatalogOpen(false)} />}
       {isSettingsOpen         && <SettingsModal        onClose={() => setIsSettingsOpen(false)} />}
