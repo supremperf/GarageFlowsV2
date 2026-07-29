@@ -39,7 +39,15 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith('/api/') ||
     pathname.startsWith('/portal') ||   // public customer portal — no gf_session needed
     pathname === '/favicon.ico' ||
-    pathname.startsWith('/public/')
+    pathname.startsWith('/public/') ||
+    // ── PWA public assets (must load before licence/auth for install) ──────
+    pathname === '/sw.js' ||
+    pathname === '/manifest.webmanifest' ||
+    pathname === '/offline' ||
+    pathname.startsWith('/icons/') ||
+    pathname.startsWith('/splash/') ||
+    // Static files served from /public (icons, images, manifests, worker…)
+    /\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico|webmanifest|json|js|css|txt|xml|woff2?|ttf)$/i.test(pathname)
   ) {
     return NextResponse.next()
   }
