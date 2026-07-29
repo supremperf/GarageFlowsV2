@@ -39,55 +39,67 @@ export function generateQuote(
 ): QuoteProposal {
   const vatRate = options.vatRate ?? 20
   const currency = options.currency ?? 'EUR'
-  const rate = options.laborRatePerHour
   const step = options.laborStepHours ?? 0.25
 
   const lines: QuoteLine[] = []
   const warnings: string[] = []
   let laborMinutes = 0
 
+  // Sanitise the rate: an invalid (NaN/negative) rate must never flow into money.
+  const rawRate = options.laborRatePerHour
+  const rate = Number.isFinite(rawRate) && rawRate > 0 ? rawRate : 0
+
   if (operations.length === 0) warnings.push('Aucune opération à chiffrer.')
-  if (!(rate > 0)) warnings.push('Taux horaire de main-d’œuvre non défini.')
+  if (rate <= 0) warnings.push('Taux horaire de main-d’œuvre non défini.')
 
   for (const op of operations) {
     laborMinutes += Math.max(0, op.laborMinutes)
     const hours = billedHours(op.laborMinutes, step)
     if (hours > 0) {
+      // Round the unit price once and reuse it so quantity × unitPrice === lineTotal.
+      const unitRate = roundMoney(rate)
       lines.push({
         kind: 'labor',
         description: `Main-d’œuvre — ${op.label}`,
         quantity: hours,
-        unitPrice: roundMoney(rate),
+        unitPrice: unitRate,
         unitCost: 0,
-        lineTotalHT: roundMoney(hours * rate),
+        lineTotalHT: roundMoney(hours * unitRate),
         isLabor: true,
         repairType: op.repairType,
       })
     }
     for (const p of op.parts ?? []) {
-      if (!(p.unitPrice > 0)) warnings.push(`Prix manquant pour « ${p.name} ».`)
+      if (!(Number.isFinite(p.unitPrice) && p.unitPrice > 0)) warnings.push(`Prix manquant pour « ${p.name} ».`)
+      const price = Number.isFinite(p.unitPrice) && p.unitPrice > 0 ? p.unitPrice : 0
+      const cost = Number.isFinite(p.unitCost) && (p.unitCost ?? 0) > 0 ? (p.unitCost as number) : 0
+      const unitPrice = roundMoney(price)
       lines.push({
         kind: 'part',
         description: p.name,
         reference: p.reference ?? null,
         quantity: p.quantity,
-        unitPrice: roundMoney(p.unitPrice),
-        unitCost: roundMoney(p.unitCost ?? 0),
-        lineTotalHT: roundMoney(p.quantity * p.unitPrice),
+        unitPrice,
+        unitCost: roundMoney(cost),
+        lineTotalHT: roundMoney(p.quantity * unitPrice),
         isLabor: false,
         repairType: op.repairType,
       })
     }
   }
 
-  const suggestionLines: SuggestionLine[] = suggestions.map((s) => ({
-    name: s.name,
-    reference: s.reference ?? null,
-    quantity: s.quantity,
-    unitPrice: s.unitPrice != null ? roundMoney(s.unitPrice) : null,
-    lineTotalHT: s.unitPrice != null ? roundMoney(s.quantity * s.unitPrice) : null,
-    reason: s.reason,
-  }))
+  const suggestionLines: SuggestionLine[] = suggestions.map((s) => {
+    const priced = s.unitPrice != null && Number.isFinite(s.unitPrice) && s.unitPrice >= 0
+    const unit = priced ? roundMoney(s.unitPrice as number) : null
+    return {
+      name: s.name,
+      reference: s.reference ?? null,
+      quantity: s.quantity,
+      unitPrice: unit,
+      lineTotalHT: unit != null ? roundMoney(s.quantity * unit) : null,
+      reason: s.reason,
+    }
+  })
 
   const laborHT = roundMoney(lines.filter((l) => l.isLabor).reduce((s, l) => s + l.lineTotalHT, 0))
   const partsHT = roundMoney(lines.filter((l) => !l.isLabor).reduce((s, l) => s + l.lineTotalHT, 0))

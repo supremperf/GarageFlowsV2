@@ -92,6 +92,25 @@ describe('generateQuote', () => {
     expect(noPrice.warnings.some((w) => /Prix manquant/.test(w))).toBe(true)
   })
 
+  it('keeps every line self-consistent: quantity × unitPrice === lineTotalHT', () => {
+    // Sub-cent supplier price: rounding the unit price once must reconcile.
+    const op: QuoteOperation = { repairType: 'x', label: 'X', laborMinutes: 0, parts: [{ name: 'P', unitPrice: 10.005, quantity: 3 }] }
+    const q = generateQuote([op], [], { laborRatePerHour: 60 })
+    const line = q.lines[0]
+    expect(Math.round(line.quantity * line.unitPrice * 100) / 100).toBe(line.lineTotalHT)
+  })
+
+  it('never emits NaN or negative money from an invalid rate', () => {
+    const nan = generateQuote([brakes], [], { laborRatePerHour: Number.NaN })
+    expect(Number.isFinite(nan.totals.totalTTC)).toBe(true)
+    expect(nan.totals.laborHT).toBe(0)
+    expect(nan.warnings.some((w) => /Taux horaire/.test(w))).toBe(true)
+
+    const neg = generateQuote([brakes], [], { laborRatePerHour: -90 })
+    expect(neg.totals.subtotalHT).toBeGreaterThanOrEqual(0)
+    expect(neg.totals.laborHT).toBe(0)
+  })
+
   it('honours a custom VAT rate', () => {
     const q = generateQuote([brakes], [], { laborRatePerHour: 60, vatRate: 10 })
     // labour 0.75×60=45 ; parts 38 ; subtotal 83 ; vat 8.3 ; ttc 91.3

@@ -38,7 +38,11 @@ export const POST = withAuth(async (req) => {
   if (!parsed.success) return NextResponse.json({ error: 'Requête invalide', details: parsed.error.flatten() }, { status: 400 })
   const body = parsed.data
 
-  const validTypes = body.repairTypes.filter((t): t is keyof typeof REPAIR_TYPES => t in REPAIR_TYPES)
+  // De-duplicate (a repeated type would double-count labour + parts) and use
+  // hasOwnProperty so inherited keys like "toString"/"constructor" are rejected.
+  const validTypes = Array.from(new Set(body.repairTypes)).filter(
+    (t): t is keyof typeof REPAIR_TYPES => Object.prototype.hasOwnProperty.call(REPAIR_TYPES, t),
+  )
   if (validTypes.length === 0) return NextResponse.json({ error: 'Aucun type de réparation reconnu.' }, { status: 400 })
 
   const [garage, repairTypeParts, parts] = await Promise.all([
@@ -94,6 +98,14 @@ export const POST = withAuth(async (req) => {
       quantity: r.estimatedImpact.qty,
       reason: r.justification,
     }))
+    // Drop any suggestion that overlaps a part already on the quote — the
+    // engine's exact-name dedup misses brand/variant-named BOM parts.
+    const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+    const jobNames = operations.flatMap((o) => (o.parts ?? []).map((p) => norm(p.name))).filter(Boolean)
+    suggestions = suggestions.filter((s) => {
+      const n = norm(s.name)
+      return n.length > 0 && !jobNames.some((jn) => jn.includes(n) || n.includes(jn))
+    })
   }
 
   const proposal = generateQuote(operations, suggestions, {
@@ -111,11 +123,18 @@ export const POST = withAuth(async (req) => {
     const v = await prisma.vehicle.findFirst({ where: { garageId, licensePlate: body.licensePlate }, select: { id: true, make: true, model: true, licensePlate: true, clientId: true } })
     if (v) vehicle = { id: v.id, model: `${v.make} ${v.model}`.trim(), plate: v.licensePlate, clientId: v.clientId }
   }
-  const resolvedClientId = body.clientId ?? vehicle?.clientId ?? null
+  // Resolve the client garage-scoped: a clientId that does not belong to this
+  // garage is dropped (never linked), mirroring the vehicle handling above.
+  let resolvedClientId: string | null = null
   let clientName = body.clientName ?? ''
-  if (!clientName && resolvedClientId) {
-    const c = await prisma.client.findFirst({ where: { id: resolvedClientId, garageId }, select: { name: true } })
-    if (c) clientName = c.name
+  const requestedClientId = body.clientId ?? vehicle?.clientId ?? null
+  if (requestedClientId) {
+    const c = await prisma.client.findFirst({ where: { id: requestedClientId, garageId }, select: { id: true, name: true } })
+    if (c) {
+      resolvedClientId = c.id
+      if (!clientName) clientName = c.name
+    }
+    // foreign / unknown id → resolvedClientId stays null; a free-text clientName is kept.
   }
 
   // Preview unless explicitly confirmed.
