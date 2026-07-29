@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { getToken } from 'next-auth/jwt'
+import { authSecretKey } from '@/lib/auth-secret'
 
 /**
  * GarageFlow middleware — page-level only (all /api/* are skipped)
@@ -13,8 +14,7 @@ import { getToken } from 'next-auth/jwt'
  */
 
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR'
-  return new TextEncoder().encode(secret)
+  return authSecretKey()
 }
 
 /** Verify the signed gf_session cookie. Returns payload or null on failure. */

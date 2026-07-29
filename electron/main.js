@@ -36,20 +36,19 @@ try { process.stderr.on('error', () => {}) } catch (_) {}
   const root    = path.join(__dirname, '..')
   const envFile = path.join(root, '.env')
 
-  // Auto-create .env if missing — prevents "blue screen" on fresh clone in dev
+  const genSecret = () => crypto.randomBytes(48).toString('base64')
+
+  // Auto-create .env if missing — prevents "blue screen" on fresh clone in dev.
+  // IMPORTANT : ne JAMAIS copier .env.example (placeholders) : on génère un
+  // NEXTAUTH_SECRET aléatoire, unique à cette installation.
   if (!fs.existsSync(envFile)) {
     try {
-      const example = path.join(root, '.env.example')
-      if (fs.existsSync(example)) {
-        fs.copyFileSync(example, envFile)
-      } else {
-        fs.writeFileSync(envFile, [
-          'DATABASE_URL="file:./dev.db"',
-          'NEXTAUTH_URL="http://localhost:3000"',
-          'NEXTAUTH_SECRET="gf-electron-local-secret-2026-xK9mP3qR"',
-          '',
-        ].join('\n'), 'utf8')
-      }
+      fs.writeFileSync(envFile, [
+        'DATABASE_URL="file:./dev.db"',
+        'NEXTAUTH_URL="http://localhost:3000"',
+        `NEXTAUTH_SECRET="${genSecret()}"`,
+        '',
+      ].join('\n'), 'utf8')
     } catch (_) { return }
   }
 
@@ -67,6 +66,27 @@ try { process.stderr.on('error', () => {}) } catch (_) {}
         val = val.slice(1, -1)
       }
       if (!(key in process.env)) process.env[key] = val
+    }
+  } catch (_) {}
+
+  // Upgrade des installations existantes : les builds précédents partageaient un
+  // NEXTAUTH_SECRET statique (désormais public/compromis) ou un placeholder.
+  // On régénère un secret unique et on le persiste pour cesser d'utiliser un
+  // secret prévisible.
+  try {
+    const WEAK = new Set(['', 'gf-electron-local-secret-2026-xK9mP3qR'])
+    const cur = process.env.NEXTAUTH_SECRET || ''
+    if (WEAK.has(cur) || cur.includes('CHANGE_ME') || cur.length < 24) {
+      const fresh = genSecret()
+      process.env.NEXTAUTH_SECRET = fresh
+      let content = ''
+      try { content = fs.readFileSync(envFile, 'utf8') } catch (_) {}
+      if (/^NEXTAUTH_SECRET=.*$/m.test(content)) {
+        content = content.replace(/^NEXTAUTH_SECRET=.*$/m, `NEXTAUTH_SECRET="${fresh}"`)
+      } else {
+        content += `\nNEXTAUTH_SECRET="${fresh}"\n`
+      }
+      try { fs.writeFileSync(envFile, content, 'utf8') } catch (_) {}
     }
   } catch (_) {}
 })()
@@ -551,7 +571,7 @@ function checkStoredLicense() {
 // page request is allowed through the middleware gate.
 
 function createGfSessionJwt(typ, lid) {
-  const secret  = process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR'
+  const secret  = process.env.NEXTAUTH_SECRET
   const now     = Math.floor(Date.now() / 1000)
   const exp     = now + 5 * 365 * 24 * 3600   // 5 years
 
@@ -1264,7 +1284,7 @@ function startNextServer() {
       DATABASE_URL:      dbUrl,
       // Use whatever secret the main process has loaded (from .env or fallback),
       // so JWTs minted by main.js and verified by Next.js always share the same secret.
-      NEXTAUTH_SECRET:   process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR',
+      NEXTAUTH_SECRET:   process.env.NEXTAUTH_SECRET,
       GF_DB_MAC_SECRET:         deriveDbMacSecret(),
       GF_INTERNAL_EXPORT_KEY:   INTERNAL_EXPORT_KEY,
       GF_PHOTOS_DIR:            PHOTOS_DIR,

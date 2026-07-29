@@ -45,13 +45,6 @@ export async function POST(req: NextRequest) {
 
     licenseId = String(body.licenseId ?? '').trim()
     status = body.status as Status
-
-    console.log("====================================")
-    console.log("📩 REVOKE API")
-    console.log("DATABASE_URL =", process.env.DATABASE_URL)
-    console.log("LicenseId reçu :", licenseId)
-    console.log("Status demandé :", status)
-
   } catch {
     return NextResponse.json(
       { error: 'Corps de requête invalide' },
@@ -77,13 +70,6 @@ export async function POST(req: NextRequest) {
     const record = await prisma.licenseKey.findUnique({
       where: { licenseId },
     })
-
-    console.log("Licence trouvée :", !!record)
-
-    if (record) {
-      console.log("Statut actuel :", record.status)
-      console.log("LicenseId DB :", record.licenseId)
-    }
 
     // Licence non encore enregistrée côté serveur
     if (!record) {
@@ -124,10 +110,6 @@ export async function POST(req: NextRequest) {
         },
       })
 
-      console.log("Licence créée :", created.licenseId)
-      console.log("Nouveau statut :", created.status)
-      console.log("====================================")
-
       return NextResponse.json({
         ok: true,
         created: true,
@@ -160,11 +142,6 @@ export async function POST(req: NextRequest) {
         recordMac: newMac,
       },
     })
-
-    console.log("Mise à jour effectuée")
-    console.log("LicenseId :", updated.licenseId)
-    console.log("Nouveau statut :", updated.status)
-    console.log("====================================")
 
     return NextResponse.json({
       ok: true,

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
 import { headers, cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
+import { authSecretKey } from '@/lib/auth-secret'
 
 // ─── In-memory rate limiter ────────────────────────────────────────────────
 // Buckets: { key -> { count, resetAt } }
@@ -100,10 +101,7 @@ export async function isAdminSession(): Promise<boolean> {
   const raw = cookies().get('gf_session')?.value
   if (!raw) return false
   try {
-    const secret = new TextEncoder().encode(
-      process.env.NEXTAUTH_SECRET ?? 'fallback-dev-secret-change-in-production'
-    )
-    const { payload } = await jwtVerify(raw, secret)
+    const { payload } = await jwtVerify(raw, authSecretKey())
     return payload.typ === 'admin'
   } catch {
     return false

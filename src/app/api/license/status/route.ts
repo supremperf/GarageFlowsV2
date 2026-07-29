@@ -19,10 +19,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { prisma } from '@/lib/db'
 import { verifyRecordMac } from '@/lib/license/record-mac'
+import { authSecretKey } from '@/lib/auth-secret'
 
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR'
-  return new TextEncoder().encode(secret)
+  return authSecretKey()
 }
 
 const OK_UNKNOWN = { allowed: true, status: 'unknown' as const }

@@ -15,8 +15,20 @@
 
 const crypto = require('crypto')
 
-// ⚠️  Must match the secret in electron/main.js
-const MASTER_SECRET = 'GF-PROD-K3Y-2026-GARAGEFLOW-MASTER-SECRET-32!'
+// ⚠️  Secret HMAC de génération des clés de licence — fourni par l'environnement,
+//     jamais codé en dur dans le dépôt. Doit correspondre au secret embarqué
+//     dans le client de validation (electron/main.js).
+//     NB : ce schéma HMAC symétrique est déprécié (secret nécessairement présent
+//     côté client = forgeable). Préférer la signature ECC (tokens GF2). Voir
+//     docs/SECURITY.md.
+const MASTER_SECRET = process.env.GF_LICENSE_MASTER_SECRET
+if (!MASTER_SECRET || MASTER_SECRET.length < 16) {
+  console.error(
+    'Erreur : variable GF_LICENSE_MASTER_SECRET absente ou trop courte.\n' +
+      'Définissez-la (openssl rand -hex 32) avant de générer une clé de licence.'
+  )
+  process.exit(1)
+}
 
 function generateKey(customerId, expiryYear) {
   const custHex = customerId.toString(16).toUpperCase().padStart(4, '0')

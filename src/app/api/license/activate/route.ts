@@ -23,12 +23,12 @@ import { verifyLicenseToken, verifyHwid } from '@/lib/license/verify'
 import { prisma } from '@/lib/db'
 import { computeRecordMac, verifyRecordMac } from '@/lib/license/record-mac'
 import { rateLimit } from '@/lib/rate-limit'
+import { authSecretKey } from '@/lib/auth-secret'
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365 * 5   // 5 years
 
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.NEXTAUTH_SECRET ?? 'fallback-dev-secret-change-in-production'
-  return new TextEncoder().encode(secret)
+  return authSecretKey()
 }
 
 export async function POST(req: NextRequest) {
