@@ -11,14 +11,23 @@ export const dynamic = 'force-dynamic'
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { timingSafeEqual } from 'crypto'
 import { prisma } from '@/lib/db'
 import { computeRecordMac } from '@/lib/license/record-mac'
 
 const VALID_STATUSES = ['active', 'revoked', 'suspended'] as const
 type Status = typeof VALID_STATUSES[number]
 
+/** Constant-time string comparison (avoids a timing side-channel on the key). */
+function safeKeyEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a)
+  const bb = Buffer.from(b)
+  if (ab.length !== bb.length) return false
+  return timingSafeEqual(ab, bb)
+}
+
 export async function POST(req: NextRequest) {
-  // Auth : compare x-gf-key à GARAGEFLOW_API_KEY
+  // Auth : compare x-gf-key à GARAGEFLOW_API_KEY (constant-time)
   const apiKey = req.headers.get('x-gf-key')?.trim() ?? ''
   const serverApiKey = process.env.GARAGEFLOW_API_KEY?.trim() ?? ''
 
@@ -30,7 +39,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  if (!apiKey || apiKey !== serverApiKey) {
+  if (!apiKey || !safeKeyEqual(apiKey, serverApiKey)) {
     return NextResponse.json(
       { error: 'Accès refusé — clé API invalide' },
       { status: 403 }

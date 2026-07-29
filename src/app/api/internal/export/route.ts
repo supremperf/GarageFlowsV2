@@ -50,6 +50,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ clients, vehicles, jobs, invoices, quotes, parts, mechanics, reminders })
   } catch (err: any) {
     console.error('[internal/export] error:', err)
-    return NextResponse.json({ error: err.message ?? 'Erreur DB' }, { status: 500 })
+    return NextResponse.json({ error: 'Erreur interne' }, { status: 500 })
   }
 }

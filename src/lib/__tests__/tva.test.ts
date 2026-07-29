@@ -66,3 +66,29 @@ describe('withTotals', () => {
     expect(result.status).toBe('draft')
   })
 })
+
+describe('roundCents — float-safe half-cent rounding (regression)', () => {
+  it('rounds representational half-cents up, not down', () => {
+    // These all round DOWN with the naive Math.round(n*100)/100 because of IEEE-754.
+    expect(roundCents(1.005)).toBe(1.01)
+    expect(roundCents(0.145)).toBe(0.15)
+    expect(roundCents(1.255)).toBe(1.26)
+    expect(roundCents(2.675)).toBe(2.68)
+  })
+
+  it('does not over-round genuine sub-half-cent values', () => {
+    expect(roundCents(1.004)).toBe(1.0)
+    expect(roundCents(1.0049)).toBe(1.0)
+    expect(roundCents(19.99)).toBe(19.99)
+  })
+
+  it('handles negative amounts symmetrically (credits/avoirs)', () => {
+    expect(roundCents(-1.005)).toBe(-1.01)
+    expect(roundCents(-0.145)).toBe(-0.15)
+  })
+
+  it('returns 0 for non-finite input', () => {
+    expect(roundCents(NaN)).toBe(0)
+    expect(roundCents(Infinity)).toBe(0)
+  })
+})

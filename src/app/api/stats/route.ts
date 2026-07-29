@@ -228,7 +228,7 @@ export const GET = withAuth(async (req) => {
       totals: { jobCount: 0, completedCount: 0, billedHours: 0, laborRevenue: 0, partsRevenue: 0,
                 partsCost: 0, partsMargin: 0, totalRevenue: 0, invoiceRevenue: 0, invoiceHT: 0,
                 invoiceCount: 0, confirmedRevenue: 0, utilizationRate: 0 },
-      error: (e as Error).message,
+      error: 'Erreur interne',
     })
   }
 })

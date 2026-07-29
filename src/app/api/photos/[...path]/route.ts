@@ -11,13 +11,21 @@ export const GET = withAuth(async (_req: Request, { params }: { params: { path: 
     return NextResponse.json({ error: 'Photo storage not configured' }, { status: 501 })
   }
 
-  // Prevent path traversal — only allow alphanumerics, dashes, underscores, dots, slashes
-  const segments = (params.path ?? []).map(s => s.replace(/[^a-zA-Z0-9_\-./]/g, ''))
+  // Prevent path traversal. Reject any '..' segment outright (the char-class
+  // sanitizer alone kept '.' and '/', so '../' survived), then sanitize.
+  const rawSegments = params.path ?? []
+  if (rawSegments.some(s => s === '..' || s.includes('..'))) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+  const segments = rawSegments.map(s => s.replace(/[^a-zA-Z0-9_\-./]/g, ''))
   const relative = segments.join('/')
 
-  // Extra guard: resolve and confirm the final path is still inside PHOTOS_DIR
-  const fullPath = path.resolve(PHOTOS_DIR, relative)
-  if (!fullPath.startsWith(path.resolve(PHOTOS_DIR))) {
+  // Containment guard: the resolved path must be the base itself or sit strictly
+  // under it. Compare against base + path.sep so a sibling dir sharing the base's
+  // name prefix (e.g. "photos-backup") can no longer pass a bare startsWith.
+  const base = path.resolve(PHOTOS_DIR)
+  const fullPath = path.resolve(base, relative)
+  if (fullPath !== base && !fullPath.startsWith(base + path.sep)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

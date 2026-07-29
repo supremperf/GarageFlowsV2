@@ -26,23 +26,30 @@ export const PATCH = withAuth(async (req, { params }) => {
   })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  // Update individual item if itemId provided
+  // Update individual item if itemId provided.
+  // SECURITY (IDOR fix): scope the write to an item that belongs to THIS
+  // (already ownership-checked) inspection. Keying on body.itemId alone let a
+  // user of garage A overwrite items of garage B. updateMany with the
+  // inspectionId constraint returns count 0 → 404 for a foreign/unknown item.
   if (body.itemId !== undefined) {
-    const item = await prisma.inspectionItem.update({
-      where: { id: body.itemId },
-      data: {
-        ...(body.status !== undefined && { status: body.status }),
-        ...(body.notes !== undefined && { notes: body.notes }),
-        ...(body.photoBase64 !== undefined && (() => {
-          const photoPath = body.photoBase64
-            ? savePhoto(body.photoBase64, `inspections/${params.id}`)
-            : null
-          return photoPath
-            ? { photoBase64: null, photoPath }
-            : { photoBase64: body.photoBase64 || null }
-        })()),
-      },
+    const data = {
+      ...(body.status !== undefined && { status: body.status }),
+      ...(body.notes !== undefined && { notes: body.notes }),
+      ...(body.photoBase64 !== undefined && (() => {
+        const photoPath = body.photoBase64
+          ? savePhoto(body.photoBase64, `inspections/${params.id}`)
+          : null
+        return photoPath
+          ? { photoBase64: null, photoPath }
+          : { photoBase64: body.photoBase64 || null }
+      })()),
+    }
+    const res = await prisma.inspectionItem.updateMany({
+      where: { id: body.itemId, inspectionId: params.id },
+      data,
     })
+    if (res.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    const item = await prisma.inspectionItem.findUnique({ where: { id: body.itemId } })
     return NextResponse.json(item)
   }
 

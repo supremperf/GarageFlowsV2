@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { getToken } from 'next-auth/jwt'
+import { getSessionSecret } from '@/lib/session-secret'
 
 /**
  * GarageFlow middleware — page-level only (all /api/* are skipped)
@@ -12,17 +13,14 @@ import { getToken } from 'next-auth/jwt'
  *  5. Redirect authenticated user away from /login and /register → /
  */
 
-function getJwtSecret(): Uint8Array {
-  const secret = process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR'
-  return new TextEncoder().encode(secret)
-}
-
-/** Verify the signed gf_session cookie. Returns payload or null on failure. */
+/** Verify the signed gf_session cookie. Returns payload or null on failure.
+ *  Fails closed: if the session secret is unset/insecure, verification throws
+ *  and we treat the request as unauthenticated (no bypass with a default key). */
 async function verifySessionJwt(req: NextRequest): Promise<{ typ: string; lid: string } | null> {
   const raw = req.cookies.get('gf_session')?.value
   if (!raw) return null
   try {
-    const { payload } = await jwtVerify(raw, getJwtSecret())
+    const { payload } = await jwtVerify(raw, getSessionSecret())
     if (typeof payload.typ !== 'string' || typeof payload.lid !== 'string') return null
     return { typ: payload.typ, lid: payload.lid }
   } catch {

@@ -73,6 +73,9 @@ export const POST = withAuth(async (req) => {
 
     return NextResponse.json({ ok: true })
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    // Log full SMTP error server-side; return a generic message so host/port/TLS
+    // and auth-failure details are not exposed to the caller.
+    console.error('[email/test] SMTP error:', err)
+    return NextResponse.json({ error: "Échec de l'envoi de l'email de test." }, { status: 500 })
   }
 })

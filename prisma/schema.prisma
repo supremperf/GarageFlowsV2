@@ -196,6 +196,8 @@ model Part {
   defaultFor   RepairTypePart[]
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
+
+  @@index([garageId, name])
 }
 
 // ─── Parts per job (bill of materials) ───────────────────────────────────────
@@ -208,6 +210,9 @@ model JobPart {
   quantity  Int
   unitPrice Float // selling price snapshot
   unitCost  Float // cost snapshot
+
+  @@index([jobId])
+  @@index([partId])
 }
 
 // ─── Default parts per repair type ───────────────────────────────────────────
@@ -218,6 +223,8 @@ model RepairTypePart {
   part       Part   @relation(fields: [partId], references: [id], onDelete: Cascade)
   defaultQty Int    @default(1)
   garageId   String
+
+  @@index([garageId, repairType])
 }
 
 // ─── Job (intervention) ──────────────────────────────────────────────────────
@@ -292,6 +299,7 @@ model Quote {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
+  @@unique([garageId, number])
   @@index([garageId])
   @@index([garageId, status])
   @@index([clientId])
@@ -339,6 +347,8 @@ model Invoice {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
+  @@unique([garageId, number])
+  @@unique([quoteId])
   @@index([garageId])
   @@index([garageId, status])
   @@index([clientId])
@@ -388,6 +398,8 @@ model Inspection {
   items        InspectionItem[]
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
+
+  @@index([garageId])
 }
 
 model InspectionItem {
@@ -401,6 +413,8 @@ model InspectionItem {
   photoBase64  String? // legacy: base64 data URL
   photoPath    String? // preferred: relative path under GF_PHOTOS_DIR/inspections/
   sortOrder    Int        @default(0)
+
+  @@index([inspectionId])
 }
 
 // ─── License keys v2 — ECC / ECDSA-SHA256 ────────────────────────────────────
@@ -446,6 +460,9 @@ model Reminder {
   status        String   @default("pending") // pending, sent, dismissed
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([garageId, status])
+  @@index([garageId, scheduledDate])
 }
 
 // ─── Work Order (Ordre de Réparation) ────────────────────────────────────────
@@ -484,6 +501,7 @@ model WorkOrder {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  @@unique([garageId, number])
   @@index([garageId])
   @@index([garageId, status])
 }
@@ -605,6 +623,7 @@ model PurchaseOrder {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  @@unique([garageId, number])
   @@index([garageId])
   @@index([garageId, status])
 }

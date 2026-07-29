@@ -25,9 +25,20 @@ export function calcTaxAmount(lines: BillingLine[], taxRate: number): number {
   return calcTotalTTC(lines, taxRate) - calcTotalHT(lines)
 }
 
-/** Round a monetary value to 2 decimal places. */
+/**
+ * Round a monetary value to 2 decimal places (cents), half-away-from-zero.
+ *
+ * A naive Math.round(n*100)/100 mis-rounds values whose exact decimal lands on a
+ * half-cent because IEEE-754 cannot represent them (e.g. 1.005 is stored as
+ * 1.00499999…, rounding DOWN to 1.00). We add a tiny epsilon in the cents domain
+ * to counteract that representation error before rounding. 1e-6 cents is far
+ * larger than the FP error at invoice magnitudes yet far smaller than any real
+ * sub-cent value, so genuine amounts are unaffected.
+ */
 export function roundCents(n: number): number {
-  return Math.round(n * 100) / 100
+  if (!Number.isFinite(n)) return 0
+  const sign = n < 0 ? -1 : 1
+  return (sign * Math.round(Math.abs(n) * 100 + 1e-6)) / 100
 }
 
 /**

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
 import { headers, cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
+import { getSessionSecret } from '@/lib/session-secret'
 
 // ─── In-memory rate limiter ────────────────────────────────────────────────
 // Buckets: { key -> { count, resetAt } }
@@ -60,9 +61,11 @@ export function withAuth(
       return await handler(req, ctx)
     } catch (e) {
       if (e instanceof NextResponse) return e
-      const msg = e instanceof Error ? e.message : String(e)
-      console.error('[API Error]', msg)
-      return NextResponse.json({ error: `Erreur interne: ${msg}` }, { status: 500 })
+      // Log the full error server-side only; NEVER echo the raw message to the
+      // client (it can carry Prisma/schema/constraint details, file paths, or
+      // upstream provider errors — reconnaissance aid).
+      console.error('[API Error]', e)
+      return NextResponse.json({ error: 'Erreur interne' }, { status: 500 })
     }
   }
 }
@@ -100,10 +103,10 @@ export async function isAdminSession(): Promise<boolean> {
   const raw = cookies().get('gf_session')?.value
   if (!raw) return false
   try {
-    const secret = new TextEncoder().encode(
-      process.env.NEXTAUTH_SECRET ?? 'fallback-dev-secret-change-in-production'
-    )
-    const { payload } = await jwtVerify(raw, secret)
+    // Fails closed: getSessionSecret() throws if NEXTAUTH_SECRET is unset or a
+    // known committed default, so a misconfigured deploy can never be spoofed
+    // into accepting an admin cookie signed with a public key.
+    const { payload } = await jwtVerify(raw, getSessionSecret())
     return payload.typ === 'admin'
   } catch {
     return false

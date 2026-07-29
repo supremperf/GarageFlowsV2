@@ -17,11 +17,19 @@ interface PartLine {
   unitPrice: number
 }
 
-function computeTotals(worksJson: string, partsJson: string, taxRate: number) {
-  const works: WorkLine[] = JSON.parse(worksJson)
-  const parts: PartLine[] = JSON.parse(partsJson)
-  const worksHT = works.reduce((s, w) => s + (w.unitPrice ?? 0), 0)
-  const partsHT = parts.reduce((s, p) => s + (p.qty ?? 0) * (p.unitPrice ?? 0), 0)
+/** Returns null when worksJson/partsJson are not valid JSON arrays. */
+function computeTotals(worksJson: string, partsJson: string, taxRate: number): { totalHT: number; totalTTC: number } | null {
+  let works: WorkLine[]
+  let parts: PartLine[]
+  try {
+    works = JSON.parse(worksJson)
+    parts = JSON.parse(partsJson)
+  } catch {
+    return null
+  }
+  if (!Array.isArray(works) || !Array.isArray(parts)) return null
+  const worksHT = works.reduce((s, w) => s + (Number(w.unitPrice) || 0), 0)
+  const partsHT = parts.reduce((s, p) => s + (Number(p.qty) || 0) * (Number(p.unitPrice) || 0), 0)
   const totalHT = Math.round((worksHT + partsHT) * 100) / 100
   const totalTTC = Math.round(totalHT * (1 + taxRate / 100) * 100) / 100
   return { totalHT, totalTTC }
@@ -67,7 +75,21 @@ export const POST = withAuth(async (req) => {
     : JSON.stringify(body.partsJson ?? [])
   const taxRate = body.taxRate ?? 20
 
-  const { totalHT, totalTTC } = computeTotals(worksJson, partsJson, taxRate)
+  const totals = computeTotals(worksJson, partsJson, taxRate)
+  if (!totals) {
+    return NextResponse.json({ error: 'worksJson/partsJson invalides' }, { status: 400 })
+  }
+  const { totalHT, totalTTC } = totals
+
+  // Validate optional foreign keys belong to THIS garage before referencing them.
+  if (body.jobId) {
+    const job = await prisma.job.findFirst({ where: { id: body.jobId, garageId: session.user.garageId } })
+    if (!job) return NextResponse.json({ error: 'jobId invalide' }, { status: 400 })
+  }
+  if (body.mechanicId) {
+    const mech = await prisma.mechanic.findFirst({ where: { id: body.mechanicId, garageId: session.user.garageId } })
+    if (!mech) return NextResponse.json({ error: 'mechanicId invalide' }, { status: 400 })
+  }
 
   // Atomically increment workOrderCounter and generate number
   const garage = await prisma.garage.update({

@@ -17,11 +17,19 @@ interface PartLine {
   unitPrice: number
 }
 
-function computeTotals(worksJson: string, partsJson: string, taxRate: number) {
-  const works: WorkLine[] = JSON.parse(worksJson)
-  const parts: PartLine[] = JSON.parse(partsJson)
-  const worksHT = works.reduce((s, w) => s + (w.unitPrice ?? 0), 0)
-  const partsHT = parts.reduce((s, p) => s + (p.qty ?? 0) * (p.unitPrice ?? 0), 0)
+/** Returns null when worksJson/partsJson are not valid JSON arrays. */
+function computeTotals(worksJson: string, partsJson: string, taxRate: number): { totalHT: number; totalTTC: number } | null {
+  let works: WorkLine[]
+  let parts: PartLine[]
+  try {
+    works = JSON.parse(worksJson)
+    parts = JSON.parse(partsJson)
+  } catch {
+    return null
+  }
+  if (!Array.isArray(works) || !Array.isArray(parts)) return null
+  const worksHT = works.reduce((s, w) => s + (Number(w.unitPrice) || 0), 0)
+  const partsHT = parts.reduce((s, p) => s + (Number(p.qty) || 0) * (Number(p.unitPrice) || 0), 0)
   const totalHT = Math.round((worksHT + partsHT) * 100) / 100
   const totalTTC = Math.round(totalHT * (1 + taxRate / 100) * 100) / 100
   return { totalHT, totalTTC }
@@ -60,7 +68,11 @@ export const PATCH = withAuth(async (req, { params }) => {
     : existing.partsJson
   const taxRate = body.taxRate !== undefined ? body.taxRate : existing.taxRate
 
-  const { totalHT, totalTTC } = computeTotals(worksJson, partsJson, taxRate)
+  const totals = computeTotals(worksJson, partsJson, taxRate)
+  if (!totals) {
+    return NextResponse.json({ error: 'worksJson/partsJson invalides' }, { status: 400 })
+  }
+  const { totalHT, totalTTC } = totals
 
   const updateData: Record<string, unknown> = { worksJson, partsJson, taxRate, totalHT, totalTTC }
 
@@ -74,7 +86,16 @@ export const PATCH = withAuth(async (req, { params }) => {
   if (body.licensePlate !== undefined) updateData.licensePlate = body.licensePlate
   if (body.mileage !== undefined) updateData.mileage = body.mileage
   if (body.vin !== undefined) updateData.vin = body.vin
-  if (body.mechanicId !== undefined) updateData.mechanicId = body.mechanicId
+  if (body.mechanicId !== undefined) {
+    // Validate the mechanic belongs to this garage before cross-linking.
+    if (body.mechanicId !== null) {
+      const mech = await prisma.mechanic.findFirst({
+        where: { id: body.mechanicId, garageId: session.user.garageId },
+      })
+      if (!mech) return NextResponse.json({ error: 'mechanicId invalide' }, { status: 400 })
+    }
+    updateData.mechanicId = body.mechanicId
+  }
   if (body.notes !== undefined) updateData.notes = body.notes
 
   const wo = await prisma.workOrder.update({

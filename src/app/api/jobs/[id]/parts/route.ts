@@ -25,38 +25,50 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
   const { partId, quantity = 1 } = await req.json()
   if (!partId) return NextResponse.json({ error: 'partId requis' }, { status: 400 })
 
+  // Validate quantity: a positive finite number. Previously a negative value
+  // (e.g. -50) inverted the stock decrement, ADDING inventory.
+  const qty = Number(quantity)
+  if (!Number.isFinite(qty) || qty <= 0) {
+    return NextResponse.json({ error: 'Quantité invalide (doit être > 0)' }, { status: 400 })
+  }
+
   const part = await prisma.part.findFirst({ where: { id: partId, garageId: session.user.garageId } })
   if (!part) return NextResponse.json({ error: 'Pièce introuvable' }, { status: 404 })
 
-  // Upsert: if already in job, increase quantity
+  // Upsert the job-part line AND decrement stock atomically. The quantity added
+  // to the job must always equal the quantity removed from stock — both the
+  // "already on job" and "new line" branches now decrement, inside one
+  // transaction so a partial failure can never desync inventory.
   const existing = await prisma.jobPart.findFirst({ where: { jobId: params.id, partId } })
-  if (existing) {
-    const updated = await prisma.jobPart.update({
-      where: { id: existing.id },
-      data: { quantity: existing.quantity + Number(quantity) },
-      include: { part: true },
+
+  const result = await prisma.$transaction(async (tx) => {
+    let line
+    if (existing) {
+      line = await tx.jobPart.update({
+        where: { id: existing.id },
+        data: { quantity: existing.quantity + qty },
+        include: { part: true },
+      })
+    } else {
+      line = await tx.jobPart.create({
+        data: {
+          jobId: params.id,
+          partId,
+          quantity: qty,
+          unitPrice: part.unitPrice,
+          unitCost: part.unitCost,
+        },
+        include: { part: true },
+      })
+    }
+    await tx.part.update({
+      where: { id: partId },
+      data: { quantity: { decrement: qty } },
     })
-    return NextResponse.json(updated)
-  }
-
-  const jobPart = await prisma.jobPart.create({
-    data: {
-      jobId: params.id,
-      partId,
-      quantity: Number(quantity),
-      unitPrice: part.unitPrice,
-      unitCost: part.unitCost,
-    },
-    include: { part: true },
+    return line
   })
 
-  // Deduct from stock
-  await prisma.part.update({
-    where: { id: partId },
-    data: { quantity: { decrement: Number(quantity) } },
-  })
-
-  return NextResponse.json(jobPart, { status: 201 })
+  return NextResponse.json(result, { status: existing ? 200 : 201 })
 })
 
 // DELETE /api/jobs/:id/parts  body: { jobPartId }
@@ -69,12 +81,13 @@ export const DELETE = withAuth(async (req, { params }: { params: { id: string } 
   })
   if (!jobPart) return NextResponse.json({ error: 'Introuvable' }, { status: 404 })
 
-  // Restore stock
-  await prisma.part.update({
-    where: { id: jobPart.partId },
-    data: { quantity: { increment: jobPart.quantity } },
-  })
-
-  await prisma.jobPart.delete({ where: { id: jobPartId } })
+  // Restore stock and remove the line atomically.
+  await prisma.$transaction([
+    prisma.part.update({
+      where: { id: jobPart.partId },
+      data: { quantity: { increment: jobPart.quantity } },
+    }),
+    prisma.jobPart.delete({ where: { id: jobPartId } }),
+  ])
   return NextResponse.json({ success: true })
 })

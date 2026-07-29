@@ -30,19 +30,15 @@ export const authOptions: NextAuthOptions = {
       },
 
       async authorize(credentials) {
-        console.log('====================================')
-        console.log('🔐 Nouvelle tentative de connexion')
-        console.log('Credentials reçues :', credentials)
-        console.log('====================================')
-
+        // SECURITY: never log the credentials object, the plaintext password,
+        // or the stored bcrypt hash — Electron pipes stdout into log files that
+        // ship in support/crash bundles. Log only the (lowercased) email and a
+        // boolean outcome for diagnostics.
         if (!credentials?.email || !credentials?.password) {
-          console.log('❌ Email ou mot de passe manquant')
           return null
         }
 
         const email = credentials.email.toLowerCase()
-
-        console.log('📧 Email recherché :', email)
 
         const user = await prisma.user.findUnique({
           where: {
@@ -54,30 +50,19 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!user) {
-          console.log('❌ Utilisateur introuvable')
+          console.warn('[auth] login failed — unknown email:', email)
           return null
         }
-
-        console.log('✅ Utilisateur trouvé')
-        console.log('Nom :', user.name)
-        console.log('Email :', user.email)
-        console.log('Rôle :', user.role)
-        console.log('Garage :', user.garage?.name)
-        console.log('Hash enregistré :', user.password)
 
         const valid = await bcrypt.compare(
           credentials.password,
           user.password
         )
 
-        console.log('🔑 Résultat bcrypt.compare :', valid)
-
         if (!valid) {
-          console.log('❌ Mot de passe incorrect')
+          console.warn('[auth] login failed — bad password:', email)
           return null
         }
-
-        console.log('✅ Connexion autorisée')
 
         return {
           id: user.id,

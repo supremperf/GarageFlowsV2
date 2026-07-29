@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { addDays, parseISO, differenceInDays, isValid } from 'date-fns'
+import { addDays, parseISO, differenceInDays, isValid, startOfDay } from 'date-fns'
 
 // GET /api/vehicles/ct-alerts?days=60
 // Returns vehicles whose CT expires within the next N days (default 60) or is already expired.
@@ -11,7 +11,10 @@ export const GET = withAuth(async (req) => {
   const { searchParams } = new URL(req.url)
   const daysAhead = Math.min(365, Math.max(1, Number(searchParams.get('days') ?? '60')))
 
-  const today   = new Date()
+  // Normalize to the start of the day so differenceInDays counts whole calendar
+  // days (parseISO(ctDate) is at 00:00); otherwise a CT expiring tomorrow but
+  // <24h away truncated to 0 and mis-bucketed the alert.
+  const today   = startOfDay(new Date())
   const horizon = addDays(today, daysAhead)
 
   const vehicles = await prisma.vehicle.findMany({

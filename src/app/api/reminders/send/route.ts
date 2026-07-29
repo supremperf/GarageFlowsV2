@@ -4,6 +4,20 @@ import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import nodemailer from 'nodemailer'
 
+/** Escape user-supplied values before embedding them in the HTML email. */
+function esc(v: unknown): string {
+  return String(v ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+/** Encode a value placed inside a tel:/mailto: href attribute. */
+function escAttr(v: unknown): string {
+  return encodeURIComponent(String(v ?? ''))
+}
+
 // POST /api/reminders/send  body: { id }
 // Sends a real email if SMTP is configured, otherwise returns the email content
 export const POST = withAuth(async (req) => {
@@ -46,22 +60,22 @@ ${garage?.name ?? 'Votre garage'}${garage?.phone ? `\nTél : ${garage.phone}` : 
 <!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;padding:20px;color:#1e293b">
 <div style="background:#3b82f6;border-radius:12px 12px 0 0;padding:20px 24px">
   <h1 style="color:white;margin:0;font-size:20px">🔔 Rappel d'entretien</h1>
-  <p style="color:#bfdbfe;margin:4px 0 0">${garage?.name ?? 'Votre garage de confiance'}</p>
+  <p style="color:#bfdbfe;margin:4px 0 0">${esc(garage?.name ?? 'Votre garage de confiance')}</p>
 </div>
 <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:0 0 12px 12px;padding:24px">
-  <p style="font-size:16px">Bonjour <strong>${reminder.clientName}</strong>,</p>
+  <p style="font-size:16px">Bonjour <strong>${esc(reminder.clientName)}</strong>,</p>
   <p>Nous vous rappelons que votre entretien est prévu :</p>
   <div style="background:white;border:2px solid #3b82f6;border-radius:10px;padding:16px;margin:16px 0;text-align:center">
-    <p style="font-size:22px;font-weight:700;color:#3b82f6;margin:0">${typeLabel}</p>
-    <p style="font-size:16px;color:#475569;margin:8px 0 0">${dateStr}${timeStr ? ` · <strong>${timeStr}</strong>` : ''}</p>
-    ${reminder.vehicleModel ? `<p style="font-size:13px;color:#94a3b8;margin:4px 0 0">${reminder.vehicleModel}${reminder.licensePlate ? ` · ${reminder.licensePlate}` : ''}</p>` : ''}
+    <p style="font-size:22px;font-weight:700;color:#3b82f6;margin:0">${esc(typeLabel)}</p>
+    <p style="font-size:16px;color:#475569;margin:8px 0 0">${esc(dateStr)}${timeStr ? ` · <strong>${esc(timeStr)}</strong>` : ''}</p>
+    ${reminder.vehicleModel ? `<p style="font-size:13px;color:#94a3b8;margin:4px 0 0">${esc(reminder.vehicleModel)}${reminder.licensePlate ? ` · ${esc(reminder.licensePlate)}` : ''}</p>` : ''}
   </div>
-  ${reminder.notes ? `<p style="color:#64748b;font-style:italic;font-size:13px">${reminder.notes}</p>` : ''}
+  ${reminder.notes ? `<p style="color:#64748b;font-style:italic;font-size:13px">${esc(reminder.notes)}</p>` : ''}
   <p>En cas d'indisponibilité :</p>
-  ${garage?.phone ? `<p><a href="tel:${garage.phone}" style="color:#3b82f6">📞 ${garage.phone}</a></p>` : ''}
-  ${garage?.email ? `<p><a href="mailto:${garage.email}" style="color:#3b82f6">✉️ ${garage.email}</a></p>` : ''}
+  ${garage?.phone ? `<p><a href="tel:${escAttr(garage.phone)}" style="color:#3b82f6">📞 ${esc(garage.phone)}</a></p>` : ''}
+  ${garage?.email ? `<p><a href="mailto:${escAttr(garage.email)}" style="color:#3b82f6">✉️ ${esc(garage.email)}</a></p>` : ''}
   <hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0">
-  <p style="color:#94a3b8;font-size:12px">Cordialement, l'équipe de ${garage?.name ?? 'votre garage'}</p>
+  <p style="color:#94a3b8;font-size:12px">Cordialement, l'équipe de ${esc(garage?.name ?? 'votre garage')}</p>
 </div>
 </body></html>`
 
