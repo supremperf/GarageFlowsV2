@@ -29,6 +29,8 @@ import {
   ShieldCheck,
   Car,
   KeyRound,
+  Sparkles,
+  ScanLine,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState, useRef, useEffect, useCallback } from 'react'
@@ -123,6 +125,8 @@ interface HeaderProps {
   onOpenLaborCatalog?:  () => void
   onOpenWarranties?:    () => void
   onOpenLoaner?:        () => void
+  onOpenCopilot?:       () => void
+  onOpenOcr?:           () => void
   warrantyAlerts?:      number
 }
 
@@ -136,6 +140,8 @@ export default function Header({
   onOpenLaborCatalog,
   onOpenWarranties,
   onOpenLoaner,
+  onOpenCopilot,
+  onOpenOcr,
   warrantyAlerts = 0,
 }: HeaderProps) {
   const {
@@ -501,6 +507,24 @@ export default function Header({
               icon={BarChart2}
               label={t.navFinance}
               title={t.ttFinance}
+              variant="finance"
+            />
+          )}
+          {onOpenCopilot && (
+            <ToolBtn
+              onClick={onOpenCopilot}
+              icon={Sparkles}
+              label="Copilot"
+              title="Assistant IA — chiffres vérifiés, actions confirmées"
+              variant="finance"
+            />
+          )}
+          {onOpenOcr && (
+            <ToolBtn
+              onClick={onOpenOcr}
+              icon={ScanLine}
+              label="OCR"
+              title="Scanner un document (carte grise, facture…)"
               variant="finance"
             />
           )}

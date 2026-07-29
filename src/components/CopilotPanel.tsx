@@ -1,0 +1,157 @@
+'use client'
+
+/**
+ * GarageFlow AI Copilot — conversational panel over /api/copilot.
+ *
+ * Read intents show grounded answers (numbers come from the engine, flagged
+ * "vérifié"); action intents render a confirmation-gated card — nothing is
+ * written without the user's explicit confirmation.
+ */
+import { useRef, useState } from 'react'
+import { X, Sparkles, Send, ShieldCheck, User } from 'lucide-react'
+
+interface CopilotResponse {
+  type: string
+  message?: string
+  phrasing?: string
+  data?: unknown
+  action?: { confirmationRequired?: boolean; endpoint?: string; method?: string }
+}
+interface Msg { role: 'user' | 'ai'; text: string; res?: CopilotResponse; confirmed?: boolean }
+
+const SUGGESTIONS = [
+  'Quel est le CA du jour ?',
+  'Quelles pièces sont en rupture de stock ?',
+  'Crée un devis pour ce client',
+]
+
+export default function CopilotPanel({ onClose }: { onClose: () => void }) {
+  const [messages, setMessages] = useState<Msg[]>([])
+  const [input, setInput] = useState('')
+  const [busy, setBusy] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  async function ask(q: string) {
+    const query = q.trim()
+    if (!query || busy) return
+    setInput('')
+    setMessages((m) => [...m, { role: 'user', text: query }])
+    setBusy(true)
+    try {
+      const r = await fetch('/api/copilot', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }) })
+      const res: CopilotResponse = await r.json()
+      const text = res.phrasing || res.message || '—'
+      setMessages((m) => [...m, { role: 'ai', text, res }])
+    } catch {
+      setMessages((m) => [...m, { role: 'ai', text: 'Erreur de communication avec le Copilot.' }])
+    } finally {
+      setBusy(false)
+      requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 1e9, behavior: 'smooth' }))
+    }
+  }
+
+  const confirm = (idx: number) => setMessages((m) => m.map((msg, i) => (i === idx ? { ...msg, confirmed: true } : msg)))
+
+  return (
+    <div style={overlay}>
+      <Bg />
+      <div style={bar}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={logo}><Sparkles size={16} color="#fff" /></div>
+          <div><p style={{ color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>Copilot IA</p><p style={{ color: '#475569', fontSize: 11 }}>Chiffres garantis par le moteur</p></div>
+        </div>
+        <button onClick={onClose} style={closeBtn} aria-label="Fermer"><X size={16} /></button>
+      </div>
+
+      <div ref={scrollRef} style={{ flex: 1, overflow: 'auto', padding: '22px 0', position: 'relative', zIndex: 1 }}>
+        <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 20px' }}>
+          {messages.length === 0 && (
+            <div style={{ textAlign: 'center', marginTop: 40 }}>
+              <div style={{ ...logo, width: 48, height: 48, borderRadius: 14, margin: '0 auto 14px' }}><Sparkles size={24} color="#fff" /></div>
+              <p style={{ color: '#e8edf4', fontSize: 17, fontWeight: 600 }}>Comment puis-je aider l&apos;atelier ?</p>
+              <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>Posez une question — les chiffres proviennent des données, jamais inventés.</p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 18 }}>
+                {SUGGESTIONS.map((s) => (
+                  <button key={s} onClick={() => ask(s)} style={chip}>{s}</button>
+                ))}
+              </div>
+            </div>
+          )}
+          {messages.map((m, i) => <Bubble key={i} m={m} onConfirm={() => confirm(i)} />)}
+          {busy && <div style={{ color: '#64748b', fontSize: 13, padding: '6px 42px' }}>Le Copilot réfléchit…</div>}
+        </div>
+      </div>
+
+      <div style={{ position: 'relative', zIndex: 1, borderTop: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', padding: 14 }}>
+        <form onSubmit={(e) => { e.preventDefault(); ask(input) }} style={{ maxWidth: 760, margin: '0 auto', display: 'flex', gap: 10 }}>
+          <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Écrivez votre question…" style={inputBox} />
+          <button type="submit" disabled={busy || !input.trim()} style={{ ...sendBtn, opacity: busy || !input.trim() ? 0.5 : 1 }}><Send size={16} /></button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function Bubble({ m, onConfirm }: { m: Msg; onConfirm: () => void }) {
+  if (m.role === 'user') {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginBottom: 14 }}>
+        <div style={{ ...bubble, background: 'rgba(59,130,246,0.14)', border: '1px solid rgba(59,130,246,0.25)', borderBottomRightRadius: 5 }}>{m.text}</div>
+        <div style={avatar}><User size={15} color="#93c5fd" /></div>
+      </div>
+    )
+  }
+  const grounded = !!m.res?.phrasing
+  const action = m.res?.action?.confirmationRequired
+  return (
+    <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+      <div style={{ ...avatar, background: 'linear-gradient(135deg,#3b82f6,#6366f1)', border: 'none' }}><Sparkles size={15} color="#fff" /></div>
+      <div style={{ ...bubble, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderBottomLeftRadius: 5 }}>
+        <div style={{ color: '#e8edf4' }}>{m.text}</div>
+        {grounded && !action && (
+          <span style={verified}><ShieldCheck size={13} /> Chiffres ancrés sur les données · vérifié</span>
+        )}
+        {action && (
+          <div style={actionCard(m.confirmed)}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: m.confirmed ? '#4ade80' : '#fbbf24', display: 'flex', alignItems: 'center', gap: 7 }}>
+              {m.confirmed ? '✓ Action confirmée' : '⚠ Cette action nécessite votre confirmation'}
+            </div>
+            {!m.confirmed && (
+              <>
+                <p style={{ fontSize: 11.5, color: '#64748b', margin: '6px 0 9px' }}>Le Copilot n&apos;écrit rien tant que vous n&apos;avez pas confirmé.</p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={onConfirm} style={btnPri}>✓ Confirmer</button>
+                  <button style={btnSec}>Annuler</button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── styles ──────────────────────────────────────────────────────────────────
+const overlay: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: '#070d1b' }
+const bar: React.CSSProperties = { position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', flexShrink: 0 }
+const logo: React.CSSProperties = { width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg,#3b82f6,#6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }
+const closeBtn: React.CSSProperties = { width: 34, height: 34, borderRadius: 9, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+const bubble: React.CSSProperties = { maxWidth: '74%', padding: '12px 15px', borderRadius: 14, fontSize: 14, lineHeight: 1.5 }
+const avatar: React.CSSProperties = { width: 30, height: 30, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }
+const verified: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 700, padding: '4px 9px', borderRadius: 999, background: 'rgba(74,222,128,0.12)', color: '#4ade80', marginTop: 9 }
+const chip: React.CSSProperties = { fontSize: 12.5, fontWeight: 600, color: '#93c5fd', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.22)', padding: '8px 13px', borderRadius: 999, cursor: 'pointer' }
+const inputBox: React.CSSProperties = { flex: 1, padding: '11px 15px', borderRadius: 11, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 14, outline: 'none' }
+const sendBtn: React.CSSProperties = { width: 44, borderRadius: 11, border: 'none', background: '#3b82f6', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+const btnPri: React.CSSProperties = { fontSize: 13, fontWeight: 700, padding: '7px 14px', borderRadius: 9, border: 'none', background: '#3b82f6', color: '#fff', cursor: 'pointer' }
+const btnSec: React.CSSProperties = { fontSize: 13, fontWeight: 700, padding: '7px 14px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }
+const actionCard = (confirmed?: boolean): React.CSSProperties => ({ marginTop: 11, padding: 12, borderRadius: 11, border: `1px solid ${confirmed ? 'rgba(74,222,128,0.35)' : 'rgba(251,191,36,0.35)'}`, background: confirmed ? 'rgba(74,222,128,0.08)' : 'rgba(251,191,36,0.07)' })
+
+function Bg() {
+  return (
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', top: '-10%', left: '15%', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.07) 0%, transparent 65%)' }} />
+      <div style={{ position: 'absolute', bottom: '-10%', right: '5%', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 65%)' }} />
+    </div>
+  )
+}
