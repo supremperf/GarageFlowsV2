@@ -2,6 +2,7 @@ import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/db'
 import bcrypt from 'bcryptjs'
+import { rateLimit, resetRateLimit } from '@/lib/rate-limit'
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -40,6 +41,15 @@ export const authOptions: NextAuthOptions = {
 
         const email = credentials.email.toLowerCase()
 
+        // Brute-force protection: throttle sign-in attempts per account.
+        // Keyed on email (not the spoofable IP) so guessing one account is
+        // bounded; a successful login resets the counter.
+        const rlKey = `login:${email}`
+        if (!rateLimit(rlKey, 10, 5 * 60).ok) {
+          console.warn('[auth] login throttled for:', email)
+          return null
+        }
+
         const user = await prisma.user.findUnique({
           where: {
             email,
@@ -63,6 +73,8 @@ export const authOptions: NextAuthOptions = {
           console.warn('[auth] login failed — bad password:', email)
           return null
         }
+
+        resetRateLimit(rlKey)
 
         return {
           id: user.id,

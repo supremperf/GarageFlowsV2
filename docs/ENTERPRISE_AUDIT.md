@@ -45,7 +45,7 @@ Colonne « Avant » = état audité ; « Après » = après les correctifs de ce
 | Catégorie | Avant | Après | Commentaire |
 |---|:---:|:---:|---|
 | Architecture | 7.5 | 7.5 | Séparation app/control-plane nette, modules/entitlements, helpers `lib/*`. Dette : argent en `Float`, duplication `computeTotals`. |
-| **Sécurité** | **3.0** | **6.5*** | 4 critiques corrigés (secret par-installation, fail-closed, RCE MAJ, IDOR). *\*plafonné tant que §0 non fait.* Restent : SSE key-in-URL, HWID flou, dev-bypass. |
+| **Sécurité** | **3.0** | **7.0*** | 4 critiques + majorité des élevés corrigés (secret par-installation, fail-closed, RCE MAJ, IDOR, jetons scopés garageId, ticket SSE, dev-bypass retiré). *\*plafonné tant que §0 non fait.* Reste : HWID flou, store partagé control-plane. |
 | Performances | 7.0 | 8.0 | Index manquants ajoutés ; quelques listes non paginées restantes. |
 | UX / UI | 7.5 | 7.5 | Riche, i18n 14 langues, responsive. Non ré-audité en profondeur ici. |
 | Maintenabilité | 7.0 | 7.5 | TS strict, Zod, tests. Reste : code mort (keygen legacy), duplication. |
@@ -102,7 +102,7 @@ Colonne « Avant » = état audité ; « Après » = après les correctifs de ce
 |---|---|---|:--:|
 | H1 | `.env.example` livrait un vrai `NEXTAUTH_SECRET` auto-copié dans `.env` | `.env.example`, `main.js` | ✅ Corrigé |
 | H2 | `revoke-by-key` : clé committée + comparaison non constant-time | `admin/licenses/revoke-by-key` | ✅ Corrigé (timingSafeEqual) |
-| H3 | Jetons portail/signature signés avec le secret par défaut, sans scoping garageId | `portal-secret.ts`, `portal/*`, `quote/*` | ⚠️ Partiel : secret fail-closed corrigé ; **liaison garageId du jeton à faire** |
+| H3 | Jetons portail/signature signés avec le secret par défaut, sans scoping garageId | `portal-secret.ts`, `portal/*`, `quote/*` | ✅ Corrigé (secret fail-closed + `garageId` embarqué dans le jeton et vérifié au lookup) |
 | H4 | IDOR : maj d'item d'inspection via `body.itemId` non scopé | `inspections/[id]` | ✅ Corrigé |
 | H5 | Mot de passe + hash bcrypt journalisés à chaque login | `lib/auth.ts` | ✅ Corrigé |
 | H6 | Session `gf_session` forgeable + serveur lié à `0.0.0.0` | `main.js`, `middleware.ts` | ✅ Secret corrigé · ⚠️ `0.0.0.0` conservé (portail LAN) — voir note |
@@ -112,7 +112,7 @@ Colonne « Avant » = état audité ; « Après » = après les correctifs de ce
 | H10 | `quantity` négative acceptée → inversion du stock ; writes non atomiques | `jobs/[id]/parts` | ✅ Corrigé |
 | H11 | Montants en `Float` sur tous les modèles financiers | `schema.prisma`, `billing.ts` | ⚠️ Atténué (`roundCents` sûr) · migration Int/Decimal = roadmap |
 | H12 | Pas de garde `will-navigate` → origine hostile garde le pont IPC | `main.js` | ✅ Corrigé |
-| H13 | Secret admin maître transmis dans l'URL du flux SSE (logs) | `garagesite3 admin/stream` | ⚠️ Documenté (ticket HMAC court — non implémenté, voir §5) |
+| H13 | Secret admin maître transmis dans l'URL du flux SSE (logs) | `garagesite3 admin/stream` | ✅ Corrigé (ticket HMAC court signé après auth par en-tête ; `stream/ticket`) |
 | H14 | `withAuth`/stats/email renvoyaient le message d'erreur interne brut | `api-helpers.ts` +3 | ✅ Corrigé |
 
 **Note H6** : le serveur Next reste lié à `0.0.0.0` pour préserver le partage du portail
@@ -136,14 +136,18 @@ rendre le binding configurable et le passer à `127.0.0.1` si le partage LAN n'e
 - Numéro de facture : année dérivée de `issueDate` (convert). ✅ (route invoices : voir remaining)
 - Clé de rate-limit basée sur `x-forwarded-for` falsifiable — **atténué** (générique documenté ; contexte desktop mono-poste).
 
+**Corrigés dans la 2ᵉ vague :**
+- **`purchase-orders/[id]/receive`** : garde « déjà reçu » déplacée dans la transaction (`updateMany` conditionnel) → plus de double incrément (TOCTOU). ✅
+- **Numérotation factures & devis** : compteur alloué dans la même transaction que le `create` (plus de trou de séquence) ; année dérivée d'`issueDate`. ✅
+- **Login rate-limit** : throttle par email branché dans `authorize()` (10/5 min, reset au succès). ✅
+- **`admin/stream`** (H13) : ticket SSE HMAC court signé après auth par en-tête ; la clé maître ne transite plus dans l'URL (+ tests). ✅
+- **Code mort / backdoors** : script keygen legacy supprimé, bypass `GF2.DEV.DEV.DEV` retiré. ✅
+
 **Restants (documentés, à traiter) :**
-- **`purchase-orders/[id]/receive`** : garde « déjà reçu » hors transaction → double incrément de stock (TOCTOU). *Fix : `updateMany({where:{status:{not:'received'}}})` dans la transaction.*
-- **Numérotation factures/devis** (`invoices/route.ts`) : compteur consommé avant `create` (trous de séquence) ; année basée sur l'horloge serveur. *Fix : allouer le compteur dans la même transaction ; dériver l'année d'`issueDate`.*
-- **Login sans rate-limit** : `withLoginRateLimit` est du code mort (jamais branché). *Fix : limiter `authorize()` par email.*
-- **HWID 75 %** : tolérance de correspondance sur un hash SHA-256 (sans effet) + HWID vide accepté. *Fix : comparer les composants bruts, pas le hash.*
+- **HWID 75 %** : tolérance de correspondance sur un hash SHA-256 (sans effet) + HWID vide accepté. *Fix : comparer les composants bruts avant hash, ou match exact + ré-activation serveur. Non modifié ici pour ne pas verrouiller les mises à niveau matérielles légitimes sans revoir le flux de ré-activation.*
 - **Ingestion crash publique** (`garagesite3 /api/crash`) : limiteur par-instance, une ligne par événement. *Fix : store partagé (Redis) + agrégation par empreinte + caps par licence.*
-- **`admin/stream`** (H13) : clé maître en query-string. *Fix : ticket SSE HMAC court signé après auth par en-tête.*
-- Money côté control-plane (`store.ts`) : totaux en flottant, `amount_ttc` client non validé.
+- **Pagination** des listes bare-array (work-orders, reminders, parts, PO, warranties, labor-ops). *Fix : envelopper en `{data,total}` avec le motif existant — nécessite une adaptation coordonnée du frontend (éviter la troncature silencieuse).*
+- **Money côté control-plane** (`store.ts`) : totaux en flottant, `amount_ttc` client non validé. Money côté app : migration `Float`→Int/Decimal (roadmap).
 
 ---
 
@@ -152,7 +156,7 @@ rendre le binding configurable et le passer à `127.0.0.1` si le partage LAN n'e
 Regroupés (détails file:line dans l'annexe machine, cf. journal d'audit) :
 - **Pagination manquante** : `work-orders`, `reminders`, `parts`, `purchase-orders`, `warranties`, `labor-operations` GET renvoient des lignes non bornées. *Fix : réutiliser le motif page/limit déjà présent sur clients/jobs/vehicles/invoices.*
 - **Index manquants** : Reminder, Part, JobPart, Inspection, InspectionItem, RepairTypePart → **✅ ajoutés au schéma** (migration §8).
-- **Code mort / backdoors latents** : `scripts/generate-license-key.js` (MASTER_SECRET committé, format GF-XXXX mort) ; token `GF2.DEV.DEV.DEV` (bypass admin dev). *Fix : supprimer.*
+- **Code mort / backdoors latents** : `scripts/generate-license-key.js` (MASTER_SECRET committé) et le token `GF2.DEV.DEV.DEV` (bypass admin dev) → **✅ supprimés**.
 - **Transport** : MAJ/telemetry acceptent du HTTP en repli. *Fix : imposer HTTPS (partiellement fait sur install-update).*
 - **Injection HTML e-mail** (`reminders/send`) → **✅ échappement ajouté**.
 - **Divers info-disclosure** (stats/email) → **✅ génériques**.
@@ -185,10 +189,13 @@ pour référence. **Aucune vraie valeur** n'y figure désormais.
 - [ ] **Appliquer la migration de schéma** : `npm run db:push` (ou `prisma migrate deploy`) pour créer les index + `@@unique`. ⚠️ Si des numéros de facture/devis dupliqués existent déjà, les dédupliquer d'abord (le `@@unique([garageId, number])` échouera sinon). Régénérer `prisma/garageflow-template.db` pour les nouveaux installs.
 - [ ] Définir `NEXTAUTH_SECRET` (web) ou laisser Electron le générer (desktop) ; vérifier `/api/health`.
 
+**Déjà traités (2ᵉ vague) :** H3 (garageId des jetons), H13 (ticket SSE), PO receive TOCTOU, numérotation factures/devis, login rate-limit, retrait du code mort/backdoors. ✅
+
 **Recommandés (constats restants) :**
-- [ ] Traiter H3 (liaison garageId des jetons portail/signature), PO receive TOCTOU, numérotation factures, login rate-limit, ticket SSE (H13).
-- [ ] Supprimer le code mort (keygen legacy, dev-bypass token).
-- [ ] Pagination des listes restantes ; store partagé (Redis) pour rate-limit/crash du control-plane.
+- [ ] HWID : revoir la liaison matérielle (match exact + ré-activation serveur) — voir §4.
+- [ ] Store partagé (Redis) pour le rate-limit + l'ingestion crash du control-plane.
+- [ ] Pagination des listes bare-array restantes (adaptation frontend).
+- [ ] Migration argent `Float`→Int/Decimal (app + control-plane).
 - [ ] Certificats/domaines/DNS, SMTP/SMS/WhatsApp, monitoring/alertes, sauvegardes vérifiées.
 - [ ] Signature du code Windows (Authenticode) et signature hors-ligne du manifeste de MAJ (défense en profondeur au-delà du SHA).
 

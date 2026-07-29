@@ -31,13 +31,17 @@ export const POST = withAuth(async (_req, { params }: { params: { id: string } }
   let lines: POLine[] = []
   try { lines = JSON.parse(order.linesJson) } catch { lines = [] }
 
-  // Run everything atomically
-  await prisma.$transaction(async (tx) => {
-    // Mark PO received
-    await tx.purchaseOrder.update({
-      where: { id: params.id },
+  // Run everything atomically. The status transition IS the concurrency guard:
+  // the earlier read-check above is best-effort UX; here we flip to 'received'
+  // only if it is not already received, INSIDE the transaction. If two requests
+  // race (double-click), exactly one gets count===1 and applies the stock
+  // increments; the other aborts → no double-count.
+  const already = await prisma.$transaction(async (tx) => {
+    const claim = await tx.purchaseOrder.updateMany({
+      where: { id: params.id, garageId: session.user.garageId, status: { not: 'received' } },
       data: { status: 'received', receivedAt: new Date() },
     })
+    if (claim.count === 0) return true // lost the race / already received
 
     // Increment stock for each line with a known partId
     const stockUpdates = lines.filter(
@@ -56,7 +60,12 @@ export const POST = withAuth(async (_req, { params }: { params: { id: string } }
         })
       }
     }
+    return false
   })
+
+  if (already) {
+    return NextResponse.json({ error: 'Commande déjà réceptionnée' }, { status: 409 })
+  }
 
   return NextResponse.json({ success: true, stockUpdated: lines.filter(l => l.partId && l.qty > 0).length })
 })

@@ -231,13 +231,12 @@ function verifyEccToken(token) {
 
     const [, headerB64, payloadB64, sigB64] = parts
 
-    // Detect placeholder public key
+    // Detect placeholder public key — refuse (never mint an admin bypass).
+    // The former "GF2.DEV.DEV.DEV" dev bypass has been removed: it was a latent
+    // full-admin backdoor that reactivated whenever the key was reset to the
+    // placeholder. Issue dev licenses with a real signed token from a dev key.
     if (PUBLIC_KEY_PEM.includes('REPLACE_WITH_YOUR_PUBLIC_KEY')) {
-      log('WARNING: ECC public key not configured — using dev bypass')
-      // In dev mode only: allow a special dev token that bypasses verification
-      if (IS_DEV && token === 'GF2.DEV.DEV.DEV') {
-        return { lid: 'dev', cid: 'DEV', typ: 'admin', iss: 0, exp: 9999999999, seats: 999, wm: '', ver: '2.0' }
-      }
+      log('SECURITY: ECC public key not configured — refusing all tokens')
       return null
     }
 

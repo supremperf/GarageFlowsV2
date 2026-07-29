@@ -52,44 +52,49 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: 'Données invalides', details: parsed.error.flatten() }, { status: 400 })
   }
 
-  // Auto-increment quoteCounter and build number
-  const garage = await prisma.garage.update({
-    where: { id: session.user.garageId },
-    data: { quoteCounter: { increment: 1 } },
-  })
-  const year = new Date().getFullYear()
-  const number = `${garage.quotePrefix}-${year}-${String(garage.quoteCounter).padStart(3, '0')}`
+  // Allocate the counter and create the quote in ONE transaction (year from the
+  // resolved issueDate) so a failed create rolls the counter back — no gaps.
+  const issueDate = body.issueDate ?? format(new Date(), 'yyyy-MM-dd')
+  const year = new Date(issueDate).getFullYear()
 
-  const quote = await prisma.quote.create({
-    data: {
-      number,
-      garageId: session.user.garageId,
-      clientId: body.clientId ?? null,
-      vehicleId: body.vehicleId ?? null,
-      jobId: body.jobId ?? null,
-      clientName: body.clientName ?? '',
-      clientEmail: body.clientEmail ?? null,
-      clientPhone: body.clientPhone ?? null,
-      clientAddress: body.clientAddress ?? null,
-      vehicleModel: body.vehicleModel ?? null,
-      licensePlate: body.licensePlate ?? null,
-      status: 'draft',
-      issueDate: body.issueDate ?? format(new Date(), 'yyyy-MM-dd'),
-      validUntil: body.validUntil ?? null,
-      notes: body.notes ?? null,
-      taxRate: body.taxRate ?? garage.taxRate,
-      lines: {
-        create: (body.lines ?? []).map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
-          description: l.description,
-          quantity: l.quantity ?? 1,
-          unitPrice: l.unitPrice ?? 0,
-          unitCost: l.unitCost ?? 0,
-          isLabor: l.isLabor ?? false,
-          sortOrder: l.sortOrder ?? i,
-        })),
+  const quote = await prisma.$transaction(async (tx) => {
+    const garage = await tx.garage.update({
+      where: { id: session.user.garageId },
+      data: { quoteCounter: { increment: 1 } },
+    })
+    const number = `${garage.quotePrefix}-${year}-${String(garage.quoteCounter).padStart(3, '0')}`
+
+    return tx.quote.create({
+      data: {
+        number,
+        garageId: session.user.garageId,
+        clientId: body.clientId ?? null,
+        vehicleId: body.vehicleId ?? null,
+        jobId: body.jobId ?? null,
+        clientName: body.clientName ?? '',
+        clientEmail: body.clientEmail ?? null,
+        clientPhone: body.clientPhone ?? null,
+        clientAddress: body.clientAddress ?? null,
+        vehicleModel: body.vehicleModel ?? null,
+        licensePlate: body.licensePlate ?? null,
+        status: 'draft',
+        issueDate,
+        validUntil: body.validUntil ?? null,
+        notes: body.notes ?? null,
+        taxRate: body.taxRate ?? garage.taxRate,
+        lines: {
+          create: (body.lines ?? []).map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
+            description: l.description,
+            quantity: l.quantity ?? 1,
+            unitPrice: l.unitPrice ?? 0,
+            unitCost: l.unitCost ?? 0,
+            isLabor: l.isLabor ?? false,
+            sortOrder: l.sortOrder ?? i,
+          })),
+        },
       },
-    },
-    include: { lines: { orderBy: { sortOrder: 'asc' } } },
+      include: { lines: { orderBy: { sortOrder: 'asc' } } },
+    })
   })
 
   await logAudit({ action: 'create', entityType: 'Quote', entityId: quote.id, session, req })

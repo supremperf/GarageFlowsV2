@@ -12,8 +12,14 @@ export async function GET(_req: Request, { params }: { params: { token: string }
       return NextResponse.json({ error: 'Token invalide' }, { status: 403 })
     }
 
-    const job = await prisma.job.findUnique({
-      where: { id: payload.jobId },
+    // Scope the lookup by the token's garageId when present (tokens issued after
+    // this change carry it); legacy tokens without it still resolve by id.
+    const jobWhere = typeof payload.garageId === 'string'
+      ? { id: payload.jobId, garageId: payload.garageId }
+      : { id: payload.jobId }
+
+    const job = await prisma.job.findFirst({
+      where: jobWhere,
       include: {
         mechanic: { select: { name: true, avatar: true, color: true } },
         photos: { select: { id: true, phase: true, caption: true, base64: true, photoPath: true, createdAt: true } },
