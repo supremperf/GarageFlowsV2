@@ -21,6 +21,12 @@ export default function PwaRegister() {
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
 
+    // Ne pas enregistrer le Service Worker dans l'app desktop Electron
+    // (GarageFlow.exe) : elle possède son propre mécanisme de mise à jour.
+    const isElectron =
+      !!(window as any).electronAPI || /electron/i.test(navigator.userAgent)
+    if (isElectron) return
+
     let reg: ServiceWorkerRegistration | undefined
     let refreshing = false
 

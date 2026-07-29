@@ -289,4 +289,8 @@ npx lighthouse https://app.garageflows.fr --only-categories=pwa --view
 - Le middleware de licence/auth reste appliqué à **toutes les pages** ; seules
   les ressources statiques publiques nécessaires à l'installation sont exemptées.
 - HTTPS obligatoire (prérequis Service Worker).
+- **Isolation desktop** : le Service Worker n'est **pas** enregistré dans l'app
+  Electron (`GarageFlow.exe`) — détection via `window.electronAPI` — afin de ne
+  pas interférer avec son mécanisme de mise à jour natif. L'invite d'installation
+  ne s'y affiche jamais non plus. `GarageFlow.exe` est donc inchangé.
 ```
