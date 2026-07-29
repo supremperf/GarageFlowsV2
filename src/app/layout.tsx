@@ -15,6 +15,8 @@ export const metadata: Metadata = {
   keywords: ['garage', 'atelier', 'planning', 'mécanique', 'gestion', 'automobile'],
   manifest: '/manifest.webmanifest',
   formatDetection: { telephone: false },
+  // Logiciel de gestion privé : jamais indexé par les moteurs de recherche.
+  robots: { index: false, follow: false },
   icons: {
     icon: [
       { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },

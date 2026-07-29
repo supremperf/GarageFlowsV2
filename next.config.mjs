@@ -21,6 +21,8 @@ const nextConfig = {
       "form-action 'self'",
     ].join('; ')
 
+    const isProd = process.env.NODE_ENV === 'production'
+
     return [
       {
         source: '/(.*)',
@@ -30,6 +32,12 @@ const nextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          // Logiciel de gestion privé : ne jamais indexer (app + portail client).
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+          // HSTS uniquement en production (ignoré sur http/localhost).
+          ...(isProd
+            ? [{ key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' }]
+            : []),
         ],
       },
       {
