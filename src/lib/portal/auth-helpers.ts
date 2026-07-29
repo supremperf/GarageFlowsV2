@@ -71,13 +71,13 @@ export async function requirePortalContext(req: NextRequest): Promise<PortalCont
  * Wrap an authenticated portal route: injects the {@link PortalContext}, turns a
  * thrown 401 into the response, and never leaks internal errors to the client.
  */
-export function withPortalAuth(
-  handler: (req: NextRequest, ctx: PortalContext) => Promise<NextResponse>,
+export function withPortalAuth<RouteCtx = unknown>(
+  handler: (req: NextRequest, portal: PortalContext, routeCtx: RouteCtx) => Promise<NextResponse>,
 ) {
-  return async (req: NextRequest): Promise<NextResponse> => {
+  return async (req: NextRequest, routeCtx: RouteCtx): Promise<NextResponse> => {
     try {
-      const ctx = await requirePortalContext(req)
-      return await handler(req, ctx)
+      const portal = await requirePortalContext(req)
+      return await handler(req, portal, routeCtx)
     } catch (e) {
       if (e instanceof NextResponse) return e
       logger.error('[portal] route error:', e)

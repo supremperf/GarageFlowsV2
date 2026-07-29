@@ -640,4 +640,52 @@ export const MIGRATIONS: Migration[] = [
     "createdAt"    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
   )` },
   { id: '086_backup_record_garage_index', sql: 'CREATE INDEX IF NOT EXISTS "BackupRecord_garageId_idx" ON "BackupRecord" ("garageId")' },
+  // ── SAV tickets + appointments (Phase 2) ─────────────────────────────────────
+  { id: '087_create_portal_ticket_table', sql: `CREATE TABLE IF NOT EXISTS "PortalTicket" (
+    "id"            TEXT PRIMARY KEY NOT NULL,
+    "garageId"      TEXT NOT NULL,
+    "portalUserId"  TEXT NOT NULL,
+    "clientId"      TEXT,
+    "vehicleId"     TEXT,
+    "subject"       TEXT NOT NULL,
+    "category"      TEXT NOT NULL DEFAULT 'general',
+    "priority"      TEXT NOT NULL DEFAULT 'normal',
+    "status"        TEXT NOT NULL DEFAULT 'open',
+    "lastMessageAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "closedAt"      DATETIME,
+    "createdAt"     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt"     DATETIME NOT NULL
+  )` },
+  { id: '088_portal_ticket_indexes', sql: 'CREATE INDEX IF NOT EXISTS "PortalTicket_garageId_status_idx" ON "PortalTicket" ("garageId", "status")' },
+  { id: '089_portal_ticket_user_index', sql: 'CREATE INDEX IF NOT EXISTS "PortalTicket_portalUserId_idx" ON "PortalTicket" ("portalUserId")' },
+  { id: '090_create_portal_ticket_message_table', sql: `CREATE TABLE IF NOT EXISTS "PortalTicketMessage" (
+    "id"             TEXT PRIMARY KEY NOT NULL,
+    "ticketId"       TEXT NOT NULL,
+    "authorType"     TEXT NOT NULL,
+    "authorName"     TEXT NOT NULL,
+    "body"           TEXT NOT NULL,
+    "attachmentPath" TEXT,
+    "createdAt"      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )` },
+  { id: '091_portal_ticket_message_index', sql: 'CREATE INDEX IF NOT EXISTS "PortalTicketMessage_ticketId_idx" ON "PortalTicketMessage" ("ticketId")' },
+  { id: '092_create_appointment_table', sql: `CREATE TABLE IF NOT EXISTS "Appointment" (
+    "id"             TEXT PRIMARY KEY NOT NULL,
+    "garageId"       TEXT NOT NULL,
+    "portalUserId"   TEXT,
+    "clientId"       TEXT,
+    "vehicleId"      TEXT,
+    "clientName"     TEXT NOT NULL,
+    "vehicleModel"   TEXT,
+    "licensePlate"   TEXT,
+    "reason"         TEXT NOT NULL,
+    "date"           TEXT NOT NULL,
+    "startTime"      TEXT NOT NULL,
+    "durationMin"    INTEGER NOT NULL DEFAULT 60,
+    "status"         TEXT NOT NULL DEFAULT 'requested',
+    "notes"          TEXT,
+    "reminderSentAt" DATETIME,
+    "createdAt"      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt"      DATETIME NOT NULL
+  )` },
+  { id: '093_appointment_indexes', sql: 'CREATE INDEX IF NOT EXISTS "Appointment_garageId_date_idx" ON "Appointment" ("garageId", "date")' },
 ]

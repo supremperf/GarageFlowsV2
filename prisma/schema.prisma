@@ -95,6 +95,8 @@ model Garage {
   signatures         SignatureRecord[]
   portalUsers        PortalUser[]
   backups            BackupRecord[]
+  tickets            PortalTicket[]
+  appointments       Appointment[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -781,6 +783,7 @@ model PortalUser {
   lockedUntil      DateTime?
   lastLoginAt      DateTime?
   devices          PortalDevice[]
+  tickets          PortalTicket[]
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
@@ -826,4 +829,67 @@ model BackupRecord {
 
   @@index([garageId])
   @@index([garageId, createdAt])
+}
+
+// ─── SAV Tickets (Phase 2) ────────────────────────────────────────────────────
+model PortalTicket {
+  id            String                @id @default(cuid())
+  garageId      String
+  garage        Garage                @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  portalUserId  String
+  portalUser    PortalUser            @relation(fields: [portalUserId], references: [id], onDelete: Cascade)
+  clientId      String?
+  vehicleId     String?
+  subject       String
+  category      String                @default("general") // general | invoice | repair | appointment | other
+  priority      String                @default("normal") // low | normal | high
+  status        String                @default("open") // open | pending | answered | closed
+  lastMessageAt DateTime              @default(now())
+  closedAt      DateTime?
+  messages      PortalTicketMessage[]
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  @@index([garageId])
+  @@index([garageId, status])
+  @@index([portalUserId])
+}
+
+model PortalTicketMessage {
+  id             String       @id @default(cuid())
+  ticketId       String
+  ticket         PortalTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorType     String // client | staff
+  authorName     String
+  body           String
+  attachmentPath String? // optional attachment (path under GF_PHOTOS_DIR)
+  createdAt      DateTime     @default(now())
+
+  @@index([ticketId])
+}
+
+// ─── Appointments (Phase 2) ───────────────────────────────────────────────────
+model Appointment {
+  id             String    @id @default(cuid())
+  garageId       String
+  garage         Garage    @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  portalUserId   String?
+  clientId       String?
+  vehicleId      String?
+  clientName     String
+  vehicleModel   String?
+  licensePlate   String?
+  reason         String
+  date           String // YYYY-MM-DD
+  startTime      String // HH:MM
+  durationMin    Int       @default(60)
+  status         String    @default("requested") // requested | confirmed | cancelled | completed
+  notes          String?
+  reminderSentAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([garageId])
+  @@index([garageId, date])
+  @@index([portalUserId])
 }
