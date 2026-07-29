@@ -23,11 +23,29 @@ function lineByCode(lines: string[], code: string): { value: string; raw: string
   return null
 }
 
-/** Parse the LAST monetary amount on a line (avoids grabbing a VAT rate first). */
-function lastAmount(line: string): number | null {
-  const matches = line.match(/-?\d[\d.,\s]*\d|\d/g)
+/**
+ * Pick the total amount from a line that may carry several figures (a VAT rate,
+ * a VAT amount, rounding). Percentages are dropped, then the LARGEST remaining
+ * amount is taken — on a total row the total exceeds its VAT component, so this
+ * is robust to "Total TTC 186,72 € (TVA 20% 31,12 €)" and "… dont TVA …".
+ */
+function bestAmount(line: string): number | null {
+  // Remove percentage tokens ("20%", "20 %") so a VAT rate is never considered.
+  const cleaned = line.replace(/\d[\d.,]*\s*%/g, ' ')
+  const matches = cleaned.match(/-?\d[\d.,\s]*\d|\d/g)
   if (!matches) return null
-  return parseFrAmount(matches[matches.length - 1])
+  let best: number | null = null
+  for (const m of matches) {
+    const v = parseFrAmount(m)
+    if (v != null && (best == null || v > best)) best = v
+  }
+  return best
+}
+
+const PHONE_RE = /\b\d{2}[.\s]\d{2}[.\s]\d{2}[.\s]\d{2}[.\s]\d{2}\b/
+function isPhoneOrRefLine(line: string): boolean {
+  const a = accentInsensitive(line)
+  return PHONE_RE.test(line) || /^(tel|telephone|fax|siret|siren|tva|ref|reference|n[°ºo])/.test(a)
 }
 
 const ENERGY: Record<string, string> = {
@@ -82,22 +100,26 @@ function extractInvoice(text: string): ExtractedField[] {
   const numMatch = text.match(/facture\s*(?:n[°ºo]?[:.\s]*)?([A-Z0-9][\w\-/]{2,})/i)
   if (numMatch) out.push({ key: 'invoiceNumber', label: 'N° de facture', value: numMatch[1], confidence: 0.75, raw: numMatch[0] })
 
-  for (const line of lines) {
-    const date = parseFrDate(line)
-    if (date) { out.push({ key: 'date', label: 'Date', value: date, confidence: 0.7, raw: line }); break }
+  // Prefer a line explicitly labelled "date"; otherwise the first plausible date
+  // line that is not a phone/reference number (dotted phones parse as dates).
+  const labelled = lines.find((l) => /\bdate\b/.test(accentInsensitive(l)) && parseFrDate(l))
+  const dateLine = labelled ?? lines.find((l) => !isPhoneOrRefLine(l) && parseFrDate(l))
+  if (dateLine) {
+    const date = parseFrDate(dateLine)!
+    out.push({ key: 'date', label: 'Date', value: date, confidence: labelled ? 0.8 : 0.6, raw: dateLine })
   }
 
   for (const line of lines) {
     const a = accentInsensitive(line)
     if (/total\s*t\.?\s*t\.?\s*c/.test(a) || a.includes('net a payer')) {
-      const amt = lastAmount(line)
+      const amt = bestAmount(line)
       if (amt != null) { out.push({ key: 'totalTTC', label: 'Total TTC', value: String(amt), confidence: 0.8, raw: line }); break }
     }
   }
   for (const line of lines) {
     const a = accentInsensitive(line)
     if (/total\s*h\.?\s*t/.test(a) || a.includes('montant ht')) {
-      const amt = lastAmount(line)
+      const amt = bestAmount(line)
       if (amt != null) { out.push({ key: 'totalHT', label: 'Total HT', value: String(amt), confidence: 0.8, raw: line }); break }
     }
   }
@@ -120,7 +142,9 @@ function extractVinPlate(text: string): ExtractedField[] {
 }
 
 function extractOdometer(text: string): ExtractedField[] {
-  const m = text.match(/(\d[\d.,\s]*)\s*km\b/i)
+  // Bounded numeric run (odometer values are short) — avoids the O(n^2)
+  // backtracking that an unbounded [\d.,\s]* before the mandatory "km" allows.
+  const m = text.match(/(\d[\d.,\s]{0,12}\d|\d)\s*km\b/i)
   if (!m) return []
   const km = parseFrAmount(m[1])
   if (km == null) return []

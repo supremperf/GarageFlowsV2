@@ -25,8 +25,9 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100
 }
 
-function meanOcrConfidence(ocr: OcrResult): number {
-  if (!ocr.blocks.length) return 1
+/** Mean OCR block confidence, or null when there is no per-block data. */
+function meanOcrConfidence(ocr: OcrResult): number | null {
+  if (!ocr.blocks.length) return null
   return ocr.blocks.reduce((s, b) => s + b.confidence, 0) / ocr.blocks.length
 }
 
@@ -39,16 +40,19 @@ export function extractDocument(ocr: OcrResult, opts: AnalyzeOptions = {}): Extr
   const type = classification.type
   const fields = extractByType(type, ocr.text)
 
+  // null = no block-confidence data → treat as neutral (1×); a measured 0 is the
+  // worst OCR quality and must NOT be coerced to 1.
   const ocrScale = meanOcrConfidence(ocr)
+  const scaleFactor = ocrScale == null ? 1 : ocrScale
   const fieldMean = fields.length ? fields.reduce((s, f) => s + f.confidence, 0) / fields.length : 0
   const typeFactor = opts.type ? 1 : Math.max(classification.confidence, 0.5)
-  const confidence = round2(fieldMean * (ocrScale || 1) * typeFactor)
+  const confidence = round2(fieldMean * scaleFactor * typeFactor)
 
   const warnings: string[] = []
   if (type === 'unknown') warnings.push('Type de document non reconnu.')
   else if (!fields.length) warnings.push('Aucun champ exploitable extrait.')
   const minOcr = opts.minOcrConfidence ?? 0.5
-  if (ocrScale && ocrScale < minOcr) warnings.push(`Confiance OCR faible (${round2(ocrScale)}).`)
+  if (ocrScale != null && ocrScale < minOcr) warnings.push(`Confiance OCR faible (${round2(ocrScale)}).`)
   for (const f of fields) if (f.valid === false) warnings.push(`Champ « ${f.label} » invalide.`)
 
   return { type, fields, confidence, warnings, typeScores: classification.scores }

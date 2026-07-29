@@ -8,10 +8,15 @@ import { vinEngine } from '@/lib/vin'
 
 const DOC_TYPES = ['carte_grise', 'invoice', 'plate', 'vin_plate', 'odometer'] as const
 
+const MAX_BODY_BYTES = 200_000
+
 const BodySchema = z.object({
   // OCR (image → text) is performed upstream; this endpoint structures the text.
   text: z.string().trim().min(1).max(20000),
   type: z.enum(DOC_TYPES).optional(),
+  // The upstream engine's overall confidence in [0,1]; drives result scaling and
+  // the low-quality warning. Omit when unknown (result is left unscaled).
+  ocrConfidence: z.number().min(0).max(1).optional(),
   minOcrConfidence: z.number().min(0).max(1).optional(),
 })
 
@@ -28,13 +33,25 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: `Trop de requêtes. Réessayez dans ${rl.retryAfter}s.` }, { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } })
   }
 
+  // Reject oversized bodies before reading/parsing them (the Zod .max only fires
+  // after the whole string is materialised & trimmed).
+  const contentLength = Number(req.headers.get('content-length') ?? '0')
+  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: 'Corps de requête trop volumineux.' }, { status: 413 })
+  }
+
   const parsed = BodySchema.safeParse(await req.json().catch(() => null))
   if (!parsed.success) {
     return NextResponse.json({ error: 'text requis (OCR effectué en amont)', details: parsed.error.flatten() }, { status: 400 })
   }
 
+  // Only attach a block when the caller supplies an OCR confidence, so scaling
+  // and the low-quality warning are meaningful (blocks:[] = neutral, unscaled).
+  const blocks = parsed.data.ocrConfidence != null
+    ? [{ text: parsed.data.text, confidence: parsed.data.ocrConfidence }]
+    : []
   const doc = extractDocument(
-    { text: parsed.data.text, blocks: [] },
+    { text: parsed.data.text, blocks },
     { type: parsed.data.type, minOcrConfidence: parsed.data.minOcrConfidence },
   )
 

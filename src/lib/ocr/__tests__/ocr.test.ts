@@ -46,6 +46,12 @@ describe('normalize', () => {
     expect(parseFrDate('32/01/2020')).toBeNull()
     expect(parseFrDate('aucune date')).toBeNull()
   })
+
+  it('rejects impossible calendar dates', () => {
+    expect(parseFrDate('31/04/2020')).toBeNull() // April has 30 days
+    expect(parseFrDate('29/02/2021')).toBeNull() // 2021 not a leap year
+    expect(parseFrDate('29/02/2020')).toBe('2020-02-29') // 2020 is a leap year
+  })
 })
 
 describe('findVin', () => {
@@ -151,6 +157,37 @@ describe('extractByType — odometer', () => {
   })
 })
 
+describe('invoice extraction robustness (regression)', () => {
+  it('takes the total, not a trailing VAT amount, on a flattened total line', () => {
+    const text = 'Facture\nTotal HT 155,60 €\nTotal TTC 186,72 € (TVA 20% : 31,12 €)'
+    const f = extractByType('invoice', text)
+    expect(Number(f.find((x) => x.key === 'totalTTC')?.value)).toBe(186.72)
+  })
+
+  it('ignores a dotted phone number when picking the invoice date', () => {
+    const text = [
+      'GARAGE DUPONT',
+      'Tel : 02.05.12.34.56',
+      'Facture N° F-2026-001',
+      'Date : 12/02/2026',
+      'Total TTC 1 234,56 €',
+    ].join('\n')
+    const f = extractByType('invoice', text)
+    expect(f.find((x) => x.key === 'date')?.value).toBe('2026-02-12')
+  })
+})
+
+describe('classification robustness (regression)', () => {
+  it('classifies a garage invoice that records mileage as invoice, not odometer', () => {
+    const text = 'Facture acquittée\nRéf. 2024-0512\nKilométrage relevé au compteur : 145 230 km\nMontant réglé : 252,00 EUR'
+    expect(classifyDocument(text).type).toBe('invoice')
+  })
+
+  it('still classifies a bare mileage reading as odometer', () => {
+    expect(classifyDocument('Kilométrage relevé au compteur : 145 230 km').type).toBe('odometer')
+  })
+})
+
 describe('extractDocument (classify + extract + assess)', () => {
   it('auto-classifies and extracts, scaling confidence by OCR quality', () => {
     const doc = extractDocument({ text: CARTE_GRISE, blocks: [{ text: CARTE_GRISE, confidence: 0.9 }] })
@@ -172,6 +209,12 @@ describe('extractDocument (classify + extract + assess)', () => {
 
     const lowq = extractDocument({ text: CARTE_GRISE, blocks: [{ text: CARTE_GRISE, confidence: 0.3 }] })
     expect(lowq.warnings.some((w) => /Confiance OCR faible/.test(w))).toBe(true)
+  })
+
+  it('treats a measured OCR confidence of 0 as worst (not perfect)', () => {
+    const zero = extractDocument({ text: CARTE_GRISE, blocks: [{ text: CARTE_GRISE, confidence: 0 }] })
+    expect(zero.confidence).toBe(0)
+    expect(zero.warnings.some((w) => /Confiance OCR faible/.test(w))).toBe(true)
   })
 })
 

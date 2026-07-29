@@ -48,6 +48,12 @@ export function parseFrAmount(s: string): number | null {
  * Parse a French date (dd/mm/yyyy, dd.mm.yyyy, dd-mm-yyyy, 2- or 4-digit year)
  * to ISO yyyy-mm-dd, or null if absent/invalid.
  */
+const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+function isLeapYear(y: number): boolean {
+  return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0
+}
+
 export function parseFrDate(s: string): string | null {
   const m = s.match(/\b(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})\b/)
   if (!m) return null
@@ -55,7 +61,11 @@ export function parseFrDate(s: string): string | null {
   const mo = Number(m[2])
   let y = Number(m[3])
   if (y < 100) y += y < 50 ? 2000 : 1900
-  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null
+  if (mo < 1 || mo > 12 || d < 1) return null
+  // Reject impossible calendar days (e.g. 31/04, 29/02 on a non-leap year), which
+  // also filters date-shaped noise like dotted phone numbers.
+  const maxDay = mo === 2 && isLeapYear(y) ? 29 : DAYS_IN_MONTH[mo - 1]
+  if (d > maxDay) return null
   return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`
 }
 

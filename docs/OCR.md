@@ -62,15 +62,21 @@ Authentifié, cloisonné par `garageId`, limité (30 req/min). Extraction pure �
 
 ```jsonc
 // requête
-{ "text": "<texte OCR>", "type": "carte_grise" /* optionnel : force le type */ }
+{ "text": "<texte OCR>",
+  "type": "carte_grise",      // optionnel : force le type
+  "ocrConfidence": 0.82,      // optionnel : confiance globale du moteur OCR amont
+  "minOcrConfidence": 0.5 }   // optionnel : seuil d'avertissement
 // réponse
 { "type": "carte_grise", "fields": [ { "key": "vin", "value": "VF3…", "confidence": 0.8, "valid": true }, … ],
   "confidence": 0.78, "warnings": [], "vinDecoded": { "manufacturer": "…", "modelYear": … } }
 ```
 
 Un **VIN détecté est recoupé** avec le décodeur VIN hors-ligne (`vinDecoded`,
-lecture seule). L'entrée **image** nécessite un `OcrProvider` configuré (non
-fourni) : passez le `text` reconnu par un moteur OCR client ou serveur.
+lecture seule). La confiance du résultat est **pondérée par `ocrConfidence`**
+quand elle est fournie (sinon non pondérée) ; en-dessous de `minOcrConfidence`
+un avertissement est émis. Les corps trop volumineux sont rejetés (413) **avant
+lecture**. L'entrée **image** nécessite un `OcrProvider` configuré (non fourni) :
+passez le `text` reconnu par un moteur OCR client ou serveur.
 
 ## Tests
 
