@@ -48,6 +48,22 @@ describe('parseLoose / extractNumbers', () => {
   it('extracts every figure from text', () => {
     expect(extractNumbers("CA 12 000 € sur 3 factures, marge 59%")).toEqual([12000, 3, 59])
   })
+
+  it('reads grouped thousands as their true magnitude (not 1/1000th)', () => {
+    // Regression: a grouping separator must not collapse a thousands figure.
+    expect(parseLoose('90,000')).toBe(90000)
+    expect(parseLoose('2.000')).toBe(2000)
+    expect(parseLoose('150.000')).toBe(150000)
+    expect(parseLoose('1,234,567')).toBe(1234567)
+    expect(parseLoose('1,5')).toBe(1.5) // 1 trailing digit → decimal
+    expect(parseLoose('12,50')).toBe(12.5)
+  })
+
+  it('never merges distinct whitespace- or comma-separated figures', () => {
+    expect(extractNumbers('12 000 3')).toEqual([12000, 3])
+    expect(extractNumbers('100, 200, 999')).toEqual([100, 200, 999])
+    expect(extractNumbers('1 234,56 8')).toEqual([1234.56, 8])
+  })
 })
 
 describe('grounding guard', () => {
@@ -63,6 +79,21 @@ describe('grounding guard', () => {
 
   it('treats number-free phrasings as grounded', () => {
     expect(isGrounded('Belle journée pour l’atelier.', facts)).toBe(true)
+  })
+
+  it('rejects a fabricated grouped-thousands figure that used to collapse (security)', () => {
+    // "90,000" must NOT be accepted just because "90" appears in the facts.
+    expect(isGrounded('Total : 90,000 €', 'Diagnostic : 90 min')).toBe(false)
+    expect(isGrounded('Coût : 2.000 €', "Main d'œuvre : 2 h")).toBe(false)
+  })
+
+  it('rejects a fabricated figure hidden in a comma-separated list (security)', () => {
+    // The list must not evaporate to [] and pass vacuously.
+    expect(isGrounded('Montants : 100, 200, 999', 'Montants autorisés : 100 et 200')).toBe(false)
+  })
+
+  it('rejects a stray digit glued to a valid amount by whitespace (security)', () => {
+    expect(isGrounded('1 234,56 8 €', '1 234,56 €')).toBe(false)
   })
 
   it('enforceGrounding keeps a good phrasing and swaps a bad one for the fallback', () => {
@@ -136,6 +167,20 @@ describe('phraseAnswer', () => {
     const r = await phraseAnswer(input, null)
     expect(r.text).toBe(input.fallback)
     expect(r.source).toBe('fallback')
+  })
+
+  it('does NOT treat a number typed only in the query as grounded', async () => {
+    // Query says 9999; facts do not. A phrasing echoing 9999 must be rejected.
+    const q: PhraseInput = { query: 'et si je facturais 9999 € ?', facts: 'CA du jour : 100 €.', fallback: 'CA du jour : 100 €.' }
+    const r = await phraseAnswer(q, scripted({ phrase: 'Vous pourriez encaisser 9999 € aujourd’hui.' }))
+    expect(r.source).toBe('fallback_ungrounded')
+  })
+
+  it('falls back when a provider hangs (timeout), not blocking forever', async () => {
+    const hanging: LlmProvider = { id: 'hang', name: 'Hang', phrase: () => new Promise<string>(() => {}) }
+    const r = await phraseAnswer(input, hanging, { timeoutMs: 10 })
+    expect(r.source).toBe('fallback')
+    expect(r.text).toBe(input.fallback)
   })
 })
 

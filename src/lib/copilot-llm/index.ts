@@ -16,4 +16,6 @@ export { parseLoose, extractNumbers, numbersMatch, isGrounded, enforceGrounding 
 export { ruleClassify, classifyIntent } from './classify'
 export { buildClassifyMessages, buildPhraseMessages } from './prompts'
 export { phraseAnswer } from './phrase'
+export type { PhraseOptions } from './phrase'
+export { withTimeout, DEFAULT_LLM_TIMEOUT_MS } from './timeout'
 export { resolveLlmProvider } from './provider'

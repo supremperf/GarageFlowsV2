@@ -139,9 +139,10 @@ export const POST = withAuth(async (req) => {
 
   // Optional natural-language phrasing. With no provider configured this returns
   // res.message verbatim; a configured provider's phrasing is grounding-checked
-  // (numbers must come from the deterministic data) before being surfaced.
-  const facts = `${res.message ?? ''} ${JSON.stringify(res.data ?? {})}`
-  const phrased = await phraseAnswer({ query: parsed.data.query, facts, fallback: res.message ?? '' }, resolveLlmProvider())
+  // against the deterministic MESSAGE only. Grounding against the whole res.data
+  // blob would let a fabricated figure launder through an incidental internal
+  // number (an id, a date, leadTimeDays, a per-row reorderPoint, …).
+  const phrased = await phraseAnswer({ query: parsed.data.query, facts: res.message ?? '', fallback: res.message ?? '' }, resolveLlmProvider())
   return NextResponse.json({ ...res, phrasing: phrased.text })
 })
 
