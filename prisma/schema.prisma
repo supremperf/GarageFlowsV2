@@ -93,6 +93,7 @@ model Garage {
   loanerReservations LoanerReservation[]
   purchaseOrders     PurchaseOrder[]
   vinSearches        VinSearch[]
+  signatures         Signature[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -109,6 +110,29 @@ model VinSearch {
 
   @@index([garageId, createdAt])
   @@index([garageId, vin])
+}
+
+// ─── Reinforced electronic signature (Premium: signature électronique) ────────
+model Signature {
+  id                   String    @id @default(cuid())
+  garageId             String
+  garage               Garage    @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  entityType           String // quote | invoice | work_order | contract | handover
+  entityId             String
+  signerName           String
+  signerRole           String? // client | garage
+  algorithm            String    @default("SHA-256 / HMAC-SHA256")
+  contentHash          String // SHA-256 of the canonical document snapshot
+  imageHash            String // SHA-256 of the signature image
+  seal                 String // HMAC integrity seal
+  signatureData        String // base64 PNG of the captured signature
+  documentSnapshotJson String // canonical document at signing time
+  ipAddress            String?
+  userAgent            String?
+  signedAt             DateTime  @default(now())
+  invalidatedAt        DateTime?
+
+  @@index([garageId, entityType, entityId])
 }
 
 // ─── User ────────────────────────────────────────────────────────────────────
