@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useScheduleStore } from '@/store/schedule-store'
 import { useSession } from 'next-auth/react'
 import { useTranslation } from '@/lib/i18n'
-import { X, BarChart3, Euro, Package, Users, Wrench, ChevronRight } from 'lucide-react'
+import { X, BarChart3, Euro, Package, Users, Wrench, ChevronRight, Gauge } from 'lucide-react'
 import { StatsData } from './dashboard/DashboardCharts'
 import {
   OverviewSection,
@@ -12,8 +12,9 @@ import {
   MechanicsSection,
   StockSection,
 } from './dashboard/DashboardSections'
+import DecisionSection from './dashboard/DecisionSection'
 
-type Section = 'overview' | 'revenue' | 'mechanics' | 'stock'
+type Section = 'overview' | 'revenue' | 'mechanics' | 'stock' | 'decision'
 
 export default function Dashboard() {
   const { toggleDashboard, statsVersion } = useScheduleStore()
@@ -25,6 +26,7 @@ export default function Dashboard() {
     { id: 'revenue'  as const, label: t.revenueSec,   icon: <Euro size={16} /> },
     { id: 'mechanics'as const, label: t.mechanics,    icon: <Users size={16} /> },
     { id: 'stock'    as const, label: t.stock,        icon: <Package size={16} /> },
+    { id: 'decision' as const, label: lang === 'en' ? 'Decision' : 'Décision', icon: <Gauge size={16} /> },
   ]
 
   const [section, setSection] = useState<Section>('overview')
@@ -184,7 +186,7 @@ export default function Dashboard() {
 
         {/* Main content */}
         <div style={{ flex: 1, overflow: 'auto' }}>
-          {loading && section !== 'stock' ? (
+          {loading && section !== 'stock' && section !== 'decision' ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{
@@ -197,7 +199,7 @@ export default function Dashboard() {
                 <p style={{ color: '#475569', fontSize: 13 }}>Chargement des données…</p>
               </div>
             </div>
-          ) : statsError && section !== 'stock' ? (
+          ) : statsError && section !== 'stock' && section !== 'decision' ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
               <div style={{ textAlign: 'center' }}>
                 <p style={{ color: '#ef4444', fontSize: 14, marginBottom: 12 }}>Impossible de charger les statistiques.</p>
@@ -215,6 +217,7 @@ export default function Dashboard() {
               {section === 'revenue' && <RevenueSection stats={stats} />}
               {section === 'mechanics' && <MechanicsSection stats={stats} />}
               {section === 'stock' && <StockSection stats={stats} />}
+              {section === 'decision' && <DecisionSection />}
             </>
           )}
         </div>
