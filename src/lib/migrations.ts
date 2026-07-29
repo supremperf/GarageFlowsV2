@@ -625,4 +625,19 @@ export const MIGRATIONS: Migration[] = [
   )` },
   { id: '083_portal_device_session_unique', sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "PortalDevice_sessionId_key" ON "PortalDevice" ("sessionId")' },
   { id: '084_portal_device_user_index', sql: 'CREATE INDEX IF NOT EXISTS "PortalDevice_portalUserId_idx" ON "PortalDevice" ("portalUserId")' },
+  // ── Encrypted backup history (Phase 1) ───────────────────────────────────────
+  { id: '085_create_backup_record_table', sql: `CREATE TABLE IF NOT EXISTS "BackupRecord" (
+    "id"           TEXT PRIMARY KEY NOT NULL,
+    "garageId"     TEXT NOT NULL,
+    "filename"     TEXT NOT NULL,
+    "sizeBytes"    INTEGER NOT NULL DEFAULT 0,
+    "checksum"     TEXT NOT NULL,
+    "algorithm"    TEXT NOT NULL DEFAULT 'aes-256-gcm',
+    "kdf"          TEXT NOT NULL DEFAULT 'raw',
+    "entityCounts" TEXT NOT NULL DEFAULT '{}',
+    "status"       TEXT NOT NULL DEFAULT 'completed',
+    "note"         TEXT,
+    "createdAt"    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )` },
+  { id: '086_backup_record_garage_index', sql: 'CREATE INDEX IF NOT EXISTS "BackupRecord_garageId_idx" ON "BackupRecord" ("garageId")' },
 ]

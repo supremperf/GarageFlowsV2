@@ -94,6 +94,7 @@ model Garage {
   purchaseOrders     PurchaseOrder[]
   signatures         SignatureRecord[]
   portalUsers        PortalUser[]
+  backups            BackupRecord[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -803,4 +804,26 @@ model PortalDevice {
   createdAt    DateTime   @default(now())
 
   @@index([portalUserId])
+}
+
+// ─── Encrypted Backup History (Phase 1) ───────────────────────────────────────
+// Metadata for each AES-256-GCM encrypted backup. The encrypted blob itself is
+// stored on disk (GF_BACKUP_DIR); this row provides history, versioning and the
+// plaintext checksum used to verify a restore. Additive & non-breaking.
+model BackupRecord {
+  id           String   @id @default(cuid())
+  garageId     String
+  garage       Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  filename     String
+  sizeBytes    Int      @default(0)
+  checksum     String // SHA-256 hex of the plaintext snapshot
+  algorithm    String   @default("aes-256-gcm")
+  kdf          String   @default("raw") // raw | scrypt
+  entityCounts String   @default("{}") // JSON: table → row count
+  status       String   @default("completed") // completed | verified | restored | failed
+  note         String?
+  createdAt    DateTime @default(now())
+
+  @@index([garageId])
+  @@index([garageId, createdAt])
 }

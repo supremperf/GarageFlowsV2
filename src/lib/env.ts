@@ -236,6 +236,15 @@ export function licensePrivateKey(): string | null {
   return raw ? raw : null
 }
 
+/**
+ * Base64-encoded 32-byte key for AES-256 encrypted backups (`GF_BACKUP_KEY`), or
+ * `null` when unset (backups then require a per-request passphrase). Validated
+ * for strength when present.
+ */
+export function backupKey(): string | null {
+  return optionalSecret('GF_BACKUP_KEY', 'openssl rand -base64 32')
+}
+
 export interface SmtpConfig {
   host: string
   port: number
