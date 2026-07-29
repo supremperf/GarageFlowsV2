@@ -93,5 +93,8 @@ describe('GET /api/dashboard (integration)', () => {
     h.session = { user: { id: 'u', name: 'A', garageId: garageA } }
     const dashA = await dashboard()
     expect(kpi(dashA, 'revenue').value).toBe(1000) // still only A's invoice
+    // Negative control for the SEPARATE profitability() query — a dropped garageId
+    // there would aggregate B's 5000/100 invoice into A's margin (~91.7%).
+    expect(kpi(dashA, 'margin').value).toBe(60)
   })
 })

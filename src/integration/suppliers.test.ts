@@ -48,6 +48,7 @@ beforeAll(async () => {
   ids.p3 = await mkPart({ name: 'Filtre a huile', quantity: 1, minQuantity: 4, unitCost: 8, unitPrice: 16, supplierName: 'MisterAuto', supplierRef: 'MA-OIL-09' })
   ids.p4 = await mkPart({ name: 'Essuie-glace', quantity: 20, minQuantity: 6, unitCost: 6, unitPrice: 12, supplierName: 'MisterAuto' }) // NOT low → excluded
   ids.p5 = await mkPart({ name: 'Courroie', quantity: 20, minQuantity: 3, unitCost: 50, unitPrice: 120, supplierName: 'Oscaro' }) // control for receive
+  ids.pRace = await mkPart({ name: 'Amortisseur', quantity: 10, minQuantity: 3, unitCost: 60, unitPrice: 130, supplierName: 'Oscaro' }) // control for the concurrency test
 
   await prisma.part.create({ data: { garageId: garageB, name: 'Bougie', quantity: 0, minQuantity: 4, unitCost: 3, unitPrice: 6, supplierName: 'MisterAuto' } })
 
@@ -56,6 +57,7 @@ beforeAll(async () => {
   ids.poRecv = await mkPO({ number: 'BC-2026-902', garageId: garageA, supplierName: 'Oscaro', status: 'sent', sentAt: new Date(), totalHT: 400, linesJson: JSON.stringify([{ partId: ids.p5, partName: 'Courroie', qty: 8, unitCost: 50 }]) })
   ids.poIllegal = await mkPO({ number: 'BC-2026-903', garageId: garageA, supplierName: 'Oscaro', status: 'draft', totalHT: 400, linesJson: '[]' })
   ids.poB = await mkPO({ number: 'BC-2026-001', garageId: garageB, supplierName: 'Oscaro', status: 'draft', totalHT: 9, linesJson: '[]' })
+  ids.poRace = await mkPO({ number: 'BC-2026-905', garageId: garageA, supplierName: 'Oscaro', status: 'sent', sentAt: new Date(), totalHT: 300, linesJson: JSON.stringify([{ partId: ids.pRace, partName: 'Amortisseur', qty: 5, unitCost: 60 }]) })
 
   h.session = { user: { id: 'user-a', name: 'Alice', garageId: garageA } }
 })
@@ -115,12 +117,15 @@ describe('POST transition (guarded lifecycle + stock effects)', () => {
   })
 
   it('confirms draft→sent and stamps sentAt without touching stock', async () => {
+    const stockBefore = (await prisma.part.findFirst({ where: { id: ids.p1 } })).quantity // p1 is on poSend
     const { status, json } = await post({ action: 'transition', orderId: ids.poSend, to: 'sent', confirm: true })
     expect(status).toBe(200)
     expect(json.ok).toBe(true)
     const po = await prisma.purchaseOrder.findFirst({ where: { id: ids.poSend } })
     expect(po.status).toBe('sent')
     expect(po.sentAt).not.toBeNull()
+    // Negative control: sending must NOT add stock (only receipt does).
+    expect((await prisma.part.findFirst({ where: { id: ids.p1 } })).quantity).toBe(stockBefore)
   })
 
   it('confirms →received and atomically increments part stock, once', async () => {
@@ -133,6 +138,18 @@ describe('POST transition (guarded lifecycle + stock effects)', () => {
     const again = await post({ action: 'transition', orderId: ids.poRecv, to: 'received', confirm: true })
     expect(again.status).toBe(400)
     expect((await prisma.part.findFirst({ where: { id: ids.p5 } })).quantity).toBe(before + 8)
+  })
+
+  it('serialises two concurrent receipts via the atomic CAS (one 200, one 409, single increment)', async () => {
+    const before = (await prisma.part.findFirst({ where: { id: ids.pRace } })).quantity // 10
+    const [r1, r2] = await Promise.all([
+      post({ action: 'transition', orderId: ids.poRace, to: 'received', confirm: true }),
+      post({ action: 'transition', orderId: ids.poRace, to: 'received', confirm: true }),
+    ])
+    // The compare-and-swap (updateMany where status='sent') lets exactly one win.
+    expect([r1.status, r2.status].sort()).toEqual([200, 409])
+    // Stock incremented exactly once despite two concurrent confirms.
+    expect((await prisma.part.findFirst({ where: { id: ids.pRace } })).quantity).toBe(before + 5)
   })
 
   it('rejects an illegal transition (draft→received) even with confirm', async () => {

@@ -6,11 +6,12 @@
  * gated and write NOTHING, and that the grounded `phrasing` field is present on
  * answers (== message with no provider) and absent on the action pass-through.
  */
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest'
 import { execSync } from 'node:child_process'
 import { format, subDays } from 'date-fns'
 import path from 'node:path'
 import fs from 'node:fs'
+import { __setLlmProvider } from '@/lib/copilot-llm/provider'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-itest-copilot.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -104,5 +105,25 @@ describe('POST /api/copilot', () => {
     const { json } = await ask('blablabla xyz 123')
     expect(json.type).toBe('unknown')
     expect('phrasing' in json).toBe(false)
+  })
+})
+
+describe('POST /api/copilot — grounding guard through the route', () => {
+  afterEach(() => __setLlmProvider(null)) // restore the default (no provider)
+
+  it('rejects a fabricated figure from a provider and keeps the deterministic message', async () => {
+    asA()
+    __setLlmProvider({ id: 'x', name: 'X', phrase: async () => 'Vous avez encaissé 9999 € aujourd’hui !' })
+    const { json } = await ask('Quel est le CA du jour ?')
+    expect(json.phrasing).toBe(json.message) // ungrounded → falls back
+    expect(json.phrasing).not.toMatch(/9999/) // the invented figure never surfaces
+  })
+
+  it('passes a grounded provider rephrase through unchanged', async () => {
+    asA()
+    __setLlmProvider({ id: 'x', name: 'X', phrase: async () => 'Aujourd’hui : 250 € encaissés sur 1 facture.' })
+    const { json } = await ask('Quel est le CA du jour ?')
+    expect(json.phrasing).not.toBe(json.message) // grounded → the rephrase is used
+    expect(json.phrasing).toMatch(/250/)
   })
 })

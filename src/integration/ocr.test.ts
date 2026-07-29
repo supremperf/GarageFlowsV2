@@ -62,6 +62,11 @@ describe('POST /api/ocr', () => {
     expect((await post({ text: 'x' }, { 'content-length': '200001' })).status).toBe(413)
     // At the cap it passes the size gate (then extracts normally).
     expect((await post({ text: CARTE_GRISE }, { 'content-length': '200000' })).status).toBe(200)
+    // Proves ORDERING: a body that would fail Zod (empty text → 400) still yields
+    // 413 when oversized — so the size guard short-circuits BEFORE parsing. A
+    // post-parse guard would surface 400 here instead.
+    expect((await post({ text: '' }, { 'content-length': '200001' })).status).toBe(413)
+    expect((await post('not json', { 'content-length': '200001' })).status).toBe(413)
   })
 
   it('rejects empty/blank/missing/invalid-json text with 400', async () => {

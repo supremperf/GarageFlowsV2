@@ -64,6 +64,12 @@ describe('GET /api/catalog', () => {
     expect(json.errors).toEqual([])
   })
 
+  it('caps results by limit while total reports the full (pre-limit) match count', async () => {
+    const { json } = await get('?text=plaquettes&limit=2')
+    expect(json.results.length).toBe(2) // truncated
+    expect(json.total).toBe(3) // full match count, not the returned-row count
+  })
+
   it('ranks an exact reference first and surfaces a transitive cross-reference', async () => {
     const exact = await get('?reference=0986494600')
     expect(exact.json.results[0].article.id).toBe('a-bosch-bp308')
