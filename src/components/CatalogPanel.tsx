@@ -5,7 +5,7 @@
  * with category path, cross-reference matching, and an in-stock annotation from
  * the garage's own inventory. Read-only.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X, Search, Boxes, CheckCircle2 } from 'lucide-react'
 
 interface Article { id: string; reference: string; brand: string; name: string; listPrice?: number | null }
@@ -16,17 +16,22 @@ export default function CatalogPanel({ onClose }: { onClose: () => void }) {
   const [results, setResults] = useState<Result[]>([])
   const [total, setTotal] = useState(0)
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle')
+  const reqId = useRef(0)
+  const alive = useRef(true)
+  useEffect(() => () => { alive.current = false }, [])
 
   async function search(text: string) {
     const term = text.trim()
+    const id = ++reqId.current // latest-wins: only the newest request may commit state
     if (!term) { setResults([]); setTotal(0); setState('idle'); return }
     setState('loading')
     try {
       const r = await fetch(`/api/catalog?text=${encodeURIComponent(term)}`)
       const d = await r.json()
+      if (!alive.current || id !== reqId.current) return // stale/unmounted: drop
       if (!r.ok) { setState('error'); return }
       setResults(d.results ?? []); setTotal(d.total ?? 0); setState('idle')
-    } catch { setState('error') }
+    } catch { if (alive.current && id === reqId.current) setState('error') }
   }
   useEffect(() => { search('plaquettes') }, [])
 

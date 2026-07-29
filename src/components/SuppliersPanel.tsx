@@ -71,9 +71,9 @@ export default function SuppliersPanel({ onClose }: { onClose: () => void }) {
                 )}
               </div>
 
-              {plan.orders.length === 0 && <div style={{ ...card, padding: 24, textAlign: 'center', color: '#64748b', fontSize: 14 }}>Aucune pièce à commander — stocks suffisants.</div>}
+              {created == null && plan.orders.length === 0 && <div style={{ ...card, padding: 24, textAlign: 'center', color: '#64748b', fontSize: 14 }}>Aucune pièce à commander — stocks suffisants.</div>}
 
-              {plan.orders.map((o) => (
+              {created == null && plan.orders.map((o) => (
                 <div key={o.supplierId} style={{ ...card, marginBottom: 14, overflow: 'hidden' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

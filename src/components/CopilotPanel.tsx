@@ -39,7 +39,11 @@ export default function CopilotPanel({ onClose }: { onClose: () => void }) {
     setBusy(true)
     try {
       const r = await fetch('/api/copilot', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }) })
-      const res: CopilotResponse = await r.json()
+      const res: CopilotResponse & { error?: string } = await r.json().catch(() => ({ type: 'error' }))
+      if (!r.ok) {
+        setMessages((m) => [...m, { role: 'ai', text: res?.error ?? 'Le Copilot a rencontré une erreur.' }])
+        return
+      }
       const text = res.phrasing || res.message || '—'
       setMessages((m) => [...m, { role: 'ai', text, res }])
     } catch {
