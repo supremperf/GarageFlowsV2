@@ -230,7 +230,7 @@ export default function LicensePage() {
           <div className="mt-5 pt-4 border-t border-white/[0.06] text-center">
             <p className="text-xs text-slate-600">
               Pas encore de licence ?{' '}
-              <a href="mailto:contact@garageflow.fr"
+              <a href="mailto:contact@garageflows.fr"
                 className="text-blue-500 hover:text-blue-400 font-medium transition-colors">
                 Contactez-nous
               </a>
