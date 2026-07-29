@@ -94,6 +94,7 @@ model Garage {
   purchaseOrders     PurchaseOrder[]
   vinSearches        VinSearch[]
   signatures         Signature[]
+  notificationLogs   NotificationLog[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -133,6 +134,26 @@ model Signature {
   invalidatedAt        DateTime?
 
   @@index([garageId, entityType, entityId])
+}
+
+// ─── Multi-channel notification journal (Premium: notifications intelligentes) ─
+model NotificationLog {
+  id         String   @id @default(cuid())
+  garageId   String
+  garage     Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  trigger    String? // NotificationTrigger, when dispatched from a business event
+  channel    String // email | sms | whatsapp | push | internal
+  recipient  String
+  subject    String?
+  body       String
+  status     String // sent | failed | skipped | not_configured
+  providerId String?
+  error      String?
+  attempts   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([garageId, createdAt])
+  @@index([garageId, status])
 }
 
 // ─── User ────────────────────────────────────────────────────────────────────
