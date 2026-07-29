@@ -12,6 +12,7 @@ import { forecast } from '@/lib/forecast'
 import { diagnose } from '@/lib/diagnostic'
 import { vinEngine } from '@/lib/vin'
 import { planReorders, type StockItemInput } from '@/lib/stock-forecast'
+import { phraseAnswer, resolveLlmProvider } from '@/lib/copilot-llm'
 
 const BodySchema = z.object({ query: z.string().trim().min(1).max(500) })
 
@@ -136,7 +137,12 @@ export const POST = withAuth(async (req) => {
     res.message = 'Erreur lors de la récupération des données.'
   }
 
-  return NextResponse.json(res)
+  // Optional natural-language phrasing. With no provider configured this returns
+  // res.message verbatim; a configured provider's phrasing is grounding-checked
+  // (numbers must come from the deterministic data) before being surfaced.
+  const facts = `${res.message ?? ''} ${JSON.stringify(res.data ?? {})}`
+  const phrased = await phraseAnswer({ query: parsed.data.query, facts, fallback: res.message ?? '' }, resolveLlmProvider())
+  return NextResponse.json({ ...res, phrasing: phrased.text })
 })
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
