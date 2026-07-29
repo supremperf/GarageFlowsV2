@@ -51,3 +51,6 @@ icon.icns
 gf_update.json
 /updates/
 /dev.db
+
+# Integration-test temporary SQLite databases
+.tmp-itest-*
