@@ -31,6 +31,8 @@ import {
   KeyRound,
   Sparkles,
   ScanLine,
+  Truck,
+  Boxes,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState, useRef, useEffect, useCallback } from 'react'
@@ -127,6 +129,8 @@ interface HeaderProps {
   onOpenLoaner?:        () => void
   onOpenCopilot?:       () => void
   onOpenOcr?:           () => void
+  onOpenSuppliers?:     () => void
+  onOpenCatalog?:       () => void
   warrantyAlerts?:      number
 }
 
@@ -142,6 +146,8 @@ export default function Header({
   onOpenLoaner,
   onOpenCopilot,
   onOpenOcr,
+  onOpenSuppliers,
+  onOpenCatalog,
   warrantyAlerts = 0,
 }: HeaderProps) {
   const {
@@ -525,6 +531,24 @@ export default function Header({
               icon={ScanLine}
               label="OCR"
               title="Scanner un document (carte grise, facture…)"
+              variant="finance"
+            />
+          )}
+          {onOpenSuppliers && (
+            <ToolBtn
+              onClick={onOpenSuppliers}
+              icon={Truck}
+              label="Fournisseurs"
+              title="Commande automatique fournisseurs (réappro. groupé)"
+              variant="finance"
+            />
+          )}
+          {onOpenCatalog && (
+            <ToolBtn
+              onClick={onOpenCatalog}
+              icon={Boxes}
+              label="Catalogue"
+              title="Catalogue de pièces (recherche, références croisées)"
               variant="finance"
             />
           )}

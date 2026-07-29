@@ -24,6 +24,8 @@ import WarrantyPanel from '@/components/WarrantyPanel'
 import LoanerPanel from '@/components/LoanerPanel'
 import CopilotPanel from '@/components/CopilotPanel'
 import OcrPanel from '@/components/OcrPanel'
+import SuppliersPanel from '@/components/SuppliersPanel'
+import CatalogPanel from '@/components/CatalogPanel'
 import LicenseRevokedOverlay from '@/components/LicenseRevokedOverlay'
 import { Loader2 } from 'lucide-react'
 import { GarageFlowIcon } from '@/components/GarageFlowLogo'
@@ -85,6 +87,8 @@ export default function Home() {
   const [isLoanerPanelOpen,    setIsLoanerPanelOpen]    = useState(false)
   const [isCopilotOpen,        setIsCopilotOpen]        = useState(false)
   const [isOcrOpen,            setIsOcrOpen]            = useState(false)
+  const [isSuppliersOpen,      setIsSuppliersOpen]      = useState(false)
+  const [isCatalogOpen,        setIsCatalogOpen]        = useState(false)
   const [warrantyAlerts,       setWarrantyAlerts]       = useState(0)
 
   // ── Global keyboard shortcuts ──────────────────────────────────────────────
@@ -247,6 +251,8 @@ export default function Home() {
         onOpenLoaner={() => setIsLoanerPanelOpen(true)}
         onOpenCopilot={() => setIsCopilotOpen(true)}
         onOpenOcr={() => setIsOcrOpen(true)}
+        onOpenSuppliers={() => setIsSuppliersOpen(true)}
+        onOpenCatalog={() => setIsCatalogOpen(true)}
         warrantyAlerts={warrantyAlerts}
       />
 
@@ -299,6 +305,8 @@ export default function Home() {
       {isLoanerPanelOpen      && <LoanerPanel           onClose={() => setIsLoanerPanelOpen(false)} />}
       {isCopilotOpen          && <CopilotPanel          onClose={() => setIsCopilotOpen(false)} />}
       {isOcrOpen              && <OcrPanel              onClose={() => setIsOcrOpen(false)} />}
+      {isSuppliersOpen        && <SuppliersPanel        onClose={() => setIsSuppliersOpen(false)} />}
+      {isCatalogOpen          && <CatalogPanel          onClose={() => setIsCatalogOpen(false)} />}
       {isSettingsOpen         && <SettingsModal        onClose={() => setIsSettingsOpen(false)} />}
 
       {/* ── First-launch onboarding ──────────────────────────────────────────── */}
