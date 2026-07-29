@@ -1,7 +1,7 @@
 # Intégration du plan de contrôle — Client GarageFlow (Electron)
 
 Ce document décrit l'intégration côté **client desktop** (`GarageFlow.exe`) des
-fonctions pilotées à distance par le serveur officiel (`app.garageflows.fr`,
+fonctions pilotées à distance par le serveur officiel (`api.garageflows.fr`,
 dépôt `garagesite3`). Le serveur reste la **source de vérité** ; le client
 applique et affiche.
 

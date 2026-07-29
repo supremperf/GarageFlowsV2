@@ -4,7 +4,7 @@ import cp from '../../../electron/control-plane.js'
 
 describe('resolveRemoteBase', () => {
   it('supprime le slash final', () => {
-    expect(cp.resolveRemoteBase({ GF_LICENSE_SERVER: 'https://app.garageflows.fr/' })).toBe('https://app.garageflows.fr')
+    expect(cp.resolveRemoteBase({ GF_LICENSE_SERVER: 'https://api.garageflows.fr/' })).toBe('https://api.garageflows.fr')
   })
   it('renvoie null si absent', () => {
     expect(cp.resolveRemoteBase({})).toBeNull()

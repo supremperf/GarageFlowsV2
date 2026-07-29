@@ -176,15 +176,18 @@ et `src/lib/pwaAssets.ts`. Les fichiers générés sont **commités** dans le d�
 ### DNS (registrar du domaine `garageflows.fr`)
 | Sous-domaine | Type | Cible |
 |---|---|---|
-| `garageflows.fr` (apex) | A / ALIAS | hébergeur de **garagesite3** |
+| `garageflows.fr` (apex) | A / ALIAS | hébergeur de **garagesite3** (vitrine + back-office) |
 | `www.garageflows.fr` | CNAME | `garageflows.fr` |
-| `app.garageflows.fr` | CNAME | hébergeur de **GarageFlowsV2** (cible web) |
+| `api.garageflows.fr` | CNAME | hébergeur de **garagesite3** (même déploiement — API / serveur de licences) |
+| `app.garageflows.fr` | CNAME | hébergeur de **GarageFlowsV2** (cible web — **PWA**) |
 
 > HTTPS est **obligatoire** pour une PWA (Service Worker). Les certificats sont
 > gérés automatiquement par Vercel (ou via Let's Encrypt sur un hôte Node).
 
 ### Vercel (recommandé)
-- Projet **`garageflows-site`** (dépôt `garagesite3`) → domaine `garageflows.fr`.
+- Projet **`garageflows-site`** (dépôt `garagesite3`) → domaines `garageflows.fr`
+  **et** `api.garageflows.fr` (deux domaines, un seul déploiement ; l'API de
+  licences est exposée sous `api.garageflows.fr` via `NEXT_PUBLIC_API_URL`).
 - Projet **`garageflows-app`** (dépôt `GarageFlowsV2`) → domaine `app.garageflows.fr`.
 - Chaque projet possède ses variables d'environnement (section 6).
 
@@ -193,23 +196,22 @@ Pour partager la session entre `garageflows.fr` et `app.garageflows.fr`, défini
 le cookie de session sur le domaine parent `.garageflows.fr`. Par défaut, la PWA
 gère sa propre connexion sur `app.garageflows.fr` (mêmes identifiants, même base).
 
-### ⚠️ Coordination inter-sessions — attribution de `app.garageflows.fr`
-Le sous-domaine `app.garageflows.fr` est **réservé à la PWA (ce dépôt)** :
-`GarageFlowsV2/.env.example` fixe déjà `NEXTAUTH_URL="https://app.garageflows.fr"`.
+### Topologie des sous-domaines (décidée)
+Trois rôles, trois sous-domaines, **sans collision** :
 
-En parallèle, `garagesite3/.env(.example)` étiquette également `app.garageflows.fr`
-comme « serveur officiel des licences / API » (`NEXT_PUBLIC_API_URL`). **Un seul
-service peut occuper ce sous-domaine.** Topologie recommandée, sans collision :
+| Rôle | Dépôt | Domaine | Variable |
+|---|---|---|---|
+| Vitrine + back-office | `garagesite3` | `garageflows.fr` | — |
+| **Serveur de licences / control-plane / API** | `garagesite3` | **`api.garageflows.fr`** | `NEXT_PUBLIC_API_URL` |
+| **PWA / application** | `GarageFlowsV2` (cible web) | **`app.garageflows.fr`** | `NEXTAUTH_URL`, `NEXT_PUBLIC_APP_URL` |
 
-| Rôle | Dépôt | Domaine recommandé |
-|---|---|---|
-| Vitrine + back-office + **serveur de licences / API** | `garagesite3` | `garageflows.fr` (API : `garageflows.fr/api/v1`) ou `api.garageflows.fr` |
-| **PWA / application** | `GarageFlowsV2` (cible web) | **`app.garageflows.fr`** |
-
-Tout est **paramétré par variables d'environnement** (`NEXT_PUBLIC_APP_URL`,
-`GF_LICENSE_SERVER`, `NEXT_PUBLIC_API_URL`) : l'attribution finale des domaines
-peut être ajustée **sans modification de code**, une fois la topologie validée
-avec l'autre session.
+> **Décision** : `app.garageflows.fr` est **exclusivement** la PWA. Le serveur
+> de licences (dépôt `garagesite3`), auparavant étiqueté `app.garageflows.fr`,
+> est basculé sur **`api.garageflows.fr`** — c'est l'origine publique utilisée
+> pour les URLs de téléchargement/mises à jour (`NEXT_PUBLIC_API_URL`) et pointée
+> par `GF_LICENSE_SERVER` côté desktop/PWA. Ce changement est purement
+> **configuration + commentaires** (le code est piloté par variables
+> d'environnement) : aucune logique métier modifiée.
 
 ---
 
@@ -220,12 +222,14 @@ avec l'autre session.
 |---|---|
 | `DATABASE_URL` | **La même** PostgreSQL que le desktop et le serveur de licences → données synchronisées |
 | `NEXTAUTH_SECRET` | **Identique** partout → sessions valides sur toutes les surfaces |
-| `NEXTAUTH_URL` | `https://app.garageflows.fr` |
+| `NEXTAUTH_URL` | `https://app.garageflows.fr` (URL propre de la PWA) |
 | `NEXT_PUBLIC_APP_URL` | `https://app.garageflows.fr` (utilisé par `metadataBase`) |
+| `GF_LICENSE_SERVER` | `https://api.garageflows.fr` — serveur de licences / control-plane |
 
-### `garagesite3` (site)
+### `garagesite3` (vitrine + API de licences)
 | Variable | Rôle |
 |---|---|
+| `NEXT_PUBLIC_API_URL` | `https://api.garageflows.fr` — origine publique du serveur de licences / API |
 | `NEXT_PUBLIC_APP_URL` | `https://app.garageflows.fr` — cible du bouton « Ouvrir l'application » |
 
 > **Synchronisation des données** = conséquence directe d'un `DATABASE_URL` et
