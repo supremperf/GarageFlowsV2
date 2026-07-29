@@ -688,4 +688,16 @@ export const MIGRATIONS: Migration[] = [
     "updatedAt"      DATETIME NOT NULL
   )` },
   { id: '093_appointment_indexes', sql: 'CREATE INDEX IF NOT EXISTS "Appointment_garageId_date_idx" ON "Appointment" ("garageId", "date")' },
+  // ── Copilote report history (Phase 4/6) ──────────────────────────────────────
+  { id: '094_create_report_snapshot_table', sql: `CREATE TABLE IF NOT EXISTS "ReportSnapshot" (
+    "id"          TEXT PRIMARY KEY NOT NULL,
+    "garageId"    TEXT NOT NULL,
+    "periodDays"  INTEGER NOT NULL,
+    "healthScore" INTEGER NOT NULL,
+    "summary"     TEXT NOT NULL,
+    "payload"     TEXT NOT NULL,
+    "createdBy"   TEXT,
+    "createdAt"   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )` },
+  { id: '095_report_snapshot_index', sql: 'CREATE INDEX IF NOT EXISTS "ReportSnapshot_garageId_createdAt_idx" ON "ReportSnapshot" ("garageId", "createdAt")' },
 ]

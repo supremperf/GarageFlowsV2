@@ -97,6 +97,7 @@ model Garage {
   backups            BackupRecord[]
   tickets            PortalTicket[]
   appointments       Appointment[]
+  reports            ReportSnapshot[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -892,4 +893,22 @@ model Appointment {
   @@index([garageId])
   @@index([garageId, date])
   @@index([portalUserId])
+}
+
+// ─── Copilote Report History (Phase 4/6) ──────────────────────────────────────
+// Historised « Analyser mon garage » reports for trend/audit. Stores the full
+// report JSON so it can be re-exported (PDF/CSV) exactly as generated.
+model ReportSnapshot {
+  id          String   @id @default(cuid())
+  garageId    String
+  garage      Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  periodDays  Int
+  healthScore Int
+  summary     String
+  payload     String // full CopilotReport JSON
+  createdBy   String? // author display name
+  createdAt   DateTime @default(now())
+
+  @@index([garageId])
+  @@index([garageId, createdAt])
 }
