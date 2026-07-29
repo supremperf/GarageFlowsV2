@@ -591,4 +591,38 @@ export const MIGRATIONS: Migration[] = [
   )` },
   { id: '077_signature_record_doc_index', sql: 'CREATE INDEX IF NOT EXISTS "SignatureRecord_documentType_documentId_idx" ON "SignatureRecord" ("documentType", "documentId")' },
   { id: '078_signature_record_garage_index', sql: 'CREATE INDEX IF NOT EXISTS "SignatureRecord_garageId_idx" ON "SignatureRecord" ("garageId")' },
+  // ── Portal client accounts + devices (Phase 2) ───────────────────────────────
+  { id: '079_create_portal_user_table', sql: `CREATE TABLE IF NOT EXISTS "PortalUser" (
+    "id"               TEXT PRIMARY KEY NOT NULL,
+    "garageId"         TEXT NOT NULL,
+    "clientId"         TEXT,
+    "email"            TEXT NOT NULL,
+    "passwordHash"     TEXT NOT NULL,
+    "name"             TEXT,
+    "emailVerified"    INTEGER NOT NULL DEFAULT 0,
+    "emailVerifyToken" TEXT,
+    "twoFactorEnabled" INTEGER NOT NULL DEFAULT 0,
+    "twoFactorSecret"  TEXT,
+    "twoFactorPending" TEXT,
+    "backupCodes"      TEXT NOT NULL DEFAULT '[]',
+    "failedLoginCount" INTEGER NOT NULL DEFAULT 0,
+    "lockedUntil"      DATETIME,
+    "lastLoginAt"      DATETIME,
+    "createdAt"        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt"        DATETIME NOT NULL
+  )` },
+  { id: '080_portal_user_email_unique', sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "PortalUser_garageId_email_key" ON "PortalUser" ("garageId", "email")' },
+  { id: '081_portal_user_garage_index', sql: 'CREATE INDEX IF NOT EXISTS "PortalUser_garageId_idx" ON "PortalUser" ("garageId")' },
+  { id: '082_create_portal_device_table', sql: `CREATE TABLE IF NOT EXISTS "PortalDevice" (
+    "id"           TEXT PRIMARY KEY NOT NULL,
+    "portalUserId" TEXT NOT NULL,
+    "sessionId"    TEXT NOT NULL,
+    "userAgent"    TEXT,
+    "ipAddress"    TEXT,
+    "lastSeenAt"   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "revokedAt"    DATETIME,
+    "createdAt"    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )` },
+  { id: '083_portal_device_session_unique', sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "PortalDevice_sessionId_key" ON "PortalDevice" ("sessionId")' },
+  { id: '084_portal_device_user_index', sql: 'CREATE INDEX IF NOT EXISTS "PortalDevice_portalUserId_idx" ON "PortalDevice" ("portalUserId")' },
 ]

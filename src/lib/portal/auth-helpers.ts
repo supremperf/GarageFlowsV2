@@ -1,0 +1,117 @@
+/**
+ * Shared helpers for the authenticated client-portal endpoints (Phase 2):
+ * session cookie handling, request-context loading, garage resolution and simple
+ * evidence extraction. Keeps the auth routes free of duplicated boilerplate.
+ */
+
+import crypto from 'crypto'
+import { NextRequest, NextResponse } from 'next/server'
+import type { PortalUser, PortalDevice } from '@prisma/client'
+import { prisma } from '@/lib/db'
+import { verifyPortalSession, signPortalSession } from '@/lib/portal/session'
+import { logger } from '@/lib/logger'
+
+export const PORTAL_COOKIE = 'gf_portal'
+export const PORTAL_SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 days (seconds)
+
+/** Set the HttpOnly portal session cookie on a response. */
+export function setPortalCookie(res: NextResponse, token: string): void {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+  res.headers.append(
+    'Set-Cookie',
+    `${PORTAL_COOKIE}=${token}; Path=/; Max-Age=${PORTAL_SESSION_MAX_AGE}; SameSite=Lax; HttpOnly${secure}`,
+  )
+}
+
+/** Clear the portal session cookie. */
+export function clearPortalCookie(res: NextResponse): void {
+  res.headers.append('Set-Cookie', `${PORTAL_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax; HttpOnly`)
+}
+
+export function clientIp(req: NextRequest): string | null {
+  const fwd = req.headers.get('x-forwarded-for')
+  const ip = fwd ? fwd.split(',')[0].trim() : req.headers.get('x-real-ip')
+  return ip || null
+}
+
+export function userAgent(req: NextRequest): string | null {
+  return req.headers.get('user-agent')
+}
+
+export interface PortalContext {
+  user: PortalUser
+  device: PortalDevice
+}
+
+/** Load the authenticated portal user + device from the session cookie, or null. */
+export async function loadPortalContext(req: NextRequest): Promise<PortalContext | null> {
+  const claims = await verifyPortalSession(req.cookies.get(PORTAL_COOKIE)?.value)
+  if (!claims) return null
+
+  const device = await prisma.portalDevice.findUnique({ where: { sessionId: claims.sid } })
+  if (!device || device.revokedAt) return null
+
+  const user = await prisma.portalUser.findUnique({ where: { id: claims.sub } })
+  if (!user || user.id !== device.portalUserId) return null
+
+  // Best-effort last-seen touch (never blocks the request).
+  prisma.portalDevice.update({ where: { id: device.id }, data: { lastSeenAt: new Date() } }).catch(() => {})
+
+  return { user, device }
+}
+
+/** Like {@link loadPortalContext} but throws a 401 NextResponse when unauthenticated. */
+export async function requirePortalContext(req: NextRequest): Promise<PortalContext> {
+  const ctx = await loadPortalContext(req)
+  if (!ctx) throw NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+  return ctx
+}
+
+/**
+ * Wrap an authenticated portal route: injects the {@link PortalContext}, turns a
+ * thrown 401 into the response, and never leaks internal errors to the client.
+ */
+export function withPortalAuth(
+  handler: (req: NextRequest, ctx: PortalContext) => Promise<NextResponse>,
+) {
+  return async (req: NextRequest): Promise<NextResponse> => {
+    try {
+      const ctx = await requirePortalContext(req)
+      return await handler(req, ctx)
+    } catch (e) {
+      if (e instanceof NextResponse) return e
+      logger.error('[portal] route error:', e)
+      return NextResponse.json({ error: 'Erreur interne' }, { status: 500 })
+    }
+  }
+}
+
+/**
+ * Create a PortalDevice row and sign a session token bound to it.
+ * Returns the token to set as the cookie plus the new session id.
+ */
+export async function issuePortalSession(
+  portalUserId: string,
+  req: NextRequest,
+): Promise<{ token: string; sessionId: string }> {
+  const sessionId = crypto.randomUUID()
+  await prisma.portalDevice.create({
+    data: { portalUserId, sessionId, userAgent: userAgent(req), ipAddress: clientIp(req) },
+  })
+  const token = await signPortalSession({ sub: portalUserId, sid: sessionId })
+  return { token, sessionId }
+}
+
+/**
+ * Resolve the target garage for a portal operation. Uses the provided slug, or
+ * the sole garage when the deployment has exactly one. Returns null when the
+ * garage is ambiguous (multiple garages, no slug) or not found.
+ */
+export async function resolveGarageId(slug?: string | null): Promise<string | null> {
+  if (slug) {
+    const g = await prisma.garage.findUnique({ where: { slug }, select: { id: true } })
+    return g?.id ?? null
+  }
+  const garages = await prisma.garage.findMany({ take: 2, select: { id: true } })
+  return garages.length === 1 ? garages[0].id : null
+}

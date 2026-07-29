@@ -93,6 +93,7 @@ model Garage {
   loanerReservations LoanerReservation[]
   purchaseOrders     PurchaseOrder[]
   signatures         SignatureRecord[]
+  portalUsers        PortalUser[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -129,19 +130,20 @@ model Mechanic {
 
 // ─── Client ───────────────────────────────────────────────────────────────────
 model Client {
-  id        String     @id @default(cuid())
-  name      String
-  phone     String?
-  email     String?
-  address   String?
-  garageId  String
-  garage    Garage     @relation(fields: [garageId], references: [id], onDelete: Cascade)
-  vehicles  Vehicle[]
-  reminders Reminder[]
-  quotes    Quote[]
-  invoices  Invoice[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id          String       @id @default(cuid())
+  name        String
+  phone       String?
+  email       String?
+  address     String?
+  garageId    String
+  garage      Garage       @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  vehicles    Vehicle[]
+  reminders   Reminder[]
+  quotes      Quote[]
+  invoices    Invoice[]
+  portalUsers PortalUser[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   @@index([garageId])
   @@index([garageId, name])
@@ -751,4 +753,54 @@ model SignatureRecord {
 
   @@index([garageId])
   @@index([documentType, documentId])
+}
+
+// ─── Portal Client Account (Phase 2) ──────────────────────────────────────────
+// Authenticated customer account for the premium client portal. Separate from
+// the staff `User` model. Supports email verification, TOTP two-factor auth with
+// one-time backup codes, and brute-force lockout. Additive & non-breaking.
+model PortalUser {
+  id               String         @id @default(cuid())
+  garageId         String
+  garage           Garage         @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  clientId         String?
+  client           Client?        @relation(fields: [clientId], references: [id])
+  email            String
+  passwordHash     String
+  name             String?
+  emailVerified    Boolean        @default(false)
+  emailVerifyToken String?
+  // Two-factor authentication (TOTP)
+  twoFactorEnabled Boolean        @default(false)
+  twoFactorSecret  String? // base32 secret, set once 2FA is confirmed
+  twoFactorPending String? // base32 secret during setup, before confirmation
+  backupCodes      String         @default("[]") // JSON array of SHA-256 code hashes
+  // Brute-force lockout
+  failedLoginCount Int            @default(0)
+  lockedUntil      DateTime?
+  lastLoginAt      DateTime?
+  devices          PortalDevice[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([garageId, email])
+  @@index([garageId])
+  @@index([clientId])
+}
+
+// ─── Portal Connected Device / Session (Phase 2) ──────────────────────────────
+// One row per active portal session, so the customer can review "connected
+// devices" and revoke them (global logout). The session JWT carries `sid`.
+model PortalDevice {
+  id           String     @id @default(cuid())
+  portalUserId String
+  portalUser   PortalUser @relation(fields: [portalUserId], references: [id], onDelete: Cascade)
+  sessionId    String     @unique // random session id embedded in the session JWT
+  userAgent    String?
+  ipAddress    String?
+  lastSeenAt   DateTime   @default(now())
+  revokedAt    DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@index([portalUserId])
 }
