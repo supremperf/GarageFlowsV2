@@ -38,6 +38,9 @@ function trendOf(value: number, previous: number | null | undefined): Trend {
 /** Status from thresholds, interpreted per direction. Neutral when no threshold. */
 export function kpiStatus(input: KpiInput): KpiStatus {
   const { value, warnAt, critAt } = input
+  // A broken upstream computation (NaN/Infinity) must not read as healthy — every
+  // relational comparison with NaN is false, which would fall through to 'good'.
+  if (!Number.isFinite(value)) return 'neutral'
   const dir = input.direction ?? 'higher_better'
   const worse = (a: number, threshold: number) => (dir === 'higher_better' ? a <= threshold : a >= threshold)
 

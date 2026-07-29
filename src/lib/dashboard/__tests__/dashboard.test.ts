@@ -8,6 +8,11 @@ describe('deltaPct', () => {
     expect(deltaPct(50, 0)).toBeNull()
     expect(deltaPct(50, null)).toBeNull()
   })
+
+  it('uses the magnitude of a negative previous (a loss shrinking is a gain)', () => {
+    expect(deltaPct(-80, -100)).toBe(20) // −100 → −80 is a +20% improvement
+    expect(deltaPct(-120, -100)).toBe(-20)
+  })
 })
 
 describe('kpiStatus', () => {
@@ -28,6 +33,11 @@ describe('kpiStatus', () => {
 
   it('is neutral when no threshold is given', () => {
     expect(kpiStatus({ key: 'x', label: 'X', value: 42 })).toBe('neutral')
+  })
+
+  it('is neutral (not good) for a non-finite value from a broken upstream metric', () => {
+    expect(kpiStatus({ key: 'x', label: 'X', value: Number.NaN, warnAt: 20, critAt: 10 })).toBe('neutral')
+    expect(kpiStatus({ key: 'x', label: 'X', value: Number.POSITIVE_INFINITY, warnAt: 20, critAt: 10, direction: 'lower_better' })).toBe('neutral')
   })
 })
 
@@ -87,6 +97,13 @@ describe('buildDashboard', () => {
     })
     expect(manyCrit.healthScore).toBe(0)
     expect(manyCrit.healthLabel).toBe('Critique')
+  })
+
+  it('labels health at the inclusive band boundaries (80/60/40)', () => {
+    const critKpi = (n: number) => Array.from({ length: n }, (_, i) => ({ key: `k${i}`, label: 'K', value: 0, warnAt: 5, critAt: 1, direction: 'higher_better' as const }))
+    expect(buildDashboard({ kpis: critKpi(1) }).healthLabel).toBe('Excellent') // 80
+    expect(buildDashboard({ kpis: critKpi(2) }).healthLabel).toBe('Bon') // 60
+    expect(buildDashboard({ kpis: critKpi(3) }).healthLabel).toBe('À surveiller') // 40
   })
 
   it('handles an empty dashboard as fully healthy', () => {

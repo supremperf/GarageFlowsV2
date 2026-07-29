@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { differenceInDays, format, startOfDay, subMonths } from 'date-fns'
+import { format, startOfDay, subDays, subMonths } from 'date-fns'
 import { calcTotalHT, roundCents } from '@/lib/billing'
 import { analyze } from '@/lib/profitability'
 import { planReorders, type StockItemInput } from '@/lib/stock-forecast'
@@ -19,7 +19,7 @@ export const GET = withAuth(async () => {
   const monthKeys = [format(subMonths(today, 1), 'yyyy-MM'), format(today, 'yyyy-MM')]
   const since30 = format(subMonths(today, 1), 'yyyy-MM-dd')
 
-  const [invoices2mo, prof, stock, pendingQuotes, overdueQuotes] = await Promise.all([
+  const [invoices2mo, prof, stock, pendingQuotes, overdueCount] = await Promise.all([
     prisma.invoice.findMany({
       where: { garageId, status: 'paid', issueDate: { gte: `${monthKeys[0]}-01` } },
       select: { issueDate: true, lines: { select: { quantity: true, unitPrice: true } } },
@@ -27,7 +27,8 @@ export const GET = withAuth(async () => {
     profitability(garageId, since30),
     stockReport(garageId, today),
     prisma.quote.count({ where: { garageId, status: 'sent' } }),
-    prisma.quote.findMany({ where: { garageId, status: 'sent' }, select: { createdAt: true } }),
+    // Count overdue quotes with a date predicate (no unbounded row scan).
+    prisma.quote.count({ where: { garageId, status: 'sent', createdAt: { lt: subDays(today, 30) } } }),
   ])
 
   // Revenue this month vs last month.
@@ -41,11 +42,17 @@ export const GET = withAuth(async () => {
 
   const lowStockCount = stock.plans.filter((p) => p.shouldReorder).length
   const criticalStock = stock.plans.filter((p) => p.urgency === 'critical')
-  const overdueCount = overdueQuotes.filter((q) => differenceInDays(today, startOfDay(q.createdAt)) > 30).length
+
+  // Margin is null when there are no paid invoices in the window — "unknown", not
+  // 0%. Only attach thresholds (which drive good/warning/critical) when known, so
+  // a quiet/new garage renders neutral rather than a false "critical".
+  const marginKpi: KpiInput = prof.marginPct != null
+    ? { key: 'margin', label: 'Marge (30 j)', value: prof.marginPct, unit: '%', direction: 'higher_better', warnAt: 20, critAt: 10, target: 30 }
+    : { key: 'margin', label: 'Marge (30 j)', value: 0, unit: '%', direction: 'higher_better', target: 30 }
 
   const kpis: KpiInput[] = [
     { key: 'revenue', label: 'CA HT (mois)', value: revenueThis, previous: revenuePrev, unit: '€', direction: 'higher_better' },
-    { key: 'margin', label: 'Marge (30 j)', value: prof.marginPct ?? 0, unit: '%', direction: 'higher_better', warnAt: 20, critAt: 10, target: 30 },
+    marginKpi,
     { key: 'lowstock', label: 'Pièces à réapprovisionner', value: lowStockCount, unit: '', direction: 'lower_better', warnAt: 3, critAt: 8 },
     { key: 'pending_quotes', label: 'Devis en attente', value: pendingQuotes, unit: '', direction: 'lower_better', warnAt: 10, critAt: 25 },
   ]
