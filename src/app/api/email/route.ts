@@ -72,7 +72,10 @@ export const POST = withAuth(async (req) => {
     })
 
     return NextResponse.json({ ok: true })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch (err) {
+    // Test SMTP admin : on renvoie un message court (utile au diagnostic) sans
+    // stack ni détail interne. Borné pour éviter toute fuite d'information.
+    const msg = (err instanceof Error ? err.message : 'Échec de l’envoi').split('\n')[0].slice(0, 160)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 })

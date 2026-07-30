@@ -45,13 +45,7 @@ export async function POST(req: NextRequest) {
 
     licenseId = String(body.licenseId ?? '').trim()
     status = body.status as Status
-
-    console.log("====================================")
-    console.log("📩 REVOKE API")
-    console.log("DATABASE_URL =", process.env.DATABASE_URL)
-    console.log("LicenseId reçu :", licenseId)
-    console.log("Status demandé :", status)
-
+    // SÉCURITÉ : ne jamais journaliser DATABASE_URL ni de secret. Trace minimale.
   } catch {
     return NextResponse.json(
       { error: 'Corps de requête invalide' },

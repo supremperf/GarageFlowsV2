@@ -1383,7 +1383,7 @@ function createSplash() {
     skipTaskbar:     true,
     center:          true,
     backgroundColor: '#0f1629',
-    webPreferences:  { contextIsolation: true, nodeIntegration: false },
+    webPreferences:  { contextIsolation: true, nodeIntegration: false, sandbox: true },
   })
   // __dirname works in both dev and inside the ASAR (Electron handles ASAR paths)
   splashWindow.loadFile(path.join(__dirname, 'splash.html'))
@@ -1415,6 +1415,8 @@ function createLicenseWindow() {
         preload:          path.join(__dirname, 'preload.js'),
         contextIsolation: true,
         nodeIntegration:  false,
+        sandbox:          true,
+        webSecurity:      true,
       },
     })
 
@@ -1488,10 +1490,13 @@ function createMainWindow() {
     frame:           false,
     titleBarStyle:   'hidden',
     webPreferences: {
-      preload:          path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration:  false,
-      spellcheck:       false,
+      preload:            path.join(__dirname, 'preload.js'),
+      contextIsolation:   true,
+      nodeIntegration:    false,
+      sandbox:            true,   // durcissement : renderer en bac à sable
+      webSecurity:        true,   // same-origin policy active (explicite)
+      allowRunningInsecureContent: false,
+      spellcheck:         false,
     },
   })
 
@@ -1577,10 +1582,34 @@ function createMainWindow() {
     log('Main window shown')
   })
 
+  // Fenêtres externes : n'ouvrir dans le navigateur QUE des URLs HTTPS vers des
+  // domaines de confiance ; tout le reste est refusé (anti-phishing / protocoles
+  // dangereux). Aucune nouvelle BrowserWindow n'est jamais créée par le renderer.
+  const ALLOWED_EXTERNAL_HOSTS = new Set([
+    'garageflows.fr', 'www.garageflows.fr', 'app.garageflows.fr', 'api.garageflows.fr',
+  ])
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('http')) shell.openExternal(url)
+    try {
+      const u = new URL(url)
+      if (u.protocol === 'https:' && ALLOWED_EXTERNAL_HOSTS.has(u.hostname)) {
+        shell.openExternal(url)
+      } else {
+        log('[security] window.open refusé :', u.protocol + '//' + u.hostname)
+      }
+    } catch { /* URL invalide → refus */ }
     return { action: 'deny' }
   })
+
+  // Empêche toute navigation hors de l'app locale (pas de file://, pas d'externe).
+  const localOrigin = `http://127.0.0.1:${PORT}`
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (!url.startsWith(localOrigin)) {
+      event.preventDefault()
+      log('[security] navigation bloquée vers :', url.slice(0, 80))
+    }
+  })
+  // Refuse tout attachement de webview (vecteur d'exécution non prévu).
+  mainWindow.webContents.on('will-attach-webview', (event) => event.preventDefault())
 
   mainWindow.on('closed', () => { mainWindow = null })
 

@@ -44,8 +44,9 @@ export async function GET(req: NextRequest) {
       ])
 
     return NextResponse.json({ clients, vehicles, jobs, invoices, quotes, parts, mechanics, reminders })
-  } catch (err: any) {
-    console.error('[internal/export] error:', err)
-    return NextResponse.json({ error: err.message ?? 'Erreur DB' }, { status: 500 })
+  } catch (err) {
+    // Ne jamais renvoyer le détail interne au client (fuite d'infos).
+    console.error('[internal/export] error:', (err as { code?: string })?.code ?? 'unknown')
+    return NextResponse.json({ error: 'Erreur interne' }, { status: 500 })
   }
 }
