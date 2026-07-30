@@ -68,6 +68,24 @@ export function isPwaProduction(): boolean {
 }
 
 /**
+ * Clé AES-256 (base64, 32 octets) pour les sauvegardes chiffrées (GF_BACKUP_KEY),
+ * ou `null` si absente — une passphrase par requête est alors requise. Quand elle
+ * est présente, sa robustesse est validée (jamais de repli codé en dur) :
+ * on LÈVE si elle est trop courte ou générique, pour éviter un chiffrement faible.
+ */
+export function backupKey(): string | null {
+  const raw = process.env.GF_BACKUP_KEY?.trim()
+  if (!raw) return null
+  if (isWeakSecret(raw)) {
+    throw new Error(
+      'GF_BACKUP_KEY trop courte ou générique — générez une clé forte ' +
+        '(« openssl rand -base64 32 »). Aucun repli codé en dur n\'est autorisé.',
+    )
+  }
+  return raw
+}
+
+/**
  * Appelée au démarrage (src/instrumentation.ts). Lève en production si la
  * configuration est invalide ; avertit seulement en développement.
  */

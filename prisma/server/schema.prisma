@@ -115,6 +115,12 @@ model Garage {
   vinSearches        VinSearch[]
   signatures         Signature[]
   notificationLogs   NotificationLog[]
+  // ── Portail client / SAV / RDV / sauvegardes / analytics (enterprise) ───────
+  portalUsers        PortalUser[]
+  portalTickets      PortalTicket[]
+  appointments       Appointment[]
+  backupRecords      BackupRecord[]
+  reportSnapshots    ReportSnapshot[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -162,6 +168,7 @@ model Client {
   reminders Reminder[]
   quotes    Quote[]
   invoices  Invoice[]
+  portalUsers PortalUser[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -777,4 +784,146 @@ model NotificationLog {
 
   @@index([garageId, createdAt])
   @@index([garageId, status])
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PORTAIL CLIENT / SAV / RDV / SAUVEGARDES / ANALYTICS (intégration enterprise)
+// Auth portail = architecture DÉDIÉE au portail client (PortalUser), distincte et
+// SANS lien avec l'auth staff (NextAuth) ni le système de licences/appareils.
+// ══════════════════════════════════════════════════════════════════════════════
+
+model PortalUser {
+  id               String         @id @default(cuid())
+  garageId         String
+  garage           Garage         @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  clientId         String?
+  client           Client?        @relation(fields: [clientId], references: [id])
+  email            String
+  passwordHash     String
+  name             String?
+  emailVerified    Boolean        @default(false)
+  emailVerifyToken String?
+  twoFactorEnabled Boolean        @default(false)
+  twoFactorSecret  String?
+  twoFactorPending String?
+  backupCodes      String         @default("[]")
+  failedLoginCount Int            @default(0)
+  lockedUntil      DateTime?
+  lastLoginAt      DateTime?
+  devices          PortalDevice[]
+  tickets          PortalTicket[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([garageId, email])
+  @@index([garageId])
+  @@index([clientId])
+}
+
+model PortalDevice {
+  id           String     @id @default(cuid())
+  portalUserId String
+  portalUser   PortalUser @relation(fields: [portalUserId], references: [id], onDelete: Cascade)
+  sessionId    String     @unique
+  userAgent    String?
+  ipAddress    String?
+  lastSeenAt   DateTime   @default(now())
+  revokedAt    DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@index([portalUserId])
+}
+
+model PortalTicket {
+  id            String                @id @default(cuid())
+  garageId      String
+  garage        Garage                @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  portalUserId  String
+  portalUser    PortalUser            @relation(fields: [portalUserId], references: [id], onDelete: Cascade)
+  clientId      String?
+  vehicleId     String?
+  subject       String
+  category      String                @default("general")
+  priority      String                @default("normal")
+  status        String                @default("open")
+  lastMessageAt DateTime              @default(now())
+  closedAt      DateTime?
+  messages      PortalTicketMessage[]
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  @@index([garageId])
+  @@index([garageId, status])
+  @@index([portalUserId])
+}
+
+model PortalTicketMessage {
+  id             String       @id @default(cuid())
+  ticketId       String
+  ticket         PortalTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorType     String
+  authorName     String
+  body           String
+  attachmentPath String?
+  createdAt      DateTime     @default(now())
+
+  @@index([ticketId])
+}
+
+model Appointment {
+  id             String    @id @default(cuid())
+  garageId       String
+  garage         Garage    @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  portalUserId   String?
+  clientId       String?
+  vehicleId      String?
+  clientName     String
+  vehicleModel   String?
+  licensePlate   String?
+  reason         String
+  date           String
+  startTime      String
+  durationMin    Int       @default(60)
+  status         String    @default("requested")
+  notes          String?
+  reminderSentAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([garageId])
+  @@index([garageId, date])
+  @@index([portalUserId])
+}
+
+model BackupRecord {
+  id           String   @id @default(cuid())
+  garageId     String
+  garage       Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  filename     String
+  sizeBytes    Int      @default(0)
+  checksum     String
+  algorithm    String   @default("aes-256-gcm")
+  kdf          String   @default("raw")
+  entityCounts String   @default("{}")
+  status       String   @default("completed")
+  note         String?
+  createdAt    DateTime @default(now())
+
+  @@index([garageId])
+  @@index([garageId, createdAt])
+}
+
+model ReportSnapshot {
+  id          String   @id @default(cuid())
+  garageId    String
+  garage      Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  periodDays  Int
+  healthScore Int
+  summary     String
+  payload     String
+  createdBy   String?
+  createdAt   DateTime @default(now())
+
+  @@index([garageId])
+  @@index([garageId, createdAt])
 }
