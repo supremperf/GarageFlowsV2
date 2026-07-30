@@ -33,6 +33,7 @@ const { licenseKey, deviceStore, prismaMock } = vi.hoisted(() => {
     hwidHash: string
     tokenHash: string
     status: string
+    platform: string | null
   }
   const deviceStore: { rows: DeviceRow[]; seq: number } = { rows: [], seq: 0 }
 
@@ -56,6 +57,7 @@ const { licenseKey, deviceStore, prismaMock } = vi.hoisted(() => {
         hwidHash: String(data.hwidHash),
         tokenHash: String(data.tokenHash),
         status: String(data.status ?? 'active'),
+        platform: data.platform != null ? String(data.platform) : null,
       }
       deviceStore.rows.push(row)
       return row
@@ -220,12 +222,22 @@ describe('POST /api/license/activate — révocation / suspension / première ut
     expect(licenseKey.create).not.toHaveBeenCalled()
   })
 
-  it('licence sans HWID initial → activation autorisée', async () => {
+  it('serveur/PWA non-admin sans identifiant d\'appareil → 400 DEVICE_REQUIRED (jamais de siège fantôme)', async () => {
+    // Contexte serveur/PWA (ELECTRON non défini) : une licence non-admin ne peut
+    // PAS obtenir de session sans enregistrer un appareil (HWID ou install id).
     licenseKey.record = null
     verifyMock.payload = { ...basePayload }   // pas de hwid dans le token
     const res = await POST(req({ license: 'GF2.x.y.z' }) as never)
+    expect(res.status).toBe(400)
+    expect((await res.json()).code).toBe('DEVICE_REQUIRED')
+  })
+
+  it('activation admin sans appareil → autorisée (les licences admin ne consomment pas de siège)', async () => {
+    licenseKey.record = null
+    verifyMock.payload = { ...basePayload, typ: 'admin' }
+    const res = await POST(req({ license: 'GF2.x.y.z' }) as never)
     expect(res.status).toBe(200)
-    expect(licenseKey.create).toHaveBeenCalled()
+    expect((await res.json()).ok).toBe(true)
   })
 
   it('licence expirée en base → refus même si le token semble valide', async () => {
@@ -303,11 +315,31 @@ describe('POST /api/license/activate — appareils (deviceToken, plafond de siè
     expect((await res.json()).code).toBe('DEVICE_REVOKED')
   })
 
-  it('activation sans HWID (navigateur PWA) → pas de deviceToken, pas d\'appareil', async () => {
-    const res = await POST(req({ license: 'GF2.x.y.z' }) as never)
+  it('PWA avec installId → deviceToken émis, appareil « pwa » enregistré (siège consommé)', async () => {
+    const installId = 'A'.repeat(43) // base64url 43 chars = 256 bits
+    const res = await POST(req({ license: 'GF2.x.y.z', installId }) as never)
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body.deviceToken).toBeUndefined()
+    expect(body.ok).toBe(true)
+    expect(typeof body.deviceToken).toBe('string')
+    expect(deviceStore.rows).toHaveLength(1)
+    expect(deviceStore.rows[0].platform).toBe('pwa')
+    // L'install id n'est jamais persisté en clair (seul son HMAC l'est).
+    expect(deviceStore.rows[0].hwidHash).not.toBe(installId)
+  })
+
+  it('PWA : installId occupe un siège — un second navigateur (seats=1) est refusé', async () => {
+    await POST(req({ license: 'GF2.x.y.z', installId: 'A'.repeat(43) }) as never)
+    const res = await POST(req({ license: 'GF2.x.y.z', installId: 'B'.repeat(43) }) as never)
+    expect(res.status).toBe(403)
+    expect((await res.json()).code).toBe('DEVICE_LIMIT_REACHED')
+    expect(deviceStore.rows).toHaveLength(1)
+  })
+
+  it('serveur/PWA : identifiant d\'installation invalide et pas de HWID → 400 DEVICE_REQUIRED', async () => {
+    const res = await POST(req({ license: 'GF2.x.y.z', installId: 'trop-court' }) as never)
+    expect(res.status).toBe(400)
+    expect((await res.json()).code).toBe('DEVICE_REQUIRED')
     expect(deviceStore.rows).toHaveLength(0)
   })
 })

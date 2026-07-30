@@ -14,6 +14,9 @@ import {
   hashHwid,
   timingSafeEqualHex,
   getDevicePepper,
+  generateInstallId,
+  isValidInstallId,
+  hashInstallId,
 } from '@/lib/license/devices'
 import { normalizeHwid, isValidHwidFormat } from '@/lib/license/verify'
 
@@ -66,6 +69,40 @@ describe('normalizeHwid / isValidHwidFormat (rappel contrat)', () => {
 
   it('normalise casse et espaces uniquement', () => {
     expect(normalizeHwid('  AbC  ')).toBe('abc')
+  })
+})
+
+describe('identifiant d\'installation PWA', () => {
+  it('generateInstallId produit 256 bits base64url (43 caractères)', () => {
+    const id = generateInstallId()
+    expect(id).toMatch(/^[A-Za-z0-9_-]{43}$/)
+    expect(Buffer.from(id, 'base64url')).toHaveLength(32)
+    expect(isValidInstallId(id)).toBe(true)
+  })
+
+  it('isValidInstallId rejette les formats non conformes', () => {
+    expect(isValidInstallId('')).toBe(false)
+    expect(isValidInstallId('trop-court')).toBe(false)
+    expect(isValidInstallId('A'.repeat(42))).toBe(false)
+    expect(isValidInstallId('A'.repeat(44))).toBe(false)
+    expect(isValidInstallId('!'.repeat(43))).toBe(false)
+    expect(isValidInstallId('A'.repeat(43))).toBe(true)
+  })
+
+  it('hashInstallId : HMAC hex 64, déterministe, jamais la valeur brute', () => {
+    const id = generateInstallId()
+    const h = hashInstallId(id)
+    expect(h).toMatch(/^[0-9a-f]{64}$/)
+    expect(hashInstallId(id)).toBe(h)
+    expect(h).not.toContain(id)
+  })
+
+  it('domaines HMAC séparés : install id et HWID de même valeur → hachés différents', () => {
+    const v = 'a'.repeat(43)
+    // Un HWID valide fait 64 hex ; on compare des domaines, pas des formats.
+    expect(hashInstallId(v)).not.toBe(hashDeviceToken(v))
+    const hex = 'a'.repeat(64)
+    expect(hashInstallId(hex.slice(0, 43))).not.toBe(hashHwid(hex))
   })
 })
 

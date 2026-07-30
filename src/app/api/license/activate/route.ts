@@ -35,6 +35,7 @@ import { getAuthSecret } from '@/lib/auth-secret'
 import {
   activateDevice,
   recordDeviceDenial,
+  isValidInstallId,
   DeviceLimitError,
   DeviceRevokedError,
   InvalidHwidError,
@@ -65,13 +66,16 @@ export async function POST(req: NextRequest) {
   const rl = await enforceRateLimit('license_activate', clientIpFrom(req))
   if (!rl.ok) return rateLimitResponse(rl)
 
-  let licenseToken: string
-  let clientHwid:   string | undefined
-  let clientMeta:   { platform?: string; appVersion?: string; name?: string } = {}
+  let licenseToken:    string
+  let clientHwid:      string | undefined
+  let clientInstallId: string | undefined
+  let clientMeta:      { platform?: string; appVersion?: string; name?: string } = {}
   try {
-    const body   = await req.json()
-    licenseToken = String(body.license ?? '').trim()
-    clientHwid   = body.hwid ? String(body.hwid) : undefined
+    const body      = await req.json()
+    licenseToken    = String(body.license ?? '').trim()
+    clientHwid      = body.hwid ? String(body.hwid) : undefined
+    // Identifiant d'installation PWA (navigateur, pas de HWID matériel).
+    clientInstallId = body.installId ? String(body.installId) : undefined
     clientMeta = {
       platform:   body.os ? `${String(body.os)}${body.arch ? ` ${String(body.arch)}` : ''}` : undefined,
       appVersion: body.version ? String(body.version) : undefined,
@@ -213,17 +217,36 @@ export async function POST(req: NextRequest) {
     logger.warn('[license/activate] erreur DB locale (fail-open Electron)')
   }
 
-  // ── Step 3: Enregistrement de l'appareil (si HWID fourni — client desktop) ──
+  // ── Step 3: Enregistrement de l'appareil (consomme un siège) ────────────────
   // ATOMIQUE : plafond `seats` appliqué sous verrou/transaction. Le deviceToken
   // est retourné UNE SEULE fois ; seul son HMAC est persisté.
+  //
+  // Client desktop → HWID matériel. Navigateur PWA → identifiant d'installation.
+  // SÉCURITÉ (serveur/PWA) : une licence NON-admin ne peut JAMAIS obtenir une
+  // session exploitable sans avoir enregistré un appareil valide → sinon
+  // plusieurs navigateurs partageraient une licence sans consommer de siège.
+  const hasHwid      = !!clientHwid && isValidHwidFormat(clientHwid)
+  const hasInstallId = !!clientInstallId && isValidInstallId(clientInstallId)
+  const deviceRequired = !IS_ELECTRON() && !(isAdmin ?? false)
+
+  if (deviceRequired && !hasHwid && !hasInstallId) {
+    return NextResponse.json(
+      {
+        ok: false, code: 'DEVICE_REQUIRED',
+        reason: 'Identifiant d\'installation requis pour activer cette licence.',
+      },
+      { status: 400 },
+    )
+  }
+
   let deviceToken: string | undefined
   let deviceId:    string | undefined
-  if (clientHwid && isValidHwidFormat(clientHwid)) {
+  if (hasHwid || hasInstallId) {
     try {
       const activation = await activateDevice({
         licenseId: payload.lid,
         seats,
-        hwid: clientHwid,
+        ...(hasHwid ? { hwid: clientHwid } : { installId: clientInstallId }),
         ...clientMeta,
       })
       deviceToken = activation.deviceToken
@@ -262,12 +285,30 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Serveur/PWA non-admin : refuser la session si aucun appareil n'a pu être
+  // enregistré (jamais de session « sans siège »). Electron reste fail-open.
+  if (deviceRequired && !deviceId) {
+    return NextResponse.json(
+      {
+        ok: false, code: 'DEVICE_REQUIRED',
+        reason: 'Enregistrement de l\'appareil impossible : activation refusée.',
+      },
+      { status: 400 },
+    )
+  }
+
   // ── Step 4: Build signed session JWT ────────────────────────────────────────
   // This JWT is stored HttpOnly and verified in middleware — prevents cookie tampering.
-  const sessionJwt = await new SignJWT({ typ: payload.typ, lid: payload.lid })
+  // `did` (deviceId) lie la session à l'appareil : la révocation de l'appareil
+  // invalide immédiatement la session (vérifié à chaque requête licenciée).
+  const sessionJwt = await new SignJWT({
+    typ: payload.typ,
+    lid: payload.lid,
+    ...(deviceId ? { did: deviceId } : {}),
+  })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('5y')
+    .setExpirationTime(IS_ELECTRON() ? '5y' : '30d')
     .sign(getJwtSecret())
 
   // ── Step 5: Set cookies via response headers ────────────────────────────────

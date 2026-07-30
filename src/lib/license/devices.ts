@@ -67,6 +67,36 @@ export function hashHwid(hwid: string): string {
     .digest('hex')
 }
 
+// ─── Identifiant d'installation PWA ──────────────────────────────────────────
+// Un navigateur ne fournit pas de HWID matériel. Chaque installation PWA génère
+// donc, côté client, un identifiant d'installation aléatoire (256 bits CSPRNG,
+// base64url) stocké de façon persistante (localStorage) — NON intrusif (aucune
+// empreinte de navigateur), unique par installation/profil, remplacé proprement
+// si les données du navigateur sont effacées. Le serveur le traite exactement
+// comme un HWID : il ne stocke que son HMAC (jamais la valeur brute) et il
+// consomme un siège comme un appareil Electron.
+
+/** Format attendu : base64url de 32 octets (43 caractères) → 256 bits. */
+const INSTALL_ID_RE = /^[A-Za-z0-9_-]{43}$/
+
+/** Génère un identifiant d'installation PWA (utilisable aussi côté serveur/tests). */
+export function generateInstallId(): string {
+  return crypto.randomBytes(32).toString('base64url')
+}
+
+/** L'identifiant d'installation est-il bien formé (256 bits base64url) ? */
+export function isValidInstallId(id: string | null | undefined): boolean {
+  return INSTALL_ID_RE.test(String(id ?? '').trim())
+}
+
+/** HMAC-SHA256 de l'identifiant d'installation — jamais la valeur brute en base. */
+export function hashInstallId(id: string): string {
+  return crypto
+    .createHmac('sha256', getDevicePepper())
+    .update(`gf-pwa-install:${String(id).trim()}`)
+    .digest('hex')
+}
+
 /** Comparaison à temps constant de deux hex de même longueur. */
 export function timingSafeEqualHex(a: string, b: string): boolean {
   const ba = Buffer.from(a, 'utf8')
@@ -93,10 +123,10 @@ export class DeviceRevokedError extends Error {
   }
 }
 
-/** HWID mal formé (doit être un SHA-256 hex de 64 caractères). */
+/** Identifiant d'appareil mal formé (HWID SHA-256 64 hex OU install id PWA). */
 export class InvalidHwidError extends Error {
   constructor() {
-    super('Identifiant matériel invalide.')
+    super('Identifiant d\'appareil invalide.')
     this.name = 'InvalidHwidError'
   }
 }
@@ -108,11 +138,32 @@ export interface ActivateDeviceInput {
   licenseId: string
   /** Plafond de sièges de la licence (LicenseKey.seats). */
   seats: number
-  /** HWID brut envoyé par le client (validé/normalisé ici). */
-  hwid: string
+  /** HWID brut (Electron) — exactement l'un de hwid / installId doit être fourni. */
+  hwid?: string
+  /** Identifiant d'installation PWA (navigateur) — alternative au HWID. */
+  installId?: string
   platform?: string
   appVersion?: string
   name?: string
+}
+
+/**
+ * Résout l'empreinte d'appareil (HWID matériel OU install id PWA) en un HMAC
+ * unique stocké dans LicenseDevice.hwidHash. Les deux domaines HMAC sont
+ * distincts : un HWID et un install id ne peuvent jamais entrer en collision.
+ */
+function resolveFingerprint(input: ActivateDeviceInput): { hash: string; platform: string } {
+  if (input.hwid) {
+    const h = normalizeHwid(input.hwid)
+    if (!isValidHwidFormat(h)) throw new InvalidHwidError()
+    return { hash: hashHwid(h), platform: input.platform?.slice(0, 64) ?? 'desktop' }
+  }
+  if (input.installId) {
+    if (!isValidInstallId(input.installId)) throw new InvalidHwidError()
+    return { hash: hashInstallId(input.installId), platform: input.platform?.slice(0, 64) ?? 'pwa' }
+  }
+  // Aucun identifiant d'appareil : refus (jamais de siège « fantôme »).
+  throw new InvalidHwidError()
 }
 
 export interface ActivateDeviceResult {
@@ -131,15 +182,14 @@ export interface ActivateDeviceResult {
  * rotation (tokenHash remplacé).
  */
 export async function activateDevice(input: ActivateDeviceInput): Promise<ActivateDeviceResult> {
-  const hwid = normalizeHwid(input.hwid)
-  if (!isValidHwidFormat(hwid)) throw new InvalidHwidError()
+  // Empreinte d'appareil : HWID (Electron) OU install id PWA — jamais aucune.
+  const { hash: hwidH, platform } = resolveFingerprint(input)
 
   const seats = Math.max(1, input.seats)
-  const hwidH = hashHwid(hwid)
   const token = generateDeviceToken()
   const tokenH = hashDeviceToken(token)
   const meta = {
-    platform:   input.platform?.slice(0, 64) ?? null,
+    platform,
     appVersion: input.appVersion?.slice(0, 32) ?? null,
     name:       input.name?.slice(0, 64) ?? null,
   }
@@ -247,7 +297,7 @@ export type ValidateDeviceTokenResult =
  */
 export async function validateDeviceToken(
   token: string,
-  opts: { hwid?: string } = {},
+  opts: { hwid?: string; installId?: string } = {},
 ): Promise<ValidateDeviceTokenResult> {
   const tokenH = hashDeviceToken(token)
   const device = await prisma.licenseDevice.findUnique({ where: { tokenHash: tokenH } })
@@ -258,8 +308,15 @@ export async function validateDeviceToken(
 
   if (device.status !== 'active') return { ok: false, code: 'device_revoked' }
 
+  // Vérification d'empreinte optionnelle : le jeton doit venir de la même
+  // machine (HWID Electron) ou de la même installation (install id PWA).
   if (opts.hwid !== undefined) {
     if (!isValidHwidFormat(opts.hwid) || !timingSafeEqualHex(device.hwidHash, hashHwid(opts.hwid))) {
+      return { ok: false, code: 'device_hwid_mismatch' }
+    }
+  }
+  if (opts.installId !== undefined) {
+    if (!isValidInstallId(opts.installId) || !timingSafeEqualHex(device.hwidHash, hashInstallId(opts.installId))) {
       return { ok: false, code: 'device_hwid_mismatch' }
     }
   }
