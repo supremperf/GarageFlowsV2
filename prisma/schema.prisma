@@ -1,3 +1,15 @@
+// ══════════════════════════════════════════════════════════════════════════════
+// SCHÉMA DESKTOP (Electron) — SQLite local mono-poste.
+//
+// Ce schéma est celui de l'application Electron : base locale
+// <userData>/garageflow.db, un seul poste, serveur Next limité à 127.0.0.1.
+// Le déploiement serveur/PWA multi-instance utilise prisma/server/schema.prisma
+// (PostgreSQL). Les deux schémas partagent les mêmes modèles métier ; seul le
+// provider et le client généré diffèrent. Voir docs/DATABASE_ARCHITECTURE.md.
+//
+// Générer : npm run db:desktop:generate
+// ══════════════════════════════════════════════════════════════════════════════
+
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "windows", "debian-openssl-3.0.x"]
@@ -425,6 +437,55 @@ model LicenseKey {
   lastSeenAt  DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  devices LicenseDevice[]
+}
+
+// ─── Appareils activés par licence ───────────────────────────────────────────
+// Un appareil (machine physique) réellement activé pour une licence.
+// Ni le HWID brut ni le deviceToken ne sont JAMAIS stockés : seuls leurs
+// HMAC-SHA256 (hwidHash / tokenHash) sont persistés — voir src/lib/license/devices.ts.
+// La contrainte @@unique([licenseId, hwidHash]) garantit qu'une même machine ne
+// consomme jamais deux sièges ; le plafond de sièges (LicenseKey.seats) est
+// appliqué dans une transaction atomique.
+model LicenseDevice {
+  id       String @id @default(cuid())
+  deviceId String @unique @default(cuid()) // identifiant public opaque (affichable)
+
+  licenseId String // = LicenseKey.licenseId (lid du token)
+  license   LicenseKey @relation(fields: [licenseId], references: [licenseId], onDelete: Cascade)
+
+  hwidHash  String // HMAC-SHA256(pepper, HWID normalisé) — jamais le HWID brut
+  tokenHash String @unique // HMAC-SHA256(pepper, deviceToken) — jamais le jeton brut
+
+  status     String  @default("active") // active | revoked | deactivated
+  name       String?
+  platform   String?
+  appVersion String?
+
+  firstActivatedAt DateTime  @default(now())
+  lastSeenAt       DateTime  @default(now())
+  revokedAt        DateTime?
+  revokeReason     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([licenseId, hwidHash])
+  @@index([licenseId, status])
+}
+
+// Journal d'audit du cycle de vie des appareils (activation, rotation,
+// révocation, refus de plafond…). Identifiants pseudonymisés uniquement.
+model LicenseDeviceEvent {
+  id        String   @id @default(cuid())
+  licenseId String
+  deviceId  String? // identifiant public opaque (LicenseDevice.deviceId)
+  action    String // activated | rotated | reactivated | revoked | deactivated | limit_denied | token_rejected
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([licenseId, createdAt])
 }
 
 // ─── Maintenance reminders ────────────────────────────────────────────────────
@@ -633,94 +694,9 @@ model AuditLog {
   @@index([garageId, entityType])
 }
 
-model License {
-  id String @id @default(cuid())
-
-  key String @unique
-
-  garageName String
-
-  email String?
-
-  plan String @default("PRO")
-
-  status String @default("ACTIVE")
-
-  expiresAt DateTime
-
-  maxDevices Int @default(1)
-
-  currentDevices Int @default(0)
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  lastCheck DateTime?
-
-  devices Device[]
-
-  logs LicenseLog[]
-
-  activations Activation[]
-}
-
-model Device {
-  id String @id @default(cuid())
-
-  hardwareId String
-
-  computerName String
-
-  os String?
-
-  version String?
-
-  ip String?
-
-  lastSeen DateTime?
-
-  createdAt DateTime @default(now())
-
-  licenseId String
-
-  license License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
-
-  @@unique([licenseId, hardwareId])
-}
-
-model Activation {
-  id String @id @default(cuid())
-
-  createdAt DateTime @default(now())
-
-  hardwareId String
-
-  ip String?
-
-  success Boolean
-
-  reason String?
-
-  licenseId String
-
-  license License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
-}
-
-model LicenseLog {
-  id String @id @default(cuid())
-
-  createdAt DateTime @default(now())
-
-  action String
-
-  message String?
-
-  ip String?
-
-  hardwareId String?
-
-  licenseId String
-
-  license License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
-}
+// NOTE : les anciens modèles serveur « License / Device / Activation / LicenseLog »
+// (vestiges du control plane, jamais référencés par le code — vérifié par grep)
+// ont été retirés de ce schéma. Les tables correspondantes éventuellement
+// présentes dans des bases installées sont ignorées et ne sont jamais lues.
+// La gestion serveur des licences/appareils vit dans prisma/server/schema.prisma
+// (PostgreSQL) et sur le control plane api.garageflows.fr.

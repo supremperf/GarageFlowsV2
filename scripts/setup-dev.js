@@ -37,6 +37,15 @@ const CORRECT_DB_URL = 'file:./dev.db'
 // Any of these historical/wrong values must be rewritten to CORRECT_DB_URL.
 const WRONG_DB_URLS  = ['file:./prisma/dev.db', 'file:prisma/dev.db']
 
+// ── Déploiement serveur (Vercel) : ne JAMAIS fabriquer un .env SQLite ────────
+// Le serveur/PWA utilise PostgreSQL via les variables d'environnement de la
+// plateforme (DATABASE_URL/DIRECT_URL). Créer ici un .env file:./dev.db serait
+// au mieux inutile (process.env prime), au pire trompeur. On sort immédiatement.
+if (process.env.VERCEL) {
+  console.log('ℹ️   Build Vercel détecté — setup-dev.js ignoré (PostgreSQL via env vars).')
+  process.exit(0)
+}
+
 let createdEnv = false
 
 // ── 1. Create / patch .env ────────────────────────────────────────────────────

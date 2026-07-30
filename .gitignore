@@ -15,6 +15,9 @@ node_modules/
 *.tsbuildinfo
 next-env.d.ts
 
+# Clients Prisma générés (desktop → node_modules, serveur → src/generated)
+src/generated/
+
 # OS
 .DS_Store
 Thumbs.db

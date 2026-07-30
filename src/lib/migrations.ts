@@ -579,4 +579,36 @@ export const MIGRATIONS: Migration[] = [
   { id: '077_unique_quote_number',         sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "Quote_garageId_number_key" ON "Quote"("garageId", "number")' },
   { id: '078_unique_workorder_number',     sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "WorkOrder_garageId_number_key" ON "WorkOrder"("garageId", "number")' },
   { id: '079_unique_purchaseorder_number', sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "PurchaseOrder_garageId_number_key" ON "PurchaseOrder"("garageId", "number")' },
+  // ── Appareils par licence (deviceToken haché + HWID haché, jamais en clair) ──
+  { id: '080_ensure_licensedevice_table', sql: `CREATE TABLE IF NOT EXISTS "LicenseDevice" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "deviceId" TEXT NOT NULL,
+    "licenseId" TEXT NOT NULL,
+    "hwidHash" TEXT NOT NULL,
+    "tokenHash" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'active',
+    "name" TEXT,
+    "platform" TEXT,
+    "appVersion" TEXT,
+    "firstActivatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "lastSeenAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "revokedAt" DATETIME,
+    "revokeReason" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "LicenseDevice_licenseId_fkey" FOREIGN KEY ("licenseId") REFERENCES "LicenseKey" ("licenseId") ON DELETE CASCADE ON UPDATE CASCADE
+)` },
+  { id: '081_ensure_licensedeviceevent_table', sql: `CREATE TABLE IF NOT EXISTS "LicenseDeviceEvent" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "licenseId" TEXT NOT NULL,
+    "deviceId" TEXT,
+    "action" TEXT NOT NULL,
+    "detail" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+)` },
+  { id: '082_licensedevice_deviceid_unique',  sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "LicenseDevice_deviceId_key" ON "LicenseDevice"("deviceId")' },
+  { id: '083_licensedevice_tokenhash_unique', sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "LicenseDevice_tokenHash_key" ON "LicenseDevice"("tokenHash")' },
+  { id: '084_licensedevice_hwid_unique',      sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "LicenseDevice_licenseId_hwidHash_key" ON "LicenseDevice"("licenseId", "hwidHash")' },
+  { id: '085_licensedevice_status_idx',       sql: 'CREATE INDEX IF NOT EXISTS "LicenseDevice_licenseId_status_idx" ON "LicenseDevice"("licenseId", "status")' },
+  { id: '086_licensedeviceevent_idx',         sql: 'CREATE INDEX IF NOT EXISTS "LicenseDeviceEvent_licenseId_createdAt_idx" ON "LicenseDeviceEvent"("licenseId", "createdAt")' },
 ]
