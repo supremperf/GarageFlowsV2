@@ -174,6 +174,10 @@ Liste complète et comportements : [`.env.example`](.env.example).
 - **[`docs/LICENSE_DEVICE_SECURITY.md`](docs/LICENSE_DEVICE_SECURITY.md)** —
   appareils par licence, deviceToken (haché), plafond `seats` atomique,
   révocation, politiques fail-open/fail-closed.
+- **[`docs/PWA_MULTITENANT_LICENSING.md`](docs/PWA_MULTITENANT_LICENSING.md)** —
+  licences multi-tenant PWA : installations PWA (install id) comptées comme
+  appareils, liaison licence↔garage (anti cross-tenant), enforcement serveur
+  par requête, révocation immédiate, politique de version, plan FREE.
 - **[`docs/PRODUCTION_DEPLOYMENT.md`](docs/PRODUCTION_DEPLOYMENT.md)** —
   déploiement Vercel, PostgreSQL/Redis, rollback, test machine propre.
 
