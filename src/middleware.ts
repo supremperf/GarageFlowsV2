@@ -73,7 +73,15 @@ export async function middleware(req: NextRequest) {
 
   // ── 4. Auth check ─────────────────────────────────────────────────────────
   const isAuthPage = pathname === '/login' || pathname === '/register'
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  // getToken peut LEVER sur un en-tête Authorization/Bearer malformé (avis Auth.js) :
+  // un échec ne doit jamais faire planter le middleware (500 → DoS de page). On
+  // traite toute erreur comme « non authentifié » (fail-closed).
+  let token: Awaited<ReturnType<typeof getToken>> = null
+  try {
+    token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  } catch {
+    token = null
+  }
 
   if (!token && !isAuthPage) {
     const loginUrl = new URL('/login', req.url)

@@ -17,6 +17,14 @@ export const GET = withAuth(async (req) => {
 
   if (!plate) return NextResponse.json({ error: 'plate param required' }, { status: 400 })
 
+  // Validation de format AVANT tout appel sortant/payant : rejette les entrées
+  // parasites et toute injection dans l'invite IA de repli (la plaque est déjà
+  // normalisée en MAJUSCULES, séparateur « - »).
+  const PLATE_RE = /^[A-Z0-9-]{4,12}$/
+  if (!PLATE_RE.test(plate)) {
+    return NextResponse.json({ error: 'Format de plaque invalide' }, { status: 400 })
+  }
+
   // Try French SIV-like API first (free, no auth)
   try {
     const r = await fetch(

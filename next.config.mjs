@@ -34,6 +34,10 @@ const nextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          // HSTS : force HTTPS sur le déploiement PWA (2 ans, sous-domaines inclus).
+          // Ignoré par les navigateurs sur une réponse http ou un hôte IP loopback,
+          // donc inoffensif sous Electron (http://127.0.0.1) et en dev.
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
         ],
       },
     ]

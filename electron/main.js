@@ -1828,6 +1828,15 @@ function createMainWindow() {
       log('[security] navigation bloquée vers :', url.slice(0, 80))
     }
   })
+  // will-navigate ne se déclenche PAS sur une redirection serveur (3xx) : sans ce
+  // garde, une redirection hors origine locale afficherait une page étrangère avec
+  // le pont preload encore attaché. Défense en profondeur (miroir de will-navigate).
+  mainWindow.webContents.on('will-redirect', (event, url) => {
+    if (!url.startsWith(localOrigin)) {
+      event.preventDefault()
+      log('[security] redirection bloquée vers :', url.slice(0, 80))
+    }
+  })
   // Refuse tout attachement de webview (vecteur d'exécution non prévu).
   mainWindow.webContents.on('will-attach-webview', (event) => event.preventDefault())
 
