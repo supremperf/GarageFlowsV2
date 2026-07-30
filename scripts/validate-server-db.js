@@ -40,11 +40,47 @@ function run(args) {
   }).toString()
 }
 
+/**
+ * Crée la base cible si elle n'existe pas (connexion à la base de maintenance
+ * « postgres »). Rend le script autonome : aucune création manuelle nécessaire
+ * avant `prisma migrate deploy`, ni dépendance au comportement d'auto-création
+ * de Prisma (qui n'est pas garanti selon les privilèges).
+ */
+async function ensureDatabase(url) {
+  const u = new URL(url)
+  const name = decodeURIComponent(u.pathname.replace(/^\//, ''))
+  // Garde-fou anti-injection : la base vient de notre propre configuration.
+  if (!/^[A-Za-z0-9_]+$/.test(name)) fail(`Nom de base invalide : ${name}`)
+
+  const admin = new URL(url)
+  admin.pathname = '/postgres'
+
+  const { PrismaClient } = require(path.join(root, 'src', 'generated', 'server-client'))
+  const client = new PrismaClient({ datasourceUrl: admin.toString() })
+  try {
+    await client.$executeRawUnsafe(`CREATE DATABASE "${name}"`)
+    console.log(`✅  Base « ${name} » créée.`)
+  } catch (err) {
+    const msg = String(err && err.message ? err.message : err)
+    // 42P04 / "already exists" : la base existe déjà — parfait.
+    if (!/already exists|42P04|P2010/i.test(msg)) {
+      fail(`Création de la base « ${name} » impossible : ${msg}`)
+    }
+    console.log(`ℹ️   Base « ${name} » déjà présente.`)
+  } finally {
+    await client.$disconnect().catch(() => {})
+  }
+}
+
 async function main() {
   const url = process.env.DATABASE_URL || ''
   if (!/^postgres(ql)?:\/\//i.test(url)) {
     fail('DATABASE_URL doit être une URL postgresql:// (base serveur). SQLite est réservé au desktop.')
   }
+
+  // ── 0. Base cible : créée si absente (aucune étape manuelle requise) ─────────
+  console.log('▶  Vérification/création de la base cible…')
+  await ensureDatabase(process.env.DIRECT_URL || url)
 
   // ── 1. Migrations ───────────────────────────────────────────────────────────
   console.log('▶  prisma migrate deploy…')

@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession, MAX_LOGO_BASE64_LENGTH } from '@/lib/api-helpers'
+import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import bcrypt from 'bcryptjs'
 import { savePhoto } from '@/lib/photo-store'
 
@@ -81,12 +82,22 @@ export const PATCH = withAuth(async (req) => {
 
 // POST /api/garages/register  — public endpoint: create new garage + owner account
 // Note: this is called at /api/garages?action=register
+// Inscription (création de garage + compte OWNER). Route PRÉ-LICENCE : elle
+// n'appelle pas requireSession (sinon l'inscription serait impossible sans
+// licence), mais elle est strictement limitée en débit pour empêcher la
+// création massive de comptes. L'accès aux API métier reste, lui, soumis à une
+// licence (requireSession → validateLicensedSession) : un garage FREE ainsi créé
+// ne peut rien faire sans activer une licence — pas de chemin implicite ouvert.
 export const POST = withAuth(async (req) => {
+  // Anti-abus : 5 inscriptions/heure/IP (clé distincte de la connexion).
+  const rl = await enforceRateLimit('login', `register:${clientIpFrom(req)}`, { max: 5, windowSec: 3600 })
+  if (!rl.ok) return rateLimitResponse(rl)
+
   const body = await req.json()
   const { garageName, garageAddress, garagePhone, userName, userEmail, userPassword } = body
 
   if (!garageName || !userName || !userEmail || !userPassword) {
-    return NextResponse.json({ error: 'Tous les champs sont obligatoires' }, { status: 400 })
+    return NextResponse.json({ error: 'Tous les champs sont obligatoires', code: 'VALIDATION_ERROR' }, { status: 400 })
   }
 
   if (userPassword.length < 8) {

@@ -116,6 +116,13 @@ jobs:
           NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
           NEXTAUTH_URL: http://localhost:4028
 
-      - name: Dependency audit (high+)
-        run: npm audit --audit-level=high
+      # Porte bloquante : toute vulnérabilité high/critical en dépendance de
+      # PRODUCTION échoue la CI, sauf dérogations documentées/datées
+      # (scripts/audit-ci.js). Une nouvelle vuln prod casse le build.
+      - name: Dependency audit gate (production high/critical)
+        run: node scripts/audit-ci.js
+
+      # Audit complet (dev inclus) — informatif, non bloquant.
+      - name: Dependency audit (full, informational)
+        run: npm audit || true
         continue-on-error: true
