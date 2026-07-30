@@ -59,4 +59,14 @@ describe('PWA — service worker sûr', () => {
     expect(sw).toContain('/offline.html')
     expect(fs.existsSync(path.join(root, 'public', 'offline.html'))).toBe(true)
   })
+
+  it('ne met pas en cache une navigation portant Cache-Control: no-store/private', () => {
+    expect(sw).toMatch(/no-store\|private/)
+    expect(sw).toMatch(/cacheable/)
+  })
+
+  it('purge le cache de pages privées à la déconnexion', () => {
+    expect(sw).toContain('CLEAR_PRIVATE_CACHE')
+    expect(sw).toMatch(/caches\.delete\(PAGE_CACHE\)/)
+  })
 })

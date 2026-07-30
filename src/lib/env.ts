@@ -22,7 +22,31 @@ export function validateEnv(): { ok: boolean; issues: EnvIssue[] } {
   if (isWeakSecret(process.env.NEXTAUTH_SECRET)) {
     issues.push({ name: 'NEXTAUTH_SECRET', problem: 'absente, trop courte ou générique' })
   }
+
+  // ── Garde-fous PWA production (déploiement web multi-instance) ────────────────
+  // Un déploiement PWA de production (NODE_ENV=production hors Electron) ne doit
+  // JAMAIS démarrer sur SQLite / un fichier local : le disque est éphémère et non
+  // partagé entre instances. On exige PostgreSQL.
+  if (isPwaProduction()) {
+    const url = process.env.DATABASE_URL ?? ''
+    const isPostgres = /^postgres(ql)?:\/\//i.test(url)
+    const isSqlite = url.startsWith('file:') || /\.db(\?|$)/.test(url) || /sqlite/i.test(url)
+    if (!url) {
+      issues.push({ name: 'DATABASE_URL', problem: 'PostgreSQL requis en production PWA (absent)' })
+    } else if (isSqlite || !isPostgres) {
+      issues.push({
+        name: 'DATABASE_URL',
+        problem: 'SQLite/stockage local interdit en production PWA — PostgreSQL requis',
+      })
+    }
+  }
+
   return { ok: issues.length === 0, issues }
+}
+
+/** Vrai pour un serveur PWA de production (web multi-instance), faux sous Electron. */
+export function isPwaProduction(): boolean {
+  return process.env.NODE_ENV === 'production' && process.env.ELECTRON !== '1'
 }
 
 /**

@@ -29,9 +29,15 @@ self.addEventListener('activate', (event) => {
   )
 })
 
-// Permet à la page de forcer l'activation d'un SW en attente.
+// Messages de la page : activation forcée + purge des caches à la déconnexion.
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting()
+  // À la déconnexion, on efface le cache de pages (aucune page privée ne doit
+  // survivre pour un autre utilisateur du même appareil). Le cache statique
+  // (assets publics versionnés) est conservé.
+  if (event.data === 'CLEAR_PRIVATE_CACHE') {
+    event.waitUntil(caches.delete(PAGE_CACHE))
+  }
 })
 
 function isStaticAsset(url) {
@@ -64,12 +70,18 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Navigations (pages) → network-first, repli cache puis page hors-ligne.
+  // On ne met en cache QUE si le serveur l'autorise : une réponse portant
+  // Cache-Control: no-store (pages authentifiées) n'est jamais stockée.
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then((res) => {
-          const copy = res.clone()
-          caches.open(PAGE_CACHE).then((c) => c.put(request, copy))
+          const cc = res.headers.get('Cache-Control') || ''
+          const cacheable = res.ok && !/no-store|private/i.test(cc)
+          if (cacheable) {
+            const copy = res.clone()
+            caches.open(PAGE_CACHE).then((c) => c.put(request, copy))
+          }
           return res
         })
         .catch(() => caches.match(request).then((hit) => hit || caches.match(OFFLINE_URL))),

@@ -369,7 +369,14 @@ export default function Header({
                   {t.changeLicense}
                 </button>
                 <button
-                  onClick={() => { setUserMenuOpen(false); signOut({ callbackUrl: '/login' }) }}
+                  onClick={() => {
+                    setUserMenuOpen(false)
+                    // Purge le cache de pages privées du Service Worker avant de
+                    // fermer la session (aucune page ne doit rester pour un autre
+                    // utilisateur du même appareil).
+                    try { navigator.serviceWorker?.controller?.postMessage('CLEAR_PRIVATE_CACHE') } catch { /* SW absent */ }
+                    signOut({ callbackUrl: '/login' })
+                  }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 transition-colors"
                 >
                   <LogOut className="w-3.5 h-3.5" />
