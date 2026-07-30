@@ -245,7 +245,7 @@ export function __setRateLimitBackendForTests(backend?: Backend | null): void {
 
 /** Jamais de licence/IP en clair dans Redis : SHA-256 tronqué du sujet. */
 function keyFor(category: RateLimitCategory, subject: string): string {
-  const digest = crypto.createHash('sha256').update(`${category} ${subject}`).digest('hex')
+  const digest = crypto.createHash('sha256').update(`${category}:${subject}`).digest('hex')
   return `rl:${category}:${digest.slice(0, 32)}`
 }
 
