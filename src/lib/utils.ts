@@ -28,9 +28,11 @@ export function getJobEndTime(job: Job): string {
 export function jobsOverlap(a: Job, b: Job): boolean {
   if (a.mechanicId !== b.mechanicId || a.date !== b.date || a.id === b.id) return false
   const aStart = timeToMinutes(a.startTime)
-  const aEnd = aStart + a.estimatedDuration
+  // Use the SAME effective end as getJobEndTime / slot-finding (include
+  // delayMinutes) — otherwise overlaps caused by delayed jobs went undetected.
+  const aEnd = aStart + a.estimatedDuration + (a.delayMinutes || 0)
   const bStart = timeToMinutes(b.startTime)
-  const bEnd = bStart + b.estimatedDuration
+  const bEnd = bStart + b.estimatedDuration + (b.delayMinutes || 0)
   return aStart < bEnd && bStart < aEnd
 }
 
@@ -207,7 +209,14 @@ export function formatDuration(minutes: number): string {
 }
 
 export function getTodayString(): string {
-  return new Date().toISOString().split('T')[0]
+  // Use the LOCAL calendar day, not UTC. toISOString() emits UTC, so in France
+  // (UTC+1/+2) evenings rolled to the next day, defaulting new jobs to tomorrow
+  // and disagreeing with the money routes (which use local yyyy-MM-dd).
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 export function generateId(): string {

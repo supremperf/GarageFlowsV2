@@ -17,7 +17,7 @@ export const POST = withAuth(async (req: Request, { params }: { params: { id: st
     return NextResponse.json({ error: 'Ce devis ne peut plus être signé' }, { status: 409 })
   }
 
-  const token = await new SignJWT({ quoteId: params.id, typ: 'quote-sign' })
+  const token = await new SignJWT({ quoteId: params.id, typ: 'quote-sign', garageId: session.user.garageId })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')

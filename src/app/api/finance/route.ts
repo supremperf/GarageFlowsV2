@@ -37,7 +37,9 @@ export const GET = withAuth(async (req) => {
       where: {
         job: { garageId, date: { gte: format(months[0].start, 'yyyy-MM-dd') } },
       },
-      include: { part: { select: { unitCost: true } } },
+      // Include the job date: the per-month bucketing below reads jp.job.date, so
+      // without this relation partsCost was always 0 and every margin read 100%.
+      include: { part: { select: { unitCost: true } }, job: { select: { date: true } } },
     }),
   ])
 

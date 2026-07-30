@@ -29,6 +29,10 @@ import {
   ShieldCheck,
   Car,
   KeyRound,
+  Sparkles,
+  ScanLine,
+  Truck,
+  Boxes,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState, useRef, useEffect, useCallback } from 'react'
@@ -123,6 +127,10 @@ interface HeaderProps {
   onOpenLaborCatalog?:  () => void
   onOpenWarranties?:    () => void
   onOpenLoaner?:        () => void
+  onOpenCopilot?:       () => void
+  onOpenOcr?:           () => void
+  onOpenSuppliers?:     () => void
+  onOpenCatalog?:       () => void
   warrantyAlerts?:      number
 }
 
@@ -136,6 +144,10 @@ export default function Header({
   onOpenLaborCatalog,
   onOpenWarranties,
   onOpenLoaner,
+  onOpenCopilot,
+  onOpenOcr,
+  onOpenSuppliers,
+  onOpenCatalog,
   warrantyAlerts = 0,
 }: HeaderProps) {
   const {
@@ -508,6 +520,42 @@ export default function Header({
               icon={BarChart2}
               label={t.navFinance}
               title={t.ttFinance}
+              variant="finance"
+            />
+          )}
+          {onOpenCopilot && (
+            <ToolBtn
+              onClick={onOpenCopilot}
+              icon={Sparkles}
+              label={t.navCopilot}
+              title={t.ttCopilot}
+              variant="finance"
+            />
+          )}
+          {onOpenOcr && (
+            <ToolBtn
+              onClick={onOpenOcr}
+              icon={ScanLine}
+              label={t.navOcr}
+              title={t.ttOcr}
+              variant="finance"
+            />
+          )}
+          {onOpenSuppliers && (
+            <ToolBtn
+              onClick={onOpenSuppliers}
+              icon={Truck}
+              label={t.navSuppliers}
+              title={t.ttSuppliers}
+              variant="finance"
+            />
+          )}
+          {onOpenCatalog && (
+            <ToolBtn
+              onClick={onOpenCatalog}
+              icon={Boxes}
+              label={t.navCatalog}
+              title={t.ttCatalog}
               variant="finance"
             />
           )}

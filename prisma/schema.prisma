@@ -105,6 +105,10 @@ model Garage {
   loanerReservations LoanerReservation[]
   purchaseOrders     PurchaseOrder[]
   licenses           LicenseKey[]
+  // ── Modules Premium (intégration f8rhzz) ───────────────────────────────────
+  vinSearches        VinSearch[]
+  signatures         Signature[]
+  notificationLogs   NotificationLog[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -711,3 +715,64 @@ model AuditLog {
 // présentes dans des bases installées sont ignorées et ne sont jamais lues.
 // La gestion serveur des licences/appareils vit dans prisma/server/schema.prisma
 // (PostgreSQL) et sur le control plane api.garageflows.fr.
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODULES PREMIUM (intégration branche complete-platform) — VIN, signature, notif
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ─── VIN decode cache/history (Premium: décodage VIN) ─────────────────────────
+model VinSearch {
+  id         String   @id @default(cuid())
+  garageId   String
+  garage     Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  vin        String
+  resultJson String // serialized VinDecodeResult
+  source     String   @default("offline")
+  createdAt  DateTime @default(now())
+
+  @@index([garageId, createdAt])
+  @@index([garageId, vin])
+}
+
+// ─── Reinforced electronic signature (Premium: signature électronique) ────────
+model Signature {
+  id                   String    @id @default(cuid())
+  garageId             String
+  garage               Garage    @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  entityType           String // quote | invoice | work_order | contract | handover
+  entityId             String
+  signerName           String
+  signerRole           String? // client | garage
+  algorithm            String    @default("SHA-256 / HMAC-SHA256")
+  contentHash          String // SHA-256 of the canonical document snapshot
+  imageHash            String // SHA-256 of the signature image
+  seal                 String // HMAC integrity seal
+  signatureData        String // base64 PNG of the captured signature
+  documentSnapshotJson String // canonical document at signing time
+  ipAddress            String?
+  userAgent            String?
+  signedAt             DateTime  @default(now())
+  invalidatedAt        DateTime?
+
+  @@index([garageId, entityType, entityId])
+}
+
+// ─── Multi-channel notification journal (Premium: notifications intelligentes) ─
+model NotificationLog {
+  id         String   @id @default(cuid())
+  garageId   String
+  garage     Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  trigger    String? // NotificationTrigger, when dispatched from a business event
+  channel    String // email | sms | whatsapp | push | internal
+  recipient  String
+  subject    String?
+  body       String
+  status     String // sent | failed | skipped | not_configured
+  providerId String?
+  error      String?
+  attempts   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([garageId, createdAt])
+  @@index([garageId, status])
+}
