@@ -6,17 +6,38 @@ import { jwtVerify } from 'jose'
 import { getAuthSecret } from '@/lib/auth-secret'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { logger } from '@/lib/logger'
+import { licenseEnforcementEnabled, validateLicensedSession } from '@/lib/license/session'
 
 // Rate limiting : implémentation UNIQUE dans src/lib/security/rate-limit.ts
 // (distribuée en production PWA, mémoire uniquement pour Electron/dev/test).
 // L'ancienne Map locale de ce fichier a été supprimée.
 
-/** Returns the current session or throws a 401 JSON response */
+/**
+ * Point de contrôle UNIQUE des API métier : renvoie la session utilisateur
+ * authentifiée OU lève une réponse d'erreur (capturée par withAuth).
+ *
+ * En contexte serveur/PWA (voir licenseEnforcementEnabled), cette fonction
+ * applique EN PLUS la validation de la session licenciée (licence active/non
+ * expirée/non révoquée, rattachement au garage, appareil actif) — révocation
+ * immédiate, aucune valeur client fiable. Toutes les routes métier passent par
+ * ici (les routes pré-licence comme l'inscription NE l'appellent pas), donc la
+ * protection s'applique partout d'un seul point. Sur Electron, seule la session
+ * est vérifiée (la licence est déjà contrôlée localement — exception documentée).
+ */
 export async function requireSession() {
   const session = await getServerSession(authOptions)
   if (!session?.user?.garageId) {
-    throw NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    throw NextResponse.json({ error: 'Non autorisé', code: 'UNAUTHENTICATED' }, { status: 401 })
   }
+
+  if (licenseEnforcementEnabled()) {
+    const raw = cookies().get('gf_session')?.value ?? ''
+    const check = await validateLicensedSession({ rawGfSession: raw, garageId: session.user.garageId })
+    if (!check.ok) {
+      throw NextResponse.json({ error: check.reason, code: check.code }, { status: check.status })
+    }
+  }
+
   return session
 }
 
