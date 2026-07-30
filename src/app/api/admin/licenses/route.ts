@@ -10,10 +10,11 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { logger } from '@/lib/logger'
 import { isAdminSession } from '@/lib/api-helpers'
 
 function dbError(err: any): NextResponse {
-  console.error('[admin/licenses] DB error:', err)
+  logger.error('[admin/licenses] DB error', err)
   const msg = err?.code === 'P2021' || err?.code === 'P2022'
     ? 'Base de données non initialisée — lancez: npx prisma db push'
     : err?.message?.includes('no such table')

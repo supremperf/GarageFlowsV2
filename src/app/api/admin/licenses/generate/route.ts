@@ -20,6 +20,7 @@ import fs from 'fs'
 import path from 'path'
 import { isAdminSession } from '@/lib/api-helpers'
 import { prisma } from '@/lib/db'
+import { logger } from '@/lib/logger'
 import { computeRecordMac } from '@/lib/license/record-mac'
 
 // ── Base64url helpers ─────────────────────────────────────────────────────────
@@ -137,7 +138,7 @@ export async function POST(req: NextRequest) {
   try {
     built = buildToken(privKeyPem, customerId, licenseType, years, seats, hwid, label)
   } catch (err: any) {
-    console.error('[admin/generate] signing error:', err)
+    logger.error('[admin/generate] signing error', err)
     const hint = err?.message?.includes('asn1')
       ? 'Format de clé invalide (attendu: PKCS8 PEM ECC P-256)'
       : 'Vérifiez que keys/private.pem est une clé ECC P-256 valide'
@@ -174,7 +175,7 @@ export async function POST(req: NextRequest) {
     if (err?.code === 'P2002') {
       return NextResponse.json({ error: 'Licence déjà enregistrée (LID en double)' }, { status: 409 })
     }
-    console.error('[admin/generate] DB error:', err)
+    logger.error('[admin/generate] DB error', err)
     return NextResponse.json({ error: 'Erreur base de données' }, { status: 500 })
   }
 }

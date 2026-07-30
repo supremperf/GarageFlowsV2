@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import nodemailer from 'nodemailer'
+import { logger } from '@/lib/logger'
 
 // POST /api/reminders/send  body: { id }
 // Sends a real email if SMTP is configured, otherwise returns the email content
@@ -101,8 +102,12 @@ ${garage?.name ?? 'Votre garage'}${garage?.phone ? `\nTél : ${garage.phone}` : 
       html: htmlBody,
     })
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    return NextResponse.json({ sent: false, reason: 'smtp_error', error: msg }, { status: 502 })
+    // Le détail SMTP (hôte, réponse serveur) reste dans les logs redactés.
+    logger.error('[reminders/send] échec SMTP', err)
+    return NextResponse.json(
+      { sent: false, reason: 'smtp_error', error: 'Échec de l\'envoi de l\'e-mail. Vérifiez la configuration SMTP.' },
+      { status: 502 },
+    )
   }
 
   // Mark as sent

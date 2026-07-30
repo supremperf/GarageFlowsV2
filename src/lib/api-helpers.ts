@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
 import { getAuthSecret } from '@/lib/auth-secret'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
+import { logger } from '@/lib/logger'
 
 // Rate limiting : implémentation UNIQUE dans src/lib/security/rate-limit.ts
 // (distribuée en production PWA, mémoire uniquement pour Electron/dev/test).
@@ -32,9 +33,13 @@ export function withAuth(
       return await handler(req, ctx)
     } catch (e) {
       if (e instanceof NextResponse) return e
-      const msg = e instanceof Error ? e.message : String(e)
-      console.error('[API Error]', msg)
-      return NextResponse.json({ error: `Erreur interne: ${msg}` }, { status: 500 })
+      // Les détails techniques (message Prisma, chemins, contraintes) vont dans
+      // les logs serveur REDACTÉS — JAMAIS dans la réponse publique.
+      logger.error('[API Error]', e)
+      return NextResponse.json(
+        { error: 'Une erreur interne est survenue.', code: 'INTERNAL_ERROR' },
+        { status: 500 },
+      )
     }
   }
 }

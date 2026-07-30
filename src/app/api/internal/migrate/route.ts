@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { MIGRATIONS } from '@/lib/migrations'
 import { internalRequestAuthorized } from '@/lib/internal-auth'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   if (!internalRequestAuthorized(req)) {
@@ -28,7 +29,10 @@ export async function POST(req: NextRequest) {
     )
   `)
 
-  const results: { id: string; sql: string; status: 'ok' | 'skip' | 'error'; error?: string }[] = []
+  // Réponse SANS le SQL ni le message d'erreur brut : l'identifiant de
+  // migration et le statut suffisent au processus Electron ; le détail
+  // technique part dans les logs serveur redactés.
+  const results: { id: string; status: 'ok' | 'skip' | 'error' }[] = []
 
   for (const { id, sql } of MIGRATIONS) {
     // Check if already applied — skip without touching the schema
@@ -36,7 +40,7 @@ export async function POST(req: NextRequest) {
       `SELECT id FROM "_gf_migrations" WHERE id = ?`, id
     )
     if (rows.length > 0) {
-      results.push({ id, sql, status: 'skip' })
+      results.push({ id, status: 'skip' })
       continue
     }
 
@@ -47,9 +51,10 @@ export async function POST(req: NextRequest) {
         id,
         new Date().toISOString()
       )
-      results.push({ id, sql, status: 'ok' })
-    } catch (err: any) {
-      results.push({ id, sql, status: 'error', error: err?.message ?? '' })
+      results.push({ id, status: 'ok' })
+    } catch (err) {
+      logger.error('[internal/migrate] échec migration', { id }, err)
+      results.push({ id, status: 'error' })
     }
   }
 

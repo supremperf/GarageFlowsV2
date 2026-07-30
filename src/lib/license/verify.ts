@@ -156,8 +156,9 @@ export function verifyLicenseToken(token: string): VerifyResult {
   const lic = p as unknown as LicensePayload
 
   // ── Type check ───────────────────────────────────────────────────────────
+  // Message fixe : ne jamais refléter le contenu du payload dans la réponse.
   if (!_VALID_TYPES.has(lic.typ)) {
-    return { valid: false, reason: `Type de licence inconnu: ${lic.typ}` }
+    return { valid: false, reason: 'Type de licence inconnu' }
   }
 
   // ── Expiry check (redundant — also in DB layer for revocation) ────────────
@@ -169,7 +170,7 @@ export function verifyLicenseToken(token: string): VerifyResult {
 
   // ── Version sanity ────────────────────────────────────────────────────────
   if (!lic.ver.startsWith('2')) {
-    return { valid: false, reason: `Version de licence non supportée: ${lic.ver}` }
+    return { valid: false, reason: 'Version de licence non supportée' }
   }
 
   return {
