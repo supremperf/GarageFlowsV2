@@ -39,6 +39,24 @@ export function validateEnv(): { ok: boolean; issues: EnvIssue[] } {
         problem: 'SQLite/stockage local interdit en production PWA — PostgreSQL requis',
       })
     }
+
+    // Jetons d'appareil : le pepper HMAC doit être explicite et fort en prod
+    // PWA (en Electron, le secret d'installation sert de repli légitime).
+    if (isWeakSecret(process.env.DEVICE_TOKEN_PEPPER)) {
+      issues.push({
+        name: 'DEVICE_TOKEN_PEPPER',
+        problem: 'absent, trop court ou générique (requis en production PWA — openssl rand -base64 32)',
+      })
+    }
+
+    // Rate limiting distribué : sans Upstash, les routes sensibles seraient en
+    // fail-closed permanent (503) — on refuse le démarrage pour l'expliciter.
+    if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+      issues.push({
+        name: 'UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN',
+        problem: 'rate limiting distribué requis en production PWA (multi-instance)',
+      })
+    }
   }
 
   return { ok: issues.length === 0, issues }

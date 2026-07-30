@@ -41,6 +41,9 @@ describe('env — validation & fail-fast', () => {
     vi.stubEnv('NODE_ENV', 'production')
     process.env.DATABASE_URL = 'postgresql://u:p@h:5432/db'
     process.env.NEXTAUTH_SECRET = 'x'.repeat(40)
+    process.env.DEVICE_TOKEN_PEPPER = 'p'.repeat(40)
+    process.env.UPSTASH_REDIS_REST_URL = 'https://example.upstash.io'
+    process.env.UPSTASH_REDIS_REST_TOKEN = 't'.repeat(32)
     expect(() => assertEnv()).not.toThrow()
   })
 })
@@ -57,19 +60,63 @@ describe('env — garde-fou PWA production (PostgreSQL obligatoire)', () => {
     expect(() => assertEnv()).toThrow(/Démarrage refusé/)
   })
 
-  it('PWA production + PostgreSQL = accepté', () => {
+  it('PWA production + PostgreSQL + pepper + Upstash = accepté', () => {
     vi.stubEnv('NODE_ENV', 'production')
     delete process.env.ELECTRON
     process.env.DATABASE_URL = 'postgresql://u:p@h:5432/db'
     process.env.NEXTAUTH_SECRET = 'x'.repeat(40)
+    process.env.DEVICE_TOKEN_PEPPER = 'p'.repeat(40)
+    process.env.UPSTASH_REDIS_REST_URL = 'https://example.upstash.io'
+    process.env.UPSTASH_REDIS_REST_TOKEN = 't'.repeat(32)
     expect(validateEnv().ok).toBe(true)
   })
 
-  it('Electron production + SQLite = autorisé (ELECTRON=1)', () => {
+  it('Electron production + SQLite = autorisé (ELECTRON=1), sans pepper ni Upstash', () => {
     vi.stubEnv('NODE_ENV', 'production')
     process.env.ELECTRON = '1'
     process.env.DATABASE_URL = 'file:./garageflow.db'
     process.env.NEXTAUTH_SECRET = 'x'.repeat(40)
+    delete process.env.DEVICE_TOKEN_PEPPER
+    delete process.env.UPSTASH_REDIS_REST_URL
+    delete process.env.UPSTASH_REDIS_REST_TOKEN
     expect(validateEnv().ok).toBe(true)
+  })
+
+  it('PWA production sans DEVICE_TOKEN_PEPPER = démarrage refusé', () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    delete process.env.ELECTRON
+    process.env.DATABASE_URL = 'postgresql://u:p@h:5432/db'
+    process.env.NEXTAUTH_SECRET = 'x'.repeat(40)
+    delete process.env.DEVICE_TOKEN_PEPPER
+    process.env.UPSTASH_REDIS_REST_URL = 'https://example.upstash.io'
+    process.env.UPSTASH_REDIS_REST_TOKEN = 't'.repeat(32)
+    const { ok, issues } = validateEnv()
+    expect(ok).toBe(false)
+    expect(issues.some((i) => i.name === 'DEVICE_TOKEN_PEPPER')).toBe(true)
+    expect(() => assertEnv()).toThrow(/Démarrage refusé/)
+  })
+
+  it('PWA production avec pepper générique (« changeme ») = refusé', () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    delete process.env.ELECTRON
+    process.env.DATABASE_URL = 'postgresql://u:p@h:5432/db'
+    process.env.NEXTAUTH_SECRET = 'x'.repeat(40)
+    process.env.DEVICE_TOKEN_PEPPER = 'changeme'
+    process.env.UPSTASH_REDIS_REST_URL = 'https://example.upstash.io'
+    process.env.UPSTASH_REDIS_REST_TOKEN = 't'.repeat(32)
+    expect(validateEnv().ok).toBe(false)
+  })
+
+  it('PWA production sans Upstash = démarrage refusé (rate limiting distribué requis)', () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    delete process.env.ELECTRON
+    process.env.DATABASE_URL = 'postgresql://u:p@h:5432/db'
+    process.env.NEXTAUTH_SECRET = 'x'.repeat(40)
+    process.env.DEVICE_TOKEN_PEPPER = 'p'.repeat(40)
+    delete process.env.UPSTASH_REDIS_REST_URL
+    delete process.env.UPSTASH_REDIS_REST_TOKEN
+    const { ok, issues } = validateEnv()
+    expect(ok).toBe(false)
+    expect(issues.some((i) => /UPSTASH/.test(i.name))).toBe(true)
   })
 })
