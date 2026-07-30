@@ -26,6 +26,7 @@ const fs      = require('fs')
 const http    = require('http')
 const crypto  = require('crypto')
 const os      = require('os')
+const { resolveMainSecret } = require('./secret')
 
 // Silence EPIPE on stdout/stderr so packaged app never crashes when no terminal is attached
 try { process.stdout.on('error', () => {}) } catch (_) {}
@@ -43,10 +44,11 @@ try { process.stderr.on('error', () => {}) } catch (_) {}
       if (fs.existsSync(example)) {
         fs.copyFileSync(example, envFile)
       } else {
+        // Aucun secret codé en dur : NEXTAUTH_SECRET est résolu par installation
+        // (voir resolveInstallSecret() dans app.whenReady) et injecté à l'exécution.
         fs.writeFileSync(envFile, [
           'DATABASE_URL="file:./dev.db"',
           'NEXTAUTH_URL="http://localhost:3000"',
-          'NEXTAUTH_SECRET="gf-electron-local-secret-2026-xK9mP3qR"',
           '',
         ].join('\n'), 'utf8')
       }
@@ -130,9 +132,23 @@ let activeLicense     = null   // { token, payload } — set after validation
 let activeDeviceToken = null   // device token issued by the server on activation (device auth)
 let desktopExportTimer = null
 let onlineCheckTimer  = null   // periodic internet connectivity check
+let installSecret     = null   // secret par installation (session JWT + NEXTAUTH_SECRET serveur)
 
 // One-time secret for internal API calls (export endpoint)
 const INTERNAL_EXPORT_KEY = crypto.randomBytes(32).toString('hex')
+
+// ── Secret local par installation (fail-closed) ────────────────────────────────
+// Résout un secret propre à l'installation (256 bits, stocké dans userData avec
+// permissions restrictives). Respecte un NEXTAUTH_SECRET déjà fort (dev/.env).
+// En cas d'échec on refuse de démarrer la partie authentifiée. La valeur n'est
+// JAMAIS journalisée.
+function resolveInstallSecret() {
+  const { secret, source } = resolveMainSecret(APP_DATA, process.env.NEXTAUTH_SECRET)
+  installSecret = secret
+  // Aligne process.env pour tout code aval qui lirait encore NEXTAUTH_SECRET.
+  process.env.NEXTAUTH_SECRET = secret
+  log(`Secret local prêt (source: ${source})`)   // ne journalise jamais la valeur
+}
 
 // ── Online check state ────────────────────────────────────────────────────────
 const ONLINE_CHECK_FILE    = () => path.join(APP_DATA, 'last_online.json')
@@ -279,17 +295,20 @@ function verifyEccToken(token) {
   }
 }
 
-// ── HWID tolerance check (75% match = OK for hardware upgrades) ───────────────
-
+// ── HWID check — comparaison STRICTE, aucune tolérance partielle ─────────────
+// Un HWID est un digest SHA-256 : le moindre changement matériel modifie tout
+// le hachage (effet d'avalanche), donc une tolérance de N % n'a aucun sens et
+// affaiblit le lien. De plus la licence stockée est chiffrée avec une clé
+// dérivée du HWID complet : un match exact est déjà requis pour la déchiffrer.
 function hwidMatches(stored, current) {
-  if (!stored) return true   // no binding
-  if (stored === current) return true
-  if (stored.length === 64 && current.length === 64) {
-    let match = 0
-    for (let i = 0; i < 64; i++) { if (stored[i] === current[i]) match++ }
-    return match >= 48   // 75% threshold
-  }
-  return false
+  if (!stored) return true   // licence non liée au matériel
+  const a = String(stored).trim().toLowerCase()
+  const b = String(current).trim().toLowerCase()
+  const hex64 = /^[0-9a-f]{64}$/
+  if (!hex64.test(a) || !hex64.test(b)) return false
+  const ba = Buffer.from(a, 'utf8')
+  const bb = Buffer.from(b, 'utf8')
+  return ba.length === bb.length && crypto.timingSafeEqual(ba, bb)
 }
 
 // ── License storage (AES-256-GCM, key derived from HWID via PBKDF2) ──────────
@@ -565,7 +584,9 @@ function checkStoredLicense() {
 // page request is allowed through the middleware gate.
 
 function createGfSessionJwt(typ, lid) {
-  const secret  = process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR'
+  // Secret par installation, résolu au démarrage (fail-closed). Aucun repli en dur.
+  const secret  = installSecret
+  if (!secret) throw new Error('Secret local indisponible — session non signable')
   const now     = Math.floor(Date.now() / 1000)
   const exp     = now + 5 * 365 * 24 * 3600   // 5 years
 
@@ -583,24 +604,28 @@ async function injectLicenseCookies(licenseType, licenseId = 'electron-local') {
   const expDate = Math.floor(Date.now() / 1000) + 5 * 365 * 24 * 3600
   const jwt     = createGfSessionJwt(licenseType, licenseId)
 
-  // Primary cookie — verified by middleware
+  // Primary cookie — verified by middleware. HttpOnly : inaccessible au JS du
+  // renderer (contextIsolation actif) ; SameSite=Strict : jamais envoyé en
+  // contexte tiers.
   await session.defaultSession.cookies.set({
     url:            baseUrl,
     name:           'gf_session',
     value:          jwt,
     path:           '/',
     expirationDate: expDate,
-    sameSite:       'lax',
+    httpOnly:       true,
+    sameSite:       'strict',
   })
 
-  // Legacy cookies kept for any code still reading them
+  // Legacy cookies kept for any code still reading them (état UI uniquement,
+  // jamais utilisés pour le contrôle d'accès).
   await session.defaultSession.cookies.set({
     url:            baseUrl,
     name:           'gf_license_validated',
     value:          '1',
     path:           '/',
     expirationDate: expDate,
-    sameSite:       'lax',
+    sameSite:       'strict',
   })
   await session.defaultSession.cookies.set({
     url:            baseUrl,
@@ -608,7 +633,7 @@ async function injectLicenseCookies(licenseType, licenseId = 'electron-local') {
     value:          licenseType,
     path:           '/',
     expirationDate: expDate,
-    sameSite:       'lax',
+    sameSite:       'strict',
   })
 
   log(`Session cookies injected — type: ${licenseType}`)
@@ -1321,15 +1346,21 @@ function startNextServer() {
     // Windows-safe path: use forward slashes in DATABASE_URL
     const dbUrl = `file:${DB_PATH.replace(/\\/g, '/')}`
 
+    if (!installSecret) {
+      reject(new Error('Secret local indisponible — refus de démarrer le serveur authentifié'))
+      return
+    }
+
     const env = {
       ...process.env,
       PORT:              String(PORT),
-      HOSTNAME:          '0.0.0.0',
+      // Écoute STRICTEMENT sur la boucle locale : jamais exposé au LAN.
+      HOSTNAME:          '127.0.0.1',
       NEXTAUTH_URL:      `http://127.0.0.1:${PORT}`,
       DATABASE_URL:      dbUrl,
-      // Use whatever secret the main process has loaded (from .env or fallback),
-      // so JWTs minted by main.js and verified by Next.js always share the same secret.
-      NEXTAUTH_SECRET:   process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR',
+      // Secret unique par installation, partagé entre main.js (mint des JWT) et
+      // le serveur Next.js (vérification). Aucun repli codé en dur.
+      NEXTAUTH_SECRET:   installSecret,
       GF_DB_MAC_SECRET:         deriveDbMacSecret(),
       GF_INTERNAL_EXPORT_KEY:   INTERNAL_EXPORT_KEY,
       GF_PHOTOS_DIR:            PHOTOS_DIR,
@@ -2019,6 +2050,20 @@ app.whenReady().then(async () => {
   log('userData:', APP_DATA)
   log('IS_DEV:', IS_DEV)
   log('Platform:', process.platform, process.arch)
+
+  // ── Secret local par installation — AVANT toute session/serveur (fail-closed) ─
+  try {
+    resolveInstallSecret()
+  } catch (err) {
+    log('FATAL: secret local indisponible')   // ne journalise jamais la valeur
+    dialog.showErrorBox(
+      'Erreur de sécurité GarageFlow',
+      `Impossible d'initialiser le secret local de façon sûre.\n\n${err.message}\n\n` +
+        `L'application ne peut pas démarrer en mode authentifié. Vérifiez les permissions du dossier de données, puis réinstallez si nécessaire.`
+    )
+    app.quit()
+    return
+  }
 
   checkDebugger()
   registerCrashHandlers()
