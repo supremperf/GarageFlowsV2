@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { SignJWT } from 'jose'
-import { verifyLicenseToken, verifyHwid } from '@/lib/license/verify'
+import { verifyLicenseToken, verifyHwid, isValidHwidFormat } from '@/lib/license/verify'
 import { prisma } from '@/lib/db'
 import { computeRecordMac, verifyRecordMac } from '@/lib/license/record-mac'
 import { rateLimit } from '@/lib/rate-limit'
@@ -86,10 +86,25 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: false, reason: 'Cette licence est temporairement suspendue.' })
       }
 
-      // HWID binding check (only if the stored record has a HWID)
-      if (record.hwid && clientHwid) {
+      // ── HWID binding — application STRICTE de la table de vérité ────────────
+      // licence liée + HWID absent   → refus
+      // licence liée + HWID invalide → refus
+      // licence liée + HWID différent→ refus
+      // licence liée + HWID identique→ autorisé
+      // Aucun contournement silencieux : dès que le record porte un HWID, le
+      // client DOIT présenter un HWID bien formé ET identique.
+      if (record.hwid) {
+        if (!clientHwid || !isValidHwidFormat(clientHwid)) {
+          return NextResponse.json(
+            { ok: false, reason: 'Cette licence est liée à un matériel : identifiant matériel requis et valide.' },
+            { status: 403 },
+          )
+        }
         if (!verifyHwid(record.hwid, clientHwid)) {
-          return NextResponse.json({ ok: false, reason: 'Cette licence est liée à un autre matériel.' })
+          return NextResponse.json(
+            { ok: false, reason: 'Cette licence est liée à un autre matériel.' },
+            { status: 403 },
+          )
         }
       }
 
@@ -99,7 +114,18 @@ export async function POST(req: NextRequest) {
         data:  { lastSeenAt: new Date() },
       })
     } else {
-      // First use — auto-register in DB with integrity MAC
+      // First use — auto-register in DB with integrity MAC.
+      // Si le TOKEN est lié à un matériel (payload.hwid), la machine qui
+      // présente la licence doit correspondre AVANT tout enregistrement —
+      // sinon un token volé s'auto-enregistrerait sur une autre machine.
+      if (payload.hwid) {
+        if (!clientHwid || !isValidHwidFormat(clientHwid) || !verifyHwid(payload.hwid, clientHwid)) {
+          return NextResponse.json(
+            { ok: false, reason: 'Cette licence est liée à un matériel : activation refusée sur cet appareil.' },
+            { status: 403 },
+          )
+        }
+      }
       const expiryAt  = new Date(payload.exp * 1000)
       const hwid      = payload.hwid ?? null
       const recordMac = computeRecordMac({
