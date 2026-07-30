@@ -611,4 +611,7 @@ export const MIGRATIONS: Migration[] = [
   { id: '084_licensedevice_hwid_unique',      sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "LicenseDevice_licenseId_hwidHash_key" ON "LicenseDevice"("licenseId", "hwidHash")' },
   { id: '085_licensedevice_status_idx',       sql: 'CREATE INDEX IF NOT EXISTS "LicenseDevice_licenseId_status_idx" ON "LicenseDevice"("licenseId", "status")' },
   { id: '086_licensedeviceevent_idx',         sql: 'CREATE INDEX IF NOT EXISTS "LicenseDeviceEvent_licenseId_createdAt_idx" ON "LicenseDeviceEvent"("licenseId", "createdAt")' },
+  // ── Liaison licence ↔ garage (parité avec le schéma serveur ; null en desktop) ──
+  { id: '087_licensekey_garageid',            sql: 'ALTER TABLE "LicenseKey" ADD COLUMN "garageId" TEXT' },
+  { id: '088_licensekey_garageid_idx',        sql: 'CREATE INDEX IF NOT EXISTS "LicenseKey_garageId_idx" ON "LicenseKey"("garageId")' },
 ]

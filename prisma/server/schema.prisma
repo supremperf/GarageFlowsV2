@@ -110,6 +110,7 @@ model Garage {
   loanerVehicles     LoanerVehicle[]
   loanerReservations LoanerReservation[]
   purchaseOrders     PurchaseOrder[]
+  licenses           LicenseKey[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -444,7 +445,16 @@ model LicenseKey {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  // Liaison licence ↔ garage (multi-tenant serveur/PWA). Nullable : une licence
+  // fraîchement enregistrée n'est pas encore rattachée ; le rattachement se fait
+  // au premier usage licencié (bind-on-first-use) et est ensuite immuable —
+  // empêche l'usage d'une licence par un autre garage.
+  garageId String?
+  garage   Garage? @relation(fields: [garageId], references: [id], onDelete: SetNull)
+
   devices LicenseDevice[]
+
+  @@index([garageId])
 }
 
 // ─── Appareils activés par licence ───────────────────────────────────────────
