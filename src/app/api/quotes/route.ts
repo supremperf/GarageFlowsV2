@@ -61,45 +61,56 @@ export const POST = withAuth(async (req) => {
   ])
   if (relErr) return relErr
 
-  // Auto-increment quoteCounter and build number
-  const garage = await prisma.garage.update({
-    where: { id: session.user.garageId },
-    data: { quoteCounter: { increment: 1 } },
-  })
   const year = new Date().getFullYear()
-  const number = `${garage.quotePrefix}-${year}-${String(garage.quoteCounter).padStart(3, '0')}`
 
-  const quote = await prisma.quote.create({
-    data: {
-      number,
-      garageId: session.user.garageId,
-      clientId: body.clientId ?? null,
-      vehicleId: body.vehicleId ?? null,
-      jobId: body.jobId ?? null,
-      clientName: body.clientName ?? '',
-      clientEmail: body.clientEmail ?? null,
-      clientPhone: body.clientPhone ?? null,
-      clientAddress: body.clientAddress ?? null,
-      vehicleModel: body.vehicleModel ?? null,
-      licensePlate: body.licensePlate ?? null,
-      status: 'draft',
-      issueDate: body.issueDate ?? format(new Date(), 'yyyy-MM-dd'),
-      validUntil: body.validUntil ?? null,
-      notes: body.notes ?? null,
-      taxRate: body.taxRate ?? garage.taxRate,
-      lines: {
-        create: (body.lines ?? []).map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
-          description: l.description,
-          quantity: l.quantity ?? 1,
-          unitPrice: l.unitPrice ?? 0,
-          unitCost: l.unitCost ?? 0,
-          isLabor: l.isLabor ?? false,
-          sortOrder: l.sortOrder ?? i,
-        })),
-      },
-    },
-    include: { lines: { orderBy: { sortOrder: 'asc' } } },
-  })
+  // Réservation du numéro + création dans UNE SEULE transaction (pas de trou de
+  // séquence si la création échoue) ; unicité garantie par @@unique([garageId, number]).
+  let quote
+  try {
+    quote = await prisma.$transaction(async (tx) => {
+      const garage = await tx.garage.update({
+        where: { id: session.user.garageId },
+        data: { quoteCounter: { increment: 1 } },
+      })
+      const number = `${garage.quotePrefix}-${year}-${String(garage.quoteCounter).padStart(3, '0')}`
+      return tx.quote.create({
+        data: {
+          number,
+          garageId: session.user.garageId,
+          clientId: body.clientId ?? null,
+          vehicleId: body.vehicleId ?? null,
+          jobId: body.jobId ?? null,
+          clientName: body.clientName ?? '',
+          clientEmail: body.clientEmail ?? null,
+          clientPhone: body.clientPhone ?? null,
+          clientAddress: body.clientAddress ?? null,
+          vehicleModel: body.vehicleModel ?? null,
+          licensePlate: body.licensePlate ?? null,
+          status: 'draft',
+          issueDate: body.issueDate ?? format(new Date(), 'yyyy-MM-dd'),
+          validUntil: body.validUntil ?? null,
+          notes: body.notes ?? null,
+          taxRate: body.taxRate ?? garage.taxRate,
+          lines: {
+            create: (body.lines ?? []).map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
+              description: l.description,
+              quantity: l.quantity ?? 1,
+              unitPrice: l.unitPrice ?? 0,
+              unitCost: l.unitCost ?? 0,
+              isLabor: l.isLabor ?? false,
+              sortOrder: l.sortOrder ?? i,
+            })),
+          },
+        },
+        include: { lines: { orderBy: { sortOrder: 'asc' } } },
+      })
+    })
+  } catch (e) {
+    if ((e as { code?: string })?.code === 'P2002') {
+      return NextResponse.json({ error: 'Numéro de devis déjà utilisé, réessayez' }, { status: 409 })
+    }
+    throw e
+  }
 
   await logAudit({ action: 'create', entityType: 'Quote', entityId: quote.id, session, req })
 

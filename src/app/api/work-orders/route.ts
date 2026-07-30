@@ -77,42 +77,53 @@ export const POST = withAuth(async (req) => {
 
   const { totalHT, totalTTC } = computeTotals(worksJson, partsJson, taxRate)
 
-  // Atomically increment workOrderCounter and generate number
-  const garage = await prisma.garage.update({
-    where: { id: session.user.garageId },
-    data: { workOrderCounter: { increment: 1 } },
-  })
   const year = new Date().getFullYear()
-  const number = `${garage.workOrderPrefix}-${year}-${String(garage.workOrderCounter).padStart(3, '0')}`
 
-  const workOrder = await prisma.workOrder.create({
-    data: {
-      number,
-      garageId: session.user.garageId,
-      jobId: body.jobId ?? null,
-      mechanicId: body.mechanicId ?? null,
-      clientName: body.clientName,
-      clientPhone: body.clientPhone ?? null,
-      clientEmail: body.clientEmail ?? null,
-      clientAddress: body.clientAddress ?? null,
-      vehicleMake: body.vehicleMake ?? null,
-      vehicleModel: body.vehicleModel ?? null,
-      licensePlate: body.licensePlate ?? null,
-      mileage: body.mileage ?? null,
-      vin: body.vin ?? null,
-      worksJson,
-      partsJson,
-      taxRate,
-      totalHT,
-      totalTTC,
-      notes: body.notes ?? null,
-      status: 'draft',
-    },
-    include: {
-      mechanic: { select: { id: true, name: true, color: true } },
-      job: { select: { id: true, customerName: true, vehicleModel: true, licensePlate: true } },
-    },
-  })
+  // Réservation du numéro + création atomiques (pas de trou de séquence) ;
+  // unicité garantie par @@unique([garageId, number]).
+  let workOrder
+  try {
+    workOrder = await prisma.$transaction(async (tx) => {
+      const garage = await tx.garage.update({
+        where: { id: session.user.garageId },
+        data: { workOrderCounter: { increment: 1 } },
+      })
+      const number = `${garage.workOrderPrefix}-${year}-${String(garage.workOrderCounter).padStart(3, '0')}`
+      return tx.workOrder.create({
+        data: {
+          number,
+          garageId: session.user.garageId,
+          jobId: body.jobId ?? null,
+          mechanicId: body.mechanicId ?? null,
+          clientName: body.clientName,
+          clientPhone: body.clientPhone ?? null,
+          clientEmail: body.clientEmail ?? null,
+          clientAddress: body.clientAddress ?? null,
+          vehicleMake: body.vehicleMake ?? null,
+          vehicleModel: body.vehicleModel ?? null,
+          licensePlate: body.licensePlate ?? null,
+          mileage: body.mileage ?? null,
+          vin: body.vin ?? null,
+          worksJson,
+          partsJson,
+          taxRate,
+          totalHT,
+          totalTTC,
+          notes: body.notes ?? null,
+          status: 'draft',
+        },
+        include: {
+          mechanic: { select: { id: true, name: true, color: true } },
+          job: { select: { id: true, customerName: true, vehicleModel: true, licensePlate: true } },
+        },
+      })
+    })
+  } catch (e) {
+    if ((e as { code?: string })?.code === 'P2002') {
+      return NextResponse.json({ error: 'Numéro d\'ordre de réparation déjà utilisé, réessayez' }, { status: 409 })
+    }
+    throw e
+  }
 
   return NextResponse.json(workOrder, { status: 201 })
 })

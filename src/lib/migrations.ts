@@ -570,4 +570,13 @@ export const MIGRATIONS: Migration[] = [
     "updatedAt" DATETIME NOT NULL
 )` },
   { id: '075_reminder_scheduled_time', sql: 'ALTER TABLE "Reminder" ADD COLUMN "scheduledTime" TEXT' },
+  // ── Unicité de la numérotation par garage (factures, devis, OR, BC) ──────────
+  // Filet de sécurité au niveau base : deux documents du même garage ne peuvent
+  // jamais partager un numéro. Si des doublons historiques existent, la création
+  // de l'index échoue et est retentée au prochain démarrage (le runner ne marque
+  // pas la migration comme appliquée en cas d'erreur).
+  { id: '076_unique_invoice_number',       sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "Invoice_garageId_number_key" ON "Invoice"("garageId", "number")' },
+  { id: '077_unique_quote_number',         sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "Quote_garageId_number_key" ON "Quote"("garageId", "number")' },
+  { id: '078_unique_workorder_number',     sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "WorkOrder_garageId_number_key" ON "WorkOrder"("garageId", "number")' },
+  { id: '079_unique_purchaseorder_number', sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "PurchaseOrder_garageId_number_key" ON "PurchaseOrder"("garageId", "number")' },
 ]
