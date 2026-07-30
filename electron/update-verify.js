@@ -1,0 +1,113 @@
+'use strict'
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Vérification des mises à jour SIGNÉES (Ed25519) — côté client Electron.
+//
+//  Un SHA-256 servi par le même serveur que le binaire ne protège pas contre la
+//  compromission du serveur. Ici, on vérifie une SIGNATURE Ed25519 du manifeste
+//  avec une clé PUBLIQUE embarquée (sûre à distribuer). La clé PRIVÉE ne se
+//  trouve QUE côté serveur (variable d'environnement).
+//
+//  La sérialisation canonique DOIT être identique à src/lib/releases/manifest.ts
+//  (garagesite3) : clés triées récursivement, JSON.stringify sans espaces.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const crypto = require('crypto')
+const semver = require('./semver')
+
+// Clés publiques de signature connues (rotation : ajouter la nouvelle sans retirer
+// l'ancienne tant que des releases signées par elle circulent). keyId → PEM SPKI.
+const PUBLIC_KEYS = {
+  'gf-update-2026':
+    '-----BEGIN PUBLIC KEY-----\n' +
+    'MCowBQYDK2VwAyEAIOtQbThNMbHLi3LHn0W16TzE6CAm98T+/0ImUXGdQdk=\n' +
+    '-----END PUBLIC KEY-----\n',
+}
+
+const EXPECTED_PRODUCT = 'GarageFlow'
+// Domaines autorisés pour l'URL de téléchargement (anti open-redirect / SSRF).
+const ALLOWED_DOWNLOAD_HOSTS = new Set([
+  'api.garageflows.fr',
+  'garageflows.fr',
+  'app.garageflows.fr',
+])
+
+/** Sérialisation canonique déterministe — IDENTIQUE au serveur. */
+function canonicalize(value) {
+  return JSON.stringify(sortDeep(value))
+}
+function sortDeep(v) {
+  if (Array.isArray(v)) return v.map(sortDeep)
+  if (v && typeof v === 'object') {
+    return Object.keys(v).sort().reduce((acc, k) => { acc[k] = sortDeep(v[k]); return acc }, {})
+  }
+  return v
+}
+
+/** Un keyId est-il configuré côté client (donc la vérif de signature est active) ? */
+function signingConfigured() {
+  return Object.keys(PUBLIC_KEYS).length > 0
+}
+
+/** Vérifie la signature Ed25519 du manifeste. Ne lève jamais. */
+function verifySignature(signed) {
+  try {
+    if (!signed || !signed.manifest || typeof signed.signature !== 'string') return false
+    const keyId = signed.manifest.keyId
+    const pem = PUBLIC_KEYS[keyId]
+    if (!pem) return false // clé inconnue → refus
+    const data = Buffer.from(canonicalize(signed.manifest), 'utf8')
+    return crypto.verify(null, data, crypto.createPublicKey(pem), Buffer.from(signed.signature, 'base64'))
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Valide entièrement un manifeste signé pour CE client.
+ * @returns {{ ok: true, manifest } | { ok: false, reason: string }}
+ */
+function validateManifest(signed, opts) {
+  const { currentVersion, channel, platform, arch } = opts || {}
+
+  if (!signingConfigured()) return { ok: false, reason: 'Aucune clé de vérification configurée.' }
+  if (!signed || !signed.manifest) return { ok: false, reason: 'Manifeste absent.' }
+  if (!verifySignature(signed)) return { ok: false, reason: 'Signature du manifeste invalide ou clé inconnue.' }
+
+  const m = signed.manifest
+  if (m.signatureAlgorithm !== 'Ed25519') return { ok: false, reason: 'Algorithme de signature non supporté.' }
+  if (m.product !== EXPECTED_PRODUCT) return { ok: false, reason: `Produit inattendu : ${m.product}.` }
+  if (platform && m.platform !== platform) return { ok: false, reason: `Plateforme incompatible (${m.platform}).` }
+  if (arch && m.architecture !== arch) return { ok: false, reason: `Architecture incompatible (${m.architecture}).` }
+  if (channel && m.channel !== channel) return { ok: false, reason: `Canal incompatible (${m.channel}).` }
+
+  if (!/^[a-f0-9]{64}$/i.test(String(m.sha256 || ''))) return { ok: false, reason: 'Empreinte SHA-256 absente/invalide.' }
+  if (!Number.isFinite(m.size) || m.size <= 0) return { ok: false, reason: 'Taille de fichier invalide.' }
+
+  // Anti-downgrade : la version proposée doit être STRICTEMENT plus récente.
+  if (currentVersion && !semver.isNewer(m.version, currentVersion)) {
+    return { ok: false, reason: `Version non supérieure à l'installée (${m.version} ≤ ${currentVersion}).` }
+  }
+
+  // URL de téléchargement : HTTPS + domaine explicitement autorisé.
+  let host = ''
+  try {
+    const u = new URL(m.downloadUrl)
+    if (u.protocol !== 'https:') return { ok: false, reason: 'URL de téléchargement non HTTPS.' }
+    host = u.hostname
+  } catch {
+    return { ok: false, reason: 'URL de téléchargement invalide.' }
+  }
+  if (!ALLOWED_DOWNLOAD_HOSTS.has(host)) return { ok: false, reason: `Domaine de téléchargement non autorisé : ${host}.` }
+
+  return { ok: true, manifest: m }
+}
+
+module.exports = {
+  canonicalize,
+  verifySignature,
+  validateManifest,
+  signingConfigured,
+  PUBLIC_KEYS,
+  ALLOWED_DOWNLOAD_HOSTS,
+}

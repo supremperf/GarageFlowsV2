@@ -103,6 +103,8 @@ const PUBLIC_KEY_PEM = _PK.join('\n')
 
 // ── Control-plane helpers (modules, crashs, clock-tamper, notifications) ──────
 const cp = require('./control-plane')
+const updateVerify = require('./update-verify')
+const semver = require('./semver')
 
 const SETTINGS_PATH     = path.join(APP_DATA, 'gf_settings.json')       // crash consent, prefs
 const ENTITLEMENTS_PATH = path.join(APP_DATA, 'gf_entitlements.dat')    // AES-GCM (HWID key)
@@ -1655,6 +1657,8 @@ function setupIPC() {
             size:          L.size ?? null,
             releaseNotes:  L.changelog ?? L.title ?? null,
             mandatory:     !!latest.mandatory,
+            // Manifeste signé Ed25519 : autorité pour sha256/size/downloadUrl/version.
+            manifest:      latest.manifest ?? null,
             source:        'server',
           }
         }
@@ -1696,7 +1700,8 @@ function setupIPC() {
       if (!data || !data.tag_name) return { hasUpdate: false }
       const latest = String(data.tag_name).replace(/^v/, '')
       return {
-        hasUpdate:     latest !== currentVersion && latest > currentVersion,
+        // Comparaison SemVer (jamais lexicographique : « 1.9.0 » < « 1.10.0 »).
+        hasUpdate:     semver.isNewer(latest, currentVersion),
         latestVersion: latest,
         releaseUrl:    data.html_url ?? null,
         releaseNotes:  data.body ? data.body.slice(0, 500) : null,
@@ -1768,11 +1773,40 @@ function setupIPC() {
   // Les données utilisateur sont dans userData (garageflow.db) → conservées.
   // L'installeur NSIS met à jour l'app en place sans toucher aux données.
   ipcMain.handle('app:install-update', async (_event, arg) => {
-    // Accepte une chaîne (URL) ou un objet { url, sha256, size }. L'empreinte
-    // SHA-256 est REQUISE pour exécuter l'installeur (voir vérification ci-dessous).
-    const url         = typeof arg === 'string' ? arg : (arg && arg.url)
-    const expectedSha = typeof arg === 'object' && arg ? (arg.sha256 || null) : null
-    const expectedSize= typeof arg === 'object' && arg ? (Number(arg.size) || null) : null
+    // Accepte une chaîne (URL) ou un objet { url, sha256, size, manifest }.
+    let url          = typeof arg === 'string' ? arg : (arg && arg.url)
+    let expectedSha  = typeof arg === 'object' && arg ? (arg.sha256 || null) : null
+    let expectedSize = typeof arg === 'object' && arg ? (Number(arg.size) || null) : null
+    const manifest   = typeof arg === 'object' && arg ? (arg.manifest || null) : null
+
+    // ── VÉRIFICATION DU MANIFESTE SIGNÉ (Ed25519) — autorité de confiance ──────
+    // Un SHA-256 seul (fourni par le même serveur que le binaire) ne protège pas
+    // d'un serveur compromis. Si une clé de vérification est embarquée, un
+    // manifeste signé VALIDE est OBLIGATOIRE ; ses champs (sha256/size/URL/version)
+    // priment sur toute valeur non signée transmise par ailleurs.
+    if (updateVerify.signingConfigured()) {
+      if (!manifest) {
+        log('[install-update] SECURITY: manifeste signé requis — installation refusée')
+        return { ok: false, reason: 'Mise à jour non signée — installation refusée pour votre sécurité.' }
+      }
+      const v = updateVerify.validateManifest(manifest, {
+        currentVersion: app.getVersion(),
+        channel: UPDATE_CHANNEL,
+        platform: process.platform,
+        arch: process.arch,
+      })
+      if (!v.ok) {
+        log('[install-update] SECURITY: manifeste invalide —', v.reason)
+        reportCrash({ message: 'update_manifest_invalid', fatal: false, kind: 'security' }).catch(() => {})
+        return { ok: false, reason: `Mise à jour rejetée : ${v.reason}` }
+      }
+      // Les valeurs SIGNÉES font autorité (on ignore toute valeur non signée).
+      url          = v.manifest.downloadUrl
+      expectedSha  = v.manifest.sha256
+      expectedSize = v.manifest.size
+      log('[install-update] manifeste signé vérifié — v' + v.manifest.version + ' keyId=' + v.manifest.keyId)
+    }
+
     if (!url || typeof url !== 'string') return { ok: false, reason: 'URL manquante' }
 
     const { spawn } = require('child_process')
