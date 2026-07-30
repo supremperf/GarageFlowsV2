@@ -44,7 +44,7 @@ export default function CatalogPanel({ onClose }: { onClose: () => void }) {
           <div style={logo}><Boxes size={16} color="#fff" /></div>
           <div><p style={{ color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>{t.catTitle}</p><p style={{ color: '#475569', fontSize: 11 }}>{t.catSubtitle}</p></div>
         </div>
-        <button onClick={onClose} style={closeBtn} aria-label="Fermer"><X size={16} /></button>
+        <button onClick={onClose} style={closeBtn} aria-label={t.uiClose}><X size={16} /></button>
       </div>
 
       <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>

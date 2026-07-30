@@ -520,8 +520,8 @@ export default function Header({
             <ToolBtn
               onClick={onOpenCopilot}
               icon={Sparkles}
-              label="Copilot"
-              title="Assistant IA — chiffres vérifiés, actions confirmées"
+              label={t.navCopilot}
+              title={t.ttCopilot}
               variant="finance"
             />
           )}
@@ -529,8 +529,8 @@ export default function Header({
             <ToolBtn
               onClick={onOpenOcr}
               icon={ScanLine}
-              label="OCR"
-              title="Scanner un document (carte grise, facture…)"
+              label={t.navOcr}
+              title={t.ttOcr}
               variant="finance"
             />
           )}
@@ -538,8 +538,8 @@ export default function Header({
             <ToolBtn
               onClick={onOpenSuppliers}
               icon={Truck}
-              label="Fournisseurs"
-              title="Commande automatique fournisseurs (réappro. groupé)"
+              label={t.navSuppliers}
+              title={t.ttSuppliers}
               variant="finance"
             />
           )}
@@ -547,8 +547,8 @@ export default function Header({
             <ToolBtn
               onClick={onOpenCatalog}
               icon={Boxes}
-              label="Catalogue"
-              title="Catalogue de pièces (recherche, références croisées)"
+              label={t.navCatalog}
+              title={t.ttCatalog}
               variant="finance"
             />
           )}

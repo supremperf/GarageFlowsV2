@@ -26,7 +26,7 @@ export default function Dashboard() {
     { id: 'revenue'  as const, label: t.revenueSec,   icon: <Euro size={16} /> },
     { id: 'mechanics'as const, label: t.mechanics,    icon: <Users size={16} /> },
     { id: 'stock'    as const, label: t.stock,        icon: <Package size={16} /> },
-    { id: 'decision' as const, label: lang === 'en' ? 'Decision' : 'Décision', icon: <Gauge size={16} /> },
+    { id: 'decision' as const, label: t.navDecision, icon: <Gauge size={16} /> },
   ]
 
   const [section, setSection] = useState<Section>('overview')

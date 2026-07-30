@@ -69,7 +69,7 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
           <div style={logo}><Sparkles size={16} color="#fff" /></div>
           <div><p style={{ color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>{t.cpTitle}</p><p style={{ color: '#475569', fontSize: 11 }}>{t.cpSubtitle}</p></div>
         </div>
-        <button onClick={onClose} style={closeBtn} aria-label="Fermer"><X size={16} /></button>
+        <button onClick={onClose} style={closeBtn} aria-label={t.uiClose}><X size={16} /></button>
       </div>
 
       <div ref={scrollRef} style={{ flex: 1, overflow: 'auto', padding: '22px 0', position: 'relative', zIndex: 1 }}>

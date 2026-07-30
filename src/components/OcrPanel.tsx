@@ -45,7 +45,7 @@ export default function OcrPanel({ onClose, onUseVehicle }: { onClose: () => voi
           <div style={logo}><ScanLine size={16} color="#fff" /></div>
           <div><p style={{ color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>{t.ocrTitle}</p><p style={{ color: '#475569', fontSize: 11 }}>{t.ocrSubtitle}</p></div>
         </div>
-        <button onClick={onClose} style={closeBtn} aria-label="Fermer"><X size={16} /></button>
+        <button onClick={onClose} style={closeBtn} aria-label={t.uiClose}><X size={16} /></button>
       </div>
 
       <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
