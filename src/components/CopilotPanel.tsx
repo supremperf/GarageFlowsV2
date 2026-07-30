@@ -19,21 +19,27 @@ interface CopilotResponse {
   data?: unknown
   action?: { id?: string; confirmationRequired?: boolean; endpoint?: string; method?: string }
 }
-interface Msg { role: 'user' | 'ai'; text: string; res?: CopilotResponse; confirmed?: boolean }
+interface Msg { role: 'user' | 'ai'; text: string; res?: CopilotResponse; confirmed?: boolean; declined?: boolean }
 
 export default function CopilotPanel({ onClose, onAction }: { onClose: () => void; onAction?: (intent: string) => void }) {
   const { t } = useTranslation()
-  const SUGGESTIONS = [t.cpSug1, t.cpSug2, t.cpSug3]
+  // The intent router matches French keyword phrases; chips show the localized
+  // label but always send the canonical French query so they classify correctly.
+  const SUGGESTIONS = [
+    { label: t.cpSug1, query: 'Quel est le CA du jour ?' },
+    { label: t.cpSug2, query: 'Quelles pièces sont en rupture de stock ?' },
+    { label: t.cpSug3, query: 'Crée un devis pour ce client' },
+  ]
   const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  async function ask(q: string) {
+  async function ask(q: string, display?: string) {
     const query = q.trim()
     if (!query || busy) return
     setInput('')
-    setMessages((m) => [...m, { role: 'user', text: query }])
+    setMessages((m) => [...m, { role: 'user', text: display ?? query }])
     setBusy(true)
     try {
       const r = await fetch('/api/copilot', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }) })
@@ -61,6 +67,9 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
     if (onAction && intent) onAction(intent)
   }
 
+  const onDeclineAction = (idx: number) =>
+    setMessages((m) => m.map((msg, i) => (i === idx ? { ...msg, declined: true } : msg)))
+
   return (
     <div style={overlay}>
       <Bg />
@@ -81,12 +90,12 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
               <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>{t.cpEmptyHint}</p>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 18 }}>
                 {SUGGESTIONS.map((s) => (
-                  <button key={s} onClick={() => ask(s)} style={chip}>{s}</button>
+                  <button key={s.query} onClick={() => ask(s.query, s.label)} style={chip}>{s.label}</button>
                 ))}
               </div>
             </div>
           )}
-          {messages.map((m, i) => <Bubble key={i} m={m} onConfirm={() => onConfirmAction(i)} />)}
+          {messages.map((m, i) => <Bubble key={i} m={m} onConfirm={() => onConfirmAction(i)} onDecline={() => onDeclineAction(i)} />)}
           {busy && <div style={{ color: '#64748b', fontSize: 13, padding: '6px 42px' }}>{t.cpThinking}</div>}
         </div>
       </div>
@@ -101,7 +110,7 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
   )
 }
 
-function Bubble({ m, onConfirm }: { m: Msg; onConfirm: () => void }) {
+function Bubble({ m, onConfirm, onDecline }: { m: Msg; onConfirm: () => void; onDecline: () => void }) {
   const { t } = useTranslation()
   if (m.role === 'user') {
     return (
@@ -122,16 +131,16 @@ function Bubble({ m, onConfirm }: { m: Msg; onConfirm: () => void }) {
           <span style={verified}><ShieldCheck size={13} /> {t.cpVerified}</span>
         )}
         {action && (
-          <div style={actionCard(m.confirmed)}>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: m.confirmed ? '#4ade80' : '#fbbf24', display: 'flex', alignItems: 'center', gap: 7 }}>
-              {m.confirmed ? `✓ ${t.cpActionConfirmed}` : `⚠ ${t.cpActionNeedsConfirm}`}
+          <div style={actionCard(m.confirmed, m.declined)}>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: m.confirmed ? '#4ade80' : m.declined ? '#94a3b8' : '#fbbf24', display: 'flex', alignItems: 'center', gap: 7 }}>
+              {m.confirmed ? `✓ ${t.cpActionConfirmed}` : m.declined ? t.cpActionDeclined : `⚠ ${t.cpActionNeedsConfirm}`}
             </div>
-            {!m.confirmed && (
+            {!m.confirmed && !m.declined && (
               <>
                 <p style={{ fontSize: 11.5, color: '#64748b', margin: '6px 0 9px' }}>{t.cpActionHint}</p>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={onConfirm} style={btnPri}>✓ {t.cpConfirmOpen}</button>
-                  <button style={btnSec}>{t.uiCancel}</button>
+                  <button type="button" onClick={onConfirm} style={btnPri}>✓ {t.cpConfirmOpen}</button>
+                  <button type="button" onClick={onDecline} style={btnSec}>{t.uiCancel}</button>
                 </div>
               </>
             )}
@@ -155,7 +164,11 @@ const inputBox: React.CSSProperties = { flex: 1, padding: '11px 15px', borderRad
 const sendBtn: React.CSSProperties = { width: 44, borderRadius: 11, border: 'none', background: '#3b82f6', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }
 const btnPri: React.CSSProperties = { fontSize: 13, fontWeight: 700, padding: '7px 14px', borderRadius: 9, border: 'none', background: '#3b82f6', color: '#fff', cursor: 'pointer' }
 const btnSec: React.CSSProperties = { fontSize: 13, fontWeight: 700, padding: '7px 14px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }
-const actionCard = (confirmed?: boolean): React.CSSProperties => ({ marginTop: 11, padding: 12, borderRadius: 11, border: `1px solid ${confirmed ? 'rgba(74,222,128,0.35)' : 'rgba(251,191,36,0.35)'}`, background: confirmed ? 'rgba(74,222,128,0.08)' : 'rgba(251,191,36,0.07)' })
+const actionCard = (confirmed?: boolean, declined?: boolean): React.CSSProperties => ({
+  marginTop: 11, padding: 12, borderRadius: 11,
+  border: `1px solid ${confirmed ? 'rgba(74,222,128,0.35)' : declined ? 'rgba(148,163,184,0.25)' : 'rgba(251,191,36,0.35)'}`,
+  background: confirmed ? 'rgba(74,222,128,0.08)' : declined ? 'rgba(148,163,184,0.06)' : 'rgba(251,191,36,0.07)',
+})
 
 function Bg() {
   return (
