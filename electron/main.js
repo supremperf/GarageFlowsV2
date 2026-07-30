@@ -379,10 +379,17 @@ function writeSettings(patch) {
     return next
   } catch (err) { log('writeSettings error:', err.message); return readSettings() }
 }
-/** Consentement crash — par défaut activé (peut être coupé dans les paramètres). */
+/**
+ * Consentement crash — OPT-IN : par défaut DÉSACTIVÉ (false). Aucun rapport n'est
+ * envoyé tant que l'utilisateur n'a pas explicitement accepté (RGPD).
+ */
 function crashConsent() {
   const s = readSettings()
-  return s.crashConsent === undefined ? true : !!s.crashConsent
+  return s.crashConsent === true
+}
+/** L'utilisateur a-t-il déjà fait un choix explicite (pour l'écran de 1er lancement) ? */
+function crashConsentDecided() {
+  return typeof readSettings().crashConsent === 'boolean'
 }
 
 // ── Entitlements (modules) — cache chiffré, lié au HWID ───────────────────────
@@ -457,8 +464,8 @@ async function reportCrash({ message, stack, fatal = true, kind = 'crash' }) {
   try {
     const info = getSystemInfo()
     const logsTail = (() => { try { return fs.readFileSync(LOG_PATH, 'utf8').slice(-4000) } catch { return null } })()
-    const payload = {
-      consent:     true,
+    // Redaction centralisée + minimisation (jamais de secret/token/chemin utilisateur/HWID brut).
+    const payload = cp.sanitizeCrashReport({
       licenseId:   activeLicense?.payload?.lid ?? null,
       hwid:        getHwid(),
       appVersion:  info.version,
@@ -467,13 +474,13 @@ async function reportCrash({ message, stack, fatal = true, kind = 'crash' }) {
       arch:        info.arch,
       cpu:         info.cpu,
       ramMb:       info.ramMb,
-      message:     String(message || 'unknown').slice(0, 2000),
-      stack:       stack ? String(stack).slice(0, 20000) : null,
-      breadcrumbs: JSON.stringify(breadcrumbs).slice(0, 10000),
+      message,
+      stack,
+      breadcrumbs: JSON.stringify(breadcrumbs),
       logs:        logsTail,
-      fatal:       !!fatal,
+      fatal,
       kind,
-    }
+    })
     const queue = cp.pushBounded(readCrashQueue(), payload, 50)
     writeCrashQueue(queue)
     log(`[crash] queued (${kind}) — ${payload.message.slice(0, 80)}`)
@@ -1751,10 +1758,12 @@ function setupIPC() {
   })
 
   // Consentement au reporting de crash (RGPD — l'utilisateur maîtrise).
-  ipcMain.handle('app:crash-consent',     () => ({ consent: crashConsent() }))
+  // consent = false par défaut ; decided = l'utilisateur a-t-il déjà choisi ?
+  // (le renderer affiche un écran de consentement au 1er lancement si !decided).
+  ipcMain.handle('app:crash-consent',     () => ({ consent: crashConsent(), decided: crashConsentDecided() }))
   ipcMain.handle('app:set-crash-consent', (_e, value) => {
     writeSettings({ crashConsent: !!value })
-    return { consent: crashConsent() }
+    return { consent: crashConsent(), decided: true }
   })
 
   // Le renderer signale un crash / une erreur, et dépose des « miettes ».
