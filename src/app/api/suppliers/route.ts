@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { rateLimit } from '@/lib/rate-limit'
+import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { logAudit } from '@/lib/audit'
 import {
   SupplierEngine,
@@ -123,9 +123,9 @@ export const POST = withAuth(async (req) => {
   const session = await requireSession()
   const garageId = session.user.garageId
 
-  const rl = rateLimit(`suppliers:${garageId}`, 30, 60)
+  const rl = await enforceRateLimit('api', `suppliers:${garageId}`, { max: 30, windowSec: 60 })
   if (!rl.ok) {
-    return NextResponse.json({ error: `Trop de requêtes. Réessayez dans ${rl.retryAfter}s.` }, { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } })
+    return NextResponse.json({ error: `Trop de requêtes. Réessayez dans ${rl.retryAfterSec}s.` }, { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } })
   }
 
   const parsed = BodySchema.safeParse(await req.json().catch(() => null))

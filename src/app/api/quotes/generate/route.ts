@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { format } from 'date-fns'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { rateLimit } from '@/lib/rate-limit'
+import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { logAudit } from '@/lib/audit'
 import { REPAIR_TYPES } from '@/lib/types'
 import { forgottenPartsEngine } from '@/lib/forgotten-parts'
@@ -29,9 +29,9 @@ export const POST = withAuth(async (req) => {
   const session = await requireSession()
   const garageId = session.user.garageId
 
-  const rl = rateLimit(`quote-gen:${garageId}`, 30, 60)
+  const rl = await enforceRateLimit('api', `quote-gen:${garageId}`, { max: 30, windowSec: 60 })
   if (!rl.ok) {
-    return NextResponse.json({ error: `Trop de requêtes. Réessayez dans ${rl.retryAfter}s.` }, { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } })
+    return NextResponse.json({ error: `Trop de requêtes. Réessayez dans ${rl.retryAfterSec}s.` }, { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } })
   }
 
   const parsed = BodySchema.safeParse(await req.json().catch(() => null))

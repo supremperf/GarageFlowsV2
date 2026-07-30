@@ -22,7 +22,6 @@ vi.mock('@/lib/api-helpers', () => ({
   requireSession: async () => h.session,
 }))
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 let POST: (req: Request) => Promise<Response>
 let prisma: any
 let garageA: string

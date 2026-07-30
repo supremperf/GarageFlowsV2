@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { rateLimit } from '@/lib/rate-limit'
+import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { extractDocument } from '@/lib/ocr'
 import { vinEngine } from '@/lib/vin'
 
@@ -28,9 +28,9 @@ export const POST = withAuth(async (req) => {
   const session = await requireSession()
   const garageId = session.user.garageId
 
-  const rl = rateLimit(`ocr:${garageId}`, 30, 60)
+  const rl = await enforceRateLimit('api', `ocr:${garageId}`, { max: 30, windowSec: 60 })
   if (!rl.ok) {
-    return NextResponse.json({ error: `Trop de requêtes. Réessayez dans ${rl.retryAfter}s.` }, { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } })
+    return NextResponse.json({ error: `Trop de requêtes. Réessayez dans ${rl.retryAfterSec}s.` }, { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } })
   }
 
   // Reject oversized bodies before reading/parsing them (the Zod .max only fires

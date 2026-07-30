@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { rateLimit } from '@/lib/rate-limit'
+import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { forgottenPartsEngine } from '@/lib/forgotten-parts'
 
 const BodySchema = z.object({
@@ -16,11 +16,11 @@ const BodySchema = z.object({
 export const POST = withAuth(async (req) => {
   const session = await requireSession()
   const garageId = session.user.garageId
-  const rl = rateLimit(`forgotten:${garageId}`, 60, 60)
+  const rl = await enforceRateLimit('api', `forgotten:${garageId}`, { max: 60, windowSec: 60 })
   if (!rl.ok) {
     return NextResponse.json(
-      { error: `Trop de requêtes. Réessayez dans ${rl.retryAfter}s.` },
-      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } },
+      { error: `Trop de requêtes. Réessayez dans ${rl.retryAfterSec}s.` },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
     )
   }
 

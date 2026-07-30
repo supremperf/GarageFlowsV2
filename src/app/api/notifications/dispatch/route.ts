@@ -4,7 +4,7 @@ import { z } from 'zod'
 import nodemailer from 'nodemailer'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { rateLimit } from '@/lib/rate-limit'
+import { enforceRateLimit } from '@/lib/security/rate-limit'
 import {
   NotificationEngine,
   InternalProvider,
@@ -54,11 +54,11 @@ function buildEmailSender(garage: {
 // POST /api/notifications/dispatch — render + send a notification, record the journal.
 export const POST = withAuth(async (req) => {
   const session = await requireSession()
-  const rl = rateLimit(`notify:${session.user.garageId}`, 30, 60)
+  const rl = await enforceRateLimit('api', `notify:${session.user.garageId}`, { max: 30, windowSec: 60 })
   if (!rl.ok) {
     return NextResponse.json(
-      { error: `Trop de requêtes. Réessayez dans ${rl.retryAfter}s.` },
-      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } },
+      { error: `Trop de requêtes. Réessayez dans ${rl.retryAfterSec}s.` },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
     )
   }
 

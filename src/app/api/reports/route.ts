@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { rateLimit } from '@/lib/rate-limit'
+import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
 import { runReport, reportToCsv, REPORT_SOURCES, isValidSource, type ReportSpec, type Row } from '@/lib/reports'
 
@@ -63,9 +63,9 @@ export const GET = withAuth(async () => {
 // POST /api/reports?source=invoices&format=csv — run a report spec.
 export const POST = withAuth(async (req) => {
   const session = await requireSession()
-  const rl = rateLimit(`reports:${session.user.garageId}`, 30, 60)
+  const rl = await enforceRateLimit('api', `reports:${session.user.garageId}`, { max: 30, windowSec: 60 })
   if (!rl.ok) {
-    return NextResponse.json({ error: `Trop de requêtes. Réessayez dans ${rl.retryAfter}s.` }, { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } })
+    return NextResponse.json({ error: `Trop de requêtes. Réessayez dans ${rl.retryAfterSec}s.` }, { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } })
   }
 
   const { searchParams } = new URL(req.url)

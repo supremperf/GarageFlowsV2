@@ -11,9 +11,8 @@ import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
 const h = vi.hoisted(() => ({ session: null as unknown }))
 vi.mock('@/lib/api-helpers', () => ({ withAuth: (fn: unknown) => fn, requireSession: async () => h.session }))
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 let POST: (req: Request) => Promise<Response>
-let resetRateLimit: (key: string) => void
+let resetRateLimit: (...args: any[]) => Promise<void>
 const GARAGE = 'garage-ocr'
 
 const CARTE_GRISE = "CERTIFICAT D'IMMATRICULATION\nA  AB-123-CD\nB  15/03/2018\nD.1 PEUGEOT\nD.3 308\nE  VF3LBHYBWFS123456\nP.3 GO"
@@ -26,11 +25,11 @@ const field = (json: any, key: string) => json.fields.find((f: any) => f.key ===
 
 beforeAll(async () => {
   ;({ POST } = await import('@/app/api/ocr/route') as any)
-  ;({ resetRateLimit } = await import('@/lib/rate-limit'))
+  ;({ resetRateLimit } = await import('@/lib/security/rate-limit'))
   h.session = { user: { id: 'u', name: 'A', garageId: GARAGE } }
 })
 
-afterEach(() => resetRateLimit(`ocr:${GARAGE}`))
+afterEach(() => resetRateLimit('api', `ocr:${GARAGE}`))
 
 describe('POST /api/ocr', () => {
   it('classifies a carte grise and extracts its fields', async () => {

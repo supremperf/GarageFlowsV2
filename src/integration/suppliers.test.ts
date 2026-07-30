@@ -16,7 +16,6 @@ process.env.DATABASE_URL = `file:${DB_PATH}`
 const h = vi.hoisted(() => ({ session: null as unknown }))
 vi.mock('@/lib/api-helpers', () => ({ withAuth: (fn: unknown) => fn, requireSession: async () => h.session }))
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 let GET: (req: Request) => Promise<Response>
 let POST: (req: Request) => Promise<Response>
 let prisma: any

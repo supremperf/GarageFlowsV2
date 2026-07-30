@@ -614,4 +614,53 @@ export const MIGRATIONS: Migration[] = [
   // ── Liaison licence ↔ garage (parité avec le schéma serveur ; null en desktop) ──
   { id: '087_licensekey_garageid',            sql: 'ALTER TABLE "LicenseKey" ADD COLUMN "garageId" TEXT' },
   { id: '088_licensekey_garageid_idx',        sql: 'CREATE INDEX IF NOT EXISTS "LicenseKey_garageId_idx" ON "LicenseKey"("garageId")' },
+  // ── Modules Premium (intégration complete-platform) : VIN, signature, notif ──
+  { id: '089_vinsearch_table', sql: `CREATE TABLE IF NOT EXISTS "VinSearch" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "garageId" TEXT NOT NULL,
+    "vin" TEXT NOT NULL,
+    "resultJson" TEXT NOT NULL,
+    "source" TEXT NOT NULL DEFAULT 'offline',
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "VinSearch_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)` },
+  { id: '090_vinsearch_idx1', sql: 'CREATE INDEX IF NOT EXISTS "VinSearch_garageId_createdAt_idx" ON "VinSearch"("garageId", "createdAt")' },
+  { id: '091_vinsearch_idx2', sql: 'CREATE INDEX IF NOT EXISTS "VinSearch_garageId_vin_idx" ON "VinSearch"("garageId", "vin")' },
+  { id: '092_signature_table', sql: `CREATE TABLE IF NOT EXISTS "Signature" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "garageId" TEXT NOT NULL,
+    "entityType" TEXT NOT NULL,
+    "entityId" TEXT NOT NULL,
+    "signerName" TEXT NOT NULL,
+    "signerRole" TEXT,
+    "algorithm" TEXT NOT NULL DEFAULT 'SHA-256 / HMAC-SHA256',
+    "contentHash" TEXT NOT NULL,
+    "imageHash" TEXT NOT NULL,
+    "seal" TEXT NOT NULL,
+    "signatureData" TEXT NOT NULL,
+    "documentSnapshotJson" TEXT NOT NULL,
+    "ipAddress" TEXT,
+    "userAgent" TEXT,
+    "signedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "invalidatedAt" DATETIME,
+    CONSTRAINT "Signature_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)` },
+  { id: '093_signature_idx', sql: 'CREATE INDEX IF NOT EXISTS "Signature_garageId_entityType_entityId_idx" ON "Signature"("garageId", "entityType", "entityId")' },
+  { id: '094_notificationlog_table', sql: `CREATE TABLE IF NOT EXISTS "NotificationLog" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "garageId" TEXT NOT NULL,
+    "trigger" TEXT,
+    "channel" TEXT NOT NULL,
+    "recipient" TEXT NOT NULL,
+    "subject" TEXT,
+    "body" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "providerId" TEXT,
+    "error" TEXT,
+    "attempts" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "NotificationLog_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+)` },
+  { id: '095_notificationlog_idx1', sql: 'CREATE INDEX IF NOT EXISTS "NotificationLog_garageId_createdAt_idx" ON "NotificationLog"("garageId", "createdAt")' },
+  { id: '096_notificationlog_idx2', sql: 'CREATE INDEX IF NOT EXISTS "NotificationLog_garageId_status_idx" ON "NotificationLog"("garageId", "status")' },
 ]

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { rateLimit } from '@/lib/rate-limit'
+import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { differenceInDays, format, startOfDay, subMonths } from 'date-fns'
 import { calcTotalHT, roundCents } from '@/lib/billing'
 import { handleQuery, type CopilotResponse } from '@/lib/copilot'
@@ -22,9 +22,9 @@ const BodySchema = z.object({ query: z.string().trim().min(1).max(500) })
 export const POST = withAuth(async (req) => {
   const session = await requireSession()
   const garageId = session.user.garageId
-  const rl = rateLimit(`copilot:${garageId}`, 60, 60)
+  const rl = await enforceRateLimit('api', `copilot:${garageId}`, { max: 60, windowSec: 60 })
   if (!rl.ok) {
-    return NextResponse.json({ error: `Trop de requêtes. Réessayez dans ${rl.retryAfter}s.` }, { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } })
+    return NextResponse.json({ error: `Trop de requêtes. Réessayez dans ${rl.retryAfterSec}s.` }, { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } })
   }
 
   const parsed = BodySchema.safeParse(await req.json())

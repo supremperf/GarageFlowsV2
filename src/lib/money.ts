@@ -14,11 +14,21 @@
  *  - INVARIANT garanti : totalTTC = totalHT + TVA (en centimes, donc exact).
  */
 
-/** Arrondi au centime le plus proche (demi vers le haut), robuste au bruit float. */
+/**
+ * Arrondi au centime le plus proche, SYMÉTRIQUE (demi éloigné de zéro), robuste
+ * au bruit float. Le calcul se fait sur la valeur absolue puis on réapplique le
+ * signe : ainsi les avoirs/remboursements (montants négatifs) sont arrondis de
+ * façon miroir aux montants positifs (−1,005 € → −1,01 €, comme +1,005 € →
+ * +1,01 €) — évite l'asymétrie de Math.round qui arrondit −100,5 vers −100.
+ * (Fusion : intègre le correctif d'arrondi des montants négatifs de la branche
+ * complete-platform tout en conservant la couche centimes exacte du socle.)
+ */
 export function toCents(amountEuros: number): number {
   if (!Number.isFinite(amountEuros)) return 0
-  // Le +epsilon corrige le bruit binaire (ex. 1.005 * 100 = 100.49999…).
-  return Math.round((amountEuros + Number.EPSILON) * 100)
+  const sign = amountEuros < 0 ? -1 : 1
+  // Le +epsilon (ajouté AVANT la multiplication) corrige le bruit binaire
+  // (ex. 1.005 * 100 = 100.49999…) pour que 1,005 → 101 et non 100.
+  return sign * Math.round((Math.abs(amountEuros) + Number.EPSILON) * 100)
 }
 
 /** Convertit des centimes entiers en euros (2 décimales exactes). */
