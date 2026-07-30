@@ -16,6 +16,11 @@ regexes = [
   '''fallback-(dev|portal)-secret-change-in-production''',
   '''CHANGE_ME[_A-Za-z0-9]*''',
   '''REPLACE_WITH_YOUR_PUBLIC_KEY''',
+  # En-tête ASN.1 SubjectPublicKeyInfo d'une clé PUBLIQUE EC P-256 (secp256r1),
+  # embarquée pour vérifier les signatures de licence/MàJ. Une valeur commençant
+  # par cet en-tête est PUBLIQUE (sûre à distribuer) — jamais une clé privée ni un
+  # secret. Couvre la clé inline d'electron/main.js et ses rotations.
+  '''MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE[A-Za-z0-9+/=]+''',
 ]
 paths = [
   '''.*public-key\.ts''',

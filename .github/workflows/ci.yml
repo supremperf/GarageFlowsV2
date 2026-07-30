@@ -13,20 +13,22 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-        with:
-          # Historique complet : gitleaks scanne la plage de commits du push ;
-          # un clone shallow fait échouer la résolution du parent (^).
-          fetch-depth: 0
+      # Scan de l'ARBRE COURANT (fichiers suivis), PAS de l'historique git. Les
+      # secrets historiques sont documentés comme rotés (docs/SECRETS_ROTATION.md).
+      # Ce mode est IDENTIQUE sur push et pull_request et n'appelle aucune API
+      # GitHub — contrairement à gitleaks-action sur les PR, qui exige la
+      # permission pull-requests:read et rescanne toute la plage de commits
+      # (rouvrant de faux positifs historiques). L'allowlist ciblé de
+      # .gitleaks.toml (clés PUBLIQUES, listes de détection, test de redaction)
+      # s'applique.
+      - name: Install gitleaks
+        run: |
+          curl -sSL -o /tmp/gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /usr/local/bin gitleaks
+          gitleaks version
       - name: Gitleaks — scan working tree
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITLEAKS_CONFIG: .gitleaks.toml
-          # Scan the current tree (les secrets historiques sont documentés comme rotés).
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
-          # Requis par gitleaks-action@v2 pour les événements pull_request (l'action
-          # récupère la plage de commits de la PR via l'API). Sans lui, le scan
-          # échoue sur les PR (il fonctionne sur push sans jeton).
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gitleaks dir . --config .gitleaks.toml --redact --no-banner
 
   check:
     name: Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)
