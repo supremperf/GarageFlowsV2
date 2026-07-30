@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { assertRelations } from '@/lib/tenant'
 
 interface WorkLine {
   description: string
@@ -58,6 +59,13 @@ export const POST = withAuth(async (req) => {
   if (!body.clientName) {
     return NextResponse.json({ error: 'clientName est requis' }, { status: 400 })
   }
+
+  // SECURITY (IDOR): job & mécanicien assignés doivent appartenir au garage.
+  const relErr = await assertRelations(session.user.garageId, [
+    { model: 'job', id: body.jobId, label: 'Intervention' },
+    { model: 'mechanic', id: body.mechanicId, label: 'Mécanicien' },
+  ])
+  if (relErr) return relErr
 
   const worksJson = typeof body.worksJson === 'string'
     ? body.worksJson

@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { assertRelations } from '@/lib/tenant'
 
 // GET /api/inspections?jobId=xxx
 export const GET = withAuth(async (req) => {
@@ -27,6 +28,13 @@ export const GET = withAuth(async (req) => {
 export const POST = withAuth(async (req) => {
   const session = await requireSession()
   const body = await req.json()
+
+  // SECURITY (IDOR): job & véhicule liés doivent appartenir au garage.
+  const relErr = await assertRelations(session.user.garageId, [
+    { model: 'job', id: body.jobId, label: 'Intervention' },
+    { model: 'vehicle', id: body.vehicleId, label: 'Véhicule' },
+  ])
+  if (relErr) return relErr
 
   const inspection = await prisma.inspection.create({
     data: {

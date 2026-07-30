@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { withTotals } from '@/lib/billing'
 import { CreateInvoiceSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
+import { assertRelations } from '@/lib/tenant'
 
 // GET /api/invoices
 export const GET = withAuth(async (req) => {
@@ -52,6 +53,14 @@ export const POST = withAuth(async (req) => {
   if (!parsed.success) {
     return NextResponse.json({ error: 'Données invalides', details: parsed.error.flatten() }, { status: 400 })
   }
+
+  // SECURITY (IDOR): les FK fournies doivent appartenir au garage de la session.
+  const relErr = await assertRelations(session.user.garageId, [
+    { model: 'client', id: body.clientId, label: 'Client' },
+    { model: 'vehicle', id: body.vehicleId, label: 'Véhicule' },
+    { model: 'job', id: body.jobId, label: 'Intervention' },
+  ])
+  if (relErr) return relErr
 
   const garage = await prisma.garage.update({
     where: { id: session.user.garageId },

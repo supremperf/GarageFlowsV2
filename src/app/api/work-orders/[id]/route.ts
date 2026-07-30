@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { assertRelations } from '@/lib/tenant'
 
 interface WorkLine {
   description: string
@@ -77,15 +78,25 @@ export const PATCH = withAuth(async (req, { params }) => {
   if (body.mechanicId !== undefined) updateData.mechanicId = body.mechanicId
   if (body.notes !== undefined) updateData.notes = body.notes
 
-  const wo = await prisma.workOrder.update({
-    where: { id: params.id },
+  // SECURITY (IDOR): un mécanicien réassigné doit appartenir au garage.
+  const relErr = await assertRelations(session.user.garageId, [
+    { model: 'mechanic', id: body.mechanicId, label: 'Mécanicien' },
+  ])
+  if (relErr) return relErr
+
+  // Atomique (anti-TOCTOU) : la portée garageId est dans le where.
+  const res = await prisma.workOrder.updateMany({
+    where: { id: params.id, garageId: session.user.garageId },
     data: updateData,
+  })
+  if (res.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const wo = await prisma.workOrder.findFirst({
+    where: { id: params.id, garageId: session.user.garageId },
     include: {
       mechanic: { select: { id: true, name: true, color: true } },
       job: { select: { id: true, customerName: true, vehicleModel: true, licensePlate: true } },
     },
   })
-
   return NextResponse.json(wo)
 })
 
@@ -99,6 +110,6 @@ export const DELETE = withAuth(async (_req, { params }) => {
   if (existing.status !== 'draft') {
     return NextResponse.json({ error: 'Seuls les ordres en brouillon peuvent être supprimés' }, { status: 400 })
   }
-  await prisma.workOrder.delete({ where: { id: params.id } })
+  await prisma.workOrder.deleteMany({ where: { id: params.id, garageId: session.user.garageId } })
   return NextResponse.json({ success: true })
 })

@@ -13,14 +13,10 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { MIGRATIONS } from '@/lib/migrations'
-
-function authorized(req: NextRequest): boolean {
-  const key = req.headers.get('x-internal-key')
-  return !!key && key === process.env.GF_INTERNAL_EXPORT_KEY
-}
+import { internalRequestAuthorized } from '@/lib/internal-auth'
 
 export async function POST(req: NextRequest) {
-  if (!authorized(req)) {
+  if (!internalRequestAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

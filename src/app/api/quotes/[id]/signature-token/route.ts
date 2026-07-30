@@ -27,7 +27,7 @@ export const POST = withAuth(async (req: Request, { params }: { params: { id: st
 
   // Mark quote as sent if it was draft
   if (quote.status === 'draft') {
-    await prisma.quote.update({ where: { id: params.id }, data: { status: 'sent' } })
+    await prisma.quote.update({ where: { id: params.id, garageId: session.user.garageId }, data: { status: 'sent' } })
   }
 
   return NextResponse.json({ token, url })

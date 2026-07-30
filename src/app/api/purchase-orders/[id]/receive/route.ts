@@ -32,12 +32,15 @@ export const POST = withAuth(async (_req, { params }: { params: { id: string } }
   try { lines = JSON.parse(order.linesJson) } catch { lines = [] }
 
   // Run everything atomically
-  await prisma.$transaction(async (tx) => {
-    // Mark PO received
-    await tx.purchaseOrder.update({
-      where: { id: params.id },
+  try {
+    await prisma.$transaction(async (tx) => {
+    // Claim the PO atomically: only proceed if it is NOT already received/cancelled.
+    // Prevents a double-reception race (double stock increment) and cross-tenant writes.
+    const claim = await tx.purchaseOrder.updateMany({
+      where: { id: params.id, garageId: session.user.garageId, status: { notIn: ['received', 'cancelled'] } },
       data: { status: 'received', receivedAt: new Date() },
     })
+    if (claim.count === 0) throw new ReceiveError(409, 'Commande déjà réceptionnée')
 
     // Increment stock for each line with a known partId
     const stockUpdates = lines.filter(
@@ -51,12 +54,22 @@ export const POST = withAuth(async (_req, { params }: { params: { id: string } }
       })
       if (part) {
         await tx.part.update({
-          where: { id: line.partId },
+          where: { id: line.partId, garageId: session.user.garageId },
           data: { quantity: { increment: line.qty } },
         })
       }
     }
-  })
+    })
+  } catch (err) {
+    if (err instanceof ReceiveError) return NextResponse.json({ error: err.message }, { status: err.status })
+    throw err
+  }
 
   return NextResponse.json({ success: true, stockUpdated: lines.filter(l => l.partId && l.qty > 0).length })
 })
+
+class ReceiveError extends Error {
+  constructor(public status: number, message: string) {
+    super(message)
+  }
+}

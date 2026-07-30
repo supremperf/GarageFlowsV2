@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { assertRelations } from '@/lib/tenant'
 import { addMonths } from 'date-fns'
 
 export const GET = withAuth(async (req) => {
@@ -36,6 +37,13 @@ export const POST = withAuth(async (req) => {
 
   if (!body.partName?.trim())  return NextResponse.json({ error: 'partName requis' }, { status: 400 })
   if (!body.clientName?.trim()) return NextResponse.json({ error: 'clientName requis' }, { status: 400 })
+
+  // SECURITY (IDOR): job & véhicule liés doivent appartenir au garage.
+  const relErr = await assertRelations(session.user.garageId, [
+    { model: 'job', id: body.jobId, label: 'Intervention' },
+    { model: 'vehicle', id: body.vehicleId, label: 'Véhicule' },
+  ])
+  if (relErr) return relErr
 
   const durationMonths = Number(body.durationMonths ?? 12)
   const installedAt = body.installedAt ? new Date(body.installedAt) : new Date()

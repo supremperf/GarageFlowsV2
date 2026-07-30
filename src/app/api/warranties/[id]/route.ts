@@ -20,7 +20,7 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
   if (body.claimNotes !== undefined)  data.claimNotes = body.claimNotes
   if (body.notes !== undefined)       data.notes      = body.notes
   if (body.status === 'claimed' && !existing.claimedAt) data.claimedAt = new Date()
-  const updated = await prisma.warranty.update({ where: { id: params.id }, data })
+  const updated = await prisma.warranty.update({ where: { id: params.id, garageId: session.user.garageId }, data })
   return NextResponse.json(updated)
 })
 
@@ -29,6 +29,6 @@ export const DELETE = withAuth(async (_req, { params }: { params: { id: string }
   const existing = await prisma.warranty.findFirst({ where: { id: params.id, garageId: session.user.garageId } })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (existing.status === 'claimed') return NextResponse.json({ error: 'Impossible de supprimer une garantie réclamée' }, { status: 400 })
-  await prisma.warranty.delete({ where: { id: params.id } })
+  await prisma.warranty.delete({ where: { id: params.id, garageId: session.user.garageId } })
   return NextResponse.json({ success: true })
 })

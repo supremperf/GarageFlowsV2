@@ -1,10 +1,22 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
-import { withAuth } from '@/lib/api-helpers'
+import { withAuth, requireSession } from '@/lib/api-helpers'
+import { rateLimit } from '@/lib/rate-limit'
 import Anthropic from '@anthropic-ai/sdk'
 
 // GET /api/plate-lookup?plate=AB-123-CD
 export const GET = withAuth(async (req) => {
+  // SECURITY: authenticate — this route calls an external API and can spend the
+  // ANTHROPIC_API_KEY, so it must never be reachable anonymously.
+  const session = await requireSession()
+  const rl = rateLimit(`plate-lookup:${session.user.garageId}`, 20, 60)
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: `Trop de requêtes. Réessayez dans ${rl.retryAfter}s.` },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } },
+    )
+  }
+
   const { searchParams } = new URL(req.url)
   const plate = searchParams.get('plate')?.toUpperCase().replace(/\s/g, '-')
 
