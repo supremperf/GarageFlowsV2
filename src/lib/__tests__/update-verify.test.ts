@@ -1,9 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import crypto from 'crypto'
 // Modules CommonJS du process Electron (vérification des mises à jour signées).
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const updateVerify = require('../../../electron/update-verify.js')
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const semver = require('../../../electron/semver.js')
 
 const KEY_ID = 'test-key'

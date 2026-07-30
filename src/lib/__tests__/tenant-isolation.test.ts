@@ -12,9 +12,7 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let prisma: any
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let relationInGarage: any
 let tmpDb = ''
 

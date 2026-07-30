@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const cp = require('../../../electron/control-plane.js')
 
 describe('control-plane — redaction des rapports de crash (RGPD)', () => {
