@@ -33,8 +33,14 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies
+      - name: Install dependencies (reproducible)
         run: npm ci
+
+      - name: Version consistency (SemVer)
+        run: node scripts/check-version.js
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
 
       - name: Generate Prisma client
         run: npx prisma generate
@@ -47,6 +53,13 @@ jobs:
 
       - name: Tests
         run: npm test
+        env:
+          DATABASE_URL: file:./prisma/dev.db
+          NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
+          NEXTAUTH_URL: http://localhost:4028
+
+      - name: Build
+        run: npm run build
         env:
           DATABASE_URL: file:./prisma/dev.db
           NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
