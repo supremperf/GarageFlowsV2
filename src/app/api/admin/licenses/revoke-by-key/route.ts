@@ -11,26 +11,36 @@ export const dynamic = 'force-dynamic'
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
 import { prisma } from '@/lib/db'
 import { computeRecordMac } from '@/lib/license/record-mac'
 
 const VALID_STATUSES = ['active', 'revoked', 'suspended'] as const
 type Status = typeof VALID_STATUSES[number]
 
+/** Comparaison à temps constant (évite l'oracle de timing sur la clé API). */
+function safeEqual(a: string, b: string): boolean {
+  const ba = Buffer.from(a, 'utf8')
+  const bb = Buffer.from(b, 'utf8')
+  if (ba.length !== bb.length) return false
+  return crypto.timingSafeEqual(ba, bb)
+}
+
 export async function POST(req: NextRequest) {
-  // Auth : compare x-gf-key à GARAGEFLOW_API_KEY
+  // Auth : compare x-gf-key à GARAGEFLOW_API_KEY (temps constant).
   const apiKey = req.headers.get('x-gf-key')?.trim() ?? ''
   const serverApiKey = process.env.GARAGEFLOW_API_KEY?.trim() ?? ''
 
-  if (!serverApiKey) {
-    console.error('[admin/licenses/revoke-by-key] GARAGEFLOW_API_KEY non configurée')
+  // Refuse une clé serveur absente OU trop faible (pas de contrôle d'accès mou).
+  if (!serverApiKey || serverApiKey.length < 16) {
+    console.error('[admin/licenses/revoke-by-key] GARAGEFLOW_API_KEY absente ou trop faible')
     return NextResponse.json(
-      { error: 'Configuration serveur incomplète (GARAGEFLOW_API_KEY absente).' },
+      { error: 'Configuration serveur incomplète (GARAGEFLOW_API_KEY).' },
       { status: 500 }
     )
   }
 
-  if (!apiKey || apiKey !== serverApiKey) {
+  if (!apiKey || !safeEqual(apiKey, serverApiKey)) {
     return NextResponse.json(
       { error: 'Accès refusé — clé API invalide' },
       { status: 403 }
@@ -72,13 +82,6 @@ export async function POST(req: NextRequest) {
       where: { licenseId },
     })
 
-    console.log("Licence trouvée :", !!record)
-
-    if (record) {
-      console.log("Statut actuel :", record.status)
-      console.log("LicenseId DB :", record.licenseId)
-    }
-
     // Licence non encore enregistrée côté serveur
     if (!record) {
       if (status === 'active') {
@@ -118,10 +121,6 @@ export async function POST(req: NextRequest) {
         },
       })
 
-      console.log("Licence créée :", created.licenseId)
-      console.log("Nouveau statut :", created.status)
-      console.log("====================================")
-
       return NextResponse.json({
         ok: true,
         created: true,
@@ -155,26 +154,15 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    console.log("Mise à jour effectuée")
-    console.log("LicenseId :", updated.licenseId)
-    console.log("Nouveau statut :", updated.status)
-    console.log("====================================")
-
     return NextResponse.json({
       ok: true,
       licenseId: updated.licenseId,
       status: updated.status,
       label: updated.label,
     })
-  } catch (err: any) {
-    console.error('[admin/licenses/revoke-by-key]', err)
-
-    return NextResponse.json(
-      {
-        error: 'Erreur base de données',
-        detail: err.message,
-      },
-      { status: 500 }
-    )
+  } catch (err) {
+    // Ne jamais renvoyer le message d'erreur brut (fuite d'infos internes).
+    console.error('[admin/licenses/revoke-by-key] erreur base de données')
+    return NextResponse.json({ error: 'Erreur base de données' }, { status: 500 })
   }
 }
