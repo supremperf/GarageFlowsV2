@@ -30,6 +30,7 @@ import { prisma } from '@/lib/db'
 import { verifyRecordMac } from '@/lib/license/record-mac'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { validateDeviceToken, type DeviceTokenFailure } from '@/lib/license/devices'
+import { isVersionSupported, seatlessCheckTolerated, type ClientPlatform } from '@/lib/license/client-policy'
 import { logger } from '@/lib/logger'
 
 const IS_ELECTRON = () => process.env.ELECTRON === '1'
@@ -91,15 +92,30 @@ export async function POST(req: NextRequest) {
   let licenseId:   string
   let deviceToken: string
   let hwid:        string | undefined
+  let version:     string | undefined
+  let platform:    ClientPlatform
   try {
     const body  = await req.json()
     licenseId   = String(body.licenseId ?? '').trim()
     deviceToken = String(body.deviceToken ?? '').trim()
     hwid        = body.hwid ? String(body.hwid) : undefined
+    version     = body.version ? String(body.version) : undefined
+    platform    = body.installId ? 'pwa' : IS_ELECTRON() ? 'electron' : 'unknown'
   } catch {
     return NextResponse.json(
       { allowed: false, code: 'VALIDATION_ERROR', reason: 'Requête invalide' },
       { status: 400 },
+    )
+  }
+
+  // ── Politique de version : sous le minimum configuré → mise à jour requise ──
+  if (!isVersionSupported(platform, version)) {
+    return NextResponse.json(
+      {
+        allowed: false, status: 'upgrade_required', code: 'UPGRADE_REQUIRED',
+        reason: 'Cette version de l\'application n\'est plus prise en charge. Mettez à jour.',
+      },
+      { status: 426 },
     )
   }
 
@@ -124,12 +140,27 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // ── Chemin 2 : compat anciens clients (licenseId seul) ──────────────────────
+  // ── Chemin 2 : SANS jeton d'appareil ────────────────────────────────────────
+  // Un heartbeat sans jeton ne peut PAS accorder d'accès de façon durable (il
+  // contournerait le contrôle des sièges). Il n'est toléré que pendant la
+  // fenêtre de migration configurée (GF_DEVICE_AUTH_DEADLINE) ; en dehors, on
+  // exige un jeton d'appareil (DEVICE_TOKEN_REQUIRED) — le client doit
+  // (ré)activer pour en obtenir un.
   if (!licenseId) {
     return NextResponse.json(
       { allowed: false, code: 'VALIDATION_ERROR', reason: 'licenseId ou deviceToken requis' },
       { status: 400 },
     )
+  }
+
+  if (!seatlessCheckTolerated()) {
+    // Défaut sûr : jeton d'appareil obligatoire. `deviceRequired:true` invite le
+    // client à (ré)activer ; jamais allowed:true sans preuve d'appareil.
+    return NextResponse.json({
+      allowed: false, status: 'device_required', code: 'DEVICE_TOKEN_REQUIRED',
+      deviceRequired: true,
+      reason: 'Jeton d\'appareil requis. Réactivez votre licence.',
+    })
   }
 
   try {
