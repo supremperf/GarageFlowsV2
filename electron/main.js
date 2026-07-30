@@ -20,7 +20,7 @@
 //    8. Auto-backup every hour
 // ─────────────────────────────────────────────────────────────────────────────
 
-const { app, BrowserWindow, ipcMain, shell, dialog, Menu, session, utilityProcess } = require('electron')
+const { app, BrowserWindow, ipcMain, shell, dialog, Menu, session, utilityProcess, safeStorage } = require('electron')
 const path    = require('path')
 const fs      = require('fs')
 const http    = require('http')
@@ -346,8 +346,19 @@ function saveLicense(token, payload, deviceToken = activeDeviceToken) {
     const cipher = crypto.createCipheriv('aes-256-gcm', key, iv)
     const enc    = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()])
     const tag    = cipher.getAuthTag()
-    // File layout: IV(12) + AuthTag(16) + Ciphertext
-    fs.writeFileSync(LIC_PATH, Buffer.concat([iv, tag, enc]))
+    // Inner layout: IV(12) + AuthTag(16) + Ciphertext (clé dérivée du HWID)
+    const innerBlob = Buffer.concat([iv, tag, enc])
+    // Couche supplémentaire : stockage sécurisé de l'OS (DPAPI/Keychain/libsecret)
+    // quand il est disponible — le fichier contient le deviceToken, il bénéficie
+    // ainsi du chiffrement lié au compte utilisateur EN PLUS du lien matériel.
+    // Format: 'GFS1' + safeStorage(base64(innerBlob)). Repli sûr : format legacy.
+    let outBlob = innerBlob
+    try {
+      if (safeStorage && safeStorage.isEncryptionAvailable()) {
+        outBlob = Buffer.concat([Buffer.from('GFS1'), safeStorage.encryptString(innerBlob.toString('base64'))])
+      }
+    } catch (_) { outBlob = innerBlob }
+    fs.writeFileSync(LIC_PATH, outBlob)
     log('License saved — lid:', payload.lid, '| type:', payload.typ)
   } catch (err) {
     log('saveLicense error:', err.message)
@@ -357,7 +368,17 @@ function saveLicense(token, payload, deviceToken = activeDeviceToken) {
 function loadLicense() {
   try {
     if (!fs.existsSync(LIC_PATH)) return null
-    const buf = fs.readFileSync(LIC_PATH)
+    let buf = fs.readFileSync(LIC_PATH)
+    // Format 'GFS1' = enveloppe safeStorage (OS) autour du blob AES-GCM.
+    // Les fichiers d'installations antérieures (sans enveloppe) restent lisibles.
+    if (buf.length > 4 && buf.subarray(0, 4).toString('utf8') === 'GFS1') {
+      try {
+        buf = Buffer.from(safeStorage.decryptString(buf.subarray(4)), 'base64')
+      } catch (_) {
+        // safeStorage indisponible / autre compte OS : illisible = non licencié.
+        return null
+      }
+    }
     if (buf.length <= 28) return null
 
     const iv  = buf.subarray(0, 12)
@@ -570,7 +591,9 @@ function checkStoredLicense() {
   if (payload.hwid) {
     const currentHwid = getHwid()
     if (!hwidMatches(payload.hwid, currentHwid)) {
-      log('HWID mismatch — token requires:', payload.hwid, 'current:', currentHwid)
+      // Jamais de HWID complet dans les logs — empreinte tronquée uniquement.
+      log('HWID mismatch — token requires:', String(payload.hwid).slice(0, 12) + '…',
+          'current:', String(currentHwid).slice(0, 12) + '…')
       return null
     }
   }
@@ -851,7 +874,10 @@ async function periodicLicenseCheck() {
   if (remoteServer) {
     try {
       result = await httpPost(`${remoteServer.replace(/\/$/, '')}/api/license/check`, body)
-      if (result) log('[license/check] remote result:', JSON.stringify(result))
+      // Ne jamais journaliser la réponse complète (elle pourrait contenir un jeton) :
+      // uniquement les champs de décision.
+      if (result) log('[license/check] remote result — allowed:', result.allowed,
+                      '| status:', result.status ?? '?', '| deviceRequired:', !!result.deviceRequired)
     } catch (err) {
       log('[license/check] remote server unreachable (fail-open):', err.message)
     }
@@ -861,7 +887,8 @@ async function periodicLicenseCheck() {
   if (!result) {
     try {
       result = await httpPost(`http://127.0.0.1:${PORT}/api/license/check`, body)
-      if (result) log('[license/check] local result:', JSON.stringify(result))
+      if (result) log('[license/check] local result — allowed:', result.allowed,
+                      '| status:', result.status ?? '?', '| deviceRequired:', !!result.deviceRequired)
     } catch (err) {
       log('[license/check] local check error (fail-open):', err.message)
     }
@@ -961,15 +988,34 @@ function saveLastOnline() {
   } catch (_) {}
 }
 
-async function checkInternetConnectivity() {
+function probeUrl(url) {
   return new Promise(resolve => {
-    const req = require('https').get(ONLINE_CHECK_URL, { timeout: 8_000 }, res => {
-      resolve(true)
-      res.destroy()
-    })
-    req.on('error',   () => resolve(false))
-    req.on('timeout', () => { req.destroy(); resolve(false) })
+    try {
+      const mod = url.startsWith('http:') ? require('http') : require('https')
+      // Toute réponse HTTP (même 4xx/5xx) prouve la joignabilité du serveur.
+      const req = mod.get(url, { timeout: 8_000 }, res => {
+        resolve(true)
+        res.destroy()
+      })
+      req.on('error',   () => resolve(false))
+      req.on('timeout', () => { req.destroy(); resolve(false) })
+    } catch (_) { resolve(false) }
   })
+}
+
+async function checkInternetConnectivity() {
+  // Anti-contournement (durci) : quand un serveur de licences est configuré,
+  // « en ligne » signifie que l'AUTORITÉ de licences est joignable — c'est par
+  // elle que passent les révocations. Auparavant la sonde visait 1.1.1.1 :
+  // firewaller uniquement api.garageflows.fr en gardant internet maintenait la
+  // période de grâce indéfiniment et rendait la révocation contournable.
+  // Désormais ce scénario N'ENTRETIENT PLUS la grâce (verrou 72 h normal).
+  const remote = process.env.GF_LICENSE_SERVER
+  if (remote) {
+    return probeUrl(`${remote.replace(/\/$/, '')}/api/health`)
+  }
+  // Sans control plane distant configuré : sonde générique (mode historique).
+  return probeUrl(ONLINE_CHECK_URL)
 }
 
 async function enforceOnlineGracePeriod() {
