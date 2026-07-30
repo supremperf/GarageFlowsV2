@@ -15,6 +15,7 @@ import { DateField } from '@/components/DateField'
 import { useTranslation } from '@/lib/i18n'
 import { dateLocale } from '@/lib/i18n/date-locale'
 import { docStatusLabel } from '@/lib/i18n/labels'
+import { computeTotals, multiplyCents, toCents, fromCents } from '@/lib/money'
 
 interface Line {
   id?: string
@@ -182,11 +183,13 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
     })
   }, [documentId, jobId])
 
-  const subtotalHT = lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0)
-  const totalCost   = lines.reduce((s, l) => s + l.quantity * l.unitCost, 0)
-  const taxAmount   = subtotalHT * (form.taxRate / 100)
-  const totalTTC    = subtotalHT + taxAmount
-  const profit      = subtotalHT - totalCost
+  // Totaux EXACTS en centimes entiers (identiques à l'API/DB via lib/money).
+  const _t          = computeTotals(lines.map(l => ({ quantity: l.quantity, unitPrice: l.unitPrice })), form.taxRate)
+  const subtotalHT  = _t.totalHT
+  const totalCost   = fromCents(lines.reduce((c, l) => c + multiplyCents(toCents(l.unitCost), l.quantity), 0))
+  const taxAmount   = _t.taxAmount
+  const totalTTC    = _t.totalTTC
+  const profit      = fromCents(toCents(subtotalHT) - toCents(totalCost))
 
   async function handleSave() {
     if (!form.clientName.trim()) {
