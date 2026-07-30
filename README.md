@@ -48,13 +48,16 @@ GarageFlow/
 │   │   └── admin/     # Interface administrateur licences
 │   ├── components/    # Composants React (Dashboard, Header, Modals…)
 │   └── lib/
-│       ├── license/   # Vérification ECDSA, HWID, record-MAC
+│       ├── license/   # Vérification ECDSA, HWID, record-MAC, appareils (devices.ts)
+│       ├── security/  # Rate limiting centralisé (distribué en PWA, mémoire en Electron)
 │       ├── ai-engine.ts # Moteur de suggestions IA (conflits, surcharges…)
 │       ├── i18n.tsx   # Internationalisation (14 langues)
-│       ├── rate-limit.ts # Limiteur de débit en mémoire
 │       └── utils.ts   # Utilitaires planning (timeToMinutes, jobsOverlap…)
 ├── prisma/
-│   └── schema.prisma  # Modèles SQLite (Garage, Job, Client, Invoice…)
+│   ├── schema.prisma  # Schéma DESKTOP — SQLite (Electron mono-poste)
+│   └── server/
+│       ├── schema.prisma  # Schéma SERVEUR — PostgreSQL (PWA multi-instance)
+│       └── migrations/    # Migrations PostgreSQL reproductibles (CI)
 ├── scripts/
 │   ├── keygen_core.py # Crypto ECC P-256 + HWID
 │   ├── keygen_db.py   # Base de données locale des licences (JSON)
@@ -147,7 +150,36 @@ Couverture : utilitaires planning, calculs TVA, rate limiter, format des tokens 
 npm run dist          # Build Next.js + packaging Electron Builder (.exe)
 ```
 
-L'installateur est généré dans `dist/`.
+L'installateur est généré dans `dist/`. Le hook `afterPack`
+(`scripts/afterPack.js`) écrit automatiquement le **manifeste d'intégrité**
+signé (voir Sécurité ci-dessous).
+
+---
+
+## Mises à jour automatiques
+
+Le serveur central (`app.garageflows.fr`, dépôt `garagesite3`) publie les
+versions. Le client les vérifie **au démarrage puis toutes les heures** et
+propose l'installation en un clic (fenêtre `UpdateModal`) :
+
+- `electron/main.js` interroge `GET /api/update/latest` (`GF_UPDATE_SERVER`,
+  défaut = `GF_LICENSE_SERVER`) ;
+- téléchargement **HTTPS reprenable** (Range) avec barre de progression ;
+- **vérification SHA-256** avant installation — un fichier altéré est refusé ;
+- l'app se ferme, l'installateur NSIS remplace les fichiers, les **données
+  utilisateur** (`%APPDATA%\GarageFlow`) sont conservées.
+
+Publication et administration : voir le README de `garagesite3` et la page
+`/admin/updates`. **Configuration complète** (variables serveur/client,
+endpoints, procédure de publication) : **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)**.
+
+---
+
+## Sécurité & durcissement (post-compilation)
+
+Chiffrement des ressources, clé fragmentée, vérification d'intégrité
+(SHA-256/HMAC), anti-altération, signature numérique, obfuscation et permissions
+d'installation : voir **[docs/SECURITY-HARDENING.md](docs/SECURITY-HARDENING.md)**.
 
 ---
 
@@ -156,8 +188,51 @@ L'installateur est généré dans `dist/`.
 | Variable | Description |
 |----------|-------------|
 | `NEXTAUTH_SECRET` | Secret de signature JWT (obligatoire en prod) |
-| `DATABASE_URL` | Chemin SQLite (géré automatiquement par Electron) |
+| `DATABASE_URL` | `file:…` = SQLite desktop (Electron) · `postgresql://…` = serveur/PWA |
+| `DIRECT_URL` | PostgreSQL direct (migrations serveur) |
+| `DEVICE_TOKEN_PEPPER` | HMAC des jetons/HWID d'appareils (obligatoire en prod PWA) |
+| `UPSTASH_REDIS_REST_URL/TOKEN` | Rate limiting distribué (obligatoire en prod PWA) |
 | `GF_INTERNAL_EXPORT_KEY` | Clé interne pour l'API d'export (générée par Electron) |
+| `GF_LICENSE_SERVER` | Serveur central (licences + mises à jour) |
+| `GF_UPDATE_SERVER` | Serveur de mises à jour (défaut : `GF_LICENSE_SERVER`) |
+| `GF_UPDATE_CHANNEL` | Canal de mises à jour (`stable` / `beta`) |
+| `GF_INTEGRITY_MODE` | Intégrité au démarrage : `audit` (défaut) / `enforce` / `off` |
+
+Liste complète et comportements : [`.env.example`](.env.example).
+
+### Bases de données & déploiement
+
+- **[`docs/DATABASE_ARCHITECTURE.md`](docs/DATABASE_ARCHITECTURE.md)** —
+  séparation SQLite desktop / PostgreSQL serveur, commandes Prisma, migrations.
+- **[`docs/LICENSE_DEVICE_SECURITY.md`](docs/LICENSE_DEVICE_SECURITY.md)** —
+  appareils par licence, deviceToken (haché), plafond `seats` atomique,
+  révocation, politiques fail-open/fail-closed.
+- **[`docs/PWA_MULTITENANT_LICENSING.md`](docs/PWA_MULTITENANT_LICENSING.md)** —
+  licences multi-tenant PWA : installations PWA (install id) comptées comme
+  appareils, liaison licence↔garage (anti cross-tenant), enforcement serveur
+  par requête, révocation immédiate, politique de version, plan FREE.
+- **[`docs/PRODUCTION_DEPLOYMENT.md`](docs/PRODUCTION_DEPLOYMENT.md)** —
+  déploiement Vercel, PostgreSQL/Redis, rollback, test machine propre.
+
+---
+
+## Plan de contrôle distant (modules, notifications, crashs, horloge)
+
+Le client est administrable à distance via le serveur officiel
+(`GF_LICENSE_SERVER`) :
+
+- **Modules / droits** reçus au heartbeat (`/api/license/check`), mis en cache
+  chiffré (HWID) et exposés au renderer via `useModule()` — ajout/retrait sans
+  réinstallation.
+- **Centre de notifications** in-app (bannières ciblées, notifications
+  obligatoires bloquantes).
+- **Crash reporting** avec consentement (file offline-first, empreinte de
+  regroupement partagée avec le serveur).
+- **Anti-recul d'horloge** : le mode hors ligne se verrouille si la date système
+  est reculée (impossible de contourner le délai).
+
+Détails : **[`docs/CONTROL_PLANE_CLIENT.md`](docs/CONTROL_PLANE_CLIENT.md)**.
+Côté serveur : voir le dépôt `garagesite3`, `docs/CONTROL_PLANE.md`.
 
 ---
 

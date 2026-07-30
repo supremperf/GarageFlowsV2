@@ -20,12 +20,13 @@
 //    8. Auto-backup every hour
 // ─────────────────────────────────────────────────────────────────────────────
 
-const { app, BrowserWindow, ipcMain, shell, dialog, Menu, session, utilityProcess } = require('electron')
+const { app, BrowserWindow, ipcMain, shell, dialog, Menu, session, utilityProcess, safeStorage } = require('electron')
 const path    = require('path')
 const fs      = require('fs')
 const http    = require('http')
 const crypto  = require('crypto')
 const os      = require('os')
+const { resolveMainSecret } = require('./secret')
 
 // Silence EPIPE on stdout/stderr so packaged app never crashes when no terminal is attached
 try { process.stdout.on('error', () => {}) } catch (_) {}
@@ -43,10 +44,11 @@ try { process.stderr.on('error', () => {}) } catch (_) {}
       if (fs.existsSync(example)) {
         fs.copyFileSync(example, envFile)
       } else {
+        // Aucun secret codé en dur : NEXTAUTH_SECRET est résolu par installation
+        // (voir resolveInstallSecret() dans app.whenReady) et injecté à l'exécution.
         fs.writeFileSync(envFile, [
           'DATABASE_URL="file:./dev.db"',
           'NEXTAUTH_URL="http://localhost:3000"',
-          'NEXTAUTH_SECRET="gf-electron-local-secret-2026-xK9mP3qR"',
           '',
         ].join('\n'), 'utf8')
       }
@@ -101,9 +103,25 @@ const _PK = [
 ]
 const PUBLIC_KEY_PEM = _PK.join('\n')
 
+// ── Control-plane helpers (modules, crashs, clock-tamper, notifications) ──────
+const cp = require('./control-plane')
+const updateVerify = require('./update-verify')
+const semver = require('./semver')
+
+const SETTINGS_PATH     = path.join(APP_DATA, 'gf_settings.json')       // crash consent, prefs
+const ENTITLEMENTS_PATH = path.join(APP_DATA, 'gf_entitlements.dat')    // AES-GCM (HWID key)
+const CRASH_QUEUE_PATH  = path.join(APP_DATA, 'gf_crash_queue.json')    // offline crash queue
+const TRUSTED_CLOCK_PATH= path.join(APP_DATA, 'gf_clock.json')          // trusted-time reference
+const UPDATE_CHANNEL    = (process.env.GF_UPDATE_CHANNEL || 'stable').trim() || 'stable'
+const CLOCK_SKEW_MS     = 15 * 60 * 1_000                               // 15 min tolerance
+
 // ── State ─────────────────────────────────────────────────────────────────────
 
 let mainWindow        = null
+let currentModules    = []      // effective module keys from the server (entitlements)
+let currentNotifs     = []      // notifications from the server
+let breadcrumbs       = []      // last user actions before a crash (bounded)
+let clockTampered     = false   // set when a backward clock jump is detected
 let splashWindow      = null
 let nextServer        = null
 let backupTimer       = null
@@ -111,11 +129,169 @@ let licenseTimer      = null    // periodic revocation check (adaptive interval)
 let licenseBlocked    = false   // true while access is blocked (revoked/suspended/tampered)
 let licenseCheckStarted = false // guards against starting the poll loop twice
 let activeLicense     = null   // { token, payload } — set after validation
+let activeDeviceToken = null   // device token issued by the server on activation (device auth)
 let desktopExportTimer = null
 let onlineCheckTimer  = null   // periodic internet connectivity check
+let installSecret     = null   // secret par installation (session JWT + NEXTAUTH_SECRET serveur)
+let updateTimer       = null   // periodic app-update check (startup + hourly)
+let lastNotifiedUpdate = null  // version already announced to the renderer (anti-spam)
+
+// ── Central update server (source of truth for app releases) ──────────────────
+// Priorité : GF_UPDATE_SERVER, sinon GF_LICENSE_SERVER, sinon l'URL officielle
+// par défaut (app.garageflows.fr héberge licences ET mises à jour). Le défaut
+// permet à l'app packagée de contacter le serveur SANS .env (non embarqué), tout
+// en restant surchargeable par variable d'environnement (dev/staging).
+// Canal par défaut : « stable ».
+const UPDATE_SERVER  = (process.env.GF_UPDATE_SERVER || process.env.GF_LICENSE_SERVER
+    || 'https://app.garageflows.fr').replace(/\/$/, '')
+// UPDATE_CHANNEL est déjà déclaré plus haut (socle) — pas de redéclaration ici.
+
+// ── App-update helpers ────────────────────────────────────────────────────────
+
+// GET JSON avec timeout + suivi de redirections (jamais de throw → resolve(null)).
+function httpGetJson(url, timeoutMs = 6000, redirects = 0) {
+  return new Promise(resolve => {
+    try {
+      if (redirects > 5) return resolve(null)
+      const mod = url.startsWith('https') ? require('https') : http
+      const req = mod.get(url, { timeout: timeoutMs, headers: { 'User-Agent': 'GarageFlow/' + app.getVersion() } }, res => {
+        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+          res.resume(); resolve(httpGetJson(res.headers.location, timeoutMs, redirects + 1)); return
+        }
+        let raw = ''
+        res.on('data', c => (raw += c))
+        res.on('end', () => { try { resolve(JSON.parse(raw)) } catch { resolve(null) } })
+      })
+      req.on('error', () => resolve(null))
+      req.on('timeout', () => { req.destroy(); resolve(null) })
+    } catch { resolve(null) }
+  })
+}
+
+// Empreinte SHA-256 (hex) d'un fichier, en flux (pas de mise en mémoire).
+function sha256File(filePath) {
+  return new Promise((resolve, reject) => {
+    const h = crypto.createHash('sha256')
+    const s = fs.createReadStream(filePath)
+    s.on('data', d => h.update(d))
+    s.on('end', () => resolve(h.digest('hex')))
+    s.on('error', reject)
+  })
+}
+
+// Interroge le serveur central et renvoie un objet de mise à jour homogène.
+// Ordre : serveur central (/api/update/latest) → fichier local admin →
+// Releases GitHub (repli, non vérifiable). Si le serveur central répond
+// « pas de maj », on s'y fie (pas de repli GitHub qui ferait un faux positif).
+async function fetchLatestUpdate() {
+  const currentVersion = app.getVersion()
+
+  if (UPDATE_SERVER) {
+    // Le HWID permet le déploiement progressif côté serveur (rollout ciblé).
+    const q = `?version=${encodeURIComponent(currentVersion)}&channel=${encodeURIComponent(UPDATE_CHANNEL)}`
+            + `&hwid=${encodeURIComponent(getHwid())}`
+    const data = await httpGetJson(`${UPDATE_SERVER}/api/update/latest${q}`, 6000)
+    if (data && typeof data.hasUpdate === 'boolean') {
+      if (data.hasUpdate && data.latest) {
+        return {
+          hasUpdate:     true,
+          currentVersion,
+          latestVersion: data.latest.version,
+          title:         data.latest.title ?? null,
+          releaseNotes:  data.latest.changelog ?? null,
+          downloadUrl:   data.latest.downloadUrl ?? null,
+          releaseUrl:    data.latest.downloadUrl ?? null, // rétro-compat renderer
+          sha256:        data.latest.sha256 ?? null,
+          size:          data.latest.size ?? null,
+          fileName:      data.latest.fileName ?? null,
+          mandatory:     Boolean(data.mandatory),
+          minVersion:    data.latest.minVersion ?? null,
+          // Manifeste signé Ed25519 : autorité pour sha256/size/downloadUrl/version
+          // (vérifié dans app:install-update quand une clé publique est embarquée).
+          manifest:      data.manifest ?? data.latest.manifest ?? null,
+          source:        'central',
+        }
+      }
+      return { hasUpdate: false, currentVersion, source: 'central' }
+    }
+    // Serveur injoignable / réponse inattendue → on tente les replis ci-dessous.
+  }
+
+  // Fichier local publié par le serveur intégré (mono-poste / hors-ligne).
+  try {
+    const localUpdate = JSON.parse(fs.readFileSync(path.join(APP_DATA, 'gf_update.json'), 'utf8'))
+    if (localUpdate?.hasUpdate && localUpdate.latestVersion !== currentVersion) {
+      const dl = localUpdate.downloadPath ? `http://127.0.0.1:${PORT}${localUpdate.downloadPath}` : (localUpdate.releaseUrl ?? null)
+      return {
+        hasUpdate:     true,
+        currentVersion,
+        latestVersion: localUpdate.latestVersion,
+        releaseNotes:  localUpdate.releaseNotes ?? null,
+        downloadUrl:   dl,
+        releaseUrl:    dl,
+        sha256:        localUpdate.sha256 ?? null,
+        size:          localUpdate.fileSize ?? null,
+        mandatory:     Boolean(localUpdate.mandatory),
+        source:        'local-admin',
+      }
+    }
+  } catch { /* pas de fichier local — ok */ }
+
+  // Repli : Releases GitHub (pas d'empreinte → non vérifiable, ouverture navigateur).
+  const gh = await httpGetJson('https://api.github.com/repos/garageflow/garageflow/releases/latest', 8000)
+  if (gh?.tag_name) {
+    const latest = String(gh.tag_name).replace(/^v/, '')
+    return {
+      // Comparaison SemVer (jamais lexicographique : « 1.9.0 » < « 1.10.0 »).
+      hasUpdate:     semver.isNewer(latest, currentVersion),
+      currentVersion,
+      latestVersion: latest,
+      releaseNotes:  gh.body ? gh.body.slice(0, 800) : null,
+      downloadUrl:   gh.html_url ?? null,
+      releaseUrl:    gh.html_url ?? null,
+      sha256:        null,
+      mandatory:     false,
+      source:        'github',
+    }
+  }
+
+  return { hasUpdate: false, currentVersion }
+}
+
+// Contrôle au démarrage (~25 s) puis toutes les heures ; notifie le renderer.
+function startPeriodicUpdateCheck() {
+  const runCheck = async () => {
+    try {
+      const info = await fetchLatestUpdate()
+      if (info?.hasUpdate && info.latestVersion && info.latestVersion !== lastNotifiedUpdate) {
+        lastNotifiedUpdate = info.latestVersion
+        try { mainWindow?.webContents.send('app:update-available', info) } catch (_) {}
+        log('[update] version disponible:', info.latestVersion, '| obligatoire:', !!info.mandatory)
+      }
+    } catch (err) {
+      log('[update] check error:', err.message)
+    }
+  }
+  setTimeout(runCheck, 25_000)
+  if (updateTimer) clearInterval(updateTimer)
+  updateTimer = setInterval(runCheck, 60 * 60 * 1_000)
+}
 
 // One-time secret for internal API calls (export endpoint)
 const INTERNAL_EXPORT_KEY = crypto.randomBytes(32).toString('hex')
+
+// ── Secret local par installation (fail-closed) ────────────────────────────────
+// Résout un secret propre à l'installation (256 bits, stocké dans userData avec
+// permissions restrictives). Respecte un NEXTAUTH_SECRET déjà fort (dev/.env).
+// En cas d'échec on refuse de démarrer la partie authentifiée. La valeur n'est
+// JAMAIS journalisée.
+function resolveInstallSecret() {
+  const { secret, source } = resolveMainSecret(APP_DATA, process.env.NEXTAUTH_SECRET)
+  installSecret = secret
+  // Aligne process.env pour tout code aval qui lirait encore NEXTAUTH_SECRET.
+  process.env.NEXTAUTH_SECRET = secret
+  log(`Secret local prêt (source: ${source})`)   // ne journalise jamais la valeur
+}
 
 // ── Online check state ────────────────────────────────────────────────────────
 const ONLINE_CHECK_FILE    = () => path.join(APP_DATA, 'last_online.json')
@@ -262,17 +438,20 @@ function verifyEccToken(token) {
   }
 }
 
-// ── HWID tolerance check (75% match = OK for hardware upgrades) ───────────────
-
+// ── HWID check — comparaison STRICTE, aucune tolérance partielle ─────────────
+// Un HWID est un digest SHA-256 : le moindre changement matériel modifie tout
+// le hachage (effet d'avalanche), donc une tolérance de N % n'a aucun sens et
+// affaiblit le lien. De plus la licence stockée est chiffrée avec une clé
+// dérivée du HWID complet : un match exact est déjà requis pour la déchiffrer.
 function hwidMatches(stored, current) {
-  if (!stored) return true   // no binding
-  if (stored === current) return true
-  if (stored.length === 64 && current.length === 64) {
-    let match = 0
-    for (let i = 0; i < 64; i++) { if (stored[i] === current[i]) match++ }
-    return match >= 48   // 75% threshold
-  }
-  return false
+  if (!stored) return true   // licence non liée au matériel
+  const a = String(stored).trim().toLowerCase()
+  const b = String(current).trim().toLowerCase()
+  const hex64 = /^[0-9a-f]{64}$/
+  if (!hex64.test(a) || !hex64.test(b)) return false
+  const ba = Buffer.from(a, 'utf8')
+  const bb = Buffer.from(b, 'utf8')
+  return ba.length === bb.length && crypto.timingSafeEqual(ba, bb)
 }
 
 // ── License storage (AES-256-GCM, key derived from HWID via PBKDF2) ──────────
@@ -295,13 +474,14 @@ function deriveDbMacSecret() {
   return crypto.pbkdf2Sync(hwid, DB_MAC_SALT, 10_000, 32, 'sha256').toString('hex')
 }
 
-function saveLicense(token, payload) {
+function saveLicense(token, payload, deviceToken = activeDeviceToken) {
   try {
     const key = deriveStorageKey()
     const iv  = crypto.randomBytes(12)
     const plain = JSON.stringify({
       token,
       payload,
+      deviceToken: deviceToken ?? null,
       savedAt:    Date.now(),
       hwid:       getHwid(),
       appVersion: app.getVersion(),
@@ -309,8 +489,19 @@ function saveLicense(token, payload) {
     const cipher = crypto.createCipheriv('aes-256-gcm', key, iv)
     const enc    = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()])
     const tag    = cipher.getAuthTag()
-    // File layout: IV(12) + AuthTag(16) + Ciphertext
-    fs.writeFileSync(LIC_PATH, Buffer.concat([iv, tag, enc]))
+    // Inner layout: IV(12) + AuthTag(16) + Ciphertext (clé dérivée du HWID)
+    const innerBlob = Buffer.concat([iv, tag, enc])
+    // Couche supplémentaire : stockage sécurisé de l'OS (DPAPI/Keychain/libsecret)
+    // quand il est disponible — le fichier contient le deviceToken, il bénéficie
+    // ainsi du chiffrement lié au compte utilisateur EN PLUS du lien matériel.
+    // Format: 'GFS1' + safeStorage(base64(innerBlob)). Repli sûr : format legacy.
+    let outBlob = innerBlob
+    try {
+      if (safeStorage && safeStorage.isEncryptionAvailable()) {
+        outBlob = Buffer.concat([Buffer.from('GFS1'), safeStorage.encryptString(innerBlob.toString('base64'))])
+      }
+    } catch (_) { outBlob = innerBlob }
+    fs.writeFileSync(LIC_PATH, outBlob)
     log('License saved — lid:', payload.lid, '| type:', payload.typ)
   } catch (err) {
     log('saveLicense error:', err.message)
@@ -320,7 +511,17 @@ function saveLicense(token, payload) {
 function loadLicense() {
   try {
     if (!fs.existsSync(LIC_PATH)) return null
-    const buf = fs.readFileSync(LIC_PATH)
+    let buf = fs.readFileSync(LIC_PATH)
+    // Format 'GFS1' = enveloppe safeStorage (OS) autour du blob AES-GCM.
+    // Les fichiers d'installations antérieures (sans enveloppe) restent lisibles.
+    if (buf.length > 4 && buf.subarray(0, 4).toString('utf8') === 'GFS1') {
+      try {
+        buf = Buffer.from(safeStorage.decryptString(buf.subarray(4)), 'base64')
+      } catch (_) {
+        // safeStorage indisponible / autre compte OS : illisible = non licencié.
+        return null
+      }
+    }
     if (buf.length <= 28) return null
 
     const iv  = buf.subarray(0, 12)
@@ -338,6 +539,183 @@ function loadLicense() {
   }
 }
 
+// ── System info (télémétrie technique — jamais de donnée métier) ──────────────
+function getSystemInfo() {
+  const os = require('os')
+  return {
+    version: app.getVersion(),
+    os:      `${os.platform()} ${os.release()}`.slice(0, 60),
+    arch:    process.arch,
+    cpu:     (os.cpus()?.[0]?.model ?? 'unknown').trim().slice(0, 120),
+    ramMb:   Math.round(os.totalmem() / 1_048_576),
+  }
+}
+
+// ── Settings (consentement crash, préférences) ────────────────────────────────
+function readSettings() {
+  try { return JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8')) } catch { return {} }
+}
+function writeSettings(patch) {
+  try {
+    const next = { ...readSettings(), ...patch }
+    fs.writeFileSync(SETTINGS_PATH, JSON.stringify(next), 'utf8')
+    return next
+  } catch (err) { log('writeSettings error:', err.message); return readSettings() }
+}
+/**
+ * Consentement crash — OPT-IN : par défaut DÉSACTIVÉ (false). Aucun rapport n'est
+ * envoyé tant que l'utilisateur n'a pas explicitement accepté (RGPD).
+ */
+function crashConsent() {
+  const s = readSettings()
+  return s.crashConsent === true
+}
+/** L'utilisateur a-t-il déjà fait un choix explicite (pour l'écran de 1er lancement) ? */
+function crashConsentDecided() {
+  return typeof readSettings().crashConsent === 'boolean'
+}
+
+// ── Entitlements (modules) — cache chiffré, lié au HWID ───────────────────────
+function saveEntitlements(modules) {
+  try {
+    const key = deriveStorageKey()
+    const iv  = crypto.randomBytes(12)
+    const plain = JSON.stringify({ modules: Array.isArray(modules) ? modules : [], savedAt: Date.now() })
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv)
+    const enc = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()])
+    fs.writeFileSync(ENTITLEMENTS_PATH, Buffer.concat([iv, cipher.getAuthTag(), enc]))
+  } catch (err) { log('saveEntitlements error:', err.message) }
+}
+function loadEntitlements() {
+  try {
+    if (!fs.existsSync(ENTITLEMENTS_PATH)) return []
+    const buf = fs.readFileSync(ENTITLEMENTS_PATH)
+    if (buf.length <= 28) return []
+    const decipher = crypto.createDecipheriv('aes-256-gcm', deriveStorageKey(), buf.subarray(0, 12))
+    decipher.setAuthTag(buf.subarray(12, 28))
+    const plain = Buffer.concat([decipher.update(buf.subarray(28)), decipher.final()]).toString('utf8')
+    const data = JSON.parse(plain)
+    return Array.isArray(data.modules) ? data.modules : []
+  } catch { return [] }
+}
+function broadcastEntitlements() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('entitlements:update', { modules: currentModules })
+  }
+}
+
+// ── Trusted clock (anti recul d'horloge) ──────────────────────────────────────
+function readTrustedClock() {
+  try { return JSON.parse(fs.readFileSync(TRUSTED_CLOCK_PATH, 'utf8')) } catch { return null }
+}
+function writeTrustedClock(wall) {
+  try { fs.writeFileSync(TRUSTED_CLOCK_PATH, JSON.stringify({ wall }), 'utf8') } catch (_) {}
+}
+/**
+ * Vérifie que l'horloge n'a pas reculé depuis la dernière référence de confiance.
+ * Si un recul > tolérance est détecté, on journalise et on marque `clockTampered`
+ * (le mode hors ligne devient plus strict : on exige une reconnexion).
+ */
+function checkClockIntegrity() {
+  const now = Date.now()
+  const rec = readTrustedClock()
+  if (cp.detectClockRollback(rec?.wall ?? null, now, CLOCK_SKEW_MS)) {
+    if (!clockTampered) log('SECURITY: clock rollback detected — offline mode restricted')
+    clockTampered = true
+    reportCrash({ message: 'clock_rollback_detected', fatal: false, kind: 'security' }).catch(() => {})
+    return false
+  }
+  // Avance normale de l'horloge → on met à jour la référence (monotone croissante).
+  if (!rec || now > rec.wall) writeTrustedClock(now)
+  return true
+}
+
+// ── Crash reporting (offline-first, consentement requis) ──────────────────────
+function readCrashQueue() {
+  try { const q = JSON.parse(fs.readFileSync(CRASH_QUEUE_PATH, 'utf8')); return Array.isArray(q) ? q : [] } catch { return [] }
+}
+function writeCrashQueue(list) {
+  try { fs.writeFileSync(CRASH_QUEUE_PATH, JSON.stringify(list), 'utf8') } catch (_) {}
+}
+function pushBreadcrumb(action) {
+  breadcrumbs = cp.pushBounded(breadcrumbs, { t: Date.now(), a: String(action).slice(0, 120) }, 25)
+}
+
+/** Construit et met en file un rapport de crash, puis tente de le vider. */
+async function reportCrash({ message, stack, fatal = true, kind = 'crash' }) {
+  if (!crashConsent()) return
+  try {
+    const info = getSystemInfo()
+    const logsTail = (() => { try { return fs.readFileSync(LOG_PATH, 'utf8').slice(-4000) } catch { return null } })()
+    // Redaction centralisée + minimisation (jamais de secret/token/chemin utilisateur/HWID brut).
+    const payload = cp.sanitizeCrashReport({
+      licenseId:   activeLicense?.payload?.lid ?? null,
+      hwid:        getHwid(),
+      appVersion:  info.version,
+      channel:     UPDATE_CHANNEL,
+      os:          info.os,
+      arch:        info.arch,
+      cpu:         info.cpu,
+      ramMb:       info.ramMb,
+      message,
+      stack,
+      breadcrumbs: JSON.stringify(breadcrumbs),
+      logs:        logsTail,
+      fatal,
+      kind,
+    })
+    const queue = cp.pushBounded(readCrashQueue(), payload, 50)
+    writeCrashQueue(queue)
+    log(`[crash] queued (${kind}) — ${payload.message.slice(0, 80)}`)
+    await flushCrashQueue()
+  } catch (err) {
+    try { log('reportCrash error:', err.message) } catch (_) {}
+  }
+}
+
+/** Vide la file de crash vers le serveur (best-effort ; garde ce qui échoue). */
+async function flushCrashQueue() {
+  const base = cp.resolveRemoteBase(process.env)
+  if (!base) return
+  let queue = readCrashQueue()
+  if (queue.length === 0) return
+  const remaining = []
+  for (const item of queue) {
+    const res = await httpPost(`${base}/api/crash`, item).catch(() => null)
+    if (!(res && res.ok)) remaining.push(item)   // échec → on réessaiera plus tard
+  }
+  writeCrashQueue(remaining)
+  if (queue.length !== remaining.length) log(`[crash] flushed ${queue.length - remaining.length} report(s)`)
+}
+
+// ── Notifications (récupération + diffusion au renderer) ──────────────────────
+async function fetchNotifications() {
+  const base = cp.resolveRemoteBase(process.env)
+  const lid  = activeLicense?.payload?.lid
+  if (!base || !lid) return
+  const url = `${base}/api/notifications?licenseId=${encodeURIComponent(lid)}`
+          + `&version=${encodeURIComponent(app.getVersion())}&channel=${encodeURIComponent(UPDATE_CHANNEL)}`
+  const res = await httpGetJson(url).catch(() => null)
+  if (res && Array.isArray(res.notifications)) {
+    currentNotifs = res.notifications
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('notifications:update', { notifications: currentNotifs })
+    }
+  }
+}
+
+/** Register global crash handlers (main process). Never crashes the reporter. */
+function registerCrashHandlers() {
+  process.on('uncaughtException', (err) => {
+    try { log('[uncaughtException]', err?.message) } catch (_) {}
+    reportCrash({ message: err?.message || 'uncaughtException', stack: err?.stack, fatal: true }).catch(() => {})
+  })
+  process.on('unhandledRejection', (reason) => {
+    const err = reason instanceof Error ? reason : new Error(String(reason))
+    reportCrash({ message: err.message || 'unhandledRejection', stack: err.stack, fatal: false }).catch(() => {})
+  })
+}
+
 /**
  * Check stored license: decrypt → verify ECC → HWID tolerance check.
  * Returns the payload if still valid, null otherwise.
@@ -349,11 +727,16 @@ function checkStoredLicense() {
   const payload = verifyEccToken(stored.token)
   if (!payload) return null
 
+  // Restore the device token (device auth) so the heartbeat can present it.
+  if (stored.deviceToken) activeDeviceToken = stored.deviceToken
+
   // Optional HWID binding (from token payload)
   if (payload.hwid) {
     const currentHwid = getHwid()
     if (!hwidMatches(payload.hwid, currentHwid)) {
-      log('HWID mismatch — token requires:', payload.hwid, 'current:', currentHwid)
+      // Jamais de HWID complet dans les logs — empreinte tronquée uniquement.
+      log('HWID mismatch — token requires:', String(payload.hwid).slice(0, 12) + '…',
+          'current:', String(currentHwid).slice(0, 12) + '…')
       return null
     }
   }
@@ -367,7 +750,9 @@ function checkStoredLicense() {
 // page request is allowed through the middleware gate.
 
 function createGfSessionJwt(typ, lid) {
-  const secret  = process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR'
+  // Secret par installation, résolu au démarrage (fail-closed). Aucun repli en dur.
+  const secret  = installSecret
+  if (!secret) throw new Error('Secret local indisponible — session non signable')
   const now     = Math.floor(Date.now() / 1000)
   const exp     = now + 5 * 365 * 24 * 3600   // 5 years
 
@@ -385,24 +770,28 @@ async function injectLicenseCookies(licenseType, licenseId = 'electron-local') {
   const expDate = Math.floor(Date.now() / 1000) + 5 * 365 * 24 * 3600
   const jwt     = createGfSessionJwt(licenseType, licenseId)
 
-  // Primary cookie — verified by middleware
+  // Primary cookie — verified by middleware. HttpOnly : inaccessible au JS du
+  // renderer (contextIsolation actif) ; SameSite=Strict : jamais envoyé en
+  // contexte tiers.
   await session.defaultSession.cookies.set({
     url:            baseUrl,
     name:           'gf_session',
     value:          jwt,
     path:           '/',
     expirationDate: expDate,
-    sameSite:       'lax',
+    httpOnly:       true,
+    sameSite:       'strict',
   })
 
-  // Legacy cookies kept for any code still reading them
+  // Legacy cookies kept for any code still reading them (état UI uniquement,
+  // jamais utilisés pour le contrôle d'accès).
   await session.defaultSession.cookies.set({
     url:            baseUrl,
     name:           'gf_license_validated',
     value:          '1',
     path:           '/',
     expirationDate: expDate,
-    sameSite:       'lax',
+    sameSite:       'strict',
   })
   await session.defaultSession.cookies.set({
     url:            baseUrl,
@@ -410,7 +799,7 @@ async function injectLicenseCookies(licenseType, licenseId = 'electron-local') {
     value:          licenseType,
     path:           '/',
     expirationDate: expDate,
-    sameSite:       'lax',
+    sameSite:       'strict',
   })
 
   log(`Session cookies injected — type: ${licenseType}`)
@@ -547,18 +936,91 @@ function httpPost(url, body) {
   })
 }
 
+// Make an HTTP/HTTPS GET request, returns parsed JSON or null (fail-open).
+function httpGetJson(url) {
+  return new Promise((resolve) => {
+    try {
+      const parsed = new URL(url)
+      const mod    = parsed.protocol === 'https:' ? require('https') : http
+      const req = mod.get(
+        {
+          hostname: parsed.hostname,
+          port:     parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
+          path:     parsed.pathname + parsed.search,
+          timeout:  10_000,
+        },
+        res => {
+          let data = ''
+          res.on('data', chunk => { data += chunk })
+          res.on('end',  ()    => { try { resolve(JSON.parse(data)) } catch { resolve(null) } })
+        }
+      )
+      req.on('error',   () => resolve(null))
+      req.on('timeout', () => { req.destroy(); resolve(null) })
+    } catch { resolve(null) }
+  })
+}
+
+// ── Server-side activation: register THIS device, obtain a device token ───────
+// Device auth: the heartbeat REQUIRES a signed device token. This registers the
+// machine (HWID) against the license and stores the returned token. Best-effort:
+// if the server is unreachable the app still starts offline; the next online
+// heartbeat returns { deviceRequired:true } and re-triggers this to get a token.
+async function activateOnServer() {
+  if (!activeLicense?.token) return false
+
+  const info = getSystemInfo()
+  const body = {
+    license: activeLicense.token,
+    hwid:    getHwid(),
+    version: info.version,
+    os:      info.os,
+    arch:    info.arch,
+  }
+
+  const bases = []
+  if (process.env.GF_LICENSE_SERVER) bases.push(process.env.GF_LICENSE_SERVER.replace(/\/$/, ''))
+  bases.push(`http://127.0.0.1:${PORT}`)
+
+  for (const base of bases) {
+    const res = await httpPost(`${base}/api/license/activate`, body)
+    if (res && res.ok && res.deviceToken) {
+      activeDeviceToken = res.deviceToken
+      saveLicense(activeLicense.token, activeLicense.payload, res.deviceToken)
+      if (Array.isArray(res.modules)) currentModules = res.modules.slice().sort()
+      log('[license/activate] device token obtained — deviceId:', res.deviceId || '?')
+      return true
+    }
+    if (res && res.ok === false) {
+      log('[license/activate] server refused —', res.status || res.reason || 'unknown')
+    }
+  }
+  return false
+}
+
 async function periodicLicenseCheck() {
   if (!activeLicense?.payload?.lid) return
 
   const licenseId = activeLicense.payload.lid
   let result = null
 
+  // If we have no device token yet (fresh upgrade / offline activation), get one
+  // before the heartbeat — the server rejects heartbeats without a device token.
+  if (!activeDeviceToken) await activateOnServer()
+
+  // Télémétrie technique jointe au heartbeat (jamais de donnée métier).
+  const info = getSystemInfo()
+  const body = { licenseId, deviceToken: activeDeviceToken, version: info.version, os: info.os, arch: info.arch, hwid: getHwid() }
+
   // 1. Check remote license server (if configured) — authoritative
   const remoteServer = process.env.GF_LICENSE_SERVER
   if (remoteServer) {
     try {
-      result = await httpPost(`${remoteServer.replace(/\/$/, '')}/api/license/check`, { licenseId })
-      if (result) log('[license/check] remote result:', JSON.stringify(result))
+      result = await httpPost(`${remoteServer.replace(/\/$/, '')}/api/license/check`, body)
+      // Ne jamais journaliser la réponse complète (elle pourrait contenir un jeton) :
+      // uniquement les champs de décision.
+      if (result) log('[license/check] remote result — allowed:', result.allowed,
+                      '| status:', result.status ?? '?', '| deviceRequired:', !!result.deviceRequired)
     } catch (err) {
       log('[license/check] remote server unreachable (fail-open):', err.message)
     }
@@ -567,8 +1029,9 @@ async function periodicLicenseCheck() {
   // 2. Fall back to local check
   if (!result) {
     try {
-      result = await httpPost(`http://127.0.0.1:${PORT}/api/license/check`, { licenseId })
-      if (result) log('[license/check] local result:', JSON.stringify(result))
+      result = await httpPost(`http://127.0.0.1:${PORT}/api/license/check`, body)
+      if (result) log('[license/check] local result — allowed:', result.allowed,
+                      '| status:', result.status ?? '?', '| deviceRequired:', !!result.deviceRequired)
     } catch (err) {
       log('[license/check] local check error (fail-open):', err.message)
     }
@@ -577,6 +1040,16 @@ async function periodicLicenseCheck() {
   // No response at all (remote + local both unreachable) → indeterminate.
   // Fail-open: keep the current state, never lock a legitimate user out offline.
   if (!result) return
+
+  // Device token missing/expired/replaced on the server side → re-activate to
+  // obtain a fresh token, then re-run the heartbeat. NOT a revocation.
+  if (result.deviceRequired) {
+    log('[license/check] device token required — re-activating this device')
+    activeDeviceToken = null
+    const ok = await activateOnServer()
+    if (ok) { setTimeout(() => { periodicLicenseCheck().catch(() => {}) }, 500) }
+    return
+  }
 
   if (result.allowed === false) {
     // ── Blocked: revoked / suspended / tampered ──────────────────────────────
@@ -605,6 +1078,21 @@ async function periodicLicenseCheck() {
     }
   }
   // status 'unknown' (record not yet registered / DB fail-open) → keep current state.
+
+  // ── Modules / droits (entitlements) — le serveur est la source de vérité ────
+  if (Array.isArray(result.modules)) {
+    const next = result.modules.slice().sort()
+    if (JSON.stringify(next) !== JSON.stringify(currentModules)) {
+      currentModules = next
+      saveEntitlements(currentModules)
+      broadcastEntitlements()
+      log('[entitlements] modules updated:', currentModules.join(', ') || '(none)')
+    }
+  }
+
+  // ── Notifications + envoi différé des crashs (best-effort) ─────────────────
+  fetchNotifications().catch(() => {})
+  flushCrashQueue().catch(() => {})
 }
 
 function startPeriodicLicenseCheck() {
@@ -643,21 +1131,43 @@ function saveLastOnline() {
   } catch (_) {}
 }
 
-async function checkInternetConnectivity() {
+function probeUrl(url) {
   return new Promise(resolve => {
-    const req = require('https').get(ONLINE_CHECK_URL, { timeout: 8_000 }, res => {
-      resolve(true)
-      res.destroy()
-    })
-    req.on('error',   () => resolve(false))
-    req.on('timeout', () => { req.destroy(); resolve(false) })
+    try {
+      const mod = url.startsWith('http:') ? require('http') : require('https')
+      // Toute réponse HTTP (même 4xx/5xx) prouve la joignabilité du serveur.
+      const req = mod.get(url, { timeout: 8_000 }, res => {
+        resolve(true)
+        res.destroy()
+      })
+      req.on('error',   () => resolve(false))
+      req.on('timeout', () => { req.destroy(); resolve(false) })
+    } catch (_) { resolve(false) }
   })
+}
+
+async function checkInternetConnectivity() {
+  // Anti-contournement (durci) : quand un serveur de licences est configuré,
+  // « en ligne » signifie que l'AUTORITÉ de licences est joignable — c'est par
+  // elle que passent les révocations. Auparavant la sonde visait 1.1.1.1 :
+  // firewaller uniquement api.garageflows.fr en gardant internet maintenait la
+  // période de grâce indéfiniment et rendait la révocation contournable.
+  // Désormais ce scénario N'ENTRETIENT PLUS la grâce (verrou 72 h normal).
+  const remote = process.env.GF_LICENSE_SERVER
+  if (remote) {
+    return probeUrl(`${remote.replace(/\/$/, '')}/api/health`)
+  }
+  // Sans control plane distant configuré : sonde générique (mode historique).
+  return probeUrl(ONLINE_CHECK_URL)
 }
 
 async function enforceOnlineGracePeriod() {
   const online = await checkInternetConnectivity()
   if (online) {
     saveLastOnline()
+    // Une reconnexion rétablit la confiance sur l'horloge (nouvelle référence).
+    clockTampered = false
+    writeTrustedClock(Date.now())
     log('[online-check] connected — last_online updated')
     // Notify UI of online status
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -667,6 +1177,8 @@ async function enforceOnlineGracePeriod() {
   }
 
   log('[online-check] offline — checking grace period')
+  // Anti-contournement : détecte un recul de l'horloge Windows.
+  checkClockIntegrity()
   const rec = readLastOnline()
   const lastOnlineTs = rec?.ts ?? 0
   const offlineMs = Date.now() - lastOnlineTs
@@ -675,14 +1187,20 @@ async function enforceOnlineGracePeriod() {
     mainWindow.webContents.send('app:online-status', { online: false, offlineMs })
   }
 
-  if (offlineMs > LOCK_PERIOD_MS) {
-    log('[online-check] offline > 72h — locking app')
+  // Verrouillage si : hors ligne trop longtemps OU horloge incohérente (recul
+  // détecté / durée hors ligne négative) — impossible de gagner du temps en
+  // reculant la date Windows.
+  if (offlineMs > LOCK_PERIOD_MS || offlineMs < 0 || clockTampered) {
+    const why = clockTampered || offlineMs < 0
+      ? 'Incohérence de l\'horloge système détectée.'
+      : 'Votre logiciel est hors ligne depuis plus de 72 heures.'
+    log('[online-check] locking app —', clockTampered || offlineMs < 0 ? 'clock tamper' : 'offline > 72h')
     const { dialog: d } = require('electron')
     await d.showMessageBox(mainWindow ?? { webContents: null }, {
       type:    'error',
       title:   'GarageFlow — Connexion requise',
       message: 'GarageFlow nécessite une connexion internet.',
-      detail:  `Votre logiciel est hors ligne depuis plus de 72 heures.\nVeuillez connecter ce PC à internet pour continuer à utiliser GarageFlow.`,
+      detail:  `${why}\nVeuillez connecter ce PC à internet pour continuer à utiliser GarageFlow.`,
       buttons: ['Fermer'],
     }).catch(() => {})
     app.quit()
@@ -1017,15 +1535,21 @@ function startNextServer() {
     // Windows-safe path: use forward slashes in DATABASE_URL
     const dbUrl = `file:${DB_PATH.replace(/\\/g, '/')}`
 
+    if (!installSecret) {
+      reject(new Error('Secret local indisponible — refus de démarrer le serveur authentifié'))
+      return
+    }
+
     const env = {
       ...process.env,
       PORT:              String(PORT),
-      HOSTNAME:          '0.0.0.0',
+      // Écoute STRICTEMENT sur la boucle locale : jamais exposé au LAN.
+      HOSTNAME:          '127.0.0.1',
       NEXTAUTH_URL:      `http://127.0.0.1:${PORT}`,
       DATABASE_URL:      dbUrl,
-      // Use whatever secret the main process has loaded (from .env or fallback),
-      // so JWTs minted by main.js and verified by Next.js always share the same secret.
-      NEXTAUTH_SECRET:   process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR',
+      // Secret unique par installation, partagé entre main.js (mint des JWT) et
+      // le serveur Next.js (vérification). Aucun repli codé en dur.
+      NEXTAUTH_SECRET:   installSecret,
       GF_DB_MAC_SECRET:         deriveDbMacSecret(),
       GF_INTERNAL_EXPORT_KEY:   INTERNAL_EXPORT_KEY,
       GF_PHOTOS_DIR:            PHOTOS_DIR,
@@ -1079,7 +1603,7 @@ function createSplash() {
     skipTaskbar:     true,
     center:          true,
     backgroundColor: '#0f1629',
-    webPreferences:  { contextIsolation: true, nodeIntegration: false },
+    webPreferences:  { contextIsolation: true, nodeIntegration: false, sandbox: true },
   })
   // __dirname works in both dev and inside the ASAR (Electron handles ASAR paths)
   splashWindow.loadFile(path.join(__dirname, 'splash.html'))
@@ -1111,6 +1635,8 @@ function createLicenseWindow() {
         preload:          path.join(__dirname, 'preload.js'),
         contextIsolation: true,
         nodeIntegration:  false,
+        sandbox:          true,
+        webSecurity:      true,
       },
     })
 
@@ -1124,8 +1650,12 @@ function createLicenseWindow() {
     ipcMain.on('license-submit', (event, token) => {
       const payload = verifyEccToken(token)
       if (payload) {
-        saveLicense(token, payload)
         activeLicense = { token, payload }
+        activeDeviceToken = null
+        saveLicense(token, payload)
+        // Register this device with the server to obtain a device token (device
+        // auth). Best-effort — the heartbeat re-tries if the server is offline now.
+        activateOnServer().catch(() => {})
         cleanup()
         win.destroy()
         resolve(true)
@@ -1180,10 +1710,13 @@ function createMainWindow() {
     frame:           false,
     titleBarStyle:   'hidden',
     webPreferences: {
-      preload:          path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration:  false,
-      spellcheck:       false,
+      preload:            path.join(__dirname, 'preload.js'),
+      contextIsolation:   true,
+      nodeIntegration:    false,
+      sandbox:            true,   // durcissement : renderer en bac à sable
+      webSecurity:        true,   // same-origin policy active (explicite)
+      allowRunningInsecureContent: false,
+      spellcheck:         false,
     },
   })
 
@@ -1195,6 +1728,11 @@ function createMainWindow() {
       mainWindow.webContents.closeDevTools()
     })
   }
+
+  // Capture les crashs du process de rendu (page blanche / OOM du renderer).
+  mainWindow.webContents.on('render-process-gone', (_e, details) => {
+    reportCrash({ message: `render-process-gone: ${details?.reason || 'unknown'}`, fatal: true, kind: 'renderer' }).catch(() => {})
+  })
 
   const APP_URL = `http://127.0.0.1:${PORT}`
 
@@ -1264,10 +1802,43 @@ function createMainWindow() {
     log('Main window shown')
   })
 
+  // Fenêtres externes : n'ouvrir dans le navigateur QUE des URLs HTTPS vers des
+  // domaines de confiance ; tout le reste est refusé (anti-phishing / protocoles
+  // dangereux). Aucune nouvelle BrowserWindow n'est jamais créée par le renderer.
+  const ALLOWED_EXTERNAL_HOSTS = new Set([
+    'garageflows.fr', 'www.garageflows.fr', 'app.garageflows.fr', 'api.garageflows.fr',
+  ])
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('http')) shell.openExternal(url)
+    try {
+      const u = new URL(url)
+      if (u.protocol === 'https:' && ALLOWED_EXTERNAL_HOSTS.has(u.hostname)) {
+        shell.openExternal(url)
+      } else {
+        log('[security] window.open refusé :', u.protocol + '//' + u.hostname)
+      }
+    } catch { /* URL invalide → refus */ }
     return { action: 'deny' }
   })
+
+  // Empêche toute navigation hors de l'app locale (pas de file://, pas d'externe).
+  const localOrigin = `http://127.0.0.1:${PORT}`
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (!url.startsWith(localOrigin)) {
+      event.preventDefault()
+      log('[security] navigation bloquée vers :', url.slice(0, 80))
+    }
+  })
+  // will-navigate ne se déclenche PAS sur une redirection serveur (3xx) : sans ce
+  // garde, une redirection hors origine locale afficherait une page étrangère avec
+  // le pont preload encore attaché. Défense en profondeur (miroir de will-navigate).
+  mainWindow.webContents.on('will-redirect', (event, url) => {
+    if (!url.startsWith(localOrigin)) {
+      event.preventDefault()
+      log('[security] redirection bloquée vers :', url.slice(0, 80))
+    }
+  })
+  // Refuse tout attachement de webview (vecteur d'exécution non prévu).
+  mainWindow.webContents.on('will-attach-webview', (event) => event.preventDefault())
 
   mainWindow.on('closed', () => { mainWindow = null })
 
@@ -1326,79 +1897,18 @@ function setupIPC() {
     shell.openPath(desktop)
   })
 
-  // Update check — checks admin license server first, then GitHub releases
+  // Update check — serveur central (/api/update/latest) puis replis (voir
+  // fetchLatestUpdate). Renvoie un objet homogène incluant sha256, size,
+  // mandatory, downloadUrl.
   ipcMain.handle('app:check-updates', async () => {
     try {
-      const currentVersion = app.getVersion()
-
-      // 1. Check admin-published update (via GF_LICENSE_SERVER or local file)
-      const remoteServer = process.env.GF_LICENSE_SERVER
-      if (remoteServer) {
-        const adminUpdate = await new Promise(resolve => {
-          const mod = remoteServer.startsWith('https') ? require('https') : http
-          mod.get(`${remoteServer.replace(/\/$/, '')}/api/admin/updates`, { timeout: 5000 }, res => {
-            let raw = ''
-            res.on('data', c => raw += c)
-            res.on('end',  () => { try { resolve(JSON.parse(raw)) } catch { resolve(null) } })
-          }).on('error', () => resolve(null)).on('timeout', () => resolve(null))
-        }).catch(() => null)
-        if (adminUpdate?.hasUpdate && adminUpdate.latestVersion) {
-          const hasUpdate = adminUpdate.latestVersion !== currentVersion
-          if (hasUpdate) return {
-            hasUpdate:     true,
-            latestVersion: adminUpdate.latestVersion,
-            // Fichier .exe téléversé par l'admin → URL directe téléchargeable in-app
-            releaseUrl:    adminUpdate.downloadPath
-              ? `${remoteServer.replace(/\/$/, '')}${adminUpdate.downloadPath}`
-              : (adminUpdate.releaseUrl ?? null),
-            releaseNotes:  adminUpdate.releaseNotes ?? null,
-            source:        'admin',
-          }
-        }
-      }
-
-      // 2. Check local admin file
-      const localUpdateFile = path.join(APP_DATA, 'gf_update.json')
-      try {
-        const localUpdate = JSON.parse(require('fs').readFileSync(localUpdateFile, 'utf8'))
-        if (localUpdate?.hasUpdate && localUpdate.latestVersion !== currentVersion) {
-          return {
-            hasUpdate:     true,
-            latestVersion: localUpdate.latestVersion,
-            // Fichier .exe téléversé localement → servi par le serveur local intégré
-            releaseUrl:    localUpdate.downloadPath
-              ? `http://127.0.0.1:${PORT}${localUpdate.downloadPath}`
-              : (localUpdate.releaseUrl ?? null),
-            releaseNotes:  localUpdate.releaseNotes ?? null,
-            source:        'local-admin',
-          }
-        }
-      } catch { /* no local update file — ok */ }
-
-      // 3. Fall back to GitHub releases
-      const data = await new Promise((resolve) => {
-        const options = {
-          hostname: 'api.github.com',
-          path:     '/repos/garageflow/garageflow/releases/latest',
-          headers:  { 'User-Agent': 'GarageFlow/' + currentVersion },
-          timeout:  10_000,
-        }
-        require('https').get(options, res => {
-          let raw = ''
-          res.on('data', c => raw += c)
-          res.on('end',  () => { try { resolve(JSON.parse(raw)) } catch { resolve(null) } })
-        }).on('error', () => resolve(null)).on('timeout', () => resolve(null))
-      })
-
-      if (!data || !data.tag_name) return { hasUpdate: false }
-      const latest = String(data.tag_name).replace(/^v/, '')
-      return {
-        hasUpdate:     latest !== currentVersion && latest > currentVersion,
-        latestVersion: latest,
-        releaseUrl:    data.html_url ?? null,
-        releaseNotes:  data.body ? data.body.slice(0, 500) : null,
-        source:        'github',
-      }
+      // Chemin unifié (voir fetchLatestUpdate) : serveur central /api/update/latest
+      // (avec HWID pour le rollout progressif + manifeste signé Ed25519), puis
+      // repli fichier local admin, puis Releases GitHub (SemVer). Le même objet
+      // homogène (sha256/size/manifest/mandatory/downloadUrl) alimente à la fois
+      // la vérification manuelle et le contrôle périodique, de sorte que
+      // app:install-update dispose toujours du manifeste requis à l'installation.
+      return await fetchLatestUpdate()
     } catch (err) {
       log('[check-updates] error:', err.message)
       return { hasUpdate: false, error: err.message }
@@ -1422,22 +1932,104 @@ function setupIPC() {
     return null
   })
 
+  // ── Control-plane IPC (modules, notifications, crash consent, breadcrumbs) ──
+
+  // Modules autorisés (entitlements) — source de vérité serveur, cache HWID.
+  ipcMain.handle('app:entitlements', () => ({ modules: currentModules }))
+
+  // Notifications côté serveur (déjà ciblées pour cette licence).
+  ipcMain.handle('app:notifications', async () => {
+    await fetchNotifications().catch(() => {})
+    return { notifications: currentNotifs }
+  })
+  ipcMain.handle('app:ack-notification', async (_e, notificationId) => {
+    const base = cp.resolveRemoteBase(process.env)
+    const lid  = activeLicense?.payload?.lid
+    if (!base || !lid || !notificationId) return { ok: false }
+    const res = await httpPost(`${base}/api/notifications/ack`, {
+      licenseId: lid, notificationId, hwid: getHwid(),
+    }).catch(() => null)
+    return { ok: !!(res && res.ok) }
+  })
+
+  // Consentement au reporting de crash (RGPD — l'utilisateur maîtrise).
+  // consent = false par défaut ; decided = l'utilisateur a-t-il déjà choisi ?
+  // (le renderer affiche un écran de consentement au 1er lancement si !decided).
+  ipcMain.handle('app:crash-consent',     () => ({ consent: crashConsent(), decided: crashConsentDecided() }))
+  ipcMain.handle('app:set-crash-consent', (_e, value) => {
+    writeSettings({ crashConsent: !!value })
+    return { consent: crashConsent(), decided: true }
+  })
+
+  // Le renderer signale un crash / une erreur, et dépose des « miettes ».
+  ipcMain.handle('app:report-crash', async (_e, info) => {
+    await reportCrash({
+      message: info?.message || 'renderer_error',
+      stack:   info?.stack || null,
+      fatal:   info?.fatal ?? false,
+      kind:    'renderer',
+    })
+    return { ok: true }
+  })
+  ipcMain.on('app:breadcrumb', (_e, action) => { pushBreadcrumb(action) })
+
   // ── Install update: download the .exe and run the installer ───────────────
   // Les données utilisateur sont dans userData (garageflow.db) → conservées.
   // L'installeur NSIS met à jour l'app en place sans toucher aux données.
-  ipcMain.handle('app:install-update', async (_event, url) => {
+  //
+  // `arg` : soit une URL (rétro-compat), soit
+  // { url|downloadUrl, sha256, size, fileName, version, manifest }.
+  // Sécurité (défense en profondeur) :
+  //   1. si une clé de vérification est embarquée, un MANIFESTE signé Ed25519
+  //      VALIDE est obligatoire et ses champs font autorité (anti-serveur compromis) ;
+  //   2. téléchargement HTTPS REPRENABLE (Range/.part, reprise sur coupure) ;
+  //   3. VÉRIFICATION SHA-256 (+ taille) avant tout lancement — fichier altéré refusé.
+  ipcMain.handle('app:install-update', async (_event, arg) => {
+    const opts       = (arg && typeof arg === 'object') ? arg : { url: arg }
+    let url          = opts.url || opts.downloadUrl
+    let expectedSha  = String(opts.sha256 || '').trim().toLowerCase() || null
+    let expectedSize = Number(opts.size) || null
+    const manifest   = opts.manifest || null
+
+    // ── VÉRIFICATION DU MANIFESTE SIGNÉ (Ed25519) — autorité de confiance ──────
+    // Un SHA-256 seul (fourni par le même serveur que le binaire) ne protège pas
+    // d'un serveur compromis. Si une clé de vérification est embarquée, un
+    // manifeste signé VALIDE est OBLIGATOIRE ; ses champs (sha256/size/URL/version)
+    // priment sur toute valeur non signée transmise par ailleurs.
+    if (updateVerify.signingConfigured()) {
+      if (!manifest) {
+        log('[install-update] SECURITY: manifeste signé requis — installation refusée')
+        return { ok: false, reason: 'Mise à jour non signée — installation refusée pour votre sécurité.' }
+      }
+      const v = updateVerify.validateManifest(manifest, {
+        currentVersion: app.getVersion(),
+        channel: UPDATE_CHANNEL,
+        platform: process.platform,
+        arch: process.arch,
+      })
+      if (!v.ok) {
+        log('[install-update] SECURITY: manifeste invalide —', v.reason)
+        reportCrash({ message: 'update_manifest_invalid', fatal: false, kind: 'security' }).catch(() => {})
+        return { ok: false, reason: `Mise à jour rejetée : ${v.reason}` }
+      }
+      // Les valeurs SIGNÉES font autorité (on ignore toute valeur non signée).
+      url          = v.manifest.downloadUrl
+      expectedSha  = String(v.manifest.sha256 || '').trim().toLowerCase()
+      expectedSize = v.manifest.size
+      log('[install-update] manifeste signé vérifié — v' + v.manifest.version + ' keyId=' + v.manifest.keyId)
+    }
     if (!url || typeof url !== 'string') return { ok: false, reason: 'URL manquante' }
 
     const { spawn } = require('child_process')
     const tmpDir = require('os').tmpdir()
 
-    // Detect if this is a direct installer URL (ends with known extension)
+    // Installateur direct ? (empreinte fournie, extension connue, ou route /downloads/)
     const installerExts = ['.exe', '.msi', '.dmg', '.pkg', '.AppImage', '.deb', '.rpm', '.zip']
-    const urlLower = url.toLowerCase().split('?')[0]
-    const isDirectFile = installerExts.some(ext => urlLower.endsWith(ext))
+    const urlNoQuery = url.toLowerCase().split('?')[0]
+    const isDirectFile = !!expectedSha || url.includes('/downloads/') || installerExts.some(ext => urlNoQuery.endsWith(ext))
 
     if (!isDirectFile) {
-      // Not a direct installer (e.g. a web page) — open in browser as fallback
+      // Pas un installateur direct (ex. page web) — ouverture navigateur.
       shell.openExternal(url)
       return { ok: true, method: 'browser', url }
     }
@@ -1447,42 +2039,139 @@ function setupIPC() {
 
     const emit = (pct) => { try { mainWindow?.webContents.send('app:update-progress', pct) } catch (_) {} }
 
-    const fileName = decodeURIComponent((url.split('/').pop() || 'GarageFlow-Setup.exe').split('?')[0])
+    const fileName = (opts.fileName && String(opts.fileName).replace(/[^0-9A-Za-z._-]/g, '')) ||
+      decodeURIComponent((url.split('/').pop() || 'GarageFlow-Setup.exe').split('?')[0]) || 'GarageFlow-Setup.exe'
     const destPath = path.join(tmpDir, fileName)
+    const partPath = destPath + '.part'
 
-    // Téléchargement avec suivi de progression + suivi des redirections
-    function download(u, redirects) {
+    // Téléchargement REPRENABLE : requête Range, reprise du .part sur coupure,
+    // avec ré-essais (backoff). Le serveur/CDN gère nativement le Range.
+    function downloadOnce(startUrl) {
       return new Promise((resolve, reject) => {
-        if (redirects > 5) return reject(new Error('Trop de redirections'))
-        const mod = u.startsWith('https') ? require('https') : http
-        const req = mod.get(u, { timeout: 300_000 }, res => {
-          if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-            res.resume()
-            resolve(download(res.headers.location, redirects + 1))
-            return
+        let settled = false
+        const doReq = (u, redirects) => {
+          if (redirects > 5) { settled = true; return reject(new Error('Trop de redirections')) }
+          const mod = u.startsWith('https') ? require('https') : http
+          const existing = fs.existsSync(partPath) ? fs.statSync(partPath).size : 0
+          const headers = { 'User-Agent': 'GarageFlow/' + app.getVersion() }
+          if (existing > 0) headers['Range'] = `bytes=${existing}-`
+          let ws = null
+          const fail = (err) => {
+            if (settled) return
+            settled = true
+            if (ws) { try { ws.destroy() } catch (_) {} } // stoppe toute écriture en attente
+            reject(err)
           }
-          if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode)) }
-
-          const total = parseInt(res.headers['content-length'] || '0', 10)
-          let received = 0
-          const file = fs.createWriteStream(destPath)
-          res.on('data', chunk => {
-            received += chunk.length
-            if (total) emit(Math.min(99, Math.round((received / total) * 100)))
+          const req = mod.get(u, { timeout: 300_000, headers }, res => {
+            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+              res.resume(); doReq(res.headers.location, redirects + 1); return
+            }
+            let append, total
+            if (res.statusCode === 206) {
+              append = true
+              const cr = res.headers['content-range'] // bytes start-end/total
+              total = cr ? parseInt(cr.split('/')[1], 10) : existing + parseInt(res.headers['content-length'] || '0', 10)
+            } else if (res.statusCode === 200) {
+              append = false // le serveur ignore Range → on repart de zéro
+              total = parseInt(res.headers['content-length'] || '0', 10)
+            } else {
+              res.resume(); return fail(new Error('HTTP ' + res.statusCode))
+            }
+            let received = append ? existing : 0
+            ws = fs.createWriteStream(partPath, { flags: append ? 'a' : 'w' })
+            res.on('data', chunk => {
+              received += chunk.length
+              if (total) emit(Math.min(99, Math.round((received / total) * 100)))
+            })
+            res.on('error', fail)
+            ws.on('error', fail)
+            // 'close' (et non 'finish') : le descripteur de fichier est libéré →
+            // le rename qui suit est sûr sous Windows.
+            ws.on('close', () => { if (!settled) { settled = true; resolve() } })
+            res.pipe(ws)
           })
-          res.pipe(file)
-          file.on('finish', () => file.close(() => resolve()))
-          file.on('error', err => { try { fs.unlinkSync(destPath) } catch (_) {} ; reject(err) })
-        })
-        req.on('error', reject)
-        req.on('timeout', () => { req.destroy(); reject(new Error('Délai de téléchargement dépassé')) })
+          req.on('error', fail)
+          req.on('timeout', () => { req.destroy(); fail(new Error('Délai de téléchargement dépassé')) })
+        }
+        doReq(startUrl, 0)
       })
+    }
+
+    async function download(startUrl, { fresh = false } = {}) {
+      if (fresh) { try { fs.unlinkSync(partPath) } catch (_) {} }
+      const MAX_ATTEMPTS = 5
+      for (let attempt = 1; ; attempt++) {
+        try { return await downloadOnce(startUrl) }
+        catch (err) {
+          if (attempt >= MAX_ATTEMPTS) throw err
+          log('[install-update] interruption, reprise (tentative ' + attempt + '):', err.message)
+          await new Promise(r => setTimeout(r, 1500 * attempt)) // backoff — conserve le .part
+        }
+      }
     }
 
     try {
       emit(0)
-      await download(url, 0)
+      await download(url)
+
+      // Vérification d'intégrité SHA-256 (obligatoire si l'empreinte est fournie).
+      if (expectedSha) {
+        let actual = await sha256File(partPath)
+        if (actual !== expectedSha) {
+          // Une passe de re-téléchargement propre au cas où le .part serait corrompu.
+          log('[install-update] SHA-256 mismatch, re-téléchargement propre…')
+          await download(url, { fresh: true })
+          actual = await sha256File(partPath)
+        }
+        if (actual !== expectedSha) {
+          try { fs.unlinkSync(partPath) } catch (_) {}
+          log('[install-update] ÉCHEC vérification SHA-256 — installation refusée')
+          try { mainWindow?.webContents.send('app:update-error', 'Fichier corrompu (empreinte SHA-256 invalide). Installation annulée.') } catch (_) {}
+          return { ok: false, reason: 'Fichier corrompu (empreinte SHA-256 invalide). Installation annulée par sécurité.' }
+        }
+        log('[install-update] SHA-256 vérifié ✓')
+      }
+
+      // Finalise : .part → fichier définitif.
+      try { fs.rmSync(destPath, { force: true }) } catch (_) {}
+      fs.renameSync(partPath, destPath)
       emit(100)
+
+      // ── VÉRIFICATION CRYPTOGRAPHIQUE OBLIGATOIRE avant toute exécution ───────
+      // On n'exécute JAMAIS un binaire téléchargé sans empreinte vérifiée : cela
+      // bloque l'attaque « URL malveillante → installeur piégé ». L'empreinte
+      // provient du serveur officiel (/api/update/latest), signée côté serveur.
+      const actualSha = await new Promise((resolve, reject) => {
+        try {
+          const h = crypto.createHash('sha256')
+          const rs = fs.createReadStream(destPath)
+          rs.on('data', d => h.update(d))
+          rs.on('end', () => resolve(h.digest('hex')))
+          rs.on('error', reject)
+        } catch (e) { reject(e) }
+      })
+
+      if (expectedSize && fs.existsSync(destPath) && fs.statSync(destPath).size !== expectedSize) {
+        try { fs.unlinkSync(destPath) } catch (_) {}
+        log('[install-update] SECURITY: size mismatch — refusing to run')
+        return { ok: false, reason: 'Taille du fichier inattendue — installation refusée.' }
+      }
+
+      if (!expectedSha) {
+        // Pas d'empreinte de confiance → on n'exécute pas. Repli navigateur (sûr).
+        try { fs.unlinkSync(destPath) } catch (_) {}
+        log('[install-update] SECURITY: no SHA-256 provided — refusing to run, opening browser')
+        shell.openExternal(url)
+        return { ok: true, method: 'browser-unverified', url }
+      }
+
+      if (!cp.sha256HexEqual(actualSha, expectedSha)) {
+        try { fs.unlinkSync(destPath) } catch (_) {}
+        log('[install-update] SECURITY: SHA-256 mismatch — refusing to run', `expected=${expectedSha}`, `actual=${actualSha}`)
+        reportCrash({ message: 'update_sha256_mismatch', fatal: false, kind: 'security' }).catch(() => {})
+        return { ok: false, reason: 'Signature de la mise à jour invalide — installation refusée pour votre sécurité.' }
+      }
+      log('[install-update] SHA-256 verified OK:', actualSha)
 
       // IMPORTANT : il faut FERMER GarageFlow avant que l'installeur ne s'exécute.
       // Sinon l'installeur NSIS ne peut pas remplacer le .exe / les fichiers
@@ -1533,10 +2222,13 @@ function setupIPC() {
       if (!payload) {
         return { ok: false, reason: 'Licence invalide ou expirée' }
       }
+      // A new license key = a new device binding: drop the old device token.
+      activeLicense = { token: token.trim(), payload }
+      activeDeviceToken = null
       // Save new license to disk (encrypted with HWID)
       saveLicense(token.trim(), payload)
-      // Update in-memory license
-      activeLicense = { token: token.trim(), payload }
+      // Register this device against the new license to obtain a fresh token.
+      await activateOnServer()
       // Re-inject session cookies so Next.js picks up the new type
       await injectLicenseCookies(payload.typ, payload.lid ?? 'runtime')
       log('[update-license] upgraded to type:', payload.typ, '| lid:', payload.lid)
@@ -1562,7 +2254,68 @@ app.whenReady().then(async () => {
   log('IS_DEV:', IS_DEV)
   log('Platform:', process.platform, process.arch)
 
+  // ── Secret local par installation — AVANT toute session/serveur (fail-closed) ─
+  try {
+    resolveInstallSecret()
+  } catch (err) {
+    log('FATAL: secret local indisponible')   // ne journalise jamais la valeur
+    dialog.showErrorBox(
+      'Erreur de sécurité GarageFlow',
+      `Impossible d'initialiser le secret local de façon sûre.\n\n${err.message}\n\n` +
+        `L'application ne peut pas démarrer en mode authentifié. Vérifiez les permissions du dossier de données, puis réinstallez si nécessaire.`
+    )
+    app.quit()
+    return
+  }
+
+  // ── Vérification d'intégrité (anti-altération) ────────────────────────────
+  // Production uniquement. Mode via GF_INTEGRITY_MODE : 'audit' (défaut, journalise
+  // sans bloquer) | 'enforce' (arrêt si un fichier critique est modifié/supprimé)
+  // | 'off'. Défaut prudent = 'audit' : passez à 'enforce' APRÈS avoir validé
+  // qu'un vrai build Windows démarre proprement (voir docs/SECURITY-HARDENING.md).
+  if (!IS_DEV) {
+    try {
+      const integrity = require('./integrity')
+      const mode = (process.env.GF_INTEGRITY_MODE || 'audit').toLowerCase()
+      if (mode !== 'off') {
+        const result = integrity.verify(process.resourcesPath)
+        if (!result.present) {
+          log('[integrity] aucun manifeste — vérification inactive')
+        } else if (result.ok) {
+          log('[integrity] OK —', result.checked, 'fichiers critiques vérifiés')
+        } else {
+          log('[integrity] ALTÉRATION détectée:', result.violations.join(', '))
+          if (mode === 'enforce') {
+            dialog.showErrorBox(
+              'GarageFlow — installation corrompue',
+              'Des fichiers essentiels de GarageFlow ont été modifiés, remplacés ou supprimés.\n\n' +
+                "Par sécurité, l'application ne peut pas démarrer.\n\n" +
+                "Veuillez réinstaller GarageFlow depuis l'installateur officiel.",
+            )
+            app.exit(1)
+            return
+          }
+        }
+        // Anti-débogueur : bloquant uniquement si explicitement activé (évite les
+        // faux positifs) via GF_ANTIDEBUG=1.
+        if (integrity.detectDebugger()) {
+          log('[integrity] débogueur/inspecteur détecté')
+          if (mode === 'enforce' && process.env.GF_ANTIDEBUG === '1') {
+            dialog.showErrorBox('GarageFlow', "Un outil de débogage a été détecté. Fermeture par sécurité.")
+            app.exit(1)
+            return
+          }
+        }
+      }
+    } catch (e) {
+      log('[integrity] erreur de vérification (non bloquante):', e.message)
+    }
+  }
+
   checkDebugger()
+  registerCrashHandlers()
+  checkClockIntegrity()
+  currentModules = loadEntitlements()
   setupIPC()
   createSplash()
   setupDatabase()
@@ -1613,6 +2366,12 @@ app.whenReady().then(async () => {
   // ── Open main window ──────────────────────────────────────────────────────
   createMainWindow()
 
+  // Diffuse les modules connus + récupère les notifications dès l'ouverture.
+  broadcastEntitlements()
+  if (!IS_DEV) {
+    setTimeout(() => { fetchNotifications().catch(() => {}); flushCrashQueue().catch(() => {}) }, 5_000)
+  }
+
   // ── Auto-backup ────────────────────────────────────────────────────────────
   runBackup()
   backupTimer = setInterval(runBackup, 60 * 60 * 1_000)
@@ -1625,12 +2384,16 @@ app.whenReady().then(async () => {
     startPeriodicLicenseCheck()
     startOnlineGraceCheck()
   }
+
+  // ── Vérification des mises à jour : au démarrage puis toutes les heures ────
+  startPeriodicUpdateCheck()
 })
 
 app.on('window-all-closed', () => {
   if (backupTimer)       { clearInterval(backupTimer);         backupTimer       = null }
   if (licenseTimer)      { clearTimeout(licenseTimer);         licenseTimer      = null }
   if (onlineCheckTimer)  { clearInterval(onlineCheckTimer);    onlineCheckTimer  = null }
+  if (updateTimer)       { clearInterval(updateTimer);         updateTimer       = null }
   if (desktopExportTimer){ clearTimeout(desktopExportTimer);   desktopExportTimer = null }
   if (nextServer) {
     const pid = nextServer.pid

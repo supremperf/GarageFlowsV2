@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { assertRelations } from '@/lib/tenant'
 
 export const GET = withAuth(async (req) => {
   const session = await requireSession()
@@ -40,6 +41,10 @@ export const POST = withAuth(async (req) => {
 
   const vehicle = await prisma.loanerVehicle.findFirst({ where: { id: body.vehicleId, garageId: session.user.garageId } })
   if (!vehicle) return NextResponse.json({ error: 'Véhicule introuvable' }, { status: 404 })
+
+  // SECURITY (IDOR): une intervention liée doit appartenir au garage.
+  const relErr = await assertRelations(session.user.garageId, [{ model: 'job', id: body.jobId, label: 'Intervention' }])
+  if (relErr) return relErr
 
   const reservation = await prisma.loanerReservation.create({
     data: {

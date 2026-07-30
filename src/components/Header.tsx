@@ -29,6 +29,10 @@ import {
   ShieldCheck,
   Car,
   KeyRound,
+  Sparkles,
+  ScanLine,
+  Truck,
+  Boxes,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState, useRef, useEffect, useCallback } from 'react'
@@ -123,6 +127,10 @@ interface HeaderProps {
   onOpenLaborCatalog?:  () => void
   onOpenWarranties?:    () => void
   onOpenLoaner?:        () => void
+  onOpenCopilot?:       () => void
+  onOpenOcr?:           () => void
+  onOpenSuppliers?:     () => void
+  onOpenCatalog?:       () => void
   warrantyAlerts?:      number
 }
 
@@ -136,6 +144,10 @@ export default function Header({
   onOpenLaborCatalog,
   onOpenWarranties,
   onOpenLoaner,
+  onOpenCopilot,
+  onOpenOcr,
+  onOpenSuppliers,
+  onOpenCatalog,
   warrantyAlerts = 0,
 }: HeaderProps) {
   const {
@@ -369,7 +381,14 @@ export default function Header({
                   {t.changeLicense}
                 </button>
                 <button
-                  onClick={() => { setUserMenuOpen(false); signOut({ callbackUrl: '/login' }) }}
+                  onClick={() => {
+                    setUserMenuOpen(false)
+                    // Purge le cache de pages privées du Service Worker avant de
+                    // fermer la session (aucune page ne doit rester pour un autre
+                    // utilisateur du même appareil).
+                    try { navigator.serviceWorker?.controller?.postMessage('CLEAR_PRIVATE_CACHE') } catch { /* SW absent */ }
+                    signOut({ callbackUrl: '/login' })
+                  }}
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 transition-colors"
                 >
                   <LogOut className="w-3.5 h-3.5" />
@@ -501,6 +520,42 @@ export default function Header({
               icon={BarChart2}
               label={t.navFinance}
               title={t.ttFinance}
+              variant="finance"
+            />
+          )}
+          {onOpenCopilot && (
+            <ToolBtn
+              onClick={onOpenCopilot}
+              icon={Sparkles}
+              label={t.navCopilot}
+              title={t.ttCopilot}
+              variant="finance"
+            />
+          )}
+          {onOpenOcr && (
+            <ToolBtn
+              onClick={onOpenOcr}
+              icon={ScanLine}
+              label={t.navOcr}
+              title={t.ttOcr}
+              variant="finance"
+            />
+          )}
+          {onOpenSuppliers && (
+            <ToolBtn
+              onClick={onOpenSuppliers}
+              icon={Truck}
+              label={t.navSuppliers}
+              title={t.ttSuppliers}
+              variant="finance"
+            />
+          )}
+          {onOpenCatalog && (
+            <ToolBtn
+              onClick={onOpenCatalog}
+              icon={Boxes}
+              label={t.navCatalog}
+              title={t.ttCatalog}
               variant="finance"
             />
           )}

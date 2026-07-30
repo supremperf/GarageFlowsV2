@@ -21,7 +21,7 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
   if (body.notes !== undefined)        data.notes        = body.notes
   if (body.status === 'returned' && !existing.returnedAt) data.returnedAt = new Date()
   const updated = await prisma.loanerReservation.update({
-    where: { id: params.id },
+    where: { id: params.id, garageId: session.user.garageId },
     data,
     include: { vehicle: { select: { id: true, name: true, licensePlate: true } } },
   })
@@ -32,6 +32,6 @@ export const DELETE = withAuth(async (_req, { params }: { params: { id: string }
   const session = await requireSession()
   const existing = await prisma.loanerReservation.findFirst({ where: { id: params.id, garageId: session.user.garageId } })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  await prisma.loanerReservation.update({ where: { id: params.id }, data: { status: 'cancelled' } })
+  await prisma.loanerReservation.update({ where: { id: params.id, garageId: session.user.garageId }, data: { status: 'cancelled' } })
   return NextResponse.json({ success: true })
 })

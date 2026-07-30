@@ -24,6 +24,7 @@
 const fs   = require('fs')
 const path = require('path')
 const { execFileSync } = require('child_process')
+const { ensureEnvSecret } = require('./secrets')
 
 const root      = path.resolve(__dirname, '..')
 const envSrc    = path.join(root, '.env.example')
@@ -35,6 +36,15 @@ const template  = path.join(prismaDir, 'garageflow-template.db')
 const CORRECT_DB_URL = 'file:./dev.db'
 // Any of these historical/wrong values must be rewritten to CORRECT_DB_URL.
 const WRONG_DB_URLS  = ['file:./prisma/dev.db', 'file:prisma/dev.db']
+
+// ── Déploiement serveur (Vercel) : ne JAMAIS fabriquer un .env SQLite ────────
+// Le serveur/PWA utilise PostgreSQL via les variables d'environnement de la
+// plateforme (DATABASE_URL/DIRECT_URL). Créer ici un .env file:./dev.db serait
+// au mieux inutile (process.env prime), au pire trompeur. On sort immédiatement.
+if (process.env.VERCEL) {
+  console.log('ℹ️   Build Vercel détecté — setup-dev.js ignoré (PostgreSQL via env vars).')
+  process.exit(0)
+}
 
 let createdEnv = false
 
@@ -69,13 +79,27 @@ try {
         '# Généré automatiquement par setup-dev.js',
         `DATABASE_URL="${CORRECT_DB_URL}"`,
         'NEXTAUTH_URL="http://localhost:3000"',
-        'NEXTAUTH_SECRET="CHANGE_ME_run_openssl_rand_base64_32"',
         '',
       ].join('\n'),
       'utf8'
     )
     createdEnv = true
     console.log('✅  .env minimal créé (aucun .env.example trouvé).')
+  }
+
+  // ── Garantit un NEXTAUTH_SECRET fort et unique par installation ─────────────
+  // Génère un secret aléatoire s'il est absent/placeholder ; n'écrase jamais un
+  // secret déjà fort. La valeur n'est jamais affichée.
+  try {
+    const before = fs.readFileSync(envDst, 'utf8')
+    const { content, changed } = ensureEnvSecret(before, 'NEXTAUTH_SECRET')
+    if (changed) {
+      fs.writeFileSync(envDst, content, 'utf8')
+      try { fs.chmodSync(envDst, 0o600) } catch (_) { /* permissions best-effort */ }
+      console.log('🔐  NEXTAUTH_SECRET généré (aléatoire, unique à cette installation).')
+    }
+  } catch (err) {
+    console.error('⚠️  Génération du secret impossible :', err.message)
   }
 } catch (err) {
   // Non-fatal — prisma generate does not need DATABASE_URL
@@ -137,9 +161,7 @@ try {
 // ── 5. Next-step hint (only when .env was just created) ───────────────────────
 if (createdEnv) {
   console.log('')
-  console.log('  ⚠️  Éditez .env et remplacez NEXTAUTH_SECRET par une vraie valeur :')
-  console.log('       openssl rand -base64 32')
-  console.log('')
+  console.log('  ✅  NEXTAUTH_SECRET a été généré automatiquement (aléatoire).')
   console.log('  Ensuite :  npm run dev')
   console.log('')
 }

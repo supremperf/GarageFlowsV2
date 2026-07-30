@@ -1,0 +1,929 @@
+// ══════════════════════════════════════════════════════════════════════════════
+// SCHÉMA SERVEUR (PWA / multi-instance) — PostgreSQL OBLIGATOIRE.
+//
+// Ce schéma est celui du déploiement web (app.garageflows.fr / Vercel) :
+// plusieurs instances sans disque partagé, donc PostgreSQL est requis
+// (DATABASE_URL poolée + DIRECT_URL non poolée pour les migrations).
+// L'application Electron desktop utilise prisma/schema.prisma (SQLite) et
+// n'a AUCUNE dépendance à PostgreSQL. Voir docs/DATABASE_ARCHITECTURE.md.
+//
+// Générer : npm run db:server:generate
+// Migrer  : npm run db:server:deploy   (prisma migrate deploy)
+// Valider : npm run db:server:validate (base neuve → migrations → smoke test)
+// ══════════════════════════════════════════════════════════════════════════════
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../../src/generated/server-client"
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  // URL poolée (runtime applicatif — ex. Neon/Supabase -pooler).
+  url       = env("DATABASE_URL")
+  // URL directe (non poolée) utilisée par prisma migrate / db push.
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Garage ───────────────────────────────────────────────────────────────────
+model Garage {
+  id                String @id @default(cuid())
+  name              String
+  slug              String @unique
+  plan              String @default("FREE")
+  hourlyRate        Float  @default(60)
+  workshopStartHour Int    @default(8) // opening hour (e.g. 8 → 08:00)
+  workshopEndHour   Int    @default(18) // closing hour (e.g. 18 → 18:00)
+
+  // ── Company identity ──────────────────────────────────────────
+  address    String?
+  phone      String?
+  email      String?
+  website    String?
+  logoBase64 String? // legacy: base64 data URL (kept for existing data)
+  logoPath   String? // preferred: relative path under GF_PHOTOS_DIR/logos/
+
+  // ── Legal / fiscal ────────────────────────────────────────────
+  siret     String?
+  vatNumber String? // numéro TVA intracommunautaire
+  taxRate   Float   @default(20) // VAT % (e.g. 20)
+
+  // ── Banking ───────────────────────────────────────────────────
+  iban     String?
+  bic      String?
+  bankName String?
+
+  // ── Billing preferences ───────────────────────────────────────
+  currency       String  @default("EUR")
+  paymentTerms   String? // e.g. "30 jours net"
+  invoicePrefix  String  @default("FAC")
+  invoiceCounter Int     @default(0)
+  quotePrefix    String  @default("DEV")
+  quoteCounter   Int     @default(0)
+  invoiceFooter  String? // custom footer text on invoices
+
+  // ── App settings ──────────────────────────────────────────────
+  language           String  @default("fr")
+  onboardingComplete Boolean @default(false)
+  smsPhone           String? // phone number shown in SMS reminder links
+
+  // ── Work Orders ───────────────────────────────────────────────
+  workOrderPrefix  String @default("OR")
+  workOrderCounter Int    @default(0)
+
+  // ── Warranties ────────────────────────────────────────────────
+  warrantyMonthsDefault Int @default(12)
+
+  // ── Loaner Vehicles ───────────────────────────────────────────
+  loanerEnabled Boolean @default(false)
+
+  // ── Smart Reminders ───────────────────────────────────────────
+  smartReminderMonths Int @default(11) // suggest reminder after N months silence
+
+  // ── Purchase Orders ───────────────────────────────────────────
+  purchaseOrderPrefix  String @default("BC")
+  purchaseOrderCounter Int    @default(0)
+
+  // ── Email SMTP ────────────────────────────────────────────────
+  smtpHost   String?
+  smtpPort   Int?
+  smtpUser   String?
+  smtpPass   String? // stored encrypted via GF_SMTP_CIPHER_KEY env
+  smtpFrom   String?
+  smtpSecure Boolean @default(true)
+
+  // ── Relations ─────────────────────────────────────────────────
+  users              User[]
+  mechanics          Mechanic[]
+  jobs               Job[]
+  clients            Client[]
+  vehicles           Vehicle[]
+  parts              Part[]
+  reminders          Reminder[]
+  quotes             Quote[]
+  invoices           Invoice[]
+  inspections        Inspection[]
+  workOrders         WorkOrder[]
+  laborOperations    LaborOperation[]
+  warranties         Warranty[]
+  loanerVehicles     LoanerVehicle[]
+  loanerReservations LoanerReservation[]
+  purchaseOrders     PurchaseOrder[]
+  licenses           LicenseKey[]
+  // ── Modules Premium (intégration f8rhzz) ───────────────────────────────────
+  vinSearches        VinSearch[]
+  signatures         Signature[]
+  notificationLogs   NotificationLog[]
+  // ── Portail client / SAV / RDV / sauvegardes / analytics (enterprise) ───────
+  portalUsers        PortalUser[]
+  portalTickets      PortalTicket[]
+  appointments       Appointment[]
+  backupRecords      BackupRecord[]
+  reportSnapshots    ReportSnapshot[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+// ─── User ────────────────────────────────────────────────────────────────────
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("RECEPTIONIST")
+  garageId  String
+  garage    Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Mechanic ────────────────────────────────────────────────────────────────
+model Mechanic {
+  id         String      @id @default(cuid())
+  name       String
+  avatar     String
+  color      String
+  isAbsent   Boolean     @default(false)
+  specialty  String      @default("[]")
+  order      Int         @default(0)
+  garageId   String
+  garage     Garage      @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  jobs       Job[]
+  workOrders WorkOrder[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+// ─── Client ───────────────────────────────────────────────────────────────────
+model Client {
+  id        String     @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  garageId  String
+  garage    Garage     @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  vehicles  Vehicle[]
+  reminders Reminder[]
+  quotes    Quote[]
+  invoices  Invoice[]
+  portalUsers PortalUser[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([garageId])
+  @@index([garageId, name])
+}
+
+// ─── Vehicle ──────────────────────────────────────────────────────────────────
+model Vehicle {
+  id           String       @id @default(cuid())
+  licensePlate String
+  vin          String? // 17-char VIN
+  make         String // brand (Peugeot, Renault…)
+  model        String // model (308, Clio…)
+  year         Int?
+  mileage      Int? // km at last visit
+  color        String?
+  notes        String?
+  ctDate       String? // YYYY-MM-DD — next technical inspection (contrôle technique)
+  clientId     String
+  client       Client       @relation(fields: [clientId], references: [id])
+  garageId     String
+  garage       Garage       @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  jobs         Job[]
+  reminders    Reminder[]
+  quotes       Quote[]
+  invoices     Invoice[]
+  inspections  Inspection[]
+  warranties   Warranty[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([licensePlate, garageId])
+  @@index([garageId])
+  @@index([clientId])
+  @@index([garageId, updatedAt])
+}
+
+// ─── Part / Stock ─────────────────────────────────────────────────────────────
+model Part {
+  id           String           @id @default(cuid())
+  reference    String?
+  name         String
+  description  String?
+  quantity     Int              @default(0)
+  minQuantity  Int              @default(5) // low-stock threshold
+  unitCost     Float            @default(0) // purchase price €
+  unitPrice    Float            @default(0) // selling price €
+  location     String? // shelf / bin reference
+  supplierName String?
+  supplierRef  String? // supplier's own reference/SKU
+  garageId     String
+  garage       Garage           @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  jobParts     JobPart[]
+  defaultFor   RepairTypePart[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+// ─── Parts per job (bill of materials) ───────────────────────────────────────
+model JobPart {
+  id        String @id @default(cuid())
+  jobId     String
+  job       Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  partId    String
+  part      Part   @relation(fields: [partId], references: [id])
+  quantity  Int
+  unitPrice Float // selling price snapshot
+  unitCost  Float // cost snapshot
+}
+
+// ─── Default parts per repair type ───────────────────────────────────────────
+model RepairTypePart {
+  id         String @id @default(cuid())
+  repairType String // REPAIR_TYPES key
+  partId     String
+  part       Part   @relation(fields: [partId], references: [id], onDelete: Cascade)
+  defaultQty Int    @default(1)
+  garageId   String
+}
+
+// ─── Job (intervention) ──────────────────────────────────────────────────────
+model Job {
+  id                 String              @id @default(cuid())
+  customerName       String
+  vehicleModel       String
+  licensePlate       String?
+  repairType         String
+  estimatedDuration  Int
+  actualDuration     Int?
+  startTime          String
+  date               String
+  status             String              @default("scheduled")
+  notes              String?
+  isUrgent           Boolean             @default(false)
+  delayMinutes       Int?
+  mileageAtVisit     Int?
+  timerStartedAt     DateTime? // for real-time stopwatch
+  // Relations
+  mechanicId         String
+  mechanic           Mechanic            @relation(fields: [mechanicId], references: [id])
+  vehicleId          String?
+  vehicle            Vehicle?            @relation(fields: [vehicleId], references: [id])
+  garageId           String
+  garage             Garage              @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  jobParts           JobPart[]
+  photos             JobPhoto[]
+  quotes             Quote[]
+  invoices           Invoice[]
+  inspections        Inspection[]
+  workOrder          WorkOrder?
+  warranties         Warranty[]
+  loanerReservations LoanerReservation[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([garageId])
+  @@index([garageId, date])
+  @@index([garageId, status])
+  @@index([mechanicId])
+}
+
+// ─── Quote (Devis) ────────────────────────────────────────────────────────────
+model Quote {
+  id            String      @id @default(cuid())
+  number        String // DEV-2026-001
+  garageId      String
+  garage        Garage      @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  clientId      String?
+  client        Client?     @relation(fields: [clientId], references: [id])
+  vehicleId     String?
+  vehicle       Vehicle?    @relation(fields: [vehicleId], references: [id])
+  jobId         String?
+  job           Job?        @relation(fields: [jobId], references: [id])
+  // Snapshot of client & vehicle
+  clientName    String
+  clientEmail   String?
+  clientPhone   String?
+  clientAddress String?
+  vehicleModel  String?
+  licensePlate  String?
+  // Status
+  status        String      @default("draft") // draft, sent, accepted, refused, converted
+  issueDate     String // YYYY-MM-DD
+  validUntil    String?
+  notes         String?
+  taxRate       Float       @default(20)
+  // Converted invoice
+  invoiceId     String?
+  lines         QuoteLine[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([garageId, number])
+  @@index([garageId])
+  @@index([garageId, status])
+  @@index([clientId])
+}
+
+model QuoteLine {
+  id          String  @id @default(cuid())
+  quoteId     String
+  quote       Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Float   @default(1)
+  unitPrice   Float   @default(0)
+  unitCost    Float   @default(0)
+  isLabor     Boolean @default(false)
+  sortOrder   Int     @default(0)
+}
+
+// ─── Invoice (Facture) ────────────────────────────────────────────────────────
+model Invoice {
+  id            String        @id @default(cuid())
+  number        String // FAC-2026-001
+  garageId      String
+  garage        Garage        @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  clientId      String?
+  client        Client?       @relation(fields: [clientId], references: [id])
+  vehicleId     String?
+  vehicle       Vehicle?      @relation(fields: [vehicleId], references: [id])
+  jobId         String?
+  job           Job?          @relation(fields: [jobId], references: [id])
+  quoteId       String? // source quote
+  // Snapshot
+  clientName    String
+  clientEmail   String?
+  clientPhone   String?
+  clientAddress String?
+  vehicleModel  String?
+  licensePlate  String?
+  // Status
+  status        String        @default("draft") // draft, sent, paid, overdue
+  issueDate     String
+  dueDate       String?
+  notes         String?
+  taxRate       Float         @default(20)
+  lines         InvoiceLine[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([garageId, number])
+  @@index([garageId])
+  @@index([garageId, status])
+  @@index([clientId])
+  @@index([garageId, createdAt])
+}
+
+model InvoiceLine {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Float   @default(1)
+  unitPrice   Float   @default(0)
+  unitCost    Float   @default(0)
+  isLabor     Boolean @default(false)
+  sortOrder   Int     @default(0)
+}
+
+// ─── Job Photos ───────────────────────────────────────────────────────────────
+model JobPhoto {
+  id        String   @id @default(cuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  garageId  String
+  phase     String   @default("before") // before, during, after
+  caption   String?
+  base64    String // legacy: data URL as base64 ('' when photoPath is used)
+  photoPath String? // preferred: relative path under GF_PHOTOS_DIR/jobs/
+  createdAt DateTime @default(now())
+}
+
+// ─── Vehicle Digital Inspection ───────────────────────────────────────────────
+model Inspection {
+  id           String           @id @default(cuid())
+  garageId     String
+  garage       Garage           @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  jobId        String?
+  job          Job?             @relation(fields: [jobId], references: [id])
+  vehicleId    String?
+  vehicle      Vehicle?         @relation(fields: [vehicleId], references: [id])
+  clientName   String
+  vehicleModel String?
+  licensePlate String?
+  mileage      Int?
+  status       String           @default("draft") // draft, completed, sent
+  notes        String?
+  items        InspectionItem[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+model InspectionItem {
+  id           String     @id @default(cuid())
+  inspectionId String
+  inspection   Inspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  category     String // brakes, tires, lights, oil, body, suspension, etc.
+  label        String // human-readable name
+  status       String     @default("ok") // ok, warning, critical, na
+  notes        String?
+  photoBase64  String? // legacy: base64 data URL
+  photoPath    String? // preferred: relative path under GF_PHOTOS_DIR/inspections/
+  sortOrder    Int        @default(0)
+}
+
+// ─── License keys v2 — ECC / ECDSA-SHA256 ────────────────────────────────────
+model LicenseKey {
+  id          Int       @id @default(autoincrement())
+  licenseId   String    @unique // UUID from token payload (lid field)
+  token       String    @unique // full GF2.xxx.xxx.xxx token (for display/copy)
+  customerId  String // customer identifier string
+  licenseType String // trial | premium | enterprise | admin
+  expiryAt    DateTime // expiry date from payload exp field
+  status      String    @default("active") // active | revoked | suspended
+  isAdmin     Boolean   @default(false)
+  seats       Int       @default(1)
+  hwid        String? // optional hardware binding hash
+  label       String? // customer name / garage name
+  notes       String?
+  recordMac   String? // HMAC-SHA256 over security-critical fields (see record-mac.ts)
+  activatedAt DateTime?
+  revokedAt   DateTime?
+  lastSeenAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Liaison licence ↔ garage (multi-tenant serveur/PWA). Nullable : une licence
+  // fraîchement enregistrée n'est pas encore rattachée ; le rattachement se fait
+  // au premier usage licencié (bind-on-first-use) et est ensuite immuable —
+  // empêche l'usage d'une licence par un autre garage.
+  garageId String?
+  garage   Garage? @relation(fields: [garageId], references: [id], onDelete: SetNull)
+
+  devices LicenseDevice[]
+
+  @@index([garageId])
+}
+
+// ─── Appareils activés par licence ───────────────────────────────────────────
+// Un appareil (machine physique) réellement activé pour une licence.
+// Ni le HWID brut ni le deviceToken ne sont JAMAIS stockés : seuls leurs
+// HMAC-SHA256 (hwidHash / tokenHash) sont persistés — voir src/lib/license/devices.ts.
+// La contrainte @@unique([licenseId, hwidHash]) garantit qu'une même machine ne
+// consomme jamais deux sièges ; le plafond de sièges (LicenseKey.seats) est
+// appliqué dans une transaction atomique.
+model LicenseDevice {
+  id       String @id @default(cuid())
+  deviceId String @unique @default(cuid()) // identifiant public opaque (affichable)
+
+  licenseId String // = LicenseKey.licenseId (lid du token)
+  license   LicenseKey @relation(fields: [licenseId], references: [licenseId], onDelete: Cascade)
+
+  hwidHash  String // HMAC-SHA256(pepper, HWID normalisé) — jamais le HWID brut
+  tokenHash String @unique // HMAC-SHA256(pepper, deviceToken) — jamais le jeton brut
+
+  status     String  @default("active") // active | revoked | deactivated
+  name       String?
+  platform   String?
+  appVersion String?
+
+  firstActivatedAt DateTime  @default(now())
+  lastSeenAt       DateTime  @default(now())
+  revokedAt        DateTime?
+  revokeReason     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([licenseId, hwidHash])
+  @@index([licenseId, status])
+}
+
+// Journal d'audit du cycle de vie des appareils (activation, rotation,
+// révocation, refus de plafond…). Identifiants pseudonymisés uniquement.
+model LicenseDeviceEvent {
+  id        String   @id @default(cuid())
+  licenseId String
+  deviceId  String? // identifiant public opaque (LicenseDevice.deviceId)
+  action    String // activated | rotated | reactivated | revoked | deactivated | limit_denied | token_rejected
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([licenseId, createdAt])
+}
+
+// ─── Maintenance reminders ────────────────────────────────────────────────────
+model Reminder {
+  id            String   @id @default(cuid())
+  garageId      String
+  garage        Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  vehicleId     String?
+  vehicle       Vehicle? @relation(fields: [vehicleId], references: [id])
+  clientId      String?
+  client        Client?  @relation(fields: [clientId], references: [id])
+  clientName    String
+  vehicleModel  String?
+  licensePlate  String?
+  phone         String?
+  email         String?
+  type          String // vidange, ct, distribution, freins, pneus, autre
+  scheduledDate String // YYYY-MM-DD
+  scheduledTime String? // HH:MM (optionnel)
+  notes         String?
+  status        String   @default("pending") // pending, sent, dismissed
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ─── Work Order (Ordre de Réparation) ────────────────────────────────────────
+model WorkOrder {
+  id            String    @id @default(cuid())
+  number        String // OR-2026-001
+  garageId      String
+  garage        Garage    @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  jobId         String?   @unique
+  job           Job?      @relation(fields: [jobId], references: [id])
+  mechanicId    String?
+  mechanic      Mechanic? @relation(fields: [mechanicId], references: [id])
+  // Client snapshot
+  clientName    String
+  clientPhone   String?
+  clientEmail   String?
+  clientAddress String?
+  // Vehicle snapshot
+  vehicleMake   String?
+  vehicleModel  String?
+  licensePlate  String?
+  mileage       Int?
+  vin           String?
+  // Work content (stored as JSON strings for SQLite)
+  worksJson     String    @default("[]") // [{description, durationMin, unitPrice, laborOpId?}]
+  partsJson     String    @default("[]") // [{name, reference, qty, unitPrice}]
+  // Pricing
+  taxRate       Float     @default(20)
+  totalHT       Float     @default(0)
+  totalTTC      Float     @default(0)
+  // Status & signature
+  status        String    @default("draft") // draft, signed, in_progress, closed
+  signatureData String? // base64 PNG of client signature
+  signedAt      DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([garageId, number])
+  @@index([garageId])
+  @@index([garageId, status])
+}
+
+// ─── Labour Catalog (Catalogue main-d'œuvre) ─────────────────────────────────
+model LaborOperation {
+  id          String   @id @default(cuid())
+  garageId    String
+  garage      Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  name        String
+  category    String? // Moteur, Freinage, Pneumatiques, Électricité, Carrosserie, Autre
+  durationMin Int      @default(30) // barème time in minutes
+  unitPrice   Float    @default(0) // price per operation (not per hour)
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([garageId])
+  @@index([garageId, category])
+}
+
+// ─── Warranty (Garantie pièces) ───────────────────────────────────────────────
+model Warranty {
+  id               String    @id @default(cuid())
+  garageId         String
+  garage           Garage    @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  jobId            String?
+  job              Job?      @relation(fields: [jobId], references: [id])
+  vehicleId        String?
+  vehicle          Vehicle?  @relation(fields: [vehicleId], references: [id])
+  clientName       String
+  licensePlate     String?
+  vehicleModel     String?
+  partName         String
+  partReference    String?
+  lotNumber        String?
+  installedAt      DateTime  @default(now())
+  durationMonths   Int       @default(12)
+  expiresAt        DateTime
+  mileageAtInstall Int?
+  supplierName     String?
+  notes            String?
+  status           String    @default("active") // active, claimed, expired
+  claimedAt        DateTime?
+  claimNotes       String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([garageId])
+  @@index([garageId, status])
+  @@index([garageId, expiresAt])
+}
+
+// ─── Loaner Vehicles (Véhicules de courtoisie) ────────────────────────────────
+model LoanerVehicle {
+  id           String              @id @default(cuid())
+  garageId     String
+  garage       Garage              @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  name         String // display name e.g. "Peugeot 208 Bleue"
+  licensePlate String
+  make         String?
+  model        String?
+  year         Int?
+  color        String?
+  notes        String?
+  isActive     Boolean             @default(true)
+  reservations LoanerReservation[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([garageId])
+}
+
+model LoanerReservation {
+  id            String        @id @default(cuid())
+  garageId      String
+  garage        Garage        @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  vehicleId     String
+  vehicle       LoanerVehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  jobId         String?
+  job           Job?          @relation(fields: [jobId], references: [id])
+  clientName    String
+  clientPhone   String?
+  startDate     DateTime
+  endDate       DateTime
+  returnedAt    DateTime?
+  mileageOut    Int?
+  mileageIn     Int?
+  conditionOut  String?
+  conditionIn   String?
+  status        String        @default("reserved") // reserved, active, returned, cancelled
+  notes         String?
+  isPaid        Boolean       @default(false)
+  dailyRate     Float?
+  depositAmount Float?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([garageId])
+  @@index([vehicleId])
+  @@index([garageId, startDate])
+}
+
+// ─── Purchase Orders (Bons de commande fournisseur) ───────────────────────────
+model PurchaseOrder {
+  id            String    @id @default(cuid())
+  number        String // BC-2026-001
+  garageId      String
+  garage        Garage    @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  supplierName  String?
+  supplierEmail String?
+  linesJson     String    @default("[]") // [{partId?, partName, reference?, qty, unitCost}]
+  totalHT       Float     @default(0)
+  status        String    @default("draft") // draft, sent, received, cancelled
+  notes         String?
+  sentAt        DateTime?
+  receivedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([garageId, number])
+  @@index([garageId])
+  @@index([garageId, status])
+}
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+// Immutable log of all write operations performed by users.
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String // create | update | delete | login | logout
+  entityType String // Job | Client | Vehicle | Invoice | Quote | User | Mechanic | Part
+  entityId   String? // ID of the affected entity (null for login/logout)
+  userId     String // ID of the user who performed the action
+  userName   String // Snapshot of user name at the time of action
+  garageId   String
+  details    String? // JSON string: { before?, after?, extra? }
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([garageId, createdAt])
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([garageId, entityType])
+}
+
+// NOTE : les anciens modèles serveur « License / Device / Activation / LicenseLog »
+// (vestiges du control plane, jamais référencés par le code — vérifié par grep)
+// ont été retirés de ce schéma. Les tables correspondantes éventuellement
+// présentes dans des bases installées sont ignorées et ne sont jamais lues.
+// La gestion serveur des licences/appareils vit dans prisma/server/schema.prisma
+// (PostgreSQL) et sur le control plane api.garageflows.fr.
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODULES PREMIUM (intégration branche complete-platform) — VIN, signature, notif
+// ══════════════════════════════════════════════════════════════════════════════
+
+model VinSearch {
+  id         String   @id @default(cuid())
+  garageId   String
+  garage     Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  vin        String
+  resultJson String
+  source     String   @default("offline")
+  createdAt  DateTime @default(now())
+
+  @@index([garageId, createdAt])
+  @@index([garageId, vin])
+}
+
+model Signature {
+  id                   String    @id @default(cuid())
+  garageId             String
+  garage               Garage    @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  entityType           String
+  entityId             String
+  signerName           String
+  signerRole           String?
+  algorithm            String    @default("SHA-256 / HMAC-SHA256")
+  contentHash          String
+  imageHash            String
+  seal                 String
+  signatureData        String
+  documentSnapshotJson String
+  ipAddress            String?
+  userAgent            String?
+  signedAt             DateTime  @default(now())
+  invalidatedAt        DateTime?
+
+  @@index([garageId, entityType, entityId])
+}
+
+model NotificationLog {
+  id         String   @id @default(cuid())
+  garageId   String
+  garage     Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  trigger    String?
+  channel    String
+  recipient  String
+  subject    String?
+  body       String
+  status     String
+  providerId String?
+  error      String?
+  attempts   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([garageId, createdAt])
+  @@index([garageId, status])
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PORTAIL CLIENT / SAV / RDV / SAUVEGARDES / ANALYTICS (intégration enterprise)
+// Auth portail = architecture DÉDIÉE au portail client (PortalUser), distincte et
+// SANS lien avec l'auth staff (NextAuth) ni le système de licences/appareils.
+// ══════════════════════════════════════════════════════════════════════════════
+
+model PortalUser {
+  id               String         @id @default(cuid())
+  garageId         String
+  garage           Garage         @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  clientId         String?
+  client           Client?        @relation(fields: [clientId], references: [id])
+  email            String
+  passwordHash     String
+  name             String?
+  emailVerified    Boolean        @default(false)
+  emailVerifyToken String?
+  twoFactorEnabled Boolean        @default(false)
+  twoFactorSecret  String?
+  twoFactorPending String?
+  backupCodes      String         @default("[]")
+  failedLoginCount Int            @default(0)
+  lockedUntil      DateTime?
+  lastLoginAt      DateTime?
+  devices          PortalDevice[]
+  tickets          PortalTicket[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([garageId, email])
+  @@index([garageId])
+  @@index([clientId])
+}
+
+model PortalDevice {
+  id           String     @id @default(cuid())
+  portalUserId String
+  portalUser   PortalUser @relation(fields: [portalUserId], references: [id], onDelete: Cascade)
+  sessionId    String     @unique
+  userAgent    String?
+  ipAddress    String?
+  lastSeenAt   DateTime   @default(now())
+  revokedAt    DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@index([portalUserId])
+}
+
+model PortalTicket {
+  id            String                @id @default(cuid())
+  garageId      String
+  garage        Garage                @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  portalUserId  String
+  portalUser    PortalUser            @relation(fields: [portalUserId], references: [id], onDelete: Cascade)
+  clientId      String?
+  vehicleId     String?
+  subject       String
+  category      String                @default("general")
+  priority      String                @default("normal")
+  status        String                @default("open")
+  lastMessageAt DateTime              @default(now())
+  closedAt      DateTime?
+  messages      PortalTicketMessage[]
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  @@index([garageId])
+  @@index([garageId, status])
+  @@index([portalUserId])
+}
+
+model PortalTicketMessage {
+  id             String       @id @default(cuid())
+  ticketId       String
+  ticket         PortalTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorType     String
+  authorName     String
+  body           String
+  attachmentPath String?
+  createdAt      DateTime     @default(now())
+
+  @@index([ticketId])
+}
+
+model Appointment {
+  id             String    @id @default(cuid())
+  garageId       String
+  garage         Garage    @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  portalUserId   String?
+  clientId       String?
+  vehicleId      String?
+  clientName     String
+  vehicleModel   String?
+  licensePlate   String?
+  reason         String
+  date           String
+  startTime      String
+  durationMin    Int       @default(60)
+  status         String    @default("requested")
+  notes          String?
+  reminderSentAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([garageId])
+  @@index([garageId, date])
+  @@index([portalUserId])
+}
+
+model BackupRecord {
+  id           String   @id @default(cuid())
+  garageId     String
+  garage       Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  filename     String
+  sizeBytes    Int      @default(0)
+  checksum     String
+  algorithm    String   @default("aes-256-gcm")
+  kdf          String   @default("raw")
+  entityCounts String   @default("{}")
+  status       String   @default("completed")
+  note         String?
+  createdAt    DateTime @default(now())
+
+  @@index([garageId])
+  @@index([garageId, createdAt])
+}
+
+model ReportSnapshot {
+  id          String   @id @default(cuid())
+  garageId    String
+  garage      Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  periodDays  Int
+  healthScore Int
+  summary     String
+  payload     String
+  createdBy   String?
+  createdAt   DateTime @default(now())
+
+  @@index([garageId])
+  @@index([garageId, createdAt])
+}

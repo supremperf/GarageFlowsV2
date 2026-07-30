@@ -15,6 +15,17 @@ node_modules/
 *.tsbuildinfo
 next-env.d.ts
 
+# Clients Prisma générés (desktop → node_modules, serveur → src/generated)
+src/generated/
+
+# Python (keygen) — caches et artefacts de compilation
+__pycache__/
+*.pyc
+*.pyo
+
+# Artefacts de tests locaux (ex. dump Redis)
+dump.rdb
+
 # OS
 .DS_Store
 Thumbs.db
@@ -30,9 +41,13 @@ prisma/*.db
 # Electron build output
 dist/
 
-# License signing keys — CRITICAL: NEVER commit private.pem
+# License signing keys — CRITICAL: NEVER commit private keys OR runtime state.
 keys/private.pem
 keys/*.pem
+# Keygen runtime state — contains real API keys / issued license tokens.
+keys/*.json
+keys/licenses_db.json
+keys/server_config.json
 
 # Generated icons (keep SVG source, not binaries)
 # icon.ico

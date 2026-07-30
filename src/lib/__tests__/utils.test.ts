@@ -79,6 +79,15 @@ describe('jobsOverlap', () => {
     const b = makeJob('j2', '10:00', 60)  // 10:00–11:00
     expect(jobsOverlap(a, b)).toBe(false)
   })
+
+  it('detects overlap caused by delayMinutes (regression)', () => {
+    // Without delayMinutes the two would be back-to-back (no overlap); the delay
+    // pushes j1 to 09:30, overlapping j2 (09:00–10:00).
+    const a = { ...makeJob('j1', '08:00', 60), delayMinutes: 30 } as Job // 08:00–09:30
+    const b = makeJob('j2', '09:00', 60)                                  // 09:00–10:00
+    expect(jobsOverlap(a, b)).toBe(true)
+    expect(jobsOverlap(b, a)).toBe(true)
+  })
 })
 
 // ─── calculateUtilizationRate ─────────────────────────────────────────────────

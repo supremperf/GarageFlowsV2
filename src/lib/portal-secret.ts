@@ -1,12 +1,10 @@
 /**
  * Shared secret for portal + quote-signature JWTs.
- * Uses GF_PORTAL_SECRET when set; falls back to NEXTAUTH_SECRET so existing
- * tokens issued before the env var was added continue to work.
+ * Uses GF_PORTAL_SECRET when strong; otherwise NEXTAUTH_SECRET. NO hard-coded
+ * fallback — a predictable secret would let anyone forge portal/quote tokens.
  */
+import { getPortalSecret } from '@/lib/auth-secret'
+
 export function portalSecret(): Uint8Array {
-  const raw =
-    process.env.GF_PORTAL_SECRET ??
-    process.env.NEXTAUTH_SECRET ??
-    'fallback-portal-secret-change-in-production'
-  return new TextEncoder().encode(raw)
+  return new TextEncoder().encode(getPortalSecret())
 }

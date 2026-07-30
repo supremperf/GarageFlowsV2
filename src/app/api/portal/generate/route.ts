@@ -18,7 +18,9 @@ export const POST = withAuth(async (req) => {
   })
   if (!job) return NextResponse.json({ error: 'Intervention introuvable' }, { status: 404 })
 
-  const token = await new SignJWT({ typ: 'portal', jobId })
+  // Bind the token to the issuing garage (defense in depth): even a valid token
+  // can only ever resolve a job within its own garage.
+  const token = await new SignJWT({ typ: 'portal', jobId, garageId: session.user.garageId })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('7d')
     .sign(portalSecret())

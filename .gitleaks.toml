@@ -1,0 +1,36 @@
+# Configuration Gitleaks — analyse des secrets du dépôt GarageFlow.
+# On étend le jeu de règles par défaut et on ajoute un allowlist ciblé pour les
+# valeurs qui NE SONT PAS des secrets exploitables : clés PUBLIQUES embarquées
+# (sûres à distribuer) et listes de détection de valeurs faibles (auth-secret.ts,
+# health/route.ts) qui existent précisément pour BANNIR ces chaînes.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Faux positifs : clés publiques, listes de détection, placeholders"
+regexes = [
+  # Ancien secret partagé — RÉVOQUÉ/ROTÉ (voir docs/SECRETS_ROTATION.md). Présent
+  # uniquement dans les listes de détection qui servent à le refuser.
+  '''gf-electron-local-secret-2026-xK9mP3qR''',
+  '''fallback-(dev|portal)-secret-change-in-production''',
+  '''CHANGE_ME[_A-Za-z0-9]*''',
+  '''REPLACE_WITH_YOUR_PUBLIC_KEY''',
+  # En-tête ASN.1 SubjectPublicKeyInfo d'une clé PUBLIQUE EC P-256 (secp256r1),
+  # embarquée pour vérifier les signatures de licence/MàJ. Une valeur commençant
+  # par cet en-tête est PUBLIQUE (sûre à distribuer) — jamais une clé privée ni un
+  # secret. Couvre la clé inline d'electron/main.js et ses rotations.
+  '''MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE[A-Za-z0-9+/=]+''',
+]
+paths = [
+  '''.*public-key\.ts''',
+  '''src/app/api/health/route\.ts''',
+  '''src/lib/auth-secret\.ts''',
+  # Test de redaction : contient VOLONTAIREMENT des chaînes qui ressemblent à des
+  # secrets (NEXTAUTH_SECRET=…, password=…, postgresql://user:pass@…) afin de
+  # PROUVER qu'elles sont masquées. Aucune de ces valeurs n'est un secret réel.
+  '''src/lib/__tests__/redact\.test\.ts''',
+  '''\.env\.example''',
+  '''.*\.md''',
+]
+stopwords = ["BEGIN PUBLIC KEY"]

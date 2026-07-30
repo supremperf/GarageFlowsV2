@@ -156,8 +156,9 @@ export function verifyLicenseToken(token: string): VerifyResult {
   const lic = p as unknown as LicensePayload
 
   // ── Type check ───────────────────────────────────────────────────────────
+  // Message fixe : ne jamais refléter le contenu du payload dans la réponse.
   if (!_VALID_TYPES.has(lic.typ)) {
-    return { valid: false, reason: `Type de licence inconnu: ${lic.typ}` }
+    return { valid: false, reason: 'Type de licence inconnu' }
   }
 
   // ── Expiry check (redundant — also in DB layer for revocation) ────────────
@@ -169,7 +170,7 @@ export function verifyLicenseToken(token: string): VerifyResult {
 
   // ── Version sanity ────────────────────────────────────────────────────────
   if (!lic.ver.startsWith('2')) {
-    return { valid: false, reason: `Version de licence non supportée: ${lic.ver}` }
+    return { valid: false, reason: 'Version de licence non supportée' }
   }
 
   return {
@@ -179,25 +180,49 @@ export function verifyLicenseToken(token: string): VerifyResult {
   }
 }
 
+/** Empreinte matérielle attendue : digest SHA-256 en hexadécimal (64 caractères). */
+const HWID_RE = /^[0-9a-f]{64}$/
+
 /**
- * Verify hardware binding with partial-match tolerance.
+ * Normalise un HWID pour une comparaison stricte : retire les espaces de bord
+ * et met en minuscules (un digest hex est insensible à la casse). Ne modifie
+ * jamais la valeur au-delà de la casse/espaces (aucune tolérance sémantique).
+ */
+export function normalizeHwid(hwid: string | null | undefined): string {
+  return String(hwid ?? '').trim().toLowerCase()
+}
+
+/** Le HWID est-il bien formé (SHA-256 hex de 64 caractères) après normalisation ? */
+export function isValidHwidFormat(hwid: string | null | undefined): boolean {
+  return HWID_RE.test(normalizeHwid(hwid))
+}
+
+/**
+ * Comparaison STRICTE d'empreinte matérielle — AUCUNE tolérance partielle.
  *
- * Why tolerance: if a user upgrades their GPU or changes one Ethernet card,
- * they shouldn't be immediately locked out. We allow up to 25% of SHA-256
- * hex chars to differ (i.e. ≥ 48/64 must match).
+ * Un HWID est un digest SHA-256 : par effet d'avalanche, le moindre changement
+ * matériel modifie l'intégralité du hachage. Une « tolérance » de N % n'a donc
+ * aucun sens cryptographique et affaiblit le lien (elle réduit l'espace de
+ * recherche et laisse des machines au préfixe commun passer). La spécification
+ * l'interdit explicitement.
+ *
+ * Règles :
+ *  - les deux valeurs doivent être des HWID bien formés (sinon → false) ;
+ *  - comparaison normalisée (casse/espaces) ET à temps constant
+ *    (crypto.timingSafeEqual) pour ne pas divulguer d'information par timing ;
+ *  - retourne true uniquement pour une correspondance EXACTE.
+ *
+ * NB : le fait qu'une licence soit « liée » (present/absent) est décidé par
+ * l'appelant ; cette fonction ne renvoie jamais true pour un HWID vide.
  */
 export function verifyHwid(storedHwid: string, currentHwid: string): boolean {
-  if (!storedHwid) return true              // License not bound to hardware
-  if (storedHwid === currentHwid) return true  // Exact match
-
-  if (storedHwid.length === 64 && currentHwid.length === 64) {
-    let matching = 0
-    for (let i = 0; i < 64; i++) {
-      if (storedHwid[i] === currentHwid[i]) matching++
-    }
-    return matching >= 48  // 75% threshold
-  }
-  return false
+  const a = normalizeHwid(storedHwid)
+  const b = normalizeHwid(currentHwid)
+  if (!isValidHwidFormat(a) || !isValidHwidFormat(b)) return false
+  const ba = Buffer.from(a, 'utf8')
+  const bb = Buffer.from(b, 'utf8')
+  if (ba.length !== bb.length) return false
+  return crypto.timingSafeEqual(ba, bb)
 }
 
 /**

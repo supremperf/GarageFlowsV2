@@ -13,8 +13,10 @@ export async function GET(_req: Request, { params }: { params: { token: string }
       return NextResponse.json({ error: 'Token invalide' }, { status: 403 })
     }
 
-    const quote = await prisma.quote.findUnique({
-      where: { id: payload.quoteId },
+    const quote = await prisma.quote.findFirst({
+      where: typeof payload.garageId === 'string'
+        ? { id: payload.quoteId, garageId: payload.garageId }
+        : { id: payload.quoteId },
       include: {
         lines: { orderBy: { sortOrder: 'asc' } },
         garage: { select: { name: true, phone: true, email: true, address: true, siret: true, logoBase64: true, logoPath: true, taxRate: true, invoiceFooter: true } },
@@ -45,14 +47,25 @@ export async function POST(req: Request, { params }: { params: { token: string }
       return NextResponse.json({ error: 'Action invalide' }, { status: 400 })
     }
 
-    const quote = await prisma.quote.findUnique({ where: { id: payload.quoteId } })
+    const quote = await prisma.quote.findFirst({
+      where: typeof payload.garageId === 'string'
+        ? { id: payload.quoteId, garageId: payload.garageId }
+        : { id: payload.quoteId },
+    })
     if (!quote) return NextResponse.json({ error: 'Introuvable' }, { status: 404 })
     if (['accepted', 'refused', 'converted'].includes(quote.status)) {
       return NextResponse.json({ error: 'Ce devis a déjà été traité' }, { status: 409 })
     }
 
+    // Atomic status claim so two concurrent signs can't both apply.
     const newStatus = action === 'accept' ? 'accepted' : 'refused'
-    await prisma.quote.update({ where: { id: payload.quoteId }, data: { status: newStatus } })
+    const claim = await prisma.quote.updateMany({
+      where: { id: quote.id, status: { in: ['draft', 'sent'] } },
+      data: { status: newStatus },
+    })
+    if (claim.count === 0) {
+      return NextResponse.json({ error: 'Ce devis a déjà été traité' }, { status: 409 })
+    }
 
     return NextResponse.json({ ok: true, status: newStatus })
   } catch {

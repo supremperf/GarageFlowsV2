@@ -2,15 +2,63 @@ name: CI
 
 on:
   push:
-    branches: [main, master, develop, 'claude/**']
+    branches: [main, master, develop, 'claude/**', 'integration/**']
   pull_request:
     branches: [main, master, develop]
 
 jobs:
-  check:
-    name: Type-check, Lint & Test
+  secrets:
+    name: Secret scan (Gitleaks)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      # Scan de l'ARBRE COURANT (fichiers suivis), PAS de l'historique git. Les
+      # secrets historiques sont documentés comme rotés (docs/SECRETS_ROTATION.md).
+      # Ce mode est IDENTIQUE sur push et pull_request et n'appelle aucune API
+      # GitHub — contrairement à gitleaks-action sur les PR, qui exige la
+      # permission pull-requests:read et rescanne toute la plage de commits
+      # (rouvrant de faux positifs historiques). L'allowlist ciblé de
+      # .gitleaks.toml (clés PUBLIQUES, listes de détection, test de redaction)
+      # s'applique.
+      - name: Install gitleaks
+        run: |
+          curl -sSL -o /tmp/gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /usr/local/bin gitleaks
+          gitleaks version
+      - name: Gitleaks — scan working tree
+        run: gitleaks dir . --config .gitleaks.toml --redact --no-banner
+
+  check:
+    name: Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # ── Services réels pour les tests d'intégration ──────────────────────────
+    # postgres : migrations serveur sur base VIDE + tests de concurrence seats.
+    # redis    : preuve du rate limiting distribué partagé entre instances.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: garageflow
+          POSTGRES_PASSWORD: garageflow_ci
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U garageflow"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - uses: actions/checkout@v4
@@ -20,11 +68,26 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies
+      - name: Install dependencies (reproducible)
         run: npm ci
 
-      - name: Generate Prisma client
-        run: npx prisma generate
+      - name: Version consistency (SemVer)
+        run: node scripts/check-version.js
+
+      - name: Validate Prisma schemas (desktop + serveur)
+        # Chaque schéma est validé avec une URL de SON provider (sqlite / postgres).
+        run: |
+          DATABASE_URL="file:./dev.db" npx prisma validate
+          DATABASE_URL="postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres" \
+            DIRECT_URL="postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres" \
+            npx prisma validate --schema prisma/server/schema.prisma
+
+      - name: Generate Prisma clients (desktop + serveur)
+        run: |
+          DATABASE_URL="file:./dev.db" npx prisma generate
+          DATABASE_URL="postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres" \
+            DIRECT_URL="postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres" \
+            npx prisma generate --schema prisma/server/schema.prisma
 
       - name: TypeScript
         run: npx tsc --noEmit
@@ -32,9 +95,40 @@ jobs:
       - name: ESLint
         run: npx next lint
 
-      - name: Tests
+      # ── Migrations PostgreSQL sur base VIDE (échec CI si une migration casse) ──
+      - name: PostgreSQL migrations on empty database + smoke test
+        run: node scripts/validate-server-db.js
+        env:
+          DATABASE_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/garageflow_ci_validate
+          DIRECT_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/garageflow_ci_validate
+
+      # ── Tests : unitaires (SQLite desktop) + intégration PostgreSQL/Redis ──
+      # TEST_POSTGRES_URL active les tests de concurrence seats (base neuve par
+      # exécution) ; TEST_REDIS_URL active la preuve multi-instance du rate
+      # limiting. La CI ÉCHOUE si le plafond d'appareils peut être dépassé.
+      - name: Tests (unit + integration)
         run: npm test
         env:
           DATABASE_URL: file:./prisma/dev.db
-          NEXTAUTH_SECRET: ci-test-secret-not-for-production
+          NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
           NEXTAUTH_URL: http://localhost:4028
+          TEST_POSTGRES_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres
+          TEST_REDIS_URL: 127.0.0.1:6379
+
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: file:./prisma/dev.db
+          NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
+          NEXTAUTH_URL: http://localhost:4028
+
+      # Porte bloquante : toute vulnérabilité high/critical en dépendance de
+      # PRODUCTION échoue la CI, sauf dérogations documentées/datées
+      # (scripts/audit-ci.js). Une nouvelle vuln prod casse le build.
+      - name: Dependency audit gate (production high/critical)
+        run: node scripts/audit-ci.js
+
+      # Audit complet (dev inclus) — informatif, non bloquant.
+      - name: Dependency audit (full, informational)
+        run: npm audit || true
+        continue-on-error: true

@@ -1,47 +1,43 @@
 import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
-import { headers, cookies } from 'next/headers'
+import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
+import { getAuthSecret } from '@/lib/auth-secret'
+import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
+import { logger } from '@/lib/logger'
+import { licenseEnforcementEnabled, validateLicensedSession } from '@/lib/license/session'
 
-// ─── In-memory rate limiter ────────────────────────────────────────────────
-// Buckets: { key -> { count, resetAt } }
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
+// Rate limiting : implémentation UNIQUE dans src/lib/security/rate-limit.ts
+// (distribuée en production PWA, mémoire uniquement pour Electron/dev/test).
+// L'ancienne Map locale de ce fichier a été supprimée.
 
 /**
- * Simple token-bucket rate limiter.
- * @param key   Unique key (e.g. "ip:127.0.0.1")
- * @param max   Max requests per window
- * @param windowMs  Window in milliseconds
- * @returns true if the request is allowed, false if rate limited
+ * Point de contrôle UNIQUE des API métier : renvoie la session utilisateur
+ * authentifiée OU lève une réponse d'erreur (capturée par withAuth).
+ *
+ * En contexte serveur/PWA (voir licenseEnforcementEnabled), cette fonction
+ * applique EN PLUS la validation de la session licenciée (licence active/non
+ * expirée/non révoquée, rattachement au garage, appareil actif) — révocation
+ * immédiate, aucune valeur client fiable. Toutes les routes métier passent par
+ * ici (les routes pré-licence comme l'inscription NE l'appellent pas), donc la
+ * protection s'applique partout d'un seul point. Sur Electron, seule la session
+ * est vérifiée (la licence est déjà contrôlée localement — exception documentée).
  */
-function checkRateLimit(key: string, max: number, windowMs: number): boolean {
-  const now = Date.now()
-  const bucket = rateLimitStore.get(key)
-  if (!bucket || now > bucket.resetAt) {
-    rateLimitStore.set(key, { count: 1, resetAt: now + windowMs })
-    return true
-  }
-  if (bucket.count >= max) return false
-  bucket.count++
-  return true
-}
-
-function getClientIp(req: Request): string {
-  const headersList = headers()
-  return (
-    headersList.get('x-forwarded-for')?.split(',')[0].trim() ||
-    headersList.get('x-real-ip') ||
-    'unknown'
-  )
-}
-
-/** Returns the current session or throws a 401 JSON response */
 export async function requireSession() {
   const session = await getServerSession(authOptions)
   if (!session?.user?.garageId) {
-    throw NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    throw NextResponse.json({ error: 'Non autorisé', code: 'UNAUTHENTICATED' }, { status: 401 })
   }
+
+  if (licenseEnforcementEnabled()) {
+    const raw = cookies().get('gf_session')?.value ?? ''
+    const check = await validateLicensedSession({ rawGfSession: raw, garageId: session.user.garageId })
+    if (!check.ok) {
+      throw NextResponse.json({ error: check.reason, code: check.code }, { status: check.status })
+    }
+  }
+
   return session
 }
 
@@ -52,17 +48,19 @@ export function withAuth(
 ) {
   return async (req: Request, ctx?: any): Promise<NextResponse> => {
     try {
-      // General API rate limit: 120 requests/minute per IP
-      const ip = getClientIp(req)
-      if (!checkRateLimit(`api:${ip}`, 120, 60_000)) {
-        return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
-      }
+      // General API rate limit (défaut 120 req/min/IP — RATE_LIMIT_API_*)
+      const rl = await enforceRateLimit('api', clientIpFrom(req))
+      if (!rl.ok) return rateLimitResponse(rl)
       return await handler(req, ctx)
     } catch (e) {
       if (e instanceof NextResponse) return e
-      const msg = e instanceof Error ? e.message : String(e)
-      console.error('[API Error]', msg)
-      return NextResponse.json({ error: `Erreur interne: ${msg}` }, { status: 500 })
+      // Les détails techniques (message Prisma, chemins, contraintes) vont dans
+      // les logs serveur REDACTÉS — JAMAIS dans la réponse publique.
+      logger.error('[API Error]', e)
+      return NextResponse.json(
+        { error: 'Une erreur interne est survenue.', code: 'INTERNAL_ERROR' },
+        { status: 500 },
+      )
     }
   }
 }
@@ -73,13 +71,9 @@ export function withLoginRateLimit(
 ) {
   return async (req: Request, ctx?: any): Promise<NextResponse> => {
     try {
-      const ip = getClientIp(req)
-      if (!checkRateLimit(`login:${ip}`, 10, 5 * 60_000)) {
-        return NextResponse.json(
-          { error: 'Trop de tentatives de connexion. Réessayez dans 5 minutes.' },
-          { status: 429 }
-        )
-      }
+      // Connexion (défaut 10 tentatives / 15 min / IP — RATE_LIMIT_LOGIN_*)
+      const rl = await enforceRateLimit('login', clientIpFrom(req))
+      if (!rl.ok) return rateLimitResponse(rl)
       return await handler(req, ctx)
     } catch (e) {
       if (e instanceof NextResponse) return e
@@ -100,9 +94,8 @@ export async function isAdminSession(): Promise<boolean> {
   const raw = cookies().get('gf_session')?.value
   if (!raw) return false
   try {
-    const secret = new TextEncoder().encode(
-      process.env.NEXTAUTH_SECRET ?? 'fallback-dev-secret-change-in-production'
-    )
+    // No hard-coded fallback — a forgeable admin secret = full /api/admin/* takeover.
+    const secret = new TextEncoder().encode(getAuthSecret())
     const { payload } = await jwtVerify(raw, secret)
     return payload.typ === 'admin'
   } catch {

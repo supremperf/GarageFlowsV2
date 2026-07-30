@@ -8,8 +8,10 @@
  *    spoof ALL of them simultaneously, which is non-trivial.
  *  - We HASH the combination (SHA-256) so individual hardware identifiers
  *    (MAC address, etc.) are never stored or transmitted — only their digest.
- *  - Partial-match tolerance (see verify.ts:verifyHwid) handles hardware
- *    upgrades without requiring a re-activation call to the server.
+ *  - Binding is verified with a STRICT, exact, constant-time comparison
+ *    (see verify.ts:verifyHwid). No partial/tolerant matching: a SHA-256
+ *    digest changes entirely on any hardware change, so tolerance would only
+ *    weaken the binding. A hardware change requires a re-activation.
  *
  * Returns null in browser context (window exists, process doesn't).
  */

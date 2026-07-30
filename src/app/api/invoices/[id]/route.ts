@@ -29,36 +29,49 @@ export const PATCH = withAuth(async (req, { params }) => {
   const existing = await prisma.invoice.findFirst({ where: { id: params.id, garageId: session.user.garageId } })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  if (body.lines !== undefined) {
-    await prisma.invoiceLine.deleteMany({ where: { invoiceId: params.id } })
-    await prisma.invoiceLine.createMany({
-      data: body.lines.map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
-        invoiceId: params.id,
-        description: l.description,
-        quantity: l.quantity ?? 1,
-        unitPrice: l.unitPrice ?? 0,
-        unitCost: l.unitCost ?? 0,
-        isLabor: l.isLabor ?? false,
-        sortOrder: l.sortOrder ?? i,
-      })),
-    })
+  // A legally-issued invoice is immutable for amounts: block line/taxRate edits
+  // once it leaves 'draft' (French sequential-invoice rules → use a credit note).
+  const financialEdit = body.lines !== undefined || body.taxRate !== undefined
+  if (financialEdit && existing.status !== 'draft') {
+    return NextResponse.json(
+      { error: 'Une facture émise ne peut plus être modifiée. Créez un avoir.' },
+      { status: 409 },
+    )
   }
 
-  const invoice = await prisma.invoice.update({
-    where: { id: params.id, garageId: session.user.garageId },
-    data: {
-      ...(body.status !== undefined && { status: body.status }),
-      ...(body.clientName !== undefined && { clientName: body.clientName }),
-      ...(body.clientEmail !== undefined && { clientEmail: body.clientEmail }),
-      ...(body.clientPhone !== undefined && { clientPhone: body.clientPhone }),
-      ...(body.clientAddress !== undefined && { clientAddress: body.clientAddress }),
-      ...(body.vehicleModel !== undefined && { vehicleModel: body.vehicleModel }),
-      ...(body.licensePlate !== undefined && { licensePlate: body.licensePlate }),
-      ...(body.dueDate !== undefined && { dueDate: body.dueDate }),
-      ...(body.notes !== undefined && { notes: body.notes }),
-      ...(body.taxRate !== undefined && { taxRate: body.taxRate }),
-    },
-    include: { lines: { orderBy: { sortOrder: 'asc' } } },
+  // Replace lines + update the invoice atomically so a partial failure can never
+  // leave the invoice with zero lines.
+  const invoice = await prisma.$transaction(async (tx) => {
+    if (body.lines !== undefined) {
+      await tx.invoiceLine.deleteMany({ where: { invoiceId: params.id } })
+      await tx.invoiceLine.createMany({
+        data: body.lines.map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
+          invoiceId: params.id,
+          description: l.description,
+          quantity: l.quantity ?? 1,
+          unitPrice: l.unitPrice ?? 0,
+          unitCost: l.unitCost ?? 0,
+          isLabor: l.isLabor ?? false,
+          sortOrder: l.sortOrder ?? i,
+        })),
+      })
+    }
+    return tx.invoice.update({
+      where: { id: params.id, garageId: session.user.garageId },
+      data: {
+        ...(body.status !== undefined && { status: body.status }),
+        ...(body.clientName !== undefined && { clientName: body.clientName }),
+        ...(body.clientEmail !== undefined && { clientEmail: body.clientEmail }),
+        ...(body.clientPhone !== undefined && { clientPhone: body.clientPhone }),
+        ...(body.clientAddress !== undefined && { clientAddress: body.clientAddress }),
+        ...(body.vehicleModel !== undefined && { vehicleModel: body.vehicleModel }),
+        ...(body.licensePlate !== undefined && { licensePlate: body.licensePlate }),
+        ...(body.dueDate !== undefined && { dueDate: body.dueDate }),
+        ...(body.notes !== undefined && { notes: body.notes }),
+        ...(body.taxRate !== undefined && { taxRate: body.taxRate }),
+      },
+      include: { lines: { orderBy: { sortOrder: 'asc' } } },
+    })
   })
 
   await logAudit({ action: 'update', entityType: 'Invoice', entityId: invoice.id, session, req })
@@ -68,6 +81,17 @@ export const PATCH = withAuth(async (req, { params }) => {
 
 export const DELETE = withAuth(async (req, { params }) => {
   const session = await requireSession()
+  // Only draft invoices may be hard-deleted. An issued (sent/paid/overdue)
+  // invoice must be preserved for the sequential series and accounting/FEC — it
+  // is cancelled via a credit note, never erased.
+  const existing = await prisma.invoice.findFirst({ where: { id: params.id, garageId: session.user.garageId } })
+  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  if (existing.status !== 'draft') {
+    return NextResponse.json(
+      { error: 'Une facture émise ne peut pas être supprimée. Créez un avoir.' },
+      { status: 409 },
+    )
+  }
   await prisma.invoice.delete({ where: { id: params.id, garageId: session.user.garageId } })
   await logAudit({ action: 'delete', entityType: 'Invoice', entityId: params.id, session, req })
   return NextResponse.json({ success: true })

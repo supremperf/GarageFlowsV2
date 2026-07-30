@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
+import { assertRelations } from '@/lib/tenant'
 
 // GET /api/reminders?status=pending
 export const GET = withAuth(async (req) => {
@@ -36,6 +37,13 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: 'clientName, type, scheduledDate requis' }, { status: 400 })
   }
 
+  // SECURITY (IDOR): véhicule & client liés doivent appartenir au garage.
+  const relErr = await assertRelations(session.user.garageId, [
+    { model: 'vehicle', id: vehicleId, label: 'Véhicule' },
+    { model: 'client', id: clientId, label: 'Client' },
+  ])
+  if (relErr) return relErr
+
   const reminder = await prisma.reminder.create({
     data: {
       garageId: session.user.garageId,
@@ -61,15 +69,13 @@ export const PATCH = withAuth(async (req) => {
   const session = await requireSession()
   const { id, status } = await req.json()
 
-  const existing = await prisma.reminder.findFirst({
+  // Atomique (anti-TOCTOU) : la portée garageId est dans le where.
+  const res = await prisma.reminder.updateMany({
     where: { id, garageId: session.user.garageId },
-  })
-  if (!existing) return NextResponse.json({ error: 'Introuvable' }, { status: 404 })
-
-  const updated = await prisma.reminder.update({
-    where: { id },
     data: { status },
   })
+  if (res.count === 0) return NextResponse.json({ error: 'Introuvable' }, { status: 404 })
+  const updated = await prisma.reminder.findFirst({ where: { id, garageId: session.user.garageId } })
   return NextResponse.json(updated)
 })
 
@@ -78,11 +84,8 @@ export const DELETE = withAuth(async (req) => {
   const session = await requireSession()
   const { id } = await req.json()
 
-  const existing = await prisma.reminder.findFirst({
-    where: { id, garageId: session.user.garageId },
-  })
-  if (!existing) return NextResponse.json({ error: 'Introuvable' }, { status: 404 })
-
-  await prisma.reminder.delete({ where: { id } })
+  // Atomique (anti-TOCTOU) : supprime uniquement si l'objet est dans le garage.
+  const res = await prisma.reminder.deleteMany({ where: { id, garageId: session.user.garageId } })
+  if (res.count === 0) return NextResponse.json({ error: 'Introuvable' }, { status: 404 })
   return NextResponse.json({ success: true })
 })

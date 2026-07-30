@@ -8,14 +8,10 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-
-function authorized(req: NextRequest): boolean {
-  const key = req.headers.get('x-internal-key')
-  return !!key && key === process.env.GF_INTERNAL_EXPORT_KEY
-}
+import { internalRequestAuthorized } from '@/lib/internal-auth'
 
 export async function GET(req: NextRequest) {
-  if (!authorized(req)) {
+  if (!internalRequestAuthorized(req)) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   }
 
@@ -48,8 +44,9 @@ export async function GET(req: NextRequest) {
       ])
 
     return NextResponse.json({ clients, vehicles, jobs, invoices, quotes, parts, mechanics, reminders })
-  } catch (err: any) {
-    console.error('[internal/export] error:', err)
-    return NextResponse.json({ error: err.message ?? 'Erreur DB' }, { status: 500 })
+  } catch (err) {
+    // Ne jamais renvoyer le détail interne au client (fuite d'infos).
+    console.error('[internal/export] error:', (err as { code?: string })?.code ?? 'unknown')
+    return NextResponse.json({ error: 'Erreur interne' }, { status: 500 })
   }
 }

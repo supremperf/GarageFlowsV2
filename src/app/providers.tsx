@@ -3,13 +3,22 @@
 import { SessionProvider } from 'next-auth/react'
 import { Toaster } from 'react-hot-toast'
 import { LanguageProvider } from '@/lib/i18n'
+import { EntitlementsProvider } from '@/lib/entitlements'
+import NotificationCenter from '@/components/NotificationCenter'
+import CrashConsentModal from '@/components/CrashConsentModal'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <LanguageProvider>
-        {children}
-      </LanguageProvider>
+      <EntitlementsProvider>
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
+        {/* Centre de notifications (actif uniquement sous Electron) */}
+        <NotificationCenter />
+        {/* Consentement crash RGPD (opt-in, 1er lancement sous Electron) */}
+        <CrashConsentModal />
+      </EntitlementsProvider>
       <Toaster
         position="bottom-right"
         toastOptions={{

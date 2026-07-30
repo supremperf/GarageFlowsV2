@@ -59,8 +59,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ── Updates ───────────────────────────────────────────────────────────────
   checkUpdates:   () => ipcRenderer.invoke('app:check-updates'),
-  installUpdate:  (url) => ipcRenderer.invoke('app:install-update', url),
-  downloadUpdate: (url) => ipcRenderer.invoke('app:install-update', url),
+  // arg: string (URL) OU { url, sha256, size } — l'empreinte est vérifiée avant exécution
+  installUpdate:  (arg) => ipcRenderer.invoke('app:install-update', arg),
+  downloadUpdate: (arg) => ipcRenderer.invoke('app:install-update', arg),
   onUpdateProgress: (cb) => {
     const handler = (_e, pct) => cb(pct)
     ipcRenderer.on('app:update-progress', handler)
@@ -71,6 +72,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('app:update-installing', handler)
     return () => ipcRenderer.removeListener('app:update-installing', handler)
   },
+  // Notification automatique (démarrage + toutes les heures) : une mise à jour existe.
+  onUpdateAvailable: (cb) => {
+    const handler = (_e, info) => cb(info)
+    ipcRenderer.on('app:update-available', handler)
+    return () => ipcRenderer.removeListener('app:update-available', handler)
+  },
+  // Erreur pendant le téléchargement/l'installation (ex. empreinte SHA-256 invalide).
+  onUpdateError: (cb) => {
+    const handler = (_e, msg) => cb(msg)
+    ipcRenderer.on('app:update-error', handler)
+    return () => ipcRenderer.removeListener('app:update-error', handler)
+  },
 
   // ── Online status ─────────────────────────────────────────────────────────
   getOnlineStatus: () => ipcRenderer.invoke('app:online-status'),
@@ -78,6 +91,27 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('app:online-status', (_e, info) => cb(info))
     return () => ipcRenderer.removeAllListeners('app:online-status')
   },
+
+  // ── Modules / droits (entitlements) ─────────────────────────────────────────
+  getEntitlements: () => ipcRenderer.invoke('app:entitlements'),
+  onEntitlements:  (cb) => {
+    ipcRenderer.on('entitlements:update', (_e, info) => cb(info))
+    return () => ipcRenderer.removeAllListeners('entitlements:update')
+  },
+
+  // ── Centre de notifications ─────────────────────────────────────────────────
+  getNotifications: () => ipcRenderer.invoke('app:notifications'),
+  onNotifications:  (cb) => {
+    ipcRenderer.on('notifications:update', (_e, info) => cb(info))
+    return () => ipcRenderer.removeAllListeners('notifications:update')
+  },
+  ackNotification: (id) => ipcRenderer.invoke('app:ack-notification', id),
+
+  // ── Crash reporting (avec consentement) ─────────────────────────────────────
+  getCrashConsent: ()      => ipcRenderer.invoke('app:crash-consent'),
+  setCrashConsent: (value) => ipcRenderer.invoke('app:set-crash-consent', value),
+  reportCrash:     (info)  => ipcRenderer.invoke('app:report-crash', info),
+  addBreadcrumb:   (action) => ipcRenderer.send('app:breadcrumb', action),
 
   // ── Utility ───────────────────────────────────────────────────────────────
   isElectron: true,

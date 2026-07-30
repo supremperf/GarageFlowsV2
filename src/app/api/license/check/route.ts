@@ -2,30 +2,165 @@ export const dynamic = 'force-dynamic'
 
 /**
  * POST /api/license/check
- * Periodic revocation check — called after initial activation to detect revocations.
+ * Heartbeat périodique — détecte révocations, suspensions, expirations et
+ * appareils révoqués après l'activation initiale.
  *
- * Body:    { licenseId: string }
- * Returns: { allowed: boolean; status?: string; reason?: string }
+ * Body:    { licenseId?: string; deviceToken?: string; hwid?: string; version?: string; os?: string; arch?: string }
+ * Returns: { allowed: boolean; status?: string; reason?: string; deviceRequired?: boolean }
  *
- * Fail-open: if the DB is unavailable, we return allowed=true so Electron
- * can work fully offline without losing functionality.
+ * Deux chemins :
+ *  1. deviceToken présent → validation STRICTE : jeton haché retrouvé en base
+ *     (comparaison à temps constant), appareil actif, HWID correspondant,
+ *     licence active et non expirée. Jeton inconnu → { deviceRequired: true }
+ *     (ré-activation), jamais un blocage à tort.
+ *  2. deviceToken absent (anciens clients / première exécution) → contrôle de
+ *     la licence par licenseId + indication deviceRequired pour que les clients
+ *     récents obtiennent un jeton.
+ *
+ * Politique d'erreur infra :
+ *  - Electron (base SQLite locale) : fail-open documenté — hors ligne, l'app
+ *    reste utilisable ; le client applique ses propres verrous 48 h/72 h.
+ *  - Serveur/PWA : 503 générique — on n'affirme JAMAIS allowed:true sans
+ *    vérification réussie. (Le client Electron traite toute réponse sans
+ *    allowed=false ni status='active' comme indéterminée et conserve son état.)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { verifyRecordMac } from '@/lib/license/record-mac'
+import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
+import { validateDeviceToken, type DeviceTokenFailure } from '@/lib/license/devices'
+import { isVersionSupported, seatlessCheckTolerated, type ClientPlatform } from '@/lib/license/client-policy'
+import { logger } from '@/lib/logger'
+
+const IS_ELECTRON = () => process.env.ELECTRON === '1'
+
+const FAIL_OPEN_UNKNOWN = { allowed: true, status: 'unknown' as const }
+
+function infraFailure(): NextResponse {
+  if (IS_ELECTRON()) {
+    // Fail-open Electron : base locale indisponible ≠ licence invalide.
+    return NextResponse.json(FAIL_OPEN_UNKNOWN)
+  }
+  return NextResponse.json(
+    { error: 'Service temporairement indisponible.', code: 'SERVICE_UNAVAILABLE' },
+    { status: 503 },
+  )
+}
+
+/** Réponse de blocage pour un échec de validation de jeton d'appareil. */
+function deviceFailureResponse(code: DeviceTokenFailure): NextResponse {
+  switch (code) {
+    case 'device_unknown':
+      // Jeton inconnu (rotation, base réinitialisée) : demander une ré-activation
+      // — ce n'est PAS une révocation, ne jamais bloquer ici.
+      return NextResponse.json({ allowed: true, status: 'unknown', deviceRequired: true })
+    case 'device_revoked':
+      return NextResponse.json({
+        allowed: false, status: 'device_revoked',
+        reason: 'Cet appareil a été révoqué pour cette licence.',
+      })
+    case 'device_hwid_mismatch':
+      return NextResponse.json({
+        allowed: false, status: 'device_hwid_mismatch',
+        reason: 'Le jeton d\'appareil ne correspond pas à cette machine.',
+      })
+    case 'license_unknown':
+      return NextResponse.json({ allowed: true, status: 'unknown', deviceRequired: true })
+    case 'license_revoked':
+      return NextResponse.json({
+        allowed: false, status: 'revoked',
+        reason: 'Cette licence a été révoquée.',
+      })
+    case 'license_suspended':
+      return NextResponse.json({
+        allowed: false, status: 'suspended',
+        reason: 'Cette licence est temporairement suspendue.',
+      })
+    case 'license_expired':
+      return NextResponse.json({
+        allowed: false, status: 'expired',
+        reason: 'Cette licence a expiré.',
+      })
+  }
+}
 
 export async function POST(req: NextRequest) {
-  let licenseId: string
+  const rl = await enforceRateLimit('license_status', clientIpFrom(req))
+  if (!rl.ok) return rateLimitResponse(rl)
+
+  let licenseId:   string
+  let deviceToken: string
+  let hwid:        string | undefined
+  let version:     string | undefined
+  let platform:    ClientPlatform
   try {
-    const body = await req.json()
-    licenseId  = String(body.licenseId ?? '').trim()
+    const body  = await req.json()
+    licenseId   = String(body.licenseId ?? '').trim()
+    deviceToken = String(body.deviceToken ?? '').trim()
+    hwid        = body.hwid ? String(body.hwid) : undefined
+    version     = body.version ? String(body.version) : undefined
+    platform    = body.installId ? 'pwa' : IS_ELECTRON() ? 'electron' : 'unknown'
   } catch {
-    return NextResponse.json({ allowed: false, reason: 'Requête invalide' }, { status: 400 })
+    return NextResponse.json(
+      { allowed: false, code: 'VALIDATION_ERROR', reason: 'Requête invalide' },
+      { status: 400 },
+    )
   }
 
+  // ── Politique de version : sous le minimum configuré → mise à jour requise ──
+  if (!isVersionSupported(platform, version)) {
+    return NextResponse.json(
+      {
+        allowed: false, status: 'upgrade_required', code: 'UPGRADE_REQUIRED',
+        reason: 'Cette version de l\'application n\'est plus prise en charge. Mettez à jour.',
+      },
+      { status: 426 },
+    )
+  }
+
+  // ── Chemin 1 : preuve d'appareil (clients récents) ──────────────────────────
+  if (deviceToken) {
+    try {
+      const validation = await validateDeviceToken(deviceToken, { hwid })
+      if (!validation.ok) return deviceFailureResponse(validation.code)
+
+      // Jeton valide, licence active — bump lastSeenAt licence (best-effort).
+      try {
+        await prisma.licenseKey.update({
+          where: { licenseId: validation.licenseId },
+          data:  { lastSeenAt: new Date() },
+        })
+      } catch { /* best-effort */ }
+
+      return NextResponse.json({ allowed: true, status: 'active' })
+    } catch (err) {
+      logger.error('[license/check] erreur infra (validation jeton)', err)
+      return infraFailure()
+    }
+  }
+
+  // ── Chemin 2 : SANS jeton d'appareil ────────────────────────────────────────
+  // Un heartbeat sans jeton ne peut PAS accorder d'accès de façon durable (il
+  // contournerait le contrôle des sièges). Il n'est toléré que pendant la
+  // fenêtre de migration configurée (GF_DEVICE_AUTH_DEADLINE) ; en dehors, on
+  // exige un jeton d'appareil (DEVICE_TOKEN_REQUIRED) — le client doit
+  // (ré)activer pour en obtenir un.
   if (!licenseId) {
-    return NextResponse.json({ allowed: false, reason: 'licenseId manquant' }, { status: 400 })
+    return NextResponse.json(
+      { allowed: false, code: 'VALIDATION_ERROR', reason: 'licenseId ou deviceToken requis' },
+      { status: 400 },
+    )
+  }
+
+  if (!seatlessCheckTolerated()) {
+    // Défaut sûr : jeton d'appareil obligatoire. `deviceRequired:true` invite le
+    // client à (ré)activer ; jamais allowed:true sans preuve d'appareil.
+    return NextResponse.json({
+      allowed: false, status: 'device_required', code: 'DEVICE_TOKEN_REQUIRED',
+      deviceRequired: true,
+      reason: 'Jeton d\'appareil requis. Réactivez votre licence.',
+    })
   }
 
   try {
@@ -33,13 +168,13 @@ export async function POST(req: NextRequest) {
 
     if (!record) {
       // Not in DB yet — allowed (will be registered on next full activation)
-      return NextResponse.json({ allowed: true, status: 'unknown' })
+      return NextResponse.json({ allowed: true, status: 'unknown', deviceRequired: true })
     }
 
     // DB integrity check — detect SQLite tampering
     const mac = verifyRecordMac(record)
     if (mac.tampered) {
-      console.error('[license/check] DB integrity FAILED for lid:', record.licenseId)
+      logger.error('[license/check] intégrité DB compromise', { lid: record.licenseId })
       return NextResponse.json({
         allowed: false,
         status:  'tampered',
@@ -47,7 +182,7 @@ export async function POST(req: NextRequest) {
       })
     }
     if (mac.missing) {
-      console.warn('[license/check] No MAC for lid:', record.licenseId, '(legacy record)')
+      logger.warn('[license/check] enregistrement sans MAC (legacy)', { lid: record.licenseId })
     }
 
     if (record.status === 'revoked') {
@@ -64,6 +199,13 @@ export async function POST(req: NextRequest) {
         reason:  'Cette licence est temporairement suspendue.',
       })
     }
+    if (record.expiryAt.getTime() < Date.now()) {
+      return NextResponse.json({
+        allowed: false,
+        status:  'expired',
+        reason:  'Cette licence a expiré.',
+      })
+    }
 
     // Still active — bump lastSeenAt
     await prisma.licenseKey.update({
@@ -71,9 +213,11 @@ export async function POST(req: NextRequest) {
       data:  { lastSeenAt: new Date() },
     })
 
-    return NextResponse.json({ allowed: true, status: 'active' })
+    // deviceRequired : les clients récents obtiennent un jeton d'appareil ;
+    // les anciens ignorent ce champ et continuent sur le statut seul.
+    return NextResponse.json({ allowed: true, status: 'active', deviceRequired: true })
   } catch (err) {
-    console.error('[license/check] DB error (fail-open):', err)
-    return NextResponse.json({ allowed: true, status: 'unknown' })
+    logger.error('[license/check] erreur infra', err)
+    return infraFailure()
   }
 }

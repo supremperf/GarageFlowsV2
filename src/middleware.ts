@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { getToken } from 'next-auth/jwt'
+import { getAuthSecret } from '@/lib/auth-secret'
 
 /**
  * GarageFlow middleware — page-level only (all /api/* are skipped)
@@ -13,8 +14,9 @@ import { getToken } from 'next-auth/jwt'
  */
 
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR'
-  return new TextEncoder().encode(secret)
+  // No hard-coded fallback: if the secret is missing/weak, getAuthSecret() throws,
+  // verifySessionJwt() catches it and returns null → fail-closed (redirect to /license).
+  return new TextEncoder().encode(getAuthSecret())
 }
 
 /** Verify the signed gf_session cookie. Returns payload or null on failure. */
@@ -71,7 +73,15 @@ export async function middleware(req: NextRequest) {
 
   // ── 4. Auth check ─────────────────────────────────────────────────────────
   const isAuthPage = pathname === '/login' || pathname === '/register'
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  // getToken peut LEVER sur un en-tête Authorization/Bearer malformé (avis Auth.js) :
+  // un échec ne doit jamais faire planter le middleware (500 → DoS de page). On
+  // traite toute erreur comme « non authentifié » (fail-closed).
+  let token: Awaited<ReturnType<typeof getToken>> = null
+  try {
+    token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  } catch {
+    token = null
+  }
 
   if (!token && !isAuthPage) {
     const loginUrl = new URL('/login', req.url)

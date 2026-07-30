@@ -22,6 +22,23 @@
 
   ; Create writable data directory in %APPDATA% so the app can write its DB there
   CreateDirectory "$APPDATA\GarageFlow"
+
+  ; ── Durcissement OPTIONNEL des permissions (installation perMachine) ────────
+  ; Empêche un utilisateur standard de modifier / remplacer / supprimer les
+  ; fichiers du dossier d'installation (DLL, .exe, ressources), tout en laissant
+  ; lecture + exécution. L'installateur officiel (élevé) peut toujours mettre à
+  ; jour les fichiers. Aucun mot de passe demandé au lancement du logiciel.
+  ;
+  ; INACTIF par défaut (bloc ignoré à la compilation si GF_HARDEN_ACL n'est pas
+  ; défini) — sûr pour le build actuel. Pour l'activer : passer à electron-builder
+  ;   --config.nsis.perMachine=true --config.nsis.include=scripts/installer.nsh \
+  ;   --config.nsis.defines.GF_HARDEN_ACL=1
+  ; (nécessite une installation dans Program Files). SID connus (indépendants de
+  ; la langue) : S-1-5-32-544=Administrateurs, S-1-5-18=SYSTEM, S-1-5-32-545=Utilisateurs.
+  !ifdef GF_HARDEN_ACL
+    DetailPrint "Application de permissions restreintes sur $INSTDIR…"
+    nsExec::ExecToLog 'icacls "$INSTDIR" /inheritance:r /grant:r "*S-1-5-32-544:(OI)(CI)F" /grant:r "*S-1-5-18:(OI)(CI)F" /grant:r "*S-1-5-32-545:(OI)(CI)RX"'
+  !endif
 !macroend
 
 !macro customUninstall

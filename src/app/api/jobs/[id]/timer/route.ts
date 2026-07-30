@@ -15,7 +15,7 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
 
   if (action === 'start') {
     const updated = await prisma.job.update({
-      where: { id: params.id },
+      where: { id: params.id, garageId: session.user.garageId },
       data: {
         timerStartedAt: new Date(),
         status: 'in_progress',
@@ -31,7 +31,7 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
     const elapsed = Math.round((Date.now() - new Date(job.timerStartedAt).getTime()) / 60000)
     const existing = job.actualDuration ?? 0
     const updated = await prisma.job.update({
-      where: { id: params.id },
+      where: { id: params.id, garageId: session.user.garageId },
       data: {
         timerStartedAt: null,
         actualDuration: existing + elapsed,

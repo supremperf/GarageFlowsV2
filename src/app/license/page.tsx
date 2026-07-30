@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GarageFlowIcon } from '@/components/GarageFlowLogo'
+import { getOrCreateInstallId } from '@/lib/pwa-install-id'
 
 const LICENSE_TYPE_LABELS: Record<string, string> = {
   admin:      'Administrateur',
@@ -50,10 +51,12 @@ export default function LicensePage() {
     setMessage('')
 
     try {
+      // Identifiant d'installation PWA : consomme un siège comme un appareil.
+      const installId = getOrCreateInstallId()
       const res  = await fetch('/api/license/activate', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ license: token.trim() }),
+        body:    JSON.stringify({ license: token.trim(), ...(installId ? { installId } : {}) }),
       })
       const data = await res.json() as {
         ok:           boolean

@@ -8,26 +8,37 @@ export const dynamic = 'force-dynamic'
  * licenseId is read from the signed `gf_session` cookie, so the client never has
  * to know its own licenseId. This works identically in Electron and on the web.
  *
- * Returns: { allowed: boolean; status: 'active'|'revoked'|'suspended'|'tampered'|'unknown'; reason? }
+ * Returns: { allowed: boolean; status: 'active'|'revoked'|'suspended'|'expired'|'tampered'|'unknown'; reason? }
  *
- * Fail-open: anything indeterminate (no cookie, bad JWT, record not found, DB
- * error) returns allowed=true so a legitimate user is never locked out by a
- * transient problem. Only an explicit revoked/suspended/tampered DB state blocks.
+ * Indéterminé (pas de cookie, JWT invalide, record absent) → allowed=true
+ * status='unknown' : un utilisateur légitime n'est jamais bloqué par un état
+ * transitoire. Seul un état explicite revoked/suspended/expired/tampered bloque.
+ *
+ * Erreur infra : Electron → fail-open documenté (base locale) ; serveur/PWA →
+ * 503 générique (le client UI ignore les réponses non-200 et conserve son état).
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { prisma } from '@/lib/db'
 import { verifyRecordMac } from '@/lib/license/record-mac'
+import { getAuthSecret } from '@/lib/auth-secret'
+import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
+import { logger } from '@/lib/logger'
+
+const IS_ELECTRON = () => process.env.ELECTRON === '1'
 
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR'
-  return new TextEncoder().encode(secret)
+  // No hard-coded fallback — a missing/weak secret throws, caught below → fail-open unknown.
+  return new TextEncoder().encode(getAuthSecret())
 }
 
 const OK_UNKNOWN = { allowed: true, status: 'unknown' as const }
 
 export async function GET(req: NextRequest) {
+  const rl = await enforceRateLimit('license_status', clientIpFrom(req))
+  if (!rl.ok) return rateLimitResponse(rl)
+
   // ── Resolve licenseId from the signed session cookie ────────────────────────
   const raw = req.cookies.get('gf_session')?.value
   if (!raw) return NextResponse.json(OK_UNKNOWN)
@@ -41,25 +52,11 @@ export async function GET(req: NextRequest) {
   }
   if (!licenseId) return NextResponse.json(OK_UNKNOWN)
 
- // ── Look up the current status in the DB ────────────────────────────────────
-try {
-  console.log("====================================")
-  console.log("🔍 LICENSE STATUS")
-  console.log("Cookie trouvé :", !!raw)
-  console.log("LicenseId du JWT :", licenseId)
+  // ── Look up the current status in the DB ────────────────────────────────────
+  try {
+    const record = await prisma.licenseKey.findUnique({ where: { licenseId } })
+    if (!record) return NextResponse.json(OK_UNKNOWN)
 
-  const record = await prisma.licenseKey.findUnique({
-    where: { licenseId },
-  })
-
-  console.log("Record trouvé :", !!record)
-
-  if (record) {
-    console.log("Status DB :", record.status)
-    console.log("LicenseId DB :", record.licenseId)
-  }
-
-  if (!record) return NextResponse.json(OK_UNKNOWN)
     const mac = verifyRecordMac(record)
     if (mac.tampered) {
       return NextResponse.json({
@@ -83,10 +80,24 @@ try {
         reason:  'Cette licence est temporairement suspendue.',
       })
     }
+    if (record.expiryAt.getTime() < Date.now()) {
+      return NextResponse.json({
+        allowed: false,
+        status:  'expired',
+        reason:  'Cette licence a expiré.',
+      })
+    }
 
     return NextResponse.json({ allowed: true, status: 'active' })
   } catch (err) {
-    console.error('[license/status] DB error (fail-open):', err)
-    return NextResponse.json(OK_UNKNOWN)
+    if (IS_ELECTRON()) {
+      // Fail-open Electron : base locale indisponible ≠ licence invalide.
+      return NextResponse.json(OK_UNKNOWN)
+    }
+    logger.error('[license/status] erreur infra', err)
+    return NextResponse.json(
+      { error: 'Service temporairement indisponible.', code: 'SERVICE_UNAVAILABLE' },
+      { status: 503 },
+    )
   }
 }

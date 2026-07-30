@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { subDays, format, eachDayOfInterval, parseISO } from 'date-fns'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
+import { logger } from '@/lib/logger'
 
 // GET /api/stats?period=7  (days, default 7)
 export const GET = withAuth(async (req) => {
@@ -52,7 +53,7 @@ export const GET = withAuth(async (req) => {
       include: { lines: true, job: { include: { mechanic: true } } },
     })
   } catch (e) {
-    console.warn('[stats] invoice query failed (graceful fallback):', (e as Error).message)
+    logger.warn('[stats] invoice query failed (graceful fallback)', e)
   }
 
   const hourlyRate          = garage?.hourlyRate ?? 60
@@ -219,8 +220,9 @@ export const GET = withAuth(async (req) => {
   })
 
   } catch (e) {
-    console.error('[stats] fatal error:', (e as Error).message)
-    // Return minimal valid response so the dashboard renders instead of erroring
+    logger.error('[stats] fatal error', e)
+    // Return minimal valid response so the dashboard renders instead of erroring.
+    // Aucun message technique dans la réponse — un code stable suffit à l'UI.
     return NextResponse.json({
       period, startDate: startStr, endDate: endStr, hourlyRate: 60,
       dailyStats: [], mechanicStats: [], stockAlerts: [], topClients: [], topRepairTypes: [],
@@ -228,7 +230,7 @@ export const GET = withAuth(async (req) => {
       totals: { jobCount: 0, completedCount: 0, billedHours: 0, laborRevenue: 0, partsRevenue: 0,
                 partsCost: 0, partsMargin: 0, totalRevenue: 0, invoiceRevenue: 0, invoiceHT: 0,
                 invoiceCount: 0, confirmedRevenue: 0, utilizationRate: 0 },
-      error: (e as Error).message,
+      error: 'Une erreur interne est survenue.', code: 'INTERNAL_ERROR',
     })
   }
 })

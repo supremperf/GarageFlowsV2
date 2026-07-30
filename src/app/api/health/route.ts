@@ -1,36 +1,57 @@
-export const dynamic = "force-dynamic"
+export const dynamic = 'force-dynamic'
+
+/**
+ * GET /api/health
+ *
+ * Version PUBLIQUE (serveur/PWA) : réponse MINIMALE — {"status":"ok"} (200) ou
+ * {"status":"degraded"} (503). Aucun détail interne : pas de dbError, pas de
+ * message Prisma, pas d'état des variables d'environnement, pas de stack.
+ * Les diagnostics vont dans les logs serveur redactés.
+ *
+ * Version ELECTRON (ELECTRON=1, serveur limité à 127.0.0.1) : conserve le
+ * diagnostic de configuration qui alimente l'écran de premier démarrage
+ * (variables présentes/absentes + instructions). Ce mode n'est jamais exposé
+ * publiquement : le serveur Electron n'écoute que sur la boucle locale.
+ */
+
 import { NextResponse } from 'next/server'
+import { isWeakSecret } from '@/lib/auth-secret'
+import { logger } from '@/lib/logger'
 
-const KNOWN_DEFAULT_SECRETS = new Set([
-  'gf-electron-local-secret-2026-xK9mP3qR',
-  'fallback-dev-secret-change-in-production',
-  'changeme',
-  'secret',
-])
+const NO_STORE = { 'Cache-Control': 'no-store' }
 
-// GET /api/health — lightweight startup check (no auth, no DB)
-// Returns env var presence and basic status so the UI can show
-// a helpful setup screen instead of a silent blue screen.
+async function dbReachable(): Promise<boolean> {
+  try {
+    const { prisma } = await import('@/lib/db')
+    await prisma.$queryRaw`SELECT 1`
+    return true
+  } catch (err) {
+    logger.error('[health] base de données injoignable', err)
+    return false
+  }
+}
+
 export async function GET() {
   const isElectron = process.env.ELECTRON === '1'
-  const rawSecret = process.env.NEXTAUTH_SECRET ?? ''
-  const usingDefaultSecret = KNOWN_DEFAULT_SECRETS.has(rawSecret)
 
+  // ── Public (serveur/PWA) : status minimal, rien d'autre ─────────────────────
+  if (!isElectron) {
+    const ok = await dbReachable()
+    return NextResponse.json(
+      { status: ok ? 'ok' : 'degraded' },
+      { status: ok ? 200 : 503, headers: NO_STORE },
+    )
+  }
+
+  // ── Electron (127.0.0.1 uniquement) : écran de configuration au démarrage ───
   const checks = {
     DATABASE_URL:    !!process.env.DATABASE_URL,
-    NEXTAUTH_SECRET: !!rawSecret,
+    NEXTAUTH_SECRET: !isWeakSecret(process.env.NEXTAUTH_SECRET),
     NEXTAUTH_URL:    !!process.env.NEXTAUTH_URL,
   }
-
-  // In non-Electron (web) deployments, using the default secret is a security risk
-  const warnings: string[] = []
-  if (!isElectron && usingDefaultSecret) {
-    warnings.push('NEXTAUTH_SECRET uses a known default value — set a strong unique secret in production')
-  }
-
   const missing = Object.entries(checks)
-    .filter(([, ok]) => !ok)
-    .map(([k]) => k)
+    .filter(([, present]) => !present)
+    .map(([name]) => name)
 
   if (missing.length > 0) {
     return NextResponse.json(
@@ -46,27 +67,18 @@ export async function GET() {
           'Puis lancez : npx prisma db push',
         ].join('\n'),
       },
-      { status: 503 }
+      { status: 503, headers: NO_STORE },
     )
   }
 
-  // Try a lightweight DB ping
-  let dbOk = false
-  let dbError: string | null = null
-  try {
-    const { prisma } = await import('@/lib/db')
-    await prisma.$queryRaw`SELECT 1`
-    dbOk = true
-  } catch (err) {
-    dbError = err instanceof Error ? err.message : String(err)
-  }
-
-  return NextResponse.json({
-    ok: dbOk,
-    env: checks,
-    db: dbOk ? 'connected' : 'error',
-    dbError,
-    warnings: warnings.length ? warnings : undefined,
-    ts: new Date().toISOString(),
-  }, { status: dbOk ? 200 : 503 })
+  const ok = await dbReachable()
+  return NextResponse.json(
+    {
+      ok,
+      env: checks,
+      db: ok ? 'connected' : 'error',
+      ts: new Date().toISOString(),
+    },
+    { status: ok ? 200 : 503, headers: NO_STORE },
+  )
 }

@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { logger } from '@/lib/logger'
 import { isAdminSession } from '@/lib/api-helpers'
 import { computeRecordMac } from '@/lib/license/record-mac'
 
@@ -68,7 +69,7 @@ export async function PATCH(
     if (err?.code === 'P2025') {
       return NextResponse.json({ error: 'Licence introuvable' }, { status: 404 })
     }
-    console.error('[admin/licenses/patch] DB error:', err)
+    logger.error('[admin/licenses/patch] DB error', err)
     return NextResponse.json({ error: 'Erreur base de données' }, { status: 500 })
   }
 }
@@ -93,7 +94,7 @@ export async function DELETE(
     if (err?.code === 'P2025') {
       return NextResponse.json({ error: 'Licence introuvable' }, { status: 404 })
     }
-    console.error('[admin/licenses/delete] DB error:', err)
+    logger.error('[admin/licenses/delete] DB error', err)
     return NextResponse.json({ error: 'Erreur base de données' }, { status: 500 })
   }
 }

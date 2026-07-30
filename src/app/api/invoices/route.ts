@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { withTotals } from '@/lib/billing'
 import { CreateInvoiceSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
+import { assertRelations } from '@/lib/tenant'
 
 // GET /api/invoices
 export const GET = withAuth(async (req) => {
@@ -53,44 +54,66 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: 'Données invalides', details: parsed.error.flatten() }, { status: 400 })
   }
 
-  const garage = await prisma.garage.update({
-    where: { id: session.user.garageId },
-    data: { invoiceCounter: { increment: 1 } },
-  })
-  const year = new Date().getFullYear()
-  const number = `${garage.invoicePrefix}-${year}-${String(garage.invoiceCounter).padStart(3, '0')}`
+  // SECURITY (IDOR): les FK fournies doivent appartenir au garage de la session.
+  const relErr = await assertRelations(session.user.garageId, [
+    { model: 'client', id: body.clientId, label: 'Client' },
+    { model: 'vehicle', id: body.vehicleId, label: 'Véhicule' },
+    { model: 'job', id: body.jobId, label: 'Intervention' },
+  ])
+  if (relErr) return relErr
 
-  const invoice = await prisma.invoice.create({
-    data: {
-      number,
-      garageId: session.user.garageId,
-      clientId: body.clientId ?? null,
-      vehicleId: body.vehicleId ?? null,
-      jobId: body.jobId ?? null,
-      clientName: body.clientName ?? '',
-      clientEmail: body.clientEmail ?? null,
-      clientPhone: body.clientPhone ?? null,
-      clientAddress: body.clientAddress ?? null,
-      vehicleModel: body.vehicleModel ?? null,
-      licensePlate: body.licensePlate ?? null,
-      status: 'draft',
-      issueDate: body.issueDate ?? format(new Date(), 'yyyy-MM-dd'),
-      dueDate: body.dueDate ?? null,
-      notes: body.notes ?? null,
-      taxRate: body.taxRate ?? garage.taxRate,
-      lines: {
-        create: (body.lines ?? []).map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
-          description: l.description,
-          quantity: l.quantity ?? 1,
-          unitPrice: l.unitPrice ?? 0,
-          unitCost: l.unitCost ?? 0,
-          isLabor: l.isLabor ?? false,
-          sortOrder: l.sortOrder ?? i,
-        })),
-      },
-    },
-    include: { lines: { orderBy: { sortOrder: 'asc' } } },
-  })
+  const year = new Date().getFullYear()
+
+  // Réservation du numéro ET création du document dans UNE SEULE transaction :
+  // si la création échoue, l'incrément du compteur est annulé (pas de trou de
+  // séquence). La contrainte unique @@unique([garageId, number]) protège en plus
+  // contre tout doublon.
+  let invoice
+  try {
+    invoice = await prisma.$transaction(async (tx) => {
+      const garage = await tx.garage.update({
+        where: { id: session.user.garageId },
+        data: { invoiceCounter: { increment: 1 } },
+      })
+      const number = `${garage.invoicePrefix}-${year}-${String(garage.invoiceCounter).padStart(3, '0')}`
+      return tx.invoice.create({
+        data: {
+          number,
+          garageId: session.user.garageId,
+          clientId: body.clientId ?? null,
+          vehicleId: body.vehicleId ?? null,
+          jobId: body.jobId ?? null,
+          clientName: body.clientName ?? '',
+          clientEmail: body.clientEmail ?? null,
+          clientPhone: body.clientPhone ?? null,
+          clientAddress: body.clientAddress ?? null,
+          vehicleModel: body.vehicleModel ?? null,
+          licensePlate: body.licensePlate ?? null,
+          status: 'draft',
+          issueDate: body.issueDate ?? format(new Date(), 'yyyy-MM-dd'),
+          dueDate: body.dueDate ?? null,
+          notes: body.notes ?? null,
+          taxRate: body.taxRate ?? garage.taxRate,
+          lines: {
+            create: (body.lines ?? []).map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
+              description: l.description,
+              quantity: l.quantity ?? 1,
+              unitPrice: l.unitPrice ?? 0,
+              unitCost: l.unitCost ?? 0,
+              isLabor: l.isLabor ?? false,
+              sortOrder: l.sortOrder ?? i,
+            })),
+          },
+        },
+        include: { lines: { orderBy: { sortOrder: 'asc' } } },
+      })
+    })
+  } catch (e) {
+    if ((e as { code?: string })?.code === 'P2002') {
+      return NextResponse.json({ error: 'Numéro de facture déjà utilisé, réessayez' }, { status: 409 })
+    }
+    throw e
+  }
 
   await logAudit({ action: 'create', entityType: 'Invoice', entityId: invoice.id, session, req })
 

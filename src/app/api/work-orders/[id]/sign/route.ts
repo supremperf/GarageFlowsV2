@@ -18,7 +18,7 @@ export const POST = withAuth(async (req, { params }) => {
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const wo = await prisma.workOrder.update({
-    where: { id: params.id },
+    where: { id: params.id, garageId: session.user.garageId },
     data: {
       signatureData: body.signatureData,
       signedAt: new Date(),

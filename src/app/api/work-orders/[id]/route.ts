@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { assertRelations } from '@/lib/tenant'
 
 interface WorkLine {
   description: string
@@ -17,11 +18,19 @@ interface PartLine {
   unitPrice: number
 }
 
-function computeTotals(worksJson: string, partsJson: string, taxRate: number) {
-  const works: WorkLine[] = JSON.parse(worksJson)
-  const parts: PartLine[] = JSON.parse(partsJson)
-  const worksHT = works.reduce((s, w) => s + (w.unitPrice ?? 0), 0)
-  const partsHT = parts.reduce((s, p) => s + (p.qty ?? 0) * (p.unitPrice ?? 0), 0)
+/** Returns null when worksJson/partsJson are not valid JSON arrays. */
+function computeTotals(worksJson: string, partsJson: string, taxRate: number): { totalHT: number; totalTTC: number } | null {
+  let works: WorkLine[]
+  let parts: PartLine[]
+  try {
+    works = JSON.parse(worksJson)
+    parts = JSON.parse(partsJson)
+  } catch {
+    return null
+  }
+  if (!Array.isArray(works) || !Array.isArray(parts)) return null
+  const worksHT = works.reduce((s, w) => s + (Number(w.unitPrice) || 0), 0)
+  const partsHT = parts.reduce((s, p) => s + (Number(p.qty) || 0) * (Number(p.unitPrice) || 0), 0)
   const totalHT = Math.round((worksHT + partsHT) * 100) / 100
   const totalTTC = Math.round(totalHT * (1 + taxRate / 100) * 100) / 100
   return { totalHT, totalTTC }
@@ -60,7 +69,11 @@ export const PATCH = withAuth(async (req, { params }) => {
     : existing.partsJson
   const taxRate = body.taxRate !== undefined ? body.taxRate : existing.taxRate
 
-  const { totalHT, totalTTC } = computeTotals(worksJson, partsJson, taxRate)
+  const totals = computeTotals(worksJson, partsJson, taxRate)
+  if (!totals) {
+    return NextResponse.json({ error: 'worksJson/partsJson invalides' }, { status: 400 })
+  }
+  const { totalHT, totalTTC } = totals
 
   const updateData: Record<string, unknown> = { worksJson, partsJson, taxRate, totalHT, totalTTC }
 
@@ -74,18 +87,37 @@ export const PATCH = withAuth(async (req, { params }) => {
   if (body.licensePlate !== undefined) updateData.licensePlate = body.licensePlate
   if (body.mileage !== undefined) updateData.mileage = body.mileage
   if (body.vin !== undefined) updateData.vin = body.vin
-  if (body.mechanicId !== undefined) updateData.mechanicId = body.mechanicId
+  if (body.mechanicId !== undefined) {
+    // Validate the mechanic belongs to this garage before cross-linking.
+    if (body.mechanicId !== null) {
+      const mech = await prisma.mechanic.findFirst({
+        where: { id: body.mechanicId, garageId: session.user.garageId },
+      })
+      if (!mech) return NextResponse.json({ error: 'mechanicId invalide' }, { status: 400 })
+    }
+    updateData.mechanicId = body.mechanicId
+  }
   if (body.notes !== undefined) updateData.notes = body.notes
 
-  const wo = await prisma.workOrder.update({
-    where: { id: params.id },
+  // SECURITY (IDOR): un mécanicien réassigné doit appartenir au garage.
+  const relErr = await assertRelations(session.user.garageId, [
+    { model: 'mechanic', id: body.mechanicId, label: 'Mécanicien' },
+  ])
+  if (relErr) return relErr
+
+  // Atomique (anti-TOCTOU) : la portée garageId est dans le where.
+  const res = await prisma.workOrder.updateMany({
+    where: { id: params.id, garageId: session.user.garageId },
     data: updateData,
+  })
+  if (res.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const wo = await prisma.workOrder.findFirst({
+    where: { id: params.id, garageId: session.user.garageId },
     include: {
       mechanic: { select: { id: true, name: true, color: true } },
       job: { select: { id: true, customerName: true, vehicleModel: true, licensePlate: true } },
     },
   })
-
   return NextResponse.json(wo)
 })
 
@@ -99,6 +131,6 @@ export const DELETE = withAuth(async (_req, { params }) => {
   if (existing.status !== 'draft') {
     return NextResponse.json({ error: 'Seuls les ordres en brouillon peuvent être supprimés' }, { status: 400 })
   }
-  await prisma.workOrder.delete({ where: { id: params.id } })
+  await prisma.workOrder.deleteMany({ where: { id: params.id, garageId: session.user.garageId } })
   return NextResponse.json({ success: true })
 })

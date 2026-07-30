@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from '@/lib/i18n'
 import { X, Printer, FileText, Receipt, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { computeTotals, multiplyCents, toCents, fromCents } from '@/lib/money'
 
 interface Job {
   id: string
@@ -99,12 +100,17 @@ export default function InvoiceModal({ job, mode, onClose }: Props) {
 
   const duration = job.actualDuration ?? job.estimatedDuration
   const laborHours = duration / 60
-  const laborHT = laborHours * garage.hourlyRate
-  const partsHT = parts.reduce((s, p) => s + p.unitPrice * p.quantity, 0)
-  const totalHT = laborHT + partsHT
-  const tva = totalHT * (garage.taxRate / 100)
-  const totalTTC = totalHT + tva
-  const currency = garage.currency
+  // Calculs EXACTS en centimes entiers (identiques à l'API/DB via lib/money) :
+  // le PDF client ne doit jamais diverger du total comptable.
+  const laborLine  = { quantity: laborHours, unitPrice: garage.hourlyRate }
+  const partLines  = parts.map(p => ({ quantity: p.quantity, unitPrice: p.unitPrice }))
+  const totals     = computeTotals([laborLine, ...partLines], garage.taxRate)
+  const laborHT    = fromCents(multiplyCents(toCents(garage.hourlyRate), laborHours))
+  const partsHT    = fromCents(partLines.reduce((c, l) => c + multiplyCents(toCents(l.unitPrice), l.quantity), 0))
+  const totalHT    = totals.totalHT
+  const tva        = totals.taxAmount
+  const totalTTC   = totals.totalTTC
+  const currency   = garage.currency
 
   const issueDate = new Date().toLocaleDateString('fr-FR')
   const jobDate = new Date(job.date).toLocaleDateString('fr-FR')

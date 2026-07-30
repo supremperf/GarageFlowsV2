@@ -1,14 +1,29 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
-import { withAuth } from '@/lib/api-helpers'
+import { withAuth, requireSession } from '@/lib/api-helpers'
+import { enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import Anthropic from '@anthropic-ai/sdk'
 
 // GET /api/plate-lookup?plate=AB-123-CD
 export const GET = withAuth(async (req) => {
+  // SECURITY: authenticate — this route calls an external API and can spend the
+  // ANTHROPIC_API_KEY, so it must never be reachable anonymously.
+  const session = await requireSession()
+  const rl = await enforceRateLimit('api', `plate-lookup:${session.user.garageId}`, { max: 20, windowSec: 60 })
+  if (!rl.ok) return rateLimitResponse(rl)
+
   const { searchParams } = new URL(req.url)
   const plate = searchParams.get('plate')?.toUpperCase().replace(/\s/g, '-')
 
   if (!plate) return NextResponse.json({ error: 'plate param required' }, { status: 400 })
+
+  // Validation de format AVANT tout appel sortant/payant : rejette les entrées
+  // parasites et toute injection dans l'invite IA de repli (la plaque est déjà
+  // normalisée en MAJUSCULES, séparateur « - »).
+  const PLATE_RE = /^[A-Z0-9-]{4,12}$/
+  if (!PLATE_RE.test(plate)) {
+    return NextResponse.json({ error: 'Format de plaque invalide' }, { status: 400 })
+  }
 
   // Try French SIV-like API first (free, no auth)
   try {

@@ -7,65 +7,104 @@ export const dynamic = 'force-dynamic'
  * The private key NEVER leaves the server — the browser only submits a token.
  *
  * Flow:
- *  1. Rate-limit check (5 attempts / 15 min per IP)
+ *  1. Rate-limit check (distribué en PWA, mémoire sous Electron)
  *  2. Cryptographic ECDSA signature verification (via verify.ts)
- *  3. DB revocation / suspension check
+ *  3. DB revocation / suspension / expiry check
  *  4. Optional HWID binding check
- *  5. Set signed session cookie + plain indicator cookies via Set-Cookie headers
+ *  5. Enregistrement ATOMIQUE de l'appareil (plafond seats sous verrou) et
+ *     émission d'un deviceToken (256 bits, haché en base, retourné UNE fois)
+ *  6. Set signed session cookie + plain indicator cookies via Set-Cookie headers
  *
- * Body:    { license: string; hwid?: string }
- * Returns: { ok, isAdmin?, licenseType?, expiryAt?, seats?, reason? }
+ * Body:    { license: string; hwid?: string; version?: string; os?: string; arch?: string; name?: string }
+ * Returns: { ok, isAdmin?, licenseType?, expiryAt?, seats?, deviceToken?, deviceId?, reason?, code? }
+ *
+ * Politique d'erreur DB :
+ *  - Electron (ELECTRON=1, SQLite locale) : fail-open documenté — l'application
+ *    doit démarrer hors ligne ; le control plane distant reste l'autorité.
+ *  - Serveur/PWA : FAIL-CLOSED — erreur interne générique 503, jamais de
+ *    session émise sans vérifications réussies.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { SignJWT } from 'jose'
-import { verifyLicenseToken, verifyHwid } from '@/lib/license/verify'
+import { verifyLicenseToken, verifyHwid, isValidHwidFormat } from '@/lib/license/verify'
 import { prisma } from '@/lib/db'
 import { computeRecordMac, verifyRecordMac } from '@/lib/license/record-mac'
-import { rateLimit } from '@/lib/rate-limit'
+import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
+import { getAuthSecret } from '@/lib/auth-secret'
+import {
+  activateDevice,
+  recordDeviceDenial,
+  isValidInstallId,
+  DeviceLimitError,
+  DeviceRevokedError,
+  InvalidHwidError,
+} from '@/lib/license/devices'
+import { logger } from '@/lib/logger'
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365 * 5   // 5 years
 
+const IS_ELECTRON = () => process.env.ELECTRON === '1'
+
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.NEXTAUTH_SECRET ?? 'fallback-dev-secret-change-in-production'
-  return new TextEncoder().encode(secret)
+  // No hard-coded fallback — a predictable secret would let anyone mint an admin session.
+  return new TextEncoder().encode(getAuthSecret())
+}
+
+/** Erreur interne générique — aucun détail technique côté client. */
+function internalError(): NextResponse {
+  return NextResponse.json(
+    { ok: false, code: 'SERVICE_UNAVAILABLE', reason: 'Service temporairement indisponible. Réessayez plus tard.' },
+    { status: 503 },
+  )
 }
 
 export async function POST(req: NextRequest) {
   // ── Step 0: Rate limiting ───────────────────────────────────────────────────
-  // Key: forwarded IP or fallback — prevents brute-force token submission
-  const ip  = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'local'
-  const rl  = rateLimit(`activate:${ip}`, 5, 15 * 60)
-  if (!rl.ok) {
+  // Distribué en production PWA (Upstash), mémoire sous Electron. Clé = IP
+  // hachée — empêche la soumission de tokens en force brute.
+  const rl = await enforceRateLimit('license_activate', clientIpFrom(req))
+  if (!rl.ok) return rateLimitResponse(rl)
+
+  let licenseToken:    string
+  let clientHwid:      string | undefined
+  let clientInstallId: string | undefined
+  let clientMeta:      { platform?: string; appVersion?: string; name?: string } = {}
+  try {
+    const body      = await req.json()
+    licenseToken    = String(body.license ?? '').trim()
+    clientHwid      = body.hwid ? String(body.hwid) : undefined
+    // Identifiant d'installation PWA (navigateur, pas de HWID matériel).
+    clientInstallId = body.installId ? String(body.installId) : undefined
+    clientMeta = {
+      platform:   body.os ? `${String(body.os)}${body.arch ? ` ${String(body.arch)}` : ''}` : undefined,
+      appVersion: body.version ? String(body.version) : undefined,
+      name:       body.name ? String(body.name) : undefined,
+    }
+  } catch {
     return NextResponse.json(
-      { ok: false, reason: `Trop de tentatives. Réessayez dans ${rl.retryAfter}s.` },
-      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      { ok: false, code: 'VALIDATION_ERROR', reason: 'Corps de requête invalide' },
+      { status: 400 },
     )
   }
 
-  let licenseToken: string
-  let clientHwid:   string | undefined
-  try {
-    const body   = await req.json()
-    licenseToken = String(body.license ?? '').trim()
-    clientHwid   = body.hwid ? String(body.hwid) : undefined
-  } catch {
-    return NextResponse.json({ ok: false, reason: 'Corps de requête invalide' }, { status: 400 })
-  }
-
   if (!licenseToken) {
-    return NextResponse.json({ ok: false, reason: 'Licence manquante' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, code: 'VALIDATION_ERROR', reason: 'Licence manquante' },
+      { status: 400 },
+    )
   }
 
   // ── Step 1: Cryptographic verification ─────────────────────────────────────
   const result = verifyLicenseToken(licenseToken)
   if (!result.valid || !result.payload) {
-    return NextResponse.json({ ok: false, reason: result.reason })
+    return NextResponse.json({ ok: false, code: 'LICENSE_INVALID', reason: result.reason })
   }
 
   const { payload, isAdmin } = result
 
-  // ── Step 2: DB check (revocation, HWID binding) ─────────────────────────────
+  // ── Step 2: DB check (revocation, expiry, HWID binding) ─────────────────────
+  let seats = payload.seats ?? 1
   try {
     const record = await prisma.licenseKey.findUnique({ where: { licenseId: payload.lid } })
 
@@ -73,22 +112,53 @@ export async function POST(req: NextRequest) {
       // DB integrity check — detect SQLite tampering
       const mac = verifyRecordMac(record)
       if (mac.tampered) {
-        console.error('[license/activate] DB integrity check FAILED for lid:', record.licenseId)
-        return NextResponse.json({ ok: false, reason: 'Erreur d\'intégrité de la base de données. Contactez le support.' })
+        logger.error('[license/activate] DB integrity check FAILED', { lid: record.licenseId })
+        return NextResponse.json({
+          ok: false, code: 'LICENSE_INVALID',
+          reason: 'Erreur d\'intégrité de la base de données. Contactez le support.',
+        })
       }
 
-      // Revocation check
+      // Revocation / suspension / expiry — la base (gérée par l'admin) prime.
       if (record.status === 'revoked') {
-        return NextResponse.json({ ok: false, reason: 'Cette licence a été révoquée. Contactez votre revendeur.' })
+        return NextResponse.json({
+          ok: false, code: 'LICENSE_REVOKED',
+          reason: 'Cette licence a été révoquée. Contactez votre revendeur.',
+        })
       }
       if (record.status === 'suspended') {
-        return NextResponse.json({ ok: false, reason: 'Cette licence est temporairement suspendue.' })
+        return NextResponse.json({
+          ok: false, code: 'LICENSE_SUSPENDED',
+          reason: 'Cette licence est temporairement suspendue.',
+        })
       }
+      if (record.expiryAt.getTime() < Date.now()) {
+        return NextResponse.json({
+          ok: false, code: 'LICENSE_EXPIRED',
+          reason: 'Cette licence a expiré. Contactez votre revendeur pour la renouveler.',
+        })
+      }
+      seats = record.seats ?? payload.seats ?? 1
 
-      // HWID binding check (only if the stored record has a HWID)
-      if (record.hwid && clientHwid) {
+      // ── HWID binding — application STRICTE de la table de vérité ────────────
+      // licence liée + HWID absent   → refus
+      // licence liée + HWID invalide → refus
+      // licence liée + HWID différent→ refus
+      // licence liée + HWID identique→ autorisé
+      // Aucun contournement silencieux : dès que le record porte un HWID, le
+      // client DOIT présenter un HWID bien formé ET identique.
+      if (record.hwid) {
+        if (!clientHwid || !isValidHwidFormat(clientHwid)) {
+          return NextResponse.json(
+            { ok: false, code: 'HWID_REQUIRED', reason: 'Cette licence est liée à un matériel : identifiant matériel requis et valide.' },
+            { status: 403 },
+          )
+        }
         if (!verifyHwid(record.hwid, clientHwid)) {
-          return NextResponse.json({ ok: false, reason: 'Cette licence est liée à un autre matériel.' })
+          return NextResponse.json(
+            { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un autre matériel.' },
+            { status: 403 },
+          )
         }
       }
 
@@ -98,7 +168,18 @@ export async function POST(req: NextRequest) {
         data:  { lastSeenAt: new Date() },
       })
     } else {
-      // First use — auto-register in DB with integrity MAC
+      // First use — auto-register in DB with integrity MAC.
+      // Si le TOKEN est lié à un matériel (payload.hwid), la machine qui
+      // présente la licence doit correspondre AVANT tout enregistrement —
+      // sinon un token volé s'auto-enregistrerait sur une autre machine.
+      if (payload.hwid) {
+        if (!clientHwid || !isValidHwidFormat(clientHwid) || !verifyHwid(payload.hwid, clientHwid)) {
+          return NextResponse.json(
+            { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un matériel : activation refusée sur cet appareil.' },
+            { status: 403 },
+          )
+        }
+      }
       const expiryAt  = new Date(payload.exp * 1000)
       const hwid      = payload.hwid ?? null
       const recordMac = computeRecordMac({
@@ -126,28 +207,125 @@ export async function POST(req: NextRequest) {
       })
     }
   } catch (err) {
-    // Fail-open: DB unavailable (Electron offline mode, fresh install)
-    console.error('[license/activate] DB error (fail-open):', err)
+    if (!IS_ELECTRON()) {
+      // Serveur/PWA : FAIL-CLOSED — jamais de session sans vérifications réussies.
+      logger.error('[license/activate] erreur DB (fail-closed serveur)', err)
+      return internalError()
+    }
+    // Electron : fail-open documenté (démarrage hors ligne, base locale absente
+    // à la première ouverture). Le control plane distant reste l'autorité.
+    logger.warn('[license/activate] erreur DB locale (fail-open Electron)')
   }
 
-  // ── Step 3: Build signed session JWT ────────────────────────────────────────
+  // ── Step 3: Enregistrement de l'appareil (consomme un siège) ────────────────
+  // ATOMIQUE : plafond `seats` appliqué sous verrou/transaction. Le deviceToken
+  // est retourné UNE SEULE fois ; seul son HMAC est persisté.
+  //
+  // Client desktop → HWID matériel. Navigateur PWA → identifiant d'installation.
+  // SÉCURITÉ (serveur/PWA) : une licence NON-admin ne peut JAMAIS obtenir une
+  // session exploitable sans avoir enregistré un appareil valide → sinon
+  // plusieurs navigateurs partageraient une licence sans consommer de siège.
+  const hasHwid      = !!clientHwid && isValidHwidFormat(clientHwid)
+  const hasInstallId = !!clientInstallId && isValidInstallId(clientInstallId)
+  const deviceRequired = !IS_ELECTRON() && !(isAdmin ?? false)
+
+  if (deviceRequired && !hasHwid && !hasInstallId) {
+    return NextResponse.json(
+      {
+        ok: false, code: 'DEVICE_REQUIRED',
+        reason: 'Identifiant d\'installation requis pour activer cette licence.',
+      },
+      { status: 400 },
+    )
+  }
+
+  let deviceToken: string | undefined
+  let deviceId:    string | undefined
+  if (hasHwid || hasInstallId) {
+    try {
+      const activation = await activateDevice({
+        licenseId: payload.lid,
+        seats,
+        ...(hasHwid ? { hwid: clientHwid } : { installId: clientInstallId }),
+        ...clientMeta,
+      })
+      deviceToken = activation.deviceToken
+      deviceId    = activation.deviceId
+    } catch (err) {
+      if (err instanceof DeviceLimitError) {
+        await recordDeviceDenial(payload.lid, 'limit_denied')
+        return NextResponse.json(
+          {
+            ok: false, code: 'DEVICE_LIMIT_REACHED',
+            reason: `Nombre maximal d'appareils atteint pour cette licence (${seats}). Désactivez un appareil ou contactez votre revendeur.`,
+          },
+          { status: 403 },
+        )
+      }
+      if (err instanceof DeviceRevokedError) {
+        await recordDeviceDenial(payload.lid, 'revoked_denied')
+        return NextResponse.json(
+          { ok: false, code: 'DEVICE_REVOKED', reason: 'Cet appareil a été révoqué pour cette licence. Contactez votre revendeur.' },
+          { status: 403 },
+        )
+      }
+      if (err instanceof InvalidHwidError) {
+        return NextResponse.json(
+          { ok: false, code: 'VALIDATION_ERROR', reason: 'Identifiant matériel invalide.' },
+          { status: 400 },
+        )
+      }
+      if (!IS_ELECTRON()) {
+        logger.error('[license/activate] enregistrement appareil impossible (fail-closed serveur)', err)
+        return internalError()
+      }
+      // Electron : la base locale vient d'être refusée plus haut (fail-open) —
+      // l'activation distante (control plane) fournira le jeton d'appareil.
+      logger.warn('[license/activate] enregistrement appareil local impossible (fail-open Electron)')
+    }
+  }
+
+  // Serveur/PWA non-admin : refuser la session si aucun appareil n'a pu être
+  // enregistré (jamais de session « sans siège »). Electron reste fail-open.
+  if (deviceRequired && !deviceId) {
+    return NextResponse.json(
+      {
+        ok: false, code: 'DEVICE_REQUIRED',
+        reason: 'Enregistrement de l\'appareil impossible : activation refusée.',
+      },
+      { status: 400 },
+    )
+  }
+
+  // ── Step 4: Build signed session JWT ────────────────────────────────────────
   // This JWT is stored HttpOnly and verified in middleware — prevents cookie tampering.
-  const sessionJwt = await new SignJWT({ typ: payload.typ, lid: payload.lid })
+  // `did` (deviceId) lie la session à l'appareil : la révocation de l'appareil
+  // invalide immédiatement la session (vérifié à chaque requête licenciée).
+  const sessionJwt = await new SignJWT({
+    typ: payload.typ,
+    lid: payload.lid,
+    ...(deviceId ? { did: deviceId } : {}),
+  })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('5y')
+    .setExpirationTime(IS_ELECTRON() ? '5y' : '30d')
     .sign(getJwtSecret())
 
-  // ── Step 4: Set cookies via response headers ────────────────────────────────
+  // ── Step 5: Set cookies via response headers ────────────────────────────────
   const res = NextResponse.json({
     ok:          true,
     isAdmin:     isAdmin ?? false,
     licenseType: payload.typ,
     expiryAt:    new Date(payload.exp * 1000).toISOString(),
-    seats:       payload.seats ?? 1,
+    seats,
+    ...(deviceToken ? { deviceToken, deviceId } : {}),
   })
 
-  const base = `; Path=/; Max-Age=${COOKIE_MAX_AGE}; SameSite=Strict`
+  // Attribut Secure hors Electron : en PWA (HTTPS), le JWT de session ne doit
+  // jamais transiter sur un canal en clair. Sous Electron (127.0.0.1 en HTTP
+  // local), Secure rendrait le cookie inopérant.
+  const secure = IS_ELECTRON() ? '' : '; Secure'
+  const base = `; Path=/; Max-Age=${COOKIE_MAX_AGE}; SameSite=Strict${secure}`
   // Signed session token — tamper-proof (HS256 with NEXTAUTH_SECRET)
   res.headers.append('Set-Cookie', `gf_session=${sessionJwt}${base}; HttpOnly`)
   // Plain indicator cookies — used for UI state only, NOT for access control
