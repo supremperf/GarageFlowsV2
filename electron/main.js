@@ -125,6 +125,7 @@ let licenseTimer      = null    // periodic revocation check (adaptive interval)
 let licenseBlocked    = false   // true while access is blocked (revoked/suspended/tampered)
 let licenseCheckStarted = false // guards against starting the poll loop twice
 let activeLicense     = null   // { token, payload } — set after validation
+let activeDeviceToken = null   // device token issued by the server on activation (device auth)
 let desktopExportTimer = null
 let onlineCheckTimer  = null   // periodic internet connectivity check
 
@@ -309,13 +310,14 @@ function deriveDbMacSecret() {
   return crypto.pbkdf2Sync(hwid, DB_MAC_SALT, 10_000, 32, 'sha256').toString('hex')
 }
 
-function saveLicense(token, payload) {
+function saveLicense(token, payload, deviceToken = activeDeviceToken) {
   try {
     const key = deriveStorageKey()
     const iv  = crypto.randomBytes(12)
     const plain = JSON.stringify({
       token,
       payload,
+      deviceToken: deviceToken ?? null,
       savedAt:    Date.now(),
       hwid:       getHwid(),
       appVersion: app.getVersion(),
@@ -532,6 +534,9 @@ function checkStoredLicense() {
 
   const payload = verifyEccToken(stored.token)
   if (!payload) return null
+
+  // Restore the device token (device auth) so the heartbeat can present it.
+  if (stored.deviceToken) activeDeviceToken = stored.deviceToken
 
   // Optional HWID binding (from token payload)
   if (payload.hwid) {
@@ -756,15 +761,56 @@ function httpGetJson(url) {
   })
 }
 
+// ── Server-side activation: register THIS device, obtain a device token ───────
+// Device auth: the heartbeat REQUIRES a signed device token. This registers the
+// machine (HWID) against the license and stores the returned token. Best-effort:
+// if the server is unreachable the app still starts offline; the next online
+// heartbeat returns { deviceRequired:true } and re-triggers this to get a token.
+async function activateOnServer() {
+  if (!activeLicense?.token) return false
+
+  const info = getSystemInfo()
+  const body = {
+    license: activeLicense.token,
+    hwid:    getHwid(),
+    version: info.version,
+    os:      info.os,
+    arch:    info.arch,
+  }
+
+  const bases = []
+  if (process.env.GF_LICENSE_SERVER) bases.push(process.env.GF_LICENSE_SERVER.replace(/\/$/, ''))
+  bases.push(`http://127.0.0.1:${PORT}`)
+
+  for (const base of bases) {
+    const res = await httpPost(`${base}/api/license/activate`, body)
+    if (res && res.ok && res.deviceToken) {
+      activeDeviceToken = res.deviceToken
+      saveLicense(activeLicense.token, activeLicense.payload, res.deviceToken)
+      if (Array.isArray(res.modules)) currentModules = res.modules.slice().sort()
+      log('[license/activate] device token obtained — deviceId:', res.deviceId || '?')
+      return true
+    }
+    if (res && res.ok === false) {
+      log('[license/activate] server refused —', res.status || res.reason || 'unknown')
+    }
+  }
+  return false
+}
+
 async function periodicLicenseCheck() {
   if (!activeLicense?.payload?.lid) return
 
   const licenseId = activeLicense.payload.lid
   let result = null
 
+  // If we have no device token yet (fresh upgrade / offline activation), get one
+  // before the heartbeat — the server rejects heartbeats without a device token.
+  if (!activeDeviceToken) await activateOnServer()
+
   // Télémétrie technique jointe au heartbeat (jamais de donnée métier).
   const info = getSystemInfo()
-  const body = { licenseId, version: info.version, os: info.os, arch: info.arch, hwid: getHwid() }
+  const body = { licenseId, deviceToken: activeDeviceToken, version: info.version, os: info.os, arch: info.arch, hwid: getHwid() }
 
   // 1. Check remote license server (if configured) — authoritative
   const remoteServer = process.env.GF_LICENSE_SERVER
@@ -790,6 +836,16 @@ async function periodicLicenseCheck() {
   // No response at all (remote + local both unreachable) → indeterminate.
   // Fail-open: keep the current state, never lock a legitimate user out offline.
   if (!result) return
+
+  // Device token missing/expired/replaced on the server side → re-activate to
+  // obtain a fresh token, then re-run the heartbeat. NOT a revocation.
+  if (result.deviceRequired) {
+    log('[license/check] device token required — re-activating this device')
+    activeDeviceToken = null
+    const ok = await activateOnServer()
+    if (ok) { setTimeout(() => { periodicLicenseCheck().catch(() => {}) }, 500) }
+    return
+  }
 
   if (result.allowed === false) {
     // ── Blocked: revoked / suspended / tampered ──────────────────────────────
@@ -1363,8 +1419,12 @@ function createLicenseWindow() {
     ipcMain.on('license-submit', (event, token) => {
       const payload = verifyEccToken(token)
       if (payload) {
-        saveLicense(token, payload)
         activeLicense = { token, payload }
+        activeDeviceToken = null
+        saveLicense(token, payload)
+        // Register this device with the server to obtain a device token (device
+        // auth). Best-effort — the heartbeat re-tries if the server is offline now.
+        activateOnServer().catch(() => {})
         cleanup()
         win.destroy()
         resolve(true)
@@ -1856,10 +1916,13 @@ function setupIPC() {
       if (!payload) {
         return { ok: false, reason: 'Licence invalide ou expirée' }
       }
+      // A new license key = a new device binding: drop the old device token.
+      activeLicense = { token: token.trim(), payload }
+      activeDeviceToken = null
       // Save new license to disk (encrypted with HWID)
       saveLicense(token.trim(), payload)
-      // Update in-memory license
-      activeLicense = { token: token.trim(), payload }
+      // Register this device against the new license to obtain a fresh token.
+      await activateOnServer()
       // Re-inject session cookies so Next.js picks up the new type
       await injectLicenseCookies(payload.typ, payload.lid ?? 'runtime')
       log('[update-license] upgraded to type:', payload.typ, '| lid:', payload.lid)
