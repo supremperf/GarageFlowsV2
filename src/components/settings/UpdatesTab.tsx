@@ -8,10 +8,12 @@ interface UpdateInfo {
   hasUpdate: boolean
   latestVersion?: string
   releaseUrl?: string
+  downloadUrl?: string
   releaseNotes?: string
   fileName?: string
-  sha256?: string
-  size?: number
+  sha256?: string | null
+  size?: number | null
+  mandatory?: boolean
 }
 
 export function UpdatesTab() {
@@ -86,14 +88,19 @@ export function UpdatesTab() {
   }
 
   async function installUpdate() {
-    const url = info?.releaseUrl
+    const url = info?.downloadUrl ?? info?.releaseUrl
     if (!url) return
     if (!electron?.installUpdate) { window.open(url, '_blank'); return }
     setInstalling(true); setProgress(0); setError(null)
     try {
-      // Transmet l'empreinte SHA-256 : l'installeur ne s'exécutera QUE si elle
-      // correspond au fichier téléchargé (vérification côté process principal).
-      const res = await electron.installUpdate({ url, sha256: info?.sha256, size: info?.size })
+      // Passe l'empreinte SHA-256 → le processus principal vérifie l'intégrité
+      // avant d'installer (fichier altéré = installation refusée).
+      const res = await electron.installUpdate({
+        url,
+        sha256: info?.sha256 ?? undefined,
+        fileName: info?.fileName ?? undefined,
+        version: info?.latestVersion,
+      })
       if (res && res.ok === false) throw new Error(res.reason || 'Échec de la mise à jour')
       // Succès : l'installeur est lancé — les données (userData) sont conservées.
     } catch (e: any) {

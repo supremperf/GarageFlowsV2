@@ -133,6 +133,149 @@ let activeDeviceToken = null   // device token issued by the server on activatio
 let desktopExportTimer = null
 let onlineCheckTimer  = null   // periodic internet connectivity check
 let installSecret     = null   // secret par installation (session JWT + NEXTAUTH_SECRET serveur)
+let updateTimer       = null   // periodic app-update check (startup + hourly)
+let lastNotifiedUpdate = null  // version already announced to the renderer (anti-spam)
+
+// ── Central update server (source of truth for app releases) ──────────────────
+// Priorité : GF_UPDATE_SERVER, sinon GF_LICENSE_SERVER, sinon l'URL officielle
+// par défaut (app.garageflows.fr héberge licences ET mises à jour). Le défaut
+// permet à l'app packagée de contacter le serveur SANS .env (non embarqué), tout
+// en restant surchargeable par variable d'environnement (dev/staging).
+// Canal par défaut : « stable ».
+const UPDATE_SERVER  = (process.env.GF_UPDATE_SERVER || process.env.GF_LICENSE_SERVER
+    || 'https://app.garageflows.fr').replace(/\/$/, '')
+// UPDATE_CHANNEL est déjà déclaré plus haut (socle) — pas de redéclaration ici.
+
+// ── App-update helpers ────────────────────────────────────────────────────────
+
+// GET JSON avec timeout + suivi de redirections (jamais de throw → resolve(null)).
+function httpGetJson(url, timeoutMs = 6000, redirects = 0) {
+  return new Promise(resolve => {
+    try {
+      if (redirects > 5) return resolve(null)
+      const mod = url.startsWith('https') ? require('https') : http
+      const req = mod.get(url, { timeout: timeoutMs, headers: { 'User-Agent': 'GarageFlow/' + app.getVersion() } }, res => {
+        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+          res.resume(); resolve(httpGetJson(res.headers.location, timeoutMs, redirects + 1)); return
+        }
+        let raw = ''
+        res.on('data', c => (raw += c))
+        res.on('end', () => { try { resolve(JSON.parse(raw)) } catch { resolve(null) } })
+      })
+      req.on('error', () => resolve(null))
+      req.on('timeout', () => { req.destroy(); resolve(null) })
+    } catch { resolve(null) }
+  })
+}
+
+// Empreinte SHA-256 (hex) d'un fichier, en flux (pas de mise en mémoire).
+function sha256File(filePath) {
+  return new Promise((resolve, reject) => {
+    const h = crypto.createHash('sha256')
+    const s = fs.createReadStream(filePath)
+    s.on('data', d => h.update(d))
+    s.on('end', () => resolve(h.digest('hex')))
+    s.on('error', reject)
+  })
+}
+
+// Interroge le serveur central et renvoie un objet de mise à jour homogène.
+// Ordre : serveur central (/api/update/latest) → fichier local admin →
+// Releases GitHub (repli, non vérifiable). Si le serveur central répond
+// « pas de maj », on s'y fie (pas de repli GitHub qui ferait un faux positif).
+async function fetchLatestUpdate() {
+  const currentVersion = app.getVersion()
+
+  if (UPDATE_SERVER) {
+    // Le HWID permet le déploiement progressif côté serveur (rollout ciblé).
+    const q = `?version=${encodeURIComponent(currentVersion)}&channel=${encodeURIComponent(UPDATE_CHANNEL)}`
+            + `&hwid=${encodeURIComponent(getHwid())}`
+    const data = await httpGetJson(`${UPDATE_SERVER}/api/update/latest${q}`, 6000)
+    if (data && typeof data.hasUpdate === 'boolean') {
+      if (data.hasUpdate && data.latest) {
+        return {
+          hasUpdate:     true,
+          currentVersion,
+          latestVersion: data.latest.version,
+          title:         data.latest.title ?? null,
+          releaseNotes:  data.latest.changelog ?? null,
+          downloadUrl:   data.latest.downloadUrl ?? null,
+          releaseUrl:    data.latest.downloadUrl ?? null, // rétro-compat renderer
+          sha256:        data.latest.sha256 ?? null,
+          size:          data.latest.size ?? null,
+          fileName:      data.latest.fileName ?? null,
+          mandatory:     Boolean(data.mandatory),
+          minVersion:    data.latest.minVersion ?? null,
+          // Manifeste signé Ed25519 : autorité pour sha256/size/downloadUrl/version
+          // (vérifié dans app:install-update quand une clé publique est embarquée).
+          manifest:      data.manifest ?? data.latest.manifest ?? null,
+          source:        'central',
+        }
+      }
+      return { hasUpdate: false, currentVersion, source: 'central' }
+    }
+    // Serveur injoignable / réponse inattendue → on tente les replis ci-dessous.
+  }
+
+  // Fichier local publié par le serveur intégré (mono-poste / hors-ligne).
+  try {
+    const localUpdate = JSON.parse(fs.readFileSync(path.join(APP_DATA, 'gf_update.json'), 'utf8'))
+    if (localUpdate?.hasUpdate && localUpdate.latestVersion !== currentVersion) {
+      const dl = localUpdate.downloadPath ? `http://127.0.0.1:${PORT}${localUpdate.downloadPath}` : (localUpdate.releaseUrl ?? null)
+      return {
+        hasUpdate:     true,
+        currentVersion,
+        latestVersion: localUpdate.latestVersion,
+        releaseNotes:  localUpdate.releaseNotes ?? null,
+        downloadUrl:   dl,
+        releaseUrl:    dl,
+        sha256:        localUpdate.sha256 ?? null,
+        size:          localUpdate.fileSize ?? null,
+        mandatory:     Boolean(localUpdate.mandatory),
+        source:        'local-admin',
+      }
+    }
+  } catch { /* pas de fichier local — ok */ }
+
+  // Repli : Releases GitHub (pas d'empreinte → non vérifiable, ouverture navigateur).
+  const gh = await httpGetJson('https://api.github.com/repos/garageflow/garageflow/releases/latest', 8000)
+  if (gh?.tag_name) {
+    const latest = String(gh.tag_name).replace(/^v/, '')
+    return {
+      // Comparaison SemVer (jamais lexicographique : « 1.9.0 » < « 1.10.0 »).
+      hasUpdate:     semver.isNewer(latest, currentVersion),
+      currentVersion,
+      latestVersion: latest,
+      releaseNotes:  gh.body ? gh.body.slice(0, 800) : null,
+      downloadUrl:   gh.html_url ?? null,
+      releaseUrl:    gh.html_url ?? null,
+      sha256:        null,
+      mandatory:     false,
+      source:        'github',
+    }
+  }
+
+  return { hasUpdate: false, currentVersion }
+}
+
+// Contrôle au démarrage (~25 s) puis toutes les heures ; notifie le renderer.
+function startPeriodicUpdateCheck() {
+  const runCheck = async () => {
+    try {
+      const info = await fetchLatestUpdate()
+      if (info?.hasUpdate && info.latestVersion && info.latestVersion !== lastNotifiedUpdate) {
+        lastNotifiedUpdate = info.latestVersion
+        try { mainWindow?.webContents.send('app:update-available', info) } catch (_) {}
+        log('[update] version disponible:', info.latestVersion, '| obligatoire:', !!info.mandatory)
+      }
+    } catch (err) {
+      log('[update] check error:', err.message)
+    }
+  }
+  setTimeout(runCheck, 25_000)
+  if (updateTimer) clearInterval(updateTimer)
+  updateTimer = setInterval(runCheck, 60 * 60 * 1_000)
+}
 
 // One-time secret for internal API calls (export endpoint)
 const INTERNAL_EXPORT_KEY = crypto.randomBytes(32).toString('hex')
@@ -1745,81 +1888,18 @@ function setupIPC() {
     shell.openPath(desktop)
   })
 
-  // Update check — checks admin license server first, then GitHub releases
+  // Update check — serveur central (/api/update/latest) puis replis (voir
+  // fetchLatestUpdate). Renvoie un objet homogène incluant sha256, size,
+  // mandatory, downloadUrl.
   ipcMain.handle('app:check-updates', async () => {
     try {
-      const currentVersion = app.getVersion()
-
-      // 1. Serveur officiel — /api/update/latest fournit l'empreinte SHA-256 et
-      //    l'URL de téléchargement signée (déploiement progressif pris en compte
-      //    via le HWID). L'empreinte est OBLIGATOIRE pour autoriser l'installation.
-      const remoteServer = process.env.GF_LICENSE_SERVER
-      if (remoteServer) {
-        const base = remoteServer.replace(/\/$/, '')
-        const q = `?version=${encodeURIComponent(currentVersion)}`
-               + `&channel=${encodeURIComponent(UPDATE_CHANNEL)}`
-               + `&hwid=${encodeURIComponent(getHwid())}`
-        const latest = await httpGetJson(`${base}/api/update/latest${q}`).catch(() => null)
-        if (latest?.hasUpdate && latest.latest) {
-          const L = latest.latest
-          return {
-            hasUpdate:     true,
-            latestVersion: L.version,
-            releaseUrl:    L.downloadUrl ?? null,
-            sha256:        L.sha256 ?? null,   // empreinte vérifiée avant install
-            size:          L.size ?? null,
-            releaseNotes:  L.changelog ?? L.title ?? null,
-            mandatory:     !!latest.mandatory,
-            // Manifeste signé Ed25519 : autorité pour sha256/size/downloadUrl/version.
-            manifest:      latest.manifest ?? null,
-            source:        'server',
-          }
-        }
-      }
-
-      // 2. Check local admin file
-      const localUpdateFile = path.join(APP_DATA, 'gf_update.json')
-      try {
-        const localUpdate = JSON.parse(require('fs').readFileSync(localUpdateFile, 'utf8'))
-        if (localUpdate?.hasUpdate && localUpdate.latestVersion !== currentVersion) {
-          return {
-            hasUpdate:     true,
-            latestVersion: localUpdate.latestVersion,
-            // Fichier .exe téléversé localement → servi par le serveur local intégré
-            releaseUrl:    localUpdate.downloadPath
-              ? `http://127.0.0.1:${PORT}${localUpdate.downloadPath}`
-              : (localUpdate.releaseUrl ?? null),
-            releaseNotes:  localUpdate.releaseNotes ?? null,
-            source:        'local-admin',
-          }
-        }
-      } catch { /* no local update file — ok */ }
-
-      // 3. Fall back to GitHub releases
-      const data = await new Promise((resolve) => {
-        const options = {
-          hostname: 'api.github.com',
-          path:     '/repos/garageflow/garageflow/releases/latest',
-          headers:  { 'User-Agent': 'GarageFlow/' + currentVersion },
-          timeout:  10_000,
-        }
-        require('https').get(options, res => {
-          let raw = ''
-          res.on('data', c => raw += c)
-          res.on('end',  () => { try { resolve(JSON.parse(raw)) } catch { resolve(null) } })
-        }).on('error', () => resolve(null)).on('timeout', () => resolve(null))
-      })
-
-      if (!data || !data.tag_name) return { hasUpdate: false }
-      const latest = String(data.tag_name).replace(/^v/, '')
-      return {
-        // Comparaison SemVer (jamais lexicographique : « 1.9.0 » < « 1.10.0 »).
-        hasUpdate:     semver.isNewer(latest, currentVersion),
-        latestVersion: latest,
-        releaseUrl:    data.html_url ?? null,
-        releaseNotes:  data.body ? data.body.slice(0, 500) : null,
-        source:        'github',
-      }
+      // Chemin unifié (voir fetchLatestUpdate) : serveur central /api/update/latest
+      // (avec HWID pour le rollout progressif + manifeste signé Ed25519), puis
+      // repli fichier local admin, puis Releases GitHub (SemVer). Le même objet
+      // homogène (sha256/size/manifest/mandatory/downloadUrl) alimente à la fois
+      // la vérification manuelle et le contrôle périodique, de sorte que
+      // app:install-update dispose toujours du manifeste requis à l'installation.
+      return await fetchLatestUpdate()
     } catch (err) {
       log('[check-updates] error:', err.message)
       return { hasUpdate: false, error: err.message }
@@ -1887,12 +1967,20 @@ function setupIPC() {
   // ── Install update: download the .exe and run the installer ───────────────
   // Les données utilisateur sont dans userData (garageflow.db) → conservées.
   // L'installeur NSIS met à jour l'app en place sans toucher aux données.
+  //
+  // `arg` : soit une URL (rétro-compat), soit
+  // { url|downloadUrl, sha256, size, fileName, version, manifest }.
+  // Sécurité (défense en profondeur) :
+  //   1. si une clé de vérification est embarquée, un MANIFESTE signé Ed25519
+  //      VALIDE est obligatoire et ses champs font autorité (anti-serveur compromis) ;
+  //   2. téléchargement HTTPS REPRENABLE (Range/.part, reprise sur coupure) ;
+  //   3. VÉRIFICATION SHA-256 (+ taille) avant tout lancement — fichier altéré refusé.
   ipcMain.handle('app:install-update', async (_event, arg) => {
-    // Accepte une chaîne (URL) ou un objet { url, sha256, size, manifest }.
-    let url          = typeof arg === 'string' ? arg : (arg && arg.url)
-    let expectedSha  = typeof arg === 'object' && arg ? (arg.sha256 || null) : null
-    let expectedSize = typeof arg === 'object' && arg ? (Number(arg.size) || null) : null
-    const manifest   = typeof arg === 'object' && arg ? (arg.manifest || null) : null
+    const opts       = (arg && typeof arg === 'object') ? arg : { url: arg }
+    let url          = opts.url || opts.downloadUrl
+    let expectedSha  = String(opts.sha256 || '').trim().toLowerCase() || null
+    let expectedSize = Number(opts.size) || null
+    const manifest   = opts.manifest || null
 
     // ── VÉRIFICATION DU MANIFESTE SIGNÉ (Ed25519) — autorité de confiance ──────
     // Un SHA-256 seul (fourni par le même serveur que le binaire) ne protège pas
@@ -1917,23 +2005,22 @@ function setupIPC() {
       }
       // Les valeurs SIGNÉES font autorité (on ignore toute valeur non signée).
       url          = v.manifest.downloadUrl
-      expectedSha  = v.manifest.sha256
+      expectedSha  = String(v.manifest.sha256 || '').trim().toLowerCase()
       expectedSize = v.manifest.size
       log('[install-update] manifeste signé vérifié — v' + v.manifest.version + ' keyId=' + v.manifest.keyId)
     }
-
     if (!url || typeof url !== 'string') return { ok: false, reason: 'URL manquante' }
 
     const { spawn } = require('child_process')
     const tmpDir = require('os').tmpdir()
 
-    // Detect if this is a direct installer URL (ends with known extension)
+    // Installateur direct ? (empreinte fournie, extension connue, ou route /downloads/)
     const installerExts = ['.exe', '.msi', '.dmg', '.pkg', '.AppImage', '.deb', '.rpm', '.zip']
-    const urlLower = url.toLowerCase().split('?')[0]
-    const isDirectFile = installerExts.some(ext => urlLower.endsWith(ext))
+    const urlNoQuery = url.toLowerCase().split('?')[0]
+    const isDirectFile = !!expectedSha || url.includes('/downloads/') || installerExts.some(ext => urlNoQuery.endsWith(ext))
 
     if (!isDirectFile) {
-      // Not a direct installer (e.g. a web page) — open in browser as fallback
+      // Pas un installateur direct (ex. page web) — ouverture navigateur.
       shell.openExternal(url)
       return { ok: true, method: 'browser', url }
     }
@@ -1943,41 +2030,102 @@ function setupIPC() {
 
     const emit = (pct) => { try { mainWindow?.webContents.send('app:update-progress', pct) } catch (_) {} }
 
-    const fileName = decodeURIComponent((url.split('/').pop() || 'GarageFlow-Setup.exe').split('?')[0])
+    const fileName = (opts.fileName && String(opts.fileName).replace(/[^0-9A-Za-z._-]/g, '')) ||
+      decodeURIComponent((url.split('/').pop() || 'GarageFlow-Setup.exe').split('?')[0]) || 'GarageFlow-Setup.exe'
     const destPath = path.join(tmpDir, fileName)
+    const partPath = destPath + '.part'
 
-    // Téléchargement avec suivi de progression + suivi des redirections
-    function download(u, redirects) {
+    // Téléchargement REPRENABLE : requête Range, reprise du .part sur coupure,
+    // avec ré-essais (backoff). Le serveur/CDN gère nativement le Range.
+    function downloadOnce(startUrl) {
       return new Promise((resolve, reject) => {
-        if (redirects > 5) return reject(new Error('Trop de redirections'))
-        const mod = u.startsWith('https') ? require('https') : http
-        const req = mod.get(u, { timeout: 300_000 }, res => {
-          if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-            res.resume()
-            resolve(download(res.headers.location, redirects + 1))
-            return
+        let settled = false
+        const doReq = (u, redirects) => {
+          if (redirects > 5) { settled = true; return reject(new Error('Trop de redirections')) }
+          const mod = u.startsWith('https') ? require('https') : http
+          const existing = fs.existsSync(partPath) ? fs.statSync(partPath).size : 0
+          const headers = { 'User-Agent': 'GarageFlow/' + app.getVersion() }
+          if (existing > 0) headers['Range'] = `bytes=${existing}-`
+          let ws = null
+          const fail = (err) => {
+            if (settled) return
+            settled = true
+            if (ws) { try { ws.destroy() } catch (_) {} } // stoppe toute écriture en attente
+            reject(err)
           }
-          if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode)) }
-
-          const total = parseInt(res.headers['content-length'] || '0', 10)
-          let received = 0
-          const file = fs.createWriteStream(destPath)
-          res.on('data', chunk => {
-            received += chunk.length
-            if (total) emit(Math.min(99, Math.round((received / total) * 100)))
+          const req = mod.get(u, { timeout: 300_000, headers }, res => {
+            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+              res.resume(); doReq(res.headers.location, redirects + 1); return
+            }
+            let append, total
+            if (res.statusCode === 206) {
+              append = true
+              const cr = res.headers['content-range'] // bytes start-end/total
+              total = cr ? parseInt(cr.split('/')[1], 10) : existing + parseInt(res.headers['content-length'] || '0', 10)
+            } else if (res.statusCode === 200) {
+              append = false // le serveur ignore Range → on repart de zéro
+              total = parseInt(res.headers['content-length'] || '0', 10)
+            } else {
+              res.resume(); return fail(new Error('HTTP ' + res.statusCode))
+            }
+            let received = append ? existing : 0
+            ws = fs.createWriteStream(partPath, { flags: append ? 'a' : 'w' })
+            res.on('data', chunk => {
+              received += chunk.length
+              if (total) emit(Math.min(99, Math.round((received / total) * 100)))
+            })
+            res.on('error', fail)
+            ws.on('error', fail)
+            // 'close' (et non 'finish') : le descripteur de fichier est libéré →
+            // le rename qui suit est sûr sous Windows.
+            ws.on('close', () => { if (!settled) { settled = true; resolve() } })
+            res.pipe(ws)
           })
-          res.pipe(file)
-          file.on('finish', () => file.close(() => resolve()))
-          file.on('error', err => { try { fs.unlinkSync(destPath) } catch (_) {} ; reject(err) })
-        })
-        req.on('error', reject)
-        req.on('timeout', () => { req.destroy(); reject(new Error('Délai de téléchargement dépassé')) })
+          req.on('error', fail)
+          req.on('timeout', () => { req.destroy(); fail(new Error('Délai de téléchargement dépassé')) })
+        }
+        doReq(startUrl, 0)
       })
+    }
+
+    async function download(startUrl, { fresh = false } = {}) {
+      if (fresh) { try { fs.unlinkSync(partPath) } catch (_) {} }
+      const MAX_ATTEMPTS = 5
+      for (let attempt = 1; ; attempt++) {
+        try { return await downloadOnce(startUrl) }
+        catch (err) {
+          if (attempt >= MAX_ATTEMPTS) throw err
+          log('[install-update] interruption, reprise (tentative ' + attempt + '):', err.message)
+          await new Promise(r => setTimeout(r, 1500 * attempt)) // backoff — conserve le .part
+        }
+      }
     }
 
     try {
       emit(0)
-      await download(url, 0)
+      await download(url)
+
+      // Vérification d'intégrité SHA-256 (obligatoire si l'empreinte est fournie).
+      if (expectedSha) {
+        let actual = await sha256File(partPath)
+        if (actual !== expectedSha) {
+          // Une passe de re-téléchargement propre au cas où le .part serait corrompu.
+          log('[install-update] SHA-256 mismatch, re-téléchargement propre…')
+          await download(url, { fresh: true })
+          actual = await sha256File(partPath)
+        }
+        if (actual !== expectedSha) {
+          try { fs.unlinkSync(partPath) } catch (_) {}
+          log('[install-update] ÉCHEC vérification SHA-256 — installation refusée')
+          try { mainWindow?.webContents.send('app:update-error', 'Fichier corrompu (empreinte SHA-256 invalide). Installation annulée.') } catch (_) {}
+          return { ok: false, reason: 'Fichier corrompu (empreinte SHA-256 invalide). Installation annulée par sécurité.' }
+        }
+        log('[install-update] SHA-256 vérifié ✓')
+      }
+
+      // Finalise : .part → fichier définitif.
+      try { fs.rmSync(destPath, { force: true }) } catch (_) {}
+      fs.renameSync(partPath, destPath)
       emit(100)
 
       // ── VÉRIFICATION CRYPTOGRAPHIQUE OBLIGATOIRE avant toute exécution ───────
@@ -2111,6 +2259,50 @@ app.whenReady().then(async () => {
     return
   }
 
+  // ── Vérification d'intégrité (anti-altération) ────────────────────────────
+  // Production uniquement. Mode via GF_INTEGRITY_MODE : 'audit' (défaut, journalise
+  // sans bloquer) | 'enforce' (arrêt si un fichier critique est modifié/supprimé)
+  // | 'off'. Défaut prudent = 'audit' : passez à 'enforce' APRÈS avoir validé
+  // qu'un vrai build Windows démarre proprement (voir docs/SECURITY-HARDENING.md).
+  if (!IS_DEV) {
+    try {
+      const integrity = require('./integrity')
+      const mode = (process.env.GF_INTEGRITY_MODE || 'audit').toLowerCase()
+      if (mode !== 'off') {
+        const result = integrity.verify(process.resourcesPath)
+        if (!result.present) {
+          log('[integrity] aucun manifeste — vérification inactive')
+        } else if (result.ok) {
+          log('[integrity] OK —', result.checked, 'fichiers critiques vérifiés')
+        } else {
+          log('[integrity] ALTÉRATION détectée:', result.violations.join(', '))
+          if (mode === 'enforce') {
+            dialog.showErrorBox(
+              'GarageFlow — installation corrompue',
+              'Des fichiers essentiels de GarageFlow ont été modifiés, remplacés ou supprimés.\n\n' +
+                "Par sécurité, l'application ne peut pas démarrer.\n\n" +
+                "Veuillez réinstaller GarageFlow depuis l'installateur officiel.",
+            )
+            app.exit(1)
+            return
+          }
+        }
+        // Anti-débogueur : bloquant uniquement si explicitement activé (évite les
+        // faux positifs) via GF_ANTIDEBUG=1.
+        if (integrity.detectDebugger()) {
+          log('[integrity] débogueur/inspecteur détecté')
+          if (mode === 'enforce' && process.env.GF_ANTIDEBUG === '1') {
+            dialog.showErrorBox('GarageFlow', "Un outil de débogage a été détecté. Fermeture par sécurité.")
+            app.exit(1)
+            return
+          }
+        }
+      }
+    } catch (e) {
+      log('[integrity] erreur de vérification (non bloquante):', e.message)
+    }
+  }
+
   checkDebugger()
   registerCrashHandlers()
   checkClockIntegrity()
@@ -2183,12 +2375,16 @@ app.whenReady().then(async () => {
     startPeriodicLicenseCheck()
     startOnlineGraceCheck()
   }
+
+  // ── Vérification des mises à jour : au démarrage puis toutes les heures ────
+  startPeriodicUpdateCheck()
 })
 
 app.on('window-all-closed', () => {
   if (backupTimer)       { clearInterval(backupTimer);         backupTimer       = null }
   if (licenseTimer)      { clearTimeout(licenseTimer);         licenseTimer      = null }
   if (onlineCheckTimer)  { clearInterval(onlineCheckTimer);    onlineCheckTimer  = null }
+  if (updateTimer)       { clearInterval(updateTimer);         updateTimer       = null }
   if (desktopExportTimer){ clearTimeout(desktopExportTimer);   desktopExportTimer = null }
   if (nextServer) {
     const pid = nextServer.pid
