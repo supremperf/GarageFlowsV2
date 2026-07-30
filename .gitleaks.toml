@@ -1,0 +1,27 @@
+# Configuration Gitleaks — analyse des secrets du dépôt GarageFlow.
+# On étend le jeu de règles par défaut et on ajoute un allowlist ciblé pour les
+# valeurs qui NE SONT PAS des secrets exploitables : clés PUBLIQUES embarquées
+# (sûres à distribuer) et listes de détection de valeurs faibles (auth-secret.ts,
+# health/route.ts) qui existent précisément pour BANNIR ces chaînes.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Faux positifs : clés publiques, listes de détection, placeholders"
+regexes = [
+  # Ancien secret partagé — RÉVOQUÉ/ROTÉ (voir docs/SECRETS_ROTATION.md). Présent
+  # uniquement dans les listes de détection qui servent à le refuser.
+  '''gf-electron-local-secret-2026-xK9mP3qR''',
+  '''fallback-(dev|portal)-secret-change-in-production''',
+  '''CHANGE_ME[_A-Za-z0-9]*''',
+  '''REPLACE_WITH_YOUR_PUBLIC_KEY''',
+]
+paths = [
+  '''.*public-key\.ts''',
+  '''src/app/api/health/route\.ts''',
+  '''src/lib/auth-secret\.ts''',
+  '''\.env\.example''',
+  '''.*\.md''',
+]
+stopwords = ["BEGIN PUBLIC KEY"]

@@ -3,6 +3,7 @@ const nextConfig = {
   output: 'standalone',
   experimental: {
     outputFileTracingRoot: undefined,
+    instrumentationHook: true,
   },
 
   async headers() {

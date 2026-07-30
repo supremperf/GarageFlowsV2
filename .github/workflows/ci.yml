@@ -7,6 +7,19 @@ on:
     branches: [main, master, develop]
 
 jobs:
+  secrets:
+    name: Secret scan (Gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gitleaks — scan working tree
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_CONFIG: .gitleaks.toml
+          # Scan the current tree (les secrets historiques sont documentés comme rotés).
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+
   check:
     name: Type-check, Lint & Test
     runs-on: ubuntu-latest
@@ -36,5 +49,9 @@ jobs:
         run: npm test
         env:
           DATABASE_URL: file:./prisma/dev.db
-          NEXTAUTH_SECRET: ci-test-secret-not-for-production
+          NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
           NEXTAUTH_URL: http://localhost:4028
+
+      - name: Dependency audit (high+)
+        run: npm audit --audit-level=high
+        continue-on-error: true

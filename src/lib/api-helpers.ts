@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
 import { headers, cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
+import { getAuthSecret } from '@/lib/auth-secret'
 
 // ─── In-memory rate limiter ────────────────────────────────────────────────
 // Buckets: { key -> { count, resetAt } }
@@ -100,9 +101,8 @@ export async function isAdminSession(): Promise<boolean> {
   const raw = cookies().get('gf_session')?.value
   if (!raw) return false
   try {
-    const secret = new TextEncoder().encode(
-      process.env.NEXTAUTH_SECRET ?? 'fallback-dev-secret-change-in-production'
-    )
+    // No hard-coded fallback — a forgeable admin secret = full /api/admin/* takeover.
+    const secret = new TextEncoder().encode(getAuthSecret())
     const { payload } = await jwtVerify(raw, secret)
     return payload.typ === 'admin'
   } catch {
