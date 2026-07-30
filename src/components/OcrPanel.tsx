@@ -7,6 +7,7 @@
  */
 import { useState } from 'react'
 import { X, ScanLine, Sparkles, Car } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n'
 
 interface Field { key: string; label: string; value: string; confidence: number; valid?: boolean }
 interface Result {
@@ -16,11 +17,11 @@ interface Result {
 
 const SAMPLE = "CERTIFICAT D'IMMATRICULATION\nA   AB-123-CD\nB   15/03/2018\nD.1 PEUGEOT\nD.3 308\nE   VF3LBHYBWFS123456\nP.3 GO"
 
-const TYPE_LABEL: Record<string, string> = {
-  carte_grise: 'Carte grise', invoice: 'Facture', plate: 'Plaque', vin_plate: 'Plaque VIN', odometer: 'Compteur', unknown: 'Non reconnu',
-}
-
 export default function OcrPanel({ onClose, onUseVehicle }: { onClose: () => void; onUseVehicle?: (preset: { licensePlate?: string; vehicleModel?: string }) => void }) {
+  const { t, lang } = useTranslation()
+  const TYPE_LABEL: Record<string, string> = {
+    carte_grise: t.ocrTypeCarteGrise, invoice: t.ocrTypeInvoice, plate: t.ocrTypePlate, vin_plate: t.ocrTypeVinPlate, odometer: t.ocrTypeOdometer, unknown: t.ocrTypeUnknown,
+  }
   const [text, setText] = useState(SAMPLE)
   const [res, setRes] = useState<Result | null>(null)
   const [busy, setBusy] = useState(false)
@@ -32,9 +33,9 @@ export default function OcrPanel({ onClose, onUseVehicle }: { onClose: () => voi
     try {
       const r = await fetch('/api/ocr', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text, ocrConfidence: 0.9 }) })
       const d = await r.json()
-      if (!r.ok) { setError(d?.error ?? 'Erreur'); return }
+      if (!r.ok) { setError(d?.error ?? t.ocrError); return }
       setRes(d)
-    } catch { setError('Erreur de communication.') } finally { setBusy(false) }
+    } catch { setError(t.ocrCommError) } finally { setBusy(false) }
   }
 
   return (
@@ -42,7 +43,7 @@ export default function OcrPanel({ onClose, onUseVehicle }: { onClose: () => voi
       <div style={bar}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={logo}><ScanLine size={16} color="#fff" /></div>
-          <div><p style={{ color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>OCR automobile</p><p style={{ color: '#475569', fontSize: 11 }}>Document → champs structurés</p></div>
+          <div><p style={{ color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>{t.ocrTitle}</p><p style={{ color: '#475569', fontSize: 11 }}>{t.ocrSubtitle}</p></div>
         </div>
         <button onClick={onClose} style={closeBtn} aria-label="Fermer"><X size={16} /></button>
       </div>
@@ -51,22 +52,22 @@ export default function OcrPanel({ onClose, onUseVehicle }: { onClose: () => voi
         <div style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.1fr', gap: 16 }}>
           {/* Input */}
           <div style={card}>
-            <p style={hdr}>Texte du document (OCR en amont)</p>
+            <p style={hdr}>{t.ocrInputLabel}</p>
             <textarea value={text} onChange={(e) => setText(e.target.value)} spellCheck={false}
               style={{ width: '100%', height: 240, resize: 'vertical', background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, color: '#cbd5e1', fontFamily: 'ui-monospace,Menlo,monospace', fontSize: 12.5, lineHeight: 1.7, padding: 12, outline: 'none' }} />
-            <button onClick={analyze} disabled={busy} style={{ ...analyzeBtn, opacity: busy ? 0.6 : 1 }}><Sparkles size={15} /> {busy ? 'Analyse…' : 'Analyser'}</button>
+            <button onClick={analyze} disabled={busy} style={{ ...analyzeBtn, opacity: busy ? 0.6 : 1 }}><Sparkles size={15} /> {busy ? t.ocrAnalyzing : t.ocrAnalyze}</button>
           </div>
 
           {/* Result */}
           <div style={card}>
-            <p style={hdr}>Champs extraits</p>
-            {!res && !error && <p style={{ color: '#64748b', fontSize: 13, padding: '8px 2px' }}>Lancez l&apos;analyse pour extraire les champs.</p>}
+            <p style={hdr}>{t.ocrFieldsLabel}</p>
+            {!res && !error && <p style={{ color: '#64748b', fontSize: 13, padding: '8px 2px' }}>{t.ocrRunHint}</p>}
             {error && <p style={{ color: '#f87171', fontSize: 13 }}>{error}</p>}
             {res && (
               <>
-                <span style={typePill}>🪪 {TYPE_LABEL[res.type] ?? res.type} · confiance {res.confidence.toFixed(2).replace('.', ',')}</span>
+                <span style={typePill}>🪪 {TYPE_LABEL[res.type] ?? res.type} · {t.ocrConfidence} {res.confidence.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 <div style={{ marginTop: 6 }}>
-                  {res.fields.length === 0 && <p style={{ color: '#64748b', fontSize: 13, paddingTop: 8 }}>Aucun champ exploitable.</p>}
+                  {res.fields.length === 0 && <p style={{ color: '#64748b', fontSize: 13, paddingTop: 8 }}>{t.ocrNoFields}</p>}
                   {res.fields.map((f) => {
                     const pct = Math.round(f.confidence * 100)
                     const col = pct >= 75 ? '#4ade80' : '#fbbf24'
@@ -74,7 +75,7 @@ export default function OcrPanel({ onClose, onUseVehicle }: { onClose: () => voi
                       <div key={f.key} style={{ padding: '11px 2px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                           <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>{f.label}</span>
-                          <span style={{ fontSize: 15, fontWeight: 700, color: '#e8edf4' }}>{f.value}{f.valid && <span style={{ color: '#4ade80', fontSize: 12, marginLeft: 6 }}>✓ valide</span>}</span>
+                          <span style={{ fontSize: 15, fontWeight: 700, color: '#e8edf4' }}>{f.value}{f.valid && <span style={{ color: '#4ade80', fontSize: 12, marginLeft: 6 }}>✓ {t.ocrValid}</span>}</span>
                         </div>
                         <div style={{ height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.07)', marginTop: 7, overflow: 'hidden' }}>
                           <div style={{ height: '100%', borderRadius: 3, width: `${pct}%`, background: col }} />
@@ -92,8 +93,8 @@ export default function OcrPanel({ onClose, onUseVehicle }: { onClose: () => voi
           <div style={{ maxWidth: 960, margin: '16px auto 0', ...card, display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(96,165,250,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Car size={20} color="#60a5fa" /></div>
             <div>
-              <p style={{ fontSize: 14, fontWeight: 700, color: '#e8edf4' }}>VIN décodé — {[res.vinDecoded.manufacturer, res.vinDecoded.country, res.vinDecoded.region].filter(Boolean).join(' · ')}</p>
-              <p style={{ fontSize: 12.5, color: '#94a3b8', marginTop: 2 }}>Recoupé avec le décodeur VIN hors-ligne. Prêt à pré-remplir la fiche véhicule — après votre confirmation.</p>
+              <p style={{ fontSize: 14, fontWeight: 700, color: '#e8edf4' }}>{t.ocrVinDecoded} — {[res.vinDecoded.manufacturer, res.vinDecoded.country, res.vinDecoded.region].filter(Boolean).join(' · ')}</p>
+              <p style={{ fontSize: 12.5, color: '#94a3b8', marginTop: 2 }}>{t.ocrVinHint}</p>
             </div>
           </div>
         )}
@@ -107,10 +108,10 @@ export default function OcrPanel({ onClose, onUseVehicle }: { onClose: () => voi
           return (
             <div style={{ maxWidth: 960, margin: '12px auto 0', ...card, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: 220 }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: '#e8edf4' }}>Pré-remplir une intervention</p>
-                <p style={{ fontSize: 12.5, color: '#94a3b8', marginTop: 2 }}>{[plate, vehicleModel].filter(Boolean).join(' · ')} — rien n&apos;est enregistré : vous complétez et validez la fiche.</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: '#e8edf4' }}>{t.ocrPrefillTitle}</p>
+                <p style={{ fontSize: 12.5, color: '#94a3b8', marginTop: 2 }}>{[plate, vehicleModel].filter(Boolean).join(' · ')} — {t.ocrPrefillHint}</p>
               </div>
-              <button onClick={() => onUseVehicle({ licensePlate: plate || undefined, vehicleModel: vehicleModel || undefined })} style={prefillBtn}><Car size={15} /> Créer l&apos;intervention</button>
+              <button onClick={() => onUseVehicle({ licensePlate: plate || undefined, vehicleModel: vehicleModel || undefined })} style={prefillBtn}><Car size={15} /> {t.ocrCreateJob}</button>
             </div>
           )
         })()}

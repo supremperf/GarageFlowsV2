@@ -9,6 +9,7 @@
  */
 import { useRef, useState } from 'react'
 import { X, Sparkles, Send, ShieldCheck, User } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n'
 
 interface CopilotResponse {
   type: string
@@ -20,13 +21,9 @@ interface CopilotResponse {
 }
 interface Msg { role: 'user' | 'ai'; text: string; res?: CopilotResponse; confirmed?: boolean }
 
-const SUGGESTIONS = [
-  'Quel est le CA du jour ?',
-  'Quelles pièces sont en rupture de stock ?',
-  'Crée un devis pour ce client',
-]
-
 export default function CopilotPanel({ onClose, onAction }: { onClose: () => void; onAction?: (intent: string) => void }) {
+  const { t } = useTranslation()
+  const SUGGESTIONS = [t.cpSug1, t.cpSug2, t.cpSug3]
   const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
@@ -42,13 +39,13 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
       const r = await fetch('/api/copilot', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }) })
       const res: CopilotResponse & { error?: string } = await r.json().catch(() => ({ type: 'error' }))
       if (!r.ok) {
-        setMessages((m) => [...m, { role: 'ai', text: res?.error ?? 'Le Copilot a rencontré une erreur.' }])
+        setMessages((m) => [...m, { role: 'ai', text: res?.error ?? t.cpGenericError }])
         return
       }
       const text = res.phrasing || res.message || '—'
       setMessages((m) => [...m, { role: 'ai', text, res }])
     } catch {
-      setMessages((m) => [...m, { role: 'ai', text: 'Erreur de communication avec le Copilot.' }])
+      setMessages((m) => [...m, { role: 'ai', text: t.cpCommError }])
     } finally {
       setBusy(false)
       requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 1e9, behavior: 'smooth' }))
@@ -70,7 +67,7 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
       <div style={bar}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={logo}><Sparkles size={16} color="#fff" /></div>
-          <div><p style={{ color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>Copilot IA</p><p style={{ color: '#475569', fontSize: 11 }}>Chiffres garantis par le moteur</p></div>
+          <div><p style={{ color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>{t.cpTitle}</p><p style={{ color: '#475569', fontSize: 11 }}>{t.cpSubtitle}</p></div>
         </div>
         <button onClick={onClose} style={closeBtn} aria-label="Fermer"><X size={16} /></button>
       </div>
@@ -80,8 +77,8 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
           {messages.length === 0 && (
             <div style={{ textAlign: 'center', marginTop: 40 }}>
               <div style={{ ...logo, width: 48, height: 48, borderRadius: 14, margin: '0 auto 14px' }}><Sparkles size={24} color="#fff" /></div>
-              <p style={{ color: '#e8edf4', fontSize: 17, fontWeight: 600 }}>Comment puis-je aider l&apos;atelier ?</p>
-              <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>Posez une question — les chiffres proviennent des données, jamais inventés.</p>
+              <p style={{ color: '#e8edf4', fontSize: 17, fontWeight: 600 }}>{t.cpEmptyTitle}</p>
+              <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>{t.cpEmptyHint}</p>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 18 }}>
                 {SUGGESTIONS.map((s) => (
                   <button key={s} onClick={() => ask(s)} style={chip}>{s}</button>
@@ -90,13 +87,13 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
             </div>
           )}
           {messages.map((m, i) => <Bubble key={i} m={m} onConfirm={() => onConfirmAction(i)} />)}
-          {busy && <div style={{ color: '#64748b', fontSize: 13, padding: '6px 42px' }}>Le Copilot réfléchit…</div>}
+          {busy && <div style={{ color: '#64748b', fontSize: 13, padding: '6px 42px' }}>{t.cpThinking}</div>}
         </div>
       </div>
 
       <div style={{ position: 'relative', zIndex: 1, borderTop: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', padding: 14 }}>
         <form onSubmit={(e) => { e.preventDefault(); ask(input) }} style={{ maxWidth: 760, margin: '0 auto', display: 'flex', gap: 10 }}>
-          <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Écrivez votre question…" style={inputBox} />
+          <input value={input} onChange={(e) => setInput(e.target.value)} placeholder={t.cpInputPh} style={inputBox} />
           <button type="submit" disabled={busy || !input.trim()} style={{ ...sendBtn, opacity: busy || !input.trim() ? 0.5 : 1 }}><Send size={16} /></button>
         </form>
       </div>
@@ -105,6 +102,7 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
 }
 
 function Bubble({ m, onConfirm }: { m: Msg; onConfirm: () => void }) {
+  const { t } = useTranslation()
   if (m.role === 'user') {
     return (
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginBottom: 14 }}>
@@ -121,19 +119,19 @@ function Bubble({ m, onConfirm }: { m: Msg; onConfirm: () => void }) {
       <div style={{ ...bubble, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderBottomLeftRadius: 5 }}>
         <div style={{ color: '#e8edf4' }}>{m.text}</div>
         {grounded && !action && (
-          <span style={verified}><ShieldCheck size={13} /> Chiffres ancrés sur les données · vérifié</span>
+          <span style={verified}><ShieldCheck size={13} /> {t.cpVerified}</span>
         )}
         {action && (
           <div style={actionCard(m.confirmed)}>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: m.confirmed ? '#4ade80' : '#fbbf24', display: 'flex', alignItems: 'center', gap: 7 }}>
-              {m.confirmed ? '✓ Action confirmée' : '⚠ Cette action nécessite votre confirmation'}
+              {m.confirmed ? `✓ ${t.cpActionConfirmed}` : `⚠ ${t.cpActionNeedsConfirm}`}
             </div>
             {!m.confirmed && (
               <>
-                <p style={{ fontSize: 11.5, color: '#64748b', margin: '6px 0 9px' }}>Le Copilot n&apos;exécute rien lui-même : en confirmant, vous ouvrez l&apos;outil dédié pour finaliser et valider l&apos;action.</p>
+                <p style={{ fontSize: 11.5, color: '#64748b', margin: '6px 0 9px' }}>{t.cpActionHint}</p>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={onConfirm} style={btnPri}>✓ Confirmer et ouvrir</button>
-                  <button style={btnSec}>Annuler</button>
+                  <button onClick={onConfirm} style={btnPri}>✓ {t.cpConfirmOpen}</button>
+                  <button style={btnSec}>{t.uiCancel}</button>
                 </div>
               </>
             )}

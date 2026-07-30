@@ -7,12 +7,14 @@
  */
 import { useEffect, useState } from 'react'
 import { X, Truck, PackageCheck, Loader2 } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n'
 
 interface Line { partId: string; name: string; reference?: string | null; quantity: number; unitPrice: number; lineTotal: number }
 interface Order { supplierId: string; supplierName: string; lines: Line[]; totalHT: number; maxLeadTimeDays: number }
 interface Plan { orders: Order[]; unfulfillable: { name: string }[]; summary: { parts: number; suppliers: number; totalHT: number } }
 
 export default function SuppliersPanel({ onClose }: { onClose: () => void }) {
+  const { t, lang } = useTranslation()
   const [plan, setPlan] = useState<Plan | null>(null)
   const [state, setState] = useState<'loading' | 'error' | 'ok'>('loading')
   const [confirming, setConfirming] = useState(false)
@@ -41,51 +43,51 @@ export default function SuppliersPanel({ onClose }: { onClose: () => void }) {
       <div style={bar}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={logo}><Truck size={16} color="#fff" /></div>
-          <div><p style={{ color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>Commande fournisseurs</p><p style={{ color: '#475569', fontSize: 11 }}>Réappro. groupé par fournisseur</p></div>
+          <div><p style={{ color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>{t.supTitle}</p><p style={{ color: '#475569', fontSize: 11 }}>{t.supSubtitle}</p></div>
         </div>
         <button onClick={onClose} style={closeBtn} aria-label="Fermer"><X size={16} /></button>
       </div>
 
       <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
         <div style={{ maxWidth: 920, margin: '0 auto' }}>
-          {state === 'loading' && <Center><Loader2 size={26} color="#3b82f6" className="spin" /><p style={{ color: '#475569', fontSize: 13, marginTop: 10 }}>Analyse des stocks…</p></Center>}
-          {state === 'error' && <Center><p style={{ color: '#f87171', fontSize: 14 }}>Impossible de charger le plan de réapprovisionnement.</p></Center>}
+          {state === 'loading' && <Center><Loader2 size={26} color="#3b82f6" className="spin" /><p style={{ color: '#475569', fontSize: 13, marginTop: 10 }}>{t.supAnalyzing}</p></Center>}
+          {state === 'error' && <Center><p style={{ color: '#f87171', fontSize: 14 }}>{t.supLoadError}</p></Center>}
           {state === 'ok' && plan && (
             <>
               {/* Summary + gated action */}
               <div style={{ ...card, display: 'flex', alignItems: 'center', gap: 18, padding: '16px 20px', marginBottom: 16 }}>
-                <Stat label="Pièces sous seuil" value={String(plan.summary.parts)} />
-                <Stat label="Fournisseurs" value={String(plan.summary.suppliers)} />
-                <Stat label="Total estimé HT" value={`${plan.summary.totalHT.toLocaleString('fr-FR')} €`} accent />
+                <Stat label={t.supPartsBelow} value={String(plan.summary.parts)} />
+                <Stat label={t.supSuppliers} value={String(plan.summary.suppliers)} />
+                <Stat label={t.supTotalHT} value={`${plan.summary.totalHT.toLocaleString(lang)} €`} accent />
                 <div style={{ flex: 1 }} />
                 {created != null ? (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: '#4ade80', fontWeight: 700, fontSize: 14 }}><PackageCheck size={18} /> {created} commande(s) créée(s)</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: '#4ade80', fontWeight: 700, fontSize: 14 }}><PackageCheck size={18} /> {t.supCreated.replace('{n}', String(created))}</span>
                 ) : confirming ? (
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <span style={{ color: '#fbbf24', fontSize: 12.5, fontWeight: 600 }}>Créer {plan.summary.suppliers} bon(s) de commande ?</span>
-                    <button onClick={confirmOrders} disabled={busy} style={btnPri}>{busy ? '…' : '✓ Confirmer'}</button>
-                    <button onClick={() => setConfirming(false)} style={btnSec}>Annuler</button>
+                    <span style={{ color: '#fbbf24', fontSize: 12.5, fontWeight: 600 }}>{t.supConfirmQ.replace('{n}', String(plan.summary.suppliers))}</span>
+                    <button onClick={confirmOrders} disabled={busy} style={btnPri}>{busy ? '…' : `✓ ${t.confirm}`}</button>
+                    <button onClick={() => setConfirming(false)} style={btnSec}>{t.uiCancel}</button>
                   </div>
                 ) : (
-                  <button onClick={() => setConfirming(true)} disabled={plan.orders.length === 0} style={{ ...btnPri, opacity: plan.orders.length === 0 ? 0.5 : 1 }}>Préparer les commandes</button>
+                  <button onClick={() => setConfirming(true)} disabled={plan.orders.length === 0} style={{ ...btnPri, opacity: plan.orders.length === 0 ? 0.5 : 1 }}>{t.supPrepare}</button>
                 )}
               </div>
 
-              {created == null && plan.orders.length === 0 && <div style={{ ...card, padding: 24, textAlign: 'center', color: '#64748b', fontSize: 14 }}>Aucune pièce à commander — stocks suffisants.</div>}
+              {created == null && plan.orders.length === 0 && <div style={{ ...card, padding: 24, textAlign: 'center', color: '#64748b', fontSize: 14 }}>{t.supNoParts}</div>}
 
               {created == null && plan.orders.map((o) => (
                 <div key={o.supplierId} style={{ ...card, marginBottom: 14, overflow: 'hidden' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span style={{ fontSize: 15, fontWeight: 700, color: '#e8edf4' }}>{o.supplierName}</span>
-                      <span style={{ fontSize: 11.5, color: '#64748b' }}>livraison ~{o.maxLeadTimeDays} j · {o.lines.length} réf.</span>
+                      <span style={{ fontSize: 11.5, color: '#64748b' }}>{t.supDelivery.replace('{d}', String(o.maxLeadTimeDays))} · {t.supRefsN.replace('{n}', String(o.lines.length))}</span>
                     </div>
-                    <span style={{ fontSize: 15, fontWeight: 750, color: '#93c5fd' }}>{o.totalHT.toLocaleString('fr-FR')} € HT</span>
+                    <span style={{ fontSize: 15, fontWeight: 750, color: '#93c5fd' }}>{o.totalHT.toLocaleString(lang)} € {t.supHT}</span>
                   </div>
                   {o.lines.map((l) => (
                     <div key={l.partId} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 18px', fontSize: 13, borderTop: '1px solid rgba(255,255,255,0.04)', color: '#94a3b8' }}>
                       <span><b style={{ color: '#cbd5e1', fontWeight: 600 }}>{l.quantity}×</b> {l.name}{l.reference ? <span style={{ color: '#475569' }}> · {l.reference}</span> : null}</span>
-                      <span style={{ color: '#cbd5e1' }}>{l.lineTotal.toLocaleString('fr-FR')} €</span>
+                      <span style={{ color: '#cbd5e1' }}>{l.lineTotal.toLocaleString(lang)} €</span>
                     </div>
                   ))}
                 </div>
