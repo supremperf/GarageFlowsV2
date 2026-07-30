@@ -1,19 +1,14 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { rateLimit } from '@/lib/rate-limit'
+import { enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import Anthropic from '@anthropic-ai/sdk'
 
 // POST /api/plate-ocr  body: { imageBase64: "data:image/...;base64,..." }
 export const POST = withAuth(async (req: Request) => {
   const session = await requireSession()
-  const rl = rateLimit(`plate-ocr:${session.user.garageId}`, 10, 60)
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: `Trop de requêtes OCR. Réessayez dans ${rl.retryAfter}s.` },
-      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } },
-    )
-  }
+  const rl = await enforceRateLimit('api', `plate-ocr:${session.user.garageId}`, { max: 10, windowSec: 60 })
+  if (!rl.ok) return rateLimitResponse(rl)
 
   const { imageBase64 } = await req.json()
   if (!imageBase64 || typeof imageBase64 !== 'string') {

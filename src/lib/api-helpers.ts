@@ -1,41 +1,14 @@
 import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
-import { headers, cookies } from 'next/headers'
+import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
 import { getAuthSecret } from '@/lib/auth-secret'
+import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
-// ─── In-memory rate limiter ────────────────────────────────────────────────
-// Buckets: { key -> { count, resetAt } }
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
-
-/**
- * Simple token-bucket rate limiter.
- * @param key   Unique key (e.g. "ip:127.0.0.1")
- * @param max   Max requests per window
- * @param windowMs  Window in milliseconds
- * @returns true if the request is allowed, false if rate limited
- */
-function checkRateLimit(key: string, max: number, windowMs: number): boolean {
-  const now = Date.now()
-  const bucket = rateLimitStore.get(key)
-  if (!bucket || now > bucket.resetAt) {
-    rateLimitStore.set(key, { count: 1, resetAt: now + windowMs })
-    return true
-  }
-  if (bucket.count >= max) return false
-  bucket.count++
-  return true
-}
-
-function getClientIp(req: Request): string {
-  const headersList = headers()
-  return (
-    headersList.get('x-forwarded-for')?.split(',')[0].trim() ||
-    headersList.get('x-real-ip') ||
-    'unknown'
-  )
-}
+// Rate limiting : implémentation UNIQUE dans src/lib/security/rate-limit.ts
+// (distribuée en production PWA, mémoire uniquement pour Electron/dev/test).
+// L'ancienne Map locale de ce fichier a été supprimée.
 
 /** Returns the current session or throws a 401 JSON response */
 export async function requireSession() {
@@ -53,11 +26,9 @@ export function withAuth(
 ) {
   return async (req: Request, ctx?: any): Promise<NextResponse> => {
     try {
-      // General API rate limit: 120 requests/minute per IP
-      const ip = getClientIp(req)
-      if (!checkRateLimit(`api:${ip}`, 120, 60_000)) {
-        return NextResponse.json({ error: 'Trop de requêtes' }, { status: 429 })
-      }
+      // General API rate limit (défaut 120 req/min/IP — RATE_LIMIT_API_*)
+      const rl = await enforceRateLimit('api', clientIpFrom(req))
+      if (!rl.ok) return rateLimitResponse(rl)
       return await handler(req, ctx)
     } catch (e) {
       if (e instanceof NextResponse) return e
@@ -74,13 +45,9 @@ export function withLoginRateLimit(
 ) {
   return async (req: Request, ctx?: any): Promise<NextResponse> => {
     try {
-      const ip = getClientIp(req)
-      if (!checkRateLimit(`login:${ip}`, 10, 5 * 60_000)) {
-        return NextResponse.json(
-          { error: 'Trop de tentatives de connexion. Réessayez dans 5 minutes.' },
-          { status: 429 }
-        )
-      }
+      // Connexion (défaut 10 tentatives / 15 min / IP — RATE_LIMIT_LOGIN_*)
+      const rl = await enforceRateLimit('login', clientIpFrom(req))
+      if (!rl.ok) return rateLimitResponse(rl)
       return await handler(req, ctx)
     } catch (e) {
       if (e instanceof NextResponse) return e

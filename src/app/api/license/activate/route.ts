@@ -22,7 +22,7 @@ import { SignJWT } from 'jose'
 import { verifyLicenseToken, verifyHwid, isValidHwidFormat } from '@/lib/license/verify'
 import { prisma } from '@/lib/db'
 import { computeRecordMac, verifyRecordMac } from '@/lib/license/record-mac'
-import { rateLimit } from '@/lib/rate-limit'
+import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { getAuthSecret } from '@/lib/auth-secret'
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365 * 5   // 5 years
@@ -34,15 +34,10 @@ function getJwtSecret(): Uint8Array {
 
 export async function POST(req: NextRequest) {
   // ── Step 0: Rate limiting ───────────────────────────────────────────────────
-  // Key: forwarded IP or fallback — prevents brute-force token submission
-  const ip  = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'local'
-  const rl  = rateLimit(`activate:${ip}`, 5, 15 * 60)
-  if (!rl.ok) {
-    return NextResponse.json(
-      { ok: false, reason: `Trop de tentatives. Réessayez dans ${rl.retryAfter}s.` },
-      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
-    )
-  }
+  // Distribué en production PWA (Upstash), mémoire sous Electron. Clé = IP
+  // hachée — empêche la soumission de tokens en force brute.
+  const rl = await enforceRateLimit('license_activate', clientIpFrom(req))
+  if (!rl.ok) return rateLimitResponse(rl)
 
   let licenseToken: string
   let clientHwid:   string | undefined

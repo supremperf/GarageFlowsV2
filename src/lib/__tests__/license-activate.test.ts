@@ -31,8 +31,14 @@ vi.mock('@/lib/db', () => ({
   },
 }))
 
-// Rate-limit toujours passant.
-vi.mock('@/lib/rate-limit', () => ({ rateLimit: () => ({ ok: true, remaining: 99 }) }))
+// Rate-limit toujours passant (la couche réelle est testée dans security-rate-limit.test.ts).
+vi.mock('@/lib/security/rate-limit', () => ({
+  clientIpFrom: () => 'local',
+  enforceRateLimit: async () => ({ ok: true, remaining: 99 }),
+  rateLimitResponse: () => {
+    throw new Error('rateLimitResponse ne doit pas être appelé dans ces tests')
+  },
+}))
 
 // Intégrité MAC toujours OK.
 vi.mock('@/lib/license/record-mac', () => ({
