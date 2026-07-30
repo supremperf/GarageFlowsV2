@@ -18,6 +18,14 @@ next-env.d.ts
 # Clients Prisma générés (desktop → node_modules, serveur → src/generated)
 src/generated/
 
+# Python (keygen) — caches et artefacts de compilation
+__pycache__/
+*.pyc
+*.pyo
+
+# Artefacts de tests locaux (ex. dump Redis)
+dump.rdb
+
 # OS
 .DS_Store
 Thumbs.db
