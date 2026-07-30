@@ -48,13 +48,16 @@ GarageFlow/
 │   │   └── admin/     # Interface administrateur licences
 │   ├── components/    # Composants React (Dashboard, Header, Modals…)
 │   └── lib/
-│       ├── license/   # Vérification ECDSA, HWID, record-MAC
+│       ├── license/   # Vérification ECDSA, HWID, record-MAC, appareils (devices.ts)
+│       ├── security/  # Rate limiting centralisé (distribué en PWA, mémoire en Electron)
 │       ├── ai-engine.ts # Moteur de suggestions IA (conflits, surcharges…)
 │       ├── i18n.tsx   # Internationalisation (14 langues)
-│       ├── rate-limit.ts # Limiteur de débit en mémoire
 │       └── utils.ts   # Utilitaires planning (timeToMinutes, jobsOverlap…)
 ├── prisma/
-│   └── schema.prisma  # Modèles SQLite (Garage, Job, Client, Invoice…)
+│   ├── schema.prisma  # Schéma DESKTOP — SQLite (Electron mono-poste)
+│   └── server/
+│       ├── schema.prisma  # Schéma SERVEUR — PostgreSQL (PWA multi-instance)
+│       └── migrations/    # Migrations PostgreSQL reproductibles (CI)
 ├── scripts/
 │   ├── keygen_core.py # Crypto ECC P-256 + HWID
 │   ├── keygen_db.py   # Base de données locale des licences (JSON)
@@ -156,8 +159,23 @@ L'installateur est généré dans `dist/`.
 | Variable | Description |
 |----------|-------------|
 | `NEXTAUTH_SECRET` | Secret de signature JWT (obligatoire en prod) |
-| `DATABASE_URL` | Chemin SQLite (géré automatiquement par Electron) |
+| `DATABASE_URL` | `file:…` = SQLite desktop (Electron) · `postgresql://…` = serveur/PWA |
+| `DIRECT_URL` | PostgreSQL direct (migrations serveur) |
+| `DEVICE_TOKEN_PEPPER` | HMAC des jetons/HWID d'appareils (obligatoire en prod PWA) |
+| `UPSTASH_REDIS_REST_URL/TOKEN` | Rate limiting distribué (obligatoire en prod PWA) |
 | `GF_INTERNAL_EXPORT_KEY` | Clé interne pour l'API d'export (générée par Electron) |
+
+Liste complète et comportements : [`.env.example`](.env.example).
+
+### Bases de données & déploiement
+
+- **[`docs/DATABASE_ARCHITECTURE.md`](docs/DATABASE_ARCHITECTURE.md)** —
+  séparation SQLite desktop / PostgreSQL serveur, commandes Prisma, migrations.
+- **[`docs/LICENSE_DEVICE_SECURITY.md`](docs/LICENSE_DEVICE_SECURITY.md)** —
+  appareils par licence, deviceToken (haché), plafond `seats` atomique,
+  révocation, politiques fail-open/fail-closed.
+- **[`docs/PRODUCTION_DEPLOYMENT.md`](docs/PRODUCTION_DEPLOYMENT.md)** —
+  déploiement Vercel, PostgreSQL/Redis, rollback, test machine propre.
 
 ---
 
