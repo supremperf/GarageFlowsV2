@@ -23,6 +23,10 @@ jobs:
           GITLEAKS_CONFIG: .gitleaks.toml
           # Scan the current tree (les secrets historiques sont documentés comme rotés).
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+          # Requis par gitleaks-action@v2 pour les événements pull_request (l'action
+          # récupère la plage de commits de la PR via l'API). Sans lui, le scan
+          # échoue sur les PR (il fonctionne sur push sans jeton).
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   check:
     name: Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)
