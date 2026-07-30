@@ -13,6 +13,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Historique complet : gitleaks scanne la plage de commits du push ;
+          # un clone shallow fait échouer la résolution du parent (^).
+          fetch-depth: 0
       - name: Gitleaks — scan working tree
         uses: gitleaks/gitleaks-action@v2
         env:
@@ -65,20 +69,19 @@ jobs:
         run: node scripts/check-version.js
 
       - name: Validate Prisma schemas (desktop + serveur)
+        # Chaque schéma est validé avec une URL de SON provider (sqlite / postgres).
         run: |
-          npx prisma validate
-          npx prisma validate --schema prisma/server/schema.prisma
-        env:
-          DATABASE_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres
-          DIRECT_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres
+          DATABASE_URL="file:./dev.db" npx prisma validate
+          DATABASE_URL="postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres" \
+            DIRECT_URL="postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres" \
+            npx prisma validate --schema prisma/server/schema.prisma
 
       - name: Generate Prisma clients (desktop + serveur)
         run: |
-          npx prisma generate
-          npx prisma generate --schema prisma/server/schema.prisma
-        env:
-          DATABASE_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres
-          DIRECT_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres
+          DATABASE_URL="file:./dev.db" npx prisma generate
+          DATABASE_URL="postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres" \
+            DIRECT_URL="postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres" \
+            npx prisma generate --schema prisma/server/schema.prisma
 
       - name: TypeScript
         run: npx tsc --noEmit
