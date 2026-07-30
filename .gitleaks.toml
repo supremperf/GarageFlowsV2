@@ -21,6 +21,10 @@ paths = [
   '''.*public-key\.ts''',
   '''src/app/api/health/route\.ts''',
   '''src/lib/auth-secret\.ts''',
+  # Test de redaction : contient VOLONTAIREMENT des chaînes qui ressemblent à des
+  # secrets (NEXTAUTH_SECRET=…, password=…, postgresql://user:pass@…) afin de
+  # PROUVER qu'elles sont masquées. Aucune de ces valeurs n'est un secret réel.
+  '''src/lib/__tests__/redact\.test\.ts''',
   '''\.env\.example''',
   '''.*\.md''',
 ]
