@@ -37,6 +37,14 @@ export const POST = withAuth(async (req) => {
   if (!body.partName?.trim())  return NextResponse.json({ error: 'partName requis' }, { status: 400 })
   if (!body.clientName?.trim()) return NextResponse.json({ error: 'clientName requis' }, { status: 400 })
 
+  // SECURITY: verify referenced FKs belong to this garage (the GET handler
+  // includes `job`, so an unvalidated jobId would leak another garage's data).
+  const gid = session.user.garageId
+  if (body.jobId && !(await prisma.job.findFirst({ where: { id: body.jobId, garageId: gid }, select: { id: true } })))
+    return NextResponse.json({ error: 'Intervention introuvable' }, { status: 400 })
+  if (body.vehicleId && !(await prisma.vehicle.findFirst({ where: { id: body.vehicleId, garageId: gid }, select: { id: true } })))
+    return NextResponse.json({ error: 'Véhicule introuvable' }, { status: 400 })
+
   const durationMonths = Number(body.durationMonths ?? 12)
   const installedAt = body.installedAt ? new Date(body.installedAt) : new Date()
   const expiresAt = addMonths(installedAt, durationMonths)

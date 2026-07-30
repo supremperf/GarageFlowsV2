@@ -46,7 +46,8 @@ try { process.stderr.on('error', () => {}) } catch (_) {}
         fs.writeFileSync(envFile, [
           'DATABASE_URL="file:./dev.db"',
           'NEXTAUTH_URL="http://localhost:3000"',
-          'NEXTAUTH_SECRET="gf-electron-local-secret-2026-xK9mP3qR"',
+          // Generate a unique dev secret — never ship a shared constant.
+          'NEXTAUTH_SECRET="' + crypto.randomBytes(32).toString('hex') + '"',
           '',
         ].join('\n'), 'utf8')
       }
@@ -309,6 +310,19 @@ function deriveDbMacSecret() {
   return crypto.pbkdf2Sync(hwid, DB_MAC_SALT, 10_000, 32, 'sha256').toString('hex')
 }
 
+// ── Session-cookie secret (gf_session HS256 / NEXTAUTH_SECRET) ─────────────────
+// SECURITY: never ship a shared constant as the session secret. A public value
+// baked into every build lets anyone forge an admin `gf_session` cookie (and,
+// combined with the LAN-exposed server, remotely). Derive it from the machine
+// HWID exactly like deriveDbMacSecret(): unique per install, so a remote
+// attacker (who cannot read the disk serial / MAC) cannot reproduce it, yet
+// deterministic across restarts so persisted cookies stay valid without any
+// extra on-disk storage.
+const SESSION_SECRET_SALT = 'GarageFlow-Session-Secret-Salt-v1'
+function deriveSessionSecret() {
+  return crypto.pbkdf2Sync(getHwid(), SESSION_SECRET_SALT, 10_000, 32, 'sha256').toString('hex')
+}
+
 function saveLicense(token, payload) {
   try {
     const key = deriveStorageKey()
@@ -551,7 +565,7 @@ function checkStoredLicense() {
 // page request is allowed through the middleware gate.
 
 function createGfSessionJwt(typ, lid) {
-  const secret  = process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR'
+  const secret  = process.env.NEXTAUTH_SECRET ?? deriveSessionSecret()
   const now     = Math.floor(Date.now() / 1000)
   const exp     = now + 5 * 365 * 24 * 3600   // 5 years
 
@@ -1262,9 +1276,10 @@ function startNextServer() {
       HOSTNAME:          '0.0.0.0',
       NEXTAUTH_URL:      `http://127.0.0.1:${PORT}`,
       DATABASE_URL:      dbUrl,
-      // Use whatever secret the main process has loaded (from .env or fallback),
-      // so JWTs minted by main.js and verified by Next.js always share the same secret.
-      NEXTAUTH_SECRET:   process.env.NEXTAUTH_SECRET ?? 'gf-electron-local-secret-2026-xK9mP3qR',
+      // Machine-specific session secret set at startup (see app.whenReady), so
+      // JWTs minted by main.js and verified by Next.js always share the same
+      // secret. Never a public constant.
+      NEXTAUTH_SECRET:   process.env.NEXTAUTH_SECRET ?? deriveSessionSecret(),
       GF_DB_MAC_SECRET:         deriveDbMacSecret(),
       GF_INTERNAL_EXPORT_KEY:   INTERNAL_EXPORT_KEY,
       GF_PHOTOS_DIR:            PHOTOS_DIR,
@@ -1509,9 +1524,28 @@ function createMainWindow() {
   })
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('http')) shell.openExternal(url)
+    // Only ever hand genuine http(s) links to the OS browser; never open other
+    // schemes and never let a new Electron window be created in-app.
+    if (/^https?:\/\//i.test(url)) shell.openExternal(url).catch(() => {})
     return { action: 'deny' }
   })
+
+  // SECURITY (defence in depth): the preload bridge (electronAPI) is attached to
+  // every page this window loads. Block any top-level navigation/redirect away
+  // from the local app origin, otherwise a remote page would run *with the
+  // bridge still exposed* — a pivot to the update-installer RCE surface.
+  const isAppOrigin = (u) => {
+    try { return new URL(u).origin === new URL(APP_URL).origin } catch { return false }
+  }
+  const guardNavigation = (e, url) => {
+    if (!isAppOrigin(url)) {
+      e.preventDefault()
+      log('Blocked navigation to foreign origin:', url)
+      if (/^https?:\/\//i.test(url)) shell.openExternal(url).catch(() => {})
+    }
+  }
+  mainWindow.webContents.on('will-navigate', guardNavigation)
+  mainWindow.webContents.on('will-redirect', guardNavigation)
 
   mainWindow.on('closed', () => { mainWindow = null })
 
@@ -1734,13 +1768,23 @@ function setupIPC() {
 
     const emit = (pct) => { try { mainWindow?.webContents.send('app:update-progress', pct) } catch (_) {} }
 
-    const fileName = decodeURIComponent((url.split('/').pop() || 'GarageFlow-Setup.exe').split('?')[0])
+    // Sanitize the filename to a bare basename — a malicious/redirecting URL
+    // could otherwise smuggle "../" (after decode) and escape the temp dir.
+    let fileName = decodeURIComponent((url.split('/').pop() || 'GarageFlow-Setup.exe').split('?')[0])
+    fileName = path.basename(fileName).replace(/[/\\]/g, '')
+    if (!fileName || fileName === '.' || fileName === '..') fileName = 'GarageFlow-Setup.exe'
     const destPath = path.join(tmpDir, fileName)
+
+    // Only https (or the loopback local-admin server) may deliver an installer
+    // we execute — plaintext http over the network is MITM-swappable.
+    const isLoopback = (u) => /^http:\/\/(127\.0\.0\.1|localhost)(:|\/)/i.test(u)
+    const transportAllowed = (u) => /^https:\/\//i.test(u) || isLoopback(u)
 
     // Téléchargement avec suivi de progression + suivi des redirections
     function download(u, redirects) {
       return new Promise((resolve, reject) => {
         if (redirects > 5) return reject(new Error('Trop de redirections'))
+        if (!transportAllowed(u)) return reject(new Error('Transport non sécurisé (HTTPS requis)'))
         const mod = u.startsWith('https') ? require('https') : http
         const req = mod.get(u, { timeout: 300_000 }, res => {
           if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
@@ -1884,6 +1928,21 @@ app.whenReady().then(async () => {
   log('userData:', APP_DATA)
   log('IS_DEV:', IS_DEV)
   log('Platform:', process.platform, process.arch)
+
+  // SECURITY: replace the legacy public fallback secret with a machine-specific
+  // one before anything mints or verifies a gf_session JWT (createGfSessionJwt,
+  // the Next.js server env, next-auth). An operator-provided strong secret is
+  // respected; only the missing/legacy-constant case is overridden.
+  const LEGACY_SHARED_SECRET = 'gf-electron-local-secret-2026-xK9mP3qR'
+  if (!process.env.NEXTAUTH_SECRET || process.env.NEXTAUTH_SECRET === LEGACY_SHARED_SECRET) {
+    try {
+      process.env.NEXTAUTH_SECRET = deriveSessionSecret()
+      log('Session secret: using per-machine derived value')
+    } catch (e) {
+      process.env.NEXTAUTH_SECRET = crypto.randomBytes(32).toString('hex')
+      log('Session secret: HWID derivation failed, using per-run random')
+    }
+  }
 
   checkDebugger()
   registerCrashHandlers()

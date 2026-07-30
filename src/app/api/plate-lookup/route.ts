@@ -1,14 +1,26 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
-import { withAuth } from '@/lib/api-helpers'
+import { withAuth, requireSession } from '@/lib/api-helpers'
 import Anthropic from '@anthropic-ai/sdk'
+
+// French plate formats: SIV "AA-123-AA" and older "123-ABC-45". Allow only
+// A–Z, digits and dashes, bounded length — this both prevents prompt injection
+// into the AI fallback and rejects junk before any paid/outbound call.
+const PLATE_RE = /^[A-Z0-9-]{4,12}$/
 
 // GET /api/plate-lookup?plate=AB-123-CD
 export const GET = withAuth(async (req) => {
+  // Authenticated garage users only — this endpoint triggers outbound + paid AI
+  // calls, so anonymous access would be a cost-abuse / DoS vector.
+  await requireSession()
+
   const { searchParams } = new URL(req.url)
   const plate = searchParams.get('plate')?.toUpperCase().replace(/\s/g, '-')
 
   if (!plate) return NextResponse.json({ error: 'plate param required' }, { status: 400 })
+  if (!PLATE_RE.test(plate)) {
+    return NextResponse.json({ error: 'Format de plaque invalide' }, { status: 400 })
+  }
 
   // Try French SIV-like API first (free, no auth)
   try {

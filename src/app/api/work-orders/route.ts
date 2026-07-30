@@ -59,6 +59,14 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: 'clientName est requis' }, { status: 400 })
   }
 
+  // SECURITY: verify body-supplied FKs belong to this garage before persisting
+  // (GET includes `job` and `mechanic`, so an unvalidated id would leak data).
+  const gid = session.user.garageId
+  if (body.jobId && !(await prisma.job.findFirst({ where: { id: body.jobId, garageId: gid }, select: { id: true } })))
+    return NextResponse.json({ error: 'Intervention introuvable' }, { status: 400 })
+  if (body.mechanicId && !(await prisma.mechanic.findFirst({ where: { id: body.mechanicId, garageId: gid }, select: { id: true } })))
+    return NextResponse.json({ error: 'Mécanicien introuvable' }, { status: 400 })
+
   const worksJson = typeof body.worksJson === 'string'
     ? body.worksJson
     : JSON.stringify(body.worksJson ?? [])

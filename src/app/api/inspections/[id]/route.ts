@@ -28,6 +28,15 @@ export const PATCH = withAuth(async (req, { params }) => {
 
   // Update individual item if itemId provided
   if (body.itemId !== undefined) {
+    // SECURITY: itemId is attacker-controlled. `existing` only proves params.id
+    // belongs to this garage — confirm the item belongs to THAT inspection
+    // before writing, otherwise any user could patch another garage's item.
+    const owned = await prisma.inspectionItem.findFirst({
+      where: { id: body.itemId, inspectionId: params.id },
+      select: { id: true },
+    })
+    if (!owned) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
     const item = await prisma.inspectionItem.update({
       where: { id: body.itemId },
       data: {

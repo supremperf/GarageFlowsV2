@@ -52,6 +52,17 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: 'Données invalides', details: parsed.error.flatten() }, { status: 400 })
   }
 
+  // SECURITY: verify body-supplied foreign keys belong to THIS garage before
+  // persisting. Otherwise an attacker could reference another garage's
+  // job/vehicle/client and read it back through the GET `include` relations.
+  const gid = session.user.garageId
+  if (body.clientId && !(await prisma.client.findFirst({ where: { id: body.clientId, garageId: gid }, select: { id: true } })))
+    return NextResponse.json({ error: 'Client introuvable' }, { status: 400 })
+  if (body.vehicleId && !(await prisma.vehicle.findFirst({ where: { id: body.vehicleId, garageId: gid }, select: { id: true } })))
+    return NextResponse.json({ error: 'Véhicule introuvable' }, { status: 400 })
+  if (body.jobId && !(await prisma.job.findFirst({ where: { id: body.jobId, garageId: gid }, select: { id: true } })))
+    return NextResponse.json({ error: 'Intervention introuvable' }, { status: 400 })
+
   // Auto-increment quoteCounter and build number
   const garage = await prisma.garage.update({
     where: { id: session.user.garageId },

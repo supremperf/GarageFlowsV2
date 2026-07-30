@@ -29,6 +29,17 @@ export const PATCH = withAuth(async (req, { params }) => {
   const existing = await prisma.invoice.findFirst({ where: { id: params.id, garageId: session.user.garageId } })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
+  // Legal immutability (FR): once an invoice leaves 'draft' its amounts are
+  // frozen. Status transitions (sent → paid) and non-financial fields stay
+  // editable, but lines and the tax rate cannot change — corrections require a
+  // credit note (avoir).
+  if (existing.status !== 'draft' && (body.lines !== undefined || body.taxRate !== undefined)) {
+    return NextResponse.json(
+      { error: 'Facture finalisée : les lignes et le taux de TVA ne peuvent plus être modifiés. Créez un avoir pour corriger.' },
+      { status: 409 }
+    )
+  }
+
   if (body.lines !== undefined) {
     await prisma.invoiceLine.deleteMany({ where: { invoiceId: params.id } })
     await prisma.invoiceLine.createMany({
@@ -68,6 +79,22 @@ export const PATCH = withAuth(async (req, { params }) => {
 
 export const DELETE = withAuth(async (req, { params }) => {
   const session = await requireSession()
+
+  // Only drafts may be deleted. Deleting an issued invoice would create a gap in
+  // the legally-required continuous numbering sequence — issue a credit note
+  // (avoir) instead.
+  const existing = await prisma.invoice.findFirst({
+    where: { id: params.id, garageId: session.user.garageId },
+    select: { id: true, status: true },
+  })
+  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  if (existing.status !== 'draft') {
+    return NextResponse.json(
+      { error: 'Seules les factures en brouillon peuvent être supprimées. Créez un avoir pour annuler une facture émise.' },
+      { status: 409 }
+    )
+  }
+
   await prisma.invoice.delete({ where: { id: params.id, garageId: session.user.garageId } })
   await logAudit({ action: 'delete', entityType: 'Invoice', entityId: params.id, session, req })
   return NextResponse.json({ success: true })

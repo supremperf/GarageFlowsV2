@@ -15,9 +15,12 @@ export const GET = withAuth(async (_req: Request, { params }: { params: { path: 
   const segments = (params.path ?? []).map(s => s.replace(/[^a-zA-Z0-9_\-./]/g, ''))
   const relative = segments.join('/')
 
-  // Extra guard: resolve and confirm the final path is still inside PHOTOS_DIR
-  const fullPath = path.resolve(PHOTOS_DIR, relative)
-  if (!fullPath.startsWith(path.resolve(PHOTOS_DIR))) {
+  // Extra guard: resolve and confirm the final path is still inside PHOTOS_DIR.
+  // Compare against base + path separator so a sibling dir sharing the prefix
+  // (e.g. "/data/photos-secret" vs base "/data/photos") cannot pass the check.
+  const base = path.resolve(PHOTOS_DIR)
+  const fullPath = path.resolve(base, relative)
+  if (fullPath !== base && !fullPath.startsWith(base + path.sep)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

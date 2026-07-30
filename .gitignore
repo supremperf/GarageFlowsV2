@@ -34,6 +34,13 @@ dist/
 keys/private.pem
 keys/*.pem
 
+# License-operator artifacts (local keygen tool):
+#  - server_config.json holds the control-plane admin API key (GARAGEFLOW_API_KEY)
+#  - licenses_db.json is the operator's local license database
+# NEVER commit these. If they ever were, rotate GARAGEFLOW_API_KEY immediately.
+keys/server_config.json
+keys/licenses_db.json
+
 # Generated icons (keep SVG source, not binaries)
 # icon.ico
 # icon.png
