@@ -1,10 +1,16 @@
 /**
  * Central application configuration.
  * All magic numbers and tunable constants live here.
+ *
+ * Product identity (name, colours, domains, legal, e-mail…) lives in the
+ * white-label layer at src/config/brand.ts and is surfaced here via BRAND so
+ * there is a single source of truth. See docs/WHITE_LABEL_GUIDE.md.
  */
 
+import { BRAND } from './brand'
+
 export const APP_CONFIG = {
-  name:    'GarageFlow',
+  name:    BRAND.productName,
   version: '2.0',
 
   /** Default pagination limit when ?limit is not specified */
