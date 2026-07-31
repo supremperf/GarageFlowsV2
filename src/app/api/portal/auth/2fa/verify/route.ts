@@ -25,6 +25,13 @@ export async function POST(req: NextRequest) {
   const userId = await verifyTwoFactorChallenge(typeof body.challenge === 'string' ? body.challenge : null)
   if (!userId) return NextResponse.json({ error: 'Challenge invalide ou expiré' }, { status: 401 })
 
+  // Verrou PAR COMPTE (en plus du verrou par IP ci-dessus) : un attaquant qui
+  // connaît le mot de passe peut faire tourner X-Forwarded-For pour contourner
+  // le verrou par IP ; la clé par compte (userId) n'est pas manipulable côté
+  // client et borne donc réellement le brute-force TOTP dans la fenêtre du défi.
+  const rlAcct = await enforceRateLimit('login', `portal-2fa-acct:${userId}`, { max: 5, windowSec: 5 * 60 })
+  if (!rlAcct.ok) return NextResponse.json({ error: `Trop de tentatives. Réessayez dans ${rlAcct.retryAfterSec}s.` }, { status: 429, headers: { 'Retry-After': String(rlAcct.retryAfterSec) } })
+
   const user = await prisma.portalUser.findUnique({ where: { id: userId } })
   if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
     return NextResponse.json({ error: 'Double authentification non configurée' }, { status: 400 })
