@@ -1,0 +1,28 @@
+GarageFlow — Proprietary Software License
+Copyright (c) 2026 GarageFlow (the current rights holder). All rights reserved.
+
+This software and its source code (the "Software"), including the desktop
+application, embedded server, database schemas, build tooling, brand assets and
+documentation contained in this repository, are proprietary and confidential.
+
+No license, right, or interest in the Software is granted by making this
+repository available, except as expressly agreed in a separate written
+agreement signed by the rights holder. Absent such an agreement, you may NOT
+copy, modify, distribute, sublicense, sell, publicly perform, or create
+derivative works of the Software, in whole or in part.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Third-party open-source components are licensed under their own terms; see
+THIRD_PARTY_NOTICES.md.
+
+NOTE ON CHAIN OF TITLE: this file asserts the proprietary nature of the
+Software. It does NOT by itself establish or transfer ownership. Any
+acquisition must be accompanied by a written IP-assignment agreement covering
+this codebase and all brand assets. See docs/acquisition-data-room/
+09_INTELLECTUAL_PROPERTY.md.
