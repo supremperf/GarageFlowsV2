@@ -53,7 +53,12 @@ function LicenseBadge() {
 function LoginForm() {
   const router     = useRouter()
   const params     = useSearchParams()
-  const callbackUrl = params.get('callbackUrl') || '/'
+  // SÉCURITÉ (open redirect) : n'accepter qu'un chemin interne RELATIF. Sans ce
+  // filtre, ?callbackUrl=https://evil.com (ou //evil.com, /\evil.com) provoquait
+  // une navigation externe après connexion (phishing). On exige un chemin qui
+  // commence par « / » et n'est ni « // » ni « /\ ».
+  const rawCallback = params.get('callbackUrl') || '/'
+  const callbackUrl = /^\/(?![/\\])/.test(rawCallback) ? rawCallback : '/'
   const errorParam = params.get('error')
 
   const [email,        setEmail]        = useState('')

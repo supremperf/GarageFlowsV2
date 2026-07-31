@@ -231,8 +231,11 @@ export const POST = withAuth(async (req) => {
       }
     } else if (t.effects.decrementStock) {
       for (const l of stockLines) {
-        const part = await tx.part.findFirst({ where: { id: l.partId, garageId }, select: { id: true, quantity: true } })
-        if (part) await tx.part.update({ where: { id: l.partId }, data: { quantity: Math.max(0, part.quantity - l.qty) } })
+        // ATOMICITÉ : décrément atomique (comme l'incrément ci-dessus) au lieu
+        // d'un read-modify-write (`quantity = part.quantity - qty`) qui pouvait
+        // perdre une écriture concurrente sur la même pièce (lost update, PG).
+        const part = await tx.part.findFirst({ where: { id: l.partId, garageId }, select: { id: true } })
+        if (part) await tx.part.update({ where: { id: l.partId }, data: { quantity: { decrement: l.qty } } })
       }
     }
     return { raced: false }

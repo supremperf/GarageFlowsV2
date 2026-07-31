@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { savePhoto, deletePhoto } from '@/lib/photo-store'
+import { savePhoto, deletePhoto, parsePhotoDataUrl } from '@/lib/photo-store'
 
 // GET /api/jobs/[id]/photos
 export const GET = withAuth(async (_req, { params }) => {
@@ -23,6 +23,18 @@ export const POST = withAuth(async (req, { params }) => {
     where: { id: params.id, garageId: session.user.garageId },
   })
   if (!job) return NextResponse.json({ error: 'Job not found' }, { status: 404 })
+
+  // SÉCURITÉ (DoS/validation) : la photo, si fournie, doit être une data URL
+  // d'image en liste blanche et ≤ MAX_PHOTO_BYTES. On rejette AVANT tout
+  // stockage (disque OU repli base64 en base) pour éviter l'abus de stockage.
+  if (body.base64 !== undefined && body.base64 !== null && body.base64 !== '') {
+    if (!parsePhotoDataUrl(body.base64)) {
+      return NextResponse.json(
+        { error: 'Image invalide ou trop volumineuse (formats: JPEG/PNG/WebP/GIF, max 8 Mo).' },
+        { status: 413 },
+      )
+    }
+  }
 
   // Try to write to disk; fall back to base64 in DB if disk write fails
   let photoPath: string | null = null

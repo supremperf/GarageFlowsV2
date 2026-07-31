@@ -201,6 +201,33 @@ export const CreatePartSchema = z.object({
 
 export const UpdatePartSchema = CreatePartSchema.partial()
 
+/**
+ * Coercition stricte d'un champ de pièce (POST/PATCH parts).
+ * Accepte number OU chaîne numérique ; REFUSE tout objet (ex. opérateur Prisma
+ * `{ increment }`), NaN/Infinity et valeurs hors bornes. Renvoie la valeur
+ * normalisée, ou une `Error` (message d'erreur destiné au 400).
+ */
+const PART_NUMERIC_FIELDS = new Set(['quantity', 'minQuantity', 'unitCost', 'unitPrice'])
+export function coercePartField(field: string, value: unknown): unknown | Error {
+  if (PART_NUMERIC_FIELDS.has(field)) {
+    const n = typeof value === 'number' ? value
+      : typeof value === 'string' && value.trim() !== '' ? Number(value)
+      : NaN
+    if (!Number.isFinite(n) || n < 0 || n > 9_999_999) {
+      return new Error(`Valeur numérique invalide pour « ${field} »`)
+    }
+    return n
+  }
+  if (field === 'name') {
+    if (typeof value !== 'string' || !value.trim()) return new Error('Nom requis')
+    return value.trim().slice(0, 200)
+  }
+  // Champs texte optionnels : null si vide, sinon chaîne bornée.
+  if (value === null || value === undefined || value === '') return null
+  if (typeof value !== 'string') return new Error(`Valeur invalide pour « ${field} »`)
+  return value.slice(0, 500)
+}
+
 // ─── Pagination helper ────────────────────────────────────────────────────────
 
 export const PaginationSchema = z.object({
