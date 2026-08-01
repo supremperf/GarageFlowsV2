@@ -1,0 +1,109 @@
+name: Windows Build (Electron)
+
+# Build + (optionnelle) signature de l'installateur Windows.
+# - workflow_dispatch : build manuel (dev, non signé si aucun secret).
+# - push tag v*       : release ; la signature est EXIGÉE (échec si absente).
+#
+# La signature n'a lieu que si les secrets WIN_CSC_LINK (certificat PFX base64 ou
+# URL) et WIN_CSC_KEY_PASSWORD sont configurés — aucun certificat n'est stocké
+# dans le dépôt. Voir docs/WINDOWS_CODE_SIGNING.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      require_signing:
+        description: "Exiger la signature (échec si secret absent)"
+        type: boolean
+        default: false
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    name: Build Windows x64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies (reproducible)
+        run: npm ci
+
+      - name: Generate Prisma clients (desktop + serveur)
+        run: |
+          npx prisma generate
+          npx prisma generate --schema prisma/server/schema.prisma
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npx next lint
+
+      - name: Unit + integration tests
+        run: npm test
+
+      - name: White-label packaging in sync
+        run: npm run brand:check
+
+      - name: Determine signing availability
+        id: signing
+        shell: bash
+        run: |
+          if [ -n "${{ secrets.WIN_CSC_LINK }}" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+          # Signature EXIGÉE pour un tag de release, ou si demandée manuellement.
+          if [ "${{ github.ref_type }}" = "tag" ] || [ "${{ inputs.require_signing }}" = "true" ]; then
+            echo "required=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "required=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fail if signing required but no certificate
+        if: steps.signing.outputs.required == 'true' && steps.signing.outputs.available == 'false'
+        run: |
+          echo "::error::Release signée exigée mais WIN_CSC_LINK/WIN_CSC_KEY_PASSWORD absents."
+          exit 1
+
+      - name: Build installer (electron-builder)
+        env:
+          # electron-builder signe automatiquement si ces variables sont fournies.
+          CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: npm run dist
+
+      - name: Verify signature (gating on release, informational otherwise)
+        shell: pwsh
+        run: |
+          $strict = "${{ steps.signing.outputs.required }}" -eq "true"
+          ./scripts/verify-windows-signature.ps1 -Path "dist" -Strict:$strict
+
+      - name: Mark unsigned dev builds
+        if: steps.signing.outputs.available == 'false'
+        shell: bash
+        run: |
+          echo "DEVELOPMENT ONLY — UNSIGNED BUILD" > dist/UNSIGNED_DEVELOPMENT_ONLY.txt
+          echo "Ce binaire n'est PAS signé (aucun certificat fourni). Ne pas distribuer." >> dist/UNSIGNED_DEVELOPMENT_ONLY.txt
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: garageflow-windows-x64
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/latest.yml
+            dist/UNSIGNED_DEVELOPMENT_ONLY.txt
+          if-no-files-found: warn
+          retention-days: 14

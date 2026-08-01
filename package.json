@@ -142,7 +142,12 @@
         }
       ],
       "icon": "icon.ico",
-      "requestedExecutionLevel": "asInvoker"
+      "requestedExecutionLevel": "asInvoker",
+      "signingHashAlgorithms": [
+        "sha256"
+      ],
+      "rfc3161TimeStampServer": "http://timestamp.digicert.com",
+      "signAndEditExecutable": true
     },
     "nsis": {
       "oneClick": false,
