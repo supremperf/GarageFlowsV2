@@ -5,6 +5,7 @@ import { z } from 'zod'
 import nodemailer from 'nodemailer'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { decryptSmtpPass } from '@/lib/email/smtp-crypto'
 import { enforceRateLimit } from '@/lib/security/rate-limit'
 import {
   NotificationEngine,
@@ -31,13 +32,16 @@ function buildEmailSender(garage: {
   smtpPass: string | null; smtpFrom: string | null; smtpSecure: boolean; name: string | null; email: string | null
 }) {
   if (!garage.smtpHost || !garage.smtpUser || !garage.smtpPass) return null
+  // Le mot de passe est chiffré au repos → déchiffrement au moment de l'envoi.
+  const pass = decryptSmtpPass(garage.smtpPass)
+  if (!pass) return null
   const port = garage.smtpPort ?? 587
   const secure = garage.smtpSecure ?? port === 465
   const from = garage.smtpFrom || garage.email || garage.smtpUser
   return async (to: string, message: RenderedMessage) => {
     try {
       const transporter = nodemailer.createTransport({
-        host: garage.smtpHost!, port, secure, auth: { user: garage.smtpUser!, pass: garage.smtpPass! },
+        host: garage.smtpHost!, port, secure, auth: { user: garage.smtpUser!, pass },
       })
       const info = await transporter.sendMail({
         from: `${garage.name ?? BRAND.productName} <${from}>`,

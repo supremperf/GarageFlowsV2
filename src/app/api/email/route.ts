@@ -10,6 +10,8 @@ import { NextResponse } from 'next/server'
 import { BRAND } from '@/config/brand'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { encryptSmtpPass, decryptSmtpPass, reencryptIfLegacy } from '@/lib/email/smtp-crypto'
+import { logger } from '@/lib/logger'
 import nodemailer from 'nodemailer'
 
 export const GET = withAuth(async () => {
@@ -34,7 +36,9 @@ export const PATCH = withAuth(async (req) => {
   if (body.smtpUser  !== undefined) data.smtpUser  = body.smtpUser  || null
   if (body.smtpFrom  !== undefined) data.smtpFrom  = body.smtpFrom  || null
   if (body.smtpSecure!== undefined) data.smtpSecure= Boolean(body.smtpSecure)
-  if (body.smtpPass) data.smtpPass = body.smtpPass
+  // Le mot de passe est CHIFFRÉ au repos (AES-256-GCM) avant stockage ; jamais
+  // conservé en clair, jamais renvoyé par l'API.
+  if (body.smtpPass) data.smtpPass = encryptSmtpPass(String(body.smtpPass))
 
   await prisma.garage.update({ where: { id: session.user.garageId }, data })
   return NextResponse.json({ ok: true })
@@ -57,12 +61,20 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: 'Configuration SMTP incomplète' }, { status: 422 })
   }
 
+  const pass = decryptSmtpPass(garage.smtpPass)
+  if (!pass) {
+    return NextResponse.json(
+      { error: 'Mot de passe SMTP illisible (clé de chiffrement absente ?). Réenregistrez la configuration.' },
+      { status: 422 },
+    )
+  }
+
   try {
     const transporter = nodemailer.createTransport({
       host: garage.smtpHost,
       port: garage.smtpPort ?? 587,
       secure: garage.smtpSecure ?? true,
-      auth: { user: garage.smtpUser, pass: garage.smtpPass },
+      auth: { user: garage.smtpUser, pass },
     })
 
     await transporter.sendMail({
@@ -71,6 +83,14 @@ export const POST = withAuth(async (req) => {
       subject: `${BRAND.productName} — Test de configuration email`,
       text: `La configuration email de ${BRAND.productName} fonctionne correctement.`,
     })
+
+    // Migration paresseuse : si le mot de passe stocké était en clair (héritage),
+    // on le ré-écrit chiffré maintenant qu'on a confirmé qu'il fonctionne.
+    const upgraded = reencryptIfLegacy(garage.smtpPass)
+    if (upgraded) {
+      await prisma.garage.update({ where: { id: session.user.garageId }, data: { smtpPass: upgraded } })
+        .catch(err => logger.error('[email] échec migration chiffrement SMTP', {}, err))
+    }
 
     return NextResponse.json({ ok: true })
   } catch (err) {

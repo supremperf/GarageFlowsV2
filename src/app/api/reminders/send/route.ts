@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { BRAND } from '@/config/brand'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
+import { decryptSmtpPass } from '@/lib/email/smtp-crypto'
 import nodemailer from 'nodemailer'
 import { logger } from '@/lib/logger'
 
@@ -82,9 +83,10 @@ ${garage?.name ?? 'Votre garage'}${garage?.phone ? `\nTél : ${garage.phone}` : 
 </body></html>`
 
   // SMTP configuration is stored on the garage (Paramètres › Email), NOT in env vars.
+  // Le mot de passe est chiffré au repos → déchiffrement au moment de l'envoi.
   const smtpHost   = garage?.smtpHost
   const smtpUser   = garage?.smtpUser
-  const smtpPass   = garage?.smtpPass
+  const smtpPass   = decryptSmtpPass(garage?.smtpPass)
   const smtpPort   = garage?.smtpPort ?? 587
   const smtpSecure = garage?.smtpSecure ?? (smtpPort === 465)
   const smtpFrom   = garage?.smtpFrom || garage?.email || smtpUser
