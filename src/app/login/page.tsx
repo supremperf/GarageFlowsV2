@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, FormEvent, Suspense, useEffect } from 'react'
+import { CLIENT_BRAND } from '@/config/brand.client'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -39,7 +40,7 @@ function LicenseBadge() {
       <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
       <div className="text-left">
         <p className="text-xs font-semibold text-emerald-400 leading-tight">
-          Licence GarageFlow Pro · Active
+          Licence {CLIENT_BRAND.productName} Pro · Active
         </p>
         <p className="text-[10px] text-emerald-600 leading-tight">
           Valide jusqu&apos;au 31/12/{info.expiryYear} · Client #{String(info.customerId).padStart(4, '0')}
@@ -241,7 +242,7 @@ function LoginForm() {
 
         {/* Footer */}
         <p className="mt-4 text-center text-[10px] text-slate-800">
-          © {new Date().getFullYear()} GarageFlow · Tous droits réservés
+          © {new Date().getFullYear()} {CLIENT_BRAND.productName} · Tous droits réservés
         </p>
       </div>
     </div>

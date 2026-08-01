@@ -83,4 +83,6 @@ export interface ClientBrand {
   colors: { primary: string; primaryDark: string; accent: string }
   supportUrl: string
   marketingDomain: string
+  /** Nom de l'exécutable/installeur Windows (pour l'UI d'aide aux mises à jour). */
+  executableName: string
 }

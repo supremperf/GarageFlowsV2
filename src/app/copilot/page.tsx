@@ -10,6 +10,7 @@
  */
 
 import { useState, type ReactNode } from 'react'
+import { CLIENT_BRAND } from '@/config/brand.client'
 import {
   Sparkles, Loader2, Download, FileSpreadsheet, Save, AlertTriangle,
   TrendingUp, TrendingDown, Minus, Activity, ClipboardList,
@@ -82,7 +83,7 @@ export default function CopilotPage() {
         y += size + 6
       }
     }
-    line('GarageFlow — Rapport « Analyser mon garage »', 16, true)
+    line(`${CLIENT_BRAND.productName} — Rapport « Analyser mon garage »`, 16, true)
     line(`Généré le ${new Date(r.generatedAt).toLocaleString('fr-FR')} · Période ${r.periodDays} j`, 9)
     y += 6
     line(`Score de santé : ${r.healthScore}/100 (${r.healthGrade})`, 13, true)
@@ -128,7 +129,7 @@ export default function CopilotPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-black text-white">
-              <Sparkles className="h-6 w-6 text-blue-400" /> Copilote GarageFlow
+              <Sparkles className="h-6 w-6 text-blue-400" /> Copilote {CLIENT_BRAND.productName}
             </h1>
             <p className="mt-1 text-sm text-slate-500">Analyse intelligente de votre garage, justifiée par vos données réelles.</p>
           </div>

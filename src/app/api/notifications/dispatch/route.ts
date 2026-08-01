@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
+import { BRAND } from '@/config/brand'
 import { z } from 'zod'
 import nodemailer from 'nodemailer'
 import { prisma } from '@/lib/db'
@@ -39,7 +40,7 @@ function buildEmailSender(garage: {
         host: garage.smtpHost!, port, secure, auth: { user: garage.smtpUser!, pass: garage.smtpPass! },
       })
       const info = await transporter.sendMail({
-        from: `${garage.name ?? 'GarageFlow'} <${from}>`,
+        from: `${garage.name ?? BRAND.productName} <${from}>`,
         to,
         subject: message.subject ?? '(sans objet)',
         text: message.body,

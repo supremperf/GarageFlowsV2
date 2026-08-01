@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { BRAND } from '@/config/brand'
 import fs from 'fs'
 import path from 'path'
 import { Readable } from 'stream'
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     const safeVersion = version.replace(/[^0-9A-Za-z._-]/g, '') || 'latest'
-    const fileName = `GarageFlow-Setup-${safeVersion}.exe`
+    const fileName = `${BRAND.packaging.executableName}-Setup-${safeVersion}.exe`
     const dest = path.join(updatesDir(), fileName)
 
     // Écriture en flux vers le disque (pas de mise en mémoire du fichier entier).

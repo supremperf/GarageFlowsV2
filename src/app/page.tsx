@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, memo, useCallback } from 'react'
+import { CLIENT_BRAND } from '@/config/brand.client'
 import { format, addDays, subDays, parseISO } from 'date-fns'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -45,7 +46,7 @@ const AppLoader = memo(function AppLoader() {
           <div className="absolute inset-0 rounded-2xl ring-2 ring-blue-500/30 animate-ping" />
         </div>
         <div className="text-center">
-          <p className="text-slate-300 text-sm font-semibold">GarageFlow</p>
+          <p className="text-slate-300 text-sm font-semibold">{CLIENT_BRAND.productName}</p>
           <p className="text-slate-600 text-xs mt-0.5">Chargement du planning…</p>
         </div>
         <Loader2 className="w-4 h-4 animate-spin text-blue-500/60" />

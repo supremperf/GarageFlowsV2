@@ -9,6 +9,7 @@
  */
 
 import { useState, FormEvent, useEffect } from 'react'
+import { CLIENT_BRAND } from '@/config/brand.client'
 import { useRouter } from 'next/navigation'
 import {
   ShieldCheck, ShieldX, Loader2, Key, ArrowRight, Lock, Crown, Info
@@ -135,7 +136,7 @@ export default function LicensePage() {
             <div>
               <h2 className="text-base font-bold text-white">Activation du logiciel</h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Collez votre clé de licence pour accéder à GarageFlow
+                Collez votre clé de licence pour accéder à {CLIENT_BRAND.productName}
               </p>
             </div>
           </div>
@@ -223,7 +224,7 @@ export default function LicensePage() {
                 {status === 'checking' ? (
                   <><Loader2 className="w-4 h-4 animate-spin" />Vérification en cours…</>
                 ) : (
-                  <><ShieldCheck className="w-4 h-4" />Activer GarageFlow<ArrowRight className="w-4 h-4" /></>
+                  <><ShieldCheck className="w-4 h-4" />Activer {CLIENT_BRAND.productName}<ArrowRight className="w-4 h-4" /></>
                 )}
               </button>
             </form>
@@ -242,7 +243,7 @@ export default function LicensePage() {
         </div>
 
         <p className="mt-4 text-center text-[10px] text-slate-800">
-          © {new Date().getFullYear()} GarageFlow · Tous droits réservés
+          © {new Date().getFullYear()} {CLIENT_BRAND.productName} · Tous droits réservés
         </p>
       </div>
     </div>

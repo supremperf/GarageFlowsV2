@@ -15,6 +15,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
+import { CLIENT_BRAND } from '@/config/brand.client'
 import { Download, Clock, ShieldCheck, AlertTriangle, HardDriveDownload, Sparkles } from 'lucide-react'
 import { GarageFlowIcon } from './GarageFlowLogo'
 
@@ -143,7 +144,7 @@ export default function UpdateModal() {
               </p>
             </div>
             <h2 id="gf-update-title" className="mt-0.5 truncate text-lg font-bold text-white">
-              {info.title || `GarageFlow ${info.latestVersion}`}
+              {info.title || `${CLIENT_BRAND.productName} ${info.latestVersion}`}
             </h2>
           </div>
         </div>
@@ -239,7 +240,7 @@ export default function UpdateModal() {
 
           {info.mandatory && !installing && (
             <p className="text-center text-[11px] text-amber-400/80">
-              Cette mise à jour est obligatoire pour continuer à utiliser GarageFlow.
+              Cette mise à jour est obligatoire pour continuer à utiliser {CLIENT_BRAND.productName}.
             </p>
           )}
         </div>

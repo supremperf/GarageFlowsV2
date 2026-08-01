@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic'
  */
 
 import { NextResponse } from 'next/server'
+import { BRAND } from '@/config/brand'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import nodemailer from 'nodemailer'
@@ -67,8 +68,8 @@ export const POST = withAuth(async (req) => {
     await transporter.sendMail({
       from: garage.smtpFrom ?? garage.smtpUser,
       to: garage.smtpUser,
-      subject: 'GarageFlow — Test de configuration email',
-      text: 'La configuration email de GarageFlow fonctionne correctement.',
+      subject: `${BRAND.productName} — Test de configuration email`,
+      text: `La configuration email de ${BRAND.productName} fonctionne correctement.`,
     })
 
     return NextResponse.json({ ok: true })

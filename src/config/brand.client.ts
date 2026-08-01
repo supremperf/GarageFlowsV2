@@ -31,4 +31,5 @@ export const CLIENT_BRAND: ClientBrand = {
   },
   supportUrl: pick(process.env.NEXT_PUBLIC_GF_BRAND_SUPPORT_URL, DEFAULT_BRAND.support.url),
   marketingDomain: pick(process.env.NEXT_PUBLIC_GF_BRAND_MARKETING_DOMAIN, DEFAULT_BRAND.domains.marketing),
+  executableName: pick(process.env.NEXT_PUBLIC_GF_BRAND_EXECUTABLE_NAME, DEFAULT_BRAND.packaging.executableName),
 }

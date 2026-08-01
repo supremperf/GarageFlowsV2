@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
+import { BRAND } from '@/config/brand'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import nodemailer from 'nodemailer'
@@ -109,7 +110,7 @@ ${garage?.name ?? 'Votre garage'}${garage?.phone ? `\nTél : ${garage.phone}` : 
 
   try {
     await transporter.sendMail({
-      from: `${garage?.name ?? 'GarageFlow'} <${smtpFrom}>`,
+      from: `${garage?.name ?? BRAND.productName} <${smtpFrom}>`,
       to: reminder.email,
       subject,
       text: textBody,

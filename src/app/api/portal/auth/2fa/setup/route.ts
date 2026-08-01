@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic'
  */
 
 import { NextResponse } from 'next/server'
+import { BRAND } from '@/config/brand'
 import QRCode from 'qrcode'
 import { prisma } from '@/lib/db'
 import { withPortalAuth } from '@/lib/portal/auth-helpers'
@@ -18,7 +19,7 @@ export const POST = withPortalAuth(async (_req, { user }) => {
   const secret = generateTotpSecret()
   await prisma.portalUser.update({ where: { id: user.id }, data: { twoFactorPending: secret } })
 
-  const otpauth = otpauthURL({ secret, label: user.email, issuer: 'GarageFlow' })
+  const otpauth = otpauthURL({ secret, label: user.email, issuer: BRAND.productName })
   const qrDataUrl = await QRCode.toDataURL(otpauth)
 
   return NextResponse.json({ secret, otpauth, qrDataUrl })

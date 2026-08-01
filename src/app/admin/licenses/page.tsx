@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect, useCallback, FormEvent } from 'react'
+import { CLIENT_BRAND } from '@/config/brand.client'
 import { useRouter } from 'next/navigation'
 import {
   Shield, ShieldCheck, ShieldX, ShieldAlert, Key, Plus, Trash2,
@@ -546,7 +547,7 @@ export default function AdminLicensesPage() {
           <div className="flex items-center gap-3" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
             <GarageFlowIcon size={36} />
             <div>
-              <h1 className="font-black text-white text-base leading-tight">GarageFlow</h1>
+              <h1 className="font-black text-white text-base leading-tight">{CLIENT_BRAND.productName}</h1>
               <div className="flex items-center gap-1.5">
                 <Shield className="w-3 h-3 text-amber-400" />
                 <span className="text-[10px] text-amber-400 font-black tracking-[0.15em] uppercase">Panneau Administrateur · ECC v2</span>

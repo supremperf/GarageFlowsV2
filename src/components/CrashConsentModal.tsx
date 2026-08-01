@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { CLIENT_BRAND } from '@/config/brand.client'
 
 /**
  * Écran de consentement (RGPD) pour les rapports de crash — OPT-IN explicite.
@@ -42,10 +43,10 @@ export default function CrashConsentModal() {
     <div style={overlay} role="dialog" aria-modal="true" aria-labelledby="cc-title">
       <div style={card}>
         <h2 id="cc-title" style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700 }}>
-          Aider à améliorer GarageFlow ?
+          Aider à améliorer {CLIENT_BRAND.productName} ?
         </h2>
         <p style={{ margin: '0 0 12px', fontSize: 14, lineHeight: 1.5, color: '#cbd5e1' }}>
-          Avec votre accord, GarageFlow peut envoyer des <strong>rapports de crash techniques</strong>
+          Avec votre accord, {CLIENT_BRAND.productName} peut envoyer des <strong>rapports de crash techniques</strong>
           {' '}pour corriger les bugs. C&apos;est <strong>facultatif</strong> et désactivé par défaut.
         </p>
 
