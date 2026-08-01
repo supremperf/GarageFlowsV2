@@ -49,14 +49,26 @@ describe('parsePhotoDataUrl — liste blanche MIME & rejet des non-images', () =
     expect(r?.ext).toBe('png')
     expect(r?.buffer.length).toBeGreaterThan(0)
   })
-  it('mappe jpeg → jpg', () => {
-    const jpg = 'data:image/jpeg;base64,' + Buffer.from('hello-jpeg').toString('base64')
+  it('mappe jpeg → jpg (magic bytes JPEG réels)', () => {
+    const jpegBytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46])
+    const jpg = 'data:image/jpeg;base64,' + jpegBytes.toString('base64')
     expect(parsePhotoDataUrl(jpg)?.ext).toBe('jpg')
   })
   it('REFUSE un MIME hors liste blanche (svg, html, octet-stream)', () => {
     expect(parsePhotoDataUrl('data:image/svg+xml;base64,' + Buffer.from('<svg/>').toString('base64'))).toBeNull()
     expect(parsePhotoDataUrl('data:text/html;base64,' + Buffer.from('<h1>x</h1>').toString('base64'))).toBeNull()
     expect(parsePhotoDataUrl('data:application/octet-stream;base64,AAAA')).toBeNull()
+  })
+  it('REFUSE une usurpation de contenu (MIME image mais octets non-image)', () => {
+    // MIME image/png annoncé, mais le contenu est du HTML → rejeté par la
+    // validation des magic bytes (défense contre les polyglots/uploads piégés).
+    const spoof = 'data:image/png;base64,' + Buffer.from('<html><script>alert(1)</script></html>').toString('base64')
+    expect(parsePhotoDataUrl(spoof)).toBeNull()
+  })
+  it('REFUSE un décalage de type (octets JPEG annoncés en PNG)', () => {
+    const jpegBytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0])
+    const mismatched = 'data:image/png;base64,' + jpegBytes.toString('base64')
+    expect(parsePhotoDataUrl(mismatched)).toBeNull()
   })
   it('REFUSE une entrée non-string / non data-URL / vide', () => {
     expect(parsePhotoDataUrl(12345 as unknown)).toBeNull()
