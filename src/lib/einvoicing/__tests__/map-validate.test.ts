@@ -104,4 +104,25 @@ describe('validateDocument — EN 16931 cœur', () => {
     const r = validateDocument(doc)
     expect(r.warnings.some((w) => w.code === 'GF-CN-REF')).toBe(true)
   })
+
+  // ── Couplages ajoutés (revue adversariale) ──────────────────────────────
+  it('ERREUR si HT ≠ somme des lignes (aucune remise modélisée)', () => {
+    const doc = mapInvoiceToDocument(invoice, garage)
+    doc.totals.taxExclusiveCents = doc.totals.lineTotalCents + 1000 // découple HT des lignes
+    const r = validateDocument(doc)
+    expect(r.valid).toBe(false)
+    expect(r.errors.some((e) => e.code === 'GF-EXCL-LINES')).toBe(true)
+  })
+  it('ERREUR si une ligne porte une TVA absente de la ventilation', () => {
+    const doc = mapInvoiceToDocument(invoice, garage)
+    // La ligne reste à 20% mais on falsifie la ventilation en 0% (Z).
+    doc.vatBreakdown = [{ vatCategory: 'Z', vatRatePercent: 0, taxableAmountCents: doc.totals.lineTotalCents, taxAmountCents: 0 }]
+    doc.totals.taxAmountCents = 0
+    doc.totals.taxInclusiveCents = doc.totals.taxExclusiveCents
+    doc.totals.payableCents = doc.totals.taxExclusiveCents
+    const r = validateDocument(doc)
+    expect(r.valid).toBe(false)
+    // La ligne 20% n'a pas d'entrée de ventilation correspondante + base incohérente.
+    expect(r.errors.some((e) => e.code === 'BR-CO-18' || e.code === 'BR-S-08')).toBe(true)
+  })
 })

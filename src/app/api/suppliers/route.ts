@@ -231,11 +231,18 @@ export const POST = withAuth(async (req) => {
       }
     } else if (t.effects.decrementStock) {
       for (const l of stockLines) {
-        // ATOMICITÉ : décrément atomique (comme l'incrément ci-dessus) au lieu
-        // d'un read-modify-write (`quantity = part.quantity - qty`) qui pouvait
-        // perdre une écriture concurrente sur la même pièce (lost update, PG).
-        const part = await tx.part.findFirst({ where: { id: l.partId, garageId }, select: { id: true } })
-        if (part) await tx.part.update({ where: { id: l.partId }, data: { quantity: { decrement: l.qty } } })
+        // ATOMICITÉ + PLANCHER À ZÉRO : décrément atomique conditionnel (jamais de
+        // read-modify-write qui perdrait une écriture concurrente ; jamais de stock
+        // NÉGATIF). Si le stock présent est insuffisant (des unités ont déjà été
+        // consommées ailleurs), on plafonne à 0 — on ne peut pas retirer plus que
+        // ce qui est présent. `updateMany … where garageId` garde le scoping tenant.
+        const dec = await tx.part.updateMany({
+          where: { id: l.partId, garageId, quantity: { gte: l.qty } },
+          data:  { quantity: { decrement: l.qty } },
+        })
+        if (dec.count === 0) {
+          await tx.part.updateMany({ where: { id: l.partId, garageId, quantity: { lt: l.qty } }, data: { quantity: 0 } })
+        }
       }
     }
     return { raced: false }

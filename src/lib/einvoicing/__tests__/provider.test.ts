@@ -44,6 +44,22 @@ describe('SandboxEInvoiceProvider — dépôt & cycle de vie', () => {
     expect(b.transmissionId).toBe(a.transmissionId)
   })
 
+  it('rejeu idempotent : renvoie la validation du PREMIER dépôt (cohérence)', async () => {
+    const p = fixedProvider()
+    const validDoc = mapInvoiceToDocument(invoice, garage)
+    const first = await p.submit(validDoc, { idempotencyKey: 'k2' })
+    expect(first.ok).toBe(true)
+    expect(first.validation.valid).toBe(true)
+    // 2ᵉ appel, même clé, avec un doc INVALIDE : on doit récupérer la transmission
+    // ET la validation d'origine (valides), pas la validation du doc invalide.
+    const invalidDoc = mapInvoiceToDocument(invoice, { ...garage, siret: null, vatNumber: null })
+    const replay = await p.submit(invalidDoc, { idempotencyKey: 'k2' })
+    expect(replay.transmissionId).toBe(first.transmissionId)
+    expect(replay.status).toBe('SUBMITTED')
+    expect(replay.ok).toBe(true)
+    expect(replay.validation.valid).toBe(true) // cohérent avec la transmission stockée
+  })
+
   it('fait avancer le cycle SUBMITTED→RECEIVED→ACCEPTED→PAID', async () => {
     const p = fixedProvider()
     const doc = mapInvoiceToDocument(invoice, garage)

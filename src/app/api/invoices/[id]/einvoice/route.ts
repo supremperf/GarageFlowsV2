@@ -65,6 +65,15 @@ export const GET = withAuth(async (req, { params }: { params: { id: string } }) 
   const xml = format === 'UBL' ? toUBL(document) : toCII(document)
 
   if (download) {
+    // Ne pas émettre silencieusement un XML non conforme en pièce jointe : si la
+    // validation échoue, on refuse (422) avec les erreurs, sauf override explicite
+    // ?force=1 (inspection). Le mode JSON (défaut) renvoie toujours la validation.
+    if (!validation.valid && url.searchParams.get('force') !== '1') {
+      return NextResponse.json(
+        { error: 'Document non conforme — export refusé (ajoutez &force=1 pour inspecter).', validation },
+        { status: 422 },
+      )
+    }
     const suffix = format === 'UBL' ? 'ubl' : 'facturx'
     return new NextResponse(xml, {
       status: 200,

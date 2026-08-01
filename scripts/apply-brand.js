@@ -29,6 +29,21 @@ const DEFAULTS = {
   companyName: 'GarageFlow',
 }
 
+/**
+ * Valide un appId (reverse-DNS). REFUSE tout ce qui sort de la liste blanche —
+ * l'appId est injecté dans une chaîne de electron/main.js : un caractère `'`,
+ * `)`, `$` ou `;` permettrait une injection de code au build. Fail-closed.
+ */
+function assertValidAppId(appId) {
+  if (typeof appId !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(appId)) {
+    throw new Error(
+      `appId invalide : "${appId}". Attendu : lettres/chiffres/point/tiret/underscore ` +
+        `(ex. com.exemple.app). Aucun caractère spécial autorisé (sécurité build).`,
+    )
+  }
+  return appId
+}
+
 /** Transforme un nom d'affichage en identifiant npm valide (minuscules, tirets). */
 function slugifyName(name) {
   const s = String(name)
@@ -58,7 +73,7 @@ function resolveBrandForPackaging(jsonConfig, env, existingCopyright) {
     return undefined
   }
   const productName = pick(e.GF_BRAND_EXE_PRODUCT_NAME, jp.productName, e.GF_BRAND_PRODUCT_NAME, j.productName, DEFAULTS.productName)
-  const appId = pick(e.GF_BRAND_APP_ID, jp.appId, DEFAULTS.appId)
+  const appId = assertValidAppId(pick(e.GF_BRAND_APP_ID, jp.appId, DEFAULTS.appId))
   const companyName = pick(e.GF_BRAND_COMPANY, j.companyName, j.companyLegalName, DEFAULTS.companyName)
   const year = extractYear(existingCopyright, 2026)
   return {
@@ -90,9 +105,13 @@ function applyToPackageJson(pkg, r) {
 
 /** Remplace l'appId dans app.setAppUserModelId('...') de electron/main.js. */
 function applyToMainJs(source, appId) {
+  assertValidAppId(appId) // fail-closed : jamais d'injection dans le source JS
+  // Fonction de remplacement (et non chaîne) : les séquences `$` d'un remplacement
+  // string seraient interprétées ($&, $1…). Ici l'appId est déjà validé, mais on
+  // reste défensif.
   return String(source).replace(
     /app\.setAppUserModelId\((['"])[^'"]*\1\)/,
-    `app.setAppUserModelId('${appId}')`,
+    () => `app.setAppUserModelId('${appId}')`,
   )
 }
 
@@ -143,6 +162,13 @@ function main() {
     (pkgChanged || mainChanged) ? '(fichiers mis à jour)' : '(déjà à jour)')
 }
 
-module.exports = { slugifyName, extractYear, resolveBrandForPackaging, applyToPackageJson, applyToMainJs, DEFAULTS }
+module.exports = { slugifyName, extractYear, resolveBrandForPackaging, applyToPackageJson, applyToMainJs, assertValidAppId, DEFAULTS }
 
-if (require.main === module) main()
+if (require.main === module) {
+  try {
+    main()
+  } catch (err) {
+    console.error('[apply-brand] ERREUR :', err.message)
+    process.exit(1)
+  }
+}

@@ -4,13 +4,14 @@
 import { describe, it, expect } from 'vitest'
 import * as applyBrand from '../../../scripts/apply-brand.js'
 
-const { slugifyName, resolveBrandForPackaging, applyToPackageJson, applyToMainJs } = applyBrand as {
+const { slugifyName, resolveBrandForPackaging, applyToPackageJson, applyToMainJs, assertValidAppId } = applyBrand as {
   slugifyName: (s: string) => string
   resolveBrandForPackaging: (json: unknown, env: Record<string, string>, existingCopyright?: string) => {
     productName: string; appId: string; companyName: string; npmName: string; author: string; copyright: string; shortcutName: string
   }
   applyToPackageJson: (pkg: unknown, r: unknown) => Record<string, unknown>
   applyToMainJs: (src: string, appId: string) => string
+  assertValidAppId: (appId: string) => string
 }
 
 describe('slugifyName', () => {
@@ -83,5 +84,24 @@ describe('applyToMainJs', () => {
   it('est idempotent', () => {
     const src = "app.setAppUserModelId('com.atelier.pro')"
     expect(applyToMainJs(src, 'com.atelier.pro')).toBe(src)
+  })
+})
+
+describe('assertValidAppId — anti-injection (sécurité build)', () => {
+  it('accepte un reverse-DNS valide', () => {
+    expect(assertValidAppId('com.atelier.pro')).toBe('com.atelier.pro')
+    expect(assertValidAppId('GarageFlow_2')).toBe('GarageFlow_2')
+  })
+  it('REJETTE une tentative d’injection de code', () => {
+    const malicious = "x'); require('child_process').execSync('calc'); ('"
+    expect(() => assertValidAppId(malicious)).toThrow(/appId invalide/)
+    expect(() => applyToMainJs("app.setAppUserModelId('a')", malicious)).toThrow(/appId invalide/)
+    // et via la résolution complète (brand.config.json hostile)
+    expect(() => resolveBrandForPackaging({ packaging: { appId: malicious } }, {})).toThrow(/appId invalide/)
+  })
+  it('REJETTE les caractères spéciaux ($, espace, guillemets)', () => {
+    expect(() => assertValidAppId('com.$brand.app')).toThrow()
+    expect(() => assertValidAppId('com brand app')).toThrow()
+    expect(() => assertValidAppId('')).toThrow()
   })
 })

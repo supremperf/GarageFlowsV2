@@ -92,11 +92,31 @@ export function validateDocument(doc: EInvoiceDocument): ValidationResult {
     if (v.taxAmountCents !== expectedTax) {
       err('BR-CO-14', `vat[${v.vatRatePercent}]`, `TVA incohérente (attendu ${expectedTax}, reçu ${v.taxAmountCents}).`)
     }
+    // Réconciliation base ↔ lignes : la base d'une catégorie doit égaler la somme
+    // des nets des lignes de même (catégorie, taux). Empêche un document où une
+    // ligne porte une TVA que la ventilation/l'en-tête ne collecte pas.
+    const sumForCat = (doc.lines ?? [])
+      .filter((l) => l.vatCategory === v.vatCategory && l.vatRatePercent === v.vatRatePercent)
+      .reduce((s, l) => s + l.netAmountCents, 0)
+    if (sumForCat !== v.taxableAmountCents) {
+      err('BR-S-08', `vat[${v.vatCategory}/${v.vatRatePercent}]`, `Base imposable (${v.taxableAmountCents}) ≠ somme des lignes correspondantes (${sumForCat}).`)
+    }
+  }
+  // Chaque ligne doit être couverte par une entrée de ventilation (catégorie+taux).
+  for (const l of doc.lines ?? []) {
+    const covered = (doc.vatBreakdown ?? []).some((v) => v.vatCategory === l.vatCategory && v.vatRatePercent === l.vatRatePercent)
+    if (!covered) {
+      err('BR-CO-18', `lines[${l.id}]`, `Ligne (${l.vatCategory}/${l.vatRatePercent}%) sans entrée de ventilation TVA correspondante.`)
+    }
   }
   const t = doc.totals
   if (t) {
     const sumLines = (doc.lines ?? []).reduce((s, l) => s + l.netAmountCents, 0)
     if (t.lineTotalCents !== sumLines) err('BR-CO-10', 'totals.lineTotalCents', `Somme des lignes incohérente (attendu ${sumLines}).`)
+    // Couplage HT ↔ lignes : aucune remise/charge modélisée ⇒ HT = somme des lignes.
+    if (t.taxExclusiveCents !== t.lineTotalCents) {
+      err('GF-EXCL-LINES', 'totals.taxExclusiveCents', `HT (${t.taxExclusiveCents}) ≠ somme des lignes (${t.lineTotalCents}).`)
+    }
     if (t.taxInclusiveCents !== t.taxExclusiveCents + t.taxAmountCents) {
       err('BR-CO-15', 'totals.taxInclusiveCents', 'TTC ≠ HT + TVA.')
     }

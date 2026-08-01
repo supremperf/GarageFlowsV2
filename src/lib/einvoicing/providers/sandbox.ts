@@ -12,7 +12,7 @@
  * référence d'implémentation pour un futur adaptateur PDP. Déterministe : l'horloge
  * et le générateur d'identifiants sont injectables.
  */
-import type { EInvoiceDocument, EInvoiceFormat, LifecycleStatus } from '../types'
+import type { EInvoiceDocument, EInvoiceFormat, LifecycleStatus, ValidationResult } from '../types'
 import type { EInvoiceProvider, StatusResult, SubmitOptions, SubmitResult } from '../provider'
 import { canTransition } from '../provider'
 import { validateDocument } from '../validate'
@@ -26,6 +26,8 @@ interface Record_ {
   xml: string
   history: { status: LifecycleStatus; at: number }[]
   idempotencyKey?: string
+  /** Validation calculée au PREMIER dépôt (retournée telle quelle en rejeu idempotent). */
+  validation: ValidationResult
 }
 
 export interface SandboxOptions {
@@ -51,7 +53,9 @@ export class SandboxEInvoiceProvider implements EInvoiceProvider {
   async submit(doc: EInvoiceDocument, opts: SubmitOptions = {}): Promise<SubmitResult> {
     const format: EInvoiceFormat = opts.format ?? 'CII'
 
-    // Idempotence : même clé → même transmission (pas de doublon).
+    // Idempotence : même clé → MÊME transmission ET même validation (celle du
+    // premier dépôt). On ne recalcule pas la validation sur le doc de ce 2ᵉ appel :
+    // le résultat resterait cohérent avec la transmission réellement stockée.
     if (opts.idempotencyKey && this.byIdem.has(opts.idempotencyKey)) {
       const rec = this.store.get(this.byIdem.get(opts.idempotencyKey)!)!
       return {
@@ -60,7 +64,7 @@ export class SandboxEInvoiceProvider implements EInvoiceProvider {
         status: rec.status,
         format: rec.format,
         xml: rec.xml,
-        validation: validateDocument(doc),
+        validation: rec.validation,
       }
     }
 
@@ -77,6 +81,7 @@ export class SandboxEInvoiceProvider implements EInvoiceProvider {
       xml,
       history: [{ status, at }],
       idempotencyKey: opts.idempotencyKey,
+      validation,
     }
     this.store.set(transmissionId, rec)
     if (opts.idempotencyKey) this.byIdem.set(opts.idempotencyKey, transmissionId)
