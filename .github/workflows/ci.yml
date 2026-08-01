@@ -99,6 +99,10 @@ jobs:
       - name: White-label packaging in sync
         run: npm run brand:check
 
+      # ── Facturation électronique : aucune formulation de conformité interdite ──
+      - name: E-invoicing compliance language guard
+        run: npm run compliance:check
+
       # ── Migrations PostgreSQL sur base VIDE (échec CI si une migration casse) ──
       - name: PostgreSQL migrations on empty database + smoke test
         run: node scripts/validate-server-db.js

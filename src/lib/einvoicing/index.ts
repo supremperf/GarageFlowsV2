@@ -17,3 +17,9 @@ export { SandboxEInvoiceProvider } from './providers/sandbox'
 export type { SandboxOptions } from './providers/sandbox'
 export { verifyWebhook, signWebhook } from './webhook'
 export type { WebhookEvent, WebhookVerifyResult } from './webhook'
+export {
+  COMPLIANCE_LEVELS, CURRENT_COMPLIANCE_LEVEL, COMPLIANCE_STATEMENTS,
+  currentComplianceStatement, canClaimProductionReady, complianceRank,
+  scanForForbiddenClaims, FORBIDDEN_CLAIM_PATTERNS,
+} from './compliance'
+export type { ComplianceLevel, ForbiddenPattern, ForbiddenMatch } from './compliance'
