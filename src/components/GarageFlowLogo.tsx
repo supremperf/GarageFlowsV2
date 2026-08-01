@@ -8,6 +8,7 @@
  */
 
 import logoMark from './brand/logo-mark.png'
+import { CLIENT_BRAND } from '@/config/brand.client'
 
 interface Props {
   size?: number
@@ -16,6 +17,10 @@ interface Props {
 }
 
 export default function GarageFlowLogo({ size = 40, showText = false, className = '' }: Props) {
+  // Marque blanche : le wordmark (deux mots) et la couleur d'accent proviennent
+  // de la configuration de marque (surchargeable par NEXT_PUBLIC_GF_BRAND_*).
+  const { primary, secondary } = CLIENT_BRAND.wordmark
+  const { primary: cPrimary, accent } = CLIENT_BRAND.colors
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <GarageFlowIcon size={size} />
@@ -25,11 +30,11 @@ export default function GarageFlowLogo({ size = 40, showText = false, className 
           <span style={{
             background: 'linear-gradient(135deg,#f8fafc,#cbd5e1 45%,#94a3b8)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          }}>GARAGE</span>
+          }}>{primary.toUpperCase()}</span>
           <span style={{
-            background: 'linear-gradient(135deg,#60a5fa,#2563eb)',
+            background: `linear-gradient(135deg,${accent},${cPrimary})`,
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          }}>FLOW</span>
+          }}>{secondary.toUpperCase()}</span>
         </div>
       )}
     </div>
@@ -42,7 +47,7 @@ export function GarageFlowIcon({ size = 32, className = '' }: { size?: number; c
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={logoMark.src}
-      alt="GarageFlow"
+      alt={CLIENT_BRAND.productName}
       width={size}
       height={size}
       draggable={false}
@@ -58,7 +63,8 @@ export function GarageFlowLockup({ iconSize = 28 }: { iconSize?: number }) {
     <div className="flex items-center gap-2">
       <GarageFlowIcon size={iconSize} />
       <span className="font-black tracking-tight leading-none" style={{ fontSize: Math.max(12, iconSize * 0.5) }}>
-        <span className="text-slate-100">Garage</span><span className="text-blue-400">Flow</span>
+        <span className="text-slate-100">{CLIENT_BRAND.wordmark.primary}</span>
+        <span style={{ color: CLIENT_BRAND.colors.accent }}>{CLIENT_BRAND.wordmark.secondary}</span>
       </span>
     </div>
   )

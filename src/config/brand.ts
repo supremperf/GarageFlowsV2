@@ -25,6 +25,7 @@
 import { z } from 'zod'
 import fs from 'node:fs'
 import path from 'node:path'
+import { DEFAULT_BRAND } from './brand.defaults'
 
 /** Hex colour like #2563eb (3 or 6 hex digits). */
 const hexColor = z
@@ -115,54 +116,8 @@ const brandSchema = z.object({
 
 export type Brand = z.infer<typeof brandSchema>
 
-/** Current GarageFlow identity — the safe, validated default. */
-const DEFAULT_BRAND: Brand = {
-  productName: 'GarageFlow',
-  shortName: 'GarageFlow',
-  companyName: 'GarageFlow',
-  companyLegalName: 'GarageFlow',
-  tagline: "Logiciel de gestion et planning d'atelier automobile",
-  wordmark: { primary: 'Garage', secondary: 'Flow' },
-  colors: { primary: '#2563eb', primaryDark: '#1d4ed8', accent: '#60a5fa' },
-  domains: {
-    marketing: 'garageflows.fr',
-    app: 'app.garageflows.fr',
-    docs: 'garageflows.fr/aide',
-  },
-  support: {
-    email: 'support@garageflows.fr',
-    phone: '',
-    url: 'https://garageflows.fr/aide',
-  },
-  mail: {
-    fromName: 'GarageFlow',
-    fromAddress: 'no-reply@garageflows.fr',
-    replyTo: 'support@garageflows.fr',
-  },
-  legal: {
-    entity: 'GarageFlow',
-    siren: '',
-    address: '',
-    termsUrl: 'https://garageflows.fr/conditions',
-    privacyUrl: 'https://garageflows.fr/rgpd',
-    legalNoticeUrl: 'https://garageflows.fr/mentions-legales',
-  },
-  assets: {
-    logoLight: '/icon.png',
-    logoDark: '/icon.png',
-    favicon: '/favicon.ico',
-    windowsIcon: 'icon.ico',
-  },
-  packaging: {
-    productName: 'GarageFlow',
-    appId: 'com.garageflow.app',
-    executableName: 'GarageFlow',
-  },
-  commercial: {
-    email: 'contact@garageflows.fr',
-    url: 'https://garageflows.fr',
-  },
-}
+/** Current GarageFlow identity — the safe, validated default (from brand.defaults.ts). */
+const DEFAULT_BRAND_TYPED: Brand = DEFAULT_BRAND
 
 /** Deep-merge `override` (partial, untyped) over `base`. Arrays/scalars replace. */
 function deepMerge<T>(base: T, override: unknown): T {
@@ -253,7 +208,7 @@ function readEnvOverride(): Record<string, unknown> {
  * Exported for tests; the app should import the memoised `BRAND` below.
  */
 export function resolveBrand(): Brand {
-  let merged: unknown = DEFAULT_BRAND
+  let merged: unknown = DEFAULT_BRAND_TYPED
   merged = deepMerge(merged as Brand, readJsonOverride())
   merged = deepMerge(merged as Brand, readEnvOverride())
 
@@ -265,11 +220,11 @@ export function resolveBrand(): Brand {
     '[brand] brand override failed validation — using defaults. Issues:',
     parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '),
   )
-  return DEFAULT_BRAND
+  return DEFAULT_BRAND_TYPED
 }
 
 /** Memoised, validated brand identity. Import this everywhere product identity is shown. */
 export const BRAND: Brand = resolveBrand()
 
 /** The pristine defaults, exported for tests and reset flows. */
-export const DEFAULT_BRAND_CONFIG: Brand = DEFAULT_BRAND
+export const DEFAULT_BRAND_CONFIG: Brand = DEFAULT_BRAND_TYPED

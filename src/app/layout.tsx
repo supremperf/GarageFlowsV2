@@ -2,14 +2,15 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Providers } from './providers'
 import PwaRegister from '@/components/PwaRegister'
+import { BRAND } from '@/config/brand'
 
 export const metadata: Metadata = {
-  title: 'GarageFlow — Planning Atelier Intelligent',
-  description: 'Système de gestion et optimisation du planning de votre atelier automobile par intelligence artificielle.',
+  title: `${BRAND.productName} — ${BRAND.tagline}`,
+  description: BRAND.tagline,
   keywords: ['garage', 'atelier', 'planning', 'mécanique', 'gestion', 'automobile'],
   manifest: '/manifest.webmanifest',
-  applicationName: 'GarageFlow',
-  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'GarageFlow' },
+  applicationName: BRAND.productName,
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: BRAND.productName },
   icons: {
     icon: [
       { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },

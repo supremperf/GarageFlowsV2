@@ -182,11 +182,33 @@ task (see §8).
 - All identity/colour/domain/support/mail/legal/commercial values available to
   any server component or module that imports `BRAND`.
 
+**Now wired (done):**
+- `src/components/GarageFlowLogo.tsx` reads the wordmark **and accent colour**
+  from the client brand (`CLIENT_BRAND.wordmark` / `.colors`) — the logo lockup
+  and the two-word wordmark rebrand from configuration.
+- `src/app/layout.tsx` metadata (`title`, `applicationName`, Apple web-app title,
+  description) derive from the server `BRAND`.
+- `src/config/app.ts` `APP_CONFIG.name` derives from `BRAND.productName`.
+- **Client-safe brand layer** `src/config/brand.client.ts`: a `use client`
+  component can import `CLIENT_BRAND` (fs-free) — values come from the shared
+  defaults (`brand.defaults.ts`) overridden by `NEXT_PUBLIC_GF_BRAND_*` (below).
+  A test guards against drift between client and server defaults.
+
+**Client-side override variables** (inlined at build by Next.js — the browser only
+ever sees `NEXT_PUBLIC_*`): `NEXT_PUBLIC_GF_BRAND_PRODUCT_NAME`,
+`…_SHORT_NAME`, `…_TAGLINE`, `…_WORDMARK_PRIMARY`, `…_WORDMARK_SECONDARY`,
+`…_PRIMARY_COLOR`, `…_PRIMARY_DARK_COLOR`, `…_ACCENT_COLOR`, `…_SUPPORT_URL`,
+`…_MARKETING_DOMAIN`. Set these at build time to rebrand the client UI; use the
+`GF_BRAND_*` / `brand.config.json` layer (§3-4) for the server side.
+
+**Two distinct brands from one codebase (demo):** build once with the GarageFlow
+defaults, and once with e.g. `NEXT_PUBLIC_GF_BRAND_PRODUCT_NAME=AtelierPro
+NEXT_PUBLIC_GF_BRAND_WORDMARK_PRIMARY=Atelier
+NEXT_PUBLIC_GF_BRAND_WORDMARK_SECONDARY=Pro
+NEXT_PUBLIC_GF_BRAND_ACCENT_COLOR=#38bdf8` — the logo wordmark, accent colour and
+window/tab title all change with **no code edit**.
+
 **Still inline today (documented, not yet wired to `BRAND`):**
-- `src/components/GarageFlowLogo.tsx` renders the wordmark text ("Garage"/"Flow")
-  and gradient colours directly. It should read `BRAND.wordmark` and
-  `BRAND.colors`. `brand.ts` already exposes those fields — wiring is a small UI
-  edit but is left explicit here rather than claimed as done.
 - ~38 source files contain the literal string "GarageFlow" (headers, modals,
   copilot copy, admin pages). Grep them with:
   `grep -rln "GarageFlow" src`. Most are user-facing copy that can be migrated
