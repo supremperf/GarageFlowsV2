@@ -116,6 +116,7 @@ model Garage {
   backupRecords      BackupRecord[]
   reportSnapshots    ReportSnapshot[]
   eInvoiceSubmissions EInvoiceSubmission[]
+  subscription       Subscription?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -992,4 +993,29 @@ model AuthToken {
 
   @@index([userId])
   @@index([type])
+}
+
+// ─── Subscription ─────────────────────────────────────────────────────────────
+// Abonnement SaaS piloté par un facturier EXTERNE (Stripe, etc.). GarageFlow ne
+// prend AUCUN paiement : il persiste l'état renvoyé par le facturier et prend les
+// décisions d'ACCÈS côté serveur. États : trial | active | grace | suspended |
+// cancelled. Voir src/lib/billing/subscription.ts et docs/SUBSCRIPTION_MODEL.md.
+model Subscription {
+  id                     String    @id @default(cuid())
+  garageId               String    @unique
+  garage                 Garage    @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  status                 String    @default("trial")
+  plan                   String    @default("standard")
+  externalCustomerId     String?
+  externalSubscriptionId String?
+  seats                  Int       @default(1)
+  trialEndsAt            DateTime?
+  currentPeriodEnd       DateTime?
+  graceEndsAt            DateTime?
+  cancelAt               DateTime?
+  canceledAt            DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  @@index([status])
 }

@@ -843,6 +843,26 @@ export const MIGRATIONS: Migration[] = [
   { id: '132_authtoken_unique_hash', sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "AuthToken_tokenHash_key" ON "AuthToken"("tokenHash")' },
   { id: '133_authtoken_idx_user',    sql: 'CREATE INDEX IF NOT EXISTS "AuthToken_userId_idx" ON "AuthToken"("userId")' },
   { id: '134_authtoken_idx_type',    sql: 'CREATE INDEX IF NOT EXISTS "AuthToken_type_idx" ON "AuthToken"("type")' },
+  // ── Abonnement SaaS (facturier externe) — décisions d'accès côté serveur ────
+  { id: '135_subscription_table', sql: `CREATE TABLE IF NOT EXISTS "Subscription" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "garageId" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'trial',
+    "plan" TEXT NOT NULL DEFAULT 'standard',
+    "externalCustomerId" TEXT,
+    "externalSubscriptionId" TEXT,
+    "seats" INTEGER NOT NULL DEFAULT 1,
+    "trialEndsAt" DATETIME,
+    "currentPeriodEnd" DATETIME,
+    "graceEndsAt" DATETIME,
+    "cancelAt" DATETIME,
+    "canceledAt" DATETIME,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Subscription_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+  )` },
+  { id: '136_subscription_unique_garage', sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "Subscription_garageId_key" ON "Subscription"("garageId")' },
+  { id: '137_subscription_idx_status',    sql: 'CREATE INDEX IF NOT EXISTS "Subscription_status_idx" ON "Subscription"("status")' },
 ]
 
 /**
