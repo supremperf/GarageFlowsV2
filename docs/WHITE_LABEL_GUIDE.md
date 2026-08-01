@@ -167,11 +167,23 @@ Keep the same file names to avoid touching imports, or update the paths in
 }
 ```
 
-Also update `app.setAppUserModelId('com.garageflow.app')` in
-`electron/main.js` to match `build.appId`. The `packaging.*` fields in
-`brand.ts` mirror these values so a build script can keep them in sync from a
-single `brand.config.json`; wiring that codegen step is a small, well-scoped
-task (see §8).
+**This is now automated.** `scripts/apply-brand.js` reads `brand.config.json`
+(or `GF_BRAND_*` env) and patches all of the above **plus**
+`app.setAppUserModelId(...)` in `electron/main.js`, from one source:
+
+```bash
+npm run brand:apply     # patch package.json + electron/main.js from the brand
+npm run brand:check     # dry-run; exits 1 if packaging is out of sync (CI-friendly)
+```
+
+`predist` runs `apply-brand` automatically, so `npm run dist` always builds the
+installer with the active brand. The transform is idempotent and its pure
+functions are unit-tested (`src/lib/__tests__/apply-brand.test.ts`). Example
+round-trip: with `brand.config.json = {"productName":"AtelierPro","companyName":
+"Atelier SAS","packaging":{"appId":"com.atelier.pro","productName":"AtelierPro"}}`,
+`npm run brand:apply` sets `name→atelierpro`, `productName→AtelierPro`,
+`author→Atelier SAS`, `build.appId→com.atelier.pro`, `build.copyright→…Atelier
+SAS`, and the Electron app-user-model id — no manual edits.
 
 ---
 
@@ -235,9 +247,8 @@ estimated at well under a day of mechanical edits, all guarded by TypeScript.
 1. ~~Wire `GarageFlowLogo.tsx` to brand~~ **done** (`CLIENT_BRAND.wordmark`/`.colors`).
 2. ~~Sweep the remaining literal "GarageFlow" strings~~ **done** (product-name
    literals ~38 → 0; only a JSX comment remains).
-3. Add a `scripts/apply-brand.js` build step that reads `brand.config.json` and
-   patches `package.json` packaging keys + `setAppUserModelId`, so packaging and
-   runtime share one source. *(still to do)*
+3. ~~Add a `scripts/apply-brand.js` build step~~ **done** — `npm run brand:apply`
+   / `brand:check`, wired via `predist` (see §6).
 4. Migrate the remaining hard-coded `garageflows.fr` domains to `BRAND.domains`
    where they are not already env-overridable. *(still to do)*
 5. Add a Tailwind theme bridge so `colors.primary` drives CSS variables. *(still to do)*
