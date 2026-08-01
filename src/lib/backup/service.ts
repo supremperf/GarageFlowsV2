@@ -13,11 +13,70 @@ import path from 'path'
 import type { BackupRecord } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { backupKey } from '@/lib/env'
+import { SCHEMA_VERSION } from '@/lib/migrations'
 import { logger } from '@/lib/logger'
 import {
   encrypt, decrypt, encryptWithPassphrase, decryptWithPassphrase, sha256, parseRawKey, type EncryptedEnvelope,
 } from './crypto'
 import { snapshotGarage, restoreSnapshot, countTables, type GarageSnapshot } from './snapshot'
+import pkg from '../../../package.json'
+
+/** Version du format d'enveloppe de sauvegarde (avec manifeste auto-descriptif). */
+export const BACKUP_FORMAT = 'gf-backup'
+export const BACKUP_FORMAT_VERSION = 2
+
+/** Version de l'application (depuis package.json). */
+function appVersion(): string {
+  return (pkg as { version?: string }).version ?? 'unknown'
+}
+
+/**
+ * Manifeste auto-descriptif embarqué DANS la sauvegarde chiffrée : permet de
+ * vérifier l'intégrité et de restaurer sur une AUTRE machine sans dépendre du
+ * `BackupRecord` local. `snapshotChecksum` couvre les données seules.
+ */
+export interface BackupManifest {
+  format: typeof BACKUP_FORMAT
+  formatVersion: number
+  appVersion: string
+  schemaVersion: number
+  garageId: string
+  createdAt: string
+  counts: Record<string, number>
+  snapshotChecksum: string
+}
+
+// `garage` = ligne racine Garage capturée pour permettre une restauration sur
+// une machine VIERGE (le snapshot ne contient que les données scopées enfant).
+interface BackupEnvelope { manifest: BackupManifest; garage: Record<string, unknown> | null; snapshot: GarageSnapshot }
+
+function buildManifest(snapshot: GarageSnapshot): BackupManifest {
+  return {
+    format: BACKUP_FORMAT,
+    formatVersion: BACKUP_FORMAT_VERSION,
+    appVersion: appVersion(),
+    schemaVersion: SCHEMA_VERSION,
+    garageId: snapshot.garageId,
+    createdAt: snapshot.createdAt,
+    counts: countTables(snapshot),
+    snapshotChecksum: sha256(JSON.stringify(snapshot)),
+  }
+}
+
+/**
+ * Interprète le texte clair d'une sauvegarde. Format 2 = `{ manifest, snapshot }` ;
+ * format 1 (héritage) = le snapshot nu → manifeste reconstruit à la volée pour
+ * rester restaurable.
+ */
+export function parseBackupPlaintext(plaintext: string): BackupEnvelope {
+  const parsed = JSON.parse(plaintext) as Record<string, unknown>
+  if (parsed && parsed.manifest && parsed.snapshot) {
+    const env = parsed as unknown as BackupEnvelope
+    return { manifest: env.manifest, garage: env.garage ?? null, snapshot: env.snapshot }
+  }
+  const snapshot = parsed as unknown as GarageSnapshot
+  return { manifest: buildManifest(snapshot), garage: null, snapshot }
+}
 
 /** Directory where encrypted backup blobs are written. */
 export function backupDir(): string {
@@ -51,8 +110,14 @@ export async function createBackup(
   garageId: string,
   opts: { passphrase?: string; note?: string } = {},
 ): Promise<BackupRecord> {
-  const snapshot = await prisma.$transaction(tx => snapshotGarage(tx, garageId))
-  const plaintext = JSON.stringify(snapshot)
+  const { snapshot, garage } = await prisma.$transaction(async (tx) => ({
+    snapshot: await snapshotGarage(tx, garageId),
+    garage: (await tx.garage.findUnique({ where: { id: garageId } })) as Record<string, unknown> | null,
+  }))
+  // Enveloppe auto-descriptive (manifeste + racine Garage + données) → portable,
+  // vérifiable et restaurable sur une autre machine sans le BackupRecord local.
+  const envelope: BackupEnvelope = { manifest: buildManifest(snapshot), garage, snapshot }
+  const plaintext = JSON.stringify(envelope)
   const checksum = sha256(plaintext)
   const { env, kdf } = encryptPlaintext(plaintext, opts.passphrase)
   const blob = JSON.stringify(env)
@@ -109,7 +174,7 @@ export async function verifyBackup(garageId: string, id: string, passphrase?: st
   try {
     const plaintext = decryptEnvelope(readEnvelope(record), passphrase).toString('utf8')
     const checksumMatches = sha256(plaintext) === record.checksum
-    const snapshot = JSON.parse(plaintext) as GarageSnapshot
+    const { snapshot } = parseBackupPlaintext(plaintext)
     const counts = countTables(snapshot)
     if (checksumMatches && record.status === 'completed') {
       await prisma.backupRecord.update({ where: { id: record.id }, data: { status: 'verified' } }).catch(() => {})
@@ -139,7 +204,7 @@ export async function restoreBackup(
   try {
     const plaintext = decryptEnvelope(readEnvelope(record), opts.passphrase).toString('utf8')
     if (sha256(plaintext) !== record.checksum) return { ok: false, error: 'Intégrité de la sauvegarde compromise — restauration annulée.' }
-    snapshot = JSON.parse(plaintext) as GarageSnapshot
+    snapshot = parseBackupPlaintext(plaintext).snapshot
   } catch (err) {
     logger.error('[backup] restore decrypt failed:', err)
     return { ok: false, error: 'Déchiffrement en échec (clé/passphrase ?)' }
@@ -157,4 +222,84 @@ export async function readBackupBlob(garageId: string, id: string): Promise<{ fi
   if (!record) return null
   const blob = fs.readFileSync(path.join(backupDir(), record.filename), 'utf8')
   return { filename: record.filename, blob }
+}
+
+// ── Portabilité : inspection & restauration sur une AUTRE machine ────────────
+
+export interface InspectResult { ok: boolean; manifest?: BackupManifest; error?: string }
+
+/**
+ * Inspecte un blob de sauvegarde SANS restaurer (aperçu « que contient cette
+ * sauvegarde »). Vérifie l'intégrité via `manifest.snapshotChecksum`. Fonctionne
+ * sur n'importe quelle machine à partir du seul blob + clé/passphrase.
+ */
+export function inspectBlob(blob: string, passphrase?: string): InspectResult {
+  try {
+    const env = JSON.parse(blob) as EncryptedEnvelope
+    const plaintext = decryptEnvelope(env, passphrase).toString('utf8')
+    const { manifest, snapshot } = parseBackupPlaintext(plaintext)
+    const dataOk = manifest.snapshotChecksum === sha256(JSON.stringify(snapshot))
+    return dataOk ? { ok: true, manifest } : { ok: false, manifest, error: 'Intégrité des données compromise' }
+  } catch {
+    return { ok: false, error: 'Déchiffrement/lecture impossible (clé/passphrase ?)' }
+  }
+}
+
+export interface RestoreReport {
+  ok: boolean
+  manifest?: BackupManifest
+  restored?: Record<string, number>
+  garageRestored?: boolean
+  error?: string
+}
+
+/**
+ * Restaure un garage à partir d'un blob PORTABLE (sur une machine vierge, sans
+ * `BackupRecord` local). Vérifie l'intégrité, recrée la ligne racine Garage si
+ * nécessaire (upsert), puis restaure les données scopées, de façon atomique.
+ * `confirmGarageId` doit égaler le garage de la sauvegarde (garde-fou).
+ */
+export async function restoreFromBlob(
+  blob: string,
+  opts: { passphrase?: string; confirmGarageId: string },
+): Promise<RestoreReport> {
+  let manifest: BackupManifest
+  let garage: Record<string, unknown> | null
+  let snapshot: GarageSnapshot
+  try {
+    const plaintext = decryptEnvelope(JSON.parse(blob) as EncryptedEnvelope, opts.passphrase).toString('utf8')
+    const parsed = parseBackupPlaintext(plaintext)
+    manifest = parsed.manifest; garage = parsed.garage; snapshot = parsed.snapshot
+  } catch (err) {
+    logger.error('[backup] restoreFromBlob decrypt failed:', err)
+    return { ok: false, error: 'Déchiffrement en échec (clé/passphrase ?)' }
+  }
+  if (manifest.snapshotChecksum !== sha256(JSON.stringify(snapshot))) {
+    return { ok: false, manifest, error: 'Intégrité des données compromise — restauration annulée.' }
+  }
+  if (snapshot.garageId !== opts.confirmGarageId) {
+    return { ok: false, manifest, error: 'La sauvegarde ne correspond pas au garage indiqué.' }
+  }
+
+  const restored = await prisma.$transaction(async (tx) => {
+    let garageRestored = false
+    if (garage && garage.id === snapshot.garageId) {
+      // Recrée la racine Garage si absente (machine vierge) sans écraser une
+      // configuration existante : create-if-missing.
+      const existing = await tx.garage.findUnique({ where: { id: snapshot.garageId } })
+      if (!existing) {
+        await tx.garage.create({ data: garage as never })
+        garageRestored = true
+      }
+    }
+    const counts = await restoreSnapshot(tx, snapshot)
+    return { counts, garageRestored }
+  })
+
+  await prisma.backupRecord.updateMany({
+    where: { garageId: snapshot.garageId, checksum: manifest.snapshotChecksum },
+    data: { status: 'restored' },
+  }).catch(() => {})
+
+  return { ok: true, manifest, restored: restored.counts, garageRestored: restored.garageRestored }
 }

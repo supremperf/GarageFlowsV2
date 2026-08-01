@@ -128,6 +128,21 @@ export const TABLE_SPECS: TableSpec[] = [
     del: (tx, g) => tx.signature.deleteMany({ where: { garageId: g } }),
     create: (tx, rows) => tx.signature.createMany({ data: rows as Prisma.SignatureCreateManyInput[] }),
   },
+  // Persistance facturation électronique — dépend d'Invoice (créée plus haut).
+  // EInvoiceSubmission a un garageId direct ; EInvoiceEvent est scopé via sa
+  // transmission. Placés en fin de liste : créés après Invoice, supprimés avant.
+  {
+    key: 'eInvoiceSubmissions',
+    read: (tx, g) => tx.eInvoiceSubmission.findMany({ where: { garageId: g } }),
+    del: (tx, g) => tx.eInvoiceSubmission.deleteMany({ where: { garageId: g } }),
+    create: (tx, rows) => tx.eInvoiceSubmission.createMany({ data: rows as Prisma.EInvoiceSubmissionCreateManyInput[] }),
+  },
+  {
+    key: 'eInvoiceEvents',
+    read: (tx, g) => tx.eInvoiceEvent.findMany({ where: { submission: { garageId: g } } }),
+    del: (tx, g) => tx.eInvoiceEvent.deleteMany({ where: { submission: { garageId: g } } }),
+    create: (tx, rows) => tx.eInvoiceEvent.createMany({ data: rows as Prisma.EInvoiceEventCreateManyInput[] }),
+  },
 ]
 
 export interface GarageSnapshot {
