@@ -784,4 +784,60 @@ export const MIGRATIONS: Migration[] = [
 )` },
   { id: '118_reportsnapshot_idx_garage', sql: 'CREATE INDEX IF NOT EXISTS "ReportSnapshot_garageId_idx" ON "ReportSnapshot"("garageId")' },
   { id: '119_reportsnapshot_idx_garage_created', sql: 'CREATE INDEX IF NOT EXISTS "ReportSnapshot_garageId_createdAt_idx" ON "ReportSnapshot"("garageId", "createdAt")' },
+  // ── Persistance facturation électronique (transmissions + événements) ────────
+  //    CRITIQUE : ces tables n'existaient que dans le template (nouvelles
+  //    installations). Sans ces migrations, une base MISE À NIVEAU depuis une
+  //    version antérieure ne les aurait jamais → la persistance e-invoicing
+  //    échouerait sur les installations existantes. Additif et idempotent.
+  { id: '120_einvoicesubmission_table', sql: `CREATE TABLE IF NOT EXISTS "EInvoiceSubmission" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "invoiceId" TEXT NOT NULL,
+    "garageId" TEXT NOT NULL,
+    "provider" TEXT NOT NULL DEFAULT 'sandbox',
+    "externalSubmissionId" TEXT,
+    "idempotencyKey" TEXT NOT NULL,
+    "documentFormat" TEXT NOT NULL,
+    "documentHash" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'SUBMITTED',
+    "rejectionCode" TEXT,
+    "rejectionMessage" TEXT,
+    "submittedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "acceptedAt" DATETIME,
+    "rejectedAt" DATETIME,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "EInvoiceSubmission_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "Invoice" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "EInvoiceSubmission_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+  )` },
+  { id: '121_einvoicesubmission_unique_idem', sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "EInvoiceSubmission_garageId_idempotencyKey_key" ON "EInvoiceSubmission"("garageId", "idempotencyKey")' },
+  { id: '122_einvoicesubmission_idx_garage', sql: 'CREATE INDEX IF NOT EXISTS "EInvoiceSubmission_garageId_idx" ON "EInvoiceSubmission"("garageId")' },
+  { id: '123_einvoicesubmission_idx_invoice', sql: 'CREATE INDEX IF NOT EXISTS "EInvoiceSubmission_invoiceId_idx" ON "EInvoiceSubmission"("invoiceId")' },
+  { id: '124_einvoicesubmission_idx_garage_status', sql: 'CREATE INDEX IF NOT EXISTS "EInvoiceSubmission_garageId_status_idx" ON "EInvoiceSubmission"("garageId", "status")' },
+  { id: '125_einvoiceevent_table', sql: `CREATE TABLE IF NOT EXISTS "EInvoiceEvent" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "submissionId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "detail" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "EInvoiceEvent_submissionId_fkey" FOREIGN KEY ("submissionId") REFERENCES "EInvoiceSubmission" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+  )` },
+  { id: '126_einvoiceevent_idx_submission', sql: 'CREATE INDEX IF NOT EXISTS "EInvoiceEvent_submissionId_idx" ON "EInvoiceEvent"("submissionId")' },
+]
+
+/**
+ * Version de schéma courante = nombre de migrations canoniques. Monotone
+ * croissante : chaque ajout de migration incrémente la version. Sert au
+ * diagnostic (« version N appliquée ») et à la validation post-migration.
+ */
+export const SCHEMA_VERSION = MIGRATIONS.length
+
+/**
+ * Tables critiques dont l'absence après migration signale une base inutilisable
+ * (utilisé par la validation post-migration). Liste volontairement courte :
+ * le cœur métier + la persistance e-invoicing récemment ajoutée.
+ */
+export const CRITICAL_TABLES: readonly string[] = [
+  'Garage', 'User', 'Client', 'Vehicle', 'Job', 'Invoice', 'InvoiceLine',
+  'Quote', 'WorkOrder', 'EInvoiceSubmission', 'EInvoiceEvent',
 ]
