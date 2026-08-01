@@ -208,11 +208,15 @@ NEXT_PUBLIC_GF_BRAND_WORDMARK_SECONDARY=Pro
 NEXT_PUBLIC_GF_BRAND_ACCENT_COLOR=#38bdf8` — the logo wordmark, accent colour and
 window/tab title all change with **no code edit**.
 
+**User-facing product name — now swept (done):** the ~38 inline "GarageFlow"
+display strings across components/pages (login, licence, portal, dashboard,
+licence/crash/update modals, admin) and server routes (test e-mail, TOTP issuer,
+default SMTP sender, installer file name) now derive from the brand config
+(`CLIENT_BRAND.productName` client-side, `BRAND` server-side). Verify with
+`grep -rn 'GarageFlow' src/components src/app` — the only remaining hit is a
+non-visible JSX comment. Product-name literals: ~38 → 0.
+
 **Still inline today (documented, not yet wired to `BRAND`):**
-- ~38 source files contain the literal string "GarageFlow" (headers, modals,
-  copilot copy, admin pages). Grep them with:
-  `grep -rln "GarageFlow" src`. Most are user-facing copy that can be migrated
-  to `BRAND.productName` incrementally.
 - 16 references to `garageflows.fr` / `garageflow.app` domains in `src` and
   `electron`. The `electron/main.js` default update server
   (`https://app.garageflows.fr`) is env-overridable via `GF_UPDATE_SERVER` /
@@ -228,14 +232,15 @@ estimated at well under a day of mechanical edits, all guarded by TypeScript.
 
 ## 8. Recommended next steps to reach full coverage
 
-1. Wire `GarageFlowLogo.tsx` to `BRAND.wordmark`/`BRAND.colors` (client-safe:
-   pass brand values from a server component or a `NEXT_PUBLIC_` mirror).
-2. Add a `scripts/apply-brand.js` build step that reads `brand.config.json` and
+1. ~~Wire `GarageFlowLogo.tsx` to brand~~ **done** (`CLIENT_BRAND.wordmark`/`.colors`).
+2. ~~Sweep the remaining literal "GarageFlow" strings~~ **done** (product-name
+   literals ~38 → 0; only a JSX comment remains).
+3. Add a `scripts/apply-brand.js` build step that reads `brand.config.json` and
    patches `package.json` packaging keys + `setAppUserModelId`, so packaging and
-   runtime share one source.
-3. Sweep the remaining literal "GarageFlow"/domain strings to `BRAND` (TypeScript
-   will flag anything missed).
-4. Add a Tailwind theme bridge so `colors.primary` drives CSS variables.
+   runtime share one source. *(still to do)*
+4. Migrate the remaining hard-coded `garageflows.fr` domains to `BRAND.domains`
+   where they are not already env-overridable. *(still to do)*
+5. Add a Tailwind theme bridge so `colors.primary` drives CSS variables. *(still to do)*
 
 Each step is independently testable and does not change behaviour — only the
 brand surface.
