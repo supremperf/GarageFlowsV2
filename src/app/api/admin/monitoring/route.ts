@@ -8,14 +8,24 @@ export const dynamic = 'force-dynamic'
  */
 
 import { NextResponse } from 'next/server'
-import { withAuth, requireSession } from '@/lib/api-helpers'
+import { withAuth, requireSession, isAdminSession } from '@/lib/api-helpers'
 import { prisma } from '@/lib/db'
+import { isPwaProduction } from '@/lib/env'
 import { APP_CONFIG } from '@/config/app'
 import { collectSystemMetrics, collectProcessMetrics, gradeMetrics } from '@/lib/monitoring/metrics'
 
 export const GET = withAuth(async () => {
   const session = await requireSession()
-  if (!(APP_CONFIG.managerRoles as readonly string[]).includes(session.user.role)) {
+  // Les métriques renvoyées concernent l'HÔTE (CPU/mémoire/charge/processus). En
+  // desktop mono-poste, le propriétaire/responsable est le propriétaire de la
+  // machine — accès légitime. En PWA multi-instance, l'hôte est PARTAGÉ entre
+  // tenants : ces métriques ne doivent être visibles que par le super-admin de la
+  // plateforme, jamais par l'admin d'un tenant (fuite d'infos inter-tenant).
+  if (isPwaProduction()) {
+    if (!(await isAdminSession())) {
+      return NextResponse.json({ error: 'Accès réservé (super-administrateur)' }, { status: 403 })
+    }
+  } else if (!(APP_CONFIG.managerRoles as readonly string[]).includes(session.user.role)) {
     return NextResponse.json({ error: 'Accès réservé (propriétaire / responsable)' }, { status: 403 })
   }
 

@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
+import { coercePartField } from '@/lib/schemas'
 
 // GET /api/parts?lowStock=true&repairType=xxx
 export const GET = withAuth(async (req) => {
@@ -36,20 +37,28 @@ export const GET = withAuth(async (req) => {
 // POST /api/parts
 export const POST = withAuth(async (req) => {
   const session = await requireSession()
-  const { name, reference, description, quantity = 0, minQuantity = 5, unitCost = 0, unitPrice = 0, location } = await req.json()
+  const body = await req.json()
 
-  if (!name?.trim()) return NextResponse.json({ error: 'Nom requis' }, { status: 400 })
+  // SÉCURITÉ : coercition stricte (refuse objets/opérateurs Prisma, NaN, hors-bornes).
+  const fields: Record<string, unknown> = {}
+  for (const [f, def] of [['name', undefined], ['reference', null], ['description', null],
+    ['quantity', 0], ['minQuantity', 5], ['unitCost', 0], ['unitPrice', 0], ['location', null]] as const) {
+    const raw = f in body ? body[f] : def
+    const v = coercePartField(f, raw)
+    if (v instanceof Error) return NextResponse.json({ error: v.message }, { status: 400 })
+    fields[f] = v
+  }
 
   const part = await prisma.part.create({
     data: {
-      name: name.trim(),
-      reference: reference || null,
-      description: description || null,
-      quantity: Number(quantity),
-      minQuantity: Number(minQuantity),
-      unitCost: Number(unitCost),
-      unitPrice: Number(unitPrice),
-      location: location || null,
+      name: fields.name as string,
+      reference: fields.reference as string | null,
+      description: fields.description as string | null,
+      quantity: fields.quantity as number,
+      minQuantity: fields.minQuantity as number,
+      unitCost: fields.unitCost as number,
+      unitPrice: fields.unitPrice as number,
+      location: fields.location as string | null,
       garageId: session.user.garageId,
     },
   })

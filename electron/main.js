@@ -1649,6 +1649,18 @@ function createLicenseWindow() {
 
     ipcMain.on('license-submit', (event, token) => {
       const payload = verifyEccToken(token)
+      // Liaison HWID à la SAISIE MANUELLE (miroir de checkStoredLicense) : sans
+      // ce contrôle, un token lié au matériel d'une AUTRE machine était accepté
+      // pour la session courante (jusqu'au redémarrage). On refuse ici aussi.
+      if (payload && payload.hwid) {
+        const currentHwid = getHwid()
+        if (!hwidMatches(payload.hwid, currentHwid)) {
+          log('HWID mismatch (submit) — token requires:', String(payload.hwid).slice(0, 12) + '…',
+              'current:', String(currentHwid).slice(0, 12) + '…')
+          event.sender.send('license-error', 'Licence liée à un autre appareil')
+          return
+        }
+      }
       if (payload) {
         activeLicense = { token, payload }
         activeDeviceToken = null
@@ -1821,9 +1833,17 @@ function createMainWindow() {
   })
 
   // Empêche toute navigation hors de l'app locale (pas de file://, pas d'externe).
+  // SÉCURITÉ : comparaison d'ORIGINE exacte (URL parsée), jamais un préfixe de
+  // chaîne. Un `startsWith('http://127.0.0.1:4028')` accepterait par erreur
+  // `http://127.0.0.1:4028@evil.com/` (origine réelle evil.com) ou
+  // `http://127.0.0.1:40288/` : le pont preload se retrouverait attaché à une
+  // page hostile. `new URL(...).origin` neutralise ces contournements.
   const localOrigin = `http://127.0.0.1:${PORT}`
+  const isLocalOrigin = (url) => {
+    try { return new URL(url).origin === localOrigin } catch { return false }
+  }
   mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (!url.startsWith(localOrigin)) {
+    if (!isLocalOrigin(url)) {
       event.preventDefault()
       log('[security] navigation bloquée vers :', url.slice(0, 80))
     }
@@ -1832,7 +1852,7 @@ function createMainWindow() {
   // garde, une redirection hors origine locale afficherait une page étrangère avec
   // le pont preload encore attaché. Défense en profondeur (miroir de will-navigate).
   mainWindow.webContents.on('will-redirect', (event, url) => {
-    if (!url.startsWith(localOrigin)) {
+    if (!isLocalOrigin(url)) {
       event.preventDefault()
       log('[security] redirection bloquée vers :', url.slice(0, 80))
     }

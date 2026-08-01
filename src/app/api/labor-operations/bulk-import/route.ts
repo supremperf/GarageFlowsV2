@@ -15,16 +15,26 @@ export const POST = withAuth(async (req) => {
   if (ops.length === 0) {
     return NextResponse.json({ error: 'Aucune opération fournie' }, { status: 400 })
   }
+  // Anti-DoS : borne dure sur la taille du lot (transaction de N créations).
+  const MAX_BULK = 1000
+  if (ops.length > MAX_BULK) {
+    return NextResponse.json({ error: `Trop d'opérations (max ${MAX_BULK}).` }, { status: 413 })
+  }
 
-  // Validate all entries before inserting
+  // Validate all entries before inserting.
+  // IMPORTANT : Number(x) peut valoir NaN (chaîne non numérique / champ manquant),
+  // et `NaN < 1` === false — l'ancienne garde était donc contournable et
+  // persistait des NaN. On exige des nombres FINIS et bornés.
   for (const op of ops) {
     if (!op.name?.trim()) {
       return NextResponse.json({ error: 'Chaque opération doit avoir un nom' }, { status: 400 })
     }
-    if (Number(op.durationMin) < 1) {
+    const durationMin = Number(op.durationMin)
+    if (!Number.isFinite(durationMin) || durationMin < 1 || durationMin > 100_000) {
       return NextResponse.json({ error: `Durée invalide pour "${op.name}"` }, { status: 400 })
     }
-    if (Number(op.unitPrice) < 0) {
+    const unitPrice = Number(op.unitPrice)
+    if (!Number.isFinite(unitPrice) || unitPrice < 0 || unitPrice > 1_000_000) {
       return NextResponse.json({ error: `Prix invalide pour "${op.name}"` }, { status: 400 })
     }
   }

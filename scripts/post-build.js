@@ -54,6 +54,32 @@ function copyDir(src, dst) {
 function main() {
   console.log('\n🔧 GarageFlow post-build\n')
 
+  // 0. SÉCURITÉ — supprimer tout fichier .env du bundle standalone.
+  //    `next build` copie le .env de la racine dans .next/standalone/.env, et
+  //    electron-builder embarque .next/standalone SANS filtre (extraResources).
+  //    Si le poste de build contient de vrais secrets dans .env, ils seraient
+  //    livrés dans l'installateur Windows (lisibles par tout client). L'app
+  //    desktop reçoit TOUTES ses variables à l'exécution via electron/main.js
+  //    (DATABASE_URL=file:…, ELECTRON=1, secret unique par machine) : ce .env
+  //    n'a donc aucune utilité et ne doit jamais être packagé.
+  {
+    const standaloneDir = path.join(ROOT, '.next', 'standalone')
+    let removed = 0
+    if (fs.existsSync(standaloneDir)) {
+      for (const name of fs.readdirSync(standaloneDir)) {
+        if (name === '.env' || name.startsWith('.env.')) {
+          fs.rmSync(path.join(standaloneDir, name), { force: true })
+          removed++
+        }
+      }
+    }
+    console.log(
+      removed > 0
+        ? `  🔒 ${removed} fichier(s) .env supprimé(s) du bundle standalone (aucun secret packagé)`
+        : '  🔒 aucun .env dans le bundle standalone (OK)',
+    )
+  }
+
   // 1. Copy .next/static → .next/standalone/.next/static  (REQUIRED — CSS + JS bundles)
   {
     const src = path.join(ROOT, '.next', 'static')

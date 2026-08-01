@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { assertRelations } from '@/lib/tenant'
+import { computeTotals as computeMoneyTotals } from '@/lib/money'
 
 interface WorkLine {
   description: string
@@ -29,11 +30,14 @@ function computeTotals(worksJson: string, partsJson: string, taxRate: number): {
     return null
   }
   if (!Array.isArray(works) || !Array.isArray(parts)) return null
-  const worksHT = works.reduce((s, w) => s + (Number(w.unitPrice) || 0), 0)
-  const partsHT = parts.reduce((s, p) => s + (Number(p.qty) || 0) * (Number(p.unitPrice) || 0), 0)
-  const totalHT = Math.round((worksHT + partsHT) * 100) / 100
-  const totalTTC = Math.round(totalHT * (1 + taxRate / 100) * 100) / 100
-  return { totalHT, totalTTC }
+  // Exactitude financière : délègue à src/lib/money.ts (centimes entiers) —
+  // même correctif que src/app/api/work-orders/route.ts.
+  const lines = [
+    ...works.map((w) => ({ quantity: 1, unitPrice: Number(w.unitPrice) || 0 })),
+    ...parts.map((p) => ({ quantity: Number(p.qty) || 0, unitPrice: Number(p.unitPrice) || 0 })),
+  ]
+  const totals = computeMoneyTotals(lines, Number(taxRate) || 0)
+  return { totalHT: totals.totalHT, totalTTC: totals.totalTTC }
 }
 
 // GET /api/work-orders/[id]
