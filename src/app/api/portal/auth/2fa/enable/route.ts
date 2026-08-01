@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withPortalAuth } from '@/lib/portal/auth-helpers'
 import { verifyTotp } from '@/lib/portal/totp'
+import { decryptTotpSecret } from '@/lib/portal/totp-crypto'
 import { generateBackupCodes } from '@/lib/portal/backup-codes'
 
 export const POST = withPortalAuth(async (req, { user }) => {
@@ -20,7 +21,9 @@ export const POST = withPortalAuth(async (req, { user }) => {
   try { body = (await req.json()) as Record<string, unknown> } catch { return NextResponse.json({ error: 'Corps invalide' }, { status: 400 }) }
   const token = typeof body.token === 'string' ? body.token : ''
 
-  if (!verifyTotp(token, user.twoFactorPending)) {
+  // Le secret en attente est chiffré au repos → déchiffrer pour vérifier le code.
+  const pendingSecret = decryptTotpSecret(user.twoFactorPending)
+  if (!pendingSecret || !verifyTotp(token, pendingSecret)) {
     return NextResponse.json({ error: 'Code invalide' }, { status: 401 })
   }
 

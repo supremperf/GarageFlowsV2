@@ -12,12 +12,15 @@ import QRCode from 'qrcode'
 import { prisma } from '@/lib/db'
 import { withPortalAuth } from '@/lib/portal/auth-helpers'
 import { generateTotpSecret, otpauthURL } from '@/lib/portal/totp'
+import { encryptTotpSecret } from '@/lib/portal/totp-crypto'
 
 export const POST = withPortalAuth(async (_req, { user }) => {
   if (user.twoFactorEnabled) return NextResponse.json({ error: 'Double authentification déjà activée' }, { status: 409 })
 
   const secret = generateTotpSecret()
-  await prisma.portalUser.update({ where: { id: user.id }, data: { twoFactorPending: secret } })
+  // Chiffré au repos : le secret en clair n'est retourné qu'ici (QR d'enrôlement),
+  // jamais stocké en clair ni relu ensuite.
+  await prisma.portalUser.update({ where: { id: user.id }, data: { twoFactorPending: encryptTotpSecret(secret) } })
 
   const otpauth = otpauthURL({ secret, label: user.email, issuer: BRAND.productName })
   const qrDataUrl = await QRCode.toDataURL(otpauth)

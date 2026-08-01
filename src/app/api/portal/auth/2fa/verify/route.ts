@@ -12,6 +12,7 @@ import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { clientIp, issuePortalSession, setPortalCookie } from '@/lib/portal/auth-helpers'
 import { verifyTwoFactorChallenge } from '@/lib/portal/session'
 import { verifyTotp } from '@/lib/portal/totp'
+import { decryptTotpSecret, encryptTotpSecret, isEncryptedTotp } from '@/lib/portal/totp-crypto'
 import { verifyBackupCode } from '@/lib/portal/backup-codes'
 
 export async function POST(req: NextRequest) {
@@ -40,8 +41,12 @@ export async function POST(req: NextRequest) {
   let ok = false
   let backupUsed = false
 
+  // Secret chiffré au repos → déchiffrer (rétro-compatible : un ancien secret en
+  // clair est renvoyé tel quel). Migration paresseuse : si le secret validé était
+  // en clair (legacy), on le re-chiffre après un succès (best-effort, non bloquant).
+  const totpSecret = decryptTotpSecret(user.twoFactorSecret)
   const token = typeof body.token === 'string' ? body.token : undefined
-  if (token) ok = verifyTotp(token, user.twoFactorSecret)
+  if (token && totpSecret) ok = verifyTotp(token, totpSecret)
 
   const backupCode = typeof body.backupCode === 'string' ? body.backupCode : undefined
   if (!ok && backupCode) {
@@ -56,6 +61,12 @@ export async function POST(req: NextRequest) {
   }
 
   if (!ok) return NextResponse.json({ error: 'Code invalide' }, { status: 401 })
+
+  // Migration paresseuse vers le chiffrement au repos (uniquement sur un succès
+  // TOTP d'un ancien secret en clair). Best-effort : n'interrompt jamais la connexion.
+  if (!backupUsed && totpSecret && !isEncryptedTotp(user.twoFactorSecret)) {
+    prisma.portalUser.update({ where: { id: user.id }, data: { twoFactorSecret: encryptTotpSecret(totpSecret) } }).catch(() => {})
+  }
 
   const { token: sessionToken } = await issuePortalSession(user.id, req)
   const res = NextResponse.json({ ok: true, backupCodeUsed: backupUsed, user: { id: user.id, email: user.email, name: user.name } })

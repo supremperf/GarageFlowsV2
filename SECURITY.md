@@ -65,9 +65,11 @@ The following are documented, not hidden. See
 
 - Local desktop anti-tamper/integrity is JavaScript-level and, by design, not a
   hard DRM guarantee; license enforcement is fail-open on network errors.
-- Portal 2FA TOTP secrets are stored unencrypted at rest (encryption-at-rest is
-  a planned hardening item; a per-account 2FA rate limit has been added to bound
-  brute-force).
+- Portal 2FA TOTP secrets are **encrypted at rest** (AES-256-GCM, dedicated key
+  `GF_TOTP_ENC_KEY` or a session-derived key, versioned format `gtotp1.…`, with
+  backward-compatible read and lazy re-encryption of legacy plaintext on the next
+  successful login). Backup codes are stored hashed. A per-account 2FA rate limit
+  bounds brute-force.
 - The licensing back-office authenticates against a single shared admin key
   (per-operator IAM/MFA/RBAC is a planned hardening item).
 - Transitive dependency advisories exist (e.g. `sharp`/libvips); tracked in
