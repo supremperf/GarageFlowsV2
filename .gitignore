@@ -62,3 +62,9 @@ icon.icns
 gf_update.json
 /updates/
 /dev.db
+
+# E2E Playwright
+/e2e/.auth/
+/.tmp-e2e.db
+/test-results/
+/playwright-report/
