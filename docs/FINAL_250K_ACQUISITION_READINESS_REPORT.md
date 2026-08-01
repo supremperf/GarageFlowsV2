@@ -100,10 +100,19 @@ Socle typé/validé `brand.ts` (desktop, 8 tests) + `site.ts`/`domains.ts` (clou
 marques de démo distinctes : **non réalisées**. Statut : socle réel, câblage
 incomplet (`docs/WHITE_LABEL_GUIDE.md`).
 
-## 13. Facturation électronique — DESIGN uniquement
-**Aucun code** Factur-X/UBL/CII/PDP. Architecture proposée + interface fournisseur
-+ limites : `docs/E_INVOICING_ARCHITECTURE.md`, `…LIMITATIONS.md`,
-`…PROVIDER_INTEGRATION.md`. **Non connecté**, non testé. Statut : **NON IMPLÉMENTÉ**.
+## 13. Facturation électronique — IMPLÉMENTÉE au niveau sandbox (MAJ)
+**Désormais du code réel et testé** (`src/lib/einvoicing/`, 30 tests verts) :
+modèle pivot EN 16931 en centimes entiers, mapping `Invoice`+`Garage`, validateur
+(BR-xx cœur + cohérence totaux/TVA), génération **UBL 2.1** et **CII/Factur-X
+(XML)**, interface fournisseur agnostique + **adaptateur sandbox fonctionnel**
+(dépôt, idempotence, cycle de vie), vérification de webhook (HMAC + anti-rejeu),
+et **route API** `GET /api/invoices/[id]/einvoice` (scopée garage, reachable).
+Docs : `ELECTRONIC_INVOICING_ARCHITECTURE.md`, `…COMPLIANCE_MATRIX.md`,
+`…PROVIDER.md`, `…LIMITATIONS.md`.
+**Reste (honnête, bloquant pour l'usage légal) :** aucune transmission PDP/Chorus
+Pro réelle (contrat requis), pas de PDF/A-3 Factur-X, pas de Schematron officiel,
+et limites du schéma (taux TVA unique, SIRET acheteur absent, pas d'Avoir/Paiement
+persistants). Statut : **IMPLÉMENTÉ (sandbox) — non connecté à une PDP**.
 
 ## 14. Imports — DESIGN uniquement
 Aucun assistant CSV/XLSX (seul `labor-operations/bulk-import` existe, désormais
@@ -190,9 +199,10 @@ Postgres/Redis (intégration).
 parallèle · `npm run build` (desktop) · `git commit`.
 
 ## 32. Résultats exacts
-Desktop : **694 tests passés / 0 échec (65 suites)** mono-thread ; `tsc` exit 0 ;
-build web exit 0 (voir §7-8 rapport). Cloud (inchangé ce tour) : 140/140, `tsc` 0,
-build exit 0 (tour précédent). `security-hardening.test.ts` 16/16.
+Desktop : **724 tests passés / 0 échec (68 suites)** mono-thread (dont
+`security-hardening` 16/16 et **e-invoicing 30/30**) ; `tsc` exit 0 ; build web
+exit 0 (route `/api/invoices/[id]/einvoice` compilée). Cloud (inchangé ce tour) :
+140/140, `tsc` 0, build exit 0.
 
 ## 33. Commits créés (ce tour, desktop)
 - `fix(security): restaure les durcissements perdus…` (16 fichiers)
@@ -222,9 +232,11 @@ restaurée, transférabilité et lisibilité accrues). **200–250 k€ NON atte
 exige les conditions §39.
 
 ## 39. Conditions manquantes pour 200–250 k€
-1. **Construire réellement** au moins un des grands leviers P2 (multi-garage
-   opérationnel **ou** e-invoicing connecté en sandbox **ou** assistant d'import),
-   testé de bout en bout.
+1. ~~Construire réellement au moins un levier P2~~ → **FAIT (partiellement)** : la
+   **facturation électronique est implémentée au niveau sandbox** (UBL/CII,
+   validateur, cycle de vie, API, 30 tests). **Reste à connecter une PDP réelle**
+   (contrat) + PDF/A-3 pour l'usage légal. Un 2ᵉ levier (multi-garage **ou**
+   import) reste souhaitable.
 2. **Signer** le binaire Windows (certificat OV/EV) et tester l'installateur.
 3. **Prouver l'opérabilité** end-to-end sans le vendeur (transferts P0 exécutés).
 4. **Audit externe** réel (pentest) avec correctifs.
@@ -260,7 +272,7 @@ exige les conditions §39.
 | Calcul financier incorrect | **PASS** (centimes entiers ; work-orders corrigé) |
 | **Niveau 100–150 k€** (stabilité, sécurité, tests, doc, install, transfert) | **PASS** technique (install/transfert = procédures) |
 | **Niveau 150–200 k€** (multi-garage, marque blanche, import, API, sauvegarde prouvée, audit préparé) | **PARTIAL** (marque blanche socle ; multi-garage/import = design ; sauvegarde non re-prouvée) |
-| **Niveau 200–250 k€** (audit externe réel, e-invoicing connecté, Windows signé, reprise testée, 5 pilotes réels, LOI, partenariat) | **FAIL / BLOCKED** (aucune preuve commerciale ; P2 non construits) |
+| **Niveau 200–250 k€** (audit externe réel, e-invoicing **connecté à une PDP**, Windows signé, reprise testée, 5 pilotes réels, LOI, partenariat) | **FAIL / BLOCKED** (e-invoicing au niveau **sandbox** seulement, pas de PDP réelle ; aucune preuve commerciale ; Windows non signé ; reprise non testée) |
 
 **Le niveau 200–250 k€ n'est PAS atteint** : les preuves commerciales humaines et
 les fonctionnalités P2 réelles n'existent pas. Ne jamais le présenter comme acquis.
