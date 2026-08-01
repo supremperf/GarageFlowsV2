@@ -88,7 +88,10 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
       if (existing) {
         return tx.jobPart.update({
           where: { id: existing.id },
-          data:  { quantity: existing.quantity + qty },
+          // ATOMICITÉ : incrément atomique de la ligne (comme le décrément de stock
+          // ci-dessus) plutôt qu'un read-modify-write `existing.quantity + qty`, qui
+          // pouvait perdre un ajout concurrent de la même pièce sur la même intervention.
+          data:  { quantity: { increment: qty } },
           include: { part: true },
         })
       }

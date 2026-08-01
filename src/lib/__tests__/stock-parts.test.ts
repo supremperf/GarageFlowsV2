@@ -63,7 +63,10 @@ const H = vi.hoisted(() => {
         ) ?? null,
       update: async ({ where, data }: any) => {
         const jp = db.jobParts.find(x => x.id === where.id)!
-        if (data.quantity !== undefined) jp.quantity = data.quantity
+        // Émule les opérateurs atomiques Prisma (comme part.updateMany ci-dessus).
+        if (data.quantity?.increment !== undefined) jp.quantity += data.quantity.increment
+        else if (data.quantity?.decrement !== undefined) jp.quantity -= data.quantity.decrement
+        else if (data.quantity !== undefined) jp.quantity = data.quantity
         return { ...jp, part: db.parts.find(p => p.id === jp.partId) }
       },
       create: async ({ data }: any) => {
