@@ -20,6 +20,9 @@ Bibliothèque `src/lib/einvoicing/` (aucune dépendance externe — propreté PI
 | `providers/sandbox.ts` | Adaptateur **sandbox fonctionnel** (dépôt, idempotence, transitions) | ✅ |
 | `webhook.ts` | Vérification de webhook (HMAC temps constant, anti-rejeu) | ✅ |
 | `src/app/api/invoices/[id]/einvoice/route.ts` | **Route API** : génère + valide + télécharge (UBL/CII), scoping garage | ✅ |
+| `src/lib/einvoicing/store.ts` | **Persistance** Prisma : transmissions + événements, empreinte SHA-256, idempotence, scoping garage | ✅ |
+| `prisma/{schema,server/schema}.prisma` | Modèles `EInvoiceSubmission` + `EInvoiceEvent` (parité desktop/serveur) + migration serveur | ✅ |
+| `src/app/api/invoices/[id]/einvoice/submit/route.ts` | **Route API** : dépose (sandbox) + **persiste** la transmission ; GET liste les transmissions | ✅ |
 
 Tests : `src/lib/einvoicing/__tests__/` — **30 tests** (mapping/cents, validation,
 UBL, CII, sandbox lifecycle, webhook). `npx vitest run src/lib/einvoicing`.

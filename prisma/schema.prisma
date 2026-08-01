@@ -115,6 +115,7 @@ model Garage {
   appointments       Appointment[]
   backupRecords      BackupRecord[]
   reportSnapshots    ReportSnapshot[]
+  eInvoiceSubmissions EInvoiceSubmission[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -361,6 +362,7 @@ model Invoice {
   notes         String?
   taxRate       Float         @default(20)
   lines         InvoiceLine[]
+  eInvoiceSubmissions EInvoiceSubmission[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -924,4 +926,46 @@ model ReportSnapshot {
 
   @@index([garageId])
   @@index([garageId, createdAt])
+}
+
+// ── Facturation électronique — persistance des transmissions & événements ──────
+// Trace chaque dépôt d'une facture au format électronique (UBL/CII) auprès d'un
+// fournisseur (sandbox aujourd'hui, PDP réelle demain) + son cycle de vie.
+model EInvoiceSubmission {
+  id                   String    @id @default(cuid())
+  invoiceId            String
+  invoice              Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  garageId             String
+  garage               Garage    @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  provider             String    @default("sandbox")
+  externalSubmissionId String? // id de transmission renvoyé par le fournisseur
+  idempotencyKey       String
+  documentFormat       String // UBL | CII
+  documentHash         String // SHA-256 (hex) du XML transmis
+  status               String    @default("SUBMITTED")
+  rejectionCode        String?
+  rejectionMessage     String?
+  submittedAt          DateTime  @default(now())
+  acceptedAt           DateTime?
+  rejectedAt           DateTime?
+  events               EInvoiceEvent[]
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@unique([garageId, idempotencyKey])
+  @@index([garageId])
+  @@index([invoiceId])
+  @@index([garageId, status])
+}
+
+model EInvoiceEvent {
+  id           String             @id @default(cuid())
+  submissionId String
+  submission   EInvoiceSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  type         String // submit | status | webhook
+  status       String
+  detail       String? // réponse fournisseur filtrée (jamais de secret)
+  createdAt    DateTime           @default(now())
+
+  @@index([submissionId])
 }

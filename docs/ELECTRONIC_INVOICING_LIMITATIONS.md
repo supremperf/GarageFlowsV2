@@ -22,10 +22,14 @@ une **route API** scopée par garage. 30 tests verts.
    (avertissement B2B) ; dates stockées en chaînes ; pas de remises/acomptes ;
    **pas de modèle Avoir/Paiement** persistant.
 5. **e-reporting** et **archivage à valeur probante** : non implémentés.
-6. **Sandbox non persistant.** L'adaptateur de démo est en mémoire (par instance) :
-   il illustre le flux et alimente les tests, mais ne conserve pas l'état entre
-   requêtes serverless. Une intégration réelle nécessite un stockage de
-   transmissions (table dédiée) — non ajouté.
+6. ~~Sandbox non persistant~~ **CORRIGÉ** — les transmissions sont désormais
+   **persistées** (modèles Prisma `EInvoiceSubmission` + `EInvoiceEvent`, sur les
+   deux schémas ; migration serveur incluse). La route
+   `POST /api/invoices/[id]/einvoice/submit` mappe → valide → dépose (sandbox) →
+   **enregistre** la transmission (empreinte SHA-256, statut, événements de cycle
+   de vie), idempotente par `(garageId, idempotencyKey)` et scopée par garage.
+   L'adaptateur **sandbox** reste en mémoire (c'est un double de test) ; la
+   PERSISTANCE, elle, est réelle et testée (isolation multi-tenant comprise).
 
 ## Ce qu'il reste à faire pour un usage réel (ordre)
 

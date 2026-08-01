@@ -12,7 +12,7 @@ import { logger } from '@/lib/logger'
 import { headers } from 'next/headers'
 import type { Session } from 'next-auth'
 
-export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout'
+export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'einvoice_submit'
 export type AuditEntityType =
   | 'Job' | 'Client' | 'Vehicle' | 'Invoice' | 'Quote'
   | 'User' | 'Mechanic' | 'Part' | 'Inspection' | 'Reminder' | 'Garage'

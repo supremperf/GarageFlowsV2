@@ -121,6 +121,7 @@ model Garage {
   appointments       Appointment[]
   backupRecords      BackupRecord[]
   reportSnapshots    ReportSnapshot[]
+  eInvoiceSubmissions EInvoiceSubmission[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -367,6 +368,7 @@ model Invoice {
   notes         String?
   taxRate       Float         @default(20)
   lines         InvoiceLine[]
+  eInvoiceSubmissions EInvoiceSubmission[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -926,4 +928,45 @@ model ReportSnapshot {
 
   @@index([garageId])
   @@index([garageId, createdAt])
+}
+
+// ── Facturation électronique — persistance des transmissions & événements ──────
+// Miroir serveur du modèle desktop (parité). PostgreSQL.
+model EInvoiceSubmission {
+  id                   String    @id @default(cuid())
+  invoiceId            String
+  invoice              Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  garageId             String
+  garage               Garage    @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  provider             String    @default("sandbox")
+  externalSubmissionId String?
+  idempotencyKey       String
+  documentFormat       String
+  documentHash         String
+  status               String    @default("SUBMITTED")
+  rejectionCode        String?
+  rejectionMessage     String?
+  submittedAt          DateTime  @default(now())
+  acceptedAt           DateTime?
+  rejectedAt           DateTime?
+  events               EInvoiceEvent[]
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@unique([garageId, idempotencyKey])
+  @@index([garageId])
+  @@index([invoiceId])
+  @@index([garageId, status])
+}
+
+model EInvoiceEvent {
+  id           String             @id @default(cuid())
+  submissionId String
+  submission   EInvoiceSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  type         String
+  status       String
+  detail       String?
+  createdAt    DateTime           @default(now())
+
+  @@index([submissionId])
 }
