@@ -25,10 +25,13 @@ import {
 } from '@/lib/migration-runner'
 import { MIGRATIONS, SCHEMA_VERSION, type Migration } from '@/lib/migrations'
 
-// Migrations « anciennes » = tout SAUF la persistance e-invoicing (ids 120-126).
-const OLD_MIGRATIONS = MIGRATIONS.filter(m => !m.id.startsWith('12'))
+// Migrations « anciennes » = préfixe numérique < 120 (état d'une installation
+// antérieure à l'ajout de la persistance e-invoicing et du cycle employé).
+// « Nouvelles » = 120+ (e-invoicing 120-126, cycle employé 127-134).
+const idNum = (m: Migration) => parseInt(m.id, 10)
+const OLD_MIGRATIONS = MIGRATIONS.filter(m => idNum(m) < 120)
 const OLD_VERSION = OLD_MIGRATIONS.length
-const EINVOICE_MIGRATIONS = MIGRATIONS.filter(m => m.id.startsWith('12'))
+const NEW_MIGRATIONS = MIGRATIONS.filter(m => idNum(m) >= 120)
 
 function makeDb(file: string): { db: RawDb; handle: DatabaseSync } {
   const handle = new DatabaseSync(file)
@@ -107,10 +110,10 @@ describe('base ANCIENNE (installation existante mise à niveau)', () => {
     expect(tables.has('EInvoiceSubmission')).toBe(false)
     expect(tables.has('EInvoiceEvent')).toBe(false)
     // 001-119 déjà suivies ; 120-126 restent en attente.
-    expect(pendingMigrations(applied).map(m => m.id)).toEqual(EINVOICE_MIGRATIONS.map(m => m.id))
+    expect(pendingMigrations(applied).map(m => m.id)).toEqual(NEW_MIGRATIONS.map(m => m.id))
   })
 
-  it("ajoute UNIQUEMENT les 7 migrations e-invoicing et valide le schéma", async () => {
+  it("ajoute UNIQUEMENT les nouvelles migrations (e-invoicing + cycle employé) et valide le schéma", async () => {
     const { db: seed, handle: h1 } = makeDb(file)
     await seedOldInstall(seed)
     h1.close()
@@ -122,12 +125,13 @@ describe('base ANCIENNE (installation existante mise à niveau)', () => {
 
     expect(summary.ok).toBe(true)
     expect(summary.hadPending).toBe(true)
-    expect(summary.appliedCount).toBe(EINVOICE_MIGRATIONS.length)
-    expect(summary.appliedCount).toBe(7)
-    expect(summary.results.map(r => r.id)).toEqual(EINVOICE_MIGRATIONS.map(m => m.id))
+    expect(summary.appliedCount).toBe(NEW_MIGRATIONS.length)
+    expect(summary.results.map(r => r.id)).toEqual(NEW_MIGRATIONS.map(m => m.id))
     expect(summary.results.every(r => r.status === 'ok')).toBe(true)
+    // Tables e-invoicing ET cycle de vie des comptes désormais présentes.
     expect(tables.has('EInvoiceSubmission')).toBe(true)
     expect(tables.has('EInvoiceEvent')).toBe(true)
+    expect(tables.has('AuthToken')).toBe(true)
     expect(summary.schemaVersion).toBe(SCHEMA_VERSION)
     expect(summary.validation.ok).toBe(true)
   })

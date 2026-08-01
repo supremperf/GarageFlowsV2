@@ -15,7 +15,10 @@ export const GET = withAuth(async () => {
 
   const users = await prisma.user.findMany({
     where: { garageId: session.user.garageId },
-    select: { id: true, name: true, email: true, role: true, createdAt: true },
+    select: {
+      id: true, name: true, email: true, role: true, createdAt: true,
+      status: true, emailVerified: true, lastLoginAt: true,
+    },
     orderBy: { createdAt: 'asc' },
   })
 

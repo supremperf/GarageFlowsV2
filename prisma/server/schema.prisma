@@ -128,15 +128,22 @@ model Garage {
 
 // ─── User ────────────────────────────────────────────────────────────────────
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      String   @default("RECEPTIONIST")
-  garageId  String
-  garage    Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String
+  name          String
+  role          String   @default("RECEPTIONIST")
+  // active | suspended | invited — l'accès est refusé si != active.
+  status        String   @default("active")
+  emailVerified Boolean  @default(false)
+  // Incrémenté pour révoquer toutes les sessions JWT existantes de l'employé.
+  sessionEpoch  Int      @default(0)
+  lastLoginAt   DateTime?
+  garageId      String
+  garage        Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  authTokens    AuthToken[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 // ─── Mechanic ────────────────────────────────────────────────────────────────
@@ -969,4 +976,21 @@ model EInvoiceEvent {
   createdAt    DateTime           @default(now())
 
   @@index([submissionId])
+}
+
+// ─── AuthToken ────────────────────────────────────────────────────────────────
+// Jetons à usage unique, HACHÉS au repos (jamais le jeton en clair) :
+// réinitialisation de mot de passe, vérification d'e-mail, invitation employé.
+model AuthToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // password_reset | email_verify | invite
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([type])
 }

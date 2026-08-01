@@ -823,6 +823,26 @@ export const MIGRATIONS: Migration[] = [
     CONSTRAINT "EInvoiceEvent_submissionId_fkey" FOREIGN KEY ("submissionId") REFERENCES "EInvoiceSubmission" ("id") ON DELETE CASCADE ON UPDATE CASCADE
   )` },
   { id: '126_einvoiceevent_idx_submission', sql: 'CREATE INDEX IF NOT EXISTS "EInvoiceEvent_submissionId_idx" ON "EInvoiceEvent"("submissionId")' },
+  // ── Cycle de vie des comptes employés + récupération de compte ──────────────
+  //    Champs additifs sur User (statut, e-mail vérifié, epoch de session pour
+  //    révocation, dernière connexion) + table de jetons HACHÉS à usage unique.
+  { id: '127_user_status',         sql: `ALTER TABLE "User" ADD COLUMN "status" TEXT NOT NULL DEFAULT 'active'` },
+  { id: '128_user_email_verified', sql: 'ALTER TABLE "User" ADD COLUMN "emailVerified" BOOLEAN NOT NULL DEFAULT false' },
+  { id: '129_user_session_epoch',  sql: 'ALTER TABLE "User" ADD COLUMN "sessionEpoch" INTEGER NOT NULL DEFAULT 0' },
+  { id: '130_user_last_login',     sql: 'ALTER TABLE "User" ADD COLUMN "lastLoginAt" DATETIME' },
+  { id: '131_authtoken_table', sql: `CREATE TABLE IF NOT EXISTS "AuthToken" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "tokenHash" TEXT NOT NULL,
+    "expiresAt" DATETIME NOT NULL,
+    "usedAt" DATETIME,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "AuthToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+  )` },
+  { id: '132_authtoken_unique_hash', sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "AuthToken_tokenHash_key" ON "AuthToken"("tokenHash")' },
+  { id: '133_authtoken_idx_user',    sql: 'CREATE INDEX IF NOT EXISTS "AuthToken_userId_idx" ON "AuthToken"("userId")' },
+  { id: '134_authtoken_idx_type',    sql: 'CREATE INDEX IF NOT EXISTS "AuthToken_type_idx" ON "AuthToken"("type")' },
 ]
 
 /**
@@ -839,5 +859,5 @@ export const SCHEMA_VERSION = MIGRATIONS.length
  */
 export const CRITICAL_TABLES: readonly string[] = [
   'Garage', 'User', 'Client', 'Vehicle', 'Job', 'Invoice', 'InvoiceLine',
-  'Quote', 'WorkOrder', 'EInvoiceSubmission', 'EInvoiceEvent',
+  'Quote', 'WorkOrder', 'EInvoiceSubmission', 'EInvoiceEvent', 'AuthToken',
 ]
