@@ -160,24 +160,34 @@ release.
   sécurité). Documenté ; l'observabilité ajoutée le rend diagnosticable. À arbitrer par le métier
   (disponibilité vs protection) si l'on veut un repli borné sur `login`.
 
-- **MOYEN — Heartbeat PWA : `installId` non transmis à `validateDeviceToken`**
-  (`src/app/api/license/check/route.ts`). L'empreinte d'appareil n'est pas revérifiée côté PWA au
-  heartbeat. *Non corrigé* : modification du flux de licence à fort risque de régression sans banc de
-  test dédié ; recommandé d'extraire `installId` et de le passer, avec test d'intégration.
+- **RÉSOLU — Heartbeat PWA : `installId` transmis à `validateDeviceToken`**
+  (`src/app/api/license/check/route.ts`). `installId` est désormais extrait et passé → l'empreinte
+  d'appareil PWA est vérifiée au heartbeat (un jeton volé n'est plus rejouable depuis un autre
+  navigateur). Rétro‑compatible (Electron → hwid inchangé). Tests : forwarding installId/hwid +
+  empreinte erronée → jamais `allowed:true`.
 
-- **MOYEN / FAIBLE — Runner de migration runtime desktop (`src/lib/migrations.ts`) ne recrée pas les
-  index UNIQUE/@@index** d'une base réparée. *Non corrigé* : chemin desktop spécifique ; à traiter avec
-  précaution (ajout de `CREATE UNIQUE INDEX IF NOT EXISTS` idempotents).
+- **RÉSOLU — Runner de migration desktop : 6 index UNIQUE rétablis avec contrôle de doublons**
+  (`src/lib/migrations.ts` + `migrate/route.ts`). Nouveau variant `uniqueIndex` : détection préalable
+  des doublons (NULL exclus) → si présents, index **différé** (jamais d'échec ni de perte), sinon
+  `CREATE UNIQUE INDEX IF NOT EXISTS`. Tests SQLite réels (node:sqlite) : création + application,
+  doublons → différé sans perte, réessai après nettoyage, NULL multiples.
+
+- **RÉSOLU — `-DryRun` du reset rendu totalement inerte** (`scripts/reset-garageflow.ps1` +
+  `configurer-api-garageflow.ps1`) : dossier d'exécution en TEMP éphémère, `vercel login`/`link`
+  refusés en simulation, sauvegardes locales ignorées. *(PowerShell non exécutable ici — vérifié par
+  inspection statique, modifications additives.)*
+
+- **ÉLEVÉ / MOYEN — Panne transitoire d'Upstash → 503 au login.** Choix de conception (fail‑closed
+  sécurité), inchangé — voir plus haut.
 
 - **FAIBLE — MAC d'intégrité de licence n'inclut pas `seats`** (`src/lib/license/record-mac.ts`).
   *Non corrigé* : changer la formule invaliderait tous les MAC existants (faux « tampered ») → exige
   une migration/backfill contrôlée. À planifier.
 
-- **FAIBLE — Divers** : couverture rate‑limit partielle sur d'autres routes `/api/admin/*` ; jetons
-  portail sans révocation (stateless) ; `-DryRun` du reset non totalement sans effet (peut faire
-  `vercel link`) ; code mort `garagesite3/src/lib/api.ts` ; CORS démo v1 avec repli `*`. Voir le détail
-  dans les findings de l'audit. **Améliorations** : cf. liste complète (structured logging étendu,
-  Decimal pour la monnaie — migration destructive, hors périmètre).
+- **FAIBLE — Divers restants** : couverture rate‑limit partielle sur d'autres routes `/api/admin/*` ;
+  jetons portail sans révocation (stateless) ; code mort `garagesite3/src/lib/api.ts` ; CORS démo v1
+  avec repli `*`. **Améliorations** : structured logging étendu ; Decimal pour la monnaie (migration
+  destructive, hors périmètre).
 
 ---
 
