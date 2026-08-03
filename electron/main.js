@@ -78,7 +78,13 @@ app.setAppUserModelId('com.garageflow.app')
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const IS_DEV      = process.env.ELECTRON_DEV === '1'
+// SÉCURITÉ LICENCE : ELECTRON_DEV n'est honoré QUE dans un build non packagé
+// (développement). Dans un build packagé (production), app.isPackaged === true
+// force IS_DEV à false quelle que soit la variable d'environnement — sinon
+// `set ELECTRON_DEV=1 && GarageFlow.exe` sauterait tout le contrôle de licence
+// et injecterait un cookie admin (contournement trivial dans un modèle desktop
+// où l'utilisateur est l'adversaire).
+const IS_DEV      = !app.isPackaged && process.env.ELECTRON_DEV === '1'
 const PORT        = 4028
 const APP_DATA    = app.getPath('userData')
 const DB_PATH     = path.join(APP_DATA, 'garageflow.db')

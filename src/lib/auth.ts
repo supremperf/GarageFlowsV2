@@ -5,6 +5,12 @@ import { prisma } from '@/lib/db'
 import { logger } from '@/lib/logger'
 import bcrypt from 'bcryptjs'
 
+// Hash de format valide utilisé pour une comparaison à temps constant quand
+// l'utilisateur est inconnu (défend contre l'énumération d'e-mails par timing :
+// un compte existant déclenche bcrypt.compare ~100 ms ; sans ce leurre, un compte
+// inexistant répondrait instantanément). Même parade que le portail client.
+const DUMMY_HASH = bcrypt.hashSync('staff-enumeration-guard', 10)
+
 /**
  * Configuration NextAuth (CredentialsProvider) — chaîne d'authentification web.
  *
@@ -88,6 +94,9 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (!user) {
+          // Égalise le temps de réponse avec le cas « utilisateur trouvé »
+          // (anti-énumération) — voir DUMMY_HASH ci-dessus.
+          await bcrypt.compare(credentials.password, DUMMY_HASH)
           step('AUTH_STEP_5_USER_LOOKUP_COMPLETED', 'user_not_found')
           return null
         }

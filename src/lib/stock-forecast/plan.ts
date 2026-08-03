@@ -42,7 +42,11 @@ export function computeReorderPlan(item: StockItemInput, consumption: number[]):
 
   // Safety stock: z × demand std scaled to the lead-time window.
   const periodStd = stddev(history)
-  const leadTimeStd = periodStd * Math.sqrt(leadTimeDays / periodDays)
+  // Garde periodDays > 0 (comme dailyRate ci-dessus) : sinon division par zéro →
+  // sqrt(Infinity) → NaN/Infinity propagé dans tout le plan (safetyStock,
+  // reorderPoint, estimatedCost) sérialisé en null. La route passe 30 en dur,
+  // mais d'autres appelants (proactive/copilot/dashboard) ne sont pas gardés.
+  const leadTimeStd = periodDays > 0 ? periodStd * Math.sqrt(leadTimeDays / periodDays) : 0
   const safetyStock = Math.ceil(z * leadTimeStd)
 
   const reorderPoint = Math.ceil(dailyRate * leadTimeDays + safetyStock)

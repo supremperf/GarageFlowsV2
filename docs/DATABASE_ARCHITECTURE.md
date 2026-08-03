@@ -43,7 +43,7 @@ serveur PWA de production sur SQLite.
 - Création : copie du template commité `garageflow-template.db` (ou
   `prisma db push` en dernier recours).
 - Évolution du schéma : migrations SQL idempotentes de `src/lib/migrations.ts`
-  (86 entrées), appliquées au démarrage via `POST /api/internal/migrate`
+  (125 entrées), appliquées au démarrage via `POST /api/internal/migrate`
   (protégé par `X-Internal-Key`), suivies dans la table `_gf_migrations`.
 - Aucune dépendance à PostgreSQL, aucun réseau requis pour les données locales.
 

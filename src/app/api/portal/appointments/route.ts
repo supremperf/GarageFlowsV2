@@ -40,12 +40,24 @@ export const POST = withPortalAuth(async (req, { user }) => {
   })
   if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: 400 })
 
+  // Isolation : un vehicleId fourni doit être un véhicule DE CE client (même
+  // garage). Sinon on refuse le rattachement.
+  let vehicleId: string | null = null
+  if (typeof body.vehicleId === 'string' && body.vehicleId && user.clientId) {
+    const owned = await prisma.vehicle.findFirst({
+      where: { id: body.vehicleId, garageId: user.garageId, clientId: user.clientId },
+      select: { id: true },
+    })
+    if (!owned) return NextResponse.json({ error: 'Véhicule introuvable' }, { status: 400 })
+    vehicleId = owned.id
+  }
+
   const appointment = await prisma.appointment.create({
     data: {
       garageId: user.garageId,
       portalUserId: user.id,
       clientId: user.clientId,
-      vehicleId: typeof body.vehicleId === 'string' ? body.vehicleId : null,
+      vehicleId,
       clientName: user.name ?? user.email,
       vehicleModel: typeof body.vehicleModel === 'string' ? body.vehicleModel : null,
       licensePlate: typeof body.licensePlate === 'string' ? body.licensePlate : null,

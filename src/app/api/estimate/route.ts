@@ -128,7 +128,7 @@ export const POST = withAuth(async (req) => {
   // Enrich with mechanic names
   const mechanicIds = mechanicBreakdown.map((b: MechanicBreakdown) => b.mechanicId)
   const mechanics = await prisma.mechanic.findMany({
-    where: { id: { in: mechanicIds } },
+    where: { id: { in: mechanicIds }, garageId: session.user.garageId },
     select: { id: true, name: true, color: true },
   })
 

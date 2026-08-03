@@ -18,6 +18,14 @@ export const GET = withAuth(async () => {
     },
   })
 
+  // Ne JAMAIS exposer le mot de passe SMTP (stocké en clair) dans la réponse :
+  // aucun rôle n'en a besoin côté client (le champ de saisie est en écriture
+  // seule). Défense contre la lecture par des rôles bas (MECHANIC/VIEWER).
+  if (garage) {
+    const { smtpPass: _smtpPass, ...safe } = garage as typeof garage & { smtpPass?: unknown }
+    return NextResponse.json(safe)
+  }
+
   return NextResponse.json(garage)
 })
 

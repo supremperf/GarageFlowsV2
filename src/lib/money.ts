@@ -23,12 +23,26 @@
  * (Fusion : intègre le correctif d'arrondi des montants négatifs de la branche
  * complete-platform tout en conservant la couche centimes exacte du socle.)
  */
+/**
+ * Arrondi demi-éloigné-de-zéro d'une valeur DÉJÀ exprimée en centimes (possib-
+ * lement fractionnaire). Symétrique par construction : round(|n|) puis signe.
+ * Math.round natif est asymétrique sur les demis négatifs (Math.round(-0.5) =
+ * -0), ce qui réintroduisait une dérive de 1 c sur les avoirs/retours.
+ */
+function roundHalfAwayFromZero(n: number): number {
+  return (n < 0 ? -1 : 1) * Math.round(Math.abs(n))
+}
+
 export function toCents(amountEuros: number): number {
   if (!Number.isFinite(amountEuros)) return 0
   const sign = amountEuros < 0 ? -1 : 1
-  // Le +epsilon (ajouté AVANT la multiplication) corrige le bruit binaire
-  // (ex. 1.005 * 100 = 100.49999…) pour que 1,005 → 101 et non 100.
-  return sign * Math.round((Math.abs(amountEuros) + Number.EPSILON) * 100)
+  // Arrondi demi-éloigné-de-zéro À L'ÉCHELLE DU CENTIME, robuste au bruit
+  // IEEE-754 à TOUTES les magnitudes. Un Number.EPSILON fixe ajouté aux EUROS
+  // ne corrigeait que la plage [1,2) (l'ULP dépasse EPSILON au-delà) : 9,995 €
+  // donnait 999 c au lieu de 1000. Ici la tolérance (1e-7 centime) est ajoutée
+  // APRÈS passage en centimes : ≫ ULP pour tout montant réaliste (< 1e7 €) mais
+  // ≪ un demi-centime, donc elle n'absorbe que le bruit binaire (1,005 → 101).
+  return sign * Math.round(Math.abs(amountEuros) * 100 + 1e-7)
 }
 
 /** Convertit des centimes entiers en euros (2 décimales exactes). */
@@ -39,7 +53,10 @@ export function fromCents(cents: number): number {
 /** Multiplie un montant (centimes) par une quantité (potentiellement décimale). */
 export function multiplyCents(cents: number, quantity: number): number {
   if (!Number.isFinite(quantity)) return 0
-  return Math.round(cents * quantity)
+  // Arrondi symétrique : une ligne d'avoir (montant/quantité négatif) doit être
+  // le miroir exact de la ligne de vente (Math.round(-499.5) = -499 cassait la
+  // symétrie garantie par toCents → résidu de 1 c sur les avoirs).
+  return roundHalfAwayFromZero(cents * quantity)
 }
 
 export interface MoneyLine {
@@ -68,7 +85,7 @@ export function computeTotals(lines: MoneyLine[], taxRatePercent: number): Total
   for (const l of lines ?? []) {
     totalHTCents += multiplyCents(toCents(l.unitPrice), l.quantity ?? 0)
   }
-  const taxCents = Math.round((totalHTCents * rate) / 100)
+  const taxCents = roundHalfAwayFromZero((totalHTCents * rate) / 100)
   const totalTTCCents = totalHTCents + taxCents
   return {
     totalHTCents,

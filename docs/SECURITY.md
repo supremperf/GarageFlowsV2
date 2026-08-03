@@ -71,8 +71,12 @@ Mesures en place (détails dans les docs dédiées du dossier `docs/`).
   identifiants, tokens GF2/JWT masqués ; HWID/SHA-256 tronqués (empreinte courte).
 
 ## Limitations connues (résiduelles)
-- Rate limiting en mémoire (par instance) — pour une PWA multi-instance, prévoir
-  un store partagé (Redis/KV). Détails et classement : voir le rapport de sécurité.
+- Rate limiting : un store partagé distribué (Upstash Redis) est **déjà
+  implémenté et EXIGÉ** en production PWA — `src/lib/env.ts` refuse le démarrage
+  sans `UPSTASH_REDIS_REST_URL`/`_TOKEN`, et les compteurs sont atomiques
+  (script Lua) partagés entre toutes les instances (`src/lib/security/rate-limit.ts`).
+  Le backend mémoire ne subsiste que pour Electron/dev/test (mono-processus).
+  Détails et classement : voir le rapport de sécurité.
 - Montants stockés en `Float` (schéma) : calculs métier exacts en centimes, mais
   migration `Float → Decimal/entier` recommandée (`docs/MIGRATION-MONEY.md`).
 - `npm audit` : résiduels de haut niveau limités à la chaîne de build

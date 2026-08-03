@@ -64,6 +64,16 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
     return NextResponse.json({ error: 'Données invalides', details: parsed.error.flatten() }, { status: 400 })
   }
 
+  // Isolation multi-tenant : si mechanicId change, vérifier son appartenance au
+  // garage (le PUT le fait déjà ; le PATCH l'omettait → assignation cross-garage
+  // + lecture du mécanicien étranger via les include).
+  if (parsed.data.mechanicId) {
+    const mech = await prisma.mechanic.findFirst({
+      where: { id: parsed.data.mechanicId, garageId: session.user.garageId },
+    })
+    if (!mech) return NextResponse.json({ error: 'Mécanicien introuvable' }, { status: 404 })
+  }
+
   const safeFields = ['mechanicId', 'startTime', 'date', 'status', 'delayMinutes', 'actualDuration']
   const data: Record<string, unknown> = {}
   for (const f of safeFields) {

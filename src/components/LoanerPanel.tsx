@@ -116,15 +116,23 @@ export default function LoanerPanel({ onClose }: { onClose: () => void }) {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [vRes, rRes] = await Promise.all([
-      fetch('/api/loaner-vehicles'),
-      fetch(`/api/loaner-reservations?startDate=${format(weekStart, 'yyyy-MM-dd')}&endDate=${format(addDays(weekStart, 6), 'yyyy-MM-dd')}`),
-    ])
-    const vData = await vRes.json()
-    const rData = await rRes.json()
-    setVehicles(Array.isArray(vData) ? vData : [])
-    setReservations(Array.isArray(rData) ? rData : [])
-    setLoading(false)
+    setError(null)
+    try {
+      const [vRes, rRes] = await Promise.all([
+        fetch('/api/loaner-vehicles'),
+        fetch(`/api/loaner-reservations?startDate=${format(weekStart, 'yyyy-MM-dd')}&endDate=${format(addDays(weekStart, 6), 'yyyy-MM-dd')}`),
+      ])
+      const vData = await vRes.json()
+      const rData = await rRes.json()
+      setVehicles(Array.isArray(vData) ? vData : [])
+      setReservations(Array.isArray(rData) ? rData : [])
+    } catch {
+      // Réseau coupé / JSON invalide : on affiche une erreur au lieu de laisser
+      // le spinner bloqué indéfiniment (setLoading(false) était inatteignable).
+      setError('Impossible de charger les véhicules de prêt. Réessayez.')
+    } finally {
+      setLoading(false)
+    }
   }, [weekStart])
 
   useEffect(() => { load() }, [load])
