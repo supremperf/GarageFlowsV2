@@ -13,6 +13,8 @@ import { getAuthSecret } from '@/lib/auth-secret'
  *
  *  1. Exclure d'emblée les assets statiques / PWA, /api/* et /portal/*.
  *  2. Lire la session NextAuth (getToken) — priorité à l'authentification.
+ *     Un cookie de session présent mais indéchiffrable (secret tourné) est purgé
+ *     lors du renvoi vers /login — évite la boucle et le bruit JWT_SESSION_ERROR.
  *  3. Pages d'auth (/login, /register) : laisser passer si non connecté,
  *     renvoyer vers / si déjà connecté.
  *  4. /license : accessible non connecté ; connecté + licence valide → sortir.
@@ -86,6 +88,34 @@ function redirectTo(req: NextRequest, target: string): NextResponse {
   return NextResponse.redirect(new URL(target, req.url))
 }
 
+// ── Nettoyage sûr d'un cookie de session NextAuth périmé (mission §4.4) ────────
+// Après une rotation de NEXTAUTH_SECRET, un ancien cookie chiffré (JWE) n'est
+// plus déchiffrable → getToken renvoie null et NextAuth journalise
+// JWT_SESSION_ERROR à chaque requête vers /api/auth/session. Quand on constate
+// qu'un cookie de session est présent MAIS ne produit aucune session valide, on
+// le purge proprement : plus de boucle, plus de bruit de log. On ne purge que si
+// le cookie est réellement présent (aucun Set-Cookie superflu sinon).
+const NEXTAUTH_SESSION_COOKIES = [
+  'next-auth.session-token',
+  '__Secure-next-auth.session-token',
+] as const
+
+function hasStaleAuthCookie(req: NextRequest): boolean {
+  return NEXTAUTH_SESSION_COOKIES.some((name) => req.cookies.has(name))
+}
+
+function clearStaleAuthCookies(req: NextRequest, res: NextResponse): NextResponse {
+  if (!hasStaleAuthCookie(req)) return res
+  // Le préfixe __Secure- impose l'attribut Secure pour être accepté/supprimé.
+  res.cookies.set('next-auth.session-token', '', {
+    path: '/', maxAge: 0, httpOnly: true, sameSite: 'lax',
+  })
+  res.cookies.set('__Secure-next-auth.session-token', '', {
+    path: '/', maxAge: 0, httpOnly: true, secure: true, sameSite: 'lax',
+  })
+  return res
+}
+
 export async function middleware(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl
 
@@ -114,8 +144,9 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   if (isAuthPage) {
     // Déjà connecté → renvoyer vers l'accueil (la licence sera vérifiée sur /).
     if (isLoggedIn) return redirectTo(req, '/')
-    // Non connecté → laisser accéder à la page de connexion/inscription.
-    return NextResponse.next()
+    // Non connecté → laisser accéder à la page ; purger au passage un éventuel
+    // cookie de session périmé (secret tourné) pour éviter les JWT_SESSION_ERROR.
+    return clearStaleAuthCookies(req, NextResponse.next())
   }
 
   // ── 4. Page /license (traitée avant l'exigence d'auth générale) ────────────
@@ -135,7 +166,9 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   if (!isLoggedIn) {
     const loginUrl = new URL('/login', req.url)
     loginUrl.searchParams.set('callbackUrl', pathname + req.nextUrl.search)
-    return NextResponse.redirect(loginUrl)
+    // Redirection + purge d'un cookie de session périmé le cas échéant (§4.4) :
+    // supprime toute boucle potentielle et le bruit JWT_SESSION_ERROR.
+    return clearStaleAuthCookies(req, NextResponse.redirect(loginUrl))
   }
 
   // ── 6. Routes admin : NextAuth valide (ci-dessus) + gf_session typ=admin ────

@@ -36,10 +36,25 @@ async function gfSession(payload: Record<string, unknown>): Promise<string> {
     .sign(secretBytes())
 }
 
-function reqFor(path: string, opts: { gf?: string } = {}): NextRequest {
+function reqFor(path: string, opts: { gf?: string; na?: string } = {}): NextRequest {
   const headers = new Headers()
-  if (opts.gf !== undefined) headers.set('cookie', `gf_session=${opts.gf}`)
+  const cookies: string[] = []
+  if (opts.gf !== undefined) cookies.push(`gf_session=${opts.gf}`)
+  // Cookie de session NextAuth (nom HTTP par défaut) — pour tester la purge.
+  if (opts.na !== undefined) cookies.push(`next-auth.session-token=${opts.na}`)
+  if (cookies.length) headers.set('cookie', cookies.join('; '))
   return new NextRequest(`http://localhost:3000${path}`, { headers })
+}
+
+/** Renvoie true si la réponse purge le cookie de session NextAuth (Max-Age=0). */
+function clearsNextAuthCookie(res: Response): boolean {
+  const setCookies =
+    typeof (res.headers as any).getSetCookie === 'function'
+      ? (res.headers as any).getSetCookie()
+      : [res.headers.get('set-cookie') ?? '']
+  return setCookies.some(
+    (c: string) => /next-auth\.session-token=/.test(c) && /Max-Age=0/i.test(c),
+  )
 }
 
 /** true si le middleware a laissé passer (NextResponse.next()). */
@@ -271,6 +286,38 @@ describe('sécurité — fail-closed', () => {
     const gf = await gfSession({ foo: 'bar' }) // ni typ ni lid
     const res = await middleware(reqFor('/', { gf }))
     expect(redirectPath(res)).toBe('/license')
+  })
+})
+
+// ── 6bis. Purge d'un cookie de session NextAuth périmé (mission §4.4) ─────────
+describe('cookie NextAuth périmé — purge sûre, pas de boucle', () => {
+  it('cookie next-auth présent mais session nulle (secret tourné) sur / → /login + purge', async () => {
+    loggedOut() // getToken renvoie null : cookie présent mais indéchiffrable
+    const res = await middleware(reqFor('/', { na: 'eyJstale.jwe.cookie' }))
+    expect(redirectPath(res)).toBe('/login?callbackUrl=%2F')
+    expect(clearsNextAuthCookie(res)).toBe(true)
+  })
+
+  it('cookie next-auth périmé sur /login → laisser passer + purge', async () => {
+    loggedOut()
+    const res = await middleware(reqFor('/login', { na: 'eyJstale.jwe.cookie' }))
+    expect(passed(res)).toBe(true)
+    expect(clearsNextAuthCookie(res)).toBe(true)
+  })
+
+  it('AUCUN cookie next-auth → aucune purge superflue', async () => {
+    loggedOut()
+    const res = await middleware(reqFor('/'))
+    expect(redirectPath(res)).toBe('/login?callbackUrl=%2F')
+    expect(clearsNextAuthCookie(res)).toBe(false)
+  })
+
+  it('session NextAuth valide → aucune purge (le cookie est bon)', async () => {
+    loggedIn()
+    const gf = await gfSession({ typ: 'premium', lid: 'lid-1' })
+    const res = await middleware(reqFor('/', { gf, na: 'valid' }))
+    expect(passed(res)).toBe(true)
+    expect(clearsNextAuthCookie(res)).toBe(false)
   })
 })
 
