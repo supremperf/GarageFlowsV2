@@ -3,6 +3,7 @@ keygen_ui.py — GarageFlow Licence Manager — Interface graphique (tkinter)
 Fenêtre principale : onglets Générer / Gérer / Clés.
 """
 
+import sys
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 import threading
@@ -931,3 +932,23 @@ class App(tk.Tk):
                 "Allez dans l'onglet  🔑 Clés ECC  et cliquez\n"
                 "'Initialiser les clés' pour commencer.",
             )
+
+
+# ── Point d'entrée ────────────────────────────────────────────────────────────
+# Sans ce garde, `python scripts/keygen_ui.py` définissait les classes puis
+# rendait la main immédiatement : aucune fenêtre ne s'ouvrait. On lance ici la
+# boucle Tk, avec un message clair si Tkinter n'est pas disponible.
+def main():
+    try:
+        App().mainloop()
+    except tk.TclError as e:
+        print(
+            "Impossible de démarrer l'interface graphique (Tkinter indisponible "
+            f"ou pas d'affichage) : {e}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

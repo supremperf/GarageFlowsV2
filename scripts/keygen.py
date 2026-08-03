@@ -240,8 +240,11 @@ def get_hwid() -> str:
     )
     plat     = f"{platform.system()}-{platform.machine()}"
     hostname = hashlib.sha256(socket.gethostname().encode()).hexdigest()[:16]
-    disk     = _disk_serial()
-    combined = "||".join([cpu, mac, plat, hostname, disk])
+    # COHÉRENCE CRITIQUE : l'empreinte DOIT être identique à keygen_core.get_hwid
+    # et electron/main.js (sinon une licence liée au matériel ne validerait jamais).
+    # Même sel « ||GF2-HWID-SALT|| » et même repli disque « unknown-disk ».
+    disk     = _disk_serial() or "unknown-disk"
+    combined = "||GF2-HWID-SALT||".join([cpu, mac, plat, hostname, disk])
     return hashlib.sha256(combined.encode()).hexdigest()
 
 # ── Watermark decoder ─────────────────────────────────────────────────────────
