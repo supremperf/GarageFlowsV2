@@ -62,3 +62,7 @@ icon.icns
 gf_update.json
 /updates/
 /dev.db
+
+# Captures E2E générées localement (livrées séparément, pas versionnées)
+e2e/shots/
+playwright-report/
