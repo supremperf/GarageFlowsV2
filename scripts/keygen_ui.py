@@ -6,6 +6,7 @@ Fenêtre principale : onglets Générer / Gérer / Clés.
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 import threading
+import socket
 import urllib.request
 import urllib.error
 import json as _json
@@ -74,10 +75,28 @@ def _frame(parent, bg=None, padx=0, pady=0):
 
 # ── Remote API helper ────────────────────────────────────────────────────────
 
+def _validate_server_url(url: str) -> tuple[bool, str]:
+    """Valide l'URL serveur. https:// requis en prod ; http:// toléré (LAN/local)."""
+    u = (url or "").strip()
+    if not u:
+        return False, "URL du serveur vide — saisissez une adresse (https://…)."
+    if not (u.startswith("http://") or u.startswith("https://")):
+        return False, "URL invalide — elle doit commencer par http:// ou https://."
+    # Doit contenir un hôte après le schéma.
+    rest = u.split("://", 1)[1].strip()
+    if not rest or rest.startswith("/"):
+        return False, "URL invalide — hôte du serveur manquant."
+    return True, ""
+
+
 def _remote_set_status(server_url: str, api_key: str, license_id: str, status: str) -> tuple[bool, str]:
     """Call GarageFlow admin API to update license status. Returns (ok, message)."""
     if not server_url or not api_key:
         return False, "Serveur ou clé API non configuré."
+    # Validation d'URL : http:// autorisé pour LAN/local, https:// requis en prod.
+    ok_url, err_url = _validate_server_url(server_url)
+    if not ok_url:
+        return False, err_url
     url = server_url.rstrip("/") + "/api/admin/licenses/revoke-by-key"
     payload = _json.dumps({"licenseId": license_id, "status": status}).encode("utf-8")
     req = urllib.request.Request(
@@ -97,13 +116,36 @@ def _remote_set_status(server_url: str, api_key: str, license_id: str, status: s
                 return True, f"Statut mis à jour sur le serveur : {status}"
             return False, data.get("error", "Réponse inattendue")
     except urllib.error.HTTPError as e:
+        # Discrimination des erreurs HTTP en messages opérateur clairs.
+        code = e.code
+        if code in (401, 403):
+            return False, "Clé API invalide (GARAGEFLOW_API_KEY) — vérifiez la clé du serveur."
+        if code == 429:
+            retry = None
+            try:
+                retry = e.headers.get("Retry-After")
+            except Exception:
+                retry = None
+            if retry:
+                return False, f"Trop de requêtes (rate limit) — réessayez dans {retry} s."
+            return False, "Trop de requêtes (rate limit) — réessayez dans quelques instants."
+        if code in (500, 502, 503, 504):
+            return False, f"Serveur indisponible (HTTP {code}) — réessayez plus tard."
+        # Autres codes : on conserve le comportement existant (body.error ou HTTP {code}).
         try:
             body = _json.loads(e.read().decode("utf-8"))
-            return False, body.get("error", f"HTTP {e.code}")
+            return False, body.get("error", f"HTTP {code}")
         except Exception:
-            return False, f"Erreur HTTP {e.code}"
-    except Exception as exc:
-        return False, f"Connexion impossible : {exc}"
+            return False, f"Erreur HTTP {code}"
+    except socket.timeout:
+        return False, "Délai dépassé — le serveur ne répond pas."
+    except urllib.error.URLError as exc:
+        # Timeout signalé via URLError, connexion refusée, DNS injoignable, etc.
+        if isinstance(exc.reason, socket.timeout):
+            return False, "Délai dépassé — le serveur ne répond pas."
+        return False, "Connexion impossible — vérifiez l'URL du serveur et le réseau."
+    except Exception:
+        return False, "Connexion impossible — vérifiez l'URL du serveur et le réseau."
 
 
 # ── Onglet 1 — Générer ────────────────────────────────────────────────────────
@@ -728,7 +770,7 @@ class TabServer(tk.Frame):
         _lbl(info, "Comment ça fonctionne :", font=FONTB).pack(anchor="w")
         _lbl(info,
              "1. L'admin installe GarageFlow et le lance comme serveur (LAN ou VPN).\n"
-             "2. Entrez l'URL et la clé API (NEXTAUTH_SECRET) ci-dessus.\n"
+             "2. Entrez l'URL et la clé API (GARAGEFLOW_API_KEY) ci-dessus.\n"
              "3. Quand vous révoquez/suspendez une licence dans cet outil,\n"
              "   le serveur GarageFlow est mis à jour immédiatement.\n"
              "4. Les clients GarageFlow vérifient le serveur toutes les 2 minutes\n"
@@ -736,6 +778,11 @@ class TabServer(tk.Frame):
              fg=MUTED, font=FONTS, justify="left").pack(anchor="w", pady=(6, 0))
 
     def _save(self):
+        # Valide l'URL avant enregistrement (https:// en prod, http:// toléré en LAN/local).
+        ok_url, err_url = _validate_server_url(self.v_url.get())
+        if not ok_url:
+            self.lbl_result.config(text="⚠️  " + err_url, fg=AMBER)
+            return
         db.save_server_config(self.v_url.get(), self.v_key.get())
         self.lbl_result.config(text="✅  Configuration enregistrée.", fg=GREEN)
 
@@ -745,10 +792,16 @@ class TabServer(tk.Frame):
         if not url or not key:
             self.lbl_result.config(text="⚠️  URL et clé requis.", fg=AMBER)
             return
+        # Valide l'URL avant de tester la connexion.
+        ok_url, err_url = _validate_server_url(url)
+        if not ok_url:
+            self.lbl_result.config(text="⚠️  " + err_url, fg=AMBER)
+            return
         self.lbl_result.config(text="⏳  Test en cours…", fg=MUTED)
 
         def _do():
-            # Ping the check endpoint with a dummy licenseId — should return 404 or OK (not 403)
+            # Ping via status='active' (chemin sans écriture DB). La route renvoie 200
+            # {ok:true, note:'not_registered'} pour un licenseId inconnu — c'est un succès.
             import urllib.request, urllib.error, json as _j
             test_url = url + "/api/admin/licenses/revoke-by-key"
             payload = _j.dumps({"licenseId": "__test_ping__", "status": "active"}).encode()
@@ -757,22 +810,38 @@ class TabServer(tk.Frame):
             try:
                 with urllib.request.urlopen(req, timeout=6) as r:
                     data = _j.loads(r.read())
-                    # If licenseId not found → 200 with error, but auth passed
-                    msg = "✅  Connexion réussie (licenceId inconnu = normal)."
+                    # 200 = authentification OK. note='not_registered' attendu pour ce licenseId factice.
+                    if data.get("note") == "not_registered":
+                        msg = "✅  Connexion réussie (licenceId inconnu = normal)."
+                    else:
+                        msg = "✅  Connexion réussie."
                     self.after(0, lambda: self.lbl_result.config(text=msg, fg=GREEN))
             except urllib.error.HTTPError as e:
-                if e.code == 404:
+                if e.code in (401, 403):
                     self.after(0, lambda: self.lbl_result.config(
-                        text="✅  Serveur joignable (404 = licenceId inconnu = normal).", fg=GREEN))
-                elif e.code == 403:
+                        text="❌  Clé API invalide (GARAGEFLOW_API_KEY) — vérifiez la clé du serveur.", fg=RED))
+                elif e.code == 429:
                     self.after(0, lambda: self.lbl_result.config(
-                        text="❌  Clé API incorrecte (403 Accès refusé).", fg=RED))
+                        text="⚠️  Trop de requêtes (rate limit) — réessayez dans quelques instants.", fg=AMBER))
+                elif e.code in (500, 502, 503, 504):
+                    self.after(0, lambda e=e: self.lbl_result.config(
+                        text=f"⚠️  Serveur indisponible (HTTP {e.code}) — réessayez plus tard.", fg=AMBER))
                 else:
                     self.after(0, lambda e=e: self.lbl_result.config(
                         text=f"⚠️  HTTP {e.code}", fg=AMBER))
-            except Exception as exc:
-                self.after(0, lambda exc=exc: self.lbl_result.config(
-                    text=f"❌  {exc}", fg=RED))
+            except socket.timeout:
+                self.after(0, lambda: self.lbl_result.config(
+                    text="❌  Délai dépassé — le serveur ne répond pas.", fg=RED))
+            except urllib.error.URLError as exc:
+                if isinstance(exc.reason, socket.timeout):
+                    self.after(0, lambda: self.lbl_result.config(
+                        text="❌  Délai dépassé — le serveur ne répond pas.", fg=RED))
+                else:
+                    self.after(0, lambda: self.lbl_result.config(
+                        text="❌  Connexion impossible — vérifiez l'URL du serveur et le réseau.", fg=RED))
+            except Exception:
+                self.after(0, lambda: self.lbl_result.config(
+                    text="❌  Connexion impossible — vérifiez l'URL du serveur et le réseau.", fg=RED))
 
         threading.Thread(target=_do, daemon=True).start()
 

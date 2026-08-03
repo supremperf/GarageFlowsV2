@@ -3,7 +3,7 @@ keygen_db.py — GarageFlow Licence DB locale (JSON)
 Stockage, révocation, réactivation des licences générées.
 """
 
-import json, time
+import json, os, time
 from pathlib import Path
 from typing import Optional
 
@@ -121,3 +121,9 @@ def save_server_config(url: str, api_key: str) -> None:
                    indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
+    # Durcit les permissions (fichier contenant la clé API), comme pour private.pem.
+    # Sur Windows le chmod POSIX est sans effet réel : on ignore toute erreur.
+    try:
+        os.chmod(SERVER_CFG_FILE, 0o600)
+    except Exception:
+        pass

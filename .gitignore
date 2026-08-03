@@ -66,3 +66,9 @@ gf_update.json
 # Captures E2E générées localement (livrées séparément, pas versionnées)
 e2e/shots/
 playwright-report/
+
+# Sorties des scripts de configuration/rotation — peuvent contenir des secrets en clair
+GarageFlow-configuration/
+API générées/
+*.pfx
+*.p12

@@ -1,0 +1,20 @@
+# .vercelignore — n'expédie JAMAIS les secrets/artefacts locaux vers Vercel.
+# Défense en profondeur : le build Next.js n'a besoin d'aucun de ces fichiers.
+# (le déploiement PWA utilise DATABASE_URL/DIRECT_URL fournis par Vercel, pas un .env)
+
+# Secrets d'environnement locaux (placeholders de .env.example conservés)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Clés de signature de licence et état runtime du keygen
+keys/
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Sorties des scripts de configuration/rotation (peuvent contenir des secrets)
+GarageFlow-configuration/
+API générées/
