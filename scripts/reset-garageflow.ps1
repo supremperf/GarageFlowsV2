@@ -1882,16 +1882,31 @@ try {
 
     # Garantir localement tous les secrets générables indispensables, même si
     # la fonction partagée change ou retourne une forme inattendue.
+    # NOTE : GF_TOTP_ENC_KEY et GF_SMTP_CIPHER_KEY sont EXCLUS ci-dessous.
+    # Ce sont des clés de chiffrement AU REPOS (secrets TOTP, mots de passe SMTP) :
+    # les régénérer rendrait les données déjà chiffrées DÉFINITIVEMENT illisibles
+    # (perte irréversible), contrairement aux secrets de session (rotation = simple
+    # reconnexion). Le manifeste les marque autoGenerate=false / rotationRisk=high.
+    # On les PRÉSERVE donc telles quelles (valeur existante conservée en 1864).
     $fallbackGenerators = @{
         NEXTAUTH_SECRET      = @{ Bytes = 32; Format = 'base64' }
         GARAGEFLOW_API_KEY   = @{ Bytes = 32; Format = 'hex' }
         DEVICE_TOKEN_PEPPER  = @{ Bytes = 32; Format = 'base64' }
         GF_PORTAL_SECRET     = @{ Bytes = 32; Format = 'base64' }
         GF_SIGNATURE_SECRET  = @{ Bytes = 32; Format = 'base64' }
-        GF_TOTP_ENC_KEY      = @{ Bytes = 32; Format = 'base64' }
-        GF_SMTP_CIPHER_KEY   = @{ Bytes = 32; Format = 'base64' }
         GF_BACKUP_KEY        = @{ Bytes = 32; Format = 'base64' }
         GF_DB_MAC_SECRET     = @{ Bytes = 32; Format = 'hex' }
+    }
+    # Secrets de chiffrement au repos : JAMAIS auto-générés ni auto-rotés par le
+    # reset. Générés UNIQUEMENT s'ils sont totalement absents (installation neuve,
+    # aucune donnée chiffrée à perdre) et jamais écrasés s'ils existent déjà.
+    $encryptionAtRestKeys = @('GF_TOTP_ENC_KEY','GF_SMTP_CIPHER_KEY')
+    foreach ($name in $encryptionAtRestKeys) {
+        $already = $newValues.ContainsKey($name) -and -not [string]::IsNullOrWhiteSpace([string]$newValues[$name])
+        if (-not $already) {
+            $newValues[$name] = New-CryptoRandomValue -Bytes 32 -Format 'base64'
+            Add-SecretToRegistry ([string]$newValues[$name])
+        }
     }
     foreach ($name in $fallbackGenerators.Keys) {
         if (-not $generated.ContainsKey($name) -or [string]::IsNullOrWhiteSpace([string]$generated[$name])) {
@@ -1901,8 +1916,10 @@ try {
         }
     }
 
-    # Rotation totale explicite : écraser absolument tous les secrets générables.
-    foreach ($name in @('NEXTAUTH_SECRET','GARAGEFLOW_API_KEY','DEVICE_TOKEN_PEPPER','GF_PORTAL_SECRET','GF_SIGNATURE_SECRET','GF_TOTP_ENC_KEY','GF_SMTP_CIPHER_KEY','GF_BACKUP_KEY','GF_DB_MAC_SECRET')) {
+    # Rotation totale explicite : écraser les secrets ROTABLES (session/signature/
+    # API/pepper/backup/MAC). GF_TOTP_ENC_KEY et GF_SMTP_CIPHER_KEY en sont EXCLUS
+    # (chiffrement au repos — cf. bloc ci-dessus, préservés/générés une seule fois).
+    foreach ($name in @('NEXTAUTH_SECRET','GARAGEFLOW_API_KEY','DEVICE_TOKEN_PEPPER','GF_PORTAL_SECRET','GF_SIGNATURE_SECRET','GF_BACKUP_KEY','GF_DB_MAC_SECRET')) {
         $newValues[$name] = Clean-InputValue ([string]$generated[$name])
     }
 
