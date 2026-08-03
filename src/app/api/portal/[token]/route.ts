@@ -25,7 +25,13 @@ export async function GET(_req: Request, { params }: { params: { token: string }
         photos: { select: { id: true, phase: true, caption: true, base64: true, photoPath: true, createdAt: true } },
         quotes: {
           where: { status: { not: 'draft' } },
-          include: { lines: true },
+          // SÉCURITÉ : select explicite des lignes SANS unitCost (coût/marge du
+          // garage) — le portail client ne doit jamais recevoir ce champ interne.
+          include: {
+            lines: {
+              select: { id: true, description: true, quantity: true, unitPrice: true, isLabor: true, sortOrder: true },
+            },
+          },
           orderBy: { createdAt: 'desc' },
           take: 1,
         },

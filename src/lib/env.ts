@@ -57,6 +57,22 @@ export function validateEnv(): { ok: boolean; issues: EnvIssue[] } {
         problem: 'rate limiting distribué requis en production PWA (multi-instance)',
       })
     }
+
+    // Proxy de confiance : clientIpFrom() n'utilise x-forwarded-for/x-real-ip
+    // QUE derrière un proxy déclaré (VERCEL=1 ou TRUST_PROXY_HEADERS=1). Sans ce
+    // signal, TOUTES les IP retombent sur la clé constante « unverified » : les
+    // limites login/api/activation s'effondrent dans un seul bucket global (un
+    // seul utilisateur peut épuiser la limite de tous — auto-DoS). Sur Vercel,
+    // VERCEL=1 est fourni automatiquement ; en auto-hébergement, déclarez
+    // explicitement TRUST_PROXY_HEADERS=1 UNIQUEMENT derrière un proxy fiable.
+    if (process.env.VERCEL !== '1' && process.env.TRUST_PROXY_HEADERS !== '1') {
+      issues.push({
+        name: 'TRUST_PROXY_HEADERS',
+        problem:
+          "proxy de confiance non déclaré en production PWA — définissez TRUST_PROXY_HEADERS=1 " +
+          "(derrière un proxy fiable) sinon les limites de débit s'effondrent en un seul bucket",
+      })
+    }
   }
 
   return { ok: issues.length === 0, issues }

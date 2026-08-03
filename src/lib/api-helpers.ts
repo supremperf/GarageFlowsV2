@@ -86,6 +86,12 @@ export function withLoginRateLimit(
 /** Max base64 logo size (after client-side downscale). Generous headroom: ~4 MB. */
 export const MAX_LOGO_BASE64_LENGTH = 4 * 1024 * 1024
 
+/** Max base64 photo size (job/inspection photos, after client-side downscale). ~8 MB. */
+export const MAX_PHOTO_BASE64_LENGTH = 8 * 1024 * 1024
+
+/** Types d'image autorisés pour un upload (data-URL). */
+export const ALLOWED_IMAGE_MIME = /^image\/(jpe?g|png|webp|gif)$/i
+
 /**
  * Verify the signed gf_session JWT and return true if the session has typ=admin.
  * Reads the HttpOnly gf_session cookie — never trusts the plain gf_license_type cookie.

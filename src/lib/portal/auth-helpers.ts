@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import type { PortalUser, PortalDevice } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { verifyPortalSession, signPortalSession } from '@/lib/portal/session'
+import { clientIpFrom } from '@/lib/security/rate-limit'
 import { logger } from '@/lib/logger'
 
 export const PORTAL_COOKIE = 'gf_portal'
@@ -28,10 +29,18 @@ export function clearPortalCookie(res: NextResponse): void {
   res.headers.append('Set-Cookie', `${PORTAL_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax; HttpOnly`)
 }
 
+/**
+ * IP cliente pour le rate limiting du portail (sujet de limite).
+ *
+ * SÉCURITÉ : n'utilise PAS directement x-forwarded-for/x-real-ip (forgeables
+ * hors proxy de confiance — un attaquant ferait tourner l'en-tête pour obtenir
+ * un bucket distinct par requête et neutraliser la limite). On délègue à
+ * clientIpFrom() (source UNIQUE, même modèle de confiance que le reste de l'app :
+ * en-têtes pris en compte uniquement derrière Vercel/TRUST_PROXY_HEADERS, sinon
+ * clé constante « unverified »). Retourne toujours une valeur exploitable.
+ */
 export function clientIp(req: NextRequest): string | null {
-  const fwd = req.headers.get('x-forwarded-for')
-  const ip = fwd ? fwd.split(',')[0].trim() : req.headers.get('x-real-ip')
-  return ip || null
+  return clientIpFrom(req)
 }
 
 export function userAgent(req: NextRequest): string | null {

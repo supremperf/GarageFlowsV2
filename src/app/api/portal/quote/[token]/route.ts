@@ -18,7 +18,13 @@ export async function GET(_req: Request, { params }: { params: { token: string }
         ? { id: payload.quoteId, garageId: payload.garageId }
         : { id: payload.quoteId },
       include: {
-        lines: { orderBy: { sortOrder: 'asc' } },
+        // SÉCURITÉ : ne JAMAIS exposer unitCost (coût d'achat/marge du garage) au
+        // client — select explicite limité aux champs nécessaires à l'affichage
+        // et au calcul des totaux (calcTotalHT/TTC : quantity + unitPrice).
+        lines: {
+          orderBy: { sortOrder: 'asc' },
+          select: { id: true, description: true, quantity: true, unitPrice: true, isLabor: true, sortOrder: true },
+        },
         garage: { select: { name: true, phone: true, email: true, address: true, siret: true, logoBase64: true, logoPath: true, taxRate: true, invoiceFooter: true } },
       },
     })

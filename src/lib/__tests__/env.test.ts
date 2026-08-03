@@ -44,6 +44,7 @@ describe('env — validation & fail-fast', () => {
     process.env.DEVICE_TOKEN_PEPPER = 'p'.repeat(40)
     process.env.UPSTASH_REDIS_REST_URL = 'https://example.upstash.io'
     process.env.UPSTASH_REDIS_REST_TOKEN = 't'.repeat(32)
+    process.env.TRUST_PROXY_HEADERS = '1'
     expect(() => assertEnv()).not.toThrow()
   })
 })
@@ -60,9 +61,38 @@ describe('env — garde-fou PWA production (PostgreSQL obligatoire)', () => {
     expect(() => assertEnv()).toThrow(/Démarrage refusé/)
   })
 
-  it('PWA production + PostgreSQL + pepper + Upstash = accepté', () => {
+  it('PWA production + PostgreSQL + pepper + Upstash + proxy de confiance = accepté', () => {
     vi.stubEnv('NODE_ENV', 'production')
     delete process.env.ELECTRON
+    process.env.DATABASE_URL = 'postgresql://u:p@h:5432/db'
+    process.env.NEXTAUTH_SECRET = 'x'.repeat(40)
+    process.env.DEVICE_TOKEN_PEPPER = 'p'.repeat(40)
+    process.env.UPSTASH_REDIS_REST_URL = 'https://example.upstash.io'
+    process.env.UPSTASH_REDIS_REST_TOKEN = 't'.repeat(32)
+    process.env.TRUST_PROXY_HEADERS = '1'
+    expect(validateEnv().ok).toBe(true)
+  })
+
+  it('PWA production sans signal de proxy de confiance (VERCEL/TRUST_PROXY_HEADERS) = refusé', () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    delete process.env.ELECTRON
+    delete process.env.VERCEL
+    delete process.env.TRUST_PROXY_HEADERS
+    process.env.DATABASE_URL = 'postgresql://u:p@h:5432/db'
+    process.env.NEXTAUTH_SECRET = 'x'.repeat(40)
+    process.env.DEVICE_TOKEN_PEPPER = 'p'.repeat(40)
+    process.env.UPSTASH_REDIS_REST_URL = 'https://example.upstash.io'
+    process.env.UPSTASH_REDIS_REST_TOKEN = 't'.repeat(32)
+    const { ok, issues } = validateEnv()
+    expect(ok).toBe(false)
+    expect(issues.some((i) => i.name === 'TRUST_PROXY_HEADERS')).toBe(true)
+  })
+
+  it('PWA production avec VERCEL=1 (proxy géré Vercel) = accepté sans TRUST_PROXY_HEADERS', () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    delete process.env.ELECTRON
+    delete process.env.TRUST_PROXY_HEADERS
+    process.env.VERCEL = '1'
     process.env.DATABASE_URL = 'postgresql://u:p@h:5432/db'
     process.env.NEXTAUTH_SECRET = 'x'.repeat(40)
     process.env.DEVICE_TOKEN_PEPPER = 'p'.repeat(40)
