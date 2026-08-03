@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main, master, develop]
 
+# Moindre privilège : aucun job ne pousse, ne commente ni n'appelle l'API GitHub
+# (Gitleaks scanne l'arbre local). Le GITHUB_TOKEN n'a donc besoin que de la
+# lecture du contenu — on retire tout droit d'écriture par défaut.
+permissions:
+  contents: read
+
 jobs:
   secrets:
     name: Secret scan (Gitleaks)
