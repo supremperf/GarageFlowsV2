@@ -1738,7 +1738,15 @@ if ($script:GfNonInteractive -and -not $script:GfConfirmDestructive) {
 }
 
 $desktop = Get-DesktopDirectory
-$runDir = Join-Path (Join-Path $desktop 'API générées') ((Get-Date).ToString('yyyy-MM-dd_HH-mm-ss'))
+# -DryRun : tout artefact d'exécution (inventaire env pull, fichiers de travail)
+# va dans un dossier TEMPORAIRE éphémère au lieu du Bureau — la simulation ne
+# laisse ainsi AUCUNE trace persistante sur le poste. En exécution réelle, les
+# sauvegardes restent sur le Bureau (« API générées ») pour le retour arrière.
+$runDir = if ($script:GfDryRun) {
+    Join-Path ([IO.Path]::GetTempPath()) ('gf-dryrun-' + (Get-Date).ToString('yyyy-MM-dd_HH-mm-ss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
+} else {
+    Join-Path (Join-Path $desktop 'API générées') ((Get-Date).ToString('yyyy-MM-dd_HH-mm-ss'))
+}
 $backupDir = Join-Path $runDir 'sauvegardes'
 New-Item -ItemType Directory -Path $backupDir -Force | Out-Null
 Set-PrivateFileAcl $runDir
@@ -1810,8 +1818,12 @@ try {
         Write-Host "[ATTENTION] $($maskedNames.Count) valeurs sensibles sont masquées par Vercel ; elles ne seront jamais utilisées comme sauvegarde en clair." -ForegroundColor Yellow
     }
 
-    if (Test-Path -LiteralPath $localEnvPath) { Copy-Item -LiteralPath $localEnvPath -Destination $localEnvBackup -Force }
-    if (Test-Path -LiteralPath $keygenPath) { Copy-Item -LiteralPath $keygenPath -Destination $keygenBackup -Force }
+    if ($script:GfDryRun) {
+        Write-Host '[DRY-RUN] Sauvegarde locale (.env / keys/server_config.json) IGNORÉE — aucune mutation à protéger en simulation.' -ForegroundColor Magenta
+    } else {
+        if (Test-Path -LiteralPath $localEnvPath) { Copy-Item -LiteralPath $localEnvPath -Destination $localEnvBackup -Force }
+        if (Test-Path -LiteralPath $keygenPath) { Copy-Item -LiteralPath $keygenPath -Destination $keygenBackup -Force }
+    }
 
     if ($script:GfBackupOnly) {
         Write-Host '[OK] -BackupOnly : sauvegarde terminée, aucune modification effectuée.' -ForegroundColor Green

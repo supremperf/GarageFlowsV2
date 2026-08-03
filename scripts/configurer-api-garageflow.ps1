@@ -751,6 +751,9 @@ function Ensure-VercelConnection {
     $who = Invoke-VercelCommand -Arguments @('whoami', '--no-color') -AllowFailure
     if ($who.ExitCode -ne 0) {
         if (-not [string]::IsNullOrEmpty($script:VercelTokenPlain)) { throw 'Le token Vercel fourni n-a pas été accepté via VERCEL_TOKEN. Connexion interactive requise.' }
+        # -DryRun : « vercel login » ouvre une session (effet de bord persistant) —
+        # refusé en simulation. Aucune modification n'est effectuée.
+        if ($script:GfDryRun) { throw '[DRY-RUN] Aucune session Vercel active : la connexion (vercel login) est refusée en simulation. Connectez-vous (vercel login) puis relancez, ou exécutez sans -DryRun.' }
         Write-GFStatus ATTENTION 'Aucune session Vercel active. Ouverture de la connexion officielle.'
         [void](Invoke-VercelCommand -Arguments @('login') -Interactive)
         $who = Invoke-VercelCommand -Arguments @('whoami', '--no-color')
@@ -762,6 +765,9 @@ function Ensure-VercelLink {
     $projectFile = Join-Path $script:ProjectRoot '.vercel/project.json'
     if (-not (Test-Path -LiteralPath $projectFile)) {
         Write-GFStatus ATTENTION 'Le dossier local n-est lié à aucun projet Vercel.'
+        # -DryRun : « vercel link » crée .vercel/project.json (modification locale
+        # persistante) — refusé en simulation. Aucune modification n'est effectuée.
+        if ($script:GfDryRun) { throw '[DRY-RUN] Projet non lié à Vercel : la liaison (vercel link) crée .vercel/ localement — refusée en simulation. Liez le projet puis relancez, ou exécutez sans -DryRun.' }
         # --cwd est ajouté centralement par Invoke-VercelCommand. Ne pas utiliser
         # l'ancienne syntaxe dépréciée `vercel link <directory>`.
         $args = @('link')
