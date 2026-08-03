@@ -1,7 +1,33 @@
 ﻿#requires -Version 5.1
+param(
+    [switch]$DryRun,
+    [switch]$NonInteractive,
+    [switch]$ConfirmDestructiveReset,
+    [switch]$BackupOnly,
+    [string]$Restore,
+    [switch]$SkipDeploy,
+    [switch]$SkipDatabaseReset,
+    [switch]$SkipLicenseReset,
+    [switch]$VerboseDiagnostics
+)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+# Figer les paramètres AVANT le dot-source : configurer-api-garageflow.ps1 possède
+# son propre param() qui déclare aussi BackupOnly/Restore et écraserait ces valeurs
+# dans la portée courante. On les capture donc sous des noms dédiés $script:Gf*.
+$script:GfDryRun             = [bool]$DryRun
+$script:GfNonInteractive     = [bool]$NonInteractive
+$script:GfConfirmDestructive = [bool]$ConfirmDestructiveReset
+$script:GfBackupOnly         = [bool]$BackupOnly
+$script:GfRestorePath        = [string]$Restore
+$script:GfSkipDeploy         = [bool]$SkipDeploy
+$script:GfSkipDatabaseReset  = [bool]$SkipDatabaseReset
+$script:GfSkipLicenseReset   = [bool]$SkipLicenseReset
+$script:GfVerboseDiagnostics = [bool]$VerboseDiagnostics
+$script:PatchedSourceBackups = @()
+
 $env:GF_CONFIGURER_API_TEST_MODE = '1'
 . (Join-Path $PSScriptRoot 'configurer-api-garageflow.ps1')
 
@@ -10,10 +36,17 @@ $script:ResetVersion = '1.8.5'
 # =====================================================================
 # OUTIL AVANCE ET POTENTIELLEMENT DESTRUCTEUR - Windows uniquement.
 # Rotation cryptographique TOTALE + reinitialisation des licences (Neon/Vercel).
-# En l'etat, le script est 100 % interactif (double confirmation tapee).
-# La refonte des garde-fous (bloc param() : -DryRun, -NonInteractive,
-# -ConfirmDestructiveReset, -SkipDeploy / -SkipLicenseReset / -SkipDatabaseReset,
-# -Restore reel + manifeste de restauration) est prevue au Lot B.
+# PARAMETRES (bloc param() ci-dessous) :
+#   -DryRun                  Simulation : aucune mutation Vercel/Neon/projet.
+#   -NonInteractive          Sans invite ; exige -ConfirmDestructiveReset.
+#   -ConfirmDestructiveReset Confirme explicitement une execution destructrice.
+#   -BackupOnly              Sauvegarde puis arret (aucune modification).
+#   -Restore <dossier>       Restaure .env + keys/server_config.json depuis une sauvegarde.
+#   -SkipDeploy              Pas de deploiement Vercel ni de tests runtime.
+#   -SkipDatabaseReset       N execute pas la reparation legacyIdV* (no-op ici).
+#   -SkipLicenseReset        Ne supprime pas les anciennes licences.
+#   -VerboseDiagnostics      Diagnostics detailles.
+# Sans parametre : mode interactif (double confirmation RESET puis ROTATION-TOTALE).
 # La « reparation legacyIdV* » est un NO-OP sur ce projet (aucune colonne legacyId).
 # Voir docs/REINITIALISATION_GARAGEFLOW.md et docs/RESTAURATION_GARAGEFLOW.md.
 # =====================================================================
@@ -239,6 +272,7 @@ function Set-LicensePublicKeyInProject {
         if ($patched -eq $raw) { throw "Tableau $([string]$target.Name) introuvable dans $path" }
         $backup = $path + '.before-v171-' + (Get-Date -Format 'yyyyMMdd-HHmmss')
         Copy-Item -LiteralPath $path -Destination $backup -Force
+        $script:PatchedSourceBackups += , ([pscustomobject]@{ Original = $path; Backup = $backup })
         [IO.File]::WriteAllText($path, $patched, $script:Utf8NoBom)
     }
     Write-Host '[OK] Nouvelle clé publique de licence appliquée au serveur et à Electron.' -ForegroundColor Green
@@ -1668,6 +1702,41 @@ function Restore-ProductionFromBackup {
     }
 }
 
+function Invoke-GfLocalRestore {
+    param([Parameter(Mandatory = $true)][string]$RestoreDir)
+    if (-not (Test-Path -LiteralPath $RestoreDir)) { throw "Dossier de restauration introuvable : $RestoreDir" }
+    Write-Host "[RESTAURATION] Depuis : $RestoreDir" -ForegroundColor Cyan
+    $envDest = Join-Path $script:ProjectRoot '.env'
+    $cfgDest = Join-Path $script:ProjectRoot 'keys/server_config.json'
+    $envSrc = @((Join-Path $RestoreDir '.env.avant-reset'), (Join-Path $RestoreDir 'sauvegardes/.env.avant-reset')) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+    $cfgSrc = @((Join-Path $RestoreDir 'server_config.avant-reset.json'), (Join-Path $RestoreDir 'sauvegardes/server_config.avant-reset.json')) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+    $stamp = (Get-Date -Format 'yyyyMMdd-HHmmss')
+    if ($envSrc) {
+        if (Test-Path -LiteralPath $envDest) { Copy-Item -LiteralPath $envDest -Destination ($envDest + '.before-restore-' + $stamp) -Force }
+        Copy-Item -LiteralPath $envSrc -Destination $envDest -Force
+        Write-Host "[OK] .env restauré depuis $envSrc" -ForegroundColor Green
+    } else { Write-Host '[IGNORÉ] Aucune sauvegarde .env.avant-reset trouvée dans le dossier fourni.' -ForegroundColor Yellow }
+    if ($cfgSrc) {
+        $cfgDir = Split-Path -Parent $cfgDest
+        if (-not (Test-Path -LiteralPath $cfgDir)) { New-Item -ItemType Directory -Path $cfgDir -Force | Out-Null }
+        if (Test-Path -LiteralPath $cfgDest) { Copy-Item -LiteralPath $cfgDest -Destination ($cfgDest + '.before-restore-' + $stamp) -Force }
+        Copy-Item -LiteralPath $cfgSrc -Destination $cfgDest -Force
+        Write-Host "[OK] keys/server_config.json restauré depuis $cfgSrc" -ForegroundColor Green
+    } else { Write-Host '[IGNORÉ] Aucune sauvegarde server_config.avant-reset.json trouvée.' -ForegroundColor Yellow }
+    Write-Host '[INFO] Restauration LOCALE terminée. Les variables Vercel Production ne sont PAS modifiées ici' -ForegroundColor Cyan
+    Write-Host '[INFO] (pour le distant : réappliquer manuellement vercel-production-avant-reset.env du run-dir).' -ForegroundColor Cyan
+}
+
+# ── Lot B : garde-fous d'entrée AVANT tout effet de bord (run-dir) ───────────────
+if (-not [string]::IsNullOrWhiteSpace($script:GfRestorePath)) {
+    try { Invoke-GfLocalRestore -RestoreDir $script:GfRestorePath; exit 0 }
+    catch { Write-Host "[ERREUR] $($_.Exception.Message)" -ForegroundColor Red; exit 1 }
+}
+if ($script:GfNonInteractive -and -not $script:GfConfirmDestructive) {
+    Write-Host '[ERREUR] Mode -NonInteractive : opération destructrice REFUSÉE sans -ConfirmDestructiveReset.' -ForegroundColor Red
+    exit 2
+}
+
 $desktop = Get-DesktopDirectory
 $runDir = Join-Path (Join-Path $desktop 'API générées') ((Get-Date).ToString('yyyy-MM-dd_HH-mm-ss'))
 $backupDir = Join-Path $runDir 'sauvegardes'
@@ -1690,6 +1759,13 @@ $sensitiveNames = @(
 $success = $false
 $remoteMutationStarted = $false
 
+# ── Lot B : bandeau dry-run ─────────────────────────────────────────────────────
+if ($script:GfDryRun) {
+    Write-Host '================================================================' -ForegroundColor Magenta
+    Write-Host '[DRY-RUN] SIMULATION : aucune modification Vercel/Neon/projet ne sera appliquée.' -ForegroundColor Magenta
+    Write-Host '================================================================' -ForegroundColor Magenta
+}
+
 try {
     Test-EnvPullParsingRegression
     Test-RemoteEnvironmentIsolationRegression
@@ -1701,8 +1777,12 @@ try {
     Write-Host 'Les valeurs externes seront demandées ou conservées si tu appuies sur Entrée.'
     Write-Host ''
     Write-Host '[ATTENTION] Certains secrets seront renouvelés et peuvent fermer les sessions.' -ForegroundColor Yellow
-    $confirm = Read-Host 'Tape exactement RESET pour continuer'
-    if ($confirm -cne 'RESET') { throw 'Réinitialisation annulée.' }
+    if ($script:GfNonInteractive -or $script:GfDryRun) {
+        Write-Host '[INFO] Confirmation RESET automatique (-NonInteractive/-DryRun).' -ForegroundColor Yellow
+    } else {
+        $confirm = Read-Host 'Tape exactement RESET pour continuer'
+        if ($confirm -cne 'RESET') { throw 'Réinitialisation annulée.' }
+    }
 
     $script:Vercel = Resolve-VercelCommand
     Ensure-VercelConnection
@@ -1733,6 +1813,13 @@ try {
     if (Test-Path -LiteralPath $localEnvPath) { Copy-Item -LiteralPath $localEnvPath -Destination $localEnvBackup -Force }
     if (Test-Path -LiteralPath $keygenPath) { Copy-Item -LiteralPath $keygenPath -Destination $keygenBackup -Force }
 
+    if ($script:GfBackupOnly) {
+        Write-Host '[OK] -BackupOnly : sauvegarde terminée, aucune modification effectuée.' -ForegroundColor Green
+        Write-Host "[OK] Sauvegardes : $backupDir" -ForegroundColor Green
+        $success = $true
+        exit 0
+    }
+
     Write-Host '[2/7] Collecte des valeurs externes...' -ForegroundColor Cyan
     $databaseUrl = Normalize-PostgresUrl (Read-SecretOrKeep 'DATABASE_URL Neon poolée' ([string]$remoteBackup['DATABASE_URL']) -Required)
     $directUrl = Normalize-PostgresUrl (Read-SecretOrKeep 'DIRECT_URL Neon directe' ([string]$remoteBackup['DIRECT_URL']) -Required)
@@ -1755,8 +1842,12 @@ try {
     $anthropic = Read-SecretOrKeep 'ANTHROPIC_API_KEY optionnelle' ([string]$remoteBackup['ANTHROPIC_API_KEY'])
 
     Write-Host '[ATTENTION] Rotation totale demandée : toutes les anciennes licences seront invalidées et supprimées.' -ForegroundColor Yellow
-    $fullConfirm = Read-Host 'Tape exactement ROTATION-TOTALE pour continuer'
-    if ($fullConfirm -cne 'ROTATION-TOTALE') { throw 'Rotation totale annulée.' }
+    if ($script:GfNonInteractive -or $script:GfDryRun) {
+        Write-Host '[INFO] Confirmation ROTATION-TOTALE automatique (-NonInteractive/-DryRun).' -ForegroundColor Yellow
+    } else {
+        $fullConfirm = Read-Host 'Tape exactement ROTATION-TOTALE pour continuer'
+        if ($fullConfirm -cne 'ROTATION-TOTALE') { throw 'Rotation totale annulée.' }
+    }
 
     Write-Host '[3/7] Génération de toutes les nouvelles clés...' -ForegroundColor Cyan
     $keyPairDir = Join-Path $runDir 'nouvelle-paire-licence'
@@ -1827,6 +1918,9 @@ try {
     if (-not [string]::IsNullOrEmpty($anthropic)) { $newValues['ANTHROPIC_API_KEY'] = $anthropic }
     if (-not [string]::IsNullOrEmpty($privateKey)) { $newValues['GF_PRIVATE_KEY'] = $privateKey }
 
+    if ($script:GfDryRun) {
+        Write-Host '[DRY-RUN] Patch clé publique (public-key.ts, electron/main.js) + écriture keys/*.pem IGNORÉS.' -ForegroundColor Magenta
+    } else {
     Set-LicensePublicKeyInProject -Root $script:ProjectRoot -PublicPem ([string]$licenseKeyPair.PublicPem)
 
     $projectKeysDir = Join-Path $script:ProjectRoot 'keys'
@@ -1839,6 +1933,7 @@ try {
     [IO.File]::WriteAllText($projectPublicPath, [string]$licenseKeyPair.PublicPem, $script:Utf8NoBom)
     Set-PrivateFileAcl $projectPrivatePath
     Write-Host '[OK] Nouvelle paire ECDSA enregistrée dans le dossier keys du projet.' -ForegroundColor Green
+    }
 
     # Conserver les variables de configuration non secrètes déjà présentes.
     $manifest = Get-EnvironmentManifest
@@ -1866,7 +1961,7 @@ try {
     if ([string]$newValues['DATABASE_URL'] -match '^file:' -or [string]$newValues['DIRECT_URL'] -match '^file:') {
         throw 'Sécurité : une URL SQLite ne peut jamais être envoyée à Vercel.'
     }
-    Ensure-VercelIgnore
+    if ($script:GfDryRun) { Write-Host '[DRY-RUN] Écriture de .vercelignore IGNORÉE.' -ForegroundColor Magenta } else { Ensure-VercelIgnore }
 
     # Ne supprimer que les variables que cette exécution sait recréer. Les variables
     # inconnues et les variables système restent intactes.
@@ -1879,6 +1974,9 @@ try {
     Write-Host '[OK] Aucune variable Production ne sera supprimée avant validation.' -ForegroundColor Green
 
     Write-Host '[5/7] Mise à jour des variables Production...' -ForegroundColor Cyan
+    if ($script:GfDryRun) {
+        Write-Host '[DRY-RUN] Mise à jour des variables Vercel Production IGNORÉE.' -ForegroundColor Magenta
+    } else {
     $desktopRemove = Invoke-VercelCommand -Arguments @('env','rm','DESKTOP_DATABASE_URL','production','--yes','--no-color') -AllowFailure
     if ($desktopRemove.ExitCode -eq 0) { Write-Host '[OK] DESKTOP_DATABASE_URL supprimée de Vercel Production.' -ForegroundColor Green }
     Add-AllProductionVariables -Values $newValues -SensitiveNames $sensitiveNames
@@ -1887,14 +1985,22 @@ try {
         -ExpectedDirectUrl ([string]$newValues['DIRECT_URL']) `
         -TemporaryDirectory $backupDir
     Write-Host '[OK] PWA_DATABASE_URL/PWA_DIRECT_URL appliquées avant instrumentation ; validation finale sur le runtime Vercel.' -ForegroundColor Green
+    }
 
-    Repair-LegacyLicenseColumns -DirectUrl ([string]$newValues['DIRECT_URL']) -RunDirectory $runDir
+    if ($script:GfDryRun -or $script:GfSkipDatabaseReset) {
+        Write-Host '[DRY-RUN/-SkipDatabaseReset] Réparation legacyIdV* (DDL Neon) IGNORÉE — no-op sur ce projet.' -ForegroundColor Magenta
+    } else {
+        Repair-LegacyLicenseColumns -DirectUrl ([string]$newValues['DIRECT_URL']) -RunDirectory $runDir
+    }
 
     Write-Host '[6/7] Mise à jour locale et sauvegarde API générées...' -ForegroundColor Cyan
     $localValues = @{}
     foreach ($name in $newValues.Keys) { $localValues[$name] = [string]$newValues[$name] }
     $localValues['DATABASE_URL'] = 'file:./dev.db'
     $localValues.Remove('DIRECT_URL')
+    if ($script:GfDryRun) {
+        Write-Host '[DRY-RUN] Écriture .env local + keys/server_config.json + secrets.env IGNORÉE.' -ForegroundColor Magenta
+    } else {
     Write-EnvMap -Path $localEnvPath -Map $localValues
 
     $keysDir = Split-Path -Parent $keygenPath
@@ -1904,6 +2010,7 @@ try {
     Set-PrivateFileAcl $keygenPath
 
     Write-EnvMap -Path (Join-Path $runDir 'secrets.env') -Map $newValues
+    }
     $summary = @(
         'GarageFlow - Rotation cryptographique totale',
         "Date : $([DateTime]::UtcNow.ToString('o'))",
@@ -1916,6 +2023,9 @@ try {
     [IO.File]::WriteAllLines((Join-Path $runDir 'rapport-validation.txt'), [string[]]$summary, $script:Utf8NoBom)
 
     Write-Host '[7/7] Déploiement Vercel Production...' -ForegroundColor Cyan
+    if ($script:GfDryRun -or $script:GfSkipDeploy) {
+        Write-Host '[DRY-RUN/-SkipDeploy] Déploiement Vercel, tests runtime et suppression des licences IGNORÉS.' -ForegroundColor Magenta
+    } else {
     $stagingDir = Join-Path $env:TEMP ('garageflow-vercel-staging-' + [Guid]::NewGuid().ToString('N'))
     try {
         $deploy = Invoke-ProductionDeployFromCleanCopy -StagingDirectory $stagingDir
@@ -1954,9 +2064,14 @@ try {
 
         # La rotation est validée côté runtime : invalider maintenant les anciennes
         # licences afin qu'aucun recordMac ni jeton signé avec les anciennes clés ne subsiste.
-        Reset-RemoteLicenseDataForFullRotation -DirectUrl ([string]$newValues['DIRECT_URL']) -RunDirectory $runDir
+        if ($script:GfSkipLicenseReset) {
+            Write-Host '[-SkipLicenseReset] Suppression des anciennes licences IGNORÉE.' -ForegroundColor Yellow
+        } else {
+            Reset-RemoteLicenseDataForFullRotation -DirectUrl ([string]$newValues['DIRECT_URL']) -RunDirectory $runDir
+        }
     } finally {
         if (Test-Path -LiteralPath $stagingDir) { Remove-Item -LiteralPath $stagingDir -Recurse -Force -ErrorAction SilentlyContinue }
+    }
     }
 
     $successSummary = @(
@@ -1971,7 +2086,11 @@ try {
     [IO.File]::WriteAllLines((Join-Path $runDir 'rapport-validation.txt'), [string[]]$successSummary, $script:Utf8NoBom)
     $success = $true
     Write-Host ''
-    Write-Host '[SUCCÈS] Tous les secrets ont été régénérés ; les anciennes licences ont été invalidées et supprimées.' -ForegroundColor Green
+    if ($script:GfDryRun) {
+        Write-Host '[DRY-RUN] Simulation terminée — AUCUNE modification Vercel/Neon/projet appliquée.' -ForegroundColor Magenta
+    } else {
+        Write-Host '[SUCCÈS] Tous les secrets ont été régénérés ; les anciennes licences ont été invalidées et supprimées.' -ForegroundColor Green
+    }
     Write-Host "[SUCCÈS] Fichiers sécurisés : $runDir" -ForegroundColor Green
 } catch {
     Write-Host "[ERREUR] $($_.Exception.Message)" -ForegroundColor Red
@@ -1981,6 +2100,12 @@ try {
     }
     if (Test-Path -LiteralPath $localEnvBackup) { Copy-Item -LiteralPath $localEnvBackup -Destination $localEnvPath -Force }
     if (Test-Path -LiteralPath $keygenBackup) { Copy-Item -LiteralPath $keygenBackup -Destination $keygenPath -Force }
+    foreach ($psb in $script:PatchedSourceBackups) {
+        if ($psb -and (Test-Path -LiteralPath $psb.Backup)) {
+            Copy-Item -LiteralPath $psb.Backup -Destination $psb.Original -Force
+            Write-Host "[ROLLBACK] Fichier source restauré : $($psb.Original)" -ForegroundColor Yellow
+        }
+    }
     $failureSummary = @(
         'GarageFlow - Rotation cryptographique totale',
         "Date : $([DateTime]::UtcNow.ToString('o'))",

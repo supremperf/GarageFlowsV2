@@ -37,6 +37,7 @@
     "env:configure": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/configurer-api-garageflow.ps1",
     "env:check": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/configurer-api-garageflow.ps1 -CheckOnly",
     "env:reset": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reset-garageflow.ps1",
+    "env:reset:dry-run": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reset-garageflow.ps1 -DryRun",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

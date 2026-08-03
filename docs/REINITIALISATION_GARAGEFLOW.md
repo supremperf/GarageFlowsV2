@@ -51,14 +51,35 @@ Vercel ; il ne touche pas aux environnements Preview/Development.
 
 ---
 
-## 3. Mode dry-run (aperçu sans écriture) — **prévu, PAS ENCORE LIVRÉ**
+## 3. Mode dry-run et paramètres (**disponible**)
 
-Un mode **dry-run** (aperçu listant les changements sans rien modifier ni
-supprimer) est **prévu dans le Lot B** et **n'est pas encore disponible** dans
-cette version du script. À ce jour, l'exécution applique réellement les
-changements après confirmation. **Ne comptez pas sur un dry-run tant que le Lot
-B n'est pas livré.** En attendant, utilisez `npm run env:check` (lecture seule)
-pour un diagnostic non destructif.
+Le script est scriptable via des paramètres (bloc `param()`), ce qui permet un
+aperçu sûr et des exécutions ciblées :
+
+| Paramètre | Effet |
+|---|---|
+| `-DryRun` | **Simulation** : calcule le plan mais **n'applique aucune** modification Vercel/Neon/projet ; chaque mutation ignorée est journalisée `[DRY-RUN] …`. |
+| `-NonInteractive` | Exécution sans invite. **Refuse de démarrer** sans `-ConfirmDestructiveReset`. |
+| `-ConfirmDestructiveReset` | Confirme explicitement une exécution destructrice en mode non interactif. |
+| `-BackupOnly` | Sauvegarde puis **arrêt** avant toute modification. |
+| `-Restore <dossier>` | Restaure `.env` + `keys/server_config.json` locaux depuis une sauvegarde ; **n'agit pas** sur Vercel (voir [RESTAURATION_GARAGEFLOW.md](RESTAURATION_GARAGEFLOW.md)). |
+| `-SkipDeploy` | Pas de déploiement Vercel ni de tests runtime (ni la suppression de licences qui suit). |
+| `-SkipDatabaseReset` | N'exécute pas la réparation `legacyIdV*` (no-op ici). |
+| `-SkipLicenseReset` | Ne supprime pas les anciennes licences. |
+| `-VerboseDiagnostics` | Diagnostics détaillés. |
+
+Aperçu sans rien modifier :
+
+```
+npm run env:reset:dry-run
+# ou : powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reset-garageflow.ps1 -DryRun
+```
+
+> En `-DryRun`, la **lecture** de la sauvegarde Vercel (`vercel env pull`) reste
+> effectuée pour bâtir l'aperçu ; seules les **écritures** (variables, DB,
+> déploiement, fichiers projet, suppression des licences) sont ignorées. Lancez
+> donc le dry-run depuis un poste authentifié à Vercel. Sans aucun paramètre, le
+> script reste **interactif** (double confirmation `RESET` puis `ROTATION-TOTALE`).
 
 ---
 

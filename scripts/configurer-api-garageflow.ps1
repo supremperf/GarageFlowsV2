@@ -53,7 +53,7 @@ $script:AppliedValues = @{}
 $script:ValueOrigins = @{}
 $script:RunResult = 'NON_EXECUTE'
 $script:Utf8NoBom = [System.Text.UTF8Encoding]::new($false)
-$script:IsWindows = $env:OS -eq 'Windows_NT'
+$script:GfIsWindows = $env:OS -eq 'Windows_NT'
 $script:TargetEnvironments = @()
 $script:DeploymentPerformed = $false
 $script:ProductionVariablesChanged = $false
@@ -310,7 +310,7 @@ function Set-PrivateFileAcl {
     [CmdletBinding()]
     param([Parameter(Mandatory = $true)][string]$Path)
     if (-not (Test-Path -LiteralPath $Path)) { return }
-    if (-not $script:IsWindows) { return }
+    if (-not $script:GfIsWindows) { return }
 
     # Utiliser le SID évite les erreurs de traduction de comptes locaux, Microsoft
     # ou de règles ACL orphelines. L'échec du durcissement reste non bloquant.
@@ -1079,7 +1079,7 @@ function Invoke-ProjectCommand {
 function Get-LocalNodeTool {
     param([Parameter(Mandatory = $true)][string]$Name)
     $bin = Join-Path $script:ProjectRoot 'node_modules/.bin'
-    $candidates = if ($script:IsWindows) {
+    $candidates = if ($script:GfIsWindows) {
         @((Join-Path $bin ($Name + '.cmd')), (Join-Path $bin ($Name + '.exe')), (Join-Path $bin $Name))
     } else { @((Join-Path $bin $Name)) }
     foreach ($candidate in $candidates) { if (Test-Path -LiteralPath $candidate -PathType Leaf) { return $candidate } }
