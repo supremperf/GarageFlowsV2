@@ -100,7 +100,7 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
         </div>
       </div>
 
-      <div style={{ position: 'relative', zIndex: 1, borderTop: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', padding: 14 }}>
+      <div style={{ position: 'relative', zIndex: 1, borderTop: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', padding: 14, paddingBottom: 'calc(14px + env(safe-area-inset-bottom))' }}>
         <form onSubmit={(e) => { e.preventDefault(); ask(input) }} style={{ maxWidth: 760, margin: '0 auto', display: 'flex', gap: 10 }}>
           <input value={input} onChange={(e) => setInput(e.target.value)} placeholder={t.cpInputPh} style={inputBox} />
           <button type="submit" disabled={busy || !input.trim()} style={{ ...sendBtn, opacity: busy || !input.trim() ? 0.5 : 1 }}><Send size={16} /></button>
@@ -153,7 +153,7 @@ function Bubble({ m, onConfirm, onDecline }: { m: Msg; onConfirm: () => void; on
 
 // ── styles ──────────────────────────────────────────────────────────────────
 const overlay: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: '#070d1b' }
-const bar: React.CSSProperties = { position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', flexShrink: 0 }
+const bar: React.CSSProperties = { position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', paddingTop: 'calc(14px + env(safe-area-inset-top))', borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', flexShrink: 0 }
 const logo: React.CSSProperties = { width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg,#3b82f6,#6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }
 const closeBtn: React.CSSProperties = { width: 34, height: 34, borderRadius: 9, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center' }
 const bubble: React.CSSProperties = { maxWidth: '74%', padding: '12px 15px', borderRadius: 14, fontSize: 14, lineHeight: 1.5 }

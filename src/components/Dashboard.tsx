@@ -59,6 +59,8 @@ export default function Dashboard() {
       display: 'flex', flexDirection: 'column',
       background: '#070d1b',
       fontFamily: 'inherit',
+      paddingTop: 'env(safe-area-inset-top)',
+      paddingBottom: 'env(safe-area-inset-bottom)',
     }}>
       {/* Decorative background glows */}
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>

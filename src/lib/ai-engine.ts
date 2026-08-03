@@ -16,6 +16,7 @@ import {
   jobsOverlap,
   generateId,
   getTodayString,
+  formatDurationLong,
 } from './utils'
 
 interface AIEngineContext {
@@ -89,7 +90,7 @@ function detectDelays(
           type: 'delay_warning',
           priority: overBy > 60 ? 'high' : 'medium',
           title: `Retard détecté — ${job.customerName}`,
-          description: `La ${REPAIR_TYPES[job.repairType].label} (${job.vehicleModel}) dépasse le temps prévu de ${overBy}min. Retard estimé : ~${estimatedExtra}min.`,
+          description: `La ${REPAIR_TYPES[job.repairType].label} (${job.vehicleModel}) dépasse le temps prévu de ${formatDurationLong(overBy)}. Retard estimé : ~${formatDurationLong(estimatedExtra)}.`,
           affectedJobIds: [job.id],
           action: {
             label: 'Signaler le retard',
@@ -129,7 +130,7 @@ function detectAndSuggestSlotFills(ctx: AIEngineContext, suggestions: Suggestion
         type: 'fill_slot',
         priority: slot.duration >= 45 ? 'medium' : 'low',
         title: `Créneau libre — ${mechanic.name} à ${slot.startTime}`,
-        description: `${slot.duration}min disponibles à partir de ${slot.startTime}. Interventions possibles : ${examples}.`,
+        description: `${formatDurationLong(slot.duration)} disponibles à partir de ${slot.startTime}. Interventions possibles : ${examples}.`,
         affectedJobIds: [],
         action: {
           label: 'Ajouter une intervention rapide',

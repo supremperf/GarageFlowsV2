@@ -106,15 +106,43 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  html, body {
+    /* Empêche tout débordement horizontal involontaire au niveau racine sans
+       masquer un problème réel : la cause est corrigée composant par composant,
+       ceci n'est qu'un garde-fou de dernier recours au niveau du document. */
+    max-width: 100%;
+    /* Coupe la « rubber-band » iOS qui laisse entrevoir le fond derrière l'app. */
+    overscroll-behavior: none;
+  }
+
   body {
     background-color: var(--app-bg);
     color: var(--text-primary);
     overflow: hidden;
+    /* Coupe les longues chaînes (immatriculations, e-mails, VIN, références) au
+       lieu de les laisser élargir leur conteneur. `break-word` est hérité et ne
+       modifie pas le dimensionnement intrinsèque : aucun impact sur le desktop. */
+    overflow-wrap: break-word;
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   * {
     box-sizing: border-box;
+  }
+
+  /* Quand un panneau/drawer mobile est ouvert, on gèle le défilement de fond. */
+  html.gf-scroll-locked, body.gf-scroll-locked {
+    overflow: hidden !important;
+    touch-action: none;
+  }
+
+  /* iOS zoome automatiquement sur un champ dont la police < 16px au focus.
+     On force 16px sur mobile tactile pour éviter ce zoom intempestif (le rendu
+     desktop dense conserve ses tailles d'origine). */
+  @media (pointer: coarse) and (max-width: 767px) {
+    input, textarea, select {
+      font-size: 16px !important;
+    }
   }
 
   ::-webkit-scrollbar {
@@ -189,7 +217,53 @@
     scrollbar-width: none;
   }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+  /* ── Hauteur de viewport dynamique (barres Safari iOS) ─────────────────────
+     On empile les déclarations : les navigateurs récents retiennent la dernière
+     unité qu'ils comprennent (dvh/svh), les anciens retombent sur vh. */
+  .h-app     { height: 100vh; height: 100svh; height: 100dvh; }
+  .min-h-app { min-height: 100vh; min-height: 100svh; min-height: 100dvh; }
+  .max-h-app { max-height: 100vh; max-height: 100svh; max-height: 100dvh; }
+  /* Hauteur max des modales : 90vh (repli navigateurs anciens) → 90dvh (iOS
+     récent, tient compte des barres Safari, le bas de la modale reste atteignable). */
+  .max-h-modal { max-height: 90vh; max-height: 90dvh; }
+
+  /* ── Zones sûres iOS (encoche, Dynamic Island, barre d'accueil) ──────────── */
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pr-safe { padding-right: env(safe-area-inset-right); }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .pl-safe { padding-left: env(safe-area-inset-left); }
+  .px-safe { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  /* Variante additive : conserve un padding de base + la zone sûre. */
+  .pb-safe-2 { padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); }
+  .pb-safe-3 { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
+  .inset-safe-b { bottom: env(safe-area-inset-bottom); }
+
+  /* ── Cibles tactiles ≥ 44×44 (uniquement sur pointeur grossier) ──────────── */
+  @media (pointer: coarse) {
+    .gf-touch { min-height: 44px; min-width: 44px; }
+  }
+
+  /* Empêche le « scroll chaining » vers le fond depuis une zone défilante. */
+  .overscroll-contain { overscroll-behavior: contain; }
 }
+
+/* ── Animations drawer / bottom-sheet ──────────────────────────────────────── */
+@keyframes gfSheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes gfDrawerRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes gfFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-sheet-up    { animation: gfSheetUp 0.28s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.animate-drawer-right{ animation: gfDrawerRight 0.28s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.animate-backdrop    { animation: gfFade 0.2s ease both; }
 
 /* ── Drag and drop ───────────────────────────────────────────────────────── */
 [data-dnd-dragging='true'] {
@@ -394,4 +468,25 @@ button:not(:disabled):active,
   position: absolute;
   inset: -12px;
   border-radius: 9999px;
+}
+
+/* ── Paysage court (téléphone à l'horizontale) : on densifie le chrome ────────
+   Peu de hauteur disponible → on réduit marges et en-têtes SANS toucher aux
+   tailles de texte ni aux cibles tactiles (lisibilité + accessibilité). */
+@media (orientation: landscape) and (max-height: 500px) {
+  .gf-app-main { padding: 6px !important; }
+  .gf-compact-scroll { scrollbar-width: thin; }
+}
+
+/* ── Réduction des animations si l'utilisateur le demande ────────────────────*/
+@media (prefers-reduced-motion: reduce) {
+  .animate-sheet-up,
+  .animate-drawer-right,
+  .animate-backdrop,
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-slide-right,
+  .animate-slide-in {
+    animation-duration: 0.01ms !important;
+  }
 }

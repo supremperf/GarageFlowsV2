@@ -114,7 +114,7 @@ export default function LaborCatalogPanel({ onClose }: { onClose: () => void }) 
   }
 
   return (
-    <div className="fixed inset-y-0 right-0 w-[440px] bg-[#0f1629] border-l border-white/[0.07] flex flex-col shadow-2xl z-40">
+    <div className="fixed inset-y-0 right-0 w-full max-w-[440px] bg-[#0f1629] border-l border-white/[0.07] flex flex-col shadow-2xl z-40 pt-safe pb-safe pr-safe">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.07]">
         <div className="flex items-center gap-2.5">

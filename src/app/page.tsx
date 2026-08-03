@@ -28,7 +28,9 @@ import SuppliersPanel from '@/components/SuppliersPanel'
 import CatalogPanel from '@/components/CatalogPanel'
 import LicenseRevokedOverlay from '@/components/LicenseRevokedOverlay'
 import UpdateModal from '@/components/UpdateModal'
-import { Loader2 } from 'lucide-react'
+import MobileNav from '@/components/MobileNav'
+import GfDrawer from '@/components/GfDrawer'
+import { Loader2, Sparkles, RefreshCw } from 'lucide-react'
 import { GarageFlowIcon } from '@/components/GarageFlowLogo'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 
@@ -69,6 +71,7 @@ export default function Home() {
     closeModal,
     selectedDate,
     setSelectedDate,
+    suggestions,
   } = useScheduleStore()
 
   const initialised   = useRef(false)
@@ -90,7 +93,10 @@ export default function Home() {
   const [isOcrOpen,            setIsOcrOpen]            = useState(false)
   const [isSuppliersOpen,      setIsSuppliersOpen]      = useState(false)
   const [isCatalogOpen,        setIsCatalogOpen]        = useState(false)
+  const [isAssistantOpen,      setIsAssistantOpen]      = useState(false)
   const [warrantyAlerts,       setWarrantyAlerts]       = useState(0)
+
+  const activeSuggestionsCount = suggestions.filter(s => !s.dismissed).length
 
   // ── Global keyboard shortcuts ──────────────────────────────────────────────
   const goToPrevDay = useCallback(() => {
@@ -137,6 +143,7 @@ export default function Home() {
       setIsLaborCatalogOpen(false)
       setIsWarrantyPanelOpen(false)
       setIsLoanerPanelOpen(false)
+      setIsAssistantOpen(false)
       if (isStockPanelOpen) toggleStockPanel()
     },
     onSave:    () => { /* forms handle their own Ctrl+S */ },
@@ -258,7 +265,7 @@ export default function Home() {
   if (status !== 'authenticated') return null
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[#0f1629]">
+    <div className="flex flex-col h-app overflow-hidden bg-[#0f1629]">
       <Header
         session={session}
         onOpenSettings={() => setIsSettingsOpen(true)}
@@ -278,7 +285,7 @@ export default function Home() {
 
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden min-h-0">
-        <main className="flex-1 min-w-0 p-3 overflow-hidden flex flex-col">
+        <main className="gf-app-main flex-1 min-w-0 p-3 overflow-hidden flex flex-col">
           {/* ── View toggle ─────────────────────────────────────────────────── */}
           {!isDashboardOpen && (
             <div className="flex items-center gap-1 mb-2 flex-shrink-0">
@@ -286,8 +293,8 @@ export default function Home() {
                 onClick={() => setView('day')}
                 className={
                   view === 'day'
-                    ? 'px-3 py-1 rounded-md text-xs font-semibold bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                    : 'px-3 py-1 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-300 hover:bg-white/[0.07] border border-transparent transition-colors'
+                    ? 'px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-600/20 text-blue-400 border border-blue-500/30'
+                    : 'px-3 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-300 hover:bg-white/[0.07] border border-transparent transition-colors'
                 }
               >
                 Jour
@@ -296,8 +303,8 @@ export default function Home() {
                 onClick={() => setView('week')}
                 className={
                   view === 'week'
-                    ? 'px-3 py-1 rounded-md text-xs font-semibold bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                    : 'px-3 py-1 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-300 hover:bg-white/[0.07] border border-transparent transition-colors'
+                    ? 'px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-600/20 text-blue-400 border border-blue-500/30'
+                    : 'px-3 py-1.5 rounded-md text-xs font-semibold text-slate-500 hover:text-slate-300 hover:bg-white/[0.07] border border-transparent transition-colors'
                 }
               >
                 Semaine
@@ -306,10 +313,53 @@ export default function Home() {
           )}
           {view === 'day' ? <ScheduleBoard /> : <WeekView />}
         </main>
-        <aside className="w-72 flex-shrink-0 p-3 pl-0 flex flex-col min-h-0 overflow-hidden">
+        {/* Assistant IA : colonne permanente à partir de md ; en drawer en dessous. */}
+        <aside className="hidden md:flex md:flex-col w-72 lg:w-80 flex-shrink-0 p-3 pl-0 min-h-0 overflow-hidden">
           <SuggestionPanel />
         </aside>
       </div>
+
+      {/* ── Navigation mobile (barre inférieure + menu « Plus ») ────────────── */}
+      <MobileNav
+        onNewJob={() => openCreateModal()}
+        onOpenAssistant={() => setIsAssistantOpen(true)}
+        onOpenReception={() => setIsReceptionBoardOpen(true)}
+        onOpenReminders={() => setIsReminderPanelOpen(true)}
+        onOpenBilling={() => setIsBillingOpen(true)}
+        onOpenFinance={() => setIsFinanceOpen(true)}
+        onOpenLaborCatalog={() => setIsLaborCatalogOpen(true)}
+        onOpenWarranties={() => setIsWarrantyPanelOpen(true)}
+        onOpenLoaner={() => setIsLoanerPanelOpen(true)}
+        onOpenCopilot={() => setIsCopilotOpen(true)}
+        onOpenOcr={() => setIsOcrOpen(true)}
+        onOpenSuppliers={() => setIsSuppliersOpen(true)}
+        onOpenCatalog={() => setIsCatalogOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        warrantyAlerts={warrantyAlerts}
+        assistantCount={activeSuggestionsCount}
+      />
+
+      {/* Assistant IA — bottom-sheet mobile (sous md) */}
+      <GfDrawer
+        open={isAssistantOpen}
+        onClose={() => setIsAssistantOpen(false)}
+        side="bottom"
+        heightClass="max-h-[88dvh]"
+        bodyClassName="p-3 pb-safe-3"
+        ariaLabel="Assistant IA"
+        title={<span className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-purple-400" />Assistant IA{activeSuggestionsCount > 0 && <span className="bg-purple-500/20 text-purple-400 text-xs font-bold px-2 py-0.5 rounded-full">{activeSuggestionsCount}</span>}</span>}
+        headerRight={
+          <button
+            onClick={() => runAI()}
+            aria-label="Analyser le planning"
+            className="gf-touch flex items-center justify-center w-9 h-9 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-white/[0.08] transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        }
+      >
+        <SuggestionPanel embedded />
+      </GfDrawer>
 
       {/* ── Modals & panels (lazy rendered) ─────────────────────────────────── */}
       <JobModal />

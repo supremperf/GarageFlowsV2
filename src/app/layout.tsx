@@ -24,6 +24,11 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  // Autorise le zoom (accessibilité) tout en gardant l'app dense lisible.
+  maximumScale: 5,
+  // `cover` : l'app s'étend sous l'encoche / la Dynamic Island / la barre d'accueil.
+  // Les zones sûres sont ensuite gérées via env(safe-area-inset-*) dans globals.css.
+  viewportFit: 'cover',
   themeColor: '#0f1629',
 }
 

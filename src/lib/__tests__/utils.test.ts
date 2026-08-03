@@ -1,6 +1,32 @@
 import { describe, it, expect } from 'vitest'
-import { timeToMinutes, minutesToTime, jobsOverlap, calculateUtilizationRate } from '../utils'
+import { timeToMinutes, minutesToTime, jobsOverlap, calculateUtilizationRate, formatDuration, formatDurationLong } from '../utils'
 import type { Job, Mechanic } from '../types'
+
+// ─── formatDuration / formatDurationLong ─────────────────────────────────────
+// Régression responsive : plus aucune durée « collée » type « 376min » / « 600min ».
+
+describe('formatDuration (compact)', () => {
+  it('minutes seules avec espace', () => expect(formatDuration(45)).toBe('45 min'))
+  it('heures pleines',             () => expect(formatDuration(120)).toBe('2h'))
+  it('heures + minutes',           () => expect(formatDuration(90)).toBe('1h30'))
+  it('jamais de forme collée « Xmin »', () => {
+    for (const m of [5, 30, 59, 376, 489, 600]) {
+      expect(formatDuration(m)).not.toMatch(/\d+min\b/)
+    }
+  })
+})
+
+describe('formatDurationLong (lisible)', () => {
+  it('45 → « 45 min »',   () => expect(formatDurationLong(45)).toBe('45 min'))
+  it('376 → « 6 h 16 »',  () => expect(formatDurationLong(376)).toBe('6 h 16'))
+  it('489 → « 8 h 09 »',  () => expect(formatDurationLong(489)).toBe('8 h 09'))
+  it('600 → « 10 h »',    () => expect(formatDurationLong(600)).toBe('10 h'))
+  it('jamais de forme collée « Xmin »', () => {
+    for (const m of [5, 59, 376, 489, 600, 720]) {
+      expect(formatDurationLong(m)).not.toMatch(/\d+min\b/)
+    }
+  })
+})
 
 // ─── timeToMinutes ────────────────────────────────────────────────────────────
 

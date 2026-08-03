@@ -336,7 +336,7 @@ export default function JobModal() {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeModal} />
 
-      <div className="relative bg-[#111827] rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-slide-in border border-white/[0.07]">
+      <div className="relative bg-[#111827] rounded-2xl shadow-2xl w-full max-w-lg max-h-modal overflow-y-auto animate-slide-in border border-white/[0.07]">
         {/* Header */}
         <div className="sticky top-0 bg-[#111827] border-b border-white/[0.07] px-6 py-4 rounded-t-2xl flex items-center justify-between">
           <div>

@@ -8,7 +8,29 @@ const config: Config = {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    // ── Breakpoints centralisés (alignés sur la stratégie responsive) ──────────
+    //  xs  480px  → mobile large (au-dessus du portrait étroit)
+    //  sm  640px  → mobile large / petit paysage
+    //  md  768px  → tablette portrait
+    //  lg  1024px → tablette paysage / petit ordinateur
+    //  xl  1280px → desktop
+    //  2xl 1536px → grand écran
+    screens: {
+      xs: '480px',
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
+      '2xl': '1536px',
+    },
     extend: {
+      // Espacements « safe-area » iOS réutilisables : p-safe-b, pt-safe, etc.
+      spacing: {
+        'safe-t': 'env(safe-area-inset-top)',
+        'safe-r': 'env(safe-area-inset-right)',
+        'safe-b': 'env(safe-area-inset-bottom)',
+        'safe-l': 'env(safe-area-inset-left)',
+      },
       colors: {
         primary: {
           50: '#eff6ff',
