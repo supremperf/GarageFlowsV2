@@ -206,6 +206,16 @@ Exécutées à la racine, environnement Linux, Node 20, après `npm ci`.
 
 ---
 
+## 6 bis. Vérification adversariale des correctifs (contre-preuve indépendante)
+
+Après application, les correctifs les plus sensibles ont été **ré-attaqués** (pas seulement re-testés) :
+
+1. **Monétaire (A24-A26) — PROUVÉ par exécution exhaustive.** Réplique des fonctions corrigées + comparaison à un arrondi décimal **exact en arithmétique entière** (millièmes) : `toCents` donne **0 écart sur 2 000 001 valeurs** (0 → 2000 € au pas de 0,001 €), **corrige les 9158 erreurs** de l'ancien code sur cette plage, **0 erreur sur les négatifs** (symétrie avoirs), l'invariant `TTC = HT + TVA` tient sur 20 000 cas, `facture + avoir = 0` sur 20 000 cas, et les grands montants (10⁷ €) restent exacts. Aucun cas où le nouveau code est pire que l'ancien.
+2. **Isolation multi-tenant — balayage indépendant des 125 routes.** Grep de tous les accès Prisma (`findUnique/findFirst/findMany/update/delete/updateMany/count/aggregate/groupBy`) : chaque accès est soit scopé par `garageId` de session (directement ou via variable `where`/vérif d'appartenance préalable — ex. `quotes/[id]` fait `findFirst{id,garageId}` avant de supprimer les lignes ; `appointments/[id]` et `vehicles` mettent à jour un `id` déjà vérifié scopé), soit intentionnellement global (portail par `portalUserId`, licence/garage/user par id dérivé de session). **Aucun IDOR nouveau** au-delà de A8/A9/A10 (corrigés).
+3. **Bypass licence Electron (A16) — fermeture confirmée.** `IS_DEV` a une définition **unique** gardée par `!app.isPackaged` ; `ELECTRON_DEV` n'est lu **que là**. La branche qui saute la licence et injecte le cookie `admin` (`main.js:2359-2361`) est le `else` de `if(!IS_DEV)` → **inatteignable** en build packagé (`app.isPackaged===true` ⇒ `IS_DEV===false`). Le token de dev (`GF2.DEV.DEV.DEV`, l.408) est pareillement neutralisé.
+
+**A66 (résidu, informatif)** — `src/app/api/internal/export/route.ts` renvoie toutes les données **sans filtre `garageId`** : correct pour la sauvegarde **desktop** (SQLite mono-garage), mais sur un déploiement **PWA multi-tenant** cette route exporterait tous les garages à tout porteur de `GF_INTERNAL_EXPORT_KEY` (clé forte, sans repli). À réserver au desktop, ou à scoper si exposée côté serveur.
+
 ## 7. Limites de cet environnement & procédures de vérification
 
 | Élément | Pourquoi non vérifiable ici | Comment vérifier |
@@ -215,3 +225,19 @@ Exécutées à la racine, environnement Linux, Node 20, après `npm ci`.
 | Migrations serveur Postgres | Pas de Postgres provisionné | `node scripts/validate-server-db.js` avec `DATABASE_URL`/`DIRECT_URL` Postgres (fait en CI). |
 | Packaging Electron (`dist`) | Windows/electron-builder non disponible | `npm run dist` sur Windows x64. |
 | Tests d'intégration seats/rate-limit | Requièrent Postgres+Redis | Fournir `TEST_POSTGRES_URL` + `TEST_REDIS_URL` (fait en CI). |
+
+## 8. Critères de fin
+
+- ☑ **100 % des fichiers traités dans `AUDIT_TRACKER.md`** — 571/571, statut `OK`/`anomalie` ou honnêtement qualifié (tests via exécution vitest, binaires « référencés/build OK », quelques docs/scripts marqués « non lu intégralement » sans fausse déclaration). Aucun `à faire` restant.
+- ☑ **`tsc`, `lint`, `build`, `prisma validate` (×2), `vitest` : tous au vert**, avant ET après corrections (sorties §1, §5, §6). vitest 765 OK / 26 skip.
+- ☑ **Zéro P0/P1 ouvert** — 4 P1 (A8, A11, A16, A24) corrigés et re-vérifiés ; aucune P0.
+- ☑ **Rapport final livré** avec synthèse chiffrée (§5), corrections (§6), vérification adversariale (§6 bis) et limites résiduelles (§7).
+
+### Recommandations prioritaires restantes (non bloquantes, à traiter côté produit)
+1. **A17** — Electron : livrer `GF_INTEGRITY_MODE=enforce` + fuses `@electron/fuses` (`RunAsNode=off`, `OnlyLoadAppFromAsar=on`, `EnableEmbeddedAsarIntegrityValidation=on`) + signer le `.exe`. C'est la seule protection robuste contre le patch d'asar (le bypass `ELECTRON_DEV` est fermé, mais l'intégrité reste en mode `audit`).
+2. **A18** — Electron : embarquer un `GF_LICENSE_SERVER` par défaut pour que révocation/expiration ne soient pas fail-open hors ligne.
+3. **A47/A48** — Prisma : FK + `@@index` sur `RepairTypePart.garageId` (orphelins) et `@@index([garageId])` sur `User`/`Mechanic`/`Part` (migration Postgres).
+4. **A43/A54** — chiffrer `smtpPass` au repos (AES-GCM), au-delà du retrait de la réponse GET déjà fait.
+5. **A27/A28** — revoir la marge `finance` (populations) et l'export FEC des avoirs (équilibre débit/crédit) — décisions métier/comptables.
+6. **A33/A35** — React : éviter la perte de saisie (JobModal réinit ; InspectionModal flush au close).
+7. **Dépendances** — planifier les montées majeures `next`/`nodemailer` (dérogations valables jusqu'au 2026-10-31) et `electron-builder` (purge `tar` critique, build-time).
