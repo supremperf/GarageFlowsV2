@@ -14,6 +14,7 @@
     "build": "prisma generate && prisma generate --schema prisma/server/schema.prisma && next build",
     "start": "next start",
     "lint": "next lint",
+    "type-check": "tsc --noEmit",
     "postinstall": "node scripts/setup-dev.js && prisma generate && prisma generate --schema prisma/server/schema.prisma",
     "setup": "node scripts/setup-dev.js",
     "db:generate": "prisma generate",
