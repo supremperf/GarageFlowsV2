@@ -92,6 +92,7 @@ export async function POST(req: NextRequest) {
   let licenseId:   string
   let deviceToken: string
   let hwid:        string | undefined
+  let installId:   string | undefined
   let version:     string | undefined
   let platform:    ClientPlatform
   try {
@@ -99,8 +100,12 @@ export async function POST(req: NextRequest) {
     licenseId   = String(body.licenseId ?? '').trim()
     deviceToken = String(body.deviceToken ?? '').trim()
     hwid        = body.hwid ? String(body.hwid) : undefined
+    // Identifiant d'installation PWA (navigateur) : lié à l'empreinte d'appareil
+    // au heartbeat — sinon un jeton d'appareil volé serait rejouable depuis un
+    // autre navigateur sans contrôle (voir validateDeviceToken).
+    installId   = body.installId ? String(body.installId) : undefined
     version     = body.version ? String(body.version) : undefined
-    platform    = body.installId ? 'pwa' : IS_ELECTRON() ? 'electron' : 'unknown'
+    platform    = installId ? 'pwa' : IS_ELECTRON() ? 'electron' : 'unknown'
   } catch {
     return NextResponse.json(
       { allowed: false, code: 'VALIDATION_ERROR', reason: 'Requête invalide' },
@@ -122,7 +127,7 @@ export async function POST(req: NextRequest) {
   // ── Chemin 1 : preuve d'appareil (clients récents) ──────────────────────────
   if (deviceToken) {
     try {
-      const validation = await validateDeviceToken(deviceToken, { hwid })
+      const validation = await validateDeviceToken(deviceToken, { hwid, installId })
       if (!validation.ok) return deviceFailureResponse(validation.code)
 
       // Jeton valide, licence active — bump lastSeenAt licence (best-effort).
