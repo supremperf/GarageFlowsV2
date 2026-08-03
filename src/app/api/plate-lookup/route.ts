@@ -64,17 +64,20 @@ export const GET = withAuth(async (req) => {
     })
   }
 
-  const client = new Anthropic({ apiKey })
-  const msg = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 200,
-    messages: [{
-      role: 'user',
-      content: `French license plate: "${plate}". Based on the plate format and any encoding, provide the most likely vehicle info in JSON only (no explanation): {"make":"","model":"","year":null,"fuel":"","color":"","confidence":"low"}. If you cannot determine, use null values. Reply with only valid JSON.`,
-    }],
-  })
-
+  // Timeout + maxRetries bornés (comme plate-ocr) : sans eux le SDK Anthropic
+  // applique un timeout par défaut de ~10 min avec retries → une API lente
+  // immobiliserait le worker (épuisement de ressources). L'appel est enveloppé
+  // dans try/catch pour un repli gracieux, jamais un 500/hang non géré.
+  const client = new Anthropic({ apiKey, timeout: 8000, maxRetries: 1 })
   try {
+    const msg = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 200,
+      messages: [{
+        role: 'user',
+        content: `French license plate: "${plate}". Based on the plate format and any encoding, provide the most likely vehicle info in JSON only (no explanation): {"make":"","model":"","year":null,"fuel":"","color":"","confidence":"low"}. If you cannot determine, use null values. Reply with only valid JSON.`,
+      }],
+    })
     const text = msg.content[0].type === 'text' ? msg.content[0].text : '{}'
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : {}

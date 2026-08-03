@@ -46,7 +46,7 @@ Exécutées à la racine, environnement Linux, Node 20, après `npm ci`.
 
 > Sévérités : **P0** = bloquant / perte de données / faille exploitable · **P1** = bug fonctionnel · **P2** = fragilité / cas limite · **P3** = mineur / qualité.
 
-48 anomalies numérotées (A1–A48). Aucune P0 non corrigée ; **aucun P1 ouvert** (tous corrigés + re-vérifiés).
+65 constats numérotés (A1–A65 + C1/C2), dont **1 faux positif écarté après vérification** (A57). Aucune P0 non corrigée ; **aucun P1 ouvert** (tous corrigés + re-vérifiés). L'audit a été mené par 8 agents de revue (2 vagues) sur les 571 fichiers, plus une revue personnelle des primitives de sécurité et une **vérification adversariale de chaque anomalie avant correctif** (A57 a ainsi été démasqué : l'agent avait lu un séparateur `\x01` comme une chaîne vide).
 
 ### P1 — bugs fonctionnels / rupture d'isolation (tous CORRIGÉS)
 
@@ -68,6 +68,10 @@ Exécutées à la racine, environnement Linux, Node 20, après `npm ci`.
 | A25 | P2 | `src/lib/money.ts:71` | TVA via `Math.round` asymétrique → facture+avoir ne s'annulent pas (résidu 1c) | Node : facture +0,05 taxe 1c, avoir −0,05 taxe 0c | `roundHalfAwayFromZero` sur la ligne TVA | **Corrigé** ✅ |
 | A26 | P2 | `src/lib/money.ts:40-43` | `multiplyCents` asymétrique → casse la garantie « négatifs symétriques » | Node : `500` vs `-499` | `roundHalfAwayFromZero` | **Corrigé** ✅ |
 | A34 | P2 | `src/components/LoanerPanel.tsx:117-128` | `load()` sans try/catch → `setLoading(false)` inatteignable → spinner bloqué | — | `try/catch/finally` + état d'erreur | **Corrigé** ✅ |
+| A50 | P2 | `src/lib/reports/csv.ts:13`, `src/lib/analytics/report-export.ts:10` | CSV formula injection : cellules `=+-@` non neutralisées (champs client) | =HYPERLINK/DDE exécuté à l'ouverture Excel → exfiltration/RCE poste | Préfixe apostrophe si 1er char ∈ `=+-@\t\r` (sauf nombre fini) + test | **Corrigé** ✅ |
+| A51 | P2 | `src/app/api/plate-lookup/route.ts:67-68` | Appel Anthropic sans timeout/maxRetries + hors try/catch (≠ plate-ocr) | SDK défaut ~10min → DoS ressources/worker | `timeout:8000, maxRetries:1` + try/catch → repli `source:'unknown'` | **Corrigé** ✅ |
+| A55 | P2 | `src/lib/schemas/index.ts:25` | Enum statut Job Zod `['…,done,…]` ≠ domaine/DB (`completed`/`delayed`) | `store:301` `status:'delayed'` → PATCH → 400 silencieux ; `'done'` jamais compté terminé (sous-CA) | Enum aligné sur `JobStatus` (`completed`/`delayed`, `done` retiré) | **Corrigé** ✅ |
+| A56 | P2 (→P1) | `src/lib/session-secret.ts:55-62` | `getPortalSecret` n'écartait pas les `GF_PORTAL_SECRET` **faibles** (`auth-secret` le fait) | Un secret faible signait cookies portail + jetons 2FA → forge de session (prise de compte) | `isWeakSecret` appliqué → un secret faible retombe sur le secret de session fort | **Corrigé** ✅ |
 | A1 | P2 | `src/app/api/admin/monitoring/route.ts:16-20` | Métriques hôte (OS/CPU/disque) exposées à OWNER/MANAGER via `requireSession` au lieu de `isAdminSession` | `metrics.ts:104` renvoie `os.release()` | Recommandé : gater derrière `isAdminSession()` (change qui y accède → à confirmer) | Recommandé |
 | A18 | P2 | `electron/main.js:1016-1042,1156-1161` | Révocation/expiration fail-open sans `GF_LICENSE_SERVER` (défaut) ; sonde `1.1.1.1` générique | `.env` = `.env.example`, serveur commenté | Recommandé : embarquer `GF_LICENSE_SERVER` (URL réelle requise), ne pas fail-open silencieux | Recommandé |
 | A19 | P2 | `src/lib/license/session.ts:80` | Pas de contrôle licence par requête en Electron ; cookie `gf_session` minté localement | `ELECTRON==='1'` désactive l'enforcement | Recommandé (inhérent offline ; documenter/2nd rempart) | Recommandé |
@@ -101,6 +105,19 @@ Exécutées à la racine, environnement Linux, Node 20, après `npm ci`.
 | A45 | `docs/DATABASE_ARCHITECTURE.md:46` | « 86 entrées » → **125** | **Corrigé** ✅ |
 | A46 | `docs/SECURITY.md:74` | Rate-limit décrit « en mémoire » alors qu'Upstash est exigé | **Corrigé** ✅ |
 | A48 | `User`/`Mechanic`/`Part` | `@@index([garageId])` manquant (surtout `Part`) | Recommandé |
+| A49 | `src/config/app.ts:8,35` | `version:'2.0'` ≠ package.json `1.1.0` ; `maxLogoBase64:512KB` ≠ `MAX_LOGO_BASE64_LENGTH:4MB` | Recommandé |
+| A52 | `copilot/reports/[id]/export` + `analytics/report-export.ts` | Même injection CSV (surface moindre) | **Corrigé** ✅ (avec A50) |
+| A53 | `notifications/dispatch/route.ts:23` | `to` arbitraire (abus SMTP garage : spam/relais authentifié) | Recommandé (restreindre aux clients) |
+| A54 | `email/route.ts:36,52,64` | `smtpPass` en clair au repos (GET l'omet bien) | Recommandé (chiffrer au repos) |
+| A58 | `src/lib/utils.ts:172` | `calculateUtilizationRate` div/0 si `workshopEnd==start` → 100%/NaN | **Corrigé** ✅ (garde) |
+| A62 | `src/lib/schemas/index.ts:188` | `logoBase64` non borné | **Corrigé** ✅ (`.max(6M)`) |
+| A64 | `src/lib/portal/lockout.ts:47` | `registerFailure` déverrouille si appelé pendant lock (atténué : callers testent `isLocked`) | **Corrigé** ✅ (garde `isLocked`) |
+| A59 | `src/lib/utils.ts:9-12` | `timeToMinutes` NaN sur entrée vide/mal formée (Zod valide en amont) | Recommandé (défensif) |
+| A60 | `src/lib/audit.ts:30-44` | `getIp` fait confiance à `x-forwarded-for` (≠ `clientIpFrom`) → IP audit falsifiable | Recommandé |
+| A61 | `src/lib/redact.ts` | PII (email/téléphone) non masquée dans les logs (RGPD) | Recommandé |
+| A63 | `src/lib/photo-store.ts:38,57,68` | `..` non filtré (ids cuid serveur → faible) | Recommandé |
+| A65 | `src/lib/migrations.ts:135 vs 469` | Doublon `CREATE TABLE Warranty` (047 sans FK avant 068 → FK jamais appliquée) | Recommandé |
+| A57 | `src/lib/reports/builder.ts:99` | ~~Collision `groupBy`~~ — **FAUX POSITIF** : séparateur réel `\x01` (agent a mal lu le caractère de contrôle), pas de collision | Écarté après vérif |
 | C1 | `.eslintrc.json` | Lint sans règles TS-aware (filet = tsc) | Recommandé |
 | C2 | `ci.yml:35`, `.gitleaks.toml` | Gitleaks arbre courant only + allowlist `.md`/`.env.example` | Recommandé |
 
@@ -128,19 +145,20 @@ Exécutées à la racine, environnement Linux, Node 20, après `npm ci`.
 | `prisma validate` desktop | 0 | **0** |
 | `prisma validate` serveur (avec env) | 0 | **0** |
 | `next build` | 0 | **0** (15/15 pages) |
-| `vitest run` | 760 OK / 26 skip | **764 OK / 26 skip** |
+| `vitest run` | 760 OK / 26 skip | **765 OK / 26 skip** |
 | `audit-ci.js` (porte prod) | passe | **passe** |
 
-**Anomalies par sévérité** (48 au total) :
+**Constats par sévérité** (64 réels + 1 faux positif) :
 
-| Sévérité | Total | Corrigées | Ouvertes (recommandées) |
+| Sévérité | Total | Corrigés | Ouverts (recommandés) |
 |---|---|---|---|
 | P0 | 0 | — | **0** |
 | P1 | 4 (A8, A11, A16, A24) | **4** | **0** |
-| P2 | 18 | 8 | 10 |
-| P3 | 26 | 6 | 20 |
+| P2 | 22 | 13 | 9 |
+| P3 | 38 | 8 | 30 |
+| Faux positif | 1 (A57) | — | — |
 
-→ **Critère « Zéro P0/P1 ouvert » : ATTEINT.** Les P2/P3 ouvertes sont soit des changements de comportement/métier, soit des changements de build/migration non validables dans cet environnement — toutes documentées avec correctif précis (§3, §6).
+**25 correctifs appliqués et re-vérifiés au vert.** → **Critère « Zéro P0/P1 ouvert » : ATTEINT.** Les P2/P3 ouverts sont soit des changements de comportement/métier (à valider produit), soit des changements de build/migration non validables dans cet environnement (Postgres/Windows) — tous documentés avec correctif précis (§3, §6).
 
 **Points non vérifiables ici** (détail et procédures §7) : gitleaks (binaire absent — scan manuel effectué, CI l'exécute), Playwright e2e (serveur+services requis), packaging electron-builder (Windows), migrations Postgres réelles + tests d'intégration seats/rate-limit (Postgres/Redis requis — exécutés en CI).
 
@@ -148,7 +166,7 @@ Exécutées à la racine, environnement Linux, Node 20, après `npm ci`.
 
 ## 6. Corrections appliquées (Phase 6)
 
-**18 anomalies corrigées** (diff minimal, sans changement de comportement métier voulu) :
+**25 anomalies corrigées** (diff minimal, sans changement de comportement métier voulu) :
 
 | ID | Fichier | Nature du correctif |
 |---|---|---|
@@ -166,6 +184,13 @@ Exécutées à la racine, environnement Linux, Node 20, après `npm ci`.
 | A44 | `.env.example` | 5 secrets ajoutés (dont `GF_DB_MAC_SECRET` requis en prod) |
 | A45 | `docs/DATABASE_ARCHITECTURE.md` | « 86 » → « 125 » entrées |
 | A46 | `docs/SECURITY.md` | Section rate-limit obsolète corrigée |
+| A50/A52 | `src/lib/reports/csv.ts`, `src/lib/analytics/report-export.ts` (+ test) | Neutralisation d'injection de formule CSV (préserve les nombres) |
+| A51 | `src/app/api/plate-lookup/route.ts` | Timeout Anthropic (8s) + try/catch (repli gracieux) |
+| A55 | `src/lib/schemas/index.ts` | Enum statut Job aligné (`completed`/`delayed`, retrait `done`) |
+| A56 | `src/lib/session-secret.ts` | `isWeakSecret` sur `GF_PORTAL_SECRET` (anti-forge session portail) |
+| A58 | `src/lib/utils.ts` | Garde div/0 taux d'utilisation |
+| A62 | `src/lib/schemas/index.ts` | `logoBase64.max(6M)` |
+| A64 | `src/lib/portal/lockout.ts` | Garde `isLocked` (machine à états lockout sûre) |
 
 **Non appliquées volontairement** (changement de comportement / build / migration non validable ici → **recommandations** avec diff précis, règle §7) : A1 (gating monitoring), A17 (fuses Electron + mode `enforce` + signature exe), A18 (URL serveur licence), A19, A27 (marge finance), A28 (FEC avoir), A31, A33/A35/A36/A37 (React data-loss/print), A47 (FK RepairTypePart → migration Postgres), A48 (index), chiffrement SMTP réel, A38-A42 (robustesse front / i18n), C1/C2.
 
@@ -176,7 +201,7 @@ Exécutées à la racine, environnement Linux, Node 20, après `npm ci`.
 | `tsc --noEmit` | 0 | **0** ✅ |
 | `next lint` | 0 | **0** ✅ |
 | `prisma validate` (×2) | 0 | **0** ✅ |
-| `vitest run` | 760 OK / 26 skip | **764 OK / 26 skip** ✅ (+4 tests money) |
+| `vitest run` | 760 OK / 26 skip | **765 OK / 26 skip** ✅ (+5 tests : 4 money + 1 injection CSV) |
 | `next build` | 0 | **0** ✅ (15/15 pages) |
 
 ---

@@ -170,6 +170,9 @@ export function calculateUtilizationRate(
   if (activeMechanics.length === 0) return 0
 
   const workshopDuration = (workshopEndHour - workshopStartHour) * 60
+  // Garde : heures d'atelier égales/inversées → capacité 0 → division par zéro
+  // (taux affiché à 100 % ou NaN sur une config invalide).
+  if (workshopDuration <= 0) return 0
   const totalCapacity = workshopDuration * activeMechanics.length
 
   const filledMinutes = jobs

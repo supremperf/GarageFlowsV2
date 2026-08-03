@@ -22,7 +22,10 @@ export const CreateJobSchema = z.object({
   startTime:         z.string().regex(/^\d{2}:\d{2}$/, 'Format heure invalide (HH:MM)'),
   date:              dateStr,
   mechanicId:        z.string().min(1, 'Mécanicien requis'),
-  status:            z.enum(['scheduled', 'in_progress', 'done', 'cancelled']).optional(),
+  // Aligné sur le canon JobStatus (src/lib/types.ts) et la base : 'completed' et
+  // 'delayed' sont les valeurs réelles ; 'done' (jamais utilisé ailleurs) faisait
+  // rejeter en 400 les transitions completed/delayed émises par l'UI et l'assistant.
+  status:            z.enum(['scheduled', 'in_progress', 'completed', 'delayed', 'cancelled']).optional(),
   notes:             z.string().max(2000).optional().nullable(),
   isUrgent:          z.boolean().optional(),
   vehicleId:         z.string().optional().nullable(),
@@ -182,7 +185,7 @@ export const UpdateGarageSchema = z.object({
   language:          z.string().length(2).optional(),
   hourlyRate:        z.number().min(0).max(9999).optional(),
   onboardingComplete: z.boolean().optional(),
-  logoBase64:        z.string().optional().nullable(),
+  logoBase64:        z.string().max(6_000_000, 'Logo trop volumineux').optional().nullable(),
   smsPhone:          phone,
 })
 

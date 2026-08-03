@@ -157,27 +157,27 @@ Statut: `à faire` / `en cours` / `OK` / `anomalie N°X`. Mis à jour au fil des
 | 130 | `src/app/api/admin/monitoring/route.ts` | API route | anomalie A1 | — |
 | 131 | `src/app/api/admin/updates/file/[name]/route.ts` | API route | OK (agent B) | — |
 | 132 | `src/app/api/admin/updates/route.ts` | API route | OK (agent B) | — |
-| 133 | `src/app/api/analytics/health/route.ts` | API route | à faire | — |
+| 133 | `src/app/api/analytics/health/route.ts` | API route | OK (agent 7) | — |
 | 134 | `src/app/api/appointments/[id]/route.ts` | API route | OK (agent A) | — |
 | 135 | `src/app/api/appointments/route.ts` | API route | OK (agent A) | — |
 | 136 | `src/app/api/auth/[...nextauth]/route.ts` | API route | anomalie A3 | — |
 | 137 | `src/app/api/catalog/route.ts` | API route | OK (agent A) | — |
 | 138 | `src/app/api/clients/route.ts` | API route | OK (agent A) | — |
-| 139 | `src/app/api/copilot/report/route.ts` | API route | à faire | — |
-| 140 | `src/app/api/copilot/reports/[id]/export/route.ts` | API route | à faire | — |
-| 141 | `src/app/api/copilot/reports/route.ts` | API route | à faire | — |
-| 142 | `src/app/api/copilot/route.ts` | API route | à faire | — |
-| 143 | `src/app/api/dashboard/route.ts` | API route | à faire | — |
-| 144 | `src/app/api/diagnostic/route.ts` | API route | à faire | — |
-| 145 | `src/app/api/email/route.ts` | API route | à faire | — |
+| 139 | `src/app/api/copilot/report/route.ts` | API route | OK (agent 7) | — |
+| 140 | `src/app/api/copilot/reports/[id]/export/route.ts` | API route | A52 — CORRIGÉ (sink report-export) | — |
+| 141 | `src/app/api/copilot/reports/route.ts` | API route | OK (agent 7) | — |
+| 142 | `src/app/api/copilot/route.ts` | API route | OK (agent 7) | — |
+| 143 | `src/app/api/dashboard/route.ts` | API route | OK (agent 7) | — |
+| 144 | `src/app/api/diagnostic/route.ts` | API route | OK (agent 7) | — |
+| 145 | `src/app/api/email/route.ts` | API route | anomalie A54,A43 | — |
 | 146 | `src/app/api/estimate/route.ts` | API route | anomalie A10 — CORRIGÉ | — |
 | 147 | `src/app/api/export/fec/route.ts` | API route | anomalie A28 | — |
 | 148 | `src/app/api/finance/route.ts` | API route | anomalie A27 | — |
-| 149 | `src/app/api/forecast/route.ts` | API route | à faire | — |
-| 150 | `src/app/api/forgotten-parts/route.ts` | API route | à faire | — |
-| 151 | `src/app/api/gamification/route.ts` | API route | à faire | — |
+| 149 | `src/app/api/forecast/route.ts` | API route | OK (agent 7) | — |
+| 150 | `src/app/api/forgotten-parts/route.ts` | API route | OK (agent 7) | — |
+| 151 | `src/app/api/gamification/route.ts` | API route | OK (agent 7) | — |
 | 152 | `src/app/api/garages/route.ts` | API route | anomalie A11 — CORRIGÉ | — |
-| 153 | `src/app/api/health/route.ts` | API route | à faire | — |
+| 153 | `src/app/api/health/route.ts` | API route | OK (agent 7) | — |
 | 154 | `src/app/api/inspections/[id]/route.ts` | API route | OK (agent A) | — |
 | 155 | `src/app/api/inspections/route.ts` | API route | OK (agent A) | — |
 | 156 | `src/app/api/internal/export/route.ts` | API route | OK (agent B) | — |
@@ -204,16 +204,16 @@ Statut: `à faire` / `en cours` / `OK` / `anomalie N°X`. Mis à jour au fil des
 | 177 | `src/app/api/loaner-vehicles/route.ts` | API route | OK (agent A) | — |
 | 178 | `src/app/api/mechanics/[id]/route.ts` | API route | OK (agent A) | — |
 | 179 | `src/app/api/mechanics/route.ts` | API route | OK (agent A) | — |
-| 180 | `src/app/api/memory/route.ts` | API route | à faire | — |
-| 181 | `src/app/api/notifications/dispatch/route.ts` | API route | à faire | — |
-| 182 | `src/app/api/ocr/route.ts` | API route | à faire | — |
+| 180 | `src/app/api/memory/route.ts` | API route | OK (agent 7) | — |
+| 181 | `src/app/api/notifications/dispatch/route.ts` | API route | anomalie A53 | — |
+| 182 | `src/app/api/ocr/route.ts` | API route | OK (agent 7) | — |
 | 183 | `src/app/api/parts/[id]/route.ts` | API route | anomalie A12 | — |
 | 184 | `src/app/api/parts/low-stock/route.ts` | API route | OK (agent A) | — |
 | 185 | `src/app/api/parts/route.ts` | API route | anomalie A12 | — |
-| 186 | `src/app/api/photos/[...path]/route.ts` | API route | à faire | — |
-| 187 | `src/app/api/ping/route.ts` | API route | à faire | — |
-| 188 | `src/app/api/plate-lookup/route.ts` | API route | à faire | — |
-| 189 | `src/app/api/plate-ocr/route.ts` | API route | à faire | — |
+| 186 | `src/app/api/photos/[...path]/route.ts` | API route | OK (agent 7) | — |
+| 187 | `src/app/api/ping/route.ts` | API route | OK (agent 7) | — |
+| 188 | `src/app/api/plate-lookup/route.ts` | API route | A51 — CORRIGÉ | — |
+| 189 | `src/app/api/plate-ocr/route.ts` | API route | OK (agent 7) | — |
 | 190 | `src/app/api/portal/[token]/route.ts` | API route | OK (agent B) | — |
 | 191 | `src/app/api/portal/appointments/[id]/route.ts` | API route | OK (agent B) | — |
 | 192 | `src/app/api/portal/appointments/route.ts` | API route | anomalie A5 — CORRIGÉ | — |
@@ -234,9 +234,9 @@ Statut: `à faire` / `en cours` / `OK` / `anomalie N°X`. Mis à jour au fil des
 | 207 | `src/app/api/portal/tickets/[id]/route.ts` | API route | OK (agent B) | — |
 | 208 | `src/app/api/portal/tickets/route.ts` | API route | anomalie A5 — CORRIGÉ | — |
 | 209 | `src/app/api/portal/token/route.ts` | API route | OK (agent B) | — |
-| 210 | `src/app/api/pricing/route.ts` | API route | à faire | — |
-| 211 | `src/app/api/proactive/route.ts` | API route | à faire | — |
-| 212 | `src/app/api/profitability/route.ts` | API route | à faire | — |
+| 210 | `src/app/api/pricing/route.ts` | API route | OK (agent 7) | — |
+| 211 | `src/app/api/proactive/route.ts` | API route | OK (agent 7) | — |
+| 212 | `src/app/api/profitability/route.ts` | API route | OK (agent 7) | — |
 | 213 | `src/app/api/purchase-orders/[id]/receive/route.ts` | API route | OK (agent A) | — |
 | 214 | `src/app/api/purchase-orders/[id]/route.ts` | API route | OK (agent A) | — |
 | 215 | `src/app/api/purchase-orders/route.ts` | API route | OK (agent A) | — |
@@ -248,12 +248,12 @@ Statut: `à faire` / `en cours` / `OK` / `anomalie N°X`. Mis à jour au fil des
 | 221 | `src/app/api/reminders/route.ts` | API route | OK (agent A) | — |
 | 222 | `src/app/api/reminders/send/route.ts` | API route | OK (agent A) | — |
 | 223 | `src/app/api/reminders/suggestions/route.ts` | API route | OK (agent A) | — |
-| 224 | `src/app/api/reports/route.ts` | API route | à faire | — |
-| 225 | `src/app/api/scheduling/route.ts` | API route | à faire | — |
+| 224 | `src/app/api/reports/route.ts` | API route | A50 — CORRIGÉ (sink csv.ts) | — |
+| 225 | `src/app/api/scheduling/route.ts` | API route | OK (agent 7) | — |
 | 226 | `src/app/api/signatures/route.ts` | API route | OK (agent A) | — |
 | 227 | `src/app/api/stats/route.ts` | API route | anomalie A30 | — |
 | 228 | `src/app/api/stock-forecast/route.ts` | API route | OK (agent M) | — |
-| 229 | `src/app/api/suggestions/route.ts` | API route | à faire | — |
+| 229 | `src/app/api/suggestions/route.ts` | API route | OK (agent 7) | — |
 | 230 | `src/app/api/suppliers/route.ts` | API route | OK (agent A) | — |
 | 231 | `src/app/api/tickets/[id]/route.ts` | API route | OK (agent A) | — |
 | 232 | `src/app/api/tickets/route.ts` | API route | OK (agent A) | — |
@@ -262,7 +262,7 @@ Statut: `à faire` / `en cours` / `OK` / `anomalie N°X`. Mis à jour au fil des
 | 235 | `src/app/api/vehicles/[id]/timeline/route.ts` | API route | OK (agent A) | — |
 | 236 | `src/app/api/vehicles/ct-alerts/route.ts` | API route | OK (agent A) | — |
 | 237 | `src/app/api/vehicles/route.ts` | API route | OK (agent A) | — |
-| 238 | `src/app/api/vin/route.ts` | API route | à faire | — |
+| 238 | `src/app/api/vin/route.ts` | API route | OK (agent 7) | — |
 | 239 | `src/app/api/warranties/[id]/route.ts` | API route | OK (agent A) | — |
 | 240 | `src/app/api/warranties/alerts/route.ts` | API route | OK (agent A) | — |
 | 241 | `src/app/api/warranties/route.ts` | API route | OK (agent A) | — |
@@ -391,202 +391,202 @@ Statut: `à faire` / `en cours` / `OK` / `anomalie N°X`. Mis à jour au fil des
 | 364 | `src/lib/__tests__/update-verify.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
 | 365 | `src/lib/__tests__/utils.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
 | 366 | `src/lib/__tests__/verify.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 367 | `src/lib/ai-engine.ts` | Lib | à faire | — |
+| 367 | `src/lib/ai-engine.ts` | Lib | OK (agent 8) | — |
 | 368 | `src/lib/analytics/__tests__/analytics.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
 | 369 | `src/lib/analytics/__tests__/report-export.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 370 | `src/lib/analytics/collect.ts` | Lib | à faire | — |
+| 370 | `src/lib/analytics/collect.ts` | Lib | OK (agent 8) | — |
 | 371 | `src/lib/analytics/health-score.ts` | Lib | OK (agent M) | — |
-| 372 | `src/lib/analytics/insights.ts` | Lib | à faire | — |
+| 372 | `src/lib/analytics/insights.ts` | Lib | OK (agent 8) | — |
 | 373 | `src/lib/analytics/metrics.ts` | Lib | OK (agent M) | — |
-| 374 | `src/lib/analytics/report-export.ts` | Lib | à faire | — |
-| 375 | `src/lib/analytics/types.ts` | Lib | à faire | — |
+| 374 | `src/lib/analytics/report-export.ts` | Lib | A52 CORRIGE | — |
+| 375 | `src/lib/analytics/types.ts` | Lib | OK (agent 8) | — |
 | 376 | `src/lib/api-helpers.ts` | Lib | OK (revue perso) | — |
-| 377 | `src/lib/audit.ts` | Lib | à faire | — |
-| 378 | `src/lib/auth-secret.ts` | Lib | à faire | — |
-| 379 | `src/lib/auth.ts` | Lib | anomalie A3 — CORRIGÉ | — |
+| 377 | `src/lib/audit.ts` | Lib | anomalie A60 | — |
+| 378 | `src/lib/auth-secret.ts` | Lib | OK (agent 8) | — |
+| 379 | `src/lib/auth.ts` | Lib | OK (agent 8) | — |
 | 380 | `src/lib/backup/__tests__/crypto.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
 | 381 | `src/lib/backup/__tests__/snapshot.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 382 | `src/lib/backup/crypto.ts` | Lib | à faire | — |
-| 383 | `src/lib/backup/service.ts` | Lib | à faire | — |
-| 384 | `src/lib/backup/snapshot.ts` | Lib | à faire | — |
+| 382 | `src/lib/backup/crypto.ts` | Lib | OK (agent 7) | — |
+| 383 | `src/lib/backup/service.ts` | Lib | OK (agent 7) | — |
+| 384 | `src/lib/backup/snapshot.ts` | Lib | OK (agent 7) | — |
 | 385 | `src/lib/billing.ts` | Lib | OK (agent M) | — |
-| 386 | `src/lib/car-database.ts` | Lib | à faire | — |
+| 386 | `src/lib/car-database.ts` | Lib | OK (agent 8) | — |
 | 387 | `src/lib/catalog/__tests__/catalog.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 388 | `src/lib/catalog/categories.ts` | Lib | à faire | — |
-| 389 | `src/lib/catalog/crossref.ts` | Lib | à faire | — |
-| 390 | `src/lib/catalog/engine.ts` | Lib | à faire | — |
-| 391 | `src/lib/catalog/fitment.ts` | Lib | à faire | — |
-| 392 | `src/lib/catalog/index.ts` | Lib | à faire | — |
-| 393 | `src/lib/catalog/normalize.ts` | Lib | à faire | — |
-| 394 | `src/lib/catalog/providers.ts` | Lib | à faire | — |
-| 395 | `src/lib/catalog/search.ts` | Lib | à faire | — |
-| 396 | `src/lib/catalog/seed.ts` | Lib | à faire | — |
-| 397 | `src/lib/catalog/types.ts` | Lib | à faire | — |
-| 398 | `src/lib/client-memory.ts` | Lib | à faire | — |
+| 388 | `src/lib/catalog/categories.ts` | Lib | OK (agent 8) | — |
+| 389 | `src/lib/catalog/crossref.ts` | Lib | OK (agent 8) | — |
+| 390 | `src/lib/catalog/engine.ts` | Lib | OK (agent 8) | — |
+| 391 | `src/lib/catalog/fitment.ts` | Lib | OK (agent 8) | — |
+| 392 | `src/lib/catalog/index.ts` | Lib | OK (agent 8) | — |
+| 393 | `src/lib/catalog/normalize.ts` | Lib | OK (agent 8) | — |
+| 394 | `src/lib/catalog/providers.ts` | Lib | OK (agent 8) | — |
+| 395 | `src/lib/catalog/search.ts` | Lib | OK (agent 8) | — |
+| 396 | `src/lib/catalog/seed.ts` | Lib | OK (agent 8) | — |
+| 397 | `src/lib/catalog/types.ts` | Lib | OK (agent 8) | — |
+| 398 | `src/lib/client-memory.ts` | Lib | OK (agent 7) | — |
 | 399 | `src/lib/copilot-llm/__tests__/copilot-llm.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 400 | `src/lib/copilot-llm/classify.ts` | Lib | à faire | — |
-| 401 | `src/lib/copilot-llm/ground.ts` | Lib | à faire | — |
-| 402 | `src/lib/copilot-llm/index.ts` | Lib | à faire | — |
-| 403 | `src/lib/copilot-llm/phrase.ts` | Lib | à faire | — |
-| 404 | `src/lib/copilot-llm/prompts.ts` | Lib | à faire | — |
-| 405 | `src/lib/copilot-llm/provider.ts` | Lib | à faire | — |
-| 406 | `src/lib/copilot-llm/timeout.ts` | Lib | à faire | — |
-| 407 | `src/lib/copilot-llm/types.ts` | Lib | à faire | — |
+| 400 | `src/lib/copilot-llm/classify.ts` | Lib | OK (agent 7) | — |
+| 401 | `src/lib/copilot-llm/ground.ts` | Lib | OK (agent 7) | — |
+| 402 | `src/lib/copilot-llm/index.ts` | Lib | OK (agent 7) | — |
+| 403 | `src/lib/copilot-llm/phrase.ts` | Lib | OK (agent 7) | — |
+| 404 | `src/lib/copilot-llm/prompts.ts` | Lib | OK (agent 7) | — |
+| 405 | `src/lib/copilot-llm/provider.ts` | Lib | OK (agent 7) | — |
+| 406 | `src/lib/copilot-llm/timeout.ts` | Lib | OK (agent 7) | — |
+| 407 | `src/lib/copilot-llm/types.ts` | Lib | OK (agent 7) | — |
 | 408 | `src/lib/copilot/__tests__/copilot.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 409 | `src/lib/copilot/actions.ts` | Lib | à faire | — |
-| 410 | `src/lib/copilot/engine.ts` | Lib | à faire | — |
-| 411 | `src/lib/copilot/index.ts` | Lib | à faire | — |
-| 412 | `src/lib/copilot/intents.ts` | Lib | à faire | — |
-| 413 | `src/lib/copilot/router.ts` | Lib | à faire | — |
-| 414 | `src/lib/copilot/types.ts` | Lib | à faire | — |
+| 409 | `src/lib/copilot/actions.ts` | Lib | OK (agent 7) | — |
+| 410 | `src/lib/copilot/engine.ts` | Lib | OK (agent 7) | — |
+| 411 | `src/lib/copilot/index.ts` | Lib | OK (agent 7) | — |
+| 412 | `src/lib/copilot/intents.ts` | Lib | OK (agent 7) | — |
+| 413 | `src/lib/copilot/router.ts` | Lib | OK (agent 7) | — |
+| 414 | `src/lib/copilot/types.ts` | Lib | OK (agent 7) | — |
 | 415 | `src/lib/dashboard/__tests__/dashboard.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 416 | `src/lib/dashboard/build.ts` | Lib | à faire | — |
-| 417 | `src/lib/dashboard/index.ts` | Lib | à faire | — |
-| 418 | `src/lib/dashboard/types.ts` | Lib | à faire | — |
-| 419 | `src/lib/db.ts` | Lib | à faire | — |
+| 416 | `src/lib/dashboard/build.ts` | Lib | OK (agent 8) | — |
+| 417 | `src/lib/dashboard/index.ts` | Lib | OK (agent 8) | — |
+| 418 | `src/lib/dashboard/types.ts` | Lib | OK (agent 8) | — |
+| 419 | `src/lib/db.ts` | Lib | OK (agent 8) | — |
 | 420 | `src/lib/diagnostic/__tests__/diagnostic.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 421 | `src/lib/diagnostic/engine.ts` | Lib | à faire | — |
-| 422 | `src/lib/diagnostic/index.ts` | Lib | à faire | — |
-| 423 | `src/lib/diagnostic/knowledge.ts` | Lib | à faire | — |
-| 424 | `src/lib/diagnostic/obd.ts` | Lib | à faire | — |
-| 425 | `src/lib/diagnostic/types.ts` | Lib | à faire | — |
-| 426 | `src/lib/entitlements.tsx` | Lib | à faire | — |
+| 421 | `src/lib/diagnostic/engine.ts` | Lib | OK (agent 7) | — |
+| 422 | `src/lib/diagnostic/index.ts` | Lib | OK (agent 7) | — |
+| 423 | `src/lib/diagnostic/knowledge.ts` | Lib | OK (agent 7) | — |
+| 424 | `src/lib/diagnostic/obd.ts` | Lib | OK (agent 7) | — |
+| 425 | `src/lib/diagnostic/types.ts` | Lib | OK (agent 7) | — |
+| 426 | `src/lib/entitlements.tsx` | Lib | OK (agent 8) | — |
 | 427 | `src/lib/env.ts` | Lib | OK (agent C) | — |
 | 428 | `src/lib/forecast/__tests__/forecast.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
 | 429 | `src/lib/forecast/forecast.ts` | Lib | OK (agent M) | — |
-| 430 | `src/lib/forecast/index.ts` | Lib | à faire | — |
+| 430 | `src/lib/forecast/index.ts` | Lib | OK (agent 8) | — |
 | 431 | `src/lib/forecast/stats.ts` | Lib | OK (agent M) | — |
-| 432 | `src/lib/forecast/types.ts` | Lib | à faire | — |
+| 432 | `src/lib/forecast/types.ts` | Lib | OK (agent 8) | — |
 | 433 | `src/lib/forgotten-parts/__tests__/forgotten-parts.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 434 | `src/lib/forgotten-parts/engine.ts` | Lib | à faire | — |
-| 435 | `src/lib/forgotten-parts/index.ts` | Lib | à faire | — |
-| 436 | `src/lib/forgotten-parts/rules.ts` | Lib | à faire | — |
-| 437 | `src/lib/forgotten-parts/types.ts` | Lib | à faire | — |
+| 434 | `src/lib/forgotten-parts/engine.ts` | Lib | OK (agent 8) | — |
+| 435 | `src/lib/forgotten-parts/index.ts` | Lib | OK (agent 8) | — |
+| 436 | `src/lib/forgotten-parts/rules.ts` | Lib | OK (agent 8) | — |
+| 437 | `src/lib/forgotten-parts/types.ts` | Lib | OK (agent 8) | — |
 | 438 | `src/lib/gamification/__tests__/gamification.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 439 | `src/lib/gamification/badges.ts` | Lib | à faire | — |
-| 440 | `src/lib/gamification/engine.ts` | Lib | à faire | — |
-| 441 | `src/lib/gamification/index.ts` | Lib | à faire | — |
-| 442 | `src/lib/gamification/levels.ts` | Lib | à faire | — |
+| 439 | `src/lib/gamification/badges.ts` | Lib | OK (agent 8) | — |
+| 440 | `src/lib/gamification/engine.ts` | Lib | OK (agent 8) | — |
+| 441 | `src/lib/gamification/index.ts` | Lib | OK (agent 8) | — |
+| 442 | `src/lib/gamification/levels.ts` | Lib | OK (agent 8) | — |
 | 443 | `src/lib/gamification/scoring.ts` | Lib | OK (agent M) | — |
-| 444 | `src/lib/gamification/types.ts` | Lib | à faire | — |
-| 445 | `src/lib/i18n.tsx` | Lib | à faire | — |
-| 446 | `src/lib/i18n/date-locale.ts` | Lib | à faire | — |
-| 447 | `src/lib/i18n/labels.ts` | Lib | à faire | — |
-| 448 | `src/lib/i18n/translations.ts` | Lib | à faire | — |
-| 449 | `src/lib/i18n/ui.ts` | Lib | à faire | — |
+| 444 | `src/lib/gamification/types.ts` | Lib | OK (agent 8) | — |
+| 445 | `src/lib/i18n.tsx` | Lib | OK (agent 8) | — |
+| 446 | `src/lib/i18n/date-locale.ts` | Lib | OK (agent 8) | — |
+| 447 | `src/lib/i18n/labels.ts` | Lib | OK (agent 8) | — |
+| 448 | `src/lib/i18n/translations.ts` | Lib | OK (agent 8) | — |
+| 449 | `src/lib/i18n/ui.ts` | Lib | OK (agent 8) | — |
 | 450 | `src/lib/internal-auth.ts` | Lib | anomalie A7 | — |
-| 451 | `src/lib/labor-defaults.ts` | Lib | à faire | — |
+| 451 | `src/lib/labor-defaults.ts` | Lib | OK (agent 8) | — |
 | 452 | `src/lib/license/__tests__/public-key-consistency.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
 | 453 | `src/lib/license/client-policy.ts` | Lib | OK (agent E) | — |
-| 454 | `src/lib/license/devices.ts` | Lib | à faire | — |
+| 454 | `src/lib/license/devices.ts` | Lib | OK (agent 8) | — |
 | 455 | `src/lib/license/hwid.ts` | Lib | OK (agent E) | — |
 | 456 | `src/lib/license/protection.ts` | Lib | OK (agent E) | — |
 | 457 | `src/lib/license/public-key.ts` | Lib | OK (agent E) | — |
 | 458 | `src/lib/license/record-mac.ts` | Lib | anomalie A21,A44 | — |
 | 459 | `src/lib/license/session.ts` | Lib | anomalie A19 | — |
 | 460 | `src/lib/license/verify.ts` | Lib | OK (agent E) | — |
-| 461 | `src/lib/logger.ts` | Lib | à faire | — |
+| 461 | `src/lib/logger.ts` | Lib | OK (agent 8) | — |
 | 462 | `src/lib/memory/__tests__/memory.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 463 | `src/lib/memory/analyze.ts` | Lib | à faire | — |
-| 464 | `src/lib/memory/index.ts` | Lib | à faire | — |
-| 465 | `src/lib/memory/types.ts` | Lib | à faire | — |
-| 466 | `src/lib/migrations.ts` | Lib | à faire | — |
+| 463 | `src/lib/memory/analyze.ts` | Lib | OK (agent 7) | — |
+| 464 | `src/lib/memory/index.ts` | Lib | OK (agent 7) | — |
+| 465 | `src/lib/memory/types.ts` | Lib | OK (agent 7) | — |
+| 466 | `src/lib/migrations.ts` | Lib | anomalie A65 | — |
 | 467 | `src/lib/money.ts` | Lib | A24,A25,A26 — CORRIGÉ (+tests) | — |
 | 468 | `src/lib/monitoring/__tests__/metrics.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 469 | `src/lib/monitoring/metrics.ts` | Lib | à faire | — |
+| 469 | `src/lib/monitoring/metrics.ts` | Lib | OK (agent 8) | — |
 | 470 | `src/lib/notifications/__tests__/notifications.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 471 | `src/lib/notifications/channels.ts` | Lib | à faire | — |
-| 472 | `src/lib/notifications/engine.ts` | Lib | à faire | — |
-| 473 | `src/lib/notifications/index.ts` | Lib | à faire | — |
-| 474 | `src/lib/notifications/template.ts` | Lib | à faire | — |
-| 475 | `src/lib/notifications/templates.ts` | Lib | à faire | — |
-| 476 | `src/lib/notifications/triggers.ts` | Lib | à faire | — |
-| 477 | `src/lib/notifications/types.ts` | Lib | à faire | — |
+| 471 | `src/lib/notifications/channels.ts` | Lib | OK (agent 7) | — |
+| 472 | `src/lib/notifications/engine.ts` | Lib | OK (agent 7) | — |
+| 473 | `src/lib/notifications/index.ts` | Lib | OK (agent 7) | — |
+| 474 | `src/lib/notifications/template.ts` | Lib | OK (agent 7) | — |
+| 475 | `src/lib/notifications/templates.ts` | Lib | OK (agent 7) | — |
+| 476 | `src/lib/notifications/triggers.ts` | Lib | OK (agent 7) | — |
+| 477 | `src/lib/notifications/types.ts` | Lib | OK (agent 7) | — |
 | 478 | `src/lib/ocr/__tests__/ocr.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 479 | `src/lib/ocr/classify.ts` | Lib | à faire | — |
-| 480 | `src/lib/ocr/engine.ts` | Lib | à faire | — |
-| 481 | `src/lib/ocr/extract.ts` | Lib | à faire | — |
-| 482 | `src/lib/ocr/index.ts` | Lib | à faire | — |
-| 483 | `src/lib/ocr/normalize.ts` | Lib | à faire | — |
-| 484 | `src/lib/ocr/plate-scan.ts` | Lib | à faire | — |
-| 485 | `src/lib/ocr/providers.ts` | Lib | à faire | — |
-| 486 | `src/lib/ocr/types.ts` | Lib | à faire | — |
-| 487 | `src/lib/ocr/vin-scan.ts` | Lib | à faire | — |
-| 488 | `src/lib/photo-store.ts` | Lib | à faire | — |
-| 489 | `src/lib/portal-secret.ts` | Lib | à faire | — |
+| 479 | `src/lib/ocr/classify.ts` | Lib | OK (agent 7) | — |
+| 480 | `src/lib/ocr/engine.ts` | Lib | OK (agent 7) | — |
+| 481 | `src/lib/ocr/extract.ts` | Lib | OK (agent 7) | — |
+| 482 | `src/lib/ocr/index.ts` | Lib | OK (agent 7) | — |
+| 483 | `src/lib/ocr/normalize.ts` | Lib | OK (agent 7) | — |
+| 484 | `src/lib/ocr/plate-scan.ts` | Lib | OK (agent 7) | — |
+| 485 | `src/lib/ocr/providers.ts` | Lib | OK (agent 7) | — |
+| 486 | `src/lib/ocr/types.ts` | Lib | OK (agent 7) | — |
+| 487 | `src/lib/ocr/vin-scan.ts` | Lib | OK (agent 7) | — |
+| 488 | `src/lib/photo-store.ts` | Lib | anomalie A63 | — |
+| 489 | `src/lib/portal-secret.ts` | Lib | OK (agent 8) | — |
 | 490 | `src/lib/portal/__tests__/auth-core.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
 | 491 | `src/lib/portal/__tests__/repair-timeline.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
 | 492 | `src/lib/portal/__tests__/session.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
 | 493 | `src/lib/portal/__tests__/tickets-appointments.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
 | 494 | `src/lib/portal/appointments.ts` | Lib | anomalie A31 | — |
-| 495 | `src/lib/portal/auth-helpers.ts` | Lib | à faire | — |
-| 496 | `src/lib/portal/backup-codes.ts` | Lib | à faire | — |
-| 497 | `src/lib/portal/lockout.ts` | Lib | à faire | — |
-| 498 | `src/lib/portal/repair-timeline.ts` | Lib | à faire | — |
-| 499 | `src/lib/portal/session.ts` | Lib | à faire | — |
-| 500 | `src/lib/portal/tickets.ts` | Lib | à faire | — |
-| 501 | `src/lib/portal/totp.ts` | Lib | à faire | — |
+| 495 | `src/lib/portal/auth-helpers.ts` | Lib | OK (agent 8) | — |
+| 496 | `src/lib/portal/backup-codes.ts` | Lib | OK (agent 7) | — |
+| 497 | `src/lib/portal/lockout.ts` | Lib | A64 CORRIGE | — |
+| 498 | `src/lib/portal/repair-timeline.ts` | Lib | OK (agent 8) | — |
+| 499 | `src/lib/portal/session.ts` | Lib | OK (agent 8) | — |
+| 500 | `src/lib/portal/tickets.ts` | Lib | OK (agent 8) | — |
+| 501 | `src/lib/portal/totp.ts` | Lib | OK (agent 8) | — |
 | 502 | `src/lib/pricing/__tests__/pricing.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
 | 503 | `src/lib/pricing/index.ts` | Lib | OK (agent M) | — |
 | 504 | `src/lib/pricing/optimize.ts` | Lib | OK (agent M) | — |
-| 505 | `src/lib/pricing/types.ts` | Lib | à faire | — |
+| 505 | `src/lib/pricing/types.ts` | Lib | OK (agent 8) | — |
 | 506 | `src/lib/proactive/__tests__/proactive.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 507 | `src/lib/proactive/engine.ts` | Lib | à faire | — |
-| 508 | `src/lib/proactive/index.ts` | Lib | à faire | — |
-| 509 | `src/lib/proactive/types.ts` | Lib | à faire | — |
+| 507 | `src/lib/proactive/engine.ts` | Lib | OK (agent 8) | — |
+| 508 | `src/lib/proactive/index.ts` | Lib | OK (agent 8) | — |
+| 509 | `src/lib/proactive/types.ts` | Lib | OK (agent 8) | — |
 | 510 | `src/lib/profitability/__tests__/profitability.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
 | 511 | `src/lib/profitability/analyze.ts` | Lib | OK (agent M) | — |
-| 512 | `src/lib/profitability/index.ts` | Lib | à faire | — |
-| 513 | `src/lib/profitability/types.ts` | Lib | à faire | — |
-| 514 | `src/lib/pwa-install-id.ts` | Lib | à faire | — |
+| 512 | `src/lib/profitability/index.ts` | Lib | OK (agent 8) | — |
+| 513 | `src/lib/profitability/types.ts` | Lib | OK (agent 8) | — |
+| 514 | `src/lib/pwa-install-id.ts` | Lib | OK (agent 8) | — |
 | 515 | `src/lib/quote-gen/__tests__/quote-gen.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
 | 516 | `src/lib/quote-gen/generate.ts` | Lib | OK (agent M) | — |
-| 517 | `src/lib/quote-gen/index.ts` | Lib | à faire | — |
-| 518 | `src/lib/quote-gen/types.ts` | Lib | à faire | — |
-| 519 | `src/lib/redact.ts` | Lib | à faire | — |
+| 517 | `src/lib/quote-gen/index.ts` | Lib | OK (agent 8) | — |
+| 518 | `src/lib/quote-gen/types.ts` | Lib | OK (agent 8) | — |
+| 519 | `src/lib/redact.ts` | Lib | anomalie A61 | — |
 | 520 | `src/lib/reports/__tests__/reports.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 521 | `src/lib/reports/builder.ts` | Lib | à faire | — |
-| 522 | `src/lib/reports/csv.ts` | Lib | à faire | — |
-| 523 | `src/lib/reports/index.ts` | Lib | à faire | — |
-| 524 | `src/lib/reports/sources.ts` | Lib | à faire | — |
-| 525 | `src/lib/reports/types.ts` | Lib | à faire | — |
+| 521 | `src/lib/reports/builder.ts` | Lib | A57 FAUX POSITIF (separateur x01 reel) | — |
+| 522 | `src/lib/reports/csv.ts` | Lib | A50 CORRIGE (+test) | — |
+| 523 | `src/lib/reports/index.ts` | Lib | OK (agent 8) | — |
+| 524 | `src/lib/reports/sources.ts` | Lib | OK (agent 8) | — |
+| 525 | `src/lib/reports/types.ts` | Lib | OK (agent 8) | — |
 | 526 | `src/lib/scheduling/__tests__/scheduling.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 527 | `src/lib/scheduling/index.ts` | Lib | à faire | — |
+| 527 | `src/lib/scheduling/index.ts` | Lib | OK (agent 8) | — |
 | 528 | `src/lib/scheduling/optimize.ts` | Lib | OK (agent M) | — |
-| 529 | `src/lib/scheduling/types.ts` | Lib | à faire | — |
-| 530 | `src/lib/schemas/index.ts` | Lib | à faire | — |
+| 529 | `src/lib/scheduling/types.ts` | Lib | OK (agent 8) | — |
+| 530 | `src/lib/schemas/index.ts` | Lib | A55,A62 CORRIGE | — |
 | 531 | `src/lib/security/rate-limit.ts` | Lib | anomalie A6 | — |
-| 532 | `src/lib/seed-data.ts` | Lib | à faire | — |
-| 533 | `src/lib/session-secret.ts` | Lib | à faire | — |
+| 532 | `src/lib/seed-data.ts` | Lib | OK (agent 8) | — |
+| 533 | `src/lib/session-secret.ts` | Lib | A56 CORRIGE (securite) | — |
 | 534 | `src/lib/signature/__tests__/signature.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 535 | `src/lib/signature/canonicalize.ts` | Lib | à faire | — |
-| 536 | `src/lib/signature/document.ts` | Lib | à faire | — |
-| 537 | `src/lib/signature/index.ts` | Lib | à faire | — |
-| 538 | `src/lib/signature/key.ts` | Lib | à faire | — |
-| 539 | `src/lib/signature/seal.ts` | Lib | à faire | — |
-| 540 | `src/lib/signature/types.ts` | Lib | à faire | — |
+| 535 | `src/lib/signature/canonicalize.ts` | Lib | OK (agent 7) | — |
+| 536 | `src/lib/signature/document.ts` | Lib | OK (agent 7) | — |
+| 537 | `src/lib/signature/index.ts` | Lib | OK (agent 7) | — |
+| 538 | `src/lib/signature/key.ts` | Lib | OK (agent 7) | — |
+| 539 | `src/lib/signature/seal.ts` | Lib | OK (agent 7) | — |
+| 540 | `src/lib/signature/types.ts` | Lib | OK (agent 7) | — |
 | 541 | `src/lib/stock-forecast/__tests__/stock-forecast.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 542 | `src/lib/stock-forecast/index.ts` | Lib | à faire | — |
+| 542 | `src/lib/stock-forecast/index.ts` | Lib | OK (agent 8) | — |
 | 543 | `src/lib/stock-forecast/plan.ts` | Lib | anomalie A29 — CORRIGÉ | — |
-| 544 | `src/lib/stock-forecast/types.ts` | Lib | à faire | — |
+| 544 | `src/lib/stock-forecast/types.ts` | Lib | OK (agent 8) | — |
 | 545 | `src/lib/suppliers/__tests__/suppliers.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
 | 546 | `src/lib/suppliers/compare.ts` | Lib | OK (agent M) | — |
-| 547 | `src/lib/suppliers/connectors.ts` | Lib | à faire | — |
-| 548 | `src/lib/suppliers/engine.ts` | Lib | à faire | — |
-| 549 | `src/lib/suppliers/index.ts` | Lib | à faire | — |
+| 547 | `src/lib/suppliers/connectors.ts` | Lib | OK (agent 8) | — |
+| 548 | `src/lib/suppliers/engine.ts` | Lib | OK (agent 8) | — |
+| 549 | `src/lib/suppliers/index.ts` | Lib | OK (agent 8) | — |
 | 550 | `src/lib/suppliers/order.ts` | Lib | OK (agent M) | — |
-| 551 | `src/lib/suppliers/types.ts` | Lib | à faire | — |
+| 551 | `src/lib/suppliers/types.ts` | Lib | OK (agent 8) | — |
 | 552 | `src/lib/tenant.ts` | Lib | OK (revue perso) | — |
-| 553 | `src/lib/types.ts` | Lib | à faire | — |
-| 554 | `src/lib/utils.ts` | Lib | à faire | — |
+| 553 | `src/lib/types.ts` | Lib | OK (agent 8) | — |
+| 554 | `src/lib/utils.ts` | Lib | A58 CORRIGE; A59 recommande | — |
 | 555 | `src/lib/vin/__tests__/vin.test.ts` | Test | Test — vitest OK (764), non lu ligne à ligne | — |
-| 556 | `src/lib/vin/constants.ts` | Lib | à faire | — |
-| 557 | `src/lib/vin/decode.ts` | Lib | à faire | — |
-| 558 | `src/lib/vin/engine.ts` | Lib | à faire | — |
-| 559 | `src/lib/vin/index.ts` | Lib | à faire | — |
-| 560 | `src/lib/vin/providers.ts` | Lib | à faire | — |
-| 561 | `src/lib/vin/types.ts` | Lib | à faire | — |
-| 562 | `src/lib/vin/validate.ts` | Lib | à faire | — |
+| 556 | `src/lib/vin/constants.ts` | Lib | OK (agent 7) | — |
+| 557 | `src/lib/vin/decode.ts` | Lib | OK (agent 7) | — |
+| 558 | `src/lib/vin/engine.ts` | Lib | OK (agent 7) | — |
+| 559 | `src/lib/vin/index.ts` | Lib | OK (agent 7) | — |
+| 560 | `src/lib/vin/providers.ts` | Lib | OK (agent 7) | — |
+| 561 | `src/lib/vin/types.ts` | Lib | OK (agent 7) | — |
+| 562 | `src/lib/vin/validate.ts` | Lib | OK (agent 7) | — |
 | 563 | `src/middleware.ts` | Autre | OK (revue perso) | — |
 | 564 | `src/store/schedule-store.ts` | Autre | anomalie A42 | — |
 | 565 | `src/types/images.d.ts` | Autre | OK — déclaration de types (trivial) | — |

@@ -6,9 +6,13 @@
 
 import type { CopilotReport } from './insights'
 
-/** Escape a value for a CSV cell (RFC 4180). */
+/** Escape a value for a CSV cell (RFC 4180) + neutralisation d'injection de formule. */
 function csvCell(value: unknown): string {
-  const s = value == null ? '' : String(value)
+  let s = value == null ? '' : String(value)
+  // Anti-injection de formule : une cellule débutant par = + - @ (ou TAB/CR) est
+  // interprétée comme formule par Excel/LibreOffice → préfixe apostrophe (texte).
+  // Exception : un nombre fini est laissé intact (reste numérique dans le tableur).
+  if (/^[=+\-@\t\r]/.test(s) && !Number.isFinite(Number(s))) s = "'" + s
   return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
 }
 

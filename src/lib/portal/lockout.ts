@@ -43,6 +43,11 @@ export function registerFailure(
   policy: LockoutPolicy = DEFAULT_LOCKOUT_POLICY,
   nowMs: number = Date.now(),
 ): LockoutState {
+  // Sûreté de la machine à états : si le compte est ACTUELLEMENT verrouillé, ne
+  // rien changer. Sinon cet appel effacerait le verrou en cours (failedCount est
+  // à 0 après un lock → il repartirait à 1 avec lockedUntil:null). Les appelants
+  // testent déjà isLocked avant, mais on ne dépend plus de cet ordre.
+  if (isLocked(state, nowMs)) return state
   // If a previous lock has already expired, the failure window starts fresh.
   const prevCount = state.lockedUntil != null && state.lockedUntil <= nowMs ? 0 : state.failedCount
   const failedCount = prevCount + 1
