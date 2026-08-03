@@ -201,11 +201,32 @@ export function getStatusLabel(status: Job['status']): string {
   return labels[status]
 }
 
+/**
+ * Format compact pour les cartes/badges denses : « 45 min », « 1h30 », « 2h ».
+ * (Espace ajouté après les minutes seules pour la lisibilité — plus de « 45min ».)
+ */
 export function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes}min`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return m > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`
+  const m = Math.max(0, Math.round(minutes))
+  if (m < 60) return `${m} min`
+  const h = Math.floor(m / 60)
+  const mm = m % 60
+  return mm > 0 ? `${h}h${String(mm).padStart(2, '0')}` : `${h}h`
+}
+
+/**
+ * Format long et lisible pour les textes (alertes IA, phrases) :
+ *   45  → « 45 min »
+ *   376 → « 6 h 16 »
+ *   489 → « 8 h 09 »
+ *   600 → « 10 h »
+ * Évite les chaînes collées type « 376min » / « 600min ».
+ */
+export function formatDurationLong(minutes: number): string {
+  const m = Math.max(0, Math.round(minutes))
+  if (m < 60) return `${m} min`
+  const h = Math.floor(m / 60)
+  const mm = m % 60
+  return mm > 0 ? `${h} h ${String(mm).padStart(2, '0')}` : `${h} h`
 }
 
 export function getTodayString(): string {

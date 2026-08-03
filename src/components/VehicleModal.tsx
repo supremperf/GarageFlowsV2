@@ -137,7 +137,7 @@ export default function VehicleModal({ vehicleId, licensePlate, onClose, onEditJ
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-slide-in">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-modal overflow-hidden flex flex-col animate-slide-in">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">

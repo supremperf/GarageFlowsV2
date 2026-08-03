@@ -220,39 +220,40 @@ export default function Header({
 
   return (
     <header
-      className="bg-[#111827] border-b border-white/[0.07] z-20 relative shadow-lg shadow-black/20 select-none flex-shrink-0"
+      className="gf-app-header bg-[#111827] border-b border-white/[0.07] z-20 relative shadow-lg shadow-black/20 select-none flex-shrink-0 pt-safe pl-safe pr-safe"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
 
       {/* ── ROW 1 : Identity + Date + User ─────────────────────────────────── */}
-      <div className="flex items-center gap-3 px-4 h-10 border-b border-white/[0.05]">
+      <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-4 h-10 border-b border-white/[0.05]">
 
         {/* Logo + Garage name */}
         <div
-          className="flex items-center gap-2 mr-1"
+          className="flex items-center gap-2 mr-0 sm:mr-1 min-w-0 flex-shrink-0"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
           {garageLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={garageLogo} alt="logo" className="w-[26px] h-[26px] object-contain rounded" />
+            <img src={garageLogo} alt="logo" className="w-[26px] h-[26px] object-contain rounded flex-shrink-0" />
           ) : (
             <GarageFlowIcon size={26} />
           )}
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-white text-xs leading-none">
+          {/* Sous xs (téléphone étroit) : on ne garde que le logo pour libérer de la place. */}
+          <div className="hidden xs:block min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="font-black text-white text-xs leading-none flex-shrink-0">
                 Garage<span className="text-blue-400">Flow</span>
               </span>
               {user?.garageName && (
-                <>
+                <span className="hidden sm:flex items-center gap-1.5 min-w-0">
                   <span className="text-white/20 text-[10px]">·</span>
                   <span className="text-slate-400 text-[11px] font-medium truncate max-w-[110px]">
                     {user.garageName}
                   </span>
-                </>
+                </span>
               )}
             </div>
-            <p className="text-[8px] text-slate-700 leading-none tracking-widest uppercase mt-0.5">
+            <p className="hidden sm:block text-[8px] text-slate-700 leading-none tracking-widest uppercase mt-0.5">
               {t.planningIntelligent}
             </p>
           </div>
@@ -262,7 +263,7 @@ export default function Header({
 
         {/* Date navigator */}
         <div
-          className="flex items-center gap-0.5 bg-white/[0.05] rounded-lg p-0.5 border border-white/[0.07]"
+          className="flex items-center gap-0.5 bg-white/[0.05] rounded-lg p-0.5 border border-white/[0.07] flex-shrink-0"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
           <button
@@ -293,9 +294,9 @@ export default function Header({
           </button>
         </div>
 
-        {/* Stats pills */}
+        {/* Stats pills — masquées sous sm (place limitée sur téléphone) */}
         <div
-          className="flex items-center gap-1.5"
+          className="hidden sm:flex items-center gap-1.5 min-w-0"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
           <span className="text-[11px] bg-blue-500/15 text-blue-300 font-semibold px-2 py-0.5 rounded-full border border-blue-500/20">
@@ -407,9 +408,11 @@ export default function Header({
 
       {/* ── ROW 2 : Action toolbar grouped by section ──────────────────────── */}
       {/* py-1.5 (auto height) instead of a fixed h-9 so each section's tiny
-          label sits cleanly ABOVE its buttons without overflowing into row 1. */}
+          label sits cleanly ABOVE its buttons without overflowing into row 1.
+          Masquée sous md : sur téléphone, ces actions passent dans la barre de
+          navigation inférieure + le menu « Plus » (aucune fonction perdue). */}
       <div
-        className="flex items-center px-4 py-1.5 gap-0 overflow-x-auto scrollbar-hide"
+        className="hidden md:flex items-center px-4 py-1.5 gap-0 overflow-x-auto scrollbar-hide"
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
 

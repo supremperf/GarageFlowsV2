@@ -319,7 +319,7 @@ export default function ReminderPanel({ onClose }: Props) {
   const FILTER_LABELS = { pending: t.rmFilterTodo, sent: t.rmFilterSent, all: t.catAll }
 
   return (
-    <div className="fixed right-0 top-0 bottom-0 w-[480px] bg-[#0f1629] z-40 shadow-2xl shadow-black/50 flex flex-col border-l border-white/[0.07]">
+    <div className="fixed right-0 top-0 bottom-0 w-full max-w-[480px] bg-[#0f1629] z-40 shadow-2xl shadow-black/50 flex flex-col border-l border-white/[0.07] pt-safe pb-safe pr-safe">
       {/* Header */}
       <div className="bg-[#111827] border-b border-white/[0.07] px-5 py-4 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">

@@ -169,7 +169,7 @@ export default function ReceptionBoard({ onClose }: Props) {
   const progressPct = totalJobs > 0 ? Math.round((doneCount / totalJobs) * 100) : 0
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'var(--app-bg, #0b1120)', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="fixed inset-0 z-50 flex flex-col pt-safe pb-safe" style={{ background: 'var(--app-bg, #0b1120)', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div className="px-6 py-4 flex items-center justify-between shadow-sm border-b" style={{ background: 'var(--card-bg, #111827)', borderColor: 'var(--border-color, rgba(255,255,255,0.08))' }}>
         <div className="flex items-center gap-4">
@@ -215,11 +215,11 @@ export default function ReceptionBoard({ onClose }: Props) {
         })}
       </div>
 
-      {/* Board */}
+      {/* Board — mobile : 4 colonnes lisibles avec scroll horizontal maîtrisé ; ≥ md : elles tiennent toutes */}
       {loading ? (
         <div className="flex-1 flex items-center justify-center" style={{ color: 'var(--text-secondary, #94a3b8)' }}>Chargement…</div>
       ) : (
-        <div className="flex-1 grid grid-cols-4 gap-0 overflow-hidden min-h-0">
+        <div className="flex-1 grid grid-cols-[repeat(4,minmax(158px,1fr))] md:grid-cols-4 gap-0 min-h-0 overflow-x-auto overflow-y-hidden md:overflow-hidden">
           {(['in_progress', 'delayed', 'scheduled', 'completed'] as const).map(status => {
             const cfg = STATUS_CONFIG[status]
             const statusJobs = grouped[status]

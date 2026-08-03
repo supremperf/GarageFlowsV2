@@ -51,9 +51,9 @@ export default function LicenseChangeModal({ onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div
-        className="relative w-full max-w-md rounded-2xl border shadow-2xl p-6"
+        className="relative w-full max-w-md rounded-2xl border shadow-2xl p-6 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain"
         style={{ background: 'var(--card-bg, #1a2235)', borderColor: 'var(--border-color, rgba(255,255,255,0.1))' }}
       >
         <button

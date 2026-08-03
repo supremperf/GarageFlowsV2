@@ -288,7 +288,7 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-[#0f1629] rounded-2xl shadow-2xl border border-white/[0.07] w-full max-w-3xl max-h-[90vh] flex flex-col">
+      <div className="relative bg-[#0f1629] rounded-2xl shadow-2xl border border-white/[0.07] w-full max-w-3xl max-h-modal flex flex-col">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.07]">

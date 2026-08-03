@@ -270,7 +270,7 @@ export default function StockPanel({ onClose }: StockPanelProps) {
 
   return (
     <div className="fixed inset-0 z-40 flex items-start justify-end p-4 pointer-events-none">
-      <div className="pointer-events-auto w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-[90vh] flex flex-col animate-slide-in">
+      <div className="pointer-events-auto w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-modal flex flex-col animate-slide-in">
         {/* Header */}
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">

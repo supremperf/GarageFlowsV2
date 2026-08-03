@@ -217,7 +217,7 @@ export default function LoanerPanel({ onClose }: { onClose: () => void }) {
   const INPUT = 'w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
 
   return (
-    <div className="fixed inset-y-0 right-0 w-[520px] bg-[#0f1629] border-l border-white/[0.07] flex flex-col shadow-2xl z-40">
+    <div className="fixed inset-y-0 right-0 w-full max-w-[520px] bg-[#0f1629] border-l border-white/[0.07] flex flex-col shadow-2xl z-40 pt-safe pb-safe pr-safe">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.07]">
         <div className="flex items-center gap-2.5">

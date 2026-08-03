@@ -107,7 +107,7 @@ export default function VehicleHistoryModal({ vehicleId, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-modal flex flex-col">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -144,7 +144,7 @@ export default function VehicleHistoryModal({ vehicleId, onClose }: Props) {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 xs:grid-cols-4 gap-3">
             {[
               { label: 'Interventions', value: vehicle.jobs.length, icon: Wrench, color: 'text-blue-600 bg-blue-50' },
               { label: 'Terminées', value: completedJobs.length, icon: Calendar, color: 'text-emerald-600 bg-emerald-50' },

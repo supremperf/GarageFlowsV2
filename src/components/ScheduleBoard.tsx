@@ -23,8 +23,9 @@ import {
 import { timeToMinutes, minutesToTime, cn, formatDuration, jobsOverlap } from '@/lib/utils'
 import JobCard from './JobCard'
 import VehicleModal from './VehicleModal'
-import { UserX, Plus } from 'lucide-react'
+import { UserX, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useIsMobile } from '@/hooks/useMediaQuery'
 
 const HOUR_HEIGHT = 60 * SLOT_HEIGHT_PER_MINUTE
 const BOARD_START = WORKSHOP_START_HOUR * 60
@@ -149,6 +150,70 @@ function CurrentTimeIndicator() {
 }
 
 // ──────────────────────────────────────────────
+// Mechanic header cell (partagé desktop / mobile)
+// ──────────────────────────────────────────────
+function MechanicHeaderCell({
+  mechanic, count, onToggleAbsence, onAdd, touch = false,
+}: {
+  mechanic: Mechanic
+  count: number
+  onToggleAbsence: () => void
+  onAdd: () => void
+  touch?: boolean
+}) {
+  const btn = touch ? 'gf-touch p-2' : 'p-1'
+  return (
+    <div className="flex items-center gap-1.5">
+      <div
+        className={cn(
+          'rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 transition-all',
+          touch ? 'w-9 h-9' : 'w-7 h-7',
+          mechanic.isAbsent && 'opacity-40 grayscale',
+        )}
+        style={{ backgroundColor: mechanic.color }}
+      >
+        {mechanic.avatar}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className={cn(
+          'font-semibold text-xs truncate leading-tight',
+          mechanic.isAbsent ? 'text-slate-500 line-through' : 'text-slate-200',
+        )}>
+          {mechanic.name}
+        </p>
+        {mechanic.isAbsent ? (
+          <p className="text-[9px] text-red-400 font-semibold leading-tight">ABSENT</p>
+        ) : (
+          <p className="text-[9px] text-slate-500 leading-tight">{count} interv.</p>
+        )}
+      </div>
+      <div className="flex gap-0.5">
+        <button
+          onClick={onToggleAbsence}
+          className={cn(
+            'rounded hover:bg-white/10 transition-colors flex items-center justify-center',
+            btn,
+            mechanic.isAbsent ? 'text-red-400 bg-red-500/15' : 'text-slate-500',
+          )}
+          title={mechanic.isAbsent ? 'Marquer présent' : 'Marquer absent'}
+          aria-label={mechanic.isAbsent ? 'Marquer présent' : 'Marquer absent'}
+        >
+          <UserX className="w-3.5 h-3.5" />
+        </button>
+        <button
+          onClick={onAdd}
+          className={cn('rounded hover:bg-white/10 transition-colors text-slate-500 flex items-center justify-center', btn)}
+          title="Ajouter une intervention"
+          aria-label="Ajouter une intervention"
+        >
+          <Plus className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────────
 // Main Board
 // ──────────────────────────────────────────────
 export default function ScheduleBoard() {
@@ -230,6 +295,41 @@ export default function ScheduleBoard() {
     return map
   }, [dayJobs, mechanics])
 
+  // ── Mobile : un seul mécanicien à la fois (portrait/téléphone) ─────────────
+  // Sous md, entasser 4 colonnes sur ~360px les rend inutilisables. On affiche
+  // donc un mécanicien à la fois via un sélecteur. L'état local persiste au
+  // changement d'orientation (le composant ne se démonte pas) → le mécanicien
+  // sélectionné est conservé, conformément à l'attendu.
+  const isMobile = useIsMobile()
+  const [selectedMechanicId, setSelectedMechanicId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (mechanics.length === 0) { if (selectedMechanicId !== null) setSelectedMechanicId(null); return }
+    if (!selectedMechanicId || !mechanics.some(m => m.id === selectedMechanicId)) {
+      setSelectedMechanicId(mechanics[0].id)
+    }
+  }, [mechanics, selectedMechanicId])
+
+  const selectedMechanic = mechanics.find(m => m.id === selectedMechanicId) ?? mechanics[0] ?? null
+  const visibleMechanics = isMobile && selectedMechanic ? [selectedMechanic] : mechanics
+
+  const stepMechanic = useCallback((dir: 1 | -1) => {
+    if (mechanics.length === 0) return
+    const idx = mechanics.findIndex(m => m.id === selectedMechanicId)
+    const base = idx === -1 ? 0 : idx
+    const next = (base + dir + mechanics.length) % mechanics.length
+    setSelectedMechanicId(mechanics[next].id)
+  }, [mechanics, selectedMechanicId])
+
+  // Bascule d'absence + rappel de redistribution (logique partagée desktop/mobile).
+  const handleToggleAbsence = useCallback((mechanic: Mechanic) => {
+    toggleMechanicAbsence(mechanic.id)
+    if (!mechanic.isAbsent) {
+      const count = (jobsByMechanic[mechanic.id] || []).filter(j => j.status === 'scheduled').length
+      if (count > 0) toast(`${mechanic.name} absent — ${count} intervention(s) à redistribuer`, { icon: '⚠️' })
+    }
+  }, [toggleMechanicAbsence, jobsByMechanic])
+
   const handleDragStart = useCallback((e: DragStartEvent) => {
     setActiveJob(e.active.data.current?.job ?? null)
   }, [])
@@ -287,65 +387,65 @@ export default function ScheduleBoard() {
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex flex-col h-full bg-[#111827] rounded-xl shadow-sm border border-white/[0.07] overflow-hidden">
 
-        {/* ── Mechanic header row ── */}
+        {/* ── Sélecteur de mécanicien (mobile / portrait uniquement) ── */}
+        {isMobile && mechanics.length > 1 && (
+          <div className="flex items-center gap-1 px-1.5 py-2 border-b border-white/[0.07] bg-[#0f1629]/80">
+            <button
+              onClick={() => stepMechanic(-1)}
+              aria-label="Mécanicien précédent"
+              className="gf-touch flex items-center justify-center w-9 h-9 rounded-md text-slate-400 hover:bg-white/10 flex-shrink-0"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Mécaniciens">
+              {mechanics.map(m => (
+                <button
+                  key={m.id}
+                  role="tab"
+                  onClick={() => setSelectedMechanicId(m.id)}
+                  aria-selected={m.id === selectedMechanicId}
+                  className={cn(
+                    'flex items-center gap-1.5 pl-1 pr-2.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors flex-shrink-0',
+                    m.id === selectedMechanicId
+                      ? 'bg-blue-600/20 text-blue-300 border-blue-500/40'
+                      : 'text-slate-400 border-white/10 hover:bg-white/5',
+                  )}
+                >
+                  <span
+                    className={cn('w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white flex-shrink-0', m.isAbsent && 'opacity-40 grayscale')}
+                    style={{ backgroundColor: m.color }}
+                  >
+                    {m.avatar}
+                  </span>
+                  <span className="max-w-[120px] truncate">{m.name}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => stepMechanic(1)}
+              aria-label="Mécanicien suivant"
+              className="gf-touch flex items-center justify-center w-9 h-9 rounded-md text-slate-400 hover:bg-white/10 flex-shrink-0"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* ── Mechanic header row (colonnes visibles : toutes en desktop, une en mobile) ── */}
         <div className="flex border-b border-white/[0.07] bg-[#0f1629]/80 sticky top-0 z-30">
           <div className="w-14 flex-shrink-0 border-r border-white/[0.07]" />
-          {mechanics.map(mechanic => (
+          {visibleMechanics.map(mechanic => (
             <div
               key={mechanic.id}
               className="flex-1 min-w-0 px-2 py-2.5 border-r border-white/[0.07] last:border-r-0"
             >
-              <div className="flex items-center gap-1.5">
-                <div
-                  className={cn(
-                    'w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 transition-all',
-                    mechanic.isAbsent && 'opacity-40 grayscale'
-                  )}
-                  style={{ backgroundColor: mechanic.color }}
-                >
-                  {mechanic.avatar}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={cn(
-                    'font-semibold text-xs truncate leading-tight',
-                    mechanic.isAbsent ? 'text-slate-500 line-through' : 'text-slate-200'
-                  )}>
-                    {mechanic.name}
-                  </p>
-                  {mechanic.isAbsent ? (
-                    <p className="text-[9px] text-red-400 font-semibold leading-tight">ABSENT</p>
-                  ) : (
-                    <p className="text-[9px] text-slate-500 leading-tight">
-                      {(jobsByMechanic[mechanic.id] || []).length} interv.
-                    </p>
-                  )}
-                </div>
-                <div className="flex gap-0.5">
-                  <button
-                    onClick={() => {
-                      toggleMechanicAbsence(mechanic.id)
-                      if (!mechanic.isAbsent) {
-                        const count = (jobsByMechanic[mechanic.id] || []).filter(j => j.status === 'scheduled').length
-                        if (count > 0) toast(`${mechanic.name} absent — ${count} intervention(s) à redistribuer`, { icon: '⚠️' })
-                      }
-                    }}
-                    className={cn(
-                      'p-1 rounded hover:bg-white/10 transition-colors',
-                      mechanic.isAbsent ? 'text-red-400 bg-red-500/15' : 'text-slate-500'
-                    )}
-                    title={mechanic.isAbsent ? 'Marquer présent' : 'Marquer absent'}
-                  >
-                    <UserX className="w-3 h-3" />
-                  </button>
-                  <button
-                    onClick={() => openCreateModal({ mechanicId: mechanic.id, date: selectedDate })}
-                    className="p-1 rounded hover:bg-white/10 transition-colors text-slate-500"
-                    title="Ajouter une intervention"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
+              <MechanicHeaderCell
+                mechanic={mechanic}
+                count={(jobsByMechanic[mechanic.id] || []).length}
+                onToggleAbsence={() => handleToggleAbsence(mechanic)}
+                onAdd={() => openCreateModal({ mechanicId: mechanic.id, date: selectedDate })}
+                touch={isMobile}
+              />
             </div>
           ))}
         </div>
@@ -372,8 +472,8 @@ export default function ScheduleBoard() {
               ))}
             </div>
 
-            {/* Droppable mechanic columns */}
-            {mechanics.map(mechanic => (
+            {/* Droppable mechanic columns (toutes en desktop, une seule en mobile) */}
+            {visibleMechanics.map(mechanic => (
               <DroppableColumn
                 key={mechanic.id}
                 mechanic={mechanic}

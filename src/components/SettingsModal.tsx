@@ -186,7 +186,7 @@ export default function SettingsModal({ onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative bg-[#111827] border border-white/[0.08] rounded-2xl shadow-2xl shadow-black/60 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="relative bg-[#111827] border border-white/[0.08] rounded-2xl shadow-2xl shadow-black/60 w-full max-w-2xl max-h-modal flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.07]">
           <h2 className="text-lg font-bold text-white">Paramètres</h2>

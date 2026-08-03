@@ -121,61 +121,86 @@ function SuggestionCard({ suggestion }: SuggestionCardProps) {
   )
 }
 
-export default function SuggestionPanel() {
+function SuggestionList({ empty, suggestions }: { empty: boolean; suggestions: Suggestion[] }) {
+  if (empty) {
+    return (
+      <div className="text-center py-6">
+        <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-2">
+          <Check className="w-5 h-5 text-emerald-400" />
+        </div>
+        <p className="text-sm font-medium text-slate-300">Planning optimisé</p>
+        <p className="text-xs text-slate-500 mt-0.5">Aucune anomalie détectée</p>
+      </div>
+    )
+  }
+  return (
+    <>
+      {suggestions.map(suggestion => (
+        <SuggestionCard key={suggestion.id} suggestion={suggestion} />
+      ))}
+    </>
+  )
+}
+
+/**
+ * Assistant IA.
+ * - `embedded` (drawer mobile) : rend uniquement la liste défilante ; le chrome
+ *   (en-tête, bouton fermer, safe-area) est fourni par GfDrawer.
+ * - défaut (colonne desktop ≥ md) : carte complète avec en-tête et repli.
+ */
+export default function SuggestionPanel({ embedded = false }: { embedded?: boolean }) {
   const { suggestions, runAI } = useScheduleStore()
   const [collapsed, setCollapsed] = useState(false)
 
   const activeSuggestions = suggestions.filter(s => !s.dismissed)
   const highPriority = activeSuggestions.filter(s => s.priority === 'high')
 
+  if (embedded) {
+    return (
+      <div className="space-y-2.5">
+        <SuggestionList empty={activeSuggestions.length === 0} suggestions={activeSuggestions} />
+      </div>
+    )
+  }
+
   return (
-    <div className="bg-[#111827] rounded-xl shadow-sm border border-white/[0.07] flex flex-col overflow-hidden">
+    <div className="h-full bg-[#111827] rounded-xl shadow-sm border border-white/[0.07] flex flex-col overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-white/[0.07] flex items-center gap-2">
-        <Sparkles className="w-4 h-4 text-purple-400" />
-        <h3 className="font-semibold text-slate-200 text-sm flex-1">
+        <Sparkles className="w-4 h-4 text-purple-400 flex-shrink-0" />
+        <h3 className="font-semibold text-slate-200 text-sm flex-1 min-w-0 truncate">
           Assistant IA
         </h3>
         {activeSuggestions.length > 0 && (
-          <span className="bg-purple-500/20 text-purple-400 text-xs font-bold px-2 py-0.5 rounded-full">
+          <span className="bg-purple-500/20 text-purple-400 text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0">
             {activeSuggestions.length}
           </span>
         )}
         {highPriority.length > 0 && (
-          <span className="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-0.5 rounded-full animate-pulse-slow">
+          <span className="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-0.5 rounded-full animate-pulse-slow flex-shrink-0">
             {highPriority.length} urgent{highPriority.length > 1 ? 's' : ''}
           </span>
         )}
         <button
           onClick={runAI}
-          className="p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-500 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-500 transition-colors flex-shrink-0"
           title="Analyser le planning"
+          aria-label="Analyser le planning"
         >
           <RefreshCw className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-500 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-500 transition-colors flex-shrink-0"
+          aria-label={collapsed ? 'Déplier' : 'Replier'}
         >
           {collapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
         </button>
       </div>
 
       {!collapsed && (
-        <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
-          {activeSuggestions.length === 0 ? (
-            <div className="text-center py-6">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-2">
-                <Check className="w-5 h-5 text-emerald-400" />
-              </div>
-              <p className="text-sm font-medium text-slate-300">Planning optimisé</p>
-              <p className="text-xs text-slate-500 mt-0.5">Aucune anomalie détectée</p>
-            </div>
-          ) : (
-            activeSuggestions.map(suggestion => (
-              <SuggestionCard key={suggestion.id} suggestion={suggestion} />
-            ))
-          )}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-3 space-y-2.5">
+          <SuggestionList empty={activeSuggestions.length === 0} suggestions={activeSuggestions} />
         </div>
       )}
     </div>
