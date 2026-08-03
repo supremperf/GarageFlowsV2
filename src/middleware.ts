@@ -4,94 +4,152 @@ import { getToken } from 'next-auth/jwt'
 import { getAuthSecret } from '@/lib/auth-secret'
 
 /**
- * GarageFlow middleware — page-level only (all /api/* are skipped)
- * Order of checks:
- *  1. Skip static assets and ALL /api/ routes (APIs handle auth themselves)
- *  2. Admin pages (/admin/*) → require a valid signed gf_session JWT with typ=admin
- *  3. License check — if no valid gf_session JWT → /license
- *  4. Auth check  — if not authenticated on protected page → /login
- *  5. Redirect authenticated user away from /login and /register → /
+ * GarageFlow middleware — niveau page uniquement (toutes les routes /api/* sont
+ * exclues : elles gèrent leur propre authentification).
+ *
+ * Ordre CORRIGÉ — la session NextAuth est vérifiée AVANT la licence gf_session,
+ * ce qui supprime les boucles /, /login, /license observées quand un utilisateur
+ * était authentifié NextAuth mais pas encore licencié.
+ *
+ *  1. Exclure d'emblée les assets statiques / PWA, /api/* et /portal/*.
+ *  2. Lire la session NextAuth (getToken) — priorité à l'authentification.
+ *  3. Pages d'auth (/login, /register) : laisser passer si non connecté,
+ *     renvoyer vers / si déjà connecté.
+ *  4. /license : accessible non connecté ; connecté + licence valide → sortir.
+ *  5. Pages privées : exiger d'abord une session NextAuth (sinon → /login).
+ *  6. /admin/* : NextAuth valide + gf_session typ=admin (sinon → /license).
+ *  7. Routes privées normales : exiger une licence gf_session valide (→ /license).
+ *
+ * Sécurité :
+ *  - getToken() ne peut JAMAIS faire planter le middleware (fail-closed, pas de 500).
+ *  - La vérification cryptographique de gf_session est conservée (jwtVerify HS256).
+ *  - Aucun secret ni contenu de jeton/cookie n'est journalisé.
  */
 
+// ── Assets publics : jamais de logique d'auth/licence. Défense en profondeur :
+// le matcher les exclut déjà, mais on re-vérifie ici (tests + robustesse). ──────
+const PUBLIC_FILE = /\.(?:png|jpe?g|svg|webp|ico|css|js|map|woff2?|ttf)$/i
+const PUBLIC_EXACT = new Set<string>([
+  '/manifest.webmanifest',
+  '/sw.js',
+  '/offline.html',
+  '/favicon.ico',
+  '/robots.txt',
+  '/sitemap.xml',
+])
+
+function isPublicAsset(pathname: string): boolean {
+  return (
+    pathname.startsWith('/_next') ||
+    pathname === '/api' ||
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/portal') || // portail client public — auth dédiée
+    pathname.startsWith('/icons/') || // icônes PWA
+    PUBLIC_EXACT.has(pathname) ||
+    PUBLIC_FILE.test(pathname)
+  )
+}
+
 function getJwtSecret(): Uint8Array {
-  // No hard-coded fallback: if the secret is missing/weak, getAuthSecret() throws,
-  // verifySessionJwt() catches it and returns null → fail-closed (redirect to /license).
+  // Aucun repli codé en dur : getAuthSecret() LÈVE si le secret est absent/faible.
+  // verifySessionJwt() intercepte l'erreur → null → fail-closed (redirection /license).
   return new TextEncoder().encode(getAuthSecret())
 }
 
-/** Verify the signed gf_session cookie. Returns payload or null on failure. */
-async function verifySessionJwt(req: NextRequest): Promise<{ typ: string; lid: string } | null> {
+/**
+ * Vérifie cryptographiquement le cookie gf_session (HS256) et renvoie {typ, lid}
+ * ou null en cas d'échec. Journalise UNIQUEMENT le chemin et le type d'erreur —
+ * jamais le contenu du cookie ni le secret.
+ */
+async function verifySessionJwt(
+  req: NextRequest,
+  pathname: string,
+): Promise<{ typ: string; lid: string } | null> {
   const raw = req.cookies.get('gf_session')?.value
   if (!raw) return null
   try {
     const { payload } = await jwtVerify(raw, getJwtSecret())
-    if (typeof payload.typ !== 'string' || typeof payload.lid !== 'string') return null
+    if (typeof payload.typ !== 'string' || typeof payload.lid !== 'string') {
+      console.warn(`[middleware] gf_session rejeté (charge utile invalide) chemin=${pathname}`)
+      return null
+    }
     return { typ: payload.typ, lid: payload.lid }
-  } catch {
+  } catch (err) {
+    // Ne jamais afficher le cookie ni le secret : uniquement le nom de l'erreur.
+    const kind = err instanceof Error ? err.name : 'ErreurInconnue'
+    console.warn(`[middleware] échec vérification gf_session chemin=${pathname} erreur=${kind}`)
     return null
   }
 }
 
-export async function middleware(req: NextRequest) {
+function redirectTo(req: NextRequest, target: string): NextResponse {
+  return NextResponse.redirect(new URL(target, req.url))
+}
+
+export async function middleware(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl
 
-  // ── 1. Skip public assets, API routes and customer-facing portal ─────────
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api/') ||
-    pathname.startsWith('/portal') ||   // public customer portal — no gf_session needed
-    pathname === '/favicon.ico' ||
-    pathname.startsWith('/public/')
-  ) {
+  // ── 1. Exclusions immédiates (assets, PWA, /api/*, /portal/*) ──────────────
+  if (isPublicAsset(pathname)) {
     return NextResponse.next()
   }
 
-  // ── 2. Admin routes — require signed JWT with typ=admin ───────────────────
-  if (pathname.startsWith('/admin')) {
-    const session = await verifySessionJwt(req)
-    if (session?.typ !== 'admin') {
-      return NextResponse.redirect(new URL('/license', req.url))
-    }
-    return NextResponse.next()
-  }
-
-  // ── 3. License check ─────────────────────────────────────────────────────
-  const session = await verifySessionJwt(req)
-
-  if (pathname === '/license') {
-    if (session) {
-      return NextResponse.redirect(
-        new URL(session.typ === 'admin' ? '/admin/licenses' : '/login', req.url)
-      )
-    }
-    return NextResponse.next()
-  }
-
-  if (!session) {
-    return NextResponse.redirect(new URL('/license', req.url))
-  }
-
-  // ── 4. Auth check ─────────────────────────────────────────────────────────
-  const isAuthPage = pathname === '/login' || pathname === '/register'
-  // getToken peut LEVER sur un en-tête Authorization/Bearer malformé (avis Auth.js) :
-  // un échec ne doit jamais faire planter le middleware (500 → DoS de page). On
-  // traite toute erreur comme « non authentifié » (fail-closed).
+  // ── 2. Session NextAuth D'ABORD (priorité à l'authentification) ────────────
+  // getToken() peut LEVER (en-tête Authorization/Bearer malformé, secret absent…).
+  // Un échec ne doit jamais provoquer un 500 (DoS de page) : on considère
+  // l'utilisateur comme non connecté (fail-closed) et on journalise sans secret.
   let token: Awaited<ReturnType<typeof getToken>> = null
   try {
     token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  } catch {
+  } catch (err) {
+    const kind = err instanceof Error ? err.name : 'ErreurInconnue'
+    console.error(`[middleware] getToken a échoué chemin=${pathname} erreur=${kind}`)
     token = null
   }
+  const isLoggedIn = Boolean(token?.sub || token?.id)
 
-  if (!token && !isAuthPage) {
+  const isAuthPage = pathname === '/login' || pathname === '/register'
+
+  // ── 3. Pages d'authentification (/login, /register) ────────────────────────
+  if (isAuthPage) {
+    // Déjà connecté → renvoyer vers l'accueil (la licence sera vérifiée sur /).
+    if (isLoggedIn) return redirectTo(req, '/')
+    // Non connecté → laisser accéder à la page de connexion/inscription.
+    return NextResponse.next()
+  }
+
+  // ── 4. Page /license (traitée avant l'exigence d'auth générale) ────────────
+  if (pathname === '/license') {
+    // Non connecté → laisser voir la page (l'activation suit la connexion).
+    if (!isLoggedIn) return NextResponse.next()
+    // Connecté : si une licence valide existe déjà, sortir de /license.
+    const session = await verifySessionJwt(req, pathname)
+    if (session) {
+      return redirectTo(req, session.typ === 'admin' ? '/admin/licenses' : '/')
+    }
+    // Connecté sans licence valide → rester sur /license pour l'activer.
+    return NextResponse.next()
+  }
+
+  // ── 5. Pages privées : exiger une session NextAuth AVANT la licence ────────
+  if (!isLoggedIn) {
     const loginUrl = new URL('/login', req.url)
-    loginUrl.searchParams.set('callbackUrl', pathname)
+    loginUrl.searchParams.set('callbackUrl', pathname + req.nextUrl.search)
     return NextResponse.redirect(loginUrl)
   }
 
-  // ── 5. Already authenticated — redirect away from auth pages ──────────────
-  if (token && isAuthPage) {
-    return NextResponse.redirect(new URL('/', req.url))
+  // ── 6. Routes admin : NextAuth valide (ci-dessus) + gf_session typ=admin ────
+  if (pathname.startsWith('/admin')) {
+    const session = await verifySessionJwt(req, pathname)
+    if (session?.typ === 'admin') return NextResponse.next()
+    // Jamais d'accès admin sur la seule foi de NextAuth.
+    return redirectTo(req, '/license')
+  }
+
+  // ── 7. Routes privées normales : exiger une licence gf_session valide ──────
+  const session = await verifySessionJwt(req, pathname)
+  if (!session) {
+    return redirectTo(req, '/license')
   }
 
   return NextResponse.next()
@@ -99,6 +157,16 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    /*
+     * Exécuter le middleware sur toutes les routes de PAGE, SAUF :
+     *  - /api/*     : les API gèrent leur propre authentification ;
+     *  - /_next/*   : assets internes Next.js ;
+     *  - /portal/*  : portail client public (auth dédiée) ;
+     *  - /icons/*   : icônes PWA ;
+     *  - tout chemin contenant un « . » → manifest.webmanifest, sw.js, offline.html,
+     *    favicon.ico, robots.txt, sitemap.xml, *.png, *.css, *.js, *.woff2, …
+     * Les ressources statiques / PWA n'entrent donc JAMAIS dans le middleware.
+     */
+    '/((?!api|_next|portal|icons|.*\\.).*)',
   ],
 }
