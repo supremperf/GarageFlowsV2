@@ -876,7 +876,12 @@ function Test-ProtectedApiKeyEndpoint {
         return $false
     }
     $payload = $result.Payload
-    if ($payload -and $payload.ok -eq $true -and [string]$payload.note -eq 'not_registered') {
+    # Accès SÛR sous Set-StrictMode : une réponse d'erreur (429/503, ou { error,
+    # code }) ne contient PAS 'ok'/'note' — l'accès direct $payload.ok lèverait
+    # « La propriété 'ok' est introuvable ». On teste l'existence avant lecture.
+    $payloadOk = $payload -and $payload.PSObject.Properties['ok'] -and $payload.PSObject.Properties['ok'].Value -eq $true
+    $payloadNote = if ($payload -and $payload.PSObject.Properties['note']) { [string]$payload.PSObject.Properties['note'].Value } else { '' }
+    if ($payloadOk -and $payloadNote -eq 'not_registered') {
         Write-Host '[OK] GARAGEFLOW_API_KEY authentifiée via vercel curl (test non destructif).' -ForegroundColor Green
         return $true
     }

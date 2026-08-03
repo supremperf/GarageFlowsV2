@@ -1056,7 +1056,11 @@ function Test-ApiKeyEndpoint {
         $response = Invoke-WebRequest -Uri ($BaseUrl.TrimEnd('/') + '/api/admin/licenses/revoke-by-key') -Method Post -Headers $headers -Body $body -UseBasicParsing -TimeoutSec 20
         if ([int]$response.StatusCode -ne 200) { Write-GFStatus ERREUR "Endpoint clé API : HTTP $($response.StatusCode), attendu 200."; return $false }
         try { $payload = $response.Content | ConvertFrom-Json } catch { $payload = $null }
-        if ($payload -and $payload.ok -eq $true -and [string]$payload.note -eq 'not_registered') {
+        # Accès SÛR sous Set-StrictMode : tester l'existence de 'ok'/'note' avant
+        # lecture (une réponse inattendue ne doit jamais lever « propriété introuvable »).
+        $payloadOk = $payload -and $payload.PSObject.Properties['ok'] -and $payload.PSObject.Properties['ok'].Value -eq $true
+        $payloadNote = if ($payload -and $payload.PSObject.Properties['note']) { [string]$payload.PSObject.Properties['note'].Value } else { '' }
+        if ($payloadOk -and $payloadNote -eq 'not_registered') {
             Write-GFStatus OK 'GARAGEFLOW_API_KEY authentifiée par un test distant non destructif.'
             return $true
         }

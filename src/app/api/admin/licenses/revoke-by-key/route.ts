@@ -28,11 +28,18 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  // Défense en profondeur (§5 « administration : protection renforcée ») : limite
-  // le débit AVANT toute comparaison — réduit la surface de brute-force sur la
-  // clé API réseau-accessible (fail-closed en prod PWA si Upstash indisponible).
+  // Défense en profondeur (§5) : limite le débit AVANT toute comparaison — réduit
+  // la surface de brute-force sur la clé API réseau-accessible.
+  //
+  // MAIS cette route est appelée par l'outillage de CONFIANCE (keygen, script de
+  // reset) authentifié par une clé API forte à comparaison à temps constant. Un
+  // repli fail-closed (503) sur indisponibilité d'Upstash bloquerait le reset —
+  // qui rote justement Upstash — au moment où il teste cette route (chicken-and-egg
+  // observé en production). On rejette donc UNIQUEMENT une vraie limite atteinte
+  // (429) ; l'indisponibilité du backend (fail_closed) est laissée passer, la clé
+  // API restant le contrôle d'accès fort.
   const rl = await enforceRateLimit('admin', clientIpFrom(req))
-  if (!rl.ok) return rateLimitResponse(rl)
+  if (!rl.ok && rl.degraded !== 'fail_closed') return rateLimitResponse(rl)
 
   // Auth : compare x-gf-key à GARAGEFLOW_API_KEY (temps constant).
   const apiKey = req.headers.get('x-gf-key')?.trim() ?? ''
