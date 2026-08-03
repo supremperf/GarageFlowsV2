@@ -18,9 +18,11 @@ Branche : `claude/audit-garageflow-finalisation-vz9ioc` · Environnement : Node 
 - **État final** : `type-check`, `lint`, `build` (Next + Electron non exécuté, voir §7) et **740 tests
   verts** côté V2 ; `typecheck`/`lint`/`build`/**135 tests** verts côté vitrine. Erreur 503
   diagnostiquée, expliquée et rendue observable. Failles prouvées corrigées.
-- **Niveau de préparation** : **PRÊT SOUS CONDITIONS** (voir §9). La seule condition bloquante est une
-  incohérence de **clé publique de licence entre les deux dépôts** qui exige une décision humaine (la
-  clé privée n'est — à juste titre — pas dans le dépôt).
+- **Niveau de préparation** : **PRÊT SOUS CONDITIONS** (voir §9). Le bloqueur n°1 — la **clé publique de
+  licence divergente entre les trois consommateurs** — est désormais **RÉSOLU** : la clé de référence a
+  été déterminée avec certitude (empreinte de `keys/public.pem` fournie par l'opérateur, jamais la clé
+  privée) et les 3 emplacements sont alignés + verrouillés par test e2e. Restent des conditions
+  d'exploitation non bloquantes pour le code (config d'env, validations Windows/PowerShell).
 - **Principales corrections** : diagnostic/observabilité de l'auth ; purge de cookie NextAuth périmé ;
   non‑exposition des coûts/marges au portail client ; extraction d'IP fiable (anti‑contournement du
   rate‑limit) ; plafond d'upload ; garde de navigation Electron par origine ; cohérence HWID du keygen ;
@@ -138,21 +140,21 @@ release.
 
 ## 6. Éléments restants (non corrigés — justifiés)
 
-- **CRITIQUE — Clé publique de licence divergente entre dépôts.**
-  `GarageFlowsV2/src/lib/license/public-key.ts` (+ `electron/main.js`, **cohérents entre eux**) et
-  `garagesite3/src/lib/licenses/public-key.ts` embarquent des clés **P‑256 différentes**, alors que les
-  deux vérifient le **même format de token GF2 (ES256)** signé par l'**unique** keygen. Un token signé
-  par la clé privée du keygen ne peut être validé que par le dépôt dont la clé publique correspond ;
-  l'autre **rejette toutes les licences réelles**.
-  *Non corrigé* : la clé privée n'est pas (à juste titre) dans le dépôt ; impossible de déterminer avec
-  certitude laquelle des deux clés est la bonne. **Corriger côté V2 ou vitrine à l'aveugle risquerait
-  de casser le chemin actuellement fonctionnel en production.**
-  **Résolution (opérateur)** : à partir du keygen (`keys/public.pem`, la vraie clé publique associée à
-  la clé privée de signature), copier cette valeur **à l'identique** dans les 3 emplacements
-  (`V2/src/lib/license/public-key.ts`, `V2/electron/main.js`, `garagesite3/src/lib/licenses/public-key.ts`),
-  puis émettre une licence de test et vérifier qu'elle valide dans **les deux** dépôts.
-  *Indice, à confirmer* : V2 est cohérent sur ses deux surfaces (PWA + Electron), ce qui **suggère**
-  que la vitrine est le dépôt à réaligner — mais **cela doit être confirmé contre `keys/public.pem`**.
+- **RÉSOLU (2026‑08) — Clé publique de licence divergente entre dépôts.**
+  Les trois consommateurs (`V2/src/lib/license/public-key.ts`, `V2/electron/main.js`,
+  `garagesite3/src/lib/licenses/public-key.ts`) embarquaient des clés **P‑256 différentes** tout en
+  vérifiant le **même format GF2 (ES256)** de l'**unique** keygen → un dépôt aurait rejeté toutes les
+  licences réelles. L'empreinte de référence a été déterminée **avec certitude** à partir de
+  `keys/public.pem` fourni par l'opérateur (jamais la clé privée) — elle ne correspondait à **aucune**
+  des deux clés embarquées : **les deux dépôts étaient périmés**. Les trois emplacements ont été alignés
+  sur la clé de référence.
+  - Empreintes DER‑SHA256 **avant** — V2 (PWA+Electron) `c48e6b3e…9906a` ; vitrine `1a48d1cc…2974a`.
+  - Empreinte DER‑SHA256 **après** (commune aux 3) : `7bed3cb736ccc8d422a7663939732faf6eb9a4c59daa590cc826b2f821b6d478`.
+  - **Test e2e** : `public-key-consistency.test.ts` (V2 + vitrine) verrouille l'invariant « les 3 clés
+    == empreinte de référence » et fournit un harnais de vérification d'un vrai jeton GF2 signé
+    (activé par `GF_TEST_LICENSE`). Aucune paire régénérée, aucune clé privée dans le dépôt.
+  - *Reste à faire (opérateur, non bloquant)* : fournir un jeton GF2 de test pour exécuter le chemin
+    e2e **positif** en CI (sinon il est `skip`).
 
 - **ÉLEVÉ / MOYEN — Panne transitoire d'Upstash → 503 au login.** Choix de conception (fail‑closed
   sécurité). Documenté ; l'observabilité ajoutée le rend diagnosticable. À arbitrer par le métier
@@ -206,15 +208,18 @@ dépôts), en commits atomiques thématiques. Pour revenir en arrière :
 ## 9. Verdict final : **PRÊT SOUS CONDITIONS**
 
 Le socle est de qualité professionnelle et l'ensemble des vérifications automatisables est **vert**.
-La mise en production/démonstration est subordonnée à :
+Le **bloqueur n°1 (clé publique de licence divergente) est RÉSOLU** : les 3 consommateurs partagent
+désormais la clé de référence du keygen (empreinte `7bed3cb7…`, §6). Restent des conditions
+d'exploitation, **non bloquantes pour le code** :
 
-1. **Bloquant** : aligner la **clé publique de licence** entre les deux dépôts contre `keys/public.pem`
-   du keygen (§6), puis prouver la validation croisée d'une licence de test.
-2. **Config d'exploitation** : en prod PWA, définir `UPSTASH_REDIS_REST_URL/TOKEN`, `NEXTAUTH_SECRET`
+1. **Config d'exploitation** : en prod PWA, définir `UPSTASH_REDIS_REST_URL/TOKEN`, `NEXTAUTH_SECRET`
    stable, `DEVICE_TOKEN_PEPPER`, et un signal de proxy de confiance (`VERCEL=1` automatique, sinon
    `TRUST_PROXY_HEADERS=1` derrière un proxy fiable) — sans quoi le démarrage est (volontairement)
    refusé avec un message clair.
-3. **À valider hors CI Linux** : build Electron Windows, `env:reset:dry-run` (PowerShell), keygen GUI.
+2. **À valider hors CI Linux** : build Electron Windows, `env:reset:dry-run` (PowerShell), keygen GUI.
+3. **Optionnel** : fournir un jeton GF2 de test (`GF_TEST_LICENSE`) pour exécuter le chemin e2e
+   **positif** des licences en CI.
 
 En dehors de ces conditions, aucune régression critique connue n'a été introduite ; le 503 est
-diagnostiqué et corrigé ; les failles prouvées sont traitées.
+diagnostiqué et corrigé ; la divergence de clé de licence est résolue et verrouillée par test ; les
+failles prouvées sont traitées.

@@ -97,8 +97,8 @@ const ROOT     = path.join(__dirname, '..')               // project root (dev) 
 // This is a PUBLIC key — distributing it is safe; you cannot forge signatures without private.pem
 const _PK = [
   '-----BEGIN PUBLIC KEY-----',
-  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEDvMVU9vdgTvQu1S2w6amt5UyFWhR',
-  'E+KEHZzdx5v4WLubA5mSjFdI6TS1L67Qq8ulJ9fUoOF6n2zzKO7o6DbbgA==',
+  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAERDyOCchcjJD1wICS9440LV+ZnJ/z',
+  'dI1hLSxlONW6sk3tL20cNRG1dMZcuhF/15GL/2yCK4Zpbhky7YhesVsEuw==',
   '-----END PUBLIC KEY-----',
 ]
 const PUBLIC_KEY_PEM = _PK.join('\n')
