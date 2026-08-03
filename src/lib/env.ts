@@ -56,6 +56,14 @@ export function validateEnv(): { ok: boolean; issues: EnvIssue[] } {
         name: 'UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN',
         problem: 'rate limiting distribué requis en production PWA (multi-instance)',
       })
+    } else if (!/^https:\/\//i.test(process.env.UPSTASH_REDIS_REST_URL.trim())) {
+      // L'API REST Upstash est en https:// (…upstash.io). Une URL rediss:// ou
+      // malformée ferait échouer fetch → fail-closed 503 sur toutes les routes
+      // critiques alors que la variable est « présente ». On l'attrape au démarrage.
+      issues.push({
+        name: 'UPSTASH_REDIS_REST_URL',
+        problem: 'doit être l\'URL REST https:// (…upstash.io) — pas rediss:// ni une valeur malformée',
+      })
     }
 
     // Proxy de confiance : clientIpFrom() n'utilise x-forwarded-for/x-real-ip

@@ -193,3 +193,46 @@ describe('clientIpFrom — en-têtes proxy contrôlés', () => {
     expect(clientIpFrom(reqWith({ 'x-forwarded-for': '5.6.7.8, 9.9.9.9' }))).toBe('5.6.7.8')
   })
 })
+
+// ─── Robustesse Upstash : valeur d'env avec retour à la ligne parasite ────────
+// Régression production : hasUpstash=true mais degraded=fail_closed, ~47 ms,
+// aucun appel sortant → un « \n » dans le token forme « Bearer <token>\n »,
+// en-tête HTTP invalide → fetch lève AVANT toute requête → repli fail-closed
+// sur toutes les routes critiques. upstashConfig() nettoie désormais la valeur.
+describe('robustesse Upstash — valeurs d\'environnement nettoyées', () => {
+  it('un token avec \\n ne casse plus fetch (Authorization nettoyé) et évite le fail-closed', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    process.env.VERCEL = '1'
+    process.env.UPSTASH_REDIS_REST_URL = 'https://demo.upstash.io\n'
+    process.env.UPSTASH_REDIS_REST_TOKEN = 'tok_abc123\n'
+    __setRateLimitBackendForTests(undefined)
+
+    let capturedAuth: unknown = null
+    const mockFetch = vi.fn(async (_url: unknown, init: { headers: Record<string, string> }) => {
+      capturedAuth = init.headers.Authorization
+      return { ok: true, json: async () => ({ result: [1, 60000] }) } as unknown as Response
+    })
+    vi.stubGlobal('fetch', mockFetch)
+
+    const d = await enforceRateLimit('login', 'ip-x')
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    expect(capturedAuth).toBe('Bearer tok_abc123')     // aucun \n
+    expect(String(capturedAuth)).not.toMatch(/[\r\n]/)
+    expect(d.ok).toBe(true)
+    expect(d.degraded).toBeUndefined()
+  })
+
+  it('URL rediss:// (non REST) → traitée comme absente, sans fetch qui lève en boucle', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    process.env.VERCEL = '1'
+    process.env.UPSTASH_REDIS_REST_URL = 'rediss://default:xxx@host:6379'
+    process.env.UPSTASH_REDIS_REST_TOKEN = 'tok'
+    __setRateLimitBackendForTests(undefined)
+    const mockFetch = vi.fn()
+    vi.stubGlobal('fetch', mockFetch)
+
+    const d = await enforceRateLimit('login', 'ip-y')
+    expect(mockFetch).not.toHaveBeenCalled()
+    expect(d.degraded).toBe('fail_closed') // critical + pas de backend REST valide
+  })
+})

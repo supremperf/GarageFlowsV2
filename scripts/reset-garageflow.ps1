@@ -1853,8 +1853,15 @@ try {
     Assert-Url 'URL publique GarageFlow' $appUrl -Https
 
     $upstashUrl = Read-TextOrKeep 'UPSTASH_REDIS_REST_URL' ([string]$remoteBackup['UPSTASH_REDIS_REST_URL']) '' -Required
+    # SÉCURITÉ D'EXÉCUTION : retirer TOUT retour à la ligne / tabulation, y compris
+    # interne. Un « \n » résiduel dans le token formerait un en-tête HTTP invalide
+    # (« Authorization: Bearer <token>\n ») → fetch lève côté app AVANT tout appel
+    # réseau → repli fail-closed 503 alors qu'Upstash est pourtant configuré. On
+    # nettoie AVANT le test ET l'écriture pour que la valeur testée == valeur écrite.
+    $upstashUrl = (Clean-InputValue $upstashUrl) -replace '[\r\n\t]', ''
     Assert-Url 'UPSTASH_REDIS_REST_URL' $upstashUrl -Https
     $upstashToken = Read-SecretOrKeep 'UPSTASH_REDIS_REST_TOKEN' ([string]$remoteBackup['UPSTASH_REDIS_REST_TOKEN']) -Required
+    $upstashToken = (Clean-InputValue $upstashToken) -replace '[\r\n\t]', ''
     [void](Test-UpstashRestConnection -Url $upstashUrl -Token $upstashToken)
     $anthropic = Read-SecretOrKeep 'ANTHROPIC_API_KEY optionnelle' ([string]$remoteBackup['ANTHROPIC_API_KEY'])
 

@@ -195,10 +195,29 @@ class MemoryBackend implements Backend {
 let cachedBackend: Backend | null | undefined
 let warnedMemory = false
 
+/**
+ * Nettoie une valeur d'environnement Upstash. ROBUSTESSE CRITIQUE : un retour à
+ * la ligne / espace parasite (copié-collé, ou ajouté à l'écriture Vercel) casse
+ * `fetch` AVANT tout appel réseau — un `\n` dans le token produit un en-tête
+ * « Authorization: Bearer <token>\n » invalide (TypeError, aucune requête
+ * sortante) → repli fail-closed 503 alors qu'Upstash est pourtant configuré
+ * (symptôme observé : hasUpstash=true, degraded=fail_closed, ~47 ms). Ni l'URL
+ * REST ni le token n'ont d'espace légitime : on retire tout blanc de bord et
+ * tout CR/LF/tab (y compris interne, illégal dans un en-tête HTTP).
+ */
+function cleanUpstashValue(v: string | undefined): string {
+  return (v ?? '').replace(/[\r\n\t]/g, '').trim()
+}
+
 function upstashConfig(): { url: string; token: string } | null {
-  const url   = process.env.UPSTASH_REDIS_REST_URL ?? ''
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? ''
-  return url && token ? { url, token } : null
+  const url   = cleanUpstashValue(process.env.UPSTASH_REDIS_REST_URL)
+  const token = cleanUpstashValue(process.env.UPSTASH_REDIS_REST_TOKEN)
+  if (!url || !token) return null
+  // URL invalide (protocole non http, ex. « rediss:// ») : inutilisable via l'API
+  // REST — on la traite comme absente plutôt que de laisser fetch lever à chaque
+  // requête (le configurateur exige déjà une URL https ...upstash.io).
+  if (!/^https?:\/\//i.test(url)) return null
+  return { url, token }
 }
 
 /**

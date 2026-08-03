@@ -1721,7 +1721,13 @@ function Build-ConfigurationPlan {
             foreach ($name in @('UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN')) {
                 if ([bool]$snap.Present[$name]) { Ensure-RemoteRollbackValue -Name $name -Target $target -Snapshot $snap -Definition $defs[$name] }
                 $existing = if ($snap.Values.ContainsKey($name)) { [string]$snap.Values[$name] } else { $null }
-                $remote[$target][$name] = Collect-ExternalValue -Definition $defs[$name] -Existing $existing -Target server -EnvironmentLabel $target -ForcePrompt
+                $collected = Collect-ExternalValue -Definition $defs[$name] -Existing $existing -Target server -EnvironmentLabel $target -ForcePrompt
+                # Ni l'URL REST ni le token Upstash n'ont de retour à la ligne
+                # légitime : on retire tout CR/LF/tab. Un « \n » résiduel formerait
+                # un en-tête « Authorization: Bearer <token>\n » invalide → fetch
+                # lève côté app AVANT tout appel → fail-closed 503 malgré config.
+                if ($null -ne $collected) { $collected = ([string]$collected) -replace '[\r\n\t]', '' }
+                $remote[$target][$name] = $collected
             }
         }
         return [pscustomobject]@{ Local = $local; Remote = $remote; Missing = $missing }
