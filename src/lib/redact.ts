@@ -24,6 +24,16 @@ export function redactString(input: string): string {
   // URLs de connexion base de données avec identifiants.
   s = s.replace(/\b(postgres(?:ql)?|mysql|mongodb(?:\+srv)?):\/\/[^\s"']+/gi, '$1://<redacted>')
 
+  // Jetons de portail client dans un CHEMIN d'URL (mission §10) :
+  //   /portal/<token>  et  /portal/quote/<token>  →  /portal[/quote]/[REDACTED]
+  // On ne masque QUE les segments « jeton » (longs / de forme JWT ou base64url),
+  // jamais les pages statiques (/portal/login, /portal/register, /portal/account).
+  // Placé AVANT la règle JWT générique pour émettre exactement « [REDACTED] ».
+  s = s.replace(
+    /\/portal(\/quote)?\/(?:eyJ[A-Za-z0-9._-]+|[A-Za-z0-9_-]{20,}(?:\.[A-Za-z0-9_-]+){0,2})/g,
+    '/portal$1/[REDACTED]',
+  )
+
   // En-têtes sensibles (valeur jusqu'à la fin de ligne).
   s = s.replace(/\b(authorization|cookie|set-cookie)\b\s*[:=]\s*[^\r\n]+/gi, '$1: <redacted>')
 
