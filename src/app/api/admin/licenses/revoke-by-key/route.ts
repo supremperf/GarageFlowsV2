@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { prisma } from '@/lib/db'
 import { computeRecordMac } from '@/lib/license/record-mac'
+import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 const VALID_STATUSES = ['active', 'revoked', 'suspended'] as const
 type Status = typeof VALID_STATUSES[number]
@@ -27,6 +28,12 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
+  // Défense en profondeur (§5 « administration : protection renforcée ») : limite
+  // le débit AVANT toute comparaison — réduit la surface de brute-force sur la
+  // clé API réseau-accessible (fail-closed en prod PWA si Upstash indisponible).
+  const rl = await enforceRateLimit('admin', clientIpFrom(req))
+  if (!rl.ok) return rateLimitResponse(rl)
+
   // Auth : compare x-gf-key à GARAGEFLOW_API_KEY (temps constant).
   const apiKey = req.headers.get('x-gf-key')?.trim() ?? ''
   const serverApiKey = process.env.GARAGEFLOW_API_KEY?.trim() ?? ''
