@@ -1,4 +1,45 @@
-export interface Migration { id: string; sql: string }
+/**
+ * Spécification d'un index UNIQUE créé par le runner avec CONTRÔLE DE DOUBLONS.
+ * Le runner détecte d'abord les groupes en doublon : s'il en existe, l'index
+ * n'est PAS créé (statut « deferred », réessayé au prochain démarrage) — jamais
+ * d'échec bloquant ni de suppression de données. Sinon l'index UNIQUE est créé.
+ */
+export interface UniqueIndexMigration {
+  /** Nom d'index (convention Prisma : <Table>_<col..>_key) — idempotent. */
+  name: string
+  table: string
+  columns: string[]
+}
+
+export interface Migration {
+  id: string
+  /** Instruction SQL unique (mutuellement exclusif avec uniqueIndex). */
+  sql?: string
+  /** Création d'un index UNIQUE sûre (contrôle de doublons). */
+  uniqueIndex?: UniqueIndexMigration
+}
+
+/** Échappe un identifiant SQLite (guillemets doubles). */
+function quoteIdent(id: string): string {
+  return `"${id.replace(/"/g, '""')}"`
+}
+
+/**
+ * SQL détectant les groupes en doublon qui EMPÊCHERAIENT un index UNIQUE.
+ * Les NULL sont exclus : SQLite autorise plusieurs NULL sous une contrainte
+ * UNIQUE (NULL ≠ NULL), donc ils ne créent jamais de conflit.
+ */
+export function duplicateGroupsSql(u: UniqueIndexMigration): string {
+  const cols = u.columns.map(quoteIdent).join(', ')
+  const notNull = u.columns.map((c) => `${quoteIdent(c)} IS NOT NULL`).join(' AND ')
+  return `SELECT ${cols} FROM ${quoteIdent(u.table)} WHERE ${notNull} GROUP BY ${cols} HAVING COUNT(*) > 1 LIMIT 5`
+}
+
+/** SQL de création idempotente de l'index UNIQUE. */
+export function createUniqueIndexSql(u: UniqueIndexMigration): string {
+  const cols = u.columns.map(quoteIdent).join(', ')
+  return `CREATE UNIQUE INDEX IF NOT EXISTS ${quoteIdent(u.name)} ON ${quoteIdent(u.table)}(${cols})`
+}
 
 export const MIGRATIONS: Migration[] = [
   // ── JobPhoto ──────────────────────────────────────────────────────────────
@@ -784,4 +825,16 @@ export const MIGRATIONS: Migration[] = [
 )` },
   { id: '118_reportsnapshot_idx_garage', sql: 'CREATE INDEX IF NOT EXISTS "ReportSnapshot_garageId_idx" ON "ReportSnapshot"("garageId")' },
   { id: '119_reportsnapshot_idx_garage_created', sql: 'CREATE INDEX IF NOT EXISTS "ReportSnapshot_garageId_createdAt_idx" ON "ReportSnapshot"("garageId", "createdAt")' },
+
+  // ── Index UNIQUE du schéma manquants sur une base réparée table-par-table ────
+  // Les entrées `NNN_ensure_*_table` créent les tables SANS contrainte UNIQUE en
+  // ligne ; ces migrations rétablissent les 6 contraintes d'unicité du schéma
+  // (prisma/schema.prisma) avec CONTRÔLE DE DOUBLONS (voir migrate/route.ts) :
+  // en présence de doublons, l'index est différé (jamais d'échec ni de perte).
+  { id: '120_unique_garage_slug',              uniqueIndex: { name: 'Garage_slug_key',                  table: 'Garage',     columns: ['slug'] } },
+  { id: '121_unique_user_email',               uniqueIndex: { name: 'User_email_key',                   table: 'User',       columns: ['email'] } },
+  { id: '122_unique_vehicle_plate_garage',     uniqueIndex: { name: 'Vehicle_licensePlate_garageId_key', table: 'Vehicle',   columns: ['licensePlate', 'garageId'] } },
+  { id: '123_unique_workorder_job',            uniqueIndex: { name: 'WorkOrder_jobId_key',              table: 'WorkOrder',  columns: ['jobId'] } },
+  { id: '124_unique_licensekey_licenseid',     uniqueIndex: { name: 'LicenseKey_licenseId_key',         table: 'LicenseKey', columns: ['licenseId'] } },
+  { id: '125_unique_licensekey_token',         uniqueIndex: { name: 'LicenseKey_token_key',             table: 'LicenseKey', columns: ['token'] } },
 ]
