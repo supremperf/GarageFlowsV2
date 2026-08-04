@@ -209,9 +209,14 @@ export default function Home() {
       .then(data => { if (data?.totalAlerts) setWarrantyAlerts(data.totalAlerts) })
       .catch(() => {})
 
-    // Load mechanics first (faster perceived startup), then jobs + AI
+    // Load mechanics first (faster perceived startup), then jobs + AI.
+    // `alive` évite de créer l'intervalle APRÈS un démontage survenu pendant les
+    // deux fetch de bootstrap (sinon runAI tournait indéfiniment sur un composant
+    // démonté, jamais nettoyé).
+    let alive = true
     fetchMechanics().then(() => {
       fetchData().then(() => {
+        if (!alive) return
         runAI()
         // Refresh AI analysis every 3 minutes (reduced frequency = less CPU)
         aiIntervalRef.current = setInterval(runAI, 3 * 60 * 1000)
@@ -219,6 +224,7 @@ export default function Home() {
     })
 
     return () => {
+      alive = false
       if (aiIntervalRef.current) clearInterval(aiIntervalRef.current)
     }
   }, [status, fetchData, fetchMechanics, runAI])

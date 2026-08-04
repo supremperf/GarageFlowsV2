@@ -79,10 +79,14 @@ export const POST = withAuth(async (req) => {
   }
 
   try {
+    // `secure` par défaut = (port === 465), COHÉRENT avec reminders/send et
+    // notifications/dispatch. L'ancien `?? true` faisait échouer le test sur un
+    // port 587 (STARTTLS) → le diagnostic signalait à tort une config invalide.
+    const smtpPort = garage.smtpPort ?? 587
     const transporter = nodemailer.createTransport({
       host: garage.smtpHost,
-      port: garage.smtpPort ?? 587,
-      secure: garage.smtpSecure ?? true,
+      port: smtpPort,
+      secure: garage.smtpSecure ?? smtpPort === 465,
       auth: { user: garage.smtpUser, pass: smtpPass ?? undefined },
     })
 

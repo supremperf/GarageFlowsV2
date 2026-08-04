@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { prisma, isPostgresDatabase } from '@/lib/db'
 import { logger } from '@/lib/logger'
 import { isAdminSession } from '@/lib/api-helpers'
 import { computeRecordMac } from '@/lib/license/record-mac'
@@ -48,22 +48,29 @@ export async function PATCH(
   if (body.hwid  !== undefined) data.hwid  = body.hwid
 
   try {
-    // Re-compute MAC whenever security-critical fields may have changed
-    if (body.status !== undefined || body.hwid !== undefined) {
-      const current = await prisma.licenseKey.findUnique({ where: { id } })
-      if (!current) {
-        return NextResponse.json({ error: 'Licence introuvable' }, { status: 404 })
+    // ATOMIQUE : lecture + recalcul du recordMac + écriture sous verrou de ligne,
+    // sinon deux éditions concurrentes de la MÊME clé sur des champs DIFFÉRENTS
+    // (ex. status vs hwid) pouvaient laisser un recordMac calculé sur un état
+    // périmé → MAC incohérent → licence considérée « tampered » et bloquée.
+    const updated = await prisma.$transaction(async (tx) => {
+      if (isPostgresDatabase()) {
+        // Sérialise les éditions concurrentes de cette licence (PostgreSQL).
+        await tx.$executeRaw`SELECT "id" FROM "LicenseKey" WHERE "id" = ${id} FOR UPDATE`
       }
-      data.recordMac = computeRecordMac({
-        licenseId: current.licenseId,
-        token:     current.token,
-        status:    (body.status ?? current.status) as string,
-        expiryAt:  current.expiryAt,
-        hwid:      (body.hwid !== undefined ? body.hwid : current.hwid) ?? null,
-      })
-    }
-
-    const updated = await prisma.licenseKey.update({ where: { id }, data })
+      // Re-compute MAC whenever security-critical fields may have changed
+      if (body.status !== undefined || body.hwid !== undefined) {
+        const current = await tx.licenseKey.findUnique({ where: { id } })
+        if (!current) throw Object.assign(new Error('not found'), { code: 'P2025' })
+        data.recordMac = computeRecordMac({
+          licenseId: current.licenseId,
+          token:     current.token,
+          status:    (body.status ?? current.status) as string,
+          expiryAt:  current.expiryAt,
+          hwid:      (body.hwid !== undefined ? body.hwid : current.hwid) ?? null,
+        })
+      }
+      return tx.licenseKey.update({ where: { id }, data })
+    })
     return NextResponse.json(updated)
   } catch (err: any) {
     if (err?.code === 'P2025') {
