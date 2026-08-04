@@ -1,14 +1,22 @@
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { prisma, isPostgresDatabase } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { can } from '@/lib/authz'
 import { verifyLicenseToken } from '@/lib/license/verify'
-import { macFor } from '@/lib/license/mechanic-admin'
+import {
+  macFor,
+  getMaxMechanicKeys,
+  MechanicConfigError,
+  MechanicKeyCapError,
+} from '@/lib/license/mechanic-admin'
 import { logAudit } from '@/lib/audit'
 
-const MAX_MECHANIC_KEYS = Number(process.env.GF_MAX_MECHANIC_KEYS ?? 20)
+/** Réponse 500 claire pour une configuration serveur invalide (jamais un cap silencieux). */
+function configErrorResponse(e: MechanicConfigError): NextResponse {
+  return NextResponse.json({ error: e.message, code: 'CONFIG_ERROR' }, { status: 500 })
+}
 
 // GET /api/mechanic-licenses — liste des clés mécanicien du garage (OWNER/MANAGER).
 // Le token complet n'est JAMAIS renvoyé ici (voir /[lid]/token, OWNER seul).
@@ -56,7 +64,14 @@ export const GET = withAuth(async () => {
     activeDevices: activeDevices.get(l.licenseId) ?? 0,
   }))
 
-  return NextResponse.json({ data, max: MAX_MECHANIC_KEYS, total: data.length })
+  let max: number
+  try {
+    max = getMaxMechanicKeys()
+  } catch (e) {
+    if (e instanceof MechanicConfigError) return configErrorResponse(e)
+    throw e
+  }
+  return NextResponse.json({ data, max, total: data.length })
 })
 
 // POST /api/mechanic-licenses  { token }
@@ -100,10 +115,14 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: 'Cette clé est déjà enregistrée.' }, { status: 409 })
   }
 
-  // Plafond de clés mécanicien par garage.
-  const count = await prisma.licenseKey.count({ where: { garageId, licenseType: 'mechanic' } })
-  if (count >= MAX_MECHANIC_KEYS) {
-    return NextResponse.json({ error: `Nombre maximal de clés mécanicien atteint (${MAX_MECHANIC_KEYS}).` }, { status: 403 })
+  // Plafond validé STRICTEMENT (config invalide ⇒ 500 clair, jamais de cap NaN
+  // qui désactivait silencieusement la limite).
+  let max: number
+  try {
+    max = getMaxMechanicKeys()
+  } catch (e) {
+    if (e instanceof MechanicConfigError) return configErrorResponse(e)
+    throw e
   }
 
   const expiryAt = new Date(payload.exp * 1000)
@@ -112,25 +131,50 @@ export const POST = withAuth(async (req) => {
     hwid: payload.hwid ?? null, parentLicenseId: payload.plid ?? null, mechanicId: null,
   })
 
-  const created = await prisma.licenseKey.create({
-    data: {
-      licenseId: payload.lid,
-      token,
-      customerId: payload.cid,
-      licenseType: 'mechanic',
-      expiryAt,
-      status: 'active',
-      isAdmin: false,
-      seats: 1,
-      hwid: payload.hwid ?? null,
-      garageId,
-      parentLicenseId: payload.plid ?? null,
-      mechanicHint: payload.mn ?? null,
-      mechanicId: null,
-      recordMac,
-    },
-    select: { licenseId: true, status: true, expiryAt: true, mechanicHint: true, createdAt: true },
-  })
+  // Plafond ATOMIQUE (§4). Sur PostgreSQL (multi-instance) un verrou consultatif
+  // transactionnel, indexé sur le garage, sérialise les créations concurrentes :
+  // deux requêtes simultanées ne peuvent plus toutes deux passer count() puis
+  // create() (course TOCTOU sur le plafond). Sur SQLite (desktop mono-poste) la
+  // transaction sérialise déjà les écritures. La contrainte UNIQUE(licenseId)
+  // protège en dernier ressort contre un doublon créé en concurrence (→ 409).
+  let created: { licenseId: string; status: string; expiryAt: Date; mechanicHint: string | null; createdAt: Date }
+  try {
+    created = await prisma.$transaction(async (tx) => {
+      if (isPostgresDatabase()) {
+        await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))', `gf:mechkeys:${garageId}`)
+      }
+      const count = await tx.licenseKey.count({ where: { garageId, licenseType: 'mechanic' } })
+      if (count >= max) throw new MechanicKeyCapError(max)
+      return tx.licenseKey.create({
+        data: {
+          licenseId: payload.lid,
+          token,
+          customerId: payload.cid,
+          licenseType: 'mechanic',
+          expiryAt,
+          status: 'active',
+          isAdmin: false,
+          seats: 1,
+          hwid: payload.hwid ?? null,
+          garageId,
+          parentLicenseId: payload.plid ?? null,
+          mechanicHint: payload.mn ?? null,
+          mechanicId: null,
+          recordMac,
+        },
+        select: { licenseId: true, status: true, expiryAt: true, mechanicHint: true, createdAt: true },
+      })
+    })
+  } catch (e) {
+    if (e instanceof MechanicKeyCapError) {
+      return NextResponse.json({ error: e.message }, { status: 403 })
+    }
+    // Doublon créé en concurrence (contrainte UNIQUE licenseId — code Prisma P2002).
+    if (e && typeof e === 'object' && 'code' in e && (e as { code?: unknown }).code === 'P2002') {
+      return NextResponse.json({ error: 'Cette clé est déjà enregistrée.' }, { status: 409 })
+    }
+    throw e
+  }
 
   await logAudit({ action: 'create', entityType: 'License', entityId: created.licenseId, session, req })
 

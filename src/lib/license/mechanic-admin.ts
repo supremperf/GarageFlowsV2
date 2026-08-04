@@ -9,8 +9,43 @@
  *    prochain contrôle serveur).
  */
 
+import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { computeRecordMac } from '@/lib/license/record-mac'
+
+/** Erreur de configuration serveur (GF_MAX_MECHANIC_KEYS invalide). */
+export class MechanicConfigError extends Error {}
+
+/** Erreur métier : plafond de clés mécanicien atteint pour le garage. */
+export class MechanicKeyCapError extends Error {
+  constructor(public readonly max: number) {
+    super(`Nombre maximal de clés mécanicien atteint (${max}).`)
+  }
+}
+
+// GF_MAX_MECHANIC_KEYS : entier STRICTEMENT positif. Zod rejette NaN (échoue
+// .int()), 0 et négatif (.positive()), et non-entier (.int()).
+const MAX_KEYS_SCHEMA = z.coerce.number().int().positive()
+const DEFAULT_MAX_MECHANIC_KEYS = 20
+
+/**
+ * Plafond de clés mécanicien par garage, validé STRICTEMENT.
+ * Absent/vide ⇒ défaut 20. Toute valeur invalide (NaN, négative, nulle, non
+ * entière, texte) ⇒ MechanicConfigError avec un message clair — jamais un
+ * plafond silencieusement désactivé (l'ancien `Number(x)` renvoyait NaN et
+ * `count >= NaN` était toujours faux, ce qui SUPPRIMAIT le plafond).
+ */
+export function getMaxMechanicKeys(): number {
+  const raw = process.env.GF_MAX_MECHANIC_KEYS
+  if (raw === undefined || raw.trim() === '') return DEFAULT_MAX_MECHANIC_KEYS
+  const parsed = MAX_KEYS_SCHEMA.safeParse(raw)
+  if (!parsed.success) {
+    throw new MechanicConfigError(
+      `Configuration invalide : GF_MAX_MECHANIC_KEYS="${raw}" (un entier strictement positif est attendu).`,
+    )
+  }
+  return parsed.data
+}
 
 type MacInput = {
   licenseId: string
