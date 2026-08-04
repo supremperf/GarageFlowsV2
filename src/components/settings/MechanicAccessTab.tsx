@@ -120,8 +120,16 @@ export function MechanicAccessTab() {
   }
 
   async function copyToken(licenseId: string) {
+    // §9 — récupération protégée : POST (token jamais dans l'URL) + réauthentification.
+    const password = window.prompt('Confirmez votre mot de passe pour copier la clé mécanicien :')
+    if (password === null) return // annulé
     try {
-      const res = await fetch(`/api/mechanic-licenses/${licenseId}/token`, { cache: 'no-store' })
+      const res = await fetch(`/api/mechanic-licenses/${licenseId}/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({ password }),
+      })
       const data = await res.json()
       if (!res.ok) { toast.error(data.error ?? 'Copie refusée'); return }
       await navigator.clipboard.writeText(data.token)
