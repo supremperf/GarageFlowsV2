@@ -43,6 +43,19 @@ export const POST = withAuth(async (req, { params }: { params: { lid: string } }
   })
   if (!license) return NextResponse.json({ error: 'Clé introuvable.' }, { status: 404 })
 
+  // §2 — RÉVOCATION IRRÉVERSIBLE. Transitions autorisées :
+  //   active⇄suspended, active→revoked, suspended→revoked.
+  // INTERDITES : revoked→active, revoked→suspended. Une clé révoquée le reste ;
+  // le remplacement se fait en générant une NOUVELLE clé (jamais en ressuscitant
+  // l'ancienne). On teste status ET revokedAt (défense en profondeur).
+  const isRevoked = license.status === 'revoked' || !!license.revokedAt
+  if (isRevoked && status !== 'revoked') {
+    return NextResponse.json(
+      { error: 'Cette clé a été révoquée définitivement. Générez une nouvelle clé de remplacement.' },
+      { status: 409 },
+    )
+  }
+
   const now = new Date()
   const newMac = macFor({
     licenseId: license.licenseId, token: license.token, status,
