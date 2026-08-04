@@ -884,10 +884,14 @@ export const MIGRATIONS: Migration[] = [
 )` },
   { id: '143_job_mechanic_note_idx1', sql: 'CREATE INDEX IF NOT EXISTS "JobMechanicNote_jobId_createdAt_idx" ON "JobMechanicNote"("jobId", "createdAt")' },
   { id: '144_job_mechanic_note_idx2', sql: 'CREATE INDEX IF NOT EXISTS "JobMechanicNote_garageId_mechanicId_idx" ON "JobMechanicNote"("garageId", "mechanicId")' },
+  // MechanicActionAudit — schéma CORRIGÉ (§6) : acteur (actorUserId/actorRole) et
+  // cible (targetMechanicId) séparés ; colonnes non applicables NULL, jamais ''.
   { id: '145_mechanic_action_audit_table', sql: `CREATE TABLE IF NOT EXISTS "MechanicActionAudit" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "garageId" TEXT NOT NULL,
-    "mechanicId" TEXT NOT NULL,
+    "actorUserId" TEXT,
+    "actorRole" TEXT,
+    "targetMechanicId" TEXT,
     "licenseId" TEXT,
     "jobId" TEXT,
     "action" TEXT NOT NULL,
@@ -897,6 +901,7 @@ export const MIGRATIONS: Migration[] = [
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 )` },
   { id: '146_mechanic_action_audit_idx1', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_garageId_createdAt_idx" ON "MechanicActionAudit"("garageId", "createdAt")' },
-  { id: '147_mechanic_action_audit_idx2', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_mechanicId_createdAt_idx" ON "MechanicActionAudit"("mechanicId", "createdAt")' },
+  { id: '147_mechanic_action_audit_idx2', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_targetMechanicId_createdAt_idx" ON "MechanicActionAudit"("targetMechanicId", "createdAt")' },
   { id: '148_mechanic_action_audit_idx3', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_jobId_idx" ON "MechanicActionAudit"("jobId")' },
+  { id: '149_mechanic_action_audit_idx4', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_actorUserId_createdAt_idx" ON "MechanicActionAudit"("actorUserId", "createdAt")' },
 ]

@@ -228,8 +228,9 @@ async function activateMechanicKey(input: {
     .sign(getJwtSecret())
 
   // Journal d'audit (connexion mécanicien) — jamais de token complet.
+  // Action MÉCANICIEN (le mécanicien active sa propre clé) : pas d'acteur staff.
   await prisma.mechanicActionAudit.create({
-    data: { garageId: record.garageId, mechanicId: record.mechanicId, licenseId: lid, action: 'login', targetType: 'LicenseKey', targetId: lid },
+    data: { garageId: record.garageId, actorUserId: null, actorRole: null, targetMechanicId: record.mechanicId, licenseId: lid, action: 'login', targetType: 'LicenseKey', targetId: lid },
   }).catch(() => {})
 
   const res = NextResponse.json({

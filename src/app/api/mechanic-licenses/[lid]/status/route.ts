@@ -67,7 +67,11 @@ export const POST = withAuth(async (req, { params }: { params: { lid: string } }
 
   await prisma.mechanicActionAudit.create({
     data: {
-      garageId, mechanicId: license.mechanicId ?? '', licenseId: license.licenseId,
+      garageId,
+      // Action STAFF (propriétaire) : acteur et cible séparés ; targetMechanicId
+      // NULL si la clé n'est pas encore attribuée — jamais la chaîne vide.
+      actorUserId: session.user.id, actorRole: session.user.role,
+      targetMechanicId: license.mechanicId ?? null, licenseId: license.licenseId,
       action: ACTION_BY_STATUS[status], targetType: 'LicenseKey', targetId: license.licenseId,
     },
   }).catch(() => {})

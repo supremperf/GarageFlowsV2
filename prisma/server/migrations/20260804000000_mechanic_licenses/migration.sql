@@ -45,7 +45,9 @@ CREATE TABLE "JobMechanicNote" (
 CREATE TABLE "MechanicActionAudit" (
     "id" TEXT NOT NULL,
     "garageId" TEXT NOT NULL,
-    "mechanicId" TEXT NOT NULL,
+    "actorUserId" TEXT,
+    "actorRole" TEXT,
+    "targetMechanicId" TEXT,
     "licenseId" TEXT,
     "jobId" TEXT,
     "action" TEXT NOT NULL,
@@ -79,7 +81,10 @@ CREATE INDEX "JobMechanicNote_garageId_mechanicId_idx" ON "JobMechanicNote"("gar
 CREATE INDEX "MechanicActionAudit_garageId_createdAt_idx" ON "MechanicActionAudit"("garageId", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "MechanicActionAudit_mechanicId_createdAt_idx" ON "MechanicActionAudit"("mechanicId", "createdAt");
+CREATE INDEX "MechanicActionAudit_targetMechanicId_createdAt_idx" ON "MechanicActionAudit"("targetMechanicId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "MechanicActionAudit_actorUserId_createdAt_idx" ON "MechanicActionAudit"("actorUserId", "createdAt");
 
 -- CreateIndex
 CREATE INDEX "MechanicActionAudit_jobId_idx" ON "MechanicActionAudit"("jobId");

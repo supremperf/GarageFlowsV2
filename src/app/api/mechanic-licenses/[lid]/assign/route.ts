@@ -80,7 +80,10 @@ export const POST = withAuth(async (req, { params }: { params: { lid: string } }
     }
     await tx.mechanicActionAudit.create({
       data: {
-        garageId, mechanicId, licenseId: license.licenseId,
+        garageId,
+        // Action STAFF : l'acteur est le propriétaire, la cible est le NOUVEAU titulaire.
+        actorUserId: session.user.id, actorRole: session.user.role,
+        targetMechanicId: mechanicId, licenseId: license.licenseId,
         action: isReassignment ? 'reassign' : 'assign',
         targetType: 'LicenseKey', targetId: license.licenseId,
         metadata: previousMechanicId ? JSON.stringify({ previousMechanicId }) : null,

@@ -18,12 +18,12 @@ export const GET = withAuth(async (req, { params }: { params: { lid: string } })
 
   const license = await prisma.licenseKey.findFirst({
     where: { licenseId: params.lid, garageId, licenseType: 'mechanic' },
-    select: { licenseId: true, token: true },
+    select: { licenseId: true, token: true, mechanicId: true },
   })
   if (!license) return NextResponse.json({ error: 'Clé introuvable.' }, { status: 404 })
 
   await prisma.mechanicActionAudit.create({
-    data: { garageId, mechanicId: '', licenseId: license.licenseId, action: 'token_copied', targetType: 'LicenseKey', targetId: license.licenseId },
+    data: { garageId, actorUserId: session.user.id, actorRole: session.user.role, targetMechanicId: license.mechanicId ?? null, licenseId: license.licenseId, action: 'token_copied', targetType: 'LicenseKey', targetId: license.licenseId },
   }).catch(() => {})
   await logAudit({ action: 'update', entityType: 'License', entityId: license.licenseId, session, req, details: { tokenCopied: true } })
 

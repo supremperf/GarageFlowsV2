@@ -89,7 +89,10 @@ export async function logMechanicAction(opts: {
     await prisma.mechanicActionAudit.create({
       data: {
         garageId: opts.ctx.garageId,
-        mechanicId: opts.ctx.mechanicId,
+        // Action MÉCANICIEN : aucun acteur staff. La cible est le mécanicien lui-même.
+        actorUserId: null,
+        actorRole: null,
+        targetMechanicId: opts.ctx.mechanicId,
         licenseId: opts.ctx.licenseId,
         jobId: opts.jobId ?? null,
         action: opts.action,

@@ -26,7 +26,7 @@ export const POST = withAuth(async (req, { params }: { params: { lid: string } }
   const count = await disconnectDevices(license.licenseId, 'owner_disconnect')
 
   await prisma.mechanicActionAudit.create({
-    data: { garageId, mechanicId: license.mechanicId ?? '', licenseId: license.licenseId, action: 'disconnect', targetType: 'LicenseKey', targetId: license.licenseId, metadata: JSON.stringify({ devices: count }) },
+    data: { garageId, actorUserId: session.user.id, actorRole: session.user.role, targetMechanicId: license.mechanicId ?? null, licenseId: license.licenseId, action: 'disconnect', targetType: 'LicenseKey', targetId: license.licenseId, metadata: JSON.stringify({ devices: count }) },
   }).catch(() => {})
   await logAudit({ action: 'update', entityType: 'License', entityId: license.licenseId, session, req, details: { disconnect: count } })
 

@@ -522,20 +522,25 @@ model JobMechanicNote {
 }
 
 // ─── Journal d'audit des actions mécanicien ──────────────────────────────────
+// Schéma CORRIGÉ (§6) — identique au schéma desktop : acteur (actorUserId/
+// actorRole) et cible (targetMechanicId) séparés, tous nullables ; jamais ''.
 model MechanicActionAudit {
-  id         String   @id @default(cuid())
-  garageId   String
-  mechanicId String
-  licenseId  String?
-  jobId      String?
-  action     String // photo_added | comment_added | issue_reported | checklist_updated | timer_started | timer_stopped | login | logout | assign | reassign | suspend | revoke | reactivate | disconnect | token_copied
-  targetType String? // JobPhoto | JobMechanicNote | InspectionItem | Job | LicenseKey
-  targetId   String?
-  metadata   String? // JSON non sensible (jamais de token ni de secret)
-  createdAt  DateTime @default(now())
+  id               String   @id @default(cuid())
+  garageId         String
+  actorUserId      String? // staff (OWNER/MANAGER) ayant effectué l'action ; null si action mécanicien
+  actorRole        String? // rôle du staff acteur ; null si action mécanicien
+  targetMechanicId String? // mécanicien concerné par l'action ; null si non applicable
+  licenseId        String?
+  jobId            String?
+  action           String // photo_added | comment_added | issue_reported | checklist_updated | timer_started | timer_stopped | login | logout | assign | reassign | suspend | revoke | reactivate | disconnect | token_copied
+  targetType       String? // JobPhoto | JobMechanicNote | InspectionItem | Job | LicenseKey
+  targetId         String?
+  metadata         String? // JSON non sensible (jamais de token ni de secret)
+  createdAt        DateTime @default(now())
 
   @@index([garageId, createdAt])
-  @@index([mechanicId, createdAt])
+  @@index([targetMechanicId, createdAt])
+  @@index([actorUserId, createdAt])
   @@index([jobId])
 }
 

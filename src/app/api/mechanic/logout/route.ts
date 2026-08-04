@@ -15,7 +15,7 @@ export async function POST() {
     const check = await validateMechanicSession({ rawGfSession: raw })
     if (check.ok) {
       await prisma.mechanicActionAudit.create({
-        data: { garageId: check.ctx.garageId, mechanicId: check.ctx.mechanicId, licenseId: check.ctx.licenseId, action: 'logout' },
+        data: { garageId: check.ctx.garageId, actorUserId: null, actorRole: null, targetMechanicId: check.ctx.mechanicId, licenseId: check.ctx.licenseId, action: 'logout' },
       }).catch(() => {})
     }
   } catch {
