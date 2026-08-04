@@ -27,6 +27,7 @@ const http    = require('http')
 const crypto  = require('crypto')
 const os      = require('os')
 const { resolveMainSecret } = require('./secret')
+const { sign: signState, verify: verifyState } = require('./signed-state')
 
 // Silence EPIPE on stdout/stderr so packaged app never crashes when no terminal is attached
 try { process.stdout.on('error', () => {}) } catch (_) {}
@@ -621,10 +622,13 @@ function broadcastEntitlements() {
 
 // ── Trusted clock (anti recul d'horloge) ──────────────────────────────────────
 function readTrustedClock() {
-  try { return JSON.parse(fs.readFileSync(TRUSTED_CLOCK_PATH, 'utf8')) } catch { return null }
+  // Signé (HMAC + hwid) : un gf_clock.json édité à la main (p. ex. wall=0 pour
+  // masquer un recul d'horloge) est rejeté → traité comme absence de référence.
+  try { return verifyState(fs.readFileSync(TRUSTED_CLOCK_PATH, 'utf8'), installSecret, getHwid()) } catch { return null }
 }
 function writeTrustedClock(wall) {
-  try { fs.writeFileSync(TRUSTED_CLOCK_PATH, JSON.stringify({ wall }), 'utf8') } catch (_) {}
+  if (!installSecret) return
+  try { fs.writeFileSync(TRUSTED_CLOCK_PATH, signState({ wall }, installSecret, getHwid()), 'utf8') } catch (_) {}
 }
 /**
  * Vérifie que l'horloge n'a pas reculé depuis la dernière référence de confiance.
@@ -1132,17 +1136,21 @@ function scheduleNextLicenseCheck() {
 // ── Internet connectivity / 48h grace period ──────────────────────────────────
 
 function readLastOnline() {
+  // État SIGNÉ (HMAC lié à l'installation + hwid). Une valeur non signée,
+  // falsifiée ou copiée d'une autre machine → null (fail-closed : la grâce
+  // n'est pas prolongée). Voir electron/signed-state.js.
   try {
     const raw = fs.readFileSync(ONLINE_CHECK_FILE(), 'utf8')
-    return JSON.parse(raw)
+    return verifyState(raw, installSecret, getHwid())
   } catch {
     return null
   }
 }
 
 function saveLastOnline() {
+  if (!installSecret) return // sans secret d'installation, on ne signe pas
   try {
-    fs.writeFileSync(ONLINE_CHECK_FILE(), JSON.stringify({ ts: Date.now() }), 'utf8')
+    fs.writeFileSync(ONLINE_CHECK_FILE(), signState({ ts: Date.now() }, installSecret, getHwid()), 'utf8')
   } catch (_) {}
 }
 
