@@ -7,6 +7,7 @@ import {
   ChevronDown, ChevronRight, ZoomIn,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { groupPendingUpdates, pendingKeysForItem } from '@/lib/inspection-autosave'
 import toast from 'react-hot-toast'
 import { useTranslation } from '@/lib/i18n'
 import { inspectionCategoryLabel } from '@/lib/i18n/labels'
@@ -229,23 +230,37 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
     }
   }, [inspectionId])
 
-  // Debounced auto-save of item updates
-  const flushItemUpdates = useCallback(async (id: string) => {
+  // Auto-sauvegarde débouncée. On flushe TOUS les items en attente (pas seulement
+  // le dernier édité) : un timer partagé ne ciblant qu'un id orphelinait sinon
+  // les modifications des autres items. Les clés d'un item ne sont retirées
+  // qu'APRÈS envoi réussi (une erreur réseau les conserve pour un re-flush).
+  const flushAll = useCallback(async () => {
     if (!inspection || pendingUpdates.current.size === 0) return
-    const updates: Record<string, string | null> = {}
-    pendingUpdates.current.forEach((val, key) => {
-      if (key.startsWith(id + ':')) updates[key.split(':')[1]] = val
-    })
-    if (Object.keys(updates).length === 0) return
-    await fetch(`/api/inspections/${inspection.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemId: id, ...updates }),
-    })
-    Array.from(pendingUpdates.current.keys()).forEach(key => {
-      if (key.startsWith(id + ':')) pendingUpdates.current.delete(key)
-    })
+    const patches = groupPendingUpdates(pendingUpdates.current)
+    for (const patch of patches) {
+      try {
+        const res = await fetch(`/api/inspections/${inspection.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ itemId: patch.itemId, ...patch.fields }),
+        })
+        if (res.ok) {
+          for (const key of pendingKeysForItem(patch)) pendingUpdates.current.delete(key)
+        }
+      } catch {
+        /* on garde les clés en attente pour un re-flush ultérieur (fermeture) */
+      }
+    }
   }, [inspection])
+
+  // Flush à l'unmount (fermeture de la modale, navigation) — via une ref pour
+  // toujours appeler la dernière version sans re-souscrire le cleanup.
+  const flushRef = useRef(flushAll)
+  flushRef.current = flushAll
+  useEffect(() => () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    void flushRef.current()
+  }, [])
 
   function updateItem(id: string, field: string, value: string | null) {
     setItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } as InspectionItem : item))
@@ -253,9 +268,16 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
     if (inspection) {
       pendingUpdates.current.set(`${id}:${field}`, value)
       if (saveTimer.current) clearTimeout(saveTimer.current)
-      saveTimer.current = setTimeout(() => flushItemUpdates(id), 800)
+      saveTimer.current = setTimeout(() => { void flushAll() }, 800)
     }
   }
+
+  // Fermeture sûre : on flushe les dernières modifications AVANT de fermer.
+  const handleClose = useCallback(async () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    await flushAll()
+    onClose()
+  }, [flushAll, onClose])
 
   async function handleCreate() {
     setSaving(true)
@@ -290,12 +312,9 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
     if (!inspection) return
     setSaving(true)
     try {
-      // Flush any pending item updates first
-    const ids = new Set<string>()
-    pendingUpdates.current.forEach((_, key) => ids.add(key.split(':')[0]))
-    for (const id of Array.from(ids)) {
-        await flushItemUpdates(id)
-      }
+      // Flush toutes les modifications en attente avant de finaliser.
+      if (saveTimer.current) clearTimeout(saveTimer.current)
+      await flushAll()
       const r = await fetch(`/api/inspections/${inspection.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -381,7 +400,7 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
                 {t.insFinalize}
               </button>
             )}
-            <button onClick={onClose} className="gf-close p-2 hover:bg-gray-100 rounded-lg text-gray-400">
+            <button onClick={() => { void handleClose() }} className="gf-close p-2 hover:bg-gray-100 rounded-lg text-gray-400">
               <X className="w-5 h-5" />
             </button>
           </div>
