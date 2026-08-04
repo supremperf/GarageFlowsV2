@@ -837,4 +837,10 @@ export const MIGRATIONS: Migration[] = [
   { id: '123_unique_workorder_job',            uniqueIndex: { name: 'WorkOrder_jobId_key',              table: 'WorkOrder',  columns: ['jobId'] } },
   { id: '124_unique_licensekey_licenseid',     uniqueIndex: { name: 'LicenseKey_licenseId_key',         table: 'LicenseKey', columns: ['licenseId'] } },
   { id: '125_unique_licensekey_token',         uniqueIndex: { name: 'LicenseKey_token_key',             table: 'LicenseKey', columns: ['token'] } },
+
+  // RepairTypePart.garageId : index pour les lectures filtrées (garageId, repairType).
+  // La relation/cascade vers Garage est appliquée par `prisma db push` (schéma) ;
+  // cet index couvre aussi les bases desktop existantes (SQLite ne permet pas
+  // d'ajouter une FK par ALTER, mais Prisma génère la cascade au niveau client).
+  { id: '126_repairtypepart_idx_garage_type', sql: 'CREATE INDEX IF NOT EXISTS "RepairTypePart_garageId_repairType_idx" ON "RepairTypePart"("garageId", "repairType")' },
 ]

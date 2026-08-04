@@ -94,6 +94,7 @@ model Garage {
   clients            Client[]
   vehicles           Vehicle[]
   parts              Part[]
+  repairTypeParts    RepairTypePart[]
   reminders          Reminder[]
   quotes             Quote[]
   invoices           Invoice[]
@@ -242,6 +243,9 @@ model RepairTypePart {
   part       Part   @relation(fields: [partId], references: [id], onDelete: Cascade)
   defaultQty Int    @default(1)
   garageId   String
+  garage     Garage @relation(fields: [garageId], references: [id], onDelete: Cascade)
+
+  @@index([garageId, repairType])
 }
 
 // ─── Job (intervention) ──────────────────────────────────────────────────────
