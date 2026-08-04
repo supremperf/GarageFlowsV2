@@ -23,7 +23,10 @@ import { getPublicKeyPem } from './public-key'
 function _pubKey(): string { return getPublicKeyPem() }
 
 // ─── License types ────────────────────────────────────────────────────────────
-export type LicenseType = 'trial' | 'premium' | 'enterprise' | 'admin'
+// 'mechanic' : licence SECONDAIRE réservée à un mécanicien, obligatoirement
+// rattachée à une licence Garage parente (champ plid signé). Elle ne donne
+// JAMAIS accès à l'application garage ni aux fonctions administratives.
+export type LicenseType = 'trial' | 'premium' | 'enterprise' | 'admin' | 'mechanic'
 
 export interface LicensePayload {
   lid:    string       // Unique license UUID
@@ -35,13 +38,16 @@ export interface LicensePayload {
   hwid?:  string       // Optional hardware fingerprint (SHA-256 hex)
   wm:     string       // Watermark — opaque base64url blob
   ver:    string       // Schema version
+  plid?:  string       // MECHANIC uniquement : lid de la licence Garage parente (OBLIGATOIRE)
+  mn?:    string       // MECHANIC uniquement : nom du mécanicien suggéré (optionnel)
 }
 
 export interface VerifyResult {
-  valid:    boolean
-  payload?: LicensePayload
-  isAdmin?: boolean
-  reason?:  string
+  valid:      boolean
+  payload?:   LicensePayload
+  isAdmin?:   boolean
+  isMechanic?: boolean
+  reason?:    string
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
@@ -79,7 +85,7 @@ function _assertPayload(p: Record<string, unknown>): boolean {
   )
 }
 
-const _VALID_TYPES = new Set<string>(['trial', 'premium', 'enterprise', 'admin'])
+const _VALID_TYPES = new Set<string>(['trial', 'premium', 'enterprise', 'admin', 'mechanic'])
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
@@ -173,10 +179,20 @@ export function verifyLicenseToken(token: string): VerifyResult {
     return { valid: false, reason: 'Version de licence non supportée' }
   }
 
+  // ── Règles MECHANIC ───────────────────────────────────────────────────────
+  // Une clé mécanicien DOIT référencer sa licence Garage parente (plid signé) ;
+  // sans parent, la clé est invalide — elle ne peut exister « seule ».
+  // Une clé mécanicien n'est JAMAIS admin, quel que soit le reste du payload.
+  const isMechanic = lic.typ === 'mechanic'
+  if (isMechanic && (typeof lic.plid !== 'string' || lic.plid.length === 0)) {
+    return { valid: false, reason: 'Licence mécanicien invalide' }
+  }
+
   return {
-    valid:   true,
-    payload: lic,
-    isAdmin: lic.typ === 'admin',
+    valid:      true,
+    payload:    lic,
+    isAdmin:    !isMechanic && lic.typ === 'admin',
+    isMechanic,
   }
 }
 

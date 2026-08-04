@@ -1,13 +1,15 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { useTranslation, type LangCode } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { X, Building2, Globe, Save, Users, Palette, Zap, Mail, RefreshCw } from 'lucide-react'
+import { X, Building2, Globe, Save, Users, Palette, Zap, Mail, RefreshCw, KeyRound } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { CompanyTab }   from './settings/CompanyTab'
 import { MechanicsTab, MECHANIC_COLORS } from './settings/MechanicsTab'
+import { MechanicAccessTab } from './settings/MechanicAccessTab'
 import { ThemeTab }     from './settings/ThemeTab'
 import { LanguageTab }  from './settings/LanguageTab'
 import { FeaturesTab }  from './settings/FeaturesTab'
@@ -19,7 +21,11 @@ interface Props { onClose: () => void }
 
 export default function SettingsModal({ onClose }: Props) {
   const { t, lang, setLang, theme, setTheme } = useTranslation()
-  const [tab, setTab] = useState<'company' | 'mechanics' | 'language' | 'theme' | 'features' | 'email' | 'updates'>('company')
+  const { data: sessionData } = useSession()
+  const role = (sessionData?.user as { role?: string } | undefined)?.role
+  // La gestion des accès mécaniciens est réservée au propriétaire / responsable.
+  const canManageAccess = role === 'OWNER' || role === 'MANAGER'
+  const [tab, setTab] = useState<'company' | 'mechanics' | 'access' | 'language' | 'theme' | 'features' | 'email' | 'updates'>('company')
   const [exporting, setExporting] = useState(false)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -175,6 +181,7 @@ export default function SettingsModal({ onClose }: Props) {
   const TABS = [
     { id: 'company'   as const, label: t.companyTab  ?? 'Entreprise',  icon: <Building2  className="w-4 h-4" /> },
     { id: 'mechanics' as const, label: t.mechanics   ?? 'Mécaniciens', icon: <Users      className="w-4 h-4" /> },
+    ...(canManageAccess ? [{ id: 'access' as const, label: 'Accès mécaniciens', icon: <KeyRound className="w-4 h-4" /> }] : []),
     { id: 'email'     as const, label: t.emailTab    ?? 'Email',       icon: <Mail       className="w-4 h-4" /> },
     { id: 'updates'   as const, label: t.updatesTab  ?? 'Mises à jour',icon: <RefreshCw  className="w-4 h-4" /> },
     { id: 'features'  as const, label: 'Fonctionnalités',              icon: <Zap        className="w-4 h-4" /> },
@@ -231,6 +238,7 @@ export default function SettingsModal({ onClose }: Props) {
               onDelete={handleDeleteMechanic}
             />
           )}
+          {tab === 'access' && canManageAccess && <MechanicAccessTab />}
           {tab === 'email'    && <EmailTab />}
           {tab === 'updates'  && <UpdatesTab />}
           {tab === 'features' && <FeaturesTab />}

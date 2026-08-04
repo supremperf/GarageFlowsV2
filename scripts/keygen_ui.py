@@ -3,8 +3,9 @@ keygen_ui.py — GarageFlow Licence Manager — Interface graphique (tkinter)
 Fenêtre principale : onglets Générer / Gérer / Clés.
 """
 
+import os
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog
+from tkinter import ttk, messagebox, simpledialog, filedialog
 import threading
 import urllib.request
 import urllib.error
@@ -12,6 +13,18 @@ import json as _json
 
 import keygen_core as core
 import keygen_db   as db
+
+# Types de licence "garage" (le type mechanic se génère via les modes dédiés)
+GARAGE_TYPES = [t for t in core.LICENSE_TYPES if t != "mechanic"]
+
+
+def _max_mechanic() -> int:
+    """Limite de clés mécanicien par génération (env GF_KEYGEN_MAX_MECHANIC, défaut 20)."""
+    try:
+        val = int(os.environ.get("GF_KEYGEN_MAX_MECHANIC", ""))
+        return val if val >= 1 else 20
+    except (TypeError, ValueError):
+        return 20
 
 # ── Palette sombre ────────────────────────────────────────────────────────────
 BG      = "#070d1b"
@@ -106,13 +119,48 @@ def _remote_set_status(server_url: str, api_key: str, license_id: str, status: s
         return False, f"Connexion impossible : {exc}"
 
 
+def _remote_register(server_url: str, api_key: str, token: str) -> tuple[bool, str]:
+    """Enregistre une licence sur le serveur GarageFlow (POST /api/admin/licenses/create).
+    Retourne (ok, message). N'expose jamais le token dans le message."""
+    if not server_url or not api_key:
+        return False, "Serveur ou clé API non configuré."
+    url = server_url.rstrip("/") + "/api/admin/licenses/create"
+    payload = _json.dumps({"token": token}).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "x-gf-key":     api_key,
+            "User-Agent":   "GarageFlow-KeygenGUI/2",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            _json.loads(resp.read().decode("utf-8"))
+            return True, "Licence enregistrée sur le serveur."
+    except urllib.error.HTTPError as e:
+        if e.code == 409:
+            return True, "Licence déjà enregistrée sur le serveur."
+        try:
+            body = _json.loads(e.read().decode("utf-8"))
+            return False, body.get("error", f"HTTP {e.code}")
+        except Exception:
+            return False, f"Erreur HTTP {e.code}"
+    except Exception as exc:
+        return False, f"Connexion impossible : {exc}"
+
+
 # ── Onglet 1 — Générer ────────────────────────────────────────────────────────
 
 class TabGenerate(tk.Frame):
-    def __init__(self, master, on_generated=None):
+    def __init__(self, master, on_generated=None, get_server_cfg=None):
         super().__init__(master, bg=BG)
         self.on_generated = on_generated
+        self._get_server_cfg = get_server_cfg or (lambda: ("", ""))
         self._passphrase  = ""
+        self._busy        = False   # anti double-clic / double-génération
         self._build()
 
     def _build(self):
@@ -120,7 +168,24 @@ class TabGenerate(tk.Frame):
         _lbl(self, "  Nouvelle licence ECC P-256", font=("Segoe UI", 13, "bold")).pack(
             anchor="w", padx=20, pady=(18, 4))
         _lbl(self, "  Remplissez les informations client puis configurez la licence.",
-             fg=MUTED, font=FONTS).pack(anchor="w", padx=20, pady=(0, 14))
+             fg=MUTED, font=FONTS).pack(anchor="w", padx=20, pady=(0, 10))
+
+        # ─ Sélecteur de mode de génération ─
+        self.v_mode = tk.StringVar(value="garage")
+        mode_row = _frame(self, bg=CARD, padx=14, pady=8)
+        mode_row.pack(fill="x", padx=20, pady=(0, 10))
+        _lbl(mode_row, "Type de génération", fg=MUTED, font=FONTS).pack(anchor="w")
+        for val, text in [
+            ("garage",       "Licence Garage seule"),
+            ("garage_meca",  "Garage + clés mécanicien"),
+            ("meca_only",    "Clés mécanicien pour un garage existant"),
+        ]:
+            tk.Radiobutton(
+                mode_row, text=text, value=val, variable=self.v_mode,
+                command=self._on_mode_change, bg=CARD, fg=TEXT,
+                selectcolor=CARD2, activebackground=CARD, activeforeground=TEXT,
+                font=FONTS, anchor="w", highlightthickness=0, bd=0,
+            ).pack(anchor="w")
 
         # ─ Conteneur 2 colonnes ─
         body = _frame(self, bg=BG)
@@ -170,8 +235,10 @@ class TabGenerate(tk.Frame):
         row_type = _frame(right, bg=BG)
         row_type.pack(fill="x", pady=(0, 6))
         _lbl(row_type, "Type de licence", fg=MUTED, font=FONTS).pack(anchor="w")
+        # Le type mechanic ne se choisit PAS ici : il est produit par les modes
+        # « Garage + clés mécanicien » / « Clés mécanicien pour un garage existant ».
         type_cb = ttk.Combobox(row_type, textvariable=self.v_type, state="readonly",
-                               values=[f"{v}  —  {core.TYPE_LABELS[v]}" for v in core.LICENSE_TYPES],
+                               values=[f"{v}  —  {core.TYPE_LABELS[v]}" for v in GARAGE_TYPES],
                                font=FONT, width=28)
         type_cb.pack(fill="x", ipady=4)
         type_cb.bind("<<ComboboxSelected>>", self._on_type_selected)
@@ -209,11 +276,51 @@ class TabGenerate(tk.Frame):
         _btn(fr_hwid, "Ce PC", self._fill_hwid, bg=CARD2, fg=MUTED,
              font=FONTS, padx=8, pady=4).pack(side="left", padx=(4, 0))
 
+        # ─── BLOC MÉCANICIEN (visible seulement en mode garage_meca / meca_only) ──
+        self.meca_frame = _frame(right, bg=BG)
+        # (packé/oublié dynamiquement par _on_mode_change)
+        self._card_title(self.meca_frame, "🔧  Clés mécanicien")
+
+        # Garage existant (mode meca_only) : sélecteur de licence parente
+        self.v_parent = tk.StringVar()
+        self._parent_map = {}   # libellé affiché -> lid
+        parent_row = _frame(self.meca_frame, bg=BG)
+        parent_row.pack(fill="x", pady=(0, 6))
+        _lbl(parent_row, "Licence garage parente", fg=MUTED, font=FONTS).pack(anchor="w")
+        self.parent_cb = ttk.Combobox(parent_row, textvariable=self.v_parent,
+                                      state="readonly", font=FONTS, width=34)
+        self.parent_cb.pack(fill="x", ipady=4)
+        self._parent_row = parent_row
+
+        # Nombre de clés
+        cnt_row = _frame(self.meca_frame, bg=BG)
+        cnt_row.pack(fill="x", pady=(0, 6))
+        self._cnt_row = cnt_row
+        _lbl(cnt_row, f"Nombre de clés mécanicien (1..{_max_mechanic()})",
+             fg=MUTED, font=FONTS).pack(anchor="w")
+        self.v_count = tk.StringVar(value="1")
+        ttk.Spinbox(cnt_row, from_=1, to=_max_mechanic(), textvariable=self.v_count,
+                    width=6, font=FONT).pack(fill="x", ipady=4)
+
+        # Noms (un par ligne, optionnel)
+        names_row = _frame(self.meca_frame, bg=BG)
+        names_row.pack(fill="x", pady=(0, 6))
+        _lbl(names_row, "Noms des mécaniciens (un par ligne, optionnel)",
+             fg=MUTED, font=FONTS).pack(anchor="w")
+        self.txt_names = tk.Text(names_row, height=4, bg=CARD2, fg=TEXT,
+                                 insertbackground=TEXT, relief="flat", bd=0,
+                                 font=FONT, highlightthickness=1,
+                                 highlightbackground=BORDER)
+        self.txt_names.pack(fill="x", ipady=2)
+
         # ─ Bouton Générer ─
         btn_row = _frame(self, bg=BG)
         btn_row.pack(pady=14, padx=20, fill="x")
-        _btn(btn_row, "  ⚡  Générer et signer la licence  ",
-             self._generate, width=40).pack(side="left")
+        self.btn_generate = _btn(btn_row, "  ⚡  Générer et signer la licence  ",
+                                 self._generate, width=40)
+        self.btn_generate.pack(side="left")
+
+        self._on_mode_change()   # état initial cohérent
 
         # ─ Zone résultat ─
         res_frame = _frame(self, bg=CARD, padx=14, pady=10)
@@ -268,7 +375,47 @@ class TabGenerate(tk.Frame):
     def set_passphrase(self, pp: str):
         self._passphrase = pp
 
+    def _on_mode_change(self):
+        """Affiche/masque le bloc mécanicien et rafraîchit la liste des garages."""
+        mode = self.v_mode.get()
+        if mode == "garage":
+            self.meca_frame.pack_forget()
+        else:
+            self.meca_frame.pack(fill="x", pady=(4, 0))
+            # Le sélecteur de parent n'est utile qu'en mode « garage existant ».
+            if mode == "meca_only":
+                self._refresh_parents()
+                self._parent_row.pack(fill="x", pady=(0, 6), before=self._cnt_row)
+            else:
+                self._parent_row.pack_forget()
+
+    def _refresh_parents(self):
+        garages = db.garage_licenses()
+        self._parent_map = {}
+        values = []
+        for g in garages:
+            lbl = g.get("label") or g.get("cid") or g["lid"]
+            display = f"{lbl}  ·  {g['lid'][:8]}…"
+            self._parent_map[display] = g["lid"]
+            values.append(display)
+        self.parent_cb.config(values=values)
+        if values and not self.v_parent.get():
+            self.v_parent.set(values[0])
+
+    def _names_list(self):
+        raw = self.txt_names.get("1.0", "end").strip()
+        return [n.strip() for n in raw.splitlines() if n.strip()]
+
+    def _set_busy(self, busy: bool):
+        self._busy = busy
+        try:
+            self.btn_generate.config(state="disabled" if busy else "normal")
+        except Exception:
+            pass
+
     def _generate(self):
+        if self._busy:
+            return   # anti double-clic / double-génération
         if not core.keys_exist():
             messagebox.showerror(
                 "Clés manquantes",
@@ -277,14 +424,38 @@ class TabGenerate(tk.Frame):
             )
             return
 
-        # Récupérer type propre
-        raw_type = self.v_type.get().split("  —")[0].strip()
-        years  = int(self.v_years.get() or 1)
-        seats  = int(self.v_seats.get() or 1)
-        label  = self.v_label.get().strip() or None
-        hwid   = self.v_hwid.get().strip() or None
+        mode = self.v_mode.get()
+        if mode in ("garage", "garage_meca"):
+            self._generate_garage(mode)
+        elif mode == "meca_only":
+            self._generate_mechanics_existing()
 
-        # Construire l'ID client
+    # ── Validation commune du nombre de clés mécanicien ────────────────────────
+    def _validated_count(self):
+        raw = self.v_count.get().strip()
+        try:
+            count = int(raw)
+        except (TypeError, ValueError):
+            messagebox.showerror("Nombre invalide",
+                                 "Le nombre de clés mécanicien doit être un entier.")
+            return None
+        if count < 1:
+            messagebox.showerror("Nombre invalide",
+                                 "Le nombre de clés mécanicien doit être au moins 1.")
+            return None
+        maxc = _max_mechanic()
+        if count > maxc:
+            messagebox.showerror("Nombre trop élevé",
+                                 f"Le nombre de clés mécanicien ne peut pas dépasser {maxc}.")
+            return None
+        names = self._names_list()
+        if len(names) > count:
+            messagebox.showerror("Trop de noms",
+                                 f"{len(names)} noms fournis pour {count} clés.")
+            return None
+        return count, names
+
+    def _build_client_and_cid(self):
         prenom = self.v_prenom.get().strip()
         nom    = self.v_nom.get().strip()
         entr   = self.v_entreprise.get().strip()
@@ -298,45 +469,216 @@ class TabGenerate(tk.Frame):
                 slug = "CLIENT"
             import time as _t
             cid = f"{slug}-{_t.strftime('%y%m%d')}"
+        label = self.v_label.get().strip() or entr or f"{prenom} {nom}".strip() or cid
+        client = {
+            "prenom": prenom, "nom": nom, "entreprise": entr,
+            "email": self.v_email.get().strip(), "tel": self.v_tel.get().strip(),
+            "adresse": self.v_adresse.get().strip(), "ville": self.v_ville.get().strip(),
+        }
+        return cid, label, client
 
-        # Étiquette auto si vide
-        if not label:
-            label = entr or f"{prenom} {nom}".strip() or cid
+    def _generate_garage(self, mode):
+        """Génère la licence garage, puis (mode garage_meca) N clés mécanicien."""
+        raw_type = self.v_type.get().split("  —")[0].strip()
+        years  = int(self.v_years.get() or 1)
+        seats  = int(self.v_seats.get() or 1)
+        hwid   = self.v_hwid.get().strip() or None
+        cid, label, client = self._build_client_and_cid()
+
+        meca = None
+        if mode == "garage_meca":
+            meca = self._validated_count()
+            if meca is None:
+                return
+        count, names = (meca or (0, []))
+
+        self._set_busy(True)
 
         def _do():
             try:
                 pk   = core.load_private_key(self._passphrase)
                 info = core.make_license(pk, cid, raw_type, years, seats, hwid, label)
-
-                client = {
-                    "prenom":     prenom,
-                    "nom":        nom,
-                    "entreprise": entr,
-                    "email":      self.v_email.get().strip(),
-                    "tel":        self.v_tel.get().strip(),
-                    "adresse":    self.v_adresse.get().strip(),
-                    "ville":      self.v_ville.get().strip(),
-                }
                 db.add_license(info, client)
+                db.audit_log("gen_garage", info["lid"], f"type={raw_type}")
 
-                self.after(0, lambda: self._on_success(info))
+                children = []
+                for i in range(count):
+                    name  = names[i] if i < len(names) else None
+                    mlabel = name or f"Mécanicien {i+1}"
+                    minfo = core.make_mechanic_license(
+                        pk, info["lid"], cid, years=years,
+                        mechanic_name=name, label=mlabel,
+                    )
+                    db.add_license(minfo, {})
+                    db.audit_log("gen_mechanic", minfo["lid"],
+                                 f"parent={info['lid'][:8]}…")
+                    children.append(minfo)
+
+                self.after(0, lambda: self._on_garage_success(info, children))
             except Exception as exc:
-                self.after(0, lambda: messagebox.showerror("Erreur de signature", str(exc)))
+                self.after(0, lambda: (self._set_busy(False),
+                                       messagebox.showerror("Erreur de signature", str(exc))))
 
         threading.Thread(target=_do, daemon=True).start()
 
-    def _on_success(self, info):
+    def _generate_mechanics_existing(self):
+        """Génère N clés mécanicien pour une licence garage déjà en base."""
+        display = self.v_parent.get()
+        parent_lid = self._parent_map.get(display)
+        if not parent_lid:
+            messagebox.showerror("Garage manquant",
+                                 "Sélectionnez la licence garage parente.")
+            return
+        parent = db.get_license(parent_lid)
+        if parent is None:
+            messagebox.showerror("Garage introuvable",
+                                 "Cette licence garage est introuvable dans la base locale.")
+            return
+        if parent.get("type") == "mechanic":
+            messagebox.showerror("Parent invalide",
+                                 "La licence parente doit être une licence garage.")
+            return
+        meca = self._validated_count()
+        if meca is None:
+            return
+        count, names = meca
+        years = int(self.v_years.get() or 1)
+        cid = parent.get("cid", "")
+
+        self._set_busy(True)
+
+        def _do():
+            try:
+                pk = core.load_private_key(self._passphrase)
+                children = []
+                for i in range(count):
+                    name  = names[i] if i < len(names) else None
+                    mlabel = name or f"Mécanicien {i+1}"
+                    minfo = core.make_mechanic_license(
+                        pk, parent_lid, cid, years=years,
+                        mechanic_name=name, label=mlabel,
+                    )
+                    db.add_license(minfo, {})
+                    db.audit_log("gen_mechanic", minfo["lid"],
+                                 f"parent={parent_lid[:8]}…")
+                    children.append(minfo)
+                self.after(0, lambda: self._on_mechanics_success(parent, children))
+            except Exception as exc:
+                self.after(0, lambda: (self._set_busy(False),
+                                       messagebox.showerror("Erreur de signature", str(exc))))
+
+        threading.Thread(target=_do, daemon=True).start()
+
+    def _on_garage_success(self, info, children):
+        self._set_busy(False)
         self.token_var.set(info["token"])
         if self.on_generated:
             self.on_generated(info)
-        messagebox.showinfo(
-            "Licence générée ✓",
-            f"Client  : {info['label']}\n"
-            f"Type    : {core.TYPE_LABELS.get(info['type'], info['type'])}\n"
-            f"Expiry  : {info['expires_at']}\n\n"
-            "Le token a été copié dans le champ résultat.\n"
-            "Retrouvez-la dans l'onglet Gérer les licences.",
-        )
+        if children:
+            self._show_recap(info, children)
+        else:
+            messagebox.showinfo(
+                "Licence générée ✓",
+                f"Client  : {info['label']}\n"
+                f"Type    : {core.TYPE_LABELS.get(info['type'], info['type'])}\n"
+                f"Expiry  : {info['expires_at']}\n\n"
+                "Le token a été copié dans le champ résultat.\n"
+                "Retrouvez-la dans l'onglet Gérer les licences.",
+            )
+
+    def _on_mechanics_success(self, parent, children):
+        self._set_busy(False)
+        if self.on_generated:
+            self.on_generated(children[0] if children else parent)
+        self._show_recap(parent, children)
+
+    def _show_recap(self, parent, children):
+        """Fenêtre récapitulative des clés mécanicien créées (copie/export)."""
+        win = tk.Toplevel(self)
+        win.title("Clés mécanicien générées")
+        win.configure(bg=BG)
+        win.geometry("720x460")
+        _lbl(win, f"  {len(children)} clé(s) mécanicien créée(s)",
+             font=("Segoe UI", 12, "bold")).pack(anchor="w", padx=16, pady=(14, 2))
+        _lbl(win, f"  Garage parent : {parent.get('label') or parent.get('cid') or parent['lid']}",
+             fg=MUTED, font=FONTS).pack(anchor="w", padx=16, pady=(0, 8))
+
+        txt = tk.Text(win, bg=CARD2, fg=TEXT, font=(MONO[0], 8), relief="flat",
+                      bd=0, highlightthickness=1, highlightbackground=BORDER, wrap="none")
+        txt.pack(fill="both", expand=True, padx=16, pady=(0, 8))
+        lines = []
+        for c in children:
+            lines.append(f"{c.get('mechanic_name') or c['label']}")
+            lines.append(f"  {c['token']}")
+            lines.append(f"  lid={c['lid']}  expire={c['expires_at']}")
+            lines.append("")
+        txt.insert("end", "\n".join(lines))
+        txt.config(state="disabled")
+
+        payload = [{
+            "label":      c.get("mechanic_name") or c.get("label"),
+            "lid":        c["lid"],
+            "token":      c["token"],
+            "expires_at": c["expires_at"],
+            "parent_lid": parent["lid"],
+        } for c in children]
+
+        bar = _frame(win, bg=BG)
+        bar.pack(fill="x", padx=16, pady=(0, 14))
+
+        def _copy_all():
+            self.clipboard_clear()
+            self.clipboard_append("\n".join(c["token"] for c in children))
+            messagebox.showinfo("Copié", "Tous les tokens ont été copiés.", parent=win)
+
+        def _export():
+            path = filedialog.asksaveasfilename(
+                parent=win, defaultextension=".json",
+                filetypes=[("JSON", "*.json"), ("Texte", "*.txt")],
+                initialfile=f"cles-mecanicien-{parent['lid'][:8]}.json",
+            )
+            if not path:
+                return
+            try:
+                if path.lower().endswith(".txt"):
+                    with open(path, "w", encoding="utf-8") as f:
+                        f.write("\n".join(
+                            f"{p['label']}\t{p['token']}" for p in payload))
+                else:
+                    with open(path, "w", encoding="utf-8") as f:
+                        _json.dump(payload, f, indent=2, ensure_ascii=False)
+                db.audit_log("export_mechanic", parent["lid"], f"n={len(payload)}")
+                messagebox.showinfo("Exporté", f"Clés exportées vers :\n{path}", parent=win)
+            except Exception as exc:
+                messagebox.showerror("Erreur d'export", str(exc), parent=win)
+
+        _btn(bar, "📋  Copier tout", _copy_all, bg=CARD2, fg=TEXT,
+             font=FONTS, padx=10, pady=4).pack(side="left")
+        _btn(bar, "💾  Exporter…", _export, bg=CARD2, fg=TEXT,
+             font=FONTS, padx=10, pady=4).pack(side="left", padx=(8, 0))
+
+        # Enregistrement serveur optionnel (best-effort, jamais bloquant).
+        url, key = self._get_server_cfg()
+        if url and key:
+            def _register_all():
+                def _do():
+                    ok_n, fail_n = 0, 0
+                    for c in children:
+                        ok, _ = _remote_register(url, key, c["token"])
+                        if ok:
+                            ok_n += 1
+                        else:
+                            fail_n += 1
+                    self.after(0, lambda: messagebox.showinfo(
+                        "Serveur GarageFlow",
+                        f"Enregistrées : {ok_n} · Échecs : {fail_n}", parent=win))
+                threading.Thread(target=_do, daemon=True).start()
+            if messagebox.askyesno(
+                "Serveur GarageFlow",
+                "Enregistrer ces clés mécanicien sur le serveur maintenant ?",
+                parent=win,
+            ):
+                _register_all()
 
     def _copy_token(self):
         t = self.token_var.get()
@@ -367,23 +709,35 @@ class TabManage(tk.Frame):
 
         self.v_search = tk.StringVar()
         self.v_search.trace_add("write", lambda *_: self.refresh())
-        e_search = _entry(bar, textvariable=self.v_search, width=22, font=FONTS)
+        e_search = _entry(bar, textvariable=self.v_search, width=18, font=FONTS)
         e_search.pack(side="right", ipady=4, padx=(4, 8))
         _lbl(bar, "🔍", fg=MUTED, font=FONTS).pack(side="right")
 
+        # Filtre par type (Tous / Garages / Mécaniciens)
+        self.v_filter = tk.StringVar(value="Tous")
+        filt = ttk.Combobox(bar, textvariable=self.v_filter, state="readonly",
+                            values=["Tous", "Garages", "Mécaniciens"],
+                            font=FONTS, width=12)
+        filt.pack(side="right", padx=(4, 8), ipady=2)
+        filt.bind("<<ComboboxSelected>>", lambda *_: self.refresh())
+
+        # Filtre « enfants d'un parent » (activé par le bouton dédié) — lid parent.
+        self._child_filter = None
+
         # Treeview
-        cols = ("client", "type", "statut", "expiry", "cid", "lid")
+        cols = ("client", "type", "parent", "statut", "expiry", "cid", "lid")
         self.tree = ttk.Treeview(
             self, columns=cols, show="headings",
             selectmode="browse", height=16,
         )
         heads = [
-            ("client",  "Client / Entreprise", 180),
+            ("client",  "Client / Entreprise", 170),
             ("type",    "Type",                 90),
+            ("parent",  "Parent",               80),
             ("statut",  "Statut",               80),
             ("expiry",  "Expiry",               90),
-            ("cid",     "ID Client",           130),
-            ("lid",     "LID (UUID)",           160),
+            ("cid",     "ID Client",           120),
+            ("lid",     "LID (UUID)",           150),
         ]
         for col, text, w in heads:
             self.tree.heading(col, text=text)
@@ -409,6 +763,8 @@ class TabManage(tk.Frame):
         _frame(pnl, bg=BORDER).pack(fill="x", pady=8, ipady=0)
         _btn(pnl, "📋  Copier token", self._copy,    bg=CARD2,
              fg=TEXT,   font=FONTS, width=16).pack(pady=3)
+        _btn(pnl, "🔧  Voir ses clés méca.", self._show_children, bg=CARD2,
+             fg=TEXT,   font=FONTS, width=16).pack(pady=3)
         _btn(pnl, "🗑  Supprimer",   self._delete,   bg=CARD2,
              fg=MUTED,  font=FONTS, width=16).pack(pady=3)
 
@@ -426,16 +782,31 @@ class TabManage(tk.Frame):
     def refresh(self, *_):
         q = self.v_search.get().strip()
         records = db.search(q) if q else db.list_licenses()
+
+        # Filtre par type (combobox) ou par parent (bouton « Voir ses clés »).
+        ftype = self.v_filter.get()
+        if self._child_filter:
+            records = [r for r in records
+                       if r.get("type") == "mechanic"
+                       and r.get("parent_lid") == self._child_filter]
+        elif ftype == "Garages":
+            records = [r for r in records if r.get("type") != "mechanic"]
+        elif ftype == "Mécaniciens":
+            records = [r for r in records if r.get("type") == "mechanic"]
+
         self.tree.delete(*self.tree.get_children())
         for r in records:
             c   = r.get("client", {})
             lbl = r.get("label") or f"{c.get('prenom','')} {c.get('nom','')}".strip() or r["cid"]
             entr = c.get("entreprise", "")
             display = f"{lbl}  {('· ' + entr) if entr and entr != lbl else ''}".strip()
+            parent = r.get("parent_lid", "")
+            parent_disp = (parent[:8] + "…") if parent else ""
             tag = r["status"]
             self.tree.insert("", "end", iid=r["lid"], tags=(tag,),
                              values=(display,
                                      core.TYPE_LABELS.get(r["type"], r["type"]),
+                                     parent_disp,
                                      STATUS_LABEL.get(r["status"], r["status"]),
                                      r.get("expires_at", ""),
                                      r["cid"],
@@ -443,6 +814,19 @@ class TabManage(tk.Frame):
         self.tree.tag_configure("active",    foreground=GREEN)
         self.tree.tag_configure("revoked",   foreground=RED)
         self.tree.tag_configure("suspended", foreground=AMBER)
+
+    def _show_children(self):
+        """Filtre la liste sur les clés mécanicien de la licence sélectionnée."""
+        lid = self._selected_lid()
+        if not lid:
+            return
+        rec = db.get_license(lid)
+        if rec and rec.get("type") == "mechanic":
+            messagebox.showinfo("Clé mécanicien",
+                                "Sélectionnez une licence GARAGE pour voir ses clés mécanicien.")
+            return
+        self._child_filter = None if self._child_filter == lid else lid
+        self.refresh()
 
     def _selected_lid(self) -> str | None:
         sel = self.tree.selection()
@@ -458,6 +842,7 @@ class TabManage(tk.Frame):
     def _apply_status(self, lid: str, status: str):
         """Update status locally and remotely in a background thread."""
         db.set_status(lid, status)
+        db.audit_log(f"status_{status}", lid)
         self.refresh()
         url, key = self._get_server_cfg()
         if url and key:
@@ -829,7 +1214,8 @@ class App(tk.Tk):
         nb.pack(fill="both", expand=True, padx=0, pady=0)
 
         self.tab_server = TabServer(nb)
-        self.tab_gen    = TabGenerate(nb, on_generated=self._on_generated)
+        self.tab_gen    = TabGenerate(nb, on_generated=self._on_generated,
+                                      get_server_cfg=self.tab_server.get_config)
         self.tab_manage = TabManage(nb, get_server_cfg=self.tab_server.get_config)
         self.tab_keys   = TabKeys(nb, on_passphrase_change=self._set_passphrase)
 
@@ -862,3 +1248,8 @@ class App(tk.Tk):
                 "Allez dans l'onglet  🔑 Clés ECC  et cliquez\n"
                 "'Initialiser les clés' pour commencer.",
             )
+
+
+# ── Point d'entrée ────────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    App().mainloop()

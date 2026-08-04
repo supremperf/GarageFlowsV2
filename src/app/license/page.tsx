@@ -22,6 +22,7 @@ const LICENSE_TYPE_LABELS: Record<string, string> = {
   enterprise: 'Enterprise',
   premium:    'Premium',
   trial:      'Essai',
+  mechanic:   'Mécanicien',
 }
 
 export default function LicensePage() {
@@ -42,6 +43,7 @@ export default function LicensePage() {
       })
     )
     if (c['gf_license_type'] === 'admin') { router.replace('/admin/licenses'); return }
+    if (c['gf_license_type'] === 'mechanic') { router.replace('/mechanic'); return }
     if (c['gf_license_validated'] === '1') { router.replace('/login') }
   }, [router])
 
@@ -81,6 +83,10 @@ export default function LicensePage() {
       if (typ === 'admin') {
         setMessage('Clé administrateur — accès au panneau de gestion')
         setTimeout(() => router.push('/admin/licenses'), 1600)
+      } else if (typ === 'mechanic') {
+        // Une clé mécanicien ouvre directement l'espace mécanicien (pas de login staff).
+        setMessage('Accès mécanicien activé · Redirection vers votre planning')
+        setTimeout(() => router.push('/mechanic'), 1400)
       } else {
         setMessage(`Licence ${LICENSE_TYPE_LABELS[typ] ?? typ} activée · Valide jusqu'en ${expYear}`)
         setTimeout(() => router.push('/login'), 1600)

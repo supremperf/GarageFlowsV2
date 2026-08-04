@@ -32,6 +32,18 @@ async function verifySessionJwt(req: NextRequest): Promise<{ typ: string; lid: s
   }
 }
 
+/**
+ * Un mécanicien ne voit QUE l'espace /mechanic. On confine sa navigation ici
+ * (les autorisations réelles restent vérifiées côté API — ce garde-fou n'est
+ * qu'une couche d'ergonomie/UX, jamais l'unique protection).
+ */
+function confineMechanic(pathname: string, req: NextRequest): NextResponse {
+  if (pathname === '/mechanic' || pathname.startsWith('/mechanic/')) {
+    return NextResponse.next()
+  }
+  return NextResponse.redirect(new URL('/mechanic', req.url))
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
@@ -60,15 +72,30 @@ export async function middleware(req: NextRequest) {
 
   if (pathname === '/license') {
     if (session) {
-      return NextResponse.redirect(
-        new URL(session.typ === 'admin' ? '/admin/licenses' : '/login', req.url)
-      )
+      const dest = session.typ === 'admin' ? '/admin/licenses'
+                 : session.typ === 'mechanic' ? '/mechanic'
+                 : '/login'
+      return NextResponse.redirect(new URL(dest, req.url))
     }
     return NextResponse.next()
   }
 
   if (!session) {
     return NextResponse.redirect(new URL('/license', req.url))
+  }
+
+  // ── 3b. Session MÉCANICIEN : confinée à l'espace /mechanic ────────────────
+  // Un mécanicien n'a PAS de session NextAuth (aucun compte staff) : on ne
+  // passe donc jamais par le contrôle d'auth staff ci-dessous. Toute page hors
+  // /mechanic est redirigée. (Les API restent protégées indépendamment.)
+  if (session.typ === 'mechanic') {
+    return confineMechanic(pathname, req)
+  }
+
+  // Inversement : une session GARAGE ne doit pas se retrouver dans l'espace
+  // mécanicien (les API /api/mechanic/* refuseraient de toute façon).
+  if (pathname === '/mechanic' || pathname.startsWith('/mechanic/')) {
+    return NextResponse.redirect(new URL('/', req.url))
   }
 
   // ── 4. Auth check ─────────────────────────────────────────────────────────

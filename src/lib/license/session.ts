@@ -48,6 +48,7 @@ export type LicensedFailureCode =
   | 'LICENSE_SUSPENDED'
   | 'LICENSE_EXPIRED'
   | 'LICENSE_GARAGE_MISMATCH' // licence rattachée à un AUTRE garage
+  | 'LICENSE_WRONG_TYPE'      // clé MECHANIC utilisée comme licence Garage
   | 'DEVICE_REQUIRED'         // session sans appareil (ancienne) → réactiver
   | 'DEVICE_UNKNOWN'          // appareil supprimé/réinitialisé → réactiver
   | 'DEVICE_REVOKED'
@@ -63,6 +64,7 @@ const FAIL: Record<LicensedFailureCode, { status: number; reason: string }> = {
   LICENSE_SUSPENDED:       { status: 403, reason: 'Cette licence est temporairement suspendue.' },
   LICENSE_EXPIRED:         { status: 403, reason: 'Cette licence a expiré.' },
   LICENSE_GARAGE_MISMATCH: { status: 403, reason: 'Cette licence est rattachée à un autre garage.' },
+  LICENSE_WRONG_TYPE:      { status: 403, reason: 'Cette clé est réservée à l\'espace mécanicien.' },
   DEVICE_REQUIRED:         { status: 401, reason: 'Appareil non enregistré. Réactivez votre licence.' },
   DEVICE_UNKNOWN:          { status: 401, reason: 'Appareil inconnu. Réactivez votre licence.' },
   DEVICE_REVOKED:          { status: 403, reason: 'Cet appareil a été révoqué.' },
@@ -113,11 +115,18 @@ export async function validateLicensedSession(opts: {
   const session = await readGfSession(opts.rawGfSession)
   if (!session) return fail('LICENSE_SESSION_MISSING')
 
+  // Une session MECHANIC ne licencie JAMAIS l'application garage : les API
+  // métier (clients, factures, paramètres…) exigent une licence Garage.
+  if (session.typ === 'mechanic') return fail('LICENSE_WRONG_TYPE')
+
   const { lid, did } = session
 
   // 2-5. Licence : existence, statut, révocation, expiration.
   const license = await prisma.licenseKey.findUnique({ where: { licenseId: lid } })
   if (!license) return fail('LICENSE_UNKNOWN')
+  // Défense en profondeur : même si le cookie prétend un autre type, le type
+  // en BASE fait foi — une clé mécanicien ne passe jamais côté garage.
+  if (license.licenseType === 'mechanic') return fail('LICENSE_WRONG_TYPE')
   if (license.status === 'revoked' || license.revokedAt) return fail('LICENSE_REVOKED')
   if (license.status === 'suspended') return fail('LICENSE_SUSPENDED')
   if (license.expiryAt.getTime() < Date.now()) return fail('LICENSE_EXPIRED')

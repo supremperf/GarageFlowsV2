@@ -391,15 +391,16 @@ model InvoiceLine {
 
 // ─── Job Photos ───────────────────────────────────────────────────────────────
 model JobPhoto {
-  id        String   @id @default(cuid())
-  jobId     String
-  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  garageId  String
-  phase     String   @default("before") // before, during, after
-  caption   String?
-  base64    String // legacy: data URL as base64 ('' when photoPath is used)
-  photoPath String? // preferred: relative path under GF_PHOTOS_DIR/jobs/
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  jobId      String
+  job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  garageId   String
+  phase      String   @default("before") // before, during, after
+  caption    String?
+  base64     String // legacy: data URL as base64 ('' when photoPath is used)
+  photoPath  String? // preferred: relative path under GF_PHOTOS_DIR/jobs/
+  mechanicId String? // renseigné quand la photo vient d'un mécanicien (espace mécanicien)
+  createdAt  DateTime @default(now())
 }
 
 // ─── Vehicle Digital Inspection ───────────────────────────────────────────────
@@ -463,9 +464,70 @@ model LicenseKey {
   garageId String?
   garage   Garage? @relation(fields: [garageId], references: [id], onDelete: SetNull)
 
+  // ── Licences MECHANIC (subordonnées à une licence Garage) ────────────────────
+  // parentLicenseId = lid de la licence Garage parente (payload plid, signé).
+  // mechanicId : mécanicien attribué — null tant que le propriétaire n'a pas
+  // associé la clé ; l'attribution/réattribution est couverte par le recordMac.
+  parentLicenseId String?
+  mechanicId      String?
+  mechanicHint    String? // nom suggéré par le Keygen (payload mn) — affichage seul
+  assignedAt      DateTime?
+  assignedBy      String? // userId du propriétaire ayant attribué la clé
+  suspendedAt     DateTime?
+
   devices LicenseDevice[]
 
   @@index([garageId])
+  @@index([parentLicenseId])
+  @@index([garageId, licenseType])
+}
+
+// ─── Historique d'attribution des clés mécanicien (append-only) ──────────────
+model MechanicLicenseAssignment {
+  id                 String    @id @default(cuid())
+  licenseId          String // LicenseKey.licenseId (lid)
+  mechanicId         String
+  garageId           String
+  assignedAt         DateTime  @default(now())
+  assignedBy         String // userId du propriétaire
+  unassignedAt       DateTime?
+  previousMechanicId String?
+
+  @@index([licenseId, assignedAt])
+  @@index([garageId])
+}
+
+// ─── Contributions du mécanicien sur une intervention (append-only) ──────────
+model JobMechanicNote {
+  id         String   @id @default(cuid())
+  jobId      String
+  garageId   String
+  mechanicId String
+  licenseId  String?
+  type       String // comment | note | observation | issue
+  body       String
+  createdAt  DateTime @default(now())
+
+  @@index([jobId, createdAt])
+  @@index([garageId, mechanicId])
+}
+
+// ─── Journal d'audit des actions mécanicien ──────────────────────────────────
+model MechanicActionAudit {
+  id         String   @id @default(cuid())
+  garageId   String
+  mechanicId String
+  licenseId  String?
+  jobId      String?
+  action     String // photo_added | comment_added | issue_reported | checklist_updated | timer_started | timer_stopped | login | logout | assign | reassign | suspend | revoke | reactivate | disconnect | token_copied
+  targetType String? // JobPhoto | JobMechanicNote | InspectionItem | Job | LicenseKey
+  targetId   String?
+  metadata   String? // JSON non sensible (jamais de token ni de secret)
+  createdAt  DateTime @default(now())
+
+  @@index([garageId, createdAt])
+  @@index([mechanicId, createdAt])
+  @@index([jobId])
 }
 
 // ─── Appareils activés par licence ───────────────────────────────────────────

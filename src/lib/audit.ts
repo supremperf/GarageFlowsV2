@@ -16,7 +16,7 @@ export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout'
 export type AuditEntityType =
   | 'Job' | 'Client' | 'Vehicle' | 'Invoice' | 'Quote'
   | 'User' | 'Mechanic' | 'Part' | 'Inspection' | 'Reminder' | 'Garage'
-  | 'PurchaseOrder'
+  | 'PurchaseOrder' | 'License'
 
 interface LogAuditOptions {
   action:     AuditAction
