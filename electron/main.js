@@ -955,30 +955,11 @@ function httpPost(url, body) {
   })
 }
 
-// Make an HTTP/HTTPS GET request, returns parsed JSON or null (fail-open).
-function httpGetJson(url) {
-  return new Promise((resolve) => {
-    try {
-      const parsed = new URL(url)
-      const mod    = parsed.protocol === 'https:' ? require('https') : http
-      const req = mod.get(
-        {
-          hostname: parsed.hostname,
-          port:     parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
-          path:     parsed.pathname + parsed.search,
-          timeout:  10_000,
-        },
-        res => {
-          let data = ''
-          res.on('data', chunk => { data += chunk })
-          res.on('end',  ()    => { try { resolve(JSON.parse(data)) } catch { resolve(null) } })
-        }
-      )
-      req.on('error',   () => resolve(null))
-      req.on('timeout', () => { req.destroy(); resolve(null) })
-    } catch { resolve(null) }
-  })
-}
+// NB : httpGetJson est défini plus haut (avec timeout, User-Agent et suivi de
+// redirections). Un DOUBLON défini ici auparavant écrasait cette version (les
+// déclarations de fonction étant hoistées, la dernière gagne) et désactivait
+// SILENCIEUSEMENT le suivi de redirections et l'en-tête User-Agent — cassant p.
+// ex. l'API GitHub (403 sans User-Agent) et toute réponse 3xx. Doublon supprimé.
 
 // ── Server-side activation: register THIS device, obtain a device token ───────
 // Device auth: the heartbeat REQUIRES a signed device token. This registers the
