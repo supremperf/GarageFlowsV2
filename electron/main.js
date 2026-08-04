@@ -152,6 +152,14 @@ const UPDATE_SERVER  = (process.env.GF_UPDATE_SERVER || process.env.GF_LICENSE_S
     || 'https://app.garageflows.fr').replace(/\/$/, '')
 // UPDATE_CHANNEL est déjà déclaré plus haut (socle) — pas de redéclaration ici.
 
+// ── Autorité de licence (source de vérité activation/révocation) ──────────────
+// URL officielle COMPILÉE (comme UPDATE_SERVER) : une app packagée sans .env doit
+// TOUJOURS pouvoir joindre l'autorité distante (révocation/suspension), sinon la
+// licence serait silencieusement désactivée. Surcharge GF_LICENSE_SERVER pour
+// dev/staging/self-hosted ; en prod packagée, une surcharge non-https est refusée.
+const { resolveLicenseServer } = require('./license-endpoint')
+const LICENSE_SERVER = resolveLicenseServer({ envUrl: process.env.GF_LICENSE_SERVER, isPackaged: app.isPackaged })
+
 // ── App-update helpers ────────────────────────────────────────────────────────
 
 // GET JSON avec timeout + suivi de redirections (jamais de throw → resolve(null)).
@@ -303,7 +311,8 @@ function resolveInstallSecret() {
 const ONLINE_CHECK_FILE    = () => path.join(APP_DATA, 'last_online.json')
 const GRACE_PERIOD_MS      = 48 * 60 * 60 * 1_000   // 48 hours
 const LOCK_PERIOD_MS       = 72 * 60 * 60 * 1_000   // 72 hours (lock after grace)
-const ONLINE_CHECK_URL     = 'https://1.1.1.1'       // Cloudflare DNS — very reliable
+// La sonde de connectivité vise désormais l'AUTORITÉ de licence (LICENSE_SERVER)
+// et non plus une URL générique — voir checkInternetConnectivity().
 
 // ── Logging ───────────────────────────────────────────────────────────────────
 
@@ -984,9 +993,8 @@ async function activateOnServer() {
     arch:    info.arch,
   }
 
-  const bases = []
-  if (process.env.GF_LICENSE_SERVER) bases.push(process.env.GF_LICENSE_SERVER.replace(/\/$/, ''))
-  bases.push(`http://127.0.0.1:${PORT}`)
+  // Autorité distante COMPILÉE en priorité, repli serveur local (127.0.0.1).
+  const bases = [LICENSE_SERVER, `http://127.0.0.1:${PORT}`]
 
   for (const base of bases) {
     const res = await httpPost(`${base}/api/license/activate`, body)
@@ -1018,8 +1026,9 @@ async function periodicLicenseCheck() {
   const info = getSystemInfo()
   const body = { licenseId, deviceToken: activeDeviceToken, version: info.version, os: info.os, arch: info.arch, hwid: getHwid() }
 
-  // 1. Check remote license server (if configured) — authoritative
-  const remoteServer = process.env.GF_LICENSE_SERVER
+  // 1. Check remote license server — authoritative. URL officielle compilée :
+  //    toujours interrogée (révocation/suspension), même sans .env.
+  const remoteServer = LICENSE_SERVER
   if (remoteServer) {
     try {
       result = await httpPost(`${remoteServer.replace(/\/$/, '')}/api/license/check`, body)
@@ -1159,12 +1168,11 @@ async function checkInternetConnectivity() {
   // firewaller uniquement api.garageflows.fr en gardant internet maintenait la
   // période de grâce indéfiniment et rendait la révocation contournable.
   // Désormais ce scénario N'ENTRETIENT PLUS la grâce (verrou 72 h normal).
-  const remote = process.env.GF_LICENSE_SERVER
-  if (remote) {
-    return probeUrl(`${remote.replace(/\/$/, '')}/api/health`)
-  }
-  // Sans control plane distant configuré : sonde générique (mode historique).
-  return probeUrl(ONLINE_CHECK_URL)
+  // « En ligne » = l'AUTORITÉ de licence est joignable (c'est par elle que passe
+  // la révocation). L'URL officielle étant compilée, on ne retombe plus sur une
+  // sonde générique (1.1.1.1) : firewaller la seule autorité de licence tout en
+  // gardant internet n'entretient donc PLUS la période de grâce indéfiniment.
+  return probeUrl(`${LICENSE_SERVER.replace(/\/$/, '')}/api/health`)
 }
 
 async function enforceOnlineGracePeriod() {
