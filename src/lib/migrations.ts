@@ -860,15 +860,26 @@ export const MIGRATIONS: Migration[] = [
   { id: '136_licensekey_parent_idx',        sql: 'CREATE INDEX IF NOT EXISTS "LicenseKey_parentLicenseId_idx" ON "LicenseKey"("parentLicenseId")' },
   { id: '137_licensekey_garage_type_idx',   sql: 'CREATE INDEX IF NOT EXISTS "LicenseKey_garageId_licenseType_idx" ON "LicenseKey"("garageId", "licenseType")' },
   { id: '138_jobphoto_mechanic_id',         sql: 'ALTER TABLE "JobPhoto" ADD COLUMN "mechanicId" TEXT' },
+  // NOTE : les clauses FOREIGN KEY en ligne ci-dessous (§5) ne sont appliquées que
+  // sur une base desktop NEUVE — SQLite ne permet pas d'ajouter une FK par ALTER,
+  // donc une base existante conserve la table SANS FK ; les relations/cascades
+  // Prisma restent effectives côté client (même principe que la migration
+  // RepairTypePart 126 ci-dessus). garageId (+ jobId côté note) = CASCADE ;
+  // licenseId/mechanicId/assignedBy/previousMechanicId = SET NULL (colonnes optionnelles).
   { id: '139_mechanic_license_assignment_table', sql: `CREATE TABLE IF NOT EXISTS "MechanicLicenseAssignment" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "licenseId" TEXT NOT NULL,
-    "mechanicId" TEXT NOT NULL,
+    "licenseId" TEXT,
+    "mechanicId" TEXT,
     "garageId" TEXT NOT NULL,
     "assignedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "assignedBy" TEXT NOT NULL,
+    "assignedBy" TEXT,
     "unassignedAt" DATETIME,
-    "previousMechanicId" TEXT
+    "previousMechanicId" TEXT,
+    CONSTRAINT "MechanicLicenseAssignment_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "MechanicLicenseAssignment_licenseId_fkey" FOREIGN KEY ("licenseId") REFERENCES "LicenseKey" ("licenseId") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "MechanicLicenseAssignment_mechanicId_fkey" FOREIGN KEY ("mechanicId") REFERENCES "Mechanic" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "MechanicLicenseAssignment_assignedBy_fkey" FOREIGN KEY ("assignedBy") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "MechanicLicenseAssignment_previousMechanicId_fkey" FOREIGN KEY ("previousMechanicId") REFERENCES "Mechanic" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 )` },
   { id: '140_mechanic_license_assignment_idx1', sql: 'CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_licenseId_assignedAt_idx" ON "MechanicLicenseAssignment"("licenseId", "assignedAt")' },
   { id: '141_mechanic_license_assignment_idx2', sql: 'CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_garageId_idx" ON "MechanicLicenseAssignment"("garageId")' },
@@ -876,11 +887,15 @@ export const MIGRATIONS: Migration[] = [
     "id" TEXT NOT NULL PRIMARY KEY,
     "jobId" TEXT NOT NULL,
     "garageId" TEXT NOT NULL,
-    "mechanicId" TEXT NOT NULL,
+    "mechanicId" TEXT,
     "licenseId" TEXT,
     "type" TEXT NOT NULL,
     "body" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "JobMechanicNote_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "JobMechanicNote_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "JobMechanicNote_mechanicId_fkey" FOREIGN KEY ("mechanicId") REFERENCES "Mechanic" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "JobMechanicNote_licenseId_fkey" FOREIGN KEY ("licenseId") REFERENCES "LicenseKey" ("licenseId") ON DELETE SET NULL ON UPDATE CASCADE
 )` },
   { id: '143_job_mechanic_note_idx1', sql: 'CREATE INDEX IF NOT EXISTS "JobMechanicNote_jobId_createdAt_idx" ON "JobMechanicNote"("jobId", "createdAt")' },
   { id: '144_job_mechanic_note_idx2', sql: 'CREATE INDEX IF NOT EXISTS "JobMechanicNote_garageId_mechanicId_idx" ON "JobMechanicNote"("garageId", "mechanicId")' },
@@ -898,10 +913,24 @@ export const MIGRATIONS: Migration[] = [
     "targetType" TEXT,
     "targetId" TEXT,
     "metadata" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "MechanicActionAudit_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "MechanicActionAudit_actorUserId_fkey" FOREIGN KEY ("actorUserId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "MechanicActionAudit_targetMechanicId_fkey" FOREIGN KEY ("targetMechanicId") REFERENCES "Mechanic" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "MechanicActionAudit_licenseId_fkey" FOREIGN KEY ("licenseId") REFERENCES "LicenseKey" ("licenseId") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "MechanicActionAudit_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 )` },
   { id: '146_mechanic_action_audit_idx1', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_garageId_createdAt_idx" ON "MechanicActionAudit"("garageId", "createdAt")' },
   { id: '147_mechanic_action_audit_idx2', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_targetMechanicId_createdAt_idx" ON "MechanicActionAudit"("targetMechanicId", "createdAt")' },
   { id: '148_mechanic_action_audit_idx3', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_jobId_idx" ON "MechanicActionAudit"("jobId")' },
   { id: '149_mechanic_action_audit_idx4', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_actorUserId_createdAt_idx" ON "MechanicActionAudit"("actorUserId", "createdAt")' },
+  // ── Index FK-enfant (§5) : colonnes de jointure/cascade non déjà en tête d'un
+  //    index composite existant. Additifs, idempotents (IF NOT EXISTS). ─────────
+  { id: '150_licensekey_mechanic_idx',           sql: 'CREATE INDEX IF NOT EXISTS "LicenseKey_mechanicId_idx" ON "LicenseKey"("mechanicId")' },
+  { id: '151_licensekey_assignedby_idx',         sql: 'CREATE INDEX IF NOT EXISTS "LicenseKey_assignedBy_idx" ON "LicenseKey"("assignedBy")' },
+  { id: '152_mla_mechanic_idx',                  sql: 'CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_mechanicId_idx" ON "MechanicLicenseAssignment"("mechanicId")' },
+  { id: '153_mla_assignedby_idx',                sql: 'CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_assignedBy_idx" ON "MechanicLicenseAssignment"("assignedBy")' },
+  { id: '154_mla_prevmechanic_idx',              sql: 'CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_previousMechanicId_idx" ON "MechanicLicenseAssignment"("previousMechanicId")' },
+  { id: '155_jobmechanicnote_license_idx',       sql: 'CREATE INDEX IF NOT EXISTS "JobMechanicNote_licenseId_idx" ON "JobMechanicNote"("licenseId")' },
+  { id: '156_mechanic_action_audit_license_idx', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_licenseId_idx" ON "MechanicActionAudit"("licenseId")' },
 ]

@@ -112,6 +112,9 @@ model Garage {
   loanerReservations LoanerReservation[]
   purchaseOrders     PurchaseOrder[]
   licenses           LicenseKey[]
+  mechanicLicenseAssignments MechanicLicenseAssignment[]
+  jobMechanicNotes           JobMechanicNote[]
+  mechanicActionAudits       MechanicActionAudit[]
   // ── Modules Premium (intégration f8rhzz) ───────────────────────────────────
   vinSearches        VinSearch[]
   signatures         Signature[]
@@ -135,6 +138,9 @@ model User {
   role      String   @default("RECEPTIONIST")
   garageId  String
   garage    Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  assignedLicenses           LicenseKey[]                @relation("LicenseKeyAssignedBy")
+  mechanicLicenseAssignments MechanicLicenseAssignment[] @relation("MlaAssignedBy")
+  mechanicActionAudits       MechanicActionAudit[]       @relation("MaaActor")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -152,6 +158,11 @@ model Mechanic {
   garage     Garage      @relation(fields: [garageId], references: [id], onDelete: Cascade)
   jobs       Job[]
   workOrders WorkOrder[]
+  assignedLicenses       LicenseKey[]                @relation("LicenseKeyMechanic")
+  licenseAssignments     MechanicLicenseAssignment[] @relation("MlaMechanic")
+  prevLicenseAssignments MechanicLicenseAssignment[] @relation("MlaPrevMechanic")
+  jobNotes               JobMechanicNote[]           @relation("JmnMechanic")
+  actionAudits           MechanicActionAudit[]       @relation("MaaTargetMechanic")
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 }
@@ -291,6 +302,8 @@ model Job {
   workOrder          WorkOrder?
   warranties         Warranty[]
   loanerReservations LoanerReservation[]
+  mechanicNotes        JobMechanicNote[]
+  mechanicActionAudits MechanicActionAudit[] @relation("MaaJob")
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
@@ -478,70 +491,98 @@ model LicenseKey {
   // mechanicId : mécanicien attribué — null tant que le propriétaire n'a pas
   // associé la clé ; l'attribution/réattribution est couverte par le recordMac.
   parentLicenseId String?
+  parentLicense   LicenseKey?  @relation("MechanicLicenseHierarchy", fields: [parentLicenseId], references: [licenseId], onDelete: SetNull)
+  childLicenses   LicenseKey[] @relation("MechanicLicenseHierarchy")
   mechanicId      String?
+  mechanic        Mechanic?    @relation("LicenseKeyMechanic", fields: [mechanicId], references: [id], onDelete: SetNull)
   mechanicHint    String? // nom suggéré par le Keygen (payload mn) — affichage seul
   assignedAt      DateTime?
   assignedBy      String? // userId du propriétaire ayant attribué la clé
+  assignedByUser  User?        @relation("LicenseKeyAssignedBy", fields: [assignedBy], references: [id], onDelete: SetNull)
   suspendedAt     DateTime?
 
-  devices LicenseDevice[]
+  devices                    LicenseDevice[]
+  mechanicLicenseAssignments MechanicLicenseAssignment[] @relation("MlaLicense")
+  jobMechanicNotes           JobMechanicNote[]           @relation("JmnLicense")
+  actionAudits               MechanicActionAudit[]       @relation("MaaLicense")
 
   @@index([garageId])
   @@index([parentLicenseId])
   @@index([garageId, licenseType])
+  @@index([mechanicId])
+  @@index([assignedBy])
 }
 
 // ─── Historique d'attribution des clés mécanicien (append-only) ──────────────
 model MechanicLicenseAssignment {
-  id                 String    @id @default(cuid())
-  licenseId          String // LicenseKey.licenseId (lid)
-  mechanicId         String
+  id                 String      @id @default(cuid())
+  licenseId          String? // LicenseKey.licenseId (lid)
+  license            LicenseKey? @relation("MlaLicense", fields: [licenseId], references: [licenseId], onDelete: SetNull)
+  mechanicId         String?
+  mechanic           Mechanic?   @relation("MlaMechanic", fields: [mechanicId], references: [id], onDelete: SetNull)
   garageId           String
-  assignedAt         DateTime  @default(now())
-  assignedBy         String // userId du propriétaire
+  garage             Garage      @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  assignedAt         DateTime    @default(now())
+  assignedBy         String? // userId du propriétaire
+  assignedByUser     User?       @relation("MlaAssignedBy", fields: [assignedBy], references: [id], onDelete: SetNull)
   unassignedAt       DateTime?
   previousMechanicId String?
+  previousMechanic   Mechanic?   @relation("MlaPrevMechanic", fields: [previousMechanicId], references: [id], onDelete: SetNull)
 
   @@index([licenseId, assignedAt])
   @@index([garageId])
+  @@index([mechanicId])
+  @@index([assignedBy])
+  @@index([previousMechanicId])
 }
 
 // ─── Contributions du mécanicien sur une intervention (append-only) ──────────
 model JobMechanicNote {
-  id         String   @id @default(cuid())
+  id         String      @id @default(cuid())
   jobId      String
+  job        Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
   garageId   String
-  mechanicId String
+  garage     Garage      @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  mechanicId String?
+  mechanic   Mechanic?   @relation("JmnMechanic", fields: [mechanicId], references: [id], onDelete: SetNull)
   licenseId  String?
+  license    LicenseKey? @relation("JmnLicense", fields: [licenseId], references: [licenseId], onDelete: SetNull)
   type       String // comment | note | observation | issue
   body       String
-  createdAt  DateTime @default(now())
+  createdAt  DateTime    @default(now())
 
   @@index([jobId, createdAt])
   @@index([garageId, mechanicId])
+  @@index([licenseId])
 }
 
 // ─── Journal d'audit des actions mécanicien ──────────────────────────────────
 // Schéma CORRIGÉ (§6) — identique au schéma desktop : acteur (actorUserId/
 // actorRole) et cible (targetMechanicId) séparés, tous nullables ; jamais ''.
 model MechanicActionAudit {
-  id               String   @id @default(cuid())
+  id               String      @id @default(cuid())
   garageId         String
+  garage           Garage      @relation(fields: [garageId], references: [id], onDelete: Cascade)
   actorUserId      String? // staff (OWNER/MANAGER) ayant effectué l'action ; null si action mécanicien
+  actorUser        User?       @relation("MaaActor", fields: [actorUserId], references: [id], onDelete: SetNull)
   actorRole        String? // rôle du staff acteur ; null si action mécanicien
   targetMechanicId String? // mécanicien concerné par l'action ; null si non applicable
+  targetMechanic   Mechanic?   @relation("MaaTargetMechanic", fields: [targetMechanicId], references: [id], onDelete: SetNull)
   licenseId        String?
+  license          LicenseKey? @relation("MaaLicense", fields: [licenseId], references: [licenseId], onDelete: SetNull)
   jobId            String?
+  job              Job?        @relation("MaaJob", fields: [jobId], references: [id], onDelete: SetNull)
   action           String // photo_added | comment_added | issue_reported | checklist_updated | timer_started | timer_stopped | login | logout | assign | reassign | suspend | revoke | reactivate | disconnect | token_copied
   targetType       String? // JobPhoto | JobMechanicNote | InspectionItem | Job | LicenseKey
   targetId         String?
   metadata         String? // JSON non sensible (jamais de token ni de secret)
-  createdAt        DateTime @default(now())
+  createdAt        DateTime    @default(now())
 
   @@index([garageId, createdAt])
   @@index([targetMechanicId, createdAt])
   @@index([actorUserId, createdAt])
   @@index([jobId])
+  @@index([licenseId])
 }
 
 // ─── Appareils activés par licence ───────────────────────────────────────────
