@@ -89,7 +89,7 @@ model Garage {
   smtpHost   String?
   smtpPort   Int?
   smtpUser   String?
-  smtpPass   String? // ATTENTION: stocké EN CLAIR (aucun chiffrement implémenté). Jamais renvoyé par GET /api/garages. TODO: chiffrer au repos (AES-GCM).
+  smtpPass   String? // AES-256-GCM at rest (GF_SMTP_CIPHER_KEY) — see src/lib/security/secret-cipher.ts
   smtpFrom   String?
   smtpSecure Boolean @default(true)
 

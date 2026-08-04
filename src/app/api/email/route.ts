@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { encryptSecret, decryptSecret } from '@/lib/security/secret-cipher'
 import nodemailer from 'nodemailer'
 
 export const GET = withAuth(async () => {
@@ -33,7 +34,18 @@ export const PATCH = withAuth(async (req) => {
   if (body.smtpUser  !== undefined) data.smtpUser  = body.smtpUser  || null
   if (body.smtpFrom  !== undefined) data.smtpFrom  = body.smtpFrom  || null
   if (body.smtpSecure!== undefined) data.smtpSecure= Boolean(body.smtpSecure)
-  if (body.smtpPass) data.smtpPass = body.smtpPass
+  // Chiffrement au repos (AES-256-GCM). On ne stocke JAMAIS le mot de passe en
+  // clair. Si la clé GF_SMTP_CIPHER_KEY manque, on refuse plutôt que de dégrader.
+  if (body.smtpPass) {
+    try {
+      data.smtpPass = encryptSecret(String(body.smtpPass))
+    } catch {
+      return NextResponse.json(
+        { error: 'Chiffrement SMTP indisponible : configurez GF_SMTP_CIPHER_KEY (« openssl rand -base64 32 »).' },
+        { status: 503 },
+      )
+    }
+  }
 
   await prisma.garage.update({ where: { id: session.user.garageId }, data })
   return NextResponse.json({ ok: true })
@@ -56,12 +68,22 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: 'Configuration SMTP incomplète' }, { status: 422 })
   }
 
+  let smtpPass: string | null
+  try {
+    smtpPass = decryptSecret(garage.smtpPass)
+  } catch {
+    return NextResponse.json(
+      { error: 'Impossible de déchiffrer le mot de passe SMTP (clé GF_SMTP_CIPHER_KEY manquante ou incorrecte).' },
+      { status: 503 },
+    )
+  }
+
   try {
     const transporter = nodemailer.createTransport({
       host: garage.smtpHost,
       port: garage.smtpPort ?? 587,
       secure: garage.smtpSecure ?? true,
-      auth: { user: garage.smtpUser, pass: garage.smtpPass },
+      auth: { user: garage.smtpUser, pass: smtpPass ?? undefined },
     })
 
     await transporter.sendMail({

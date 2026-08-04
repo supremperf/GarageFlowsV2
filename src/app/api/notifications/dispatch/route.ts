@@ -4,6 +4,7 @@ import { z } from 'zod'
 import nodemailer from 'nodemailer'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { decryptSecret } from '@/lib/security/secret-cipher'
 import { enforceRateLimit } from '@/lib/security/rate-limit'
 import {
   NotificationEngine,
@@ -30,13 +31,18 @@ function buildEmailSender(garage: {
   smtpPass: string | null; smtpFrom: string | null; smtpSecure: boolean; name: string | null; email: string | null
 }) {
   if (!garage.smtpHost || !garage.smtpUser || !garage.smtpPass) return null
+  // Mot de passe chiffré au repos (AES-256-GCM) — déchiffrement avant usage. Une
+  // clé absente/incorrecte fait échouer proprement (pas d'envoi, aucune fuite).
+  let smtpPass: string | null
+  try { smtpPass = decryptSecret(garage.smtpPass) } catch { return null }
+  if (!smtpPass) return null
   const port = garage.smtpPort ?? 587
   const secure = garage.smtpSecure ?? port === 465
   const from = garage.smtpFrom || garage.email || garage.smtpUser
   return async (to: string, message: RenderedMessage) => {
     try {
       const transporter = nodemailer.createTransport({
-        host: garage.smtpHost!, port, secure, auth: { user: garage.smtpUser!, pass: garage.smtpPass! },
+        host: garage.smtpHost!, port, secure, auth: { user: garage.smtpUser!, pass: smtpPass! },
       })
       const info = await transporter.sendMail({
         from: `${garage.name ?? 'GarageFlow'} <${from}>`,
