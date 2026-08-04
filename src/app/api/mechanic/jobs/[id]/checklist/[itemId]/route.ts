@@ -27,23 +27,34 @@ export const PATCH = withMechanic(async (req, { params }: { params: { id: string
   const notes = typeof payload.notes === 'string' ? payload.notes.slice(0, 2000) : undefined
 
   // L'item DOIT appartenir à une inspection de CE garage ET de CETTE
-  // intervention : on relie item → inspection → job attribué.
-  const item = await prisma.inspectionItem.findFirst({
-    where: {
-      id: params.itemId,
-      inspection: { jobId: job.id, garageId: ctx.garageId },
-    },
-    select: { id: true },
-  })
-  if (!item) return NextResponse.json({ error: 'Élément de checklist non accessible.' }, { status: 404 })
+  // intervention : on relie item → inspection → job attribué. §7 — la propriété
+  // (mechanicId) est RE-VÉRIFIÉE dans la transaction au moment de l'écriture :
+  // une réattribution concurrente empêche le mécanicien dessaisi d'écrire (409).
+  let updated
+  try {
+    updated = await prisma.$transaction(async (tx) => {
+      const still = await tx.job.findFirst({
+        where: { id: job.id, garageId: ctx.garageId, mechanicId: ctx.mechanicId },
+        select: { id: true },
+      })
+      if (!still) throw NextResponse.json({ error: 'Élément de checklist non accessible.' }, { status: 409 })
+      const item = await tx.inspectionItem.findFirst({
+        where: { id: params.itemId, inspection: { jobId: job.id, garageId: ctx.garageId } },
+        select: { id: true },
+      })
+      if (!item) throw NextResponse.json({ error: 'Élément de checklist non accessible.' }, { status: 404 })
+      return tx.inspectionItem.update({
+        where: { id: item.id },
+        data: { status, ...(notes !== undefined ? { notes } : {}) },
+        select: { id: true, category: true, label: true, status: true, notes: true, sortOrder: true },
+      })
+    })
+  } catch (e) {
+    if (e instanceof NextResponse) return e
+    throw e
+  }
 
-  const updated = await prisma.inspectionItem.update({
-    where: { id: item.id },
-    data: { status, ...(notes !== undefined ? { notes } : {}) },
-    select: { id: true, category: true, label: true, status: true, notes: true, sortOrder: true },
-  })
-
-  await logMechanicAction({ ctx, action: 'checklist_updated', jobId: job.id, targetType: 'InspectionItem', targetId: item.id, metadata: { status } })
+  await logMechanicAction({ ctx, action: 'checklist_updated', jobId: job.id, targetType: 'InspectionItem', targetId: updated.id, metadata: { status } })
 
   return NextResponse.json(updated)
 })

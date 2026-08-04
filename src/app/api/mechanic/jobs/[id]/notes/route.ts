@@ -34,16 +34,26 @@ export const POST = withMechanic(async (req, { params }: { params: { id: string 
   if (!text) return NextResponse.json({ error: 'Le contenu est obligatoire.' }, { status: 400 })
   if (text.length > 4000) return NextResponse.json({ error: 'Contenu trop long (max 4000 caractères).' }, { status: 400 })
 
-  const note = await prisma.jobMechanicNote.create({
-    data: {
-      jobId: job.id,
-      garageId: ctx.garageId,
-      mechanicId: ctx.mechanicId,
-      licenseId: ctx.licenseId,
-      type,
-      body: text,
-    },
-    select: { id: true, type: true, body: true, mechanicId: true, createdAt: true },
+  // §7 — Re-vérifier la propriété AU MOMENT de l'écriture (transaction) : si
+  // l'intervention a été réattribuée entre le contrôle et l'insertion, le
+  // mécanicien tout juste dessaisi ne peut plus y ajouter de note (409).
+  const note = await prisma.$transaction(async (tx) => {
+    const still = await tx.job.findFirst({
+      where: { id: job.id, garageId: ctx.garageId, mechanicId: ctx.mechanicId },
+      select: { id: true },
+    })
+    if (!still) throw NextResponse.json({ error: 'Intervention non accessible.' }, { status: 409 })
+    return tx.jobMechanicNote.create({
+      data: {
+        jobId: job.id,
+        garageId: ctx.garageId,
+        mechanicId: ctx.mechanicId,
+        licenseId: ctx.licenseId,
+        type,
+        body: text,
+      },
+      select: { id: true, type: true, body: true, mechanicId: true, createdAt: true },
+    })
   })
 
   await logMechanicAction({ ctx, action: ACTION_BY_TYPE[type], jobId: job.id, targetType: 'JobMechanicNote', targetId: note.id })
