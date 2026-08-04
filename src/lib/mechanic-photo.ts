@@ -11,10 +11,14 @@
  *    aucun nom fourni par le client, donc aucun chemin relatif ni exécutable.
  */
 
+import crypto from 'crypto'
+
 export const MECHANIC_PHOTO_MAX_BYTES = 8 * 1024 * 1024 // 8 Mo décodés
+/** Plafond du nombre de photos par intervention (§7 — anti-abus/stockage). */
+export const MECHANIC_PHOTO_MAX_PER_JOB = 50
 
 export type PhotoValidation =
-  | { ok: true; mime: string; bytes: number }
+  | { ok: true; mime: string; bytes: number; hash: string }
   | { ok: false; reason: string }
 
 /** Sniffe le type réel d'une image d'après ses octets magiques. */
@@ -67,5 +71,7 @@ export function validateMechanicPhoto(dataUrl: unknown): PhotoValidation {
   if (!realMime) {
     return { ok: false, reason: 'Type de fichier non autorisé (image JPEG/PNG/WebP/HEIC attendue).' }
   }
-  return { ok: true, mime: realMime, bytes: buf.length }
+  // Empreinte de contenu (§7) — intégrité + traçabilité + déduplication éventuelle.
+  const hash = crypto.createHash('sha256').update(buf).digest('hex')
+  return { ok: true, mime: realMime, bytes: buf.length, hash }
 }
