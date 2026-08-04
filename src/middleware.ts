@@ -7,14 +7,20 @@ import { getAuthSecret } from '@/lib/auth-secret'
  * GarageFlow middleware — niveau page uniquement (toutes les routes /api/* sont
  * exclues : elles gèrent leur propre authentification).
  *
- * Ordre CORRIGÉ — la session NextAuth est vérifiée AVANT la licence gf_session,
- * ce qui supprime les boucles /, /login, /license observées quand un utilisateur
- * était authentifié NextAuth mais pas encore licencié.
+ * Ordre CORRIGÉ (durcissement) — la session NextAuth est vérifiée AVANT la
+ * licence gf_session, ce qui supprime les boucles /, /login, /license observées
+ * quand un utilisateur était authentifié NextAuth mais pas encore licencié.
  *
  *  1. Exclure d'emblée les assets statiques / PWA, /api/* et /portal/*.
  *  2. Lire la session NextAuth (getToken) — priorité à l'authentification.
  *     `secureCookie` est déduit du protocole réel de la requête (repli sur l'autre
  *     nom de cookie) pour ne JAMAIS rater une session valide sur HTTPS.
+ *  2b. Session MÉCANICIEN (gf_session typ=mechanic, AUTO-PORTANTE, SANS NextAuth) :
+ *      confinée à l'espace /mechanic. Elle est vérifiée juste après NextAuth car un
+ *      mécanicien n'a jamais de compte staff : l'exigence d'auth §5 le renverrait
+ *      à tort vers /login. Ce n'est PAS un retour à « licence avant NextAuth » — le
+ *      flux garage/admin conserve strictement l'ordre NextAuth-d'abord ci-dessous ;
+ *      seule cette classe de session distincte (typ=mechanic, signée HS256) court-circuite.
  *  3. Pages d'auth (/login, /register) : laisser passer si non connecté,
  *     renvoyer vers / si déjà connecté.
  *  4. /license : accessible non connecté ; connecté + licence valide → sortir.
@@ -88,6 +94,18 @@ function redirectTo(req: NextRequest, target: string): NextResponse {
   return NextResponse.redirect(new URL(target, req.url))
 }
 
+/**
+ * Un mécanicien ne voit QUE l'espace /mechanic. On confine sa navigation ici
+ * (les autorisations réelles restent vérifiées côté API — ce garde-fou n'est
+ * qu'une couche d'ergonomie/UX, jamais l'unique protection).
+ */
+function confineMechanic(pathname: string, req: NextRequest): NextResponse {
+  if (pathname === '/mechanic' || pathname.startsWith('/mechanic/')) {
+    return NextResponse.next()
+  }
+  return redirectTo(req, '/mechanic')
+}
+
 export async function middleware(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl
 
@@ -122,6 +140,17 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   }
   const isLoggedIn = Boolean(token?.sub || token?.id)
 
+  // ── 2b. Session MÉCANICIEN (auto-portante, sans NextAuth) ──────────────────
+  // Vérifiée une seule fois ici puis réutilisée plus bas (`gfSession`). Un
+  // mécanicien détenteur d'un gf_session signé typ=mechanic est confiné à
+  // /mechanic AVANT l'exigence d'auth NextAuth §5 (sinon il serait renvoyé vers
+  // /login alors qu'il n'a — et ne doit avoir — aucun compte staff). Le flux
+  // garage/admin ci-dessous reste strictement NextAuth-d'abord.
+  const gfSession = await verifySessionJwt(req, pathname)
+  if (gfSession?.typ === 'mechanic') {
+    return confineMechanic(pathname, req)
+  }
+
   const isAuthPage = pathname === '/login' || pathname === '/register'
 
   // ── 3. Pages d'authentification (/login, /register) ────────────────────────
@@ -140,9 +169,8 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
     // Non connecté → laisser voir la page (l'activation suit la connexion).
     if (!isLoggedIn) return NextResponse.next()
     // Connecté : si une licence valide existe déjà, sortir de /license.
-    const session = await verifySessionJwt(req, pathname)
-    if (session) {
-      return redirectTo(req, session.typ === 'admin' ? '/admin/licenses' : '/')
+    if (gfSession) {
+      return redirectTo(req, gfSession.typ === 'admin' ? '/admin/licenses' : '/')
     }
     // Connecté sans licence valide → rester sur /license pour l'activer.
     return NextResponse.next()
@@ -159,15 +187,19 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
 
   // ── 6. Routes admin : NextAuth valide (ci-dessus) + gf_session typ=admin ────
   if (pathname.startsWith('/admin')) {
-    const session = await verifySessionJwt(req, pathname)
-    if (session?.typ === 'admin') return NextResponse.next()
+    if (gfSession?.typ === 'admin') return NextResponse.next()
     // Jamais d'accès admin sur la seule foi de NextAuth.
     return redirectTo(req, '/license')
   }
 
+  // ── 6b. Une session GARAGE/staff ne doit pas se retrouver dans l'espace ─────
+  // mécanicien (les API /api/mechanic/* refuseraient de toute façon).
+  if (pathname === '/mechanic' || pathname.startsWith('/mechanic/')) {
+    return redirectTo(req, '/')
+  }
+
   // ── 7. Routes privées normales : exiger une licence gf_session valide ──────
-  const session = await verifySessionJwt(req, pathname)
-  if (!session) {
+  if (!gfSession) {
     return redirectTo(req, '/license')
   }
 

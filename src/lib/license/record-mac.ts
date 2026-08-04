@@ -33,11 +33,27 @@ type RecordFields = {
   status:    string
   expiryAt:  Date
   hwid:      string | null
+  // Licences MECHANIC : le parent et l'attribution sont critiques pour la
+  // sécurité (changer mechanicId dans la base donnerait accès aux travaux d'un
+  // autre mécanicien). Optionnels pour rester rétrocompatible.
+  parentLicenseId?: string | null
+  mechanicId?:      string | null
 }
 
-/** Compute deterministic HMAC over the security-critical fields. */
+/**
+ * Compute deterministic HMAC over the security-critical fields.
+ *
+ * Rétrocompatibilité : les champs MECHANIC (parentLicenseId, mechanicId) ne
+ * sont ajoutés au message QUE s'ils sont non nuls. Les enregistrements
+ * existants (licences Garage — les deux champs nuls) conservent exactement le
+ * même message qu'avant, donc leurs MAC restent valides.
+ */
 export function computeRecordMac(r: RecordFields): string {
-  const msg = [r.licenseId, r.token, r.status, r.expiryAt.toISOString(), r.hwid ?? ''].join('\x00')
+  const parts = [r.licenseId, r.token, r.status, r.expiryAt.toISOString(), r.hwid ?? '']
+  if (r.parentLicenseId || r.mechanicId) {
+    parts.push(r.parentLicenseId ?? '', r.mechanicId ?? '')
+  }
+  const msg = parts.join('\x00')
   return crypto.createHmac('sha256', getSecret()).update(msg).digest('hex')
 }
 

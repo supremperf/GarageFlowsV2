@@ -17,6 +17,8 @@ Usage (Windows — run from project root):
   python scripts\keygen.py --gen --customer CUST-001                # Single user license
   python scripts\keygen.py --gen --customer CUST-001 --type trial --years 1
   python scripts\keygen.py --batch 10 --type premium --years 2      # Bulk generation
+  python scripts\keygen.py --gen-mechanic --parent-lid <LID> --count 3 --names "A,B,C"
+                                                                    # Mechanic keys for a garage
   python scripts\keygen.py --verify <token>                         # Verify any token
   python scripts\keygen.py --hwid                                   # Print this machine's HWID
 
@@ -41,6 +43,11 @@ ROOT_DIR  = Path(__file__).resolve().parent.parent
 KEYS_DIR  = ROOT_DIR / "keys"
 PRIV_FILE = KEYS_DIR / "private.pem"
 PUB_FILE  = KEYS_DIR / "public.pem"
+
+# ── Local modules (mechanic licenses + local DB + audit) ───────────────────────
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import keygen_core
+import keygen_db
 
 # ── Token constants ────────────────────────────────────────────────────────────
 HEADER        = {"alg": "ES256", "typ": "GF-LIC", "v": 2}
@@ -162,6 +169,92 @@ def make_license(priv_key, customer_id: str, license_type: str,
         "label":      label,
     }
 
+# ── Mechanic license generation ────────────────────────────────────────────────
+DEFAULT_MAX_MECHANIC = 20
+
+def max_mechanic_count() -> int:
+    """Limite de clés mécanicien par génération (env GF_KEYGEN_MAX_MECHANIC, défaut 20)."""
+    try:
+        val = int(os.environ.get("GF_KEYGEN_MAX_MECHANIC", ""))
+        return val if val >= 1 else DEFAULT_MAX_MECHANIC
+    except (TypeError, ValueError):
+        return DEFAULT_MAX_MECHANIC
+
+
+def validate_mechanic_request(parent_lid, count, names_arg=None) -> tuple:
+    """Valide les arguments de --gen-mechanic.
+    Retourne (enregistrement_parent, liste_noms) ou lève ValueError avec un
+    message clair : count entier >= 1 et <= GF_KEYGEN_MAX_MECHANIC, parent-lid
+    obligatoire, existant dans la base locale et de type non-mechanic, pas plus
+    de noms que de clés demandées."""
+    max_count = max_mechanic_count()
+    if isinstance(count, bool) or not isinstance(count, int):
+        raise ValueError(f"--count doit être un entier (reçu: {count!r})")
+    if count < 1:
+        raise ValueError(f"--count doit être un entier >= 1 (reçu: {count})")
+    if count > max_count:
+        raise ValueError(
+            f"--count dépasse la limite autorisée ({max_count}). "
+            "Ajustez la variable d'environnement GF_KEYGEN_MAX_MECHANIC si nécessaire."
+        )
+    if not parent_lid or not str(parent_lid).strip():
+        raise ValueError("--parent-lid est obligatoire avec --gen-mechanic")
+    parent = keygen_db.get_license(str(parent_lid).strip())
+    if parent is None:
+        raise ValueError(
+            f"Licence parente introuvable dans la base locale: {parent_lid}\n"
+            "Générez d'abord la licence garage (ou vérifiez le LID)."
+        )
+    if parent.get("type") == "mechanic":
+        raise ValueError(
+            "La licence parente doit être une licence garage "
+            "(trial/premium/enterprise/admin), pas une clé mécanicien."
+        )
+    names = []
+    if names_arg:
+        names = [n.strip() for n in str(names_arg).split(",") if n.strip()]
+        if len(names) > count:
+            raise ValueError(
+                f"Trop de noms fournis ({len(names)}) pour --count {count}."
+            )
+    return parent, names
+
+
+def cmd_gen_mechanic(args):
+    """Génère N clés mécanicien liées à une licence garage de la base locale."""
+    try:
+        parent, names = validate_mechanic_request(args.parent_lid, args.count, args.names)
+    except ValueError as exc:
+        print(f"\nERREUR: {exc}\n")
+        sys.exit(1)
+
+    pk  = _load_private(args.passphrase)
+    cid = parent.get("cid", "")
+    print("\n" + "="*70)
+    print(f"  MECHANIC LICENSES — parent {parent['lid']}")
+    print("="*70)
+    infos = []
+    for i in range(args.count):
+        name  = names[i] if i < len(names) else None
+        label = args.label or name or f"Mécanicien {i+1}"
+        info  = keygen_core.make_mechanic_license(
+            pk, parent["lid"], cid, years=args.years,
+            mechanic_name=name, label=label,
+        )
+        keygen_db.add_license(info, {})
+        keygen_db.audit_log("gen_mechanic", info["lid"],
+                            f"parent={parent['lid'][:8]}…")
+        infos.append(info)
+        print(f"\n[{i+1:>3}] {label}")
+        print(f"      {info['token']}")
+        print(f"      lid={info['lid']}")
+    print("\n" + "-"*70)
+    print(f"  parent   : {parent['lid']}  ({parent.get('label') or cid})")
+    print(f"  count    : {len(infos)}")
+    print(f"  expires  : {infos[0]['expires_at']}")
+    print("="*70 + "\n")
+
+
 # ── Verification ───────────────────────────────────────────────────────────────
 def verify_token(token: str):
     parts = token.strip().split(".")
@@ -269,6 +362,14 @@ def main():
     p.add_argument("--init",       action="store_true")
     p.add_argument("--passphrase", type=str)
     p.add_argument("--gen",        action="store_true")
+    p.add_argument("--gen-mechanic", action="store_true", dest="gen_mechanic",
+                   help="Génère des clés mécanicien liées à une licence garage (--parent-lid)")
+    p.add_argument("--parent-lid", type=str, default=None, dest="parent_lid",
+                   metavar="LID", help="LID de la licence garage parente (base locale)")
+    p.add_argument("--count",      type=int, default=1, metavar="N",
+                   help="Nombre de clés mécanicien à générer (défaut 1)")
+    p.add_argument("--names",      type=str, default=None, metavar='"Nom1,Nom2,..."',
+                   help="Noms des mécaniciens, séparés par des virgules (optionnel)")
     p.add_argument("--admin",      action="store_true")
     p.add_argument("--verify",     type=str, metavar="TOKEN")
     p.add_argument("--batch",      type=int, metavar="N")
@@ -312,6 +413,10 @@ def main():
             else:
                 val = time.strftime("%Y-%m-%d", time.gmtime(v)) if k in ("iss", "exp") else v
                 print(f"  {k:<8}: {val}")
+        if pl.get("typ") == "mechanic":
+            print("-"*60)
+            print(f"  Licence MÉCANICIEN — parent (plid): {pl.get('plid', '(absent!)')}")
+            print(f"  Nom suggéré (mn)                  : {pl.get('mn', '(non fourni)')}")
         print("="*60 + "\n")
         return
 
@@ -330,6 +435,10 @@ def main():
         print("-"*70)
         print(f"  LID: {info['lid']}  |  expires: {info['expires_at']}")
         print("="*70 + "\n")
+        return
+
+    if args.gen_mechanic:
+        cmd_gen_mechanic(args)
         return
 
     if args.batch:

@@ -1,0 +1,94 @@
+export const dynamic = 'force-dynamic'
+
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
+import { requireSession, withAuth } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
+import { macFor } from '@/lib/license/mechanic-admin'
+import { logAudit } from '@/lib/audit'
+
+// POST /api/mechanic-licenses/[lid]/assign  { mechanicId }
+// Attribue (ou réattribue) une clé mécanicien à un mécanicien du garage (OWNER).
+// Une RÉATTRIBUTION : trace l'historique, désactive les appareils de l'ancien
+// titulaire (sessions invalidées) et recalcule l'intégrité (recordMac).
+export const POST = withAuth(async (req, { params }: { params: { lid: string } }) => {
+  const session = await requireSession()
+  if (!can(session.user.role, 'mechanicLicense:assign')) {
+    return NextResponse.json({ error: 'Réservé au propriétaire' }, { status: 403 })
+  }
+  const garageId = session.user.garageId
+
+  let body: { mechanicId?: unknown }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Requête invalide' }, { status: 400 })
+  }
+  const mechanicId = typeof body.mechanicId === 'string' ? body.mechanicId : ''
+  if (!mechanicId) return NextResponse.json({ error: 'Mécanicien manquant' }, { status: 400 })
+
+  // La clé DOIT appartenir à ce garage et être de type mechanic.
+  const license = await prisma.licenseKey.findFirst({
+    where: { licenseId: params.lid, garageId, licenseType: 'mechanic' },
+  })
+  if (!license) return NextResponse.json({ error: 'Clé introuvable.' }, { status: 404 })
+
+  // Le mécanicien cible DOIT appartenir au même garage.
+  const mechanic = await prisma.mechanic.findFirst({ where: { id: mechanicId, garageId }, select: { id: true } })
+  if (!mechanic) return NextResponse.json({ error: 'Mécanicien introuvable.' }, { status: 404 })
+
+  const previousMechanicId = license.mechanicId
+  if (previousMechanicId === mechanicId) {
+    return NextResponse.json({ error: 'Cette clé est déjà attribuée à ce mécanicien.' }, { status: 409 })
+  }
+  const isReassignment = !!previousMechanicId
+
+  const now = new Date()
+  const newMac = macFor({
+    licenseId: license.licenseId, token: license.token, status: license.status,
+    expiryAt: license.expiryAt, hwid: license.hwid,
+    parentLicenseId: license.parentLicenseId, mechanicId,
+  })
+
+  await prisma.$transaction(async (tx) => {
+    // Clôturer l'attribution précédente dans l'historique.
+    if (isReassignment) {
+      await tx.mechanicLicenseAssignment.updateMany({
+        where: { licenseId: license.licenseId, unassignedAt: null },
+        data: { unassignedAt: now },
+      })
+    }
+    await tx.licenseKey.update({
+      where: { id: license.id },
+      data: { mechanicId, assignedAt: now, assignedBy: session.user.id, recordMac: newMac },
+    })
+    await tx.mechanicLicenseAssignment.create({
+      data: {
+        licenseId: license.licenseId,
+        mechanicId,
+        garageId,
+        assignedBy: session.user.id,
+        previousMechanicId: previousMechanicId ?? null,
+      },
+    })
+    // Réattribution : couper les sessions/appareils de l'ancien titulaire.
+    if (isReassignment) {
+      await tx.licenseDevice.updateMany({
+        where: { licenseId: license.licenseId, status: 'active' },
+        data: { status: 'revoked', revokedAt: now, revokeReason: 'reassigned' },
+      })
+    }
+    await tx.mechanicActionAudit.create({
+      data: {
+        garageId, mechanicId, licenseId: license.licenseId,
+        action: isReassignment ? 'reassign' : 'assign',
+        targetType: 'LicenseKey', targetId: license.licenseId,
+        metadata: previousMechanicId ? JSON.stringify({ previousMechanicId }) : null,
+      },
+    })
+  })
+
+  await logAudit({ action: 'update', entityType: 'License', entityId: license.licenseId, session, req, details: { assign: mechanicId, reassignment: isReassignment } })
+
+  return NextResponse.json({ ok: true, licenseId: license.licenseId, mechanicId, reassignment: isReassignment })
+})

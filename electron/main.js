@@ -768,7 +768,7 @@ function checkStoredLicense() {
 // the "gf_session" cookie.  Electron must mint that token itself so that every
 // page request is allowed through the middleware gate.
 
-function createGfSessionJwt(typ, lid) {
+function createGfSessionJwt(typ, lid, extra = {}) {
   // Secret par installation, résolu au démarrage (fail-closed). Aucun repli en dur.
   const secret  = installSecret
   if (!secret) throw new Error('Secret local indisponible — session non signable')
@@ -776,18 +776,19 @@ function createGfSessionJwt(typ, lid) {
   const exp     = now + 5 * 365 * 24 * 3600   // 5 years
 
   // Standard HS256 JWT — compatible with jose's jwtVerify()
+  // `extra` porte les revendications MÉCANICIEN (gid, mid, did) le cas échéant.
   const header  = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')
-  const payload = Buffer.from(JSON.stringify({ typ, lid, iat: now, exp })).toString('base64url')
+  const payload = Buffer.from(JSON.stringify({ typ, lid, ...extra, iat: now, exp })).toString('base64url')
   const sig     = crypto.createHmac('sha256', secret)
                         .update(`${header}.${payload}`)
                         .digest('base64url')
   return `${header}.${payload}.${sig}`
 }
 
-async function injectLicenseCookies(licenseType, licenseId = 'electron-local') {
+async function injectLicenseCookies(licenseType, licenseId = 'electron-local', extra = {}) {
   const baseUrl = `http://127.0.0.1:${PORT}`
   const expDate = Math.floor(Date.now() / 1000) + 5 * 365 * 24 * 3600
-  const jwt     = createGfSessionJwt(licenseType, licenseId)
+  const jwt     = createGfSessionJwt(licenseType, licenseId, extra)
 
   // Primary cookie — verified by middleware. HttpOnly : inaccessible au JS du
   // renderer (contextIsolation actif) ; SameSite=Strict : jamais envoyé en
@@ -994,6 +995,41 @@ async function activateOnServer() {
       log('[license/activate] server refused —', res.status || res.reason || 'unknown')
     }
   }
+  return false
+}
+
+/**
+ * Établit la session MÉCANICIEN locale (mono-poste). Une clé mécanicien exige
+ * une session portant gid + mid ; on interroge l'activation locale pour les
+ * obtenir puis on réinjecte le cookie complet. Best-effort : si la clé n'est pas
+ * (encore) attribuée localement, la session reste incomplète et les API
+ * mécanicien refusent l'accès (fail-closed) — jamais d'accès élargi.
+ */
+async function establishMechanicSession() {
+  if (!activeLicense?.token) return false
+  const info = getSystemInfo()
+  const body = {
+    license: activeLicense.token,
+    hwid:    getHwid(),
+    version: info.version,
+    os:      info.os,
+    arch:    info.arch,
+  }
+  const res = await httpPost(`http://127.0.0.1:${PORT}/api/license/activate`, body).catch(() => null)
+  if (res && res.ok && res.licenseType === 'mechanic' && res.garageId && res.mechanicId) {
+    if (res.deviceToken) {
+      activeDeviceToken = res.deviceToken
+      saveLicense(activeLicense.token, activeLicense.payload, res.deviceToken)
+    }
+    await injectLicenseCookies('mechanic', activeLicense.payload.lid, {
+      gid: res.garageId,
+      mid: res.mechanicId,
+      ...(res.deviceId ? { did: res.deviceId } : {}),
+    })
+    log('[mechanic] session locale établie — mid:', res.mechanicId)
+    return true
+  }
+  log('[mechanic] session locale indisponible —', (res && (res.reason || res.code)) || 'refus')
   return false
 }
 
@@ -2379,6 +2415,14 @@ app.whenReady().then(async () => {
   // ── Run additive DB schema migrations via internal API ──────────────────
   // Awaited so the schema is up to date before the user can interact with the app
   await runInternalMigration().catch(err => log('Migration error (non-fatal):', err.message))
+
+  // ── Session MÉCANICIEN (mono-poste) ─────────────────────────────────────
+  // Une clé mécanicien ouvre l'espace /mechanic : on complète la session locale
+  // (gid + mid) une fois la base migrée. Sans cela, les API mécanicien refusent
+  // l'accès (fail-closed).
+  if (!IS_DEV && activeLicense?.payload?.typ === 'mechanic') {
+    await establishMechanicSession().catch(err => log('[mechanic] session error:', err.message))
+  }
 
   // ── Open main window ──────────────────────────────────────────────────────
   createMainWindow()

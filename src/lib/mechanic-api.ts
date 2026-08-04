@@ -1,0 +1,104 @@
+/**
+ * Helpers d'API pour l'espace MÉCANICIEN.
+ *
+ * `requireMechanic()` est le point de contrôle UNIQUE de toutes les routes
+ * /api/mechanic/* : il revalide la session mécanicien en base (voir
+ * validateMechanicSession) et renvoie un contexte de confiance {garageId,
+ * mechanicId, licenseId}. Toute route mécanicien DOIT l'utiliser et n'utiliser
+ * QUE ce contexte — jamais un garageId/mechanicId/role provenant du client.
+ *
+ * `withMechanic()` enveloppe le handler : rate limiting, Cache-Control:no-store
+ * (aucune donnée mécanicien mise en cache HTTP partagé), et capture des
+ * réponses d'erreur levées.
+ */
+
+import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { validateMechanicSession, type MechanicContext } from '@/lib/license/mechanic-session'
+import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
+import { logger } from '@/lib/logger'
+import { prisma } from '@/lib/db'
+
+/**
+ * Vérifie la session mécanicien. Lève une NextResponse d'erreur (capturée par
+ * withMechanic) si l'accès n'est pas autorisé. Sinon retourne le contexte de
+ * confiance.
+ */
+export async function requireMechanic(): Promise<MechanicContext> {
+  const raw = cookies().get('gf_session')?.value ?? ''
+  const check = await validateMechanicSession({ rawGfSession: raw })
+  if (!check.ok) {
+    throw NextResponse.json({ error: check.reason, code: check.code }, { status: check.status })
+  }
+  return check.ctx
+}
+
+/** En-têtes anti-cache pour toute réponse mécanicien (isolation par utilisateur). */
+function noStore(res: NextResponse): NextResponse {
+  res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private')
+  res.headers.set('Pragma', 'no-cache')
+  return res
+}
+
+/** Enveloppe un handler de route mécanicien. */
+export function withMechanic(
+  handler: (req: Request, ctx?: any) => Promise<NextResponse>,
+) {
+  return async (req: Request, ctx?: any): Promise<NextResponse> => {
+    try {
+      const rl = await enforceRateLimit('api', clientIpFrom(req))
+      if (!rl.ok) return rateLimitResponse(rl)
+      return noStore(await handler(req, ctx))
+    } catch (e) {
+      if (e instanceof NextResponse) return noStore(e)
+      logger.error('[Mechanic API Error]', e)
+      return noStore(
+        NextResponse.json(
+          { error: 'Une erreur interne est survenue.', code: 'INTERNAL_ERROR' },
+          { status: 500 },
+        ),
+      )
+    }
+  }
+}
+
+/**
+ * Récupère UNE intervention attribuée au mécanicien courant, ou null.
+ * Le scoping (garageId + mechanicId) provient EXCLUSIVEMENT du contexte de
+ * session : impossible de lire l'intervention d'un autre mécanicien ou garage
+ * en manipulant l'URL/le corps. Renvoie null (⇒ 404 générique) sinon — aucune
+ * fuite sur l'existence de la ressource.
+ */
+export async function findAssignedJob(ctx: MechanicContext, jobId: string) {
+  if (!jobId) return null
+  return prisma.job.findFirst({
+    where: { id: jobId, garageId: ctx.garageId, mechanicId: ctx.mechanicId },
+  })
+}
+
+/** Journalise une action mécanicien (jamais de secret/token). Fail-silent. */
+export async function logMechanicAction(opts: {
+  ctx: MechanicContext
+  action: string
+  jobId?: string | null
+  targetType?: string | null
+  targetId?: string | null
+  metadata?: Record<string, unknown>
+}): Promise<void> {
+  try {
+    await prisma.mechanicActionAudit.create({
+      data: {
+        garageId: opts.ctx.garageId,
+        mechanicId: opts.ctx.mechanicId,
+        licenseId: opts.ctx.licenseId,
+        jobId: opts.jobId ?? null,
+        action: opts.action,
+        targetType: opts.targetType ?? null,
+        targetId: opts.targetId ?? null,
+        metadata: opts.metadata ? JSON.stringify(opts.metadata) : null,
+      },
+    })
+  } catch (err) {
+    logger.warn('[mechanic-audit] écriture impossible', err)
+  }
+}
