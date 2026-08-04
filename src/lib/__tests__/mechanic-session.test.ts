@@ -17,7 +17,9 @@ const store = vi.hoisted(() => {
   const licenses = new Map<string, any>()
   const mechanics = new Map<string, any>()
   const devices = new Map<string, any>()
-  return { licenses, mechanics, devices }
+  // Résultat de vérification MAC contrôlable par test (défaut : MAC valide présent).
+  const macResult = { ok: true, tampered: false, missing: false }
+  return { licenses, mechanics, devices, macResult }
 })
 
 vi.mock('@/lib/db', () => ({
@@ -31,9 +33,9 @@ vi.mock('@/lib/db', () => ({
   },
   isPostgresDatabase: () => false,
 }))
-// Pas d'altération : le MAC est recalculé « à la volée » pour l'état stocké.
+// MAC contrôlable : par défaut valide et présent (missing:false).
 vi.mock('@/lib/license/record-mac', () => ({
-  verifyRecordMac: () => ({ ok: true, tampered: false, missing: true }),
+  verifyRecordMac: () => store.macResult,
 }))
 
 import { validateMechanicSession } from '@/lib/license/mechanic-session'
@@ -47,6 +49,7 @@ const future = new Date(Date.now() + 86_400_000)
 
 function seed() {
   store.licenses.clear(); store.mechanics.clear(); store.devices.clear()
+  store.macResult.ok = true; store.macResult.tampered = false; store.macResult.missing = false
   store.licenses.set('parent-1', { licenseId: 'parent-1', licenseType: 'premium', status: 'active', revokedAt: null, expiryAt: future, garageId: 'garage-1' })
   store.licenses.set('mech-lic-1', { licenseId: 'mech-lic-1', licenseType: 'mechanic', status: 'active', revokedAt: null, expiryAt: future, garageId: 'garage-1', parentLicenseId: 'parent-1', mechanicId: 'mecaA', token: 't', hwid: null, recordMac: 'x' })
   store.mechanics.set('mecaA', { id: 'mecaA', garageId: 'garage-1' })
@@ -116,5 +119,20 @@ describe('mechanic-session — rejets de sécurité', () => {
   it('refuse un gid falsifié dans le cookie (incohérent avec la base)', async () => {
     const r = await validateMechanicSession({ rawGfSession: await cookie({ typ: 'mechanic', lid: 'mech-lic-1', gid: 'garage-999', mid: 'mecaA', did: 'dev-1' }) })
     expect(r.ok).toBe(false)
+  })
+
+  it('refuse un recordMac ALTÉRÉ (mechanicId modifié en base)', async () => {
+    store.macResult.tampered = true; store.macResult.missing = false; store.macResult.ok = false
+    const r = await validateMechanicSession({ rawGfSession: await goodSession() })
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.code).toBe('MECHANIC_LICENSE_TAMPERED')
+  })
+
+  it('refuse un recordMac ABSENT (mise à NULL du MAC pour usurper — F1)', async () => {
+    // Une clé mécanicien est toujours créée AVEC un MAC : un MAC absent = altération.
+    store.macResult.tampered = false; store.macResult.missing = true; store.macResult.ok = true
+    const r = await validateMechanicSession({ rawGfSession: await goodSession() })
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.code).toBe('MECHANIC_LICENSE_TAMPERED')
   })
 })

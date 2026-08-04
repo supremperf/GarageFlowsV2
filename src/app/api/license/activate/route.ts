@@ -106,11 +106,15 @@ async function activateMechanicKey(input: {
   if (!record || record.licenseType !== 'mechanic') return unassigned()
 
   // Intégrité DB (inclut mechanicId/parent — anti-altération).
-  if (verifyRecordMac({
+  // Un MAC ABSENT n'est jamais légitime pour une clé mécanicien (toujours créée
+  // avec un recordMac) : le traiter comme une altération empêche l'usurpation
+  // par mise à NULL du MAC + modification de mechanicId en base.
+  const mmac = verifyRecordMac({
     licenseId: record.licenseId, token: record.token, status: record.status,
     expiryAt: record.expiryAt, hwid: record.hwid, recordMac: record.recordMac,
     parentLicenseId: record.parentLicenseId, mechanicId: record.mechanicId,
-  }).tampered) {
+  })
+  if (mmac.tampered || mmac.missing) {
     return NextResponse.json(
       { ok: false, code: 'LICENSE_INVALID', reason: 'Erreur d\'intégrité de la clé. Contactez le support.' },
       { status: 403 },

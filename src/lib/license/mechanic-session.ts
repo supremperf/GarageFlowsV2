@@ -119,6 +119,11 @@ export async function validateMechanicSession(opts: {
   if (license.licenseType !== 'mechanic') return fail('MECHANIC_LICENSE_UNKNOWN')
 
   // Intégrité DB (anti-altération SQLite / base) — inclut mechanicId/parent.
+  // Toute clé mécanicien est créée AVEC un recordMac (enregistrement + chaque
+  // changement d'attribution/statut le recalculent) : un MAC ABSENT n'est donc
+  // jamais légitime ici et est traité comme une altération (sinon un attaquant
+  // pouvant écrire en base mettrait recordMac=NULL puis changerait mechanicId
+  // pour usurper un autre mécanicien).
   const mac = verifyRecordMac({
     licenseId: license.licenseId,
     token: license.token,
@@ -129,7 +134,7 @@ export async function validateMechanicSession(opts: {
     parentLicenseId: license.parentLicenseId,
     mechanicId: license.mechanicId,
   })
-  if (mac.tampered) return fail('MECHANIC_LICENSE_TAMPERED')
+  if (mac.tampered || mac.missing) return fail('MECHANIC_LICENSE_TAMPERED')
 
   if (license.status === 'revoked' || license.revokedAt) return fail('MECHANIC_LICENSE_REVOKED')
   if (license.status === 'suspended') return fail('MECHANIC_LICENSE_SUSPENDED')
