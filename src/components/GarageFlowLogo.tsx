@@ -51,15 +51,3 @@ export function GarageFlowIcon({ size = 32, className = '' }: { size?: number; c
     />
   )
 }
-
-/** Lockup en-tête : icône + nom. */
-export function GarageFlowLockup({ iconSize = 28 }: { iconSize?: number }) {
-  return (
-    <div className="flex items-center gap-2">
-      <GarageFlowIcon size={iconSize} />
-      <span className="font-black tracking-tight leading-none" style={{ fontSize: Math.max(12, iconSize * 0.5) }}>
-        <span className="text-slate-100">Garage</span><span className="text-blue-400">Flow</span>
-      </span>
-    </div>
-  )
-}

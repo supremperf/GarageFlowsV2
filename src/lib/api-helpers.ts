@@ -65,24 +65,6 @@ export function withAuth(
   }
 }
 
-/** Rate limit for auth endpoints: 10 attempts per 5 minutes per IP */
-export function withLoginRateLimit(
-  handler: (req: Request, ctx?: any) => Promise<NextResponse>
-) {
-  return async (req: Request, ctx?: any): Promise<NextResponse> => {
-    try {
-      // Connexion (défaut 10 tentatives / 15 min / IP — RATE_LIMIT_LOGIN_*)
-      const rl = await enforceRateLimit('login', clientIpFrom(req))
-      if (!rl.ok) return rateLimitResponse(rl)
-      return await handler(req, ctx)
-    } catch (e) {
-      if (e instanceof NextResponse) return e
-      console.error('[Auth Error]', e)
-      return NextResponse.json({ error: 'Erreur interne' }, { status: 500 })
-    }
-  }
-}
-
 /** Max base64 logo size (after client-side downscale). Generous headroom: ~4 MB. */
 export const MAX_LOGO_BASE64_LENGTH = 4 * 1024 * 1024
 

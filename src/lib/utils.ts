@@ -36,34 +36,6 @@ export function jobsOverlap(a: Job, b: Job): boolean {
   return aStart < bEnd && bStart < aEnd
 }
 
-export function estimateRepairDuration(
-  repairType: RepairType,
-  vehicleModel: string,
-  historicalData: Job[]
-): number {
-  const config = REPAIR_TYPES[repairType]
-  const base = config.defaultDuration
-
-  // Find historical jobs of same type
-  const similar = historicalData.filter(
-    j => j.repairType === repairType && j.status === 'completed' && j.actualDuration
-  )
-
-  if (similar.length === 0) return base
-
-  // Weight by vehicle similarity
-  const vehicleBrand = vehicleModel.toLowerCase().split(' ')[0]
-  const sameBrand = similar.filter(j =>
-    j.vehicleModel.toLowerCase().startsWith(vehicleBrand)
-  )
-
-  const sample = sameBrand.length >= 3 ? sameBrand : similar
-  const avg = sample.reduce((sum, j) => sum + (j.actualDuration || base), 0) / sample.length
-
-  // Blend: 70% historical, 30% default
-  return Math.round(avg * 0.7 + base * 0.3)
-}
-
 export function findAvailableSlots(
   mechanicId: string,
   jobs: Job[],

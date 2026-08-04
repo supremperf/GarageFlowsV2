@@ -121,12 +121,3 @@ export function balanceCents(totalTTCCents: number, paymentsEuros: number[] = []
   const credited = creditsEuros.reduce((s, c) => s + toCents(c), 0)
   return totalTTCCents - paid - credited
 }
-
-/** Formate un montant en euros pour l'affichage (fr-FR). */
-export function formatEuros(amountEuros: number, currency = 'EUR'): string {
-  try {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amountEuros)
-  } catch {
-    return `${fromCents(toCents(amountEuros)).toFixed(2)} €`
-  }
-}

@@ -58,13 +58,3 @@ export function deletePhoto(relativePath: string): void {
     if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath)
   } catch {}
 }
-
-/**
- * Resolve a relative photo path to an absolute filesystem path.
- * Returns null if PHOTOS_DIR is not set or the path is missing.
- */
-export function resolvePhoto(relativePath: string): string | null {
-  if (!PHOTOS_DIR || !relativePath) return null
-  const fullPath = path.join(PHOTOS_DIR, relativePath)
-  return fs.existsSync(fullPath) ? fullPath : null
-}
