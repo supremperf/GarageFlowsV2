@@ -1827,17 +1827,9 @@ function createMainWindow() {
   })
 
   // Empêche toute navigation hors de l'app locale (pas de file://, pas d'externe).
-  // SÉCURITÉ : comparaison d'ORIGINE analysée (URL.origin), jamais un préfixe de
-  // chaîne — `http://127.0.0.1:${PORT}@evil.com/` commence par le préfixe local
-  // mais son hôte réel est evil.com (userinfo). url.startsWith() laisserait donc
-  // fuir le pont preload vers une origine attaquante. On refuse aussi toute URL
-  // non analysable (fail-closed).
-  const localOrigin = `http://127.0.0.1:${PORT}`
-  const isLocalOrigin = (url) => {
-    try { return new URL(url).origin === localOrigin } catch { return false }
-  }
+  const { isLocalAppUrl } = require('./nav-guard')
   mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (!isLocalOrigin(url)) {
+    if (!isLocalAppUrl(url, localOrigin)) {
       event.preventDefault()
       log('[security] navigation bloquée vers :', String(url).slice(0, 80))
     }
@@ -1846,7 +1838,7 @@ function createMainWindow() {
   // garde, une redirection hors origine locale afficherait une page étrangère avec
   // le pont preload encore attaché. Défense en profondeur (miroir de will-navigate).
   mainWindow.webContents.on('will-redirect', (event, url) => {
-    if (!isLocalOrigin(url)) {
+    if (!isLocalAppUrl(url, localOrigin)) {
       event.preventDefault()
       log('[security] redirection bloquée vers :', String(url).slice(0, 80))
     }
