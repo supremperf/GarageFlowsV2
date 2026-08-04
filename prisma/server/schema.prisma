@@ -286,7 +286,8 @@ model Job {
   isUrgent           Boolean             @default(false)
   delayMinutes       Int?
   mileageAtVisit     Int?
-  timerStartedAt     DateTime? // for real-time stopwatch
+  timerStartedAt     DateTime? // début du segment de chrono EN COURS (null si en pause/arrêté)
+  timerAccumulatedSec Int               @default(0) // secondes accumulées sur les segments terminés (pause/reprise sans perte)
   // Relations
   mechanicId         String
   mechanic           Mechanic            @relation(fields: [mechanicId], references: [id])

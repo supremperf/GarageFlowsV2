@@ -55,6 +55,7 @@ export const GET = withMechanic(async (_req, { params }: { params: { id: string 
     customerName: job.customerName,
     notes: job.notes,
     timerStartedAt: job.timerStartedAt,
+    timerAccumulatedSec: job.timerAccumulatedSec ?? 0,
     delayMinutes: job.delayMinutes,
   }
 

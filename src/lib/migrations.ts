@@ -933,4 +933,8 @@ export const MIGRATIONS: Migration[] = [
   { id: '154_mla_prevmechanic_idx',              sql: 'CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_previousMechanicId_idx" ON "MechanicLicenseAssignment"("previousMechanicId")' },
   { id: '155_jobmechanicnote_license_idx',       sql: 'CREATE INDEX IF NOT EXISTS "JobMechanicNote_licenseId_idx" ON "JobMechanicNote"("licenseId")' },
   { id: '156_mechanic_action_audit_license_idx', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_licenseId_idx" ON "MechanicActionAudit"("licenseId")' },
+
+  // Chrono mécanicien (§6) : secondes accumulées sur les segments terminés
+  // (pause/reprise sans perte). Additif, valeur par défaut 0 sur les lignes existantes.
+  { id: '157_job_timer_accumulated_sec', sql: 'ALTER TABLE "Job" ADD COLUMN "timerAccumulatedSec" INTEGER NOT NULL DEFAULT 0' },
 ]

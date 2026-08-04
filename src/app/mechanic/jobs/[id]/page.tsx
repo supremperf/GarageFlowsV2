@@ -13,7 +13,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  Loader2, ChevronLeft, Camera, Play, Square, Send, MessageSquarePlus,
+  Loader2, ChevronLeft, Camera, Play, Pause, Square, Send, MessageSquarePlus,
   AlertTriangle, CheckCircle2, Car, Clock, ImagePlus,
 } from 'lucide-react'
 import { mechFetch } from '@/lib/mechanic-client'
@@ -23,6 +23,7 @@ interface JobView {
   actualDuration: number | null; status: string; repairType: string
   isUrgent: boolean; vehicleModel: string; licensePlate: string | null
   customerName: string; notes: string | null; timerStartedAt: string | null
+  timerAccumulatedSec: number
 }
 interface Photo { id: string; phase: string; caption: string | null; photoPath: string | null; base64?: string; mechanicId: string | null; createdAt: string }
 interface Note { id: string; type: string; body: string; mechanicId: string | null; createdAt: string }
@@ -56,7 +57,7 @@ export default function MechanicJobPage({ params }: { params: { id: string } }) 
 
   useEffect(() => { load() }, [load])
 
-  async function timer(action: 'start' | 'stop') {
+  async function timer(action: 'start' | 'pause' | 'resume' | 'stop') {
     setBusy(true)
     try { await mechFetch(`/api/mechanic/jobs/${params.id}/timer`, { method: 'POST', body: JSON.stringify({ action }) }); load() }
     catch (e) { setError((e as Error).message) } finally { setBusy(false) }
@@ -129,12 +130,26 @@ export default function MechanicJobPage({ params }: { params: { id: string } }) 
         {job.notes && <p className="mt-3 text-sm text-slate-300 whitespace-pre-wrap border-t border-white/[0.06] pt-3">{job.notes}</p>}
       </section>
 
-      {/* Chrono */}
+      {/* Chrono — démarrer / pause / reprendre / terminer (§6) */}
       <section className="mb-4 flex gap-2">
         {job.timerStartedAt ? (
-          <button disabled={busy} onClick={() => timer('stop')} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-red-600/90 hover:bg-red-600 text-white font-semibold disabled:opacity-50">
-            <Square className="w-4 h-4" /> Terminer l&apos;intervention
-          </button>
+          <>
+            <button disabled={busy} onClick={() => timer('pause')} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-amber-600/90 hover:bg-amber-600 text-white font-semibold disabled:opacity-50">
+              <Pause className="w-4 h-4" /> Pause
+            </button>
+            <button disabled={busy} onClick={() => timer('stop')} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-red-600/90 hover:bg-red-600 text-white font-semibold disabled:opacity-50">
+              <Square className="w-4 h-4" /> Terminer
+            </button>
+          </>
+        ) : job.status === 'in_progress' ? (
+          <>
+            <button disabled={busy} onClick={() => timer('resume')} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold disabled:opacity-50">
+              <Play className="w-4 h-4" /> Reprendre
+            </button>
+            <button disabled={busy} onClick={() => timer('stop')} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-red-600/90 hover:bg-red-600 text-white font-semibold disabled:opacity-50">
+              <Square className="w-4 h-4" /> Terminer
+            </button>
+          </>
         ) : (
           <button disabled={busy} onClick={() => timer('start')} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold disabled:opacity-50">
             <Play className="w-4 h-4" /> Démarrer l&apos;intervention
