@@ -8,7 +8,7 @@ import { useTranslation } from '@/lib/i18n'
 import { jobStatusLabel } from '@/lib/i18n/labels'
 
 type JobStatus = Job['status']
-const STATUS_OPTIONS: JobStatus[] = ['scheduled', 'in_progress', 'completed', 'delayed', 'cancelled']
+const STATUS_OPTIONS: JobStatus[] = ['scheduled', 'in_progress', 'awaiting_validation', 'completed', 'delayed', 'cancelled']
 
 interface Props {
   estimatedDuration: number

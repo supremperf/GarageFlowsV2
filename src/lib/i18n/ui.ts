@@ -318,6 +318,7 @@ export const UI = {
   // ── Statuts d'intervention (libellés — clés JobStatus conservées) ─────────
   jstScheduled: { fr:'Planifié', en:'Scheduled', es:'Programado', de:'Geplant', it:'Programmato', pt:'Agendado', nl:'Gepland', pl:'Zaplanowane', ru:'Запланировано', ar:'مجدول', zh:'已排期', ja:'予定', tr:'Planlandı', ko:'예정' },
   jstInProgress:{ fr:'En cours', en:'In progress', es:'En curso', de:'In Bearbeitung', it:'In corso', pt:'Em curso', nl:'Bezig', pl:'W toku', ru:'В работе', ar:'قيد التنفيذ', zh:'进行中', ja:'進行中', tr:'Devam ediyor', ko:'진행 중' },
+  jstAwaitingValidation:{ fr:'En attente de validation', en:'Awaiting validation', es:'Pendiente de validación', de:'Warten auf Freigabe', it:'In attesa di convalida', pt:'A aguardar validação', nl:'Wacht op validatie', pl:'Oczekuje na walidację', ru:'Ожидает подтверждения', ar:'بانتظار التحقق', zh:'待验证', ja:'検証待ち', tr:'Onay bekliyor', ko:'검증 대기' },
   jstCompleted: { fr:'Terminé', en:'Completed', es:'Completado', de:'Abgeschlossen', it:'Completato', pt:'Concluído', nl:'Voltooid', pl:'Zakończone', ru:'Завершено', ar:'مكتمل', zh:'已完成', ja:'完了', tr:'Tamamlandı', ko:'완료' },
   jstDelayed:   { fr:'En retard', en:'Delayed', es:'Retrasado', de:'Verzögert', it:'In ritardo', pt:'Atrasado', nl:'Vertraagd', pl:'Opóźnione', ru:'Задержано', ar:'متأخر', zh:'延误', ja:'遅延', tr:'Gecikti', ko:'지연' },
   jstCancelled: { fr:'Annulé', en:'Cancelled', es:'Cancelado', de:'Storniert', it:'Annullato', pt:'Cancelado', nl:'Geannuleerd', pl:'Anulowane', ru:'Отменено', ar:'ملغى', zh:'已取消', ja:'キャンセル', tr:'İptal edildi', ko:'취소됨' },

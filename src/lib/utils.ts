@@ -186,6 +186,7 @@ export function getStatusColor(status: Job['status']): string {
   const colors: Record<Job['status'], string> = {
     scheduled: '#3b82f6',
     in_progress: '#10b981',
+    awaiting_validation: '#a855f7',
     completed: '#6b7280',
     delayed: '#f59e0b',
     cancelled: '#ef4444',
@@ -197,6 +198,7 @@ export function getStatusLabel(status: Job['status']): string {
   const labels: Record<Job['status'], string> = {
     scheduled: 'Planifié',
     in_progress: 'En cours',
+    awaiting_validation: 'En attente de validation',
     completed: 'Terminé',
     delayed: 'En retard',
     cancelled: 'Annulé',

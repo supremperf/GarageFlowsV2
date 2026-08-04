@@ -25,7 +25,7 @@ export const CreateJobSchema = z.object({
   // Aligné sur le canon JobStatus (src/lib/types.ts) et la base : 'completed' et
   // 'delayed' sont les valeurs réelles ; 'done' (jamais utilisé ailleurs) faisait
   // rejeter en 400 les transitions completed/delayed émises par l'UI et l'assistant.
-  status:            z.enum(['scheduled', 'in_progress', 'completed', 'delayed', 'cancelled']).optional(),
+  status:            z.enum(['scheduled', 'in_progress', 'awaiting_validation', 'completed', 'delayed', 'cancelled']).optional(),
   notes:             z.string().max(2000).optional().nullable(),
   isUrgent:          z.boolean().optional(),
   vehicleId:         z.string().optional().nullable(),

@@ -20,6 +20,7 @@ export type RepairType =
 export type JobStatus =
   | 'scheduled'
   | 'in_progress'
+  | 'awaiting_validation' // mécanicien a terminé (chrono arrêté) — en attente de validation du responsable
   | 'completed'
   | 'delayed'
   | 'cancelled'

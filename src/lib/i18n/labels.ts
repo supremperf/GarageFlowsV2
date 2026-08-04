@@ -31,6 +31,7 @@ export function repairTypeLabel(t: T, key: string, fallback?: string): string {
 const JOB_STATUS_KEYS: Record<string, keyof T> = {
   scheduled: 'jstScheduled',
   in_progress: 'jstInProgress',
+  awaiting_validation: 'jstAwaitingValidation',
   completed: 'jstCompleted',
   delayed: 'jstDelayed',
   cancelled: 'jstCancelled',
