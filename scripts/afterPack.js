@@ -28,6 +28,19 @@ exports.default = async function afterPack(context) {
       ? path.join(appOutDir, `${packager.appInfo.productFilename}.app`, 'Contents', 'Resources')
       : path.join(appOutDir, 'resources')
 
+  // ── Durcissement des Electron Fuses sur le binaire packagé ──────────────────
+  // Grave les bits qui désactivent RunAsNode, --inspect, NODE_OPTIONS, etc. Échec
+  // BLOQUANT : un binaire non durci est un build défectueux.
+  const { flipFuses } = require('@electron/fuses')
+  const { fusePlan } = require(path.join(__dirname, 'fuse-config.js'))
+  const productFilename = packager.appInfo.productFilename
+  const electronBinary =
+    electronPlatformName === 'darwin'
+      ? path.join(appOutDir, `${productFilename}.app`, 'Contents', 'MacOS', productFilename)
+      : path.join(appOutDir, `${productFilename}${electronPlatformName === 'win32' ? '.exe' : ''}`)
+  await flipFuses(electronBinary, fusePlan)
+  console.log('  ✓ Electron Fuses appliqués (RunAsNode off, --inspect off, OnlyLoadAppFromAsar, …)')
+
   const integrity = require(path.join(__dirname, '..', 'electron', 'integrity.js'))
   let manifest
   try {
