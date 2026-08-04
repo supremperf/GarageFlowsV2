@@ -221,6 +221,8 @@ model Part {
   defaultFor   RepairTypePart[]
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
+
+  @@index([garageId])
 }
 
 // ─── Parts per job (bill of materials) ───────────────────────────────────────
@@ -233,6 +235,9 @@ model JobPart {
   quantity  Int
   unitPrice Float // selling price snapshot
   unitCost  Float // cost snapshot
+
+  @@index([jobId])
+  @@index([partId])
 }
 
 // ─── Default parts per repair type ───────────────────────────────────────────

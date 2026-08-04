@@ -843,4 +843,8 @@ export const MIGRATIONS: Migration[] = [
   // cet index couvre aussi les bases desktop existantes (SQLite ne permet pas
   // d'ajouter une FK par ALTER, mais Prisma génère la cascade au niveau client).
   { id: '126_repairtypepart_idx_garage_type', sql: 'CREATE INDEX IF NOT EXISTS "RepairTypePart_garageId_repairType_idx" ON "RepairTypePart"("garageId", "repairType")' },
+  // Colonnes chaudes / clés étrangères non indexées (perf lectures + jointures).
+  { id: '127_part_idx_garage', sql: 'CREATE INDEX IF NOT EXISTS "Part_garageId_idx" ON "Part"("garageId")' },
+  { id: '128_jobpart_idx_job', sql: 'CREATE INDEX IF NOT EXISTS "JobPart_jobId_idx" ON "JobPart"("jobId")' },
+  { id: '129_jobpart_idx_part', sql: 'CREATE INDEX IF NOT EXISTS "JobPart_partId_idx" ON "JobPart"("partId")' },
 ]
