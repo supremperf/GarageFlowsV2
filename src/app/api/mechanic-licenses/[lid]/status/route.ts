@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { can, type Permission } from '@/lib/authz'
-import { macFor, disconnectDevices } from '@/lib/license/mechanic-admin'
+import { macFor, revokeDevices } from '@/lib/license/mechanic-admin'
 import { logAudit } from '@/lib/audit'
 
 // POST /api/mechanic-licenses/[lid]/status  { status: 'suspended'|'active'|'revoked' }
@@ -73,9 +73,16 @@ export const POST = withAuth(async (req, { params }: { params: { lid: string } }
     },
   })
 
-  // suspend/revoke : couper immédiatement les appareils/sessions.
-  if (status === 'suspended' || status === 'revoked') {
-    await disconnectDevices(license.licenseId, status)
+  // §1/§3 — Effet sur les appareils selon la transition :
+  //  - REVOKED : révocation PERMANENTE des appareils (ne pourront plus se réactiver).
+  //  - SUSPENDED : on NE touche PAS les appareils. La licence 'suspended' bloque déjà
+  //    toute session (validateDeviceToken/validateMechanicSession) ; les appareils
+  //    restent 'active' → le SIÈGE est CONSERVÉ (les licences suspendues comptent dans
+  //    le quota) et la réactivation est INSTANTANÉE au retour en 'active' (unsuspend),
+  //    sans re-consommer de siège ni forcer une réactivation manuelle.
+  //  - ACTIVE (réactivation) : rien à faire côté appareils (le statut licence rétablit l'accès).
+  if (status === 'revoked') {
+    await revokeDevices(license.licenseId, 'license_revoked')
   }
 
   await prisma.mechanicActionAudit.create({

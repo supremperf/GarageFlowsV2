@@ -23,7 +23,10 @@ export const POST = withAuth(async (req, { params }: { params: { lid: string } }
   })
   if (!license) return NextResponse.json({ error: 'Clé introuvable.' }, { status: 404 })
 
-  const count = await disconnectDevices(license.licenseId, 'owner_disconnect')
+  // §2 — DÉCONNEXION : coupe la session et libère le siège (appareils passés à
+  // 'deactivated'), SANS révoquer : le mécanicien pourra se reconnecter avec sa
+  // clé encore valide. La licence elle-même reste 'active'.
+  const count = await disconnectDevices(license.licenseId)
 
   await prisma.mechanicActionAudit.create({
     data: { garageId, actorUserId: session.user.id, actorRole: session.user.role, targetMechanicId: license.mechanicId ?? null, licenseId: license.licenseId, action: 'disconnect', targetType: 'LicenseKey', targetId: license.licenseId, metadata: JSON.stringify({ devices: count }) },
