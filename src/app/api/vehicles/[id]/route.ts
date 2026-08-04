@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
-import { UpdateVehicleSchema } from '@/lib/schemas'
 import { assertRelations } from '@/lib/tenant'
+import { UpdateVehicleSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
 
 // GET /api/vehicles/:id  — full vehicle fiche with history
