@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { logAudit } from '@/lib/audit'
+import { normalizeSpecialty } from '@/lib/specialty'
 
 // PATCH /api/mechanics/:id  (toggle absence, update info)
 export const PATCH = withAuth(async (req, { params }: { params: { id: string } }) => {
@@ -18,9 +19,7 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
   const data: Record<string, unknown> = {}
   for (const f of allowed) {
     if (f in body) {
-      data[f] = f === 'specialty' && Array.isArray(body[f])
-        ? JSON.stringify(body[f])
-        : body[f]
+      data[f] = f === 'specialty' ? normalizeSpecialty(body[f]) : body[f]
     }
   }
 

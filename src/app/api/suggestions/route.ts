@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { runAIEngine } from '@/lib/ai-engine'
 import { Job, Mechanic } from '@/lib/types'
+import { parseSpecialty } from '@/lib/specialty'
 
 // GET /api/suggestions?date=YYYY-MM-DD
 export const GET = withAuth(async (req) => {
@@ -48,7 +49,7 @@ export const GET = withAuth(async (req) => {
     avatar: m.avatar,
     color: m.color,
     isAbsent: m.isAbsent,
-    specialty: JSON.parse(m.specialty) as Mechanic['specialty'],
+    specialty: parseSpecialty(m.specialty) as Mechanic['specialty'],
     order: m.order,
     garageId: m.garageId,
     createdAt: m.createdAt.toISOString(),

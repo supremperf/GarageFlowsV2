@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { CreateMechanicSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
+import { normalizeSpecialty } from '@/lib/specialty'
 
 // GET /api/mechanics
 export const GET = withAuth(async () => {
@@ -45,7 +46,7 @@ export const POST = withAuth(async (req) => {
       name,
       avatar: avatar || name.substring(0, 2).toUpperCase(),
       color,
-      specialty: typeof specialty === 'string' ? specialty : JSON.stringify(specialty),
+      specialty: normalizeSpecialty(specialty),
       order: count + 1,
       garageId: session.user.garageId,
     },

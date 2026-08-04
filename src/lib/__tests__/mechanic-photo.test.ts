@@ -23,8 +23,10 @@ describe('§7 — validateMechanicPhoto : types autorisés', () => {
     const j = validateMechanicPhoto(url(JPEG))
     expect(j.ok && j.mime).toBe('image/jpeg')
     expect(j.ok && /^[0-9a-f]{64}$/.test(j.hash)).toBe(true)
-    expect(validateMechanicPhoto(url(PNG)).ok && validateMechanicPhoto(url(PNG)).mime).toBe('image/png')
-    expect(validateMechanicPhoto(url(WEBP)).ok && validateMechanicPhoto(url(WEBP)).mime).toBe('image/webp')
+    const p = validateMechanicPhoto(url(PNG))
+    expect(p.ok && p.mime).toBe('image/png')
+    const w = validateMechanicPhoto(url(WEBP))
+    expect(w.ok && w.mime).toBe('image/webp')
   })
   it('le MIME déclaré ne fait PAS foi : PNG déclaré image/jpeg → sniffé image/png', () => {
     const r = validateMechanicPhoto(url(PNG, 'image/jpeg'))

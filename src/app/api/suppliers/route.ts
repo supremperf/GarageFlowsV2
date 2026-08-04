@@ -231,8 +231,21 @@ export const POST = withAuth(async (req) => {
       }
     } else if (t.effects.decrementStock) {
       for (const l of stockLines) {
-        const part = await tx.part.findFirst({ where: { id: l.partId, garageId }, select: { id: true, quantity: true } })
-        if (part) await tx.part.update({ where: { id: l.partId }, data: { quantity: Math.max(0, part.quantity - l.qty) } })
+        // Décrément ATOMIQUE (comme l'incrément ci-dessus) : updateMany conditionnel
+        // sur un stock suffisant → { decrement } — évite la course lecture-modif-écriture
+        // (lost update) qui, sur PostgreSQL multi-instance, écrasait un incrément concurrent.
+        const dec = await tx.part.updateMany({
+          where: { id: l.partId, garageId, quantity: { gte: l.qty } },
+          data: { quantity: { decrement: l.qty } },
+        })
+        // Stock insuffisant (donnée incohérente) : on plafonne à 0 de façon atomique
+        // (condition quantity < qty → set 0), sans jamais passer sous zéro.
+        if (dec.count === 0) {
+          await tx.part.updateMany({
+            where: { id: l.partId, garageId, quantity: { lt: l.qty } },
+            data: { quantity: 0 },
+          })
+        }
       }
     }
     return { raced: false }
