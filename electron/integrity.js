@@ -144,6 +144,27 @@ function verify(resourcesPath) {
   return { present: true, ok: violations.length === 0, violations, checked }
 }
 
+// ── Résolution du mode d'intégrité (PURE — testable) ──────────────────────────
+//  Règle de sécurité : dans un build PACKAGÉ (production réelle, app.isPackaged),
+//  l'intégrité est TOUJOURS appliquée en mode « enforce ». Aucune variable
+//  d'environnement (GF_INTEGRITY_MODE, ELECTRON_DEV, …) ne peut la rétrograder
+//  en « audit »/« off » : une tentative de rétrogradation est signalée
+//  (downgradeIgnored) mais le mode reste « enforce ». Hors packagé (dev/test),
+//  le mode est piloté par GF_INTEGRITY_MODE (défaut « off » : ne bloque pas le
+//  développement), et peut être forcé à « enforce » pour les tests.
+//
+//  Renvoie : { mode:'enforce'|'audit'|'off', downgradeIgnored:boolean }
+function resolveIntegrityMode({ isPackaged, requested }) {
+  const req = String(requested || '').toLowerCase()
+  const known = req === 'enforce' || req === 'audit' || req === 'off'
+  if (isPackaged) {
+    // Toute demande != enforce (ou inconnue) est ignorée par sécurité.
+    const downgradeIgnored = req !== '' && req !== 'enforce'
+    return { mode: 'enforce', downgradeIgnored }
+  }
+  return { mode: known ? req : 'off', downgradeIgnored: false }
+}
+
 // ── Détection best-effort d'un débogueur / inspecteur ─────────────────────────
 function detectDebugger() {
   try {
@@ -163,5 +184,6 @@ module.exports = {
   generateManifest,
   writeManifest,
   verify,
+  resolveIntegrityMode,
   detectDebugger,
 }

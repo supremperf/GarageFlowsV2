@@ -2283,32 +2283,43 @@ app.whenReady().then(async () => {
   }
 
   // ── Vérification d'intégrité (anti-altération) ────────────────────────────
-  // Production uniquement. Mode via GF_INTEGRITY_MODE : 'audit' (défaut, journalise
-  // sans bloquer) | 'enforce' (arrêt si un fichier critique est modifié/supprimé)
-  // | 'off'. Défaut prudent = 'audit' : passez à 'enforce' APRÈS avoir validé
-  // qu'un vrai build Windows démarre proprement (voir docs/SECURITY-HARDENING.md).
-  if (!IS_DEV) {
-    try {
-      const integrity = require('./integrity')
-      const mode = (process.env.GF_INTEGRITY_MODE || 'audit').toLowerCase()
-      if (mode !== 'off') {
+  // SÉCURITÉ : la décision se fonde sur app.isPackaged (build RÉEL), JAMAIS sur
+  // ELECTRON_DEV (variable d'environnement que l'utilisateur/attaquant contrôle).
+  // Un build packagé APPLIQUE toujours « enforce » et ne peut pas être rétrogradé
+  // en « audit »/« off » par une variable d'environnement. Hors packagé (dev/test),
+  // le mode suit GF_INTEGRITY_MODE (défaut « off »). Voir docs/SECURITY-HARDENING.md.
+  {
+    const integrity = require('./integrity')
+    const { mode, downgradeIgnored } = integrity.resolveIntegrityMode({
+      isPackaged: app.isPackaged,
+      requested: process.env.GF_INTEGRITY_MODE,
+    })
+    if (downgradeIgnored) {
+      log(`[integrity] GF_INTEGRITY_MODE=${process.env.GF_INTEGRITY_MODE} IGNORÉ en build packagé — « enforce » appliqué`)
+    }
+    if (mode !== 'off') {
+      const blockCorrupt = () => {
+        dialog.showErrorBox(
+          'GarageFlow — installation corrompue',
+          'Des fichiers essentiels de GarageFlow ont été modifiés, remplacés ou supprimés.\n\n' +
+            "Par sécurité, l'application ne peut pas démarrer.\n\n" +
+            "Veuillez réinstaller GarageFlow depuis l'installateur officiel.",
+        )
+        app.exit(1)
+      }
+      try {
         const result = integrity.verify(process.resourcesPath)
         if (!result.present) {
-          log('[integrity] aucun manifeste — vérification inactive')
+          // Manifeste ABSENT : en « enforce » c'est un échec — sinon un attaquant
+          // supprimerait simplement le manifeste pour contourner la vérification.
+          // afterPack garantit sa présence dans un build légitime.
+          log('[integrity] manifeste absent')
+          if (mode === 'enforce') { blockCorrupt(); return }
         } else if (result.ok) {
           log('[integrity] OK —', result.checked, 'fichiers critiques vérifiés')
         } else {
           log('[integrity] ALTÉRATION détectée:', result.violations.join(', '))
-          if (mode === 'enforce') {
-            dialog.showErrorBox(
-              'GarageFlow — installation corrompue',
-              'Des fichiers essentiels de GarageFlow ont été modifiés, remplacés ou supprimés.\n\n' +
-                "Par sécurité, l'application ne peut pas démarrer.\n\n" +
-                "Veuillez réinstaller GarageFlow depuis l'installateur officiel.",
-            )
-            app.exit(1)
-            return
-          }
+          if (mode === 'enforce') { blockCorrupt(); return }
         }
         // Anti-débogueur : bloquant uniquement si explicitement activé (évite les
         // faux positifs) via GF_ANTIDEBUG=1.
@@ -2320,9 +2331,12 @@ app.whenReady().then(async () => {
             return
           }
         }
+      } catch (e) {
+        // En « enforce », une ERREUR de vérification ne doit PAS être avalée en
+        // silence : un attaquant pourrait provoquer l'exception pour contourner.
+        log('[integrity] erreur de vérification:', e && e.message)
+        if (mode === 'enforce') { blockCorrupt(); return }
       }
-    } catch (e) {
-      log('[integrity] erreur de vérification (non bloquante):', e.message)
     }
   }
 
