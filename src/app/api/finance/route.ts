@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { calcTotalHT, calcTotalTTC } from '@/lib/billing'
 import { subMonths, format, startOfMonth, endOfMonth } from 'date-fns'
 
@@ -9,6 +10,10 @@ import { subMonths, format, startOfMonth, endOfMonth } from 'date-fns'
 // Returns monthly revenue, margins, quote→invoice conversion rate
 export const GET = withAuth(async (req) => {
   const session = await requireSession()
+  // §Autorisation — données financières réservées à financial:read (OWNER/MANAGER).
+  if (!can(session.user.role, 'financial:read')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const { searchParams } = new URL(req.url)
   const monthCount = Math.min(24, Math.max(1, Number(searchParams.get('months') ?? '6')))
   const garageId = session.user.garageId

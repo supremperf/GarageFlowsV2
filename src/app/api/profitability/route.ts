@@ -2,12 +2,16 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { subMonths, format } from 'date-fns'
 import { analyze, type AnalyzedInvoice, type AnalyzedJobPart, type PartStock } from '@/lib/profitability'
 
 // GET /api/profitability?months=6 — margin breakdowns + anomalies + recommendations.
 export const GET = withAuth(async (req) => {
   const session = await requireSession()
+  if (!can(session.user.role, 'financial:read')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const garageId = session.user.garageId
   const { searchParams } = new URL(req.url)
   const months = Math.min(24, Math.max(1, Number(searchParams.get('months') ?? '6')))

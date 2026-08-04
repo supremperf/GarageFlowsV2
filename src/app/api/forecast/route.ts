@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { subMonths, format } from 'date-fns'
 import { calcTotalHT } from '@/lib/billing'
 import { forecast, type ForecastMethod } from '@/lib/forecast'
@@ -53,6 +54,9 @@ async function buildSeries(metric: Metric, garageId: string, months: number): Pr
 // GET /api/forecast?metric=revenue&months=12&horizon=3
 export const GET = withAuth(async (req) => {
   const session = await requireSession()
+  if (!can(session.user.role, 'financial:read')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const { searchParams } = new URL(req.url)
   const metricParam = (searchParams.get('metric') ?? 'revenue') as Metric
   const metric: Metric = METRICS.includes(metricParam) ? metricParam : 'revenue'

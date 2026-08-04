@@ -2,11 +2,16 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
 
 // GET /api/export/fec?year=2026
 export const GET = withAuth(async (req) => {
   const session = await requireSession()
+  // §Autorisation — export comptable FEC (donnée légale sensible) réservé à financial:read.
+  if (!can(session.user.role, 'financial:read')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const { searchParams } = new URL(req.url)
   const year = parseInt(searchParams.get('year') ?? String(new Date().getFullYear()), 10)
 
