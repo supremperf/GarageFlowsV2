@@ -78,6 +78,35 @@ publique ne serait pas l'empreinte canonique — c'est voulu.
 - **Sauvegardes** : les archives chiffrées avec l'ancienne `GF_BACKUP_KEY` ne sont
   restaurables **que** si vous conservez l'ancienne clé.
 
+## 6. Échec « GARAGEFLOW_API_KEY ne fonctionne pas sur le déploiement » (test post‑deploy)
+
+Symptôme : le build Vercel **réussit**, le déploiement se crée, `/api/health`
+répond `status:ok`, **puis** la rotation s'arrête sur
+`La nouvelle GARAGEFLOW_API_KEY n-a pas passé le test runtime…`.
+
+**Ce n'est PAS un problème de Deployment Protection.** Le test `/api/health`
+et le test de clé passent tous deux par `vercel curl --deployment …`, qui
+s'authentifie et **traverse** la protection. Si le health check est OK, la
+protection est déjà franchie ; l'échec du test de clé vient donc de la
+**réponse HTTP de la route** `POST /api/admin/licenses/revoke-by-key`, pas de
+Vercel. La validation (`Test-ProtectedApiKeyEndpoint` dans
+`scripts/reset-garageflow.ps1`) **retente désormais 4× avec backoff** et
+**affiche le vrai code HTTP** ; interprétez‑le ainsi :
+
+| Code HTTP | Cause | Correctif (sans redéployer à l'aveugle) |
+|---|---|---|
+| **403** | La fonction déployée lit un `GARAGEFLOW_API_KEY` **différent** de la nouvelle clé. | La variable n'est pas (encore) celle que voit CE déploiement. Vérifier `vercel env ls production` ; confirmer que la valeur Production **égale** la clé du rapport ; s'assurer que le déploiement testé a été **construit APRÈS** l'écriture de la variable. Un simple `vercel redeploy` du dernier build (sans re‑générer la clé) suffit souvent. |
+| **500** | `GARAGEFLOW_API_KEY` **absente ou < 16 car.** dans le runtime. | La variable n'a pas été appliquée à l'environnement **Production**. La (re)définir en Production puis redéployer. |
+| **401** / login Vercel | Protection interceptée (CLI non authentifiée). | `vercel whoami` ; `vercel login` ; vérifier le lien projet et `VERCEL_TOKEN`. |
+| **429 / 503 / 502 / 504** | Rate‑limit ou fonction pas encore prête. | Transitoire : les 4 tentatives absorbent la fenêtre ; sinon relancer, ou attendre le `Retry‑After`. |
+
+Point clé : la nouvelle clé est **écrite dans Vercel** puis **envoyée** par le
+script depuis la même valeur générée — un 403 signifie presque toujours que le
+**runtime testé** ne sert pas encore cette valeur (propagation d'environnement,
+ou mauvais environnement ciblé), **pas** que la clé est « cassée ». Aucune
+donnée n'est perdue : `revoke-by-key` avec un UUID neuf + `status:active` suit la
+branche `not_registered` et **ne crée ni ne modifie** aucune licence.
+
 ## 5. Rappel — le build échouait sur une injection locale
 
 L'échec Vercel (`Cannot find name 'seats'` à `license/activate/route.ts:203`)

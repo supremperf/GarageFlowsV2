@@ -650,6 +650,10 @@ function Invoke-ProtectedDeploymentRequest {
 
     $curlArguments = @('--silent', '--show-error')
     if ($Method -ne 'GET') { $curlArguments += @('--request', $Method) }
+    # Capture le VRAI code HTTP renvoyé par la fonction déployée. curl interprète
+    # `\n` et `%{http_code}` dans --write-out ; le marqueur est émis sur SA propre
+    # ligne (après le corps JSON) pour ne pas casser l'extraction du JSON en aval.
+    $curlArguments += @('--write-out', '\nGF_HTTP_STATUS:%{http_code}')
 
     $configPath = $null
     try {
@@ -695,12 +699,16 @@ function Invoke-ProtectedDeploymentRequest {
         }
 
         $safeOutput = Protect-LogText ([string]$result.Output)
+        $httpStatus = 0
+        $statusMatch = [regex]::Match([string]$result.Output, 'GF_HTTP_STATUS:(\d{3})')
+        if ($statusMatch.Success) { $httpStatus = [int]$statusMatch.Groups[1].Value }
         if (Test-IsVercelLoginPage -Text $safeOutput) {
             return [pscustomobject]@{
                 Ok = $false
                 ExitCode = $result.ExitCode
                 Output = $safeOutput
                 Payload = $null
+                HttpStatus = $httpStatus
                 ProtectionIntercepted = $true
             }
         }
@@ -709,6 +717,7 @@ function Invoke-ProtectedDeploymentRequest {
             ExitCode = $result.ExitCode
             Output = $safeOutput
             Payload = (Get-JsonPayloadFromVercelCurlOutput -Output $safeOutput)
+            HttpStatus = $httpStatus
             ProtectionIntercepted = $false
         }
     } finally {
@@ -861,31 +870,66 @@ function Test-ProtectedApiKeyEndpoint {
         [Parameter(Mandatory=$true)][string]$DeploymentUrl,
         [Parameter(Mandatory=$true)][string]$ApiKey
     )
+    $script:LastApiKeyDiag = ''
     Add-SecretToRegistry $ApiKey
-    $licenseId = 'config-test-' + [Guid]::NewGuid().ToString('N')
-    $body = @{ licenseId = $licenseId; status = 'active' } | ConvertTo-Json -Compress
-    $result = Invoke-ProtectedDeploymentRequest `
-        -Path '/api/admin/licenses/revoke-by-key' `
-        -DeploymentUrl $DeploymentUrl `
-        -Method POST `
-        -Headers @{ 'x-gf-key' = $ApiKey; 'Content-Type' = 'application/json'; 'Accept' = 'application/json' } `
-        -Body $body
 
-    if (-not $result.Ok) {
-        Write-Host "[ERREUR] Test authentifié via vercel curl en échec (code $($result.ExitCode))." -ForegroundColor Red
-        return $false
+    # Juste après `vercel --prod`, la nouvelle valeur GARAGEFLOW_API_KEY vient
+    # d'être écrite : le runtime de la fonction fraîchement déployée peut mettre
+    # quelques secondes à la lire. On RETENTE avec backoff, et surtout on
+    # DIAGNOSTIQUE le vrai code HTTP au lieu d'un échec opaque (le check /api/health
+    # a déjà prouvé que `vercel curl` traverse la Deployment Protection : un échec
+    # ICI n'est donc PAS un problème de protection, mais de propagation/valeur).
+    $maxAttempts = 4
+    $backoff = @(0, 3, 6, 9)
+    $lastStatus = 0
+    $lastReason = ''
+
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        if ($backoff[$attempt - 1] -gt 0) { Start-Sleep -Seconds $backoff[$attempt - 1] }
+
+        $licenseId = 'config-test-' + [Guid]::NewGuid().ToString('N')
+        $body = @{ licenseId = $licenseId; status = 'active' } | ConvertTo-Json -Compress
+        $result = Invoke-ProtectedDeploymentRequest `
+            -Path '/api/admin/licenses/revoke-by-key' `
+            -DeploymentUrl $DeploymentUrl `
+            -Method POST `
+            -Headers @{ 'x-gf-key' = $ApiKey; 'Content-Type' = 'application/json'; 'Accept' = 'application/json' } `
+            -Body $body
+
+        $status = [int]$result.HttpStatus
+        $lastStatus = $status
+
+        # Réponse attendue : HTTP 200 + { ok:true, note:'not_registered' }.
+        # Accès SÛR sous Set-StrictMode : une réponse d'erreur ne contient pas
+        # 'ok'/'note' — on teste l'existence de la propriété avant lecture.
+        $payload = $result.Payload
+        $payloadOk = $payload -and $payload.PSObject.Properties['ok'] -and $payload.PSObject.Properties['ok'].Value -eq $true
+        $payloadNote = if ($payload -and $payload.PSObject.Properties['note']) { [string]$payload.PSObject.Properties['note'].Value } else { '' }
+        if (($status -eq 200 -or $status -eq 0) -and $payloadOk -and $payloadNote -eq 'not_registered') {
+            Write-Host "[OK] GARAGEFLOW_API_KEY authentifiée via vercel curl (test non destructif, tentative $attempt/$maxAttempts)." -ForegroundColor Green
+            return $true
+        }
+
+        if ($result.ProtectionIntercepted) {
+            $lastReason = "Deployment Protection a intercepté la requête. vercel curl doit être authentifié (vercel whoami) et lié au projet ; sinon fournir un VERCEL_TOKEN valide."
+        } else {
+            switch ($status) {
+                403 { $lastReason = "HTTP 403 : la fonction déployée lit un GARAGEFLOW_API_KEY DIFFÉRENT de la nouvelle clé. La valeur envoyée ne correspond pas à celle du runtime — variable pas encore propagée à CE déploiement, ou écrite dans un autre environnement que Production." }
+                500 { $lastReason = "HTTP 500 : GARAGEFLOW_API_KEY absente ou trop courte (<16 caractères) dans le runtime déployé. La variable n'a pas été appliquée à l'environnement Production de ce déploiement." }
+                401 { $lastReason = "HTTP 401 : couche d'authentification (Deployment Protection) devant la fonction." }
+                429 { $lastReason = "HTTP 429 : rate limit admin atteint ; nouvelle tentative." }
+                502 { $lastReason = "HTTP 502 : passerelle ; fonction pas encore prête, nouvelle tentative." }
+                503 { $lastReason = "HTTP 503 : service indisponible (rate limiter/Upstash) ; nouvelle tentative." }
+                504 { $lastReason = "HTTP 504 : délai dépassé ; nouvelle tentative." }
+                0   { $lastReason = if (-not $result.Ok) { "vercel curl a échoué (code $($result.ExitCode)) sans code HTTP exploitable." } else { "Réponse sans code HTTP exploitable." } }
+                default { $lastReason = "HTTP $status : réponse inattendue, payload non conforme au test non destructif." }
+            }
+        }
+        Write-Host "[ATTENTION] Test clé API tentative $attempt/$maxAttempts : $lastReason" -ForegroundColor Yellow
     }
-    $payload = $result.Payload
-    # Accès SÛR sous Set-StrictMode : une réponse d'erreur (429/503, ou { error,
-    # code }) ne contient PAS 'ok'/'note' — l'accès direct $payload.ok lèverait
-    # « La propriété 'ok' est introuvable ». On teste l'existence avant lecture.
-    $payloadOk = $payload -and $payload.PSObject.Properties['ok'] -and $payload.PSObject.Properties['ok'].Value -eq $true
-    $payloadNote = if ($payload -and $payload.PSObject.Properties['note']) { [string]$payload.PSObject.Properties['note'].Value } else { '' }
-    if ($payloadOk -and $payloadNote -eq 'not_registered') {
-        Write-Host '[OK] GARAGEFLOW_API_KEY authentifiée via vercel curl (test non destructif).' -ForegroundColor Green
-        return $true
-    }
-    Write-Host '[ERREUR] La réponse API protégée ne correspond pas au résultat non destructif attendu.' -ForegroundColor Red
+
+    $script:LastApiKeyDiag = "Dernier code HTTP=$lastStatus. $lastReason"
+    Write-Host "[ERREUR] Validation GARAGEFLOW_API_KEY échouée après $maxAttempts tentatives — $($script:LastApiKeyDiag)" -ForegroundColor Red
     return $false
 }
 
@@ -2099,7 +2143,8 @@ try {
         Write-Host '[OK] Nouveau déploiement protégé : /api/health = status ok.' -ForegroundColor Green
 
         if (-not (Test-ProtectedApiKeyEndpoint -DeploymentUrl ([string]$deploy.DeploymentUrl) -ApiKey ([string]$newValues['GARAGEFLOW_API_KEY']))) {
-            throw 'La nouvelle GARAGEFLOW_API_KEY ne fonctionne pas sur le nouveau déploiement protégé.'
+            $apiKeyDiag = if (-not [string]::IsNullOrWhiteSpace([string]$script:LastApiKeyDiag)) { ' ' + [string]$script:LastApiKeyDiag } else { '' }
+            throw "La nouvelle GARAGEFLOW_API_KEY n-a pas passé le test runtime sur le déploiement Production (le check /api/health a réussi via vercel curl, donc la Deployment Protection n-est PAS en cause).$apiKeyDiag"
         }
         [void](Test-LicenseActivationRateLimit -DeploymentUrl ([string]$deploy.DeploymentUrl))
 
