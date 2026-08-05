@@ -632,7 +632,10 @@ $garageflow$;
         if ($combined -match '(?im)^\s*Error\s*:') {
             throw "Prisma a signalé une erreur pendant la convergence du schéma : $(Protect-LogText $combined). Voir docs/POST_ROTATION_RECOVERY.md §7."
         }
-        Write-Host '[OK] Schéma Neon convergé : colonnes/tables mechanic + chrono présentes (le runtime ne renverra plus « Erreur base de données »).' -ForegroundColor Green
+        # Note : brefs verrous d'écriture pendant CREATE INDEX / ADD CONSTRAINT sur
+        # LicenseKey (petite table) ; les tables mechanic sont neuves/vides. Idempotent
+        # PAR NOM : une colonne préexistante au mauvais type ne serait pas corrigée.
+        Write-Host '[OK] Schéma Neon convergé : colonnes/tables du merge (mechanic + chrono) créées. Un « Erreur base de données » persistant signalerait un autre écart de schéma — voir docs/POST_ROTATION_RECOVERY.md §7.' -ForegroundColor Green
     } finally {
         [Environment]::SetEnvironmentVariable('DATABASE_URL', $oldDb, 'Process')
         [Environment]::SetEnvironmentVariable('DIRECT_URL', $oldDirect, 'Process')
@@ -1162,7 +1165,7 @@ function Test-ProtectedApiKeyEndpoint {
                     # attribuer un 500 DB à un problème de clé.
                     $errText = if ($payload -and $payload.PSObject.Properties['error']) { [string]$payload.PSObject.Properties['error'].Value } else { '' }
                     if ($errText -match 'base de donn') {
-                        $lastReason = "HTTP 500 (erreur base de données) : le schéma Neon Production ne correspond PAS au code déployé — colonne/table manquante (ex. LicenseKey.parentLicenseId). La rotation converge désormais le schéma (DDL idempotent) AVANT le déploiement ; si l'erreur persiste, relancez la convergence ou 'npm run db:server:deploy' avec les DATABASE_URL/DIRECT_URL de Production. Voir docs/POST_ROTATION_RECOVERY.md §7."
+                        $lastReason = "HTTP 500 (erreur base de données) : le schéma Neon Production ne correspond PAS au code déployé — colonne/table manquante (ex. LicenseKey.parentLicenseId). La rotation converge désormais le schéma (DDL idempotent) AVANT le déploiement ; si l'erreur persiste, REJOUEZ la convergence (converge-server-schema.sql via 'prisma db execute') — évitez 'migrate deploy' seul, qui saute une migration inscrite-mais-manquante et laisserait le 500. Voir docs/POST_ROTATION_RECOVERY.md §7."
                     } elseif ($errText -match 'Configuration serveur') {
                         $lastReason = "HTTP 500 (configuration) : GARAGEFLOW_API_KEY absente ou trop courte (<16) dans le runtime déployé. La variable n'a pas été appliquée à l'environnement Production."
                     } else {

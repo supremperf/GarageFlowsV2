@@ -158,25 +158,35 @@ nom** : si une colonne existait déjà avec un mauvais type/nullabilité (drift
 partiel bricolé à la main), elle est laissée telle quelle et doit être corrigée
 manuellement.
 
-**Manuel (si besoin, hors rotation)** — deux voies, avec les valeurs Production :
+**Manuel (si besoin, hors rotation)** — avec les valeurs Production. La voie (a),
+**drift-safe**, est celle à privilégier :
 
 ```bash
-# (a) Voie « historique propre » : applique les migrations en attente ET les
-#     enregistre dans _prisma_migrations. À privilégier si l'historique est sain.
-DATABASE_URL="postgresql://…neon-direct…" DIRECT_URL="postgresql://…neon-direct…" \
-  npm run db:server:deploy    # = prisma migrate deploy --schema prisma/server/schema.prisma
-
-# (b) Voie « convergence » (drift-safe) : rejoue le DDL idempotent écrit par la
-#     rotation dans le dossier de rapport (converge-server-schema.sql).
+# (a) RECOMMANDÉ — convergence idempotente (fonctionne quel que soit l'historique).
+#     Rejoue le DDL écrit par la rotation dans le dossier de rapport.
 DATABASE_URL="postgresql://…neon-direct…" DIRECT_URL="postgresql://…neon-direct…" \
   npx prisma db execute --schema prisma/server/schema.prisma --file converge-server-schema.sql
+
+# (b) SEULEMENT si _prisma_migrations est sain (aucune migration inscrite-mais-
+#     manquante) : applique les migrations en attente ET les enregistre.
+DATABASE_URL="postgresql://…neon-direct…" DIRECT_URL="postgresql://…neon-direct…" \
+  npm run db:server:deploy    # = prisma migrate deploy --schema prisma/server/schema.prisma
 ```
 
 **Cas de drift piégeux** : si `_prisma_migrations` marque une migration
-« appliquée » alors que ses colonnes manquent, `migrate deploy` (voie a) la
-**saute** et le 500 persiste — utilisez alors la voie (b), puis, pour réaligner
-l'historique, `prisma migrate resolve --applied <nom_migration>` pour chacune des
-migrations 2026‑08‑04/05.
+« appliquée » alors que ses colonnes manquent, `migrate deploy` (voie b) la
+**saute** et le 500 persiste — restez sur la voie (a). Pour réaligner ensuite
+l'historique : `prisma migrate resolve --applied <nom_migration>` pour chacune des
+migrations 2026‑08‑04/05 — **mais** si la base a été créée par `db push` ou
+restaurée sans historique, `_prisma_migrations` peut aussi manquer les migrations
+**baseline** ; résolvez alors l'ensemble complet, sinon un futur `migrate deploy`
+tentera de recréer les tables baseline (« relation already exists »).
+
+**Note verrous** : la convergence pose de **brefs** verrous d'écriture pendant
+`CREATE INDEX` / `ADD CONSTRAINT` sur `LicenseKey` (petite table) ; les tables
+mechanic sont neuves/vides. Sur une base volumineuse, envisager `CREATE INDEX
+CONCURRENTLY` / FK `NOT VALID` + `VALIDATE`. La convergence couvre le drift connu
+(merge) : si une colonne **baseline** manquait aussi, elle ne serait pas ajoutée.
 
 ## 5. Rappel — le build échouait sur une injection locale
 
