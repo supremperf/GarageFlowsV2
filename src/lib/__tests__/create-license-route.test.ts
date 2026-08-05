@@ -24,7 +24,7 @@ vi.mock('@/lib/security/rate-limit', () => ({
 
 const dbState = vi.hoisted(() => ({
   existing: null as { licenseId: string; status: string } | null,
-  parents: new Set<string>(),
+  parents: new Map<string, string | null>(), // lid parent garage -> garageId (null = non lié)
   created: null as Record<string, unknown> | null,
   createThrows: null as { code?: string } | null,
 }))
@@ -34,7 +34,9 @@ vi.mock('@/lib/db', () => ({
       findUnique: async (args: { where: { licenseId: string } }) => {
         const lid = args.where.licenseId
         if (dbState.existing && dbState.existing.licenseId === lid) return dbState.existing
-        if (dbState.parents.has(lid)) return { licenseId: lid }
+        if (dbState.parents.has(lid)) {
+          return { licenseId: lid, garageId: dbState.parents.get(lid) ?? null, licenseType: 'premium' }
+        }
         return null
       },
       create: async (args: { data: Record<string, unknown> }) => {
@@ -71,7 +73,7 @@ const mechPayload = { ...garagePayload, lid: 'L-mech', typ: 'mechanic', plid: 'L
 beforeEach(() => {
   rlState.result = { ok: true, remaining: 99 }
   dbState.existing = null
-  dbState.parents = new Set()
+  dbState.parents = new Map()
   dbState.created = null
   dbState.createThrows = null
   vState.result = { valid: true, payload: garagePayload, isAdmin: false, isMechanic: false }
@@ -86,6 +88,7 @@ describe('POST /api/admin/licenses/create', () => {
     expect(body.licenseId).toBe('L-garage')
     expect(dbState.created?.recordMac).toBe('mac')
     expect(dbState.created?.parentLicenseId).toBe(null)
+    expect(dbState.created?.garageId).toBe(null) // licence garage : garageId lié à l'activation
     expect(dbState.created?.status).toBe('active')
   })
 
@@ -112,21 +115,32 @@ describe('POST /api/admin/licenses/create', () => {
     expect(res.status).toBe(400)
   })
 
-  it('clé mécanicien, parent PRÉSENT → parentLicenseId posé + mechanicHint', async () => {
+  it('clé mécanicien, parent PRÉSENT + lié à un garage → parentLicenseId + garageId hérités (visible côté patron)', async () => {
     vState.result = { valid: true, payload: mechPayload, isAdmin: false, isMechanic: true }
-    dbState.parents = new Set(['L-garage'])
+    dbState.parents = new Map([['L-garage', 'garage-42']]) // garage parent lié à garage-42
     const res = await POST(req({ token: 'GF2.mech' }) as never)
     expect(res.status).toBe(201)
     expect(dbState.created?.parentLicenseId).toBe('L-garage')
+    expect(dbState.created?.garageId).toBe('garage-42') // → apparaît dans « Accès mécanicien »
     expect(dbState.created?.mechanicHint).toBe('Alice')
   })
 
-  it('clé mécanicien, parent ABSENT → parentLicenseId null (FK-safe)', async () => {
+  it('clé mécanicien, parent PRÉSENT mais non encore activé (garageId null) → garageId null', async () => {
     vState.result = { valid: true, payload: mechPayload, isAdmin: false, isMechanic: true }
-    dbState.parents = new Set()
+    dbState.parents = new Map([['L-garage', null]])
+    const res = await POST(req({ token: 'GF2.mech' }) as never)
+    expect(res.status).toBe(201)
+    expect(dbState.created?.parentLicenseId).toBe('L-garage')
+    expect(dbState.created?.garageId).toBe(null)
+  })
+
+  it('clé mécanicien, parent ABSENT → parentLicenseId & garageId null (FK-safe)', async () => {
+    vState.result = { valid: true, payload: mechPayload, isAdmin: false, isMechanic: true }
+    dbState.parents = new Map()
     const res = await POST(req({ token: 'GF2.mech' }) as never)
     expect(res.status).toBe(201)
     expect(dbState.created?.parentLicenseId).toBe(null)
+    expect(dbState.created?.garageId).toBe(null)
   })
 
   it('fail_closed (Upstash indispo) + clé valide → NON bloqué (201)', async () => {

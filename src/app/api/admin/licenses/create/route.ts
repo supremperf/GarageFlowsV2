@@ -87,18 +87,27 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Lien parent (clé mécanicien) : la FK parentLicenseId → LicenseKey.licenseId
-    // n'est posée QUE si le garage parent est déjà enregistré (sinon insertion
-    // refusée par la FK). Sans lien stocké, l'activation retombe sur le `plid`
-    // SIGNÉ du token (activate: record.parentLicenseId ?? payload.plid), donc
-    // aucune fonctionnalité n'est perdue.
+    // Lien parent + rattachement au garage (clé mécanicien). La FK parentLicenseId
+    // → LicenseKey.licenseId et le garageId ne sont posés QUE si le garage parent
+    // est déjà enregistré (sinon l'insertion serait refusée par les FK).
+    //
+    // En posant garageId = celui de la licence garage parente, la clé apparaît
+    // IMMÉDIATEMENT dans « Paramètres › Accès mécanicien » du patron
+    // (GET /api/mechanic-licenses filtre par garageId) et devient attribuable
+    // (POST …/assign exige garageId), donc activable une fois attribuée. Sans
+    // parent enregistré, l'activation retombe sur le `plid` SIGNÉ du token
+    // (activate : record.parentLicenseId ?? payload.plid) — rien n'est perdu.
     let parentLicenseId: string | null = null
+    let garageId: string | null = null
     if (isMechanic && typeof p.plid === 'string' && p.plid.length > 0) {
       const parent = await prisma.licenseKey.findUnique({
         where: { licenseId: p.plid },
-        select: { licenseId: true },
+        select: { licenseId: true, garageId: true, licenseType: true },
       })
-      parentLicenseId = parent ? p.plid : null
+      if (parent && parent.licenseType !== 'mechanic') {
+        parentLicenseId = parent.licenseId
+        garageId = parent.garageId ?? null
+      }
     }
 
     const expiryAt = new Date(p.exp * 1000)
@@ -129,6 +138,7 @@ export async function POST(req: NextRequest) {
         label:        isMechanic ? (p.mn ?? null) : null,
         mechanicHint: isMechanic ? (p.mn ?? null) : null,
         parentLicenseId,
+        garageId, // clé mécanicien → garage du parent (visible côté patron)
         recordMac,
       },
     })
