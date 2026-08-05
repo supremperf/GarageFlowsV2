@@ -200,6 +200,32 @@
   .bg-gray-50 input::placeholder {
     color: #9ca3af !important;
   }
+
+  /* Champs qui portent EUX-MÊMES un fond clair (utilitaire Tailwind posé SUR
+     l'input : recherche du « Stock pièces », formulaires sur carte blanche…).
+     Le sélecteur descendant `.bg-white input` ci-dessus ne les couvre pas, donc
+     la règle globale forçait un texte clair → texte saisi illisible sur fond
+     blanc. On force ici un texte sombre + text-fill (autofill/WebKit) + un caret
+     bleu GarageFlows visible + un placeholder gris + une sélection lisible. */
+  input.bg-white, textarea.bg-white,
+  input.bg-gray-50, textarea.bg-gray-50,
+  input.bg-gray-100, textarea.bg-gray-100 {
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    caret-color: #2563eb;
+  }
+  input.bg-white::placeholder, textarea.bg-white::placeholder,
+  input.bg-gray-50::placeholder, textarea.bg-gray-50::placeholder,
+  input.bg-gray-100::placeholder, textarea.bg-gray-100::placeholder {
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+  }
+  input.bg-white::selection, textarea.bg-white::selection,
+  input.bg-gray-50::selection, input.bg-gray-100::selection {
+    background: #bfdbfe;
+    color: #0f172a;
+    -webkit-text-fill-color: #0f172a;
+  }
 }
 
 @layer utilities {
