@@ -1,7 +1,7 @@
 {
   "id": "/?source=pwa",
-  "name": "GarageFlow — Gestion d'atelier",
-  "short_name": "GarageFlow",
+  "name": "GarageFlows — Gestion d'atelier",
+  "short_name": "GarageFlows",
   "description": "Gestion et planning d'atelier automobile : clients, véhicules, devis, factures, stock.",
   "start_url": "/?source=pwa",
   "scope": "/",

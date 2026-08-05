@@ -29,7 +29,7 @@ export default function GarageFlowLogo({ size = 40, showText = false, className 
           <span style={{
             background: 'linear-gradient(135deg,#60a5fa,#2563eb)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          }}>FLOW</span>
+          }}>FLOWS</span>
         </div>
       )}
     </div>
@@ -42,7 +42,7 @@ export function GarageFlowIcon({ size = 32, className = '' }: { size?: number; c
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={logoMark.src}
-      alt="GarageFlow"
+      alt="GarageFlows"
       width={size}
       height={size}
       draggable={false}

@@ -108,16 +108,28 @@ export default function LicenseChangeModal({ onClose }: Props) {
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         style={{ background: 'radial-gradient(120% 120% at 50% 45%, rgba(37,99,235,0.14), rgba(2,6,23,0.72) 55%, rgba(2,6,23,0.86))' }}
       />
-      {/* Couche 2 — GRAND logo GarageFlows officiel, centré, faiblement visible. */}
+      {/* Couche 2 — GRAND logo GarageFlows officiel : la marque hexagonale au-dessus
+          du mot « GARAGEFLOWS » (lockup vertical fidèle au logo fourni), centré et
+          faiblement visible. */}
       <div
         aria-hidden="true"
-        className={`pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.08] blur-[1.5px] transition-transform duration-500 ease-out motion-reduce:transition-none ${shown ? 'scale-100' : 'scale-95'}`}
-        style={{ width: 'min(78vw, 78vh)', height: 'min(78vw, 78vh)' }}
+        className={`pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-[3vmin] opacity-[0.09] blur-[1.5px] transition-transform duration-500 ease-out motion-reduce:transition-none ${shown ? 'scale-100' : 'scale-95'}`}
+        style={{ width: 'min(82vw, 70vh)' }}
       >
         <GarageFlowIcon
-          size={640}
-          className="!w-full !h-full drop-shadow-[0_0_120px_rgba(37,99,235,0.45)]"
+          size={560}
+          className="!w-[min(52vw,46vh)] !h-[min(52vw,46vh)] drop-shadow-[0_0_120px_rgba(37,99,235,0.5)]"
         />
+        <div className="font-black tracking-tight leading-none whitespace-nowrap" style={{ fontSize: 'min(11vw, 9.5vh)' }}>
+          <span style={{
+            background: 'linear-gradient(135deg,#f8fafc,#cbd5e1 45%,#94a3b8)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          }}>GARAGE</span>
+          <span style={{
+            background: 'linear-gradient(135deg,#60a5fa,#2563eb)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+          }}>FLOWS</span>
+        </div>
       </div>
 
       {/* Couche 3 — la modale au premier plan. */}
