@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X, KeyRound, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import { GarageFlowIcon } from './GarageFlowLogo'
 
 interface Props {
   onClose: () => void
@@ -10,9 +11,51 @@ interface Props {
 export default function LicenseChangeModal({ onClose }: Props) {
   const [token, setToken] = useState('')
   const [loading, setLoading] = useState(false)
+  const [shown, setShown] = useState(false)
   const [result, setResult] = useState<{ ok: boolean; message: string; licenseType?: string } | null>(null)
 
-  const isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const taRef = useRef<HTMLTextAreaElement>(null)
+
+  const isElectron = typeof window !== 'undefined' && !!(window as unknown as { electronAPI?: unknown }).electronAPI
+
+  // Accessibilité + comportement modale : focus initial, Échap, piège de focus,
+  // verrou de défilement, restauration du focus sur le bouton d'origine.
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    setShown(true)
+    // Focus initial dans le champ de licence (après la transition d'entrée).
+    const focusTimer = window.setTimeout(() => taRef.current?.focus(), 60)
+
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden' // empêche le défilement de l'arrière-plan
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return }
+      if (e.key !== 'Tab') return
+      // Piège de focus : garder la tabulation dans la modale.
+      const root = dialogRef.current
+      if (!root) return
+      const focusables = root.querySelectorAll<HTMLElement>(
+        'button, textarea, input, a[href], [tabindex]:not([tabindex="-1"])',
+      )
+      const list = Array.from(focusables).filter((el) => !el.hasAttribute('disabled'))
+      if (list.length === 0) return
+      const first = list[0]
+      const last = list[list.length - 1]
+      const active = document.activeElement as HTMLElement | null
+      if (e.shiftKey && active === first) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && active === last) { e.preventDefault(); first.focus() }
+    }
+    document.addEventListener('keydown', onKeyDown)
+
+    return () => {
+      window.clearTimeout(focusTimer)
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = prevOverflow
+      previouslyFocused?.focus?.() // restaure le focus sur le déclencheur
+    }
+  }, [onClose])
 
   async function handleSubmit() {
     const t = token.trim()
@@ -22,7 +65,7 @@ export default function LicenseChangeModal({ onClose }: Props) {
 
     try {
       if (isElectron) {
-        const res = await (window as any).electronAPI.updateLicense(t)
+        const res = await (window as unknown as { electronAPI: { updateLicense: (t: string) => Promise<{ ok: boolean; licenseType?: string; reason?: string }> } }).electronAPI.updateLicense(t)
         if (res.ok) {
           setResult({ ok: true, message: `Licence activée (${res.licenseType})`, licenseType: res.licenseType })
           setTimeout(() => { onClose(); window.location.reload() }, 1500)
@@ -51,13 +94,48 @@ export default function LicenseChangeModal({ onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div
+      className={`fixed inset-0 z-[200] flex items-center justify-center p-4 transition-opacity duration-200 motion-reduce:transition-none ${shown ? 'opacity-100' : 'opacity-0'}`}
+      style={{
+        paddingTop: 'max(1rem, env(safe-area-inset-top))',
+        paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+      }}
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      {/* Couche 1 — assombrissement + halo radial bleu pour la profondeur. */}
       <div
-        className="relative w-full max-w-md rounded-2xl border shadow-2xl p-6 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain"
-        style={{ background: 'var(--card-bg, #1a2235)', borderColor: 'var(--border-color, rgba(255,255,255,0.1))' }}
+        aria-hidden="true"
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        style={{ background: 'radial-gradient(120% 120% at 50% 45%, rgba(37,99,235,0.14), rgba(2,6,23,0.72) 55%, rgba(2,6,23,0.86))' }}
+      />
+      {/* Couche 2 — GRAND logo GarageFlows officiel, centré, faiblement visible. */}
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.08] blur-[1.5px] transition-transform duration-500 ease-out motion-reduce:transition-none ${shown ? 'scale-100' : 'scale-95'}`}
+        style={{ width: 'min(78vw, 78vh)', height: 'min(78vw, 78vh)' }}
+      >
+        <GarageFlowIcon
+          size={640}
+          className="!w-full !h-full drop-shadow-[0_0_120px_rgba(37,99,235,0.45)]"
+        />
+      </div>
+
+      {/* Couche 3 — la modale au premier plan. */}
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="license-modal-title"
+        className={`relative z-10 w-full max-w-md rounded-2xl border shadow-2xl p-6 max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain transition-all duration-200 ease-out motion-reduce:transition-none ${shown ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+        style={{
+          background: 'var(--card-bg, #1a2235)',
+          borderColor: 'var(--border-color, rgba(255,255,255,0.12))',
+          boxShadow: '0 24px 70px -20px rgba(2,6,23,0.85), 0 0 0 1px rgba(96,165,250,0.10)',
+        }}
       >
         <button
           onClick={onClose}
+          aria-label="Fermer"
           className="absolute top-4 right-4 p-1 rounded-md text-slate-500 hover:text-slate-300 hover:bg-white/10 transition-colors"
         >
           <X className="w-4 h-4" />
@@ -68,7 +146,7 @@ export default function LicenseChangeModal({ onClose }: Props) {
             <KeyRound className="w-4.5 h-4.5 text-blue-400" />
           </div>
           <div>
-            <h2 className="text-base font-bold" style={{ color: 'var(--text-primary, #f1f5f9)' }}>
+            <h2 id="license-modal-title" className="text-base font-bold" style={{ color: 'var(--text-primary, #f1f5f9)' }}>
               Changer de licence
             </h2>
             <p className="text-xs" style={{ color: 'var(--text-secondary, #94a3b8)' }}>
@@ -77,14 +155,19 @@ export default function LicenseChangeModal({ onClose }: Props) {
           </div>
         </div>
 
-        <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary, #94a3b8)' }}>
+        <label htmlFor="license-key-input" className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary, #94a3b8)' }}>
           Clé de licence
         </label>
         <textarea
+          id="license-key-input"
+          ref={taRef}
           value={token}
           onChange={e => setToken(e.target.value)}
           placeholder="GF2.eyJ..."
           rows={4}
+          spellCheck={false}
+          autoCapitalize="off"
+          autoCorrect="off"
           className="w-full rounded-lg border px-3 py-2 text-xs font-mono resize-none outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
           style={{
             background: 'var(--input-bg, #0d1724)',
@@ -96,6 +179,7 @@ export default function LicenseChangeModal({ onClose }: Props) {
 
         {result && (
           <div
+            role="status"
             className={`mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium ${
               result.ok ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
             }`}
