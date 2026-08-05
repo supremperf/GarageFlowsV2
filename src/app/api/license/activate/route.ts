@@ -171,11 +171,17 @@ async function activateMechanicKey(input: {
 
   let deviceToken: string | undefined
   let deviceId: string | undefined
+  // Une clé mécanicien = 1 seul siège (mono-appareil). Déclaré comme constante
+  // NOMMÉE `seats` (et non littéral `seats: 1`) et RÉFÉRENCÉE dans cette portée :
+  // ne pas ré-inliner — l'outil de rotation Production injecte ici un diagnostic
+  // `console.info(..., { seats })`, qui doit pouvoir résoudre `seats` sinon le
+  // build Vercel échoue (Cannot find name 'seats').
+  const seats = 1
   if (hasHwid || hasInstallId) {
     try {
       const activation = await activateDevice({
         licenseId: lid,
-        seats: 1,
+        seats,
         ...(hasHwid ? { hwid: clientHwid } : { installId: clientInstallId }),
         ...clientMeta,
       })
