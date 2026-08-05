@@ -83,9 +83,32 @@ async function verifySessionJwt(
     }
     return { typ: payload.typ, lid: payload.lid }
   } catch (err) {
-    // Ne jamais afficher le cookie ni le secret : uniquement le nom de l'erreur.
-    const kind = err instanceof Error ? err.name : 'ErreurInconnue'
-    console.warn(`[middleware] échec vérification gf_session chemin=${pathname} erreur=${kind}`)
+    // Un cookie gf_session sans signature valide, EXPIRÉ ou mal formé est un cas
+    // NORMAL d'exploitation (jamais connecté, session expirée, ou secret tourné →
+    // l'utilisateur se ré-authentifie). Le journaliser en warn à CHAQUE requête est
+    // du bruit — typiquement le flot « erreur=E » après une rotation de
+    // NEXTAUTH_SECRET, où tous les anciens cookies échouent la vérification.
+    //
+    // On classe via le `code` STABLE de jose (contrairement à err.name, minifié en
+    // « E » dans le build de production) et on ne journalise QUE l'inattendu (ex.
+    // secret mal configuré → getAuthSecret lève). Sécurité inchangée : fail-closed,
+    // on renvoie null dans tous les cas. Jamais de cookie ni de secret journalisé.
+    const code =
+      typeof (err as { code?: unknown }).code === 'string'
+        ? (err as { code: string }).code
+        : err instanceof Error
+          ? err.name
+          : 'ErreurInconnue'
+    const EXPECTED_SESSION_FAILURES = new Set([
+      'ERR_JWS_SIGNATURE_VERIFICATION_FAILED', // secret tourné / cookie forgé
+      'ERR_JWT_EXPIRED',                        // session expirée
+      'ERR_JWS_INVALID',                        // cookie tronqué / mal formé
+      'ERR_JWT_INVALID',
+      'ERR_JWT_CLAIM_VALIDATION_FAILED',
+    ])
+    if (!EXPECTED_SESSION_FAILURES.has(code)) {
+      console.warn(`[middleware] échec vérification gf_session INATTENDU chemin=${pathname} code=${code}`)
+    }
     return null
   }
 }
