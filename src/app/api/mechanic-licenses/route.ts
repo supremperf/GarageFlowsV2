@@ -27,6 +27,31 @@ export const GET = withAuth(async () => {
   }
   const garageId = session.user.garageId
 
+  // Réconciliation (self-heal) : rattache à CE garage les clés mécanicien dont la
+  // licence garage parente (plid SIGNÉ, donc de confiance) appartient au garage
+  // mais dont le garageId n'a pas encore été posé — cas d'une clé enregistrée par
+  // le keygen AVANT que le patron n'ait activé sa licence garage (le garageId du
+  // parent n'était alors pas encore lié). Elles apparaissent ainsi « directement »
+  // ici sans dépendre de l'ordre d'enregistrement. garageId n'entre PAS dans le
+  // recordMac → aucun MAC à recalculer ; aucune fuite inter-garage (on ne relie
+  // que des clés dont le parent appartient déjà à ce garage).
+  try {
+    const parentIds = (
+      await prisma.licenseKey.findMany({
+        where: { garageId, licenseType: { not: 'mechanic' } },
+        select: { licenseId: true },
+      })
+    ).map((p) => p.licenseId)
+    if (parentIds.length > 0) {
+      await prisma.licenseKey.updateMany({
+        where: { licenseType: 'mechanic', garageId: null, parentLicenseId: { in: parentIds } },
+        data: { garageId },
+      })
+    }
+  } catch {
+    // Best-effort : un échec de réconciliation ne doit jamais casser la lecture.
+  }
+
   const [licenses, mechanics] = await Promise.all([
     prisma.licenseKey.findMany({
       where: { garageId, licenseType: 'mechanic' },
