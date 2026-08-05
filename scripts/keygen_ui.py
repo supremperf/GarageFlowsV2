@@ -230,9 +230,59 @@ class TabGenerate(tk.Frame):
                 font=FONTS, anchor="w", highlightthickness=0, bd=0,
             ).pack(anchor="w")
 
-        # ─ Conteneur 2 colonnes ─
-        body = _frame(self, bg=BG)
+        # ─ Barre d'action ANCRÉE EN BAS (toujours visible) : bouton Générer +
+        #   zone résultat. Packée AVANT le corps défilant pour réserver sa place ;
+        #   ainsi le bouton reste visible même quand le bloc mécanicien allonge le
+        #   formulaire au-delà de la hauteur de la fenêtre. ───────────────────────
+        self._action_bar = _frame(self, bg=BG)
+        self._action_bar.pack(side="bottom", fill="x")
+
+        # ─ Corps DÉFILANT (canevas + molette) : le formulaire peut dépasser la
+        #   hauteur de la fenêtre, surtout avec le bloc mécanicien affiché. ────────
+        scroll_wrap = _frame(self, bg=BG)
+        scroll_wrap.pack(side="top", fill="both", expand=True)
+        self._form_canvas = tk.Canvas(scroll_wrap, bg=BG, highlightthickness=0, bd=0)
+        _vscroll = ttk.Scrollbar(scroll_wrap, orient="vertical",
+                                 command=self._form_canvas.yview)
+        self._form_canvas.configure(yscrollcommand=_vscroll.set)
+        _vscroll.pack(side="right", fill="y")
+        self._form_canvas.pack(side="left", fill="both", expand=True)
+        scroll_inner = _frame(self._form_canvas, bg=BG)
+        _inner_win = self._form_canvas.create_window((0, 0), window=scroll_inner, anchor="nw")
+        scroll_inner.bind(
+            "<Configure>",
+            lambda _e: self._form_canvas.configure(scrollregion=self._form_canvas.bbox("all")),
+        )
+        # La largeur du contenu suit celle du canevas (pas de défilement horizontal).
+        self._form_canvas.bind(
+            "<Configure>",
+            lambda e: self._form_canvas.itemconfigure(_inner_win, width=e.width),
+        )
+
+        # Molette souris : défile le formulaire UNIQUEMENT quand le pointeur est
+        # au-dessus de lui. On remonte la hiérarchie depuis le widget réellement
+        # survolé (gère correctement les champs enfants) ; ailleurs (autres onglets,
+        # ex. l'arbre « Gérer les licences »), le binding global est un no-op.
+        def _wheel(e):
+            node = self.winfo_containing(e.x_root, e.y_root)
+            over_form = False
+            while node is not None:
+                if node is self._form_canvas or node is scroll_inner:
+                    over_form = True
+                    break
+                node = getattr(node, "master", None)
+            if not over_form:
+                return
+            step = -1 if (getattr(e, "delta", 0) > 0 or getattr(e, "num", 0) == 4) else 1
+            self._form_canvas.yview_scroll(step, "units")
+        self._form_canvas.bind_all("<MouseWheel>", _wheel)
+        self._form_canvas.bind_all("<Button-4>", _wheel)
+        self._form_canvas.bind_all("<Button-5>", _wheel)
+
+        # ─ Conteneur 2 colonnes (dans la zone défilante) ─
+        body = _frame(scroll_inner, bg=BG)
         body.pack(fill="both", expand=True, padx=20)
+        self._scroll_inner = scroll_inner
 
         left  = _frame(body, bg=BG)
         right = _frame(body, bg=BG)
@@ -356,18 +406,16 @@ class TabGenerate(tk.Frame):
                                  highlightbackground=BORDER)
         self.txt_names.pack(fill="x", ipady=2)
 
-        # ─ Bouton Générer ─
-        btn_row = _frame(self, bg=BG)
-        btn_row.pack(pady=14, padx=20, fill="x")
+        # ─ Bouton Générer (dans la barre d'action ancrée en bas — toujours visible) ─
+        btn_row = _frame(self._action_bar, bg=BG)
+        btn_row.pack(pady=(10, 8), padx=20, fill="x")
         self.btn_generate = _btn(btn_row, "  ⚡  Générer et signer la licence  ",
                                  self._generate, width=40)
         self.btn_generate.pack(side="left")
 
-        self._on_mode_change()   # état initial cohérent
-
-        # ─ Zone résultat ─
-        res_frame = _frame(self, bg=CARD, padx=14, pady=10)
-        res_frame.pack(fill="x", padx=20, pady=(0, 14))
+        # ─ Zone résultat (sous le bouton, également ancrée en bas) ─
+        res_frame = _frame(self._action_bar, bg=CARD, padx=14, pady=8)
+        res_frame.pack(fill="x", padx=20, pady=(0, 10))
         _lbl(res_frame, "Token généré", fg=MUTED, font=FONTS).pack(anchor="w")
 
         self.token_var = tk.StringVar(value="— en attente de génération —")
@@ -382,6 +430,8 @@ class TabGenerate(tk.Frame):
 
         _btn(res_frame, "📋  Copier le token", self._copy_token,
              bg=CARD2, fg=TEXT, font=FONTS, padx=10, pady=4).pack(anchor="w")
+
+        self._on_mode_change()   # état initial cohérent (affiche/masque le bloc méca)
 
     def _card_title(self, parent, text):
         _lbl(parent, text, font=("Segoe UI", 10, "bold")).pack(
@@ -1258,8 +1308,10 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("GarageFlow — Gestionnaire de Licences v2")
-        self.geometry("960x680")
-        self.minsize(800, 600)
+        # Fenêtre plus haute par défaut pour que le bouton « Générer » tienne sans
+        # défiler ; le corps du formulaire défile de toute façon si l'écran est petit.
+        self.geometry("1040x860")
+        self.minsize(820, 560)
         self.configure(bg=BG)
         self._passphrase = ""
         self._build()
