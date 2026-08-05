@@ -45,6 +45,7 @@ export default function SettingsModal({ onClose }: Props) {
   const [editingMech, setEditingMech]   = useState<MechanicRecord | null>(null)
   const [newMech, setNewMech]           = useState({ name: '', color: MECHANIC_COLORS[0], specialty: [] as string[] })
   const [showAddForm, setShowAddForm]   = useState(false)
+  const [addingMechanic, setAddingMechanic] = useState(false)
 
   useEffect(() => {
     fetch('/api/garages')
@@ -121,25 +122,34 @@ export default function SettingsModal({ onClose }: Props) {
   }
 
   async function handleAddMechanic() {
-    if (!newMech.name.trim()) { toast.error('Nom requis'); return }
+    const name = newMech.name.trim()
+    if (!name) { toast.error('Le nom du mécanicien est obligatoire.'); return }
+    if (addingMechanic) return // anti double-clic / double création
+    setAddingMechanic(true)
     try {
+      // Initiales robustes (accents/apostrophes/tirets OK) ; le serveur re-dérive
+      // si vide. Espaces multiples filtrés pour éviter un avatar incohérent.
+      const avatar =
+        name.split(/\s+/).filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2)
+        || name.slice(0, 2).toUpperCase()
       const res = await fetch('/api/mechanics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name:    newMech.name.trim(),
-          color:   newMech.color,
-          specialty: newMech.specialty,
-          avatar:  newMech.name.trim().split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2),
-        }),
+        body: JSON.stringify({ name, color: newMech.color, specialty: newMech.specialty, avatar }),
       })
-      if (!res.ok) throw new Error()
-      toast.success('Mécanicien ajouté')
+      if (!res.ok) {
+        const serverMsg = await res.json().then(d => (d && typeof d.error === 'string' ? d.error : null)).catch(() => null)
+        throw new Error(serverMsg || "Erreur lors de l'ajout")
+      }
+      toast.success('Mécanicien ajouté avec succès')
       setNewMech({ name: '', color: MECHANIC_COLORS[0], specialty: [] })
       setShowAddForm(false)
-      loadMechanics()
-    } catch {
-      toast.error("Erreur lors de l'ajout")
+      loadMechanics() // rafraîchissement immédiat de la liste
+    } catch (e) {
+      // Conserver les données saisies pour permettre un nouvel essai.
+      toast.error(e instanceof Error ? e.message : "Erreur lors de l'ajout")
+    } finally {
+      setAddingMechanic(false)
     }
   }
 
@@ -233,6 +243,7 @@ export default function SettingsModal({ onClose }: Props) {
               setNewMech={setNewMech}
               showAddForm={showAddForm}
               setShowAddForm={setShowAddForm}
+              adding={addingMechanic}
               onAdd={handleAddMechanic}
               onUpdate={handleUpdateMechanic}
               onDelete={handleDeleteMechanic}

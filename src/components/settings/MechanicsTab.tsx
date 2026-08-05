@@ -26,6 +26,7 @@ interface Props {
   setNewMech: React.Dispatch<React.SetStateAction<NewMechState>>
   showAddForm: boolean
   setShowAddForm: React.Dispatch<React.SetStateAction<boolean>>
+  adding?: boolean
   onAdd: () => void
   onUpdate: () => void
   onDelete: (id: string, name: string) => void
@@ -40,6 +41,7 @@ export function MechanicsTab({
   editingMech, setEditingMech,
   newMech, setNewMech,
   showAddForm, setShowAddForm,
+  adding = false,
   onAdd, onUpdate, onDelete,
 }: Props) {
   return (
@@ -107,13 +109,14 @@ export function MechanicsTab({
             </div>
           </div>
           <div className="flex gap-2 pt-1">
-            <button onClick={onAdd}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors">
-              <Check className="w-3.5 h-3.5" />
-              Confirmer
+            <button onClick={onAdd} disabled={adding || !newMech.name.trim()}
+              aria-busy={adding}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+              {adding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+              {adding ? 'Création…' : 'Confirmer'}
             </button>
-            <button onClick={() => setShowAddForm(false)}
-              className="px-4 py-2 rounded-lg border border-white/10 text-slate-400 text-xs hover:bg-white/[0.05] transition-colors">
+            <button onClick={() => setShowAddForm(false)} disabled={adding}
+              className="px-4 py-2 rounded-lg border border-white/10 text-slate-400 text-xs hover:bg-white/[0.05] transition-colors disabled:opacity-60">
               Annuler
             </button>
           </div>
