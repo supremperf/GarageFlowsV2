@@ -764,15 +764,17 @@ class TabManage(tk.Frame):
         filt.pack(side="right", padx=(4, 8), ipady=2)
         filt.bind("<<ComboboxSelected>>", lambda *_: self.refresh())
 
-        # Filtre « enfants d'un parent » (activé par le bouton dédié) — lid parent.
-        self._child_filter = None
-
-        # Treeview
+        # Treeview HIÉRARCHIQUE : chaque licence garage porte ses clés mécanicien
+        # comme enfants dépliables. 1 clic sur la flèche ▸ pour voir ses clés,
+        # double-clic sur la ligne pour replier — garages et mécaniciens visibles
+        # ensemble, sans manipulation de filtre.
         cols = ("client", "type", "parent", "statut", "expiry", "cid", "lid")
         self.tree = ttk.Treeview(
-            self, columns=cols, show="headings",
+            self, columns=cols, show="tree headings",
             selectmode="browse", height=16,
         )
+        self.tree.heading("#0", text="")
+        self.tree.column("#0", width=36, minwidth=36, anchor="center", stretch=False)
         heads = [
             ("client",  "Client / Entreprise", 170),
             ("type",    "Type",                 90),
@@ -806,7 +808,7 @@ class TabManage(tk.Frame):
         _frame(pnl, bg=BORDER).pack(fill="x", pady=8, ipady=0)
         _btn(pnl, "📋  Copier token", self._copy,    bg=CARD2,
              fg=TEXT,   font=FONTS, width=16).pack(pady=3)
-        _btn(pnl, "🔧  Voir ses clés méca.", self._show_children, bg=CARD2,
+        _btn(pnl, "🔧  Déplier / replier", self._toggle_children, bg=CARD2,
              fg=TEXT,   font=FONTS, width=16).pack(pady=3)
         _btn(pnl, "🗑  Supprimer",   self._delete,   bg=CARD2,
              fg=MUTED,  font=FONTS, width=16).pack(pady=3)
@@ -822,54 +824,69 @@ class TabManage(tk.Frame):
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
         self.refresh()
 
+    def _row_values(self, r):
+        c = r.get("client", {})
+        lbl = r.get("label") or f"{c.get('prenom','')} {c.get('nom','')}".strip() or r["cid"]
+        entr = c.get("entreprise", "")
+        display = f"{lbl}  {('· ' + entr) if entr and entr != lbl else ''}".strip()
+        parent = r.get("parent_lid", "")
+        parent_disp = (parent[:8] + "…") if parent else ""
+        return (display,
+                core.TYPE_LABELS.get(r["type"], r["type"]),
+                parent_disp,
+                STATUS_LABEL.get(r["status"], r["status"]),
+                r.get("expires_at", ""),
+                r["cid"],
+                r["lid"][:8] + "…")
+
+    def _insert_row(self, r, parent_item=""):
+        icon = "🔧" if r.get("type") == "mechanic" else "🏢"
+        self.tree.insert(parent_item, "end", iid=r["lid"], text=icon,
+                         tags=(r["status"],), values=self._row_values(r), open=False)
+
     def refresh(self, *_):
         q = self.v_search.get().strip()
         records = db.search(q) if q else db.list_licenses()
-
-        # Filtre par type (combobox) ou par parent (bouton « Voir ses clés »).
         ftype = self.v_filter.get()
-        if self._child_filter:
-            records = [r for r in records
-                       if r.get("type") == "mechanic"
-                       and r.get("parent_lid") == self._child_filter]
-        elif ftype == "Garages":
-            records = [r for r in records if r.get("type") != "mechanic"]
-        elif ftype == "Mécaniciens":
-            records = [r for r in records if r.get("type") == "mechanic"]
 
         self.tree.delete(*self.tree.get_children())
-        for r in records:
-            c   = r.get("client", {})
-            lbl = r.get("label") or f"{c.get('prenom','')} {c.get('nom','')}".strip() or r["cid"]
-            entr = c.get("entreprise", "")
-            display = f"{lbl}  {('· ' + entr) if entr and entr != lbl else ''}".strip()
-            parent = r.get("parent_lid", "")
-            parent_disp = (parent[:8] + "…") if parent else ""
-            tag = r["status"]
-            self.tree.insert("", "end", iid=r["lid"], tags=(tag,),
-                             values=(display,
-                                     core.TYPE_LABELS.get(r["type"], r["type"]),
-                                     parent_disp,
-                                     STATUS_LABEL.get(r["status"], r["status"]),
-                                     r.get("expires_at", ""),
-                                     r["cid"],
-                                     r["lid"][:8] + "…"))
+
+        garages   = [r for r in records if r.get("type") != "mechanic"]
+        mechanics = [r for r in records if r.get("type") == "mechanic"]
+
+        if ftype == "Garages":
+            for g in garages:
+                self._insert_row(g)
+        elif ftype == "Mécaniciens":
+            for m in mechanics:
+                self._insert_row(m)
+        else:
+            # « Tous » : hiérarchie garage → clés mécanicien enfants. Une clé
+            # mécanicien dont le parent n'est pas dans la vue (filtré/recherché)
+            # est affichée au premier niveau plutôt que masquée.
+            parents = set()
+            for g in garages:
+                self._insert_row(g)
+                parents.add(g["lid"])
+            for m in mechanics:
+                p = m.get("parent_lid")
+                self._insert_row(m, p if (p and p in parents) else "")
+
         self.tree.tag_configure("active",    foreground=GREEN)
         self.tree.tag_configure("revoked",   foreground=RED)
         self.tree.tag_configure("suspended", foreground=AMBER)
 
-    def _show_children(self):
-        """Filtre la liste sur les clés mécanicien de la licence sélectionnée."""
+    def _toggle_children(self):
+        """Déplie/replie la licence garage sélectionnée (raccourci de la flèche ▸)."""
         lid = self._selected_lid()
         if not lid:
             return
-        rec = db.get_license(lid)
-        if rec and rec.get("type") == "mechanic":
-            messagebox.showinfo("Clé mécanicien",
-                                "Sélectionnez une licence GARAGE pour voir ses clés mécanicien.")
+        if not self.tree.get_children(lid):
+            messagebox.showinfo("Clés mécanicien",
+                                "Cette licence n'a pas de clés mécanicien rattachées "
+                                "(sélectionnez une licence GARAGE qui en possède).")
             return
-        self._child_filter = None if self._child_filter == lid else lid
-        self.refresh()
+        self.tree.item(lid, open=not self.tree.item(lid, "open"))
 
     def _selected_lid(self) -> str | None:
         sel = self.tree.selection()
