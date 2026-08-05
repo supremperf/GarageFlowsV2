@@ -400,6 +400,246 @@ $garageflow$;
     Write-Host '[OK] Schéma Neon réparé : les colonnes legacyIdV* de LicenseKey ne bloquent plus les créations Prisma.' -ForegroundColor Green
 }
 
+function Invoke-ServerSchemaConverge {
+    # Aligne le schéma Neon Production sur le CODE fusionné (mechanic-licenses +
+    # chrono) via un DDL IDEMPOTENT (ADD COLUMN/CREATE TABLE/CREATE INDEX IF NOT
+    # EXISTS + FK guardées). Sans ces objets, toute requête Prisma les listant
+    # renvoie HTTP 500 « Erreur base de données » (ex. LicenseKey.parentLicenseId
+    # via findUnique qui SELECT tous les scalaires). Le build Vercel ne fait que
+    # `prisma generate` — il ne migre PAS la base ; on le fait donc ici, AVANT que
+    # le nouveau déploiement ne serve du trafic.
+    #
+    # Pourquoi `db execute` (comme Repair-LegacyLicenseColumns) et NON
+    # `migrate deploy` : migrate deploy SAUTE toute migration déjà inscrite dans
+    # _prisma_migrations même si ses colonnes manquent réellement (drift), et peut
+    # avorter sur un état de migration échoué. Le DDL conditionnel CONVERGE toujours
+    # les colonnes/tables réelles quel que soit l'historique, et est rejouable sans
+    # risque. Additif : sûr pour l'ancien déploiement encore en ligne.
+    param(
+        [Parameter(Mandatory=$true)][string]$DirectUrl,
+        [Parameter(Mandatory=$true)][string]$RunDirectory
+    )
+
+    $schemaPath = Join-Path $script:ProjectRoot 'prisma\server\schema.prisma'
+    if (-not (Test-Path -LiteralPath $schemaPath -PathType Leaf)) { throw 'Schéma Prisma serveur introuvable.' }
+
+    $localPrismaCmd = Join-Path $script:ProjectRoot 'node_modules\.bin\prisma.cmd'
+    $localPrismaExe = Join-Path $script:ProjectRoot 'node_modules\.bin\prisma.exe'
+    $prismaMode = ''
+    $prismaLauncher = ''
+    if (Test-Path -LiteralPath $localPrismaCmd -PathType Leaf) {
+        $prismaLauncher = $localPrismaCmd
+        $prismaMode = 'local-cmd'
+    } elseif (Test-Path -LiteralPath $localPrismaExe -PathType Leaf) {
+        $prismaLauncher = $localPrismaExe
+        $prismaMode = 'local-exe'
+    } else {
+        $npx = Get-Command npx.cmd -ErrorAction SilentlyContinue
+        if (-not $npx) { $npx = Get-Command npx.exe -ErrorAction SilentlyContinue }
+        if (-not $npx) { $npx = Get-Command npx -ErrorAction SilentlyContinue }
+        if (-not $npx) { throw 'Prisma local introuvable et npx indisponible. Exécutez npm install dans le projet.' }
+        $prismaLauncher = [string]$npx.Source
+        $prismaMode = 'npx-pinned'
+    }
+
+    if (-not (Test-Path -LiteralPath $RunDirectory)) { New-Item -ItemType Directory -Path $RunDirectory -Force | Out-Null }
+    $sqlPath = Join-Path $RunDirectory 'converge-server-schema.sql'
+    $stdoutPath = Join-Path $RunDirectory 'converge-server-schema.stdout.txt'
+    $stderrPath = Join-Path $RunDirectory 'converge-server-schema.stderr.txt'
+    $commandPath = Join-Path $RunDirectory 'converge-server-schema.command.txt'
+
+    # DDL idempotent — types/défauts COPIÉS des migrations 20260804000000_mechanic_licenses
+    # et 20260805000000_job_timer_accumulated. Non destructif, rejouable.
+    $sql = @'
+-- Colonnes mechanic/attribution sur LicenseKey (toutes nullables, sans défaut).
+ALTER TABLE "LicenseKey" ADD COLUMN IF NOT EXISTS "parentLicenseId" TEXT;
+ALTER TABLE "LicenseKey" ADD COLUMN IF NOT EXISTS "mechanicId" TEXT;
+ALTER TABLE "LicenseKey" ADD COLUMN IF NOT EXISTS "mechanicHint" TEXT;
+ALTER TABLE "LicenseKey" ADD COLUMN IF NOT EXISTS "assignedAt" TIMESTAMP(3);
+ALTER TABLE "LicenseKey" ADD COLUMN IF NOT EXISTS "assignedBy" TEXT;
+ALTER TABLE "LicenseKey" ADD COLUMN IF NOT EXISTS "suspendedAt" TIMESTAMP(3);
+
+-- JobPhoto.mechanicId (nullable).
+ALTER TABLE "JobPhoto" ADD COLUMN IF NOT EXISTS "mechanicId" TEXT;
+
+-- Job.timerAccumulatedSec (chrono cumulé, NOT NULL DEFAULT 0 -> sûr sur table peuplée).
+ALTER TABLE "Job" ADD COLUMN IF NOT EXISTS "timerAccumulatedSec" INTEGER NOT NULL DEFAULT 0;
+
+-- Tables mechanic.
+CREATE TABLE IF NOT EXISTS "MechanicLicenseAssignment" (
+    "id" TEXT NOT NULL,
+    "licenseId" TEXT,
+    "mechanicId" TEXT,
+    "garageId" TEXT NOT NULL,
+    "assignedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "assignedBy" TEXT,
+    "unassignedAt" TIMESTAMP(3),
+    "previousMechanicId" TEXT,
+    CONSTRAINT "MechanicLicenseAssignment_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "JobMechanicNote" (
+    "id" TEXT NOT NULL,
+    "jobId" TEXT NOT NULL,
+    "garageId" TEXT NOT NULL,
+    "mechanicId" TEXT,
+    "licenseId" TEXT,
+    "type" TEXT NOT NULL,
+    "body" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "JobMechanicNote_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "MechanicActionAudit" (
+    "id" TEXT NOT NULL,
+    "garageId" TEXT NOT NULL,
+    "actorUserId" TEXT,
+    "actorRole" TEXT,
+    "targetMechanicId" TEXT,
+    "licenseId" TEXT,
+    "jobId" TEXT,
+    "action" TEXT NOT NULL,
+    "targetType" TEXT,
+    "targetId" TEXT,
+    "metadata" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "MechanicActionAudit_pkey" PRIMARY KEY ("id")
+);
+
+-- Index (IF NOT EXISTS).
+CREATE INDEX IF NOT EXISTS "LicenseKey_parentLicenseId_idx" ON "LicenseKey"("parentLicenseId");
+CREATE INDEX IF NOT EXISTS "LicenseKey_garageId_licenseType_idx" ON "LicenseKey"("garageId", "licenseType");
+CREATE INDEX IF NOT EXISTS "LicenseKey_mechanicId_idx" ON "LicenseKey"("mechanicId");
+CREATE INDEX IF NOT EXISTS "LicenseKey_assignedBy_idx" ON "LicenseKey"("assignedBy");
+CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_licenseId_assignedAt_idx" ON "MechanicLicenseAssignment"("licenseId", "assignedAt");
+CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_garageId_idx" ON "MechanicLicenseAssignment"("garageId");
+CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_mechanicId_idx" ON "MechanicLicenseAssignment"("mechanicId");
+CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_assignedBy_idx" ON "MechanicLicenseAssignment"("assignedBy");
+CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_previousMechanicId_idx" ON "MechanicLicenseAssignment"("previousMechanicId");
+CREATE INDEX IF NOT EXISTS "JobMechanicNote_jobId_createdAt_idx" ON "JobMechanicNote"("jobId", "createdAt");
+CREATE INDEX IF NOT EXISTS "JobMechanicNote_garageId_mechanicId_idx" ON "JobMechanicNote"("garageId", "mechanicId");
+CREATE INDEX IF NOT EXISTS "JobMechanicNote_licenseId_idx" ON "JobMechanicNote"("licenseId");
+CREATE INDEX IF NOT EXISTS "MechanicActionAudit_garageId_createdAt_idx" ON "MechanicActionAudit"("garageId", "createdAt");
+CREATE INDEX IF NOT EXISTS "MechanicActionAudit_targetMechanicId_createdAt_idx" ON "MechanicActionAudit"("targetMechanicId", "createdAt");
+CREATE INDEX IF NOT EXISTS "MechanicActionAudit_actorUserId_createdAt_idx" ON "MechanicActionAudit"("actorUserId", "createdAt");
+CREATE INDEX IF NOT EXISTS "MechanicActionAudit_jobId_idx" ON "MechanicActionAudit"("jobId");
+CREATE INDEX IF NOT EXISTS "MechanicActionAudit_licenseId_idx" ON "MechanicActionAudit"("licenseId");
+
+-- Clés étrangères — ADD CONSTRAINT n'a pas d'IF NOT EXISTS : on garde par conname.
+-- Colonnes/tables neuves donc NULL/vides : aucun risque de violation FK.
+DO $garageflow$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'LicenseKey_parentLicenseId_fkey') THEN
+    ALTER TABLE "LicenseKey" ADD CONSTRAINT "LicenseKey_parentLicenseId_fkey" FOREIGN KEY ("parentLicenseId") REFERENCES "LicenseKey"("licenseId") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'LicenseKey_mechanicId_fkey') THEN
+    ALTER TABLE "LicenseKey" ADD CONSTRAINT "LicenseKey_mechanicId_fkey" FOREIGN KEY ("mechanicId") REFERENCES "Mechanic"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'LicenseKey_assignedBy_fkey') THEN
+    ALTER TABLE "LicenseKey" ADD CONSTRAINT "LicenseKey_assignedBy_fkey" FOREIGN KEY ("assignedBy") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'MechanicLicenseAssignment_garageId_fkey') THEN
+    ALTER TABLE "MechanicLicenseAssignment" ADD CONSTRAINT "MechanicLicenseAssignment_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'MechanicLicenseAssignment_licenseId_fkey') THEN
+    ALTER TABLE "MechanicLicenseAssignment" ADD CONSTRAINT "MechanicLicenseAssignment_licenseId_fkey" FOREIGN KEY ("licenseId") REFERENCES "LicenseKey"("licenseId") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'MechanicLicenseAssignment_mechanicId_fkey') THEN
+    ALTER TABLE "MechanicLicenseAssignment" ADD CONSTRAINT "MechanicLicenseAssignment_mechanicId_fkey" FOREIGN KEY ("mechanicId") REFERENCES "Mechanic"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'MechanicLicenseAssignment_assignedBy_fkey') THEN
+    ALTER TABLE "MechanicLicenseAssignment" ADD CONSTRAINT "MechanicLicenseAssignment_assignedBy_fkey" FOREIGN KEY ("assignedBy") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'MechanicLicenseAssignment_previousMechanicId_fkey') THEN
+    ALTER TABLE "MechanicLicenseAssignment" ADD CONSTRAINT "MechanicLicenseAssignment_previousMechanicId_fkey" FOREIGN KEY ("previousMechanicId") REFERENCES "Mechanic"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'JobMechanicNote_jobId_fkey') THEN
+    ALTER TABLE "JobMechanicNote" ADD CONSTRAINT "JobMechanicNote_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'JobMechanicNote_garageId_fkey') THEN
+    ALTER TABLE "JobMechanicNote" ADD CONSTRAINT "JobMechanicNote_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'JobMechanicNote_mechanicId_fkey') THEN
+    ALTER TABLE "JobMechanicNote" ADD CONSTRAINT "JobMechanicNote_mechanicId_fkey" FOREIGN KEY ("mechanicId") REFERENCES "Mechanic"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'JobMechanicNote_licenseId_fkey') THEN
+    ALTER TABLE "JobMechanicNote" ADD CONSTRAINT "JobMechanicNote_licenseId_fkey" FOREIGN KEY ("licenseId") REFERENCES "LicenseKey"("licenseId") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'MechanicActionAudit_garageId_fkey') THEN
+    ALTER TABLE "MechanicActionAudit" ADD CONSTRAINT "MechanicActionAudit_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'MechanicActionAudit_actorUserId_fkey') THEN
+    ALTER TABLE "MechanicActionAudit" ADD CONSTRAINT "MechanicActionAudit_actorUserId_fkey" FOREIGN KEY ("actorUserId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'MechanicActionAudit_targetMechanicId_fkey') THEN
+    ALTER TABLE "MechanicActionAudit" ADD CONSTRAINT "MechanicActionAudit_targetMechanicId_fkey" FOREIGN KEY ("targetMechanicId") REFERENCES "Mechanic"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'MechanicActionAudit_licenseId_fkey') THEN
+    ALTER TABLE "MechanicActionAudit" ADD CONSTRAINT "MechanicActionAudit_licenseId_fkey" FOREIGN KEY ("licenseId") REFERENCES "LicenseKey"("licenseId") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'MechanicActionAudit_jobId_fkey') THEN
+    ALTER TABLE "MechanicActionAudit" ADD CONSTRAINT "MechanicActionAudit_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+END
+$garageflow$;
+'@
+    [IO.File]::WriteAllText($sqlPath, $sql, $script:Utf8NoBom)
+
+    $oldDb = [Environment]::GetEnvironmentVariable('DATABASE_URL','Process')
+    $oldDirect = [Environment]::GetEnvironmentVariable('DIRECT_URL','Process')
+    $oldNativePrefExists = Test-Path variable:PSNativeCommandUseErrorActionPreference
+    $oldNativePref = if ($oldNativePrefExists) { $PSNativeCommandUseErrorActionPreference } else { $null }
+
+    try {
+        # DDL via la connexion DIRECTE (non poolée) de Neon.
+        [Environment]::SetEnvironmentVariable('DATABASE_URL', $DirectUrl, 'Process')
+        [Environment]::SetEnvironmentVariable('DIRECT_URL', $DirectUrl, 'Process')
+        if ($oldNativePrefExists) { $PSNativeCommandUseErrorActionPreference = $false }
+
+        if ($prismaMode -eq 'npx-pinned') {
+            $safeCommand = '"{0}" --yes prisma@5 db execute --schema "{1}" --file "{2}"' -f `
+                $prismaLauncher.Replace('"','""'), `
+                $schemaPath.Replace('"','""'), `
+                $sqlPath.Replace('"','""')
+        } else {
+            $safeCommand = '"{0}" db execute --schema "{1}" --file "{2}"' -f `
+                $prismaLauncher.Replace('"','""'), `
+                $schemaPath.Replace('"','""'), `
+                $sqlPath.Replace('"','""')
+        }
+        [IO.File]::WriteAllText($commandPath, $safeCommand, $script:Utf8NoBom)
+        Write-Host "[INFO] Convergence du schéma Neon (mechanic-licenses + chrono) : $prismaMode" -ForegroundColor DarkCyan
+
+        Remove-Item -LiteralPath $stdoutPath,$stderrPath -Force -ErrorAction SilentlyContinue
+        $proc = Start-Process `
+            -FilePath $env:ComSpec `
+            -ArgumentList @('/d','/s','/c',('"' + $safeCommand + '"')) `
+            -WorkingDirectory $script:ProjectRoot `
+            -RedirectStandardOutput $stdoutPath `
+            -RedirectStandardError $stderrPath `
+            -NoNewWindow `
+            -Wait `
+            -PassThru
+
+        $stdout = if (Test-Path -LiteralPath $stdoutPath) { [IO.File]::ReadAllText($stdoutPath) } else { '' }
+        $stderr = if (Test-Path -LiteralPath $stderrPath) { [IO.File]::ReadAllText($stderrPath) } else { '' }
+        $combined = (($stdout.Trim(), $stderr.Trim()) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }) -join ' | '
+
+        if ($proc.ExitCode -ne 0) {
+            if ([string]::IsNullOrWhiteSpace($combined)) { $combined = "Aucune sortie native. Code retour : $($proc.ExitCode)." }
+            throw "Convergence du schéma Neon échouée (code $($proc.ExitCode)) : $(Protect-LogText $combined). Voir docs/POST_ROTATION_RECOVERY.md §7. Journaux : $stdoutPath / $stderrPath"
+        }
+        if ($combined -match '(?im)^\s*Error\s*:') {
+            throw "Prisma a signalé une erreur pendant la convergence du schéma : $(Protect-LogText $combined). Voir docs/POST_ROTATION_RECOVERY.md §7."
+        }
+        Write-Host '[OK] Schéma Neon convergé : colonnes/tables mechanic + chrono présentes (le runtime ne renverra plus « Erreur base de données »).' -ForegroundColor Green
+    } finally {
+        [Environment]::SetEnvironmentVariable('DATABASE_URL', $oldDb, 'Process')
+        [Environment]::SetEnvironmentVariable('DIRECT_URL', $oldDirect, 'Process')
+        if ($oldNativePrefExists) { $PSNativeCommandUseErrorActionPreference = $oldNativePref }
+    }
+}
+
 function Reset-RemoteLicenseDataForFullRotation {
     param(
         [Parameter(Mandatory=$true)][string]$DirectUrl,
@@ -915,7 +1155,20 @@ function Test-ProtectedApiKeyEndpoint {
         } else {
             switch ($status) {
                 403 { $lastReason = "HTTP 403 : la fonction déployée lit un GARAGEFLOW_API_KEY DIFFÉRENT de la nouvelle clé. La valeur envoyée ne correspond pas à celle du runtime — variable pas encore propagée à CE déploiement, ou écrite dans un autre environnement que Production." }
-                500 { $lastReason = "HTTP 500 : GARAGEFLOW_API_KEY absente ou trop courte (<16 caractères) dans le runtime déployé. La variable n'a pas été appliquée à l'environnement Production de ce déploiement." }
+                500 {
+                    # Deux causes de 500 sur cette route : (a) clé API absente/faible,
+                    # (b) erreur base de données (schéma Neon désaligné du code). On
+                    # LES DISTINGUE via le champ 'error' du corps JSON — ne jamais
+                    # attribuer un 500 DB à un problème de clé.
+                    $errText = if ($payload -and $payload.PSObject.Properties['error']) { [string]$payload.PSObject.Properties['error'].Value } else { '' }
+                    if ($errText -match 'base de donn') {
+                        $lastReason = "HTTP 500 (erreur base de données) : le schéma Neon Production ne correspond PAS au code déployé — colonne/table manquante (ex. LicenseKey.parentLicenseId). La rotation converge désormais le schéma (DDL idempotent) AVANT le déploiement ; si l'erreur persiste, relancez la convergence ou 'npm run db:server:deploy' avec les DATABASE_URL/DIRECT_URL de Production. Voir docs/POST_ROTATION_RECOVERY.md §7."
+                    } elseif ($errText -match 'Configuration serveur') {
+                        $lastReason = "HTTP 500 (configuration) : GARAGEFLOW_API_KEY absente ou trop courte (<16) dans le runtime déployé. La variable n'a pas été appliquée à l'environnement Production."
+                    } else {
+                        $lastReason = "HTTP 500 : erreur serveur inattendue$(if ($errText) { " — $errText" } else { '' })."
+                    }
+                }
                 401 { $lastReason = "HTTP 401 : couche d'authentification (Deployment Protection) devant la fonction." }
                 429 { $lastReason = "HTTP 429 : rate limit admin atteint ; nouvelle tentative." }
                 502 { $lastReason = "HTTP 502 : passerelle ; fonction pas encore prête, nouvelle tentative." }
@@ -2076,6 +2329,17 @@ try {
         Write-Host '[DRY-RUN/-SkipDatabaseReset] Réparation legacyIdV* (DDL Neon) IGNORÉE — no-op sur ce projet.' -ForegroundColor Magenta
     } else {
         Repair-LegacyLicenseColumns -DirectUrl ([string]$newValues['DIRECT_URL']) -RunDirectory $runDir
+    }
+
+    # Convergence du schéma Neon vers le CODE fusionné (mechanic-licenses, chrono)
+    # AVANT le déploiement — sinon LicenseKey.parentLicenseId & co. manquent et
+    # toute requête Prisma les listant renvoie HTTP 500. Exécuté sur tout run réel
+    # (indépendant de -SkipDatabaseReset, qui ne vise que la réparation legacyIdV*).
+    # DDL additif et idempotent.
+    if ($script:GfDryRun) {
+        Write-Host '[DRY-RUN] Convergence du schéma Neon (DDL idempotent) IGNORÉE.' -ForegroundColor Magenta
+    } else {
+        Invoke-ServerSchemaConverge -DirectUrl ([string]$newValues['DIRECT_URL']) -RunDirectory $runDir
     }
 
     Write-Host '[6/7] Mise à jour locale et sauvegarde API générées...' -ForegroundColor Cyan

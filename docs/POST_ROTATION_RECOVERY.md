@@ -107,6 +107,77 @@ ou mauvais environnement ciblé), **pas** que la clé est « cassée ». Aucune
 donnée n'est perdue : `revoke-by-key` avec un UUID neuf + `status:active` suit la
 branche `not_registered` et **ne crée ni ne modifie** aucune licence.
 
+## 7. Cause réelle d'un HTTP 500 au test de clé : schéma Neon désaligné
+
+Observé le 2026‑08‑05 : le déploiement réussit, `/api/health` = ok, puis le test
+de clé renvoie **HTTP 500** avec, dans les logs runtime :
+
+```
+Invalid `prisma.licenseKey.findUnique()` invocation:
+The column `LicenseKey.parentLicenseId` does not exist in the current database.
+[error] [admin/licenses/revoke-by-key] erreur base de données
+```
+
+**Ce n'est PAS un problème de clé API** (l'auth est passée, sinon 403). C'est un
+**drift de schéma** : le code fusionné (mechanic‑licenses + chrono) référence des
+colonnes/tables que la base Neon Production **n'a jamais reçues**. `findUnique`
+sans `select` liste **toutes** les colonnes scalaires du modèle → dès qu'une
+manque, Postgres échoue et la route renvoie 500. Colonnes/tables ajoutées par le
+merge et absentes de Neon :
+
+- `LicenseKey.parentLicenseId`, `mechanicId`, `mechanicHint`, `assignedAt`, `assignedBy`, `suspendedAt`
+- `JobPhoto.mechanicId`
+- `Job.timerAccumulatedSec`
+- tables `MechanicLicenseAssignment`, `JobMechanicNote`, `MechanicActionAudit` (+ index/FK)
+
+Migrations concernées (présentes dans le dépôt, **jamais appliquées** en prod) :
+`20260804000000_mechanic_licenses`, `20260804120000_link_repairtypepart_garage`,
+`20260804130000_add_part_jobpart_indexes`, `20260805000000_job_timer_accumulated`.
+
+**Pourquoi ça arrive** : le build Vercel ne fait que `prisma generate` — il **ne
+migre pas** la base. La rotation ne lançait qu'une réparation `legacyIdV*`.
+
+**Correctif appliqué** : `scripts/reset-garageflow.ps1` **converge** désormais le
+schéma Neon **avant** le déploiement (`Invoke-ServerSchemaConverge`) : un DDL
+**idempotent** (`ADD COLUMN / CREATE TABLE / CREATE INDEX IF NOT EXISTS` + FK
+guardées par `pg_constraint`) exécuté via `prisma db execute` (le même mécanisme
+sûr que la réparation `legacyIdV*`). C'est volontairement **`db execute` et non
+`migrate deploy`** : `migrate deploy` **saute** toute migration déjà inscrite dans
+`_prisma_migrations` même si ses colonnes manquent réellement (drift) et peut
+avorter sur un état de migration échoué — le DDL conditionnel, lui, **converge
+toujours** les colonnes/tables réelles quel que soit l'historique, et est
+rejouable sans risque. Additif (aucune colonne supprimée) : sûr pour l'ancien
+déploiement encore en ligne, qui ignore les nouvelles colonnes.
+
+**Portée & limites** : la convergence couvre exactement ce qui casse le runtime
+(colonnes/tables **mechanic‑licenses + chrono** + leurs index/FK). Les objets
+purement « performance » d'autres migrations récentes (index `JobPart`/`Part`,
+FK `RepairTypePart`) ne sont **pas** inclus — sans impact sur les 500 — et
+relèvent d'un `migrate deploy` complet. `IF NOT EXISTS` est idempotent **par
+nom** : si une colonne existait déjà avec un mauvais type/nullabilité (drift
+partiel bricolé à la main), elle est laissée telle quelle et doit être corrigée
+manuellement.
+
+**Manuel (si besoin, hors rotation)** — deux voies, avec les valeurs Production :
+
+```bash
+# (a) Voie « historique propre » : applique les migrations en attente ET les
+#     enregistre dans _prisma_migrations. À privilégier si l'historique est sain.
+DATABASE_URL="postgresql://…neon-direct…" DIRECT_URL="postgresql://…neon-direct…" \
+  npm run db:server:deploy    # = prisma migrate deploy --schema prisma/server/schema.prisma
+
+# (b) Voie « convergence » (drift-safe) : rejoue le DDL idempotent écrit par la
+#     rotation dans le dossier de rapport (converge-server-schema.sql).
+DATABASE_URL="postgresql://…neon-direct…" DIRECT_URL="postgresql://…neon-direct…" \
+  npx prisma db execute --schema prisma/server/schema.prisma --file converge-server-schema.sql
+```
+
+**Cas de drift piégeux** : si `_prisma_migrations` marque une migration
+« appliquée » alors que ses colonnes manquent, `migrate deploy` (voie a) la
+**saute** et le 500 persiste — utilisez alors la voie (b), puis, pour réaligner
+l'historique, `prisma migrate resolve --applied <nom_migration>` pour chacune des
+migrations 2026‑08‑04/05.
+
 ## 5. Rappel — le build échouait sur une injection locale
 
 L'échec Vercel (`Cannot find name 'seats'` à `license/activate/route.ts:203`)
