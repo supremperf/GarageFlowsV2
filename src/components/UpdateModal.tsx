@@ -127,7 +127,7 @@ export default function UpdateModal() {
         className="w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-[#0b1220] shadow-2xl"
         style={{ boxShadow: '0 25px 80px -20px rgba(37,99,235,0.55)' }}
       >
-        {/* En-tête aux couleurs GarageFlow */}
+        {/* En-tête aux couleurs GarageFlows */}
         <div
           className="relative flex items-center gap-4 px-6 py-5"
           style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.22), rgba(14,165,233,0.10))' }}
@@ -143,7 +143,7 @@ export default function UpdateModal() {
               </p>
             </div>
             <h2 id="gf-update-title" className="mt-0.5 truncate text-lg font-bold text-white">
-              {info.title || `GarageFlow ${info.latestVersion}`}
+              {info.title || `GarageFlows ${info.latestVersion}`}
             </h2>
           </div>
         </div>
@@ -239,7 +239,7 @@ export default function UpdateModal() {
 
           {info.mandatory && !installing && (
             <p className="text-center text-[11px] text-amber-400/80">
-              Cette mise à jour est obligatoire pour continuer à utiliser GarageFlow.
+              Cette mise à jour est obligatoire pour continuer à utiliser GarageFlows.
             </p>
           )}
         </div>

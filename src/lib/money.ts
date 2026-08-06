@@ -121,3 +121,42 @@ export function balanceCents(totalTTCCents: number, paymentsEuros: number[] = []
   const credited = creditsEuros.reduce((s, c) => s + toCents(c), 0)
   return totalTTCCents - paid - credited
 }
+
+/**
+ * Marge en centimes = produit − coût (soustraction d'entiers, donc EXACTE).
+ * Les montants négatifs (coût supérieur au produit) sont conservés tels quels —
+ * une marge négative est une information métier valide, jamais tronquée à zéro.
+ */
+export function marginCents(revenueCents: number, costCents: number): number {
+  return Math.round(revenueCents) - Math.round(costCents)
+}
+
+/** Ligne avec coût d'achat optionnel, pour le calcul de marge en centimes. */
+export interface CostedLine {
+  quantity: number
+  /** Prix de vente unitaire en EUROS. */
+  unitPrice: number
+  /** Coût d'achat unitaire en EUROS (0 si absent). */
+  unitCost?: number
+}
+
+/**
+ * Produit, coût et marge d'un ensemble de lignes, TOUT en centimes entiers.
+ * Même convention d'arrondi que `computeTotals` : arrondi PAR LIGNE
+ * (`round(quantité × prix_centimes)`), jamais d'accumulation flottante. Utilisable
+ * partout où l'on calculait une marge en `number` natif (analytics, rentabilité).
+ */
+export function computeMarginCents(lines: CostedLine[]): {
+  revenueCents: number
+  costCents: number
+  marginCents: number
+} {
+  let revenueCents = 0
+  let costCents = 0
+  for (const l of lines ?? []) {
+    const qty = l.quantity ?? 0
+    revenueCents += multiplyCents(toCents(l.unitPrice), qty)
+    costCents += multiplyCents(toCents(l.unitCost ?? 0), qty)
+  }
+  return { revenueCents, costCents, marginCents: revenueCents - costCents }
+}

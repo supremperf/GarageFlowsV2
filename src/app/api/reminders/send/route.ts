@@ -113,7 +113,7 @@ ${garage?.name ?? 'Votre garage'}${garage?.phone ? `\nTél : ${garage.phone}` : 
 
   try {
     await transporter.sendMail({
-      from: `${garage?.name ?? 'GarageFlow'} <${smtpFrom}>`,
+      from: `${garage?.name ?? 'GarageFlows'} <${smtpFrom}>`,
       to: reminder.email,
       subject,
       text: textBody,

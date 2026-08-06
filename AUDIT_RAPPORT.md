@@ -1,3 +1,8 @@
+<!-- doc-status: historique -->
+> **⚠️ DOCUMENT HISTORIQUE — instantané daté, ne fait plus foi.**
+> Ne pas utiliser comme source de vérité pour un déploiement actuel.
+> Source de vérité : **[docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md)**.
+
 # AUDIT_RAPPORT — GarageFlow V2
 
 **Date** : 2026-08-03

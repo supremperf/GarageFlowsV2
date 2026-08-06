@@ -1,10 +1,15 @@
 {
-  "name": "GarageFlow",
-  "short_name": "GarageFlow",
-  "description": "Logiciel de gestion d'atelier automobile",
+  "name": "GarageFlows",
+  "short_name": "GarageFlows",
+  "description": "Logiciel professionnel de gestion pour garages automobiles",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0f1629",
-  "theme_color": "#3b82f6",
-  "icons": []
+  "theme_color": "#0f1629",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
 }

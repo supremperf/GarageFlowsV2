@@ -189,7 +189,7 @@ export function UpdatesTab() {
               <div className="flex items-center gap-2 text-sm text-blue-300">
                 <HardDriveDownload className="w-4 h-4 animate-pulse" />
                 {closing
-                  ? 'GarageFlow va se fermer pour installer la mise à jour…'
+                  ? 'GarageFlows va se fermer pour installer la mise à jour…'
                   : progress != null && progress < 100
                   ? `Téléchargement… ${progress}%`
                   : 'Préparation de l\'installation…'}

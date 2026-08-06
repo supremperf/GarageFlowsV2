@@ -29,9 +29,12 @@ export const POST = withAuth(async (req) => {
   } catch {
     return NextResponse.json({ error: 'Lignes de commande invalides' }, { status: 400 })
   }
-  const totalHT = fromCents(
-    lines.reduce((c, l) => c + multiplyCents(toCents(Number(l.unitCost) || 0), Number(l.qty) || 0), 0),
+  // Centimes = source de vérité ; totalHT (euros) = miroir dérivé (fromCents).
+  const totalHtCents = lines.reduce(
+    (c, l) => c + multiplyCents(toCents(Number(l.unitCost) || 0), Number(l.qty) || 0),
+    0,
   )
+  const totalHT = fromCents(totalHtCents)
 
   // Réservation du numéro + création atomiques ; unicité par @@unique([garageId, number]).
   let order
@@ -50,6 +53,7 @@ export const POST = withAuth(async (req) => {
           supplierEmail: body.supplierEmail ?? null,
           linesJson,
           totalHT,
+          totalHtCents,
           status:        'draft',
           notes:         body.notes ?? null,
         },

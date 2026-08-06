@@ -101,6 +101,14 @@ jobs:
       - name: ESLint
         run: npx next lint
 
+      # Garde-fou marque : « GarageFlows » partout dans le visible + manifestes/icônes.
+      - name: Branding consistency
+        run: node scripts/check-branding.mjs
+
+      # Garde-fou docs : aucune affirmation de statut contradictoire dans un doc actif.
+      - name: Docs consistency
+        run: node scripts/check-docs-consistency.mjs
+
       # ── Migrations PostgreSQL sur base VIDE (échec CI si une migration casse) ──
       - name: PostgreSQL migrations on empty database + smoke test
         run: node scripts/validate-server-db.js

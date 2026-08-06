@@ -93,8 +93,8 @@ export const POST = withAuth(async (req) => {
     await transporter.sendMail({
       from: garage.smtpFrom ?? garage.smtpUser,
       to: garage.smtpUser,
-      subject: 'GarageFlow — Test de configuration email',
-      text: 'La configuration email de GarageFlow fonctionne correctement.',
+      subject: 'GarageFlows — Test de configuration email',
+      text: 'La configuration email de GarageFlows fonctionne correctement.',
     })
 
     return NextResponse.json({ ok: true })

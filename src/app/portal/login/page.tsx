@@ -71,7 +71,7 @@ export default function PortalLoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-[#0a0f1e] p-4">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-black text-white">Espace client <span className="text-blue-400">GarageFlow</span></h1>
+          <h1 className="text-2xl font-black text-white">Espace client <span className="text-blue-400">GarageFlows</span></h1>
           <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">Suivi de vos réparations</p>
         </div>
 

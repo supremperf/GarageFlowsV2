@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { assertRelations } from '@/lib/tenant'
+import { toCents, fromCents } from '@/lib/money'
 
 export const GET = withAuth(async (req) => {
   const session = await requireSession()
@@ -60,7 +61,9 @@ export const POST = withAuth(async (req) => {
       notes:        body.notes ?? null,
       isPaid:       Boolean(body.isPaid),
       dailyRate:    body.dailyRate != null ? Number(body.dailyRate) : null,
-      depositAmount:body.depositAmount != null ? Number(body.depositAmount) : null,
+      // Caution (somme) : centimes = source de vérité ; depositAmount = miroir dérivé.
+      depositAmountCents: body.depositAmount != null ? toCents(Number(body.depositAmount)) : null,
+      depositAmount: body.depositAmount != null ? fromCents(toCents(Number(body.depositAmount))) : null,
       status:       'reserved',
     },
     include: { vehicle: { select: { id: true, name: true, licensePlate: true } } },

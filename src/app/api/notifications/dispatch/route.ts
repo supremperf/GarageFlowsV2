@@ -45,7 +45,7 @@ function buildEmailSender(garage: {
         host: garage.smtpHost!, port, secure, auth: { user: garage.smtpUser!, pass: smtpPass! },
       })
       const info = await transporter.sendMail({
-        from: `${garage.name ?? 'GarageFlow'} <${from}>`,
+        from: `${garage.name ?? 'GarageFlows'} <${from}>`,
         to,
         subject: message.subject ?? '(sans objet)',
         text: message.body,

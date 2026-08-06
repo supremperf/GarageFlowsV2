@@ -29,14 +29,14 @@ const STATUS_CONFIG: Record<
     color: 'text-red-400',
     ring:  'rgba(239,68,68,0.15)',
     title: 'Compte révoqué',
-    hint:  "Votre licence GarageFlow a été révoquée. L'accès au logiciel est bloqué. Veuillez contacter votre revendeur pour rétablir votre compte.",
+    hint:  "Votre licence GarageFlows a été révoquée. L'accès au logiciel est bloqué. Veuillez contacter votre revendeur pour rétablir votre compte.",
   },
   suspended: {
     icon:  Clock,
     color: 'text-amber-400',
     ring:  'rgba(245,158,11,0.15)',
     title: 'Compte suspendu',
-    hint:  "Votre licence GarageFlow est temporairement suspendue. L'accès est bloqué jusqu'à sa réactivation. Contactez votre revendeur pour plus d'informations.",
+    hint:  "Votre licence GarageFlows est temporairement suspendue. L'accès est bloqué jusqu'à sa réactivation. Contactez votre revendeur pour plus d'informations.",
   },
   tampered: {
     icon:  ShieldOff,

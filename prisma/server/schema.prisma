@@ -684,6 +684,12 @@ model WorkOrder {
   taxRate       Float     @default(20)
   totalHT       Float     @default(0)
   totalTTC      Float     @default(0)
+  // Migration monétaire (additif) : centimes entiers = SOURCE DE VÉRITÉ ; les
+  // colonnes Float ci-dessus sont un miroir dérivé (fromCents) conservé pour la
+  // compatibilité/signatures, retiré par l'opérateur après vérification.
+  // Voir docs/MIGRATION-MONEY.md.
+  totalHtCents  Int?
+  totalTtcCents Int?
   // Status & signature
   status        String    @default("draft") // draft, signed, in_progress, closed
   signatureData String? // base64 PNG of client signature
@@ -789,6 +795,10 @@ model LoanerReservation {
   isPaid        Boolean       @default(false)
   dailyRate     Float?
   depositAmount Float?
+  // Migration monétaire (additif) : la caution (somme) est stockée en centimes ;
+  // depositAmount devient un miroir dérivé. dailyRate (tarif unitaire) reste Float
+  // — cf. docs/MIGRATION-MONEY.md (prix unitaires : migration stagée).
+  depositAmountCents Int?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -807,6 +817,8 @@ model PurchaseOrder {
   supplierEmail String?
   linesJson     String    @default("[]") // [{partId?, partName, reference?, qty, unitCost}]
   totalHT       Float     @default(0)
+  // Migration monétaire (additif) : centimes = source de vérité, Float miroir dérivé.
+  totalHtCents  Int?
   status        String    @default("draft") // draft, sent, received, cancelled
   notes         String?
   sentAt        DateTime?

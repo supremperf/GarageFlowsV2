@@ -1,3 +1,8 @@
+<!-- doc-status: historique -->
+> **⚠️ DOCUMENT HISTORIQUE — instantané daté, ne fait plus foi.**
+> Ne pas utiliser comme source de vérité pour un déploiement actuel.
+> Source de vérité : **[docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md)**.
+
 # GarageFlow — Rapport de mise en état « Enterprise Production Ready »
 
 > Suite du rapport `FINAL_UNIFIED_GARAGEFLOW_REPORT.md`. Cette phase durcit la

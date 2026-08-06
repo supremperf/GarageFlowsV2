@@ -29,7 +29,7 @@ function row(...cells: unknown[]): string {
 export function reportToCSV(report: CopilotReport): string {
   const lines: string[] = []
 
-  lines.push(row('Rapport GarageFlow', `Généré le ${report.generatedAt}`))
+  lines.push(row('Rapport GarageFlows', `Généré le ${report.generatedAt}`))
   lines.push(row('Période (jours)', report.periodDays))
   lines.push(row('Score de santé', `${report.healthScore}/100 (${report.healthGrade})`))
   lines.push(row('Résumé', report.summary))

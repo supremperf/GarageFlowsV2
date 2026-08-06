@@ -18,7 +18,10 @@ export const POST = withPortalAuth(async (_req, { user }) => {
   const secret = generateTotpSecret()
   await prisma.portalUser.update({ where: { id: user.id }, data: { twoFactorPending: secret } })
 
-  const otpauth = otpauthURL({ secret, label: user.email, issuer: 'GarageFlow' })
+  // Émetteur affiché dans l'app d'authentification. Le changement de libellé est
+  // « forward-only » : les enrôlements TOTP existants (secret déjà partagé) restent
+  // valides — l'issuer n'entre pas dans le calcul du code, seul le secret compte.
+  const otpauth = otpauthURL({ secret, label: user.email, issuer: 'GarageFlows' })
   const qrDataUrl = await QRCode.toDataURL(otpauth)
 
   return NextResponse.json({ secret, otpauth, qrDataUrl })

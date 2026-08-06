@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { assertRelations } from '@/lib/tenant'
+import { computeTotals as computeMoneyTotals, type MoneyLine } from '@/lib/money'
 
 interface WorkLine {
   description: string
@@ -18,8 +19,18 @@ interface PartLine {
   unitPrice: number
 }
 
-/** Returns null when worksJson/partsJson are not valid JSON arrays. */
-function computeTotals(worksJson: string, partsJson: string, taxRate: number): { totalHT: number; totalTTC: number } | null {
+/**
+ * Totaux d'un ordre de réparation. Calcul EXACT en centimes entiers via
+ * `lib/money.ts` (fin de l'arithmétique flottante native ici) : garantit
+ * TTC = HT + TVA. Renvoie aussi les centimes (source de vérité stockée) ; les
+ * euros sont dérivés (`fromCents`). Une ligne de main-d'œuvre = quantité 1.
+ * Returns null when worksJson/partsJson are not valid JSON arrays.
+ */
+function computeTotals(
+  worksJson: string,
+  partsJson: string,
+  taxRate: number,
+): { totalHT: number; totalTTC: number; totalHtCents: number; totalTtcCents: number } | null {
   let works: WorkLine[]
   let parts: PartLine[]
   try {
@@ -29,11 +40,12 @@ function computeTotals(worksJson: string, partsJson: string, taxRate: number): {
     return null
   }
   if (!Array.isArray(works) || !Array.isArray(parts)) return null
-  const worksHT = works.reduce((s, w) => s + (Number(w.unitPrice) || 0), 0)
-  const partsHT = parts.reduce((s, p) => s + (Number(p.qty) || 0) * (Number(p.unitPrice) || 0), 0)
-  const totalHT = Math.round((worksHT + partsHT) * 100) / 100
-  const totalTTC = Math.round(totalHT * (1 + taxRate / 100) * 100) / 100
-  return { totalHT, totalTTC }
+  const lines: MoneyLine[] = [
+    ...works.map((w) => ({ quantity: 1, unitPrice: Number(w.unitPrice) || 0 })),
+    ...parts.map((p) => ({ quantity: Number(p.qty) || 0, unitPrice: Number(p.unitPrice) || 0 })),
+  ]
+  const t = computeMoneyTotals(lines, Number(taxRate) || 0)
+  return { totalHT: t.totalHT, totalTTC: t.totalTTC, totalHtCents: t.totalHTCents, totalTtcCents: t.totalTTCCents }
 }
 
 // GET /api/work-orders
@@ -87,7 +99,7 @@ export const POST = withAuth(async (req) => {
   if (!totals) {
     return NextResponse.json({ error: 'worksJson/partsJson invalides' }, { status: 400 })
   }
-  const { totalHT, totalTTC } = totals
+  const { totalHT, totalTTC, totalHtCents, totalTtcCents } = totals
 
   // Validate optional foreign keys belong to THIS garage before referencing them.
   if (body.jobId) {
@@ -131,6 +143,9 @@ export const POST = withAuth(async (req) => {
           taxRate,
           totalHT,
           totalTTC,
+          // Centimes = source de vérité ; totalHT/totalTTC ci-dessus = miroir dérivé.
+          totalHtCents,
+          totalTtcCents,
           notes: body.notes ?? null,
           status: 'draft',
         },

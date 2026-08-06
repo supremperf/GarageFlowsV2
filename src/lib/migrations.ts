@@ -937,4 +937,12 @@ export const MIGRATIONS: Migration[] = [
   // Chrono mécanicien (§6) : secondes accumulées sur les segments terminés
   // (pause/reprise sans perte). Additif, valeur par défaut 0 sur les lignes existantes.
   { id: '157_job_timer_accumulated_sec', sql: 'ALTER TABLE "Job" ADD COLUMN "timerAccumulatedSec" INTEGER NOT NULL DEFAULT 0' },
+  // ── Migration monétaire : colonnes en CENTIMES entiers (additif, nullable) ────
+  // Source de vérité écrite par l'app ; les colonnes Float existantes deviennent un
+  // miroir dérivé. NULL sur les lignes antérieures → l'app lit `cents ?? toCents(float)`.
+  // Voir docs/MIGRATION-MONEY.md. Aucune donnée supprimée, aucune colonne retirée.
+  { id: '158_workorder_total_ht_cents',   sql: 'ALTER TABLE "WorkOrder" ADD COLUMN "totalHtCents" INTEGER' },
+  { id: '159_workorder_total_ttc_cents',  sql: 'ALTER TABLE "WorkOrder" ADD COLUMN "totalTtcCents" INTEGER' },
+  { id: '160_purchaseorder_total_ht_cents', sql: 'ALTER TABLE "PurchaseOrder" ADD COLUMN "totalHtCents" INTEGER' },
+  { id: '161_loaner_deposit_amount_cents', sql: 'ALTER TABLE "LoanerReservation" ADD COLUMN "depositAmountCents" INTEGER' },
 ]

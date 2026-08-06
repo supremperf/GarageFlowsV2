@@ -1,3 +1,8 @@
+<!-- doc-status: historique -->
+> **⚠️ DOCUMENT HISTORIQUE — instantané daté, ne fait plus foi.**
+> Ne pas utiliser comme source de vérité pour un déploiement actuel.
+> Source de vérité : **[./PRODUCTION-READINESS.md](./PRODUCTION-READINESS.md)**.
+
 # GarageFlow — Matrice de décision de la fusion finale
 
 Méthode : **base = hardening**, `mechanic` traitée comme branche de fonctionnalité,

@@ -86,7 +86,7 @@ export default function Dashboard() {
             <Wrench size={16} style={{ color: 'white' }} />
           </div>
           <div>
-            <p style={{ color: 'white', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>GarageFlow</p>
+            <p style={{ color: 'white', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>GarageFlows</p>
             <p style={{ color: '#475569', fontSize: 11 }}>{t.dashboard}</p>
           </div>
         </div>

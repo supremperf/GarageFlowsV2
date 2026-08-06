@@ -465,6 +465,15 @@ ALTER TABLE "JobPhoto" ADD COLUMN IF NOT EXISTS "mechanicId" TEXT;
 -- Job.timerAccumulatedSec (chrono cumulé, NOT NULL DEFAULT 0 -> sûr sur table peuplée).
 ALTER TABLE "Job" ADD COLUMN IF NOT EXISTS "timerAccumulatedSec" INTEGER NOT NULL DEFAULT 0;
 
+-- Migration monétaire (additif) : totaux en CENTIMES entiers, source de vérité.
+-- Colonnes nullables ; les colonnes Float existantes deviennent un miroir dérivé.
+-- Backfill au niveau applicatif / migration Prisma (20260806100000_money_cents).
+-- Voir docs/MIGRATION-MONEY.md. Aucune donnée supprimée.
+ALTER TABLE "WorkOrder"         ADD COLUMN IF NOT EXISTS "totalHtCents"       INTEGER;
+ALTER TABLE "WorkOrder"         ADD COLUMN IF NOT EXISTS "totalTtcCents"      INTEGER;
+ALTER TABLE "PurchaseOrder"     ADD COLUMN IF NOT EXISTS "totalHtCents"       INTEGER;
+ALTER TABLE "LoanerReservation" ADD COLUMN IF NOT EXISTS "depositAmountCents" INTEGER;
+
 -- Tables mechanic.
 CREATE TABLE IF NOT EXISTS "MechanicLicenseAssignment" (
     "id" TEXT NOT NULL,

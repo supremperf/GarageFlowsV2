@@ -1,3 +1,8 @@
+<!-- doc-status: historique -->
+> **⚠️ DOCUMENT HISTORIQUE — instantané daté, ne fait plus foi.**
+> Ne pas utiliser comme source de vérité pour un déploiement actuel.
+> Source de vérité : **[docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md)**.
+
 # GarageFlow — Rapport final de la version unifiée
 
 > Version unique consolidée : **base durcissement (hardening v4)** + **licences

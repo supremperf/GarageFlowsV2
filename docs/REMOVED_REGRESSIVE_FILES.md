@@ -1,3 +1,8 @@
+<!-- doc-status: historique -->
+> **⚠️ DOCUMENT HISTORIQUE — instantané daté, ne fait plus foi.**
+> Ne pas utiliser comme source de vérité pour un déploiement actuel.
+> Source de vérité : **[./PRODUCTION-READINESS.md](./PRODUCTION-READINESS.md)**.
+
 # GarageFlow — Fichiers régressifs supprimés
 
 Règle appliquée : un fichier n'est supprimé QUE si (1) une meilleure version existe,

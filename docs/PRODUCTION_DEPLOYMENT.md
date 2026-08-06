@@ -1,9 +1,13 @@
 # Déploiement en production
 
+> **Runbook** — décrit la procédure. L'**état de préparation** (ce qui est prêt,
+> ce qui reste bloquant) fait foi dans **[PRODUCTION-READINESS.md](./PRODUCTION-READINESS.md)**,
+> seule source de vérité. Ne pas déployer tant que ses bloqueurs (§6) ne sont pas levés.
+
 Deux produits distincts sortent de ce dépôt :
 
 1. **Application Electron desktop (mono-poste)** — SQLite locale, serveur Next
-   limité à 127.0.0.1. C'est le produit principal, approuvé pour la production.
+   limité à 127.0.0.1. C'est le produit principal.
 2. **Serveur / PWA multi-instance** (app.garageflows.fr sur Vercel) —
    PostgreSQL + Upstash Redis OBLIGATOIRES.
 
@@ -72,9 +76,15 @@ vercel deploy --prod
 DATABASE_URL=$DIRECT_URL DIRECT_URL=$DIRECT_URL npm run db:server:deploy
 ```
 
-`prisma migrate deploy` n'applique que les migrations manquantes, dans l'ordre,
-et échoue sans rien casser si l'historique diverge. Aucune modification
-manuelle de la base n'est nécessaire ni tolérée.
+`prisma migrate deploy` n'applique que les migrations manquantes déjà **inscrites
+dans l'historique**. ⚠️ **Important** : si des migrations sont enregistrées mais
+**absentes** de la base (drift), `migrate deploy` les **saute** — le schéma reste
+désaligné (cause du HTTP 500 observé le 2026-08-05). Dans ce cas, appliquer le
+**DDL idempotent** documenté (`prisma db execute`, `ADD COLUMN/CREATE TABLE/INDEX
+IF NOT EXISTS`) **puis** réaligner `_prisma_migrations`. Voir
+`POST_ROTATION_RECOVERY.md §7` et `PRODUCTION-READINESS.md` (bloqueur B2). Une
+convergence DDL manuelle **peut donc être nécessaire** — contrairement à ce que
+laissait entendre l'ancienne rédaction.
 
 ### Rollback
 

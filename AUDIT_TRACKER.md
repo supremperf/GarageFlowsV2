@@ -1,3 +1,8 @@
+<!-- doc-status: historique -->
+> **⚠️ DOCUMENT HISTORIQUE — instantané daté, ne fait plus foi.**
+> Ne pas utiliser comme source de vérité pour un déploiement actuel.
+> Source de vérité : **[docs/PRODUCTION-READINESS.md](docs/PRODUCTION-READINESS.md)**.
+
 # AUDIT_TRACKER — GarageFlow V2
 
 Généré le 2026-08-03. Total: 571 fichiers suivis (git ls-files).

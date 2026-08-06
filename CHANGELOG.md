@@ -1,5 +1,31 @@
 # Changelog
 
+## [Non publié] — 2026-08-06 — Monnaie déterministe · docs · marque
+
+### Monnaie (fin du Float dangereux pour l'argent)
+- **Stockage des totaux en centimes entiers** (additif, non destructif) : colonnes
+  `WorkOrder.totalHtCents/totalTtcCents`, `PurchaseOrder.totalHtCents`,
+  `LoanerReservation.depositAmountCents` — source de vérité en écriture, colonnes
+  Float conservées en **miroir dérivé** (aucune régression lecture/PDF/export/signature).
+- **Ordres de réparation** : calcul des totaux rerouté sur `lib/money.ts` (centimes
+  exacts) — fin de l'arithmétique flottante native dans ce chemin.
+- `lib/money.ts` : ajout `marginCents` / `computeMarginCents` (marge = produit − coût, exacte).
+- Migration additive PostgreSQL `20260806100000_money_cents` (+ backfill/vérif/rollback
+  documentés) ; runner SQLite `158–161` ; convergence reset synchronisée.
+  Voir `docs/MIGRATION-MONEY.md`.
+
+### Documentation
+- **`docs/PRODUCTION-READINESS.md`** : source de vérité UNIQUE de l'état de production
+  (verdict honnête « préparé, non déployé, sous conditions » + checklist de bloqueurs).
+- 12 rapports-instantanés marqués **HISTORIQUE** ; `PRODUCTION_DEPLOYMENT.md` corrigé.
+- Garde-fou CI `scripts/check-docs-consistency.mjs`.
+
+### Marque
+- Harmonisation **« GarageFlows »** partout dans le visible (i18n, pages, dialogues
+  Electron, e-mails, manifestes) ; identifiants techniques/artefacts/sels crypto conservés.
+- `public/site.webmanifest` réparé (nom pluriel + icônes réelles). `config/app.ts` réaligné 1.1.0.
+- Garde-fou CI `scripts/check-branding.mjs`.
+
 ## [1.1.0] — 2026-07-30 — Finalisation sécurité production
 
 ### Sécurité (correctifs réellement implémentés + testés)

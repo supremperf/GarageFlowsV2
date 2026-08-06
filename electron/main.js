@@ -1237,9 +1237,9 @@ async function enforceOnlineGracePeriod() {
     const { dialog: d } = require('electron')
     await d.showMessageBox(mainWindow ?? { webContents: null }, {
       type:    'error',
-      title:   'GarageFlow — Connexion requise',
-      message: 'GarageFlow nécessite une connexion internet.',
-      detail:  `${why}\nVeuillez connecter ce PC à internet pour continuer à utiliser GarageFlow.`,
+      title:   'GarageFlows — Connexion requise',
+      message: 'GarageFlows nécessite une connexion internet.',
+      detail:  `${why}\nVeuillez connecter ce PC à internet pour continuer à utiliser GarageFlows.`,
       buttons: ['Fermer'],
     }).catch(() => {})
     app.quit()
@@ -1249,8 +1249,8 @@ async function enforceOnlineGracePeriod() {
     if (mainWindow && !mainWindow.isDestroyed()) {
       require('electron').dialog.showMessageBox(mainWindow, {
         type:    'warning',
-        title:   'GarageFlow — Mode hors ligne',
-        message: `GarageFlow est hors ligne depuis plus de 48 heures.`,
+        title:   'GarageFlows — Mode hors ligne',
+        message: `GarageFlows est hors ligne depuis plus de 48 heures.`,
         detail:  `Connectez ce PC à internet dans les ${remaining} heure(s) pour éviter le verrouillage du logiciel.`,
         buttons: ['OK'],
       }).catch(() => {})
@@ -1745,7 +1745,7 @@ function createMainWindow() {
     show:            false,
     backgroundColor: '#070d1b',
     icon:            iconExists ? iconPath : undefined,
-    title:           'GarageFlow',
+    title:           'GarageFlows',
     frame:           false,
     titleBarStyle:   'hidden',
     webPreferences: {
@@ -1792,7 +1792,7 @@ function createMainWindow() {
     if (!mainWindow || mainWindow.isDestroyed()) return
     const html = `<!DOCTYPE html><html><body style="margin:0;background:#070d1b;color:#94a3b8;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:12px">
 <div style="font-size:48px">⚠</div>
-<p style="color:#f87171;font-size:16px;font-weight:700">Impossible de charger GarageFlow</p>
+<p style="color:#f87171;font-size:16px;font-weight:700">Impossible de charger GarageFlows</p>
 <p style="font-size:12px">Erreur ${code}: ${desc}</p>
 <p style="font-size:11px;color:#475569">URL: ${url}</p>
 <p style="font-size:11px;color:#475569">Log: ${LOG_PATH}</p>
@@ -2299,7 +2299,7 @@ app.whenReady().then(async () => {
   } catch (err) {
     log('FATAL: secret local indisponible')   // ne journalise jamais la valeur
     dialog.showErrorBox(
-      'Erreur de sécurité GarageFlow',
+      'Erreur de sécurité GarageFlows',
       `Impossible d'initialiser le secret local de façon sûre.\n\n${err.message}\n\n` +
         `L'application ne peut pas démarrer en mode authentifié. Vérifiez les permissions du dossier de données, puis réinstallez si nécessaire.`
     )
@@ -2351,7 +2351,7 @@ app.whenReady().then(async () => {
         if (integrity.detectDebugger()) {
           log('[integrity] débogueur/inspecteur détecté')
           if (mode === 'enforce' && process.env.GF_ANTIDEBUG === '1') {
-            dialog.showErrorBox('GarageFlow', "Un outil de débogage a été détecté. Fermeture par sécurité.")
+            dialog.showErrorBox('GarageFlows', "Un outil de débogage a été détecté. Fermeture par sécurité.")
             app.exit(1)
             return
           }
@@ -2405,7 +2405,7 @@ app.whenReady().then(async () => {
   } catch (err) {
     log('FATAL:', err.message)
     dialog.showErrorBox(
-      'Erreur de démarrage GarageFlow',
+      'Erreur de démarrage GarageFlows',
       `Impossible de démarrer le serveur.\n\n${err.message}\n\nRéinstallez l'application.`
     )
     app.quit()

@@ -141,7 +141,7 @@ export default function LicensePage() {
             <div>
               <h2 className="text-base font-bold text-white">Activation du logiciel</h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Collez votre clé de licence pour accéder à GarageFlow
+                Collez votre clé de licence pour accéder à GarageFlows
               </p>
             </div>
           </div>
@@ -229,7 +229,7 @@ export default function LicensePage() {
                 {status === 'checking' ? (
                   <><Loader2 className="w-4 h-4 animate-spin" />Vérification en cours…</>
                 ) : (
-                  <><ShieldCheck className="w-4 h-4" />Activer GarageFlow<ArrowRight className="w-4 h-4" /></>
+                  <><ShieldCheck className="w-4 h-4" />Activer GarageFlows<ArrowRight className="w-4 h-4" /></>
                 )}
               </button>
             </form>
@@ -239,7 +239,7 @@ export default function LicensePage() {
           <div className="mt-5 pt-4 border-t border-white/[0.06] text-center">
             <p className="text-xs text-slate-600">
               Pas encore de licence ?{' '}
-              <a href="mailto:contact@garageflow.fr"
+              <a href="mailto:contact@garageflows.fr"
                 className="text-blue-500 hover:text-blue-400 font-medium transition-colors">
                 Contactez-nous
               </a>
@@ -248,7 +248,7 @@ export default function LicensePage() {
         </div>
 
         <p className="mt-4 text-center text-[10px] text-slate-800">
-          © {new Date().getFullYear()} GarageFlow · Tous droits réservés
+          © {new Date().getFullYear()} GarageFlows · Tous droits réservés
         </p>
       </div>
     </div>
