@@ -231,9 +231,9 @@ export function UpdatesTab() {
           <div className="flex items-start gap-2 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
             <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <span>
-              Important : téléversez le fichier <strong>« GarageFlow&nbsp;Setup&nbsp;X.Y.Z.exe »</strong> généré
+              Important : téléversez le fichier <strong>« GarageFlows&nbsp;Setup&nbsp;X.Y.Z.exe »</strong> généré
               par le build (dossier <em>dist</em>), et non l&apos;exécutable de l&apos;application
-              (<em>win-unpacked/GarageFlow.exe</em>) qui nécessite ses fichiers annexes et ne peut pas
+              (<em>win-unpacked/GarageFlows.exe</em>) qui nécessite ses fichiers annexes et ne peut pas
               s&apos;installer seul.
             </span>
           </div>
@@ -263,7 +263,7 @@ export function UpdatesTab() {
                     {file.name} <span className="text-slate-500">({(file.size / 1e6).toFixed(1)} Mo)</span>
                   </span>
                 ) : (
-                  <span className="text-sm text-slate-500">Cliquez pour choisir le fichier GarageFlow-Setup.exe…</span>
+                  <span className="text-sm text-slate-500">Cliquez pour choisir le fichier GarageFlows-Setup.exe…</span>
                 )}
               </button>
               <input

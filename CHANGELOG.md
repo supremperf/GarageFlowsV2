@@ -1,5 +1,37 @@
 # Changelog
 
+## [Non publié] — 2026-08-06 (2) — Précision 4 décimales · rename Windows · icônes · garde-fous
+
+### Monnaie — précision & centralisation
+- **Correctif 4 décimales** : `lib/money.ts` arrondit désormais le **montant étendu**
+  par ligne (`lineCents = round(prix_€ × qté)`) et **n'arrondit plus le prix unitaire
+  au centime avant** la multiplication → **12,3456 € × 3 = 37,04 €** (était 37,05).
+  Aucune régression sur les données à 2 décimales (suite de tests inchangée).
+- **Centralisation** des marges/coûts natifs restants via `lineCents` :
+  `analytics/metrics.ts`, `api/finance`, `api/stats`, `api/purchase-orders`.
+- **Garde-fou** `scripts/check-money-fields.mjs` : interdit tout nouveau Float
+  monétaire non classé ; liste nommément les 15 champs monétaires Float encore suivis.
+
+### Marque Windows (visible → GarageFlows, données préservées)
+- `productName`, `author`, `copyright`, `nsis.shortcutName` → **GarageFlows** ;
+  dialogues d'intégrité/installation Electron, titre de fenêtre, log de démarrage,
+  noms d'artefacts (exe/installeur) alignés.
+- **Épinglage userData** sur `%APPDATA%\GarageFlow` (`app.setPath` avant tout accès)
+  → les installations existantes conservent BD/licence/secret malgré le rename.
+- Conservés (documentés) : `appId`, `garageflow.db`, `Software\GarageFlow`,
+  serviceName, User-Agent, `EXPECTED_PRODUCT` (pont de MàJ), sels crypto, env var.
+- **Garde-fou marque durci** : exceptions techniques **précises et listées**
+  (fin de la liste blanche fourre-tout).
+
+### PWA / icônes
+- **maskable-192/512 régénérées aux dimensions exactes** (étaient 238×238 / 636×636).
+- **Garde-fou** `scripts/check-pwa.mjs` : compare dimensions **déclarées vs réelles**
+  (entête PNG), existence des icônes, cohérence name/short_name des manifestes.
+
+### CI
+- Ajout des garde-fous `check:branding` (strict), `check:pwa`, `check:money`,
+  `check:docs` au workflow.
+
 ## [Non publié] — 2026-08-06 — Monnaie déterministe · docs · marque
 
 ### Monnaie (fin du Float dangereux pour l'argent)

@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { multiplyCents, toCents, fromCents } from '@/lib/money'
+import { lineCents, fromCents } from '@/lib/money'
 
 export const GET = withAuth(async (req) => {
   const session = await requireSession()
@@ -30,8 +30,9 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: 'Lignes de commande invalides' }, { status: 400 })
   }
   // Centimes = source de vérité ; totalHT (euros) = miroir dérivé (fromCents).
+  // lineCents : montant étendu arrondi une fois → précision 4 décimales du coût.
   const totalHtCents = lines.reduce(
-    (c, l) => c + multiplyCents(toCents(Number(l.unitCost) || 0), Number(l.qty) || 0),
+    (c, l) => c + lineCents(Number(l.unitCost) || 0, Number(l.qty) || 0),
     0,
   )
   const totalHT = fromCents(totalHtCents)

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { subDays, format, eachDayOfInterval, parseISO } from 'date-fns'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
+import { lineCents, fromCents } from '@/lib/money'
 import { logger } from '@/lib/logger'
 
 // GET /api/stats?period=7  (days, default 7)
@@ -83,9 +84,9 @@ export const GET = withAuth(async (req) => {
     const laborRevenue  = billedHours * hourlyRate
 
     const partsRevenue  = dayJobs.reduce((s, j) =>
-      s + j.jobParts.reduce((ps, jp) => ps + jp.unitPrice * jp.quantity, 0), 0)
+      s + j.jobParts.reduce((ps, jp) => ps + fromCents(lineCents(jp.unitPrice, jp.quantity)), 0), 0)
     const partsCost     = dayJobs.reduce((s, j) =>
-      s + j.jobParts.reduce((ps, jp) => ps + jp.unitCost * jp.quantity, 0), 0)
+      s + j.jobParts.reduce((ps, jp) => ps + fromCents(lineCents(jp.unitCost, jp.quantity)), 0), 0)
 
     // Invoice revenue for this specific day
     const dayInvoiceRevenue = invoiceByDate.get(dateStr) ?? 0
@@ -181,7 +182,7 @@ export const GET = withAuth(async (req) => {
     const key = j.customerName
     const entry = clientCounts.get(key) ?? { name: key, count: 0, revenue: 0 }
     entry.count++
-    entry.revenue += j.jobParts.reduce((s, p) => s + p.unitPrice * p.quantity, 0)
+    entry.revenue += j.jobParts.reduce((s, p) => s + fromCents(lineCents(p.unitPrice, p.quantity)), 0)
     clientCounts.set(key, entry)
   }
   const topClients = Array.from(clientCounts.values())

@@ -1,22 +1,22 @@
 #!/usr/bin/env node
 /**
- * check-branding.mjs — garde-fou de marque (CI).
+ * check-branding.mjs — garde-fou de marque STRICT (CI).
  *
- * La marque VISIBLE par l'utilisateur doit être « GarageFlows » (pluriel).
- * Ce script échoue si une occurrence VISIBLE de l'ancien nom « GarageFlow »
- * (singulier, CamelCase) réapparaît hors de la liste d'exclusions documentée.
+ * La marque VISIBLE de l'application (« GarageFlows », pluriel) doit être uniforme.
+ * Ce script échoue si une occurrence CamelCase « GarageFlow » (non suivie de « s »)
+ * apparaît dans le RUNTIME EXPÉDIÉ (src/, public/, electron/) HORS d'une exception
+ * TECHNIQUE précisément documentée.
  *
- * Il vérifie aussi :
- *   - la cohérence des manifestes (name / short_name = GarageFlows) ;
- *   - l'EXISTENCE réelle de chaque icône référencée par un manifeste.
+ * PRINCIPES (durcis) :
+ *   - aucune exclusion de dossier entier ; aucune expression régulière « fourre-tout » ;
+ *   - chaque exception cible un IDENTIFIANT technique précis (motif étroit) OU un
+ *     couple exact {fichier, sous-chaîne} avec justification ;
+ *   - une occurrence VISIBLE non documentée fait ÉCHOUER la CI ;
+ *   - la liste exacte des exceptions est AFFICHÉE (transparence).
  *
- * Les exclusions sont PRÉCISES (jamais un dossier entier) et JUSTIFIÉES : ce sont
- * des identifiants techniques, des noms d'artefacts (exe/installeur), des sels
- * cryptographiques, ou des libellés qui désignent l'identité d'installation
- * Windows (productName = « GarageFlow », conservé pour ne pas casser les
- * installations/mises à jour existantes). Voir docs/PRODUCTION-READINESS.md.
- *
- * Usage : node scripts/check-branding.mjs        (échoue en cas de violation)
+ * Périmètre = runtime expédié (src, public, electron). Les scripts de build/ops
+ * (scripts/) ne sont pas du runtime visible ; la seule chaîne visible de
+ * l'installateur (installer.nsh : DetailPrint) est traitée à la source.
  */
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
@@ -27,58 +27,53 @@ const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..')
 const SCAN_DIRS = ['src', 'public', 'electron']
 const SCAN_EXT = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.html', '.webmanifest', '.css'])
 
-// ── Jetons TECHNIQUES autorisés (jamais « visibles » comme marque) ───────────
-// Chaque motif est justifié : renommer casserait un identifiant, un artefact,
-// une identité OS/HTTP ou du matériel cryptographique.
-const ALLOWED_TOKENS = [
-  /GarageFlows/,                    // déjà la cible correcte (pluriel)
-  /GarageFlowLogo/,                 // identifiant de composant React
-  /GarageFlowIcon/,                 // identifiant de composant React
-  /GarageFlow\.exe/,                // nom d'exécutable (productName)
-  /GarageFlow[- ]Setup/,            // nom d'installeur (productName)
-  /GarageFlow&nbsp;Setup/,          // idem (HTML)
-  /GarageFlow_Export_/,             // dossier d'export (artefact fichier)
-  /GarageFlow-server/,              // serviceName Electron (identité OS)
-  /GarageFlow\//,                   // User-Agent HTTP
-  /GarageFlow-License-Storage-Salt/,// sel de chiffrement (KDF) — NE PAS changer
-  /GarageFlow-DB-MAC-Salt/,         // sel de MAC base — NE PAS changer
-  /GarageFlow::v2::kdf/,            // sel KDF secure-key — NE PAS changer
-  /GarageFlow-KeygenGUI/,           // User-Agent keygen (compat control-plane)
+// ── Motifs d'IDENTIFIANTS techniques autorisés (ÉTROITS, jamais « visibles ») ──
+// Chacun ne matche qu'un jeton technique précis ; renommer casserait le code,
+// l'OS/HTTP ou du matériel cryptographique. Justification par entrée.
+const IDENTIFIER_PATTERNS = [
+  { re: /GarageFlow(Logo|Icon)\b/, why: 'identifiant de composant React (GarageFlowLogo/Icon)' },
+  { re: /GarageFlow-server\b/, why: 'serviceName Electron (keytar/identité OS)' },
+  { re: /GarageFlow\/[0-9']/, why: "User-Agent HTTP « GarageFlow/<version> »" },
+  { re: /GarageFlow-License-Storage-Salt/, why: 'sel de chiffrement (KDF) — NE PAS changer' },
+  { re: /GarageFlow-DB-MAC-Salt/, why: 'sel de MAC base — NE PAS changer' },
+  { re: /GarageFlow::v2::kdf/, why: 'sel KDF secure-key — NE PAS changer' },
+  { re: /GarageFlow-KeygenGUI/, why: 'User-Agent keygen (compat control-plane)' },
 ]
 
-// ── Exclusions EXPLICITES (libellé qui désigne l'identité d'installation) ────
-// Repérées par une sous-chaîne distinctive → robustes aux décalages de lignes.
+// ── Exceptions EXPLICITES {fichier, sous-chaîne, raison} (couples exacts) ──────
 const EXPLICIT_EXCLUSIONS = [
-  { file: 'electron/main.js', needle: 'Base de données manquante', reason: 'dialogue « réinstaller » : identité Windows productName' },
-  { file: 'electron/main.js', needle: 'désinstallez GarageFlow', reason: 'instruction de désinstallation = entrée Windows productName' },
-  { file: 'electron/main.js', needle: 'installation corrompue', reason: 'dialogue intégrité : identité produit installé' },
-  { file: 'electron/main.js', needle: 'fichiers essentiels de GarageFlow', reason: 'dialogue intégrité : identité produit installé' },
-  { file: 'electron/main.js', needle: 'réinstaller GarageFlow', reason: 'instruction de réinstallation = installeur productName' },
-  { file: 'electron/main.js', needle: "log('GarageFlow v'", reason: 'log interne de démarrage (non visible UI)' },
-  { file: 'electron/update-verify.js', needle: "EXPECTED_PRODUCT = 'GarageFlow'", reason: 'doit correspondre au champ « product » du flux de MàJ' },
+  { file: 'electron/main.js', needle: "app.getPath('appData'), 'GarageFlow'", reason: "épinglage du dossier userData historique — préserve BD/licence/secret des installs existantes" },
+  { file: 'electron/update-verify.js', needle: "EXPECTED_PRODUCT = 'GarageFlow'", reason: 'doit correspondre au champ « product » du flux de MàJ (identité interne, non visible)' },
   { file: 'src/lib/__tests__/update-verify.test.ts', needle: "product: 'GarageFlow'", reason: "reflète l'identité « product » du flux de MàJ (voir EXPECTED_PRODUCT)" },
 ]
 
-/** Retire les commentaires évidents d'une ligne (heuristique de scan de marque). */
+/** Retire les commentaires évidents (heuristique de scan de marque). */
 function stripComments(line) {
   const t = line.trimStart()
   if (t.startsWith('//') || t.startsWith('*') || t.startsWith('/*') || t.startsWith('<!--')) return ''
-  // commentaire de fin de ligne « // … » (naïf, suffisant pour la détection)
-  const idx = line.indexOf('//')
-  if (idx >= 0 && !/https?:$/.test(line.slice(0, idx + 1))) return line.slice(0, idx)
-  return line
+  let out = line
+  // Commentaire JSX {/* ... */} sur une ligne.
+  out = out.replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+  // Commentaire /* ... */ inline.
+  out = out.replace(/\/\*[\s\S]*?\*\//g, '')
+  // Commentaire de fin de ligne « // … » (hors URL http://).
+  const idx = out.indexOf('//')
+  if (idx >= 0 && !/https?:$/.test(out.slice(0, idx + 1))) out = out.slice(0, idx)
+  return out
 }
 
-function isAllowedAt(line, matchIndex) {
-  // Un contexte est autorisé si l'occurrence appartient à un jeton technique.
-  for (const re of ALLOWED_TOKENS) {
-    const g = new RegExp(re.source, 'g')
+function classify(line, matchIndex, relFile, rawLine) {
+  for (const p of IDENTIFIER_PATTERNS) {
+    const g = new RegExp(p.re.source, 'g')
     let m
     while ((m = g.exec(line))) {
-      if (matchIndex >= m.index && matchIndex < m.index + m[0].length) return true
+      if (matchIndex >= m.index && matchIndex < m.index + m[0].length) return p.why
     }
   }
-  return false
+  for (const e of EXPLICIT_EXCLUSIONS) {
+    if (relFile === e.file && rawLine.includes(e.needle)) return e.reason
+  }
+  return null
 }
 
 function walk(dir, out) {
@@ -91,7 +86,6 @@ function walk(dir, out) {
   }
 }
 
-const violations = []
 const files = []
 for (const d of SCAN_DIRS) {
   const abs = join(ROOT, d)
@@ -99,6 +93,8 @@ for (const d of SCAN_DIRS) {
 }
 
 const BRAND = /GarageFlow(?!s)/g
+const violations = []
+const usedExceptions = new Map()
 for (const file of files) {
   const rel = relative(ROOT, file).split('\\').join('/')
   const text = readFileSync(file, 'utf8')
@@ -107,47 +103,45 @@ for (const file of files) {
     let m
     BRAND.lastIndex = 0
     while ((m = BRAND.exec(line))) {
-      if (isAllowedAt(line, m.index)) continue
-      const excluded = EXPLICIT_EXCLUSIONS.some(
-        (e) => rel === e.file && rawLine.includes(e.needle),
-      )
-      if (excluded) continue
-      violations.push({ file: rel, line: i + 1, text: rawLine.trim().slice(0, 120) })
+      const why = classify(line, m.index, rel, rawLine)
+      if (why) {
+        const key = `${rel} — ${why}`
+        usedExceptions.set(key, (usedExceptions.get(key) ?? 0) + 1)
+      } else {
+        violations.push({ file: rel, line: i + 1, text: rawLine.trim().slice(0, 120) })
+      }
     }
   })
 }
 
-// ── Vérification des manifestes ──────────────────────────────────────────────
+// Contrôle de marque des manifestes (name/short_name). Dimensions d'icônes → check-pwa.
 const manifestIssues = []
 for (const mf of ['public/manifest.webmanifest', 'public/site.webmanifest']) {
   const abs = join(ROOT, mf)
   if (!existsSync(abs)) continue
-  let json
-  try { json = JSON.parse(readFileSync(abs, 'utf8')) } catch (e) { manifestIssues.push(`${mf}: JSON invalide (${e.message})`); continue }
-  if (json.name && !String(json.name).includes('GarageFlows')) manifestIssues.push(`${mf}: name="${json.name}" ne contient pas « GarageFlows »`)
-  if (json.short_name && json.short_name !== 'GarageFlows') manifestIssues.push(`${mf}: short_name="${json.short_name}" ≠ « GarageFlows »`)
-  for (const ic of json.icons ?? []) {
-    const iconPath = join(ROOT, 'public', String(ic.src).replace(/^\//, ''))
-    if (!existsSync(iconPath)) manifestIssues.push(`${mf}: icône absente sur le disque → ${ic.src}`)
-  }
+  try {
+    const j = JSON.parse(readFileSync(abs, 'utf8'))
+    if (j.name && !String(j.name).includes('GarageFlows')) manifestIssues.push(`${mf}: name="${j.name}" sans « GarageFlows »`)
+    if (j.short_name && j.short_name !== 'GarageFlows') manifestIssues.push(`${mf}: short_name="${j.short_name}" ≠ « GarageFlows »`)
+  } catch (e) { manifestIssues.push(`${mf}: JSON invalide (${e.message})`) }
 }
 
 // ── Rapport ───────────────────────────────────────────────────────────────
+console.log(`Marque — exceptions techniques ACTIVES (précises, documentées) :`)
+for (const [k, n] of [...usedExceptions.entries()].sort()) console.log(`   • ${k}  (${n})`)
+if (usedExceptions.size === 0) console.log('   (aucune)')
+
 let failed = false
 if (violations.length) {
   failed = true
-  console.error(`\n❌ Marque : ${violations.length} occurrence(s) VISIBLE(s) de « GarageFlow » (singulier) hors exclusions :`)
+  console.error(`\n❌ ${violations.length} occurrence(s) VISIBLE(s) « GarageFlow » hors exception :`)
   for (const v of violations) console.error(`   ${v.file}:${v.line}  ${v.text}`)
-  console.error('\n   → Corrigez en « GarageFlows », ou ajoutez une exclusion JUSTIFIÉE dans scripts/check-branding.mjs.')
+  console.error('\n   → Corrigez en « GarageFlows », ou ajoutez une exception PRÉCISE (fichier+clé+raison).')
 }
 if (manifestIssues.length) {
   failed = true
-  console.error(`\n❌ Manifestes : ${manifestIssues.length} problème(s) :`)
+  console.error(`\n❌ Manifestes :`)
   for (const m of manifestIssues) console.error(`   ${m}`)
 }
-
-if (failed) {
-  console.error('\nÉchec du contrôle de marque.\n')
-  process.exit(1)
-}
-console.log(`✅ Marque cohérente : « GarageFlows » partout dans le visible (${files.length} fichiers scannés). Manifestes et icônes OK.`)
+if (failed) { console.error('\nÉchec du contrôle de marque.\n'); process.exit(1) }
+console.log(`\n✅ Marque cohérente : « GarageFlows » dans tout le visible (${files.length} fichiers). Exceptions techniques uniquement.`)

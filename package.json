@@ -1,9 +1,9 @@
 {
   "name": "garageflow",
   "version": "1.1.0",
-  "productName": "GarageFlow",
+  "productName": "GarageFlows",
   "description": "Logiciel de gestion et planning d'atelier automobile — version desktop",
-  "author": "GarageFlow",
+  "author": "GarageFlows",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -45,7 +45,9 @@
     "test:e2e": "playwright test",
     "check:branding": "node scripts/check-branding.mjs",
     "check:docs": "node scripts/check-docs-consistency.mjs",
-    "check:consistency": "npm run check:branding && npm run check:docs"
+    "check:pwa": "node scripts/check-pwa.mjs",
+    "check:money": "node scripts/check-money-fields.mjs",
+    "check:consistency": "npm run check:branding && npm run check:docs && npm run check:pwa && npm run check:money"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.79.0",
@@ -100,8 +102,8 @@
   },
   "build": {
     "appId": "com.garageflow.app",
-    "productName": "GarageFlow",
-    "copyright": "Copyright © 2026 GarageFlow",
+    "productName": "GarageFlows",
+    "copyright": "Copyright © 2026 GarageFlows",
     "afterPack": "scripts/afterPack.js",
     "asar": true,
     "asarUnpack": [
@@ -162,7 +164,7 @@
       "installerHeaderIcon": "icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "GarageFlow",
+      "shortcutName": "GarageFlows",
       "include": "scripts/installer.nsh",
       "warningsAsErrors": false
     }

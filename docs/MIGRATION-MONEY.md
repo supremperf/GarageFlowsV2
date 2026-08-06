@@ -30,12 +30,23 @@ TOUT calcul financier passe par des **entiers de centimes** :
 flottante native pour l'argent dans ces chemins (l'ancien calcul OR
 `Math.round((worksHT+partsHT)*100)/100` a été remplacé).
 
+**Centralisation étendue** : les calculs de marge/coût de `src/lib/analytics/metrics.ts`,
+`src/app/api/finance/route.ts`, `src/app/api/stats/route.ts` et
+`src/app/api/purchase-orders/route.ts` passent désormais par `lineCents` (arrondi par
+ligne du montant étendu) au lieu de `quantité × prix` en flottant natif. Résultats
+**identiques** sur les données à 2 décimales (non-régression prouvée par la suite de
+tests), et **corrects** pour les prix à 3-4 décimales.
+
+**Garde-fou CI** : `scripts/check-money-fields.mjs` interdit tout **nouveau** champ
+Float monétaire non classé et **liste nommément** les champs monétaires encore en
+Float (miroirs de totaux + prix unitaires stagés) — voir §4/§7.
+
 ## 3. Contrat d'arrondi (centralisé & documenté)
 
 | Règle | Décision |
 |---|---|
-| Précision intermédiaire | **centimes entiers** (aucun flottant intermédiaire monétaire) |
-| Arrondi d'une ligne | `round(quantité × prix_centimes)` — **arrondi PAR LIGNE** |
+| Précision intermédiaire | **centimes entiers** ; le **prix unitaire garde sa précision (≥ 4 décimales)** jusqu'à la multiplication |
+| Arrondi d'une ligne | `lineCents(prix_€, qté) = round(prix_€ × qté)` — arrondi du **MONTANT ÉTENDU**, PAR LIGNE, le prix n'est **PAS** arrondi au centime avant. Ainsi **12,3456 € × 3 = 37,04 €** (et non 37,05). |
 | Arrondi de TVA | `round(HT_centimes × taux / 100)` — sur le **total HT**, une fois |
 | TTC | `HT_centimes + TVA_centimes` (addition exacte) → jamais recalculé depuis un flottant |
 | Remises | pourcentage puis montant fixe, en centimes ; plancher à 0 |

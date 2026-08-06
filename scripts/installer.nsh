@@ -9,7 +9,7 @@
   ReadRegStr $R1 SHCTX "${UNINSTALL_REGISTRY_KEY}" "InstallLocation"
   ${If} $R0 != ""
   ${AndIf} $R1 != ""
-    DetailPrint "Suppression de la version précédente de GarageFlow…"
+    DetailPrint "Suppression de la version précédente de GarageFlows…"
     ; /S = silencieux, _?= rend l'appel synchrone (attend la fin)
     ExecWait '$R0 /S _?=$R1'
   ${EndIf}

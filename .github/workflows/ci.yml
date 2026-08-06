@@ -101,9 +101,17 @@ jobs:
       - name: ESLint
         run: npx next lint
 
-      # Garde-fou marque : « GarageFlows » partout dans le visible + manifestes/icônes.
-      - name: Branding consistency
+      # Garde-fou marque : « GarageFlows » partout dans le visible (exceptions techniques précises).
+      - name: Branding consistency (strict)
         run: node scripts/check-branding.mjs
+
+      # Garde-fou PWA : manifestes cohérents + icônes aux dimensions RÉELLES déclarées.
+      - name: PWA manifests & icon dimensions
+        run: node scripts/check-pwa.mjs
+
+      # Garde-fou monnaie : aucun Float monétaire non classé (régression interdite).
+      - name: Money fields (no unclassified monetary Float)
+        run: node scripts/check-money-fields.mjs
 
       # Garde-fou docs : aucune affirmation de statut contradictoire dans un doc actif.
       - name: Docs consistency

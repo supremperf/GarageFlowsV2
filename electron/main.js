@@ -77,6 +77,19 @@ try { process.stderr.on('error', () => {}) } catch (_) {}
 // Must be set before app is ready — enables Windows taskbar icon + pinning
 app.setAppUserModelId('com.garageflow.app')
 
+// ── Compatibilité des données après passage de productName à « GarageFlows » ──
+// La marque VISIBLE (productName, exe, raccourci, désinstalleur) devient
+// « GarageFlows ». Mais le dossier de données utilisateur est DÉRIVÉ de app name
+// (%APPDATA%/<productName>). On l'ÉPINGLE explicitement sur le nom HISTORIQUE
+// « GarageFlow » pour que les installations existantes conservent leur base
+// (garageflow.db), leur licence et leur secret d'installation — sinon la mise à
+// jour perdrait ces données. appId, serviceName, User-Agent et sels crypto sont
+// eux aussi conservés (identifiants techniques, voir docs/PRODUCTION-READINESS.md).
+// DOIT précéder tout app.getPath('userData').
+try {
+  app.setPath('userData', path.join(app.getPath('appData'), 'GarageFlow'))
+} catch (_) {}
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 // SÉCURITÉ LICENCE : ELECTRON_DEV n'est honoré QUE dans un build non packagé
@@ -896,11 +909,11 @@ function setupDatabase() {
     } else {
       log('FATAL: No database template found in resources — installation may be corrupted')
       dialog.showErrorBox(
-        'GarageFlow — Base de données manquante',
+        'GarageFlows — Base de données manquante',
         'Le fichier de base de données n\'a pas été trouvé dans les ressources de l\'application.\n\n' +
         'resourcesPath: ' + rp + '\n\n' +
         'Consultez le fichier log pour plus de détails :\n' + LOG_PATH + '\n\n' +
-        'Solution : désinstallez GarageFlow puis réinstallez-le depuis le fichier d\'installation fourni.'
+        'Solution : désinstallez GarageFlows puis réinstallez-le depuis le fichier d\'installation fourni.'
       )
       app.quit()
       process.exit(1)
@@ -1405,7 +1418,7 @@ async function runDesktopExport() {
     const desktop = app.getPath('desktop')
     const d       = new Date()
     const stamp   = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-    const dir     = path.join(desktop, `GarageFlow_Export_${stamp}`)
+    const dir     = path.join(desktop, `GarageFlows_Export_${stamp}`)
     fs.mkdirSync(dir, { recursive: true })
 
     // Fetch all data from the internal API
@@ -2079,7 +2092,7 @@ function setupIPC() {
     const emit = (pct) => { try { mainWindow?.webContents.send('app:update-progress', pct) } catch (_) {} }
 
     const fileName = (opts.fileName && String(opts.fileName).replace(/[^0-9A-Za-z._-]/g, '')) ||
-      decodeURIComponent((url.split('/').pop() || 'GarageFlow-Setup.exe').split('?')[0]) || 'GarageFlow-Setup.exe'
+      decodeURIComponent((url.split('/').pop() || 'GarageFlows-Setup.exe').split('?')[0]) || 'GarageFlows-Setup.exe'
     const destPath = path.join(tmpDir, fileName)
     const partPath = destPath + '.part'
 
@@ -2288,7 +2301,7 @@ function setupIPC() {
 
 app.whenReady().then(async () => {
   log('═══════════════════════════════════')
-  log('GarageFlow v' + app.getVersion() + ' starting')
+  log('GarageFlows v' + app.getVersion() + ' starting')
   log('userData:', APP_DATA)
   log('IS_DEV:', IS_DEV)
   log('Platform:', process.platform, process.arch)
@@ -2325,10 +2338,10 @@ app.whenReady().then(async () => {
     if (mode !== 'off') {
       const blockCorrupt = () => {
         dialog.showErrorBox(
-          'GarageFlow — installation corrompue',
-          'Des fichiers essentiels de GarageFlow ont été modifiés, remplacés ou supprimés.\n\n' +
+          'GarageFlows — installation corrompue',
+          'Des fichiers essentiels de GarageFlows ont été modifiés, remplacés ou supprimés.\n\n' +
             "Par sécurité, l'application ne peut pas démarrer.\n\n" +
-            "Veuillez réinstaller GarageFlow depuis l'installateur officiel.",
+            "Veuillez réinstaller GarageFlows depuis l'installateur officiel.",
         )
         app.exit(1)
       }

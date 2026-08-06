@@ -7,6 +7,7 @@ import {
   marginCents,
   balanceCents,
   multiplyCents,
+  lineCents,
 } from '@/lib/money'
 
 /**
@@ -51,12 +52,21 @@ describe('TVA à différents taux, invariant HT+TVA=TTC', () => {
 })
 
 describe('prix unitaire à 4 décimales & quantité fractionnaire', () => {
-  it('prix 4 décimales × quantité : arrondi au centime par ligne, déterministe', () => {
-    // 12,3456 € → 1235 c (arrondi demi-haut) ; × 3 = 3705 c = 37,05 €
+  it('CRITÈRE : 12,3456 € × 3 = 37,04 € (prix NON arrondi prématurément)', () => {
+    // Règle métier : arrondir le MONTANT ÉTENDU (12,3456×3 = 37,0368 → 37,04),
+    // et NON le prix unitaire d'abord (12,35 × 3 = 37,05, incorrect).
     const line = computeTotals([{ quantity: 3, unitPrice: 12.3456 }], 0)
-    expect(toCents(12.3456)).toBe(1235)
-    expect(line.totalHTCents).toBe(multiplyCents(1235, 3))
-    expect(line.totalHT).toBe(37.05)
+    expect(lineCents(12.3456, 3)).toBe(3704)
+    expect(line.totalHTCents).toBe(3704)
+    expect(line.totalHT).toBe(37.04)
+  })
+
+  it('coût unitaire 4 décimales × quantité (marge)', () => {
+    // coût 8,7654 × 2 = 17,5308 → 17,53 € (1753 c)
+    const r = computeMarginCents([{ quantity: 2, unitPrice: 20, unitCost: 8.7654 }])
+    expect(r.costCents).toBe(1753)
+    expect(r.revenueCents).toBe(4000)
+    expect(r.marginCents).toBe(2247)
   })
 
   it('quantité fractionnaire (1,5 L d’huile)', () => {

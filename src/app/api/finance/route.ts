@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { can } from '@/lib/authz'
 import { calcTotalHT, calcTotalTTC } from '@/lib/billing'
+import { lineCents, fromCents } from '@/lib/money'
 import { subMonths, format, startOfMonth, endOfMonth } from 'date-fns'
 
 // GET /api/finance?months=6
@@ -62,7 +63,7 @@ export const GET = withAuth(async (req) => {
     const partsCost   = paidInvoices.reduce((s, inv) =>
       s + inv.lines
         .filter(l => !l.isLabor)
-        .reduce((ls, l) => ls + l.unitCost * l.quantity, 0), 0)
+        .reduce((ls, l) => ls + fromCents(lineCents(l.unitCost, l.quantity)), 0), 0)
 
     const quotesCreated  = allQuotes.filter(q => new Date(q.createdAt) >= start && new Date(q.createdAt) <= end)
     const quotesAccepted = quotesCreated.filter(q => ['accepted', 'converted'].includes(q.status))

@@ -59,6 +59,21 @@ export function multiplyCents(cents: number, quantity: number): number {
   return roundHalfAwayFromZero(cents * quantity)
 }
 
+/**
+ * Montant d'UNE ligne, en centimes : `round(prix_unitaire_€ × quantité)`.
+ *
+ * PRÉCISION 4 DÉCIMALES : le prix unitaire N'EST PAS arrondi au centime avant la
+ * multiplication. Le produit `prix × quantité` (précision étendue) est arrondi au
+ * centime UNE SEULE FOIS, à la fin. Ainsi 12,3456 € × 3 = 37,0368 € → 37,04 €
+ * (et non 12,35 € × 3 = 37,05 €). L'ancien `multiplyCents(toCents(prix), qté)`
+ * arrondissait le prix trop tôt et faussait les prix à 3-4 décimales.
+ * Arrondi demi-éloigné-de-zéro (symétrique) → une ligne d'avoir est le miroir exact.
+ */
+export function lineCents(unitPriceEuros: number, quantity: number): number {
+  if (!Number.isFinite(unitPriceEuros) || !Number.isFinite(quantity)) return 0
+  return toCents(unitPriceEuros * quantity)
+}
+
 export interface MoneyLine {
   quantity: number
   /** Prix unitaire en EUROS (converti en centimes en interne). */
@@ -83,7 +98,9 @@ export function computeTotals(lines: MoneyLine[], taxRatePercent: number): Total
   const rate = Number.isFinite(taxRatePercent) ? taxRatePercent : 0
   let totalHTCents = 0
   for (const l of lines ?? []) {
-    totalHTCents += multiplyCents(toCents(l.unitPrice), l.quantity ?? 0)
+    // Arrondi de la ligne sur le MONTANT ÉTENDU (prix×qté), pas sur le prix seul :
+    // préserve la précision 4 décimales du prix unitaire (voir lineCents).
+    totalHTCents += lineCents(l.unitPrice, l.quantity ?? 0)
   }
   const taxCents = roundHalfAwayFromZero((totalHTCents * rate) / 100)
   const totalTTCCents = totalHTCents + taxCents
@@ -155,8 +172,9 @@ export function computeMarginCents(lines: CostedLine[]): {
   let costCents = 0
   for (const l of lines ?? []) {
     const qty = l.quantity ?? 0
-    revenueCents += multiplyCents(toCents(l.unitPrice), qty)
-    costCents += multiplyCents(toCents(l.unitCost ?? 0), qty)
+    // Montant étendu arrondi une fois (précision 4 décimales préservée).
+    revenueCents += lineCents(l.unitPrice, qty)
+    costCents += lineCents(l.unitCost ?? 0, qty)
   }
   return { revenueCents, costCents, marginCents: revenueCents - costCents }
 }

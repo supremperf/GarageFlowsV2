@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     }
 
     const safeVersion = version.replace(/[^0-9A-Za-z._-]/g, '') || 'latest'
-    const fileName = `GarageFlow-Setup-${safeVersion}.exe`
+    const fileName = `GarageFlows-Setup-${safeVersion}.exe`
     const dest = path.join(updatesDir(), fileName)
 
     // Écriture en flux vers le disque (pas de mise en mémoire du fichier entier).
