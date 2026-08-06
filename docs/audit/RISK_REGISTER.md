@@ -38,7 +38,7 @@
 | AUD-017 | Critique(test) | tests | V2 | Restauration de sauvegarde JAMAIS exécutée par un test | backup/snapshot.test.ts (« no DB ») | PLAUSIBLE | 16/22 |
 | AUD-018 | Critique(test) | tests | site3 | `requireAdminKey` (25 routes admin) sans aucun test | licenses/auth.ts:28 | PLAUSIBLE | 22 |
 | AUD-019 | Critique(test)→**Corrigé** | tests | V2 | Isolation inter-garage non permutée sur la majorité des familles de routes | 22 tests de handler / 141 routes | **CORRIGÉ** lot C (audit statique 141 routes : 0 faille + matrice de permutation 14 familles × tous verbes + matrice de rôles 128 cellules) | 5/22 |
-| AUD-020 | Haute | tests | V2 | Concurrence de numérotation de factures testée sur mock mémoire uniquement | document-numbering.test.ts | PLAUSIBLE | 7/22 |
+| AUD-020 | Haute→**Corrigé** | tests | V2 | Concurrence de numérotation de factures testée sur mock mémoire uniquement | document-numbering.test.ts | **CORRIGÉ** `84b0742` (test PG réel : 50 créations parallèles → 50 numéros distincts contigus, 0 échec) | 7/22 |
 | AUD-021 | Haute | tests | V2 | Concurrence de stock prouvée sur mock mémoire, pas de décrément SQL atomique testé en réel | stock-parts.test.ts | PLAUSIBLE | 12/22 |
 | AUD-022 | Haute | tests | V2 | Portail client : 20 routes, 0 test de handler | portal/__tests__ (fonctions pures) | PLAUSIBLE | 22 |
 | AUD-023 | Haute | tests | V2+site3 | E2E jamais exécuté en CI ; aucun parcours métier complet | ci.yml (pas de playwright) | PLAUSIBLE | 22 |
@@ -139,6 +139,31 @@ fail-closed renverrait « degraded » alors que l'app est saine. Preuve :
   expiration + révocation fine) hors périmètre d'un correctif isolé — à cadrer.
 - **AUD-012** (type `mechanic` rejeté par la vitrine) : question ouverte
   (rejet intentionnel ?) — à confirmer avec le propriétaire puis tester.
+
+## Lot financier — Revérification (priorité #3, 2026-08-06)
+
+Commit `84b0742` (V2). Les corrections d'immutabilité (AUD-001/002/004) ayant
+été faites au lot P0/P7, ce lot revérifie numérotation, concurrence, FEC et
+zéro-Float avec **preuves exécutées** :
+
+- **Numérotation sous concurrence réelle (AUD-020) → CORRIGÉ**. Cluster
+  PostgreSQL 16 local jetable (initdb + pg_ctl sous utilisateur non-root),
+  schéma serveur poussé (`prisma db push`). Nouveau test
+  `document-numbering.postgres.int.test.ts` : 50 `POST /api/invoices` en
+  parallèle via le vrai handler → **50 numéros distincts et contigus (001..050),
+  compteur = 50, 0 échec**. Confirme que le verrou de ligne sur `garage.update`
+  (increment atomique) sérialise les incréments — pas de doublon ni de P2002.
+  Résultat exécuté ici : 1/1 vert. Rejoué en CI via le service postgres:16.
+- **Conformité FEC** : libellé TVA au taux réel (plus figé à 20 %) ; nom de
+  fichier DGFiP `<SIREN>FEC<AAAAMMJJ>.txt`. Test `fec-export.test.ts` (7) :
+  équilibre débit/crédit de chaque écriture, taux 10 %/5,5 %, autorisation.
+- **Zéro Float monétaire re-prouvé** : `check:money`, `check:money-calculations`,
+  `check:money-json` verts (534 fichiers, stockage 100 % entiers exacts).
+
+**Résiduel (revue expert-comptable, assignée dans le plan)** : imputation 706
+(services) vs 707 (ventes de pièces) ; hypothèse de clôture au 31/12 pour un
+exercice décalé ; sous-comptes de TVA distincts par taux. Ces points relèvent
+d'une validation comptable, hors compétence de l'audit technique.
 
 ## Détail des risques critiques et hauts
 

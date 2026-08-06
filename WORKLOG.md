@@ -21,3 +21,5 @@
 | 2026-08-06T19:29Z | C (5) | Matrice de rôles exhaustive (`authz-full-matrix.test.ts`, 128 cellules rôle × permission + deny-by-default + hiérarchie) | 139 tests verts ; `tsc` 0, `lint` 0 |
 | 2026-08-06T19:38Z | D1 (2) | garagesite3 : `npm ci` (deps absentes) ; migration de 6 routes publiques du limiteur mémoire → distribué fail-closed (`enforceDistributedLimit`) ; health = exception documentée | `tsc` 0, `lint` 0, suite 140 verte ; commit `8f880af` |
 | 2026-08-06T19:42Z | D2 (2) | garagesite3 : CORS défaut-refus (`corsHeaders()`), blob-upload rate-limit+audit, jeton SSE à clé séparée ; tests cors + sse-token-key | `tsc` 0, `lint` 0, suite 147 verte ; commit `cbfa5e3` |
+| 2026-08-06T19:50Z | D-fin (7) | Cluster PostgreSQL 16 local jetable (initdb/pg_ctl sous `pguser`) ; test de concurrence de numérotation via vrai handler POST (`document-numbering.postgres.int.test.ts`) | 50 POST parallèles → 50 numéros distincts contigus, compteur=50, 0 échec ; 1/1 vert |
+| 2026-08-06T19:52Z | D-fin (7) | Conformité FEC : libellé TVA au taux réel + nom de fichier DGFiP ; test `fec-export.test.ts` | 7 verts ; gardes money/money-calc/money-json verts ; commit `84b0742` |
