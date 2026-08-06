@@ -35,13 +35,13 @@
 | AUD-014 | Critique(RGPD) | rgpd | V2+site3 | Aucun registre traitements, DPA art. 28, procédure droits/violations | PRIVACY-CRASH-REPORTING.md:37 ; rgpd/page.tsx:131 | PLAUSIBLE | 10 |
 | AUD-015 | Haute | pi | V2+site3 | Aucun THIRD_PARTY_NOTICES / SBOM / inventaire licences OSS | absence vérifiée sur les 2 dépôts | PLAUSIBLE | 11/23 |
 | AUD-016 | Haute | pi | V2+site3 | Aucune provenance du code ni registre de contribution IA | branches `claude/*` ; plan lot E | PLAUSIBLE | 11 |
-| AUD-017 | Critique(test) | tests | V2 | Restauration de sauvegarde JAMAIS exécutée par un test | backup/snapshot.test.ts (« no DB ») | PLAUSIBLE | 16/22 |
+| AUD-017 | Critique(test)→**Corrigé** | tests | V2 | Restauration de sauvegarde JAMAIS exécutée par un test | backup/snapshot.test.ts (« no DB ») | **CORRIGÉ** `e796ab8` (round-trip réel SQLite : backup→corruption→restore exact, scopé garage, confirmation+intégrité prouvées — 6 tests) | 16/22 |
 | AUD-018 | Critique(test) | tests | site3 | `requireAdminKey` (25 routes admin) sans aucun test | licenses/auth.ts:28 | PLAUSIBLE | 22 |
 | AUD-019 | Critique(test)→**Corrigé** | tests | V2 | Isolation inter-garage non permutée sur la majorité des familles de routes | 22 tests de handler / 141 routes | **CORRIGÉ** lot C (audit statique 141 routes : 0 faille + matrice de permutation 14 familles × tous verbes + matrice de rôles 128 cellules) | 5/22 |
 | AUD-020 | Haute→**Corrigé** | tests | V2 | Concurrence de numérotation de factures testée sur mock mémoire uniquement | document-numbering.test.ts | **CORRIGÉ** `84b0742` (test PG réel : 50 créations parallèles → 50 numéros distincts contigus, 0 échec) | 7/22 |
 | AUD-021 | Haute | tests | V2 | Concurrence de stock prouvée sur mock mémoire, pas de décrément SQL atomique testé en réel | stock-parts.test.ts | PLAUSIBLE | 12/22 |
 | AUD-022 | Haute | tests | V2 | Portail client : 20 routes, 0 test de handler | portal/__tests__ (fonctions pures) | PLAUSIBLE | 22 |
-| AUD-023 | Haute | tests | V2+site3 | E2E jamais exécuté en CI ; aucun parcours métier complet | ci.yml (pas de playwright) | PLAUSIBLE | 22 |
+| AUD-023 | Haute→**Partiel** | tests | V2+site3 | E2E jamais exécuté en CI ; aucun parcours métier complet | ci.yml (pas de playwright) | **PARTIEL** `e796ab8` : job CI `e2e` + webServer auto-démarrant ajoutés (tests publics/responsive) ; config vérifiée (48 tests, build OK). RESTE : parcours métier authentifié complet (devis→facture→paiement) avec identifiants semés | 22 |
 | AUD-024 | Moyenne | frontend | V2+site3 | CSP `script-src 'unsafe-inline' 'unsafe-eval'` sans nonce (admin inclus) | next.config.mjs:15 (V2/site3) | PLAUSIBLE | 4/14 |
 | AUD-025 | Moyenne | pwa | V2 | `skipWaiting()` inconditionnel → rechargement forcé, perte de saisie atelier | sw.js:20 ; PwaRegister.tsx:44 | PLAUSIBLE | 14 |
 | AUD-026 | Moyenne | i18n | V2 | RTL/lang jamais restaurés au rechargement ; 27 composants sans i18n | i18n.tsx:53 ; layout.tsx:37 | PLAUSIBLE | 21 |

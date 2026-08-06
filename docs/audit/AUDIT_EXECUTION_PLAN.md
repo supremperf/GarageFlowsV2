@@ -18,7 +18,7 @@
 | D | 7-9 | Finance, e-invoicing, signature | revérification zéro Float, tests de concurrence numérotation, immuabilité factures, connecteur abstrait + validation de formats, qualification honnête des signatures | numérotation/concurrence + immuabilité + FEC (taux, nom fichier) + zéro-Float **faits & prouvés (PG réel)** ; connecteur e-invoicing abstrait + validation formats **à faire** ; qualification honnête signatures **à faire** |
 | E | 10-11 | RGPD, propriété intellectuelle | registres (traitements, sous-traitants, clés), procédures droits/violations, SBOM SPDX + notices tierces, registre IA, dossier PI | à faire |
 | F | 12-15 | BDD, Electron, PWA, contrats API | audit contraintes/concurrence, durcissement Electron/updates, stratégie SW explicite, spécification API + erreurs uniformes | à faire |
-| G | 16-18 | Résilience, observabilité, performance | scénarios de panne, preuve de restauration, runbooks/alertes, mesures + budget de perf | à faire |
+| G | 16-18 | Résilience, observabilité, performance | scénarios de panne, preuve de restauration, runbooks/alertes, mesures + budget de perf | **preuve de restauration faite** (round-trip réel) ; E2E câblée en CI (AUD-023, parcours authentifié à compléter) ; observabilité/perf **à faire** |
 | H | 19-21 | UX, accessibilité, i18n | corrections UI atelier, audit WCAG 2.2 AA outillé + manuel, formats FR | à faire |
 | I | 22-24 | Tests, supply chain, environnements | 30 parcours critiques + négatifs, CI durcie (SBOM/scans), manifeste des variables, scripts Windows documentés | à faire |
 | J | 25 | Documentation | synchronisation totale, ADR, runbooks, contrôle automatique des affirmations | à faire |
