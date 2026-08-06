@@ -61,9 +61,10 @@ export const GET = withAuth(async (req) => {
 
     // 706 — revenue (HT)
     rows.push(row(['VE','Ventes',veNum,ecritureDate,'706000','Prestations de services','','',inv.number,pieceDate,lib,'0,00',fmt(ht),'','','','','']))
-    // 44571 — TVA collectée
+    // 44571 — TVA collectée (libellé au taux RÉEL de la facture, pas figé à 20 %)
     if (tva > 0) {
-      rows.push(row(['VE','Ventes',veNum,ecritureDate,'445710','TVA collectée 20%','','',inv.number,pieceDate,lib,'0,00',fmt(tva),'','','','','']))
+      const rateLabel = `TVA collectée ${String(inv.taxRate).replace('.', ',')} %`
+      rows.push(row(['VE','Ventes',veNum,ecritureDate,'445710',rateLabel,'','',inv.number,pieceDate,lib,'0,00',fmt(tva),'','','','','']))
     }
     // 411 — client receivable
     rows.push(row(['VE','Ventes',veNum,ecritureDate,'411000','Clients',auxNum,auxLib,inv.number,pieceDate,lib,fmt(ttc),'0,00','','','','','']))
@@ -77,7 +78,13 @@ export const GET = withAuth(async (req) => {
     }
   }
 
-  const filename = `FEC_${garage?.siret ?? 'GARAGE'}_${year}.txt`
+  // Nom de fichier selon la convention DGFiP : <SIREN>FEC<AAAAMMJJ>.txt, où la
+  // date est la clôture de l'exercice. Le SIREN = 9 premiers chiffres du SIRET ;
+  // clôture supposée au 31/12 (année civile — cas standard TPE ; un exercice
+  // décalé doit être paramétré, cf. revue expert-comptable).
+  const siret = (garage?.siret ?? '').replace(/\D/g, '')
+  const siren = siret.length >= 9 ? siret.slice(0, 9) : (siret || 'SIREN')
+  const filename = `${siren}FEC${year}1231.txt`
   const body = rows.join('\r\n')  // FEC uses CRLF
 
   return new NextResponse(body, {
