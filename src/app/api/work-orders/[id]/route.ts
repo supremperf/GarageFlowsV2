@@ -5,6 +5,7 @@ import { withAuth, requireSession } from '@/lib/api-helpers'
 import { assertRelations } from '@/lib/tenant'
 import { parseWorksJson, parsePartsJson, serializeWorksJsonV2, serializePartsJsonV2, workOrderTotalHtCents, workLinesToEuros, partLinesToEuros } from '@/lib/money-json'
 import { workOrderToEuros } from '@/lib/money-db'
+import { checkStatusTransition, isDeletable } from '@/lib/document-status'
 
 
 /**
@@ -116,7 +117,14 @@ export const PATCH = withAuth(async (req, { params }) => {
     updateData.totalTtcCents = normalized.totalTtcCents
   }
 
-  if (body.status !== undefined) updateData.status = body.status
+  if (body.status !== undefined) {
+    // Machine à états : un OR ne revient jamais à « draft » (sinon le DELETE
+    // « brouillon uniquement » serait contournable et permettrait d'effacer un
+    // ordre signé — document scellé — en deux appels).
+    const transitionError = checkStatusTransition('workOrder', existing.status, body.status)
+    if (transitionError) return NextResponse.json({ error: transitionError }, { status: 409 })
+    updateData.status = body.status
+  }
   if (body.clientName !== undefined) updateData.clientName = body.clientName
   if (body.clientPhone !== undefined) updateData.clientPhone = body.clientPhone
   if (body.clientEmail !== undefined) updateData.clientEmail = body.clientEmail
@@ -167,8 +175,16 @@ export const DELETE = withAuth(async (_req, { params }) => {
     where: { id: params.id, garageId: session.user.garageId },
   })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  if (existing.status !== 'draft') {
-    return NextResponse.json({ error: 'Seuls les ordres en brouillon peuvent être supprimés' }, { status: 400 })
+  // Un OR signé est SCELLÉ (preuve juridique) : jamais supprimable, quel que
+  // soit son statut. Sinon, seuls les brouillons le sont.
+  const signed = Boolean(existing.signedAt || existing.signatureData)
+  if (!isDeletable('workOrder', existing.status, { signed })) {
+    return NextResponse.json(
+      { error: signed
+          ? 'Un ordre de réparation signé ne peut pas être supprimé (document scellé).'
+          : 'Seuls les ordres en brouillon peuvent être supprimés' },
+      { status: 400 },
+    )
   }
   await prisma.workOrder.deleteMany({ where: { id: params.id, garageId: session.user.garageId } })
   return NextResponse.json({ success: true })

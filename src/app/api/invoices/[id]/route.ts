@@ -6,6 +6,7 @@ import { UpdateInvoiceSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
 import { withTotals } from '@/lib/billing'
 import { lineToScaled, linesToEuros } from '@/lib/money-db'
+import { checkStatusTransition, areAmountsLocked, isDeletable } from '@/lib/document-status'
 
 export const GET = withAuth(async (_req, { params }) => {
   const session = await requireSession()
@@ -33,11 +34,19 @@ export const PATCH = withAuth(async (req, { params }) => {
   // A legally-issued invoice is immutable for amounts: block line/taxRate edits
   // once it leaves 'draft' (French sequential-invoice rules → use a credit note).
   const financialEdit = body.lines !== undefined || body.taxRate !== undefined
-  if (financialEdit && existing.status !== 'draft') {
+  if (financialEdit && areAmountsLocked('invoice', existing.status)) {
     return NextResponse.json(
       { error: 'Une facture émise ne peut plus être modifiée. Créez un avoir.' },
       { status: 409 },
     )
+  }
+
+  // Machine à états : une facture émise ne peut JAMAIS revenir à « draft »
+  // (sinon le verrou d'immutabilité ci-dessus serait contournable en deux
+  // appels : PATCH {status:'draft'} puis ré-édition/suppression).
+  if (body.status !== undefined) {
+    const transitionError = checkStatusTransition('invoice', existing.status, body.status)
+    if (transitionError) return NextResponse.json({ error: transitionError }, { status: 409 })
   }
 
   // Replace lines + update the invoice atomically so a partial failure can never
@@ -85,7 +94,7 @@ export const DELETE = withAuth(async (req, { params }) => {
   // is cancelled via a credit note, never erased.
   const existing = await prisma.invoice.findFirst({ where: { id: params.id, garageId: session.user.garageId } })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  if (existing.status !== 'draft') {
+  if (!isDeletable('invoice', existing.status)) {
     return NextResponse.json(
       { error: 'Une facture émise ne peut pas être supprimée. Créez un avoir.' },
       { status: 409 },

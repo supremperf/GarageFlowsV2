@@ -1893,7 +1893,13 @@ function createMainWindow() {
   })
 
   // Empêche toute navigation hors de l'app locale (pas de file://, pas d'externe).
+  // localOrigin = origine EXACTE attendue (http://127.0.0.1:PORT), dérivée de
+  // l'URL réellement chargée. Sans cette définition, isLocalAppUrl(url,
+  // localOrigin) levait une ReferenceError AVANT event.preventDefault() : le
+  // handler échouait « ouvert » (navigation non bloquée) — le garde de
+  // confinement était totalement inopérant.
   const { isLocalAppUrl } = require('./nav-guard')
+  const localOrigin = new URL(APP_URL).origin
   mainWindow.webContents.on('will-navigate', (event, url) => {
     if (!isLocalAppUrl(url, localOrigin)) {
       event.preventDefault()
