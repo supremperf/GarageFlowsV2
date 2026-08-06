@@ -9,11 +9,12 @@
 Cette fonctionnalité est une **plateforme réglementée** (PDP/PPF) : elle exige des
 adaptateurs API **réels et certifiés**, des flux OAuth réels, la génération
 Factur‑X/UBL/CII, des webhooks signés, et une validation sur Windows du script de
-reset. Elle est livrée **par phases**. Ce commit livre la **Phase 1 — Fondation**,
-sûre, additive et testée. Les phases suivantes nécessitent les **spécifications
-API réelles** des plateformes agréées et un **poste Windows** pour prouver le
-reset. **Rien n'est simulé** : aucune plateforme n'est présentée comme
-« connectable » sans adaptateur réel, aucun envoi n'est feint.
+reset. Elle est livrée **par phases**. Sont livrées la **Phase 1 — Fondation** et
+la **Phase 2 — Modèles de données + UI en lecture seule** : sûres, additives et
+testées. Les phases suivantes (connexions réelles, adaptateurs certifiés, envoi)
+nécessitent les **spécifications API réelles** des plateformes agréées et un
+**poste Windows** pour prouver le reset. **Rien n'est simulé** : aucune plateforme
+n'est présentée comme « connectable » sans adaptateur réel, aucun envoi n'est feint.
 
 ## Phase 1 — Fondation (livrée, testée)
 
@@ -41,14 +42,40 @@ Manifeste (`scripts/garageflow-env-manifest.json`) : **10 variables** ajoutées
 + `autoManage:false` + `rotationRisk:critical` (précédent `GF_SMTP_CIPHER_KEY`).
 `.env.example` documenté. Tests : `src/lib/einvoicing/__tests__/`.
 
+## Phase 2 — Modèles de données + UI lecture seule (livrée, testée)
+
+**Modèles Prisma** (additifs, non destructifs, **côté serveur PostgreSQL** — jamais
+en SQLite/desktop) dans `prisma/server/schema.prisma` :
+
+- `GarageEInvoiceConnection` — connexion d'un garage à une plateforme (par
+  `environment`), champ `credentials` **chiffré** (`credentials-cipher`),
+  `credentialsKeyVersion`, `@@unique([garageId, providerId, environment])`.
+- `EInvoiceTransmission` — un envoi (état, format, `documentSha256`), clé
+  **`idempotencyKey` `@unique`** (anti double‑envoi dès la Phase 2).
+- `EInvoiceEvent` — chronologie d'une transmission (types/statuts).
+- `EInvoiceAuditEvent` — journal d'audit par garage (acteur, action, cible).
+
+Références **scalaires** (pas de `@relation`) : aucune modification des modèles
+existants (`Garage`, `Invoice`, `User`) → migration strictement additive.
+`prisma validate` + `generate` **OK**. Migration additive
+`prisma/server/migrations/20260806000000_einvoicing_phase2/`. La convergence de
+schéma du reset (`Invoke-ServerSchemaConverge`) crée ces tables en
+**`CREATE TABLE IF NOT EXISTS`** (idempotent, sans FK, sans suppression) — voir
+`EINVOICING_RESET_COMPATIBILITY.md` §5.
+
+**Route lecture seule** `GET /api/einvoicing/status` (`requireSession`,
+OWNER/MANAGER, mécaniciens **exclus**) : renvoie les **drapeaux** de configuration
++ le **catalogue public** (aucun secret, aucune donnée d'un autre garage,
+`connection: null`).
+
+**Rubrique UI** « Paramètres › Facturation électronique » (`EInvoicingTab`,
+OWNER/MANAGER) : bandeau d'état honnête (activé/désactivé, sandbox), **recherche**
+insensible casse/accents (préfixe d'abord), badges de statut (`coming_soon` par
+défaut), **aucune** action de connexion/envoi (bloc « Connexion indisponible pour
+l'instant »), placeholder « Aucune connexion configurée ». Rien n'est feint.
+
 ## Phases suivantes (planifiées, non livrées)
 
-2. **Modèles de données** (additifs, non destructifs, **côté serveur PostgreSQL**
-   pour les secrets ; jamais d'identifiants déchiffrables en SQLite/desktop) :
-   `EInvoiceProvider`, `GarageEInvoiceConnection`, `EInvoiceTransmission`,
-   `EInvoiceEvent`, `EInvoiceWebhookReceipt`, `IncomingEInvoice`,
-   `EInvoicePaymentReport`, `EInvoiceAuditEvent`. Migration additive, `prisma
-   validate` + `generate`, **jamais** déclenchée par le reset.
 3. **Connexions par garage** — routes serveur (`requireSession`, filtre `garageId`,
    rôles OWNER/ADMIN/COMPTABLE ; mécanicien **bloqué**), identifiants chiffrés via
    `credentials-cipher`, méthode d'auth adaptée à chaque plateforme (OAuth2 réel,

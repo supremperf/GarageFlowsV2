@@ -1045,3 +1045,82 @@ model ReportSnapshot {
   @@index([garageId])
   @@index([garageId, createdAt])
 }
+
+// ─── Facturation électronique (Phase 2 — modèles, serveur uniquement) ─────────
+// Références scalaires + index (pas de @relation) pour rester additif et découplé
+// des modèles Garage/Invoice/User. Les secrets (credentials) sont TOUJOURS chiffrés
+// (enveloppe gfeic1… via src/lib/einvoicing/credentials-cipher.ts, clé serveur) et
+// ne sont jamais stockés côté SQLite desktop. Voir docs/EINVOICING_ARCHITECTURE.md.
+
+model GarageEInvoiceConnection {
+  id                    String    @id @default(cuid())
+  garageId              String
+  providerId            String
+  environment           String    @default("sandbox") // sandbox | production
+  status                String    @default("disconnected") // disconnected | pending | connected | error | expired | revoked
+  authMethod            String? // oauth2 | api_key | client_credentials | certificate | username_password | manual_activation
+  externalAccountId     String?
+  legalEntityId         String?
+  siren                 String?
+  capabilities          String? // JSON non sensible
+  credentials           String? // enveloppe CHIFFRÉE (gfeic1…) — jamais en clair
+  credentialsKeyVersion Int       @default(1)
+  lastTestedAt          DateTime?
+  lastTestOk            Boolean   @default(false)
+  expiresAt             DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([garageId, providerId, environment])
+  @@index([garageId])
+  @@index([status])
+}
+
+model EInvoiceTransmission {
+  id             String   @id @default(cuid())
+  garageId       String
+  invoiceId      String
+  providerId     String
+  connectionId   String?
+  environment    String   @default("sandbox")
+  status         String   @default("draft") // draft | submission_pending | submitted | received_by_platform | rejected | delivered | accepted | refused | paid | error | unknown
+  documentFormat String? // facturx | ubl | cii
+  documentSha256 String?
+  externalId     String?
+  idempotencyKey String   @unique
+  errorMessage   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([garageId, createdAt])
+  @@index([invoiceId])
+  @@index([status])
+}
+
+model EInvoiceEvent {
+  id             String   @id @default(cuid())
+  transmissionId String
+  garageId       String
+  type           String // submitted | status_update | webhook | error
+  status         String?
+  message        String?
+  payload        String? // JSON non sensible
+  createdAt      DateTime @default(now())
+
+  @@index([transmissionId, createdAt])
+  @@index([garageId, createdAt])
+}
+
+model EInvoiceAuditEvent {
+  id          String   @id @default(cuid())
+  garageId    String
+  actorUserId String?
+  action      String // connect | disconnect | test | submit | resubmit | rotate_key | change_platform
+  targetType  String?
+  targetId    String?
+  metadata    String? // JSON non sensible (jamais de secret)
+  createdAt   DateTime @default(now())
+
+  @@index([garageId, createdAt])
+  @@index([actorUserId, createdAt])
+}

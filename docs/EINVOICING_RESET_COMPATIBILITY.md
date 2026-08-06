@@ -77,12 +77,32 @@ sa synchronisation Vercel. Comme les variables de facturation sont `autoManage:f
 elles **ne participent pas** aux mutations Vercel du reset — donc aucun risque de
 `.env` partiel ni d'échec Vercel les concernant.
 
-## 5. Données métier jamais supprimées
+## 5. Modèles Phase 2 : convergence **additive**, données métier jamais supprimées
 
-Le reset **ne touche pas** aux données de facturation électronique (connexions,
-transmissions, statuts, factures, journaux). Cette phase n'introduit d'ailleurs
-encore **aucun modèle Prisma** (voir `EINVOICING_ARCHITECTURE.md`, phases
-suivantes) : aucune migration n'est déclenchée par le reset.
+La Phase 2 introduit **4 modèles serveur** (`GarageEInvoiceConnection`,
+`EInvoiceTransmission`, `EInvoiceEvent`, `EInvoiceAuditEvent`, PostgreSQL
+uniquement). Pour que la rotation amène le schéma Neon à jour, la fonction de
+convergence de schéma du reset (`Invoke-ServerSchemaConverge` dans
+`reset-garageflow.ps1`) crée ces tables via **`CREATE TABLE IF NOT EXISTS`** +
+`CREATE INDEX IF NOT EXISTS` — **strictement additif et idempotent** :
+
+- **`IF NOT EXISTS`** partout → si les tables existent déjà (migration Prisma
+  déjà appliquée), la convergence **ne fait rien** ; si elles manquent, elle les
+  crée. Rejouable sans effet de bord.
+- **Aucune** clause `DROP`, `TRUNCATE`, `ALTER … DROP` : le reset **ne supprime
+  jamais** une donnée de facturation (connexions, transmissions, statuts,
+  journaux) ni aucune donnée métier.
+- **Aucune clé étrangère** ajoutée pour ces tables (références scalaires côté
+  Prisma) : elles ne participent pas au bloc `DO $garageflow$` des contraintes et
+  ne peuvent pas violer une FK sur des données existantes.
+- La contrainte d'**idempotence** (`EInvoiceTransmission.idempotencyKey UNIQUE`)
+  est créée dès cette phase — l'anti double‑envoi est protégé au niveau base.
+
+Le reset **ne déclenche pas** `prisma migrate` ; il applique ce DDL idempotent en
+même temps que les autres tables mécanicien (même mécanisme éprouvé). La source de
+vérité du schéma reste la migration Prisma additive
+`prisma/server/migrations/20260806000000_einvoicing_phase2/` ; la convergence du
+reset n'est qu'un **filet de sécurité** pour un déploiement Neon en retard.
 
 ## 6. Vérification manuelle (Windows requis)
 
