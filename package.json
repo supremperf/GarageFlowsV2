@@ -1,6 +1,7 @@
 {
   "name": "garageflow",
   "version": "1.1.0",
+  "license": "UNLICENSED",
   "productName": "GarageFlows",
   "description": "Logiciel de gestion et planning d'atelier automobile — version desktop",
   "author": "GarageFlows",
