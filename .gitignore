@@ -72,3 +72,4 @@ GarageFlow-configuration/
 API générées/
 *.pfx
 *.p12
+test-results/

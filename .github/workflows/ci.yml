@@ -180,3 +180,37 @@ jobs:
       - name: Dependency audit (full, informational)
         run: npm audit || true
         continue-on-error: true
+
+  e2e:
+    name: E2E (Playwright — responsive, auto-démarrage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies (reproducible)
+        run: npm ci
+      - name: Install Playwright Chromium (+ deps)
+        run: npx playwright install --with-deps chromium
+      - name: Prepare local SQLite database
+        run: cp prisma/garageflow-template.db prisma/dev.db
+      # `npx playwright test` démarre l'app en mode dev via le webServer de
+      # playwright.config.ts (mode production interdit SQLite — fail-closed).
+      # Sans E2E_EMAIL/E2E_PASSWORD, seuls les tests PUBLICS (page de connexion,
+      # responsive) s'exécutent ; les parcours authentifiés sont ignorés (skip).
+      - name: Run E2E (public responsive suite)
+        run: npx playwright test
+        env:
+          DATABASE_URL: file:./prisma/dev.db
+          NEXTAUTH_SECRET: ci-e2e-secret-not-for-production-0123456789
+          NEXTAUTH_URL: http://localhost:3000
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
