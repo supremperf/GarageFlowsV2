@@ -23,8 +23,8 @@
 | AUD-002 | Haute→**Corrigé** | finance/légal | V2 | OR signé supprimable via rétrogradation de statut | work-orders/[id]/route.ts:92,119,170 | **CORRIGÉ** `a5044a0` | 9 |
 | AUD-003 | Haute→**Corrigé** | electron/sécurité | V2 | Garde de navigation inopérante : `localOrigin` indéfini → échec ouvert | main.js:1898,1907 | **CORRIGÉ** `a5044a0` | 13 |
 | AUD-004 | Moyenne→**Corrigé** | finance | V2 | Devis accepté modifiable + lignes remplacées hors transaction | quotes/[id]/route.ts:36-52 | **CORRIGÉ** `a5044a0` | 7 |
-| AUD-005 | Haute | secrets | V2+site3 | Historique git NON purgé : blobs de secrets toujours résolvables | SECRETS_ROTATION.md (V2) ; .env.local ×4 (site3) | PLAUSIBLE | 4/23 |
-| AUD-006 | Haute | secrets | V2+site3 | Rotations obligatoires déclarées NON faites (cases décochées) | SECRETS_ROTATION.md:120-122 (V2) ; :33-41 (site3) | PLAUSIBLE | 4 |
+| AUD-005 | Haute | secrets | V2+site3 | Historique git NON purgé : blobs de secrets toujours résolvables | SECRETS_ROTATION.md (V2) ; .env.local ×4 (site3) | CONFIRMÉ — purge = action propriétaire (réécriture d'historique, NON faite unilatéralement ; runbook §4 + rollback). Gitleaks durci scanne désormais les docs (non-régression) | 4/23 |
+| AUD-006 | Haute | secrets | V2+site3 | Rotations obligatoires déclarées NON faites (cases décochées) | SECRETS_ROTATION.md:120-122 (V2) ; :33-41 (site3) | CONFIRMÉ — **mécanisme de preuve livré** (`npm run verify:rotation`, `8d81488`) : exit 0 en prod = preuve cryptographique de rotation. La rotation infra (Vercel/Neon) reste non exécutable ici | 4 |
 | AUD-007 | Haute | licence | V2+site3 | Licences GF-XXXX (HMAC déprécié) forgeables, réémission non tracée ; décision ECDSA en suspens | POST_ROTATION_RECOVERY.md:18 ; SECRETS_ROTATION.md:40 (site3) | PLAUSIBLE | 6 |
 | AUD-008 | Haute | supply-chain | V2 | Installeur Windows NSIS non signé (aucun Authenticode) | package.json:158-169 ; SECURITY-HARDENING.md:233 | PLAUSIBLE | 13/23 |
 | AUD-009 | Haute→**Corrigé** | authz | site3 | 7 routes publiques sur limiteur mémoire (inopérant serverless) | crash/contact/newsletter/notifications/route.ts | **CORRIGÉ** lot D1 `8f880af` (6 routes → limiteur distribué fail-closed ; health = exception documentée) | 4 |
@@ -50,7 +50,7 @@
 | AUD-029 | Moyenne | ci | V2 | `check-critical-files.js` fonctionnel mais câblé nulle part | check-critical-files.js:7 | PLAUSIBLE | 23 |
 | AUD-030 | Moyenne | ci | V2 | Pipeline de durcissement desktop (Fuses/intégrité) jamais exécuté en CI | ci.yml (pas de dist/afterPack) | PLAUSIBLE | 23 |
 | AUD-031 | Moyenne | supply-chain | V2 | Gitleaks binaire téléchargé sans vérification de checksum ; actions sur tags mobiles | ci.yml:32,21,72 | PLAUSIBLE | 23 |
-| AUD-032 | Moyenne | secrets | V2+site3 | Allowlist Gitleaks trop large (tous les .md exemptés) ; V2 ne scanne pas l'historique | .gitleaks.toml:34 (les 2) | PLAUSIBLE | 23 |
+| AUD-032 | Moyenne→**Corrigé** | secrets | V2+site3 | Allowlist Gitleaks trop large (tous les .md exemptés) ; V2 ne scanne pas l'historique | .gitleaks.toml:34 (les 2) | **CORRIGÉ** `8d81488`/`51543e0` (exemption `.*\.md` retirée dans les 2 dépôts + allowlist ciblée ; découvert : scan était rouge sur fixtures test → corrigé ; 0 fuite vérifié gitleaks 8.24.3). Scan d'historique planifié = reste recommandé | 23 |
 | AUD-033 | Moyenne | session | V2 | Session staff NextAuth JWT sans invalidation serveur (rôle figé ≤ 30 j) | authOptions (stratégie JWT) | PLAUSIBLE | 4 |
 | AUD-034 | Moyenne | bdd/perf | V2 | Index FK manquants (QuoteLine.quoteId, InvoiceLine.invoiceId, JobPhoto.jobId…) | schema.prisma | PLAUSIBLE | 12/18 |
 | AUD-035 | Moyenne | crypto | V2 | Recalcul `recordMac` incomplet dans revoke-by-key/PATCH admin (brique la clé) | mechanic-licenses routes | PLAUSIBLE | 6 |
@@ -164,6 +164,34 @@ zéro-Float avec **preuves exécutées** :
 (services) vs 707 (ventes de pièces) ; hypothèse de clôture au 31/12 pour un
 exercice décalé ; sous-comptes de TVA distincts par taux. Ces points relèvent
 d'une validation comptable, hors compétence de l'audit technique.
+
+## Lot secrets — Preuve de rotation & durcissement du scan (priorité #4, 2026-08-06)
+
+Commits `8d81488` (V2), `51543e0` (garagesite3). Principe appliqué : « aucun
+secret exposé n'est sûr sans preuve ». Aucune action destructive (la purge
+d'historique reste au propriétaire, avec rollback documenté §4).
+
+- **Mécanisme de preuve de rotation (AUD-005/006)** : `scripts/verify-rotation
+  .mjs` + manifeste `compromised-secrets.json` comparent l'empreinte SHA-256 du
+  secret ACTUEL aux empreintes des valeurs compromises. Exit 1 si un secret est
+  encore la valeur exposée ; `--require-all` → exit 2 si un secret manque.
+  Jamais de valeur affichée. Les 3 codes de sortie sont démontrés ; la mécanique
+  est prouvée par `verify-rotation.test.ts` (5). L'opérateur lance
+  `npm run verify:rotation` en production pour produire l'artefact de preuve.
+- **Gitleaks durci (AUD-032)** : suppression de l'exemption globale `.*\.md`
+  (55 docs V2 + README/14 docs site3) au profit de regexes ciblées. **Découverte
+  au passage** : 3 fichiers de test portant des clés-fixtures n'étaient pas
+  allowlistés → gitleaks sortait en échec (le scan de secrets était donc
+  effectivement rouge, indépendamment de l'exemption .md). Corrigé et vérifié
+  0 fuite avec gitleaks 8.24.3 sur `git archive HEAD` des deux dépôts.
+
+**Résiduels (non exécutables ici, assignés)** :
+- Rotation effective des secrets en production (Vercel/Neon) — opérateur ; la
+  preuve se produit ensuite via `verify:rotation`.
+- Purge de l'historique git (`git filter-repo`) — propriétaire du dépôt, après
+  rotation, avec sauvegarde miroir (runbook §4). Un fork/cache GitHub conserve
+  les valeurs indépendamment de la purge → la rotation est le vrai correctif.
+- Scan d'historique planifié (hors chemin critique PR) — recommandé pour V2.
 
 ## Détail des risques critiques et hauts
 
