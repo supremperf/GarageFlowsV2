@@ -27,10 +27,10 @@
 | AUD-006 | Haute | secrets | V2+site3 | Rotations obligatoires déclarées NON faites (cases décochées) | SECRETS_ROTATION.md:120-122 (V2) ; :33-41 (site3) | PLAUSIBLE | 4 |
 | AUD-007 | Haute | licence | V2+site3 | Licences GF-XXXX (HMAC déprécié) forgeables, réémission non tracée ; décision ECDSA en suspens | POST_ROTATION_RECOVERY.md:18 ; SECRETS_ROTATION.md:40 (site3) | PLAUSIBLE | 6 |
 | AUD-008 | Haute | supply-chain | V2 | Installeur Windows NSIS non signé (aucun Authenticode) | package.json:158-169 ; SECURITY-HARDENING.md:233 | PLAUSIBLE | 13/23 |
-| AUD-009 | Haute | authz | site3 | 7 routes publiques sur limiteur mémoire (inopérant serverless) | crash/contact/newsletter/notifications/route.ts | PLAUSIBLE | 4 |
-| AUD-010 | Haute | authz | site3 | Clé admin unique statique, sans identité/expiration, en sessionStorage | admin/_lib/client.ts:13 ; licenses/auth.ts:29 | PLAUSIBLE | 4/6 |
-| AUD-011 | Haute | authz | site3 | Notifications lisibles/acquittables par simple `licenseId` (pas de preuve d'appareil) | notifications/route.ts:22 ; ack/route.ts:26 | PLAUSIBLE | 4 |
-| AUD-012 | Haute | licence | site3 | Vérificateur vitrine ignore le type `mechanic` : licence mécanicien rejetée | licenses/verify.ts:12,68,127 | PLAUSIBLE | 6 |
+| AUD-009 | Haute→**Corrigé** | authz | site3 | 7 routes publiques sur limiteur mémoire (inopérant serverless) | crash/contact/newsletter/notifications/route.ts | **CORRIGÉ** lot D1 `8f880af` (6 routes → limiteur distribué fail-closed ; health = exception documentée) | 4 |
+| AUD-010 | Haute | authz | site3 | Clé admin unique statique, sans identité/expiration, en sessionStorage | admin/_lib/client.ts:13 ; licenses/auth.ts:29 | PLAUSIBLE — refonte (identités + expiration) hors périmètre d'un correctif isolé, à cadrer | 4/6 |
+| AUD-011 | Haute | authz | site3 | Notifications lisibles/acquittables par simple `licenseId` (pas de preuve d'appareil) | notifications/route.ts:22 ; ack/route.ts:26 | PLAUSIBLE — enforcement casserait les clients déployés (electron/main.js:734 n'envoie que licenseId) ; **déploiement coordonné 2 phases requis** ; impact réel faible (diffusions, aucune donnée métier) | 4 |
+| AUD-012 | Haute | licence | site3 | Vérificateur vitrine ignore le type `mechanic` : licence mécanicien rejetée | licenses/verify.ts:12,68,127 | PLAUSIBLE — question ouverte : rejet intentionnel (licences mécanicien confinées à l'app) ? à confirmer puis tester explicitement | 6 |
 | AUD-013 | Critique(PI) | pi | V2+site3 | Aucun fichier LICENSE ni champ `license`, alors que « Tous droits réservés » | package.json (les 2) ; README.md:201 (site3) | PLAUSIBLE | 11 |
 | AUD-014 | Critique(RGPD) | rgpd | V2+site3 | Aucun registre traitements, DPA art. 28, procédure droits/violations | PRIVACY-CRASH-REPORTING.md:37 ; rgpd/page.tsx:131 | PLAUSIBLE | 10 |
 | AUD-015 | Haute | pi | V2+site3 | Aucun THIRD_PARTY_NOTICES / SBOM / inventaire licences OSS | absence vérifiée sur les 2 dépôts | PLAUSIBLE | 11/23 |
@@ -55,8 +55,8 @@
 | AUD-034 | Moyenne | bdd/perf | V2 | Index FK manquants (QuoteLine.quoteId, InvoiceLine.invoiceId, JobPhoto.jobId…) | schema.prisma | PLAUSIBLE | 12/18 |
 | AUD-035 | Moyenne | crypto | V2 | Recalcul `recordMac` incomplet dans revoke-by-key/PATCH admin (brique la clé) | mechanic-licenses routes | PLAUSIBLE | 6 |
 | AUD-036 | Moyenne | licence | V2 | Divergence HWID keygen Python ↔ Electron malgré commentaire « cohérence CRITIQUE » | keygen_core.py ↔ electron | PLAUSIBLE | 6 |
-| AUD-037 | Moyenne | authz | site3 | CORS `/api/v1/*` par défaut `*` (doc annonce l'inverse) ; blob-upload hors guardAdmin | api/http.ts:9 ; blob-upload/route.ts | PLAUSIBLE | 15 |
-| AUD-038 | Moyenne | secrets | site3 | `LICENSE_ADMIN_API_KEY` réutilisée comme clé HMAC des jetons SSE (rotation impossible) | sse-token.ts:15 | PLAUSIBLE | 4 |
+| AUD-037 | Moyenne→**Corrigé** | authz | site3 | CORS `/api/v1/*` par défaut `*` (doc annonce l'inverse) ; blob-upload hors guardAdmin | api/http.ts:9 ; blob-upload/route.ts | **CORRIGÉ** lot D2 `cbfa5e3` (CORS défaut-refus + blob-upload rate-limit distribué + audit) | 15 |
+| AUD-038 | Moyenne→**Corrigé** | secrets | site3 | `LICENSE_ADMIN_API_KEY` réutilisée comme clé HMAC des jetons SSE (rotation impossible) | sse-token.ts:15 | **CORRIGÉ** lot D2 `cbfa5e3` (secret dédié GF_SSE_SIGNING_SECRET ou dérivation à séparation de domaine) | 4 |
 | AUD-039 | Moyenne | scripts | V2 | `restore.js` interactif inutilisable (rl.close avant 2e question) ; protect-resources sans dry-run | restore.js:142 ; protect-resources.js:38 | PLAUSIBLE | 24 |
 | AUD-040 | Moyenne | docs | V2 | `docs/history/` référencé ×3 mais absent ; livrables cités absents | PRODUCTION-READINESS.md:8,134,165 | EN COURS (lot A) | 25 |
 | AUD-041 | Moyenne | docs/marque | V2+site3 | « GarageFlow » sans « s » dans docs/ (V2, hors scanner) et partout dans la vitrine visible | SECURITY-HARDENING.md:1 ; site.ts:9 | PLAUSIBLE | 19/25 |
@@ -97,6 +97,48 @@ incohérent). Aligné sur le motif `findFirst → 404` de toutes les autres rout
 (noté par l'audit, hors périmètre isolation) → à traiter au lot financier (D3).
 Les espaces mécanicien et portail sont audités SÛRS mais leurs handlers restent
 peu couverts par des tests d'intégration dédiés (AUD-022) → lot tests.
+
+## Lot D — Durcissement authz du control-plane (garagesite3, 2026-08-06)
+
+Deux commits sur `garagesite3` (branche `claude/garageflow-final-unified-merge-ub0l67`) :
+
+**D1 `8f880af` — limiteur de débit fail-closed distribué (AUD-009)**. Six
+routes abuse-sensibles (crash, contact, newsletter, notifications,
+notifications/ack, admin/stream SSE) migrées du limiteur mémoire — inopérant
+sur serverless multi-instances — vers le limiteur distribué Upstash via un
+garde centralisé `enforceDistributedLimit` : 503 SERVICE_UNAVAILABLE si le
+limiteur est indisponible en production (fail-closed), 429 au dépassement.
+**Exception délibérée et documentée** : `health` conserve le limiteur mémoire —
+une sonde de vivacité doit rester observable indépendamment de Redis ; la rendre
+fail-closed renverrait « degraded » alors que l'app est saine. Preuve :
+`rate-guard.test.ts` (503 fail-closed prod, 429 corps métier, pass-through).
+
+**D2 `cbfa5e3` — CORS, blob-upload, jeton SSE (AUD-037, AUD-038)**.
+- CORS défaut-refus : `corsHeaders()` calculé à la requête, aucun ACAO sans
+  `GARAGEFLOW_API_CORS_ORIGIN` (l'ancien `*` contredisait la doc). Preuve :
+  `cors.test.ts`.
+- blob-upload : limiteur distribué (30/min/IP) + audit des tentatives ; clé
+  invalide → 401 tracé (la clé transite par clientPayload, contrainte
+  @vercel/blob → ne peut passer par guardAdmin).
+- jeton SSE : clé de signature séparée de `LICENSE_ADMIN_API_KEY` (secret dédié
+  ou dérivation à séparation de domaine). Preuve : `sse-token-key.test.ts` — un
+  jeton forgé à la clé admin brute est désormais **rejeté**.
+
+**Résiduels non corrigés (décisions honnêtes)** :
+- **AUD-011** (notifications sans preuve d'appareil) : NON corrigé
+  unilatéralement — l'enforcement casserait tous les clients déployés
+  (`electron/main.js:734` n'envoie que `licenseId`). Nécessite un déploiement
+  coordonné en 2 phases (client envoie le deviceToken → serveur l'exige). Impact
+  réel faible (notifications de diffusion, aucune donnée métier). Procédure de
+  retour arrière préservée en ne modifiant pas le contrat.
+- **AUD-047** (update/latest, changelog, downloads sans rate limit) : différé.
+  Les rendre fail-closed casserait la vérification de mise à jour de TOUS les
+  clients pendant une panne Redis (tradeoff de disponibilité défavorable pour un
+  risque « basse »). À traiter avec un limiteur soft dédié.
+- **AUD-010** (clé admin unique statique) : refonte (identités par opérateur +
+  expiration + révocation fine) hors périmètre d'un correctif isolé — à cadrer.
+- **AUD-012** (type `mechanic` rejeté par la vitrine) : question ouverte
+  (rejet intentionnel ?) — à confirmer avec le propriétaire puis tester.
 
 ## Détail des risques critiques et hauts
 
