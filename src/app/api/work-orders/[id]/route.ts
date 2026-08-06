@@ -3,47 +3,59 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { assertRelations } from '@/lib/tenant'
-import { computeTotals as computeMoneyTotals, type MoneyLine } from '@/lib/money'
+import { parseWorksJson, parsePartsJson, serializeWorksJsonV2, serializePartsJsonV2, workOrderTotalHtCents, workLinesToEuros, partLinesToEuros } from '@/lib/money-json'
 import { workOrderToEuros } from '@/lib/money-db'
 
-interface WorkLine {
-  description: string
-  durationMin: number
-  unitPrice: number
-  laborOpId?: string
-}
-
-interface PartLine {
-  name: string
-  reference?: string
-  qty: number
-  unitPrice: number
-}
 
 /**
- * Totaux exacts (centimes entiers via lib/money.ts) ; renvoie aussi les centimes
- * (source de vérité stockée). Returns null when worksJson/partsJson are invalid.
+ * Normalise l'entrée client (tableaux euros v1 OU objet v2 OU chaîne JSON) en
+ * lignes EXACTES via lib/money-json (validation STRICTE — NaN/Infinity/formes
+ * inattendues rejetées), calcule les totaux en centimes et produit les chaînes
+ * V2 persistées (AUCUN flottant monétaire stocké). Renvoie null si invalide.
  */
-function computeTotals(
-  worksJson: string,
-  partsJson: string,
+function normalizeWorkOrderJson(
+  worksInput: unknown,
+  partsInput: unknown,
   taxRate: number,
-): { totalHtCents: number; totalTtcCents: number } | null {
-  let works: WorkLine[]
-  let parts: PartLine[]
+): {
+  worksJson: string
+  partsJson: string
+  totalHtCents: number
+  totalTtcCents: number
+} | null {
   try {
-    works = JSON.parse(worksJson)
-    parts = JSON.parse(partsJson)
+    const worksRaw = typeof worksInput === 'string' ? worksInput : JSON.stringify(worksInput ?? [])
+    const partsRaw = typeof partsInput === 'string' ? partsInput : JSON.stringify(partsInput ?? [])
+    const works = parseWorksJson(worksRaw).lines
+    const parts = parsePartsJson(partsRaw).lines
+    const totalHtCents = workOrderTotalHtCents(works, parts)
+    const rate = Number(taxRate) || 0
+    const totalTtcCents = totalHtCents + Math.round((totalHtCents * rate) / 100)
+    return {
+      worksJson: serializeWorksJsonV2(works),
+      partsJson: serializePartsJsonV2(parts),
+      totalHtCents,
+      totalTtcCents,
+    }
   } catch {
     return null
   }
-  if (!Array.isArray(works) || !Array.isArray(parts)) return null
-  const lines: MoneyLine[] = [
-    ...works.map((w) => ({ quantity: 1, unitPrice: Number(w.unitPrice) || 0 })),
-    ...parts.map((p) => ({ quantity: Number(p.qty) || 0, unitPrice: Number(p.unitPrice) || 0 })),
-  ]
-  const t = computeMoneyTotals(lines, Number(taxRate) || 0)
-  return { totalHtCents: t.totalHTCents, totalTtcCents: t.totalTTCCents }
+}
+
+
+/** Vue API d'un OR : euros dérivés + lignes euros parsées (v1 signés / v2). */
+function workOrderView(wo: Parameters<typeof workOrderToEuros>[0] & { worksJson: string; partsJson: string }) {
+  const base = workOrderToEuros(wo)
+  try {
+    return {
+      ...base,
+      works: workLinesToEuros(parseWorksJson(wo.worksJson).lines),
+      parts: partLinesToEuros(parsePartsJson(wo.partsJson).lines),
+    }
+  } catch {
+    // Ligne au JSON illisible : on n'écrase rien, on signale (jamais de crash de liste).
+    return { ...base, works: [], parts: [], jsonError: true }
+  }
 }
 
 // GET /api/work-orders/[id]
@@ -57,7 +69,7 @@ export const GET = withAuth(async (_req, { params }) => {
     },
   })
   if (!wo) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(wo ? workOrderToEuros(wo) : wo)
+  return NextResponse.json(wo ? workOrderView(wo) : wo)
 })
 
 // PATCH /api/work-orders/[id]
@@ -70,23 +82,39 @@ export const PATCH = withAuth(async (req, { params }) => {
   })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  // Resolve current JSON strings for recompute
-  const worksJson = body.worksJson !== undefined
-    ? (typeof body.worksJson === 'string' ? body.worksJson : JSON.stringify(body.worksJson))
-    : existing.worksJson
-  const partsJson = body.partsJson !== undefined
-    ? (typeof body.partsJson === 'string' ? body.partsJson : JSON.stringify(body.partsJson))
-    : existing.partsJson
-  const taxRate = body.taxRate !== undefined ? body.taxRate : existing.taxRate
-
-  const totals = computeTotals(worksJson, partsJson, taxRate)
-  if (!totals) {
-    return NextResponse.json({ error: 'worksJson/partsJson invalides' }, { status: 400 })
+  // ── DOCUMENT SIGNÉ = SCELLÉ ────────────────────────────────────────────────
+  // Le JSON d'un OR signé est canonicalisé VERBATIM dans le document signé
+  // (lib/signature/document.ts) : le ré-écrire — même à contenu équivalent —
+  // invaliderait la signature. Lignes et taux sont donc VERROUILLÉS ; seuls les
+  // champs non scellés (statut, notes, contact…) restent modifiables, et le
+  // JSON stocké n'est JAMAIS ré-sérialisé.
+  const isSigned = Boolean(existing.signedAt || existing.signatureData)
+  if (isSigned && (body.worksJson !== undefined || body.partsJson !== undefined || body.taxRate !== undefined)) {
+    return NextResponse.json(
+      { error: 'Ordre signé : lignes et taux de TVA sont verrouillés (document scellé)' },
+      { status: 400 },
+    )
   }
-  const { totalHtCents, totalTtcCents } = totals
 
-  // Centimes entiers = UNIQUE source de vérité (colonnes Float supprimées).
-  const updateData: Record<string, unknown> = { worksJson, partsJson, taxRate, totalHtCents, totalTtcCents }
+  const updateData: Record<string, unknown> = {}
+  if (!isSigned) {
+    // Entrées : nouvelles valeurs OU JSON stocké ; validation stricte +
+    // re-sérialisation V2 systématique (les écritures sont TOUJOURS v2).
+    const worksInput = body.worksJson !== undefined ? body.worksJson : existing.worksJson
+    const partsInput = body.partsJson !== undefined ? body.partsJson : existing.partsJson
+    const taxRate = body.taxRate !== undefined ? body.taxRate : existing.taxRate
+
+    const normalized = normalizeWorkOrderJson(worksInput, partsInput, taxRate)
+    if (!normalized) {
+      return NextResponse.json({ error: 'worksJson/partsJson invalides' }, { status: 400 })
+    }
+    // Centimes entiers = UNIQUE source de vérité (colonnes Float supprimées).
+    updateData.worksJson = normalized.worksJson
+    updateData.partsJson = normalized.partsJson
+    updateData.taxRate = taxRate
+    updateData.totalHtCents = normalized.totalHtCents
+    updateData.totalTtcCents = normalized.totalTtcCents
+  }
 
   if (body.status !== undefined) updateData.status = body.status
   if (body.clientName !== undefined) updateData.clientName = body.clientName
@@ -129,7 +157,7 @@ export const PATCH = withAuth(async (req, { params }) => {
       job: { select: { id: true, customerName: true, vehicleModel: true, licensePlate: true } },
     },
   })
-  return NextResponse.json(wo ? workOrderToEuros(wo) : wo)
+  return NextResponse.json(wo ? workOrderView(wo) : wo)
 })
 
 // DELETE /api/work-orders/[id]

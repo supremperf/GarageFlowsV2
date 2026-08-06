@@ -152,6 +152,12 @@ try {
       env: { ...process.env, DATABASE_URL: CORRECT_DB_URL },
     })
     console.log('✅  Base de données créée via prisma db push.')
+    // Baseline du registre de migrations (base neuve au schéma final).
+    try {
+      execFileSync(process.execPath, ['--experimental-strip-types', path.join(root, 'scripts', 'baseline-template.mjs'), devDb], { stdio: 'inherit' })
+    } catch (err) {
+      console.error('⚠️   Baseline du registre impossible :', err.message)
+    }
   }
 } catch (err) {
   console.error('⚠️  Impossible de créer la base de données :', err.message)

@@ -14,9 +14,9 @@
 | Produit | **GarageFlows** (desktop Electron + PWA/serveur) |
 | Version applicative | **1.1.0** (`package.json`) — `src/config/app.ts` réaligné sur 1.1.0 |
 | Branche | `claude/garageflow-final-unified-merge-ub0l67` |
-| Commit de base | `d650beb` (+ présent lot : monnaie / docs / marque) |
+| Commit de base | `5fd3dfa` (+ présent lot : sécurisation migrations / JSON v2 / fail-closed) |
 | Date de dernière validation | **2026-08-06** |
-| Environnement de validation | CI/Linux (Node), **sans** Windows/PowerShell, **sans** PostgreSQL/Neon réel, **sans** navigateur e2e stable |
+| Environnement de validation | CI/Linux (Node 22), **PostgreSQL 16 local réel** (cluster jetable), **sans** Windows/PowerShell, **sans** Neon réel, **sans** Redis, **sans** navigateur e2e stable |
 
 ## 2. Verdict global
 
@@ -40,16 +40,23 @@ Statuts employés : **VALIDÉ** · **ÉCHEC** · **NON EXÉCUTÉ** · **ACTION M
 |---|---|---|---|
 | Types | `npm run type-check` (`tsc --noEmit`) | **VALIDÉ** | 0 erreur |
 | Lint | `npm run lint` (`next lint`) | **VALIDÉ** | 0 erreur/avertissement |
-| Tests unitaires/intégration | `npm test` (`vitest run`) | **VALIDÉ** | 1017 passés · 26 ignorés · 102 fichiers |
-| Tests monétaires dédiés | `npm run test:money` / `test:migration` | **VALIDÉ** | 51 + 8 tests (4 décimales, backfill, idempotence) |
+| Tests unitaires/intégration | `npm test` (`vitest run`) | **VALIDÉ** | 1 040 passés · 26 ignorés · 104 fichiers ; avec `TEST_POSTGRES_URL` (PG 16 local) : **1 059 passés · 7 ignorés** (les 7 restants exigent Redis) |
+| Tests monétaires dédiés | `test:money` / `test:money-json` / `test:migration` | **VALIDÉ** | 4 décimales, JSON v1→v2, backfill, idempotence, **échecs simulés avec rollback**, sauvegarde pré-migration |
 | Build | `npm run build` (`prisma generate ×2 + next build`) | **VALIDÉ** | *Compiled successfully* · 16/16 pages |
-| Schéma desktop | `npm run db:desktop:validate` | **VALIDÉ** | SQLite valide · template régénéré au schéma final |
-| Schéma serveur | `npm run db:server:validate` | **VALIDÉ** | PostgreSQL valide (URL factices en CI) |
-| Version SemVer | `node scripts/check-version.js` | **VALIDÉ** | 1.1.0 cohérent (app.ts réaligné) |
-| Marque (strict, repo entier) | `npm run check:branding` | **VALIDÉ** | 591 fichiers (src+scripts+keygen+cmd/ps1+racine) |
-| PWA (manifestes + dimensions d'icônes) | `npm run check:pwa` | **VALIDÉ** | maskable 192/512 corrigées (étaient 238/636) |
+| Schéma desktop | `npm run db:desktop:validate` | **VALIDÉ** | SQLite valide · template au schéma final **baseliné** (179/179) |
+| Schéma serveur | `npm run db:server:validate` | **VALIDÉ** | PostgreSQL valide |
+| Migrations PostgreSQL sur base **VIDE** | `node scripts/validate-server-db.js` | **VALIDÉ** | **exécution réelle** (PG 16.13 local) : 12 migrations `migrate deploy`, statut propre, migration JSON v2 (0 doc), smoke CRUD |
+| Migrations PostgreSQL sur base **PEUPLÉE** | psql (séquence legacy → migrations → contrôles) | **VALIDÉ** | **exécution réelle** : données Float legacy insérées, 17 colonnes converties exactement (65,5→655000 ; 12,3456→123456 ; NULL↔NULL), **test négatif** : valeur corrompue → `RAISE EXCEPTION` nommant la colonne, rollback total prouvé, puis DROP réussi (0 colonne Float restante) |
+| Migration JSON v1→v2 PostgreSQL | `npm run db:server:migrate-json` | **VALIDÉ** | **exécution réelle** : WorkOrder v1 migré (12,3456×3 → `lineTotalCents` 3704), ordre **signé GELÉ verbatim**, total divergent → échec SANS écriture, ré-exécution idempotente |
+| Version SemVer | `node scripts/check-version.js` | **VALIDÉ** | 1.1.0 cohérent |
+| Marque (strict, repo entier) | `npm run check:branding` | **VALIDÉ** | 601 fichiers (src+scripts+keygen+cmd/ps1+racine) |
+| PWA (manifestes + dimensions d'icônes) | `npm run check:pwa` | **VALIDÉ** | maskable 192/512 exactes |
 | Monnaie — stockage | `npm run check:money` | **VALIDÉ** | **0 champ monétaire Float** (règle : zéro, bloquante) |
 | Monnaie — calculs | `npm run check:money-calculations` | **VALIDÉ** | 0 calcul financier direct hors couche centrale |
+| Monnaie — JSON persistants | `npm run check:money-json` | **VALIDÉ** | écritures via sérialiseurs v2 uniquement (3 exceptions justifiées, garde anti-exception-morte) |
+| Sûreté des migrations | `npm run check:migration-safety` | **VALIDÉ** | runner atomique fail-closed, DROP⇒verifySql, ordre Electron sauvegarde→serveur→migration→fenêtre |
+| Modèle SQLite (réel) | `npm run check:sqlite-template` | **VALIDÉ** | `integrity_check` ok, 0 violation FK, baseline 179/179, checksums conformes, schéma final |
+| Migrations PostgreSQL (statique) | `npm run check:pg-migrations` | **VALIDÉ** | bijection 17/17 DROP⇔vérification, bloc de contrôle avant tout DROP |
 | Cohérence docs | `node scripts/check-docs-consistency.mjs` | **VALIDÉ** | aucune affirmation contradictoire active |
 
 <!-- BLOC-VALIDATION-FIN -->
@@ -59,11 +66,13 @@ Statuts employés : **VALIDÉ** · **ÉCHEC** · **NON EXÉCUTÉ** · **ACTION M
 | Contrôle | Statut | Comment reproduire |
 |---|---|---|
 | E2E Playwright (`npm run test:e2e`) | **NON EXÉCUTÉ** | poste avec navigateur ; `npx playwright test` |
-| Migration Prisma sur base **avec données** | **NON EXÉCUTÉ** | Neon de staging ; §7 |
+| Migration sur les données **de production réelles** (Neon) | **NON EXÉCUTÉ** | staging Neon (dump prod restauré) ; la séquence complète a été validée sur PG 16 local avec données legacy synthétiques (§3) — pas sur le dump réel |
 | Build Electron / Windows, Fuses, Authenticode | **NON EXÉCUTÉ** | poste Windows ; `npm run dist` |
+| Démarrage Electron réel (sauvegarde pré-migration + gate fail-closed) | **NON EXÉCUTÉ** (logique testée unitairement + ordre contrôlé par `check:migration-safety`) | poste Windows : premier lancement post-MàJ sur base ancienne |
 | `RESET-GARAGEFLOW.cmd` (PowerShell) | **NON EXÉCUTÉ** | poste Windows ; voir `EINVOICING_RESET_COMPATIBILITY.md §6` |
 | Gitleaks / scan de secrets | **NON EXÉCUTÉ** | CI dédiée |
-| Concurrence PostgreSQL réelle, preuve de restauration | **NON EXÉCUTÉ** | staging Neon + Upstash |
+| Rate limiting multi-instance (Redis) | **NON EXÉCUTÉ** (7 tests ignorés) | `TEST_REDIS_URL` vers un Redis de test |
+| Preuve de restauration end-to-end | **NON EXÉCUTÉ** | staging Neon + Upstash |
 
 > ⚠️ Les scripts `test:unit`, `test:integration`, `test:security`,
 > `test:isolation`, `build:electron`, `build:pwa` **n'existent pas** dans
@@ -89,7 +98,7 @@ prête » — voir §6.
 | B5b | **Rename Windows `productName`→GarageFlows** : vérifier sur Win10/11 la mise à jour **en place** d'une install existante « GarageFlow » (appId inchangé), la **conservation des données** via l'épinglage userData sur `%APPDATA%\GarageFlow`, l'exe/raccourci/désinstalleur « GarageFlows », et le **pont de MàJ** (flux `product` conservé = « GarageFlow » interne) | **ACTION MANUELLE REQUISE** | `docs/PRODUCTION-READINESS.md` §Marque, `electron/main.js` (setPath userData) |
 | B6 | Validations externes : FEC/TVA (expert-comptable), RGPD/juridique, connecteurs fournisseurs, e-invoicing Phases 3-6, tests de charge PostgreSQL + preuve de restauration end-to-end | **ACTION MANUELLE REQUISE** | `docs/EINVOICING_ARCHITECTURE.md`, `docs/HARDENING_REPORT.md` |
 | B7 | `GF_INTEGRITY_MODE=enforce` uniquement **après** validation du build Windows signé | **ACTION MANUELLE REQUISE** | `docs/CONFIGURATION.md` |
-| B8 | **Migration monétaire sur données réelles** : sauvegarde → staging (dump prod) → `db:server:deploy` (3 migrations, vérification bloquante intégrée) → contrôles → prod. Desktop : migration auto au démarrage (sauvegarde quotidienne préalable) | **ACTION MANUELLE REQUISE** | `docs/MIGRATION-MONEY.md §6` |
+| B8 | **Migration monétaire sur données réelles** : sauvegarde → staging (dump prod) → `db:server:deploy` (migrations à vérification par colonne) → `db:server:migrate-json` (JSON v1→v2, `--dry-run` d'abord) → contrôles → prod. La séquence complète (y compris échecs/rollback) est **prouvée sur PG 16 local avec données legacy synthétiques** — il reste à l'exécuter sur le dump réel. Desktop : sauvegarde pré-migration vérifiée puis migration fail-closed au démarrage (automatique) | **ACTION MANUELLE REQUISE** | `docs/MIGRATION-MONEY.md §6, §8, §9` |
 
 ## 7. Risques acceptés (non bloquants)
 

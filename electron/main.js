@@ -1395,27 +1395,46 @@ function toCsv(rows, headers) {
   return lines.join('\r\n')
 }
 
+/**
+ * Exécute les migrations SQLite via l'API interne et CONTRÔLE le résultat
+ * complet : statut HTTP, corps JSON, champ `ok`. Renvoie l'objet résultat.
+ * REJETTE (avec code structuré) si : erreur réseau, statut ≠ 200, JSON
+ * illisible, ou ok !== true — un HTTP 500 n'est JAMAIS traité comme une
+ * migration terminée. L'appelant applique le fail-closed (pas de fenêtre).
+ */
 async function runInternalMigration() {
   const body = JSON.stringify({})
-  return new Promise((resolve, reject) => {
+  const { statusCode, raw } = await new Promise((resolve, reject) => {
     const req = http.request(
       { hostname: '127.0.0.1', port: PORT, path: '/api/internal/migrate', method: 'POST' },
       res => {
-        let raw = ''
-        res.on('data', d => (raw += d))
-        res.on('end', () => {
-          log('DB migration result:', raw.slice(0, 120))
-          resolve(raw)
-        })
+        let acc = ''
+        res.on('data', d => (acc += d))
+        res.on('end', () => resolve({ statusCode: res.statusCode ?? 0, raw: acc }))
       }
     )
-    req.on('error', reject)
+    req.on('error', err => reject(new Error(`MIGRATION_HTTP_ERROR: ${err.message}`)))
     req.setHeader('Content-Type', 'application/json')
     req.setHeader('Content-Length', Buffer.byteLength(body))
     req.setHeader('x-internal-key', INTERNAL_EXPORT_KEY)
     req.write(body)
     req.end()
   })
+
+  let result
+  try {
+    result = JSON.parse(raw)
+  } catch {
+    throw new Error(`MIGRATION_BAD_RESPONSE: statut ${statusCode}, corps illisible`)
+  }
+  log('DB migration result:', JSON.stringify({ status: statusCode, ok: result.ok, applied: result.applied?.length ?? 0, failed: result.failedMigration ?? null }))
+  if (statusCode !== 200 || result.ok !== true) {
+    const code = result.errorCode ?? `HTTP_${statusCode}`
+    const stage = result.stage ? ` (étape ${result.stage})` : ''
+    const failed = result.failedMigration ? ` [${result.failedMigration}]` : ''
+    throw new Error(`MIGRATION_FAILED:${code}${stage}${failed}`)
+  }
+  return result
 }
 
 async function runDesktopExport() {
@@ -2403,6 +2422,28 @@ app.whenReady().then(async () => {
   createSplash()
   setupDatabase()
 
+  // ── SAUVEGARDE PRÉ-MIGRATION (AVANT le serveur, AVANT toute migration) ─────
+  // La base n'est ouverte par aucun processus ici → copie (db + -wal + -shm)
+  // COHÉRENTE, puis VÉRIFIÉE (en-tête SQLite, taille). Une sauvegarde invalide
+  // BLOQUE le démarrage : aucune migration ne s'exécutera sans copie sûre.
+  const { createPreMigrationBackup } = require('./pre-migration-backup')
+  const PRE_MIGRATION_DIR = path.join(BAK_DIR, 'pre-migration')
+  const preBackup = createPreMigrationBackup(DB_PATH, PRE_MIGRATION_DIR)
+  if (!preBackup.ok) {
+    log('[FATAL] sauvegarde pré-migration invalide:', preBackup.error)
+    dialog.showErrorBox(
+      'GarageFlows — Sauvegarde impossible',
+      'La sauvegarde de sécurité de votre base de données n\'a pas pu être créée ou vérifiée.\n\n' +
+        'Par précaution, GarageFlows ne démarre pas (aucune migration ne sera tentée sans sauvegarde valide).\n' +
+        'Vérifiez l\'espace disque et les permissions, puis relancez l\'application.\n\n' +
+        'Code technique : PRE_MIGRATION_BACKUP_FAILED'
+    )
+    app.exit(1)
+    return
+  }
+  if (preBackup.warning) log('[backup] avertissement:', preBackup.warning)
+  if (!preBackup.skipped) log('Sauvegarde pré-migration OK:', preBackup.path)
+
   // ── License check ──────────────────────────────────────────────────────────
   if (!IS_DEV) {
     let payload = checkStoredLicense()
@@ -2442,9 +2483,37 @@ app.whenReady().then(async () => {
     return
   }
 
-  // ── Run additive DB schema migrations via internal API ──────────────────
-  // Awaited so the schema is up to date before the user can interact with the app
-  await runInternalMigration().catch(err => log('Migration error (non-fatal):', err.message))
+  // ── Migrations SQLite via l'API interne — FAIL-CLOSED ─────────────────────
+  // Le résultat COMPLET est contrôlé (statut HTTP, JSON, ok). En cas d'échec :
+  // AUCUNE fenêtre principale, message utilisateur avec référence d'erreur et
+  // accès au dossier de sauvegarde, sortie avec code non nul. Une erreur de
+  // migration destructive n'est JAMAIS « non fatale ».
+  try {
+    await runInternalMigration()
+  } catch (err) {
+    log('[FATAL] migration échouée:', err.message)
+    const backupInfo = preBackup.skipped
+      ? 'Aucune donnée antérieure (première installation).'
+      : `Une sauvegarde intacte de vos données a été créée AVANT toute modification :\n${preBackup.path}`
+    const { response } = await dialog.showMessageBox({
+      type: 'error',
+      title: 'GarageFlows — Migration de la base interrompue',
+      message: 'La mise à jour de la base de données a échoué. Vos données n\'ont pas été perdues.',
+      detail:
+        `${backupInfo}\n\n` +
+        'GarageFlows va se fermer par sécurité (aucune donnée ne sera modifiée en l\'état).\n' +
+        'Relancez l\'application ; si le problème persiste, contactez le support avec la référence ci-dessous.\n\n' +
+        `Référence : ${String(err.message).slice(0, 160)}`,
+      buttons: preBackup.skipped ? ['Fermer'] : ['Ouvrir le dossier de sauvegarde', 'Fermer'],
+      defaultId: preBackup.skipped ? 0 : 1,
+      noLink: true,
+    }).catch(() => ({ response: -1 }))
+    if (!preBackup.skipped && response === 0) {
+      try { await shell.openPath(PRE_MIGRATION_DIR) } catch (_e) { log('[backup] ouverture dossier impossible:', _e.message) }
+    }
+    app.exit(1)
+    return
+  }
 
   // ── Session MÉCANICIEN (mono-poste) ─────────────────────────────────────
   // Une clé mécanicien ouvre l'espace /mechanic : on complète la session locale

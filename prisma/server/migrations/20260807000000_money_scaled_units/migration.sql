@@ -52,9 +52,32 @@ UPDATE "LoanerReservation" SET "depositAmountCents" = COALESCE("depositAmountCen
                            CASE WHEN "depositAmount" IS NULL THEN NULL ELSE ROUND(("depositAmount"::numeric) * 100)::int END);
 
 -- ── 3. VÉRIFICATION BLOQUANTE (échec si divergence > 1/2 unité d'échelle) ──────
+-- CHAQUE colonne migrée possède sa preuve : divergence, NULLs inattendus.
 DO $gfmoney$
 DECLARE bad integer;
 BEGIN
+  SELECT count(*) INTO bad FROM "Garage"
+   WHERE abs("hourlyRateTenThousandths" - ("hourlyRate"::numeric) * 10000) > 0.5;
+  IF bad > 0 THEN RAISE EXCEPTION 'money_scaled_units: % Garage.hourlyRate divergent(s) — migration bloquée', bad; END IF;
+
+  SELECT count(*) INTO bad FROM "JobPart"
+   WHERE abs("unitPriceTenThousandths" - ("unitPrice"::numeric) * 10000) > 0.5
+      OR abs("unitCostTenThousandths"  - ("unitCost"::numeric)  * 10000) > 0.5;
+  IF bad > 0 THEN RAISE EXCEPTION 'money_scaled_units: % JobPart divergent(s) — migration bloquée', bad; END IF;
+
+  SELECT count(*) INTO bad FROM "LaborOperation"
+   WHERE abs("unitPriceTenThousandths" - ("unitPrice"::numeric) * 10000) > 0.5;
+  IF bad > 0 THEN RAISE EXCEPTION 'money_scaled_units: % LaborOperation divergent(s) — migration bloquée', bad; END IF;
+
+  SELECT count(*) INTO bad FROM "LoanerReservation"
+   WHERE ("dailyRate" IS NOT NULL AND ("dailyRateTenThousandths" IS NULL
+          OR abs("dailyRateTenThousandths" - ("dailyRate"::numeric) * 10000) > 0.5))
+      OR ("dailyRate" IS NULL AND "dailyRateTenThousandths" IS NOT NULL)
+      OR ("depositAmount" IS NOT NULL AND ("depositAmountCents" IS NULL
+          OR abs("depositAmountCents" - ("depositAmount"::numeric) * 100) > 0.5))
+      OR ("depositAmount" IS NULL AND "depositAmountCents" IS NOT NULL);
+  IF bad > 0 THEN RAISE EXCEPTION 'money_scaled_units: % LoanerReservation divergent(s) — migration bloquée', bad; END IF;
+
   SELECT count(*) INTO bad FROM "Part"
    WHERE abs("unitCostTenThousandths"  - ("unitCost"::numeric)  * 10000) > 0.5
       OR abs("unitPriceTenThousandths" - ("unitPrice"::numeric) * 10000) > 0.5;

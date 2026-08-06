@@ -678,8 +678,8 @@ model WorkOrder {
   mileage       Int?
   vin           String?
   // Work content (stored as JSON strings for SQLite)
-  worksJson     String    @default("[]") // [{description, durationMin, unitPrice, laborOpId?}]
-  partsJson     String    @default("[]") // [{name, reference, qty, unitPrice}]
+  worksJson     String    @default("[]") // v2 {schemaVersion:2, works:[{description, durationMin, unitPriceTenThousandths, lineTotalCents, laborOpId?}]} — v1 flottant lu uniquement pour les ordres SIGNÉS (JSON gelé, voir src/lib/money-json.ts)
+  partsJson     String    @default("[]") // v2 {schemaVersion:2, parts:[{name, reference, qtyTenThousandths, unitPriceTenThousandths, lineTotalCents}]} — v1 flottant lu uniquement pour les ordres SIGNÉS
   // Pricing
   taxRate       Float     @default(20)
   // Totaux en CENTIMES entiers — UNIQUE source de vérité (les anciennes
@@ -810,7 +810,7 @@ model PurchaseOrder {
   garage        Garage    @relation(fields: [garageId], references: [id], onDelete: Cascade)
   supplierName  String?
   supplierEmail String?
-  linesJson     String    @default("[]") // [{partId?, partName, reference?, qty, unitCost}]
+  linesJson     String    @default("[]") // v2 {schemaVersion:2, lines:[{partId?, partName, reference?, qtyTenThousandths, unitCostTenThousandths, lineTotalCents}]} — plus aucun flottant persistant (src/lib/money-json.ts)
   // Total HT en CENTIMES entiers — unique source de vérité (ancien Float supprimé).
   totalHtCents  Int       @default(0)
   status        String    @default("draft") // draft, sent, received, cancelled

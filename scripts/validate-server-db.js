@@ -102,6 +102,26 @@ async function main() {
     fail(`migrate status a échoué : ${err.message}`)
   }
 
+  // ── 1bis. Migration JSON monétaire v1 → v2 (exécution RÉELLE) ───────────────
+  // Fait partie du déploiement standard (docs/MIGRATION-MONEY.md) : la lancer
+  // ici prouve qu'elle s'exécute de bout en bout (base vide → 0 document,
+  // base existante → migration effective ou ÉCHEC bloquant).
+  console.log('▶  Migration JSON monétaire v1 → v2 (scripts/migrate-money-json.ts)…')
+  try {
+    const tsNode = path.join(
+      root, 'node_modules', '.bin', process.platform === 'win32' ? 'ts-node.cmd' : 'ts-node'
+    )
+    const out = execFileSync(
+      tsNode,
+      ['--project', 'tsconfig.scripts.json', 'scripts/migrate-money-json.ts'],
+      { cwd: root, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env } }
+    ).toString()
+    process.stdout.write(out)
+  } catch (err) {
+    const detail = err.stderr ? err.stderr.toString() : err.message
+    fail(`Migration JSON v2 échouée : ${detail}`)
+  }
+
   // ── 2. Smoke test CRUD via le client serveur ────────────────────────────────
   console.log('▶  Smoke test CRUD (LicenseKey + LicenseDevice)…')
   const { PrismaClient } = require(path.join(root, 'src', 'generated', 'server-client'))

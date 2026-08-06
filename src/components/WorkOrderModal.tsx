@@ -191,8 +191,10 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
       setVehicleMake(wo.vehicleMake ?? ''); setVehicleModel(wo.vehicleModel ?? '')
       setLicensePlate(wo.licensePlate ?? ''); setMileage(wo.mileage?.toString() ?? '')
       setVin(wo.vin ?? ''); setNotes(wo.notes ?? ''); setTaxRate(wo.taxRate ?? 20)
-      setWorks(JSON.parse(wo.worksJson || '[]'))
-      setParts(JSON.parse(wo.partsJson || '[]'))
+      // L'API expose works/parts en VUE EUROS dérivée des entiers exacts (v2) —
+      // jamais de JSON.parse du blob persistant côté client.
+      setWorks(Array.isArray(wo.works) ? wo.works : [])
+      setParts(Array.isArray(wo.parts) ? wo.parts : [])
       setSavedNumber(wo.number); setExistingSig(wo.signatureData ?? null)
     }).catch(() => {})
   }, [initialId])

@@ -1,5 +1,60 @@
 # Changelog
 
+## [Non publié] — 2026-08-06 (4) — Sécurisation des migrations & JSON monétaires v2
+
+### JSON persistants (worksJson / partsJson / linesJson)
+- **Format v2 versionné en entiers exacts** (`{"schemaVersion":2, …,
+  "qtyTenThousandths", "unitPriceTenThousandths", "lineTotalCents"}`) — plus
+  AUCUN flottant monétaire persisté. Module unique `src/lib/money-json.ts`
+  (Zod strict, v1 accepté en LECTURE seule avec parsing strict ≤ 4 décimales).
+- Migration v1→v2 **sans perte** : SQLite `179_money_json_v2` (runner) ;
+  PostgreSQL `scripts/migrate-money-json.ts` (`db:server:migrate-json`,
+  `--dry-run` disponible). Transactionnelle, idempotente, contrôle de cohérence
+  bloquant (|recalculé − stocké| ≤ max(1, nb lignes) centimes, le total stocké
+  reste la référence), v2 re-parsé avant écriture.
+- **Ordres signés GELÉS** : JSON canonicalisé verbatim dans la signature —
+  exclus de la migration, PATCH des lignes refusé (400), lecture v1 conservée
+  pour eux seuls (exception légale documentée).
+
+### Runner SQLite (`/api/internal/migrate`) — fail-closed
+- Migrations monétaires **162–178 recomposées** en étapes atomiques par colonne
+  (ADD gardé → BACKFILL → `verifySql` BLOQUANT → DROP) ; **une transaction par
+  migration, enregistrement `_gf_migrations` inclus** — un échec annule tout,
+  stoppe la séquence, n'enregistre rien, réponse structurée
+  `{ok:false, failedMigration, stage, errorCode, recoverable}`.
+- Registre enrichi (name/checksum sha256/schemaVersion) : **checksum divergent
+  = blocage** (`MIGRATION_CHECKSUM_MISMATCH`) ; `PRAGMA integrity_check` +
+  `foreign_key_check` AVANT et APRÈS (résultats contrôlés) ; verrou anti-réentrance.
+- Modèle `garageflow-template.db` **baseliné** (179/179 enregistrées, plus
+  aucune migration rejouée sur base neuve) — `scripts/baseline-template.mjs`
+  branché dans `post-build`/`setup-dev`.
+
+### Electron — sauvegarde pré-migration & gate
+- `electron/pre-migration-backup.js` (testé) : copie db + `-wal`/`-shm` AVANT le
+  démarrage du serveur, **en-tête SQLite réel vérifié**, rétention 5 copies sans
+  jamais supprimer la fraîche (`garageflows-pre-migration-AAAAMMJJ-HHMMSS.db`).
+- Démarrage fail-closed : sauvegarde invalide → dialogue
+  `PRE_MIGRATION_BACKUP_FAILED` + arrêt (1) ; migration : statut HTTP **et**
+  `ok === true` contrôlés, échec → dialogue avec chemin de sauvegarde + bouton
+  « Ouvrir le dossier », arrêt (1), **aucune fenêtre principale**.
+
+### PostgreSQL
+- `money_scaled_units` : vérification bloquante **par colonne** (17/17, dont
+  cohérence NULL bidirectionnelle LoanerReservation) ; `money_drop_floats` :
+  **re-vérification pré-DROP par colonne** (bijection spec⇔DROP, bloc avant tout
+  DROP, échec = transaction annulée). **Exécutées réellement** sur PG 16 local :
+  base vide (CI-équivalent) + base peuplée legacy (conversions exactes, test
+  négatif avec rollback prouvé, JSON v1→v2, signé gelé, idempotence).
+
+### CI / gardes
+- Nouveaux gardes bloquants : `check:money-json` (écritures JSON via
+  sérialiseurs v2 uniquement, exceptions justifiées anti-mortes),
+  `check:migration-safety` (invariants runner/Electron/ordre de démarrage),
+  `check:sqlite-template` (intégrité réelle + baseline + checksums),
+  `check:pg-migrations` (bijection DROP⇔vérification). CI Node 20 → **22**
+  (node:sqlite). Tests : `test:money-json` (16), échecs de migration simulés,
+  sauvegarde pré-migration (5) — suite complète 1 040 verts (+19 PG locaux).
+
 ## [Non publié] — 2026-08-06 (3) — Migration monétaire FINALE : zéro Float, entiers exacts
 
 ### Monnaie — schémas (SQLite + PostgreSQL, alignés)

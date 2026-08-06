@@ -3,50 +3,59 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { assertRelations } from '@/lib/tenant'
-import { computeTotals as computeMoneyTotals, type MoneyLine } from '@/lib/money'
+import { parseWorksJson, parsePartsJson, serializeWorksJsonV2, serializePartsJsonV2, workOrderTotalHtCents, workLinesToEuros, partLinesToEuros } from '@/lib/money-json'
 import { workOrderToEuros } from '@/lib/money-db'
 
-interface WorkLine {
-  description: string
-  durationMin: number
-  unitPrice: number
-  laborOpId?: string
-}
-
-interface PartLine {
-  name: string
-  reference?: string
-  qty: number
-  unitPrice: number
-}
 
 /**
- * Totaux d'un ordre de réparation. Calcul EXACT en centimes entiers via
- * `lib/money.ts` (fin de l'arithmétique flottante native ici) : garantit
- * TTC = HT + TVA. Renvoie aussi les centimes (source de vérité stockée) ; les
- * euros sont dérivés (`fromCents`). Une ligne de main-d'œuvre = quantité 1.
- * Returns null when worksJson/partsJson are not valid JSON arrays.
+ * Normalise l'entrée client (tableaux euros v1 OU objet v2 OU chaîne JSON) en
+ * lignes EXACTES via lib/money-json (validation STRICTE — NaN/Infinity/formes
+ * inattendues rejetées), calcule les totaux en centimes et produit les chaînes
+ * V2 persistées (AUCUN flottant monétaire stocké). Renvoie null si invalide.
  */
-function computeTotals(
-  worksJson: string,
-  partsJson: string,
+function normalizeWorkOrderJson(
+  worksInput: unknown,
+  partsInput: unknown,
   taxRate: number,
-): { totalHtCents: number; totalTtcCents: number } | null {
-  let works: WorkLine[]
-  let parts: PartLine[]
+): {
+  worksJson: string
+  partsJson: string
+  totalHtCents: number
+  totalTtcCents: number
+} | null {
   try {
-    works = JSON.parse(worksJson)
-    parts = JSON.parse(partsJson)
+    const worksRaw = typeof worksInput === 'string' ? worksInput : JSON.stringify(worksInput ?? [])
+    const partsRaw = typeof partsInput === 'string' ? partsInput : JSON.stringify(partsInput ?? [])
+    const works = parseWorksJson(worksRaw).lines
+    const parts = parsePartsJson(partsRaw).lines
+    const totalHtCents = workOrderTotalHtCents(works, parts)
+    const rate = Number(taxRate) || 0
+    const totalTtcCents = totalHtCents + Math.round((totalHtCents * rate) / 100)
+    return {
+      worksJson: serializeWorksJsonV2(works),
+      partsJson: serializePartsJsonV2(parts),
+      totalHtCents,
+      totalTtcCents,
+    }
   } catch {
     return null
   }
-  if (!Array.isArray(works) || !Array.isArray(parts)) return null
-  const lines: MoneyLine[] = [
-    ...works.map((w) => ({ quantity: 1, unitPrice: Number(w.unitPrice) || 0 })),
-    ...parts.map((p) => ({ quantity: Number(p.qty) || 0, unitPrice: Number(p.unitPrice) || 0 })),
-  ]
-  const t = computeMoneyTotals(lines, Number(taxRate) || 0)
-  return { totalHtCents: t.totalHTCents, totalTtcCents: t.totalTTCCents }
+}
+
+
+/** Vue API d'un OR : euros dérivés + lignes euros parsées (v1 signés / v2). */
+function workOrderView(wo: Parameters<typeof workOrderToEuros>[0] & { worksJson: string; partsJson: string }) {
+  const base = workOrderToEuros(wo)
+  try {
+    return {
+      ...base,
+      works: workLinesToEuros(parseWorksJson(wo.worksJson).lines),
+      parts: partLinesToEuros(parsePartsJson(wo.partsJson).lines),
+    }
+  } catch {
+    // Ligne au JSON illisible : on n'écrase rien, on signale (jamais de crash de liste).
+    return { ...base, works: [], parts: [], jsonError: true }
+  }
 }
 
 // GET /api/work-orders
@@ -69,7 +78,7 @@ export const GET = withAuth(async (req) => {
     orderBy: { createdAt: 'desc' },
   })
 
-  return NextResponse.json(orders.map(workOrderToEuros)) // + totalHT/totalTTC dérivés
+  return NextResponse.json(orders.map(workOrderView)) // euros dérivés + lignes euros
 })
 
 // POST /api/work-orders
@@ -88,19 +97,13 @@ export const POST = withAuth(async (req) => {
   ])
   if (relErr) return relErr
 
-  const worksJson = typeof body.worksJson === 'string'
-    ? body.worksJson
-    : JSON.stringify(body.worksJson ?? [])
-  const partsJson = typeof body.partsJson === 'string'
-    ? body.partsJson
-    : JSON.stringify(body.partsJson ?? [])
   const taxRate = body.taxRate ?? 20
-
-  const totals = computeTotals(worksJson, partsJson, taxRate)
-  if (!totals) {
+  // Validation stricte + conversion v1→exact + sérialisation V2 (entiers).
+  const normalized = normalizeWorkOrderJson(body.worksJson, body.partsJson, taxRate)
+  if (!normalized) {
     return NextResponse.json({ error: 'worksJson/partsJson invalides' }, { status: 400 })
   }
-  const { totalHtCents, totalTtcCents } = totals
+  const { worksJson, partsJson, totalHtCents, totalTtcCents } = normalized
 
   // Validate optional foreign keys belong to THIS garage before referencing them.
   if (body.jobId) {
@@ -161,5 +164,5 @@ export const POST = withAuth(async (req) => {
     throw e
   }
 
-  return NextResponse.json(workOrderToEuros(workOrder), { status: 201 })
+  return NextResponse.json(workOrderView(workOrder), { status: 201 })
 })

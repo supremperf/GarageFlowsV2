@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { lineCents, fromCents } from '@/lib/money'
 import { purchaseOrderToEuros } from '@/lib/money-db'
+import { parsePoLinesJson, serializePoLinesJsonV2, poTotalHtCents, poLinesToEuros } from '@/lib/money-json'
 
 export const GET = withAuth(async (req) => {
   const session = await requireSession()
@@ -12,7 +12,7 @@ export const GET = withAuth(async (req) => {
   const where: Record<string, unknown> = { garageId: session.user.garageId }
   if (status) where.status = status
   const orders = await prisma.purchaseOrder.findMany({ where, orderBy: { createdAt: 'desc' } })
-  return NextResponse.json(orders.map(purchaseOrderToEuros))
+  return NextResponse.json(orders.map(o => { try { return { ...purchaseOrderToEuros(o), lines: poLinesToEuros(parsePoLinesJson(o.linesJson).lines) } } catch { return { ...purchaseOrderToEuros(o), lines: [], jsonError: true } } }))
 })
 
 export const POST = withAuth(async (req) => {
@@ -21,22 +21,16 @@ export const POST = withAuth(async (req) => {
 
   const year = new Date().getFullYear()
 
-  // Parse défensif des lignes + total HT EXACT en centimes (par ligne, sans dérive).
-  const linesJson = typeof body.linesJson === 'string' ? body.linesJson : JSON.stringify(body.linesJson ?? [])
-  let lines: Array<{ unitCost: number; qty: number }>
+  // Validation STRICTE (v1 euros OU v2 entiers) + conversion exacte + V2 persisté.
+  const linesRaw = typeof body.linesJson === 'string' ? body.linesJson : JSON.stringify(body.linesJson ?? [])
+  let exactLines
   try {
-    const parsed = JSON.parse(linesJson)
-    lines = Array.isArray(parsed) ? parsed : []
+    exactLines = parsePoLinesJson(linesRaw).lines
   } catch {
     return NextResponse.json({ error: 'Lignes de commande invalides' }, { status: 400 })
   }
-  // Centimes = source de vérité ; totalHT (euros) = miroir dérivé (fromCents).
-  // lineCents : montant étendu arrondi une fois → précision 4 décimales du coût.
-  const totalHtCents = lines.reduce(
-    (c, l) => c + lineCents(Number(l.unitCost) || 0, Number(l.qty) || 0),
-    0,
-  )
-  const totalHT = fromCents(totalHtCents)
+  const linesJson = serializePoLinesJsonV2(exactLines)
+  const totalHtCents = poTotalHtCents(exactLines)
 
   // Réservation du numéro + création atomiques ; unicité par @@unique([garageId, number]).
   let order

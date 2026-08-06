@@ -153,8 +153,12 @@ function main() {
           env:   { ...process.env, DATABASE_URL: dbPushUrl },
         })
         if (fs.existsSync(devDbPath) && isValidSqliteFile(devDbPath)) {
-          fs.copyFileSync(devDbPath, path.join(prismaDst, 'garageflow-template.db'))
-          console.log('  ✅ dev.db created + copied → standalone/prisma/garageflow-template.db')
+          const templateDst = path.join(prismaDst, 'garageflow-template.db')
+          fs.copyFileSync(devDbPath, templateDst)
+          // BASELINE OBLIGATOIRE : une base neuve au schéma final ne doit rejouer
+          // AUCUNE migration historique (registre _gf_migrations pré-rempli).
+          execSync(`node --experimental-strip-types scripts/baseline-template.mjs "${templateDst}"`, { cwd: ROOT, stdio: 'inherit' })
+          console.log('  ✅ dev.db created + copied + baseliné → standalone/prisma/garageflow-template.db')
           dbCopied = true
         } else {
           console.error('  ❌ prisma db push ran but produced no valid DB — check prisma/schema.prisma')

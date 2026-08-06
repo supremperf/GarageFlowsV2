@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
-import { fromScaled, toCents, fromCents } from '@/lib/money'
+import { fromScaled, toScaled, fromCents, lineTotalCentsFromScaled } from '@/lib/money'
+import { serializePoLinesJsonV2, poTotalHtCents } from '@/lib/money-json'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
@@ -164,13 +165,19 @@ export const POST = withAuth(async (req) => {
     // collide on the unique (garageId, number) constraint.
     const created: { id: string; number: string; supplierName: string; totalHT: number }[] = []
     for (const order of plan.orders) {
-      const lines: POLine[] = order.lines.map((l) => ({
-        partId: l.partId,
-        partName: l.name,
-        reference: l.reference ?? null,
-        qty: l.quantity,
-        unitCost: l.unitPrice,
-      }))
+      // Lignes en ENTIERS exacts (dix-millièmes) — persistées au format V2.
+      const exactLines = order.lines.map((l) => {
+        const qtyTenThousandths = toScaled(l.quantity)
+        const unitCostTenThousandths = toScaled(l.unitPrice)
+        return {
+          partId: l.partId,
+          partName: l.name,
+          reference: l.reference ?? null,
+          qtyTenThousandths,
+          unitCostTenThousandths,
+          lineTotalCents: lineTotalCentsFromScaled(unitCostTenThousandths, qtyTenThousandths),
+        }
+      })
       const po = await prisma.$transaction(async (tx) => {
         const garage = await tx.garage.update({ where: { id: garageId }, data: { purchaseOrderCounter: { increment: 1 } } })
         const year = new Date().getFullYear()
@@ -180,8 +187,8 @@ export const POST = withAuth(async (req) => {
             number,
             garageId,
             supplierName: order.supplierName,
-            linesJson: JSON.stringify(lines),
-            totalHtCents: toCents(order.totalHT), // centimes = source de vérité
+            linesJson: serializePoLinesJsonV2(exactLines),
+            totalHtCents: poTotalHtCents(exactLines), // centimes exacts par ligne
             status: 'draft',
             notes: `Commande auto — ${order.lines.length} référence(s), livraison ~${order.maxLeadTimeDays} j.`,
           },

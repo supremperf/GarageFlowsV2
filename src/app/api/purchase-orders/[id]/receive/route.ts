@@ -1,4 +1,6 @@
 export const dynamic = "force-dynamic"
+import { parsePoLinesJson } from '@/lib/money-json'
+import { fromScaled } from '@/lib/money'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
@@ -28,8 +30,16 @@ export const POST = withAuth(async (_req, { params }: { params: { id: string } }
     return NextResponse.json({ error: 'Commande annulée' }, { status: 400 })
   }
 
-  let lines: POLine[] = []
-  try { lines = JSON.parse(order.linesJson) } catch { lines = [] }
+  // Parsing STRICT versionné (v1 historique OU v2) — plus de JSON.parse nu.
+  let lines: Array<{ partId?: string | null; qty: number }> = []
+  try {
+    lines = parsePoLinesJson(order.linesJson).lines.map((l) => ({
+      partId: l.partId,
+      // Stock : unités entières — la quantité exacte (dix-millièmes) est arrondie
+      // à l'unité pour l'incrément de stock (comportement historique conservé).
+      qty: Math.round(fromScaled(l.qtyTenThousandths)),
+    }))
+  } catch { lines = [] }
 
   // Run everything atomically
   try {
