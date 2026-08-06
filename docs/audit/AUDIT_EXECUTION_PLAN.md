@@ -14,7 +14,7 @@
 |---|---|---|---|---|
 | A | 0 | Conservation, empreintes, cartographie préliminaire | `BASELINE.md`, `INITIAL_SHA256.txt`, `REPOSITORY_INVENTORY.md`, `WORKLOG.md`, ce plan, `docs/audit/RISK_REGISTER.md` | en cours |
 | B | 1-3 | Inventaire détaillé, architecture actuelle/cible, modèle de menaces | diagrammes (contexte, conteneurs, auth, licence, facture, e-invoicing, update, reprise, données personnelles, frontières), `THREAT_MODEL.md`, ADR initiaux | à faire |
-| C | 4-6 | Sécurité applicative, isolation multi-garage, auth & licences | corrections + tests de permutations inter-garages, matrice de rôles testée, registre des clés, rapport rate-limit/journaux | à faire |
+| C | 4-6 | Sécurité applicative, isolation multi-garage, auth & licences | corrections + tests de permutations inter-garages, matrice de rôles testée, registre des clés, rapport rate-limit/journaux | isolation **faite** (audit 141 routes 0 faille + matrice permutation + matrice rôles 128 cellules) ; auth/licences/rate-limit **en cours** (lot D) |
 | D | 7-9 | Finance, e-invoicing, signature | revérification zéro Float, tests de concurrence numérotation, immuabilité factures, connecteur abstrait + validation de formats, qualification honnête des signatures | à faire |
 | E | 10-11 | RGPD, propriété intellectuelle | registres (traitements, sous-traitants, clés), procédures droits/violations, SBOM SPDX + notices tierces, registre IA, dossier PI | à faire |
 | F | 12-15 | BDD, Electron, PWA, contrats API | audit contraintes/concurrence, durcissement Electron/updates, stratégie SW explicite, spécification API + erreurs uniformes | à faire |

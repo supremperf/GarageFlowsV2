@@ -26,6 +26,11 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
 // DELETE /api/parts/:id
 export const DELETE = withAuth(async (_req, { params }: { params: { id: string } }) => {
   const session = await requireSession()
+  // Contrôle de propriété AVANT suppression : renvoie un 404 propre et uniforme
+  // (comme les autres ressources) au lieu d'un P2025 non typé pour une pièce
+  // d'un autre garage. La portée garageId reste dans le where du delete.
+  const existing = await prisma.part.findFirst({ where: { id: params.id, garageId: session.user.garageId } })
+  if (!existing) return NextResponse.json({ error: 'Introuvable' }, { status: 404 })
   await prisma.part.delete({ where: { id: params.id, garageId: session.user.garageId } })
   return NextResponse.json({ success: true })
 })

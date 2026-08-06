@@ -37,7 +37,7 @@
 | AUD-016 | Haute | pi | V2+site3 | Aucune provenance du code ni registre de contribution IA | branches `claude/*` ; plan lot E | PLAUSIBLE | 11 |
 | AUD-017 | Critique(test) | tests | V2 | Restauration de sauvegarde JAMAIS exécutée par un test | backup/snapshot.test.ts (« no DB ») | PLAUSIBLE | 16/22 |
 | AUD-018 | Critique(test) | tests | site3 | `requireAdminKey` (25 routes admin) sans aucun test | licenses/auth.ts:28 | PLAUSIBLE | 22 |
-| AUD-019 | Critique(test) | tests | V2 | Isolation inter-garage non permutée sur la majorité des familles de routes | 22 tests de handler / 141 routes | PLAUSIBLE | 5/22 |
+| AUD-019 | Critique(test)→**Corrigé** | tests | V2 | Isolation inter-garage non permutée sur la majorité des familles de routes | 22 tests de handler / 141 routes | **CORRIGÉ** lot C (audit statique 141 routes : 0 faille + matrice de permutation 14 familles × tous verbes + matrice de rôles 128 cellules) | 5/22 |
 | AUD-020 | Haute | tests | V2 | Concurrence de numérotation de factures testée sur mock mémoire uniquement | document-numbering.test.ts | PLAUSIBLE | 7/22 |
 | AUD-021 | Haute | tests | V2 | Concurrence de stock prouvée sur mock mémoire, pas de décrément SQL atomique testé en réel | stock-parts.test.ts | PLAUSIBLE | 12/22 |
 | AUD-022 | Haute | tests | V2 | Portail client : 20 routes, 0 test de handler | portal/__tests__ (fonctions pures) | PLAUSIBLE | 22 |
@@ -67,6 +67,36 @@
 | AUD-046 | Basse | licence | site3 | Tolérance HWID 75 % + `if (!storedHwid) return true` | licenses/verify.ts:146 | PLAUSIBLE | 6 |
 | AUD-047 | Basse | authz | site3 | Routes update/latest, changelog, downloads sans rate limit | update/latest/route.ts | PLAUSIBLE | 4/16 |
 | AUD-048 | Basse | ci | V2 | Aucune SAST (CodeQL/Semgrep) ; postinstall écrit `.env` sur tout `npm ci` | ci.yml ; package.json:18 | PLAUSIBLE | 23 |
+
+## Lot C — Isolation multi-garage : conclusion (2026-08-06)
+
+**Résultat** : AUCUNE faille d'isolation (IDOR) trouvée sur les 141 routes. Le
+risque AUD-019 était un trou de PREUVE (isolation non testée systématiquement),
+pas une vulnérabilité. Il est désormais prouvé sur les deux plans :
+
+1. **Audit statique adversarial** (workflow, 8 groupes couvrant les ~56 familles,
+   chaque opération Prisma vérifiée puis chaque faille alléguée soumise à un
+   vérificateur adversarial) : `totalAlleged: 0, confirmed: 0`. Toutes les routes
+   confirmées scopées par garageId — y compris les cas subtils : jetons de
+   capability portail (jobId ET garageId proviennent du JWT signé, non
+   forgeable), anti-traversal photos + contrôle de propriété, injection de FK
+   systématiquement validée via `assertRelations`/`findFirst` avant usage.
+2. **Matrice de permutation end-to-end** (`tenant-isolation-matrix.test.ts`, 38
+   tests) : session garage A → ressource garage B sur 14 familles × chaque verbe
+   exporté (GET/PATCH/PUT/DELETE/POST) → statut ≥ 400 ET ressource de B intacte ;
+   contrôles positifs (A accède aux siennes) ; scoping de 10 collections.
+3. **Matrice de rôles exhaustive** (`authz-full-matrix.test.ts`, 139 tests) : les
+   4 × 32 = 128 cellules rôle × permission asserties contre une table attendue
+   indépendante (détecte toute dérive), + deny-by-default + hiérarchie stricte.
+
+**Hardening appliqué** : `parts/[id]` DELETE faisait un `delete` direct
+(P2025/500 pour une pièce d'un autre garage — pas une fuite, mais contrat
+incohérent). Aligné sur le motif `findFirst → 404` de toutes les autres routes.
+
+**Risque résiduel** : le PATCH de purchase-orders n'a pas de machine à états
+(noté par l'audit, hors périmètre isolation) → à traiter au lot financier (D3).
+Les espaces mécanicien et portail sont audités SÛRS mais leurs handlers restent
+peu couverts par des tests d'intégration dédiés (AUD-022) → lot tests.
 
 ## Détail des risques critiques et hauts
 
