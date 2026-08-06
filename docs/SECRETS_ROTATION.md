@@ -25,6 +25,23 @@ empreinte **différente** de `59ca3f01…` :
 printf '%s' "$GARAGEFLOW_API_KEY" | sha256sum | cut -c1-8
 ```
 
+**Preuve automatisée (recommandée)** — exécuter dans l'environnement de
+production (variables réelles chargées) pour produire l'ARTEFACT DE PREUVE :
+
+```sh
+npm run verify:rotation            # échoue (exit 1) si un secret ACTUEL == valeur compromise
+npm run verify:rotation -- --require-all   # exige en plus que tous les secrets listés soient présents (exit 2 sinon)
+```
+
+L'outil (`scripts/verify-rotation.mjs`, manifeste `scripts/compromised-secrets.json`)
+compare l'empreinte SHA-256 du secret **actuel** aux empreintes des valeurs
+**compromises** ; il n'affiche jamais de valeur. Un `exit 0` avec tous les
+secrets présents constitue une preuve cryptographique que plus aucun secret de
+production n'est égal à une valeur exposée dans l'historique. Le propriétaire
+peut compléter le manifeste avec les empreintes 64-hex complètes (calculées
+depuis l'historique) pour une précision maximale. Mécanique prouvée par
+`src/lib/__tests__/verify-rotation.test.ts`.
+
 ## 2. Ce qui a déjà été corrigé dans le code (tip de la branche)
 
 - `docs/SECRETS_ROTATION.md` (ce fichier) : la représentation partielle de la

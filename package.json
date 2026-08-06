@@ -53,6 +53,7 @@
     "check:migration-safety": "node scripts/check-migration-safety.mjs",
     "check:sqlite-template": "node scripts/check-sqlite-template.mjs",
     "check:pg-migrations": "node scripts/check-postgres-migration-verification.mjs",
+    "verify:rotation": "node scripts/verify-rotation.mjs",
     "check:consistency": "npm run check:branding && npm run check:docs && npm run check:pwa && npm run check:money && npm run check:money-calculations && npm run check:money-json && npm run check:migration-safety && npm run check:sqlite-template && npm run check:pg-migrations",
     "test:money": "vitest run src/lib/__tests__/money.test.ts src/lib/__tests__/money-migration.test.ts src/lib/__tests__/money-document-consistency.test.ts src/lib/__tests__/tva.test.ts",
     "test:money-json": "vitest run src/lib/__tests__/money-json.test.ts",
