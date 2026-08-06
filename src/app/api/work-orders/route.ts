@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { assertRelations } from '@/lib/tenant'
 import { computeTotals as computeMoneyTotals, type MoneyLine } from '@/lib/money'
+import { workOrderToEuros } from '@/lib/money-db'
 
 interface WorkLine {
   description: string
@@ -30,7 +31,7 @@ function computeTotals(
   worksJson: string,
   partsJson: string,
   taxRate: number,
-): { totalHT: number; totalTTC: number; totalHtCents: number; totalTtcCents: number } | null {
+): { totalHtCents: number; totalTtcCents: number } | null {
   let works: WorkLine[]
   let parts: PartLine[]
   try {
@@ -45,7 +46,7 @@ function computeTotals(
     ...parts.map((p) => ({ quantity: Number(p.qty) || 0, unitPrice: Number(p.unitPrice) || 0 })),
   ]
   const t = computeMoneyTotals(lines, Number(taxRate) || 0)
-  return { totalHT: t.totalHT, totalTTC: t.totalTTC, totalHtCents: t.totalHTCents, totalTtcCents: t.totalTTCCents }
+  return { totalHtCents: t.totalHTCents, totalTtcCents: t.totalTTCCents }
 }
 
 // GET /api/work-orders
@@ -68,7 +69,7 @@ export const GET = withAuth(async (req) => {
     orderBy: { createdAt: 'desc' },
   })
 
-  return NextResponse.json(orders)
+  return NextResponse.json(orders.map(workOrderToEuros)) // + totalHT/totalTTC dérivés
 })
 
 // POST /api/work-orders
@@ -99,7 +100,7 @@ export const POST = withAuth(async (req) => {
   if (!totals) {
     return NextResponse.json({ error: 'worksJson/partsJson invalides' }, { status: 400 })
   }
-  const { totalHT, totalTTC, totalHtCents, totalTtcCents } = totals
+  const { totalHtCents, totalTtcCents } = totals
 
   // Validate optional foreign keys belong to THIS garage before referencing them.
   if (body.jobId) {
@@ -141,9 +142,7 @@ export const POST = withAuth(async (req) => {
           worksJson,
           partsJson,
           taxRate,
-          totalHT,
-          totalTTC,
-          // Centimes = source de vérité ; totalHT/totalTTC ci-dessus = miroir dérivé.
+          // Centimes entiers = UNIQUE source de vérité (colonnes Float supprimées).
           totalHtCents,
           totalTtcCents,
           notes: body.notes ?? null,
@@ -162,5 +161,5 @@ export const POST = withAuth(async (req) => {
     throw e
   }
 
-  return NextResponse.json(workOrder, { status: 201 })
+  return NextResponse.json(workOrderToEuros(workOrder), { status: 201 })
 })

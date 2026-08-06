@@ -82,13 +82,19 @@ app.setAppUserModelId('com.garageflow.app')
 // « GarageFlows ». Mais le dossier de données utilisateur est DÉRIVÉ de app name
 // (%APPDATA%/<productName>). On l'ÉPINGLE explicitement sur le nom HISTORIQUE
 // « GarageFlow » pour que les installations existantes conservent leur base
-// (garageflow.db), leur licence et leur secret d'installation — sinon la mise à
-// jour perdrait ces données. appId, serviceName, User-Agent et sels crypto sont
-// eux aussi conservés (identifiants techniques, voir docs/PRODUCTION-READINESS.md).
-// DOIT précéder tout app.getPath('userData').
-try {
-  app.setPath('userData', path.join(app.getPath('appData'), 'GarageFlow'))
-} catch (_) {}
+// (garageflow.db), leur licence et leur secret d'installation. AUCUN échec
+// silencieux : si l'épinglage ne prend pas, les données seraient créées dans un
+// MAUVAIS dossier (perte silencieuse de BD/licence) → l'erreur est journalisée
+// et l'application s'ARRÊTE de façon contrôlée au ready (avant toute écriture).
+// DOIT précéder tout app.getPath('userData'). Logique pure/testée :
+// electron/user-data-path.js (+ src/lib/__tests__/user-data-path.test.ts).
+const { pinUserDataToLegacyDir } = require('./user-data-path')
+const USER_DATA_PIN = pinUserDataToLegacyDir(app)
+if (!USER_DATA_PIN.ok) {
+  // console.error : le log fichier (LOG_PATH) dépend justement de userData.
+  // Aucun secret ni donnée sensible — uniquement le motif technique.
+  console.error('[FATAL] userData pinning failed:', USER_DATA_PIN.error)
+}
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -1481,15 +1487,13 @@ async function runDesktopExport() {
 
     // ── Factures ──
     if (data.invoices?.length) {
-      const rows = data.invoices.map(inv => {
-        const totalHT = inv.lines?.reduce((s, l) => s + l.quantity * l.unitPrice, 0) ?? 0
-        const totalTTC = totalHT * (1 + (inv.taxRate ?? 20) / 100)
-        return {
-          ...inv,
-          totalHT:  totalHT.toFixed(2),
-          totalTTC: totalTTC.toFixed(2),
-        }
-      })
+      // Totaux fournis par la couche financière exacte du serveur (centimes) —
+      // AUCUN recalcul flottant ici : formatage uniquement.
+      const rows = data.invoices.map(inv => ({
+        ...inv,
+        totalHT:  Number(inv.totalHT ?? 0).toFixed(2),
+        totalTTC: Number(inv.totalTTC ?? 0).toFixed(2),
+      }))
       fs.writeFileSync(
         path.join(dir, '04_Factures.csv'),
         toCsv(rows, ['number','issueDate','dueDate','clientName','clientEmail','clientPhone','vehicleModel','licensePlate','status','totalHT','totalTTC','taxRate','notes']),
@@ -1499,11 +1503,8 @@ async function runDesktopExport() {
 
     // ── Devis ──
     if (data.quotes?.length) {
-      const rows = data.quotes.map(q => {
-        const totalHT = q.lines?.reduce((s, l) => s + l.quantity * l.unitPrice, 0) ?? 0
-        const totalTTC = totalHT * (1 + (q.taxRate ?? 20) / 100)
-        return { ...q, totalHT: totalHT.toFixed(2), totalTTC: totalTTC.toFixed(2) }
-      })
+      // Totaux exacts fournis par le serveur — formatage uniquement.
+      const rows = data.quotes.map(q => ({ ...q, totalHT: Number(q.totalHT ?? 0).toFixed(2), totalTTC: Number(q.totalTTC ?? 0).toFixed(2) }))
       fs.writeFileSync(
         path.join(dir, '05_Devis.csv'),
         toCsv(rows, ['number','issueDate','validUntil','clientName','clientEmail','vehicleModel','licensePlate','status','totalHT','totalTTC','taxRate','notes']),
@@ -2301,6 +2302,22 @@ function setupIPC() {
 
 app.whenReady().then(async () => {
   log('═══════════════════════════════════')
+  // ── ARRÊT CONTRÔLÉ si l'épinglage du dossier de données a échoué ────────────
+  // Continuer risquerait de créer BD/licence/secret dans un MAUVAIS dossier
+  // (perte silencieuse pour les installations existantes). On informe et on sort
+  // AVANT toute écriture. Message utilisateur sans chemin sensible inutile.
+  if (!USER_DATA_PIN.ok) {
+    dialog.showErrorBox(
+      'GarageFlows — Erreur de démarrage',
+      'Le dossier de données de GarageFlows est inaccessible.\n\n' +
+        'Pour protéger vos données existantes (base, licence), l\'application ne peut pas démarrer.\n' +
+        'Vérifiez les permissions de votre profil utilisateur Windows, puis relancez GarageFlows.\n\n' +
+        `Code technique : USERDATA_PIN_FAILED`
+    )
+    app.exit(1)
+    return
+  }
+
   log('GarageFlows v' + app.getVersion() + ' starting')
   log('userData:', APP_DATA)
   log('IS_DEV:', IS_DEV)

@@ -2,6 +2,8 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
+import { toScaled } from '@/lib/money'
+import { partToEuros } from '@/lib/money-db'
 
 // GET /api/parts?lowStock=true&repairType=xxx
 export const GET = withAuth(async (req) => {
@@ -29,7 +31,8 @@ export const GET = withAuth(async (req) => {
     orderBy: { name: 'asc' },
   })
 
-  const result = lowStock ? parts.filter(p => p.quantity <= p.minQuantity) : parts
+  const withEuros = parts.map(partToEuros) // + unitCost/unitPrice dérivés (euros)
+  const result = lowStock ? withEuros.filter(p => p.quantity <= p.minQuantity) : withEuros
   return NextResponse.json(result)
 })
 
@@ -47,11 +50,11 @@ export const POST = withAuth(async (req) => {
       description: description || null,
       quantity: Number(quantity),
       minQuantity: Number(minQuantity),
-      unitCost: Number(unitCost),
-      unitPrice: Number(unitPrice),
+      unitCostTenThousandths: toScaled(Number(unitCost)), // € -> dix-milliemes exacts
+      unitPriceTenThousandths: toScaled(Number(unitPrice)),
       location: location || null,
       garageId: session.user.garageId,
     },
   })
-  return NextResponse.json(part, { status: 201 })
+  return NextResponse.json(partToEuros(part), { status: 201 })
 })

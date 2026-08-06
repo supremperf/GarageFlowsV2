@@ -1,5 +1,5 @@
 """
-keygen_ui.py — GarageFlow Licence Manager — Interface graphique (tkinter)
+keygen_ui.py — GarageFlows Licence Manager — Interface graphique (tkinter)
 Fenêtre principale : onglets Générer / Gérer / Clés.
 """
 
@@ -104,7 +104,7 @@ def _validate_server_url(url: str) -> tuple[bool, str]:
 
 
 def _remote_set_status(server_url: str, api_key: str, license_id: str, status: str) -> tuple[bool, str]:
-    """Call GarageFlow admin API to update license status. Returns (ok, message)."""
+    """Call GarageFlows admin API to update license status. Returns (ok, message)."""
     if not server_url or not api_key:
         return False, "Serveur ou clé API non configuré."
     # Validation d'URL : http:// autorisé pour LAN/local, https:// requis en prod.
@@ -163,7 +163,7 @@ def _remote_set_status(server_url: str, api_key: str, license_id: str, status: s
 
 
 def _remote_register(server_url: str, api_key: str, token: str) -> tuple[bool, str]:
-    """Enregistre une licence sur le serveur GarageFlow (POST /api/admin/licenses/create).
+    """Enregistre une licence sur le serveur GarageFlows (POST /api/admin/licenses/create).
     Retourne (ok, message). N'expose jamais le token dans le message."""
     if not server_url or not api_key:
         return False, "Serveur ou clé API non configuré."
@@ -763,11 +763,11 @@ class TabGenerate(tk.Frame):
                         else:
                             fail_n += 1
                     self.after(0, lambda: messagebox.showinfo(
-                        "Serveur GarageFlow",
+                        "Serveur GarageFlows",
                         f"Enregistrées : {ok_n} · Échecs : {fail_n}", parent=win))
                 threading.Thread(target=_do, daemon=True).start()
             if messagebox.askyesno(
-                "Serveur GarageFlow",
+                "Serveur GarageFlows",
                 "Enregistrer ces clés mécanicien sur le serveur maintenant ?",
                 parent=win,
             ):
@@ -959,7 +959,7 @@ class TabManage(tk.Frame):
             def _call():
                 ok, msg = _remote_set_status(url, key, lid, status)
                 self.after(0, lambda: messagebox.showinfo(
-                    "Serveur GarageFlow",
+                    "Serveur GarageFlows",
                     f"{'✅' if ok else '⚠️'} {msg}"
                 ))
             threading.Thread(target=_call, daemon=True).start()
@@ -1177,10 +1177,10 @@ class TabKeys(tk.Frame):
         messagebox.showinfo("Copié ✓", "Snippet de code copié.\nCollez-le dans public-key.ts et main.js.")
 
 
-# ── Onglet 4 — Serveur GarageFlow ────────────────────────────────────────────
+# ── Onglet 4 — Serveur GarageFlows ────────────────────────────────────────────
 
 class TabServer(tk.Frame):
-    """Configure the remote GarageFlow server for real-time license revocation."""
+    """Configure the remote GarageFlows server for real-time license revocation."""
 
     def __init__(self, master):
         super().__init__(master, bg=BG)
@@ -1190,7 +1190,7 @@ class TabServer(tk.Frame):
         self._build()
 
     def _build(self):
-        _lbl(self, "  Connexion au serveur GarageFlow",
+        _lbl(self, "  Connexion au serveur GarageFlows",
              font=("Segoe UI", 13, "bold")).pack(anchor="w", padx=20, pady=(18, 4))
         _lbl(self,
              "  Configurez l'URL et la clé API pour appliquer les révocations en temps réel.",
@@ -1199,7 +1199,7 @@ class TabServer(tk.Frame):
         card = _frame(self, bg=CARD, padx=16, pady=14)
         card.pack(fill="x", padx=20, pady=(0, 12))
 
-        _lbl(card, "URL du serveur GarageFlow admin", fg=MUTED, font=FONTS).pack(anchor="w")
+        _lbl(card, "URL du serveur GarageFlows admin", fg=MUTED, font=FONTS).pack(anchor="w")
         _lbl(card, "ex: http://192.168.1.10:4028", fg=MUTED, font=("Segoe UI", 8)).pack(anchor="w")
         _entry(card, textvariable=self.v_url).pack(fill="x", ipady=4, pady=(2, 10))
 
@@ -1222,11 +1222,11 @@ class TabServer(tk.Frame):
         info.pack(fill="x", padx=20, pady=(0, 12))
         _lbl(info, "Comment ça fonctionne :", font=FONTB).pack(anchor="w")
         _lbl(info,
-             "1. L'admin installe GarageFlow et le lance comme serveur (LAN ou VPN).\n"
+             "1. L'admin installe GarageFlows et le lance comme serveur (LAN ou VPN).\n"
              "2. Entrez l'URL et la clé API (GARAGEFLOW_API_KEY) ci-dessus.\n"
              "3. Quand vous révoquez/suspendez une licence dans cet outil,\n"
-             "   le serveur GarageFlow est mis à jour immédiatement.\n"
-             "4. Les clients GarageFlow vérifient le serveur toutes les 2 minutes\n"
+             "   le serveur GarageFlows est mis à jour immédiatement.\n"
+             "4. Les clients GarageFlows vérifient le serveur toutes les 2 minutes\n"
              "   et sont bloqués en cas de révocation.",
              fg=MUTED, font=FONTS, justify="left").pack(anchor="w", pady=(6, 0))
 
@@ -1307,7 +1307,7 @@ class TabServer(tk.Frame):
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("GarageFlow — Gestionnaire de Licences v2")
+        self.title("GarageFlows — Gestionnaire de Licences v2")
         # Fenêtre plus haute par défaut pour que le bouton « Générer » tienne sans
         # défiler ; le corps du formulaire défile de toute façon si l'écran est petit.
         self.geometry("1040x860")
@@ -1322,7 +1322,7 @@ class App(tk.Tk):
         tb = tk.Frame(self, bg="#070d1b", height=36)
         tb.pack(fill="x")
         tb.pack_propagate(False)
-        tk.Label(tb, text="  🔑  GarageFlow — Gestionnaire de Licences ECC v2",
+        tk.Label(tb, text="  🔑  GarageFlows — Gestionnaire de Licences ECC v2",
                  bg="#070d1b", fg=MUTED,
                  font=("Segoe UI", 9, "bold")).pack(side="left", padx=4)
 
@@ -1361,7 +1361,7 @@ class App(tk.Tk):
         nb.add(self.tab_gen,    text="  ⚡  Générer       ")
         nb.add(self.tab_manage, text="  📋  Gérer les licences  ")
         nb.add(self.tab_keys,   text="  🔑  Clés ECC      ")
-        nb.add(self.tab_server, text="  🌐  Serveur GarageFlow  ")
+        nb.add(self.tab_server, text="  🌐  Serveur GarageFlows  ")
 
     def _set_passphrase(self, pp: str):
         self._passphrase = pp

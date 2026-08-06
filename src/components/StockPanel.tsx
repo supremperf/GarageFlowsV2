@@ -1,4 +1,5 @@
 'use client'
+import { lineCents, fromCents } from '@/lib/money'
 
 import { useState, useEffect, useCallback } from 'react'
 import { Part } from '@/lib/types'
@@ -266,7 +267,7 @@ export default function StockPanel({ onClose }: StockPanelProps) {
 
   const lowCount = parts.filter(p => p.quantity <= p.minQuantity).length
   const inStockCount = parts.filter(p => p.quantity > 0).length
-  const totalValue = parts.reduce((s, p) => s + p.quantity * p.unitCost, 0)
+  const totalValue = parts.reduce((s, p) => s + fromCents(lineCents(p.unitCost, p.quantity)), 0)
 
   return (
     <div className="fixed inset-0 z-40 flex items-start justify-end p-4 pointer-events-none">

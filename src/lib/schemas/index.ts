@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod'
+import { parseAmountToScaled } from '@/lib/money'
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
 
@@ -67,11 +68,20 @@ export const UpdateVehicleSchema = CreateVehicleSchema.partial()
 
 // ─── Invoice ──────────────────────────────────────────────────────────────────
 
+/**
+ * Validation STRICTE d'un montant/quantité saisi en euros/unités :
+ * fini (NaN/Infinity refusés), borné, et 4 DÉCIMALES MAXIMUM — la valeur est
+ * ensuite convertie sans perte vers l'entier exact en dix-millièmes
+ * (`parseAmountToScaled`). Aucune décimale n'est silencieusement tronquée.
+ */
+const max4Decimals = (v: number) => parseAmountToScaled(v) !== null
+const MAX4_MSG = { message: 'Maximum 4 décimales' }
+
 const InvoiceLineSchema = z.object({
   description: z.string().min(1).max(500),
-  quantity:    z.number().min(0.01).max(9999),
-  unitPrice:   z.number().min(0).max(999_999),
-  unitCost:    z.number().min(0).max(999_999).optional(),
+  quantity:    z.number().finite().min(0.01).max(9999).refine(max4Decimals, MAX4_MSG),
+  unitPrice:   z.number().finite().min(0).max(999_999).refine(max4Decimals, MAX4_MSG),
+  unitCost:    z.number().finite().min(0).max(999_999).refine(max4Decimals, MAX4_MSG).optional(),
   isLabor:     z.boolean().optional(),
   sortOrder:   z.number().int().optional(),
 })
@@ -189,7 +199,7 @@ export const UpdateGarageSchema = z.object({
   quotePrefix:       z.string().min(1).max(10).optional(),
   invoiceFooter:     z.string().max(1000).optional().nullable(),
   language:          z.string().length(2).optional(),
-  hourlyRate:        z.number().min(0).max(9999).optional(),
+  hourlyRate:        z.number().finite().min(0).max(9999).refine(max4Decimals, MAX4_MSG).optional(),
   onboardingComplete: z.boolean().optional(),
   logoBase64:        z.string().max(6_000_000, 'Logo trop volumineux').optional().nullable(),
   smsPhone:          phone,
@@ -203,8 +213,8 @@ export const CreatePartSchema = z.object({
   description: z.string().max(500).optional().nullable(),
   quantity:    z.number().int().min(0).optional(),
   minQuantity: z.number().int().min(0).optional(),
-  unitCost:    z.number().min(0).max(999_999).optional(),
-  unitPrice:   z.number().min(0).max(999_999).optional(),
+  unitCost:    z.number().finite().min(0).max(999_999).refine(max4Decimals, MAX4_MSG).optional(),
+  unitPrice:   z.number().finite().min(0).max(999_999).refine(max4Decimals, MAX4_MSG).optional(),
   location:    z.string().max(100).optional().nullable(),
 })
 

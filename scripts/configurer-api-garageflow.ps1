@@ -1,7 +1,7 @@
 ﻿#requires -Version 5.1
 <#
 .SYNOPSIS
-  Configure, synchronise, valide et sauvegarde les variables d'environnement GarageFlow.
+  Configure, synchronise, valide et sauvegarde les variables d'environnement GarageFlows.
 .DESCRIPTION
   Ce script distingue strictement l'environnement Electron/SQLite local de l'environnement
   PWA/Vercel/PostgreSQL. Les valeurs secrètes ne sont jamais écrites dans les journaux.
@@ -296,7 +296,7 @@ function Find-ProjectRoot {
         if ([string]::IsNullOrEmpty($parent) -or $parent -eq $current) { break }
         $current = $parent
     }
-    throw 'Racine GarageFlow introuvable (package.json et schémas Prisma requis).'
+    throw 'Racine GarageFlows introuvable (package.json et schémas Prisma requis).'
 }
 
 function Get-DesktopDirectory {
@@ -1018,7 +1018,7 @@ function Get-ServerBaseUrl {
         $value = Get-KnownLocalValue $name
         if ($value -match '^https?://') { return $value.TrimEnd('/') }
     }
-    $value = Read-Host 'URL HTTPS publique du serveur GarageFlow (ex. https://app.garageflows.fr)'
+    $value = Read-Host 'URL HTTPS publique du serveur GarageFlows (ex. https://app.garageflows.fr)'
     if ($value -notmatch '^https://') { throw 'Une URL HTTPS est requise.' }
     return $value.TrimEnd('/')
 }
@@ -2062,7 +2062,7 @@ function Invoke-Main {
     try {
         [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
         Write-Host '================================================================'
-        Write-Host 'GarageFlow - Configuration automatisée des API et variables'
+        Write-Host 'GarageFlows - Configuration automatisée des API et variables'
         Write-Host '================================================================'
         Write-GFStep 0 10 'Initialisation'
         $script:ProjectRoot = Find-ProjectRoot

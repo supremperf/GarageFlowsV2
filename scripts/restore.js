@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * GarageFlow — Database Restore Script
+ * GarageFlows — Database Restore Script
  *
  * Usage:
  *   node scripts/restore.js                  # interactive: list and choose a backup
@@ -12,7 +12,7 @@
  * that electron/main.js uses). It NEVER overwrites the backup — it copies the
  * backup to a new .restore file first, then replaces garageflow.db.
  *
- * IMPORTANT: Close GarageFlow before running this script.
+ * IMPORTANT: Close GarageFlows before running this script.
  */
 
 'use strict'

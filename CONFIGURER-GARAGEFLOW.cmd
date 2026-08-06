@@ -6,7 +6,7 @@ pushd "%~dp0" || (
   pause
   exit /b 1
 )
-title GarageFlow - Configuration des variables et API
+title GarageFlows - Configuration des variables et API
 
 set "SCRIPT=%~dp0scripts\configurer-api-garageflow.ps1"
 set "MANIFEST=%~dp0scripts\garageflow-env-manifest.json"

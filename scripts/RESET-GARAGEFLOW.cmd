@@ -6,10 +6,10 @@ pushd "%~dp0" || (
   pause
   exit /b 1
 )
-title GarageFlow - Rotation totale Vercel
+title GarageFlows - Rotation totale Vercel
 
 echo ================================================================
-echo GarageFlow - Rotation totale des variables Production
+echo GarageFlows - Rotation totale des variables Production
 echo Outil avance et potentiellement destructeur - Windows uniquement
 echo ================================================================
 echo.

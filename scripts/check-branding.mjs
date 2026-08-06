@@ -14,9 +14,11 @@
  *   - une occurrence VISIBLE non documentée fait ÉCHOUER la CI ;
  *   - la liste exacte des exceptions est AFFICHÉE (transparence).
  *
- * Périmètre = runtime expédié (src, public, electron). Les scripts de build/ops
- * (scripts/) ne sont pas du runtime visible ; la seule chaîne visible de
- * l'installateur (installer.nsh : DetailPrint) est traitée à la source.
+ * Périmètre = TOUT le dépôt utile : runtime expédié (src, public, electron),
+ * scripts (CMD/PS1/Python — keygen inclus), prisma, .github et fichiers racine
+ * (README, CHANGELOG, package.json…). Les rapports HISTORIQUES (marqueur
+ * `doc-status: historique`) sont hors périmètre : ils documentent d'anciennes
+ * versions et l'affichent en bandeau.
  */
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
@@ -24,8 +26,12 @@ import { join, extname, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..')
-const SCAN_DIRS = ['src', 'public', 'electron']
-const SCAN_EXT = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.html', '.webmanifest', '.css'])
+// Périmètre COMPLET : runtime expédié + racine + scripts + prisma + CI.
+// Aucun dossier n'est exclu en bloc ; les rapports HISTORIQUES (marqueur
+// `doc-status: historique`) sont ignorés car ils documentent d'anciennes versions.
+const SCAN_DIRS = ['src', 'public', 'electron', 'scripts', 'prisma', '.github']
+const ROOT_FILES = ['README.md', 'CHANGELOG.md', 'CONFIGURER-GARAGEFLOW.cmd', 'package.json', 'AUDIT_RAPPORT.md', 'AUDIT_TRACKER.md', 'FINAL_ENTERPRISE_READINESS_REPORT.md', 'FINAL_UNIFIED_GARAGEFLOW_REPORT.md']
+const SCAN_EXT = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.html', '.webmanifest', '.css', '.md', '.cmd', '.ps1', '.py', '.yml', '.yaml', '.json', '.prisma'])
 
 // ── Motifs d'IDENTIFIANTS techniques autorisés (ÉTROITS, jamais « visibles ») ──
 // Chacun ne matche qu'un jeton technique précis ; renommer casserait le code,
@@ -38,6 +44,10 @@ const IDENTIFIER_PATTERNS = [
   { re: /GarageFlow-DB-MAC-Salt/, why: 'sel de MAC base — NE PAS changer' },
   { re: /GarageFlow::v2::kdf/, why: 'sel KDF secure-key — NE PAS changer' },
   { re: /GarageFlow-KeygenGUI/, why: 'User-Agent keygen (compat control-plane)' },
+  { re: /%APPDATA%\\GarageFlow\b/, why: 'dossier de données HISTORIQUE Windows (compat installations)' },
+  { re: /Software\\GarageFlow\b/, why: 'clé de registre historique (compat installations)' },
+  { re: /'GarageFlow'\)$|, 'GarageFlow'\)/, why: "chemin du dossier de données historique (restore.js / userData pin)" },
+  { re: /appData'\), 'GarageFlow'/, why: 'épinglage userData historique (main.js)' },
 ]
 
 // ── Exceptions EXPLICITES {fichier, sous-chaîne, raison} (couples exacts) ──────
@@ -45,13 +55,22 @@ const EXPLICIT_EXCLUSIONS = [
   { file: 'electron/main.js', needle: "app.getPath('appData'), 'GarageFlow'", reason: "épinglage du dossier userData historique — préserve BD/licence/secret des installs existantes" },
   { file: 'electron/update-verify.js', needle: "EXPECTED_PRODUCT = 'GarageFlow'", reason: 'doit correspondre au champ « product » du flux de MàJ (identité interne, non visible)' },
   { file: 'src/lib/__tests__/update-verify.test.ts', needle: "product: 'GarageFlow'", reason: "reflète l'identité « product » du flux de MàJ (voir EXPECTED_PRODUCT)" },
+  { file: 'electron/user-data-path.js', needle: "LEGACY_DATA_DIR_NAME = 'GarageFlow'", reason: 'nom du dossier de données HISTORIQUE — compat installations existantes' },
+  { file: 'src/lib/__tests__/user-data-path.test.ts', needle: "toBe('GarageFlow')", reason: 'assertion de compat : le dossier historique ne doit JAMAIS être renommé' },
+  { file: 'src/lib/__tests__/user-data-path.test.ts', needle: "dossier HISTORIQUE GarageFlow", reason: 'intitulé du test de compat du dossier historique' },
 ]
 
 /** Retire les commentaires évidents (heuristique de scan de marque). */
-function stripComments(line) {
+function stripComments(line, ext) {
   const t = line.trimStart()
   if (t.startsWith('//') || t.startsWith('*') || t.startsWith('/*') || t.startsWith('<!--')) return ''
+  // Commentaires « # … » (Python / PowerShell / YAML) et « :: » / « rem » (CMD).
+  if ((ext === '.py' || ext === '.ps1' || ext === '.yml' || ext === '.yaml') && t.startsWith('#')) return ''
+  if (ext === '.cmd' && (t.startsWith('::') || /^rem\s/i.test(t))) return ''
   let out = line
+  // Markdown : le CODE (spans `…` et identifiants techniques documentés) n'est
+  // pas de la marque visible — on retire les spans inline.
+  if (ext === '.md') out = out.replace(/`[^`]*`/g, '')
   // Commentaire JSX {/* ... */} sur une ligne.
   out = out.replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
   // Commentaire /* ... */ inline.
@@ -91,15 +110,27 @@ for (const d of SCAN_DIRS) {
   const abs = join(ROOT, d)
   if (existsSync(abs)) walk(abs, files)
 }
+for (const f of ROOT_FILES) {
+  const abs = join(ROOT, f)
+  if (existsSync(abs)) files.push(abs)
+}
 
 const BRAND = /GarageFlow(?!s)/g
 const violations = []
 const usedExceptions = new Map()
 for (const file of files) {
   const rel = relative(ROOT, file).split('\\').join('/')
+  const ext = '.' + (rel.split('.').pop() ?? '')
   const text = readFileSync(file, 'utf8')
+  // Rapports HISTORIQUES : documentent d'anciennes versions — hors périmètre.
+  if (text.includes('doc-status: historique')) continue
+  let inFence = false
   text.split('\n').forEach((rawLine, i) => {
-    const line = stripComments(rawLine)
+    if (ext === '.md') {
+      if (rawLine.trimStart().startsWith('```')) { inFence = !inFence; return }
+      if (inFence) return // bloc de code markdown = technique, pas de marque visible
+    }
+    const line = stripComments(rawLine, ext)
     let m
     BRAND.lastIndex = 0
     while ((m = BRAND.exec(line))) {

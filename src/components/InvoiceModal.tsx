@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from '@/lib/i18n'
 import { X, Printer, FileText, Receipt, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { computeTotals, multiplyCents, toCents, fromCents } from '@/lib/money'
+import { computeTotals, multiplyCents, toCents, fromCents, lineCents } from '@/lib/money'
 
 interface Job {
   id: string
@@ -266,7 +266,7 @@ export default function InvoiceModal({ job, mode, onClose }: Props) {
                       </td>
                       <td className="px-3 py-3 text-center text-gray-600">{p.quantity}</td>
                       <td className="px-3 py-3 text-right text-gray-600">{fmt(p.unitPrice, currency)}</td>
-                      <td className="px-4 py-3 text-right font-semibold">{fmt(p.unitPrice * p.quantity, currency)}</td>
+                      <td className="px-4 py-3 text-right font-semibold">{fmt(fromCents(lineCents(p.unitPrice, p.quantity)), currency)}</td>
                     </tr>
                   ))}
                 </tbody>

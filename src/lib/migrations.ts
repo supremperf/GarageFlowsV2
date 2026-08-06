@@ -11,12 +11,32 @@ export interface UniqueIndexMigration {
   columns: string[]
 }
 
+/** Garde conditionnelle : la migration ne s'applique que selon l'état RÉEL du schéma. */
+export interface ColumnGuard {
+  table: string
+  column: string
+}
+
 export interface Migration {
   id: string
   /** Instruction SQL unique (mutuellement exclusif avec uniqueIndex). */
   sql?: string
   /** Création d'un index UNIQUE sûre (contrôle de doublons). */
   uniqueIndex?: UniqueIndexMigration
+  /**
+   * N'exécute la migration QUE si la colonne EXISTE (sinon : marquée appliquée,
+   * aucun effet). Utilisé par la migration monétaire : le backfill/drop d'une
+   * ancienne colonne Float n'a de sens que sur une base ANCIENNE — une base
+   * neuve (modèle au schéma actuel) ne possède plus ces colonnes.
+   */
+  onlyIfColumnExists?: ColumnGuard
+  /** N'exécute la migration QUE si la colonne MANQUE (idempotence des ADD COLUMN). */
+  onlyIfColumnMissing?: ColumnGuard
+}
+
+/** SQL listant les colonnes d'une table (PRAGMA) — pour les gardes ci-dessus. */
+export function tableColumnsSql(table: string): string {
+  return `PRAGMA table_info(${quoteIdent(table)})`
 }
 
 /** Échappe un identifiant SQLite (guillemets doubles). */
@@ -945,4 +965,61 @@ export const MIGRATIONS: Migration[] = [
   { id: '159_workorder_total_ttc_cents',  sql: 'ALTER TABLE "WorkOrder" ADD COLUMN "totalTtcCents" INTEGER' },
   { id: '160_purchaseorder_total_ht_cents', sql: 'ALTER TABLE "PurchaseOrder" ADD COLUMN "totalHtCents" INTEGER' },
   { id: '161_loaner_deposit_amount_cents', sql: 'ALTER TABLE "LoanerReservation" ADD COLUMN "depositAmountCents" INTEGER' },
+  // ── MIGRATION MONÉTAIRE FINALE : entiers exacts, suppression des Float ────
+  // Par colonne : (a) ADD de la colonne exacte si absente ; (b) BACKFILL
+  // déterministe round(ancien×échelle) si l'ancienne colonne existe ;
+  // (c) DROP de l'ancienne colonne Float. Les gardes onlyIfColumn* rendent
+  // la séquence sûre sur TOUTES les bases : ancienne (migre) comme neuve
+  // (déjà au bon schéma → no-op). Aucune donnée supprimée avant conversion.
+  { id: '162_add_garage_hourlyratetenthousandths', onlyIfColumnMissing: { table: 'Garage', column: 'hourlyRateTenThousandths' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "hourlyRateTenThousandths" INTEGER NOT NULL DEFAULT 600000' },
+  { id: '163_backfill_garage_hourlyratetenthousandths', onlyIfColumnExists: { table: 'Garage', column: 'hourlyRate' }, sql: 'UPDATE "Garage" SET "hourlyRateTenThousandths" = CAST(ROUND("hourlyRate" * 10000) AS INTEGER) WHERE "hourlyRate" IS NOT NULL' },
+  { id: '164_drop_garage_hourlyrate', onlyIfColumnExists: { table: 'Garage', column: 'hourlyRate' }, sql: 'ALTER TABLE "Garage" DROP COLUMN "hourlyRate"' },
+  { id: '165_add_part_unitcosttenthousandths', onlyIfColumnMissing: { table: 'Part', column: 'unitCostTenThousandths' }, sql: 'ALTER TABLE "Part" ADD COLUMN "unitCostTenThousandths" INTEGER NOT NULL DEFAULT 0' },
+  { id: '166_backfill_part_unitcosttenthousandths', onlyIfColumnExists: { table: 'Part', column: 'unitCost' }, sql: 'UPDATE "Part" SET "unitCostTenThousandths" = CAST(ROUND("unitCost" * 10000) AS INTEGER) WHERE "unitCost" IS NOT NULL' },
+  { id: '167_drop_part_unitcost', onlyIfColumnExists: { table: 'Part', column: 'unitCost' }, sql: 'ALTER TABLE "Part" DROP COLUMN "unitCost"' },
+  { id: '168_add_part_unitpricetenthousandths', onlyIfColumnMissing: { table: 'Part', column: 'unitPriceTenThousandths' }, sql: 'ALTER TABLE "Part" ADD COLUMN "unitPriceTenThousandths" INTEGER NOT NULL DEFAULT 0' },
+  { id: '169_backfill_part_unitpricetenthousandths', onlyIfColumnExists: { table: 'Part', column: 'unitPrice' }, sql: 'UPDATE "Part" SET "unitPriceTenThousandths" = CAST(ROUND("unitPrice" * 10000) AS INTEGER) WHERE "unitPrice" IS NOT NULL' },
+  { id: '170_drop_part_unitprice', onlyIfColumnExists: { table: 'Part', column: 'unitPrice' }, sql: 'ALTER TABLE "Part" DROP COLUMN "unitPrice"' },
+  { id: '171_add_jobpart_unitpricetenthousandths', onlyIfColumnMissing: { table: 'JobPart', column: 'unitPriceTenThousandths' }, sql: 'ALTER TABLE "JobPart" ADD COLUMN "unitPriceTenThousandths" INTEGER NOT NULL DEFAULT 0' },
+  { id: '172_backfill_jobpart_unitpricetenthousandths', onlyIfColumnExists: { table: 'JobPart', column: 'unitPrice' }, sql: 'UPDATE "JobPart" SET "unitPriceTenThousandths" = CAST(ROUND("unitPrice" * 10000) AS INTEGER) WHERE "unitPrice" IS NOT NULL' },
+  { id: '173_drop_jobpart_unitprice', onlyIfColumnExists: { table: 'JobPart', column: 'unitPrice' }, sql: 'ALTER TABLE "JobPart" DROP COLUMN "unitPrice"' },
+  { id: '174_add_jobpart_unitcosttenthousandths', onlyIfColumnMissing: { table: 'JobPart', column: 'unitCostTenThousandths' }, sql: 'ALTER TABLE "JobPart" ADD COLUMN "unitCostTenThousandths" INTEGER NOT NULL DEFAULT 0' },
+  { id: '175_backfill_jobpart_unitcosttenthousandths', onlyIfColumnExists: { table: 'JobPart', column: 'unitCost' }, sql: 'UPDATE "JobPart" SET "unitCostTenThousandths" = CAST(ROUND("unitCost" * 10000) AS INTEGER) WHERE "unitCost" IS NOT NULL' },
+  { id: '176_drop_jobpart_unitcost', onlyIfColumnExists: { table: 'JobPart', column: 'unitCost' }, sql: 'ALTER TABLE "JobPart" DROP COLUMN "unitCost"' },
+  { id: '177_add_quoteline_quantitytenthousandths', onlyIfColumnMissing: { table: 'QuoteLine', column: 'quantityTenThousandths' }, sql: 'ALTER TABLE "QuoteLine" ADD COLUMN "quantityTenThousandths" INTEGER NOT NULL DEFAULT 10000' },
+  { id: '178_backfill_quoteline_quantitytenthousandths', onlyIfColumnExists: { table: 'QuoteLine', column: 'quantity' }, sql: 'UPDATE "QuoteLine" SET "quantityTenThousandths" = CAST(ROUND("quantity" * 10000) AS INTEGER) WHERE "quantity" IS NOT NULL' },
+  { id: '179_drop_quoteline_quantity', onlyIfColumnExists: { table: 'QuoteLine', column: 'quantity' }, sql: 'ALTER TABLE "QuoteLine" DROP COLUMN "quantity"' },
+  { id: '180_add_quoteline_unitpricetenthousandths', onlyIfColumnMissing: { table: 'QuoteLine', column: 'unitPriceTenThousandths' }, sql: 'ALTER TABLE "QuoteLine" ADD COLUMN "unitPriceTenThousandths" INTEGER NOT NULL DEFAULT 0' },
+  { id: '181_backfill_quoteline_unitpricetenthousandths', onlyIfColumnExists: { table: 'QuoteLine', column: 'unitPrice' }, sql: 'UPDATE "QuoteLine" SET "unitPriceTenThousandths" = CAST(ROUND("unitPrice" * 10000) AS INTEGER) WHERE "unitPrice" IS NOT NULL' },
+  { id: '182_drop_quoteline_unitprice', onlyIfColumnExists: { table: 'QuoteLine', column: 'unitPrice' }, sql: 'ALTER TABLE "QuoteLine" DROP COLUMN "unitPrice"' },
+  { id: '183_add_quoteline_unitcosttenthousandths', onlyIfColumnMissing: { table: 'QuoteLine', column: 'unitCostTenThousandths' }, sql: 'ALTER TABLE "QuoteLine" ADD COLUMN "unitCostTenThousandths" INTEGER NOT NULL DEFAULT 0' },
+  { id: '184_backfill_quoteline_unitcosttenthousandths', onlyIfColumnExists: { table: 'QuoteLine', column: 'unitCost' }, sql: 'UPDATE "QuoteLine" SET "unitCostTenThousandths" = CAST(ROUND("unitCost" * 10000) AS INTEGER) WHERE "unitCost" IS NOT NULL' },
+  { id: '185_drop_quoteline_unitcost', onlyIfColumnExists: { table: 'QuoteLine', column: 'unitCost' }, sql: 'ALTER TABLE "QuoteLine" DROP COLUMN "unitCost"' },
+  { id: '186_add_invoiceline_quantitytenthousandths', onlyIfColumnMissing: { table: 'InvoiceLine', column: 'quantityTenThousandths' }, sql: 'ALTER TABLE "InvoiceLine" ADD COLUMN "quantityTenThousandths" INTEGER NOT NULL DEFAULT 10000' },
+  { id: '187_backfill_invoiceline_quantitytenthousandths', onlyIfColumnExists: { table: 'InvoiceLine', column: 'quantity' }, sql: 'UPDATE "InvoiceLine" SET "quantityTenThousandths" = CAST(ROUND("quantity" * 10000) AS INTEGER) WHERE "quantity" IS NOT NULL' },
+  { id: '188_drop_invoiceline_quantity', onlyIfColumnExists: { table: 'InvoiceLine', column: 'quantity' }, sql: 'ALTER TABLE "InvoiceLine" DROP COLUMN "quantity"' },
+  { id: '189_add_invoiceline_unitpricetenthousandths', onlyIfColumnMissing: { table: 'InvoiceLine', column: 'unitPriceTenThousandths' }, sql: 'ALTER TABLE "InvoiceLine" ADD COLUMN "unitPriceTenThousandths" INTEGER NOT NULL DEFAULT 0' },
+  { id: '190_backfill_invoiceline_unitpricetenthousandths', onlyIfColumnExists: { table: 'InvoiceLine', column: 'unitPrice' }, sql: 'UPDATE "InvoiceLine" SET "unitPriceTenThousandths" = CAST(ROUND("unitPrice" * 10000) AS INTEGER) WHERE "unitPrice" IS NOT NULL' },
+  { id: '191_drop_invoiceline_unitprice', onlyIfColumnExists: { table: 'InvoiceLine', column: 'unitPrice' }, sql: 'ALTER TABLE "InvoiceLine" DROP COLUMN "unitPrice"' },
+  { id: '192_add_invoiceline_unitcosttenthousandths', onlyIfColumnMissing: { table: 'InvoiceLine', column: 'unitCostTenThousandths' }, sql: 'ALTER TABLE "InvoiceLine" ADD COLUMN "unitCostTenThousandths" INTEGER NOT NULL DEFAULT 0' },
+  { id: '193_backfill_invoiceline_unitcosttenthousandths', onlyIfColumnExists: { table: 'InvoiceLine', column: 'unitCost' }, sql: 'UPDATE "InvoiceLine" SET "unitCostTenThousandths" = CAST(ROUND("unitCost" * 10000) AS INTEGER) WHERE "unitCost" IS NOT NULL' },
+  { id: '194_drop_invoiceline_unitcost', onlyIfColumnExists: { table: 'InvoiceLine', column: 'unitCost' }, sql: 'ALTER TABLE "InvoiceLine" DROP COLUMN "unitCost"' },
+  { id: '195_add_laboroperation_unitpricetenthousandths', onlyIfColumnMissing: { table: 'LaborOperation', column: 'unitPriceTenThousandths' }, sql: 'ALTER TABLE "LaborOperation" ADD COLUMN "unitPriceTenThousandths" INTEGER NOT NULL DEFAULT 0' },
+  { id: '196_backfill_laboroperation_unitpricetenthousandths', onlyIfColumnExists: { table: 'LaborOperation', column: 'unitPrice' }, sql: 'UPDATE "LaborOperation" SET "unitPriceTenThousandths" = CAST(ROUND("unitPrice" * 10000) AS INTEGER) WHERE "unitPrice" IS NOT NULL' },
+  { id: '197_drop_laboroperation_unitprice', onlyIfColumnExists: { table: 'LaborOperation', column: 'unitPrice' }, sql: 'ALTER TABLE "LaborOperation" DROP COLUMN "unitPrice"' },
+  { id: '198_add_loanerreservation_dailyratetenthousandths', onlyIfColumnMissing: { table: 'LoanerReservation', column: 'dailyRateTenThousandths' }, sql: 'ALTER TABLE "LoanerReservation" ADD COLUMN "dailyRateTenThousandths" INTEGER' },
+  { id: '199_backfill_loanerreservation_dailyratetenthousandths', onlyIfColumnExists: { table: 'LoanerReservation', column: 'dailyRate' }, sql: 'UPDATE "LoanerReservation" SET "dailyRateTenThousandths" = CASE WHEN "dailyRate" IS NULL THEN NULL ELSE CAST(ROUND("dailyRate" * 10000) AS INTEGER) END WHERE "dailyRateTenThousandths" IS NULL' },
+  { id: '200_drop_loanerreservation_dailyrate', onlyIfColumnExists: { table: 'LoanerReservation', column: 'dailyRate' }, sql: 'ALTER TABLE "LoanerReservation" DROP COLUMN "dailyRate"' },
+  { id: '201_add_loanerreservation_depositamountcents', onlyIfColumnMissing: { table: 'LoanerReservation', column: 'depositAmountCents' }, sql: 'ALTER TABLE "LoanerReservation" ADD COLUMN "depositAmountCents" INTEGER' },
+  { id: '202_backfill_loanerreservation_depositamountcents', onlyIfColumnExists: { table: 'LoanerReservation', column: 'depositAmount' }, sql: 'UPDATE "LoanerReservation" SET "depositAmountCents" = CASE WHEN "depositAmount" IS NULL THEN NULL ELSE CAST(ROUND("depositAmount" * 100) AS INTEGER) END WHERE "depositAmountCents" IS NULL' },
+  { id: '203_drop_loanerreservation_depositamount', onlyIfColumnExists: { table: 'LoanerReservation', column: 'depositAmount' }, sql: 'ALTER TABLE "LoanerReservation" DROP COLUMN "depositAmount"' },
+  { id: '204_add_workorder_totalhtcents', onlyIfColumnMissing: { table: 'WorkOrder', column: 'totalHtCents' }, sql: 'ALTER TABLE "WorkOrder" ADD COLUMN "totalHtCents" INTEGER NOT NULL DEFAULT 0' },
+  { id: '205_backfill_workorder_totalhtcents', onlyIfColumnExists: { table: 'WorkOrder', column: 'totalHT' }, sql: 'UPDATE "WorkOrder" SET "totalHtCents" = CAST(ROUND("totalHT" * 100) AS INTEGER) WHERE "totalHT" IS NOT NULL' },
+  { id: '206_drop_workorder_totalht', onlyIfColumnExists: { table: 'WorkOrder', column: 'totalHT' }, sql: 'ALTER TABLE "WorkOrder" DROP COLUMN "totalHT"' },
+  { id: '207_add_workorder_totalttccents', onlyIfColumnMissing: { table: 'WorkOrder', column: 'totalTtcCents' }, sql: 'ALTER TABLE "WorkOrder" ADD COLUMN "totalTtcCents" INTEGER NOT NULL DEFAULT 0' },
+  { id: '208_backfill_workorder_totalttccents', onlyIfColumnExists: { table: 'WorkOrder', column: 'totalTTC' }, sql: 'UPDATE "WorkOrder" SET "totalTtcCents" = CAST(ROUND("totalTTC" * 100) AS INTEGER) WHERE "totalTTC" IS NOT NULL' },
+  { id: '209_drop_workorder_totalttc', onlyIfColumnExists: { table: 'WorkOrder', column: 'totalTTC' }, sql: 'ALTER TABLE "WorkOrder" DROP COLUMN "totalTTC"' },
+  { id: '210_add_purchaseorder_totalhtcents', onlyIfColumnMissing: { table: 'PurchaseOrder', column: 'totalHtCents' }, sql: 'ALTER TABLE "PurchaseOrder" ADD COLUMN "totalHtCents" INTEGER NOT NULL DEFAULT 0' },
+  { id: '211_backfill_purchaseorder_totalhtcents', onlyIfColumnExists: { table: 'PurchaseOrder', column: 'totalHT' }, sql: 'UPDATE "PurchaseOrder" SET "totalHtCents" = CAST(ROUND("totalHT" * 100) AS INTEGER) WHERE "totalHT" IS NOT NULL' },
+  { id: '212_drop_purchaseorder_totalht', onlyIfColumnExists: { table: 'PurchaseOrder', column: 'totalHT' }, sql: 'ALTER TABLE "PurchaseOrder" DROP COLUMN "totalHT"' },
 ]

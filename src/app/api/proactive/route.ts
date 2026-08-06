@@ -1,9 +1,11 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
+import { fromScaled } from '@/lib/money'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { addDays, differenceInDays, format, parseISO, startOfDay, subMonths } from 'date-fns'
 import { calcTotalTTC } from '@/lib/billing'
+import { billingLines } from '@/lib/money-db'
 import { planReorders, type StockItemInput } from '@/lib/stock-forecast'
 import { buildAlerts, type ProactiveInput } from '@/lib/proactive'
 
@@ -23,7 +25,7 @@ export const GET = withAuth(async () => {
     const keys = Array.from({ length: months }, (_, i) => format(subMonths(today, months - 1 - i), 'yyyy-MM'))
     const idx = new Map(keys.map((k, i) => [k, i]))
     const [parts, jobParts] = await Promise.all([
-      prisma.part.findMany({ where: { garageId }, select: { id: true, name: true, reference: true, quantity: true, unitCost: true, minQuantity: true } }),
+      prisma.part.findMany({ where: { garageId }, select: { id: true, name: true, reference: true, quantity: true, unitCostTenThousandths: true, minQuantity: true } }),
       prisma.jobPart.findMany({ where: { job: { garageId, date: { gte: startDate } } }, select: { partId: true, quantity: true, job: { select: { date: true } } } }),
     ])
     const consumption = new Map<string, number[]>()
@@ -33,7 +35,7 @@ export const GET = withAuth(async () => {
       if (arr && jp.job) { const i = idx.get(jp.job.date.slice(0, 7)); if (i !== undefined) arr[i] += jp.quantity }
     }
     const report = planReorders(parts.map((p): { item: StockItemInput; consumption: number[] } => ({
-      item: { id: p.id, name: p.name, reference: p.reference, currentStock: p.quantity, unitCost: p.unitCost, minStock: p.minQuantity, leadTimeDays: 7, periodDays: 30 },
+      item: { id: p.id, name: p.name, reference: p.reference, currentStock: p.quantity, unitCost: fromScaled(p.unitCostTenThousandths), minStock: p.minQuantity, leadTimeDays: 7, periodDays: 30 },
       consumption: consumption.get(p.id) ?? [],
     })))
     input.stock = report.plans
@@ -45,12 +47,12 @@ export const GET = withAuth(async () => {
   try {
     const invoices = await prisma.invoice.findMany({
       where: { garageId },
-      select: { id: true, number: true, status: true, clientId: true, clientName: true, issueDate: true, dueDate: true, taxRate: true, lines: { select: { quantity: true, unitPrice: true } } },
+      select: { id: true, number: true, status: true, clientId: true, clientName: true, issueDate: true, dueDate: true, taxRate: true, lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true } } },
     })
     const overdue = []
     const byClient = new Map<string, { name: string; total: number; last: string }>()
     for (const inv of invoices) {
-      const ttc = calcTotalTTC(inv.lines, inv.taxRate)
+      const ttc = calcTotalTTC(billingLines(inv.lines), inv.taxRate)
       if (inv.status !== 'paid' && inv.status !== 'draft' && inv.dueDate) {
         const days = differenceInDays(today, parseISO(inv.dueDate))
         if (days > 0) overdue.push({ id: inv.id, number: inv.number, clientName: inv.clientName ?? '—', amount: ttc, overdueDays: days })
@@ -72,10 +74,10 @@ export const GET = withAuth(async () => {
   try {
     const quotes = await prisma.quote.findMany({
       where: { garageId, status: 'sent' },
-      select: { id: true, number: true, clientName: true, createdAt: true, taxRate: true, lines: { select: { quantity: true, unitPrice: true } } },
+      select: { id: true, number: true, clientName: true, createdAt: true, taxRate: true, lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true } } },
     })
     input.quotes = quotes.map((q) => ({
-      id: q.id, number: q.number, clientName: q.clientName, ageDays: differenceInDays(today, startOfDay(q.createdAt)), amount: calcTotalTTC(q.lines, q.taxRate),
+      id: q.id, number: q.number, clientName: q.clientName, ageDays: differenceInDays(today, startOfDay(q.createdAt)), amount: calcTotalTTC(billingLines(q.lines), q.taxRate),
     }))
   } catch { /* optional */ }
 

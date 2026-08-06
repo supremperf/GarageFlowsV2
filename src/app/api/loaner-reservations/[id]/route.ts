@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { loanerToEuros } from '@/lib/money-db'
 
 export const PATCH = withAuth(async (req, { params }: { params: { id: string } }) => {
   const session = await requireSession()
@@ -25,7 +26,7 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
     data,
     include: { vehicle: { select: { id: true, name: true, licensePlate: true } } },
   })
-  return NextResponse.json(updated)
+  return NextResponse.json(loanerToEuros(updated))
 })
 
 export const DELETE = withAuth(async (_req, { params }: { params: { id: string } }) => {

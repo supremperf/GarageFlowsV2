@@ -5,6 +5,7 @@ import { withAuth, requireSession } from '@/lib/api-helpers'
 import { UpdateQuoteSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
 import { withTotals } from '@/lib/billing'
+import { lineToScaled, linesToEuros } from '@/lib/money-db'
 
 // GET /api/quotes/[id]
 export const GET = withAuth(async (_req, { params }) => {
@@ -14,7 +15,7 @@ export const GET = withAuth(async (_req, { params }) => {
     include: { lines: { orderBy: { sortOrder: 'asc' } } },
   })
   if (!quote) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(withTotals(quote))
+  return NextResponse.json(withTotals({ ...quote, lines: linesToEuros(quote.lines) }))
 })
 
 // PATCH /api/quotes/[id]
@@ -38,9 +39,7 @@ export const PATCH = withAuth(async (req, { params }) => {
       data: body.lines.map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
         quoteId: params.id,
         description: l.description,
-        quantity: l.quantity ?? 1,
-        unitPrice: l.unitPrice ?? 0,
-        unitCost: l.unitCost ?? 0,
+        ...lineToScaled(l), // saisie euros -> entiers exacts (dix-milliemes)
         isLabor: l.isLabor ?? false,
         sortOrder: l.sortOrder ?? i,
       })),
@@ -66,7 +65,7 @@ export const PATCH = withAuth(async (req, { params }) => {
 
   await logAudit({ action: 'update', entityType: 'Quote', entityId: quote.id, session, req })
 
-  return NextResponse.json(withTotals(quote))
+  return NextResponse.json(withTotals({ ...quote, lines: linesToEuros(quote.lines) }))
 })
 
 // DELETE /api/quotes/[id]

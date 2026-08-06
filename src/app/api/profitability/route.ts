@@ -5,6 +5,8 @@ import { withAuth, requireSession } from '@/lib/api-helpers'
 import { can } from '@/lib/authz'
 import { subMonths, format } from 'date-fns'
 import { analyze, type AnalyzedInvoice, type AnalyzedJobPart, type PartStock } from '@/lib/profitability'
+import { linesToEuros, partToEuros } from '@/lib/money-db'
+import { fromScaled } from '@/lib/money'
 
 // GET /api/profitability?months=6 — margin breakdowns + anomalies + recommendations.
 export const GET = withAuth(async (req) => {
@@ -21,7 +23,7 @@ export const GET = withAuth(async (req) => {
     prisma.invoice.findMany({
       where: { garageId, status: 'paid', issueDate: { gte: startStr } },
       include: {
-        lines: { select: { description: true, quantity: true, unitPrice: true, unitCost: true, isLabor: true } },
+        lines: { select: { description: true, quantityTenThousandths: true, unitPriceTenThousandths: true, unitCostTenThousandths: true, isLabor: true } },
         client: { select: { id: true, name: true } },
         vehicle: { select: { id: true, make: true } },
         job: { select: { mechanic: { select: { id: true, name: true } } } },
@@ -33,7 +35,7 @@ export const GET = withAuth(async (req) => {
     }),
     prisma.part.findMany({
       where: { garageId },
-      select: { id: true, name: true, reference: true, quantity: true, unitCost: true, unitPrice: true },
+      select: { id: true, name: true, reference: true, quantity: true, unitCostTenThousandths: true, unitPriceTenThousandths: true },
     }),
     prisma.garage.findUnique({ where: { id: garageId }, select: { currency: true } }),
   ])
@@ -48,18 +50,19 @@ export const GET = withAuth(async (req) => {
     make: inv.vehicle?.make ?? null,
     mechanicId: inv.job?.mechanic?.id ?? null,
     mechanicName: inv.job?.mechanic?.name ?? null,
-    lines: inv.lines,
+    lines: linesToEuros(inv.lines),
   }))
 
   const jobParts: AnalyzedJobPart[] = rawJobParts.map((jp) => ({
     partId: jp.partId,
     partName: jp.part?.name ?? '—',
     quantity: jp.quantity,
-    unitPrice: jp.unitPrice,
-    unitCost: jp.unitCost,
+    unitPrice: fromScaled(jp.unitPriceTenThousandths),
+    unitCost: fromScaled(jp.unitCostTenThousandths),
   }))
 
-  const parts: PartStock[] = rawParts as PartStock[]
+  // Vue euros des entiers exacts (unitCost/unitPrice dérivés).
+  const parts: PartStock[] = rawParts.map(p => partToEuros(p))
 
   const report = analyze({ invoices, jobParts, parts, currency: garage?.currency ?? 'EUR' })
   return NextResponse.json(report)

@@ -1,147 +1,123 @@
-# Montants financiers — architecture monétaire déterministe
+# Architecture monétaire — entiers exacts (migration TERMINÉE au niveau schéma)
 
-> Statut : **calcul 100 % en centimes entiers (fait)** + **stockage des totaux en
-> centimes, additif et non destructif (fait, colonnes `*Cents`)**. Le retrait des
-> colonnes Float et la migration des **prix unitaires** en sous-unités sont
-> **stagés** (raisons ci-dessous). Rien n'est simulé : le backfill sur **données
-> réelles** est exécuté par l'opérateur (SQL fourni), pas dans cet environnement.
+> Statut : **ZÉRO champ monétaire `Float`** dans les deux schémas Prisma
+> (`npm run check:money` le prouve et l'impose en CI). Les montants sont stockés
+> en **entiers exacts** ; tous les calculs passent par la couche centrale
+> `src/lib/money.ts` (`npm run check:money-calculations` l'impose). Le **backfill
+> des données réelles de production** reste à exécuter par l'opérateur (migrations
+> fournies, vérification bloquante intégrée) — voir §5/§6.
 
-## 1. Le vrai problème : l'ARITHMÉTIQUE, pas seulement le stockage
+## 1. Représentation de stockage (unique source de vérité)
 
-`0.1 + 0.2 === 0.30000000000000004` en IEEE-754. Le danger des Float monétaires
-vient surtout des **calculs** (sommes de lignes, TVA, marges, soldes) qui
-accumulent ce bruit. Un stockage « décimal » ne corrige rien si l'application
-additionne encore des flottants avant d'écrire.
+| Nature | Représentation | Exemple |
+|---|---|---|
+| Totaux, TVA, soldes, cautions, avoirs | **centimes entiers** (`*Cents` Int) | 37,04 € → `3704` |
+| Prix / coûts unitaires, taux horaires & journaliers | **dix-millièmes d'euro** (`*TenThousandths` Int) | 12,3456 € → `123456` |
+| Quantités fractionnaires (lignes devis/facture) | **dix-millièmes d'unité** (`quantityTenThousandths` Int) | 1,5 → `15000` |
+| Taux de TVA | Float **classé non monétaire** (valeurs 0/5,5/10/20 exactes en binaire ; 1 multiplication + 1 arrondi en centimes) | `20` |
+| Quantités de stock (Part/JobPart) | Int (unités entières, non monétaire) | `5` |
 
-## 2. Couche de calcul — `src/lib/money.ts` (source unique)
+Champs migrés (les 2 schémas, SQLite + PostgreSQL, **identiques**) :
+`Garage.hourlyRateTenThousandths`, `Part.unitCost/unitPriceTenThousandths`,
+`JobPart.unitPrice/unitCostTenThousandths`, `QuoteLine`/`InvoiceLine`
+`.quantity/unitPrice/unitCostTenThousandths`, `LaborOperation.unitPriceTenThousandths`,
+`LoanerReservation.dailyRateTenThousandths` + `depositAmountCents`,
+`WorkOrder.totalHtCents/totalTtcCents`, `PurchaseOrder.totalHtCents`.
+**Les anciennes colonnes Float sont SUPPRIMÉES des schémas** — aucune double
+écriture, aucun fallback applicatif.
 
-TOUT calcul financier passe par des **entiers de centimes** :
+## 2. Couche de calcul — `src/lib/money.ts` (obligatoire)
 
-- `toCents` / `fromCents` — conversion €⇄centimes, **arrondi demi-éloigné-de-zéro**,
-  robuste au bruit binaire à toute magnitude ;
-- `multiplyCents(cents, quantité)` — ligne = `round(quantité × prix_centimes)` ;
-- `computeTotals(lignes, taux)` — HT, TVA, TTC ; **invariant garanti** `TTC = HT + TVA` ;
-- `applyDiscountCents` — remise (% puis fixe), plancher à 0 ;
-- `balanceCents` — `solde = TTC − paiements − avoirs` ;
-- `marginCents` / `computeMarginCents` — **marge = produit − coût**, exacte, signe conservé.
+- `lineCents(prix_€, qté)` — arrondi du **montant étendu** par ligne : le prix
+  unitaire **n'est jamais arrondi au centime avant** multiplication.
+  **12,3456 € × 3 = 37,04 €** (testé ; 37,05 est interdit).
+- `lineTotalCentsFromScaled(uPtt, qtt)` — chemin **100 % entier** (dix-millièmes ×
+  dix-millièmes → centimes, un seul arrondi, garde anti-dépassement 2^53).
+- `computeTotals` — HT/TVA/TTC, invariant `TTC = HT + TVA` au centime.
+- `toScaled`/`fromScaled` (±, échelle 1e-4), `toCents`/`fromCents`,
+  `marginCents`/`computeMarginCents`, `applyDiscountCents`, `balanceCents`,
+  `allocateCents` (répartition d'arrondi sans perte), `parseAmountToScaled`
+  (**parsing STRICT** des saisies : virgule/point, refus NaN/Infinity/notation
+  exponentielle/> 4 décimales/hors Int32 — jamais de `Number()` silencieux).
+- `src/lib/money-db.ts` — frontière base⇄application : dérive la **vue euros**
+  des entiers exacts (`linesToEuros`, `partToEuros`, `garageToEuros`,
+  `workOrderToEuros`, …) et convertit les saisies (`lineToScaled`).
 
-`src/lib/billing.ts` (routes invoices/quotes/stats) et les **ordres de réparation**
-(`/api/work-orders`) délèguent désormais à `money.ts` — plus **aucune** arithmétique
-flottante native pour l'argent dans ces chemins (l'ancien calcul OR
-`Math.round((worksHT+partsHT)*100)/100` a été remplacé).
+**Fidélité binaire** : `scaled/10000` est une division IEEE correctement arrondie
+→ elle redonne EXACTEMENT le même double que la saisie d'origine
+(`199900/10000 === 19.99`). Conséquences prouvées par les tests : documents
+**signés** (canonicalisation euros) inchangés, PDF/exports identiques, 1017 tests
+verts sans modification d'aucune valeur attendue.
 
-**Centralisation étendue** : les calculs de marge/coût de `src/lib/analytics/metrics.ts`,
-`src/app/api/finance/route.ts`, `src/app/api/stats/route.ts` et
-`src/app/api/purchase-orders/route.ts` passent désormais par `lineCents` (arrondi par
-ligne du montant étendu) au lieu de `quantité × prix` en flottant natif. Résultats
-**identiques** sur les données à 2 décimales (non-régression prouvée par la suite de
-tests), et **corrects** pour les prix à 3-4 décimales.
+## 3. Contrat d'API
 
-**Garde-fou CI** : `scripts/check-money-fields.mjs` interdit tout **nouveau** champ
-Float monétaire non classé et **liste nommément** les champs monétaires encore en
-Float (miroirs de totaux + prix unitaires stagés) — voir §4/§7.
+Les réponses exposent **les entiers exacts** (source de vérité, sans perte JSON)
+**et** les nombres euros dérivés (`unitPrice`, `quantity`, `totalHT`, …) pour
+l'affichage et la compatibilité. Les saisies clientes restent en euros/unités,
+validées par Zod (`finite`, bornes, **≤ 4 décimales**) puis converties en entiers
+exacts à l'écriture. Les anciennes **sauvegardes** (euros flottants) restent
+restaurables : `restoreSnapshot` convertit à la volée (`migrateLegacyRow`).
 
-## 3. Contrat d'arrondi (centralisé & documenté)
+## 4. Règles d'arrondi (centralisées — aucune route n'invente la sienne)
 
 | Règle | Décision |
 |---|---|
-| Précision intermédiaire | **centimes entiers** ; le **prix unitaire garde sa précision (≥ 4 décimales)** jusqu'à la multiplication |
-| Arrondi d'une ligne | `lineCents(prix_€, qté) = round(prix_€ × qté)` — arrondi du **MONTANT ÉTENDU**, PAR LIGNE, le prix n'est **PAS** arrondi au centime avant. Ainsi **12,3456 € × 3 = 37,04 €** (et non 37,05). |
-| Arrondi de TVA | `round(HT_centimes × taux / 100)` — sur le **total HT**, une fois |
-| TTC | `HT_centimes + TVA_centimes` (addition exacte) → jamais recalculé depuis un flottant |
-| Remises | pourcentage puis montant fixe, en centimes ; plancher à 0 |
-| Avoirs / montants négatifs | arrondi **symétrique** (miroir des montants positifs) → une facture et son avoir s'annulent exactement (résidu 0) |
-| Mode d'arrondi | **demi-éloigné-de-zéro** (`toCents`/`multiplyCents`) |
+| Ligne | `round(prix_exact × qté_exacte)` au **centime**, une seule fois, demi-éloigné-de-zéro |
+| TVA | `round(HT_centimes × taux / 100)` sur le total HT, une fois |
+| TTC | `HT_centimes + TVA_centimes` (exact) |
+| Remises | % puis fixe, en centimes, plancher 0 |
+| Négatifs (avoirs) | arrondi symétrique — une facture et son avoir s'annulent exactement |
+| Répartition | `allocateCents` (plus fort reste, somme exacte garantie) |
 
-Ce contrat est **identique** pour factures, devis et ordres de réparation
-(cohérence prouvée par tests : `money.test.ts`, `money-migration.test.ts`,
-`money-document-consistency.test.ts`, `tva.test.ts`).
+## 5. Migrations (fournies, vérifiées, ordonnées)
 
-## 4. Classification des champs (ne PAS tout convertir pareil)
+**PostgreSQL** (chaîne `prisma migrate deploy`, testée sur base vide en CI) :
+1. `20260806100000_money_cents` — totaux en centimes (add + backfill).
+2. `20260807000000_money_scaled_units` — **ADD** colonnes exactes + **BACKFILL**
+   `ROUND(ancien × 10000)` + **VÉRIFICATION BLOQUANTE** (`RAISE EXCEPTION` si une
+   ligne diverge > ½ unité d'échelle — la migration échoue AVANT toute perte).
+3. `20260807100000_money_drop_floats` — re-vérification défensive, contraintes
+   `NOT NULL DEFAULT 0` sur les centimes, **DROP** des anciennes colonnes Float.
 
-| Modèle.champ | Nature | Traitement |
-|---|---|---|
-| `WorkOrder.totalHT` / `totalTTC` | **total monétaire** (somme arrondie) | **→ `totalHtCents` / `totalTtcCents` (Int)** — fait |
-| `PurchaseOrder.totalHT` | **total monétaire** | **→ `totalHtCents` (Int)** — fait |
-| `LoanerReservation.depositAmount` | **somme** (caution) | **→ `depositAmountCents` (Int)** — fait |
-| `*.unitPrice`, `*.unitCost`, `LaborOperation.unitPrice`, `Garage.hourlyRate`, `LoanerReservation.dailyRate` | **prix/coût unitaire** (sous-centime possible) | **stagé** (sous-unités entières ×10 000) — cf. §7 |
-| `*.quantity` (Quote/Invoice line, Part) | **quantité** (fractionnable) | **non monétaire** — reste numérique (stagé en sous-unités si besoin) |
-| `*.taxRate` (Garage/Quote/Invoice/WorkOrder) | **taux (%)** | **non monétaire** — reste numérique |
+**SQLite (desktop)** : entrées **162–212** du runner versionné
+(`src/lib/migrations.ts` + `/api/internal/migrate`), appliquées une fois au
+démarrage Electron. Chaque colonne : ADD (garde `onlyIfColumnMissing`) →
+BACKFILL déterministe (garde `onlyIfColumnExists` sur l'ancienne colonne) →
+DROP. Les gardes rendent la séquence sûre sur base ANCIENNE (migre) comme NEUVE
+(no-op). **Preuve exécutée** : `npm run test:migration` rejoue la séquence sur
+une base ancienne peuplée (positifs, négatifs, NULL, 4 décimales, 0,25/1,5/2,375),
+vérifie les valeurs converties, l'idempotence de la relance et le no-op sur base
+neuve. Le modèle `prisma/garageflow-template.db` est régénéré au schéma final.
 
-## 5. Migration de stockage exécutée (additive, non destructive)
+**Reset (`RESET-GARAGEFLOW.cmd`)** : la convergence de schéma reste **strictement
+additive** (ADD IF NOT EXISTS des colonnes exactes) ; backfill vérifié et drops
+relèvent EXCLUSIVEMENT de la chaîne de migrations, jamais du reset.
 
-Suit le recette additive sûre : **ajouter → convertir → vérifier → basculer → (plus
-tard) retirer**.
+## 6. Déploiement production & rollback (opérateur)
 
-1. **Colonnes ajoutées** (nullable, `Int`) dans **les deux schémas** :
-   `prisma/schema.prisma` (SQLite/desktop) **et** `prisma/server/schema.prisma`
-   (PostgreSQL). `prisma validate` + `generate` : **OK**.
-2. **Application des colonnes** :
-   - Desktop (SQLite) : entrées **158–161** du runner versionné `src/lib/migrations.ts`
-     (`ALTER TABLE … ADD COLUMN`), appliquées **une fois** au démarrage Electron
-     (`/api/internal/migrate`), avant toute interaction — même mécanisme éprouvé
-     que les colonnes précédentes.
-   - Serveur (PostgreSQL) : migration additive
-     `prisma/server/migrations/20260806100000_money_cents/` **+** filet de sécurité
-     dans la convergence du reset (`reset-garageflow.ps1`, `ADD COLUMN IF NOT EXISTS`).
-3. **Backfill** : `cents = ROUND(float × 100)` (dans la migration Prisma ; idempotent,
-   ne touche que les lignes non converties). **N'a pas été exécuté ici** (pas de base
-   réelle) — l'opérateur le lance sur staging **avec sauvegarde préalable**.
-4. **Écriture** : l'application écrit désormais les **centimes comme source de vérité**
-   (`work-orders`, `purchase-orders`, `loaner-reservations`) ; la colonne Float est
-   maintenue en **miroir dérivé** (`fromCents(cents)`), donc **aucune lecture,
-   signature, PDF ou export existant ne change** (les nombres euros exposés sont
-   identiques au centime).
-5. **Lecture** : la valeur euro reste dérivable de `cents ?? toCents(float)` — les
-   lignes antérieures (cents `NULL`) retombent sans risque sur le Float.
-6. **Retrait des colonnes Float** : **stagé** — uniquement **après** vérification sur
-   données réelles (étape 3) et bascule des lectures sur les centimes. Voir §6.
-7. **Rollback** : les colonnes `*Cents` étant additives et nullables, un retour
-   arrière = ignorer/dropper ces colonnes ; les Float restent la source. Aucun
-   `DROP`/`TRUNCATE` n'est exécuté par la migration ou le reset.
+1. **Sauvegarde complète** (`pg_dump` Neon + copie `garageflow.db` desktop) — OBLIGATOIRE.
+2. **Staging d'abord** : restaurer un dump de prod en staging, `npm run
+   db:server:deploy`, vérifier que les 3 migrations passent (la vérification
+   bloquante ferait échouer un backfill divergent) et lancer les smoke tests.
+3. **Production** : `npm run db:server:deploy` (applique 1→3 dans l'ordre).
+4. **Contrôles post-migration** (exemples) :
+   `SELECT count(*) FROM "InvoiceLine";` (inchangé) ; échantillon de factures →
+   totaux identiques à l'affichage d'avant migration.
+5. **Rollback** : restaurer la sauvegarde de l'étape 1 + redéployer la version
+   applicative précédente. Les DROP ne sont pas réversibles **sans** la
+   sauvegarde — c'est documenté et volontaire (état final sans Float). Une
+   migration interrompue avant `_drop_floats` laisse une base intacte (phases
+   additives) ; `migrate deploy` reprend où il s'est arrêté.
+6. **Desktop** : la migration s'exécute au premier démarrage post-mise à jour,
+   AVANT toute interaction ; la sauvegarde automatique quotidienne précède.
 
-## 6. Vérification & rollback (SQL opérateur, PostgreSQL)
+## 7. Garde-fous CI (bloquants)
 
-```sql
--- Vérif : aucune divergence cents ↔ round(float*100) (attendu : 0)
-SELECT count(*) FROM "WorkOrder"
- WHERE "totalHtCents"  <> ROUND(("totalHT"::numeric)*100)::int
-    OR "totalTtcCents" <> ROUND(("totalTTC"::numeric)*100)::int;
--- Vérif : cohérence HT + TVA = TTC au centime (attendu : 0)
-SELECT count(*) FROM "WorkOrder"
- WHERE "totalTtcCents" <> "totalHtCents" + ROUND("totalHtCents" * "taxRate" / 100.0)::int;
--- Vérif : dépassement de capacité Int32 (attendu : 0)
-SELECT count(*) FROM "WorkOrder" WHERE abs("totalHtCents") > 2147483647;
--- Vérif : valeurs nulles inattendues après backfill (attendu : 0)
-SELECT count(*) FROM "WorkOrder" WHERE "totalHtCents" IS NULL OR "totalTtcCents" IS NULL;
-
--- Rollback (si besoin) — les Float restent la source de vérité ; on peut simplement
--- ignorer les colonnes cents, ou (base non partagée) :
--- ALTER TABLE "WorkOrder" DROP COLUMN "totalHtCents", DROP COLUMN "totalTtcCents";
-```
-
-## 7. Pourquoi les prix unitaires ne sont **pas** encore migrés (stagé, assumé)
-
-- **SQLite (desktop) n'a pas de type décimal** et `@db.Decimal` y est indisponible ;
-  les deux schémas doivent rester **compatibles**. Le seul stockage exact possible
-  est l'**entier en sous-unités** (ex. ×10 000). C'est une migration de **~30
-  fichiers** touchant chaque ligne (create/read/serialize).
-- Les prix unitaires figurent dans le **document signé cryptographiquement**
-  (`src/lib/signature/document.ts`) : changer leur représentation impose de
-  reconvertir en **euro identique** avant canonicalisation pour ne pas invalider les
-  signatures historiques — à **valider sur données réelles**.
-- `Prisma.Decimal` est **écarté** : il casse la frontière JSON (`Decimal→string`),
-  les opérateurs natifs (`×`, `+`, comparaisons) et, sur SQLite, est stocké en REAL
-  (aucun gain). ~125 fichiers impactés → régression garantie.
-
-En attendant, la **correctness du calcul** est déjà garantie (tout passe en centimes
-via `money.ts`), donc un prix unitaire stocké en Float ne **corrompt aucun calcul**.
-
-## 8. Tests
-
-- `src/lib/__tests__/money.test.ts` — socle centimes, invariant TTC = HT + TVA, arrondis.
-- `src/lib/__tests__/money-migration.test.ts` — marge/coût, TVA multi-taux, prix à 4
-  décimales, quantité fractionnaire, acompte, paiement partiel, avoir total/partiel,
-  montants négatifs, **montant maximal (borne Int32)**, et **équivalence de backfill**
-  `toCents(v) === ROUND(v×100)` avec round-trip exact.
-- `money-document-consistency.test.ts`, `tva.test.ts`, `business-logic.test.ts` — non-régression.
+- `check:money` — **échoue si UN SEUL champ monétaire Float** réapparaît
+  (aucune « liste de suivi » : la règle est zéro) ; seuls les 4 `taxRate`
+  sont classés non monétaires, justification affichée.
+- `check:money-calculations` — échoue sur `prix × quantité` flottant,
+  `Math.round(x*100)/100` monétaire, `parseFloat` monétaire, TTC direct
+  `*(1+taxRate/100)` hors couche centrale.
+- `test:money` (51 tests) / `test:migration` (8 tests) — précision 4 décimales,
+  quantités fractionnaires, avoirs, bornes Int32, backfill, idempotence.

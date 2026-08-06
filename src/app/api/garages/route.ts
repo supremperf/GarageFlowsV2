@@ -2,6 +2,8 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession, MAX_LOGO_BASE64_LENGTH } from '@/lib/api-helpers'
+import { parseAmountToScaled } from '@/lib/money'
+import { garageToEuros } from '@/lib/money-db'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import bcrypt from 'bcryptjs'
 import { savePhoto } from '@/lib/photo-store'
@@ -26,7 +28,7 @@ export const GET = withAuth(async () => {
     return NextResponse.json(safe)
   }
 
-  return NextResponse.json(garage)
+  return NextResponse.json(garage ? garageToEuros(garage) : garage)
 })
 
 // PATCH /api/garages  — update garage info
@@ -73,7 +75,8 @@ export const PATCH = withAuth(async (req) => {
       })()),
       ...(body.language !== undefined && { language: body.language }),
       ...(body.onboardingComplete !== undefined && { onboardingComplete: body.onboardingComplete }),
-      ...(body.hourlyRate !== undefined && { hourlyRate: parseFloat(body.hourlyRate) || 60 }),
+      // Saisie euros -> entier exact (dix-milliemes) ; parsing STRICT (jamais parseFloat monétaire).
+      ...(body.hourlyRate !== undefined && { hourlyRateTenThousandths: parseAmountToScaled(body.hourlyRate) ?? 600000 }),
       ...(body.workshopStartHour !== undefined && { workshopStartHour: parseInt(body.workshopStartHour, 10) || 8 }),
       ...(body.workshopEndHour   !== undefined && { workshopEndHour:   parseInt(body.workshopEndHour,   10) || 18 }),
       ...(body.smsPhone !== undefined && { smsPhone: body.smsPhone || null }),
@@ -85,7 +88,7 @@ export const PATCH = withAuth(async (req) => {
     },
   })
 
-  return NextResponse.json(garage)
+  return NextResponse.json(garage ? garageToEuros(garage) : garage)
 })
 
 // POST /api/garages/register  — public endpoint: create new garage + owner account

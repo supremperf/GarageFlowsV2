@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { jwtVerify } from 'jose'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
+import { fromScaled } from '@/lib/money'
+import { billingLines } from '@/lib/money-db'
 import { portalSecret } from '@/lib/portal-secret'
 
 // GET — return quote data
@@ -23,18 +25,25 @@ export async function GET(_req: Request, { params }: { params: { token: string }
         // et au calcul des totaux (calcTotalHT/TTC : quantity + unitPrice).
         lines: {
           orderBy: { sortOrder: 'asc' },
-          select: { id: true, description: true, quantity: true, unitPrice: true, isLabor: true, sortOrder: true },
+          select: { id: true, description: true, quantityTenThousandths: true, unitPriceTenThousandths: true, isLabor: true, sortOrder: true },
         },
         garage: { select: { name: true, phone: true, email: true, address: true, siret: true, logoBase64: true, logoPath: true, taxRate: true, invoiceFooter: true } },
       },
     })
     if (!quote) return NextResponse.json({ error: 'Introuvable' }, { status: 404 })
 
-    const totalHT  = roundCents(calcTotalHT(quote.lines))
-    const totalTTC = roundCents(calcTotalTTC(quote.lines, quote.taxRate))
+    const totalHT  = roundCents(calcTotalHT(billingLines(quote.lines)))
+    const totalTTC = roundCents(calcTotalTTC(billingLines(quote.lines), quote.taxRate))
     const alreadySigned = ['accepted', 'refused', 'converted'].includes(quote.status)
 
-    return NextResponse.json({ ...quote, totalHT, totalTTC, alreadySigned })
+    // Lignes : entiers exacts + dérivés euros (quantity/unitPrice) pour l'affichage
+    // portail. Le coût d'achat n'est jamais exposé au client.
+    const lines = quote.lines.map((l) => ({
+      ...l,
+      quantity: fromScaled(l.quantityTenThousandths),
+      unitPrice: fromScaled(l.unitPriceTenThousandths),
+    }))
+    return NextResponse.json({ ...quote, lines, totalHT, totalTTC, alreadySigned })
   } catch {
     return NextResponse.json({ error: 'Token invalide ou expiré' }, { status: 403 })
   }

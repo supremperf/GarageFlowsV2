@@ -49,7 +49,7 @@ beforeAll(async () => {
   ;({ prisma } = await import('@/lib/db'))
   ;({ POST } = await import('@/app/api/quotes/generate/route') as any)
 
-  const a = await prisma.garage.create({ data: { name: 'Garage A', slug: 'a', hourlyRate: 60, taxRate: 20 } })
+  const a = await prisma.garage.create({ data: { name: 'Garage A', slug: 'a', hourlyRateTenThousandths: 600000, taxRate: 20 } })
   const b = await prisma.garage.create({ data: { name: 'Garage B', slug: 'b' } })
   garageA = a.id
   garageB = b.id
@@ -57,7 +57,7 @@ beforeAll(async () => {
   clientB = cb.id
 
   // A default part (BOM) for oil_change in garage A.
-  const part = await prisma.part.create({ data: { name: 'Filtre à huile', reference: 'OIL-9', unitPrice: 8, unitCost: 4, garageId: garageA } })
+  const part = await prisma.part.create({ data: { name: 'Filtre à huile', reference: 'OIL-9', unitPriceTenThousandths: 80000, unitCostTenThousandths: 40000, garageId: garageA } })
   await prisma.repairTypePart.create({ data: { repairType: 'oil_change', partId: part.id, defaultQty: 1, garageId: garageA } })
 
   h.session = { user: { id: 'user-a', name: 'Alice', garageId: garageA } }

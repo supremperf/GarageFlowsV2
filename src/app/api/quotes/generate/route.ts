@@ -1,5 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
+import { fromScaled } from '@/lib/money'
+import { lineToScaled } from '@/lib/money-db'
 import { z } from 'zod'
 import { format } from 'date-fns'
 import { prisma } from '@/lib/db'
@@ -46,12 +48,12 @@ export const POST = withAuth(async (req) => {
   if (validTypes.length === 0) return NextResponse.json({ error: 'Aucun type de réparation reconnu.' }, { status: 400 })
 
   const [garage, repairTypeParts, parts] = await Promise.all([
-    prisma.garage.findUnique({ where: { id: garageId }, select: { hourlyRate: true, taxRate: true, currency: true } }),
+    prisma.garage.findUnique({ where: { id: garageId }, select: { hourlyRateTenThousandths: true, taxRate: true, currency: true } }),
     prisma.repairTypePart.findMany({
       where: { garageId, repairType: { in: validTypes } },
-      select: { repairType: true, defaultQty: true, part: { select: { name: true, reference: true, unitPrice: true, unitCost: true } } },
+      select: { repairType: true, defaultQty: true, part: { select: { name: true, reference: true, unitPriceTenThousandths: true, unitCostTenThousandths: true } } },
     }),
-    prisma.part.findMany({ where: { garageId }, select: { name: true, reference: true, unitPrice: true }, take: 5000 }),
+    prisma.part.findMany({ where: { garageId }, select: { name: true, reference: true, unitPriceTenThousandths: true }, take: 5000 }),
   ])
 
   // Default parts (BOM) grouped by repair type.
@@ -62,8 +64,8 @@ export const POST = withAuth(async (req) => {
     list!.push({
       name: rtp.part.name,
       reference: rtp.part.reference,
-      unitPrice: rtp.part.unitPrice,
-      unitCost: rtp.part.unitCost,
+      unitPrice: fromScaled(rtp.part.unitPriceTenThousandths),
+      unitCost: fromScaled(rtp.part.unitCostTenThousandths),
       quantity: rtp.defaultQty,
     })
     partsByType.set(rtp.repairType, list)
@@ -81,8 +83,8 @@ export const POST = withAuth(async (req) => {
   if (body.includeSuggestions !== false) {
     const catalog = new Map<string, number>()
     for (const p of parts) {
-      if (p.name) catalog.set(p.name.toLowerCase(), p.unitPrice)
-      if (p.reference) catalog.set(p.reference.toLowerCase(), p.unitPrice)
+      if (p.name) catalog.set(p.name.toLowerCase(), fromScaled(p.unitPriceTenThousandths))
+      if (p.reference) catalog.set(p.reference.toLowerCase(), fromScaled(p.unitPriceTenThousandths))
     }
     const partsOnJob = operations.flatMap((o) => (o.parts ?? []).map((p) => ({ name: p.name, reference: p.reference })))
     const recs = forgottenPartsEngine.analyze({
@@ -109,7 +111,7 @@ export const POST = withAuth(async (req) => {
   }
 
   const proposal = generateQuote(operations, suggestions, {
-    laborRatePerHour: body.laborRatePerHour ?? garage?.hourlyRate ?? 60,
+    laborRatePerHour: body.laborRatePerHour ?? (garage ? fromScaled(garage.hourlyRateTenThousandths) : 60),
     vatRate: body.vatRate ?? garage?.taxRate ?? 20,
     currency: garage?.currency ?? 'EUR',
   })
@@ -164,9 +166,8 @@ export const POST = withAuth(async (req) => {
         lines: {
           create: proposal.lines.map((l, i) => ({
             description: l.description,
-            quantity: l.quantity,
-            unitPrice: l.unitPrice,
-            unitCost: l.unitCost,
+            // Proposition en euros → entiers exacts (dix-millièmes) au stockage.
+            ...lineToScaled(l),
             isLabor: l.isLabor,
             sortOrder: i,
           })),

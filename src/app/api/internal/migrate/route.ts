@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { MIGRATIONS, duplicateGroupsSql, createUniqueIndexSql } from '@/lib/migrations'
+import { MIGRATIONS, duplicateGroupsSql, createUniqueIndexSql, tableColumnsSql, type ColumnGuard } from '@/lib/migrations'
 import { internalRequestAuthorized } from '@/lib/internal-auth'
 import { logger } from '@/lib/logger'
 
@@ -43,6 +43,29 @@ export async function POST(req: NextRequest) {
       `SELECT id FROM "_gf_migrations" WHERE id = ?`, id
     )
     if (rows.length > 0) {
+      results.push({ id, status: 'skip' })
+      continue
+    }
+
+    // ── Gardes conditionnelles sur l'état RÉEL du schéma ────────────────────
+    // Une base neuve (créée au schéma actuel) n'a plus les anciennes colonnes
+    // Float : les migrations de backfill/drop ne s'y appliquent pas — on les
+    // marque appliquées SANS effet (déterministe, pas d'erreur en boucle).
+    const columnExists = async (g: ColumnGuard) => {
+      const cols = await prisma.$queryRawUnsafe<{ name: string }[]>(tableColumnsSql(g.table))
+      return cols.some((c) => c.name === g.column)
+    }
+    if (migration.onlyIfColumnExists && !(await columnExists(migration.onlyIfColumnExists))) {
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "_gf_migrations" (id, appliedAt) VALUES (?, ?)`, id, new Date().toISOString()
+      )
+      results.push({ id, status: 'skip' })
+      continue
+    }
+    if (migration.onlyIfColumnMissing && (await columnExists(migration.onlyIfColumnMissing))) {
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "_gf_migrations" (id, appliedAt) VALUES (?, ?)`, id, new Date().toISOString()
+      )
       results.push({ id, status: 'skip' })
       continue
     }

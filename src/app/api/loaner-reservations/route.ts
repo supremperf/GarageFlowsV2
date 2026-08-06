@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { assertRelations } from '@/lib/tenant'
-import { toCents, fromCents } from '@/lib/money'
+import { toCents, toScaled } from '@/lib/money'
+import { loanerToEuros } from '@/lib/money-db'
 
 export const GET = withAuth(async (req) => {
   const session = await requireSession()
@@ -29,7 +30,7 @@ export const GET = withAuth(async (req) => {
     orderBy: { startDate: 'asc' },
   })
 
-  return NextResponse.json(reservations)
+  return NextResponse.json(reservations.map(loanerToEuros))
 })
 
 export const POST = withAuth(async (req) => {
@@ -60,14 +61,13 @@ export const POST = withAuth(async (req) => {
       conditionOut: body.conditionOut ?? null,
       notes:        body.notes ?? null,
       isPaid:       Boolean(body.isPaid),
-      dailyRate:    body.dailyRate != null ? Number(body.dailyRate) : null,
-      // Caution (somme) : centimes = source de vérité ; depositAmount = miroir dérivé.
+      // Tarif journalier en dix-milliemes, caution en centimes — sources de vérité uniques.
+      dailyRateTenThousandths: body.dailyRate != null ? toScaled(Number(body.dailyRate)) : null,
       depositAmountCents: body.depositAmount != null ? toCents(Number(body.depositAmount)) : null,
-      depositAmount: body.depositAmount != null ? fromCents(toCents(Number(body.depositAmount))) : null,
       status:       'reserved',
     },
     include: { vehicle: { select: { id: true, name: true, licensePlate: true } } },
   })
 
-  return NextResponse.json(reservation, { status: 201 })
+  return NextResponse.json(loanerToEuros(reservation), { status: 201 })
 })

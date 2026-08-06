@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * GarageFlow post-build script
+ * GarageFlows post-build script
  * Copies static assets into .next/standalone so electron-builder can package them correctly.
  * Run: node scripts/post-build.js
  */
@@ -52,7 +52,7 @@ function copyDir(src, dst) {
 }
 
 function main() {
-  console.log('\n🔧 GarageFlow post-build\n')
+  console.log('\n🔧 GarageFlows post-build\n')
 
   // 1. Copy .next/static → .next/standalone/.next/static  (REQUIRED — CSS + JS bundles)
   {

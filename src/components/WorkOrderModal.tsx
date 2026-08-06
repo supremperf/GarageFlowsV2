@@ -1,4 +1,5 @@
 'use client'
+import { computeTotals, lineCents, fromCents } from '@/lib/money'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Plus, Trash2, Printer, PenLine, Check, ChevronDown } from 'lucide-react'
@@ -169,10 +170,17 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
   const [works, setWorks] = useState<WorkLine[]>([{ description: '', durationMin: 30, unitPrice: 0 }])
   const [parts, setParts] = useState<PartLine[]>([])
 
-  const totalWorksHT = works.reduce((s, w) => s + (w.unitPrice || 0), 0)
-  const totalPartsHT = parts.reduce((s, p) => s + (p.qty || 0) * (p.unitPrice || 0), 0)
-  const totalHT  = Math.round((totalWorksHT + totalPartsHT) * 100) / 100
-  const totalTTC = Math.round(totalHT * (1 + taxRate / 100) * 100) / 100
+  // Totaux calculés par la couche financière centrale (centimes exacts,
+  // même règle que le serveur) — plus aucune arithmétique flottante locale.
+  const woTotals = computeTotals(
+    [
+      ...works.map(w => ({ quantity: 1, unitPrice: w.unitPrice || 0 })),
+      ...parts.map(p => ({ quantity: p.qty || 0, unitPrice: p.unitPrice || 0 })),
+    ],
+    taxRate,
+  )
+  const totalHT  = woTotals.totalHT
+  const totalTTC = woTotals.totalTTC
 
   // Load existing if editing
   useEffect(() => {
@@ -249,7 +257,7 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
         @media print{body{padding:10mm}}
       </style>`
     const worksRows = works.map(w => `<tr><td>${w.description}</td><td>${fmtDuration(w.durationMin)}</td><td>${fmt(w.unitPrice)}</td></tr>`).join('')
-    const partsRows = parts.map(p => `<tr><td>${p.name}</td><td>${p.reference}</td><td>${p.qty}</td><td>${fmt(p.unitPrice)}</td><td>${fmt(p.qty * p.unitPrice)}</td></tr>`).join('')
+    const partsRows = parts.map(p => `<tr><td>${p.name}</td><td>${p.reference}</td><td>${p.qty}</td><td>${fmt(p.unitPrice)}</td><td>${fmt(fromCents(lineCents(p.unitPrice, p.qty)))}</td></tr>`).join('')
     const sigHtml = existingSig ? `<img src="${existingSig}" style="max-height:80px" />` : '<div style="height:60px"></div>'
 
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${t.woTitle} ${savedNumber}</title>${style}</head><body>
@@ -425,7 +433,7 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
                     </div>
                     <div className="flex flex-col justify-end">
                       <span className="text-xs text-slate-500">{t.woTotal}</span>
-                      <span className="text-sm text-white font-medium">{fmt(p.qty * p.unitPrice)}</span>
+                      <span className="text-sm text-white font-medium">{fmt(fromCents(lineCents(p.unitPrice, p.qty)))}</span>
                     </div>
                   </div>
                 </div>

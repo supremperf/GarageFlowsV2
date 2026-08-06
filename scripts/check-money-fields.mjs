@@ -1,17 +1,15 @@
 #!/usr/bin/env node
 /**
- * check-money-fields.mjs — garde-fou « pas de Float monétaire non classé » (CI).
+ * check-money-fields.mjs — garde-fou monétaire STRICT (CI).
  *
- * Analyse les DEUX schémas Prisma, repère chaque champ `Float`, et le confronte à
- * une CLASSIFICATION EXPLICITE (par `Model.champ`). Objectif :
- *   - ÉCHOUER si un champ Float monétaire N'EST PAS classé (nouveau Float d'argent
- *     non maîtrisé → régression) ;
- *   - autoriser les Float NON monétaires (taux, quantité) après classification ;
- *   - AFFICHER le SUIVI des champs monétaires encore en Float (miroir dérivé /
- *     migration stagée) — transparence, pas de dissimulation.
+ * RÈGLE ABSOLUE : **ZÉRO champ monétaire `Float`** dans les schémas Prisma.
+ * Il n'existe PLUS de liste « suivie » de champs monétaires Float tolérés : la
+ * migration est TERMINÉE (entiers exacts — centimes `*Cents` et dix-millièmes
+ * `*TenThousandths`). Toute réapparition d'un Float monétaire ÉCHOUE la CI.
  *
- * Ce script ne « masque » rien : chaque Float monétaire restant est listé
- * nommément avec sa raison et un renvoi à docs/MIGRATION-MONEY.md.
+ * Un champ `Float` n'est accepté QUE s'il est explicitement classé NON MONÉTAIRE
+ * dans NON_MONETARY (modèle + champ + nature + justification). Tout Float non
+ * classé échoue aussi (aucun montant ne peut se glisser sans classification).
  */
 
 import { readFileSync, existsSync } from 'node:fs'
@@ -21,41 +19,22 @@ import { fileURLToPath } from 'node:url'
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..')
 const SCHEMAS = ['prisma/schema.prisma', 'prisma/server/schema.prisma']
 
-// Float NON monétaires (autorisés définitivement, classés).
+// Float NON monétaires autorisés — classification EXPLICITE et justifiée.
+// (Nature : taux en POURCENTAGE, pas des montants. Les valeurs métier réelles
+// — 0, 5,5, 10, 20 — sont exactement représentables en binaire ; la TVA est
+// calculée par UNE multiplication puis UN arrondi en centimes dans lib/money.ts.)
 const NON_MONETARY = {
-  'Garage.taxRate': 'taux de TVA (%) — non monétaire',
-  'Quote.taxRate': 'taux de TVA (%)',
-  'Invoice.taxRate': 'taux de TVA (%)',
-  'WorkOrder.taxRate': 'taux de TVA (%)',
-  'QuoteLine.quantity': 'quantité (fractionnable) — non monétaire',
-  'InvoiceLine.quantity': 'quantité (fractionnable) — non monétaire',
+  'Garage.taxRate': 'taux de TVA (%) — non monétaire, valeurs exactes en binaire',
+  'Quote.taxRate': 'taux de TVA (%) — non monétaire',
+  'Invoice.taxRate': 'taux de TVA (%) — non monétaire',
+  'WorkOrder.taxRate': 'taux de TVA (%) — non monétaire',
 }
 
-// Float MONÉTAIRES encore présents — SUIVIS (à migrer), jamais « masqués ».
-const MONETARY_TRACKED = {
-  // Totaux : colonnes *Cents = source de vérité ; Float = MIROIR dérivé. Retrait
-  // gaté sur backfill des données réelles (voir docs/MIGRATION-MONEY.md §5-6).
-  'WorkOrder.totalHT': 'miroir dérivé (source: totalHtCents) — retrait gaté sur backfill prod',
-  'WorkOrder.totalTTC': 'miroir dérivé (source: totalTtcCents) — retrait gaté sur backfill prod',
-  'PurchaseOrder.totalHT': 'miroir dérivé (source: totalHtCents) — retrait gaté sur backfill prod',
-  'LoanerReservation.depositAmount': 'miroir dérivé (source: depositAmountCents) — retrait gaté sur backfill prod',
-  // Prix/coûts unitaires : migration en sous-unités entières STAGÉE (SQLite ∌
-  // @db.Decimal ; risque signatures) — le CALCUL est déjà exact/4-décimales via
-  // lib/money.ts (lineCents). Voir docs/MIGRATION-MONEY.md §7.
-  'Garage.hourlyRate': 'prix unitaire (€/h) — migration sous-unités stagée',
-  'Part.unitCost': 'coût unitaire — migration sous-unités stagée',
-  'Part.unitPrice': 'prix unitaire — migration sous-unités stagée',
-  'JobPart.unitPrice': 'prix unitaire (snapshot) — migration sous-unités stagée',
-  'JobPart.unitCost': 'coût unitaire (snapshot) — migration sous-unités stagée',
-  'QuoteLine.unitPrice': 'prix unitaire — migration sous-unités stagée',
-  'QuoteLine.unitCost': 'coût unitaire — migration sous-unités stagée',
-  'InvoiceLine.unitPrice': 'prix unitaire (légal) — migration sous-unités stagée',
-  'InvoiceLine.unitCost': 'coût unitaire — migration sous-unités stagée',
-  'LaborOperation.unitPrice': 'prix unitaire (forfait MO) — migration sous-unités stagée',
-  'LoanerReservation.dailyRate': 'tarif unitaire (€/jour) — migration sous-unités stagée',
-}
+// Détection de champs MONÉTAIRES par sémantique de nom — un nouveau champ Float
+// dont le nom évoque l'argent est refusé même s'il était « classé » par erreur.
+const MONETARY_NAME = /price|cost|amount|total|deposit|rate(?!Limit)|margin|paid|balance|discount|refund|cents|euro/i
 
-/** Extrait { 'Model.field': 'Float' } d'un schéma Prisma. */
+/** Extrait { 'Model.field': true } des champs Float d'un schéma Prisma. */
 function floatFields(schemaText) {
   const out = {}
   let model = null
@@ -78,24 +57,31 @@ for (const s of SCHEMAS) {
   Object.assign(allFloat, floatFields(readFileSync(abs, 'utf8')))
 }
 
-const unclassified = []
-const tracked = []
-const nonMonetary = []
+const errors = []
+const allowed = []
+let monetaryFloatCount = 0
 for (const key of Object.keys(allFloat).sort()) {
-  if (NON_MONETARY[key]) nonMonetary.push(key)
-  else if (MONETARY_TRACKED[key]) tracked.push(key)
-  else unclassified.push(key)
+  const field = key.split('.')[1]
+  const classified = NON_MONETARY[key]
+  const looksMonetary = MONETARY_NAME.test(field) && !/^taxRate$/.test(field)
+  if (looksMonetary) {
+    monetaryFloatCount++
+    errors.push(`${key} : champ Float au nom MONÉTAIRE — INTERDIT (utiliser Int centimes/dix-millièmes)`)
+  } else if (!classified) {
+    errors.push(`${key} : champ Float NON CLASSÉ — ajoutez-le à NON_MONETARY (avec justification) ou migrez-le en entier exact`)
+  } else {
+    allowed.push(`${key} — ${classified}`)
+  }
 }
 
-console.log(`Champs Float NON monétaires (autorisés) : ${nonMonetary.length}`)
-for (const k of nonMonetary) console.log(`   • ${k} — ${NON_MONETARY[k]}`)
-console.log(`\nChamps Float MONÉTAIRES encore présents (SUIVI — à migrer, voir docs/MIGRATION-MONEY.md) : ${tracked.length}`)
-for (const k of tracked) console.log(`   • ${k} — ${MONETARY_TRACKED[k]}`)
+console.log(`Schémas analysés : ${SCHEMAS.join(', ')}`)
+console.log(`Champs Float NON monétaires classés (autorisés) : ${allowed.length}`)
+for (const a of allowed) console.log(`   • ${a}`)
 
-if (unclassified.length) {
-  console.error(`\n❌ ${unclassified.length} champ(s) Float NON CLASSÉ(s) — un montant monétaire en Float non maîtrisé est INTERDIT :`)
-  for (const k of unclassified) console.error(`   • ${k}`)
-  console.error(`\n   → Classez-le dans NON_MONETARY (taux/quantité) ou MONETARY_TRACKED (avec plan de migration) dans scripts/check-money-fields.mjs.`)
+if (errors.length) {
+  console.error(`\n❌ ${errors.length} violation(s) :`)
+  for (const e of errors) console.error(`   • ${e}`)
+  console.error('\nRÈGLE : 0 champ monétaire Float. La migration est terminée — aucun retour en arrière.\n')
   process.exit(1)
 }
-console.log(`\n✅ Aucun Float monétaire non classé. ${tracked.length} champ(s) monétaire(s) suivis pour migration ; le CALCUL est déjà exact (centimes, lib/money.ts).`)
+console.log(`\n✅ ${monetaryFloatCount} champ monétaire Float (RÈGLE : zéro). Stockage monétaire 100 % en entiers exacts.`)

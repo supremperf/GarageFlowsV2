@@ -7,6 +7,7 @@
  * garage scoping (one tenant's data never leaks into another's dashboard).
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+import { toScaled } from '@/lib/money'
 import { execSync } from 'node:child_process'
 import { format } from 'date-fns'
 import path from 'node:path'
@@ -38,7 +39,7 @@ async function paidInvoice(garageId: string, number: string, ht: number, cost: n
   await prisma.invoice.create({
     data: {
       number, garageId, clientName: 'C', status: 'paid', issueDate: `${thisMonth}-05`, taxRate: 20,
-      lines: { create: [{ description: 'Prestation', quantity: 1, unitPrice: ht, unitCost: cost, isLabor: false, sortOrder: 0 }] },
+      lines: { create: [{ description: 'Prestation', quantityTenThousandths: 10000, unitPriceTenThousandths: toScaled(ht), unitCostTenThousandths: toScaled(cost), isLabor: false, sortOrder: 0 }] },
     },
   })
 }

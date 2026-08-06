@@ -1,5 +1,5 @@
 """
-GarageFlow License Keygen v2 — ECC P-256 / ECDSA-SHA256
+GarageFlows License Keygen v2 — ECC P-256 / ECDSA-SHA256
 =========================================================
 
 Security design:
@@ -356,7 +356,7 @@ def decode_watermark(wm: str):
 # ── CLI ────────────────────────────────────────────────────────────────────────
 def main():
     p = argparse.ArgumentParser(
-        description="GarageFlow License Keygen v2 — ECC P-256",
+        description="GarageFlows License Keygen v2 — ECC P-256",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument("--init",       action="store_true")
@@ -427,7 +427,7 @@ def main():
     if args.admin:
         pk   = _load_private(args.passphrase)
         info = make_license(pk, "ADMIN", "admin", years=10, seats=999,
-                            label="GarageFlow Admin")
+                            label="GarageFlows Admin")
         print("\n" + "="*70)
         print("  ADMIN LICENSE")
         print("="*70)

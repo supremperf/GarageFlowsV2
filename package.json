@@ -47,7 +47,11 @@
     "check:docs": "node scripts/check-docs-consistency.mjs",
     "check:pwa": "node scripts/check-pwa.mjs",
     "check:money": "node scripts/check-money-fields.mjs",
-    "check:consistency": "npm run check:branding && npm run check:docs && npm run check:pwa && npm run check:money"
+    "check:money-calculations": "node scripts/check-money-calculations.mjs",
+    "check:consistency": "npm run check:branding && npm run check:docs && npm run check:pwa && npm run check:money && npm run check:money-calculations",
+    "test:money": "vitest run src/lib/__tests__/money.test.ts src/lib/__tests__/money-migration.test.ts src/lib/__tests__/money-document-consistency.test.ts src/lib/__tests__/tva.test.ts",
+    "test:migration": "vitest run src/lib/__tests__/money-schema-migration.test.ts src/lib/__tests__/user-data-path.test.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.79.0",

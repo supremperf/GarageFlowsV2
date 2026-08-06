@@ -3,8 +3,9 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { can } from '@/lib/authz'
-import { calcTotalHT, calcTotalTTC } from '@/lib/billing'
-import { lineCents, fromCents } from '@/lib/money'
+import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
+import { lineCents, fromCents, fromScaled } from '@/lib/money'
+import { linesToEuros } from '@/lib/money-db'
 import { subMonths, format, startOfMonth, endOfMonth } from 'date-fns'
 
 // GET /api/finance?months=6
@@ -32,7 +33,7 @@ export const GET = withAuth(async (req) => {
     prisma.invoice.findMany({
       where: { garageId, createdAt: { gte: months[0].start } },
       include: { lines: true },
-    }),
+    }).then(rows => rows.map(i => ({ ...i, lines: linesToEuros(i.lines) }))), // entiers exacts -> vue euros
 
     prisma.quote.findMany({
       where: { garageId, createdAt: { gte: months[0].start } },
@@ -40,7 +41,7 @@ export const GET = withAuth(async (req) => {
     }),
   ])
 
-  const hourlyRate = garage?.hourlyRate ?? 60
+  const hourlyRate = garage ? fromScaled(garage.hourlyRateTenThousandths) : 60
 
   const monthlyStats = months.map(({ label, start, end }) => {
     const invoices = allInvoices.filter(inv =>
@@ -75,11 +76,11 @@ export const GET = withAuth(async (req) => {
 
     return {
       label,
-      caHT:            Math.round(caHT * 100) / 100,
-      caTTC:           Math.round(caTTC * 100) / 100,
-      tva:             Math.round(tva * 100) / 100,
+      caHT:            roundCents(caHT),
+      caTTC:           roundCents(caTTC),
+      tva:             roundCents(tva),
       invoiceCount:    paidInvoices.length,
-      partsCost:       Math.round(partsCost * 100) / 100,
+      partsCost:       roundCents(partsCost),
       margin,
       quotesCreated:   quotesCreated.length,
       quotesAccepted:  quotesAccepted.length,
@@ -102,9 +103,9 @@ export const GET = withAuth(async (req) => {
   return NextResponse.json({
     months: monthlyStats,
     totals: {
-      caHT:            Math.round(totalCAHT * 100) / 100,
-      caTTC:           Math.round(totalCATTC * 100) / 100,
-      tva:             Math.round(totalTVA * 100) / 100,
+      caHT:            roundCents(totalCAHT),
+      caTTC:           roundCents(totalCATTC),
+      tva:             roundCents(totalTVA),
       avgMargin:       Math.round(avgMargin),
       globalConversion,
       invoiceCount:    monthlyStats.reduce((s, m) => s + m.invoiceCount, 0),

@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
+import { fromScaled } from '@/lib/money'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
@@ -55,11 +56,11 @@ export const POST = withAuth(async (req) => {
   if (body.partId) {
     const part = await prisma.part.findFirst({
       where: { id: body.partId, garageId },
-      select: { unitCost: true, unitPrice: true },
+      select: { unitCostTenThousandths: true, unitPriceTenThousandths: true },
     })
     if (!part) return NextResponse.json({ error: 'Pièce introuvable' }, { status: 404 })
-    input.unitCost = body.unitCost ?? part.unitCost
-    input.currentPrice = body.currentPrice ?? part.unitPrice
+    input.unitCost = body.unitCost ?? fromScaled(part.unitCostTenThousandths)
+    input.currentPrice = body.currentPrice ?? fromScaled(part.unitPriceTenThousandths)
 
     // Baseline monthly volume from the last 3 months of sales, if not supplied.
     if (input.baselineVolume == null) {

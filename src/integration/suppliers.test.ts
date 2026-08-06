@@ -42,21 +42,21 @@ beforeAll(async () => {
   garageB = (await prisma.garage.create({ data: { name: 'B', slug: 'b' } })).id
 
   const mkPart = async (d: any) => (await prisma.part.create({ data: { garageId: garageA, ...d } })).id
-  ids.p1 = await mkPart({ name: 'Plaquettes avant', quantity: 2, minQuantity: 5, unitCost: 20, unitPrice: 40, supplierName: 'Oscaro', supplierRef: 'OSC-BRK-01' })
-  ids.p2 = await mkPart({ name: 'Disques avant', quantity: 5, minQuantity: 5, unitCost: 45, unitPrice: 90, supplierName: 'Oscaro', supplierRef: 'OSC-DSC-01' }) // qty==min → included
-  ids.p3 = await mkPart({ name: 'Filtre a huile', quantity: 1, minQuantity: 4, unitCost: 8, unitPrice: 16, supplierName: 'MisterAuto', supplierRef: 'MA-OIL-09' })
-  ids.p4 = await mkPart({ name: 'Essuie-glace', quantity: 20, minQuantity: 6, unitCost: 6, unitPrice: 12, supplierName: 'MisterAuto' }) // NOT low → excluded
-  ids.p5 = await mkPart({ name: 'Courroie', quantity: 20, minQuantity: 3, unitCost: 50, unitPrice: 120, supplierName: 'Oscaro' }) // control for receive
-  ids.pRace = await mkPart({ name: 'Amortisseur', quantity: 10, minQuantity: 3, unitCost: 60, unitPrice: 130, supplierName: 'Oscaro' }) // control for the concurrency test
+  ids.p1 = await mkPart({ name: 'Plaquettes avant', quantity: 2, minQuantity: 5, unitCostTenThousandths: 200000, unitPriceTenThousandths: 400000, supplierName: 'Oscaro', supplierRef: 'OSC-BRK-01' })
+  ids.p2 = await mkPart({ name: 'Disques avant', quantity: 5, minQuantity: 5, unitCostTenThousandths: 450000, unitPriceTenThousandths: 900000, supplierName: 'Oscaro', supplierRef: 'OSC-DSC-01' }) // qty==min → included
+  ids.p3 = await mkPart({ name: 'Filtre a huile', quantity: 1, minQuantity: 4, unitCostTenThousandths: 80000, unitPriceTenThousandths: 160000, supplierName: 'MisterAuto', supplierRef: 'MA-OIL-09' })
+  ids.p4 = await mkPart({ name: 'Essuie-glace', quantity: 20, minQuantity: 6, unitCostTenThousandths: 60000, unitPriceTenThousandths: 120000, supplierName: 'MisterAuto' }) // NOT low → excluded
+  ids.p5 = await mkPart({ name: 'Courroie', quantity: 20, minQuantity: 3, unitCostTenThousandths: 500000, unitPriceTenThousandths: 1200000, supplierName: 'Oscaro' }) // control for receive
+  ids.pRace = await mkPart({ name: 'Amortisseur', quantity: 10, minQuantity: 3, unitCostTenThousandths: 600000, unitPriceTenThousandths: 1300000, supplierName: 'Oscaro' }) // control for the concurrency test
 
-  await prisma.part.create({ data: { garageId: garageB, name: 'Bougie', quantity: 0, minQuantity: 4, unitCost: 3, unitPrice: 6, supplierName: 'MisterAuto' } })
+  await prisma.part.create({ data: { garageId: garageB, name: 'Bougie', quantity: 0, minQuantity: 4, unitCostTenThousandths: 30000, unitPriceTenThousandths: 60000, supplierName: 'MisterAuto' } })
 
   const mkPO = async (d: any) => (await prisma.purchaseOrder.create({ data: d })).id
-  ids.poSend = await mkPO({ number: 'BC-2026-901', garageId: garageA, supplierName: 'Oscaro', status: 'draft', totalHT: 160, linesJson: JSON.stringify([{ partId: ids.p1, partName: 'Plaquettes avant', qty: 8, unitCost: 20 }]) })
-  ids.poRecv = await mkPO({ number: 'BC-2026-902', garageId: garageA, supplierName: 'Oscaro', status: 'sent', sentAt: new Date(), totalHT: 400, linesJson: JSON.stringify([{ partId: ids.p5, partName: 'Courroie', qty: 8, unitCost: 50 }]) })
-  ids.poIllegal = await mkPO({ number: 'BC-2026-903', garageId: garageA, supplierName: 'Oscaro', status: 'draft', totalHT: 400, linesJson: '[]' })
-  ids.poB = await mkPO({ number: 'BC-2026-001', garageId: garageB, supplierName: 'Oscaro', status: 'draft', totalHT: 9, linesJson: '[]' })
-  ids.poRace = await mkPO({ number: 'BC-2026-905', garageId: garageA, supplierName: 'Oscaro', status: 'sent', sentAt: new Date(), totalHT: 300, linesJson: JSON.stringify([{ partId: ids.pRace, partName: 'Amortisseur', qty: 5, unitCost: 60 }]) })
+  ids.poSend = await mkPO({ number: 'BC-2026-901', garageId: garageA, supplierName: 'Oscaro', status: 'draft', totalHtCents: 16000, linesJson: JSON.stringify([{ partId: ids.p1, partName: 'Plaquettes avant', qty: 8, unitCost: 20 }]) })
+  ids.poRecv = await mkPO({ number: 'BC-2026-902', garageId: garageA, supplierName: 'Oscaro', status: 'sent', sentAt: new Date(), totalHtCents: 40000, linesJson: JSON.stringify([{ partId: ids.p5, partName: 'Courroie', qty: 8, unitCost: 50 }]) })
+  ids.poIllegal = await mkPO({ number: 'BC-2026-903', garageId: garageA, supplierName: 'Oscaro', status: 'draft', totalHtCents: 40000, linesJson: '[]' })
+  ids.poB = await mkPO({ number: 'BC-2026-001', garageId: garageB, supplierName: 'Oscaro', status: 'draft', totalHtCents: 900, linesJson: '[]' })
+  ids.poRace = await mkPO({ number: 'BC-2026-905', garageId: garageA, supplierName: 'Oscaro', status: 'sent', sentAt: new Date(), totalHtCents: 30000, linesJson: JSON.stringify([{ partId: ids.pRace, partName: 'Amortisseur', qty: 5, unitCost: 60 }]) })
 
   h.session = { user: { id: 'user-a', name: 'Alice', garageId: garageA } }
 })

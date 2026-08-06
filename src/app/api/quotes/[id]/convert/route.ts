@@ -48,9 +48,10 @@ export const POST = withAuth(async (_req, { params }) => {
           lines: {
             create: quote.lines.map(l => ({
               description: l.description,
-              quantity: l.quantity,
-              unitPrice: l.unitPrice,
-              unitCost: l.unitCost,
+              // Copie VERBATIM des entiers exacts (aucune conversion, zéro perte).
+              quantityTenThousandths: l.quantityTenThousandths,
+              unitPriceTenThousandths: l.unitPriceTenThousandths,
+              unitCostTenThousandths: l.unitCostTenThousandths,
               isLabor: l.isLabor,
               sortOrder: l.sortOrder,
             })),

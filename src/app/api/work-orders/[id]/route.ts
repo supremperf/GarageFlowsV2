@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { assertRelations } from '@/lib/tenant'
 import { computeTotals as computeMoneyTotals, type MoneyLine } from '@/lib/money'
+import { workOrderToEuros } from '@/lib/money-db'
 
 interface WorkLine {
   description: string
@@ -27,7 +28,7 @@ function computeTotals(
   worksJson: string,
   partsJson: string,
   taxRate: number,
-): { totalHT: number; totalTTC: number; totalHtCents: number; totalTtcCents: number } | null {
+): { totalHtCents: number; totalTtcCents: number } | null {
   let works: WorkLine[]
   let parts: PartLine[]
   try {
@@ -42,7 +43,7 @@ function computeTotals(
     ...parts.map((p) => ({ quantity: Number(p.qty) || 0, unitPrice: Number(p.unitPrice) || 0 })),
   ]
   const t = computeMoneyTotals(lines, Number(taxRate) || 0)
-  return { totalHT: t.totalHT, totalTTC: t.totalTTC, totalHtCents: t.totalHTCents, totalTtcCents: t.totalTTCCents }
+  return { totalHtCents: t.totalHTCents, totalTtcCents: t.totalTTCCents }
 }
 
 // GET /api/work-orders/[id]
@@ -56,7 +57,7 @@ export const GET = withAuth(async (_req, { params }) => {
     },
   })
   if (!wo) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(wo)
+  return NextResponse.json(wo ? workOrderToEuros(wo) : wo)
 })
 
 // PATCH /api/work-orders/[id]
@@ -82,10 +83,10 @@ export const PATCH = withAuth(async (req, { params }) => {
   if (!totals) {
     return NextResponse.json({ error: 'worksJson/partsJson invalides' }, { status: 400 })
   }
-  const { totalHT, totalTTC, totalHtCents, totalTtcCents } = totals
+  const { totalHtCents, totalTtcCents } = totals
 
-  // Centimes = source de vérité ; totalHT/totalTTC = miroir dérivé (fromCents).
-  const updateData: Record<string, unknown> = { worksJson, partsJson, taxRate, totalHT, totalTTC, totalHtCents, totalTtcCents }
+  // Centimes entiers = UNIQUE source de vérité (colonnes Float supprimées).
+  const updateData: Record<string, unknown> = { worksJson, partsJson, taxRate, totalHtCents, totalTtcCents }
 
   if (body.status !== undefined) updateData.status = body.status
   if (body.clientName !== undefined) updateData.clientName = body.clientName
@@ -128,7 +129,7 @@ export const PATCH = withAuth(async (req, { params }) => {
       job: { select: { id: true, customerName: true, vehicleModel: true, licensePlate: true } },
     },
   })
-  return NextResponse.json(wo)
+  return NextResponse.json(wo ? workOrderToEuros(wo) : wo)
 })
 
 // DELETE /api/work-orders/[id]

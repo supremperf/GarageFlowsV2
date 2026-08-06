@@ -465,14 +465,28 @@ ALTER TABLE "JobPhoto" ADD COLUMN IF NOT EXISTS "mechanicId" TEXT;
 -- Job.timerAccumulatedSec (chrono cumulé, NOT NULL DEFAULT 0 -> sûr sur table peuplée).
 ALTER TABLE "Job" ADD COLUMN IF NOT EXISTS "timerAccumulatedSec" INTEGER NOT NULL DEFAULT 0;
 
--- Migration monétaire (additif) : totaux en CENTIMES entiers, source de vérité.
--- Colonnes nullables ; les colonnes Float existantes deviennent un miroir dérivé.
--- Backfill au niveau applicatif / migration Prisma (20260806100000_money_cents).
--- Voir docs/MIGRATION-MONEY.md. Aucune donnée supprimée.
+-- Migration monétaire : unités EXACTES (centimes + dix-millièmes), source de vérité.
+-- La convergence est STRICTEMENT ADDITIVE (ADD IF NOT EXISTS) : le backfill vérifié
+-- et la SUPPRESSION des anciennes colonnes Float relèvent EXCLUSIVEMENT de la chaîne
+-- de migrations Prisma (20260807000000_money_scaled_units + _drop_floats), jamais du
+-- reset. Voir docs/MIGRATION-MONEY.md. Aucune donnée supprimée ici.
 ALTER TABLE "WorkOrder"         ADD COLUMN IF NOT EXISTS "totalHtCents"       INTEGER;
 ALTER TABLE "WorkOrder"         ADD COLUMN IF NOT EXISTS "totalTtcCents"      INTEGER;
 ALTER TABLE "PurchaseOrder"     ADD COLUMN IF NOT EXISTS "totalHtCents"       INTEGER;
 ALTER TABLE "LoanerReservation" ADD COLUMN IF NOT EXISTS "depositAmountCents" INTEGER;
+ALTER TABLE "Garage"            ADD COLUMN IF NOT EXISTS "hourlyRateTenThousandths" INTEGER NOT NULL DEFAULT 600000;
+ALTER TABLE "Part"              ADD COLUMN IF NOT EXISTS "unitCostTenThousandths"   INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "Part"              ADD COLUMN IF NOT EXISTS "unitPriceTenThousandths"  INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "JobPart"           ADD COLUMN IF NOT EXISTS "unitPriceTenThousandths"  INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "JobPart"           ADD COLUMN IF NOT EXISTS "unitCostTenThousandths"   INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "QuoteLine"         ADD COLUMN IF NOT EXISTS "quantityTenThousandths"   INTEGER NOT NULL DEFAULT 10000;
+ALTER TABLE "QuoteLine"         ADD COLUMN IF NOT EXISTS "unitPriceTenThousandths"  INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "QuoteLine"         ADD COLUMN IF NOT EXISTS "unitCostTenThousandths"   INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "InvoiceLine"       ADD COLUMN IF NOT EXISTS "quantityTenThousandths"   INTEGER NOT NULL DEFAULT 10000;
+ALTER TABLE "InvoiceLine"       ADD COLUMN IF NOT EXISTS "unitPriceTenThousandths"  INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "InvoiceLine"       ADD COLUMN IF NOT EXISTS "unitCostTenThousandths"   INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "LaborOperation"    ADD COLUMN IF NOT EXISTS "unitPriceTenThousandths"  INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "LoanerReservation" ADD COLUMN IF NOT EXISTS "dailyRateTenThousandths"  INTEGER;
 
 -- Tables mechanic.
 CREATE TABLE IF NOT EXISTS "MechanicLicenseAssignment" (
@@ -1161,7 +1175,7 @@ function Test-LicenseActivationRateLimit {
         version = 'config-validator'
         os = 'windows'
         arch = 'x64'
-        name = 'GarageFlow configuration validator'
+        name = 'GarageFlows configuration validator'
     } | ConvertTo-Json -Compress
 
     $result = Invoke-ProtectedDeploymentRequest `
@@ -2168,7 +2182,7 @@ try {
     Test-EnvPullParsingRegression
     Test-RemoteEnvironmentIsolationRegression
     Write-Host '================================================================' -ForegroundColor Cyan
-    Write-Host 'GarageFlow - Rotation cryptographique totale des variables Vercel' -ForegroundColor Cyan
+    Write-Host 'GarageFlows - Rotation cryptographique totale des variables Vercel' -ForegroundColor Cyan
     Write-Host '================================================================' -ForegroundColor Cyan
     Write-Host 'Les variables Production seront sauvegardées puis mises à jour sans suppression préalable.'
     Write-Host 'Les secrets générables recevront une nouvelle valeur.'
@@ -2229,13 +2243,13 @@ try {
     Assert-Url 'DIRECT_URL' $directUrl -Postgres
 
     $existingAppUrl = if ($remoteBackup.ContainsKey('NEXTAUTH_URL')) { [string]$remoteBackup['NEXTAUTH_URL'] } elseif ($remoteBackup.ContainsKey('GF_APP_URL')) { [string]$remoteBackup['GF_APP_URL'] } else { '' }
-    $appUrl = Read-TextOrKeep 'URL publique GarageFlow' $existingAppUrl 'https://app.garageflows.fr' -Required
+    $appUrl = Read-TextOrKeep 'URL publique GarageFlows' $existingAppUrl 'https://app.garageflows.fr' -Required
     $appUrl = Clean-InputValue $appUrl
     if ($appUrl -match '^https://app\.garagesflows\.fr/?$') {
         Write-Host '[ATTENTION] Adresse corrigée automatiquement : app.garagesflows.fr -> app.garageflows.fr' -ForegroundColor Yellow
         $appUrl = 'https://app.garageflows.fr'
     }
-    Assert-Url 'URL publique GarageFlow' $appUrl -Https
+    Assert-Url 'URL publique GarageFlows' $appUrl -Https
 
     $upstashUrl = Read-TextOrKeep 'UPSTASH_REDIS_REST_URL' ([string]$remoteBackup['UPSTASH_REDIS_REST_URL']) '' -Required
     # SÉCURITÉ D'EXÉCUTION : retirer TOUT retour à la ligne / tabulation, y compris
@@ -2449,7 +2463,7 @@ try {
     Write-EnvMap -Path (Join-Path $runDir 'secrets.env') -Map $newValues
     }
     $summary = @(
-        'GarageFlow - Rotation cryptographique totale',
+        'GarageFlows - Rotation cryptographique totale',
         "Date : $([DateTime]::UtcNow.ToString('o'))",
         "Projet : $($script:VercelProject.Name)",
         "Variables supprimées : $($deletedNames.Count)",
@@ -2513,7 +2527,7 @@ try {
     }
 
     $successSummary = @(
-        'GarageFlow - Rotation cryptographique totale',
+        'GarageFlows - Rotation cryptographique totale',
         "Date : $([DateTime]::UtcNow.ToString('o'))",
         "Projet : $($script:VercelProject.Name)",
         "Variables utilisateur supprimées : 0",
@@ -2545,7 +2559,7 @@ try {
         }
     }
     $failureSummary = @(
-        'GarageFlow - Rotation cryptographique totale',
+        'GarageFlows - Rotation cryptographique totale',
         "Date : $([DateTime]::UtcNow.ToString('o'))",
         "Projet : $($script:VercelProject.Name)",
         'Environnement : production',

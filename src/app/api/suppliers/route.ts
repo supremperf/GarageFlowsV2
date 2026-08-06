@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
+import { fromScaled, toCents, fromCents } from '@/lib/money'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
@@ -69,11 +70,13 @@ function lowStockQueries(parts: PartRow[], targetMultiplier: number): PartQuery[
 }
 
 async function loadParts(garageId: string): Promise<PartRow[]> {
-  return prisma.part.findMany({
+  const rows = await prisma.part.findMany({
     where: { garageId },
-    select: { id: true, name: true, reference: true, supplierName: true, supplierRef: true, unitCost: true, quantity: true, minQuantity: true },
+    select: { id: true, name: true, reference: true, supplierName: true, supplierRef: true, unitCostTenThousandths: true, quantity: true, minQuantity: true },
     take: 5000,
   })
+  // Vue euros du coût exact (dix-millièmes) pour le contrat PartRow existant.
+  return rows.map(({ unitCostTenThousandths, ...r }) => ({ ...r, unitCost: fromScaled(unitCostTenThousandths) }))
 }
 
 // ── GET: preview the automatic reorder plan (read-only, no writes) ─────────────
@@ -178,14 +181,14 @@ export const POST = withAuth(async (req) => {
             garageId,
             supplierName: order.supplierName,
             linesJson: JSON.stringify(lines),
-            totalHT: order.totalHT,
+            totalHtCents: toCents(order.totalHT), // centimes = source de vérité
             status: 'draft',
             notes: `Commande auto — ${order.lines.length} référence(s), livraison ~${order.maxLeadTimeDays} j.`,
           },
         })
       })
-      created.push({ id: po.id, number: po.number, supplierName: po.supplierName ?? '—', totalHT: po.totalHT })
-      await logAudit({ action: 'create', entityType: 'PurchaseOrder', entityId: po.id, session, req, details: { auto: true, supplier: po.supplierName, totalHT: po.totalHT } })
+      created.push({ id: po.id, number: po.number, supplierName: po.supplierName ?? '—', totalHT: fromCents(po.totalHtCents) })
+      await logAudit({ action: 'create', entityType: 'PurchaseOrder', entityId: po.id, session, req, details: { auto: true, supplier: po.supplierName, totalHT: fromCents(po.totalHtCents) } })
     }
 
     return NextResponse.json({ created, unfulfillable: plan.unfulfillable }, { status: 201 })

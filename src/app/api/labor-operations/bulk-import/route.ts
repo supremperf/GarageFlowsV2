@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { toScaled } from '@/lib/money'
 
 // POST /api/labor-operations/bulk-import
 // Body: { operations: [{ name, category, durationMin, unitPrice }] }
@@ -36,7 +37,7 @@ export const POST = withAuth(async (req) => {
           name: op.name.trim(),
           category: op.category || null,
           durationMin: Number(op.durationMin),
-          unitPrice: Number(op.unitPrice),
+          unitPriceTenThousandths: toScaled(Number(op.unitPrice)), // € -> dix-milliemes exacts
           description: op.description || null,
           isActive: true,
           garageId: session.user.garageId,

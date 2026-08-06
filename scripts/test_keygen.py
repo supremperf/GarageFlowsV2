@@ -1,5 +1,5 @@
 """
-Tests du Keygen GarageFlow — licences mécanicien.
+Tests du Keygen GarageFlows — licences mécanicien.
 
 Exécution (depuis la racine du projet) :
     python3 scripts/test_keygen.py

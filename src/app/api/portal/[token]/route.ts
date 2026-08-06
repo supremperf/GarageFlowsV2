@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { jwtVerify } from 'jose'
 import { portalSecret } from '@/lib/portal-secret'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
+import { billingLines } from '@/lib/money-db'
 
 export async function GET(_req: Request, { params }: { params: { token: string } }) {
   try {
@@ -29,7 +30,7 @@ export async function GET(_req: Request, { params }: { params: { token: string }
           // garage) — le portail client ne doit jamais recevoir ce champ interne.
           include: {
             lines: {
-              select: { id: true, description: true, quantity: true, unitPrice: true, isLabor: true, sortOrder: true },
+              select: { id: true, description: true, quantityTenThousandths: true, unitPriceTenThousandths: true, isLabor: true, sortOrder: true },
             },
           },
           orderBy: { createdAt: 'desc' },
@@ -44,8 +45,8 @@ export async function GET(_req: Request, { params }: { params: { token: string }
     const quote = rawQuote
       ? {
           ...rawQuote,
-          totalHT:  roundCents(calcTotalHT(rawQuote.lines)),
-          totalTTC: roundCents(calcTotalTTC(rawQuote.lines, rawQuote.taxRate)),
+          totalHT:  roundCents(calcTotalHT(billingLines(rawQuote.lines))),
+          totalTTC: roundCents(calcTotalTTC(billingLines(rawQuote.lines), rawQuote.taxRate)),
         }
       : null
 

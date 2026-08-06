@@ -1,5 +1,5 @@
 """
-keygen_db.py — GarageFlow Licence DB locale (JSON)
+keygen_db.py — GarageFlows Licence DB locale (JSON)
 Stockage, révocation, réactivation des licences générées.
 """
 

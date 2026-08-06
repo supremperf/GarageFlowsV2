@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { format } from 'date-fns'
 import { withTotals } from '@/lib/billing'
+import { lineToScaled, linesToEuros } from '@/lib/money-db'
 import { CreateInvoiceSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
 import { assertRelations } from '@/lib/tenant'
@@ -39,7 +40,7 @@ export const GET = withAuth(async (req) => {
 
   // Compute totals from lines (no stored computed columns in SQLite)
   const data = invoices.map(inv => {
-    return withTotals(inv)
+    return withTotals({ ...inv, lines: linesToEuros(inv.lines) })
   })
   return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit), limit })
 })
@@ -97,9 +98,7 @@ export const POST = withAuth(async (req) => {
           lines: {
             create: (body.lines ?? []).map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
               description: l.description,
-              quantity: l.quantity ?? 1,
-              unitPrice: l.unitPrice ?? 0,
-              unitCost: l.unitCost ?? 0,
+              ...lineToScaled(l), // saisie euros -> entiers exacts (dix-milliemes)
               isLabor: l.isLabor ?? false,
               sortOrder: l.sortOrder ?? i,
             })),

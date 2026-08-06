@@ -15,7 +15,7 @@ import { DateField } from '@/components/DateField'
 import { useTranslation } from '@/lib/i18n'
 import { dateLocale } from '@/lib/i18n/date-locale'
 import { docStatusLabel } from '@/lib/i18n/labels'
-import { computeTotals, multiplyCents, toCents, fromCents } from '@/lib/money'
+import { computeTotals, multiplyCents, toCents, fromCents, parseAmountToScaled, fromScaled, lineCents } from '@/lib/money'
 
 interface Line {
   id?: string
@@ -579,19 +579,19 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                     <td className="py-2 text-center text-gray-800">
                       {editing ? (
                         <input type="number" min="0.01" step="0.01" value={line.quantity}
-                          onChange={e => updateLine(i, 'quantity', parseFloat(e.target.value) || 0)}
+                          onChange={e => updateLine(i, 'quantity', fromScaled(parseAmountToScaled(e.target.value) ?? 0))}
                           className={cn(INP, 'w-16 text-center')} />
                       ) : line.quantity}
                     </td>
                     <td className="py-2 text-right text-gray-800">
                       {editing ? (
                         <input type="number" min="0" step="0.01" value={line.unitPrice}
-                          onChange={e => updateLine(i, 'unitPrice', parseFloat(e.target.value) || 0)}
+                          onChange={e => updateLine(i, 'unitPrice', fromScaled(parseAmountToScaled(e.target.value) ?? 0))}
                           className={cn(INP, 'w-24 text-right')} />
                       ) : `${line.unitPrice.toFixed(2)} €`}
                     </td>
                     <td className="py-2 text-right font-medium text-gray-800">
-                      {(line.quantity * line.unitPrice).toFixed(2)} €
+                      {fromCents(lineCents(line.unitPrice, line.quantity)).toFixed(2)} €
                     </td>
                     {editing && (
                       <td className="py-2 pl-2">
@@ -629,7 +629,7 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                   <span>
                     {t.woVAT} ({editing ? (
                       <input type="number" min="0" max="100" value={form.taxRate}
-                        onChange={e => setForm(f => ({ ...f, taxRate: parseFloat(e.target.value) || 0 }))}
+                        onChange={e => setForm(f => ({ ...f, taxRate: fromScaled(parseAmountToScaled(e.target.value) ?? 0) }))}
                         className="w-10 text-center border-b border-gray-300 text-sm text-gray-800 bg-transparent focus:outline-none" />
                     ) : form.taxRate}%)
                   </span>

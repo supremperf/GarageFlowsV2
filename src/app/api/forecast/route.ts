@@ -6,6 +6,7 @@ import { withAuth, requireSession } from '@/lib/api-helpers'
 import { can } from '@/lib/authz'
 import { subMonths, format } from 'date-fns'
 import { calcTotalHT } from '@/lib/billing'
+import { billingLines } from '@/lib/money-db'
 import { forecast, type ForecastMethod } from '@/lib/forecast'
 
 const METRICS = ['revenue', 'appointments', 'workshop_load'] as const
@@ -27,12 +28,12 @@ async function buildSeries(metric: Metric, garageId: string, months: number): Pr
   if (metric === 'revenue') {
     const invoices = await prisma.invoice.findMany({
       where: { garageId, status: 'paid', issueDate: { gte: startDate } },
-      select: { issueDate: true, lines: { select: { quantity: true, unitPrice: true } } },
+      select: { issueDate: true, lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true } } },
     })
     for (const inv of invoices) {
       const k = inv.issueDate.slice(0, 7)
       const i = index.get(k)
-      if (i !== undefined) values[i] += calcTotalHT(inv.lines)
+      if (i !== undefined) values[i] += calcTotalHT(billingLines(inv.lines))
     }
   } else {
     // appointments (count) and workshop_load (sum of estimated minutes → hours)

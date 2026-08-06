@@ -1,4 +1,5 @@
 'use client'
+import { lineCents, fromCents } from '@/lib/money'
 
 import { useState, useEffect, useMemo } from 'react'
 import { useScheduleStore } from '@/store/schedule-store'
@@ -28,7 +29,7 @@ export function StockSection({ stats }: { stats: StatsData | null }) {
   }, [])
 
   const lowStock = parts.filter(p => p.quantity <= p.minQuantity)
-  const totalValue = parts.reduce((s, p) => s + p.quantity * p.unitCost, 0)
+  const totalValue = parts.reduce((s, p) => s + fromCents(lineCents(p.unitCost, p.quantity)), 0)
 
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -101,7 +102,7 @@ export function StockSection({ stats }: { stats: StatsData | null }) {
                   </td>
                   <td style={{ padding: '10px 14px', color: isLow ? '#f59e0b' : '#94a3b8', fontSize: 13, fontWeight: 600 }}>{p.quantity}</td>
                   <td style={{ padding: '10px 14px', color: '#94a3b8', fontSize: 13 }}>{p.unitPrice} €</td>
-                  <td style={{ padding: '10px 14px', color: '#3b82f6', fontSize: 13, fontWeight: 600 }}>{(p.quantity * p.unitCost).toFixed(0)} €</td>
+                  <td style={{ padding: '10px 14px', color: '#3b82f6', fontSize: 13, fontWeight: 600 }}>{fromCents(lineCents(p.unitCost, p.quantity)).toFixed(0)} €</td>
                   <td style={{ padding: '10px 14px' }}>
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999,

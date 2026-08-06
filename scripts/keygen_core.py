@@ -1,5 +1,5 @@
 """
-keygen_core.py — GarageFlow Licence ECC P-256
+keygen_core.py — GarageFlows Licence ECC P-256
 Gestion des clés, signature et vérification ECDSA-SHA256.
 """
 

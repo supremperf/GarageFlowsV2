@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
+import { fromScaled } from '@/lib/money'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { subMonths, format } from 'date-fns'
@@ -21,7 +22,7 @@ export const GET = withAuth(async (req) => {
   const [parts, jobParts, garage] = await Promise.all([
     prisma.part.findMany({
       where: { garageId },
-      select: { id: true, name: true, reference: true, quantity: true, unitCost: true, minQuantity: true },
+      select: { id: true, name: true, reference: true, quantity: true, unitCostTenThousandths: true, minQuantity: true },
     }),
     prisma.jobPart.findMany({
       where: { job: { garageId, date: { gte: startDate } } },
@@ -46,7 +47,7 @@ export const GET = withAuth(async (req) => {
       name: p.name,
       reference: p.reference,
       currentStock: p.quantity,
-      unitCost: p.unitCost,
+      unitCost: fromScaled(p.unitCostTenThousandths),
       minStock: p.minQuantity,
       leadTimeDays,
       periodDays: 30,

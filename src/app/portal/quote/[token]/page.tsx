@@ -1,4 +1,5 @@
 'use client'
+import { lineCents, fromCents } from '@/lib/money'
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
@@ -251,7 +252,7 @@ export default function QuoteApprovalPage() {
                     <td className="py-2.5 px-2 text-right text-gray-600">{line.quantity}</td>
                     <td className="py-2.5 px-2 text-right text-gray-600">{line.unitPrice.toFixed(2)} €</td>
                     <td className="py-2.5 pl-2 text-right font-medium text-gray-800">
-                      {(line.quantity * line.unitPrice).toFixed(2)} €
+                      {fromCents(lineCents(line.unitPrice, line.quantity)).toFixed(2)} €
                     </td>
                   </tr>
                 ))}

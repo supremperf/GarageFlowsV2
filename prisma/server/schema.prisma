@@ -32,7 +32,7 @@ model Garage {
   name              String
   slug              String @unique
   plan              String @default("FREE")
-  hourlyRate        Float  @default(60)
+  hourlyRateTenThousandths Int @default(600000) // taux horaire en DIX-MILLIÈMES d'€/h (600000 = 60 €/h) — exact, 4 décimales
   workshopStartHour Int    @default(8) // opening hour (e.g. 8 → 08:00)
   workshopEndHour   Int    @default(18) // closing hour (e.g. 18 → 18:00)
 
@@ -227,8 +227,8 @@ model Part {
   description  String?
   quantity     Int              @default(0)
   minQuantity  Int              @default(5) // low-stock threshold
-  unitCost     Float            @default(0) // purchase price €
-  unitPrice    Float            @default(0) // selling price €
+  unitCostTenThousandths  Int    @default(0) // coût d'achat en DIX-MILLIÈMES d'€ (exact, 4 décimales)
+  unitPriceTenThousandths Int    @default(0) // prix de vente en DIX-MILLIÈMES d'€ (exact, 4 décimales)
   location     String? // shelf / bin reference
   supplierName String?
   supplierRef  String? // supplier's own reference/SKU
@@ -250,8 +250,8 @@ model JobPart {
   partId    String
   part      Part   @relation(fields: [partId], references: [id])
   quantity  Int
-  unitPrice Float // selling price snapshot
-  unitCost  Float // cost snapshot
+  unitPriceTenThousandths Int // prix de vente (snapshot) en DIX-MILLIÈMES d'€
+  unitCostTenThousandths  Int // coût (snapshot) en DIX-MILLIÈMES d'€
 
   @@index([jobId])
   @@index([partId])
@@ -356,9 +356,9 @@ model QuoteLine {
   quoteId     String
   quote       Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
   description String
-  quantity    Float   @default(1)
-  unitPrice   Float   @default(0)
-  unitCost    Float   @default(0)
+  quantityTenThousandths  Int @default(10000) // quantité en DIX-MILLIÈMES d'unité (10000 = 1 ; 15000 = 1,5)
+  unitPriceTenThousandths Int @default(0) // prix unitaire en DIX-MILLIÈMES d'€ (exact, 4 décimales)
+  unitCostTenThousandths  Int @default(0) // coût unitaire en DIX-MILLIÈMES d'€ (exact, 4 décimales)
   isLabor     Boolean @default(false)
   sortOrder   Int     @default(0)
 }
@@ -405,9 +405,9 @@ model InvoiceLine {
   invoiceId   String
   invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   description String
-  quantity    Float   @default(1)
-  unitPrice   Float   @default(0)
-  unitCost    Float   @default(0)
+  quantityTenThousandths  Int @default(10000) // quantité en DIX-MILLIÈMES d'unité (10000 = 1 ; 15000 = 1,5)
+  unitPriceTenThousandths Int @default(0) // prix unitaire en DIX-MILLIÈMES d'€ (exact, 4 décimales)
+  unitCostTenThousandths  Int @default(0) // coût unitaire en DIX-MILLIÈMES d'€ (exact, 4 décimales)
   isLabor     Boolean @default(false)
   sortOrder   Int     @default(0)
 }
@@ -682,14 +682,11 @@ model WorkOrder {
   partsJson     String    @default("[]") // [{name, reference, qty, unitPrice}]
   // Pricing
   taxRate       Float     @default(20)
-  totalHT       Float     @default(0)
-  totalTTC      Float     @default(0)
-  // Migration monétaire (additif) : centimes entiers = SOURCE DE VÉRITÉ ; les
-  // colonnes Float ci-dessus sont un miroir dérivé (fromCents) conservé pour la
-  // compatibilité/signatures, retiré par l'opérateur après vérification.
-  // Voir docs/MIGRATION-MONEY.md.
-  totalHtCents  Int?
-  totalTtcCents Int?
+  // Totaux en CENTIMES entiers — UNIQUE source de vérité (les anciennes
+  // colonnes Float totalHT/totalTTC ont été migrées puis supprimées ;
+  // voir docs/MIGRATION-MONEY.md).
+  totalHtCents  Int       @default(0)
+  totalTtcCents Int       @default(0)
   // Status & signature
   status        String    @default("draft") // draft, signed, in_progress, closed
   signatureData String? // base64 PNG of client signature
@@ -711,7 +708,7 @@ model LaborOperation {
   name        String
   category    String? // Moteur, Freinage, Pneumatiques, Électricité, Carrosserie, Autre
   durationMin Int      @default(30) // barème time in minutes
-  unitPrice   Float    @default(0) // price per operation (not per hour)
+  unitPriceTenThousandths Int @default(0) // prix par opération (forfait) en DIX-MILLIÈMES d'€
   description String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -793,12 +790,10 @@ model LoanerReservation {
   status        String        @default("reserved") // reserved, active, returned, cancelled
   notes         String?
   isPaid        Boolean       @default(false)
-  dailyRate     Float?
-  depositAmount Float?
-  // Migration monétaire (additif) : la caution (somme) est stockée en centimes ;
-  // depositAmount devient un miroir dérivé. dailyRate (tarif unitaire) reste Float
-  // — cf. docs/MIGRATION-MONEY.md (prix unitaires : migration stagée).
-  depositAmountCents Int?
+  // Tarif journalier en DIX-MILLIÈMES d'€/jour ; caution en CENTIMES —
+  // uniques sources de vérité (anciens Float dailyRate/depositAmount supprimés).
+  dailyRateTenThousandths Int?
+  depositAmountCents      Int?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -816,9 +811,8 @@ model PurchaseOrder {
   supplierName  String?
   supplierEmail String?
   linesJson     String    @default("[]") // [{partId?, partName, reference?, qty, unitCost}]
-  totalHT       Float     @default(0)
-  // Migration monétaire (additif) : centimes = source de vérité, Float miroir dérivé.
-  totalHtCents  Int?
+  // Total HT en CENTIMES entiers — unique source de vérité (ancien Float supprimé).
+  totalHtCents  Int       @default(0)
   status        String    @default("draft") // draft, sent, received, cancelled
   notes         String?
   sentAt        DateTime?

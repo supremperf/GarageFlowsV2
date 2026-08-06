@@ -1,5 +1,43 @@
 # Changelog
 
+## [Non publié] — 2026-08-06 (3) — Migration monétaire FINALE : zéro Float, entiers exacts
+
+### Monnaie — schémas (SQLite + PostgreSQL, alignés)
+- **ZÉRO champ monétaire Float** : prix/coûts unitaires, taux horaires/journaliers
+  → `*TenThousandths` (Int, dix-millièmes d'€, 4 décimales exactes) ; quantités
+  fractionnaires → `quantityTenThousandths` ; totaux/caution → `*Cents` (Int).
+  **Anciennes colonnes Float SUPPRIMÉES** — plus de double écriture ni fallback.
+  Seuls les 4 `taxRate` (taux %, non monétaires, classés) restent Float.
+- Migrations : PG `money_scaled_units` (add + backfill ROUND(x×10000) +
+  **vérification bloquante**) puis `money_drop_floats` (drops) ; SQLite runner
+  **162–212** avec gardes `onlyIfColumnExists/Missing` (sûres sur base ancienne
+  ET neuve) ; template desktop régénéré ; converge du reset synchronisée (additive).
+- Consommateurs migrés (~45 fichiers) : routes devis/factures/OR/stock/MO/prêt/
+  garages, exports (FEC, CSV, Electron), analytics, signature (canonicalisation
+  euros **bit-identique** → signatures historiques préservées), sauvegardes
+  (restauration des anciens snapshots convertie à la volée), Zod strict
+  (finite, ≤ 4 décimales), API : entiers exacts + vue euros dérivée.
+- Calculs centralisés : plus AUCUN `prix × quantité` flottant, `parseFloat`
+  monétaire ni `Math.round(x*100)/100` hors `lib/money.ts` (modales, portail,
+  stock, dashboard, profitability, quote-gen, suppliers, Electron export).
+- `parseAmountToScaled` : parsing STRICT des saisies (virgule/point, refus
+  NaN/Infinity/> 4 décimales) ; `allocateCents` (répartition d'arrondi exacte).
+
+### Electron
+- Épinglage userData refondu : module pur `electron/user-data-path.js` **testé**,
+  **zéro catch silencieux** — échec journalisé + **arrêt contrôlé** avant toute
+  écriture (protège BD/licence des installations existantes).
+
+### Marque
+- Keygen (fenêtres/labels), scripts CMD/PS1 (titres/echo/messages), README,
+  seed → **GarageFlows**. Scanner étendu à TOUT le dépôt (scripts, prisma,
+  .github, racine, .py/.ps1/.cmd/.md) — exceptions précises listées.
+
+### CI
+- `check:money` **STRICT** (échec si un seul champ monétaire Float) ;
+  nouveau `check:money-calculations` (calculs interdits) ; `test:money` (51),
+  `test:migration` (8) ; `typecheck` ajouté.
+
 ## [Non publié] — 2026-08-06 (2) — Précision 4 décimales · rename Windows · icônes · garde-fous
 
 ### Monnaie — précision & centralisation

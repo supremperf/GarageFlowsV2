@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { CreateQuoteSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
 import { withTotals } from '@/lib/billing'
+import { lineToScaled, linesToEuros } from '@/lib/money-db'
 import { assertRelations } from '@/lib/tenant'
 
 // GET /api/quotes
@@ -38,7 +39,7 @@ export const GET = withAuth(async (req) => {
   ])
 
   const data = quotes.map(q => {
-    return withTotals(q)
+    return withTotals({ ...q, lines: linesToEuros(q.lines) })
   })
   return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit), limit })
 })
@@ -94,9 +95,7 @@ export const POST = withAuth(async (req) => {
           lines: {
             create: (body.lines ?? []).map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
               description: l.description,
-              quantity: l.quantity ?? 1,
-              unitPrice: l.unitPrice ?? 0,
-              unitCost: l.unitCost ?? 0,
+              ...lineToScaled(l), // saisie euros -> entiers exacts (dix-milliemes)
               isLabor: l.isLabor ?? false,
               sortOrder: l.sortOrder ?? i,
             })),

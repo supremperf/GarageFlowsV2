@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { can } from '@/lib/authz'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
+import { linesToEuros } from '@/lib/money-db'
 
 // GET /api/export/fec?year=2026
 export const GET = withAuth(async (req) => {
@@ -25,7 +26,8 @@ export const GET = withAuth(async (req) => {
       },
       include: { lines: true },
       orderBy: { issueDate: 'asc' },
-    }),
+      // Entiers exacts → vue euros pour le calcul FEC (mêmes nombres qu'avant migration).
+    }).then(rows => rows.map(i => ({ ...i, lines: linesToEuros(i.lines) }))),
   ])
 
   // Build FEC lines

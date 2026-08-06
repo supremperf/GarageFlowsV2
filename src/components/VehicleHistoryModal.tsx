@@ -1,4 +1,5 @@
 'use client'
+import { lineCents, fromCents } from '@/lib/money'
 
 import { useState, useEffect } from 'react'
 import { X, Car, Wrench, Calendar, TrendingUp, Camera, Clock, ChevronRight } from 'lucide-react'
@@ -94,13 +95,13 @@ export default function VehicleHistoryModal({ vehicleId, onClose }: Props) {
   const completedJobs = vehicle.jobs.filter(j => j.status === 'completed')
   const totalRevenue = completedJobs.reduce((s, j) => {
     const parts = j.jobParts ?? []
-    const partsRevenue = parts.reduce((ps, p) => ps + p.unitPrice * p.quantity, 0)
+    const partsRevenue = parts.reduce((ps, p) => ps + fromCents(lineCents(p.unitPrice, p.quantity)), 0)
     const laborRevenue = ((j.actualDuration ?? j.estimatedDuration) / 60) * 60
     return s + partsRevenue + laborRevenue
   }, 0)
   const totalCost = completedJobs.reduce((s, j) => {
     const parts = j.jobParts ?? []
-    return s + parts.reduce((ps, p) => ps + p.unitCost * p.quantity, 0)
+    return s + parts.reduce((ps, p) => ps + fromCents(lineCents(p.unitCost, p.quantity)), 0)
   }, 0)
 
   const sortedJobs = [...vehicle.jobs].sort((a, b) => b.date.localeCompare(a.date))
@@ -171,10 +172,10 @@ export default function VehicleHistoryModal({ vehicleId, onClose }: Props) {
               <div className="space-y-2">
                 {sortedJobs.map((job, idx) => {
                   const parts = job.jobParts ?? []
-                  const partsRevenue = parts.reduce((s, p) => s + p.unitPrice * p.quantity, 0)
+                  const partsRevenue = parts.reduce((s, p) => s + fromCents(lineCents(p.unitPrice, p.quantity)), 0)
                   const laborRevenue = ((job.actualDuration ?? job.estimatedDuration) / 60) * 60
                   const total = partsRevenue + laborRevenue
-                  const partsCost = parts.reduce((s, p) => s + p.unitCost * p.quantity, 0)
+                  const partsCost = parts.reduce((s, p) => s + fromCents(lineCents(p.unitCost, p.quantity)), 0)
                   const profit = total - partsCost
                   return (
                     <div key={job.id} className={cn('border rounded-xl p-3.5 transition-colors', idx === 0 ? 'border-blue-200 bg-blue-50/30' : 'border-gray-100 bg-white')}>

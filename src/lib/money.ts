@@ -139,6 +139,118 @@ export function balanceCents(totalTTCCents: number, paymentsEuros: number[] = []
   return totalTTCCents - paid - credited
 }
 
+// ─── Unités EXACTES à l'échelle 1/10 000 (dix-millièmes) ─────────────────────
+//
+// STOCKAGE : les prix/coûts unitaires, taux horaires/journaliers et quantités
+// fractionnaires sont persistés en ENTIERS de dix-millièmes (« TenThousandths »).
+//   12,3456 €  → 123456    (dix-millièmes d'euro)
+//   1,5 (qté)  → 15000     (dix-millièmes d'unité)
+// Cette représentation est EXACTE, identique sur SQLite et PostgreSQL (INTEGER),
+// et conserve les 4 décimales jusqu'à l'arrondi final au centime.
+
+/** Facteur d'échelle des unités exactes (dix-millièmes). */
+export const MONEY_SCALE = 10_000
+
+/** Plage sûre d'un INTEGER 32 bits (colonnes Prisma Int). */
+export const MAX_SCALED = 2_147_483_647
+
+/**
+ * Convertit une valeur en euros (ou une quantité) vers l'entier en dix-millièmes.
+ * Arrondi demi-éloigné-de-zéro à 1e-4, robuste au bruit binaire (même stratégie
+ * que toCents). Renvoie 0 pour une entrée non finie.
+ */
+export function toScaled(value: number): number {
+  if (!Number.isFinite(value)) return 0
+  const sign = value < 0 ? -1 : 1
+  return sign * Math.round(Math.abs(value) * MONEY_SCALE + 1e-5)
+}
+
+/** Convertit un entier en dix-millièmes vers le nombre (euros / quantité).
+ *  Division IEEE correctement arrondie → même double que la saisie d'origine. */
+export function fromScaled(scaled: number): number {
+  return Math.round(scaled) / MONEY_SCALE
+}
+
+/**
+ * Montant d'une ligne en CENTIMES à partir des représentations EXACTES :
+ * prix (dix-millièmes d'euro) × quantité (dix-millièmes d'unité).
+ * Chemin 100 % entier : produit en 1e-8 €, arrondi une seule fois au centime
+ * (demi-éloigné-de-zéro). Le produit est gardé sous 2^53 (exactitude garantie) —
+ * au-delà des bornes métier (MAX_SCALED), l'entrée est invalide → 0.
+ */
+export function lineTotalCentsFromScaled(unitScaled: number, qtyScaled: number): number {
+  if (!Number.isFinite(unitScaled) || !Number.isFinite(qtyScaled)) return 0
+  if (Math.abs(unitScaled) > MAX_SCALED || Math.abs(qtyScaled) > MAX_SCALED) return 0
+  const product = unitScaled * qtyScaled // 1e-8 € ; |produit| < 2^53 non garanti aux extrêmes
+  if (!Number.isSafeInteger(product)) {
+    // Repli exact : décompose la quantité (entier + reste) pour rester en zone sûre.
+    const qWhole = Math.trunc(qtyScaled / MONEY_SCALE)
+    const qRest = qtyScaled - qWhole * MONEY_SCALE
+    const wholeCents = roundHalfAwayFromZero((unitScaled * qWhole) / 100)
+    const restCents = roundHalfAwayFromZero((unitScaled * qRest) / 1_000_000)
+    return wholeCents + restCents
+  }
+  return roundHalfAwayFromZero(product / 1_000_000)
+}
+
+/**
+ * Parsing STRICT d'une saisie décimale (formulaire) vers l'entier en
+ * dix-millièmes. Accepte chaîne (virgule OU point) ou nombre fini.
+ * Rejette (→ null) : NaN, Infinity, notation exotique, plus de `maxDecimals`
+ * décimales, hors plage Int32. Ne passe JAMAIS par un Number() silencieux :
+ * la chaîne est validée par motif puis convertie exactement.
+ */
+export function parseAmountToScaled(
+  input: string | number,
+  opts: { maxDecimals?: number; allowNegative?: boolean } = {},
+): number | null {
+  const maxDecimals = opts.maxDecimals ?? 4
+  let str: string
+  if (typeof input === 'number') {
+    if (!Number.isFinite(input)) return null
+    str = String(input)
+    if (!/^[+-]?\d+(\.\d+)?$/.test(str)) return null // notation exponentielle → rejet
+  } else {
+    str = input.trim().replace(',', '.')
+  }
+  const m = str.match(/^([+-]?)(\d+)(?:\.(\d+))?$/)
+  if (!m) return null
+  const [, sign, intPart, decPart = ''] = m
+  if (decPart.length > maxDecimals) return null
+  if (sign === '-' && opts.allowNegative === false) return null
+  const scaled =
+    (sign === '-' ? -1 : 1) *
+    (Number(intPart) * MONEY_SCALE + Number((decPart + '0000').slice(0, 4)))
+  if (!Number.isSafeInteger(scaled) || Math.abs(scaled) > MAX_SCALED) return null
+  return scaled
+}
+
+/**
+ * Répartit un total en centimes entre plusieurs lignes au prorata de poids,
+ * SANS perdre ni créer un centime : la somme des parts vaut exactement le total
+ * (méthode du plus fort reste). Poids nuls/négatifs → répartition égale.
+ */
+export function allocateCents(totalCents: number, weights: number[]): number[] {
+  const n = weights.length
+  if (n === 0) return []
+  const safe = weights.map((w) => (Number.isFinite(w) && w > 0 ? w : 0))
+  const sum = safe.reduce((s, w) => s + w, 0)
+  const base = sum > 0 ? safe : safe.map(() => 1)
+  const baseSum = sum > 0 ? sum : n
+  const raw = base.map((w) => (totalCents * w) / baseSum)
+  const floors = raw.map((r) => Math.trunc(r))
+  let remainder = totalCents - floors.reduce((s, f) => s + f, 0)
+  const order = raw
+    .map((r, i) => ({ i, frac: r - Math.trunc(r) }))
+    .sort((a, b) => b.frac - a.frac)
+  const out = [...floors]
+  const step = remainder >= 0 ? 1 : -1
+  for (let k = 0; remainder !== 0 && k < order.length; k++, remainder -= step) {
+    out[order[k].i] += step
+  }
+  return out
+}
+
 /**
  * Marge en centimes = produit − coût (soustraction d'entiers, donc EXACTE).
  * Les montants négatifs (coût supérieur au produit) sont conservés tels quels —

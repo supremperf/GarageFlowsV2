@@ -109,9 +109,13 @@ jobs:
       - name: PWA manifests & icon dimensions
         run: node scripts/check-pwa.mjs
 
-      # Garde-fou monnaie : aucun Float monétaire non classé (régression interdite).
-      - name: Money fields (no unclassified monetary Float)
+      # Garde-fou monnaie STRICT : ZÉRO champ monétaire Float dans les schémas.
+      - name: Money fields (ZERO monetary Float)
         run: node scripts/check-money-fields.mjs
+
+      # Garde-fou calculs : aucun calcul financier direct hors couche centrale.
+      - name: Money calculations (no direct float math)
+        run: node scripts/check-money-calculations.mjs
 
       # Garde-fou docs : aucune affirmation de statut contradictoire dans un doc actif.
       - name: Docs consistency

@@ -5,6 +5,7 @@ import { withAuth, requireSession } from '@/lib/api-helpers'
 import { UpdateInvoiceSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
 import { withTotals } from '@/lib/billing'
+import { lineToScaled, linesToEuros } from '@/lib/money-db'
 
 export const GET = withAuth(async (_req, { params }) => {
   const session = await requireSession()
@@ -13,7 +14,7 @@ export const GET = withAuth(async (_req, { params }) => {
     include: { lines: { orderBy: { sortOrder: 'asc' } } },
   })
   if (!invoice) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(withTotals(invoice))
+  return NextResponse.json(withTotals({ ...invoice, lines: linesToEuros(invoice.lines) }))
 })
 
 export const PATCH = withAuth(async (req, { params }) => {
@@ -48,9 +49,7 @@ export const PATCH = withAuth(async (req, { params }) => {
         data: body.lines.map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
           invoiceId: params.id,
           description: l.description,
-          quantity: l.quantity ?? 1,
-          unitPrice: l.unitPrice ?? 0,
-          unitCost: l.unitCost ?? 0,
+          ...lineToScaled(l), // saisie euros -> entiers exacts (dix-milliemes)
           isLabor: l.isLabor ?? false,
           sortOrder: l.sortOrder ?? i,
         })),
@@ -76,7 +75,7 @@ export const PATCH = withAuth(async (req, { params }) => {
 
   await logAudit({ action: 'update', entityType: 'Invoice', entityId: invoice.id, session, req })
 
-  return NextResponse.json(withTotals(invoice))
+  return NextResponse.json(withTotals({ ...invoice, lines: linesToEuros(invoice.lines) }))
 })
 
 export const DELETE = withAuth(async (req, { params }) => {

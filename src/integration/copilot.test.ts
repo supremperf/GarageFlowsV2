@@ -7,6 +7,7 @@
  * answers (== message with no provider) and absent on the action pass-through.
  */
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest'
+import { toScaled } from '@/lib/money'
 import { execSync } from 'node:child_process'
 import { format, subDays } from 'date-fns'
 import path from 'node:path'
@@ -32,7 +33,7 @@ async function ask(query: string): Promise<{ status: number; json: any }> {
 const asA = () => { h.session = { user: { id: 'ua', name: 'A', garageId: garageA } } }
 
 async function paidInvoice(garageId: string, number: string, issueDate: string, status: string, ht: number) {
-  await prisma.invoice.create({ data: { number, garageId, clientName: 'C', status, issueDate, taxRate: 20, lines: { create: [{ description: 'x', quantity: 1, unitPrice: ht, unitCost: 0, isLabor: false, sortOrder: 0 }] } } })
+  await prisma.invoice.create({ data: { number, garageId, clientName: 'C', status, issueDate, taxRate: 20, lines: { create: [{ description: 'x', quantityTenThousandths: 10000, unitPriceTenThousandths: toScaled(ht), unitCostTenThousandths: 0, isLabor: false, sortOrder: 0 }] } } })
 }
 
 beforeAll(async () => {
@@ -52,9 +53,9 @@ beforeAll(async () => {
 
   // low_stock: one below-min part, one well-stocked, one in garage B. NO JobParts
   // (zero consumption keeps the reorder figures deterministic).
-  await prisma.part.create({ data: { name: 'Plaquettes', reference: 'BRK-1', quantity: 2, minQuantity: 5, unitCost: 10, garageId: garageA } })
-  await prisma.part.create({ data: { name: 'Ampoule', quantity: 100, minQuantity: 5, unitCost: 1, garageId: garageA } })
-  await prisma.part.create({ data: { name: 'CrossTenant', quantity: 0, minQuantity: 5, unitCost: 50, garageId: garageB } })
+  await prisma.part.create({ data: { name: 'Plaquettes', reference: 'BRK-1', quantity: 2, minQuantity: 5, unitCostTenThousandths: 100000, garageId: garageA } })
+  await prisma.part.create({ data: { name: 'Ampoule', quantity: 100, minQuantity: 5, unitCostTenThousandths: 10000, garageId: garageA } })
+  await prisma.part.create({ data: { name: 'CrossTenant', quantity: 0, minQuantity: 5, unitCostTenThousandths: 500000, garageId: garageB } })
 
   asA()
 })

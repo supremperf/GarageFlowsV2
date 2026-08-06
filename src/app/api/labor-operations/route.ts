@@ -2,6 +2,8 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { toScaled } from '@/lib/money'
+import { laborOpToEuros } from '@/lib/money-db'
 import { LABOR_DEFAULTS } from '@/lib/labor-defaults'
 
 // GET /api/labor-operations
@@ -29,7 +31,7 @@ export const GET = withAuth(async (req) => {
     orderBy: [{ category: 'asc' }, { name: 'asc' }],
   })
 
-  return NextResponse.json({ operations, defaults: LABOR_DEFAULTS })
+  return NextResponse.json({ operations: operations.map(laborOpToEuros), defaults: LABOR_DEFAULTS })
 })
 
 // POST /api/labor-operations
@@ -53,12 +55,12 @@ export const POST = withAuth(async (req) => {
       name: name.trim(),
       category: category || null,
       durationMin: Number(durationMin),
-      unitPrice: Number(unitPrice),
+      unitPriceTenThousandths: toScaled(Number(unitPrice)), // € -> dix-milliemes exacts
       description: description || null,
       isActive: Boolean(isActive),
       garageId: session.user.garageId,
     },
   })
 
-  return NextResponse.json(operation, { status: 201 })
+  return NextResponse.json(laborOpToEuros(operation), { status: 201 })
 })

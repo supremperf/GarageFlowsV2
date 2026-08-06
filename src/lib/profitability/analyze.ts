@@ -1,6 +1,7 @@
 /**
  * Profitability analytics — pure, deterministic computations.
  */
+import { lineCents, fromCents } from '@/lib/money'
 import type {
   AnalyzedInvoice,
   AnalyzedJobPart,
@@ -25,8 +26,8 @@ function pct(margin: number, revenue: number): number | null {
 }
 
 export function lineMargin(line: { quantity: number; unitPrice: number; unitCost: number }): Margin {
-  const revenueHT = line.quantity * line.unitPrice
-  const costHT = line.quantity * line.unitCost
+  const revenueHT = fromCents(lineCents(line.unitPrice, line.quantity))
+  const costHT = fromCents(lineCents(line.unitCost, line.quantity))
   const margin = revenueHT - costHT
   return { revenueHT: round2(revenueHT), costHT: round2(costHT), margin: round2(margin), marginPct: pct(margin, revenueHT) }
 }
@@ -35,8 +36,8 @@ export function invoiceMargin(inv: AnalyzedInvoice): Margin {
   let revenue = 0
   let cost = 0
   for (const l of inv.lines) {
-    revenue += l.quantity * l.unitPrice
-    cost += l.quantity * l.unitCost
+    revenue += fromCents(lineCents(l.unitPrice, l.quantity))
+    cost += fromCents(lineCents(l.unitCost, l.quantity))
   }
   const margin = revenue - cost
   return { revenueHT: round2(revenue), costHT: round2(cost), margin: round2(margin), marginPct: pct(margin, revenue) }
@@ -74,8 +75,8 @@ export function marginByPart(jobParts: AnalyzedJobPart[]): PartMargin[] {
       acc.get(jp.partId) ??
       { partId: jp.partId, partName: jp.partName, qtySold: 0, revenueHT: 0, costHT: 0, margin: 0, marginPct: null }
     cur.qtySold += jp.quantity
-    cur.revenueHT = round2(cur.revenueHT + jp.quantity * jp.unitPrice)
-    cur.costHT = round2(cur.costHT + jp.quantity * jp.unitCost)
+    cur.revenueHT = round2(cur.revenueHT + fromCents(lineCents(jp.unitPrice, jp.quantity)))
+    cur.costHT = round2(cur.costHT + fromCents(lineCents(jp.unitCost, jp.quantity)))
     cur.margin = round2(cur.revenueHT - cur.costHT)
     acc.set(jp.partId, cur)
   }
@@ -89,7 +90,7 @@ export function detectDormantStock(parts: PartStock[], soldPartIds: Set<string>)
   return parts
     .filter((p) => p.quantity > 0 && !soldPartIds.has(p.id))
     .map<Anomaly>((p) => {
-      const amount = round2(p.quantity * p.unitCost)
+      const amount = round2(fromCents(lineCents(p.unitCost, p.quantity)))
       return {
         type: 'dormant_stock',
         severity: amount >= 500 ? 'high' : amount >= 100 ? 'medium' : 'low',

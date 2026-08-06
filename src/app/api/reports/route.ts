@@ -1,11 +1,13 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
+import { fromScaled } from '@/lib/money'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { can } from '@/lib/authz'
 import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
+import { billingLines } from '@/lib/money-db'
 import { runReport, reportToCsv, REPORT_SOURCES, isValidSource, type ReportSpec, type Row } from '@/lib/reports'
 
 const SpecSchema = z.object({
@@ -21,19 +23,19 @@ async function loadRows(source: string, garageId: string): Promise<Row[]> {
   if (source === 'invoices') {
     const invoices = await prisma.invoice.findMany({
       where: { garageId },
-      include: { lines: { select: { quantity: true, unitPrice: true } } },
+      include: { lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true } } },
       orderBy: { createdAt: 'desc' },
     })
     return invoices.map((inv) => ({
       number: inv.number, status: inv.status, issueDate: inv.issueDate, clientName: inv.clientName,
-      totalHT: roundCents(calcTotalHT(inv.lines)), totalTTC: roundCents(calcTotalTTC(inv.lines, inv.taxRate)), taxRate: inv.taxRate,
+      totalHT: roundCents(calcTotalHT(billingLines(inv.lines))), totalTTC: roundCents(calcTotalTTC(billingLines(inv.lines), inv.taxRate)), taxRate: inv.taxRate,
     }))
   }
   if (source === 'parts') {
     const parts = await prisma.part.findMany({ where: { garageId }, orderBy: { name: 'asc' } })
     return parts.map((p) => ({
       reference: p.reference, name: p.name, quantity: p.quantity, minQuantity: p.minQuantity,
-      unitCost: p.unitCost, unitPrice: p.unitPrice, location: p.location,
+      unitCost: fromScaled(p.unitCostTenThousandths), unitPrice: fromScaled(p.unitPriceTenThousandths), location: p.location,
     }))
   }
   if (source === 'clients') {

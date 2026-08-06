@@ -2,12 +2,13 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { purchaseOrderToEuros } from '@/lib/money-db'
 
 export const GET = withAuth(async (_req, { params }: { params: { id: string } }) => {
   const session = await requireSession()
   const order = await prisma.purchaseOrder.findFirst({ where: { id: params.id, garageId: session.user.garageId } })
   if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(order)
+  return NextResponse.json(purchaseOrderToEuros(order))
 })
 
 export const PATCH = withAuth(async (req, { params }: { params: { id: string } }) => {
@@ -23,7 +24,7 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
   if (body.status === 'sent' && !existing.sentAt)         data.sentAt = new Date()
   if (body.status === 'received' && !existing.receivedAt) data.receivedAt = new Date()
   const updated = await prisma.purchaseOrder.update({ where: { id: params.id, garageId: session.user.garageId }, data })
-  return NextResponse.json(updated)
+  return NextResponse.json(purchaseOrderToEuros(updated))
 })
 
 export const DELETE = withAuth(async (_req, { params }: { params: { id: string } }) => {

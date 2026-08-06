@@ -1,4 +1,5 @@
 'use client'
+import { lineCents, fromCents, toCents } from '@/lib/money'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useScheduleStore } from '@/store/schedule-store'
@@ -105,10 +106,10 @@ export default function JobModal() {
     ]).then(([garage, parts]) => {
       if (!garage) return
       const duration = editingJob.actualDuration ?? editingJob.estimatedDuration
-      const laborRevenue = Math.round((duration / 60) * (garage.hourlyRate ?? 60) * 100) / 100
-      const partsRevenue = parts.reduce((s: number, p: { unitPrice: number; quantity: number }) => s + p.unitPrice * p.quantity, 0)
-      const partsCost = parts.reduce((s: number, p: { unitCost: number; quantity: number }) => s + p.unitCost * p.quantity, 0)
-      const profit = Math.round((laborRevenue + partsRevenue - partsCost) * 100) / 100
+      const laborRevenue = fromCents(lineCents(garage.hourlyRate ?? 60, duration / 60))
+      const partsRevenue = parts.reduce((s: number, p: { unitPrice: number; quantity: number }) => s + fromCents(lineCents(p.unitPrice, p.quantity)), 0)
+      const partsCost = parts.reduce((s: number, p: { unitCost: number; quantity: number }) => s + fromCents(lineCents(p.unitCost, p.quantity)), 0)
+      const profit = fromCents(toCents(laborRevenue) + toCents(partsRevenue) - toCents(partsCost))
       setJobProfit({ laborRevenue, partsRevenue, partsCost, profit })
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps

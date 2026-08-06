@@ -6,6 +6,7 @@
  * level, a justification and an estimated financial impact.
  */
 import { DEFAULT_RULES } from './rules'
+import { lineCents, fromCents } from '@/lib/money'
 import type {
   AnalyzeInput,
   ConfidenceLevel,
@@ -76,7 +77,7 @@ export class ForgottenPartsEngine {
           (rec.reference ? catalog.get(normalize(rec.reference)) : undefined) ??
           catalog.get(nName) ??
           null
-        const total = price != null ? Math.round(price * qty * 100) / 100 : null
+        const total = price != null ? fromCents(lineCents(price, qty)) : null
 
         const justification = inHabit
           ? `${rec.reason} (habituellement ajouté dans votre garage.)`

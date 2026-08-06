@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { logAudit } from '@/lib/audit'
+import { jobPartToEuros, partToEuros } from '@/lib/money-db'
 
 /** Quantité maximale acceptée pour une ligne de pièce (garde-fou anti-abus). */
 const MAX_QTY = 100_000
@@ -37,7 +38,8 @@ export const GET = withAuth(async (_req, { params }: { params: { id: string } })
     where: { jobId: params.id },
     include: { part: true },
   })
-  return NextResponse.json(parts)
+  // + unitPrice/unitCost dérivés (euros) pour l'UI ; pièce imbriquée idem.
+  return NextResponse.json(parts.map(jp => ({ ...jobPartToEuros(jp), part: partToEuros(jp.part) })))
 })
 
 // POST /api/jobs/:id/parts — ajoute une pièce à l'intervention (ou augmente la ligne)
@@ -97,8 +99,9 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
           jobId:     params.id,
           partId,
           quantity:  qty,
-          unitPrice: part.unitPrice,
-          unitCost:  part.unitCost,
+          // Snapshot VERBATIM des entiers exacts de la pièce (dix-millièmes d'€).
+          unitPriceTenThousandths: part.unitPriceTenThousandths,
+          unitCostTenThousandths:  part.unitCostTenThousandths,
         },
         include: { part: true },
       })
@@ -108,7 +111,7 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
       action: 'update', entityType: 'Part', entityId: partId, session, req,
       details: { op: 'job-part-add', jobId: params.id, quantity: qty },
     })
-    return NextResponse.json(jobPart, { status: 201 })
+    return NextResponse.json({ ...jobPartToEuros(jobPart), part: partToEuros(jobPart.part) }, { status: 201 })
   } catch (e) {
     if (e instanceof StockError) {
       return NextResponse.json({ error: e.message }, { status: e.status })

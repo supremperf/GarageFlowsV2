@@ -41,7 +41,7 @@ async function main() {
     data: {
       email: 'admingarageflow@admin.fr',
       password: hashedPassword,
-      name: 'Admin GarageFlow',
+      name: 'Admin GarageFlows',
       role: 'OWNER',
       garageId: garage.id,
     },

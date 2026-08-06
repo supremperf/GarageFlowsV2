@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { jobPartToEuros } from '@/lib/money-db'
 
 export const GET = withAuth(async (_req, { params }: { params: { id: string } }) => {
   const session = await requireSession()
@@ -44,7 +45,9 @@ export const GET = withAuth(async (_req, { params }: { params: { id: string } })
     data: unknown
   }> = []
 
-  for (const job of vehicle.jobs) {
+  for (const rawJob of vehicle.jobs) {
+    // jobParts : vue euros dérivée des entiers exacts (UI timeline).
+    const job = { ...rawJob, jobParts: rawJob.jobParts.map(jobPartToEuros) }
     events.push({
       date:     job.date,
       type:     'job',

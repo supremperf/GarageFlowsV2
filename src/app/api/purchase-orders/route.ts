@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { lineCents, fromCents } from '@/lib/money'
+import { purchaseOrderToEuros } from '@/lib/money-db'
 
 export const GET = withAuth(async (req) => {
   const session = await requireSession()
@@ -11,7 +12,7 @@ export const GET = withAuth(async (req) => {
   const where: Record<string, unknown> = { garageId: session.user.garageId }
   if (status) where.status = status
   const orders = await prisma.purchaseOrder.findMany({ where, orderBy: { createdAt: 'desc' } })
-  return NextResponse.json(orders)
+  return NextResponse.json(orders.map(purchaseOrderToEuros))
 })
 
 export const POST = withAuth(async (req) => {
@@ -53,7 +54,6 @@ export const POST = withAuth(async (req) => {
           supplierName:  body.supplierName ?? null,
           supplierEmail: body.supplierEmail ?? null,
           linesJson,
-          totalHT,
           totalHtCents,
           status:        'draft',
           notes:         body.notes ?? null,
@@ -67,5 +67,5 @@ export const POST = withAuth(async (req) => {
     throw e
   }
 
-  return NextResponse.json(order, { status: 201 })
+  return NextResponse.json(purchaseOrderToEuros(order), { status: 201 })
 })

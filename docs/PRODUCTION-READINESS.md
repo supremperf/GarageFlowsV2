@@ -40,14 +40,16 @@ Statuts employés : **VALIDÉ** · **ÉCHEC** · **NON EXÉCUTÉ** · **ACTION M
 |---|---|---|---|
 | Types | `npm run type-check` (`tsc --noEmit`) | **VALIDÉ** | 0 erreur |
 | Lint | `npm run lint` (`next lint`) | **VALIDÉ** | 0 erreur/avertissement |
-| Tests unitaires/intégration | `npm test` (`vitest run`) | **VALIDÉ** | 1009 passés · 26 ignorés · 100 fichiers |
+| Tests unitaires/intégration | `npm test` (`vitest run`) | **VALIDÉ** | 1017 passés · 26 ignorés · 102 fichiers |
+| Tests monétaires dédiés | `npm run test:money` / `test:migration` | **VALIDÉ** | 51 + 8 tests (4 décimales, backfill, idempotence) |
 | Build | `npm run build` (`prisma generate ×2 + next build`) | **VALIDÉ** | *Compiled successfully* · 16/16 pages |
-| Schéma desktop | `npm run db:desktop:validate` | **VALIDÉ** | SQLite valide |
+| Schéma desktop | `npm run db:desktop:validate` | **VALIDÉ** | SQLite valide · template régénéré au schéma final |
 | Schéma serveur | `npm run db:server:validate` | **VALIDÉ** | PostgreSQL valide (URL factices en CI) |
 | Version SemVer | `node scripts/check-version.js` | **VALIDÉ** | 1.1.0 cohérent (app.ts réaligné) |
-| Marque (strict) | `npm run check:branding` | **VALIDÉ** | 543 fichiers · exceptions techniques précises listées |
+| Marque (strict, repo entier) | `npm run check:branding` | **VALIDÉ** | 591 fichiers (src+scripts+keygen+cmd/ps1+racine) |
 | PWA (manifestes + dimensions d'icônes) | `npm run check:pwa` | **VALIDÉ** | maskable 192/512 corrigées (étaient 238/636) |
-| Monnaie (Float classé) | `npm run check:money` | **VALIDÉ** | 0 Float monétaire non classé ; 15 suivis (§7) |
+| Monnaie — stockage | `npm run check:money` | **VALIDÉ** | **0 champ monétaire Float** (règle : zéro, bloquante) |
+| Monnaie — calculs | `npm run check:money-calculations` | **VALIDÉ** | 0 calcul financier direct hors couche centrale |
 | Cohérence docs | `node scripts/check-docs-consistency.mjs` | **VALIDÉ** | aucune affirmation contradictoire active |
 
 <!-- BLOC-VALIDATION-FIN -->
@@ -87,17 +89,17 @@ prête » — voir §6.
 | B5b | **Rename Windows `productName`→GarageFlows** : vérifier sur Win10/11 la mise à jour **en place** d'une install existante « GarageFlow » (appId inchangé), la **conservation des données** via l'épinglage userData sur `%APPDATA%\GarageFlow`, l'exe/raccourci/désinstalleur « GarageFlows », et le **pont de MàJ** (flux `product` conservé = « GarageFlow » interne) | **ACTION MANUELLE REQUISE** | `docs/PRODUCTION-READINESS.md` §Marque, `electron/main.js` (setPath userData) |
 | B6 | Validations externes : FEC/TVA (expert-comptable), RGPD/juridique, connecteurs fournisseurs, e-invoicing Phases 3-6, tests de charge PostgreSQL + preuve de restauration end-to-end | **ACTION MANUELLE REQUISE** | `docs/EINVOICING_ARCHITECTURE.md`, `docs/HARDENING_REPORT.md` |
 | B7 | `GF_INTEGRITY_MODE=enforce` uniquement **après** validation du build Windows signé | **ACTION MANUELLE REQUISE** | `docs/CONFIGURATION.md` |
+| B8 | **Migration monétaire sur données réelles** : sauvegarde → staging (dump prod) → `db:server:deploy` (3 migrations, vérification bloquante intégrée) → contrôles → prod. Desktop : migration auto au démarrage (sauvegarde quotidienne préalable) | **ACTION MANUELLE REQUISE** | `docs/MIGRATION-MONEY.md §6` |
 
 ## 7. Risques acceptés (non bloquants)
 
-- **RISQUE ACCEPTÉ / SUIVI** — Monnaie : le **calcul** est exact en centimes, y
-  compris la **précision 4 décimales** des prix unitaires (`12,3456 × 3 = 37,04 €`,
-  testé). Le **stockage** conserve encore **15 champs monétaires en Float**
-  (`npm run check:money` les liste nommément) : 4 **miroirs** de totaux (source de
-  vérité = colonnes `*Cents`) dont le retrait est **gaté sur le backfill des données
-  réelles**, et 11 **prix/coûts unitaires** dont la migration en sous-unités entières
-  est **stagée** (SQLite ∌ `@db.Decimal` ; risque signatures). Le garde-fou CI
-  interdit tout **nouveau** Float monétaire. Détail et procédure : `docs/MIGRATION-MONEY.md`.
+- **TERMINÉ (schéma) / ACTION MANUELLE (données prod)** — Monnaie : **plus aucun
+  champ monétaire Float** dans les deux schémas (règle CI bloquante) ; stockage en
+  entiers exacts (centimes + dix-millièmes), précision 4 décimales prouvée
+  (`12,3456 × 3 = 37,04 €`), anciennes colonnes **supprimées**, aucune double
+  écriture. Reste : exécuter la chaîne de migrations sur les **données réelles**
+  (staging puis prod, sauvegarde préalable) — la vérification bloquante intégrée
+  aux migrations refuse toute divergence. Procédure : `docs/MIGRATION-MONEY.md §6`.
 - **RISQUE ACCEPTÉ** — `EnableEmbeddedAsarIntegrityValidation=false` tant que le
   build Windows signé n'est pas validé (réévaluer avant release — B5).
 - **RISQUE ACCEPTÉ** — Numérotation FAC des brouillons pouvant laisser des trous
