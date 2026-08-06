@@ -12,6 +12,12 @@
 | `supremperf/GarageFlowsV2` | Application GarageFlows (PWA app.garageflows.fr + desktop Windows Electron + serveur de licences) | `cec75887d8223fdfe4e3932e60653fff0f9b6d0c` | `claude/garageflow-final-unified-merge-ub0l67` | propre (0 fichier modifié, 0 non suivi) |
 | `supremperf/garagesite3` | Site vitrine garageflows.fr | `2d5614255c6be143e9e26213d0130e32eaafa6e1` | `claude/garageflow-final-unified-merge-ub0l67` | propre (0 fichier modifié, 0 non suivi) |
 
+> Note : cette baseline fige l'état de DÉPART de l'audit au commit `cec7588`
+> (les empreintes SHA-256 ci-dessous en attestent). Les commits d'audit qui
+> suivent (documents de référence, corrections) font AVANCER `HEAD` au-delà de
+> ce point — c'est attendu : une baseline est un repère fixe, pas le HEAD
+> courant. L'historique des avancées est dans `WORKLOG.md`.
+
 Empreintes SHA-256 de l'arbre suivi (méthode : `git archive HEAD | sha256sum`,
 déterministe pour un commit donné) :
 
