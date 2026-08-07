@@ -50,6 +50,7 @@ export const POST = withAuth(async (req) => {
     startTime,
     date,
     mechanicId,
+    vehicleId,
     status = 'scheduled',
     notes,
     isUrgent = false,
@@ -67,6 +68,18 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: 'Mécanicien introuvable' }, { status: 404 })
   }
 
+  // Le schéma accepte vehicleId mais l'ancien handler ne le persistait jamais :
+  // le rattachement intervention↔véhicule (historique du véhicule) était perdu
+  // en silence. Persisté désormais, après contrôle d'appartenance au garage.
+  if (vehicleId) {
+    const vehicle = await prisma.vehicle.findFirst({
+      where: { id: vehicleId, garageId: session.user.garageId },
+    })
+    if (!vehicle) {
+      return NextResponse.json({ error: 'Véhicule introuvable' }, { status: 404 })
+    }
+  }
+
   const job = await prisma.job.create({
     data: {
       customerName,
@@ -80,6 +93,7 @@ export const POST = withAuth(async (req) => {
       notes: notes || null,
       isUrgent: Boolean(isUrgent),
       mechanicId,
+      vehicleId: vehicleId || null,
       garageId: session.user.garageId,
     },
   })
