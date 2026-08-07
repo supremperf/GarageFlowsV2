@@ -143,6 +143,9 @@ jobs:
       - name: Docs consistency
         run: node scripts/check-docs-consistency.mjs
 
+      - name: Critical security/licence files present & coherent
+        run: node scripts/check-critical-files.js
+
       # ── Migrations PostgreSQL sur base VIDE (échec CI si une migration casse) ──
       - name: PostgreSQL migrations on empty database + smoke test
         run: node scripts/validate-server-db.js
