@@ -84,11 +84,18 @@ documentaire) et K (tenant de démo scripté, matrice concurrentielle sourcée,
 data room + checklist de transfert) ont été livrés — voir `WORKLOG.md` et le
 registre pour les commits et preuves.
 
+La couche formats e-invoicing (lot D résiduel) a également été livrée et
+prouvée (`37d3e6a`) : modèle canonique EN 16931, validateur à recalcul
+intégral, CII Factur-X MINIMUM fail-closed **validé contre le XSD officiel
+1.09**, TVA du dépôt en arithmétique 100 % entière, après revue adversariale
+(6 défauts démontrés, corrigés, testés).
+
 Restent poursuivables sans intervention externe : durcissement CSP à nonce
 (AUD-024), i18n complète des 27 composants restants (AUD-026 partiel), tests
 des autres handlers du portail (AUD-022 partiel), parcours E2E métier
-authentifié en CI (AUD-023), connecteur e-invoicing abstrait + validation de
-formats (lot D résiduel), ADR formels et runbooks complémentaires.
+authentifié en CI (AUD-023), PDF/A-3 + Schematron e-invoicing, ADR formels et
+runbooks complémentaires. L'adaptateur de plateforme agréée réelle exige un
+contrat externe (choix commercial de l'acquéreur).
 
 ## 7. Preuves exécutées (rappel)
 
