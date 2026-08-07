@@ -529,6 +529,42 @@ CREATE TABLE IF NOT EXISTS "MechanicActionAudit" (
     CONSTRAINT "MechanicActionAudit_pkey" PRIMARY KEY ("id")
 );
 
+-- Convergence COLONNE par COLONNE (idempotente). Si une de ces tables PRÉEXISTE
+-- avec un schéma plus ancien, le CREATE TABLE IF NOT EXISTS ci-dessus est un
+-- NO-OP et n'ajoute AUCUNE colonne manquante -> les index par colonne plus bas
+-- échoueraient (« column "…" does not exist »). On réaligne donc explicitement
+-- chaque colonne AVANT ses index. Les colonnes NOT NULL sans défaut sont ajoutées
+-- en NULLABLE : sûr sur toute table préexistante (une table dérivée sans cette
+-- colonne n'a jamais servi -> vide) ; les tables NEUVES restent NOT NULL via le
+-- CREATE TABLE, et l'application garantit la présence des valeurs.
+ALTER TABLE "MechanicLicenseAssignment" ADD COLUMN IF NOT EXISTS "licenseId" TEXT;
+ALTER TABLE "MechanicLicenseAssignment" ADD COLUMN IF NOT EXISTS "mechanicId" TEXT;
+ALTER TABLE "MechanicLicenseAssignment" ADD COLUMN IF NOT EXISTS "garageId" TEXT;
+ALTER TABLE "MechanicLicenseAssignment" ADD COLUMN IF NOT EXISTS "assignedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "MechanicLicenseAssignment" ADD COLUMN IF NOT EXISTS "assignedBy" TEXT;
+ALTER TABLE "MechanicLicenseAssignment" ADD COLUMN IF NOT EXISTS "unassignedAt" TIMESTAMP(3);
+ALTER TABLE "MechanicLicenseAssignment" ADD COLUMN IF NOT EXISTS "previousMechanicId" TEXT;
+
+ALTER TABLE "JobMechanicNote" ADD COLUMN IF NOT EXISTS "jobId" TEXT;
+ALTER TABLE "JobMechanicNote" ADD COLUMN IF NOT EXISTS "garageId" TEXT;
+ALTER TABLE "JobMechanicNote" ADD COLUMN IF NOT EXISTS "mechanicId" TEXT;
+ALTER TABLE "JobMechanicNote" ADD COLUMN IF NOT EXISTS "licenseId" TEXT;
+ALTER TABLE "JobMechanicNote" ADD COLUMN IF NOT EXISTS "type" TEXT;
+ALTER TABLE "JobMechanicNote" ADD COLUMN IF NOT EXISTS "body" TEXT;
+ALTER TABLE "JobMechanicNote" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE "MechanicActionAudit" ADD COLUMN IF NOT EXISTS "garageId" TEXT;
+ALTER TABLE "MechanicActionAudit" ADD COLUMN IF NOT EXISTS "actorUserId" TEXT;
+ALTER TABLE "MechanicActionAudit" ADD COLUMN IF NOT EXISTS "actorRole" TEXT;
+ALTER TABLE "MechanicActionAudit" ADD COLUMN IF NOT EXISTS "targetMechanicId" TEXT;
+ALTER TABLE "MechanicActionAudit" ADD COLUMN IF NOT EXISTS "licenseId" TEXT;
+ALTER TABLE "MechanicActionAudit" ADD COLUMN IF NOT EXISTS "jobId" TEXT;
+ALTER TABLE "MechanicActionAudit" ADD COLUMN IF NOT EXISTS "action" TEXT;
+ALTER TABLE "MechanicActionAudit" ADD COLUMN IF NOT EXISTS "targetType" TEXT;
+ALTER TABLE "MechanicActionAudit" ADD COLUMN IF NOT EXISTS "targetId" TEXT;
+ALTER TABLE "MechanicActionAudit" ADD COLUMN IF NOT EXISTS "metadata" TEXT;
+ALTER TABLE "MechanicActionAudit" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
 -- Index (IF NOT EXISTS).
 CREATE INDEX IF NOT EXISTS "LicenseKey_parentLicenseId_idx" ON "LicenseKey"("parentLicenseId");
 CREATE INDEX IF NOT EXISTS "LicenseKey_garageId_licenseType_idx" ON "LicenseKey"("garageId", "licenseType");
@@ -570,6 +606,24 @@ CREATE TABLE IF NOT EXISTS "GarageEInvoiceConnection" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "GarageEInvoiceConnection_pkey" PRIMARY KEY ("id")
 );
+-- Convergence colonne (cf. note plus haut) : réaligne une table e-invoicing
+-- préexistante avant ses index. NOT NULL sans défaut -> NULLABLE (drift-safe).
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "garageId" TEXT;
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "providerId" TEXT;
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "environment" TEXT NOT NULL DEFAULT 'sandbox';
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "status" TEXT NOT NULL DEFAULT 'disconnected';
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "authMethod" TEXT;
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "externalAccountId" TEXT;
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "legalEntityId" TEXT;
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "siren" TEXT;
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "capabilities" TEXT;
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "credentials" TEXT;
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "credentialsKeyVersion" INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "lastTestedAt" TIMESTAMP(3);
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "lastTestOk" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "expiresAt" TIMESTAMP(3);
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "GarageEInvoiceConnection" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3);
 CREATE UNIQUE INDEX IF NOT EXISTS "GarageEInvoiceConnection_garageId_providerId_environment_key" ON "GarageEInvoiceConnection"("garageId", "providerId", "environment");
 CREATE INDEX IF NOT EXISTS "GarageEInvoiceConnection_garageId_idx" ON "GarageEInvoiceConnection"("garageId");
 CREATE INDEX IF NOT EXISTS "GarageEInvoiceConnection_status_idx" ON "GarageEInvoiceConnection"("status");
@@ -591,6 +645,20 @@ CREATE TABLE IF NOT EXISTS "EInvoiceTransmission" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "EInvoiceTransmission_pkey" PRIMARY KEY ("id")
 );
+-- Convergence colonne (cf. note plus haut). NOT NULL sans défaut -> NULLABLE.
+ALTER TABLE "EInvoiceTransmission" ADD COLUMN IF NOT EXISTS "garageId" TEXT;
+ALTER TABLE "EInvoiceTransmission" ADD COLUMN IF NOT EXISTS "invoiceId" TEXT;
+ALTER TABLE "EInvoiceTransmission" ADD COLUMN IF NOT EXISTS "providerId" TEXT;
+ALTER TABLE "EInvoiceTransmission" ADD COLUMN IF NOT EXISTS "connectionId" TEXT;
+ALTER TABLE "EInvoiceTransmission" ADD COLUMN IF NOT EXISTS "environment" TEXT NOT NULL DEFAULT 'sandbox';
+ALTER TABLE "EInvoiceTransmission" ADD COLUMN IF NOT EXISTS "status" TEXT NOT NULL DEFAULT 'draft';
+ALTER TABLE "EInvoiceTransmission" ADD COLUMN IF NOT EXISTS "documentFormat" TEXT;
+ALTER TABLE "EInvoiceTransmission" ADD COLUMN IF NOT EXISTS "documentSha256" TEXT;
+ALTER TABLE "EInvoiceTransmission" ADD COLUMN IF NOT EXISTS "externalId" TEXT;
+ALTER TABLE "EInvoiceTransmission" ADD COLUMN IF NOT EXISTS "idempotencyKey" TEXT;
+ALTER TABLE "EInvoiceTransmission" ADD COLUMN IF NOT EXISTS "errorMessage" TEXT;
+ALTER TABLE "EInvoiceTransmission" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE "EInvoiceTransmission" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3);
 CREATE UNIQUE INDEX IF NOT EXISTS "EInvoiceTransmission_idempotencyKey_key" ON "EInvoiceTransmission"("idempotencyKey");
 CREATE INDEX IF NOT EXISTS "EInvoiceTransmission_garageId_createdAt_idx" ON "EInvoiceTransmission"("garageId", "createdAt");
 CREATE INDEX IF NOT EXISTS "EInvoiceTransmission_invoiceId_idx" ON "EInvoiceTransmission"("invoiceId");
@@ -607,6 +675,16 @@ CREATE TABLE IF NOT EXISTS "EInvoiceEvent" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "EInvoiceEvent_pkey" PRIMARY KEY ("id")
 );
+-- Convergence colonne (cf. note plus haut) : c'est ICI que « transmissionId »
+-- manquant (table préexistante d'un schéma antérieur) faisait échouer la rotation
+-- au CREATE INDEX. NOT NULL sans défaut -> NULLABLE (drift-safe).
+ALTER TABLE "EInvoiceEvent" ADD COLUMN IF NOT EXISTS "transmissionId" TEXT;
+ALTER TABLE "EInvoiceEvent" ADD COLUMN IF NOT EXISTS "garageId" TEXT;
+ALTER TABLE "EInvoiceEvent" ADD COLUMN IF NOT EXISTS "type" TEXT;
+ALTER TABLE "EInvoiceEvent" ADD COLUMN IF NOT EXISTS "status" TEXT;
+ALTER TABLE "EInvoiceEvent" ADD COLUMN IF NOT EXISTS "message" TEXT;
+ALTER TABLE "EInvoiceEvent" ADD COLUMN IF NOT EXISTS "payload" TEXT;
+ALTER TABLE "EInvoiceEvent" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 CREATE INDEX IF NOT EXISTS "EInvoiceEvent_transmissionId_createdAt_idx" ON "EInvoiceEvent"("transmissionId", "createdAt");
 CREATE INDEX IF NOT EXISTS "EInvoiceEvent_garageId_createdAt_idx" ON "EInvoiceEvent"("garageId", "createdAt");
 
@@ -621,6 +699,14 @@ CREATE TABLE IF NOT EXISTS "EInvoiceAuditEvent" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "EInvoiceAuditEvent_pkey" PRIMARY KEY ("id")
 );
+-- Convergence colonne (cf. note plus haut). NOT NULL sans défaut -> NULLABLE.
+ALTER TABLE "EInvoiceAuditEvent" ADD COLUMN IF NOT EXISTS "garageId" TEXT;
+ALTER TABLE "EInvoiceAuditEvent" ADD COLUMN IF NOT EXISTS "actorUserId" TEXT;
+ALTER TABLE "EInvoiceAuditEvent" ADD COLUMN IF NOT EXISTS "action" TEXT;
+ALTER TABLE "EInvoiceAuditEvent" ADD COLUMN IF NOT EXISTS "targetType" TEXT;
+ALTER TABLE "EInvoiceAuditEvent" ADD COLUMN IF NOT EXISTS "targetId" TEXT;
+ALTER TABLE "EInvoiceAuditEvent" ADD COLUMN IF NOT EXISTS "metadata" TEXT;
+ALTER TABLE "EInvoiceAuditEvent" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 CREATE INDEX IF NOT EXISTS "EInvoiceAuditEvent_garageId_createdAt_idx" ON "EInvoiceAuditEvent"("garageId", "createdAt");
 CREATE INDEX IF NOT EXISTS "EInvoiceAuditEvent_actorUserId_createdAt_idx" ON "EInvoiceAuditEvent"("actorUserId", "createdAt");
 

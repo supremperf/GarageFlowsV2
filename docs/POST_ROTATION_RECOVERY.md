@@ -158,6 +158,35 @@ nom** : si une colonne existait déjà avec un mauvais type/nullabilité (drift
 partiel bricolé à la main), elle est laissée telle quelle et doit être corrigée
 manuellement.
 
+### 7 bis — Convergence NON additive par colonne (corrigé le 2026‑08‑07)
+
+Observé : la rotation échoue à l'étape « Convergence du schéma Neon » avec
+
+```
+Error: column "transmissionId" does not exist
+```
+
+**Cause** : pour les tables matérialisées par `CREATE TABLE IF NOT EXISTS`
+(mechanic ×3 + e‑invoicing ×4), si la table **préexiste** en base avec un schéma
+plus **ancien** (ici `EInvoiceEvent` créée avant l'ajout de `transmissionId`), le
+`CREATE TABLE IF NOT EXISTS` est un **no‑op** et n'ajoute **aucune** colonne
+manquante. Le `CREATE INDEX … ("transmissionId", …)` qui suit échoue alors
+(`column does not exist`) et la rotation avorte — **sans** suppression de
+variable (aucun rollback destructif), donc rejouable après correctif.
+
+**Correctif** : la convergence est désormais **additive PAR COLONNE**. Chaque
+colonne de chaque table `CREATE TABLE IF NOT EXISTS` reçoit aussi un
+`ALTER TABLE … ADD COLUMN IF NOT EXISTS …` placé **avant** ses index. Les
+colonnes `NOT NULL` sans défaut sont réalignées en **NULLABLE** (sûr sur toute
+table préexistante : une table dérivée sans la colonne n'a jamais servi, donc
+elle est vide ; les tables neuves restent `NOT NULL` via le `CREATE TABLE`). Un
+garde‑fou CI, `npm run check:converge-additive`, échoue si une colonne d'une
+table `CREATE TABLE IF NOT EXISTS` n'a pas son `ADD COLUMN` correspondant.
+
+**Reprise après l'échec** : relancer simplement la rotation avec le script
+corrigé — le DDL est idempotent et rejouable ; les variables déjà mises à jour
+sont conservées.
+
 **Manuel (si besoin, hors rotation)** — avec les valeurs Production. La voie (a),
 **drift-safe**, est celle à privilégier :
 
