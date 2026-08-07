@@ -5,6 +5,8 @@ on:
     branches: [main, master, develop, 'claude/**', 'integration/**']
   pull_request:
     branches: [main, master, develop]
+  # Déclenchement manuel du release gate complet (validation avant tag/release).
+  workflow_dispatch:
 
 # Moindre privilège : aucun job ne pousse, ne commente ni n'appelle l'API GitHub
 # (Gitleaks scanne l'arbre local). Le GITHUB_TOKEN n'a donc besoin que de la
@@ -222,3 +224,57 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # ── Release gate complet (manuel) ──────────────────────────────────────────
+  # Porte de sortie V13 : une seule commande qui enchaîne tsc, lint, les 10
+  # gardes, la suite de tests, les tests PostgreSQL/Redis RÉELS (services),
+  # l'audit de dépendances, le build et le budget de perf. À déclencher avant
+  # tout tag/release (workflow_dispatch) — les jobs par-PR ci-dessus restent
+  # les « fast checks ».
+  release-gate:
+    name: Final release gate (full)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: garageflow
+          POSTGRES_PASSWORD: garageflow_ci
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U garageflow"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies (reproducible)
+        run: npm ci
+      - name: Generate Prisma clients
+        run: |
+          npx prisma generate
+          npx prisma generate --schema prisma/server/schema.prisma
+      - name: Run final release gate
+        run: node scripts/final-release-gate.mjs
+        env:
+          DATABASE_URL: file:./prisma/dev.db
+          NEXTAUTH_SECRET: ci-gate-secret-not-for-production-0123456789
+          NEXTAUTH_URL: http://localhost:4028
+          TEST_POSTGRES_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres
+          TEST_REDIS_URL: 127.0.0.1:6379
