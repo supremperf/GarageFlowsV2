@@ -31,6 +31,51 @@ const crypto = require('crypto')
 
 const MANIFEST_NAME = 'integrity.manifest.json'
 
+// ── Robustesse aux verrous de fichiers TRANSITOIRES (anti faux-positif) ───────
+//  Au démarrage sous Windows, app.asar (et les modules déballés) peuvent être
+//  momentanément VERROUILLÉS par un tiers légitime : analyse temps réel de
+//  l'antivirus/Defender, indexeur de recherche, logiciel de sauvegarde. La
+//  lecture échoue alors avec EBUSY/EACCES/… — une condition RÉCUPÉRABLE qui n'a
+//  RIEN à voir avec une altération. Sans réessai, cet échec transitoire était
+//  compté comme « fichier illisible » → « installation corrompue » (faux positif
+//  intermittent, fichier pourtant intact).
+//
+//  On réessaie donc les erreurs d'E/S transitoires avec un court backoff. Ce qui
+//  n'est JAMAIS masqué : une vraie altération (le contenu diffère → empreinte
+//  différente → « modified ») et une vraie suppression (ENOENT persistant →
+//  « missing »). L'anti-tamper reste donc pleinement actif.
+const TRANSIENT_IO_CODES = new Set([
+  'EBUSY', 'EACCES', 'EPERM', 'EMFILE', 'ENFILE', 'EAGAIN', 'EWOULDBLOCK', 'ETXTBSY',
+])
+
+function isTransientIoError(err) {
+  return !!err && TRANSIENT_IO_CODES.has(err.code)
+}
+
+// Sommeil SYNCHRONE borné (l'intégrité est vérifiée en synchrone au démarrage).
+function sleepSync(ms) {
+  const d = Math.max(0, ms | 0)
+  if (!d) return
+  try { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, d) }
+  catch { /* SharedArrayBuffer indisponible → pas de sommeil (réessai immédiat) */ }
+}
+
+// Lecture d'un fichier avec réessai sur erreur d'E/S TRANSITOIRE uniquement.
+// Une erreur non transitoire (ENOENT, EISDIR, …) ou l'épuisement des réessais
+// est propagée telle quelle. Délais par défaut : 60,120,180,240 ms (~600 ms max).
+function readFileWithRetry(abs, { readFile = fs.readFileSync, sleep = sleepSync, retries = 4, baseDelayMs = 60 } = {}) {
+  let lastErr
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try { return readFile(abs) }
+    catch (err) {
+      lastErr = err
+      if (!isTransientIoError(err) || attempt === retries) throw err
+      sleep(baseDelayMs * (attempt + 1))
+    }
+  }
+  throw lastErr
+}
+
 // ── Sélection des fichiers critiques (PARTAGÉE build ↔ runtime) ───────────────
 function walk(dir, base, out) {
   let entries
@@ -65,9 +110,9 @@ function criticalFiles(resourcesPath) {
     .sort((a, b) => (a.rel < b.rel ? -1 : a.rel > b.rel ? 1 : 0))
 }
 
-function sha256File(abs) {
+function sha256File(abs, io = {}) {
   const h = crypto.createHash('sha256')
-  h.update(fs.readFileSync(abs))
+  h.update(readFileWithRetry(abs, io)) // réessai sur verrou transitoire
   return h.digest('hex')
 }
 
@@ -102,7 +147,10 @@ function writeManifest(resourcesPath, appVersion) {
 
 // ── Vérification (runtime) ────────────────────────────────────────────────────
 // Renvoie : { present, ok, violations:[], checked:number, reason? }
-function verify(resourcesPath) {
+// `opts.io` (optionnel, pour les tests) = { readFile, sleep, retries, baseDelayMs }
+// injecté dans les lectures avec réessai (verrous transitoires).
+function verify(resourcesPath, opts = {}) {
+  const io = opts.io || {}
   const manifestPath = path.join(resourcesPath, MANIFEST_NAME)
   if (!fs.existsSync(manifestPath)) {
     // Pas de manifeste (dev, ou build sans hook) → on ne bloque jamais.
@@ -111,7 +159,8 @@ function verify(resourcesPath) {
 
   let manifest
   try {
-    manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
+    // Réessai : le manifeste peut lui aussi être momentanément verrouillé.
+    manifest = JSON.parse(readFileWithRetry(manifestPath, io).toString('utf8'))
   } catch {
     return { present: true, ok: false, violations: ['manifest-unreadable'], checked: 0, reason: 'Manifeste illisible' }
   }
@@ -129,7 +178,10 @@ function verify(resourcesPath) {
     return { present: true, ok: false, violations: ['manifest-mac'], checked: 0, reason: 'Manifeste falsifié' }
   }
 
-  // 2. Empreinte de chaque fichier listé.
+  // 2. Empreinte de chaque fichier listé. Les lectures réessaient sur verrou
+  //    transitoire (sha256File → readFileWithRetry) : un `unreadable` ne subsiste
+  //    donc qu'après épuisement des réessais (I/O réellement persistante), tandis
+  //    qu'un `modified` (contenu altéré) est détecté immédiatement et sans merci.
   const violations = []
   let checked = 0
   for (const entry of manifest.files || []) {
@@ -137,7 +189,7 @@ function verify(resourcesPath) {
     if (!fs.existsSync(abs)) { violations.push(`missing:${entry.rel}`); continue }
     checked++
     let actual
-    try { actual = sha256File(abs) } catch { violations.push(`unreadable:${entry.rel}`); continue }
+    try { actual = sha256File(abs, io) } catch { violations.push(`unreadable:${entry.rel}`); continue }
     if (actual !== entry.sha256) violations.push(`modified:${entry.rel}`)
   }
 
@@ -186,4 +238,7 @@ module.exports = {
   verify,
   resolveIntegrityMode,
   detectDebugger,
+  // Exposés pour les tests de non-régression (faux positif de verrou transitoire).
+  isTransientIoError,
+  readFileWithRetry,
 }
