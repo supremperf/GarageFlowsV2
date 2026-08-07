@@ -4,6 +4,7 @@ import { fromScaled } from '@/lib/money'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { differenceInDays, format, startOfDay, subMonths } from 'date-fns'
 import { calcTotalHT, roundCents } from '@/lib/billing'
@@ -17,6 +18,12 @@ import { planReorders, type StockItemInput } from '@/lib/stock-forecast'
 import { phraseAnswer, resolveLlmProvider } from '@/lib/copilot-llm'
 
 const BodySchema = z.object({ query: z.string().trim().min(1).max(500) })
+
+// Résolveurs exposant des données FINANCIÈRES (CA, marge, revenu par client,
+// prévision de CA) — réservés à financial:read (OWNER/MANAGER). Les intentions
+// opérationnelles (mécaniciens dispo, VIN, diagnostic, retards…) restent
+// ouvertes à tous les rôles authentifiés.
+const FINANCIAL_RESOLVERS = new Set(['margin', 'revenue_today', 'top_clients', 'forecast'])
 
 // POST /api/copilot — conversational routing over the platform's engines.
 // Read intents are answered with real data; action intents return a
@@ -36,6 +43,12 @@ export const POST = withAuth(async (req) => {
 
   // Actions & unknown pass through unchanged (actions require confirmation).
   if (res.type !== 'answer' || !res.resolver) return NextResponse.json(res)
+
+  // Contrôle d'accès financier : une intention financière posée par un rôle sans
+  // financial:read est refusée (pas de fuite de CA/marge via le copilote).
+  if (FINANCIAL_RESOLVERS.has(res.resolver) && !can(session.user.role, 'financial:read')) {
+    return NextResponse.json({ error: 'Accès refusé : données financières réservées.' }, { status: 403 })
+  }
 
   const today = startOfDay(new Date())
   const todayStr = format(today, 'yyyy-MM-dd')

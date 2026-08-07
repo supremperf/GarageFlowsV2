@@ -8,11 +8,16 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { reportToCSV } from '@/lib/analytics/report-export'
 import type { CopilotReport } from '@/lib/analytics/insights'
 
 export const GET = withAuth(async (req, { params }: { params: { id: string } }) => {
   const session = await requireSession()
+  // Export d'un rapport financier historisé → financial:read requis.
+  if (!can(session.user.role, 'financial:read')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const format = new URL(req.url).searchParams.get('format') === 'json' ? 'json' : 'csv'
 
   const snapshot = await prisma.reportSnapshot.findFirst({ where: { id: params.id, garageId: session.user.garageId } })
