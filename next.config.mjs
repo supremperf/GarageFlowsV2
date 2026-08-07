@@ -7,12 +7,15 @@ const nextConfig = {
   },
 
   async headers() {
+    // 'unsafe-eval' n'est requis que par l'outillage de DÉVELOPPEMENT de
+    // Next.js (react-refresh) : en production il constituait un relâchement
+    // inutile de la CSP (AUD-024). Restreint au dev depuis la V13.
+    // 'unsafe-inline' (scripts d'hydratation App Router sans nonce) reste
+    // l'exception documentée — le durcissement par nonce est le chemin prévu.
+    const dev = process.env.NODE_ENV === 'development'
     const csp = [
       "default-src 'self'",
-      // Next.js (App Router) requiert 'unsafe-eval' (chargement de chunks) et
-      // 'unsafe-inline' (scripts d'hydratation) sans nonce. Exception justifiée et
-      // limitée à 'self' ; l'app ne charge aucun script tiers.
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+      `script-src 'self'${dev ? " 'unsafe-eval'" : ''} 'unsafe-inline'`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "connect-src 'self'",
