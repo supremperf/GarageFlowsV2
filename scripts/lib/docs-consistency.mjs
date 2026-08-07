@@ -20,6 +20,7 @@
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { join, relative } from 'node:path'
+import { parseAutoBlock, COMPONENTS } from './baseline-doc.mjs'
 
 const CANONICAL = 'docs/audit/FINAL_VERIFICATION_BASELINE.md'
 const CANONICAL_MARKER = 'doc-role: canonical-baseline'
@@ -68,6 +69,60 @@ function collectMarkdown(dir, out) {
     if (st.isDirectory()) collectMarkdown(p, out)
     else if (entry.toLowerCase().endsWith('.md')) out.push(p)
   }
+}
+
+/**
+ * Vérifie que la baseline CANONIQUE humaine reflète EXACTEMENT la baseline
+ * machine (bloc AUTO-GÉNÉRÉ) : comptes de tests ET versions de toolchain
+ * RÉSOLUES. C'est ce contrôle qui ferme les deux régressions V15 :
+ *   - le doc affichait 1360/1332 alors que la machine mesure 1396/1368 ;
+ *   - le doc/le générateur affichait Prisma 5.16.1 (plage tronquée) au lieu de
+ *     la version résolue 5.22.0.
+ * Actif uniquement pour une baseline machine « v2 » (avec toolchain.dependencies).
+ * @returns {Array<{file:string,line:number,kind:string,label:string,text:string}>}
+ */
+export function checkCanonicalBaseline(root, baseline) {
+  const violations = []
+  if (!baseline || !baseline.toolchain || !baseline.toolchain.dependencies) return violations
+  const canonPath = join(root, CANONICAL)
+  if (!existsSync(canonPath)) return violations // présence gérée par la règle (1)
+
+  const raw = readFileSync(canonPath, 'utf8')
+  const parsed = parseAutoBlock(raw)
+  if (!parsed) {
+    violations.push({ file: CANONICAL, line: 0, kind: 'baseline-auto-missing',
+      label: 'bloc AUTO-GENERATED BASELINE absent de la baseline canonique — lancez `npm run baseline:generate`', text: '' })
+    return violations
+  }
+
+  // (a) Comptes de tests : doc vs machine.
+  const bt = baseline.tests ?? {}
+  const machineDiscovered = bt.discovered ?? bt.total
+  const countPairs = [
+    ['discovered', parsed.tests.discovered, machineDiscovered],
+    ['passed', parsed.tests.passed, bt.passed],
+    ['failed', parsed.tests.failed, bt.failed],
+    ['skipped', parsed.tests.skipped, bt.skipped],
+    ['files', parsed.tests.files, bt.files],
+  ]
+  const countMismatch = countPairs.filter(([, doc, mac]) => mac != null && doc != null && Number(doc) !== Number(mac))
+  if (countMismatch.length) {
+    const detail = countMismatch.map(([k, doc, mac]) => `${k}: doc=${doc} machine=${mac}`).join(' ; ')
+    violations.push({ file: CANONICAL, line: 0, kind: 'baseline-test-count',
+      label: `Canonical baseline test count mismatch — ${detail}. Regenerate the canonical baseline (npm run baseline:generate).`, text: '' })
+  }
+
+  // (b) Versions de toolchain RÉSOLUES : doc vs machine.
+  for (const c of COMPONENTS) {
+    const machine = baseline.toolchain.dependencies[c.dep]?.resolved
+    const doc = parsed.versions[c.dep]
+    if (machine != null && doc != null && doc !== String(machine)) {
+      violations.push({ file: CANONICAL, line: 0, kind: 'baseline-toolchain',
+        label: `Canonical baseline toolchain mismatch — ${c.label}: doc=${doc} machine(resolved)=${machine}. Regenerate the canonical baseline.`, text: '' })
+    }
+  }
+
+  return violations
 }
 
 /**
@@ -155,6 +210,11 @@ export function checkDocsConsistency(root, opts = {}) {
   } else if (canonicalMarkerCount > 1) {
     violations.push({ file: '(global)', line: 0, kind: 'canonical-count', label: `${canonicalMarkerCount} sources canoniques déclarées (attendu : 1) : ${canonicalHolders.join(', ')}`, text: '' })
   }
+
+  // (5) La baseline canonique humaine doit refléter la baseline machine (comptes
+  //     de tests + versions résolues). C'est le contrôle qui EXAMINE le fichier
+  //     canonique lui-même (les règles 2-4 l'exemptent volontairement).
+  violations.push(...checkCanonicalBaseline(root, baseline))
 
   return { ok: violations.length === 0, violations, scanned: files.length }
 }

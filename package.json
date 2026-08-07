@@ -64,6 +64,8 @@
     "release:gate": "node scripts/final-release-gate.mjs",
     "release:gate:fast": "node scripts/final-release-gate.mjs --fast",
     "verify:baseline": "vitest run --reporter=json --outputFile=artifacts/verification/test-results.json && node scripts/generate-verification-baseline.mjs",
+    "baseline:generate": "vitest run --reporter=json --outputFile=artifacts/verification/test-results.json && node scripts/generate-verification-baseline.mjs",
+    "docs:check": "node scripts/check-docs-consistency.mjs",
     "check:consistency": "npm run check:branding && npm run check:docs && npm run check:pwa && npm run check:money && npm run check:money-calculations && npm run check:money-json && npm run check:migration-safety && npm run check:sqlite-template && npm run check:pg-migrations && npm run check:converge-additive && npm run check:critical-files",
     "test:money": "vitest run src/lib/__tests__/money.test.ts src/lib/__tests__/money-migration.test.ts src/lib/__tests__/money-document-consistency.test.ts src/lib/__tests__/tva.test.ts",
     "test:money-json": "vitest run src/lib/__tests__/money-json.test.ts",

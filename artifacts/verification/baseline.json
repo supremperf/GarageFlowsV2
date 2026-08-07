@@ -1,28 +1,68 @@
 {
-  "_note": "Généré par scripts/generate-verification-baseline.mjs — NE PAS éditer à la main. Source machine unique du commit/toolchain/comptes de tests (anti-divergence V13.1).",
+  "_note": "Généré par scripts/generate-verification-baseline.mjs — NE PAS éditer à la main. Source machine unique du commit/toolchain/comptes de tests (anti-divergence).",
+  "schemaVersion": 2,
   "product": "GarageFlows",
   "version": "1.1.0",
-  "commit": "565922f5591032d7cab7ed6edc6b952117b10a8f",
-  "commitShort": "565922f",
+  "commit": "d9c1155e179055683420ef27dd6b9541394e0b38",
+  "commitShort": "d9c1155",
   "branch": "claude/garageflow-final-unified-merge-ub0l67",
-  "generatedAtUtc": "2026-08-07T15:17:20.342Z",
+  "generatedAtUtc": "2026-08-07T18:11:05.273Z",
   "toolchain": {
     "node": "v22.22.2",
     "npm": "10.9.7",
     "os": "linux x64",
-    "next": "14.2.35",
-    "prisma": "5.16.1",
-    "electron": "31.7.7",
-    "typescript": "5",
+    "dependencies": {
+      "next": {
+        "declared": "^14.2.35",
+        "resolved": "14.2.35",
+        "source": "node_modules"
+      },
+      "react": {
+        "declared": "^18.3.1",
+        "resolved": "18.3.1",
+        "source": "node_modules"
+      },
+      "react-dom": {
+        "declared": "^18.3.1",
+        "resolved": "18.3.1",
+        "source": "node_modules"
+      },
+      "typescript": {
+        "declared": "^5",
+        "resolved": "5.9.3",
+        "source": "node_modules"
+      },
+      "prisma": {
+        "declared": "^5.16.1",
+        "resolved": "5.22.0",
+        "source": "node_modules"
+      },
+      "@prisma/client": {
+        "declared": "^5.16.1",
+        "resolved": "5.22.0",
+        "source": "node_modules"
+      },
+      "electron": {
+        "declared": "^31.7.7",
+        "resolved": "31.7.7",
+        "source": "node_modules"
+      },
+      "vitest": {
+        "declared": "^4.1.5",
+        "resolved": "4.1.5",
+        "source": "node_modules"
+      }
+    },
     "postgresTested": "not in this run",
     "redisTested": "not in this run"
   },
   "tests": {
     "measured": true,
-    "files": 129,
-    "suites": 458,
-    "total": 1396,
-    "passed": 1368,
+    "files": 131,
+    "suites": 464,
+    "total": 1411,
+    "discovered": 1411,
+    "passed": 1383,
     "failed": 0,
     "skipped": 28
   }

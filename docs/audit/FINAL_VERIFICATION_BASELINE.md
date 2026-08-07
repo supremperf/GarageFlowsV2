@@ -1,7 +1,7 @@
 <!-- doc-role: canonical-baseline -->
 <!-- doc-status: actif -->
 
-# GarageFlows V13.1 — CANONICAL TECHNICAL BASELINE
+# GarageFlows V15.1 — CANONICAL TECHNICAL BASELINE
 
 > **This document is the single canonical source of truth for the current
 > GarageFlows technical verification state.** Tout autre document qui donne un
@@ -21,11 +21,48 @@
 | Date UTC | 2026-08-07 |
 | Méthode de validation | `npm run release:gate` (11/11 OK) ; comptes issus du rapport JSON vitest ; PostgreSQL 16.13 et Redis 7 **locaux réels** pour les suites conditionnelles |
 
-## Toolchain
+## Toolchain & tests (mesure machine)
 
-Node v22.22.2 · npm 10.9.7 · OS linux/x64 · Next.js 14.2.35 · Prisma 5.22.0
-(client ; déclaré `^5.16.1`) · Electron 31.7.7 · TypeScript 5.9.3 ·
-PostgreSQL 16.13 (local, suites conditionnelles) · Redis 7 (local).
+Section **AUTO-GÉNÉRÉE** depuis `artifacts/verification/baseline.json`
+(`npm run baseline:generate`) — ne pas éditer à la main. Le garde-fou
+`check-docs-consistency` échoue si elle diverge de la baseline machine (comptes
+de tests ou versions **résolues** de la toolchain). PostgreSQL 16.13 et Redis 7
+(locaux réels) exécutent les suites conditionnelles décrites plus bas.
+
+<!-- BEGIN AUTO-GENERATED BASELINE (source: artifacts/verification/baseline.json — `npm run baseline:generate`) -->
+
+### Toolchain (versions RÉSOLUES / verrouillées)
+
+> `Version résolue` = version réellement installée / verrouillée (package-lock).
+> `Plage déclarée` = contrainte semver du package.json (jamais présentée comme la version installée).
+
+| Composant | Version résolue | Plage déclarée |
+|---|---|---|
+| Node | v22.22.2 | — |
+| npm | 10.9.7 | — |
+| Next.js | 14.2.35 | ^14.2.35 |
+| React | 18.3.1 | ^18.3.1 |
+| React DOM | 18.3.1 | ^18.3.1 |
+| TypeScript | 5.9.3 | ^5 |
+| Prisma (CLI) | 5.22.0 | ^5.16.1 |
+| @prisma/client | 5.22.0 | ^5.16.1 |
+| Electron | 31.7.7 | ^31.7.7 |
+| Vitest | 4.1.5 | ^4.1.5 |
+| OS | linux x64 | — |
+
+### Tests (suite standard `npm test`, reproductible sans service externe)
+
+| Champ | Valeur |
+|---|---|
+| Test files | 131 |
+| Tests discovered | 1411 |
+| Tests passed | 1383 |
+| Tests failed | 0 |
+| Tests skipped | 28 |
+
+Commit : `d9c1155` · Branche : `claude/garageflow-final-unified-merge-ub0l67` · Généré (UTC) : `2026-08-07T18:11:05.273Z`
+
+<!-- END AUTO-GENERATED BASELINE -->
 
 ## Static quality
 
@@ -33,28 +70,15 @@ PostgreSQL 16.13 (local, suites conditionnelles) · Redis 7 (local).
 - **Lint** : 0 (`next lint`)
 - **Build** : OK — 16 pages ; CSP de production vérifiée au runtime (sans `unsafe-eval`)
 
-## Tests
+## Suites conditionnelles (services réels, hors compte standard)
 
-Chiffres = `artifacts/verification/baseline.json` (suite standard `npm test`,
-reproductible sans service externe) :
-
-| Champ | Valeur |
-|---|---|
-| Files | 120 |
-| Tests discovered | 1360 |
-| Passed | 1332 |
-| Failed | 0 |
-| Skipped | 28 |
-| Environment | vitest, SQLite réel |
-
-Valeurs = `artifacts/verification/baseline.json` (suite standard `npm test`,
-reproductible sans service externe). **Suites conditionnelles exécutées en
-plus** (services réels, hors compte standard) : PostgreSQL 16.13 → **21 tests
-verts** (numérotation 50 requêtes parallèles, stock, licences/sièges,
-sessions) ; Redis 7 → **5 tests verts** (rate-limit multi-instance). **Total
-exécuté vert = 1358 ; 2 restants** exigent un jeton de licence réel (poste
-opérateur). E2E : parcours métier 13 étapes via vrais handlers + Playwright
-responsive 3× vert contre le build de production.
+Les comptes standard (bloc AUTO ci-dessus) proviennent de la suite `npm test`,
+reproductible **sans** service externe. **En plus**, exécutées sur services
+réels : PostgreSQL 16.13 → **21 tests verts** (numérotation 50 requêtes
+parallèles, stock, licences/sièges, sessions) ; Redis 7 → **5 tests verts**
+(rate-limit multi-instance). **2 tests restants** exigent un jeton de licence
+réel (poste opérateur). E2E : parcours métier 13 étapes via vrais handlers +
+Playwright responsive 3× vert contre le build de production.
 
 ## Financial integrity
 
