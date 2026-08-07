@@ -92,7 +92,9 @@ export function EInvoicingTab() {
     )
   }
 
-  const flags = data!.flags
+  // Défensif : une réponse API sans `flags` (forme inattendue) ne doit pas
+  // crasher l'onglet — on retombe sur un état désactivé sûr.
+  const flags = data!.flags ?? { enabled: false, sandboxOnly: false, defaultEnvironment: 'sandbox' }
 
   return (
     <div className="space-y-4">
@@ -157,7 +159,7 @@ export function EInvoicingTab() {
 
               {/* Capacités annoncées par le catalogue (informatif) */}
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {p.authenticationMethods.map((m) => (
+                {(p.authenticationMethods ?? []).map((m) => (
                   <span key={m} className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.05] text-slate-400 font-mono">{m}</span>
                 ))}
               </div>
