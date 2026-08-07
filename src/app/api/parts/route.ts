@@ -22,13 +22,24 @@ export const GET = withAuth(async (req) => {
     return NextResponse.json(defaults)
   }
 
+  // Borne de sécurité : ne JAMAIS charger un catalogue arbitrairement grand en
+  // mémoire (déni de service sur une base pathologique). Cap élevé (5000) =
+  // transparent pour un garage réel ; pagination explicite via ?page&?limit.
+  const MAX_LIMIT = 5000
+  const limitParam = Number(searchParams.get('limit'))
+  const take = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, MAX_LIMIT) : MAX_LIMIT
+  const pageParam = Number(searchParams.get('page'))
+  const page = Number.isFinite(pageParam) && pageParam > 1 ? Math.floor(pageParam) : 1
+  const skip = (page - 1) * take
+
   const parts = await prisma.part.findMany({
     where: {
       garageId: session.user.garageId,
-      ...(lowStock ? {} : {}), // filter below
       ...(q ? { OR: [{ name: { contains: q } }, { reference: { contains: q } }] } : {}),
     },
     orderBy: { name: 'asc' },
+    take,
+    skip,
   })
 
   const withEuros = parts.map(partToEuros) // + unitCost/unitPrice dérivés (euros)
