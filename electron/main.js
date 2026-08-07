@@ -1794,10 +1794,18 @@ function createMainWindow() {
 
   Menu.setApplicationMenu(null)
 
-  // Block DevTools in production
-  if (!IS_DEV) {
+  // DevTools : bloqués en production SAUF diagnostic explicite (GF_DEBUG=1) —
+  // permet de voir la console (erreur d'hydratation/écran vide) sans affaiblir
+  // la sécurité par défaut. Avec GF_DEBUG=1 : ouverture auto + Ctrl+Shift+I.
+  const DEBUG = process.env.GF_DEBUG === '1'
+  if (!IS_DEV && !DEBUG) {
     mainWindow.webContents.on('devtools-opened', () => {
       mainWindow.webContents.closeDevTools()
+    })
+  }
+  if (DEBUG) {
+    mainWindow.webContents.on('did-frame-finish-load', () => {
+      try { mainWindow.webContents.openDevTools({ mode: 'detach' }) } catch { /* ignore */ }
     })
   }
 
@@ -1850,7 +1858,47 @@ function createMainWindow() {
 
   // A successful load means the server is up — reset the retry budget so any
   // later runtime navigation failure gets a fresh set of retries.
-  mainWindow.webContents.on('did-finish-load', () => { loadRetries = 0 })
+  mainWindow.webContents.on('did-finish-load', () => {
+    loadRetries = 0
+    // DIAGNOSTIC écran vide : installe dans le renderer un capteur d'erreurs non
+    // gérées + un détecteur de page blanche. Si une erreur JS (ex. hydratation)
+    // ou une page sans contenu survient, un bandeau VISIBLE affiche le message
+    // (plus de « rien qui s'affiche » muet), et l'erreur part dans garageflow.log
+    // via console-message. N'affecte pas une page qui rend normalement.
+    mainWindow.webContents.executeJavaScript(`(() => {
+      if (window.__gfDiag) return; window.__gfDiag = true;
+      function overlay(title, msg) {
+        try {
+          var d = document.getElementById('gf-diag') || document.createElement('div');
+          d.id = 'gf-diag';
+          d.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#0a0f1e;color:#e2e8f0;font:13px system-ui;padding:24px;overflow:auto;white-space:pre-wrap';
+          d.textContent = '⚠ ' + title + '\\n\\n' + msg + '\\n\\nLog: ${LOG_PATH.replace(/\\\\/g, '\\\\\\\\')}';
+          if (!d.parentNode) document.documentElement.appendChild(d);
+        } catch (e) {}
+      }
+      window.addEventListener('error', function (e) {
+        console.error('[gf] uncaught: ' + (e && e.message) + ' @ ' + (e && e.filename) + ':' + (e && e.lineno));
+        overlay('Erreur JavaScript (écran vide)', (e && e.message ? e.message : 'inconnue') + '\\n' + (e && e.error && e.error.stack ? e.error.stack : ''));
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e && e.reason; var m = (r && r.message) ? r.message : String(r);
+        console.error('[gf] unhandledrejection: ' + m);
+        overlay('Promesse rejetée (écran vide)', m + '\\n' + (r && r.stack ? r.stack : ''));
+      });
+      // Détecteur de page blanche : 4 s après le chargement, si le <body> n'a
+      // aucun contenu visible, on le signale (aide au diagnostic sans DevTools).
+      setTimeout(function () {
+        try {
+          var txt = (document.body && document.body.innerText || '').trim();
+          var els = document.body ? document.body.querySelectorAll('*').length : 0;
+          if (txt.length === 0 && els < 3 && !document.getElementById('gf-diag')) {
+            console.error('[gf] page blanche détectée (body vide) url=' + location.href);
+            overlay('Page vide détectée', 'Le contenu ne s\\'est pas affiché (aucun élément rendu).\\nURL: ' + location.href + '\\nOuvrez la console (GF_DEBUG=1) ou envoyez le log ci-dessous.');
+          }
+        } catch (e) {}
+      }, 4000);
+    })();`).catch(() => {})
+  })
 
   // Auto-retry on failure (server still warming up), then show a diagnostic page.
   mainWindow.webContents.on('did-fail-load', (_e, code, desc, url, isMainFrame) => {

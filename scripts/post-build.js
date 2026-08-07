@@ -102,6 +102,31 @@ function main() {
     }
   }
 
+  // 5. SÉCURITÉ — retirer TOUT fichier .env du standalone empaqueté.
+  //    Next.js (`output: 'standalone'`) TRACE le `.env` du dépôt dans la sortie ;
+  //    il contient des secrets de PRODUCTION (DATABASE_URL Neon, NEXTAUTH_SECRET
+  //    PWA, GARAGEFLOW_API_KEY) qui seraient alors LIVRÉS EN CLAIR dans chaque
+  //    installateur (lisibles dans resources/standalone/.env). L'app desktop n'en
+  //    a AUCUN besoin : electron/main.js injecte l'environnement d'exécution
+  //    (DATABASE_URL local SQLite, NEXTAUTH_SECRET par-installation, NEXTAUTH_URL
+  //    127.0.0.1) au fork du serveur — ces valeurs priment (@next/env n'écrase
+  //    jamais une variable déjà définie). On supprime donc tous les .env* ici.
+  {
+    const standaloneDir = path.join(ROOT, '.next', 'standalone')
+    const removed = []
+    for (const name of fs.readdirSync(standaloneDir)) {
+      if (name === '.env' || name.startsWith('.env.')) {
+        fs.rmSync(path.join(standaloneDir, name), { force: true })
+        removed.push(name)
+      }
+    }
+    if (removed.length) {
+      console.log(`  ✅ secrets retirés du package : ${removed.join(', ')} (jamais distribués)`)
+    } else {
+      console.log('  ✅ aucun .env dans le standalone (rien à retirer)')
+    }
+  }
+
   // 5. Copy Prisma schema + DB template into standalone/prisma
   {
     const prismaSrc = path.join(ROOT, 'prisma')
