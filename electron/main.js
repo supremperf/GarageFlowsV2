@@ -1678,6 +1678,11 @@ function createSplash() {
     webPreferences:  { contextIsolation: true, nodeIntegration: false, sandbox: true },
   })
   // __dirname works in both dev and inside the ASAR (Electron handles ASAR paths)
+  // — à condition que le fuse GrantFileProtocolExtraPrivileges reste actif, sinon
+  // file:// ne sait plus lire dans l'asar (voir scripts/fuse-config.js).
+  splashWindow.webContents.on('did-fail-load', (_e, code, desc, url, isMainFrame) => {
+    if (isMainFrame) log('[FATAL] splash.html non chargé:', code, desc, url)
+  })
   splashWindow.loadFile(path.join(__dirname, 'splash.html'))
   splashWindow.on('closed', () => { splashWindow = null })
 }
@@ -1710,6 +1715,23 @@ function createLicenseWindow() {
         sandbox:          true,
         webSecurity:      true,
       },
+    })
+
+    // Un échec de chargement ici laissait la fenêtre ENTIÈREMENT vide (peinte par
+    // le seul backgroundColor) : l'utilisateur voyait un « écran noir » sans
+    // message ni trace dans le log, et ne pouvait ni activer ni comprendre.
+    // On journalise et on affiche une page de repli explicite.
+    win.webContents.on('did-fail-load', (_e, code, desc, url, isMainFrame) => {
+      if (!isMainFrame) return
+      log('[FATAL] license.html non chargé:', code, desc, url)
+      if (win.isDestroyed()) return
+      const html = `<!DOCTYPE html><html><body style="margin:0;background:#0f1629;color:#94a3b8;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:10px;text-align:center;padding:24px">
+<div style="font-size:40px">⚠</div>
+<p style="color:#f87171;font-size:15px;font-weight:700;margin:0">Fenêtre d'activation illisible</p>
+<p style="font-size:12px;margin:0">Erreur ${code} : ${desc}</p>
+<p style="font-size:11px;color:#475569;margin:0">Réinstallez GarageFlows. Détails : ${LOG_PATH}</p>
+</body></html>`
+      win.webContents.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`)
     })
 
     win.loadFile(path.join(__dirname, 'license.html'))
