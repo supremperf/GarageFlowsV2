@@ -2378,12 +2378,33 @@ app.whenReady().then(async () => {
       log(`[integrity] GF_INTEGRITY_MODE=${process.env.GF_INTEGRITY_MODE} IGNORÉ en build packagé — « enforce » appliqué`)
     }
     if (mode !== 'off') {
-      const blockCorrupt = () => {
+      // Rapport de diagnostic ÉCRIT DANS userData (répertoire MUTABLE — jamais
+      // dans resources) : chemins absolus/relatifs, hash attendu/réel, tailles,
+      // raison précise. Aucun secret. Best-effort : ne bloque jamais l'app.
+      const writeIntegrityReport = (result) => {
+        try {
+          const reportPath = path.join(app.getPath('userData'), 'integrity-report.json')
+          fs.writeFileSync(reportPath, JSON.stringify({
+            timestamp: new Date().toISOString(),
+            appVersion: app.getVersion(),
+            mode,
+            resourcesPath: process.resourcesPath,
+            present: result.present,
+            ok: result.ok,
+            checked: result.checked,
+            violations: result.violations,
+            details: result.details ?? [],
+          }, null, 2))
+          return reportPath
+        } catch (e) { log('[integrity] rapport non écrit:', e && e.message); return null }
+      }
+      const blockCorrupt = (reportPath) => {
         dialog.showErrorBox(
           'GarageFlows — installation corrompue',
           'Des fichiers essentiels de GarageFlows ont été modifiés, remplacés ou supprimés.\n\n' +
             "Par sécurité, l'application ne peut pas démarrer.\n\n" +
-            "Veuillez réinstaller GarageFlows depuis l'installateur officiel.",
+            "Veuillez réinstaller GarageFlows depuis l'installateur officiel." +
+            (reportPath ? `\n\nRapport technique : ${reportPath}` : ''),
         )
         app.exit(1)
       }
@@ -2393,13 +2414,21 @@ app.whenReady().then(async () => {
           // Manifeste ABSENT : en « enforce » c'est un échec — sinon un attaquant
           // supprimerait simplement le manifeste pour contourner la vérification.
           // afterPack garantit sa présence dans un build légitime.
-          log('[integrity] manifeste absent')
-          if (mode === 'enforce') { blockCorrupt(); return }
+          log('[integrity] manifeste absent —', path.join(process.resourcesPath, integrity.MANIFEST_NAME))
+          if (mode === 'enforce') { blockCorrupt(writeIntegrityReport(result)); return }
         } else if (result.ok) {
           log('[integrity] OK —', result.checked, 'fichiers critiques vérifiés')
         } else {
+          // Diagnostic COMPLET par échec (format exigé) — jamais de secret ici.
+          for (const d of result.details ?? []) {
+            log(
+              `[INTEGRITY][FAIL] file=${d.rel} abs=${d.absPath} reason=${d.reason}` +
+              ` expectedSha256=${d.expectedSha256 ?? '-'} actualSha256=${d.actualSha256 ?? '-'}` +
+              ` expectedSize=${d.expectedSize ?? '-'} actualSize=${d.actualSize ?? '-'}`,
+            )
+          }
           log('[integrity] ALTÉRATION détectée:', result.violations.join(', '))
-          if (mode === 'enforce') { blockCorrupt(); return }
+          if (mode === 'enforce') { blockCorrupt(writeIntegrityReport(result)); return }
         }
         // Anti-débogueur : bloquant uniquement si explicitement activé (évite les
         // faux positifs) via GF_ANTIDEBUG=1.
