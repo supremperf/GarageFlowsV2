@@ -4,8 +4,8 @@
 
 > Ce document est la **seule source de vérité** sur l'état de préparation à la
 > production. En cas de contradiction avec tout autre rapport du dépôt, **ce
-> document fait foi**. Les anciens rapports d'étape sont marqués **HISTORIQUE**
-> et renvoient ici (voir `docs/history/`).
+> document fait foi**. Les anciens rapports d'étape portent le marqueur
+> `doc-status: historique` (à la racine et dans `docs/`) et renvoient ici.
 
 ## 1. Identité de la version auditée
 
@@ -131,7 +131,8 @@ suivants sont vrais et **datés** :
 Les anciens rapports annoncent des totaux de tests différents (137, 204, 694,
 740, 760/765, 843, 869, 912, 947…), chacun « tout vert » sur une branche/instant
 distinct. **Seule** la baseline de la §3, datée et rattachée au commit courant,
-fait foi. Les autres comptes sont des instantanés historiques (voir `docs/history/`).
+fait foi. Les autres comptes sont des instantanés historiques (documents portant
+le marqueur `doc-status: historique`).
 
 ## 9bis. Marque & identité Windows (rename `GarageFlows`)
 
@@ -162,5 +163,5 @@ occurrence est documentée par le garde-fou) :
   `PRODUCTION_DEPLOYMENT.md`, `SECRETS_ROTATION.md`, `ROTATION_SECRETS.md`,
   `POST_ROTATION_RECOVERY.md`, `CONFIGURATION.md`, `EINVOICING_*.md`,
   `MIGRATION-MONEY.md`, `DATABASE_ARCHITECTURE.md`, `README.md`, `CHANGELOG.md`.
-- **Annexes historiques** (instantanés figés, ne font plus foi) : `docs/history/`
-  et les rapports racine marqués **HISTORIQUE**.
+- **Annexes historiques** (instantanés figés, ne font plus foi) : les rapports à
+  la racine et dans `docs/` portant le marqueur `doc-status: historique`.

@@ -64,7 +64,9 @@ BASE_URL=http://localhost:3000 npm run test:e2e   # E2E (app en cours d'exécuti
 ## 8. Résultats
 
 - `next build` : ✅ succès (15 pages).
-- `vitest` : ✅ 679 tests OK (24 skip).
+- `vitest` : suite verte. Le **compte de tests faisant foi** (unique, daté,
+  rattaché à un commit) est tenu dans `docs/PRODUCTION-READINESS.md` §3 — ne pas
+  dupliquer de chiffre ici pour éviter toute divergence (AUD-042).
 
 ## 9. Limites restantes
 

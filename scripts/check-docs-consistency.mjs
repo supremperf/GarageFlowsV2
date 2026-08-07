@@ -37,6 +37,7 @@ const FORBIDDEN = [
   { re: /100\s*%\s*(pret|prete|ready|prod)/, label: '« 100 % prêt »' },
   { re: /tous\s+les\s+tests\s+passent/, label: '« tous les tests passent »' },
   { re: /aucune\s+action\s+(necessaire|requise)/, label: '« aucune action nécessaire/requise »' },
+  { re: /inviolable/, label: '« inviolable » (aucune protection logicielle locale ne l\'est)' },
 ]
 
 function collectMarkdown(dir, out) {
@@ -68,6 +69,9 @@ for (const file of files) {
     // Ignore les lignes de citation/négation explicites (« ne jamais … »).
     const n = norm(line)
     if (n.includes('ne jamais') || n.includes('ne pas annoncer') || n.includes('interdit')) return
+    // Un terme mis entre guillemets français est *discuté/nié* (convention de ces
+    // docs : on encadre le terme pour le récuser), pas affirmé → ligne neutre.
+    if ((line.includes('«') || line.includes('»')) && n.includes('inviolable')) return
     for (const f of FORBIDDEN) {
       if (f.re.test(n)) violations.push({ file: rel, line: i + 1, label: f.label, text: line.trim().slice(0, 120) })
     }
