@@ -43,7 +43,7 @@
 | AUD-022 | Haute | tests | V2 | Portail client : 20 routes, 0 test de handler | portal/__tests__ (fonctions pures) | PLAUSIBLE | 22 |
 | AUD-023 | Haute→**Partiel** | tests | V2+site3 | E2E jamais exécuté en CI ; aucun parcours métier complet | ci.yml (pas de playwright) | **PARTIEL** `e796ab8` : job CI `e2e` + webServer auto-démarrant ajoutés (tests publics/responsive) ; config vérifiée (48 tests, build OK). RESTE : parcours métier authentifié complet (devis→facture→paiement) avec identifiants semés | 22 |
 | AUD-024 | Moyenne | frontend | V2+site3 | CSP `script-src 'unsafe-inline' 'unsafe-eval'` sans nonce (admin inclus) | next.config.mjs:15 (V2/site3) | PLAUSIBLE | 4/14 |
-| AUD-025 | Moyenne | pwa | V2 | `skipWaiting()` inconditionnel → rechargement forcé, perte de saisie atelier | sw.js:20 ; PwaRegister.tsx:44 | PLAUSIBLE | 14 |
+| AUD-025 | Moyenne→**Corrigé** | pwa | V2 | `skipWaiting()` inconditionnel → rechargement forcé, perte de saisie atelier | sw.js:20 ; PwaRegister.tsx:44 | **CORRIGÉ** `e50b35d` (skipWaiting retiré de l'install ; activation sur clic « Mettre à jour » uniquement) | 14 |
 | AUD-026 | Moyenne | i18n | V2 | RTL/lang jamais restaurés au rechargement ; 27 composants sans i18n | i18n.tsx:53 ; layout.tsx:37 | PLAUSIBLE | 21 |
 | AUD-027 | Moyenne | frontend | V2 | Aucun error boundary (error.tsx/global-error.tsx absents) | src/app (aucun) | PLAUSIBLE | 14/19 |
 | AUD-028 | Moyenne | a11y | V2 | StockPanel sans rôle modale/nom accessible + contrastes < 3:1 | StockPanel.tsx:108,273 | PLAUSIBLE | 20 |
@@ -52,7 +52,7 @@
 | AUD-031 | Moyenne | supply-chain | V2 | Gitleaks binaire téléchargé sans vérification de checksum ; actions sur tags mobiles | ci.yml:32,21,72 | PLAUSIBLE | 23 |
 | AUD-032 | Moyenne→**Corrigé** | secrets | V2+site3 | Allowlist Gitleaks trop large (tous les .md exemptés) ; V2 ne scanne pas l'historique | .gitleaks.toml:34 (les 2) | **CORRIGÉ** `8d81488`/`51543e0` (exemption `.*\.md` retirée dans les 2 dépôts + allowlist ciblée ; découvert : scan était rouge sur fixtures test → corrigé ; 0 fuite vérifié gitleaks 8.24.3). Scan d'historique planifié = reste recommandé | 23 |
 | AUD-033 | Moyenne | session | V2 | Session staff NextAuth JWT sans invalidation serveur (rôle figé ≤ 30 j) | authOptions (stratégie JWT) | PLAUSIBLE | 4 |
-| AUD-034 | Moyenne | bdd/perf | V2 | Index FK manquants (QuoteLine.quoteId, InvoiceLine.invoiceId, JobPhoto.jobId…) | schema.prisma | PLAUSIBLE | 12/18 |
+| AUD-034 | Moyenne→**Corrigé** | bdd/perf | V2 | Index FK manquants (QuoteLine.quoteId, InvoiceLine.invoiceId, JobPhoto.jobId…) | schema.prisma | **CORRIGÉ** `e50b35d` (5 index FK ajoutés : 2 schémas + runner SQLite 180-184 + template re-baseliné + migration PG appliquée/vérifiée) | 12/18 |
 | AUD-035 | Moyenne | crypto | V2 | Recalcul `recordMac` incomplet dans revoke-by-key/PATCH admin (brique la clé) | mechanic-licenses routes | PLAUSIBLE | 6 |
 | AUD-036 | Moyenne | licence | V2 | Divergence HWID keygen Python ↔ Electron malgré commentaire « cohérence CRITIQUE » | keygen_core.py ↔ electron | PLAUSIBLE | 6 |
 | AUD-037 | Moyenne→**Corrigé** | authz | site3 | CORS `/api/v1/*` par défaut `*` (doc annonce l'inverse) ; blob-upload hors guardAdmin | api/http.ts:9 ; blob-upload/route.ts | **CORRIGÉ** lot D2 `cbfa5e3` (CORS défaut-refus + blob-upload rate-limit distribué + audit) | 15 |
