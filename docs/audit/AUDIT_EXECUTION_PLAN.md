@@ -12,7 +12,7 @@
 
 | Lot | Phases | Contenu | Livrables clés | État |
 |---|---|---|---|---|
-| A | 0 | Conservation, empreintes, cartographie préliminaire | `BASELINE.md`, `INITIAL_SHA256.txt`, `REPOSITORY_INVENTORY.md`, `WORKLOG.md`, ce plan, `docs/audit/RISK_REGISTER.md` | en cours |
+| A | 0 | Conservation, empreintes, cartographie préliminaire | `BASELINE.md`, `INITIAL_SHA256.txt`, `REPOSITORY_INVENTORY.md`, `WORKLOG.md`, ce plan, `docs/audit/RISK_REGISTER.md` | **fait** |
 | B | 1-3 | Inventaire détaillé, architecture actuelle/cible, modèle de menaces | diagrammes (contexte, conteneurs, auth, licence, facture, e-invoicing, update, reprise, données personnelles, frontières), `THREAT_MODEL.md`, ADR initiaux | à faire |
 | C | 4-6 | Sécurité applicative, isolation multi-garage, auth & licences | corrections + tests de permutations inter-garages, matrice de rôles testée, registre des clés, rapport rate-limit/journaux | isolation **faite** ; rate-limit fail-closed + CORS + blob-upload + jeton SSE **faits** (lot D1/D2) ; preuve de rotation secrets (verify:rotation) + gitleaks durci **faits** ; refonte clé admin (AUD-010) et preuve appareil notifications (AUD-011) **à cadrer** ; rotation/purge infra = opérateur |
 | D | 7-9 | Finance, e-invoicing, signature | revérification zéro Float, tests de concurrence numérotation, immuabilité factures, connecteur abstrait + validation de formats, qualification honnête des signatures | numérotation/concurrence + immuabilité + FEC (taux, nom fichier) + zéro-Float **faits & prouvés (PG réel)** ; connecteur e-invoicing abstrait + validation formats **à faire** ; qualification honnête signatures **à faire** |
@@ -23,7 +23,7 @@
 | I | 22-24 | Tests, supply chain, environnements | 30 parcours critiques + négatifs, CI durcie (SBOM/scans), manifeste des variables, scripts Windows documentés | à faire |
 | J | 25 | Documentation | synchronisation totale, ADR, runbooks, contrôle automatique des affirmations | à faire |
 | K | 26-28 | Démo, concurrence, data room | tenant de démo scripté + reset, matrice concurrentielle sourcée, data room + checklist de transfert | à faire |
-| L | 29 | Sortie | critères de sortie vérifiés, scores /100 motivés, rapport final A-L, verdict | à faire |
+| L | 29 | Sortie | critères de sortie vérifiés, scores /100 motivés, rapport final A-L, verdict | **fait** — `RAPPORT_FINAL_AUDIT.md` (verdict niveau 3 : PRÉPARÉ — NON DÉPLOYÉ — SOUS CONDITIONS) |
 
 Règle de séquencement : les lots C et D passent AVANT tout le reste dès la fin
 du lot B, car ils portent les priorités 1-4. Les corrections sont commitées par
