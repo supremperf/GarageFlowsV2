@@ -22,7 +22,7 @@
  * Aucune dépendance à Prisma/Next : pur, testable, réutilisable côté serveur.
  */
 
-export type DocumentKind = 'invoice' | 'quote' | 'workOrder'
+export type DocumentKind = 'invoice' | 'quote' | 'workOrder' | 'purchaseOrder' | 'warranty'
 
 /**
  * Graphe des transitions autorisées : depuis chaque statut, l'ensemble des
@@ -51,6 +51,25 @@ const TRANSITIONS: Record<DocumentKind, Record<string, string[]>> = {
     signed: ['signed', 'in_progress', 'closed'],
     in_progress: ['in_progress', 'signed', 'closed'],
     closed: ['closed', 'in_progress'],
+  },
+  // Bon de commande fournisseur. « received » n'est JAMAIS une cible du PATCH
+  // générique : la réception passe EXCLUSIVEMENT par POST /receive (qui incrémente
+  // le stock atomiquement, une seule fois). « received » et « cancelled » sont
+  // TERMINAUX → on ne peut pas rétrograder un BC réceptionné pour ré-incrémenter
+  // le stock (ré-inflation) ni contourner le verrou de suppression (draft-only).
+  purchaseOrder: {
+    draft: ['draft', 'sent', 'cancelled'],
+    sent: ['sent', 'cancelled'],
+    received: ['received'],
+    cancelled: ['cancelled'],
+  },
+  // Garantie. « claimed » est TERMINAL : une réclamation est un enregistrement
+  // (SAV/preuve) — on ne peut pas la « dé-réclamer » via PATCH pour ensuite
+  // supprimer la garantie (contournement du verrou de suppression).
+  warranty: {
+    active: ['active', 'claimed', 'expired'],
+    claimed: ['claimed'],
+    expired: ['expired', 'active'],
   },
 }
 
@@ -113,11 +132,17 @@ export function areAmountsLocked(kind: DocumentKind, status: string | null | und
 export function isDeletable(
   kind: DocumentKind,
   status: string | null | undefined,
-  opts?: { signed?: boolean },
+  opts?: { signed?: boolean; claimed?: boolean },
 ): boolean {
   const s = status ?? 'draft'
   if (kind === 'invoice') return s === 'draft'
   if (kind === 'quote') return s === 'draft' || s === 'sent' || s === 'refused'
   if (kind === 'workOrder') return s === 'draft' && !opts?.signed
+  // Bon de commande : seul un brouillon est supprimable (un BC envoyé/réceptionné
+  // se conserve). Un BC réceptionné a impacté le stock → jamais supprimable.
+  if (kind === 'purchaseOrder') return s === 'draft'
+  // Garantie : supprimable tant qu'elle n'est pas réclamée. `opts.claimed`
+  // (claimedAt renseigné) prime — vérité durable même si le statut divergeait.
+  if (kind === 'warranty') return s !== 'claimed' && !opts?.claimed
   return false
 }
