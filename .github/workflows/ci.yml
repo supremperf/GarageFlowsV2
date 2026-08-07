@@ -173,6 +173,11 @@ jobs:
           NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
           NEXTAUTH_URL: http://localhost:4028
 
+      # Budget de performance du bundle client (fail-closed : exige le build
+      # ci-dessus). Échoue si le JS client régresse au-delà de perf-budget.json.
+      - name: Performance budget (client bundle)
+        run: npm run check:perf-budget
+
       # Porte bloquante : toute vulnérabilité high/critical en dépendance de
       # PRODUCTION échoue la CI, sauf dérogations documentées/datées
       # (scripts/audit-ci.js). Une nouvelle vuln prod casse le build.

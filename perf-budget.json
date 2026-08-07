@@ -1,0 +1,14 @@
+{
+  "totalClientJsBytes": 3145728,
+  "largestChunkBytes": 524288,
+  "reference": {
+    "measuredAt": "2026-08-07",
+    "buildId": "next build (production)",
+    "totalClientJsBytes": 2709219,
+    "totalClientJsGzipBytes": 794328,
+    "largestChunkBytes": 444849,
+    "largestChunkGzipBytes": 102015,
+    "largestChunkPath": ".next/static/chunks/app/page-*.js",
+    "note": "Budgets exprimés en OCTETS BRUTS sur disque (déterministes, vérifiés par scripts/check-perf-budget.mjs après `npm run build`). Le gzip est informatif (le poids réellement transféré est ~0,76 MiB total / ~100 KiB pour le plus gros chunk). Marge volontaire d'environ 16 % (total) et 18 % (plus gros chunk) au-dessus de la mesure de référence pour absorber les variations mineures sans masquer une régression."
+  }
+}
