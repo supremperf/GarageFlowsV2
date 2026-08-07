@@ -42,6 +42,18 @@ export const GET = withAuth(async (req) => {
   function clientCode(name: string) {
     return name.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 17).padEnd(1, 'X') || 'CLIENT'
   }
+  // Neutralise les champs TEXTE libres (nom client, n° de pièce) provenant de la
+  // saisie utilisateur — JAMAIS les montants/dates/n° de compte, générés par le
+  // programme. Deux menaces :
+  //  1. Corruption du fichier délimité : un « | » ou un retour ligne dans un
+  //     libellé injecterait des colonnes / des écritures fantômes dans le FEC.
+  //  2. Injection de formule tableur : un libellé débutant par = + - @ (ou tab)
+  //     s'exécute à l'ouverture du .txt dans Excel/LibreOffice.
+  function fecText(s: string) {
+    let t = s.replace(/[|\r\n\t]+/g, ' ').trim()
+    if (/^[=+\-@]/.test(t)) t = `'${t}`
+    return t
+  }
   function row(fields: (string | number)[]) {
     return fields.map(String).join('|')
   }
@@ -52,29 +64,30 @@ export const GET = withAuth(async (req) => {
     const tva = roundCents(ttc - ht)
     const ecritureDate = fmtDate(inv.issueDate)
     const pieceDate    = fmtDate(inv.issueDate)
-    const lib          = `${inv.number} - ${inv.clientName.slice(0, 30)}`
+    const safeNumber   = fecText(inv.number)
+    const lib          = fecText(`${inv.number} - ${inv.clientName.slice(0, 30)}`)
     const auxNum       = clientCode(inv.clientName)
-    const auxLib       = inv.clientName.slice(0, 30)
+    const auxLib       = fecText(inv.clientName.slice(0, 30))
 
     veSeq++
     const veNum = `VE${String(veSeq).padStart(4, '0')}`
 
     // 706 — revenue (HT)
-    rows.push(row(['VE','Ventes',veNum,ecritureDate,'706000','Prestations de services','','',inv.number,pieceDate,lib,'0,00',fmt(ht),'','','','','']))
+    rows.push(row(['VE','Ventes',veNum,ecritureDate,'706000','Prestations de services','','',safeNumber,pieceDate,lib,'0,00',fmt(ht),'','','','','']))
     // 44571 — TVA collectée (libellé au taux RÉEL de la facture, pas figé à 20 %)
     if (tva > 0) {
       const rateLabel = `TVA collectée ${String(inv.taxRate).replace('.', ',')} %`
-      rows.push(row(['VE','Ventes',veNum,ecritureDate,'445710',rateLabel,'','',inv.number,pieceDate,lib,'0,00',fmt(tva),'','','','','']))
+      rows.push(row(['VE','Ventes',veNum,ecritureDate,'445710',rateLabel,'','',safeNumber,pieceDate,lib,'0,00',fmt(tva),'','','','','']))
     }
     // 411 — client receivable
-    rows.push(row(['VE','Ventes',veNum,ecritureDate,'411000','Clients',auxNum,auxLib,inv.number,pieceDate,lib,fmt(ttc),'0,00','','','','','']))
+    rows.push(row(['VE','Ventes',veNum,ecritureDate,'411000','Clients',auxNum,auxLib,safeNumber,pieceDate,lib,fmt(ttc),'0,00','','','','','']))
 
     // If paid — bank entry
     if (inv.status === 'paid') {
       bqSeq++
       const bqNum = `BQ${String(bqSeq).padStart(4, '0')}`
-      rows.push(row(['BQ','Banque',bqNum,ecritureDate,'512000','Banque','','',inv.number,pieceDate,lib,fmt(ttc),'0,00','','','','','']))
-      rows.push(row(['BQ','Banque',bqNum,ecritureDate,'411000','Clients',auxNum,auxLib,inv.number,pieceDate,lib,'0,00',fmt(ttc),'','','','','']))
+      rows.push(row(['BQ','Banque',bqNum,ecritureDate,'512000','Banque','','',safeNumber,pieceDate,lib,fmt(ttc),'0,00','','','','','']))
+      rows.push(row(['BQ','Banque',bqNum,ecritureDate,'411000','Clients',auxNum,auxLib,safeNumber,pieceDate,lib,'0,00',fmt(ttc),'','','','','']))
     }
   }
 
