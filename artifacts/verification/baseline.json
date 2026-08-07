@@ -3,10 +3,10 @@
   "schemaVersion": 2,
   "product": "GarageFlows",
   "version": "1.1.0",
-  "commit": "a3f62dd003ca6416876436d011f44ae769313e5e",
-  "commitShort": "a3f62dd",
+  "commit": "8491ffe1ee5f4972de7bac0dae43cf30fddac50e",
+  "commitShort": "8491ffe",
   "branch": "claude/garageflow-final-unified-merge-ub0l67",
-  "generatedAtUtc": "2026-08-07T19:45:20.710Z",
+  "generatedAtUtc": "2026-08-07T19:46:22.904Z",
   "toolchain": {
     "node": "v22.22.2",
     "npm": "10.9.7",
