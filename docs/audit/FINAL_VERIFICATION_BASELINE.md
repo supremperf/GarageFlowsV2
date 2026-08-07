@@ -54,13 +54,13 @@ de tests ou versions **résolues** de la toolchain). PostgreSQL 16.13 et Redis 7
 
 | Champ | Valeur |
 |---|---|
-| Test files | 131 |
-| Tests discovered | 1411 |
-| Tests passed | 1383 |
+| Test files | 133 |
+| Tests discovered | 1431 |
+| Tests passed | 1403 |
 | Tests failed | 0 |
 | Tests skipped | 28 |
 
-Commit : `d9c1155` · Branche : `claude/garageflow-final-unified-merge-ub0l67` · Généré (UTC) : `2026-08-07T18:11:05.273Z`
+Commit : `5934ac2` · Branche : `claude/garageflow-final-unified-merge-ub0l67` · Généré (UTC) : `2026-08-07T19:39:15.511Z`
 
 <!-- END AUTO-GENERATED BASELINE -->
 
