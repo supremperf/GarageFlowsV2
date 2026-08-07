@@ -77,12 +77,18 @@ lots H–K non encore traités et ne sont pas notés ici.
 
 ## 6. Travaux restants dans le dépôt (lots non traités)
 
-Poursuivables sans intervention externe : durcissement CSP à nonce (AUD-024),
-i18n/RTL + error boundary + a11y StockPanel (AUD-026/027/028), tests de handler
-portail + admin + concurrence stock réelle (AUD-018/021/022), câblage
-`check-critical-files.js` en CI (AUD-029), 30 parcours critiques (lot I),
-observabilité/perf (lot G), synchronisation documentaire (lot J), tenant de
-démo + matrice concurrentielle + data room (lot K).
+Depuis la première édition de ce rapport, les lots B (modèle de menaces),
+G (observabilité + budget de perf), H (error boundary, RTL, a11y StockPanel),
+I (tests admin/stock/portail + garde critical-files en CI), J (synchronisation
+documentaire) et K (tenant de démo scripté, matrice concurrentielle sourcée,
+data room + checklist de transfert) ont été livrés — voir `WORKLOG.md` et le
+registre pour les commits et preuves.
+
+Restent poursuivables sans intervention externe : durcissement CSP à nonce
+(AUD-024), i18n complète des 27 composants restants (AUD-026 partiel), tests
+des autres handlers du portail (AUD-022 partiel), parcours E2E métier
+authentifié en CI (AUD-023), connecteur e-invoicing abstrait + validation de
+formats (lot D résiduel), ADR formels et runbooks complémentaires.
 
 ## 7. Preuves exécutées (rappel)
 
