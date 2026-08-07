@@ -27,6 +27,9 @@ vi.mock('@/lib/db', () => ({
   prisma: {
     mechanic: {
       count: async () => dbState.count,
+      // Le roster sert au comptage (order) ET au dé-doublonnage applicatif. On
+      // renvoie des noms fictifs qui ne collisionnent avec aucun nom de test.
+      findMany: async () => Array.from({ length: dbState.count }, (_, i) => ({ name: `__existing_${i}` })),
       create: async (args: { data: Record<string, unknown> }) => {
         if (dbState.throws) throw dbState.throws
         dbState.created = args.data

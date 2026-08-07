@@ -30,7 +30,10 @@ async function ask(query: string): Promise<{ status: number; json: any }> {
   const res = await POST(new Request('http://localhost/api/copilot', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }) }))
   return { status: res.status, json: await res.json() }
 }
-const asA = () => { h.session = { user: { id: 'ua', name: 'A', garageId: garageA } } }
+// Rôle OWNER : ces tests exercent la LOGIQUE des résolveurs (scoping garage,
+// grounding) ; l'accès aux résolveurs financiers exige financial:read (cf. le
+// test d'autorisation dédié copilot-financial-authz-v15).
+const asA = () => { h.session = { user: { id: 'ua', name: 'A', role: 'OWNER', garageId: garageA } } }
 
 async function paidInvoice(garageId: string, number: string, issueDate: string, status: string, ht: number) {
   await prisma.invoice.create({ data: { number, garageId, clientName: 'C', status, issueDate, taxRate: 20, lines: { create: [{ description: 'x', quantityTenThousandths: 10000, unitPriceTenThousandths: toScaled(ht), unitCostTenThousandths: 0, isLabor: false, sortOrder: 0 }] } } })
@@ -73,7 +76,7 @@ describe('POST /api/copilot', () => {
   })
 
   it('scopes revenue strictly to the session garage', async () => {
-    h.session = { user: { id: 'ub', name: 'B', garageId: garageB } }
+    h.session = { user: { id: 'ub', name: 'B', role: 'OWNER', garageId: garageB } }
     const { json } = await ask('Quel est le CA du jour ?')
     expect(json.data.revenueHT).toBe(777) // B sees only its own row
     asA()
