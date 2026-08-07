@@ -2,10 +2,10 @@
   "_note": "Généré par scripts/generate-verification-baseline.mjs — NE PAS éditer à la main. Source machine unique du commit/toolchain/comptes de tests (anti-divergence V13.1).",
   "product": "GarageFlows",
   "version": "1.1.0",
-  "commit": "c3fb30497bf3107450c75b1f8f39246a172e8b63",
-  "commitShort": "c3fb304",
+  "commit": "b61cff829017a54b9115c305ab8a52e4b01e4067",
+  "commitShort": "b61cff8",
   "branch": "claude/garageflow-final-unified-merge-ub0l67",
-  "generatedAtUtc": "2026-08-07T11:28:58.770Z",
+  "generatedAtUtc": "2026-08-07T11:48:01.266Z",
   "toolchain": {
     "node": "v22.22.2",
     "npm": "10.9.7",
@@ -19,10 +19,10 @@
   },
   "tests": {
     "measured": true,
-    "files": 119,
-    "suites": 430,
-    "total": 1351,
-    "passed": 1323,
+    "files": 120,
+    "suites": 433,
+    "total": 1360,
+    "passed": 1332,
     "failed": 0,
     "skipped": 28
   }

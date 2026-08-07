@@ -62,9 +62,15 @@ run('Gardes de cohérence (check:consistency)', 'npm run check:consistency')
 //    multi-tenant, autorisation, immuabilité, parcours métier E2E, sauvegardes).
 //    Émet le rapport JSON et RÉGÉNÈRE la baseline machine (comptes de tests) —
 //    en un seul passage de la suite (pas de double exécution).
+// La baseline machine capture la SUITE STANDARD (reproductible partout, sans
+// service) : on neutralise TEST_POSTGRES_URL/TEST_REDIS_URL pour CE passage,
+// afin que baseline.json = 1323/1351 (les suites conditionnelles sont des
+// étapes séparées ci-dessous). Sinon le compte inclurait les +26 conditionnels
+// et divergerait de la documentation.
 run('Suite de tests (vitest) + baseline machine', FAST
   ? 'npm test'
-  : 'npx vitest run --reporter=json --outputFile=artifacts/verification/test-results.json && node scripts/generate-verification-baseline.mjs')
+  : 'npx vitest run --reporter=json --outputFile=artifacts/verification/test-results.json && node scripts/generate-verification-baseline.mjs',
+  { env: { TEST_POSTGRES_URL: '', TEST_REDIS_URL: '' } })
 
 // 4b. Cohérence documentaire CONTRE la baseline fraîchement régénérée : échoue
 //     si un document présente un compte de tests / une source canonique

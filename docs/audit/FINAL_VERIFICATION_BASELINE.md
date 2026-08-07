@@ -16,10 +16,10 @@
 | Champ | Valeur |
 |---|---|
 | Version | 1.1.0 |
-| Commit de mesure | `c3fb304` (voir `baseline.json` pour le SHA complet) |
+| Commit de mesure | voir `artifacts/verification/baseline.json` (champ `commit`) — jamais recopié à la main |
 | Branch | `claude/garageflow-final-unified-merge-ub0l67` |
 | Date UTC | 2026-08-07 |
-| Méthode de validation | commandes réellement exécutées ; comptes issus du rapport JSON vitest ; PostgreSQL 16.13 et Redis 7 **locaux réels** pour les suites conditionnelles |
+| Méthode de validation | `npm run release:gate` (11/11 OK) ; comptes issus du rapport JSON vitest ; PostgreSQL 16.13 et Redis 7 **locaux réels** pour les suites conditionnelles |
 
 ## Toolchain
 
@@ -40,19 +40,21 @@ reproductible sans service externe) :
 
 | Champ | Valeur |
 |---|---|
-| Files | 119 |
-| Tests discovered | 1351 |
-| Passed | 1323 |
+| Files | 120 |
+| Tests discovered | 1360 |
+| Passed | 1332 |
 | Failed | 0 |
 | Skipped | 28 |
 | Environment | vitest, SQLite réel |
 
-**Suites conditionnelles exécutées en plus** (services réels, hors compte
-standard) : PostgreSQL 16.13 → **21 tests verts** (numérotation 50 requêtes
-parallèles, stock, licences/sièges, sessions) ; Redis 7 → **5 tests verts**
-(rate-limit multi-instance). **Total exécuté vert = 1349 ; 2 restants** exigent
-un jeton de licence réel (poste opérateur). E2E : parcours métier 13 étapes via
-vrais handlers + Playwright responsive 3× vert contre le build de production.
+Valeurs = `artifacts/verification/baseline.json` (suite standard `npm test`,
+reproductible sans service externe). **Suites conditionnelles exécutées en
+plus** (services réels, hors compte standard) : PostgreSQL 16.13 → **21 tests
+verts** (numérotation 50 requêtes parallèles, stock, licences/sièges,
+sessions) ; Redis 7 → **5 tests verts** (rate-limit multi-instance). **Total
+exécuté vert = 1358 ; 2 restants** exigent un jeton de licence réel (poste
+opérateur). E2E : parcours métier 13 étapes via vrais handlers + Playwright
+responsive 3× vert contre le build de production.
 
 ## Financial integrity
 
