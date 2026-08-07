@@ -2,87 +2,42 @@
 /**
  * check-docs-consistency.mjs — garde-fou de cohérence documentaire (CI).
  *
- * Empêche la réapparition d'affirmations de statut trop favorables dans un
- * document ACTIF (non historique). La seule source de vérité de l'état de
- * préparation est docs/PRODUCTION-READINESS.md (exclue de ce contrôle car elle
- * DISCUTE ces termes pour les encadrer/nier).
- *
- * Un document est « historique » s'il contient le marqueur `doc-status: historique`
- * (bandeau ajouté en tête) — il est alors ignoré.
- *
- * Échoue si l'une des affirmations interdites apparaît dans un document actif :
- *   « aucun bloqueur », « production ready », « 100 % prêt »,
- *   « tous les tests passent », « aucune action nécessaire/requise ».
+ * Fin wrapper CLI autour de `scripts/lib/docs-consistency.mjs` (cœur testable).
+ * Vérifie sur le dépôt : source canonique unique, aucune revendication
+ * canonique forte hors baseline, aucun compte de tests courant divergent,
+ * aucune affirmation de statut trop favorable. Voir le module pour le détail.
  *
  * Usage : node scripts/check-docs-consistency.mjs
  */
-
-import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { checkDocsConsistency, CANONICAL_PATH } from './lib/docs-consistency.mjs'
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..')
-const SOURCE_OF_TRUTH = 'docs/PRODUCTION-READINESS.md'
 
-/** Normalise : minuscules + suppression des accents (comparaison robuste). */
-function norm(s) {
-  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+if (!existsSync(join(ROOT, CANONICAL_PATH))) {
+  console.error(`❌ Baseline canonique absente : ${CANONICAL_PATH}`)
+  process.exit(1)
 }
 
-// Motifs interdits (déjà normalisés, sans accents). Chaque entrée = {re, label}.
-const FORBIDDEN = [
-  { re: /aucun(e)?\s+bloqu(eur|ant)/, label: '« aucun bloqueur/bloquant »' },
-  { re: /zero\s+bloqu(eur|ant)/, label: '« zéro bloqueur »' },
-  { re: /production[\s-]?ready/, label: '« production ready »' },
-  { re: /100\s*%\s*(pret|prete|ready|prod)/, label: '« 100 % prêt »' },
-  { re: /tous\s+les\s+tests\s+passent/, label: '« tous les tests passent »' },
-  { re: /aucune\s+action\s+(necessaire|requise)/, label: '« aucune action nécessaire/requise »' },
-  { re: /inviolable/, label: '« inviolable » (aucune protection logicielle locale ne l\'est)' },
-]
+// Baseline machine (comptes de tests) — pour le contrôle de compte courant.
+let baseline = null
+const baselineFile = join(ROOT, 'artifacts', 'verification', 'baseline.json')
+if (existsSync(baselineFile)) {
+  try { baseline = JSON.parse(readFileSync(baselineFile, 'utf8')) } catch { /* ignore */ }
+}
 
-function collectMarkdown(dir, out) {
-  for (const entry of readdirSync(dir)) {
-    if (entry === 'node_modules' || entry === '.next' || entry === '.git') continue
-    const p = join(dir, entry)
-    const st = statSync(p)
-    if (st.isDirectory()) collectMarkdown(p, out)
-    else if (entry.toLowerCase().endsWith('.md')) out.push(p)
+const { ok, violations, scanned } = checkDocsConsistency(ROOT, { baseline })
+
+if (!ok) {
+  console.error(`\n❌ Cohérence docs : ${violations.length} incohérence(s) dans les documents actifs :`)
+  for (const v of violations) {
+    const loc = v.line ? `${v.file}:${v.line}` : v.file
+    console.error(`   [${v.kind}] ${loc}  ${v.label}${v.text ? `\n      ${v.text}` : ''}`)
   }
-}
-
-const files = []
-collectMarkdown(ROOT, files)
-
-if (!existsSync(join(ROOT, SOURCE_OF_TRUTH))) {
-  console.error(`❌ Source de vérité absente : ${SOURCE_OF_TRUTH}`)
+  console.error(`\n   → Corrigez le document, marquez-le HISTORIQUE (« doc-status: historique »),`)
+  console.error(`     ou pointez vers la baseline canonique ${CANONICAL_PATH}.\n`)
   process.exit(1)
 }
-
-const violations = []
-for (const file of files) {
-  const rel = relative(ROOT, file).split('\\').join('/')
-  if (rel === SOURCE_OF_TRUTH) continue // la SoT encadre/nie ces termes
-  const raw = readFileSync(file, 'utf8')
-  if (norm(raw).includes('doc-status: historique')) continue // annexe historique
-  const lines = raw.split('\n')
-  lines.forEach((line, i) => {
-    // Ignore les lignes de citation/négation explicites (« ne jamais … »).
-    const n = norm(line)
-    if (n.includes('ne jamais') || n.includes('ne pas annoncer') || n.includes('interdit')) return
-    // Un terme mis entre guillemets français est *discuté/nié* (convention de ces
-    // docs : on encadre le terme pour le récuser), pas affirmé → ligne neutre.
-    if ((line.includes('«') || line.includes('»')) && n.includes('inviolable')) return
-    for (const f of FORBIDDEN) {
-      if (f.re.test(n)) violations.push({ file: rel, line: i + 1, label: f.label, text: line.trim().slice(0, 120) })
-    }
-  })
-}
-
-if (violations.length) {
-  console.error(`\n❌ Cohérence docs : ${violations.length} affirmation(s) de statut interdite(s) dans un document actif :`)
-  for (const v of violations) console.error(`   ${v.file}:${v.line}  ${v.label}\n      ${v.text}`)
-  console.error(`\n   → Corrigez le document, ou marquez-le HISTORIQUE (bandeau « doc-status: historique »),`)
-  console.error(`     ou déplacez l'affirmation encadrée dans ${SOURCE_OF_TRUTH}.\n`)
-  process.exit(1)
-}
-console.log(`✅ Cohérence docs : aucune affirmation de statut contradictoire dans les documents actifs (${files.length} .md scannés).`)
+console.log(`✅ Cohérence docs : source canonique unique, comptes & statuts cohérents (${scanned} .md scannés).`)

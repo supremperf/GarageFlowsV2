@@ -1,22 +1,23 @@
-<!-- SOURCE DE VÉRITÉ — NE PAS marquer ce fichier comme historique. -->
+<!-- doc-status: actif -->
 
-# GarageFlows — État de préparation à la production (SOURCE DE VÉRITÉ)
+# GarageFlows — Résumé de préparation à la production
 
-> Ce document est la **seule source de vérité** sur l'état de préparation à la
-> production. En cas de contradiction avec tout autre rapport du dépôt, **ce
-> document fait foi**. Les anciens rapports d'étape portent le marqueur
-> `doc-status: historique` (à la racine et dans `docs/`) et renvoient ici.
+> **Ce document est un RÉSUMÉ de production. Pour les résultats de validation
+> faisant autorité (commit, comptes de tests, toolchain, classification), voir
+> la source canonique unique : [`docs/audit/FINAL_VERIFICATION_BASELINE.md`](./audit/FINAL_VERIFICATION_BASELINE.md).**
+> En cas de divergence de chiffres, la baseline canonique fait foi. Les chiffres
+> historiques ci-dessous (§3, datés 2026-08-06) sont conservés comme instantané
+> et NE représentent PAS l'état courant.
 
-## 1. Identité de la version auditée
+## 1. Identité (voir la baseline canonique pour les valeurs faisant foi)
 
 | Champ | Valeur |
 |---|---|
 | Produit | **GarageFlows** (desktop Electron + PWA/serveur) |
-| Version applicative | **1.1.0** (`package.json`) — `src/config/app.ts` réaligné sur 1.1.0 |
+| Version applicative | **1.1.0** (`package.json`) |
 | Branche | `claude/garageflow-final-unified-merge-ub0l67` |
-| Commit de base | `5fd3dfa` (+ présent lot : sécurisation migrations / JSON v2 / fail-closed) |
-| Date de dernière validation | **2026-08-06** |
-| Environnement de validation | CI/Linux (Node 22), **PostgreSQL 16 local réel** (cluster jetable), **sans** Windows/PowerShell, **sans** Neon réel, **sans** Redis, **sans** navigateur e2e stable |
+| État courant (commit, tests, toolchain) | → `FINAL_VERIFICATION_BASELINE.md` / `artifacts/verification/baseline.json` |
+| Classification courante | **`DUE_DILIGENCE_READY_WITH_CONDITIONS`** (cf. `docs/audit/PRODUCTION_STATUS_LEVELS.md`) |
 
 ## 2. Verdict global
 
@@ -32,15 +33,21 @@ le produit **ne doit pas** être présenté comme prêt pour la production.
 
 Statuts employés : **VALIDÉ** · **ÉCHEC** · **NON EXÉCUTÉ** · **ACTION MANUELLE REQUISE** · **BLOQUEUR** · **RISQUE ACCEPTÉ**.
 
-## 3. Contrôles réellement exécutés (2026-08-06)
+## 3. Baseline historique — instantané 2026-08-06 (NON courant)
 
-<!-- BLOC-VALIDATION-DEBUT : rempli à partir de l'exécution réelle -->
+> ⚠ **Historical result — not current baseline.** Les chiffres de ce tableau
+> sont un instantané figé du 2026-08-06 (commit `5fd3dfa`). L'état **courant**
+> faisant foi est dans `FINAL_VERIFICATION_BASELINE.md` /
+> `artifacts/verification/baseline.json`. Conservé pour la traçabilité de
+> l'évolution, jamais à confondre avec l'actuel.
+
+<!-- BLOC-VALIDATION-DEBUT : instantané historique 2026-08-06 -->
 
 | Contrôle | Commande | Résultat | Détail |
 |---|---|---|---|
 | Types | `npm run type-check` (`tsc --noEmit`) | **VALIDÉ** | 0 erreur |
 | Lint | `npm run lint` (`next lint`) | **VALIDÉ** | 0 erreur/avertissement |
-| Tests unitaires/intégration | `npm test` (`vitest run`) | **VALIDÉ** | 1 040 passés · 26 ignorés · 104 fichiers ; avec `TEST_POSTGRES_URL` (PG 16 local) : **1 059 passés · 7 ignorés** (les 7 restants exigent Redis) |
+| Tests unitaires/intégration | `npm test` (`vitest run`) | **VALIDÉ** | *(instantané historique)* 1 040 passés · 26 ignorés · 104 fichiers ; avec `TEST_POSTGRES_URL` : 1 059 passés — **compte courant : voir baseline canonique** |
 | Tests monétaires dédiés | `test:money` / `test:money-json` / `test:migration` | **VALIDÉ** | 4 décimales, JSON v1→v2, backfill, idempotence, **échecs simulés avec rollback**, sauvegarde pré-migration |
 | Build | `npm run build` (`prisma generate ×2 + next build`) | **VALIDÉ** | *Compiled successfully* · 16/16 pages |
 | Schéma desktop | `npm run db:desktop:validate` | **VALIDÉ** | SQLite valide · template au schéma final **baseliné** (179/179) |
@@ -129,10 +136,13 @@ suivants sont vrais et **datés** :
 ## 9. Note sur les baselines de tests divergentes
 
 Les anciens rapports annoncent des totaux de tests différents (137, 204, 694,
-740, 760/765, 843, 869, 912, 947…), chacun « tout vert » sur une branche/instant
-distinct. **Seule** la baseline de la §3, datée et rattachée au commit courant,
-fait foi. Les autres comptes sont des instantanés historiques (documents portant
-le marqueur `doc-status: historique`).
+740, 760/765, 843, 869, 912, 947, 1 040, 1 059, 1 301…), chacun « tout vert » sur
+une branche/instant distinct — ce sont des **instantanés historiques** (*Historical
+result — not current baseline*). **Le seul compte courant faisant foi** est celui
+de la baseline canonique `FINAL_VERIFICATION_BASELINE.md`, dérivé de
+`artifacts/verification/baseline.json` (généré, jamais recopié). Le garde-fou
+`check-docs-consistency` interdit qu'un compte différent soit présenté comme
+courant dans un document actif.
 
 ## 9bis. Marque & identité Windows (rename `GarageFlows`)
 

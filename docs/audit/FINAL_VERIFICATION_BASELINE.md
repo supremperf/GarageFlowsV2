@@ -1,97 +1,136 @@
-# FINAL VERIFICATION BASELINE — source de vérité unique (V13)
+<!-- doc-role: canonical-baseline -->
+<!-- doc-status: actif -->
 
-> **Tout document du dépôt qui cite un chiffre d'état (tests, versions,
-> statuts) pointe ici.** Chaque valeur provient d'une commande exécutée le
-> 2026-08-07 sur le commit indiqué — rien n'est recopié ni estimé. Ce qui n'a
-> pas été vérifié est listé en §8.
+# GarageFlows V13.1 — CANONICAL TECHNICAL BASELINE
 
-## 1. Identité
+> **This document is the single canonical source of truth for the current
+> GarageFlows technical verification state.** Tout autre document qui donne un
+> état de production ou des résultats de tests doit pointer ici. Les comptes de
+> tests, le commit et la toolchain proviennent de
+> `artifacts/verification/baseline.json` (généré par
+> `scripts/generate-verification-baseline.mjs` — jamais recopié à la main).
+> La cohérence est vérifiée en CI par `scripts/check-docs-consistency.mjs`.
 
-- Product : **GarageFlows** · Version : 1.1.0
-- Commit des mesures : `af73de3` (branche `claude/garageflow-final-unified-merge-ub0l67`)
-- Date UTC : 2026-08-07 (10:40 → 12:00)
-- Node v22.22.2 · npm 10.9.7 · Next.js 14.2.35 · Electron 31.7.7 ·
-  Prisma 5.22.0 · TypeScript 5.9.3
-- PostgreSQL d'audit : 16.13 (cluster local jetable) · Redis d'audit : 7 (local)
-- Dépôt compagnon : garagesite3 `3405bcd` (arbre propre)
+## Identification
 
-## 2. Build
+| Champ | Valeur |
+|---|---|
+| Version | 1.1.0 |
+| Commit de mesure | `c3fb304` (voir `baseline.json` pour le SHA complet) |
+| Branch | `claude/garageflow-final-unified-merge-ub0l67` |
+| Date UTC | 2026-08-07 |
+| Méthode de validation | commandes réellement exécutées ; comptes issus du rapport JSON vitest ; PostgreSQL 16.13 et Redis 7 **locaux réels** pour les suites conditionnelles |
 
-- TypeScript : **0 erreur** (`tsc --noEmit`)
-- Lint : **0 avertissement / 0 erreur** (`next lint`)
-- Build production : **OK** (16 pages) — CSP de production vérifiée AU RUNTIME
-  (sans `unsafe-eval`), page de connexion rendue 200
-- Build Electron/Windows : **NON EXÉCUTÉ** (conteneur Linux — §8)
-- PWA : gardes `check:pwa` vertes ; suite Playwright **3× 12/12 verte** contre
-  le build de production
+## Toolchain
 
-## 3. Tests (exécutés, 0 échec)
+Node v22.22.2 · npm 10.9.7 · OS linux/x64 · Next.js 14.2.35 · Prisma 5.22.0
+(client ; déclaré `^5.16.1`) · Electron 31.7.7 · TypeScript 5.9.3 ·
+PostgreSQL 16.13 (local, suites conditionnelles) · Redis 7 (local).
 
-- Suite standard : **119 fichiers (114 verts + 5 conditionnels), 1351 tests —
-  1323 verts, 28 conditionnels** (vitest, SQLite réel)
-- Suites conditionnelles EXÉCUTÉES en plus : PostgreSQL réel **21 tests verts**
-  (numérotation 50 requêtes parallèles, stock, licences/sièges, sessions) ;
-  Redis réel **5 tests verts** (rate-limit multi-instance)
-- **Total exécuté vert : 1349 / 1351** ; les 2 restants exigent un jeton de
-  licence réel (poste opérateur)
-- E2E : parcours métier complet 13 étapes via vrais handlers (persistance
-  vérifiée en base) ; Playwright responsive contre build de production
-- Release gate final : **10/10 OK** (preuve négative : PG injoignable → exit 1)
+## Static quality
 
-## 4. Sécurité (état vérifié)
+- **TypeScript** : 0 erreur (`tsc --noEmit`)
+- **Lint** : 0 (`next lint`)
+- **Build** : OK — 16 pages ; CSP de production vérifiée au runtime (sans `unsafe-eval`)
 
-- Secrets : 0 fuite fichiers suivis (gitleaks 8.24.3, 2 dépôts) ; historique =
-  uniquement les secrets DÉJÀ recensés compromis (registre + rotation outillée)
-- Auth/sessions : NextAuth, secret fail-closed (démarrage refusé sans — observé)
-- Authorization : deny-by-default, matrice 128 cellules testée
-- Tenant isolation : matrice de permutation **63 tests** + audit statique 141
-  routes (0 faille) + refus inter-garages dans l'E2E métier
-- Rate limiting : distribué fail-closed, prouvé multi-instance (Redis réel)
-- HWID/licences : plafond d'appareils atomique prouvé sous concurrence PG ;
-  révocation irréversible testée ; clé publique ECDSA cohérente (test)
-- CSP : production sans `unsafe-eval` (runtime vérifié) ; `'unsafe-inline'`
-  scripts = exception verrouillée par test (nonce = reste à faire)
-- Electron : `contextIsolation/sandbox/webSecurity` actifs (3 fenêtres,
-  fichier:ligne dans `ELECTRON_SECURITY_BASELINE.md`), fuses au packaging
-- Dépendances : 0 high/critical de production non dérogée (1 dérogation datée)
+## Tests
 
-## 5. Finance
+Chiffres = `artifacts/verification/baseline.json` (suite standard `npm test`,
+reproductible sans service externe) :
 
-- Représentation : **entiers exacts** (centimes / dix-millièmes) ; champs
-  monétaires Float : **0** (garde CI ; les 8 `taxRate Float` sont des TAUX)
-- TVA : formule UNIQUE du dépôt (`taxCentsFromBasis`, chemin 100 % entier),
-  arrondi fiscal demi-éloigné-de-zéro sur l'assiette — testée y compris taux
-  exotiques et bornes BigInt
-- Facturation : immuabilité prouvée (409), numérotation transactionnelle
-  contiguë prouvée sous concurrence réelle, FEC testé (libellés, nommage)
-- Migrations monétaires : appliquées et vérifiées colonne par colonne (gardes)
+| Champ | Valeur |
+|---|---|
+| Files | 119 |
+| Tests discovered | 1351 |
+| Passed | 1323 |
+| Failed | 0 |
+| Skipped | 28 |
+| Environment | vitest, SQLite réel |
 
-## 6. E-invoicing (état réel)
+**Suites conditionnelles exécutées en plus** (services réels, hors compte
+standard) : PostgreSQL 16.13 → **21 tests verts** (numérotation 50 requêtes
+parallèles, stock, licences/sièges, sessions) ; Redis 7 → **5 tests verts**
+(rate-limit multi-instance). **Total exécuté vert = 1349 ; 2 restants** exigent
+un jeton de licence réel (poste opérateur). E2E : parcours métier 13 étapes via
+vrais handlers + Playwright responsive 3× vert contre le build de production.
 
-- Modèle canonique EN 16931 (sous-ensemble) : **fait, testé**
-- Validation : Luhn SIREN/SIRET, clé TVA FR, recalcul intégral fail-closed
-- CII Factur-X MINIMUM : généré et **validé contre le XSD officiel 1.09**
-  (xmllint, 1 passage)
-- Mapping documenté : `docs/einvoicing/EN16931_MAPPING.md`
-- **Statut réel : préparation avancée, PAS de conformité revendiquée** — sans
-  PDF/A-3, sans Schematron, sans raccordement à une plateforme agréée
-  (architecture d'adaptateurs prête, registre volontairement vide)
+## Financial integrity
 
-## 7. Production (infrastructure)
+- **Monetary Float fields : 0** (garde `check:money-fields`)
+- **Tax rate representation** : `taxRate Float` (4 modèles × 2 schémas) = un
+  TAUX, pas un montant — non monétaire, documenté
+- **Financial guard** : `check:money-fields` + `check:money-calculations` +
+  `check:money-json` (chaînées dans `check:consistency`)
 
-- Neon / Vercel / Upstash de production : **AUCUN accès — rien de validé** ;
-  équivalents locaux réels utilisés (PG 16.13, Redis 7)
-- Validation d'environnement : fail-closed **prouvée** (démarrage refusé)
-- Windows/Authenticode : **non exécuté** (protocole + pipeline documentés)
-- Monitoring : sondes + seuils codés et testés ; alerting non câblé
-- Backups : restauration desktop prouvée par test ; exercice serveur réel à
-  faire (RPO/RTO = objectifs)
+## Security
 
-## 8. Restrictions — NON vérifié dans cet environnement
+- **Auth** : NextAuth, secret fail-closed (démarrage refusé sans — observé)
+- **RBAC** : deny-by-default, matrice 128 cellules testée
+- **Tenant isolation** : matrice 63 tests + audit statique 141 routes (0 faille)
+- **Secrets** : 0 fuite fichiers suivis (gitleaks) ; historique = secrets déjà
+  recensés compromis (rotation outillée)
+- **Licensing** : signatures ECDSA, plafond d'appareils atomique prouvé (PG réel)
+- **Rate limiting** : distribué fail-closed, prouvé multi-instance (Redis réel)
+- **CSP** : production sans `unsafe-eval` (runtime vérifié) ; `'unsafe-inline'`
+  scripts = exception verrouillée par test (nonce = ouvert)
+- **Electron** : contextIsolation/sandbox/webSecurity actifs, fuses au packaging
 
-Build/installation/upgrade Windows réels ; signature Authenticode ;
-SmartScreen ; rendu WebKit/Safari réel ; déploiement Neon/Vercel/Upstash ;
-test de charge sur infrastructure réelle (scripts fournis) ; exercice de
-restauration serveur chronométré ; rotation effective des secrets compromis
+## E-invoicing
+
+- **Canonical model** : EN 16931 (sous-ensemble) — fait, testé
+- **EN16931 mapping** : `docs/einvoicing/EN16931_MAPPING.md`
+- **CII** : profil Factur-X MINIMUM, fail-closed
+- **Factur-X** : XML MINIMUM généré ; PDF/A-3 non produit
+- **XSD** : validé contre le XSD officiel Factur-X 1.09 MINIMUM (xmllint, 1 passage)
+- **Accredited platform integration** : AUCUNE (architecture d'adaptateurs prête,
+  registre volontairement vide) — conformité NON revendiquée
+
+## Desktop
+
+- **Build / Installer** : NON EXÉCUTÉ (conteneur Linux)
+- **Authenticode** : NON EXÉCUTÉ (pas de certificat) — pipeline documenté
+- **Update security** : fail-closed testé (signature/hash/anti-downgrade)
+
+## PWA
+
+Manifest & icônes : gardes `check:pwa` vertes. Service worker : sans
+rechargement forcé. Installability : responsive prouvé (Playwright 3× vert).
+
+## Operations
+
+- **Health checks** : `/api/health` (public minimal / Electron), `/api/admin/monitoring`
+- **Logging** : structuré + redaction (testée)
+- **Backups** : restauration desktop prouvée par test ; serveur = procédure
+- **Disaster recovery** : runbook (RPO/RTO = OBJECTIFS, exercice réel requis)
+- **Load tests** : script fourni (staging-only), AUCUN chiffre exécuté
+
+## Due diligence
+
+SBOM (2 dépôts) · OSS license audit (0 BLOCKER) · Data inventory · Risk
+register (48 findings) · Data room (10 volets).
+
+## Compteurs de risques
+
+- **Open code risks** : 8 (voir `docs/data-room/09-risks/OPEN_ITEMS.md`) — aucun critique
+- **External actions** : 5 (secrets, purge historique, Authenticode, staging, restore)
+- **External validations** : juridique + comptable + e-invoicing réglementaire
+
+## Final classification
+
+**`DUE_DILIGENCE_READY_WITH_CONDITIONS`** (voir définitions ci-dessous et
+`docs/audit/PRODUCTION_STATUS_LEVELS.md`).
+
+Justification : tout ce qui est prouvable dans l'environnement disponible est
+prouvé et reproductible en une commande (`npm run release:gate`) ; aucun risque
+critique code connu ouvert ; conditions = validations externes (rotation
+secrets prouvée, build Windows signé, déploiement staging/production réel,
+raccordement e-invoicing). `PRODUCTION_VERIFIED` exigerait en plus l'exécution
+réelle sur infrastructure de production (jamais simulée ici).
+
+## Restrictions — NON vérifié dans cet environnement
+
+Build/installation/upgrade Windows réels ; Authenticode ; SmartScreen ; rendu
+WebKit/Safari réel ; déploiement Neon/Vercel/Upstash ; test de charge réel ;
+exercice de restauration serveur chronométré ; rotation effective des secrets
 (outil fourni, action opérateur) ; validations juridiques/comptables/
-réglementaires (voir `docs/data-room/09-risks/EXTERNAL_VALIDATIONS.md`).
+réglementaires — voir `docs/data-room/09-risks/EXTERNAL_VALIDATIONS.md`.

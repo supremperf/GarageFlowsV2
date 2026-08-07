@@ -1,3 +1,4 @@
+<!-- doc-numbers: journal — comptes datés point-dans-le-temps, exempts du contrôle de compte courant (V13.1) -->
 # Registre de risques — Audit maître GarageFlows
 
 > Consolidation des 12 cartographies en lecture seule (Phase 0/1) sur les deux

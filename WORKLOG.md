@@ -1,3 +1,4 @@
+<!-- doc-numbers: journal — comptes datés point-dans-le-temps, exempts du contrôle de compte courant (V13.1) -->
 # WORKLOG — Journal horodaté de l'audit GarageFlows
 
 > Journal d'opérations de l'audit maître (Phase 0 → 29). Heures en UTC.

@@ -1,8 +1,9 @@
 # Déploiement en production
 
-> **Runbook** — décrit la procédure. L'**état de préparation** (ce qui est prêt,
-> ce qui reste bloquant) fait foi dans **[PRODUCTION-READINESS.md](./PRODUCTION-READINESS.md)**,
-> seule source de vérité. Ne pas déployer tant que ses bloqueurs (§6) ne sont pas levés.
+> **Runbook** — décrit la procédure. L'**état de préparation** faisant autorité
+> est dans la source canonique **[FINAL_VERIFICATION_BASELINE.md](./audit/FINAL_VERIFICATION_BASELINE.md)**
+> (résumé : [PRODUCTION-READINESS.md](./PRODUCTION-READINESS.md)). Ne pas déployer
+> tant que les conditions externes ne sont pas levées.
 
 Deux produits distincts sortent de ce dépôt :
 

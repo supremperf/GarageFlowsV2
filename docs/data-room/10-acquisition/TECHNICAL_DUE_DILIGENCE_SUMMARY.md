@@ -12,7 +12,7 @@ Produit réel et cohérent : gestion de garage (planning, clients/véhicules,
 devis/factures, OR, stock, portail client, signatures) livrée en desktop
 Windows hors-ligne (Electron+SQLite), serveur multi-tenant (PostgreSQL) et PWA
 — combinaison absente du panel concurrentiel français étudié. L'ingénierie est
-outillée pour la preuve : >1300 tests verts (dont concurrence sur PostgreSQL
+outillée pour la preuve : une suite de tests substantielle et verte (comptes exacts : baseline canonique) (dont concurrence sur PostgreSQL
 réel), 10 gardes CI bloquantes, release gate unique, documentation
 anti-contradiction gardée. Les risques résiduels sont majoritairement des
 **validations externes** (Authenticode, plateforme e-invoicing, juridique,
@@ -28,7 +28,7 @@ infrastructure de production), pas des défauts de code connus.
 | Financial Integrity | **GREEN** | zéro Float monétaire (3 gardes), formule TVA unique 100 % entière, immuabilité 409 testée, numérotation contiguë prouvée sous 50 requêtes parallèles sur PostgreSQL réel |
 | E-Invoicing | **AMBER** | modèle EN 16931 + validateur fail-closed + CII validé au XSD officiel MINIMUM ; MAIS pas de PDF/A-3, pas de Schematron, aucune plateforme raccordée (échéance réglementaire 2026 = l'écart concurrentiel le plus daté) |
 | Desktop/PWA | **AMBER** | Electron durci (baseline complète) et PWA gardée ; MAIS aucun build/installation Windows réel ni Authenticode (validation externe) |
-| Testing | **GREEN** | >1300 tests verts 0 échec (unit/intégration/E2E métier/Playwright contre build prod ×3), PG+Redis réels, release gate 10/10 avec preuve négative |
+| Testing | **GREEN** | suite verte 0 échec, comptes dans la baseline canonique (unit/intégration/E2E métier/Playwright contre build prod ×3), PG+Redis réels, release gate 10/10 avec preuve négative |
 | Deployment | **AMBER** | validation d'env fail-closed PROUVÉE (démarrage refusé sans infra conforme) ; MAIS aucun déploiement production/staging réel effectué |
 | Open Source / IP | **GREEN** (code) / **AMBER** (juridique) | 0 licence bloquante en production, SBOM + notices générées, provenance documentée ; cession de droits et attestations = conseil |
 | Data Protection | **AMBER** | mesures art. 32 réelles et testées, inventaire des données, runbooks ; MAIS anonymisation automatisée à livrer, rétentions à paramétrer, validation DPO absente |

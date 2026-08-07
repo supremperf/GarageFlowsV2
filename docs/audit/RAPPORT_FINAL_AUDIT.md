@@ -1,3 +1,4 @@
+<!-- doc-numbers: journal — comptes datés point-dans-le-temps, exempts du contrôle de compte courant (V13.1) -->
 # Rapport final d'audit — GarageFlows (lot L)
 
 > Synthèse de sortie de l'audit maître « acquisition-readiness » mené sur les

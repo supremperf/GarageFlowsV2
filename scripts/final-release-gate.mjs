@@ -59,8 +59,17 @@ run('ESLint', 'npx next lint --quiet')
 run('Gardes de cohérence (check:consistency)', 'npm run check:consistency')
 
 // 4. Tests unitaires + intégration (inclut monnaie, e-invoicing/formats, isolation
-//    multi-tenant, autorisation, immuabilité, parcours métier E2E, sauvegardes)
-run('Suite de tests (vitest)', 'npm test')
+//    multi-tenant, autorisation, immuabilité, parcours métier E2E, sauvegardes).
+//    Émet le rapport JSON et RÉGÉNÈRE la baseline machine (comptes de tests) —
+//    en un seul passage de la suite (pas de double exécution).
+run('Suite de tests (vitest) + baseline machine', FAST
+  ? 'npm test'
+  : 'npx vitest run --reporter=json --outputFile=artifacts/verification/test-results.json && node scripts/generate-verification-baseline.mjs')
+
+// 4b. Cohérence documentaire CONTRE la baseline fraîchement régénérée : échoue
+//     si un document présente un compte de tests / une source canonique
+//     divergents des mesures réelles (anti-divergence de due diligence).
+run('Cohérence documentaire (post-baseline)', 'node scripts/check-docs-consistency.mjs', { skip: FAST, skipReason: '--fast (déjà couvert par check:consistency)' })
 
 // 5-6. Tests conditionnels sur infrastructures réelles
 run('Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)',

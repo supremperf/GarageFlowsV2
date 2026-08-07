@@ -18,7 +18,8 @@ le verdict global dans `docs/audit/RAPPORT_FINAL_AUDIT.md`.
 | Registre de risques | `docs/audit/RISK_REGISTER.md` | 48 findings AUD-001..048, états et preuves | A–L |
 | Modèle de menaces | `docs/audit/THREAT_MODEL.md` | STRIDE par frontière de confiance | B |
 | Rapport final | `docs/audit/RAPPORT_FINAL_AUDIT.md` | verdict (échelle à 6 niveaux), scores par axe | L |
-| Source de vérité préparation | `docs/PRODUCTION-READINESS.md` | seul état de préparation faisant foi | J |
+| Baseline canonique de vérification | `docs/audit/FINAL_VERIFICATION_BASELINE.md` | état technique courant faisant foi (commit, tests, classification) | J/V13.1 |
+| Résumé de préparation | `docs/PRODUCTION-READINESS.md` | résumé (pointe vers la baseline canonique) | J |
 | SBOM | `docs/sbom/sbom-garageflowsv2.cdx.json` | CycloneDX, composants de production | E |
 | Inventaire de licences | `docs/sbom/LICENSE_INVENTORY.md` | analyse copyleft/permissif | E |
 | Notices tierces | `THIRD_PARTY_NOTICES.md` | attributions générées | E |

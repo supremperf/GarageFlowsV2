@@ -73,3 +73,7 @@ API générées/
 *.pfx
 *.p12
 test-results/
+
+# Vérification (V13.1) : baseline.json est SUIVI (métadonnées canoniques) ;
+# le rapport brut vitest est un artefact local volumineux, non suivi.
+artifacts/verification/test-results.json

@@ -7,7 +7,7 @@
 > des données réelles de production** reste à exécuter par l'opérateur (migrations
 > fournies, vérification bloquante intégrée) — voir §5/§6.
 
-## 1. Représentation de stockage (unique source de vérité)
+## 1. Représentation de stockage (référence de stockage unique)
 
 | Nature | Représentation | Exemple |
 |---|---|---|
@@ -47,7 +47,7 @@ Champs migrés (les 2 schémas, SQLite + PostgreSQL, **identiques**) :
 → elle redonne EXACTEMENT le même double que la saisie d'origine
 (`199900/10000 === 19.99`). Conséquences prouvées par les tests : documents
 **signés** (canonicalisation euros) inchangés, PDF/exports identiques — suite
-complète : 1 066 tests (1 059 exécutés verts, 7 conditionnés à un Redis de test).
+complète (instantané historique — compte courant : baseline canonique).
 
 ## 3. Contrat d'API
 

@@ -1,3 +1,4 @@
+<!-- doc-numbers: journal — comptes datés point-dans-le-temps, exempts du contrôle de compte courant (V13.1) -->
 # Plan d'exécution — Audit maître GarageFlows (Phases 0 → 29)
 
 > Feuille de route opérationnelle de l'audit « acquisition-readiness ».

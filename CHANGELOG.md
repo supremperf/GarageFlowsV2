@@ -1,3 +1,4 @@
+<!-- doc-numbers: journal — comptes datés point-dans-le-temps, exempts du contrôle de compte courant (V13.1) -->
 # Changelog
 
 ## [Non publié] — 2026-08-06 (4) — Sécurisation des migrations & JSON monétaires v2
@@ -140,8 +141,10 @@
   Voir `docs/MIGRATION-MONEY.md`.
 
 ### Documentation
-- **`docs/PRODUCTION-READINESS.md`** : source de vérité UNIQUE de l'état de production
-  (verdict honnête « préparé, non déployé, sous conditions » + checklist de bloqueurs).
+- **`docs/PRODUCTION-READINESS.md`** : résumé de production de l'époque (verdict
+  honnête « préparé, non déployé, sous conditions » + checklist de bloqueurs).
+  Depuis V13.1, la source canonique faisant foi est
+  `docs/audit/FINAL_VERIFICATION_BASELINE.md`.
 - 12 rapports-instantanés marqués **HISTORIQUE** ; `PRODUCTION_DEPLOYMENT.md` corrigé.
 - Garde-fou CI `scripts/check-docs-consistency.mjs`.
 

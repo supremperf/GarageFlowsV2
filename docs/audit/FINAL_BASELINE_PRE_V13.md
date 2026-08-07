@@ -1,3 +1,4 @@
+<!-- doc-numbers: journal — comptes datés point-dans-le-temps, exempts du contrôle de compte courant (V13.1) -->
 # FINAL BASELINE PRE-V13 — état vérifié avant l'intervention V13
 
 > Baseline de la règle « zéro régression » : chaque résultat ci-dessous provient

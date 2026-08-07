@@ -26,7 +26,7 @@ sans perte de fonctionnalité ni régression desktop / Electron.
 | `lg` | ≥ 1024 px | Tablette paysage / petit ordinateur | Libellés des boutons d'outils, assistant plus large |
 | `xl` | ≥ 1280 px | Desktop | Pleine densité |
 
-Une seule source de vérité : les mêmes valeurs sont exposées à JS via `src/hooks/useMediaQuery.ts` (`BP`).
+Une référence unique de breakpoints : les mêmes valeurs sont exposées à JS via `src/hooks/useMediaQuery.ts` (`BP`).
 
 ## 3. Différences portrait / paysage / tablette / desktop
 
