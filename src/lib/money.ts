@@ -74,6 +74,43 @@ export function lineCents(unitPriceEuros: number, quantity: number): number {
   return toCents(unitPriceEuros * quantity)
 }
 
+/**
+ * TVA en centimes pour une assiette en centimes et un taux en pourcent
+ * (ex. 20 = 20 %). Arrondi fiscal demi-éloigné-de-zéro, appliqué UNE fois sur
+ * l'assiette totale du taux (pas ligne à ligne). Unique formule de TVA du
+ * dépôt : computeTotals et la facturation électronique s'appuient dessus —
+ * toute divergence de calcul entre les deux est impossible par construction.
+ *
+ * Chemin 100 % ENTIER : le taux est figé en CENTIÈMES DE POINT (2 décimales,
+ * comme sur les documents), puis TVA = assiette × tauxCentièmes / 10000 avec
+ * détection exacte du demi (reste ≥ 5000). Corrige le bruit IEEE-754 de la
+ * formule flottante historique (ex. 5500 c × 0,7 % = 38,50 c → 39 c, que le
+ * produit flottant 38.4999… arrondissait à 38 — défaut démontré en revue).
+ */
+export function taxCentsFromBasis(basisCents: number, taxRatePercent: number): number {
+  const rate = Number.isFinite(taxRatePercent) ? taxRatePercent : 0
+  const basis = Math.round(basisCents)
+  // Taux en centièmes de point, entier (20 % → 2000 ; 5,5 % → 550 ; 0,7 % → 70).
+  const rateHundredths = Math.round(Math.abs(rate) * 100) * (rate < 0 ? -1 : 1)
+  const product = basis * rateHundredths
+  if (!Number.isSafeInteger(product)) {
+    // Bornes extrêmes : exactitude garantie par BigInt (même règle d'arrondi).
+    const p = BigInt(basis) * BigInt(rateHundredths)
+    const neg = p < BigInt(0)
+    const abs = neg ? -p : p
+    const q = abs / BigInt(10_000)
+    const r = abs - q * BigInt(10_000)
+    const rounded = r >= BigInt(5_000) ? q + BigInt(1) : q
+    return Number(neg ? -rounded : rounded)
+  }
+  const neg = product < 0
+  const abs = Math.abs(product)
+  const q = Math.trunc(abs / 10_000)
+  const r = abs - q * 10_000
+  const rounded = r >= 5_000 ? q + 1 : q
+  return neg ? -rounded : rounded
+}
+
 export interface MoneyLine {
   quantity: number
   /** Prix unitaire en EUROS (converti en centimes en interne). */
@@ -102,7 +139,7 @@ export function computeTotals(lines: MoneyLine[], taxRatePercent: number): Total
     // préserve la précision 4 décimales du prix unitaire (voir lineCents).
     totalHTCents += lineCents(l.unitPrice, l.quantity ?? 0)
   }
-  const taxCents = roundHalfAwayFromZero((totalHTCents * rate) / 100)
+  const taxCents = taxCentsFromBasis(totalHTCents, rate)
   const totalTTCCents = totalHTCents + taxCents
   return {
     totalHTCents,
@@ -183,12 +220,16 @@ export function lineTotalCentsFromScaled(unitScaled: number, qtyScaled: number):
   if (Math.abs(unitScaled) > MAX_SCALED || Math.abs(qtyScaled) > MAX_SCALED) return 0
   const product = unitScaled * qtyScaled // 1e-8 € ; |produit| < 2^53 non garanti aux extrêmes
   if (!Number.isSafeInteger(product)) {
-    // Repli exact : décompose la quantité (entier + reste) pour rester en zone sûre.
-    const qWhole = Math.trunc(qtyScaled / MONEY_SCALE)
-    const qRest = qtyScaled - qWhole * MONEY_SCALE
-    const wholeCents = roundHalfAwayFromZero((unitScaled * qWhole) / 100)
-    const restCents = roundHalfAwayFromZero((unitScaled * qRest) / 1_000_000)
-    return wholeCents + restCents
+    // Repli exact : produit BigInt et arrondi demi-éloigné-de-zéro UNIQUE sur le
+    // total (l'ancienne décomposition entier+reste arrondissait DEUX fois et
+    // dérivait de ±1 c — défaut démontré en revue adversariale).
+    const p = BigInt(unitScaled) * BigInt(qtyScaled)
+    const neg = p < BigInt(0)
+    const abs = neg ? -p : p
+    const q = abs / BigInt(1_000_000)
+    const r = abs - q * BigInt(1_000_000)
+    const rounded = r >= BigInt(500_000) ? q + BigInt(1) : q
+    return Number(neg ? -rounded : rounded)
   }
   return roundHalfAwayFromZero(product / 1_000_000)
 }
