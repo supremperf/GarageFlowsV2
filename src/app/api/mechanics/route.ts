@@ -56,7 +56,17 @@ export const POST = withAuth(async (req) => {
   const garageId = session.user.garageId
 
   try {
-    const count = await prisma.mechanic.count({ where: { garageId } })
+    // Anti-doublon RÉEL : le modèle Mechanic n'a pas de contrainte d'unicité en
+    // base (le handler P2002 plus bas ne se déclenchait donc jamais → dédup
+    // illusoire). On contrôle au niveau applicatif, insensible à la casse, sur la
+    // liste (courte) du garage. Le P2002 reste en filet de sécurité si une
+    // contrainte est ajoutée un jour.
+    const roster = await prisma.mechanic.findMany({ where: { garageId }, select: { name: true } })
+    const norm = (s: string) => s.trim().toLowerCase()
+    if (roster.some((m) => norm(m.name) === norm(name))) {
+      return NextResponse.json({ error: 'Ce mécanicien existe déjà.' }, { status: 409 })
+    }
+    const count = roster.length
     const mechanic = await prisma.mechanic.create({
       data: {
         name,

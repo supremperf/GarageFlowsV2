@@ -26,6 +26,15 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
   const status = nextAppointmentStatus(appointment.status as AppointmentStatus, action)
   if (!status) return NextResponse.json({ error: `Transition « ${action} » impossible depuis « ${appointment.status} »` }, { status: 409 })
 
-  await prisma.appointment.update({ where: { id: appointment.id }, data: { status } })
+  // Transition ATOMIQUE (anti-TOCTOU) : l'update n'aboutit que si le statut n'a
+  // pas changé depuis la lecture. Deux actions concurrentes (ex. confirm/cancel)
+  // ne peuvent donc pas s'écraser l'une l'autre — la seconde reçoit un 409.
+  const moved = await prisma.appointment.updateMany({
+    where: { id: appointment.id, garageId: session.user.garageId, status: appointment.status },
+    data: { status },
+  })
+  if (moved.count === 0) {
+    return NextResponse.json({ error: 'Le rendez-vous a été modifié entre-temps. Réessayez.' }, { status: 409 })
+  }
   return NextResponse.json({ ok: true, status })
 })

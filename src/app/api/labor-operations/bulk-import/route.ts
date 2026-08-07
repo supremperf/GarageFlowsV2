@@ -6,6 +6,8 @@ import { toScaled } from '@/lib/money'
 
 // POST /api/labor-operations/bulk-import
 // Body: { operations: [{ name, category, durationMin, unitPrice }] }
+const MAX_OPERATIONS = 500 // borne anti-DoS : une transaction de N inserts par requête
+
 export const POST = withAuth(async (req) => {
   const session = await requireSession()
   const body = await req.json()
@@ -15,6 +17,14 @@ export const POST = withAuth(async (req) => {
 
   if (ops.length === 0) {
     return NextResponse.json({ error: 'Aucune opération fournie' }, { status: 400 })
+  }
+  // Borne supérieure : un tableau non borné construirait une transaction géante
+  // (mémoire + verrous DB longs) → déni de service. On refuse au-delà du plafond.
+  if (ops.length > MAX_OPERATIONS) {
+    return NextResponse.json(
+      { error: `Trop d'opérations (${ops.length}). Maximum ${MAX_OPERATIONS} par import.` },
+      { status: 400 },
+    )
   }
 
   // Validate all entries before inserting
