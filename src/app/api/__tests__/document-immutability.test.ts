@@ -32,7 +32,12 @@ vi.mock('@/lib/db', () => ({
       deleteMany: async () => { state.workOrderDeleted = true; return { count: 1 } },
     },
     $transaction: async (fn: (tx: unknown) => Promise<unknown>) => fn({
-      invoice: { update: async (args: { data: Record<string, unknown> }) => { state.invoiceUpdated = true; return { ...state.invoice, ...args.data, lines: [] } } },
+      // tx reflète le vrai client Prisma : le re-contrôle anti-TOCTOU lit l'état
+      // COURANT dans la transaction (findFirst) avant de muter.
+      invoice: {
+        findFirst: async () => state.invoice,
+        update: async (args: { data: Record<string, unknown> }) => { state.invoiceUpdated = true; return { ...state.invoice, ...args.data, lines: [] } },
+      },
       invoiceLine: { deleteMany: async () => ({ count: 0 }), createMany: async () => ({ count: 0 }) },
     }),
   },

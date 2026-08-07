@@ -51,7 +51,17 @@ export const PATCH = withAuth(async (req, { params }) => {
 
   // Replace lines + update the invoice atomically so a partial failure can never
   // leave the invoice with zero lines.
+  let lockConflict = false
   const invoice = await prisma.$transaction(async (tx) => {
+    // ANTI-TOCTOU : le verrou d'immutabilité et la transition sont RE-CONTRÔLÉS
+    // DANS la transaction sur l'état COURANT (le contrôle hors transaction
+    // ci-dessus lit un état potentiellement périmé : deux PATCH concurrents
+    // pourraient sinon franchir le verrou avec une lecture « draft » périmée).
+    const fresh = await tx.invoice.findFirst({ where: { id: params.id, garageId: session.user.garageId }, select: { status: true } })
+    if (fresh) {
+      if (financialEdit && areAmountsLocked('invoice', fresh.status)) { lockConflict = true; return null }
+      if (body.status !== undefined && checkStatusTransition('invoice', fresh.status, body.status)) { lockConflict = true; return null }
+    }
     if (body.lines !== undefined) {
       await tx.invoiceLine.deleteMany({ where: { invoiceId: params.id } })
       await tx.invoiceLine.createMany({
@@ -81,6 +91,13 @@ export const PATCH = withAuth(async (req, { params }) => {
       include: { lines: { orderBy: { sortOrder: 'asc' } } },
     })
   })
+
+  if (lockConflict || !invoice) {
+    return NextResponse.json(
+      { error: 'Une facture émise ne peut plus être modifiée. Créez un avoir.' },
+      { status: 409 },
+    )
+  }
 
   await logAudit({ action: 'update', entityType: 'Invoice', entityId: invoice.id, session, req })
 
