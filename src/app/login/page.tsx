@@ -9,6 +9,7 @@ import {
   ShieldCheck, Wrench, CalendarDays, BarChart3, Package,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { safeInternalPath } from '@/lib/safe-redirect'
 import GarageFlowLogo from '@/components/GarageFlowLogo'
 
 // Feature pills shown beneath the logo
@@ -53,7 +54,9 @@ function LicenseBadge() {
 function LoginForm() {
   const router     = useRouter()
   const params     = useSearchParams()
-  const callbackUrl = params.get('callbackUrl') || '/'
+  // Anti open-redirect : la cible de redirection post-login vient de l'URL
+  // (non fiable) — on n'autorise QUE les chemins internes (cf. safeInternalPath).
+  const callbackUrl = safeInternalPath(params.get('callbackUrl'))
   const errorParam = params.get('error')
 
   const [email,        setEmail]        = useState('')
