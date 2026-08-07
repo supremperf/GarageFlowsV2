@@ -41,10 +41,26 @@ Pas d'app mobile native (PWA responsive) ; pas d'intégrations catalogues
 ('unsafe-inline' scripts verrouillé) ; mono-taux de TVA par facture ; avoirs
 non modélisés. Détail : `docs/audit/RISK_REGISTER.md` et `OPEN_ITEMS.md`.
 
-## External Validations Required
+## Current residual risks
 
-Voir `../09-risks/EXTERNAL_VALIDATIONS.md` (juridique, comptable, plateforme
-agréée, Windows/Authenticode, infrastructure/charge).
+Aucun risque critique code ouvert. Principaux résiduels (détail + statuts :
+`../09-risks/OPEN_ITEMS.md`, synthèse : `../09-risks/ACQUISITION_RISK_SUMMARY.md`) :
+- **Secrets** : rotation réelle + preuve (AUD-005/006, `EXTERNAL_ACTION_REQUIRED`).
+- **Windows** : installeur non signé (AUD-008, `EXTERNAL_ACTION_REQUIRED`).
+- **Control-plane** : clé admin unique statique (AUD-010, `CODE_OPEN`) ;
+  notifications par licenseId (AUD-011, impact borné, `BUSINESS_DECISION_REQUIRED`).
+- **Licence** : sort du HMAC déprécié (AUD-007, `BUSINESS_DECISION_REQUIRED`) ;
+  `mechanic` hors vitrine (AUD-012, `RISK_ACCEPTED`, intentionnel).
+- **Code** : CSP nonce, E2E authentifié CI, e-invoicing PDF/A-3+Schematron,
+  anonymisation RGPD (`CODE_OPEN`, aucun critique).
+
+## External actions before Production Verified
+
+Rotation des secrets (+ purge d'historique optionnelle) · Authenticode +
+tests Windows physiques · migration staging Neon · restauration de sauvegarde
+chronométrée · plateforme e-invoicing agréée · validations juridiques (CGV,
+CLUF, DPA, RGPD) et comptable (FEC). Détail et matrice code/externe :
+`../09-risks/EXTERNAL_VALIDATIONS.md`.
 
 ## Overall Technical Risk : **AMBER — maîtrisé**
 

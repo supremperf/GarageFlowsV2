@@ -1,42 +1,33 @@
-# External Validations Required — ce que le code ne peut pas prouver seul
+<!-- doc-status: actif -->
 
-Ces éléments exigent une personne, un service ou un environnement EXTERNE. Ils
-ne sont **pas** des défauts de code et ne doivent pas être requalifiés en
-bloqueurs code — mais aucun ne doit être réputé acquis sans sa preuve.
+# External Validations Required — matrice code vs externe
 
-## Juridique (conseil / DPO)
-- CGV, CLUF/EULA, politique de confidentialité (AUD-015).
-- DPA sous-traitants ; validation du registre art. 30 (projet fourni) ;
-  qualification des bases légales ; arbitrage IP/user-agent sur signatures.
-- Cession de droits PI formalisée (base factuelle : `docs/PROVENANCE.md`,
-  AUD-016) ; attestations contributeurs (checklist §3 de l'audit licences).
-- Revue des affirmations marketing de la vitrine (AUD-044).
+Ce que le code ne peut pas prouver seul. Un item ici n'est **pas** un défaut de
+code et ne doit pas être requalifié en bloqueur code. Colonnes : **Code** =
+une modification de code est requise ; **Infra** = infrastructure réelle
+requise ; **Jur.** = juriste ; **Compta** = expert-comptable ; **Fourn.** =
+fournisseur/tiers externe.
 
-## Comptable (expert-comptable)
-- Validation de l'export FEC sur un exercice réel (structure et libellés testés
-  côté code).
-- Règles de conservation et de numérotation validées en contexte client.
+| ID | Sujet | Code | Infra | Jur. | Compta | Fourn. | État |
+|---|---|:--:|:--:|:--:|:--:|:--:|---|
+| EV-01 | Signature Authenticode (installeur Windows) | ± | ✓ | — | — | ✓ (AC) | `EXTERNAL_ACTION_REQUIRED` (AUD-008) — pipeline prêt |
+| EV-02 | Rotation effective des secrets + preuve | — | ✓ | — | — | — | `EXTERNAL_ACTION_REQUIRED` (AUD-005/006) — outil `verify:rotation` fourni |
+| EV-03 | Purge de l'historique git (secrets) | — | ✓ | — | — | — | `EXTERNAL_ACTION_REQUIRED` — runbook `GIT_HISTORY_SECRET_PURGE.md` |
+| EV-04 | Migration sur staging Neon (réel) | — | ✓ | — | — | ✓ (Neon) | `EXTERNAL_VALIDATION_REQUIRED` — runbook migration fourni |
+| EV-05 | Restauration de sauvegarde (exercice réel chronométré) | — | ✓ | — | — | — | `EXTERNAL_VALIDATION_REQUIRED` — round-trip desktop déjà prouvé par test |
+| EV-06 | Test de charge (p50/p95/p99) sur infra réelle | — | ✓ | — | — | — | `EXTERNAL_VALIDATION_REQUIRED` — `scripts/loadtest.mjs` fourni |
+| EV-07 | Raccordement à une plateforme e-invoicing agréée | ✓ | ✓ | — | — | ✓ (PDP/PA) | `EXTERNAL_ACTION_REQUIRED` — architecture d'adaptateurs prête, registre vide |
+| EV-08 | Certification / conformité e-invoicing (Schematron, PDF/A-3) | ✓ | — | — | — | ✓ (validateur) | `CODE_OPEN` + `EXTERNAL_VALIDATION_REQUIRED` — XSD MINIMUM déjà validé |
+| EV-09 | Validation FEC sur exercice réel | — | — | — | ✓ | — | `EXTERNAL_VALIDATION_REQUIRED` — structure/libellés testés |
+| EV-10 | RGPD juridique (bases légales, notifications, DPA) | — | — | ✓ | — | — | `EXTERNAL_VALIDATION_REQUIRED` — mesures techniques art. 32 fournies |
+| EV-11 | CGV / CLUF-EULA / politique de confidentialité | — | — | ✓ | — | — | `EXTERNAL_ACTION_REQUIRED` |
+| EV-12 | DPA sous-traitants | — | — | ✓ | — | ✓ (héberg.) | `EXTERNAL_ACTION_REQUIRED` |
+| EV-13 | Cession de droits PI + attestations contributeurs | — | — | ✓ | — | — | `EXTERNAL_ACTION_REQUIRED` — provenance factuelle fournie |
+| EV-14 | Déploiement production (Vercel/équivalent) + env fail-closed | — | ✓ | — | — | ✓ | `EXTERNAL_VALIDATION_REQUIRED` — validation d'env prouvée (démarrage refusé) |
+| EV-15 | Tests machines Windows physiques (install/upgrade/SmartScreen) | — | ✓ | — | — | — | `EXTERNAL_VALIDATION_REQUIRED` — protocole fourni |
 
-## Facturation électronique (réglementaire)
-- Contrat + raccordement à une plateforme agréée réelle, implémentation de
-  l'adaptateur, homologation sandbox → production.
-- PDF/A-3 (Factur-X complet) + exécution Schematron officiel + passage au
-  validateur de référence (le XSD MINIMUM officiel est déjà passé, une fois).
-- Décision sur l'évolution de schéma (SIREN acheteur BT-47, multi-taux,
-  avoirs 381).
+Légende : ✓ requis · ± partiellement · — non requis.
 
-## Windows (poste opérateur + matériel)
-- Certificat Authenticode au nom de l'exploitant, signature des installeurs,
-  vérification SmartScreen (AUD-013).
-- Protocole d'installation/upgrade/désinstallation sur Windows 10/11 physiques ;
-  hash SHA-256 publiés par release ; coexistence PWA/EXE.
-- Rendu WebKit/Safari réel (les gabarits mobiles sont émulés sous Chromium).
-
-## Infrastructure (exploitant)
-- Rotation effective des secrets compromis + sortie `verify:rotation` archivée
-  (AUD-004) ; décision de purge d'historique git.
-- Répétition de migration sur branche Neon de staging ; premier déploiement
-  production (Vercel/équivalent) avec la validation d'env fail-closed.
-- Exercice de restauration chronométré (transforme RPO/RTO d'objectifs en
-  engagements) ; câblage alerting/APM/expédition de logs ; test de charge réel
-  (scripts fournis, aucun chiffre inventé).
+Aucun de ces items ne bloque une **due diligence** (tous documentés, avec
+l'outillage ou le protocole fourni) ; plusieurs bloquent un **déploiement
+production** tant qu'ils ne sont pas levés (EV-01, EV-02, EV-14).
