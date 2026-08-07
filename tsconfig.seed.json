@@ -5,5 +5,5 @@
     "moduleResolution": "node",
     "noEmit": false
   },
-  "include": ["prisma/seed.ts"]
+  "include": ["prisma/seed.ts", "prisma/demo-tenant.ts"]
 }
