@@ -1153,4 +1153,15 @@ export const MIGRATIONS: Migration[] = [
   // Code dans /api/internal/migrate : ordres SIGNÉS exclus (JSON gelé par la
   // signature), totaux re-vérifiés, transactionnel, enregistré après réussite.
   { id: '179_money_json_v2', kind: 'json-v2' },
+
+  // ── Index de clés étrangères sur tables chaudes (perf) ───────────────────────
+  // Ces tables sont interrogées/écrites par leur FK (ex. InvoiceLine par
+  // invoiceId lors du remplacement des lignes, JobPhoto par jobId/garageId).
+  // Sans index, ce sont des balayages complets qui se dégradent avec le volume.
+  // Additif et idempotent (IF NOT EXISTS) ; réversible par DROP INDEX.
+  { id: '180_quoteline_idx_quote',       sql: 'CREATE INDEX IF NOT EXISTS "QuoteLine_quoteId_idx" ON "QuoteLine"("quoteId")' },
+  { id: '181_invoiceline_idx_invoice',   sql: 'CREATE INDEX IF NOT EXISTS "InvoiceLine_invoiceId_idx" ON "InvoiceLine"("invoiceId")' },
+  { id: '182_jobphoto_idx_job',          sql: 'CREATE INDEX IF NOT EXISTS "JobPhoto_jobId_idx" ON "JobPhoto"("jobId")' },
+  { id: '183_jobphoto_idx_garage',       sql: 'CREATE INDEX IF NOT EXISTS "JobPhoto_garageId_idx" ON "JobPhoto"("garageId")' },
+  { id: '184_inspectionitem_idx_insp',   sql: 'CREATE INDEX IF NOT EXISTS "InspectionItem_inspectionId_idx" ON "InspectionItem"("inspectionId")' },
 ]

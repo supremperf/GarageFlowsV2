@@ -16,9 +16,13 @@ const OFFLINE_URL = '/offline.html'
 const PRECACHE = [OFFLINE_URL, '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png']
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(STATIC_CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()),
-  )
+  // On NE force PAS l'activation ici (pas de self.skipWaiting() à l'install) : un
+  // nouveau SW qui prendrait le contrôle immédiatement déclencherait un
+  // rechargement de page NON CONSENTI (controllerchange), avec perte de la saisie
+  // en cours (devis, OR, fiche véhicule). Le nouveau SW RESTE EN ATTENTE ; la
+  // page propose « Mettre à jour » et n'active le nouveau SW que sur clic de
+  // l'utilisateur, via le message SKIP_WAITING ci-dessous.
+  event.waitUntil(caches.open(STATIC_CACHE).then((c) => c.addAll(PRECACHE)))
 })
 
 self.addEventListener('activate', (event) => {

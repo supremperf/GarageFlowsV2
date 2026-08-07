@@ -355,6 +355,7 @@ model QuoteLine {
   unitCostTenThousandths  Int @default(0) // coût unitaire en DIX-MILLIÈMES d'€ (exact, 4 décimales)
   isLabor     Boolean @default(false)
   sortOrder   Int     @default(0)
+  @@index([quoteId])
 }
 
 // ─── Invoice (Facture) ────────────────────────────────────────────────────────
@@ -404,6 +405,7 @@ model InvoiceLine {
   unitCostTenThousandths  Int @default(0) // coût unitaire en DIX-MILLIÈMES d'€ (exact, 4 décimales)
   isLabor     Boolean @default(false)
   sortOrder   Int     @default(0)
+  @@index([invoiceId])
 }
 
 // ─── Job Photos ───────────────────────────────────────────────────────────────
@@ -418,6 +420,8 @@ model JobPhoto {
   photoPath  String? // preferred: relative path under GF_PHOTOS_DIR/jobs/
   mechanicId String? // renseigné quand la photo vient d'un mécanicien (espace mécanicien)
   createdAt  DateTime @default(now())
+  @@index([jobId])
+  @@index([garageId])
 }
 
 // ─── Vehicle Digital Inspection ───────────────────────────────────────────────
@@ -451,6 +455,7 @@ model InspectionItem {
   photoBase64  String? // legacy: base64 data URL
   photoPath    String? // preferred: relative path under GF_PHOTOS_DIR/inspections/
   sortOrder    Int        @default(0)
+  @@index([inspectionId])
 }
 
 // ─── License keys v2 — ECC / ECDSA-SHA256 ────────────────────────────────────
