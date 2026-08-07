@@ -105,7 +105,9 @@ function PartRow({ part, onUpdate, onDelete }: {
 
       <button
         onClick={() => onDelete(part.id)}
-        className="p-1.5 rounded hover:bg-red-50 text-gray-300 hover:text-red-400 transition-colors"
+        aria-label={`Supprimer ${part.name}`}
+        title={`Supprimer ${part.name}`}
+        className="p-1.5 rounded hover:bg-red-50 text-gray-500 hover:text-red-500 transition-colors"
       >
         <Trash2 className="w-3.5 h-3.5" />
       </button>
@@ -271,7 +273,7 @@ export default function StockPanel({ onClose }: StockPanelProps) {
 
   return (
     <div className="fixed inset-0 z-40 flex items-start justify-end p-4 pointer-events-none">
-      <div className="pointer-events-auto w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-modal flex flex-col animate-slide-in">
+      <div role="dialog" aria-modal="true" aria-label={t.stkTitle} className="pointer-events-auto w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-modal flex flex-col animate-slide-in">
         {/* Header */}
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -285,10 +287,10 @@ export default function StockPanel({ onClose }: StockPanelProps) {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={fetchParts} className="p-1.5 rounded hover:bg-gray-100 text-gray-400">
+            <button onClick={fetchParts} aria-label="Rafraîchir le stock" title="Rafraîchir" className="p-1.5 rounded hover:bg-gray-100 text-gray-500">
               <RefreshCw className="w-4 h-4" />
             </button>
-            <button onClick={onClose} className="gf-close p-1.5 rounded hover:bg-gray-100 text-gray-400">
+            <button onClick={onClose} aria-label="Fermer" title="Fermer" className="gf-close p-1.5 rounded hover:bg-gray-100 text-gray-500">
               <X className="w-4 h-4" />
             </button>
           </div>
