@@ -3,8 +3,13 @@ export const dynamic = 'force-dynamic'
 /**
  * POST /api/portal/auth/register — create a client-portal account.
  * Body: { email, password, name?, garageSlug? }
- * Links to an existing Client with the same email when present. Email
- * verification is non-blocking (a token is stored for a later verification mail).
+ *
+ * SÉCURITÉ (anti-prise de contrôle de compte) : le nouveau compte n'est JAMAIS
+ * lié à un Client existant sur simple correspondance d'email. Sans preuve de
+ * possession de l'email, un attaquant s'inscrivant avec l'email d'une victime
+ * hériterait de son dossier Client (dashboard : véhicules, factures, devis,
+ * garanties). Le rattachement au Client est donc DIFFÉRÉ jusqu'à la vérification
+ * de l'email (verify-email), seul moment où la possession de l'adresse est prouvée.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -41,10 +46,12 @@ export async function POST(req: NextRequest) {
 
   const passwordHash = await bcrypt.hash(password, 10)
   const emailVerifyToken = crypto.randomBytes(32).toString('hex')
-  const client = await prisma.client.findFirst({ where: { garageId, email }, select: { id: true } })
 
+  // clientId reste NULL à l'inscription : aucun rattachement à un Client existant
+  // tant que l'email n'est pas vérifié (cf. verify-email). Empêche la prise de
+  // contrôle du dossier d'un client par simple ré-utilisation de son email.
   const user = await prisma.portalUser.create({
-    data: { garageId, email, passwordHash, name, clientId: client?.id ?? null, emailVerifyToken },
+    data: { garageId, email, passwordHash, name, clientId: null, emailVerifyToken },
     select: { id: true, email: true, name: true, emailVerified: true, clientId: true },
   })
 
