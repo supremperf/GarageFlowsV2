@@ -16,6 +16,11 @@ const PASSWORD = process.env.E2E_PASSWORD
 
 /** Vérifie l'absence de scroll horizontal global (tolérance 1px d'arrondi). */
 async function expectNoHorizontalOverflow(page: Page) {
+  // Mesure APRÈS stabilisation (réseau au repos + styles appliqués) : sous
+  // forte parallélisation, mesurer pendant le chargement des CSS/polices
+  // produisait un débordement transitoire — un flake, pas un vrai défaut.
+  // Un débordement RÉEL (persistant) échoue toujours ici.
+  await page.waitForLoadState('networkidle')
   const { clientWidth, scrollWidth } = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,

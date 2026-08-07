@@ -40,12 +40,18 @@ export default defineConfig({
         reuseExistingServer: !process.env.CI,
       },
   // Chaque « projet » = un gabarit d'écran testé (portrait, paysage, tablette, desktop).
+  // Les gabarits iPhone/iPad sont ÉMULÉS SOUS CHROMIUM (viewport + user-agent +
+  // tactile) : la CI comme l'environnement d'audit n'installent que Chromium —
+  // les descripteurs Apple par défaut exigeaient WebKit et faisaient échouer le
+  // job au lancement du navigateur (jamais au test). Le rendu du VRAI moteur
+  // WebKit/Safari reste une validation externe sur matériel Apple (documentée
+  // dans EXTERNAL_VALIDATIONS).
   projects: [
     { name: 'mobile-portrait-small',  use: { ...devices['Desktop Chrome'], viewport: { width: 320, height: 568 } } },
-    { name: 'mobile-portrait',        use: { ...devices['iPhone 12'] } },
-    { name: 'mobile-landscape',       use: { ...devices['iPhone 12 landscape'] } },
-    { name: 'tablet-portrait',        use: { ...devices['iPad Mini'] } },
-    { name: 'tablet-landscape',       use: { ...devices['iPad Mini landscape'] } },
+    { name: 'mobile-portrait',        use: { ...devices['iPhone 12'], browserName: 'chromium' } },
+    { name: 'mobile-landscape',       use: { ...devices['iPhone 12 landscape'], browserName: 'chromium' } },
+    { name: 'tablet-portrait',        use: { ...devices['iPad Mini'], browserName: 'chromium' } },
+    { name: 'tablet-landscape',       use: { ...devices['iPad Mini landscape'], browserName: 'chromium' } },
     { name: 'desktop',                use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
   ],
 })
