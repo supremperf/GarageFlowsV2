@@ -11,6 +11,7 @@
 'use strict'
 const fs = require('fs')
 const path = require('path')
+const crypto = require('crypto')
 
 const ROOT = path.resolve(__dirname, '..')
 
@@ -46,23 +47,36 @@ const CRITICAL = [
   '.vercelignore',
 ]
 
-// Empreintes textuelles qui NE DOIVENT JAMAIS réapparaître (clé publique périmée).
-const FORBIDDEN_SUBSTRINGS = [
-  {
-    label: 'ancienne clé publique DER-SHA256 (périmée)',
-    needle: 'c48e6b3e47a8cf47248ddcccc24964213ae87802f220458b97e65ae5fee9906a',
-    scan: ['src/lib/license/public-key.ts', 'electron/main.js'],
-  },
+/**
+ * Clés publiques de licence RETIRÉES : plus aucune licence en circulation n'est
+ * signée par la privée correspondante. Y revenir — par un retour en arrière, une
+ * fusion malheureuse ou un copier-coller depuis une vieille branche — reproduit
+ * le verrouillage hors du logiciel corrigé par a6fbff7.
+ *
+ * Cette liste est tenue automatiquement : `npm run keys:sync` y ajoute
+ * l'empreinte sortante à chaque rotation. NE PAS retirer d'entrée.
+ * gitleaks:allow — ce sont des empreintes de clés PUBLIQUES, non des secrets.
+ */
+const RETIRED_FINGERPRINTS = [
+  { fp: 'c48e6b3e47a8cf47248ddcccc24964213ae87802f220458b97e65ae5fee9906a', retired: 'avant 2026-08-03' },
+  { fp: '7bed3cb736ccc8d422a7663939732faf6eb9a4c59daa590cc826b2f821b6d478', retired: '2026-08-07 (keygen régénéré)' },
+  { fp: '3150baaccc36af0120cfffa99dd41ce21c716831e432399791b5a9a9dcd59de6', retired: '2026-08-08 (rotation cryptographique totale)' },
 ]
 
-// Empreinte canonique attendue (doit être présente dans le test de cohérence).
-const REQUIRED = [
-  {
-    label: 'clé publique canonique 7bed…478 référencée par le test de cohérence',
-    needle: '7bed3cb736ccc8d422a7663939732faf6eb9a4c59daa590cc826b2f821b6d478',
-    file: 'src/lib/license/__tests__/public-key-consistency.test.ts',
-  },
-]
+/** Reconstruit le PEM porté par un littéral `const <varName> = [ '…', … ]`. */
+function pemFromLiteral(rel, varName) {
+  const source = fs.readFileSync(path.join(ROOT, rel), 'utf8')
+  const block = source.match(new RegExp(`const\\s+${varName}\\s*=\\s*\\[([\\s\\S]*?)\\]`))
+  if (!block) return null
+  return Array.from(block[1].matchAll(/'([^']*)'/g), (m) => m[1]).join('\n')
+}
+
+/** Empreinte canonique : SHA-256 du DER SPKI. */
+function fingerprint(pem) {
+  return crypto.createHash('sha256')
+    .update(crypto.createPublicKey(pem).export({ type: 'spki', format: 'der' }))
+    .digest('hex')
+}
 
 let failures = 0
 const fail = (msg) => { console.error('  ✗ ' + msg); failures++ }
@@ -77,26 +91,47 @@ for (const rel of CRITICAL) {
   ok(rel)
 }
 
-console.log('→ Vérification de l\'absence des empreintes interdites…')
-for (const rule of FORBIDDEN_SUBSTRINGS) {
-  for (const rel of rule.scan) {
-    const p = path.join(ROOT, rel)
-    if (!fs.existsSync(p)) continue
-    if (fs.readFileSync(p, 'utf8').includes(rule.needle)) {
-      fail(`${rule.label} présente dans ${rel}`)
-    }
+// La clé publique EMBARQUÉE est la seule qui compte : on la dérive des deux
+// littéraux plutôt que de chercher une empreinte en clair dans des fichiers qui
+// n'en contiennent aucune — un contrôle textuel y était structurellement muet.
+console.log('→ Vérification de la clé publique embarquée…')
+const EMBEDDED = [
+  { rel: 'electron/main.js', varName: '_PK' },
+  { rel: 'src/lib/license/public-key.ts', varName: '_LINES' },
+]
+const empreintes = new Map()
+for (const { rel, varName } of EMBEDDED) {
+  const pem = pemFromLiteral(rel, varName)
+  if (!pem) { fail(`littéral \`${varName}\` introuvable dans ${rel}`); continue }
+  try { empreintes.set(rel, fingerprint(pem)) } catch (e) {
+    fail(`clé publique embarquée illisible dans ${rel} : ${e.message}`)
   }
 }
-if (failures === 0) ok('aucune empreinte interdite')
-
-console.log('→ Vérification des empreintes requises…')
-for (const rule of REQUIRED) {
-  const p = path.join(ROOT, rule.file)
-  if (!fs.existsSync(p) || !fs.readFileSync(p, 'utf8').includes(rule.needle)) {
-    fail(`${rule.label} absente de ${rule.file}`)
+if (new Set(empreintes.values()).size > 1) {
+  fail('les deux clés publiques embarquées DIVERGENT — les licences seront refusées :\n' +
+    [...empreintes].map(([rel, fp]) => `      ${rel.padEnd(34)} ${fp}`).join('\n'))
+} else if (empreintes.size === EMBEDDED.length) {
+  const active = [...empreintes.values()][0]
+  const retired = RETIRED_FINGERPRINTS.find((r) => r.fp === active)
+  if (retired) {
+    fail(`la clé publique embarquée est une clé RETIRÉE (${retired.retired}) :\n` +
+      `      ${active}\n` +
+      '      Aucune licence en circulation n\'est signée par sa privée : tout binaire\n' +
+      '      construit ici refusera SILENCIEUSEMENT chaque activation.\n' +
+      '      Réparez : npm run keys:sync (depuis la machine porteuse de keys/public.pem).')
   } else {
-    ok(rule.label)
+    ok(`clé publique embarquée cohérente et non retirée (${active.slice(0, 16)}…)`)
   }
+
+  // L'empreinte de référence du test doit suivre la clé réellement embarquée.
+  const testRel = 'src/lib/license/__tests__/public-key-consistency.test.ts'
+  const testSrc = fs.readFileSync(path.join(ROOT, testRel), 'utf8')
+  const ref = testSrc.match(/const\s+REFERENCE_FP\s*=\s*'([0-9a-f]{64})'/)
+  if (!ref) fail(`REFERENCE_FP introuvable dans ${testRel}`)
+  else if (ref[1] !== active) {
+    fail(`REFERENCE_FP (${ref[1].slice(0, 16)}…) ne correspond pas à la clé embarquée ` +
+      `(${active.slice(0, 16)}…) — réparez : npm run keys:sync`)
+  } else ok('REFERENCE_FP du test de cohérence alignée sur la clé embarquée')
 }
 
 if (failures > 0) {

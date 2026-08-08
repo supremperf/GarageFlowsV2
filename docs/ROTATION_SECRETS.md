@@ -60,6 +60,44 @@ permet), et tester sur un environnement non-production.
 
 ---
 
+## 2 bis. Rotation de la paire de licence (`GF_PRIVATE_KEY` / `keys/public.pem`)
+
+Cette rotation a une étape que les autres n'ont pas : la clé **publique** est
+recopiée **dans le code**, à trois endroits. Une rotation qui ne met à jour que
+`GF_PRIVATE_KEY` produit un logiciel qui refuse **silencieusement** toutes les
+licences — `crypto.verify()` renvoie `false`, sans exception ni journal ; l'app
+réaffiche l'activation, le serveur peut ensuite refuser pour quota d'appareils,
+et l'utilisateur est verrouillé hors de son propre logiciel sans qu'aucun
+message n'indique la vraie cause. **Le cas s'est produit trois fois** (2026-08-03,
+2026-08-07, 2026-08-08).
+
+Ordre à respecter :
+
+1. Générer la paire (`python scripts/keygen.py --init`) — la privée ne quitte
+   jamais `keys/private.pem`.
+2. **Depuis le dépôt**, `keys/public.pem` en place : `npm run keys:sync`.
+   Une seule commande met à jour les trois ancrages (`_PK` d'`electron/main.js`,
+   `_LINES` de `src/lib/license/public-key.ts`, `REFERENCE_FP` du test de
+   cohérence) et inscrit la clé sortante parmi les empreintes retirées.
+3. Publier `GF_PRIVATE_KEY` (Base64 du PEM) dans l'environnement de production.
+4. `npm run check:consistency` — doit être vert **avant** tout build ou déploiement.
+5. Mettre à jour la vitrine **garagesite3** : elle vit dans un AUTRE dépôt,
+   aucun script local ne l'atteint.
+6. Rebuild ET redéploiement : un binaire ou un déploiement antérieur porte
+   encore l'ancienne clé.
+
+> **Le dossier de build n'est pas le dépôt.** Une rotation exécutée depuis le
+> dossier de lancement met à jour ce dossier seul ; le dépôt reste périmé et
+> propage la panne au prochain push. Faites l'étape 2 dans le dépôt.
+
+Vérification honnête, sans rien supposer : placez un jeton GF2 réellement émis
+par le nouveau keygen dans `GF_TEST_LICENSE` et lancez
+`npx vitest run src/lib/license/__tests__/public-key-consistency.test.ts`.
+Les deux tests optionnels ne sont plus ignorés : ils prouvent qu'une vraie
+licence est acceptée et qu'une signature altérée est rejetée.
+
+---
+
 ## 3. Interprétation des erreurs HTTP fréquentes
 
 | Code | Signification probable | Piste |

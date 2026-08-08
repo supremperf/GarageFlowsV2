@@ -68,6 +68,43 @@
 | AUD-046 | Basse | licence | site3 | Tolérance HWID 75 % + `if (!storedHwid) return true` | licenses/verify.ts:146 | PLAUSIBLE | 6 |
 | AUD-047 | Basse | authz | site3 | Routes update/latest, changelog, downloads sans rate limit | update/latest/route.ts | PLAUSIBLE | 4/16 |
 | AUD-048 | Basse | ci | V2 | Aucune SAST (CodeQL/Semgrep) ; postinstall écrit `.env` sur tout `npm ci` | ci.yml ; package.json:18 | PLAUSIBLE | 23 |
+| AUD-049 | Critique→**Corrigé** | licence/crypto | V2 | Clé publique du dépôt périmée après la rotation totale du 2026-08-08 22:16 : tout binaire/PWA construit depuis le dépôt refuse SILENCIEUSEMENT chaque licence émise par la production | public-key.ts:16 ; main.js:167 (empreinte `3150baac…` vs `1f1be919…` en production) | **CORRIGÉ** — `npm run keys:sync` + preuve bout en bout (licence réelle émise à 22:29 acceptée par `verifyLicenseToken`) | 6 |
+| AUD-050 | Haute→**Corrigé** | ci/gardes | V2 | Deux gardes « clé publique » structurellement muettes : recherche d'empreintes hexadécimales dans des fichiers qui n'en contiennent aucune, et exigence d'une empreinte PÉRIMÉE satisfaite par un simple commentaire | check-critical-files.js:50-65 (avant correction) | **CORRIGÉ** — gardes reconstruites sur l'empreinte DÉRIVÉE des littéraux + liste des clés retirées tenue automatiquement ; les deux sens vérifiés par rejeu | 6/23 |
+| AUD-051 | Haute→**Corrigé** | build/release | V2 | Porte de release inexécutable sous Windows : `spawnSync('sh', …)` échoue au lancement pour les 10 étapes, affichées « ÉCHEC — exit null » avec une sortie `undefined` — indiscernable d'un vrai échec | final-release-gate.mjs:34 (avant correction) | **CORRIGÉ** — exécution portable (`shell: true`), étape PostgreSQL réécrite en JS, échec de LANCEMENT distingué d'un échec de contrôle ; porte complète verte sous Windows (build inclus) | 23 |
+
+## Lot rotation — Réalignement cryptographique post-rotation (2026-08-08, soir)
+
+**Contexte** : l'opérateur a exécuté une rotation cryptographique TOTALE le
+2026-08-08 à 22:16 (nouvelle paire ECC P-256, `GF_PRIVATE_KEY` de production
+régénérée, 19 variables Vercel recréées, table `LicenseKey` purgée). Elle a mis à
+jour son dossier de build local — **pas le dépôt**, qui n'est pas le même
+répertoire.
+
+**Constat** (AUD-049) : le dépôt embarquait encore `3150baac…` tandis que la clé
+privée déployée en production dérive `1f1be919…`. C'est la TROISIÈME occurrence
+du même défaut (`f6ef4db`, puis `a6fbff7`) : la clé est recopiée à la main dans
+trois fichiers, et une rotation n'en met jamais à jour la totalité.
+
+**Preuves** :
+- empreinte SPKI-DER de la clé privée de production = `1f1be919…` (dérivée
+  localement, la clé privée n'a jamais quitté son fichier) ;
+- une licence réellement émise APRÈS la rotation (2026-08-08 22:29) est
+  désormais ACCEPTÉE par `verifyLicenseToken`, et sa variante à signature
+  altérée REJETÉE (`GF_TEST_LICENSE`, 5 tests verts) ;
+- la production tourne sur un déploiement créé à 22:17:47, soit 72 s après
+  l'écriture de la nouvelle paire : elle porte donc déjà la bonne clé. Le dépôt
+  était le seul point de divergence — mais un push l'aurait propagée à la PWA.
+
+**Correction structurelle** : `npm run keys:sync` propage `keys/public.pem` vers
+les TROIS ancrages en une commande et inscrit l'empreinte sortante parmi les
+clés retirées (une re-rotation vers une clé anciennement retirée l'en retire
+symétriquement). `npm run keys:check` refuse la divergence sans rien écrire, et
+s'annonce NON EXÉCUTÉ — jamais vert — là où `keys/public.pem` est absent.
+
+**Vérification des gardes** (AUD-050) : les deux nouveaux contrôles ont été
+éprouvés par rejeu réel — retour forcé à la clé retirée → refus avec exit 1 ;
+retour à la clé de production → acceptation. Aucune garde n'est déclarée
+opérante sans avoir été vue mordre.
 
 ## Lot C — Isolation multi-garage : conclusion (2026-08-06)
 
@@ -224,7 +261,7 @@ La restauration de sauvegarde n'est jamais exécutée (seul le chiffrement l'est
 
 1. **Rotations de secrets** : les rotations de `GARAGEFLOW_API_KEY`, `NEXTAUTH_SECRET` distinct, mot de passe Neon, `LICENSE_ADMIN_API_KEY` ont-elles été réellement exécutées en production (aucune trace datée dans les dépôts) ? Sans confirmation, AUD-005/006 passent en critique.
 2. **Purge d'historique git** planifiée pour l'un ou l'autre dépôt ? Les blobs sont résolvables aujourd'hui ; un fork/cache GitHub conserverait les valeurs indépendamment d'une purge future.
-3. **Clé ECDSA de licence** : l'état actuel de `GF_PRIVATE_KEY` en production est-il l'ancienne paire (empreinte publique `7bed…`) ou la nouvelle ? Conditionne la validité de toutes les licences émises.
+3. ~~**Clé ECDSA de licence** : l'état actuel de `GF_PRIVATE_KEY` en production est-il l'ancienne paire (empreinte publique `7bed…`) ou la nouvelle ?~~ **TRANCHÉE le 2026-08-08** : ni l'une ni l'autre. Une rotation totale à 22:16 a produit une TROISIÈME paire ; `GF_PRIVATE_KEY` de production dérive l'empreinte publique `1f1be919…`, vérifié localement. Le dépôt a été réaligné (AUD-049) et une licence émise après la rotation est prouvée acceptée. `7bed…` et `3150baac…` sont désormais inscrites parmi les clés RETIRÉES, dont le retour est refusé par `check:critical-files`.
 4. **Licences GF-XXXX HMAC** : réémises en tokens ECDSA GF2 ? Combien restent falsifiables ?
 5. **Anciennes clés au repos** (`GF_SMTP_CIPHER_KEY`, `GF_TOTP_ENC_KEY`, `GF_BACKUP_KEY`) conservées avant la rotation du 2026-08-04 ? Sinon SMTP/2FA/sauvegardes antérieures définitivement perdus.
 6. **Type de licence `mechanic`** : doit-il être accepté par la vitrine ou est-il délibérément confiné à l'app (rejet à tester explicitement) ?
