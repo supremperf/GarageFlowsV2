@@ -104,7 +104,9 @@ export default function VehicleHistoryModal({ vehicleId, onClose }: Props) {
     return s + parts.reduce((ps, p) => ps + fromCents(lineCents(p.unitCost, p.quantity)), 0)
   }, 0)
 
-  const sortedJobs = [...vehicle.jobs].sort((a, b) => b.date.localeCompare(a.date))
+  // Défensif : une `date` manquante ne doit pas faire tomber la modale
+  // d'historique (voir DashboardCharts — même classe de défaut).
+  const sortedJobs = [...vehicle.jobs].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
