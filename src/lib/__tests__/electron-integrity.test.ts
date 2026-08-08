@@ -71,6 +71,24 @@ describe('verify — détecte les altérations des fichiers critiques', () => {
     expect(r.violations).toHaveLength(0)
   })
 
+  it('expose un identifiant de PAQUET distinct de la version', () => {
+    // Le 2026-08-08, un installeur lancé par-dessus une installation de même
+    // version s'est exécuté deux minutes sans rien écrire, en silence : le poste
+    // a continué de faire tourner l'ancien binaire, sous le même « 1.1.0 », sans
+    // qu'aucune trace ne permette de s'en apercevoir. buildId rend deux paquets
+    // de même version distinguables au démarrage.
+    integrity.writeManifest(dir, '1.1.0')
+    const avant = integrity.verify(dir)
+    expect(avant.buildId).toMatch(/^[0-9a-f]{12}$/)
+
+    // Même version, contenu différent → identifiant différent.
+    fs.writeFileSync(path.join(dir, 'app.asar'), 'FAKE ASAR CONTENT v2')
+    integrity.writeManifest(dir, '1.1.0')
+    const apres = integrity.verify(dir)
+    expect(apres.ok).toBe(true)
+    expect(apres.buildId).not.toBe(avant.buildId)
+  })
+
   it('un app.asar MODIFIÉ est détecté et refusé', () => {
     integrity.writeManifest(dir, '2.0.0')
     fs.writeFileSync(path.join(dir, 'app.asar'), 'FAKE ASAR CONTENT v1 TAMPERED')

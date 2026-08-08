@@ -75,6 +75,33 @@
 | AUD-053 | Basse→**Corrigé** | hygiène | V2 | `.vercel/` non ignoré : un `vercel link` local aurait committé la cible de déploiement de tout le monde | .gitignore (absence) | **CORRIGÉ** — `.vercel/` ignoré | 24 |
 | AUD-054 | Haute→**Corrigé** | licence/UX | V2 | Refus d'activation présenté comme une RÉVOCATION (statut `device_limit` absent de la table de l'overlay → repli « Compte révoqué ») et diagnostic « autorité injoignable ? » émis alors que l'autorité venait de répondre | garageflow.log 2026-08-08 20:35→20:38 (clé mécanicien non attribuée) ; main.js:1234-1247 + LicenseRevokedOverlay.tsx:183 (avant correction) | **CORRIGÉ** — décision extraite dans `electron/activation-report.js` (10 tests de comportement, plus de motif textuel), statut `activation_refused` honnête, overlay idempotent survivant à un rechargement | 6/19 |
 | AUD-055 | Basse→**Corrigé** | hygiène | V2 | ~20 bases SQLite `.tmp-*.db` laissées à la racine par les tests d'intégration, non ignorées : un `git add -A` après `npm test` les committait | `git status` après `vitest run` | **CORRIGÉ** — `.tmp-*.db` et `.tmp-*.db-journal` ignorés (aucune n'était déjà suivie) | 24 |
+| AUD-056 | Haute | distribution | V2 | Une installation lancée par-dessus une installation de MÊME version s'est exécutée 118 s **sans écrire un seul fichier**, en silence : le poste a continué de faire tourner l'ancien paquet. Non reproduit après changement d'état — cause non établie | Observé 2026-08-08 23:38 (0 fichier modifié après coup, `app.asar` inchangé, ancien `main.js` conservé) ; installation propre à 23:43 = 19 s et conforme | **PARTIEL** — `buildId` (empreinte d'`app.asar`) journalisé au démarrage : un paquet non remplacé devient visible en une ligne. Cause racine NON identifiée ; discipline de version = opérateur | 17/23 |
+
+## Lot packaging — Cycle Windows complet (2026-08-08, nuit)
+
+**Exécuté réellement** sur Windows 10 19045 : build → installeur NSIS →
+installation silencieuse → lancement → désinstallation → réinstallation.
+
+**Conformité du paquet** : clé publique `1f1be919…` aux deux emplacements
+(`resources/keys/public.pem` et `_PK` extrait d'`app.asar`), aucun `.env`,
+aucune clé privée, manifeste d'intégrité de 11 fichiers couvrant `keys/public.pem`,
+Fuses conformes (relus par `@electron/fuses`), Defender sans détection,
+Authenticode absent (AUD-008 inchangé).
+
+**Preuve du P0 par l'artefact** : l'installeur présent sur disque avant cette
+session embarquait `3150baacc…`, clé RETIRÉE — il aurait refusé toutes les
+licences émises par la production.
+
+**Désinstallation** : dossier vidé, deux clés de registre et deux raccourcis
+supprimés, **données conservées** (`garageflow.db` d'empreinte identique avant et
+après, 40 sauvegardes intactes).
+
+**AUD-056** : la première tentative d'installation par-dessus l'existant n'a rien
+écrit et n'a rien dit. Après désinstallation, l'installation a réussi en 19 s ;
+une réinstallation ultérieure par-dessus le même paquet a bien restauré un
+fichier témoin supprimé — le mécanisme n'est donc pas cassé en général et la
+cause reste inconnue. Ce qui est corrigé, c'est l'INVISIBILITÉ : `buildId` rend
+deux paquets de même version distinguables dès la première ligne du journal.
 
 ## Lot rotation — Réalignement cryptographique post-rotation (2026-08-08, soir)
 

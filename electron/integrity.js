@@ -226,6 +226,16 @@ function verify(resourcesPath, opts = {}) {
   //    un `unreadable` ne subsiste qu'après épuisement des réessais (I/O
   //    réellement persistante), tandis qu'un contenu altéré est détecté
   //    immédiatement (taille puis empreinte) et sans merci.
+  // Identité du PAQUET, dérivée de l'empreinte d'app.asar déjà présente dans le
+  // manifeste authentifié. `version` ne suffit pas : deux paquets peuvent porter
+  // le même 1.1.0 et un contenu différent. Le 2026-08-08, un installeur lancé
+  // par-dessus une installation de même version s'est exécuté deux minutes sans
+  // rien écrire, en silence — le poste a continué de faire tourner l'ancien
+  // binaire, et rien à l'écran ni au journal ne permettait de s'en apercevoir.
+  // Journalisé au démarrage, cet identifiant répond en une ligne à « le
+  // correctif est-il réellement installé ? ».
+  const buildId = (manifest.files || []).find((f) => f.rel === 'app.asar')?.sha256?.slice(0, 12) ?? null
+
   const violations = []
   const details = []
   let checked = 0
@@ -257,7 +267,7 @@ function verify(resourcesPath, opts = {}) {
     }
   }
 
-  return { present: true, ok: violations.length === 0, violations, details, checked }
+  return { present: true, ok: violations.length === 0, violations, details, checked, buildId }
 }
 
 // ── Résolution du mode d'intégrité (PURE — testable) ──────────────────────────

@@ -2647,7 +2647,11 @@ app.whenReady().then(async () => {
           log('[integrity] manifeste absent —', path.join(process.resourcesPath, integrity.MANIFEST_NAME))
           if (mode === 'enforce') { blockCorrupt(writeIntegrityReport(result)); return }
         } else if (result.ok) {
-          log('[integrity] OK —', result.checked, 'fichiers critiques vérifiés')
+          // buildId identifie le PAQUET, pas la version : deux paquets 1.1.0
+          // peuvent différer, et une installation qui n'a rien écrit ne se voit
+          // autrement nulle part. Voir electron/integrity.js.
+          log('[integrity] OK —', result.checked, 'fichiers critiques vérifiés',
+              '| paquet:', result.buildId ?? 'inconnu')
         } else {
           // Diagnostic COMPLET par échec (format exigé) — jamais de secret ici.
           for (const d of result.details ?? []) {
