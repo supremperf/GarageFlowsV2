@@ -13,6 +13,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Bell, X, AlertTriangle, Info, Wrench, Gift, DownloadCloud } from 'lucide-react'
+import { useElectronApi } from '@/lib/use-electron-api'
 
 interface Notif {
   id: string
@@ -24,11 +25,6 @@ interface Notif {
   createdAt: string
   read: boolean
   acknowledged: boolean
-}
-
-function getElectronAPI(): any {
-  if (typeof window === 'undefined') return null
-  return (window as any).electronAPI ?? null
 }
 
 function levelIcon(level: string) {
@@ -51,7 +47,12 @@ export default function NotificationCenter() {
   const [notifs, setNotifs] = useState<Notif[]>([])
   const [open, setOpen] = useState(false)
 
-  const api = getElectronAPI()
+  // Lu APRÈS montage : le premier rendu client doit être identique au rendu
+  // serveur (qui n'a pas de `window`), sinon l'hydratation échoue — voir
+  // useElectronApi. Ici la conséquence était directe : `enabled` pilote un
+  // `return null`, donc le serveur ne rendait rien et le client rendait la
+  // cloche dès le premier rendu.
+  const api = useElectronApi<any>()
   const enabled = !!api?.getNotifications
 
   const load = useCallback(async () => {
