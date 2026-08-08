@@ -23,22 +23,48 @@ import { existsSync } from 'node:fs'
 const FAST = process.argv.includes('--fast')
 const results = []
 
+/**
+ * Exécute une étape.
+ *
+ * `shell: true` plutôt que `sh -c` : GarageFlows est un produit WINDOWS, et `sh`
+ * n'existe pas sur un PATH Windows standard. Le lancement échouait donc pour les
+ * DIX étapes à la fois, chacune affichant « ÉCHEC — exit null » et une sortie
+ * `undefined` — la porte censée être le dernier mot avant une release était
+ * inutilisable sur sa propre plateforme cible, et son échec de lancement était
+ * visuellement indiscernable d'un vrai échec de contrôle. Node choisit ici
+ * cmd.exe sous Windows et /bin/sh ailleurs ; les commandes n'utilisent que `&&`,
+ * compris par les deux.
+ *
+ * `argv` (tableau) lance sans shell du tout : réservé aux étapes dont les
+ * arguments ne doivent traverser aucune interprétation.
+ */
 function run(name, cmd, opts = {}) {
-  const { mandatory = true, env = {}, skip = false, skipReason = '' } = opts
+  const { mandatory = true, env = {}, skip = false, skipReason = '', argv = null } = opts
   if (skip) {
     results.push({ name, status: 'NON EXÉCUTÉ', mandatory: false, note: skipReason })
     return
   }
   const started = Date.now()
   process.stdout.write(`▶ ${name}… `)
-  const r = spawnSync('sh', ['-c', cmd], {
+  const spawnOpts = {
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, ...env },
     maxBuffer: 64 * 1024 * 1024,
-  })
+  }
+  const r = argv
+    ? spawnSync(argv[0], argv.slice(1), spawnOpts)
+    : spawnSync(cmd, { ...spawnOpts, shell: true })
   const ok = r.status === 0
   const secs = ((Date.now() - started) / 1000).toFixed(0)
   console.log(ok ? `OK (${secs}s)` : `ÉCHEC (${secs}s)`)
+
+  // Un processus qui n'a pas pu DÉMARRER (status null + r.error) n'est pas un
+  // contrôle en échec : le dire explicitement, jamais le maquiller en « exit null ».
+  if (!ok && r.error) {
+    console.error(`    LANCEMENT IMPOSSIBLE : ${r.error.message}`)
+    results.push({ name, status: 'ÉCHEC', mandatory, note: `lancement impossible (${r.error.code || r.error.name})` })
+    return
+  }
   if (!ok) {
     const tail = `${r.stdout}`.split('\n').slice(-15).join('\n') + '\n' + `${r.stderr}`.split('\n').slice(-15).join('\n')
     console.error(tail.trim().split('\n').map((l) => `    ${l}`).join('\n'))
@@ -84,14 +110,8 @@ run('Cohérence documentaire (post-baseline)', 'node scripts/check-docs-consiste
 run('Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)',
   'npx vitest run src/lib/__tests__/document-numbering.postgres.int.test.ts src/lib/__tests__/stock-concurrency.postgres.int.test.ts src/lib/__tests__/license-devices.postgres.int.test.ts src/lib/__tests__/licensed-session.postgres.int.test.ts',
   { skip: !PG, skipReason: 'TEST_POSTGRES_URL non fourni', mandatory: !!PG })
-// `psql -d "$URL"` et NON `psql "$URL"` : sous Windows, getopt cesse d'analyser
-// les options dès le premier argument positionnel, si bien que les `-c` étaient
-// silencieusement ignorés (la glibc, elle, les permute — d'où un fonctionnement
-// trompeur en CI Linux uniquement). En faire une valeur d'option rend l'ordre
-// indifférent sur toutes les plateformes.
-run('Migrations PostgreSQL sur base neuve + smoke test',
-  `sh -c 'psql -d "$TEST_POSTGRES_URL" -c "DROP DATABASE IF EXISTS gf_gate_check" -c "CREATE DATABASE gf_gate_check" >/dev/null && DATABASE_URL="\${TEST_POSTGRES_URL%/*}/gf_gate_check" DIRECT_URL="\${TEST_POSTGRES_URL%/*}/gf_gate_check" node scripts/validate-server-db.js'`,
-  { skip: !PG, skipReason: 'TEST_POSTGRES_URL non fourni', mandatory: !!PG })
+run('Migrations PostgreSQL sur base neuve + smoke test', null,
+  { argv: [process.execPath, 'scripts/gate-fresh-postgres.mjs'], skip: !PG, skipReason: 'TEST_POSTGRES_URL non fourni', mandatory: !!PG })
 run('Rate-limit distribué multi-instance (Redis réel)',
   'npx vitest run src/lib/__tests__/rate-limit-multi-instance.int.test.ts',
   { skip: !REDIS, skipReason: 'TEST_REDIS_URL non fourni', mandatory: !!REDIS })
