@@ -150,12 +150,22 @@ const ROOT     = path.join(__dirname, '..')               // project root (dev) 
 
 // ── Embedded ECC Public Key (P-256 / secp256r1) ───────────────────────────────
 // Generated ONCE by: python scripts\keygen.py --init
-// Replace the placeholder lines below with YOUR generated public key lines.
 // This is a PUBLIC key — distributing it is safe; you cannot forge signatures without private.pem
+//
+// SOURCE DE VÉRITÉ UNIQUE : ces lignes DOIVENT rester identiques à keys/public.pem
+// (la clé dont keys/private.pem signe les licences). `npm run check:public-key`,
+// intégré à check:consistency et donc au release gate, ÉCHOUE si les deux
+// divergent — la divergence est silencieuse et catastrophique en production :
+// verify() renvoie simplement false, la licence pourtant valide est refusée,
+// l'application repart en activation, et le serveur la refuse quand le quota
+// d'appareils est atteint. L'utilisateur est alors verrouillé hors de son
+// logiciel sans le moindre message expliquant pourquoi.
+// (Cas réellement observé : le dépôt portait une clé issue d'un keygen antérieur
+//  tandis que les licences émises l'étaient par celle de keys/public.pem.)
 const _PK = [
   '-----BEGIN PUBLIC KEY-----',
-  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAERDyOCchcjJD1wICS9440LV+ZnJ/z',
-  'dI1hLSxlONW6sk3tL20cNRG1dMZcuhF/15GL/2yCK4Zpbhky7YhesVsEuw==',
+  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE/PUZ9i12EqzP/4wfe5s1qq+8+jTM',
+  'VDJaIxDlS5c8bywRjGkxVmQmhcwgt4kryo2eWRp/NVCpscAivaYRL98BZA==',
   '-----END PUBLIC KEY-----',
 ]
 const PUBLIC_KEY_PEM = _PK.join('\n')
@@ -452,6 +462,21 @@ function b64uDecode(s) {
  * Verify a GF2 license token using ECDSA-SHA256.
  * Returns the decoded payload, or null if invalid / expired.
  */
+/**
+ * Empreinte courte de la clé publique EMBARQUÉE, pour le journal uniquement.
+ * SHA-256 du DER, 12 hex — suffisant pour comparer deux builds entre eux sans
+ * jamais écrire la clé. Ne lève jamais : le diagnostic ne doit pas ajouter une
+ * panne à la panne qu'il documente.
+ */
+function publicKeyFingerprint() {
+  try {
+    const der = crypto.createPublicKey(PUBLIC_KEY_PEM).export({ type: 'spki', format: 'der' })
+    return crypto.createHash('sha256').update(der).digest('hex').slice(0, 12)
+  } catch {
+    return 'indisponible'
+  }
+}
+
 function verifyEccToken(token) {
   try {
     if (typeof token !== 'string' || !token.startsWith('GF2.')) return null
@@ -482,7 +507,16 @@ function verifyEccToken(token) {
     const sig = b64uDecode(sigB64)
     const verifier = crypto.createVerify('SHA256')
     verifier.update(signingInput)
-    if (!verifier.verify({ key: PUBLIC_KEY_PEM, format: 'pem' }, sig)) return null
+    if (!verifier.verify({ key: PUBLIC_KEY_PEM, format: 'pem' }, sig)) {
+      // Ce rejet était TOTALEMENT muet : la seule trace était « No valid license »
+      // plus haut, indiscernable d'une absence de licence. Diagnostiquer une clé
+      // embarquée divergente demandait alors de désosser le binaire.
+      // On journalise une empreinte TRONQUÉE de la clé de vérification (une clé
+      // publique n'est pas un secret, mais on n'en écrit jamais le corps complet).
+      log('Signature de licence invalide — la clé publique embarquée ne correspond',
+          'pas à la clé émettrice. Empreinte clé embarquée:', publicKeyFingerprint())
+      return null
+    }
 
     // Parse payload
     const payload = JSON.parse(b64uDecode(payloadB64).toString('utf8'))
