@@ -29,6 +29,9 @@ const os      = require('os')
 const { resolveMainSecret } = require('./secret')
 const { sign: signState, verify: verifyState } = require('./signed-state')
 const { activationReport } = require('./activation-report')
+const {
+  shouldAttemptActivation, afterRefusal, cleared, humanDelay,
+} = require('./activation-backoff')
 
 // Silence EPIPE on stdout/stderr so packaged app never crashes when no terminal is attached
 try { process.stdout.on('error', () => {}) } catch (_) {}
@@ -1074,6 +1077,12 @@ let loggedActivationRefusal = null
 /** Battements consécutifs où l'appareil n'a pas pu s'enregistrer. */
 let deviceRetryStreak = 0
 
+/** Refus explicites CONSÉCUTIFS — pilote l'espacement des tentatives. */
+let activationRefusalStreak = 0
+
+/** Horodatage du prochain enregistrement autorisé, ou null si aucun délai. */
+let activationRetryAt = null
+
 /** Au bout de N échecs d'affilée, on le signale UNE fois dans le journal. */
 const DEVICE_RETRY_WARN_AT = 5
 
@@ -1222,9 +1231,48 @@ async function periodicLicenseCheck() {
   // Device token missing/expired/replaced on the server side → re-activate to
   // obtain a fresh token, then re-run the heartbeat. NOT a revocation.
   if (result.deviceRequired) {
+    // Un refus EXPLICITE ne se dissipe pas tout seul : il attend un geste humain
+    // (attribuer la clé, libérer un appareil…). Tant qu'il tient, on espace les
+    // tentatives au lieu de rejouer le cycle à CHAQUE battement — ce que faisait
+    // encore le code quand les DEUX autorités refusaient, cas non couvert par le
+    // garde précédent (qui ne bornait que le repli derrière un refus distant).
+    if (!shouldAttemptActivation({ refused: !!lastActivationRefusal, retryAt: activationRetryAt, now: Date.now() })) {
+      // Overlay maintenu : le motif doit rester à l'écran pendant l'attente,
+      // sinon l'utilisateur ne verrait plus ce qu'on attend de lui.
+      if (lastActivationRefusal && mainWindow && !mainWindow.isDestroyed()) {
+        const held = activationReport({
+          refusal:       lastActivationRefusal.reason,
+          streak:        deviceRetryStreak,
+          loggedRefusal: lastActivationRefusal.reason, // déjà journalisé : ne pas répéter
+          warnAt:        DEVICE_RETRY_WARN_AT,
+          authority:     lastActivationRefusal.authority,
+        })
+        if (held.overlay) mainWindow.webContents.send('license:revoked', held.overlay)
+      }
+      return
+    }
+
     log('[license/check] device token required — re-activating this device')
     activeDeviceToken = null
+    const refusalBefore = lastActivationRefusal
     const authority = await activateOnServer()
+
+    // Bilan du refus : on n'espace QUE sur une décision explicite de l'autorité.
+    // Une autorité injoignable (aucune réponse) reste sondée à chaque battement,
+    // pour repartir dès le retour du réseau.
+    if (lastActivationRefusal) {
+      const next = afterRefusal({
+        refusalStreak: lastActivationRefusal === refusalBefore ? activationRefusalStreak : 0,
+        now: Date.now(),
+      })
+      activationRefusalStreak = next.refusalStreak
+      activationRetryAt = next.retryAt
+      log(`[license/activate] refus explicite — prochaine tentative dans ${humanDelay(next.delayMs)}`)
+    } else {
+      const fresh = cleared()
+      activationRefusalStreak = fresh.refusalStreak
+      activationRetryAt = fresh.retryAt
+    }
 
     // On ne re-vérifie IMMÉDIATEMENT que si le jeton vient de l'autorité qui
     // vient de l'exiger. Un jeton délivré par le repli local ne la satisfait
