@@ -22,6 +22,7 @@ const CRITICAL = [
   'electron/signed-state.js',
   'electron/nav-guard.js',
   'electron/integrity.js',
+  'electron/activation-report.js',
   'scripts/fuse-config.js',
   // ── Sécurité applicative ───────────────────────────────────────────────
   'src/lib/security/secret-cipher.ts',

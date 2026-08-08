@@ -45,6 +45,18 @@ const STATUS_CONFIG: Record<
     title: 'Sécurité compromise',
     hint:  "L'intégrité de la licence n'a pas pu être vérifiée. Contactez votre revendeur pour rétablir votre compte.",
   },
+  // L'autorité a REFUSÉ d'enregistrer cet appareil (limite atteinte, clé
+  // mécanicien pas encore attribuée…). Ce n'est PAS une révocation : sans
+  // cette entrée, le repli affichait « Compte révoqué » à quelqu'un dont la
+  // licence est parfaitement valide. Le motif exact du serveur est affiché
+  // juste en dessous — c'est lui qui indique le geste à faire.
+  activation_refused: {
+    icon:  Clock,
+    color: 'text-amber-400',
+    ring:  'rgba(245,158,11,0.15)',
+    title: 'Appareil non enregistré',
+    hint:  "Votre licence est valide, mais cet appareil n'a pas pu être enregistré :",
+  },
 }
 
 export default function LicenseRevokedOverlay() {

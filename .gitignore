@@ -81,3 +81,9 @@ artifacts/verification/test-results.json
 # Lien de projet Vercel : créé par `vercel link`, propre à la machine.
 # Non suivi pour qu'un déploiement local ne réécrive pas la cible de tous.
 .vercel/
+
+# Bases SQLite jetables créées par les tests d'intégration à la racine.
+# Sans cette règle, elles restent dans `git status` après chaque `npm test` et
+# un `git add -A` les committerait — 20 bases de test dans le dépôt.
+.tmp-*.db
+.tmp-*.db-journal

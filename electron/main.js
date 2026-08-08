@@ -28,6 +28,7 @@ const crypto  = require('crypto')
 const os      = require('os')
 const { resolveMainSecret } = require('./secret')
 const { sign: signState, verify: verifyState } = require('./signed-state')
+const { activationReport } = require('./activation-report')
 
 // Silence EPIPE on stdout/stderr so packaged app never crashes when no terminal is attached
 try { process.stdout.on('error', () => {}) } catch (_) {}
@@ -1055,15 +1056,20 @@ function httpPost(url, body) {
 // if the server is unreachable the app still starts offline; the next online
 // heartbeat returns { deviceRequired:true } and re-triggers this to get a token.
 /**
- * Motif du DERNIER refus explicite de l'autorité distante (ex. limite
- * d'appareils atteinte). Conservé pour être présenté à l'utilisateur : sans
- * cela, le seul message actionnable — « Désactivez un appareil ou contactez
- * votre revendeur » — restait enfermé dans le journal.
+ * DERNIER refus explicite d'une autorité — `{ reason, authority }` ou null.
+ * Ex. « Nombre maximal d'appareils atteint », « Cette clé n'est pas encore
+ * attribuée à un mécanicien ». Conservé pour être présenté à l'utilisateur :
+ * sans cela, le seul message actionnable restait enfermé dans le journal.
+ *
+ * Le repli LOCAL y est inclus, à la différence du contrôle de flux plus bas :
+ * pour DÉCIDER, seule l'autorité distante fait foi ; pour DIRE ce qui se passe,
+ * un refus local explicite reste la meilleure information disponible — le taire
+ * laissait l'utilisateur devant une fenêtre muette.
  */
-let lastRemoteActivationRefusal = null
+let lastActivationRefusal = null
 
-/** Motif déjà présenté à l'écran — évite de renvoyer le même à chaque battement. */
-let shownActivationRefusal = null
+/** Motif déjà JOURNALISÉ — évite de répéter la même ligne à chaque battement. */
+let loggedActivationRefusal = null
 
 /** Battements consécutifs où l'appareil n'a pas pu s'enregistrer. */
 let deviceRetryStreak = 0
@@ -1106,7 +1112,12 @@ async function activateOnServer() {
       activeDeviceToken = res.deviceToken
       saveLicense(activeLicense.token, activeLicense.payload, res.deviceToken)
       if (Array.isArray(res.modules)) currentModules = res.modules.slice().sort()
-      if (authority === 'remote') lastRemoteActivationRefusal = null
+      // Un succès DISTANT lève tout refus ; un succès local ne lève qu'un refus
+      // local — il ne dit rien de ce que l'autorité distante avait décidé.
+      if (authority === 'remote' || lastActivationRefusal?.authority === authority) {
+        lastActivationRefusal = null
+        loggedActivationRefusal = null
+      }
       log('[license/activate] device token obtained —', authority, '— deviceId:', res.deviceId || '?')
       return authority
     }
@@ -1114,13 +1125,13 @@ async function activateOnServer() {
     if (res && res.ok === false) {
       const reason = res.reason || res.status || 'refus sans motif'
       log('[license/activate] server refused —', authority, '—', reason)
+      lastActivationRefusal = { reason: String(reason), authority }
       if (authority === 'remote') {
         // Un REFUS EXPLICITE de l'autorité est une réponse DÉFINITIVE, pas une
         // panne : on n'essaie PAS le repli local derrière. Le faire revenait à
         // laisser le serveur local délivrer un jeton que l'autorité venait de
         // refuser — ce qui rendait inopérante la limite d'appareils (une
         // décision commerciale) tout en amorçant la boucle sans fin.
-        lastRemoteActivationRefusal = String(reason)
         return null
       }
     }
@@ -1228,22 +1239,25 @@ async function periodicLicenseCheck() {
     // sans re-sonde immédiate, et on compte les tentatives infructueuses.
     deviceRetryStreak++
 
-    // Refus EXPLICITE de l'autorité (ex. limite d'appareils atteinte) : seule
-    // l'utilisatrice ou l'utilisateur peut débloquer la situation. Le message
-    // n'existait que dans le journal — on l'affiche, une seule fois par motif.
-    if (lastRemoteActivationRefusal && lastRemoteActivationRefusal !== shownActivationRefusal) {
-      shownActivationRefusal = lastRemoteActivationRefusal
-      log('[license/check] activation refusée par l\'autorité —', lastRemoteActivationRefusal)
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('license:revoked', {
-          status: 'device_limit',
-          reason: lastRemoteActivationRefusal,
-        })
-      }
-    } else if (deviceRetryStreak === DEVICE_RETRY_WARN_AT) {
-      // Aucun refus explicite (autorité injoignable) : on signale une fois que
-      // l'appareil n'arrive pas à s'enregistrer, sans bloquer l'utilisation.
-      log(`[license/check] ${deviceRetryStreak} tentatives d'enregistrement sans succès — autorité injoignable ?`)
+    // Refus EXPLICITE de l'autorité (limite d'appareils, clé mécanicien pas
+    // encore attribuée…) : seul un geste humain débloque la situation, et le
+    // message n'existait que dans le journal. Ce qu'il faut dire — et à qui —
+    // est décidé par un module testable ; voir electron/activation-report.js
+    // pour les deux mensonges que cette séparation a supprimés.
+    const report = activationReport({
+      refusal:       lastActivationRefusal?.reason ?? null,
+      streak:        deviceRetryStreak,
+      loggedRefusal: loggedActivationRefusal,
+      warnAt:        DEVICE_RETRY_WARN_AT,
+      authority,
+    })
+    loggedActivationRefusal = report.loggedRefusal
+    if (report.log) log(report.log)
+    if (report.overlay && mainWindow && !mainWindow.isDestroyed()) {
+      // Renvoyé à chaque battement tant que le refus tient : l'overlay
+      // réapparaît ainsi après un rechargement accidentel de la page, comme
+      // pour une licence bloquée.
+      mainWindow.webContents.send('license:revoked', report.overlay)
     }
     return
   }

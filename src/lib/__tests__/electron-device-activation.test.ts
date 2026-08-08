@@ -39,11 +39,18 @@ describe('electron/main — activation d\'appareil, pas de boucle sans fin', () 
     return mainSrc.slice(start, start + 2200)
   })()
 
-  /** Branche `deviceRequired` du battement périodique. */
+  /**
+   * Branche `deviceRequired` du battement périodique, bornée par la branche
+   * SUIVANTE plutôt que par une longueur fixe : découper à N caractères coupait
+   * la branche en deux dès qu'on y ajoutait une ligne, et le test tombait sur
+   * une modification parfaitement saine.
+   */
   const deviceRequiredBranch = (() => {
     const start = mainSrc.indexOf('if (result.deviceRequired)')
     expect(start).toBeGreaterThan(-1)
-    return mainSrc.slice(start, start + 1800)
+    const end = mainSrc.indexOf('if (result.allowed === false)', start)
+    expect(end).toBeGreaterThan(start)
+    return mainSrc.slice(start, end)
   })()
 
   it('activateOnServer distingue les deux autorités interrogées', () => {
@@ -74,12 +81,20 @@ describe('electron/main — activation d\'appareil, pas de boucle sans fin', () 
 
   it('le motif de refus est remonté à l\'interface, pas seulement journalisé', () => {
     expect(deviceRequiredBranch).toMatch(/webContents\.send\(\s*'license:revoked'/)
-    expect(deviceRequiredBranch).toMatch(/reason:\s*lastRemoteActivationRefusal/)
+    expect(deviceRequiredBranch).toMatch(/report\.overlay/)
   })
 
-  it('le même motif n\'est pas renvoyé à chaque battement', () => {
-    // Sans ce garde, l'overlay serait re-poussé toutes les 2 minutes.
-    expect(deviceRequiredBranch).toMatch(/!==\s*shownActivationRefusal/)
+  it('la décision de ce qu\'il faut dire est déléguée au module testable', () => {
+    // Elle vivait ici, inatteignable par un test, et mentait deux fois : elle
+    // accusait le réseau d'un refus délibéré du serveur, et présentait ce refus
+    // sous un statut absent de l'overlay — donc rendu « Compte révoqué ».
+    // Le comportement est désormais éprouvé pour de vrai dans
+    // electron-activation-report.test.ts ; on verrouille ici le câblage.
+    expect(mainSrc).toMatch(/require\('\.\/activation-report'\)/)
+    expect(deviceRequiredBranch).toMatch(/activationReport\(\{/)
+    expect(deviceRequiredBranch).toMatch(/loggedRefusal:\s*loggedActivationRefusal/)
+    // Le statut codé en dur qui provoquait le repli « révoqué » ne doit pas revenir.
+    expect(deviceRequiredBranch).not.toMatch(/status:\s*'device_limit'/)
   })
 
   it('les échecs consécutifs sont comptés et signalés une fois', () => {
