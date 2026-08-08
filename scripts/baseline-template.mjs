@@ -17,7 +17,7 @@
 import { DatabaseSync } from 'node:sqlite'
 import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import path from 'node:path'
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -35,7 +35,11 @@ function migrationChecksum(m) {
     .digest('hex')
 }
 
-const { MIGRATIONS } = await import(path.join(ROOT, 'src', 'lib', 'migrations.ts'))
+// pathToFileURL est OBLIGATOIRE : sous Windows, `import()` reçoit sinon un
+// chemin « C:\… » que le résolveur ESM interprète comme le schéma d'URL « c: »
+// et rejette avec ERR_UNSUPPORTED_ESM_URL_SCHEME. Le script était donc
+// inexécutable hors Linux, et avec lui le contrôle check:sqlite-template.
+const { MIGRATIONS } = await import(pathToFileURL(path.join(ROOT, 'src', 'lib', 'migrations.ts')).href)
 
 const db = new DatabaseSync(dbPath)
 try {
