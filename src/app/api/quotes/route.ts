@@ -113,5 +113,8 @@ export const POST = withAuth(async (req) => {
 
   await logAudit({ action: 'create', entityType: 'Quote', entityId: quote.id, session, req })
 
-  return NextResponse.json(quote, { status: 201 })
+  // MÊME projection que GET et PATCH — voir le commentaire détaillé dans
+  // src/app/api/invoices/route.ts : sans elle, le client plante à l'affichage
+  // du devis qu'il vient d'enregistrer (unitPrice absent → toFixed sur undefined).
+  return NextResponse.json(withTotals({ ...quote, lines: linesToEuros(quote.lines) }), { status: 201 })
 })

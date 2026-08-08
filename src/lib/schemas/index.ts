@@ -9,7 +9,23 @@ import { parseAmountToScaled } from '@/lib/money'
 // ─── Shared primitives ────────────────────────────────────────────────────────
 
 const phone   = z.string().max(30).optional().nullable()
-const email   = z.string().email('Email invalide').max(255).optional().nullable()
+/**
+ * E-mail FACULTATIF. `.optional().nullable()` accepte `undefined` et `null`,
+ * mais PAS la chaîne vide — or c'est exactement ce qu'un formulaire HTML envoie
+ * pour un champ laissé vide. Résultat constaté en test réel : enregistrer une
+ * facture sans e-mail client renvoyait
+ *   400 {"fieldErrors":{"clientEmail":["Email invalide"]}}
+ * alors que le champ n'est pas marqué requis dans l'interface. Un client de
+ * passage n'a souvent pas d'e-mail : la facture devenait impossible à créer.
+ *
+ * On normalise donc « vide ou espaces » en `null` AVANT de valider. Un e-mail
+ * réellement saisi reste vérifié à l'identique. Le seul e-mail OBLIGATOIRE du
+ * schéma (compte utilisateur) a son propre validateur et n'est pas concerné.
+ */
+const email = z.preprocess(
+  v => (typeof v === 'string' && v.trim() === '' ? null : v),
+  z.string().email('Email invalide').max(255).optional().nullable(),
+)
 const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format date invalide (YYYY-MM-DD)')
 
 // ─── Job ──────────────────────────────────────────────────────────────────────

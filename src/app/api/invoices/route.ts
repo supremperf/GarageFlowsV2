@@ -116,5 +116,13 @@ export const POST = withAuth(async (req) => {
 
   await logAudit({ action: 'create', entityType: 'Invoice', entityId: invoice.id, session, req })
 
-  return NextResponse.json(invoice, { status: 201 })
+  // MÊME projection que GET et PATCH. L'objet Prisma brut ne porte que les
+  // entiers en dix-millièmes ; ses lignes n'ont ni `quantity`, ni `unitPrice`,
+  // ni `unitCost` en euros, et le document n'a ni totalHT ni totalTTC.
+  // Le client réinjecte cette réponse dans son état (setLines) puis affiche
+  // `line.unitPrice.toFixed(2)` : sur la réponse brute, cela levait
+  // « Cannot read properties of undefined (reading 'toFixed') » et la limite
+  // d'erreur remplaçait TOUTE l'application — alors que la facture, elle,
+  // était bien enregistrée.
+  return NextResponse.json(withTotals({ ...invoice, lines: linesToEuros(invoice.lines) }), { status: 201 })
 })

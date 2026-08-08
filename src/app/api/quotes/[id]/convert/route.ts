@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { format } from 'date-fns'
+import { withTotals } from '@/lib/billing'
+import { linesToEuros } from '@/lib/money-db'
 
 // POST /api/quotes/[id]/convert  — converts a quote to an invoice
 // Atomique (une seule transaction) + idempotent : deux conversions concurrentes
@@ -70,7 +72,10 @@ export const POST = withAuth(async (_req, { params }) => {
       return inv
     })
 
-    return NextResponse.json(invoice, { status: 201 })
+    // MÊME projection que GET/PATCH des factures — voir le commentaire détaillé
+    // dans src/app/api/invoices/route.ts. La facture issue d'une conversion est
+    // consommée par le même composant client que celle créée directement.
+    return NextResponse.json(withTotals({ ...invoice, lines: linesToEuros(invoice.lines) }), { status: 201 })
   } catch (err) {
     if (err instanceof ConvertError) return NextResponse.json({ error: err.message }, { status: err.status })
     throw err
