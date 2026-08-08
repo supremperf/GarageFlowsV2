@@ -54,13 +54,13 @@ de tests ou versions **résolues** de la toolchain). PostgreSQL 16.13 et Redis 7
 
 | Champ | Valeur |
 |---|---|
-| Test files | 145 |
-| Tests discovered | 1525 |
-| Tests passed | 1497 |
+| Test files | 146 |
+| Tests discovered | 1528 |
+| Tests passed | 1500 |
 | Tests failed | 0 |
 | Tests skipped | 28 |
 
-Commit : `39d30bf` · Branche : `fix/blackscreen-asar-file-protocol` · Généré (UTC) : `2026-08-08T20:08:20.935Z`
+Commit : `ad79892` · Branche : `fix/blackscreen-asar-file-protocol` · Généré (UTC) : `2026-08-08T21:08:02.158Z`
 
 <!-- END AUTO-GENERATED BASELINE -->
 

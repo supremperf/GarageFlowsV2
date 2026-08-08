@@ -77,3 +77,7 @@ test-results/
 # Vérification (V13.1) : baseline.json est SUIVI (métadonnées canoniques) ;
 # le rapport brut vitest est un artefact local volumineux, non suivi.
 artifacts/verification/test-results.json
+
+# Lien de projet Vercel : créé par `vercel link`, propre à la machine.
+# Non suivi pour qu'un déploiement local ne réécrive pas la cible de tous.
+.vercel/
