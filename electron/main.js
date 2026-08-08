@@ -1133,7 +1133,37 @@ function resetActivationBackoff() {
  */
 async function activateOnServerAuto() {
   if (activationThrottled()) return null
-  return activateOnServer()
+
+  // Motif AVANT la tentative — comparé par sa VALEUR, jamais par l'identité de
+  // l'objet : `activateOnServer()` réaffecte `lastActivationRefusal` à un objet
+  // NEUF à chaque refus, si bien qu'un `===` était toujours faux. Le streak
+  // repartait donc de zéro à chaque fois et le délai restait figé à 1 min —
+  // l'escalade 5 min / 15 min / 1 h n'était jamais atteinte (observé le
+  // 2026-08-09 : trois refus d'affilée, trois fois « dans 1 min »).
+  const motifAvant = lastActivationRefusal?.reason ?? null
+  const authority = await activateOnServer()
+
+  // Bilan de CETTE tentative — ici et nulle part ailleurs. Le tenir au point
+  // d'appel laissait la tentative pré-battement hors comptabilité : elle
+  // essuyait un refus sans repousser l'échéance, d'où deux tentatives par cycle.
+  // Une autorité injoignable (aucune réponse, donc aucun refus) n'est PAS
+  // espacée : il faut repartir dès le retour du réseau.
+  if (lastActivationRefusal) {
+    const memeMotif = lastActivationRefusal.reason === motifAvant
+    const next = afterRefusal({
+      refusalStreak: memeMotif ? activationRefusalStreak : 0,
+      now: Date.now(),
+    })
+    activationRefusalStreak = next.refusalStreak
+    activationRetryAt = next.retryAt
+    log(`[license/activate] refus explicite — prochaine tentative dans ${humanDelay(next.delayMs)}`)
+  } else {
+    const fresh = cleared()
+    activationRefusalStreak = fresh.refusalStreak
+    activationRetryAt = fresh.retryAt
+  }
+
+  return authority
 }
 
 /**
@@ -1306,25 +1336,9 @@ async function periodicLicenseCheck() {
 
     log('[license/check] device token required — re-activating this device')
     activeDeviceToken = null
-    const refusalBefore = lastActivationRefusal
+    // Le bilan du refus (streak, échéance, journal) est tenu par
+    // `activateOnServerAuto()` : un seul endroit, donc un seul comptage.
     const authority = await activateOnServerAuto()
-
-    // Bilan du refus : on n'espace QUE sur une décision explicite de l'autorité.
-    // Une autorité injoignable (aucune réponse) reste sondée à chaque battement,
-    // pour repartir dès le retour du réseau.
-    if (lastActivationRefusal) {
-      const next = afterRefusal({
-        refusalStreak: lastActivationRefusal === refusalBefore ? activationRefusalStreak : 0,
-        now: Date.now(),
-      })
-      activationRefusalStreak = next.refusalStreak
-      activationRetryAt = next.retryAt
-      log(`[license/activate] refus explicite — prochaine tentative dans ${humanDelay(next.delayMs)}`)
-    } else {
-      const fresh = cleared()
-      activationRefusalStreak = fresh.refusalStreak
-      activationRetryAt = fresh.retryAt
-    }
 
     // On ne re-vérifie IMMÉDIATEMENT que si le jeton vient de l'autorité qui
     // vient de l'exiger. Un jeton délivré par le repli local ne la satisfait

@@ -143,9 +143,16 @@ describe('electron/main — câblage de l\'espacement', () => {
 
     expect(lignes.length, 'aucune référence trouvée — le test ne mesure plus rien').toBeGreaterThan(0)
 
+    // Bornes du wrapper gardé : l'appel qu'il contient est légitime par nature.
+    const debutWrapper = code.indexOf('async function activateOnServerAuto')
+    expect(debutWrapper, 'activateOnServerAuto() a disparu').toBeGreaterThan(-1)
+    const finWrapper = code.indexOf('\n}', debutWrapper)
+    const ligneDe = (offset: number) => code.slice(0, offset).split('\n').length
+    const [wDebut, wFin] = [ligneDe(debutWrapper), ligneDe(finWrapper)]
+
     for (const { n, t } of lignes) {
       if (t.startsWith('async function activateOnServer(')) continue   // la définition
-      if (t.startsWith('return activateOnServer()')) continue          // le corps du wrapper gardé
+      if (n >= wDebut && n <= wFin) continue                           // corps du wrapper gardé
 
       // Tout autre appel direct doit être une ACTION UTILISATEUR, reconnaissable
       // au reset qui la précède immédiatement (≤ 5 lignes au-dessus).
@@ -157,6 +164,34 @@ describe('electron/main — câblage de l\'espacement', () => {
         `sinon la tentative rejoue malgré le délai annoncé.`,
       ).toBe(true)
     }
+  })
+
+  /**
+   * RÉGRESSION — l'escalade des paliers était morte.
+   *
+   * Le streak n'était reconduit que si `lastActivationRefusal === refusalBefore`.
+   * Or `activateOnServer()` réaffecte cette variable à un objet NEUF à chaque
+   * refus : l'égalité stricte portait sur l'identité, donc toujours fausse. Le
+   * streak repartait de zéro et le délai restait figé.
+   *
+   * Observé le 2026-08-09 sur le paquet installé — trois refus consécutifs du
+   * même motif, trois fois « prochaine tentative dans 1 min », jamais 5 ni 15.
+   */
+  it('le streak se compare par MOTIF, jamais par identité d\'objet', () => {
+    const bilan = mainSrc.slice(
+      mainSrc.indexOf('async function activateOnServerAuto'),
+      mainSrc.indexOf('return authority', mainSrc.indexOf('async function activateOnServerAuto')),
+    )
+    expect(bilan).toMatch(/lastActivationRefusal\.reason === motifAvant/)
+    // Comparer les objets eux-mêmes rendrait l'escalade inatteignable.
+    expect(bilan).not.toMatch(/lastActivationRefusal === /)
+  })
+
+  it('le bilan du refus est tenu à UN seul endroit', () => {
+    // Le tenir au point d'appel laissait la tentative pré-battement hors
+    // comptabilité : elle essuyait un refus sans repousser l'échéance.
+    expect((mainSrc.match(/afterRefusal\(\{/g) ?? []).length).toBe(1)
+    expect((mainSrc.match(/activationRetryAt = next\.retryAt/g) ?? []).length).toBe(1)
   })
 
   it('une action de l\'utilisateur remet le backoff à neuf', () => {
