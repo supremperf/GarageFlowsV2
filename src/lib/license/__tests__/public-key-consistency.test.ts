@@ -23,8 +23,18 @@ import { getPublicKeyPem } from '@/lib/license/public-key'
 import { verifyLicenseToken } from '@/lib/license/verify'
 
 /** Empreinte DER‑SHA256 (SPKI) de la clé publique de référence du keygen.
- *  (Empreinte d'une clé PUBLIQUE — non sensible ; jamais la clé privée.) */
-const REFERENCE_FP = '7bed3cb736ccc8d422a7663939732faf6eb9a4c59daa590cc826b2f821b6d478' // gitleaks:allow
+ *  (Empreinte d'une clé PUBLIQUE — non sensible ; jamais la clé privée.)
+ *
+ *  MISE À JOUR 2026‑08‑08 — l'empreinte précédente
+ *  (7bed3cb736ccc8d422a7663939732faf6eb9a4c59daa590cc826b2f821b6d478, alignée le
+ *  2026‑08‑03 par f6ef4db) était PÉRIMÉE : l'opérateur a régénéré sa paire le
+ *  2026‑08‑07 à 23:44, et TOUTES les licences existantes (keys/keygen_audit.log :
+ *  9 émissions, 2026‑08‑08 00:01→00:10) sont signées par la NOUVELLE clé.
+ *  Le dépôt refusait donc toutes les licences réellement en circulation.
+ *  Vérifié : la licence en service sur le poste de l'opérateur porte une
+ *  signature ECDSA valide sous cette empreinte, et le binaire installé —
+ *  construit avec elle — l'accepte depuis des semaines. */
+const REFERENCE_FP = '3150baaccc36af0120cfffa99dd41ce21c716831e432399791b5a9a9dcd59de6' // gitleaks:allow
 
 /** Empreinte SPKI‑DER SHA‑256 d'une clé publique PEM. */
 function fingerprint(pem: string): string {

@@ -24,7 +24,9 @@ const PEM = path.join(ROOT, 'keys', 'public.pem')
 function extractEmbeddedPem(source: string): string | null {
   const block = source.match(/const\s+_PK\s*=\s*\[([\s\S]*?)\]/)
   if (!block) return null
-  return [...block[1].matchAll(/'([^']*)'/g)].map(m => m[1]).join('\n')
+  // Array.from plutôt qu'un spread : la cible TS du dépôt n'autorise pas
+  // l'itération directe d'un RegExpStringIterator (TS2802).
+  return Array.from(block[1].matchAll(/'([^']*)'/g), m => m[1]).join('\n')
 }
 
 function fingerprint(pem: string): string {
