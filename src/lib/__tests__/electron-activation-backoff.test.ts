@@ -103,21 +103,76 @@ describe('electron/main — câblage de l\'espacement', () => {
     const start = mainSrc.indexOf('if (result.deviceRequired)')
     const end = mainSrc.indexOf('if (result.allowed === false)', start)
     const branch = mainSrc.slice(start, end)
-    const guard = branch.indexOf('shouldAttemptActivation')
-    const attempt = branch.indexOf('await activateOnServer()')
+    const guard = branch.indexOf('activationThrottled()')
+    const attempt = branch.indexOf('await activateOnServerAuto()')
     expect(guard).toBeGreaterThan(-1)
     expect(attempt).toBeGreaterThan(-1)
     // L'ordre compte : décider AVANT d'appeler, sinon l'appel a déjà eu lieu.
     expect(guard).toBeLessThan(attempt)
   })
 
+  /**
+   * RÉGRESSION — le garde ne couvrait qu'UN appelant sur quatre.
+   *
+   * Observé le 2026-08-09 à 00:40 sur le paquet installé, clé mécanicien non
+   * attribuée :
+   *
+   *   00:40:28 [license/activate] server refused — remote — …
+   *   00:40:28 [license/activate] refus explicite — prochaine tentative dans 1 min
+   *   00:40:55 [license/activate] server refused — remote — …      ← 27 s plus tard
+   *
+   * Le battement périodique appelle `activateOnServer()` DEUX fois : une fois
+   * en tête (« pas encore de jeton d'appareil ? »), une fois dans la branche
+   * `deviceRequired`. Seule la seconde était bornée. Or un refus ne délivre
+   * jamais de jeton : la première condition restait vraie à chaque battement, et
+   * le délai annoncé n'était pas tenu.
+   */
+  it('TOUT enregistrement automatique est borné, pas seulement celui de la branche', () => {
+    // Les appels dans les gestionnaires d'action UTILISATEUR sont légitimement
+    // hors backoff : on les identifie par le reset qui les précède.
+    // On raisonne sur le CODE seul : les commentaires citent `activateOnServer()`
+    // en prose, et les compter donnerait de faux positifs.
+    const code = mainSrc
+      .replace(/\/\*[\s\S]*?\*\//g, '')       // blocs /* … */
+      .replace(/(^|[^:])\/\/[^\n]*/g, '$1')   // // … (le [^:] épargne les URL)
+
+    // `activateOnServer` non suffixé de `Auto` : appel DIRECT, donc hors garde.
+    const lignes = code.split('\n')
+      .map((l, n) => ({ n: n + 1, t: l.trim() }))
+      .filter((l) => /\bactivateOnServer\(\)/.test(l.t))
+
+    expect(lignes.length, 'aucune référence trouvée — le test ne mesure plus rien').toBeGreaterThan(0)
+
+    for (const { n, t } of lignes) {
+      if (t.startsWith('async function activateOnServer(')) continue   // la définition
+      if (t.startsWith('return activateOnServer()')) continue          // le corps du wrapper gardé
+
+      // Tout autre appel direct doit être une ACTION UTILISATEUR, reconnaissable
+      // au reset qui la précède immédiatement (≤ 5 lignes au-dessus).
+      const amont = code.split('\n').slice(Math.max(0, n - 6), n - 1).join('\n')
+      expect(
+        /resetActivationBackoff\(\)/.test(amont),
+        `ligne ${n} : « ${t} » appelle activateOnServer() directement sans être une ` +
+        `action utilisateur. Le chemin automatique doit passer par activateOnServerAuto(), ` +
+        `sinon la tentative rejoue malgré le délai annoncé.`,
+      ).toBe(true)
+    }
+  })
+
+  it('une action de l\'utilisateur remet le backoff à neuf', () => {
+    // Saisie d'une licence et changement de clé : sa décision prime sur un délai
+    // calculé pour des tentatives automatiques.
+    expect(mainSrc).toMatch(/function resetActivationBackoff\(\)/)
+    expect((mainSrc.match(/resetActivationBackoff\(\)/g) ?? []).length).toBeGreaterThanOrEqual(3)
+  })
+
   it('l\'overlay reste affiché pendant l\'attente', () => {
     // Sans cela, l'utilisateur perdrait de vue ce qu'on attend de lui.
     // On cherche l'USAGE dans la branche, pas l'import en tête de fichier.
     const branchStart = mainSrc.indexOf('if (result.deviceRequired)')
-    const guardStart = mainSrc.indexOf('shouldAttemptActivation', branchStart)
+    const guardStart = mainSrc.indexOf('activationThrottled()', branchStart)
     expect(guardStart).toBeGreaterThan(branchStart)
-    const bloc = mainSrc.slice(guardStart, mainSrc.indexOf('await activateOnServer()', guardStart))
+    const bloc = mainSrc.slice(guardStart, mainSrc.indexOf('await activateOnServerAuto()', guardStart))
     expect(bloc).toMatch(/license:revoked/)
   })
 

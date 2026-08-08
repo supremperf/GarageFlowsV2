@@ -1087,6 +1087,56 @@ let activationRetryAt = null
 const DEVICE_RETRY_WARN_AT = 5
 
 /**
+ * Le backoff s'applique-t-il MAINTENANT à un enregistrement d'appareil ?
+ *
+ * `activateOnServer()` a QUATRE appelants. Le garde n'en couvrait qu'un — celui
+ * de la branche `deviceRequired` — alors que le battement périodique en appelle
+ * un autre AVANT lui : « pas encore de jeton d'appareil ? alors enregistre-toi ».
+ * Or un refus ne délivre jamais de jeton : la condition restait vraie, et
+ * l'application relançait une activation à CHAQUE battement malgré un délai
+ * annoncé. Observé le 2026-08-09 à 00:40 sur le poste de l'opérateur — une
+ * tentative 27 s après un « prochaine tentative dans 1 min ».
+ */
+function activationThrottled() {
+  return !shouldAttemptActivation({
+    refused:  !!lastActivationRefusal,
+    retryAt:  activationRetryAt,
+    now:      Date.now(),
+  })
+}
+
+/**
+ * Remet le backoff à neuf. À appeler quand l'utilisateur AGIT (saisie ou
+ * changement de licence) : sa décision prime sur un délai calculé pour des
+ * tentatives automatiques, et la situation qu'il vient de changer mérite un
+ * essai immédiat.
+ */
+function resetActivationBackoff() {
+  lastActivationRefusal   = null
+  loggedActivationRefusal = null
+  const fresh = cleared()
+  activationRefusalStreak = fresh.refusalStreak
+  activationRetryAt       = fresh.retryAt
+}
+
+/**
+ * Enregistrement AUTOMATIQUE de l'appareil — le seul chemin que le battement
+ * doit emprunter.
+ *
+ * Le garde vit ICI plutôt qu'à chaque appel : c'est précisément en le posant
+ * appel par appel qu'on en a oublié un. Toute tentative non déclenchée par
+ * l'utilisateur passe par cette fonction ; `activateOnServer()` ne reste appelé
+ * directement que sur une action explicite (saisie ou changement de licence),
+ * précédée d'un `resetActivationBackoff()`.
+ *
+ * @returns {Promise<?string>} l'autorité émettrice, ou null (échec OU différé).
+ */
+async function activateOnServerAuto() {
+  if (activationThrottled()) return null
+  return activateOnServer()
+}
+
+/**
  * Enregistre CET appareil et récupère un jeton d'appareil.
  *
  * Renvoie l'AUTORITÉ qui a délivré le jeton — 'remote' ou 'local' — ou null en
@@ -1192,7 +1242,9 @@ async function periodicLicenseCheck() {
 
   // If we have no device token yet (fresh upgrade / offline activation), get one
   // before the heartbeat — the server rejects heartbeats without a device token.
-  if (!activeDeviceToken) await activateOnServer()
+  // Mais un refus explicite ne délivre AUCUN jeton : sans le garde de backoff,
+  // cette ligne relançait une activation à chaque battement, indéfiniment.
+  if (!activeDeviceToken) await activateOnServerAuto()
 
   // Télémétrie technique jointe au heartbeat (jamais de donnée métier).
   const info = getSystemInfo()
@@ -1236,7 +1288,7 @@ async function periodicLicenseCheck() {
     // tentatives au lieu de rejouer le cycle à CHAQUE battement — ce que faisait
     // encore le code quand les DEUX autorités refusaient, cas non couvert par le
     // garde précédent (qui ne bornait que le repli derrière un refus distant).
-    if (!shouldAttemptActivation({ refused: !!lastActivationRefusal, retryAt: activationRetryAt, now: Date.now() })) {
+    if (activationThrottled()) {
       // Overlay maintenu : le motif doit rester à l'écran pendant l'attente,
       // sinon l'utilisateur ne verrait plus ce qu'on attend de lui.
       if (lastActivationRefusal && mainWindow && !mainWindow.isDestroyed()) {
@@ -1255,7 +1307,7 @@ async function periodicLicenseCheck() {
     log('[license/check] device token required — re-activating this device')
     activeDeviceToken = null
     const refusalBefore = lastActivationRefusal
-    const authority = await activateOnServer()
+    const authority = await activateOnServerAuto()
 
     // Bilan du refus : on n'espace QUE sur une décision explicite de l'autorité.
     // Une autorité injoignable (aucune réponse) reste sondée à chaque battement,
@@ -1956,6 +2008,8 @@ function createLicenseWindow() {
         saveLicense(token, payload)
         // Register this device with the server to obtain a device token (device
         // auth). Best-effort — the heartbeat re-tries if the server is offline now.
+        // Licence NEUVE : le backoff d'un refus précédent ne la concerne pas.
+        resetActivationBackoff()
         activateOnServer().catch(() => {})
         cleanup()
         win.destroy()
@@ -2584,6 +2638,9 @@ function setupIPC() {
       // Save new license to disk (encrypted with HWID)
       saveLicense(token.trim(), payload)
       // Register this device against the new license to obtain a fresh token.
+      // Changement de licence à l'initiative de l'utilisateur : le délai calculé
+      // pour l'ANCIENNE clé ne doit pas retarder celle qu'il vient de saisir.
+      resetActivationBackoff()
       await activateOnServer()
       // Re-inject session cookies so Next.js picks up the new type
       await injectLicenseCookies(payload.typ, payload.lid ?? 'runtime')
