@@ -21,9 +21,16 @@ export const GET = withAuth(async () => {
   }
 
   const flags = getEInvoicingFlags()
+  // `normalizedName` fait partie du CONTRAT attendu par le client : l'onglet
+  // e-facturation passe ce tableau tel quel à `searchPlatforms()`, qui trie et
+  // filtre dessus. L'omettre de la projection le rendait `undefined` et faisait
+  // lever « Cannot read properties of undefined (reading 'localeCompare') » —
+  // dans un useMemo, donc pendant le rendu : l'error boundary emportait tout
+  // l'écran des réglages, de façon systématique.
   const platforms = EINVOICE_PLATFORM_CATALOG.map((p) => ({
     id: p.id,
     officialName: p.officialName,
+    normalizedName: p.normalizedName,
     slug: p.slug,
     approvalStatus: p.approvalStatus,
     integrationStatus: p.integrationStatus,

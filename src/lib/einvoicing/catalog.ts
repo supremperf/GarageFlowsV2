@@ -106,13 +106,25 @@ export function searchPlatforms(
   query: string,
   catalog: ApprovedEInvoicePlatform[] = EINVOICE_PLATFORM_CATALOG,
 ): ApprovedEInvoicePlatform[] {
-  const sorted = [...catalog].sort((a, b) => a.normalizedName.localeCompare(b.normalizedName, 'fr'))
+  // Cette fonction accepte un catalogue FOURNI PAR L'APPELANT (l'onglet
+  // e-facturation lui passe la réponse de /api/einvoicing/status). On ne peut
+  // donc pas présumer que chaque entrée porte `normalizedName` : une projection
+  // d'API incomplète suffisait à faire lever le tri, pendant le rendu, et à
+  // détruire tout l'écran. On retombe sur le nom officiel, puis sur la chaîne
+  // vide — dégrader plutôt que rompre.
+  const nameOf = (p: ApprovedEInvoicePlatform): string =>
+    p.normalizedName ?? normalizePlatformSearch(p.officialName ?? '')
+
+  const sorted = [...catalog].sort((a, b) => nameOf(a).localeCompare(nameOf(b), 'fr'))
   const q = normalizePlatformSearch(query)
   if (!q) return sorted
-  const starts = sorted.filter((p) => p.normalizedName.startsWith(q))
+  // Même précaution que ci-dessus sur TOUS les champs consultés : le filtrage
+  // ne doit pas lever davantage que le tri.
+  const starts = sorted.filter((p) => nameOf(p).startsWith(q))
   const contains = sorted.filter(
-    (p) => !p.normalizedName.startsWith(q) &&
-      (p.normalizedName.includes(q) || p.slug.includes(q) || normalizePlatformSearch(p.officialName).includes(q)),
+    (p) => !nameOf(p).startsWith(q) &&
+      (nameOf(p).includes(q) || (p.slug ?? '').includes(q) ||
+        normalizePlatformSearch(p.officialName ?? '').includes(q)),
   )
   return [...starts, ...contains]
 }
