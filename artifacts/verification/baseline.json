@@ -3,14 +3,14 @@
   "schemaVersion": 2,
   "product": "GarageFlows",
   "version": "1.1.0",
-  "commit": "5d2937eef840db1ba7eff6779b2b6d2a75597220",
-  "commitShort": "5d2937e",
-  "branch": "claude/garageflow-final-unified-merge-ub0l67",
-  "generatedAtUtc": "2026-08-07T20:52:02.438Z",
+  "commit": "00a8d509cb1601c3a4b4305be962a73baeba097f",
+  "commitShort": "00a8d50",
+  "branch": "fix/blackscreen-asar-file-protocol",
+  "generatedAtUtc": "2026-08-08T15:11:30.439Z",
   "toolchain": {
-    "node": "v22.22.2",
-    "npm": "10.9.7",
-    "os": "linux x64",
+    "node": "v22.23.2",
+    "npm": "10.9.8",
+    "os": "win32 x64",
     "dependencies": {
       "next": {
         "declared": "^14.2.35",
@@ -58,11 +58,11 @@
   },
   "tests": {
     "measured": true,
-    "files": 136,
-    "suites": 480,
-    "total": 1461,
-    "discovered": 1461,
-    "passed": 1433,
+    "files": 138,
+    "suites": 487,
+    "total": 1481,
+    "discovered": 1481,
+    "passed": 1453,
     "failed": 0,
     "skipped": 28
   }

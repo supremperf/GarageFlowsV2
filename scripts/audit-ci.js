@@ -47,11 +47,23 @@ const ALLOW = {
   },
 }
 
+// Sous Windows, npm n'est pas un exécutable mais un script `npm.cmd` :
+// `execFileSync('npm', …)` échoue en ENOENT, et le nommer `npm.cmd` ne suffit
+// pas non plus (execFile ne résout pas les scripts de commande via PATHEXT).
+// Seul `shell: true` fonctionne. La CI tournant sur ubuntu-latest, cette porte
+// ne s'exécutait tout simplement jamais sur une machine de développement Windows.
+//
+// `shell: true` est sûr ICI et seulement ici : les trois arguments sont des
+// littéraux constants, sans espace ni métacaractère, et rien ne provient d'une
+// entrée externe. Ne pas reprendre ce motif avec des arguments interpolés.
+const IS_WINDOWS = process.platform === 'win32'
+
 function auditJson() {
   try {
     const out = execFileSync('npm', ['audit', '--omit=dev', '--json'], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
+      shell: IS_WINDOWS,
     })
     return JSON.parse(out)
   } catch (err) {

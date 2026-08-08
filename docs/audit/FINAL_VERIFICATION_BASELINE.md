@@ -38,8 +38,8 @@ de tests ou versions **résolues** de la toolchain). PostgreSQL 16.13 et Redis 7
 
 | Composant | Version résolue | Plage déclarée |
 |---|---|---|
-| Node | v22.22.2 | — |
-| npm | 10.9.7 | — |
+| Node | v22.23.2 | — |
+| npm | 10.9.8 | — |
 | Next.js | 14.2.35 | ^14.2.35 |
 | React | 18.3.1 | ^18.3.1 |
 | React DOM | 18.3.1 | ^18.3.1 |
@@ -48,19 +48,19 @@ de tests ou versions **résolues** de la toolchain). PostgreSQL 16.13 et Redis 7
 | @prisma/client | 5.22.0 | ^5.16.1 |
 | Electron | 31.7.7 | ^31.7.7 |
 | Vitest | 4.1.5 | ^4.1.5 |
-| OS | linux x64 | — |
+| OS | win32 x64 | — |
 
 ### Tests (suite standard `npm test`, reproductible sans service externe)
 
 | Champ | Valeur |
 |---|---|
-| Test files | 136 |
-| Tests discovered | 1461 |
-| Tests passed | 1433 |
+| Test files | 138 |
+| Tests discovered | 1481 |
+| Tests passed | 1453 |
 | Tests failed | 0 |
 | Tests skipped | 28 |
 
-Commit : `5d2937e` · Branche : `claude/garageflow-final-unified-merge-ub0l67` · Généré (UTC) : `2026-08-07T20:52:02.438Z`
+Commit : `00a8d50` · Branche : `fix/blackscreen-asar-file-protocol` · Généré (UTC) : `2026-08-08T15:11:30.439Z`
 
 <!-- END AUTO-GENERATED BASELINE -->
 

@@ -18,7 +18,7 @@
 import { DatabaseSync } from 'node:sqlite'
 import { createHash } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import path from 'node:path'
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -35,7 +35,12 @@ function migrationChecksum(m) {
     .digest('hex')
 }
 
-const { MIGRATIONS } = await import(path.join(ROOT, 'src', 'lib', 'migrations.ts'))
+// `import()` attend un SPÉCIFICATEUR, pas un chemin OS. Un chemin POSIX absolu
+// (« /… ») se résout par chance comme une URL, mais sous Windows « C:\… » est lu
+// comme un protocole « c: » → ERR_UNSUPPORTED_ESM_URL_SCHEME. La CI tournant sur
+// ubuntu-latest, ce garde ne s'exécutait tout simplement JAMAIS sur une machine
+// de développement Windows. `pathToFileURL` donne un file:// valide partout.
+const { MIGRATIONS } = await import(pathToFileURL(path.join(ROOT, 'src', 'lib', 'migrations.ts')).href)
 
 const errors = []
 const db = new DatabaseSync(dbPath)
