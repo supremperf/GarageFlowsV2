@@ -3,10 +3,10 @@
   "schemaVersion": 2,
   "product": "GarageFlows",
   "version": "1.1.0",
-  "commit": "ad7abbe35a8b6bbca04849ba11904d6aaed410c9",
-  "commitShort": "ad7abbe",
+  "commit": "6063089005c95bcb66091d4526d685eabab49ffa",
+  "commitShort": "6063089",
   "branch": "fix/blackscreen-asar-file-protocol",
-  "generatedAtUtc": "2026-08-08T22:24:36.933Z",
+  "generatedAtUtc": "2026-08-08T22:29:17.958Z",
   "toolchain": {
     "node": "v22.23.2",
     "npm": "10.9.8",
