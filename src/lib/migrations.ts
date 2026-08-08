@@ -1164,4 +1164,23 @@ export const MIGRATIONS: Migration[] = [
   { id: '182_jobphoto_idx_job',          sql: 'CREATE INDEX IF NOT EXISTS "JobPhoto_jobId_idx" ON "JobPhoto"("jobId")' },
   { id: '183_jobphoto_idx_garage',       sql: 'CREATE INDEX IF NOT EXISTS "JobPhoto_garageId_idx" ON "JobPhoto"("garageId")' },
   { id: '184_inspectionitem_idx_insp',   sql: 'CREATE INDEX IF NOT EXISTS "InspectionItem_inspectionId_idx" ON "InspectionItem"("inspectionId")' },
+
+  // ── Rattrapage : colonne oubliée par une migration « ensure table » ──────────
+  // `054_ensure_vehicle_table` crée Vehicle avec `CREATE TABLE IF NOT EXISTS` en
+  // incluant "ctDate". Sur toute base où Vehicle EXISTAIT DÉJÀ sans cette colonne,
+  // l'instruction entière est un NO-OP silencieux : la colonne n'a jamais été
+  // ajoutée, et aucune migration ADD COLUMN ne la rattrapait.
+  // Conséquence mesurée sur la base de production de l'opérateur :
+  //   GET /api/vehicles → 500 INTERNAL_ERROR
+  //   Invalid `prisma.vehicle.findMany()` : The column `main.Vehicle.ctDate`
+  //   does not exist in the current database.
+  // La recherche par plaque, la fiche véhicule et les alertes de contrôle
+  // technique étaient donc TOTALEMENT hors service, sans message exploitable.
+  // ATTENTION, PIÈGE GÉNÉRAL : toute colonne ajoutée plus tard à un
+  // `CREATE TABLE IF NOT EXISTS` n'atteint QUE les bases neuves. Sur les bases
+  // déjà en service, il faut TOUJOURS une migration ADD COLUMN dédiée en fin de
+  // liste. Régression couverte par
+  // src/lib/__tests__/migrations-vehicle-ctdate.test.ts, qui rejoue la séquence
+  // sur une base portant l'ANCIENNE forme de Vehicle.
+  { id: '185_vehicle_ct_date',           onlyIfColumnMissing: { table: 'Vehicle', column: 'ctDate' }, sql: 'ALTER TABLE "Vehicle" ADD COLUMN "ctDate" TEXT' },
 ]
