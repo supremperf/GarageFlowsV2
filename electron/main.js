@@ -106,6 +106,37 @@ if (!USER_DATA_PIN.ok) {
 // où l'utilisateur est l'adversaire).
 const IS_DEV      = !app.isPackaged && process.env.ELECTRON_DEV === '1'
 const PORT        = 4028
+
+// ── Origine unique côté NAVIGATEUR ───────────────────────────────────────────
+//
+// Tout ce que le renderer voit — URL de la fenêtre, cookies injectés, NEXTAUTH_URL
+// — DOIT porter cette seule et même origine. Une divergence provoquait l'« écran
+// noir » au démarrage.
+//
+// Pourquoi « localhost » et non « 127.0.0.1 » : Next construit toute URL interne
+// via `NextURL` → `parseURL()`, qui applique REGEX_LOCALHOST_HOSTNAME
+// (next/dist/server/web/next-url.js) et réécrit INCONDITIONNELLEMENT tout hôte
+// 127.x.x.x / [::1] en « localhost ». Aucune option ne la désactive : mesuré sur
+// le serveur standalone réel, une fenêtre chargée sur http://127.0.0.1:PORT
+// recevait un « Location: http://localhost:PORT/login », donc une AUTRE origine.
+// Le cookie gf_session (posé sur 127.0.0.1) n'était plus envoyé, et surtout le
+// garde `will-redirect` bloquait le saut hors origine → la fenêtre principale ne
+// chargeait JAMAIS et le splash restait affiché indéfiniment.
+// Émettre un `Location` relatif depuis le middleware n'est pas une issue :
+// l'adaptateur de Next parse ce header en `NextURL` AVANT toute vérification
+// (server/web/adapter.js) et lève « TypeError: Invalid URL » → 500 (mesuré).
+// On aligne donc l'origine du client sur celle que Next impose.
+//
+// L'ÉCOUTE, elle, reste sur 127.0.0.1 (voir HOSTNAME plus bas) : jamais exposée
+// au LAN. Les appels internes de ce fichier (main → serveur) visent directement
+// 127.0.0.1, sans DNS.
+const APP_ORIGIN  = `http://localhost:${PORT}`
+
+// « localhost » résout sur cette machine en [::1] PUIS 127.0.0.1 (mesuré). Le
+// serveur n'écoutant que sur 127.0.0.1, Chromium tenterait ::1 d'abord et ne
+// réussirait que par repli — délai variable, et échec net si le repli est filtré.
+// Cette règle force la résolution côté Chromium : plus de tentative ::1.
+app.commandLine.appendSwitch('host-resolver-rules', 'MAP localhost 127.0.0.1')
 const APP_DATA    = app.getPath('userData')
 const DB_PATH     = path.join(APP_DATA, 'garageflow.db')
 const LIC_PATH    = path.join(APP_DATA, 'gf_license.dat')   // AES-GCM encrypted
@@ -805,7 +836,10 @@ function createGfSessionJwt(typ, lid, extra = {}) {
 }
 
 async function injectLicenseCookies(licenseType, licenseId = 'electron-local', extra = {}) {
-  const baseUrl = `http://127.0.0.1:${PORT}`
+  // MÊME origine que la fenêtre (APP_ORIGIN) : un cookie posé sur une autre
+  // origine ne serait jamais renvoyé par le renderer → l'utilisateur resterait
+  // bloqué sur /license malgré une licence valide.
+  const baseUrl = APP_ORIGIN
   const expDate = Math.floor(Date.now() / 1000) + 5 * 365 * 24 * 3600
   const jwt     = createGfSessionJwt(licenseType, licenseId, extra)
 
@@ -1617,7 +1651,10 @@ function startNextServer() {
       PORT:              String(PORT),
       // Écoute STRICTEMENT sur la boucle locale : jamais exposé au LAN.
       HOSTNAME:          '127.0.0.1',
-      NEXTAUTH_URL:      `http://127.0.0.1:${PORT}`,
+      // Origine vue par le NAVIGATEUR (≠ adresse d'écoute ci-dessus) : les URL de
+      // rappel NextAuth doivent tomber sur la même origine que la fenêtre, sinon
+      // la connexion renvoie hors origine et le garde de navigation la bloque.
+      NEXTAUTH_URL:      APP_ORIGIN,
       DATABASE_URL:      dbUrl,
       // Secret unique par installation, partagé entre main.js (mint des JWT) et
       // le serveur Next.js (vérification). Aucun repli codé en dur.
@@ -1836,7 +1873,8 @@ function createMainWindow() {
     reportCrash({ message: `render-process-gone: ${details?.reason || 'unknown'}`, fatal: true, kind: 'renderer' }).catch(() => {})
   })
 
-  const APP_URL = `http://127.0.0.1:${PORT}`
+  // Origine unique côté navigateur — voir APP_ORIGIN en tête de fichier.
+  const APP_URL = APP_ORIGIN
 
   // The standalone Next.js server + Prisma engine can take a while to accept
   // connections on a cold start (especially on Windows / first run while the
