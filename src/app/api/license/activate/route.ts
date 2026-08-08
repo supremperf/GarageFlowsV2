@@ -81,11 +81,28 @@ async function activateMechanicKey(input: {
   const { payload, clientHwid, clientInstallId, clientMeta } = input
   const lid = payload.lid
 
-  const unassigned = () =>
-    NextResponse.json(
+  /**
+   * Refus « clé non attribuée ».
+   *
+   * La réponse CLIENT reste rigoureusement identique quelle que soit la cause :
+   * distinguer « licence inconnue » de « licence connue mais sans mécanicien »
+   * dirait à un inconnu quels identifiants existent en base.
+   *
+   * Mais le SERVEUR, lui, doit savoir. Quatre situations très différentes
+   * partageaient ce message — dont « la licence n'existe pas du tout côté
+   * serveur », cas devenu courant après une purge de la table `LicenseKey` — et
+   * les journaux de production n'en disaient rien : on y voyait « étape 0 :
+   * requête reçue » puis un 403 muet. L'exploitant lisait « pas encore attribuée
+   * à un mécanicien » et allait chercher un problème d'attribution qui pouvait
+   * n'exister nulle part.
+   */
+  const unassigned = (cause: 'licence-inconnue' | 'type-non-mecanicien' | 'sans-mecanicien-ni-garage' | 'mecanicien-absent-du-garage') => {
+    logger.warn('[license/activate:mechanic] refus MECHANIC_KEY_UNASSIGNED', { lid, cause })
+    return NextResponse.json(
       { ok: false, code: 'MECHANIC_KEY_UNASSIGNED', reason: 'Cette clé n\'est pas encore attribuée à un mécanicien. Contactez le responsable du garage.' },
       { status: 403 },
     )
+  }
   const parentInvalid = () =>
     NextResponse.json(
       { ok: false, code: 'PARENT_LICENSE_INVALID', reason: 'La licence du garage n\'est plus valide.' },
@@ -103,7 +120,8 @@ async function activateMechanicKey(input: {
     }
     record = null
   }
-  if (!record || record.licenseType !== 'mechanic') return unassigned()
+  if (!record) return unassigned('licence-inconnue')
+  if (record.licenseType !== 'mechanic') return unassigned('type-non-mecanicien')
 
   // Intégrité DB (inclut mechanicId/parent — anti-altération).
   // Un MAC ABSENT n'est jamais légitime pour une clé mécanicien (toujours créée
@@ -130,7 +148,7 @@ async function activateMechanicKey(input: {
   if (record.expiryAt.getTime() < Date.now()) {
     return NextResponse.json({ ok: false, code: 'MECHANIC_LICENSE_EXPIRED', reason: 'Cette clé mécanicien a expiré.' }, { status: 403 })
   }
-  if (!record.mechanicId || !record.garageId) return unassigned()
+  if (!record.mechanicId || !record.garageId) return unassigned('sans-mecanicien-ni-garage')
 
   // Licence Garage parente valide (chaîne de confiance).
   const parentLid = record.parentLicenseId ?? payload.plid
@@ -146,7 +164,7 @@ async function activateMechanicKey(input: {
     where: { id: record.mechanicId, garageId: record.garageId },
     select: { id: true },
   })
-  if (!mechanic) return unassigned()
+  if (!mechanic) return unassigned('mecanicien-absent-du-garage')
 
   // Liaison matérielle éventuelle (si la clé porte un hwid).
   if (record.hwid) {
