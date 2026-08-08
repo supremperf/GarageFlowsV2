@@ -17,7 +17,7 @@
  * cluster local jetable). Rôle autorisé à CREATE DATABASE requis.
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest"
-import { execSync } from "node:child_process"
+import { execFileSync, execSync } from "node:child_process"
 import path from "node:path"
 import crypto from "node:crypto"
 
@@ -31,6 +31,30 @@ function sh(cmd: string, opts: Parameters<typeof execSync>[1] = {}) {
   } catch (e) {
     const err = e as { stdout?: Buffer; stderr?: Buffer; message: string }
     throw new Error(`${cmd}\n${err.stdout ?? ""}\n${err.stderr ?? ""}\n${err.message}`)
+  }
+}
+
+/**
+ * Ordre SQL d'administration, SANS passer par un shell.
+ *
+ * La forme `psql "URL" -c '…'` n'est portable que sous Linux, pour DEUX raisons :
+ *  - le shell : `execSync` utilise cmd.exe sous Windows, où les apostrophes ne
+ *    délimitent rien — psql recevait « 'CREATE », « DATABASE », « nom' » ;
+ *  - `getopt` : sous Windows, psql n'analyse plus AUCUNE option après un
+ *    argument positionnel (l'URL). La glibc, elle, les permute silencieusement,
+ *    d'où un `-c` correctement pris en compte en CI et ignoré ailleurs.
+ *
+ * `execFileSync` supprime le shell (donc toute question de guillemets) et `-d`
+ * fait de l'URL une VALEUR d'option, ce qui rend l'ordre indifférent.
+ */
+function psqlAdmin(sql: string): void {
+  try {
+    execFileSync("psql", ["-d", ADMIN_URL as string, "-v", "ON_ERROR_STOP=1", "-c", sql], {
+      stdio: ["ignore", "pipe", "pipe"],
+    })
+  } catch (e) {
+    const err = e as { stdout?: Buffer; stderr?: Buffer; message: string }
+    throw new Error(`psql -c ${sql}\n${err.stdout ?? ""}\n${err.stderr ?? ""}\n${err.message}`)
   }
 }
 
@@ -50,7 +74,7 @@ run("Numérotation de factures — concurrence réelle PostgreSQL", () => {
     // Base jetable dédiée à ce test (isolée de toute autre suite PG).
     dbName = `gf_numbering_${crypto.randomBytes(4).toString("hex")}`
     const admin = new URL(ADMIN_URL as string)
-    sh(`psql "${ADMIN_URL}" -c 'CREATE DATABASE ${dbName}'`)
+    psqlAdmin(`CREATE DATABASE ${dbName}`)
     admin.pathname = `/${dbName}`
     dbUrl = admin.toString()
 
@@ -71,7 +95,7 @@ run("Numérotation de factures — concurrence réelle PostgreSQL", () => {
   afterAll(async () => {
     await prisma?.$disconnect()
     if (dbName) {
-      try { sh(`psql "${ADMIN_URL}" -c 'DROP DATABASE ${dbName} WITH (FORCE)'`) } catch { /* best effort */ }
+      try { psqlAdmin(`DROP DATABASE ${dbName} WITH (FORCE)`) } catch { /* best effort */ }
     }
   })
 

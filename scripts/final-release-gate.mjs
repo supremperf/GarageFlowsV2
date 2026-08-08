@@ -84,8 +84,13 @@ run('Cohérence documentaire (post-baseline)', 'node scripts/check-docs-consiste
 run('Tests PostgreSQL réels (concurrence numérotation/stock/licences/sessions)',
   'npx vitest run src/lib/__tests__/document-numbering.postgres.int.test.ts src/lib/__tests__/stock-concurrency.postgres.int.test.ts src/lib/__tests__/license-devices.postgres.int.test.ts src/lib/__tests__/licensed-session.postgres.int.test.ts',
   { skip: !PG, skipReason: 'TEST_POSTGRES_URL non fourni', mandatory: !!PG })
+// `psql -d "$URL"` et NON `psql "$URL"` : sous Windows, getopt cesse d'analyser
+// les options dès le premier argument positionnel, si bien que les `-c` étaient
+// silencieusement ignorés (la glibc, elle, les permute — d'où un fonctionnement
+// trompeur en CI Linux uniquement). En faire une valeur d'option rend l'ordre
+// indifférent sur toutes les plateformes.
 run('Migrations PostgreSQL sur base neuve + smoke test',
-  `sh -c 'psql "$TEST_POSTGRES_URL" -c "DROP DATABASE IF EXISTS gf_gate_check" -c "CREATE DATABASE gf_gate_check" >/dev/null && DATABASE_URL="\${TEST_POSTGRES_URL%/*}/gf_gate_check" DIRECT_URL="\${TEST_POSTGRES_URL%/*}/gf_gate_check" node scripts/validate-server-db.js'`,
+  `sh -c 'psql -d "$TEST_POSTGRES_URL" -c "DROP DATABASE IF EXISTS gf_gate_check" -c "CREATE DATABASE gf_gate_check" >/dev/null && DATABASE_URL="\${TEST_POSTGRES_URL%/*}/gf_gate_check" DIRECT_URL="\${TEST_POSTGRES_URL%/*}/gf_gate_check" node scripts/validate-server-db.js'`,
   { skip: !PG, skipReason: 'TEST_POSTGRES_URL non fourni', mandatory: !!PG })
 run('Rate-limit distribué multi-instance (Redis réel)',
   'npx vitest run src/lib/__tests__/rate-limit-multi-instance.int.test.ts',

@@ -11,7 +11,7 @@
  * Skippé sauf TEST_POSTGRES_URL fourni (service postgres CI ou cluster local).
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest"
-import { execSync } from "node:child_process"
+import { execFileSync, execSync } from "node:child_process"
 import path from "node:path"
 import crypto from "node:crypto"
 
@@ -21,6 +21,24 @@ const run = ADMIN_URL ? describe : describe.skip
 function sh(cmd: string, opts: Parameters<typeof execSync>[1] = {}) {
   try { return execSync(cmd, { stdio: ["ignore", "pipe", "pipe"], ...opts }) }
   catch (e) { const err = e as { stdout?: Buffer; stderr?: Buffer; message: string }; throw new Error(`${cmd}\n${err.stdout}\n${err.stderr}\n${err.message}`) }
+}
+
+/**
+ * Ordre SQL d'administration, SANS shell — la forme `psql "URL" -c '…'` n'est
+ * portable que sous Linux : cmd.exe ne traite pas les apostrophes comme des
+ * délimiteurs, et le `getopt` de Windows cesse d'analyser les options dès qu'un
+ * argument positionnel (l'URL) est rencontré. `-d` en fait une valeur d'option,
+ * et `execFileSync` élimine toute question de guillemets.
+ */
+function psqlAdmin(sql: string): void {
+  try {
+    execFileSync("psql", ["-d", ADMIN_URL as string, "-v", "ON_ERROR_STOP=1", "-c", sql], {
+      stdio: ["ignore", "pipe", "pipe"],
+    })
+  } catch (e) {
+    const err = e as { stdout?: Buffer; stderr?: Buffer; message: string }
+    throw new Error(`psql -c ${sql}\n${err.stdout ?? ""}\n${err.stderr ?? ""}\n${err.message}`)
+  }
 }
 
 const h = vi.hoisted(() => ({ session: null as unknown }))
@@ -38,7 +56,7 @@ run("Décrément de stock — concurrence réelle PostgreSQL", () => {
   beforeAll(async () => {
     dbName = `gf_stock_${crypto.randomBytes(4).toString("hex")}`
     const dbUrl = (ADMIN_URL as string).replace(/\/[^/]*$/, `/${dbName}`)
-    sh(`psql "${ADMIN_URL}" -c 'CREATE DATABASE ${dbName}'`)
+    psqlAdmin(`CREATE DATABASE ${dbName}`)
     process.env.DATABASE_URL = dbUrl; process.env.DIRECT_URL = dbUrl
     sh(`npx prisma db push --schema prisma/server/schema.prisma --skip-generate --accept-data-loss`, {
       cwd: path.resolve(__dirname, "../../.."), env: { ...process.env, DATABASE_URL: dbUrl, DIRECT_URL: dbUrl },
@@ -56,7 +74,7 @@ run("Décrément de stock — concurrence réelle PostgreSQL", () => {
 
   afterAll(async () => {
     await prisma?.$disconnect()
-    if (dbName) { try { sh(`psql "${ADMIN_URL}" -c 'DROP DATABASE ${dbName} WITH (FORCE)'`) } catch { /* best effort */ } }
+    if (dbName) { try { psqlAdmin(`DROP DATABASE ${dbName} WITH (FORCE)`) } catch { /* best effort */ } }
   })
 
   it("stock 5, 10 ajouts parallèles de 2 → 2 succès, 8 refus (409), stock final = 1, jamais négatif", async () => {
