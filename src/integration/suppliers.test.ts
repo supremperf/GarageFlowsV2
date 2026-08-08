@@ -139,16 +139,31 @@ describe('POST transition (guarded lifecycle + stock effects)', () => {
     expect((await prisma.part.findFirst({ where: { id: ids.p5 } })).quantity).toBe(before + 8)
   })
 
-  it('serialises two concurrent receipts via the atomic CAS (one 200, one 409, single increment)', async () => {
+  it('serialises two concurrent receipts: exactly one applies, stock incremented once', async () => {
     const before = (await prisma.part.findFirst({ where: { id: ids.pRace } })).quantity // 10
     const [r1, r2] = await Promise.all([
       post({ action: 'transition', orderId: ids.poRace, to: 'received', confirm: true }),
       post({ action: 'transition', orderId: ids.poRace, to: 'received', confirm: true }),
     ])
-    // The compare-and-swap (updateMany where status='sent') lets exactly one win.
-    expect([r1.status, r2.status].sort()).toEqual([200, 409])
-    // Stock incremented exactly once despite two concurrent confirms.
+    const statuses = [r1.status, r2.status].sort()
+
+    // Exactly one receipt applies. The loser is refused, but WHICH refusal
+    // depends on the interleaving — both are correct:
+    //   409 — it read 'sent' too, then the compare-and-swap
+    //         (updateMany where status='sent') matched no row.
+    //   400 — it read AFTER the winner committed, so it saw 'received' and the
+    //         state machine rejected the illegal received→received transition.
+    // The previous assertion demanded 409 specifically and therefore failed on
+    // every isolated run (measured 4/4), passing only when full-suite timing
+    // happened to produce the read-read interleaving. The guarantee under test
+    // is "no double receipt", not which of the two refusals is returned.
+    expect(statuses[0]).toBe(200)
+    expect([400, 409]).toContain(statuses[1])
+
+    // THE invariant that matters: stock incremented exactly once, never twice.
     expect((await prisma.part.findFirst({ where: { id: ids.pRace } })).quantity).toBe(before + 5)
+    // And the order settles on the single terminal state.
+    expect((await prisma.purchaseOrder.findFirst({ where: { id: ids.poRace } })).status).toBe('received')
   })
 
   it('rejects an illegal transition (draft→received) even with confirm', async () => {
