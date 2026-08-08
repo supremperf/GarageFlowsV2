@@ -1020,8 +1020,35 @@ function httpPost(url, body) {
 // machine (HWID) against the license and stores the returned token. Best-effort:
 // if the server is unreachable the app still starts offline; the next online
 // heartbeat returns { deviceRequired:true } and re-triggers this to get a token.
+/**
+ * Motif du DERNIER refus explicite de l'autorité distante (ex. limite
+ * d'appareils atteinte). Conservé pour être présenté à l'utilisateur : sans
+ * cela, le seul message actionnable — « Désactivez un appareil ou contactez
+ * votre revendeur » — restait enfermé dans le journal.
+ */
+let lastRemoteActivationRefusal = null
+
+/** Motif déjà présenté à l'écran — évite de renvoyer le même à chaque battement. */
+let shownActivationRefusal = null
+
+/** Battements consécutifs où l'appareil n'a pas pu s'enregistrer. */
+let deviceRetryStreak = 0
+
+/** Au bout de N échecs d'affilée, on le signale UNE fois dans le journal. */
+const DEVICE_RETRY_WARN_AT = 5
+
+/**
+ * Enregistre CET appareil et récupère un jeton d'appareil.
+ *
+ * Renvoie l'AUTORITÉ qui a délivré le jeton — 'remote' ou 'local' — ou null en
+ * cas d'échec. Cette distinction est essentielle : un jeton émis par le repli
+ * local ne satisfait PAS l'autorité distante, qui l'ignore et redemande aussitôt
+ * un appareil. Renvoyer un simple booléen faisait passer les deux cas pour un
+ * succès et enfermait l'application dans une boucle de réactivation sans fin
+ * (136 tentatives observées dans garageflow.log, une toutes les 2 minutes).
+ */
 async function activateOnServer() {
-  if (!activeLicense?.token) return false
+  if (!activeLicense?.token) return null
 
   const info = getSystemInfo()
   const body = {
@@ -1033,22 +1060,39 @@ async function activateOnServer() {
   }
 
   // Autorité distante COMPILÉE en priorité, repli serveur local (127.0.0.1).
-  const bases = [LICENSE_SERVER, `http://127.0.0.1:${PORT}`]
+  const bases = [
+    { url: LICENSE_SERVER,             authority: 'remote' },
+    { url: `http://127.0.0.1:${PORT}`, authority: 'local'  },
+  ]
 
-  for (const base of bases) {
-    const res = await httpPost(`${base}/api/license/activate`, body)
+  for (const { url, authority } of bases) {
+    const res = await httpPost(`${url}/api/license/activate`, body)
+
     if (res && res.ok && res.deviceToken) {
       activeDeviceToken = res.deviceToken
       saveLicense(activeLicense.token, activeLicense.payload, res.deviceToken)
       if (Array.isArray(res.modules)) currentModules = res.modules.slice().sort()
-      log('[license/activate] device token obtained — deviceId:', res.deviceId || '?')
-      return true
+      if (authority === 'remote') lastRemoteActivationRefusal = null
+      log('[license/activate] device token obtained —', authority, '— deviceId:', res.deviceId || '?')
+      return authority
     }
+
     if (res && res.ok === false) {
-      log('[license/activate] server refused —', res.status || res.reason || 'unknown')
+      const reason = res.reason || res.status || 'refus sans motif'
+      log('[license/activate] server refused —', authority, '—', reason)
+      if (authority === 'remote') {
+        // Un REFUS EXPLICITE de l'autorité est une réponse DÉFINITIVE, pas une
+        // panne : on n'essaie PAS le repli local derrière. Le faire revenait à
+        // laisser le serveur local délivrer un jeton que l'autorité venait de
+        // refuser — ce qui rendait inopérante la limite d'appareils (une
+        // décision commerciale) tout en amorçant la boucle sans fin.
+        lastRemoteActivationRefusal = String(reason)
+        return null
+      }
     }
+    // res === null → autorité injoignable (et non refus) : le repli est légitime.
   }
-  return false
+  return null
 }
 
 /**
@@ -1135,8 +1179,38 @@ async function periodicLicenseCheck() {
   if (result.deviceRequired) {
     log('[license/check] device token required — re-activating this device')
     activeDeviceToken = null
-    const ok = await activateOnServer()
-    if (ok) { setTimeout(() => { periodicLicenseCheck().catch(() => {}) }, 500) }
+    const authority = await activateOnServer()
+
+    // On ne re-vérifie IMMÉDIATEMENT que si le jeton vient de l'autorité qui
+    // vient de l'exiger. Un jeton délivré par le repli local ne la satisfait
+    // pas : la re-sonder aussitôt relançait la même exigence, en boucle.
+    if (authority === 'remote') {
+      deviceRetryStreak = 0
+      setTimeout(() => { periodicLicenseCheck().catch(() => {}) }, 500)
+      return
+    }
+
+    // Échec ou jeton purement local : on laisse le battement normal reprendre,
+    // sans re-sonde immédiate, et on compte les tentatives infructueuses.
+    deviceRetryStreak++
+
+    // Refus EXPLICITE de l'autorité (ex. limite d'appareils atteinte) : seule
+    // l'utilisatrice ou l'utilisateur peut débloquer la situation. Le message
+    // n'existait que dans le journal — on l'affiche, une seule fois par motif.
+    if (lastRemoteActivationRefusal && lastRemoteActivationRefusal !== shownActivationRefusal) {
+      shownActivationRefusal = lastRemoteActivationRefusal
+      log('[license/check] activation refusée par l\'autorité —', lastRemoteActivationRefusal)
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('license:revoked', {
+          status: 'device_limit',
+          reason: lastRemoteActivationRefusal,
+        })
+      }
+    } else if (deviceRetryStreak === DEVICE_RETRY_WARN_AT) {
+      // Aucun refus explicite (autorité injoignable) : on signale une fois que
+      // l'appareil n'arrive pas à s'enregistrer, sans bloquer l'utilisation.
+      log(`[license/check] ${deviceRetryStreak} tentatives d'enregistrement sans succès — autorité injoignable ?`)
+    }
     return
   }
 
