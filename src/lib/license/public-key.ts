@@ -13,8 +13,8 @@
  */
 const _LINES = [
   '-----BEGIN PUBLIC KEY-----',
-  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXOkZzbqVmq/ZPhHEWa2hCyQG0d/W',
-  'Y+SVGFD/W/tmZyVoKinaUwHYISXZZrJK8dHqvEWvoRtBldeEREJmF0A2Ow==',
+  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE0NSE5M7rvk+jwOBAwgk7PfKJTqHT',
+  'Fkb2bYbjK6eEkWwiXUwOaQGxmiw04IJpwm3+eOFXb5zf1bn+rewOXryfkQ==',
   '-----END PUBLIC KEY-----',
 ]
 
