@@ -104,6 +104,28 @@ fichier témoin supprimé — le mécanisme n'est donc pas cassé en général e
 cause reste inconnue. Ce qui est corrigé, c'est l'INVISIBILITÉ : `buildId` rend
 deux paquets de même version distinguables dès la première ligne du journal.
 
+**AUD-056 — SECONDE OCCURRENCE (2026-08-09 01:03), signature obtenue.**
+Reproduit une deuxième fois, et cette fois le code de sortie a été capturé :
+
+| | installation par-dessus (échec) | installation après désinstallation |
+|---|---|---|
+| durée | 118 s, puis 163,7 s | 19 à 22 s |
+| code de sortie | **2** | 0 |
+| fichiers écrits | **aucun** | 2330 |
+
+Le code 2 est celui que `handleUninstallResult` (app-builder-lib) pose —
+`SetErrorLevel 2` puis `Quit` — lorsque le désinstalleur de la version en place
+rend un code non nul. L'application NE tournait PAS (arrêtée 7 min plus tôt,
+journal à l'appui), et le même désinstalleur, lancé SEUL juste après, a rendu
+**0 en 2,1 s** en nettoyant correctement. L'échec est donc intermittent et se
+situe dans l'enchaînement installeur → désinstalleur, pas dans le désinstalleur.
+Les deux occurrences suivent immédiatement un build ayant écrit ~1 Go (analyse
+antivirus en cours plausible, non prouvée).
+
+Règle opérationnelle sûre en attendant : **désinstaller avant d'installer**, ou
+vérifier le `buildId` au démarrage — c'est lui qui a rendu les deux échecs
+visibles au lieu de les laisser passer pour des succès.
+
 ## Lot rotation — Réalignement cryptographique post-rotation (2026-08-08, soir)
 
 **Contexte** : l'opérateur a exécuté une rotation cryptographique TOTALE le
