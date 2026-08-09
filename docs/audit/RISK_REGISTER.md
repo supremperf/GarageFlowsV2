@@ -77,6 +77,35 @@
 | AUD-055 | Basse→**Corrigé** | hygiène | V2 | ~20 bases SQLite `.tmp-*.db` laissées à la racine par les tests d'intégration, non ignorées : un `git add -A` après `npm test` les committait | `git status` après `vitest run` | **CORRIGÉ** — `.tmp-*.db` et `.tmp-*.db-journal` ignorés (aucune n'était déjà suivie) | 24 |
 | AUD-056 | Haute | distribution | V2 | Une installation lancée par-dessus une installation de MÊME version s'est exécutée 118 s **sans écrire un seul fichier**, en silence : le poste a continué de faire tourner l'ancien paquet. Non reproduit après changement d'état — cause non établie | Observé 2026-08-08 23:38 (0 fichier modifié après coup, `app.asar` inchangé, ancien `main.js` conservé) ; installation propre à 23:43 = 19 s et conforme | **PARTIEL** — `buildId` (empreinte d'`app.asar`) journalisé au démarrage : un paquet non remplacé devient visible en une ligne. Cause racine NON identifiée ; discipline de version = opérateur | 17/23 |
 | AUD-057 | Moyenne→**Corrigé** | licence/observabilité | V2 | `/api/license/activate` : QUATRE causes distinctes de refus mécanicien (licence inconnue du serveur, mauvais type, clé sans mécanicien, mécanicien absent du garage) partageaient un unique 403 sans aucune trace serveur — les journaux Vercel montraient « étape 0 : requête reçue » puis un 403 muet | Journaux de production 2026-08-09 (403 sur `/api/license/activate`) ; activate/route.ts:84-88,106,133,149 avant correction | **CORRIGÉ** — cause discriminante journalisée côté serveur ; réponse client INCHANGÉE dans les quatre cas (pas d'énumération d'identifiants) | 6/39 |
+| AUD-058 | Critique→**Corrigé** | finance/réglages | V2 | `PATCH /api/garages` n'appliquait AUCUNE validation (`UpdateGarageSchema` existait, jamais appelé) : TVA 150 % persistée ; **TVA 0 % impossible** (`parseFloat(x) \|\| 20`), donc franchise art. 293 B indéclarable ; tarif horaire >4 décimales remplacé par 60 €/h en silence ; devise « EUROS » et e-mail malformé acceptés | Parcours garage réel, 2026-08-09 | **CORRIGÉ** — schéma appliqué (+ champs d'atelier ajoutés, sinon Zod les supprimait), `\|\|` remplacés, conversion monétaire stricte ; revérifié sur l'API | 7/19 |
+| AUD-059 | Moyenne→**Corrigé** | api/projection | V2 | `GET /api/garages` : `return` anticipé court-circuitant `garageToEuros` → `hourlyRate` `undefined` côté client | garages/route.ts:26-31 | **CORRIGÉ** — conversion appliquée à l'objet expurgé | 19 |
+| AUD-060 | Haute→**Corrigé** | stock/finance | V2 | `POST`/`PATCH /api/parts` ignoraient leurs schémas : quantité **négative** acceptée (stock −3) et prix à 6 décimales arrondi en silence | `{quantity:-3}` → 201 | **CORRIGÉ** — schémas appliqués, `parseAmountToScaled` strict | 12/19 |
+| AUD-061 | Moyenne→**Corrigé** | mécaniciens | V2 | `specialty:'Moteur'` accepté en 201 puis stocké `"[]"` : spécialité perdue sans message | Création réelle d'un mécanicien | **CORRIGÉ** — le schéma exige un tableau ; la lecture tolérante (délibérée) reste intacte | 10 |
+
+## Lot parcours garage — Utilisation réelle de bout en bout (2026-08-09)
+
+**Méthode** : base SQLite neuve issue du modèle, serveur standalone de production
+(`ELECTRON=1`, port isolé), licence garage réelle, parcours joué via l'API HTTP —
+vrais handlers, vraie base, vraie validation, données accentuées.
+
+**Quatre défauts (AUD-058 à 061), une seule cause** : des schémas présents dans
+`src/lib/schemas` que les routes n'appelaient pas. Aucun n'était détectable en
+lisant les tests existants ; tous sont apparus à la première utilisation
+réaliste.
+
+**Solide** : isolation multi-garage (404 sur les 5 ressources d'un autre garage,
+liste vide, aucune fuite) · exactitude financière (186,91 € HT / 224,29 € TTC,
+identiques au calcul indépendant) · FEC **équilibré** (débit 448,58 = crédit
+448,58) · immuabilité (devis accepté et facture émise verrouillés, pas de retour
+au brouillon) · numérotation contiguë · machine à états cohérente · encodage
+intact de bout en bout.
+
+**Non testé** : rendu des PDF (généré côté CLIENT par jsPDF, hors d'atteinte sans
+navigateur) et interface React (aucune automatisation disponible pour Electron).
+
+**Attention** : ces correctifs bloquent l'écriture de nouvelles valeurs invalides,
+ils ne réparent pas l'existant. Une base portant déjà un taux hors bornes le
+conserve — un contrôle des réglages en place est recommandé.
 
 ## Lot packaging — Cycle Windows complet (2026-08-08, nuit)
 

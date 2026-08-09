@@ -7,6 +7,7 @@ import { garageToEuros } from '@/lib/money-db'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import bcrypt from 'bcryptjs'
 import { savePhoto } from '@/lib/photo-store'
+import { UpdateGarageSchema } from '@/lib/schemas'
 
 // GET /api/garages  — returns the current user's garage info
 export const GET = withAuth(async () => {
@@ -25,10 +26,14 @@ export const GET = withAuth(async () => {
   // seule). Défense contre la lecture par des rôles bas (MECHANIC/VIEWER).
   if (garage) {
     const { smtpPass: _smtpPass, ...safe } = garage as typeof garage & { smtpPass?: unknown }
-    return NextResponse.json(safe)
+    // …mais TOUJOURS en repassant par garageToEuros : ce retour anticipé
+    // court-circuitait la conversion, si bien que la réponse ne portait que
+    // `hourlyRateTenThousandths` et que `hourlyRate` arrivait `undefined` côté
+    // client — l'appel à garageToEuros plus bas était devenu inatteignable.
+    return NextResponse.json(garageToEuros(safe))
   }
 
-  return NextResponse.json(garage ? garageToEuros(garage) : garage)
+  return NextResponse.json(garage)
 })
 
 // PATCH /api/garages  — update garage info
@@ -38,11 +43,41 @@ export const PATCH = withAuth(async (req) => {
     return NextResponse.json({ error: 'Réservé au propriétaire' }, { status: 403 })
   }
 
-  const body = await req.json()
+  const raw = await req.json()
 
   // Reject oversized logos (very generous — the client already downscales)
-  if (body.logoBase64 && body.logoBase64.length > MAX_LOGO_BASE64_LENGTH) {
+  if (raw.logoBase64 && raw.logoBase64.length > MAX_LOGO_BASE64_LENGTH) {
     return NextResponse.json({ error: 'Logo trop grand' }, { status: 413 })
+  }
+
+  // VALIDATION — `UpdateGarageSchema` existait déjà mais n'était pas appliqué :
+  // le corps de requête partait tel quel en base. Un taux de TVA de 150 %, une
+  // devise « EUROS » ou une adresse e-mail malformée étaient acceptés et
+  // persistés, et le taux de TVA du garage alimente CHAQUE document facturé.
+  const parsed = UpdateGarageSchema.safeParse(raw)
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Réglages invalides', code: 'VALIDATION_ERROR', details: parsed.error.flatten() },
+      { status: 400 },
+    )
+  }
+  const body = parsed.data
+
+  // Le schéma garantit ≤ 4 décimales, donc une conversion exacte. On la fait
+  // AVANT l'écriture, et on refuse explicitement en cas d'échec : le code
+  // précédent retombait sur `?? 600000`, écrivant 60 €/h en silence quand la
+  // saisie n'était pas convertible — le garage facturait alors un tarif qu'il
+  // n'avait jamais choisi.
+  let scaledHourlyRate: number | undefined
+  if (body.hourlyRate !== undefined) {
+    const scaled = parseAmountToScaled(body.hourlyRate)
+    if (scaled === null) {
+      return NextResponse.json(
+        { error: 'Tarif horaire invalide', code: 'VALIDATION_ERROR' },
+        { status: 400 },
+      )
+    }
+    scaledHourlyRate = scaled
   }
 
   const garage = await prisma.garage.update({
@@ -55,7 +90,7 @@ export const PATCH = withAuth(async (req) => {
       ...(body.website !== undefined && { website: body.website || null }),
       ...(body.siret !== undefined && { siret: body.siret || null }),
       ...(body.vatNumber !== undefined && { vatNumber: body.vatNumber || null }),
-      ...(body.taxRate !== undefined && { taxRate: parseFloat(body.taxRate) || 20 }),
+      ...(body.taxRate !== undefined && { taxRate: body.taxRate }),
       ...(body.iban !== undefined && { iban: body.iban || null }),
       ...(body.bic !== undefined && { bic: body.bic || null }),
       ...(body.bankName !== undefined && { bankName: body.bankName || null }),
@@ -76,14 +111,14 @@ export const PATCH = withAuth(async (req) => {
       ...(body.language !== undefined && { language: body.language }),
       ...(body.onboardingComplete !== undefined && { onboardingComplete: body.onboardingComplete }),
       // Saisie euros -> entier exact (dix-milliemes) ; parsing STRICT (jamais parseFloat monétaire).
-      ...(body.hourlyRate !== undefined && { hourlyRateTenThousandths: parseAmountToScaled(body.hourlyRate) ?? 600000 }),
-      ...(body.workshopStartHour !== undefined && { workshopStartHour: parseInt(body.workshopStartHour, 10) || 8 }),
-      ...(body.workshopEndHour   !== undefined && { workshopEndHour:   parseInt(body.workshopEndHour,   10) || 18 }),
+      ...(body.hourlyRate !== undefined && { hourlyRateTenThousandths: scaledHourlyRate }),
+      ...(body.workshopStartHour !== undefined && { workshopStartHour: body.workshopStartHour }),
+      ...(body.workshopEndHour   !== undefined && { workshopEndHour:   body.workshopEndHour }),
       ...(body.smsPhone !== undefined && { smsPhone: body.smsPhone || null }),
       ...(body.workOrderPrefix        !== undefined && { workOrderPrefix:        body.workOrderPrefix }),
-      ...(body.warrantyMonthsDefault  !== undefined && { warrantyMonthsDefault:  parseInt(body.warrantyMonthsDefault,  10) || 12 }),
-      ...(body.loanerEnabled          !== undefined && { loanerEnabled:          Boolean(body.loanerEnabled) }),
-      ...(body.smartReminderMonths    !== undefined && { smartReminderMonths:    parseInt(body.smartReminderMonths,    10) || 11 }),
+      ...(body.warrantyMonthsDefault  !== undefined && { warrantyMonthsDefault:  body.warrantyMonthsDefault }),
+      ...(body.loanerEnabled          !== undefined && { loanerEnabled:          body.loanerEnabled }),
+      ...(body.smartReminderMonths    !== undefined && { smartReminderMonths:    body.smartReminderMonths }),
       ...(body.purchaseOrderPrefix    !== undefined && { purchaseOrderPrefix:    body.purchaseOrderPrefix }),
     },
   })

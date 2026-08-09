@@ -185,7 +185,20 @@ export const UpdateUserSchema = z.object({
 // tolère aussi une chaîne JSON déjà sérialisée (rétro-compat / clients tiers).
 // La route normalise ensuite via normalizeSpecialty() avant l'écriture en base.
 // avatar : dérivé du nom côté serveur s'il n'est pas fourni (donc optionnel ici).
-const SpecialtyInput = z.union([z.array(z.string().max(60)).max(50), z.string().max(2000)]).optional()
+// La chaîne acceptée doit être un TABLEAU JSON, pas un libellé nu : côté
+// écriture, `normalizeSpecialty` ne conserve que du JSON de tableau et renvoie
+// `[]` pour tout le reste — délibérément, pour ne jamais faire lever la lecture
+// d'une ligne corrompue (cf. specialty.ts). Sans ce contrôle, `specialty:
+// 'Moteur'` était ACCEPTÉ en 201 puis stocké vide : la spécialité disparaissait
+// sans message. Mieux vaut un refus explicite qu'un enregistrement muet.
+const jsonArrayOfStrings = z.string().max(2000).refine((s) => {
+  try {
+    const parsed = JSON.parse(s)
+    return Array.isArray(parsed) && parsed.every((x) => typeof x === 'string')
+  } catch { return false }
+}, { message: 'Spécialité : tableau attendu (ex. ["Moteur","Freins"]) ou tableau JSON sérialisé' })
+
+const SpecialtyInput = z.union([z.array(z.string().max(60)).max(50), jsonArrayOfStrings]).optional()
 
 export const CreateMechanicSchema = z.object({
   name:      z.string().min(1, 'Nom requis').max(100),
@@ -219,7 +232,19 @@ export const UpdateGarageSchema = z.object({
   onboardingComplete: z.boolean().optional(),
   logoBase64:        z.string().max(6_000_000, 'Logo trop volumineux').optional().nullable(),
   smsPhone:          phone,
-})
+  // Réglages d'atelier et de documents — présents dans le handler depuis
+  // toujours, absents de ce schéma : ils passaient donc sans aucun contrôle.
+  workshopStartHour: z.number().int().min(0).max(23).optional(),
+  workshopEndHour:   z.number().int().min(1).max(24).optional(),
+  workOrderPrefix:      z.string().min(1).max(10).optional(),
+  purchaseOrderPrefix:  z.string().min(1).max(10).optional(),
+  warrantyMonthsDefault: z.number().int().min(0).max(120).optional(),
+  smartReminderMonths:   z.number().int().min(0).max(60).optional(),
+  loanerEnabled:         z.boolean().optional(),
+}).refine(
+  (g) => g.workshopStartHour === undefined || g.workshopEndHour === undefined || g.workshopEndHour > g.workshopStartHour,
+  { message: "L'heure de fermeture doit suivre l'heure d'ouverture", path: ['workshopEndHour'] },
+)
 
 // ─── Part ─────────────────────────────────────────────────────────────────────
 
