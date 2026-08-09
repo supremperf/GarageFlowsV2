@@ -2244,23 +2244,39 @@ function createMainWindow() {
   // localOrigin) levait une ReferenceError AVANT event.preventDefault() : le
   // handler échouait « ouvert » (navigation non bloquée) — le garde de
   // confinement était totalement inopérant.
-  const { isLocalAppUrl } = require('./nav-guard')
+  const { isLocalAppUrl, canonicalizeLoopbackUrl } = require('./nav-guard')
   const localOrigin = new URL(APP_URL).origin
-  mainWindow.webContents.on('will-navigate', (event, url) => {
-    if (!isLocalAppUrl(url, localOrigin)) {
+
+  // Garde de navigation :
+  //  1. Origine canonique exacte (http://127.0.0.1:PORT) → autorisée.
+  //  2. Même serveur de bouclage sous un autre nom (le serveur Next standalone
+  //     redirige « / → /login » sur « localhost » alors que la fenêtre est sur
+  //     « 127.0.0.1 ») → RÉÉCRITE vers l'origine canonique puis rechargée. Sans
+  //     cela la redirection était bloquée et la fenêtre restait VIDE (écran blanc).
+  //     La réécriture garde tout sur 127.0.0.1 (cookies gf_session/session
+  //     inchangés, pas d'ambiguïté IPv4/IPv6).
+  //  3. Toute autre origine (externe, port différent, userinfo) → BLOQUÉE.
+  const guardNavigation = (event, url, kind) => {
+    if (isLocalAppUrl(url, localOrigin)) return
+    const canonical = canonicalizeLoopbackUrl(url, localOrigin)
+    if (canonical) {
       event.preventDefault()
-      log('[security] navigation bloquée vers :', String(url).slice(0, 80))
+      log(`[nav] ${kind} loopback normalisée →`, String(canonical).slice(0, 80))
+      // loadURL différé : hors du handler d'évènement (évite la ré-entrance).
+      setImmediate(() => {
+        if (mainWindow && !mainWindow.isDestroyed()) mainWindow.loadURL(canonical)
+      })
+      return
     }
-  })
+    event.preventDefault()
+    log(`[security] ${kind} bloquée vers :`, String(url).slice(0, 80))
+  }
+
+  mainWindow.webContents.on('will-navigate', (event, url) => guardNavigation(event, url, 'navigation'))
   // will-navigate ne se déclenche PAS sur une redirection serveur (3xx) : sans ce
   // garde, une redirection hors origine locale afficherait une page étrangère avec
   // le pont preload encore attaché. Défense en profondeur (miroir de will-navigate).
-  mainWindow.webContents.on('will-redirect', (event, url) => {
-    if (!isLocalAppUrl(url, localOrigin)) {
-      event.preventDefault()
-      log('[security] redirection bloquée vers :', String(url).slice(0, 80))
-    }
-  })
+  mainWindow.webContents.on('will-redirect', (event, url) => guardNavigation(event, url, 'redirection'))
   // Refuse tout attachement de webview (vecteur d'exécution non prévu).
   mainWindow.webContents.on('will-attach-webview', (event) => event.preventDefault())
 
