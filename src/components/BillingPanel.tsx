@@ -250,7 +250,8 @@ export default function BillingPanel({ onClose }: Props) {
                   {tab === 'quotes' ? <FileText className="w-6 h-6 text-slate-600" /> : <Receipt className="w-6 h-6 text-slate-600" />}
                 </div>
                 <p className="text-slate-400 font-medium mb-1">
-                  {search ? 'Aucun résultat' : `Aucune ${tab === 'quotes' ? 'devis' : 'facture'}`}
+                  {/* « devis » est masculin : l'article était figé au féminin pour les deux onglets. */}
+                  {search ? 'Aucun résultat' : (tab === 'quotes' ? 'Aucun devis' : 'Aucune facture')}
                 </p>
                 <p className="text-slate-600 text-sm">
                   {search ? 'Modifiez votre recherche' : 'Cliquez "Nouveau" pour créer'}

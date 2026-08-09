@@ -201,8 +201,7 @@ export default function LicensePage() {
                   <Info className="w-3 h-3 text-slate-700 mt-0.5 flex-shrink-0" />
                   <p className="text-[10px] text-slate-700">
                     Format: <span className="font-mono text-slate-600">GF2.&lt;header&gt;.&lt;payload&gt;.&lt;signature&gt;</span>
-                    {' '}— fourni par votre revendeur ou généré par{' '}
-                    <span className="text-slate-500">python scripts/keygen.py</span>
+                    {' '}— cette clé vous est fournie par votre revendeur GarageFlows.
                   </p>
                 </div>
               </div>
