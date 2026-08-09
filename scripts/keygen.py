@@ -448,6 +448,8 @@ def main():
             cid  = args.customer or f"CUST-{i+1:04d}"
             info = make_license(pk, cid, args.type, args.years, args.seats,
                                 args.bind_hwid, args.label)
+            keygen_db.add_license(info, {})
+            keygen_db.audit_log("gen_batch", info["lid"], f"cid={cid}")
             print(f"[{i+1:>3}] {info['token']}")
             print(f"      cid={info['cid']}  expires={info['expires_at']}  lid={info['lid']}\n")
         return
@@ -458,6 +460,13 @@ def main():
         pk   = _load_private(args.passphrase)
         info = make_license(pk, args.customer, args.type, args.years,
                             args.seats, args.bind_hwid, args.label)
+        # Enregistrement dans la base locale du keygen (keys/licenses_db.json).
+        # Sans lui, « --gen-mechanic --parent-lid <LID> » — pourtant documenté
+        # dans l'en-tête de ce fichier — échouait TOUJOURS avec « Licence parente
+        # introuvable dans la base locale » : seuls cmd_gen_mechanic et
+        # keygen_ui.py appelaient add_license, jamais --gen ni --batch.
+        keygen_db.add_license(info, {})
+        keygen_db.audit_log("gen", info["lid"], f"cid={args.customer}")
         print("\n" + "="*70)
         print("  LICENSE GENERATED")
         print("="*70)
