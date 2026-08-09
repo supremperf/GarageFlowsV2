@@ -1311,6 +1311,40 @@ async function activateOnServer() {
 }
 
 /**
+ * Réplique la licence ACTIVE dans la base LOCALE du poste, sans lui donner la
+ * moindre autorité.
+ *
+ * Pourquoi c'est nécessaire : activateOnServer() interroge l'autorité DISTANTE
+ * en premier et RETOURNE dès qu'elle répond favorablement. La route locale
+ * /api/license/activate — la SEULE à écrire une ligne LicenseKey dans le SQLite
+ * du poste — n'est donc jamais appelée quand la machine est en ligne. La base
+ * locale ignorait alors la licence garage active, et toute fonction qui la
+ * cherche localement échouait : l'enregistrement d'une clé mécanicien répondait
+ * « Licence garage parente introuvable pour ce garage », ce qui rendait l'onglet
+ * « Accès mécaniciens » inutilisable dès que le poste avait du réseau. La voie
+ * mécanicien faisait déjà cet enregistrement (establishMechanicSession) ; la
+ * voie garage n'avait aucun équivalent — c'est cette asymétrie qui était le bug.
+ *
+ * Best-effort et idempotent : le control plane distant reste l'autorité, la
+ * réponse est ignorée, et ni le device token ni l'état des refus ne sont
+ * touchés. Si la ligne existe déjà, la route se contente d'actualiser lastSeenAt.
+ */
+async function recordLicenseInLocalDatabase() {
+  if (!activeLicense?.token) return false
+  const info = getSystemInfo()
+  const res = await httpPost(`http://127.0.0.1:${PORT}/api/license/activate`, {
+    license: activeLicense.token,
+    hwid:    getHwid(),
+    version: info.version,
+    os:      info.os,
+    arch:    info.arch,
+  }).catch(() => null)
+  const ok = !!(res && res.ok)
+  log('[license] enregistrement dans la base locale —', ok ? 'OK' : 'ignoré')
+  return ok
+}
+
+/**
  * Établit la session MÉCANICIEN locale (mono-poste). Une clé mécanicien exige
  * une session portant gid + mid ; on interroge l'activation locale pour les
  * obtenir puis on réinjecte le cookie complet. Best-effort : si la clé n'est pas
@@ -2996,6 +3030,14 @@ app.whenReady().then(async () => {
   // l'accès (fail-closed).
   if (!IS_DEV && activeLicense?.payload?.typ === 'mechanic') {
     await establishMechanicSession().catch(err => log('[mechanic] session error:', err.message))
+  }
+
+  // ── Licence GARAGE : enregistrement dans la base locale ───────────────────
+  // Symétrique du bloc mécanicien ci-dessus. Voir recordLicenseInLocalDatabase()
+  // pour le détail : sans cet appel, un poste EN LIGNE n'écrit jamais sa licence
+  // garage en base locale et le module « Accès mécaniciens » est inutilisable.
+  if (!IS_DEV && activeLicense?.token && activeLicense?.payload?.typ !== 'mechanic') {
+    await recordLicenseInLocalDatabase().catch(err => log('[license] enregistrement local ignoré:', err.message))
   }
 
   // ── Open main window ──────────────────────────────────────────────────────
