@@ -954,6 +954,39 @@ function createGfSessionJwt(typ, lid, extra = {}) {
   return `${header}.${payload}.${sig}`
 }
 
+/**
+ * Ferme la session applicative (NextAuth) de l'utilisateur connecté.
+ *
+ * Appelée lors d'un CHANGEMENT DE LICENCE. Sans cela, la session ouverte sous
+ * l'ancienne licence survivait à la bascule : après être passé sur une clé
+ * MÉCANICIEN, l'instance continuait de servir des données de niveau
+ * propriétaire — clients, devis, factures, utilisateurs, paramètres du garage,
+ * export comptable FEC, et jusqu'à la SUPPRESSION d'un mécanicien (constaté :
+ * HTTP 200 sur toutes ces routes). Le garde-fou prévu pour cela
+ * (validateLicensedSession → LICENSE_WRONG_TYPE) ne s'exécute pas sur Electron,
+ * où l'application des licences est désactivée par conception
+ * (licenseEnforcementEnabled() renvoie false quand ELECTRON=1). Une fois la
+ * session supprimée, ces mêmes routes répondent 401 — d'où ce nettoyage
+ * explicite au moment précis où la frontière de privilège est franchie.
+ */
+async function clearAppSessionCookies() {
+  const noms = [
+    'next-auth.session-token',
+    'next-auth.csrf-token',
+    'next-auth.callback-url',
+    '__Secure-next-auth.session-token',
+    '__Host-next-auth.csrf-token',
+  ]
+  let supprimes = 0
+  for (const name of noms) {
+    try {
+      await session.defaultSession.cookies.remove(APP_ORIGIN, name)
+      supprimes++
+    } catch (_) { /* cookie absent : rien à faire */ }
+  }
+  log('[session] session applicative fermée après changement de licence —', supprimes, 'cookie(s)')
+}
+
 async function injectLicenseCookies(licenseType, licenseId = 'electron-local', extra = {}) {
   // MÊME origine que la fenêtre (APP_ORIGIN) : un cookie posé sur une autre
   // origine ne serait jamais renvoyé par le renderer → l'utilisateur resterait
@@ -2767,6 +2800,11 @@ function setupIPC() {
       if (!payload) {
         return { ok: false, reason: 'Licence invalide ou expirée' }
       }
+      // Changement RÉEL de licence (identité ou type) : la session ouverte sous
+      // l'ancienne licence ne doit pas survivre à la bascule. Voir
+      // clearAppSessionCookies() pour ce qui restait accessible sans ce nettoyage.
+      const ancienne = activeLicense?.payload ?? null
+      const licenceDifferente = !ancienne || ancienne.lid !== payload.lid || ancienne.typ !== payload.typ
       // A new license key = a new device binding: drop the old device token.
       activeLicense = { token: token.trim(), payload }
       activeDeviceToken = null
@@ -2779,6 +2817,7 @@ function setupIPC() {
       await activateOnServer()
       // Re-inject session cookies so Next.js picks up the new type
       await injectLicenseCookies(payload.typ, payload.lid ?? 'runtime')
+      if (licenceDifferente) await clearAppSessionCookies()
       log('[update-license] upgraded to type:', payload.typ, '| lid:', payload.lid)
       return {
         ok:          true,
