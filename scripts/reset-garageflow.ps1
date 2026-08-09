@@ -248,6 +248,75 @@ fs.writeFileSync(require('path').join(out, 'public.pem'), publicPem, { mode: 0o6
     }
 }
 
+# Valide la paire candidate AVANT la moindre mutation (fichiers, Vercel, Neon).
+# Une rotation qui pousse une paire non vérifiée fait rejeter TOUTES les licences
+# en silence ; ce contrôle est donc la dernière barrière avant le point de
+# non-retour. Il rejoue exactement ce que fait le produit : ECDSA P-256 + SHA-256
+# sur « <header>.<payload> », signature DER (crypto.createVerify côté Electron,
+# cryptography côté keygen Python).
+function Test-LicenseKeyPairCandidate {
+    param(
+        [Parameter(Mandatory=$true)][string]$PrivatePath,
+        [Parameter(Mandatory=$true)][string]$PublicPath,
+        [AllowNull()][string]$PreviousPublicPath,
+        [Parameter(Mandatory=$true)][string]$RunDirectory
+    )
+
+    $node = Get-Command node.exe -ErrorAction SilentlyContinue
+    if (-not $node) { $node = Get-Command node -ErrorAction SilentlyContinue }
+    if (-not $node) { throw 'Node.js est obligatoire pour valider la paire de signature.' }
+
+    $checkPath = Join-Path $RunDirectory 'verifier-paire-licence.cjs'
+    $js = @'
+const fs = require('fs');
+const crypto = require('crypto');
+const [priv, pub, prev] = process.argv.slice(2);
+const privateKey = fs.readFileSync(priv, 'utf8');
+const publicKey = fs.readFileSync(pub, 'utf8');
+const b64u = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+const input = b64u({ alg: 'ES256', typ: 'GF-LIC', v: 2 }) + '.' +
+              b64u({ lid: 'rotation-selftest', typ: 'premium', exp: 4102444800 });
+const sig = crypto.createSign('SHA256').update(input).sign({ key: privateKey, format: 'pem' });
+const verify = (data, signature, key) => {
+  try { return crypto.createVerify('SHA256').update(data).verify({ key, format: 'pem' }, signature); }
+  catch { return false; }
+};
+const tampered = Buffer.from(sig); tampered[tampered.length - 1] ^= 0xff;
+const res = {
+  signeEtVerifie: verify(input, sig, publicKey),
+  refuseCharge: !verify(input + 'x', sig, publicKey),
+  refuseSignature: !verify(input, tampered, publicKey),
+  refuseAncienneCle: true,
+};
+if (prev && fs.existsSync(prev)) {
+  res.refuseAncienneCle = !verify(input, sig, fs.readFileSync(prev, 'utf8'));
+  res.ancienneCleTestee = true;
+} else {
+  res.ancienneCleTestee = false;
+}
+res.ok = res.signeEtVerifie && res.refuseCharge && res.refuseSignature && res.refuseAncienneCle;
+console.log(JSON.stringify(res));
+'@
+    [IO.File]::WriteAllText($checkPath, $js, $script:Utf8NoBom)
+    try {
+        $args = @($checkPath, $PrivatePath, $PublicPath)
+        if (-not [string]::IsNullOrWhiteSpace($PreviousPublicPath)) { $args += $PreviousPublicPath }
+        $out = & $node.Source @args 2>&1
+        if ($LASTEXITCODE -ne 0) { throw "Auto-test cryptographique impossible : $(Protect-LogText ($out -join ' | '))" }
+        $res = ($out -join '') | ConvertFrom-Json
+    } finally {
+        Remove-Item -LiteralPath $checkPath -Force -ErrorAction SilentlyContinue
+    }
+
+    if (-not $res.signeEtVerifie)  { throw 'Auto-test : la clé publique candidate ne vérifie pas une signature produite par la clé privée candidate.' }
+    if (-not $res.refuseCharge)    { throw 'Auto-test : une charge utile altérée est acceptée — vérification cryptographique non fiable.' }
+    if (-not $res.refuseSignature) { throw 'Auto-test : une signature altérée est acceptée — vérification cryptographique non fiable.' }
+    if (-not $res.refuseAncienneCle) { throw 'Auto-test : l ancienne clé publique accepte encore la nouvelle signature — la paire n a pas changé.' }
+
+    $ancienne = if ($res.ancienneCleTestee) { 'ancienne clé rejetée' } else { 'aucune clé précédente à comparer' }
+    Write-Host "[OK] Auto-test cryptographique de la paire candidate : signature vérifiée, altérations rejetées, $ancienne." -ForegroundColor Green
+}
+
 function Set-LicensePublicKeyInProject {
     param(
         [Parameter(Mandatory=$true)][string]$Root,
@@ -2361,6 +2430,16 @@ try {
     Write-Host '[3/7] Génération de toutes les nouvelles clés...' -ForegroundColor Cyan
     $keyPairDir = Join-Path $runDir 'nouvelle-paire-licence'
     $licenseKeyPair = New-LicenseSigningKeyPair -OutputDirectory $keyPairDir
+
+    # PREPARE FIRST — PUSH LAST : la paire est produite dans un dossier de
+    # travail puis VALIDÉE ici. Tant que cet auto-test n'est pas vert, aucun
+    # fichier du projet ni aucune variable distante n'est touché.
+    Test-LicenseKeyPairCandidate `
+        -PrivatePath ([string]$licenseKeyPair.PrivatePath) `
+        -PublicPath ([string]$licenseKeyPair.PublicPath) `
+        -PreviousPublicPath (Join-Path (Join-Path $script:ProjectRoot 'keys') 'public.pem') `
+        -RunDirectory $keyPairDir
+
     $privateKey = [string]$licenseKeyPair.PrivateBase64
 
 
@@ -2483,8 +2562,23 @@ try {
     if (-not (Test-Path -LiteralPath $projectKeysDir)) { New-Item -ItemType Directory -Path $projectKeysDir -Force | Out-Null }
     $projectPrivatePath = Join-Path $projectKeysDir 'private.pem'
     $projectPublicPath = Join-Path $projectKeysDir 'public.pem'
-    if (Test-Path -LiteralPath $projectPrivatePath) { Copy-Item -LiteralPath $projectPrivatePath -Destination ($projectPrivatePath + '.before-v171-' + (Get-Date -Format 'yyyyMMdd-HHmmss')) -Force }
-    if (Test-Path -LiteralPath $projectPublicPath) { Copy-Item -LiteralPath $projectPublicPath -Destination ($projectPublicPath + '.before-v171-' + (Get-Date -Format 'yyyyMMdd-HHmmss')) -Force }
+    # Les sauvegardes de keys/*.pem étaient créées mais JAMAIS enregistrées dans
+    # $script:PatchedSourceBackups : en cas d'échec, le bloc catch restaurait les
+    # sources patchées (donc l'ANCIENNE clé publique dans le code) tout en
+    # laissant keys/*.pem sur la NOUVELLE paire. Le dépôt et le dossier keys se
+    # retrouvaient sur deux clés différentes et toute licence émise ensuite était
+    # rejetée en silence. On les inscrit donc au même rollback que les sources.
+    $keyStamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+    if (Test-Path -LiteralPath $projectPrivatePath) {
+        $privateBackup = $projectPrivatePath + '.before-v171-' + $keyStamp
+        Copy-Item -LiteralPath $projectPrivatePath -Destination $privateBackup -Force
+        $script:PatchedSourceBackups += , ([pscustomobject]@{ Original = $projectPrivatePath; Backup = $privateBackup })
+    }
+    if (Test-Path -LiteralPath $projectPublicPath) {
+        $publicBackup = $projectPublicPath + '.before-v171-' + $keyStamp
+        Copy-Item -LiteralPath $projectPublicPath -Destination $publicBackup -Force
+        $script:PatchedSourceBackups += , ([pscustomobject]@{ Original = $projectPublicPath; Backup = $publicBackup })
+    }
     [IO.File]::WriteAllText($projectPrivatePath, [string]$licenseKeyPair.PrivatePem, $script:Utf8NoBom)
     [IO.File]::WriteAllText($projectPublicPath, [string]$licenseKeyPair.PublicPem, $script:Utf8NoBom)
     Set-PrivateFileAcl $projectPrivatePath
@@ -2668,6 +2762,15 @@ try {
     if ($remoteMutationStarted) {
         Write-Host '[SÉCURITÉ] Aucun rollback automatique destructif : les variables n-ont pas été supprimées avant la mise à jour.' -ForegroundColor Yellow
         Write-Host '[SÉCURITÉ] Les valeurs actuellement présentes dans Vercel sont conservées pour permettre le diagnostic.' -ForegroundColor Yellow
+        # Vercel ne permet pas de relire une variable sensible : sa valeur
+        # précédente est définitivement perdue, donc AUCUN rollback distant n'est
+        # possible. Le local, lui, vient d'être restauré sur l'ancienne paire :
+        # les deux côtés divergent et toute licence sera rejetée tant que
+        # l'opérateur n'a pas tranché. On le dit explicitement plutôt que de
+        # laisser découvrir la panne à la première activation.
+        Write-Host '[ATTENTION] DIVERGENCE DE CLÉ : Production porte la NOUVELLE paire, le projet local a été restauré sur l ANCIENNE.' -ForegroundColor Red
+        Write-Host '[ATTENTION] Pour converger : copiez keys/public.pem de la sauvegarde du run, puis « npm run keys:sync » et redéployez.' -ForegroundColor Red
+        Write-Host "[ATTENTION] Paire poussée en Production : $keyPairDir" -ForegroundColor Red
     }
     if (Test-Path -LiteralPath $localEnvBackup) { Copy-Item -LiteralPath $localEnvBackup -Destination $localEnvPath -Force }
     if (Test-Path -LiteralPath $keygenBackup) { Copy-Item -LiteralPath $keygenBackup -Destination $keygenPath -Force }
