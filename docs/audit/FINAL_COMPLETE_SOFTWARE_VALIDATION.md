@@ -60,9 +60,20 @@ présent, **0 erreur page**.
 | 3 | immutabilité (TOCTOU) OR signé | **P2** | `updateMany` exige `signedAt: null` sur écriture des champs scellés → 409 si signé entre-temps (miroir `sign`) | source guard + suite verte |
 | 4 | monnaie — TVA flottante | P2/P3 | `work-orders`(×2) + `quote-gen` utilisent la règle centrale `taxCentsFromBasis` (fini `Math.round(ht*rate/100)`) | test exactitude `5500c×0,7 %→39c` + source guard |
 | 5 | restauration — `scripts/restore.js` | P2 | cycle readline réparé (une interface, fermée une fois ; Ctrl+C géré) + validation SQLite de l'archive avant écrasement + rollback | `restore-script.test.ts` (10 tests) + codes de sortie CLI |
+| 6 | licences mécanicien — réattribution | P2 (partiel) | réattribution : révocation de TOUS les appareils non révoqués (actifs **et** déconnectés) de l'ancien titulaire, comme `revokeDevices()` (l'ancien code n'en coupait que les « active ») | correctif ciblé `assign/route.ts` ; **résiduel OUVERT** ci-dessous |
 
-Le domaine multi-tenant / IDOR, le portail et les licences ont été audités
-adversarialement et sont revenus **PROPRES** (0 finding confirmé).
+**Domaines audités** : multi-tenant / IDOR = **PROPRE** ; portail = **PROPRE** ;
+authz/monnaie/immutabilité = findings ci-dessus (corrigés) ; **licences = 1
+finding P2 confirmé** (réattribution mécanicien).
+
+**Résiduel OUVERT (P2, honnête)** — la clé mécanicien est un **jeton porteur** :
+un ancien titulaire ayant conservé la chaîne du token peut tenter une
+**ré-activation fraîche** et obtenir l'identité du nouveau titulaire tant que le
+siège (`seats=1`) est libre. Le durcissement livré (révocation complète des
+appareils) + le plafond de sièges bloquent le cas courant (dès que le nouveau
+titulaire s'active), mais **fermer complètement la fenêtre exige une
+rotation/ré-émission de clé à la réattribution** — décision produit, suivie comme
+finding P2 OUVERT (voir `EXTERNAL_BLOCKERS.md` #8bis).
 
 ## 4. Tests & vérifications (commandes EXACTES, HEAD d8352bb)
 

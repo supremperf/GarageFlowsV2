@@ -71,10 +71,23 @@ export const POST = withAuth(async (req, { params }: { params: { lid: string } }
         previousMechanicId: previousMechanicId ?? null,
       },
     })
-    // Réattribution : couper les sessions/appareils de l'ancien titulaire.
+    // Réattribution : couper les sessions/appareils de l'ancien titulaire. On
+    // révoque TOUS les appareils non révoqués (actifs ET déconnectés), comme
+    // revokeDevices() (mechanic-admin.ts) — l'ancien code n'en coupait que les
+    // « active », laissant un appareil « deactivated » de l'ancien titulaire
+    // retenir un siège. La révocation est PERMANENTE (un appareil révoqué ne peut
+    // pas se réactiver seul).
+    //
+    // RÉSIDUEL CONNU (docs/audit + EXTERNAL_BLOCKERS) : la clé mécanicien est un
+    // jeton PORTEUR ; un ancien titulaire qui a CONSERVÉ la chaîne du token peut
+    // encore tenter une RÉ-ACTIVATION FRAÎCHE (nouvel appareil) et obtenir
+    // l'identité du NOUVEAU titulaire tant que le siège (seats=1) est libre. Le
+    // plafond de sièges le bloque dès que le nouveau titulaire s'est activé, mais
+    // fermer complètement la fenêtre exige une ROTATION/RÉ-ÉMISSION de clé à la
+    // réattribution (décision produit) — suivi comme finding P2 OUVERT.
     if (isReassignment) {
       await tx.licenseDevice.updateMany({
-        where: { licenseId: license.licenseId, status: 'active' },
+        where: { licenseId: license.licenseId, status: { in: ['active', 'deactivated'] } },
         data: { status: 'revoked', revokedAt: now, revokeReason: 'reassigned' },
       })
     }
