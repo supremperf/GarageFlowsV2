@@ -168,8 +168,8 @@ const ROOT     = path.join(__dirname, '..')               // project root (dev) 
 //  tandis que les licences émises l'étaient par celle de keys/public.pem.)
 const _PK = [
   '-----BEGIN PUBLIC KEY-----',
-  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXOkZzbqVmq/ZPhHEWa2hCyQG0d/W',
-  'Y+SVGFD/W/tmZyVoKinaUwHYISXZZrJK8dHqvEWvoRtBldeEREJmF0A2Ow==',
+  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE0NSE5M7rvk+jwOBAwgk7PfKJTqHT',
+  'Fkb2bYbjK6eEkWwiXUwOaQGxmiw04IJpwm3+eOFXb5zf1bn+rewOXryfkQ==',
   '-----END PUBLIC KEY-----',
 ]
 const PUBLIC_KEY_PEM = _PK.join('\n')
@@ -2037,7 +2037,7 @@ function createSplash() {
   splashWindow.webContents.on('did-fail-load', (_e, code, desc, url, isMainFrame) => {
     if (isMainFrame) log('[FATAL] splash.html non chargé:', code, desc, url)
   })
-  splashWindow.loadFile(path.join(__dirname, 'splash.html'))
+  splashWindow.loadFile(path.join(__dirname, 'splash.html'), { query: { v: app.getVersion() } })
   splashWindow.on('closed', () => { splashWindow = null })
 }
 
@@ -2107,8 +2107,14 @@ function createLicenseWindow() {
         resetActivationBackoff()
         activateOnServer().catch(() => {})
         cleanup()
-        win.destroy()
+        // resolve(true) DOIT précéder win.destroy() : destroy() émet « closed »
+        // de façon SYNCHRONE, et le gestionnaire de cette fenêtre appelle
+        // resolve(false). La promesse se réglait donc sur false alors que la
+        // licence venait d'être acceptée et enregistrée — l'appelant concluait
+        // « Activation cancelled » et fermait l'application juste après que le
+        // garage ait saisi une clé valide (il fallait relancer à la main).
         resolve(true)
+        win.destroy()
       } else {
         // Provide a human-readable reason
         const nowSec = Math.floor(Date.now() / 1000)
