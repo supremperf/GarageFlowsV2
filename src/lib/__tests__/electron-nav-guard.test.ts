@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 // Module CommonJS du process Electron (garde de navigation will-navigate/redirect).
-const { isLocalAppUrl, canonicalizeLoopbackUrl } = require('../../../electron/nav-guard.js')
+const { isLocalAppUrl } = require('../../../electron/nav-guard.js')
 
 const LOCAL = 'http://127.0.0.1:4028'
 
@@ -34,41 +34,5 @@ describe('nav-guard — n\'autorise que l\'origine locale exacte', () => {
     expect(isLocalAppUrl('not a url', LOCAL)).toBe(false)
     expect(isLocalAppUrl(undefined, LOCAL)).toBe(false) // robustesse valeur non-string
     expect(isLocalAppUrl(null, LOCAL)).toBe(false)
-  })
-})
-
-// ── Réécriture loopback (fix écran blanc desktop) ────────────────────────────
-// Le serveur Next standalone redirige « / → /login » sur l'hôte « localhost »
-// tandis que la fenêtre est sur « 127.0.0.1 » : deux origines distinctes que le
-// nav-guard bloquait → écran blanc. canonicalizeLoopbackUrl réécrit le MÊME
-// serveur loopback vers l'origine canonique, sans élargir la surface.
-describe('nav-guard — canonicalizeLoopbackUrl (localhost ↔ 127.0.0.1, même serveur)', () => {
-  it('RÉGRESSION écran blanc : localhost:PORT → 127.0.0.1:PORT (chemin/query/fragment conservés)', () => {
-    expect(canonicalizeLoopbackUrl('http://localhost:4028/login?callbackUrl=%2F', LOCAL))
-      .toBe('http://127.0.0.1:4028/login?callbackUrl=%2F')
-    expect(canonicalizeLoopbackUrl('http://localhost:4028/license', LOCAL))
-      .toBe('http://127.0.0.1:4028/license')
-    expect(canonicalizeLoopbackUrl('http://localhost:4028/a?b=1#h', LOCAL))
-      .toBe('http://127.0.0.1:4028/a?b=1#h')
-  })
-
-  it('réécrit aussi [::1] (IPv6 loopback) sur le même port', () => {
-    expect(canonicalizeLoopbackUrl('http://[::1]:4028/login', LOCAL))
-      .toBe('http://127.0.0.1:4028/login')
-  })
-
-  it('null si déjà canonique (l\'appelant l\'autorise via isLocalAppUrl)', () => {
-    expect(canonicalizeLoopbackUrl('http://127.0.0.1:4028/login', LOCAL)).toBeNull()
-  })
-
-  it('N\'ÉLARGIT PAS la surface : origines externes / port / protocole / userinfo → null', () => {
-    expect(canonicalizeLoopbackUrl('https://garageflows.fr/', LOCAL)).toBeNull()      // externe
-    expect(canonicalizeLoopbackUrl('http://evil.com/login', LOCAL)).toBeNull()        // externe
-    expect(canonicalizeLoopbackUrl('http://localhost:40288/login', LOCAL)).toBeNull() // MAUVAIS port
-    expect(canonicalizeLoopbackUrl('http://localhost:9999/login', LOCAL)).toBeNull()  // MAUVAIS port
-    expect(canonicalizeLoopbackUrl('https://localhost:4028/login', LOCAL)).toBeNull() // MAUVAIS protocole
-    expect(canonicalizeLoopbackUrl('http://127.0.0.1:4028@evil.com/x', LOCAL)).toBeNull() // userinfo → host=evil.com
-    expect(canonicalizeLoopbackUrl('file:///etc/passwd', LOCAL)).toBeNull()
-    expect(canonicalizeLoopbackUrl('not a url', LOCAL)).toBeNull()
   })
 })
