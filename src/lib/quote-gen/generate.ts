@@ -16,7 +16,7 @@ import type {
   QuoteSuggestionInput,
   SuggestionLine,
 } from './types'
-import { toCents, fromCents, lineCents } from '@/lib/money'
+import { toCents, fromCents, lineCents, taxCentsFromBasis } from '@/lib/money'
 
 /** Arrondi au centime — délègue à la couche financière centrale (centimes exacts). */
 export function roundMoney(n: number): number {
@@ -106,7 +106,7 @@ export function generateQuote(
   // TVA/TTC via la règle centrale (centimes entiers, arrondi unique) :
   // TTC = HT + TVA garanti au centime, comme les factures/devis persistés.
   const subtotalHTCents = toCents(laborHT) + toCents(partsHT)
-  const vatCents = Math.round((subtotalHTCents * vatRate) / 100)
+  const vatCents = taxCentsFromBasis(subtotalHTCents, vatRate)
   const subtotalHT = fromCents(subtotalHTCents)
   const vat = fromCents(vatCents)
   const totalTTC = fromCents(subtotalHTCents + vatCents)

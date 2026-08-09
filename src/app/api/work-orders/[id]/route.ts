@@ -5,6 +5,7 @@ import { withAuth, requireSession } from '@/lib/api-helpers'
 import { assertRelations } from '@/lib/tenant'
 import { parseWorksJson, parsePartsJson, serializeWorksJsonV2, serializePartsJsonV2, workOrderTotalHtCents, workLinesToEuros, partLinesToEuros } from '@/lib/money-json'
 import { workOrderToEuros } from '@/lib/money-db'
+import { taxCentsFromBasis } from '@/lib/money'
 import { checkStatusTransition, isDeletable } from '@/lib/document-status'
 
 
@@ -31,7 +32,9 @@ function normalizeWorkOrderJson(
     const parts = parsePartsJson(partsRaw).lines
     const totalHtCents = workOrderTotalHtCents(works, parts)
     const rate = Number(taxRate) || 0
-    const totalTtcCents = totalHtCents + Math.round((totalHtCents * rate) / 100)
+    // TVA via la règle centrale (entiers exacts, arrondi fiscal unique) — cf.
+    // work-orders/route.ts : la formule flottante dérivait d'un centime.
+    const totalTtcCents = totalHtCents + taxCentsFromBasis(totalHtCents, rate)
     return {
       worksJson: serializeWorksJsonV2(works),
       partsJson: serializePartsJsonV2(parts),
@@ -152,12 +155,37 @@ export const PATCH = withAuth(async (req, { params }) => {
   ])
   if (relErr) return relErr
 
-  // Atomique (anti-TOCTOU) : la portée garageId est dans le where.
+  // Atomique (anti-TOCTOU) : la portée garageId est dans le where. Quand on écrit
+  // des champs SCELLÉS (worksJson/partsJson/taxRate/totaux — branche !isSigned),
+  // on exige `signedAt: null` DANS le where : si l'OR a été signé sur une tablette
+  // ENTRE la lecture (ligne 84) et cette écriture, la mise à jour n'affecte aucune
+  // ligne (count=0) plutôt que d'écraser le JSON scellé (invalidant la signature).
+  // Miroir du garde de work-orders/[id]/sign (where signedAt: null).
+  const writesSealedFields = !isSigned
   const res = await prisma.workOrder.updateMany({
-    where: { id: params.id, garageId: session.user.garageId },
+    where: {
+      id: params.id,
+      garageId: session.user.garageId,
+      ...(writesSealedFields ? { signedAt: null } : {}),
+    },
     data: updateData,
   })
-  if (res.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  if (res.count === 0) {
+    // Distinguer « signé entre-temps » (TOCTOU) d'un vrai 404.
+    if (writesSealedFields) {
+      const now = await prisma.workOrder.findFirst({
+        where: { id: params.id, garageId: session.user.garageId },
+        select: { signedAt: true, signatureData: true },
+      })
+      if (now && (now.signedAt || now.signatureData)) {
+        return NextResponse.json(
+          { error: 'Ordre signé entre-temps : lignes et taux de TVA sont verrouillés (document scellé)' },
+          { status: 409 },
+        )
+      }
+    }
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
   const wo = await prisma.workOrder.findFirst({
     where: { id: params.id, garageId: session.user.garageId },
     include: {

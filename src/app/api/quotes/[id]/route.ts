@@ -51,7 +51,18 @@ export const PATCH = withAuth(async (req, { params }) => {
 
   // Remplacement des lignes + mise à jour du devis dans UNE transaction : un
   // échec partiel ne peut jamais laisser le devis avec zéro ligne.
+  let lockConflict = false
   const quote = await prisma.$transaction(async (tx) => {
+    // ANTI-TOCTOU : le verrou d'immutabilité et la transition sont RE-CONTRÔLÉS
+    // DANS la transaction sur l'état COURANT. Le contrôle hors transaction plus
+    // haut lit un statut potentiellement périmé : si le client ACCEPTE le devis
+    // (portail) entre cette lecture et l'écriture, un PATCH « draft » périmé
+    // réécrirait sinon les lignes d'un devis accepté. Miroir de invoices/[id].
+    const fresh = await tx.quote.findFirst({ where: { id: params.id, garageId: session.user.garageId }, select: { status: true } })
+    if (fresh) {
+      if (financialEdit && areAmountsLocked('quote', fresh.status)) { lockConflict = true; return null }
+      if (body.status !== undefined && checkStatusTransition('quote', fresh.status, body.status)) { lockConflict = true; return null }
+    }
     if (body.lines !== undefined) {
       await tx.quoteLine.deleteMany({ where: { quoteId: params.id } })
       await tx.quoteLine.createMany({
@@ -81,6 +92,14 @@ export const PATCH = withAuth(async (req, { params }) => {
       include: { lines: { orderBy: { sortOrder: 'asc' } } },
     })
   })
+
+  if (lockConflict) {
+    return NextResponse.json(
+      { error: 'Un devis accepté ne peut plus être modifié. Créez un nouveau devis.' },
+      { status: 409 },
+    )
+  }
+  if (!quote) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   await logAudit({ action: 'update', entityType: 'Quote', entityId: quote.id, session, req })
 

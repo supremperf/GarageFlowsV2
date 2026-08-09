@@ -5,6 +5,7 @@ import { withAuth, requireSession } from '@/lib/api-helpers'
 import { assertRelations } from '@/lib/tenant'
 import { parseWorksJson, parsePartsJson, serializeWorksJsonV2, serializePartsJsonV2, workOrderTotalHtCents, workLinesToEuros, partLinesToEuros } from '@/lib/money-json'
 import { workOrderToEuros } from '@/lib/money-db'
+import { taxCentsFromBasis } from '@/lib/money'
 
 
 /**
@@ -30,7 +31,10 @@ function normalizeWorkOrderJson(
     const parts = parsePartsJson(partsRaw).lines
     const totalHtCents = workOrderTotalHtCents(works, parts)
     const rate = Number(taxRate) || 0
-    const totalTtcCents = totalHtCents + Math.round((totalHtCents * rate) / 100)
+    // TVA via la règle centrale (entiers exacts, arrondi fiscal unique) — la
+    // formule flottante Math.round(ht*rate/100) dérivait d'un centime sur les
+    // taux non standard (ex. 0,7 %) et sur les HT négatifs (avoirs).
+    const totalTtcCents = totalHtCents + taxCentsFromBasis(totalHtCents, rate)
     return {
       worksJson: serializeWorksJsonV2(works),
       partsJson: serializePartsJsonV2(parts),
