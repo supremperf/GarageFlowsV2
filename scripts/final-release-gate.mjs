@@ -129,6 +129,14 @@ run('Audit runtime desktop empaqueté (Electron)', 'node scripts/check-desktop-r
 run('Manifeste de release (commit-bound)', 'node scripts/generate-release-manifest.mjs')
 run('Vérification d\'artefact (identité + cohérence + secrets)', 'node scripts/verify-artifact.mjs')
 
+// 7quater. Preuve de release SUR ARTEFACT RÉEL : construit le ZIP de
+// distribution (git archive HEAD + manifeste injecté + SHA-256), l'extrait dans
+// un dossier SANS .git et y exécute verify-artifact en MODE ARTIFACT — prouve la
+// chaîne complète (pas seulement en mode dépôt). L'installateur Windows NSIS
+// reste EXTERNE (cf. EXTERNAL_BLOCKERS) ; ceci vérifie l'artefact source.
+run('Empaquetage + vérification d\'artefact RÉEL (ZIP extrait, sans .git)',
+  null, { argv: [process.execPath, 'scripts/package-artifact.mjs', '--verify'] })
+
 // 8-9. Build + budget de perf (sautés en --fast)
 run('Build de production (next build)', 'npm run build', {
   skip: FAST, skipReason: '--fast', env: {

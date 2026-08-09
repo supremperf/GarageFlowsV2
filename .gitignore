@@ -90,3 +90,6 @@ artifacts/verification/test-results.json
 
 # Build artifact — generated at release time (scripts/generate-release-manifest.mjs), binds to HEAD
 release-manifest.json
+
+# Release artifacts (build output — not committed)
+dist-artifact/
