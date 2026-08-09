@@ -22,7 +22,7 @@ const FEATURES = [
 
 // ── License badge (Electron only) ────────────────────────────────────────────
 function LicenseBadge() {
-  const [info, setInfo] = useState<{ expiryYear: number; customerId: number } | null | 'loading'>('loading')
+  const [info, setInfo] = useState<{ expiryAt: string; customerId: string } | null | 'loading'>('loading')
 
   useEffect(() => {
     const api = (window as any).electronAPI
@@ -43,7 +43,10 @@ function LicenseBadge() {
           Licence GarageFlows Pro · Active
         </p>
         <p className="text-[10px] text-emerald-600 leading-tight">
-          Valide jusqu&apos;au 31/12/{info.expiryYear} · Client #{String(info.customerId).padStart(4, '0')}
+          {/* La date était codée en dur au 31/12 et expiryYear n'existe pas dans
+              app:license-info (qui renvoie expiryAt en ISO) : toute licence
+              affichait « Valide jusqu'au 31/12/ » suivi de rien. */}
+          Valide jusqu&apos;au {new Date(info.expiryAt).toLocaleDateString('fr-FR')} · Client #{info.customerId}
         </p>
       </div>
     </div>
