@@ -119,6 +119,16 @@ run('Rate-limit distribué multi-instance (Redis réel)',
 // 7. Audit de dépendances de production (porte bloquante, dérogations datées)
 run('Audit dépendances production (high/critical)', 'node scripts/audit-ci.js')
 
+// 7bis. Audit du RUNTIME DESKTOP EMPAQUETÉ (Electron) — que `--omit=dev` ignore.
+// Porte bloquante, dérogations datées (check-desktop-runtime-audit.mjs).
+run('Audit runtime desktop empaqueté (Electron)', 'node scripts/check-desktop-runtime-audit.mjs')
+
+// 7ter. Preuve de release : génère le manifeste commit-bound puis vérifie
+// l'artefact (identité, cohérence version, absence de .env réel, fichiers
+// critiques). Fonctionne aussi hors dépôt via `release:verify-artifact`.
+run('Manifeste de release (commit-bound)', 'node scripts/generate-release-manifest.mjs')
+run('Vérification d\'artefact (identité + cohérence + secrets)', 'node scripts/verify-artifact.mjs')
+
 // 8-9. Build + budget de perf (sautés en --fast)
 run('Build de production (next build)', 'npm run build', {
   skip: FAST, skipReason: '--fast', env: {

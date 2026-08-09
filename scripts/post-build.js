@@ -219,6 +219,26 @@ function main() {
     }
   }
 
+  // 8. RELEASE MANIFEST — génère l'identité de build (commit, versions, toolchain)
+  //    et l'INCLUT dans le standalone empaqueté, pour que l'archive distribuée
+  //    (sans .git) reste rattachable à son code source et vérifiable via
+  //    `npm run release:verify-artifact`. Corrige « manifest absent du ZIP ».
+  {
+    try {
+      execSync('node scripts/generate-release-manifest.mjs', { cwd: ROOT, stdio: 'inherit' })
+      const src = path.join(ROOT, 'release-manifest.json')
+      if (fs.existsSync(src)) {
+        const dst = path.join(ROOT, '.next', 'standalone', 'release-manifest.json')
+        fs.copyFileSync(src, dst)
+        console.log('  ✅ release-manifest.json généré + inclus → standalone (artefact rattachable)')
+      } else {
+        console.warn('  ⚠  release-manifest.json non généré — artefact non rattachable')
+      }
+    } catch (err) {
+      console.warn('  ⚠  génération du release-manifest échouée :', err.message)
+    }
+  }
+
   console.log('\n🎉 Post-build complete — ready for electron-builder\n')
 }
 

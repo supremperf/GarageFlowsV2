@@ -69,6 +69,8 @@
     "check:perf-budget": "node scripts/check-perf-budget.mjs",
     "check:desktop-audit": "node scripts/check-desktop-runtime-audit.mjs",
     "release:gate": "node scripts/final-release-gate.mjs",
+    "release:manifest": "node scripts/generate-release-manifest.mjs",
+    "release:verify-artifact": "node scripts/verify-artifact.mjs",
     "release:gate:fast": "node scripts/final-release-gate.mjs --fast",
     "verify:baseline": "vitest run --reporter=json --outputFile=artifacts/verification/test-results.json && node scripts/generate-verification-baseline.mjs",
     "baseline:generate": "vitest run --reporter=json --outputFile=artifacts/verification/test-results.json && node scripts/generate-verification-baseline.mjs",
