@@ -205,7 +205,18 @@ function main() {
       fs.copyFileSync(pubKey, path.join(dst, 'public.pem'))
       console.log('  ✅ public.pem copied      → standalone/keys')
     } else {
-      console.warn('  ⚠  keys/public.pem not found — run: python scripts/keygen.py --init')
+      // Échec DUR, et non simple avertissement : sans ce fichier, electron-builder
+      // se contente d'un « file source doesn't exist » non bloquant, et
+      // electron/integrity.js (criticalFiles) ignore silencieusement l'ancre
+      // keys/public.pem. Résultat observé : un installateur d'apparence normale
+      // dont le manifeste d'intégrité ne couvre que 10 fichiers critiques au lieu
+      // de 11, sans qu'aucune étape de la chaîne n'ait signalé d'erreur.
+      console.error('  ❌ keys/public.pem introuvable — artefact non distribuable.')
+      console.error('     package.json (build.extraResources) et electron/integrity.js')
+      console.error('     considèrent ce fichier comme critique. Générez la paire avec :')
+      console.error('       python scripts/keygen.py --init')
+      console.error('     puis synchronisez les ancres du code :  npm run keys:sync')
+      process.exit(1)
     }
   }
 
