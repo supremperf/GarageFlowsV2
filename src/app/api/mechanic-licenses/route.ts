@@ -129,7 +129,29 @@ export const POST = withAuth(async (req) => {
 
   // La licence Garage parente doit appartenir à CE garage.
   const parent = await prisma.licenseKey.findUnique({ where: { licenseId: payload.plid } })
-  if (!parent || parent.garageId !== garageId || parent.licenseType === 'mechanic') {
+
+  // Rattachement à la PREMIÈRE UTILISATION, strictement identique à celui de
+  // validateLicensedSession (atomique, puis immuable). Indispensable sur
+  // Electron : l'application des licences y est désactivée par conception
+  // (licenseEnforcementEnabled() est faux — cf. src/lib/api-helpers.ts), donc
+  // validateLicensedSession — le seul endroit qui posait garageId — ne s'exécute
+  // jamais sur le poste. La ligne LicenseKey locale restait sans garageId et ce
+  // contrôle échouait TOUJOURS avec « Licence garage parente introuvable pour ce
+  // garage », rendant l'onglet « Accès mécaniciens » inutilisable sur desktop.
+  // On ne rattache QUE si la licence est encore libre, et le plid provient d'un
+  // jeton SIGNÉ : un autre garage ne peut donc pas s'approprier une licence.
+  let parentGarageId = parent?.garageId ?? null
+  if (parent && !parentGarageId && parent.licenseType !== 'mechanic') {
+    const bind = await prisma.licenseKey.updateMany({
+      where: { licenseId: payload.plid, garageId: null },
+      data:  { garageId },
+    })
+    parentGarageId = bind.count > 0
+      ? garageId
+      : (await prisma.licenseKey.findUnique({ where: { licenseId: payload.plid } }))?.garageId ?? null
+  }
+
+  if (!parent || parentGarageId !== garageId || parent.licenseType === 'mechanic') {
     // Message neutre : ne pas confirmer l'existence d'une licence d'un autre garage.
     return NextResponse.json({ error: 'Licence garage parente introuvable pour ce garage.' }, { status: 400 })
   }
