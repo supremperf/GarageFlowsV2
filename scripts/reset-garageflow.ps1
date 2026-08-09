@@ -2409,13 +2409,43 @@ try {
     # Secrets de chiffrement au repos : JAMAIS auto-générés ni auto-rotés par le
     # reset. Générés UNIQUEMENT s'ils sont totalement absents (installation neuve,
     # aucune donnée chiffrée à perdre) et jamais écrasés s'ils existent déjà.
+    #
+    # ATTENTION : `vercel env pull` renvoie « [SENSITIVE] » pour TOUTE variable
+    # sensible. Get-UsableExistingValue transforme donc la valeur en chaîne vide et
+    # $newValues ne contient jamais ces clés — même quand elles existent bel et bien
+    # en Production. Tester uniquement $newValues revenait à les régénérer à CHAQUE
+    # exécution, c'est-à-dire une rotation silencieuse qui rend les données déjà
+    # chiffrées (mots de passe SMTP, secrets TOTP) DÉFINITIVEMENT indéchiffrables.
+    # La présence de la clé dans $remoteBackup est la seule preuve fiable
+    # d'existence : dans ce cas on ne la recrée pas et on ne la supprime pas non
+    # plus (absente de $newValues, elle est hors du périmètre de $deletedNames).
+    # La rotation reste possible, mais uniquement par le processus dédié
+    # (GF_SMTP_CIPHER_KEY_OLD — cf. scripts/encrypt-smtp-secrets.js).
     $encryptionAtRestKeys = @('GF_TOTP_ENC_KEY','GF_SMTP_CIPHER_KEY')
+    $localEnvExisting = if (Test-Path -LiteralPath $localEnvPath) { Read-EnvFileMap $localEnvPath } else { @{} }
+    $localOnlyValues = @{}
     foreach ($name in $encryptionAtRestKeys) {
         $already = $newValues.ContainsKey($name) -and -not [string]::IsNullOrWhiteSpace([string]$newValues[$name])
-        if (-not $already) {
-            $newValues[$name] = New-CryptoRandomValue -Bytes 32 -Format 'base64'
-            Add-SecretToRegistry ([string]$newValues[$name])
+        if ($already) { continue }
+
+        if ($remoteBackup.ContainsKey($name)) {
+            [void]$newValues.Remove($name)
+            Write-Host "[OK] $name existe déjà en Production : préservée intacte (rotation contrôlée uniquement)." -ForegroundColor Green
+
+            # L'environnement local possède sa propre base et donc ses propres
+            # données chiffrées : on y réutilise la valeur locale existante si elle
+            # est lisible, sinon on en génère une, sans jamais toucher à Production.
+            $localValue = Clean-InputValue ([string]$localEnvExisting[$name])
+            if ([string]::IsNullOrWhiteSpace($localValue)) {
+                $localValue = New-CryptoRandomValue -Bytes 32 -Format 'base64'
+            }
+            $localOnlyValues[$name] = $localValue
+            Add-SecretToRegistry $localValue
+            continue
         }
+
+        $newValues[$name] = New-CryptoRandomValue -Bytes 32 -Format 'base64'
+        Add-SecretToRegistry ([string]$newValues[$name])
     }
     foreach ($name in $fallbackGenerators.Keys) {
         if (-not $generated.ContainsKey($name) -or [string]::IsNullOrWhiteSpace([string]$generated[$name])) {
@@ -2533,6 +2563,9 @@ try {
     Write-Host '[6/7] Mise à jour locale et sauvegarde API générées...' -ForegroundColor Cyan
     $localValues = @{}
     foreach ($name in $newValues.Keys) { $localValues[$name] = [string]$newValues[$name] }
+    # Clés de chiffrement au repos préservées côté Production : l'environnement
+    # local garde sa propre valeur (base locale distincte) sans jamais la publier.
+    foreach ($name in $localOnlyValues.Keys) { $localValues[$name] = [string]$localOnlyValues[$name] }
     $localValues['DATABASE_URL'] = 'file:./dev.db'
     $localValues.Remove('DIRECT_URL')
     if ($script:GfDryRun) {
@@ -2657,6 +2690,14 @@ try {
     exit 1
 } finally {
     $env:GF_CONFIGURER_API_TEST_MODE = $null
+    # Une interruption (Ctrl+C sur une invite Read-Host, fermeture de la console)
+    # ne passe PAS par le bloc catch : le script se terminait alors avec le code 0
+    # et RESET-GARAGEFLOW.cmd annonçait « [OK] Operation terminee. » pour une
+    # rotation abandonnée en cours de route. Seul $success atteste d'un succès réel.
+    if (-not $success) {
+        Write-Host '[ERREUR] Rotation interrompue avant la fin : aucun succès validé.' -ForegroundColor Red
+        exit 1
+    }
 }
 
 if ($success) { exit 0 }
