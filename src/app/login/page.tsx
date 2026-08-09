@@ -112,7 +112,7 @@ function LoginForm() {
             </div>
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight">
-            Garage<span className="text-blue-400">Flow</span>
+            Garage<span className="text-blue-400">Flows</span>
           </h1>
           <p className="text-slate-500 text-xs mt-1.5 tracking-[0.2em] uppercase font-medium">
             Le planning intelligent pour garages

@@ -98,7 +98,7 @@ export default function RegisterPage() {
             <GarageFlowLogo size={64} />
           </div>
           <h1 className="text-2xl font-black text-white">
-            Garage<span className="text-blue-400">Flow</span>
+            Garage<span className="text-blue-400">Flows</span>
           </h1>
           <p className="text-slate-500 text-xs mt-1 tracking-widest uppercase">Créer votre espace</p>
         </div>

@@ -131,15 +131,30 @@ for (const file of files) {
       if (inFence) return // bloc de code markdown = technique, pas de marque visible
     }
     const line = stripComments(rawLine, ext)
-    let m
-    BRAND.lastIndex = 0
-    while ((m = BRAND.exec(line))) {
-      const why = classify(line, m.index, rel, rawLine)
-      if (why) {
-        const key = `${rel} — ${why}`
-        usedExceptions.set(key, (usedExceptions.get(key) ?? 0) + 1)
-      } else {
-        violations.push({ file: rel, line: i + 1, text: rawLine.trim().slice(0, 120) })
+    // La marque VISIBLE peut être coupée par une balise : « Garage<span>Flow</span> »
+    // s'affiche « GarageFlow » à l'écran alors qu'aucune occurrence contiguë
+    // n'existe dans la source. C'est ce qui avait laissé passer le titre du splash,
+    // la fenêtre d'activation, l'en-tête de l'application (donc TOUS les écrans)
+    // et trois pages PWA. On teste donc aussi la ligne débarrassée de ses balises.
+    const candidates = [line]
+    if (ext === '.html' || ext === '.tsx' || ext === '.jsx') {
+      const visible = line.replace(/<[^>]*>/g, '')
+      if (visible !== line) candidates.push(visible)
+    }
+    const seen = new Set()
+    for (const candidate of candidates) {
+      let m
+      BRAND.lastIndex = 0
+      while ((m = BRAND.exec(candidate))) {
+        const why = classify(candidate, m.index, rel, rawLine)
+        if (why) {
+          const key = `${rel} — ${why}`
+          usedExceptions.set(key, (usedExceptions.get(key) ?? 0) + 1)
+        } else if (!seen.has(i)) {
+          // une seule violation par ligne, quelle que soit la variante détectée
+          seen.add(i)
+          violations.push({ file: rel, line: i + 1, text: rawLine.trim().slice(0, 120) })
+        }
       }
     }
   })

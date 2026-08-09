@@ -242,7 +242,7 @@ export default function Header({
           <div className="hidden xs:block min-w-0">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="font-black text-white text-xs leading-none flex-shrink-0">
-                Garage<span className="text-blue-400">Flow</span>
+                Garage<span className="text-blue-400">Flows</span>
               </span>
               {user?.garageName && (
                 <span className="hidden sm:flex items-center gap-1.5 min-w-0">

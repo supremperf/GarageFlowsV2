@@ -218,7 +218,7 @@
   </div>
 
   <!-- Title -->
-  <div class="app-name">Garage<span>Flow</span></div>
+  <div class="app-name">Garage<span>Flows</span></div>
   <div class="tagline">Planning intelligent</div>
 
   <!-- Progress -->
@@ -229,10 +229,19 @@
     <div class="status-text" id="status">Initialisation…</div>
   </div>
 
-  <div class="version">v<span id="ver">1.0.0</span></div>
+  <div class="version">v<span id="ver">—</span></div>
   <div class="border-accent"></div>
 
   <script>
+    // Version réelle transmise par le processus principal (loadFile + query).
+    // Elle était figée à « 1.0.0 » dans le HTML : tout utilisateur d'une version
+    // ultérieure voyait donc un numéro faux à chaque démarrage. Le splash tourne
+    // en sandbox avec contextIsolation, il ne peut pas lire package.json lui-même.
+    try {
+      const v = new URLSearchParams(location.search).get('v')
+      if (v) document.getElementById('ver').textContent = v
+    } catch (_) { /* le splash ne doit jamais bloquer le démarrage */ }
+
     // Cycle through status messages
     const messages = [
       'Initialisation…',
