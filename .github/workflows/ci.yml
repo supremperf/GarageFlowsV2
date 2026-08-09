@@ -186,6 +186,12 @@ jobs:
       - name: Dependency audit gate (production high/critical)
         run: node scripts/audit-ci.js
 
+      # Runtime EMPAQUETÉ desktop : Electron (classé devDependency mais RÉELLEMENT
+      # distribué) est audité ici — `--omit=dev` du gate ci-dessus ne le couvre pas.
+      # Bloquant, dérogations datées uniquement (scripts/check-desktop-runtime-audit.mjs).
+      - name: Desktop packaged runtime audit gate (Electron)
+        run: node scripts/check-desktop-runtime-audit.mjs
+
       # Audit complet (dev inclus) — informatif, non bloquant.
       - name: Dependency audit (full, informational)
         run: npm audit || true

@@ -67,6 +67,7 @@
     "keys:check": "node scripts/sync-public-key.mjs --check",
     "check:converge-additive": "node scripts/check-converge-additive.mjs",
     "check:perf-budget": "node scripts/check-perf-budget.mjs",
+    "check:desktop-audit": "node scripts/check-desktop-runtime-audit.mjs",
     "release:gate": "node scripts/final-release-gate.mjs",
     "release:gate:fast": "node scripts/final-release-gate.mjs --fast",
     "verify:baseline": "vitest run --reporter=json --outputFile=artifacts/verification/test-results.json && node scripts/generate-verification-baseline.mjs",
