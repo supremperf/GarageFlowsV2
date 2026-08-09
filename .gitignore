@@ -87,3 +87,6 @@ artifacts/verification/test-results.json
 # un `git add -A` les committerait — 20 bases de test dans le dépôt.
 .tmp-*.db
 .tmp-*.db-journal
+
+# Build artifact — generated at release time (scripts/generate-release-manifest.mjs), binds to HEAD
+release-manifest.json
