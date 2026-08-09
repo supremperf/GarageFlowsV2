@@ -18,3 +18,17 @@ keys/
 # Sorties des scripts de configuration/rotation (peuvent contenir des secrets)
 GarageFlow-configuration/
 API générées/
+
+# Artefacts de build locaux : Vercel réinstalle et rebuild à partir des sources.
+# Sans ces règles, « vercel --prod » lancé depuis la racine téléverse ~760 Mo et
+# ÉCHOUE sur « File size limit exceeded (100 MB) » à cause de l'installateur
+# Windows présent dans dist/ (≈196 Mo). Le script de rotation contournait le
+# problème via une copie propre ; un déploiement direct, lui, cassait.
+node_modules/
+.next/
+dist/
+out/
+coverage/
+artifacts/
+*.exe
+*.blockmap
