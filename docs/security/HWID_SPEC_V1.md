@@ -62,32 +62,57 @@ Exemple (vecteur `full-windows`) →
   de licence. **Aucune migration destructive** : une licence v0 continue de
   fonctionner ; une nouvelle activation produit v1.
 
-## Adoption runtime (étape de bascule — à valider sur poste réel)
+## Adoption runtime (chaîne de code LIVRÉE + prouvée ; reste le déploiement réel)
 
-1. `getHwidV1()` (Electron) : collecte `{cpu, mac (sélection stable), platform,
-   machineId, diskSerial}` puis appelle l'algorithme canonique ; l'app affiche le
-   `HWID1-…`.
-2. Le keygen **cesse** de reconstruire pour le binding : `create_license` lie la
-   valeur `HWID1-…` **fournie** (copiée depuis le client). `get_hwid()` reste un
-   outil de diagnostic legacy, **jamais** une source de binding.
-3. `verify.ts` accepte v0 (legacy) et v1 selon `hwidVersion`.
+Les trois maillons du flux sont désormais **écrits et prouvés en tests
+automatisés** (sans matériel réel) :
 
-Cette bascule touche le flux de licence en production (activation/validation) et
-doit être validée sur un poste réel (desktop) — elle est suivie comme telle. La
-FONDATION (algorithme canonique + spécification + parité Node/Python + vecteurs +
-tests + stratégie legacy) est livrée et prouvée ici.
+1. **Émetteur client** — `getHwidV1()` (`electron/main.js`) : collecte
+   `{cpu, mac (sélection stable), platform, machineId, diskSerial}` puis applique
+   l'algorithme canonique. Réimplémentation **octet-pour-octet identique** à
+   `hwid-v1.ts` (prouvée : l'algorithme sérialise `full-windows` →
+   `HWID1-acdfae38…56744b`, comme TS et Python). `getMachineId()` lit une source
+   stable par OS (MachineGuid Windows / IOPlatformUUID macOS / `/etc/machine-id`).
+2. **Keygen consomme, ne reconstruit plus** — `create_license` lie la valeur
+   `HWID1-…` **fournie** (option `--bind-hwid`, copiée depuis le client).
+   `get_hwid()` reste un outil de diagnostic legacy, **jamais** une source de
+   binding. Prouvé par `gen_test_licenses.py` (L7) : le keygen officiel signe une
+   licence liée à l'empreinte v1 produite par l'algorithme partagé.
+3. **Vérificateur accepte v1** — `verify.ts` : `isValidHwidFormat` /
+   `verifyHwid` / `hwidVersionOf` acceptent v0 (64 hex) **et** v1
+   (`HWID1-<64 hex>`), comparaison stricte à temps constant. v0 et v1 ne peuvent
+   **jamais** se confondre (longueurs 64 vs 70 → `verifyHwid` renvoie false entre
+   versions). Round-trip complet prouvé (test E2E `license-keygen-e2e`) :
+   *client → hwid v1 → keygen signe → verifyLicenseToken + verifyHwid = OK ;
+   mauvaise machine = rejet*.
+
+**Ce qui reste (déploiement réel, non simulable en conteneur Linux headless)** :
+basculer le **défaut LIVE** de l'app pour émettre v1 aux **nouvelles**
+activations (les licences v0 existantes continuent par le chemin v0 — aucune
+migration destructive), puis valider sur un **poste Windows réel** la **stabilité
+des champs collectés au fil des redémarrages** (propriété inhérente à tout HWID,
+non vérifiable sans matériel). Les call-sites internes de signature d'état
+(horloge de confiance, online-check) restent volontairement en v0 pour ne pas
+invalider l'état des installations existantes lors d'une mise à jour.
 
 ## Critère de fermeture AUD-036
 
-| Exigence | État |
-|---|---|
-| Spécification | ✅ ce document |
-| Code canonique commun (TS + Python référence) | ✅ hwid-v1.ts + hwid_v1.py |
-| Vecteurs partagés | ✅ tests/fixtures/hwid-v1-vectors.json (5) |
-| Identité Node ↔ Python | ✅ prouvée (test + `python3 scripts/hwid_v1.py --vectors`) |
-| Legacy fonctionne | ✅ hwidVersion 0 conservé (chemin inchangé) |
-| Bascule runtime (Electron émet v1, keygen consomme) | 🔶 documentée, à valider sur poste réel |
+| Exigence | État | Preuve |
+|---|---|---|
+| Spécification | ✅ | ce document |
+| Code canonique commun (TS + Python référence) | ✅ | hwid-v1.ts + hwid_v1.py |
+| Émetteur client (Electron) | ✅ | `getHwidV1()` — parité octet-pour-octet vérifiée |
+| Vecteurs partagés | ✅ | tests/fixtures/hwid-v1-vectors.json (5) |
+| Identité Node ↔ Python ↔ Electron | ✅ | tests + `python3 scripts/hwid_v1.py --vectors` |
+| Keygen consomme la valeur cliente (ne reconstruit plus) | ✅ | `--bind-hwid` + L7 dans gen_test_licenses.py |
+| Vérificateur accepte v0 **et** v1, sans confusion | ✅ | verify.ts + hwid-verify.test.ts |
+| Round-trip client→keygen→verify (sans matériel) | ✅ | license-keygen-e2e.test.ts (L7) |
+| Legacy v0 fonctionne (aucune licence cassée) | ✅ | hwidVersion 0 conservé (chemin inchangé) |
+| Défaut LIVE bascule vers v1 + validation poste réel | 🔶 | déploiement/desktop — hors conteneur |
 
-Statut AUD-036 : **MITIGATED** (fondation canonique livrée + parité prouvée ; la
-bascule runtime est la dernière étape, validable sur desktop réel). Passera
-**FIXED** une fois la bascule effectuée et validée par une activation réelle.
+Statut AUD-036 : **MITIGATED** — la **divergence** (deux reconstructions →
+empreintes différentes) est **architecturalement éliminée** (une seule autorité
+collecte ; keygen/backend consomment la valeur) et la **chaîne de code complète
+est livrée et prouvée end-to-end en tests**. Reste, avant **FIXED**, le seul
+maillon non simulable ici : basculer le défaut LIVE de l'app et valider la
+stabilité des champs sur un poste Windows réel par une activation réelle.

@@ -18,6 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'scripts'))
 import keygen_core as kc  # outil officiel
+import hwid_v1            # référence canonique HWID V1 (AUD-036)
 
 if not kc.HAS_CRYPTO:
     print('SKIP: module cryptography indisponible', file=sys.stderr)
@@ -48,6 +49,20 @@ add('L5 liée au HWID machine', l5['token'], True, typ='premium', hwidBound=True
 l6 = kc.make_mechanic_license(priv, l1['lid'], 'CUST-0001', years=1, mechanic_name='Lea')
 add('L6 mecanicien (parent L1)', l6['token'], True, typ='mechanic')
 
+# L7 : HWID V1 CANONIQUE (AUD-036). Le CLIENT produit l'empreinte via l'algorithme
+# partagé (hwid_v1) ; le keygen la LIE telle quelle (aucune reconstruction). On
+# utilise les champs du vecteur « full-windows » → empreinte connue/déterministe.
+hwid_v1_fields = {
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "mac": "a4:83:e7:1b:2c:3d",
+    "platform": "win32-x64",
+    "machineId": "",
+    "diskSerial": "WD-WX21A1234567",
+}
+machine_hwid_v1 = hwid_v1.hwid_v1(hwid_v1_fields)
+l7 = kc.make_license(priv, 'CUST-0007', 'premium', years=1, seats=1, hwid=machine_hwid_v1)
+add('L7 liée au HWID V1 canonique', l7['token'], True, typ='premium', hwidV1Bound=True)
+
 add('I1 expiree', kc.make_license(priv, 'CUST-0006', 'premium', years=-1, seats=1)['token'], False)
 
 t = l1['token']; add('I2 signature alteree', t[:-2] + ('BB' if t.endswith('A') else 'AA'), False)
@@ -58,7 +73,9 @@ parts[2] = kc.b64u_enc(json.dumps(p, separators=(',', ':')).encode())
 add('I3 payload modifie (sieges gonfles)', '.'.join(parts), False)
 
 Path(sys.argv[1]).write_text(json.dumps(
-    {'publicPem': pub_pem, 'machineHwid': machine_hwid, 'wrongHwid': 'f' * 64, 'licenses': lics}, indent=1))
+    {'publicPem': pub_pem, 'machineHwid': machine_hwid, 'wrongHwid': 'f' * 64,
+     'machineHwidV1': machine_hwid_v1, 'wrongHwidV1': 'HWID1-' + 'f' * 64,
+     'licenses': lics}, indent=1))
 
 kc.PRIV_FILE.unlink()  # ne jamais conserver la clé privée
 print(f'OK {len(lics)} jetons (keygen_core officiel)')

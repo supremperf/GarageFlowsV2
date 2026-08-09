@@ -196,21 +196,55 @@ export function verifyLicenseToken(token: string): VerifyResult {
   }
 }
 
-/** Empreinte matérielle attendue : digest SHA-256 en hexadécimal (64 caractères). */
-const HWID_RE = /^[0-9a-f]{64}$/
+/**
+ * Deux formats d'empreinte matérielle sont acceptés, tous deux stricts :
+ *  - v0 (legacy)   : digest SHA-256 hex de 64 caractères — `sha256(join("||GF2-HWID-SALT||", …))`
+ *                    reconstruit historiquement par Electron ET le keygen (cf. AUD-036).
+ *  - v1 (canonique): `HWID1-<64 hex>` — empreinte produite par UNE SEULE autorité
+ *                    (le client) via l'algorithme canonique `hwid-v1.ts` puis LIÉE
+ *                    telle quelle (le keygen ne reconstruit plus). Après
+ *                    normalisation (minuscules) le préfixe devient `hwid1-`.
+ *
+ * Les deux formats coexistent : une licence v0 reste valide, une nouvelle
+ * activation peut être v1. Ils ne peuvent JAMAIS se confondre : longueurs
+ * différentes (64 vs 70) → `verifyHwid` renvoie false entre versions.
+ */
+const HWID_V0_RE = /^[0-9a-f]{64}$/
+const HWID_V1_RE = /^hwid1-[0-9a-f]{64}$/
 
 /**
  * Normalise un HWID pour une comparaison stricte : retire les espaces de bord
- * et met en minuscules (un digest hex est insensible à la casse). Ne modifie
- * jamais la valeur au-delà de la casse/espaces (aucune tolérance sémantique).
+ * et met en minuscules (un digest hex est insensible à la casse ; le préfixe
+ * `HWID1-` d'une empreinte v1 devient `hwid1-`, appliqué identiquement des deux
+ * côtés d'une comparaison). Ne modifie jamais la valeur au-delà de la
+ * casse/espaces (aucune tolérance sémantique).
  */
 export function normalizeHwid(hwid: string | null | undefined): string {
   return String(hwid ?? '').trim().toLowerCase()
 }
 
-/** Le HWID est-il bien formé (SHA-256 hex de 64 caractères) après normalisation ? */
+/**
+ * Le HWID est-il bien formé après normalisation ? Accepte v0 (64 hex) OU v1
+ * (`hwid1-<64 hex>`). Tout autre motif (mauvaise longueur, non-hexadécimal,
+ * autre préfixe) est rejeté.
+ */
 export function isValidHwidFormat(hwid: string | null | undefined): boolean {
-  return HWID_RE.test(normalizeHwid(hwid))
+  const n = normalizeHwid(hwid)
+  return HWID_V0_RE.test(n) || HWID_V1_RE.test(n)
+}
+
+/**
+ * Version d'empreinte détectée : 1 pour `HWID1-…`, 0 pour un digest hex nu,
+ * `null` si le format est invalide. Utilitaire de diagnostic/branchement — la
+ * comparaison stricte ne dépend PAS de ce résultat (elle compare les chaînes
+ * normalisées telles quelles, ce qui exclut naturellement toute confusion de
+ * version par différence de longueur).
+ */
+export function hwidVersionOf(hwid: string | null | undefined): 0 | 1 | null {
+  const n = normalizeHwid(hwid)
+  if (HWID_V1_RE.test(n)) return 1
+  if (HWID_V0_RE.test(n)) return 0
+  return null
 }
 
 /**

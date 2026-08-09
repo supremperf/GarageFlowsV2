@@ -455,6 +455,87 @@ function getHwid() {
   return crypto.createHash('sha256').update(combined).digest('hex')
 }
 
+// ── HWID V1 — empreinte CANONIQUE (AUD-036) ───────────────────────────────────
+// UNE SEULE autorité collecte les champs : le client (ici). Le keygen/backend ne
+// reconstruisent plus l'identité — ils LIENT la valeur produite ici (voir
+// docs/security/HWID_SPEC_V1.md + scripts/hwid_v1.py + src/lib/license/hwid-v1.ts).
+// L'algorithme ci-dessous DOIT rester octet-pour-octet identique à hwid-v1.ts
+// (prouvé par tests/fixtures/hwid-v1-vectors.json). Ne pas le modifier isolément.
+
+/** Identifiant machine stable, par OS. Vide si indisponible (l'empreinte reste définie). */
+function getMachineId() {
+  const { execSync } = require('child_process')
+  try {
+    if (os.platform() === 'win32') {
+      // MachineGuid : identifiant d'installation Windows, stable, non lié au NIC.
+      const out = execSync(
+        'reg query "HKLM\\SOFTWARE\\Microsoft\\Cryptography" /v MachineGuid',
+        { timeout: 3000 },
+      ).toString()
+      const m = out.match(/MachineGuid\s+REG_SZ\s+([0-9a-fA-F-]+)/)
+      if (m) return m[1].trim()
+    } else if (os.platform() === 'darwin') {
+      const out = execSync(
+        'ioreg -rd1 -c IOPlatformExpertDevice 2>/dev/null | grep IOPlatformUUID',
+        { timeout: 3000 },
+      ).toString()
+      const m = out.match(/"IOPlatformUUID"\s*=\s*"([^"]+)"/)
+      if (m) return m[1].trim()
+    } else {
+      // Linux : /etc/machine-id (ou /var/lib/dbus/machine-id).
+      for (const p of ['/etc/machine-id', '/var/lib/dbus/machine-id']) {
+        try {
+          const v = fs.readFileSync(p, 'utf8').trim()
+          if (v) return v
+        } catch { /* essai suivant */ }
+      }
+    }
+  } catch { /* ignore — champ vide */ }
+  return ''
+}
+
+/** Normalisation d'un champ — IDENTIQUE à normalizeHwidField (hwid-v1.ts / hwid_v1.py). */
+function normalizeHwidFieldV1(value) {
+  return String(value ?? '')
+    .normalize('NFC')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+}
+
+/** Collecte les champs matériels canoniques (source unique côté client). */
+function collectHwidFieldsV1() {
+  // MAC : première interface non-loopback stable (même sélection que getHwid v0).
+  let mac = ''
+  outer: for (const ifaces of Object.values(os.networkInterfaces())) {
+    for (const net of (ifaces ?? [])) {
+      if (!net.internal && net.mac && net.mac !== '00:00:00:00:00:00') {
+        mac = net.mac
+        break outer
+      }
+    }
+  }
+  return {
+    cpu:        os.cpus()[0]?.model ?? '',
+    diskSerial: getDiskSerial() === 'unknown-disk' ? '' : getDiskSerial(),
+    mac,
+    machineId:  getMachineId(),
+    platform:   `${os.platform()}-${os.arch()}`,
+  }
+}
+
+// Ordre canonique FIXE (trié) — NE JAMAIS réordonner (changerait toutes les empreintes).
+const HWID_V1_CANONICAL_KEYS = ['cpu', 'diskSerial', 'mac', 'machineId', 'platform']
+
+/** Empreinte V1 canonique « HWID1-<sha256hex> » (== hwidV1() TS / hwid_v1.py). */
+function getHwidV1() {
+  const fields = collectHwidFieldsV1()
+  const lines = HWID_V1_CANONICAL_KEYS.map((k) => `${k}=${normalizeHwidFieldV1(fields[k])}`)
+  const serialized = 'GF-HWID-V1\n' + lines.join('\n')
+  const digest = crypto.createHash('sha256').update(Buffer.from(serialized, 'utf8')).digest('hex')
+  return `HWID1-${digest}`
+}
+
 // ── ECC License Verification (ECDSA-SHA256, P-256) ────────────────────────────
 
 function b64uDecode(s) {

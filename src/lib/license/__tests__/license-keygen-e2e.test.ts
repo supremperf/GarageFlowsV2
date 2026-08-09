@@ -24,8 +24,11 @@ vi.mock('@/lib/license/public-key', () => ({ getPublicKeyPem: () => h.pubPem }))
 
 import { verifyLicenseToken, isValidHwidFormat, verifyHwid } from '@/lib/license/verify'
 
-interface Fixture { name: string; token: string; expectValid: boolean; typ?: string; hwidBound?: boolean }
-let fixtures: { publicPem: string; machineHwid: string; wrongHwid: string; licenses: Fixture[] } | null = null
+interface Fixture { name: string; token: string; expectValid: boolean; typ?: string; hwidBound?: boolean; hwidV1Bound?: boolean }
+let fixtures: {
+  publicPem: string; machineHwid: string; wrongHwid: string
+  machineHwidV1: string; wrongHwidV1: string; licenses: Fixture[]
+} | null = null
 
 beforeAll(() => {
   const out = join(mkdtempSync(join(tmpdir(), 'gf-lic-')), 'fixtures.json')
@@ -86,5 +89,33 @@ describe('licence E2E — keygen_core.py officiel → verifyLicenseToken', () =>
     expect(verifyHwid(f.machineHwid, f.wrongHwid)).toBe(false)      // autre machine
     const l5 = f.licenses.find((l) => l.hwidBound)!
     expect(verifyLicenseToken(l5.token).payload?.hwid).toBe(f.machineHwid) // HWID signé = HWID machine
+  })
+
+  // ── AUD-036 : bascule HWID V1 canonique, round-trip RÉEL sans matériel ──────
+  // Le client produit l'empreinte canonique (algorithme partagé hwid_v1) → le
+  // keygen officiel la LIE telle quelle (aucune reconstruction) → le vérificateur
+  // de PRODUCTION l'accepte et la compare STRICTEMENT. Prouve la chaîne complète.
+  it('HWID V1 canonique — keygen lie la valeur cliente, verify l’accepte (L7)', () => {
+    const f = fixtures
+    if (!f) return
+    // Format v1 accepté par le code de production.
+    expect(isValidHwidFormat(f.machineHwidV1)).toBe(true)
+    expect(f.machineHwidV1).toMatch(/^HWID1-[0-9a-f]{64}$/)
+    // Le keygen a signé EXACTEMENT la valeur produite par le client (pas de reconstruction).
+    const l7 = f.licenses.find((l) => l.hwidV1Bound)!
+    const p7 = verifyLicenseToken(l7.token)
+    expect(p7.valid).toBe(true)
+    expect(p7.payload?.hwid).toBe(f.machineHwidV1)
+    // Comparaison stricte : même machine v1 → OK ; autre machine v1 → rejet.
+    expect(verifyHwid(f.machineHwidV1, f.machineHwidV1)).toBe(true)
+    expect(verifyHwid(f.machineHwidV1, f.wrongHwidV1)).toBe(false)
+  })
+
+  it('HWID v0 et v1 ne se confondent JAMAIS (longueurs 64 vs 70)', () => {
+    const f = fixtures
+    if (!f) return
+    // Un HWID v0 stocké ne matche pas un HWID v1 client, et réciproquement.
+    expect(verifyHwid(f.machineHwid, f.machineHwidV1)).toBe(false)
+    expect(verifyHwid(f.machineHwidV1, f.machineHwid)).toBe(false)
   })
 })
