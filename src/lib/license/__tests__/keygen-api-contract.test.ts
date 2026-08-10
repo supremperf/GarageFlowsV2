@@ -51,8 +51,8 @@ function routeSource(endpoint: string): string {
 /** Tous les endpoints /api/... littéraux présents dans le source Python. */
 function endpointsUsedByKeygen(): string[] {
   const found = new Set<string>()
-  for (const m of python.matchAll(/["'](\/api\/[A-Za-z0-9/_-]+)["']/g)) found.add(m[1])
-  return [...found].sort()
+  Array.from(python.matchAll(/["'](\/api\/[A-Za-z0-9/_-]+)["']/g)).forEach(m => found.add(m[1]))
+  return Array.from(found).sort()
 }
 
 describe('Endpoints appelés par le Keygen', () => {
@@ -115,10 +115,10 @@ describe('POST /api/admin/licenses/revoke-by-key', () => {
   it('accepte les trois statuts que le Keygen peut émettre', () => {
     const src = routeSource(ENDPOINT)
     const declared = src.match(/const VALID_STATUSES = \[([^\]]+)\]/)?.[1] ?? ''
-    const serverStatuses = [...declared.matchAll(/'([a-z]+)'/g)].map(m => m[1]).sort()
+    const serverStatuses = Array.from(declared.matchAll(/'([a-z]+)'/g)).map(m => m[1]).sort()
 
     // Statuts réellement passés à _apply_status() dans l'interface Python.
-    const keygenStatuses = [...python.matchAll(/_apply_status\(lid,\s*"([a-z]+)"\)/g)]
+    const keygenStatuses = Array.from(python.matchAll(/_apply_status\(lid,\s*"([a-z]+)"\)/g))
       .map(m => m[1])
     expect(keygenStatuses.length).toBeGreaterThan(0)
 
