@@ -4,6 +4,24 @@ const nextConfig = {
   experimental: {
     outputFileTracingRoot: undefined,
     instrumentationHook: true,
+
+    // CLÉ PRIVÉE — NE JAMAIS L'EMBARQUER DANS LE PAQUET.
+    //
+    // `src/app/api/admin/licenses/generate/route.ts` écrit
+    // `path.join(process.cwd(), 'keys', 'private.pem')` (émission de licences
+    // en développement). Le traceur de fichiers de Next RÉSOUT ce chemin
+    // littéral et COPIE le fichier dans `.next/standalone`, d'où
+    // `build.extraResources` (qui prend tout le dossier, sans filtre) le
+    // reprenait dans CHAQUE installateur : la clé de signature des licences
+    // était distribuée aux clients, rendant possible la forge de licences.
+    //
+    // Constaté dans dist/GarageFlows Setup 1.1.0.exe →
+    // resources\standalone\keys\private.pem. On exclut donc explicitement tout
+    // matériel de clé du traçage ; `scripts/post-build.js` conserve en plus une
+    // purge + un refus de livrer, en défense en profondeur.
+    outputFileTracingExcludes: {
+      '**/*': ['keys/**'],
+    },
   },
 
   async headers() {
