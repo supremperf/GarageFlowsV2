@@ -139,17 +139,21 @@ export function smtpErrorMessage(err: unknown, host?: string): string {
   const responseCode = typeof e?.responseCode === 'number' ? e.responseCode : 0
   const raw = typeof e?.message === 'string' ? e.message : ''
   const message = raw.toLowerCase()
-  const service = host?.includes('gmail') ? 'Gmail'
+  const provider = host?.includes('gmail') ? 'Gmail'
     : host?.includes('office365') || host?.includes('outlook') ? 'Outlook'
     : host?.includes('yahoo') ? 'Yahoo'
-    : 'le serveur email'
+    : null
+  /** Sujet de phrase : « Gmail n'a pas répondu » / « le serveur email … ». */
+  const service = provider ?? 'le serveur email'
+  /** Complément contracté : « auprès de Gmail » / « auprès du serveur email ». */
+  const aupres = provider ? `de ${provider}` : 'du serveur email'
 
   if (code === 'EAUTH' || responseCode === 535 || responseCode === 534 ||
       message.includes('username and password not accepted') || message.includes('invalid login')) {
     const hint = /gmail|yahoo/.test(host ?? '')
       ? ' Ce fournisseur exige un mot de passe d’application, pas votre mot de passe habituel.'
       : ''
-    return `Impossible d’envoyer l’email. L’authentification auprès de ${service} a été refusée.` +
+    return `Impossible d’envoyer l’email. L’authentification auprès ${aupres} a été refusée.` +
            ` Vérifiez l’adresse et le mot de passe.${hint}`
   }
   if (code === 'ETIMEDOUT' || code === 'ESOCKETTIMEDOUT' || message.includes('timeout')) {

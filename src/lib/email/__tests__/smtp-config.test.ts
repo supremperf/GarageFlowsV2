@@ -153,6 +153,13 @@ describe('Messages d’erreur SMTP exploitables', () => {
     expect(smtpErrorMessage({ message: 'wrong version number' }, 'smtp.ex.fr')).toContain('TLS/SSL')
   })
 
+  it('formule correctement le complément (« auprès du », pas « auprès de le »)', () => {
+    const generique = smtpErrorMessage({ code: 'EAUTH' }, 'smtp.mon-hebergeur.fr')
+    expect(generique).toContain('auprès du serveur email')
+    expect(generique).not.toContain('auprès de le')
+    expect(smtpErrorMessage({ code: 'EAUTH' }, 'smtp.gmail.com')).toContain('auprès de Gmail')
+  })
+
   it('ne divulgue jamais de trace interne', () => {
     const msg = smtpErrorMessage(new Error('boom\n    at Object.<anonymous> (/app/secret/path.js:1:1)'), 'smtp.ex.fr')
     expect(msg).not.toContain('at Object')
