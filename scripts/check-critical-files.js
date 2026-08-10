@@ -63,6 +63,7 @@ const RETIRED_FINGERPRINTS = [
   { fp: '7bed3cb736ccc8d422a7663939732faf6eb9a4c59daa590cc826b2f821b6d478', retired: '2026-08-07 (keygen régénéré)' },
   { fp: '3150baaccc36af0120cfffa99dd41ce21c716831e432399791b5a9a9dcd59de6', retired: '2026-08-08 (rotation cryptographique totale)' },
   { fp: '1f1be91993deed4ae92353b035a7e3ccf3a972dae9b52cfe62e39824143e0e08', retired: '2026-08-09 (rotation)' },
+  { fp: '1c21d4bb0baa2f52812eef35bd5ebca70818f02086d35d3c30ebf4f4fa77a312', retired: '2026-08-10 (rotation)' },
 ]
 
 /** Reconstruit le PEM porté par un littéral `const <varName> = [ '…', … ]`. */
