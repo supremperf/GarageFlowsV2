@@ -617,6 +617,10 @@ export default function JobModal() {
     {isInspectionOpen && editingJob && (
       <InspectionModal
         jobId={editingJob.id}
+        vehicleId={editingJob.vehicleId ?? undefined}
+        // Affichage IMMÉDIAT depuis l'intervention ; la modale complète ensuite
+        // avec les relations réelles (fiche véhicule, kilométrage) résolues par
+        // /api/inspections/prefill.
         prefill={{
           clientName: editingJob.customerName,
           vehicleModel: editingJob.vehicleModel,

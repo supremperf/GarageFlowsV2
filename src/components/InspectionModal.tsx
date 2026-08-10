@@ -211,24 +211,73 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
   const pendingUpdates = useRef<Map<string, string | null>>(new Map())
   const saveTimer = useRef<NodeJS.Timeout | null>(null)
 
+  /** Véhicule réellement rattaché, résolu par le serveur (jamais deviné ici). */
+  const [resolvedVehicleId, setResolvedVehicleId] = useState<string | null>(vehicleId ?? null)
+
+  function applyInspection(d: Inspection) {
+    setInspection(d)
+    setItems(d.items)
+    setForm({
+      clientName: d.clientName,
+      vehicleModel: d.vehicleModel ?? '',
+      licensePlate: d.licensePlate ?? '',
+      mileage: d.mileage?.toString() ?? '',
+      notes: d.notes ?? '',
+    })
+  }
+
   useEffect(() => {
     if (inspectionId) {
       fetch(`/api/inspections/${inspectionId}`)
         .then(r => r.ok ? r.json() : null)
-        .then((d: Inspection | null) => {
-          if (!d) return
-          setInspection(d)
-          setItems(d.items)
-          setForm({
-            clientName: d.clientName,
-            vehicleModel: d.vehicleModel ?? '',
-            licensePlate: d.licensePlate ?? '',
-            mileage: d.mileage?.toString() ?? '',
-            notes: d.notes ?? '',
-          })
-        })
+        .then((d: Inspection | null) => { if (d) applyInspection(d) })
     }
   }, [inspectionId])
+
+  // Ouverture depuis une intervention / un véhicule : on REPREND le contrôle en
+  // cours s'il existe (rouvrir la modale créait sinon un doublon et perdait la
+  // saisie), sinon on préremplit depuis les RELATIONS RÉELLES résolues côté
+  // serveur — et non depuis les seuls libellés recopiés en props.
+  useEffect(() => {
+    if (inspectionId) return
+    if (!jobId && !vehicleId) return
+    let cancelled = false
+    const qs = new URLSearchParams()
+    if (jobId) qs.set('jobId', jobId)
+    if (vehicleId) qs.set('vehicleId', vehicleId)
+
+    ;(async () => {
+      try {
+        const existingRes = await fetch(`/api/inspections?${qs.toString()}`)
+        const existing: Inspection[] = existingRes.ok ? await existingRes.json() : []
+        const draft = Array.isArray(existing) ? existing.find(i => i.status === 'draft') : undefined
+        if (cancelled) return
+        if (draft) { applyInspection(draft); return }
+
+        const ctxRes = await fetch(`/api/inspections/prefill?${qs.toString()}`)
+        if (!ctxRes.ok || cancelled) return
+        const ctx = await ctxRes.json() as {
+          vehicleId: string | null; clientName: string
+          vehicleModel: string; licensePlate: string; mileage: number | null
+        }
+        if (cancelled) return
+        setResolvedVehicleId(ctx.vehicleId ?? null)
+        // Les valeurs serveur complètent le formulaire sans écraser une saisie
+        // déjà faite par l'utilisateur.
+        setForm(f => ({
+          ...f,
+          clientName:   f.clientName   || ctx.clientName   || '',
+          vehicleModel: f.vehicleModel || ctx.vehicleModel || '',
+          licensePlate: f.licensePlate || ctx.licensePlate || '',
+          mileage:      f.mileage      || (ctx.mileage != null ? String(ctx.mileage) : ''),
+        }))
+      } catch {
+        /* hors ligne : le préremplissage par props reste affiché */
+      }
+    })()
+
+    return () => { cancelled = true }
+  }, [inspectionId, jobId, vehicleId])
 
   // Auto-sauvegarde débouncée. On flushe TOUS les items en attente (pas seulement
   // le dernier édité) : un timer partagé ne ciblant qu'un id orphelinait sinon
@@ -287,7 +336,9 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           jobId: jobId ?? null,
-          vehicleId: vehicleId ?? null,
+          // Le serveur re-résout de toute façon le rattachement depuis
+          // l'intervention ; on transmet ce qu'il nous a déjà répondu.
+          vehicleId: resolvedVehicleId ?? null,
           clientName: form.clientName,
           vehicleModel: form.vehicleModel || null,
           licensePlate: form.licensePlate || null,
