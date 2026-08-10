@@ -87,6 +87,101 @@ def _frame(parent, bg=None, padx=0, pady=0):
     return tk.Frame(parent, bg=bg or parent.cget("bg"), padx=padx, pady=pady)
 
 
+# ── Cycle de vie des widgets (anti-TclError) ─────────────────────────────────
+#
+# Les appels réseau tournent dans des threads afin de ne pas geler l'interface,
+# et reviennent vers Tk via `.after(0, …)`. Entre la PLANIFICATION du retour et
+# son EXÉCUTION, l'utilisateur peut avoir fermé la fenêtre concernée : le widget
+# n'existe alors plus côté Tcl et toute référence à son chemin lève
+#
+#     _tkinter.TclError: bad window path name ".!notebook.!tabgenerate.!toplevel"
+#
+# (crash reproduit sur la fenêtre récapitulative des clés mécanicien, fermée
+# pendant l'enregistrement serveur : `messagebox.showinfo(..., parent=win)`).
+#
+# Règles appliquées partout ci-dessous :
+#   - aucune opération Tk depuis un thread secondaire : on repasse par `.after` ;
+#   - le widget est revérifié AU MOMENT de l'exécution, pas seulement à la
+#     planification ;
+#   - un parent détruit n'est jamais transmis à une boîte de dialogue : on
+#     retombe sur un ancêtre vivant, sinon la boîte s'ouvre sans parent ;
+#   - le callback d'un composant fermé est ignoré silencieusement — MAIS
+#     l'erreur réseau sous-jacente, elle, n'est jamais avalée : elle est
+#     journalisée sur stderr.
+
+def _widget_alive(widget) -> bool:
+    """Le widget existe-t-il encore côté Tcl ?
+
+    À n'appeler QUE depuis le thread de la boucle Tk : `winfo_exists` est un
+    appel Tcl, et tkinter lève `RuntimeError: main thread is not in main loop`
+    s'il vient d'un thread secondaire.
+    """
+    if widget is None:
+        return False
+    try:
+        return bool(widget.winfo_exists())
+    except (tk.TclError, RuntimeError):
+        return False
+
+
+def _live_parent(*candidates):
+    """Premier widget encore vivant parmi `candidates`, sinon None."""
+    for w in candidates:
+        if _widget_alive(w):
+            return w
+    return None
+
+
+def _dialog(kind: str, title: str, message: str, *parents):
+    """Boîte de dialogue dont le `parent` est garanti vivant (ou omis)."""
+    show = getattr(messagebox, kind)
+    parent = _live_parent(*parents)
+    if parent is not None:
+        return show(title, message, parent=parent)
+    return show(title, message)
+
+
+def _info(title, message, *parents):
+    return _dialog("showinfo", title, message, *parents)
+
+
+def _error(title, message, *parents):
+    return _dialog("showerror", title, message, *parents)
+
+
+def _ui(widget, fn):
+    """Planifie `fn` sur la boucle Tk de `widget`, en l'ignorant s'il a disparu.
+
+    À utiliser pour TOUT retour de thread réseau. `fn` ne reçoit aucun argument :
+    capturez les valeurs nécessaires dans la fermeture.
+    """
+    # AUCUN test d'existence ici : `_ui` est appelée depuis un thread réseau, et
+    # `winfo_exists` y lèverait « main thread is not in main loop ». La seule
+    # opération tolérée depuis un thread secondaire est la mise en file `after`.
+    def _run():
+        # Exécuté SUR la boucle Tk : c'est ici, et seulement ici, qu'on peut
+        # interroger l'état réel des widgets.
+        if not _widget_alive(widget):
+            return
+        try:
+            fn()
+        except tk.TclError as exc:
+            # Widget détruit pendant l'exécution du callback : sans intérêt pour
+            # l'utilisateur, mais on le trace pour ne rien masquer en diagnostic.
+            print(f"[keygen] callback UI ignoré (widget fermé) : {exc}", file=sys.stderr)
+
+    try:
+        widget.after(0, _run)
+    except tk.TclError:
+        # Widget déjà détruit : il n'y a plus d'interface à mettre à jour.
+        pass
+    except RuntimeError as exc:
+        # « main thread is not in main loop » : la boucle Tk ne tourne pas
+        # (application en cours de fermeture). Rien à afficher, mais on le trace
+        # plutôt que de perdre le retour en silence.
+        print(f"[keygen] retour UI non délivré (boucle Tk arrêtée) : {exc}", file=sys.stderr)
+
+
 # ── Remote API helper ────────────────────────────────────────────────────────
 
 def _validate_server_url(url: str) -> tuple[bool, str]:
@@ -607,10 +702,13 @@ class TabGenerate(tk.Frame):
                                  f"parent={info['lid'][:8]}…")
                     children.append(minfo)
 
-                self.after(0, lambda: self._on_garage_success(info, children))
+                _ui(self, lambda: self._on_garage_success(info, children))
             except Exception as exc:
-                self.after(0, lambda: (self._set_busy(False),
-                                       messagebox.showerror("Erreur de signature", str(exc))))
+                # `exc` est supprimé à la sortie du bloc `except` (Python 3) :
+                # capturé par défaut d'argument, sinon le callback différé lève
+                # NameError et l'utilisateur ne voit JAMAIS l'erreur réelle.
+                _ui(self, lambda msg=str(exc): (self._set_busy(False),
+                                                _error("Erreur de signature", msg, self)))
 
         threading.Thread(target=_do, daemon=True).start()
 
@@ -655,10 +753,10 @@ class TabGenerate(tk.Frame):
                     db.audit_log("gen_mechanic", minfo["lid"],
                                  f"parent={parent_lid[:8]}…")
                     children.append(minfo)
-                self.after(0, lambda: self._on_mechanics_success(parent, children))
+                _ui(self, lambda: self._on_mechanics_success(parent, children))
             except Exception as exc:
-                self.after(0, lambda: (self._set_busy(False),
-                                       messagebox.showerror("Erreur de signature", str(exc))))
+                _ui(self, lambda msg=str(exc): (self._set_busy(False),
+                                                _error("Erreur de signature", msg, self)))
 
         threading.Thread(target=_do, daemon=True).start()
 
@@ -756,15 +854,25 @@ class TabGenerate(tk.Frame):
             def _register_all():
                 def _do():
                     ok_n, fail_n = 0, 0
+                    errors = []
                     for c in children:
-                        ok, _ = _remote_register(url, key, c["token"])
+                        ok, msg = _remote_register(url, key, c["token"])
                         if ok:
                             ok_n += 1
                         else:
                             fail_n += 1
-                    self.after(0, lambda: messagebox.showinfo(
+                            if msg and msg not in errors:
+                                errors.append(msg)
+                    # La cause réelle des échecs est REMONTÉE (timeout, 401,
+                    # 5xx…) : un simple compteur laissait l'utilisateur sans
+                    # aucun moyen de comprendre.
+                    detail = ("\n\nDétail : " + " · ".join(errors[:3])) if errors else ""
+                    # `win` peut avoir été fermée pendant la requête : le parent
+                    # est choisi au moment de l'affichage, jamais figé ici.
+                    _ui(self, lambda: _info(
                         "Serveur GarageFlows",
-                        f"Enregistrées : {ok_n} · Échecs : {fail_n}", parent=win))
+                        f"Enregistrées : {ok_n} · Échecs : {fail_n}{detail}",
+                        win, self))
                 threading.Thread(target=_do, daemon=True).start()
             if messagebox.askyesno(
                 "Serveur GarageFlows",
@@ -958,10 +1066,11 @@ class TabManage(tk.Frame):
         if url and key:
             def _call():
                 ok, msg = _remote_set_status(url, key, lid, status)
-                self.after(0, lambda: messagebox.showinfo(
+                # Onglet fermé pendant la requête : le retour est ignoré au lieu
+                # de lever sur un chemin de fenêtre mort.
+                _ui(self, lambda: _info(
                     "Serveur GarageFlows",
-                    f"{'✅' if ok else '⚠️'} {msg}"
-                ))
+                    f"{'✅' if ok else '⚠️'} {msg}", self))
             threading.Thread(target=_call, daemon=True).start()
 
     def _reactivate(self):
@@ -1252,6 +1361,10 @@ class TabServer(tk.Frame):
             return
         self.lbl_result.config(text="⏳  Test en cours…", fg=MUTED)
 
+        def _result(text: str, fg: str):
+            """Affiche le verdict — ignoré si l'onglet a été fermé entre-temps."""
+            _ui(self, lambda: self.lbl_result.config(text=text, fg=fg))
+
         def _do():
             # Ping via status='active' (chemin sans écriture DB). La route renvoie 200
             # {ok:true, note:'not_registered'} pour un licenseId inconnu — c'est un succès.
@@ -1262,39 +1375,43 @@ class TabServer(tk.Frame):
                 headers={"Content-Type": "application/json", "x-gf-key": key}, method="POST")
             try:
                 with urllib.request.urlopen(req, timeout=6) as r:
-                    data = _j.loads(r.read())
+                    try:
+                        data = _j.loads(r.read())
+                    except (ValueError, UnicodeDecodeError):
+                        # Réponse 200 mais illisible : souvent un portail captif
+                        # ou un proxy qui renvoie du HTML à la place du JSON.
+                        _result("⚠️  Réponse illisible du serveur (JSON attendu) — vérifiez l'URL.", AMBER)
+                        return
                     # 200 = authentification OK. note='not_registered' attendu pour ce licenseId factice.
-                    if data.get("note") == "not_registered":
-                        msg = "✅  Connexion réussie (licenceId inconnu = normal)."
+                    if not isinstance(data, dict):
+                        _result("⚠️  Réponse inattendue du serveur — vérifiez l'URL.", AMBER)
+                    elif data.get("note") == "not_registered":
+                        _result("✅  Connexion réussie (licenceId inconnu = normal).", GREEN)
                     else:
-                        msg = "✅  Connexion réussie."
-                    self.after(0, lambda: self.lbl_result.config(text=msg, fg=GREEN))
+                        _result("✅  Connexion réussie.", GREEN)
             except urllib.error.HTTPError as e:
                 if e.code in (401, 403):
-                    self.after(0, lambda: self.lbl_result.config(
-                        text="❌  Clé API invalide (GARAGEFLOW_API_KEY) — vérifiez la clé du serveur.", fg=RED))
+                    _result("❌  Clé API invalide (GARAGEFLOW_API_KEY) — vérifiez la clé du serveur.", RED)
+                elif e.code == 404:
+                    _result("❌  Route de licences introuvable (HTTP 404) — l'URL ne pointe pas vers GarageFlows.", RED)
                 elif e.code == 429:
-                    self.after(0, lambda: self.lbl_result.config(
-                        text="⚠️  Trop de requêtes (rate limit) — réessayez dans quelques instants.", fg=AMBER))
+                    _result("⚠️  Trop de requêtes (rate limit) — réessayez dans quelques instants.", AMBER)
                 elif e.code in (500, 502, 503, 504):
-                    self.after(0, lambda e=e: self.lbl_result.config(
-                        text=f"⚠️  Serveur indisponible (HTTP {e.code}) — réessayez plus tard.", fg=AMBER))
+                    _result(f"⚠️  Serveur indisponible (HTTP {e.code}) — réessayez plus tard.", AMBER)
                 else:
-                    self.after(0, lambda e=e: self.lbl_result.config(
-                        text=f"⚠️  HTTP {e.code}", fg=AMBER))
+                    _result(f"⚠️  HTTP {e.code}", AMBER)
             except socket.timeout:
-                self.after(0, lambda: self.lbl_result.config(
-                    text="❌  Délai dépassé — le serveur ne répond pas.", fg=RED))
+                _result("❌  Délai dépassé — le serveur ne répond pas.", RED)
             except urllib.error.URLError as exc:
                 if isinstance(exc.reason, socket.timeout):
-                    self.after(0, lambda: self.lbl_result.config(
-                        text="❌  Délai dépassé — le serveur ne répond pas.", fg=RED))
+                    _result("❌  Délai dépassé — le serveur ne répond pas.", RED)
                 else:
-                    self.after(0, lambda: self.lbl_result.config(
-                        text="❌  Connexion impossible — vérifiez l'URL du serveur et le réseau.", fg=RED))
-            except Exception:
-                self.after(0, lambda: self.lbl_result.config(
-                    text="❌  Connexion impossible — vérifiez l'URL du serveur et le réseau.", fg=RED))
+                    _result("❌  Connexion impossible — vérifiez l'URL du serveur et le réseau.", RED)
+            except Exception as exc:
+                # Cause technique tracée : jamais affichée brute à l'utilisateur,
+                # jamais perdue non plus.
+                print(f"[keygen] test serveur — erreur inattendue : {exc!r}", file=sys.stderr)
+                _result("❌  Connexion impossible — vérifiez l'URL du serveur et le réseau.", RED)
 
         threading.Thread(target=_do, daemon=True).start()
 
