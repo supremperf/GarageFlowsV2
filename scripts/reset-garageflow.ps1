@@ -2482,7 +2482,6 @@ try {
         DEVICE_TOKEN_PEPPER  = @{ Bytes = 32; Format = 'base64' }
         GF_PORTAL_SECRET     = @{ Bytes = 32; Format = 'base64' }
         GF_SIGNATURE_SECRET  = @{ Bytes = 32; Format = 'base64' }
-        GF_BACKUP_KEY        = @{ Bytes = 32; Format = 'base64' }
         GF_DB_MAC_SECRET     = @{ Bytes = 32; Format = 'hex' }
     }
     # Secrets de chiffrement au repos : JAMAIS auto-générés ni auto-rotés par le
@@ -2500,7 +2499,14 @@ try {
     # plus (absente de $newValues, elle est hors du périmètre de $deletedNames).
     # La rotation reste possible, mais uniquement par le processus dédié
     # (GF_SMTP_CIPHER_KEY_OLD — cf. scripts/encrypt-smtp-secrets.js).
-    $encryptionAtRestKeys = @('GF_TOTP_ENC_KEY','GF_SMTP_CIPHER_KEY')
+    #
+    # GF_BACKUP_KEY relève de la MÊME famille et manquait à cette liste : c'est la
+    # clé AES-256 des SAUVEGARDES CHIFFRÉES (src/lib/backup/crypto.ts). Le
+    # manifeste le disait déjà — « Rotation makes raw-key backups unreadable » —
+    # alors que le script la régénérait à chaque exécution : toutes les
+    # sauvegardes déjà produites devenaient définitivement irrécupérables, au
+    # moment précis où l'on en a le plus besoin. Elle est désormais préservée.
+    $encryptionAtRestKeys = @('GF_TOTP_ENC_KEY','GF_SMTP_CIPHER_KEY','GF_BACKUP_KEY')
     $localEnvExisting = if (Test-Path -LiteralPath $localEnvPath) { Read-EnvFileMap $localEnvPath } else { @{} }
     $localOnlyValues = @{}
     foreach ($name in $encryptionAtRestKeys) {
@@ -2535,9 +2541,10 @@ try {
     }
 
     # Rotation totale explicite : écraser les secrets ROTABLES (session/signature/
-    # API/pepper/backup/MAC). GF_TOTP_ENC_KEY et GF_SMTP_CIPHER_KEY en sont EXCLUS
-    # (chiffrement au repos — cf. bloc ci-dessus, préservés/générés une seule fois).
-    foreach ($name in @('NEXTAUTH_SECRET','GARAGEFLOW_API_KEY','DEVICE_TOKEN_PEPPER','GF_PORTAL_SECRET','GF_SIGNATURE_SECRET','GF_BACKUP_KEY','GF_DB_MAC_SECRET')) {
+    # API/pepper/MAC). Les clés de CHIFFREMENT AU REPOS en sont EXCLUES
+    # (GF_TOTP_ENC_KEY, GF_SMTP_CIPHER_KEY, GF_BACKUP_KEY — cf. bloc ci-dessus,
+    # préservées ou générées une seule fois).
+    foreach ($name in @('NEXTAUTH_SECRET','GARAGEFLOW_API_KEY','DEVICE_TOKEN_PEPPER','GF_PORTAL_SECRET','GF_SIGNATURE_SECRET','GF_DB_MAC_SECRET')) {
         $newValues[$name] = Clean-InputValue ([string]$generated[$name])
     }
 

@@ -4,6 +4,51 @@
   "projectVersion": "1.1.0",
   "variables": [
     {
+      "name": "ANTHROPIC_API_KEY",
+      "classification": "external",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "nonempty-secret",
+      "minLength": 10,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/app/api/plate-lookup/route.ts",
+        "src/app/api/plate-ocr/route.ts"
+      ],
+      "autoManage": true
+    },
+    {
+      "name": "APPDATA",
+      "classification": "runtime-system",
+      "scope": "runtime-system",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/restore.js"
+      ],
+      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
+    },
+    {
+      "name": "CI",
+      "classification": "runtime-system",
+      "scope": "runtime-system",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "playwright.config.ts"
+      ],
+      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
+    },
+    {
       "name": "DATABASE_URL",
       "classification": "external",
       "scope": "both",
@@ -19,6 +64,38 @@
         "src/lib/db.ts"
       ],
       "notes": "Desktop must remain file:./dev.db. Vercel must use a pooled PostgreSQL URL.",
+      "autoManage": true
+    },
+    {
+      "name": "DEMO_RESET_FORCE",
+      "classification": "dangerous",
+      "scope": "development",
+      "requiredProduction": false,
+      "format": "enum:0,1",
+      "autoGenerate": false,
+      "rotationRisk": "high",
+      "consumers": [
+        "prisma/demo-tenant.ts"
+      ],
+      "notes": "Lève la protection du jeu de démonstration (effacement de données). Jamais en production.",
+      "autoManage": false
+    },
+    {
+      "name": "DEVICE_TOKEN_PEPPER",
+      "classification": "dangerous",
+      "scope": "server",
+      "requiredProduction": true,
+      "format": "strong-secret",
+      "minLength": 32,
+      "recommendedBytes": 32,
+      "autoGenerate": true,
+      "generationFormat": "base64",
+      "rotationRisk": "critical",
+      "consumers": [
+        "src/lib/env.ts",
+        "src/lib/license/devices.ts"
+      ],
+      "notes": "Rotation invalidates existing device tokens and HWID hashes.",
       "autoManage": true
     },
     {
@@ -38,55 +115,148 @@
       "autoManage": true
     },
     {
-      "name": "NEXTAUTH_URL",
-      "classification": "external",
-      "scope": "both",
-      "requiredProduction": true,
-      "format": "http-url",
-      "minLength": 8,
-      "autoGenerate": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "src/app/api/health/route.ts",
-        "electron/main.js"
-      ],
-      "autoManage": true
-    },
-    {
-      "name": "GF_APP_URL",
-      "classification": "external",
+      "name": "EINVOICING_CONNECTIONS_ENABLED",
+      "classification": "configuration",
       "scope": "server",
       "requiredProduction": false,
-      "format": "https-url",
-      "minLength": 8,
+      "format": "string",
       "autoGenerate": false,
+      "autoManage": false,
       "rotationRisk": "low",
       "consumers": [
-        "src/lib/app-url.ts"
+        "src/lib/einvoicing/flags.ts"
       ],
-      "autoManage": false,
-      "status": "absent-consumer",
-      "notes": "Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin."
+      "notes": "Autorise la connexion des garages a leur plateforme. Sans effet si EINVOICING_ENABLED est OFF."
     },
     {
-      "name": "NEXTAUTH_SECRET",
-      "classification": "dangerous",
-      "scope": "both",
-      "requiredProduction": true,
-      "format": "strong-secret",
-      "minLength": 32,
-      "recommendedBytes": 32,
-      "autoGenerate": true,
-      "generationFormat": "base64",
-      "rotationRisk": "critical",
+      "name": "EINVOICING_DEFAULT_ENVIRONMENT",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "string",
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
       "consumers": [
-        "src/middleware.ts",
-        "src/lib/auth-secret.ts",
-        "src/lib/session-secret.ts",
-        "electron/main.js"
+        "src/lib/einvoicing/flags.ts"
       ],
-      "notes": "Rotation invalidates sessions and may make d1-encrypted TOTP/SMTP data unreadable.",
-      "autoManage": true
+      "notes": "sandbox ou production. Ignore (force sandbox) tant que EINVOICING_SANDBOX_ONLY est true."
+    },
+    {
+      "name": "EINVOICING_ENABLED",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "string",
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/einvoicing/flags.ts"
+      ],
+      "notes": "Drapeau maitre de la facturation electronique. OFF par defaut. Jamais active automatiquement par le reset (autoManage=false)."
+    },
+    {
+      "name": "EINVOICING_INCOMING_ENABLED",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "string",
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/einvoicing/flags.ts"
+      ],
+      "notes": "Autorise la reception des factures. OFF par defaut."
+    },
+    {
+      "name": "EINVOICING_OUTGOING_ENABLED",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "string",
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/einvoicing/flags.ts"
+      ],
+      "notes": "Autorise l envoi electronique des factures. OFF par defaut. Sans effet si maitre OFF."
+    },
+    {
+      "name": "EINVOICING_PAYMENT_REPORTING_ENABLED",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "string",
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/einvoicing/flags.ts"
+      ],
+      "notes": "Autorise le e-reporting de paiement. OFF par defaut."
+    },
+    {
+      "name": "EINVOICING_PROVIDER_CATALOG_ENABLED",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "string",
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/einvoicing/flags.ts"
+      ],
+      "notes": "Affiche le catalogue des plateformes (lecture seule, aucun secret). Defaut true."
+    },
+    {
+      "name": "EINVOICING_SANDBOX_ONLY",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "string",
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/einvoicing/flags.ts"
+      ],
+      "notes": "Verrouille l environnement sur sandbox (defaut true) : aucune transmission reelle par megarde."
+    },
+    {
+      "name": "ELECTRON",
+      "classification": "runtime-system",
+      "scope": "runtime-system",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/env.ts",
+        "src/app/api/health/route.ts"
+      ],
+      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
+    },
+    {
+      "name": "ELECTRON_DEV",
+      "classification": "runtime-system",
+      "scope": "runtime-system",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "electron/main.js",
+        "src/lib/license/protection.ts"
+      ],
+      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
     },
     {
       "name": "GARAGEFLOW_API_KEY",
@@ -108,368 +278,6 @@
       "autoManage": true
     },
     {
-      "name": "GF_LICENSE_SERVER",
-      "classification": "external",
-      "scope": "desktop",
-      "requiredProduction": false,
-      "format": "https-url",
-      "minLength": 8,
-      "autoGenerate": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "electron/main.js"
-      ],
-      "autoManage": true
-    },
-    {
-      "name": "DEVICE_TOKEN_PEPPER",
-      "classification": "dangerous",
-      "scope": "server",
-      "requiredProduction": true,
-      "format": "strong-secret",
-      "minLength": 32,
-      "recommendedBytes": 32,
-      "autoGenerate": true,
-      "generationFormat": "base64",
-      "rotationRisk": "critical",
-      "consumers": [
-        "src/lib/env.ts",
-        "src/lib/license/devices.ts"
-      ],
-      "notes": "Rotation invalidates existing device tokens and HWID hashes.",
-      "autoManage": true
-    },
-    {
-      "name": "UPSTASH_REDIS_REST_URL",
-      "classification": "external",
-      "scope": "server",
-      "requiredProduction": true,
-      "format": "https-url",
-      "minLength": 8,
-      "autoGenerate": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/lib/env.ts",
-        "src/lib/security/rate-limit.ts"
-      ],
-      "autoManage": true
-    },
-    {
-      "name": "UPSTASH_REDIS_REST_TOKEN",
-      "classification": "external",
-      "scope": "server",
-      "requiredProduction": true,
-      "format": "nonempty-secret",
-      "minLength": 16,
-      "autoGenerate": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/lib/env.ts",
-        "src/lib/security/rate-limit.ts"
-      ],
-      "autoManage": true
-    },
-    {
-      "name": "GF_PORTAL_SECRET",
-      "classification": "dangerous",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "strong-secret",
-      "minLength": 32,
-      "recommendedBytes": 32,
-      "autoGenerate": true,
-      "generationFormat": "base64",
-      "rotationRisk": "high",
-      "consumers": [
-        "src/lib/auth-secret.ts",
-        "src/lib/session-secret.ts"
-      ],
-      "notes": "Rotation invalidates portal and quote-signature JWTs.",
-      "autoManage": true
-    },
-    {
-      "name": "ANTHROPIC_API_KEY",
-      "classification": "external",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "nonempty-secret",
-      "minLength": 10,
-      "autoGenerate": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "src/app/api/plate-lookup/route.ts",
-        "src/app/api/plate-ocr/route.ts"
-      ],
-      "autoManage": true
-    },
-    {
-      "name": "GF_UPDATE_SIGNING_KEY",
-      "classification": "dangerous-external",
-      "scope": "publisher-only",
-      "requiredProduction": false,
-      "format": "private-key",
-      "minLength": 32,
-      "autoGenerate": false,
-      "rotationRisk": "critical",
-      "consumers": [],
-      "notes": "Documented but not consumed by this repository. Never configure automatically here.",
-      "autoManage": false
-    },
-    {
-      "name": "GF_UPDATE_SERVER",
-      "classification": "external",
-      "scope": "desktop",
-      "requiredProduction": false,
-      "format": "https-url",
-      "minLength": 8,
-      "autoGenerate": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "electron/main.js"
-      ],
-      "autoManage": true
-    },
-    {
-      "name": "GF_UPDATE_CHANNEL",
-      "classification": "configuration",
-      "scope": "desktop",
-      "requiredProduction": false,
-      "format": "enum:stable,beta",
-      "minLength": 4,
-      "autoGenerate": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "electron/main.js"
-      ],
-      "autoManage": true
-    },
-    {
-      "name": "GF_TOTP_ENC_KEY",
-      "classification": "dangerous",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "strong-secret",
-      "minLength": 32,
-      "recommendedBytes": 32,
-      "autoGenerate": false,
-      "generationFormat": "base64",
-      "rotationRisk": "critical",
-      "consumers": [
-        "src/lib/portal/totp-crypto.ts"
-      ],
-      "notes": "Existing gtotp1.k1 values require the same key. No automatic multi-key migration exists. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "autoManage": false,
-      "status": "absent-consumer"
-    },
-    {
-      "name": "GF_SMTP_CIPHER_KEY",
-      "classification": "dangerous",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "strong-secret",
-      "minLength": 32,
-      "recommendedBytes": 32,
-      "autoGenerate": false,
-      "generationFormat": "base64",
-      "rotationRisk": "critical",
-      "consumers": [
-        "src/lib/email/smtp-crypto.ts"
-      ],
-      "notes": "Existing gsmtp1.k1 values require the same key. No automatic multi-key migration exists. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "autoManage": false,
-      "status": "absent-consumer"
-    },
-    {
-      "name": "GF_SIGNATURE_SECRET",
-      "classification": "dangerous",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "strong-secret",
-      "minLength": 32,
-      "recommendedBytes": 32,
-      "autoGenerate": true,
-      "generationFormat": "base64",
-      "rotationRisk": "critical",
-      "consumers": [
-        "src/lib/signature/key.ts"
-      ],
-      "notes": "Rotation changes the derived signature-sealing key.",
-      "autoManage": true
-    },
-    {
-      "name": "GF_BACKUP_KEY",
-      "classification": "dangerous",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "base64-32-bytes",
-      "minLength": 43,
-      "recommendedBytes": 32,
-      "autoGenerate": true,
-      "generationFormat": "base64",
-      "rotationRisk": "critical",
-      "consumers": [
-        "src/lib/env.ts",
-        "src/lib/backup/crypto.ts",
-        "src/lib/backup/service.ts"
-      ],
-      "notes": "Must decode to exactly 32 bytes. Rotation makes raw-key backups unreadable.",
-      "autoManage": true
-    },
-    {
-      "name": "GF_DB_MAC_SECRET",
-      "classification": "dangerous",
-      "scope": "both",
-      "requiredProduction": true,
-      "format": "strong-secret",
-      "minLength": 32,
-      "recommendedBytes": 32,
-      "autoGenerate": true,
-      "generationFormat": "hex",
-      "rotationRisk": "critical",
-      "consumers": [
-        "src/lib/license/record-mac.ts",
-        "electron/main.js"
-      ],
-      "notes": "Electron derives this from the HWID. A server value protects LicenseKey records and must not be rotated blindly.",
-      "autoManage": true
-    },
-    {
-      "name": "GF_INTERNAL_EXPORT_KEY",
-      "classification": "runtime-generated",
-      "scope": "desktop-runtime",
-      "requiredProduction": false,
-      "format": "hex64",
-      "minLength": 32,
-      "recommendedBytes": 32,
-      "autoGenerate": false,
-      "generationFormat": "hex",
-      "rotationRisk": "low",
-      "consumers": [
-        "electron/main.js",
-        "src/lib/internal-auth.ts"
-      ],
-      "notes": "Generated in memory by Electron for each process. Do not persist or send to Vercel.",
-      "autoManage": false
-    },
-    {
-      "name": "LICENSE_ENFORCEMENT",
-      "classification": "configuration",
-      "scope": "development",
-      "requiredProduction": false,
-      "format": "enum:on,off",
-      "minLength": 2,
-      "autoGenerate": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "src/lib/license/session.ts"
-      ],
-      "autoManage": true
-    },
-    {
-      "name": "GF_MIN_ELECTRON_VERSION",
-      "classification": "configuration",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "semver",
-      "minLength": 5,
-      "autoGenerate": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/lib/license/client-policy.ts"
-      ],
-      "autoManage": true
-    },
-    {
-      "name": "GF_MIN_PWA_VERSION",
-      "classification": "configuration",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "semver",
-      "minLength": 5,
-      "autoGenerate": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/lib/license/client-policy.ts"
-      ],
-      "autoManage": true
-    },
-    {
-      "name": "GF_DEVICE_AUTH_DEADLINE",
-      "classification": "configuration",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "rfc3339",
-      "minLength": 10,
-      "autoGenerate": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/lib/license/client-policy.ts"
-      ],
-      "autoManage": true
-    },
-    {
-      "name": "TRUST_PROXY_HEADERS",
-      "classification": "configuration",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "enum:0,1",
-      "minLength": 1,
-      "autoGenerate": false,
-      "rotationRisk": "high",
-      "consumers": [
-        "src/lib/security/rate-limit.ts"
-      ],
-      "autoManage": true
-    },
-    {
-      "name": "GF_PRIVATE_KEY",
-      "classification": "dangerous-external",
-      "scope": "server-publisher",
-      "requiredProduction": false,
-      "format": "base64-pem-p256",
-      "minLength": 100,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "critical",
-      "consumers": [
-        "src/app/api/admin/licenses/generate/route.ts"
-      ],
-      "notes": "Base64-encoded PKCS#8 EC P-256 private PEM. Must match the public key embedded in Electron and src/lib/license/public-key.ts. Never rotate or generate automatically."
-    },
-    {
-      "name": "GF_PHOTOS_DIR",
-      "classification": "external-path",
-      "scope": "both",
-      "requiredProduction": false,
-      "format": "path",
-      "minLength": 1,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/lib/photo-store.ts",
-        "src/lib/backup/service.ts",
-        "src/app/api/photos/[...path]/route.ts",
-        "src/app/api/admin/updates/route.ts"
-      ],
-      "notes": "Optional storage path; defaults depend on runtime."
-    },
-    {
-      "name": "GF_BACKUP_DIR",
-      "classification": "external-path",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "path",
-      "minLength": 1,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/lib/backup/service.ts"
-      ],
-      "notes": "Optional backup storage directory."
-    },
-    {
       "name": "GARAGEFLOW_LLM",
       "classification": "configuration",
       "scope": "server",
@@ -483,36 +291,6 @@
         "src/lib/copilot-llm/provider.ts"
       ],
       "notes": "Only documented in the provider stub; no network provider is actually implemented in this repository."
-    },
-    {
-      "name": "GF_INTEGRITY_MODE",
-      "classification": "configuration",
-      "scope": "desktop",
-      "requiredProduction": false,
-      "format": "enum:audit,enforce",
-      "minLength": 5,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "high",
-      "consumers": [
-        "electron/main.js"
-      ],
-      "notes": "Controls Electron integrity behavior."
-    },
-    {
-      "name": "GF_ANTIDEBUG",
-      "classification": "configuration",
-      "scope": "desktop",
-      "requiredProduction": false,
-      "format": "enum:0,1",
-      "minLength": 1,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "high",
-      "consumers": [
-        "electron/main.js"
-      ],
-      "notes": "Enables anti-debug enforcement only with integrity enforcement."
     },
     {
       "name": "GF_ALLOW_DEBUG",
@@ -530,6 +308,35 @@
       "notes": "Development override; must not be enabled in production builds."
     },
     {
+      "name": "GF_ALLOW_INSECURE_SYNC",
+      "classification": "dangerous",
+      "scope": "development",
+      "requiredProduction": false,
+      "format": "enum:0,1",
+      "autoGenerate": false,
+      "rotationRisk": "high",
+      "consumers": [
+        "src/lib/sync/cloud-client.ts"
+      ],
+      "notes": "DÉVELOPPEMENT UNIQUEMENT : autorise une autorité cloud en http:// (anti-downgrade désactivé). Doit rester absente ou à 0 en production.",
+      "autoManage": false
+    },
+    {
+      "name": "GF_ANTIDEBUG",
+      "classification": "configuration",
+      "scope": "desktop",
+      "requiredProduction": false,
+      "format": "enum:0,1",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "high",
+      "consumers": [
+        "electron/main.js"
+      ],
+      "notes": "Enables anti-debug enforcement only with integrity enforcement."
+    },
+    {
       "name": "GF_APP_DATA",
       "classification": "external-path",
       "scope": "maintenance-tool",
@@ -545,11 +352,61 @@
       "notes": "Optional override for the local restore utility."
     },
     {
-      "name": "GF_BRAND_CONFIG",
-      "classification": "external-config",
+      "name": "GF_APP_URL",
+      "classification": "external",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "https-url",
+      "minLength": 8,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/app-url.ts"
+      ],
+      "autoManage": false,
+      "status": "absent-consumer",
+      "notes": "Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin."
+    },
+    {
+      "name": "GF_BACKUP_DIR",
+      "classification": "external-path",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "path",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/lib/backup/service.ts"
+      ],
+      "notes": "Optional backup storage directory."
+    },
+    {
+      "name": "GF_BACKUP_KEY",
+      "classification": "dangerous",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "base64-32-bytes",
+      "minLength": 43,
+      "recommendedBytes": 32,
+      "autoGenerate": false,
+      "generationFormat": "base64",
+      "rotationRisk": "critical",
+      "consumers": [
+        "src/lib/env.ts",
+        "src/lib/backup/crypto.ts",
+        "src/lib/backup/service.ts"
+      ],
+      "notes": "Doit décoder exactement 32 octets. CHIFFREMENT AU REPOS : la rotation rend ILLISIBLES toutes les sauvegardes déjà produites avec la clé brute. Jamais régénérée par le reset — générée uniquement si totalement absente (installation neuve). Rotation seulement par procédure dédiée, après avoir restauré/rechiffré les sauvegardes à conserver.",
+      "autoManage": false
+    },
+    {
+      "name": "GF_BRAND_ACCENT_COLOR",
+      "classification": "configuration",
       "scope": "build-time",
       "requiredProduction": false,
-      "format": "string",
+      "format": "hex-color",
       "minLength": 1,
       "autoGenerate": false,
       "autoManage": false,
@@ -558,11 +415,28 @@
         "src/config/brand.ts",
         "scripts/apply-brand.js"
       ],
-      "notes": "Path to brand JSON or inline JSON. Not a secret. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
       "status": "absent-consumer"
     },
     {
-      "name": "GF_BRAND_PRODUCT_NAME",
+      "name": "GF_BRAND_APP_DOMAIN",
+      "classification": "configuration",
+      "scope": "build-time",
+      "requiredProduction": false,
+      "format": "domain",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.ts",
+        "scripts/apply-brand.js"
+      ],
+      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "GF_BRAND_APP_ID",
       "classification": "configuration",
       "scope": "build-time",
       "requiredProduction": false,
@@ -579,11 +453,28 @@
       "status": "absent-consumer"
     },
     {
-      "name": "GF_BRAND_SHORT_NAME",
+      "name": "GF_BRAND_COMMERCIAL_EMAIL",
       "classification": "configuration",
       "scope": "build-time",
       "requiredProduction": false,
-      "format": "string",
+      "format": "email",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.ts",
+        "scripts/apply-brand.js"
+      ],
+      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "GF_BRAND_COMMERCIAL_URL",
+      "classification": "configuration",
+      "scope": "build-time",
+      "requiredProduction": false,
+      "format": "https-url",
       "minLength": 1,
       "autoGenerate": false,
       "autoManage": false,
@@ -630,7 +521,41 @@
       "status": "absent-consumer"
     },
     {
-      "name": "GF_BRAND_TAGLINE",
+      "name": "GF_BRAND_CONFIG",
+      "classification": "external-config",
+      "scope": "build-time",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.ts",
+        "scripts/apply-brand.js"
+      ],
+      "notes": "Path to brand JSON or inline JSON. Not a secret. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "GF_BRAND_DOCS_DOMAIN",
+      "classification": "configuration",
+      "scope": "build-time",
+      "requiredProduction": false,
+      "format": "domain",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.ts",
+        "scripts/apply-brand.js"
+      ],
+      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "GF_BRAND_EXE_PRODUCT_NAME",
       "classification": "configuration",
       "scope": "build-time",
       "requiredProduction": false,
@@ -647,7 +572,7 @@
       "status": "absent-consumer"
     },
     {
-      "name": "GF_BRAND_WORDMARK_PRIMARY",
+      "name": "GF_BRAND_EXECUTABLE_NAME",
       "classification": "configuration",
       "scope": "build-time",
       "requiredProduction": false,
@@ -664,11 +589,113 @@
       "status": "absent-consumer"
     },
     {
-      "name": "GF_BRAND_WORDMARK_SECONDARY",
+      "name": "GF_BRAND_LEGAL_ADDRESS",
       "classification": "configuration",
       "scope": "build-time",
       "requiredProduction": false,
       "format": "string",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.ts",
+        "scripts/apply-brand.js"
+      ],
+      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "GF_BRAND_LEGAL_ENTITY",
+      "classification": "configuration",
+      "scope": "build-time",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.ts",
+        "scripts/apply-brand.js"
+      ],
+      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "GF_BRAND_LEGAL_SIREN",
+      "classification": "configuration",
+      "scope": "build-time",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.ts",
+        "scripts/apply-brand.js"
+      ],
+      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "GF_BRAND_MAIL_FROM",
+      "classification": "configuration",
+      "scope": "build-time",
+      "requiredProduction": false,
+      "format": "email",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.ts",
+        "scripts/apply-brand.js"
+      ],
+      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "GF_BRAND_MAIL_FROM_NAME",
+      "classification": "configuration",
+      "scope": "build-time",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.ts",
+        "scripts/apply-brand.js"
+      ],
+      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "GF_BRAND_MAIL_REPLY_TO",
+      "classification": "configuration",
+      "scope": "build-time",
+      "requiredProduction": false,
+      "format": "email",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.ts",
+        "scripts/apply-brand.js"
+      ],
+      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "GF_BRAND_MARKETING_DOMAIN",
+      "classification": "configuration",
+      "scope": "build-time",
+      "requiredProduction": false,
+      "format": "domain",
       "minLength": 1,
       "autoGenerate": false,
       "autoManage": false,
@@ -715,11 +742,11 @@
       "status": "absent-consumer"
     },
     {
-      "name": "GF_BRAND_ACCENT_COLOR",
+      "name": "GF_BRAND_PRODUCT_NAME",
       "classification": "configuration",
       "scope": "build-time",
       "requiredProduction": false,
-      "format": "hex-color",
+      "format": "string",
       "minLength": 1,
       "autoGenerate": false,
       "autoManage": false,
@@ -732,45 +759,11 @@
       "status": "absent-consumer"
     },
     {
-      "name": "GF_BRAND_MARKETING_DOMAIN",
+      "name": "GF_BRAND_SHORT_NAME",
       "classification": "configuration",
       "scope": "build-time",
       "requiredProduction": false,
-      "format": "domain",
-      "minLength": 1,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/config/brand.ts",
-        "scripts/apply-brand.js"
-      ],
-      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
-    },
-    {
-      "name": "GF_BRAND_APP_DOMAIN",
-      "classification": "configuration",
-      "scope": "build-time",
-      "requiredProduction": false,
-      "format": "domain",
-      "minLength": 1,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/config/brand.ts",
-        "scripts/apply-brand.js"
-      ],
-      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
-    },
-    {
-      "name": "GF_BRAND_DOCS_DOMAIN",
-      "classification": "configuration",
-      "scope": "build-time",
-      "requiredProduction": false,
-      "format": "domain",
+      "format": "string",
       "minLength": 1,
       "autoGenerate": false,
       "autoManage": false,
@@ -834,7 +827,7 @@
       "status": "absent-consumer"
     },
     {
-      "name": "GF_BRAND_MAIL_FROM_NAME",
+      "name": "GF_BRAND_TAGLINE",
       "classification": "configuration",
       "scope": "build-time",
       "requiredProduction": false,
@@ -851,41 +844,7 @@
       "status": "absent-consumer"
     },
     {
-      "name": "GF_BRAND_MAIL_FROM",
-      "classification": "configuration",
-      "scope": "build-time",
-      "requiredProduction": false,
-      "format": "email",
-      "minLength": 1,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/config/brand.ts",
-        "scripts/apply-brand.js"
-      ],
-      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
-    },
-    {
-      "name": "GF_BRAND_MAIL_REPLY_TO",
-      "classification": "configuration",
-      "scope": "build-time",
-      "requiredProduction": false,
-      "format": "email",
-      "minLength": 1,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/config/brand.ts",
-        "scripts/apply-brand.js"
-      ],
-      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
-    },
-    {
-      "name": "GF_BRAND_LEGAL_ENTITY",
+      "name": "GF_BRAND_WORDMARK_PRIMARY",
       "classification": "configuration",
       "scope": "build-time",
       "requiredProduction": false,
@@ -902,7 +861,7 @@
       "status": "absent-consumer"
     },
     {
-      "name": "GF_BRAND_LEGAL_SIREN",
+      "name": "GF_BRAND_WORDMARK_SECONDARY",
       "classification": "configuration",
       "scope": "build-time",
       "requiredProduction": false,
@@ -919,105 +878,512 @@
       "status": "absent-consumer"
     },
     {
-      "name": "GF_BRAND_LEGAL_ADDRESS",
+      "name": "GF_CONFIGURER_API_TEST_MODE",
       "classification": "configuration",
-      "scope": "build-time",
+      "scope": "maintenance-tool",
+      "requiredProduction": false,
+      "format": "enum:0,1",
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/configurer-api-garageflow.ps1",
+        "scripts/reset-garageflow.ps1"
+      ],
+      "notes": "Exécution des scripts de configuration en mode test (aucune mutation distante). Réservé aux tests.",
+      "autoManage": false
+    },
+    {
+      "name": "GF_DB_MAC_SECRET",
+      "classification": "dangerous",
+      "scope": "both",
+      "requiredProduction": true,
+      "format": "strong-secret",
+      "minLength": 32,
+      "recommendedBytes": 32,
+      "autoGenerate": true,
+      "generationFormat": "hex",
+      "rotationRisk": "critical",
+      "consumers": [
+        "src/lib/license/record-mac.ts",
+        "electron/main.js"
+      ],
+      "notes": "Electron derives this from the HWID. A server value protects LicenseKey records and must not be rotated blindly.",
+      "autoManage": true
+    },
+    {
+      "name": "GF_DEBUG",
+      "classification": "dangerous",
+      "scope": "desktop-runtime",
+      "requiredProduction": false,
+      "format": "enum:0,1",
+      "autoGenerate": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "electron/main.js"
+      ],
+      "notes": "Journalisation détaillée du poste. À laisser absente en production (verbosité et informations d'environnement).",
+      "autoManage": false
+    },
+    {
+      "name": "GF_DEVICE_AUTH_DEADLINE",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "rfc3339",
+      "minLength": 10,
+      "autoGenerate": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/lib/license/client-policy.ts"
+      ],
+      "autoManage": true
+    },
+    {
+      "name": "GF_E2E_CHROMIUM",
+      "classification": "runtime-system",
+      "scope": "runtime-system",
       "requiredProduction": false,
       "format": "string",
-      "minLength": 1,
+      "minLength": 0,
       "autoGenerate": false,
       "autoManage": false,
-      "rotationRisk": "medium",
+      "rotationRisk": "low",
       "consumers": [
-        "src/config/brand.ts",
-        "scripts/apply-brand.js"
+        "playwright.config.ts"
       ],
-      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
+      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
     },
     {
-      "name": "GF_BRAND_EXE_PRODUCT_NAME",
-      "classification": "configuration",
-      "scope": "build-time",
+      "name": "GF_EINVOICE_CREDENTIALS_KEY",
+      "classification": "dangerous",
+      "scope": "server",
       "requiredProduction": false,
-      "format": "string",
-      "minLength": 1,
+      "format": "strong-secret",
+      "minLength": 32,
+      "recommendedBytes": 32,
       "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
+      "generationFormat": "base64",
+      "rotationRisk": "critical",
       "consumers": [
-        "src/config/brand.ts",
-        "scripts/apply-brand.js"
+        "src/lib/einvoicing/credentials-cipher.ts"
       ],
-      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
+      "notes": "Cle AES-256-GCM des identifiants de plateformes. NE JAMAIS roter automatiquement (rendrait les identifiants existants indechiffrables). Generee une seule fois si absente, PRESERVEE au reset (autoManage=false), rotation controlee via un processus dedie. Meme convention que GF_SMTP_CIPHER_KEY.",
+      "autoManage": false
     },
     {
-      "name": "GF_BRAND_APP_ID",
+      "name": "GF_EINVOICE_CREDENTIALS_KEY_VERSION",
       "classification": "configuration",
-      "scope": "build-time",
+      "scope": "server",
       "requiredProduction": false,
-      "format": "string",
-      "minLength": 1,
+      "format": "positive-int",
       "autoGenerate": false,
       "autoManage": false,
-      "rotationRisk": "medium",
+      "rotationRisk": "low",
       "consumers": [
-        "src/config/brand.ts",
-        "scripts/apply-brand.js"
+        "src/lib/einvoicing/credentials-cipher.ts"
       ],
-      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
+      "notes": "Version de la cle de chiffrement des identifiants (defaut 1). Incrementee lors d une rotation controlee."
     },
     {
-      "name": "GF_BRAND_EXECUTABLE_NAME",
+      "name": "GF_INTEGRITY_MODE",
       "classification": "configuration",
-      "scope": "build-time",
+      "scope": "desktop",
       "requiredProduction": false,
-      "format": "string",
-      "minLength": 1,
+      "format": "enum:audit,enforce",
+      "minLength": 5,
       "autoGenerate": false,
       "autoManage": false,
-      "rotationRisk": "medium",
+      "rotationRisk": "high",
       "consumers": [
-        "src/config/brand.ts",
-        "scripts/apply-brand.js"
+        "electron/main.js"
       ],
-      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
+      "notes": "Controls Electron integrity behavior."
     },
     {
-      "name": "GF_BRAND_COMMERCIAL_EMAIL",
-      "classification": "configuration",
-      "scope": "build-time",
+      "name": "GF_INTERNAL_EXPORT_KEY",
+      "classification": "runtime-generated",
+      "scope": "desktop-runtime",
       "requiredProduction": false,
-      "format": "email",
-      "minLength": 1,
+      "format": "hex64",
+      "minLength": 32,
+      "recommendedBytes": 32,
       "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
+      "generationFormat": "hex",
+      "rotationRisk": "low",
       "consumers": [
-        "src/config/brand.ts",
-        "scripts/apply-brand.js"
+        "electron/main.js",
+        "src/lib/internal-auth.ts"
       ],
-      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
+      "notes": "Generated in memory by Electron for each process. Do not persist or send to Vercel.",
+      "autoManage": false
     },
     {
-      "name": "GF_BRAND_COMMERCIAL_URL",
+      "name": "GF_KEYGEN_MAX_MECHANIC",
       "classification": "configuration",
-      "scope": "build-time",
+      "scope": "server-keygen",
+      "requiredProduction": false,
+      "format": "positive-int",
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/keygen.py",
+        "scripts/keygen_ui.py"
+      ],
+      "notes": "Nombre maximum de clés mécanicien générables en une fois par le Keygen (défaut 20).",
+      "autoManage": false
+    },
+    {
+      "name": "GF_LICENSE_SERVER",
+      "classification": "external",
+      "scope": "desktop",
       "requiredProduction": false,
       "format": "https-url",
+      "minLength": 8,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "electron/main.js"
+      ],
+      "autoManage": true
+    },
+    {
+      "name": "GF_MAX_MECHANIC_KEYS",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "positive-int",
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/license/mechanic-admin.ts"
+      ],
+      "notes": "Plafond de clés mécanicien rattachables à une licence garage.",
+      "autoManage": false
+    },
+    {
+      "name": "GF_MECHANIC_TIMER_AUTOCOMPLETE",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "enum:0,1",
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/app/api/mechanic/jobs/[id]/timer/route.ts"
+      ],
+      "notes": "Bascule l'achèvement automatique d'une intervention à l'arrêt du chronomètre mécanicien.",
+      "autoManage": false
+    },
+    {
+      "name": "GF_MIN_ELECTRON_VERSION",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "semver",
+      "minLength": 5,
+      "autoGenerate": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/lib/license/client-policy.ts"
+      ],
+      "autoManage": true
+    },
+    {
+      "name": "GF_MIN_PWA_VERSION",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "semver",
+      "minLength": 5,
+      "autoGenerate": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/lib/license/client-policy.ts"
+      ],
+      "autoManage": true
+    },
+    {
+      "name": "GF_PHOTOS_DIR",
+      "classification": "external-path",
+      "scope": "both",
+      "requiredProduction": false,
+      "format": "path",
       "minLength": 1,
       "autoGenerate": false,
       "autoManage": false,
       "rotationRisk": "medium",
       "consumers": [
-        "src/config/brand.ts",
-        "scripts/apply-brand.js"
+        "src/lib/photo-store.ts",
+        "src/lib/backup/service.ts",
+        "src/app/api/photos/[...path]/route.ts",
+        "src/app/api/admin/updates/route.ts"
       ],
-      "notes": "Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "notes": "Optional storage path; defaults depend on runtime."
+    },
+    {
+      "name": "GF_PORTAL_SECRET",
+      "classification": "dangerous",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "strong-secret",
+      "minLength": 32,
+      "recommendedBytes": 32,
+      "autoGenerate": true,
+      "generationFormat": "base64",
+      "rotationRisk": "high",
+      "consumers": [
+        "src/lib/auth-secret.ts",
+        "src/lib/session-secret.ts"
+      ],
+      "notes": "Rotation invalidates portal and quote-signature JWTs.",
+      "autoManage": true
+    },
+    {
+      "name": "GF_PRIVATE_KEY",
+      "classification": "dangerous-external",
+      "scope": "server-publisher",
+      "requiredProduction": false,
+      "format": "base64-pem-p256",
+      "minLength": 100,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "critical",
+      "consumers": [
+        "src/app/api/admin/licenses/generate/route.ts"
+      ],
+      "notes": "Base64-encoded PKCS#8 EC P-256 private PEM. Must match the public key embedded in Electron and src/lib/license/public-key.ts. Never rotate or generate automatically."
+    },
+    {
+      "name": "GF_SIGNATURE_SECRET",
+      "classification": "dangerous",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "strong-secret",
+      "minLength": 32,
+      "recommendedBytes": 32,
+      "autoGenerate": true,
+      "generationFormat": "base64",
+      "rotationRisk": "critical",
+      "consumers": [
+        "src/lib/signature/key.ts"
+      ],
+      "notes": "Rotation changes the derived signature-sealing key.",
+      "autoManage": true
+    },
+    {
+      "name": "GF_SMTP_CIPHER_KEY",
+      "classification": "dangerous",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "strong-secret",
+      "minLength": 32,
+      "recommendedBytes": 32,
+      "autoGenerate": false,
+      "generationFormat": "base64",
+      "rotationRisk": "critical",
+      "consumers": [
+        "src/lib/email/smtp-crypto.ts"
+      ],
+      "notes": "Existing gsmtp1.k1 values require the same key. No automatic multi-key migration exists. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "autoManage": false,
+      "status": "absent-consumer"
+    },
+    {
+      "name": "GF_SMTP_CIPHER_KEY_OLD",
+      "classification": "dangerous",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "base64-32-bytes",
+      "minLength": 32,
+      "autoGenerate": false,
+      "rotationRisk": "critical",
+      "consumers": [
+        "src/lib/security/secret-cipher.ts",
+        "scripts/encrypt-smtp-secrets.js"
+      ],
+      "notes": "MIGRATION DE ROTATION de GF_SMTP_CIPHER_KEY : anciennes clés (séparées par des virgules) conservées le temps de rechiffrer les mots de passe SMTP existants. Sans elle, une rotation rend les secrets déjà stockés DÉFINITIVEMENT indéchiffrables. Ne jamais générer automatiquement.",
+      "autoManage": false
+    },
+    {
+      "name": "GF_TOTP_ENC_KEY",
+      "classification": "dangerous",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "strong-secret",
+      "minLength": 32,
+      "recommendedBytes": 32,
+      "autoGenerate": false,
+      "generationFormat": "base64",
+      "rotationRisk": "critical",
+      "consumers": [
+        "src/lib/portal/totp-crypto.ts"
+      ],
+      "notes": "Existing gtotp1.k1 values require the same key. No automatic multi-key migration exists. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "autoManage": false,
+      "status": "absent-consumer"
+    },
+    {
+      "name": "GF_UPDATE_CHANNEL",
+      "classification": "configuration",
+      "scope": "desktop",
+      "requiredProduction": false,
+      "format": "enum:stable,beta",
+      "minLength": 4,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "electron/main.js"
+      ],
+      "autoManage": true
+    },
+    {
+      "name": "GF_UPDATE_SERVER",
+      "classification": "external",
+      "scope": "desktop",
+      "requiredProduction": false,
+      "format": "https-url",
+      "minLength": 8,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "electron/main.js"
+      ],
+      "autoManage": true
+    },
+    {
+      "name": "GF_UPDATE_SIGNING_KEY",
+      "classification": "dangerous-external",
+      "scope": "publisher-only",
+      "requiredProduction": false,
+      "format": "private-key",
+      "minLength": 32,
+      "autoGenerate": false,
+      "rotationRisk": "critical",
+      "consumers": [],
+      "notes": "Documented but not consumed by this repository. Never configure automatically here.",
+      "autoManage": false
+    },
+    {
+      "name": "HOSTNAME",
+      "classification": "runtime-system",
+      "scope": "runtime-system",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/__tests__/electron-loopback.test.ts"
+      ],
+      "notes": "Runtime/test host name; never managed."
+    },
+    {
+      "name": "LICENSE_ENFORCEMENT",
+      "classification": "configuration",
+      "scope": "development",
+      "requiredProduction": false,
+      "format": "enum:on,off",
+      "minLength": 2,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/license/session.ts"
+      ],
+      "autoManage": true
+    },
+    {
+      "name": "NEXT_PUBLIC_APP_URL",
+      "classification": "configuration",
+      "scope": "both",
+      "requiredProduction": false,
+      "format": "https-url",
+      "autoGenerate": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/lib/public-url.ts"
+      ],
+      "notes": "Base des URL PUBLIQUES (liens portail, signature de devis, e-mails). Premier candidat devant GF_APP_URL puis NEXTAUTH_URL ; toute valeur non-HTTPS ou pointant vers un hôte privé (localhost, RFC1918) est ÉCARTÉE et l'on retombe sur https://app.garageflows.fr. Ne jamais y mettre l'URL Electron locale.",
+      "autoManage": true
+    },
+    {
+      "name": "NEXT_PUBLIC_GF_BRAND_ACCENT_COLOR",
+      "classification": "public-build-configuration",
+      "scope": "build-time-public",
+      "requiredProduction": false,
+      "format": "hex-color",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.client.ts"
+      ],
+      "notes": "Public value embedded into the browser bundle at build time; never store a secret here. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "NEXT_PUBLIC_GF_BRAND_EXECUTABLE_NAME",
+      "classification": "public-build-configuration",
+      "scope": "build-time-public",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.client.ts"
+      ],
+      "notes": "Public value embedded into the browser bundle at build time; never store a secret here. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "NEXT_PUBLIC_GF_BRAND_MARKETING_DOMAIN",
+      "classification": "public-build-configuration",
+      "scope": "build-time-public",
+      "requiredProduction": false,
+      "format": "domain",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.client.ts"
+      ],
+      "notes": "Public value embedded into the browser bundle at build time; never store a secret here. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "NEXT_PUBLIC_GF_BRAND_PRIMARY_COLOR",
+      "classification": "public-build-configuration",
+      "scope": "build-time-public",
+      "requiredProduction": false,
+      "format": "hex-color",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.client.ts"
+      ],
+      "notes": "Public value embedded into the browser bundle at build time; never store a secret here. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "NEXT_PUBLIC_GF_BRAND_PRIMARY_DARK_COLOR",
+      "classification": "public-build-configuration",
+      "scope": "build-time-public",
+      "requiredProduction": false,
+      "format": "hex-color",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.client.ts"
+      ],
+      "notes": "Public value embedded into the browser bundle at build time; never store a secret here. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
       "status": "absent-consumer"
     },
     {
@@ -1042,6 +1408,22 @@
       "scope": "build-time-public",
       "requiredProduction": false,
       "format": "string",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/config/brand.client.ts"
+      ],
+      "notes": "Public value embedded into the browser bundle at build time; never store a secret here. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "status": "absent-consumer"
+    },
+    {
+      "name": "NEXT_PUBLIC_GF_BRAND_SUPPORT_URL",
+      "classification": "public-build-configuration",
+      "scope": "build-time-public",
+      "requiredProduction": false,
+      "format": "https-url",
       "minLength": 1,
       "autoGenerate": false,
       "autoManage": false,
@@ -1101,103 +1483,116 @@
       "status": "absent-consumer"
     },
     {
-      "name": "NEXT_PUBLIC_GF_BRAND_PRIMARY_COLOR",
-      "classification": "public-build-configuration",
-      "scope": "build-time-public",
-      "requiredProduction": false,
-      "format": "hex-color",
-      "minLength": 1,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/config/brand.client.ts"
-      ],
-      "notes": "Public value embedded into the browser bundle at build time; never store a secret here. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
-    },
-    {
-      "name": "NEXT_PUBLIC_GF_BRAND_PRIMARY_DARK_COLOR",
-      "classification": "public-build-configuration",
-      "scope": "build-time-public",
-      "requiredProduction": false,
-      "format": "hex-color",
-      "minLength": 1,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/config/brand.client.ts"
-      ],
-      "notes": "Public value embedded into the browser bundle at build time; never store a secret here. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
-    },
-    {
-      "name": "NEXT_PUBLIC_GF_BRAND_ACCENT_COLOR",
-      "classification": "public-build-configuration",
-      "scope": "build-time-public",
-      "requiredProduction": false,
-      "format": "hex-color",
-      "minLength": 1,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/config/brand.client.ts"
-      ],
-      "notes": "Public value embedded into the browser bundle at build time; never store a secret here. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
-    },
-    {
-      "name": "NEXT_PUBLIC_GF_BRAND_SUPPORT_URL",
-      "classification": "public-build-configuration",
-      "scope": "build-time-public",
-      "requiredProduction": false,
-      "format": "https-url",
-      "minLength": 1,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/config/brand.client.ts"
-      ],
-      "notes": "Public value embedded into the browser bundle at build time; never store a secret here. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
-    },
-    {
-      "name": "NEXT_PUBLIC_GF_BRAND_MARKETING_DOMAIN",
-      "classification": "public-build-configuration",
-      "scope": "build-time-public",
-      "requiredProduction": false,
-      "format": "domain",
-      "minLength": 1,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/config/brand.client.ts"
-      ],
-      "notes": "Public value embedded into the browser bundle at build time; never store a secret here. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
-    },
-    {
-      "name": "NEXT_PUBLIC_GF_BRAND_EXECUTABLE_NAME",
-      "classification": "public-build-configuration",
-      "scope": "build-time-public",
+      "name": "NEXT_RUNTIME",
+      "classification": "runtime-system",
+      "scope": "runtime-system",
       "requiredProduction": false,
       "format": "string",
-      "minLength": 1,
+      "minLength": 0,
       "autoGenerate": false,
       "autoManage": false,
-      "rotationRisk": "medium",
+      "rotationRisk": "low",
       "consumers": [
-        "src/config/brand.client.ts"
+        "src/instrumentation.ts"
       ],
-      "notes": "Public value embedded into the browser bundle at build time; never store a secret here. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "status": "absent-consumer"
+      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
     },
     {
-      "name": "RATE_LIMIT_LOGIN_MAX",
+      "name": "NEXTAUTH_SECRET",
+      "classification": "dangerous",
+      "scope": "both",
+      "requiredProduction": true,
+      "format": "strong-secret",
+      "minLength": 32,
+      "recommendedBytes": 32,
+      "autoGenerate": true,
+      "generationFormat": "base64",
+      "rotationRisk": "critical",
+      "consumers": [
+        "src/middleware.ts",
+        "src/lib/auth-secret.ts",
+        "src/lib/session-secret.ts",
+        "electron/main.js"
+      ],
+      "notes": "Rotation invalidates sessions and may make d1-encrypted TOTP/SMTP data unreadable.",
+      "autoManage": true
+    },
+    {
+      "name": "NEXTAUTH_URL",
+      "classification": "external",
+      "scope": "both",
+      "requiredProduction": true,
+      "format": "http-url",
+      "minLength": 8,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/app/api/health/route.ts",
+        "electron/main.js"
+      ],
+      "autoManage": true
+    },
+    {
+      "name": "NODE_ENV",
+      "classification": "runtime-system",
+      "scope": "runtime-system",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/env.ts",
+        "src/lib/db.ts"
+      ],
+      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
+    },
+    {
+      "name": "NODE_INSPECTOR_IPC",
+      "classification": "runtime-system",
+      "scope": "runtime-system",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/license/protection.ts"
+      ],
+      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
+    },
+    {
+      "name": "PWA_DATABASE_URL",
+      "classification": "external",
+      "scope": "server-publisher",
+      "requiredProduction": false,
+      "format": "postgres-url",
+      "autoGenerate": false,
+      "rotationRisk": "high",
+      "consumers": [
+        "scripts/reset-garageflow.ps1"
+      ],
+      "notes": "URL PostgreSQL (pooled) poussée vers Vercel comme DATABASE_URL de la PWA. Saisie par l'opérateur pendant le reset ; distincte du DATABASE_URL du poste (file:./dev.db).",
+      "autoManage": false
+    },
+    {
+      "name": "PWA_DIRECT_URL",
+      "classification": "external",
+      "scope": "server-publisher",
+      "requiredProduction": false,
+      "format": "postgres-url",
+      "autoGenerate": false,
+      "rotationRisk": "high",
+      "consumers": [
+        "scripts/reset-garageflow.ps1"
+      ],
+      "notes": "URL PostgreSQL NON poolée (Neon « direct »), nécessaire aux migrations Prisma. Saisie par l'opérateur pendant le reset.",
+      "autoManage": false
+    },
+    {
+      "name": "RATE_LIMIT_ADMIN_MAX",
       "classification": "configuration",
       "scope": "server",
       "requiredProduction": false,
@@ -1212,7 +1607,37 @@
       "notes": "Optional positive integer override; code has a safe default."
     },
     {
-      "name": "RATE_LIMIT_LOGIN_WINDOW_SECONDS",
+      "name": "RATE_LIMIT_ADMIN_WINDOW_SECONDS",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "positive-int",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/lib/security/rate-limit.ts"
+      ],
+      "notes": "Optional positive integer override; code has a safe default."
+    },
+    {
+      "name": "RATE_LIMIT_API_MAX",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "positive-int",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/lib/security/rate-limit.ts"
+      ],
+      "notes": "Optional positive integer override; code has a safe default."
+    },
+    {
+      "name": "RATE_LIMIT_API_WINDOW_SECONDS",
       "classification": "configuration",
       "scope": "server",
       "requiredProduction": false,
@@ -1287,7 +1712,7 @@
       "notes": "Optional positive integer override; code has a safe default."
     },
     {
-      "name": "RATE_LIMIT_ADMIN_MAX",
+      "name": "RATE_LIMIT_LOGIN_MAX",
       "classification": "configuration",
       "scope": "server",
       "requiredProduction": false,
@@ -1302,7 +1727,7 @@
       "notes": "Optional positive integer override; code has a safe default."
     },
     {
-      "name": "RATE_LIMIT_ADMIN_WINDOW_SECONDS",
+      "name": "RATE_LIMIT_LOGIN_WINDOW_SECONDS",
       "classification": "configuration",
       "scope": "server",
       "requiredProduction": false,
@@ -1317,188 +1742,20 @@
       "notes": "Optional positive integer override; code has a safe default."
     },
     {
-      "name": "RATE_LIMIT_API_MAX",
-      "classification": "configuration",
-      "scope": "server",
+      "name": "SEED_ADMIN_PASSWORD",
+      "classification": "dangerous",
+      "scope": "development",
       "requiredProduction": false,
-      "format": "positive-int",
-      "minLength": 1,
+      "format": "nonempty-secret",
+      "minLength": 12,
       "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
+      "rotationRisk": "high",
       "consumers": [
-        "src/lib/security/rate-limit.ts"
+        "prisma/seed.ts",
+        "prisma/demo-tenant.ts"
       ],
-      "notes": "Optional positive integer override; code has a safe default."
-    },
-    {
-      "name": "RATE_LIMIT_API_WINDOW_SECONDS",
-      "classification": "configuration",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "positive-int",
-      "minLength": 1,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/lib/security/rate-limit.ts"
-      ],
-      "notes": "Optional positive integer override; code has a safe default."
-    },
-    {
-      "name": "APPDATA",
-      "classification": "runtime-system",
-      "scope": "runtime-system",
-      "requiredProduction": false,
-      "format": "string",
-      "minLength": 0,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "scripts/restore.js"
-      ],
-      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
-    },
-    {
-      "name": "CI",
-      "classification": "runtime-system",
-      "scope": "runtime-system",
-      "requiredProduction": false,
-      "format": "string",
-      "minLength": 0,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "playwright.config.ts"
-      ],
-      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
-    },
-    {
-      "name": "ELECTRON",
-      "classification": "runtime-system",
-      "scope": "runtime-system",
-      "requiredProduction": false,
-      "format": "string",
-      "minLength": 0,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "src/lib/env.ts",
-        "src/app/api/health/route.ts"
-      ],
-      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
-    },
-    {
-      "name": "ELECTRON_DEV",
-      "classification": "runtime-system",
-      "scope": "runtime-system",
-      "requiredProduction": false,
-      "format": "string",
-      "minLength": 0,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "electron/main.js",
-        "src/lib/license/protection.ts"
-      ],
-      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
-    },
-    {
-      "name": "GF_E2E_CHROMIUM",
-      "classification": "runtime-system",
-      "scope": "runtime-system",
-      "requiredProduction": false,
-      "format": "string",
-      "minLength": 0,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "playwright.config.ts"
-      ],
-      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
-    },
-    {
-      "name": "NEXT_RUNTIME",
-      "classification": "runtime-system",
-      "scope": "runtime-system",
-      "requiredProduction": false,
-      "format": "string",
-      "minLength": 0,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "src/instrumentation.ts"
-      ],
-      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
-    },
-    {
-      "name": "NODE_ENV",
-      "classification": "runtime-system",
-      "scope": "runtime-system",
-      "requiredProduction": false,
-      "format": "string",
-      "minLength": 0,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "src/lib/env.ts",
-        "src/lib/db.ts"
-      ],
-      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
-    },
-    {
-      "name": "NODE_INSPECTOR_IPC",
-      "classification": "runtime-system",
-      "scope": "runtime-system",
-      "requiredProduction": false,
-      "format": "string",
-      "minLength": 0,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "src/lib/license/protection.ts"
-      ],
-      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
-    },
-    {
-      "name": "VERCEL",
-      "classification": "runtime-system",
-      "scope": "runtime-system",
-      "requiredProduction": false,
-      "format": "string",
-      "minLength": 0,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "scripts/setup-dev.js",
-        "src/lib/security/rate-limit.ts"
-      ],
-      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
-    },
-    {
-      "name": "HOSTNAME",
-      "classification": "runtime-system",
-      "scope": "runtime-system",
-      "requiredProduction": false,
-      "format": "string",
-      "minLength": 0,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "src/lib/__tests__/electron-loopback.test.ts"
-      ],
-      "notes": "Runtime/test host name; never managed."
+      "notes": "Mot de passe du compte administrateur créé par les jeux de données de démonstration. Ne JAMAIS réutiliser une valeur de production ; sans elle, l'amorçage doit refuser de créer un compte.",
+      "autoManage": false
     },
     {
       "name": "TEST_POSTGRES_URL",
@@ -1532,127 +1789,79 @@
       "notes": "Optional integration-test Redis URL; never copy to production."
     },
     {
-      "name": "EINVOICING_ENABLED",
+      "name": "TRUST_PROXY_HEADERS",
       "classification": "configuration",
       "scope": "server",
       "requiredProduction": false,
+      "format": "enum:0,1",
+      "minLength": 1,
+      "autoGenerate": false,
+      "rotationRisk": "high",
+      "consumers": [
+        "src/lib/security/rate-limit.ts"
+      ],
+      "autoManage": true
+    },
+    {
+      "name": "UPSTASH_REDIS_REST_TOKEN",
+      "classification": "external",
+      "scope": "server",
+      "requiredProduction": true,
+      "format": "nonempty-secret",
+      "minLength": 16,
+      "autoGenerate": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/lib/env.ts",
+        "src/lib/security/rate-limit.ts"
+      ],
+      "autoManage": true
+    },
+    {
+      "name": "UPSTASH_REDIS_REST_URL",
+      "classification": "external",
+      "scope": "server",
+      "requiredProduction": true,
+      "format": "https-url",
+      "minLength": 8,
+      "autoGenerate": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/lib/env.ts",
+        "src/lib/security/rate-limit.ts"
+      ],
+      "autoManage": true
+    },
+    {
+      "name": "VERCEL",
+      "classification": "runtime-system",
+      "scope": "runtime-system",
+      "requiredProduction": false,
       "format": "string",
+      "minLength": 0,
       "autoGenerate": false,
       "autoManage": false,
       "rotationRisk": "low",
-      "consumers": ["src/lib/einvoicing/flags.ts"],
-      "notes": "Drapeau maitre de la facturation electronique. OFF par defaut. Jamais active automatiquement par le reset (autoManage=false)."
+      "consumers": [
+        "scripts/setup-dev.js",
+        "src/lib/security/rate-limit.ts"
+      ],
+      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
     },
     {
-      "name": "EINVOICING_PROVIDER_CATALOG_ENABLED",
-      "classification": "configuration",
-      "scope": "server",
+      "name": "VERCEL_TOKEN",
+      "classification": "dangerous-external",
+      "scope": "publisher-only",
       "requiredProduction": false,
-      "format": "string",
+      "format": "nonempty-secret",
+      "minLength": 20,
       "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": ["src/lib/einvoicing/flags.ts"],
-      "notes": "Affiche le catalogue des plateformes (lecture seule, aucun secret). Defaut true."
-    },
-    {
-      "name": "EINVOICING_CONNECTIONS_ENABLED",
-      "classification": "configuration",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "string",
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": ["src/lib/einvoicing/flags.ts"],
-      "notes": "Autorise la connexion des garages a leur plateforme. Sans effet si EINVOICING_ENABLED est OFF."
-    },
-    {
-      "name": "EINVOICING_OUTGOING_ENABLED",
-      "classification": "configuration",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "string",
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": ["src/lib/einvoicing/flags.ts"],
-      "notes": "Autorise l envoi electronique des factures. OFF par defaut. Sans effet si maitre OFF."
-    },
-    {
-      "name": "EINVOICING_INCOMING_ENABLED",
-      "classification": "configuration",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "string",
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": ["src/lib/einvoicing/flags.ts"],
-      "notes": "Autorise la reception des factures. OFF par defaut."
-    },
-    {
-      "name": "EINVOICING_PAYMENT_REPORTING_ENABLED",
-      "classification": "configuration",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "string",
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": ["src/lib/einvoicing/flags.ts"],
-      "notes": "Autorise le e-reporting de paiement. OFF par defaut."
-    },
-    {
-      "name": "EINVOICING_SANDBOX_ONLY",
-      "classification": "configuration",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "string",
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": ["src/lib/einvoicing/flags.ts"],
-      "notes": "Verrouille l environnement sur sandbox (defaut true) : aucune transmission reelle par megarde."
-    },
-    {
-      "name": "EINVOICING_DEFAULT_ENVIRONMENT",
-      "classification": "configuration",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "string",
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": ["src/lib/einvoicing/flags.ts"],
-      "notes": "sandbox ou production. Ignore (force sandbox) tant que EINVOICING_SANDBOX_ONLY est true."
-    },
-    {
-      "name": "GF_EINVOICE_CREDENTIALS_KEY",
-      "classification": "dangerous",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "strong-secret",
-      "minLength": 32,
-      "recommendedBytes": 32,
-      "autoGenerate": false,
-      "generationFormat": "base64",
-      "rotationRisk": "critical",
-      "consumers": ["src/lib/einvoicing/credentials-cipher.ts"],
-      "notes": "Cle AES-256-GCM des identifiants de plateformes. NE JAMAIS roter automatiquement (rendrait les identifiants existants indechiffrables). Generee une seule fois si absente, PRESERVEE au reset (autoManage=false), rotation controlee via un processus dedie. Meme convention que GF_SMTP_CIPHER_KEY.",
+      "rotationRisk": "high",
+      "consumers": [
+        "scripts/configurer-api-garageflow.ps1"
+      ],
+      "notes": "Jeton d'API Vercel de l'ÉDITEUR, utilisé pour pousser les variables et déclencher un déploiement. Ne doit jamais être livré à un garage ni écrit dans un .env versionné.",
       "autoManage": false
-    },
-    {
-      "name": "GF_EINVOICE_CREDENTIALS_KEY_VERSION",
-      "classification": "configuration",
-      "scope": "server",
-      "requiredProduction": false,
-      "format": "positive-int",
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": ["src/lib/einvoicing/credentials-cipher.ts"],
-      "notes": "Version de la cle de chiffrement des identifiants (defaut 1). Incrementee lors d une rotation controlee."
     }
   ],
   "auditCleanup": {
@@ -1662,6 +1871,25 @@
       "orphan(consumers absents + non référencé) => autoGenerate/autoManage=false, status=absent-consumer",
       "secrets critiques => minLength>=32",
       "consumers périmés corrigés vers les fichiers réels"
-    ]
+    ],
+    "lastSync": {
+      "date": "2026-08-10",
+      "by": "remédiation E2E — inventaire process.env / os.environ / $env: sur le code courant",
+      "added": [
+        "NEXT_PUBLIC_APP_URL",
+        "GF_SMTP_CIPHER_KEY_OLD",
+        "GF_ALLOW_INSECURE_SYNC",
+        "GF_MAX_MECHANIC_KEYS",
+        "GF_KEYGEN_MAX_MECHANIC",
+        "GF_MECHANIC_TIMER_AUTOCOMPLETE",
+        "GF_DEBUG",
+        "SEED_ADMIN_PASSWORD",
+        "DEMO_RESET_FORCE",
+        "PWA_DATABASE_URL",
+        "PWA_DIRECT_URL",
+        "VERCEL_TOKEN",
+        "GF_CONFIGURER_API_TEST_MODE"
+      ]
+    }
   }
 }
