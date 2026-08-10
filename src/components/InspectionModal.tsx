@@ -11,6 +11,8 @@ import { groupPendingUpdates, pendingKeysForItem } from '@/lib/inspection-autosa
 import toast from 'react-hot-toast'
 import { useTranslation } from '@/lib/i18n'
 import { inspectionCategoryLabel } from '@/lib/i18n/labels'
+import { InspectionPrintDocument, type PrintGarage } from '@/components/inspection/InspectionPrintDocument'
+import { planPageSlices } from '@/lib/pdf/page-slices'
 
 interface InspectionItem {
   id: string
@@ -208,8 +210,22 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
   const [saving, setSaving] = useState(false)
   const [printing, setPrinting] = useState(false)
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set())
+  const [garage, setGarage] = useState<PrintGarage | null>(null)
   const pendingUpdates = useRef<Map<string, string | null>>(new Map())
   const saveTimer = useRef<NodeJS.Timeout | null>(null)
+  /** Nœud du document d'impression, rendu hors écran (jamais l'interface). */
+  const printRef = useRef<HTMLDivElement>(null)
+
+  // En-tête du PDF : sans ces informations le document ne ressemble pas à une
+  // pièce de garage. Chargé une fois, sans bloquer l'ouverture de la modale.
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/garages')
+      .then(r => r.ok ? r.json() : null)
+      .then((g) => { if (!cancelled && g) setGarage(g) })
+      .catch(() => { /* le PDF reste imprimable sans en-tête */ })
+    return () => { cancelled = true }
+  }, [])
 
   /** Véhicule réellement rattaché, résolu par le serveur (jamais deviné ici). */
   const [resolvedVehicleId, setResolvedVehicleId] = useState<string | null>(vehicleId ?? null)
@@ -384,27 +400,44 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
   }
 
   async function handleDownloadPDF() {
-    const el = document.getElementById('inspection-print')
+    // On n'imprime PAS l'interface : un document dédié est rendu hors écran,
+    // en thème clair déterministe, avec l'en-tête garage, l'identification du
+    // véhicule et TOUTES les catégories (même celles repliées à l'écran).
+    const el = printRef.current
     if (!el) return
     setPrinting(true)
     try {
       const { default: html2canvas } = await import('html2canvas')
       const { default: jsPDF } = await import('jspdf')
       const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false })
-      const imgData = canvas.toDataURL('image/png')
+
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const pageW = 210, pageH = 297
-      const imgW = pageW - 20
-      const imgH = (canvas.height * imgW) / canvas.width
-      let remaining = imgH, yOffset = 10
-      while (remaining > 0) {
-        const sliceH = Math.min(remaining, pageH - 20)
-        if (yOffset !== 10) pdf.addPage()
-        pdf.addImage(imgData, 'PNG', 10, yOffset, imgW, sliceH)
-        remaining -= sliceH
-        yOffset = 10
-      }
-      pdf.save(`inspection-${form.licensePlate || 'vehicule'}.pdf`)
+      const margin = 10
+      const imgW = 210 - margin * 2
+
+      // DÉCOUPE CORRECTE (plan vérifié par tests, cf. lib/pdf/page-slices).
+      // L'ancien code réinjectait l'image ENTIÈRE dans chaque page en l'écrasant
+      // à la hauteur de la tranche : toutes les pages montraient le document
+      // complet, comprimé. On recadre désormais une bande par page.
+      const slices = planPageSlices(canvas.width, canvas.height, { marginMm: margin })
+      slices.forEach((slice, index) => {
+        const band = document.createElement('canvas')
+        band.width = canvas.width
+        band.height = slice.sourceHeight
+        const ctx = band.getContext('2d')
+        if (!ctx) return
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, band.width, band.height)
+        ctx.drawImage(
+          canvas,
+          0, slice.sourceY, canvas.width, slice.sourceHeight,
+          0, 0, canvas.width, slice.sourceHeight,
+        )
+        if (index > 0) pdf.addPage()
+        pdf.addImage(band.toDataURL('image/png'), 'PNG', margin, margin, imgW, slice.heightMm)
+      })
+
+      pdf.save(`controle-${form.licensePlate || 'vehicule'}.pdf`)
     } catch {
       toast.error(t.insPdfError)
     } finally {
@@ -606,6 +639,33 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
           </div>
         </div>
       </div>
+
+      {/* Document d'impression — rendu HORS ÉCRAN, jamais visible.
+          `left:-10000px` le sort du champ de vision sans le retirer du flux :
+          `display:none` ou `visibility:hidden` donneraient un canevas vide,
+          html2canvas ayant besoin d'un nœud réellement mis en page. */}
+      {inspection && (
+        <div
+          aria-hidden="true"
+          style={{ position: 'fixed', left: -10000, top: 0, pointerEvents: 'none', zIndex: -1 }}
+        >
+          <div ref={printRef}>
+            <InspectionPrintDocument
+              garage={garage}
+              clientName={form.clientName}
+              vehicleModel={form.vehicleModel}
+              licensePlate={form.licensePlate}
+              mileage={form.mileage}
+              notes={form.notes}
+              items={items}
+              createdAt={inspection.createdAt}
+              categoryLabel={(cat) =>
+                inspectionCategoryLabel(t, cat, CATEGORY_CONFIG[cat]?.label ?? cat)
+              }
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
