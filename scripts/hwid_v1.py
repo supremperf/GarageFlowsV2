@@ -42,7 +42,12 @@ def hwid_v1(fields):
 
 def _main(argv):
     if "--stdin" in argv:
-        fields = json.load(sys.stdin)
+        # Lecture BINAIRE puis décodage UTF-8 EXPLICITE : `json.load(sys.stdin)`
+        # décode avec l'encodage local, qui vaut cp1252 sous Windows. Un champ
+        # matériel accentué (« Café CPU ») arrivait donc en mojibake et Python
+        # produisait un HWID DIFFÉRENT de Node pour la même machine — exactement
+        # la divergence que ce module de référence est censé interdire.
+        fields = json.loads(sys.stdin.buffer.read().decode("utf-8"))
         print(hwid_v1(fields))
         return 0
     if "--vectors" in argv:

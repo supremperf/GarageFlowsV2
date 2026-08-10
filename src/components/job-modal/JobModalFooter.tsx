@@ -6,6 +6,7 @@ import { Job } from '@/lib/types'
 import { JobQRCode, usePortalUrl } from '@/components/JobQRCode'
 import { useState } from 'react'
 import { useTranslation } from '@/lib/i18n'
+import { formatEuros, roundEurosForDisplay } from '@/lib/money'
 import type { T } from '@/lib/i18n'
 
 interface JobProfit {
@@ -83,13 +84,15 @@ export function JobModalFooter({
           </p>
           <div className="grid grid-cols-4 gap-3">
             {[
-              { label: t.jmLabor, value: `+${jobProfit.laborRevenue.toFixed(2)} €`, color: 'text-blue-400' },
-              { label: t.jmPartsSale, value: `+${jobProfit.partsRevenue.toFixed(2)} €`, color: 'text-cyan-400' },
-              { label: t.jmPartsCost, value: `-${jobProfit.partsCost.toFixed(2)} €`, color: 'text-red-400' },
+              { label: t.jmLabor, value: formatEuros(jobProfit.laborRevenue, 'always'), color: 'text-blue-400' },
+              { label: t.jmPartsSale, value: formatEuros(jobProfit.partsRevenue, 'always'), color: 'text-cyan-400' },
+              // Poste de coût : le signe vient de `formatEuros`, jamais d'un « - »
+              // codé en dur — sinon un coût nul s'affiche « -0.00 € ».
+              { label: t.jmPartsCost, value: formatEuros(jobProfit.partsCost, 'negative'), color: 'text-red-400' },
               {
                 label: t.jmNetProfit,
-                value: `${jobProfit.profit >= 0 ? '+' : ''}${jobProfit.profit.toFixed(2)} €`,
-                color: jobProfit.profit >= 0 ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold',
+                value: formatEuros(jobProfit.profit, 'always'),
+                color: roundEurosForDisplay(jobProfit.profit) >= 0 ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold',
               },
             ].map(({ label, value, color }) => (
               <div key={label} className="text-center">

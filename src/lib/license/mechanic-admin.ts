@@ -71,6 +71,76 @@ export function macFor(input: MacInput): string {
 }
 
 /**
+ * RÉPARATION des clés mécanicien ORPHELINES (`parentLicenseId = NULL`).
+ *
+ * Cause racine : `/api/admin/licenses/create` ne pose `parentLicenseId` que si la
+ * licence garage parente est DÉJÀ enregistrée (contrainte de clé étrangère). Le
+ * keygen enregistre les clés dans un ordre non garanti : si la clé mécanicien
+ * arrive avant sa licence garage, le lien reste NULL — DÉFINITIVEMENT, car la
+ * réconciliation de `GET /api/mechanic-licenses` cherche les clés PAR
+ * `parentLicenseId`. La clé n'apparaît alors jamais chez le patron, ne peut pas
+ * être attribuée, et l'activation répond `MECHANIC_KEY_UNASSIGNED`.
+ *
+ * Observé en production (2026-08-09) : clé `2a89048c-…` (`parentLicenseId` NULL)
+ * alors que sa licence parente `3e619b98-…` existe dans la même base.
+ *
+ * Réparation : on ne se fie qu'au `plid` SIGNÉ contenu dans le jeton STOCKÉ — la
+ * même source de confiance qu'à l'activation (`record.parentLicenseId ?? payload.plid`).
+ * Un garage ne peut donc pas s'approprier la clé d'un autre : seules les clés
+ * dont le parent figure dans `parentLids` sont touchées, et `parentLids` est
+ * dérivé des licences du garage appelant.
+ *
+ * `parentLicenseId` entre dans le recordMac : il est recalculé, sinon
+ * l'activation échouerait ensuite en « erreur d'intégrité ».
+ *
+ * @param parentLids licences garage de confiance (déjà rattachées au garage)
+ * @param garageId   garage à poser sur la clé réparée (null = ne pas toucher)
+ * @returns nombre de clés réparées
+ */
+export async function rebindOrphanMechanicKeys(
+  parentLids: string[],
+  garageId: string | null,
+): Promise<number> {
+  if (parentLids.length === 0) return 0
+  const known = new Set(parentLids)
+
+  // Seules les clés ORPHELINES et NON ATTRIBUÉES sont candidates : on ne
+  // réécrit jamais un lien existant ni une clé déjà en service.
+  const orphans = await prisma.licenseKey.findMany({
+    where: { licenseType: 'mechanic', parentLicenseId: null, mechanicId: null },
+    select: { licenseId: true, token: true, status: true, expiryAt: true, hwid: true, garageId: true },
+    take: 500,
+  })
+  if (orphans.length === 0) return 0
+
+  // Import tardif : évite un cycle mechanic-admin ↔ verify au chargement.
+  const { verifyLicenseToken } = await import('@/lib/license/verify')
+
+  let repaired = 0
+  for (const o of orphans) {
+    const v = verifyLicenseToken(o.token)
+    const plid = v.valid && v.isMechanic ? v.payload?.plid : undefined
+    if (!plid || !known.has(plid)) continue
+
+    const recordMac = macFor({
+      licenseId: o.licenseId, token: o.token, status: o.status,
+      expiryAt: o.expiryAt, hwid: o.hwid, parentLicenseId: plid, mechanicId: null,
+    })
+    // Garde de concurrence : la clé doit toujours être orpheline et non attribuée.
+    const res = await prisma.licenseKey.updateMany({
+      where: { licenseId: o.licenseId, parentLicenseId: null, mechanicId: null },
+      data: {
+        parentLicenseId: plid,
+        recordMac,
+        ...(garageId && !o.garageId ? { garageId } : {}),
+      },
+    })
+    repaired += res.count
+  }
+  return repaired
+}
+
+/**
  * DÉCONNEXION (≠ révocation) — §1/§2. Passe les appareils ACTIFS d'une licence à
  * l'état `deactivated` (= « disconnected ») : la SESSION est coupée et le SIÈGE
  * est LIBÉRÉ, mais l'appareil peut se RECONNECTER plus tard (réactivation) tant

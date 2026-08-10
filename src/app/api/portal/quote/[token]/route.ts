@@ -6,6 +6,7 @@ import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
 import { fromScaled } from '@/lib/money'
 import { billingLines } from '@/lib/money-db'
 import { portalSecret } from '@/lib/portal-secret'
+import { readPhotoAsDataUrl } from '@/lib/photo-store'
 
 // GET — return quote data
 export async function GET(_req: Request, { params }: { params: { token: string } }) {
@@ -43,7 +44,13 @@ export async function GET(_req: Request, { params }: { params: { token: string }
       quantity: fromScaled(l.quantityTenThousandths),
       unitPrice: fromScaled(l.unitPriceTenThousandths),
     }))
-    return NextResponse.json({ ...quote, lines, totalHT, totalTTC, alreadySigned })
+    // Page publique : /api/photos est authentifié, on inline donc le logo
+    // stocké sur disque (cf. src/lib/photo-store.ts).
+    const garage = {
+      ...quote.garage,
+      logoBase64: quote.garage?.logoBase64 ?? readPhotoAsDataUrl(quote.garage?.logoPath),
+    }
+    return NextResponse.json({ ...quote, garage, lines, totalHT, totalTTC, alreadySigned })
   } catch {
     return NextResponse.json({ error: 'Token invalide ou expiré' }, { status: 403 })
   }

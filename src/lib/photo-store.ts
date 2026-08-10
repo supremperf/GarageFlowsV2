@@ -48,6 +48,41 @@ export function savePhoto(
   }
 }
 
+const MIME_BY_EXT: Record<string, string> = {
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif',
+}
+
+/**
+ * Relit un fichier stocké et le rend sous forme de data URL.
+ *
+ * Utilisé par les pages PUBLIQUES (portail client, signature de devis) : elles
+ * n'ont pas de session, donc `/api/photos/<path>` — authentifié à dessein — leur
+ * est inaccessible. Sans cela, un garage dont le logo est stocké sur disque
+ * (`logoPath`, cas normal depuis le passage au stockage fichier) n'affichait
+ * aucun logo côté client.
+ *
+ * L'appelant a déjà prouvé son droit d'accès (jeton portail vérifié) ; ici on
+ * ne garde que la protection anti-traversée et une borne de taille.
+ */
+export function readPhotoAsDataUrl(relativePath: string | null | undefined, maxBytes = 2_000_000): string | null {
+  if (!photosEnabled() || !relativePath) return null
+  try {
+    const base = path.resolve(PHOTOS_DIR)
+    const full = path.resolve(base, relativePath)
+    const rel  = path.relative(base, full)
+    if (rel.startsWith('..') || path.isAbsolute(rel)) return null
+    if (!fs.existsSync(full)) return null
+    const stat = fs.statSync(full)
+    if (!stat.isFile() || stat.size > maxBytes) return null
+    const ext  = path.extname(full).slice(1).toLowerCase()
+    const mime = MIME_BY_EXT[ext]
+    if (!mime) return null
+    return `data:${mime};base64,${fs.readFileSync(full).toString('base64')}`
+  } catch {
+    return null
+  }
+}
+
 /**
  * Delete a stored photo file. Silently ignores missing files.
  */

@@ -1183,4 +1183,24 @@ export const MIGRATIONS: Migration[] = [
   // src/lib/__tests__/migrations-vehicle-ctdate.test.ts, qui rejoue la séquence
   // sur une base portant l'ANCIENNE forme de Vehicle.
   { id: '185_vehicle_ct_date',           onlyIfColumnMissing: { table: 'Vehicle', column: 'ctDate' }, sql: 'ALTER TABLE "Vehicle" ADD COLUMN "ctDate" TEXT' },
+
+  // ── Synchronisation POSTE → CLOUD des attributions de clés mécanicien ────────
+  // Horodatage du dernier accusé de réception du serveur officiel. NULL = jamais
+  // confirmé (l'interface l'affiche et la remontée est retentée). Additif,
+  // idempotent, sans valeur par défaut : aucune donnée existante n'est touchée.
+  // Réversible : la colonne peut être retirée sans perte (elle n'exprime aucun
+  // droit, seulement l'horodatage du dernier accusé de réception du serveur).
+  { id: '186_licensekey_cloud_synced_at', onlyIfColumnMissing: { table: 'LicenseKey', column: 'cloudSyncedAt' }, sql: 'ALTER TABLE "LicenseKey" ADD COLUMN "cloudSyncedAt" DATETIME' },
+
+  // Table PortalSnapshot — présente aussi côté poste pour que les deux schémas
+  // Prisma restent strictement identiques (src/lib/db.ts partage l'API). Le
+  // poste ne l'alimente pas : il PUBLIE ses instantanés vers le cloud.
+  // Additif et idempotent ; réversible (table de cache, aucune donnée maîtresse).
+  {
+    id: '187_portal_snapshot',
+    sql: 'CREATE TABLE IF NOT EXISTS "PortalSnapshot" ("id" TEXT NOT NULL PRIMARY KEY, "garageId" TEXT NOT NULL, "jobId" TEXT NOT NULL, "payload" TEXT NOT NULL, "expiresAt" DATETIME NOT NULL, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)',
+  },
+  { id: '188_portal_snapshot_idx_garage', sql: 'CREATE INDEX IF NOT EXISTS "PortalSnapshot_garageId_idx" ON "PortalSnapshot"("garageId")' },
+  { id: '189_portal_snapshot_idx_job',    sql: 'CREATE INDEX IF NOT EXISTS "PortalSnapshot_jobId_idx" ON "PortalSnapshot"("jobId")' },
+  { id: '190_portal_snapshot_idx_exp',    sql: 'CREATE INDEX IF NOT EXISTS "PortalSnapshot_expiresAt_idx" ON "PortalSnapshot"("expiresAt")' },
 ]

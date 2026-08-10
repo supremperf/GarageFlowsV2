@@ -11,8 +11,8 @@ const PHOTOS_DIR = process.env.GF_PHOTOS_DIR ?? ''
 // SECURITY:
 //  1. Authenticated (requireSession) — never public.
 //  2. Robust anti-traversal via path.relative (not a fragile startsWith prefix).
-//  3. IDOR: the path must be a photo RECORDED for the caller's garage
-//     (JobPhoto.garageId or InspectionItem.inspection.garageId).
+//  3. IDOR: the path must be a media RECORDED for the caller's garage
+//     (JobPhoto.garageId, InspectionItem.inspection.garageId, ou Garage.logoPath).
 export const GET = withAuth(async (_req: Request, { params }: { params: { path: string[] } }) => {
   const session = await requireSession()
   if (!PHOTOS_DIR) {
@@ -33,11 +33,17 @@ export const GET = withAuth(async (_req: Request, { params }: { params: { path: 
   }
 
   // Ownership: the relative path must belong to a resource of THIS garage.
-  const [jobOwned, inspOwned] = await Promise.all([
+  // Le logo du garage (`Garage.logoPath`, écrit par savePhoto(..., 'logos'))
+  // est stocké au même endroit mais n'est ni un JobPhoto ni un InspectionItem :
+  // sans ce troisième contrôle il tombait en 404 et le header affichait une
+  // image cassée. Le filtre reste borné au garage de la session — aucun
+  // relâchement de l'isolation multi-garage.
+  const [jobOwned, inspOwned, logoOwned] = await Promise.all([
     prisma.jobPhoto.count({ where: { photoPath: relative, garageId: session.user.garageId } }),
     prisma.inspectionItem.count({ where: { photoPath: relative, inspection: { garageId: session.user.garageId } } }),
+    prisma.garage.count({ where: { id: session.user.garageId, logoPath: relative } }),
   ])
-  if (jobOwned + inspOwned === 0) {
+  if (jobOwned + inspOwned + logoOwned === 0) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 

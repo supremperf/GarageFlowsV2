@@ -4,6 +4,7 @@ import { withAuth, requireSession } from '@/lib/api-helpers'
 import { prisma } from '@/lib/db'
 import { SignJWT } from 'jose'
 import { portalSecret } from '@/lib/portal-secret'
+import { publicUrlFor } from '@/lib/public-url'
 
 // POST /api/quotes/[id]/signature-token
 export const POST = withAuth(async (req: Request, { params }: { params: { id: string } }) => {
@@ -23,7 +24,9 @@ export const POST = withAuth(async (req: Request, { params }: { params: { id: st
     .setExpirationTime('7d')
     .sign(portalSecret())
 
-  const url = `${req.headers.get('origin') ?? ''}/portal/quote/${token}`
+  // URL PUBLIQUE (envoyée au client pour signer) : jamais l'origine de la
+  // requête — sous Electron elle vaut `http://localhost:4028`.
+  const url = publicUrlFor(`/portal/quote/${token}`)
 
   // Mark quote as sent if it was draft
   if (quote.status === 'draft') {

@@ -18,6 +18,7 @@ import {
   SLOT_HEIGHT_PER_MINUTE,
   Job,
   REPAIR_TYPES,
+  repairConfig,
   Mechanic,
 } from '@/lib/types'
 import { timeToMinutes, minutesToTime, cn, formatDuration, jobsOverlap } from '@/lib/utils'
@@ -497,8 +498,8 @@ export default function ScheduleBoard() {
           <div
             className="rounded-lg shadow-2xl px-3 py-2 pointer-events-none border border-white/20 opacity-90"
             style={{
-              backgroundColor: REPAIR_TYPES[activeJob.repairType].color + '25',
-              borderLeftColor: REPAIR_TYPES[activeJob.repairType].color,
+              backgroundColor: repairConfig(activeJob.repairType).color + '25',
+              borderLeftColor: repairConfig(activeJob.repairType).color,
               borderLeftWidth: '3px',
               width: '150px',
               backdropFilter: 'blur(8px)',
@@ -507,7 +508,7 @@ export default function ScheduleBoard() {
             <p className="text-xs font-bold text-white truncate">{activeJob.customerName}</p>
             <p className="text-[10px] text-slate-300 truncate">{activeJob.vehicleModel}</p>
             <p className="text-[10px] text-slate-400">
-              {REPAIR_TYPES[activeJob.repairType].icon} {formatDuration(activeJob.estimatedDuration)}
+              {repairConfig(activeJob.repairType).icon} {formatDuration(activeJob.estimatedDuration)}
             </p>
           </div>
         ) : null}

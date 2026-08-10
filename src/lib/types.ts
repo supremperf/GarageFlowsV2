@@ -205,6 +205,28 @@ export const REPAIR_TYPES: Record<RepairType, RepairTypeConfig> = {
   custom: { label: 'Autre intervention', defaultDuration: 60, color: '#6b7280', icon: '🔧', isQuick: false },
 }
 
+/**
+ * Configuration d'un type d'intervention, TOUJOURS définie.
+ *
+ * `REPAIR_TYPES[job.repairType]` était lu directement dans les composants du
+ * planning. Or l'API accepte n'importe quelle chaîne (`repairType: z.string()`,
+ * schemas/index.ts) : une valeur hors des 17 clés connues — import de données,
+ * intégration tierce, ancien enregistrement — rendait la configuration
+ * `undefined` et `repairConfig.color` levait
+ * « Cannot read properties of undefined (reading 'color') ».
+ * Ce n'est pas une carte qui ne s'affiche pas : c'est TOUT le planning qui tombe
+ * sur l'écran « Une erreur est survenue » (reproduit le 2026-08-10 avec
+ * repairType = "Vidange", le LIBELLÉ au lieu de la clé `oil_change`).
+ *
+ * On retombe sur « Autre intervention », en conservant le libellé d'origine
+ * pour ne rien masquer à l'utilisateur.
+ */
+export function repairConfig(type: string | null | undefined): RepairTypeConfig {
+  const known = REPAIR_TYPES[type as RepairType]
+  if (known) return known
+  return { ...REPAIR_TYPES.custom, label: (type && String(type).trim()) || REPAIR_TYPES.custom.label }
+}
+
 export const WORKSHOP_START_HOUR = 8
 export const WORKSHOP_END_HOUR = 18
 export const SLOT_HEIGHT_PER_MINUTE = 2 // px per minute in the board

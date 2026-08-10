@@ -168,8 +168,8 @@ const ROOT     = path.join(__dirname, '..')               // project root (dev) 
 //  tandis que les licences émises l'étaient par celle de keys/public.pem.)
 const _PK = [
   '-----BEGIN PUBLIC KEY-----',
-  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE0NSE5M7rvk+jwOBAwgk7PfKJTqHT',
-  'Fkb2bYbjK6eEkWwiXUwOaQGxmiw04IJpwm3+eOFXb5zf1bn+rewOXryfkQ==',
+  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEs3YqloZWPDTxnsfl1cibYU3nAkhD',
+  'OhMbTaHPJKPXqk48/cHsmPq9OFjpGuZ+TnGcugrJZxMD2ZRoIG+kjS4RKg==',
   '-----END PUBLIC KEY-----',
 ]
 const PUBLIC_KEY_PEM = _PK.join('\n')
@@ -2818,6 +2818,22 @@ function setupIPC() {
       // Re-inject session cookies so Next.js picks up the new type
       await injectLicenseCookies(payload.typ, payload.lid ?? 'runtime')
       if (licenceDifferente) await clearAppSessionCookies()
+
+      // ── Enregistrement dans la base LOCALE ────────────────────────────────
+      // Symétrique du démarrage (voir recordLicenseInLocalDatabase /
+      // establishMechanicSession). Sans cet appel, la nouvelle licence n'existe
+      // que sur disque : la table LicenseKey du poste l'ignore et
+      // « Paramètres › Accès mécaniciens » répond « Licence garage parente
+      // introuvable pour ce garage » jusqu'au prochain redémarrage — le patron
+      // ne peut ni enregistrer ni attribuer de clé mécanicien après avoir
+      // changé de licence. Reproduit le 2026-08-10.
+      // Best-effort : un échec ici ne doit pas annuler le changement de licence.
+      if (payload.typ === 'mechanic') {
+        await establishMechanicSession().catch(err => log('[update-license] session mécanicien:', err.message))
+      } else {
+        await recordLicenseInLocalDatabase().catch(err => log('[update-license] enregistrement local ignoré:', err.message))
+      }
+
       log('[update-license] upgraded to type:', payload.typ, '| lid:', payload.lid)
       return {
         ok:          true,

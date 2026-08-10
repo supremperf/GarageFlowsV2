@@ -331,3 +331,48 @@ export function computeMarginCents(lines: CostedLine[]): {
   }
   return { revenueCents, costCents, marginCents: revenueCents - costCents }
 }
+
+// ---------------------------------------------------------------------------
+// Affichage
+// ---------------------------------------------------------------------------
+
+/**
+ * Arrondi d'affichage au centime, SANS zéro signé.
+ *
+ * `Math.round(-0.004 * 100) / 100` vaut `-0` en IEEE-754, et `(-0).toFixed(2)`
+ * rend « 0.00 » — mais tout code qui préfixe le signe lui-même (`-${v.toFixed(2)}`,
+ * ou `v >= 0 ? '+' : '-'`) réintroduit le signe et affiche « -0.00 € ».
+ * On normalise donc -0 → 0 ici, une seule fois.
+ */
+export function roundEurosForDisplay(value: number): number {
+  // Même arrondi que le reste du module (demi-éloigné-de-zéro, robuste au bruit
+  // binaire) : l'affichage ne doit pas diverger du montant réellement stocké.
+  const r = fromCents(toCents(value))
+  return Object.is(r, -0) ? 0 : r
+}
+
+/** Politique de signe d'un montant affiché. */
+export type MoneySign =
+  /** « + » seulement si strictement positif après arrondi (défaut). */
+  | 'auto'
+  /** « + » / « - » toujours affiché (sauf zéro). */
+  | 'always'
+  /** Poste de coût : toujours rendu négatif (sauf zéro). */
+  | 'negative'
+
+/**
+ * Montant en euros prêt à afficher (« 12.30 € », « +12.30 € », « -12.30 € »).
+ *
+ * Le signe est décidé APRÈS l'arrondi au centime : un montant nul — ou qui
+ * s'arrondit à zéro — s'affiche toujours « 0.00 € », jamais « -0.00 € » ni
+ * « +0.00 € ». C'est la cause racine du « -0.00 € » observé sur la carte
+ * rentabilité (coût pièces = 0 avec un « - » codé en dur dans le template).
+ */
+export function formatEuros(value: number, sign: MoneySign = 'auto'): string {
+  const r = roundEurosForDisplay(value)
+  const abs = Math.abs(r).toFixed(2)
+  if (r === 0) return `${abs} €`
+  if (sign === 'negative') return `-${abs} €`
+  if (sign === 'always') return `${r > 0 ? '+' : '-'}${abs} €`
+  return `${r < 0 ? '-' : ''}${abs} €`
+}

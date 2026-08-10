@@ -15,7 +15,7 @@ import { DateField } from '@/components/DateField'
 import { useTranslation } from '@/lib/i18n'
 import { dateLocale } from '@/lib/i18n/date-locale'
 import { docStatusLabel } from '@/lib/i18n/labels'
-import { computeTotals, multiplyCents, toCents, fromCents, parseAmountToScaled, fromScaled, lineCents } from '@/lib/money'
+import { computeTotals, multiplyCents, toCents, fromCents, parseAmountToScaled, fromScaled, lineCents, formatEuros, roundEurosForDisplay } from '@/lib/money'
 
 interface Line {
   id?: string
@@ -677,7 +677,7 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>
                   <p className="text-gray-500">{t.jmPartsCost}</p>
-                  <p className="font-bold text-red-600">− {totalCost.toFixed(2)} €</p>
+                  <p className="font-bold text-red-600">{formatEuros(totalCost, 'negative')}</p>
                 </div>
                 <div>
                   <p className="text-gray-500">{t.qiSaleHT}</p>
@@ -685,8 +685,8 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                 </div>
                 <div>
                   <p className="text-gray-500">{t.qiGrossMargin}</p>
-                  <p className={cn('font-bold text-lg', profit >= 0 ? 'text-emerald-600' : 'text-red-600')}>
-                    {profit >= 0 ? '+' : ''}{profit.toFixed(2)} €
+                  <p className={cn('font-bold text-lg', roundEurosForDisplay(profit) >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+                    {formatEuros(profit, 'always')}
                   </p>
                 </div>
               </div>

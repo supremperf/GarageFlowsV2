@@ -25,6 +25,7 @@ import crypto from 'crypto'
 import { prisma } from '@/lib/db'
 import { verifyLicenseToken } from '@/lib/license/verify'
 import { computeRecordMac } from '@/lib/license/record-mac'
+import { rebindOrphanMechanicKeys } from '@/lib/license/mechanic-admin'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 /** Comparaison à temps constant (évite l'oracle de timing sur la clé API). */
@@ -142,6 +143,17 @@ export async function POST(req: NextRequest) {
         recordMac,
       },
     })
+
+    // Une licence GARAGE vient d'arriver : les clés mécanicien poussées AVANT
+    // elle sont restées orphelines (parentLicenseId NULL — la FK interdisait de
+    // pointer une ligne inexistante) et le seraient restées à jamais. On rétablit
+    // le lien à partir du `plid` signé de leur jeton. Best-effort : un échec ici
+    // ne doit pas faire échouer l'enregistrement de la licence.
+    if (!isMechanic) {
+      const repaired = await rebindOrphanMechanicKeys([record.licenseId], record.garageId ?? null)
+        .catch(() => 0)
+      if (repaired > 0) console.info('[admin/licenses/create] clés mécanicien orphelines réparées :', repaired)
+    }
 
     return NextResponse.json(
       { ok: true, licenseId: record.licenseId, status: record.status, type: record.licenseType },

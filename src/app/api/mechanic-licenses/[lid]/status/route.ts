@@ -6,6 +6,7 @@ import { requireSession, withAuth } from '@/lib/api-helpers'
 import { can, type Permission } from '@/lib/authz'
 import { macFor, revokeDevices } from '@/lib/license/mechanic-admin'
 import { logAudit } from '@/lib/audit'
+import { pushMechanicStatus } from '@/lib/sync/mechanic-sync'
 
 // POST /api/mechanic-licenses/[lid]/status  { status: 'suspended'|'active'|'revoked' }
 // Suspend / réactive / révoque UNE clé mécanicien (OWNER). Ne touche jamais les
@@ -98,5 +99,17 @@ export const POST = withAuth(async (req, { params }: { params: { lid: string } }
 
   await logAudit({ action: 'update', entityType: 'License', entityId: license.licenseId, session, req, details: { status } })
 
-  return NextResponse.json({ ok: true, licenseId: license.licenseId, status })
+  // Propagation au CLOUD : une clé révoquée/suspendue sur le poste doit l'être
+  // aussi sur app.garageflows.fr, sinon le mécanicien écarté garde l'accès
+  // depuis son téléphone. Best-effort APRÈS le commit local ; l'état réel est
+  // renvoyé pour que l'interface ne promette pas une coupure non appliquée.
+  const sync = await pushMechanicStatus(license.licenseId, status)
+
+  return NextResponse.json({
+    ok: true,
+    licenseId: license.licenseId,
+    status,
+    cloudSynced: sync.synced,
+    cloudSyncCode: sync.synced ? undefined : sync.code,
+  })
 })

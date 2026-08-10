@@ -1,5 +1,6 @@
 'use client'
 import { lineCents, fromCents } from '@/lib/money'
+import { repairConfig } from '@/lib/types'
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
@@ -220,7 +221,9 @@ export default function PortalPage() {
             </div>
             <div className="bg-gray-50 rounded-xl p-3">
               <p className="text-xs text-gray-400 mb-0.5">Type d&apos;intervention</p>
-              <p className="font-medium text-gray-800">{data.repairType}</p>
+              {/* Libellé LISIBLE : le client ne doit pas voir la clé interne
+                  (« brake_pads » au lieu de « Plaquettes de frein »). */}
+              <p className="font-medium text-gray-800">{repairConfig(data.repairType).label}</p>
             </div>
             {data.mechanic && (
               <div className="bg-gray-50 rounded-xl p-3 flex items-center gap-2">
@@ -349,7 +352,9 @@ export default function PortalPage() {
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-400 pb-4">
-          Cette page est réservée à votre usage personnel. Lien valable 48h.
+          {/* Durée RÉELLE du jeton (7 jours, cf. /api/portal/generate) — le
+              texte annonçait 48 h, ce qui était faux. */}
+          Cette page est réservée à votre usage personnel. Lien valable 7 jours.
         </p>
       </main>
     </div>

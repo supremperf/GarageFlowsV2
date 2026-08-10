@@ -6,6 +6,7 @@ import { requireSession, withAuth } from '@/lib/api-helpers'
 import { can } from '@/lib/authz'
 import { macFor } from '@/lib/license/mechanic-admin'
 import { logAudit } from '@/lib/audit'
+import { pushMechanicAssignment } from '@/lib/sync/mechanic-sync'
 
 // POST /api/mechanic-licenses/[lid]/assign  { mechanicId }
 // Attribue (ou réattribue) une clé mécanicien à un mécanicien du garage (OWNER).
@@ -106,5 +107,19 @@ export const POST = withAuth(async (req, { params }: { params: { lid: string } }
 
   await logAudit({ action: 'update', entityType: 'License', entityId: license.licenseId, session, req, details: { assign: mechanicId, reassignment: isReassignment } })
 
-  return NextResponse.json({ ok: true, licenseId: license.licenseId, mechanicId, reassignment: isReassignment })
+  // ── Remontée vers le CLOUD (poste uniquement) ───────────────────────────────
+  // L'attribution vit dans la base du poste ; sans cette remontée, la PWA ne la
+  // connaît pas et refuse l'activation du mécanicien (MECHANIC_KEY_UNASSIGNED).
+  // Best-effort APRÈS le commit local : le patron n'est jamais bloqué par le
+  // réseau, et l'interface affiche l'état RÉEL (jamais un faux « succès »).
+  const sync = await pushMechanicAssignment(license.licenseId)
+
+  return NextResponse.json({
+    ok: true,
+    licenseId: license.licenseId,
+    mechanicId,
+    reassignment: isReassignment,
+    cloudSynced: sync.synced,
+    cloudSyncCode: sync.synced ? undefined : sync.code,
+  })
 })

@@ -21,6 +21,11 @@ vi.mock('@/lib/db', () => ({
     licenseDevice: { updateMany: async () => ({ count: 0 }) },
     mechanicActionAudit: { create: async (args: { data: Record<string, unknown> }) => { state.audits.push(args.data); return args.data } },
   },
+  // La route propage désormais le statut au cloud (pushMechanicStatus) : le
+  // mock doit exposer l'API réelle du module, sinon l'import échoue.
+  // `false` = instance POSTE ; la remontée est tentée puis neutralisée par
+  // l'absence de findUnique (best-effort, jamais bloquant).
+  isPostgresDatabase: () => false,
 }))
 vi.mock('@/lib/api-helpers', () => ({
   requireSession: async () => ({ user: { id: 'owner1', role: 'OWNER', garageId: 'gA' } }),

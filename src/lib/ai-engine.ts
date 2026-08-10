@@ -5,6 +5,7 @@ import {
   Suggestion,
   SuggestionType,
   REPAIR_TYPES,
+  repairConfig,
   WORKSHOP_START_HOUR,
   WORKSHOP_END_HOUR,
 } from './types'
@@ -90,7 +91,7 @@ function detectDelays(
           type: 'delay_warning',
           priority: overBy > 60 ? 'high' : 'medium',
           title: `Retard détecté — ${job.customerName}`,
-          description: `La ${REPAIR_TYPES[job.repairType].label} (${job.vehicleModel}) dépasse le temps prévu de ${formatDurationLong(overBy)}. Retard estimé : ~${formatDurationLong(estimatedExtra)}.`,
+          description: `La ${repairConfig(job.repairType).label} (${job.vehicleModel}) dépasse le temps prévu de ${formatDurationLong(overBy)}. Retard estimé : ~${formatDurationLong(estimatedExtra)}.`,
           affectedJobIds: [job.id],
           action: {
             label: 'Signaler le retard',

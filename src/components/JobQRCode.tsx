@@ -6,48 +6,45 @@ interface Props {
   size?: number
 }
 
+/**
+ * L'URL du portail client est FOURNIE PAR LE SERVEUR (`url` renvoyé par
+ * /api/portal/generate, calculé via `src/lib/public-url.ts`).
+ *
+ * Elle n'est plus construite ici : le code précédent préférait l'IP LAN
+ * remontée par Electron (`electronAPI.getLocalIP()`) et retombait sur
+ * `window.location.origin`, ce qui produisait des liens
+ * `http://192.168.x.x:4028/portal/…` ou `http://localhost:4028/portal/…`
+ * remis tels quels au client du garage — inutilisables hors du réseau de
+ * l'atelier. Le jeton signé, lui, est identique : seul le domaine change.
+ */
+async function fetchPortalUrl(jobId: string): Promise<string | null> {
+  const res = await fetch('/api/portal/generate', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ jobId }),
+  })
+  if (!res.ok) return null
+  const data = await res.json()
+  return typeof data?.url === 'string' && data.url ? data.url : null
+}
+
 export function JobQRCode({ jobId, size = 120 }: Props) {
-  const [svg,     setSvg]     = useState<string>('')
+  const [svg,       setSvg]       = useState<string>('')
   const [portalUrl, setPortalUrl] = useState<string>('')
 
   useEffect(() => {
+    let cancelled = false
     async function load() {
-      try {
-        // Generate a 7-day portal JWT token for this job
-        const res = await fetch('/api/portal/generate', {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ jobId }),
-        })
-        if (!res.ok) throw new Error('token failed')
-        const { path } = await res.json()
-
-        // Prefer local network IP (from Electron) for LAN-accessible QR; fall back to window.location.origin
-        let base = window.location.origin
-        const electronAPI = (window as any).electronAPI
-        if (electronAPI?.getLocalIP) {
-          const ip = await electronAPI.getLocalIP().catch(() => null)
-          if (ip) base = `http://${ip}:${new URL(window.location.origin).port || 4028}`
-        }
-
-        const url = `${base}${path}`
-        setPortalUrl(url)
-
-        const QRCode = await import('qrcode')
-        QRCode.toString(url, { type: 'svg', width: size, margin: 1 }, (err, svgStr) => {
-          if (!err && svgStr) setSvg(svgStr)
-        })
-      } catch {
-        // Fallback: internal job link
-        const fallback = `${window.location.origin}/?job=${jobId}`
-        setPortalUrl(fallback)
-        const QRCode = await import('qrcode')
-        QRCode.toString(fallback, { type: 'svg', width: size, margin: 1 }, (err, svgStr) => {
-          if (!err && svgStr) setSvg(svgStr)
-        })
-      }
+      const url = await fetchPortalUrl(jobId).catch(() => null)
+      if (cancelled || !url) return
+      setPortalUrl(url)
+      const QRCode = await import('qrcode')
+      QRCode.toString(url, { type: 'svg', width: size, margin: 1 }, (err, svgStr) => {
+        if (!cancelled && !err && svgStr) setSvg(svgStr)
+      })
     }
     load()
+    return () => { cancelled = true }
   }, [jobId, size])
 
   if (!svg) return <div style={{ width: size, height: size }} className="bg-white/10 rounded animate-pulse" />
@@ -62,31 +59,17 @@ export function JobQRCode({ jobId, size = 120 }: Props) {
 }
 
 export { }
-// Export the portalUrl separately for the footer
+
+/** URL publique du portail client pour cette intervention (ou null si indispo). */
 export function usePortalUrl(jobId: string) {
   const [portalUrl, setPortalUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/portal/generate', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ jobId }),
-    })
-      .then(r => r.ok ? r.json() : null)
-      .then(async data => {
-        if (!data?.path) return
-        let base = window.location.origin
-        const electronAPI = (window as any).electronAPI
-        if (electronAPI?.getLocalIP) {
-          const ip = await electronAPI.getLocalIP().catch(() => null)
-          if (ip) {
-            const port = new URL(window.location.origin).port || '4028'
-            base = `http://${ip}:${port}`
-          }
-        }
-        setPortalUrl(`${base}${data.path}`)
-      })
-      .catch(() => setPortalUrl(`${window.location.origin}/?job=${jobId}`))
+    let cancelled = false
+    fetchPortalUrl(jobId)
+      .then(url => { if (!cancelled && url) setPortalUrl(url) })
+      .catch(() => { /* lien indisponible : l'UI affiche « génération… » */ })
+    return () => { cancelled = true }
   }, [jobId])
 
   return portalUrl

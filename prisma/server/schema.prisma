@@ -507,6 +507,13 @@ model LicenseKey {
   assignedByUser  User?        @relation("LicenseKeyAssignedBy", fields: [assignedBy], references: [id], onDelete: SetNull)
   suspendedAt     DateTime?
 
+  // ── Synchronisation POSTE → CLOUD (attribution mécanicien) ───────────────────
+  // Horodatage du dernier accusé de réception du serveur officiel pour CETTE
+  // attribution. NULL = jamais confirmé : l'interface affiche « synchronisation
+  // cloud en attente » et la remontée est retentée. Champ purement local au
+  // suivi (il n'entre PAS dans le recordMac : il ne décrit aucun droit).
+  cloudSyncedAt   DateTime?
+
   devices                    LicenseDevice[]
   mechanicLicenseAssignments MechanicLicenseAssignment[] @relation("MlaLicense")
   jobMechanicNotes           JobMechanicNote[]           @relation("JmnLicense")
@@ -1134,4 +1141,28 @@ model EInvoiceAuditEvent {
 
   @@index([garageId, createdAt])
   @@index([actorUserId, createdAt])
+}
+
+/// Instantané PORTAIL CLIENT publié par un POSTE (Electron) vers le cloud.
+///
+/// Le portail client est une page PUBLIQUE servie par app.garageflows.fr, alors
+/// que l'intervention d'un garage installé en local n'existe que dans le SQLite
+/// du poste : la page s'ouvrait donc sur « Token invalide ». On ne réplique pas
+/// la base — on stocke UNIQUEMENT le contenu que la page portail affiche, déjà
+/// filtré côté poste (aucun coût d'achat, aucune marge). L'instantané expire en
+/// même temps que le jeton et peut être purgé sans perte.
+model PortalSnapshot {
+  /// `jti` du jeton portail — jamais le jeton complet.
+  id        String   @id
+  garageId  String
+  jobId     String
+  /// JSON du contenu portail (schéma identique à la réponse de /api/portal/[token]).
+  payload   String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([garageId])
+  @@index([jobId])
+  @@index([expiresAt])
 }

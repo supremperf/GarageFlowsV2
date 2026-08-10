@@ -1,5 +1,5 @@
 'use client'
-import { lineCents, fromCents } from '@/lib/money'
+import { lineCents, fromCents, formatEuros, roundEurosForDisplay } from '@/lib/money'
 
 import { useState, useEffect } from 'react'
 import { X, Car, Wrench, Calendar, TrendingUp, Camera, Clock, ChevronRight } from 'lucide-react'
@@ -232,8 +232,8 @@ export default function VehicleHistoryModal({ vehicleId, onClose }: Props) {
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-gray-600">Marge totale</p>
-                  <p className={cn('text-xl font-bold', (totalRevenue - totalCost) >= 0 ? 'text-emerald-600' : 'text-red-600')}>
-                    {(totalRevenue - totalCost) >= 0 ? '+' : ''}{(totalRevenue - totalCost).toFixed(2)} €
+                  <p className={cn('text-xl font-bold', roundEurosForDisplay(totalRevenue - totalCost) >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+                    {formatEuros(totalRevenue - totalCost, 'always')}
                   </p>
                 </div>
               </div>
