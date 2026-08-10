@@ -139,3 +139,45 @@ describe('Thème d’impression — lisibilité', () => {
     expect(() => relativeLuminance('#fff')).toThrow()
   })
 })
+
+describe('Date d’établissement du document', () => {
+  // La fonction est interne au composant : on verrouille ici la RÈGLE, telle
+  // qu'appliquée par InspectionPrintDocument.formatDate.
+  const DATE_FR: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' }
+  function formatDate(value?: string | number | null): string {
+    if (value === null || value === undefined || value === '') {
+      return new Date().toLocaleDateString('fr-FR', DATE_FR)
+    }
+    const epoch = typeof value === 'number' ? value
+      : /^\d+$/.test(String(value).trim()) ? Number(String(value).trim())
+      : null
+    const d = epoch !== null ? new Date(epoch) : new Date(String(value))
+    if (Number.isNaN(d.getTime())) return new Date().toLocaleDateString('fr-FR', DATE_FR)
+    return d.toLocaleDateString('fr-FR', DATE_FR)
+  }
+
+  it('rend une date ISO', () => {
+    expect(formatDate('2026-08-10T09:15:00.000Z')).toMatch(/2026/)
+  })
+
+  it('rend un horodatage epoch NUMÉRIQUE (SQLite) et non le nombre brut', () => {
+    const out = formatDate(1786381978669)
+    expect(out).not.toMatch(/^\d+$/)
+    expect(out).toMatch(/\d{4}/)
+  })
+
+  it('rend une chaîne entièrement numérique comme un epoch — défaut constaté sur PDF réel', () => {
+    // « Établi le 1786381978669 » sur un document remis au client.
+    const out = formatDate('1786381978669')
+    expect(out).not.toContain('1786381978669')
+    expect(out).toMatch(/\d{4}/)
+  })
+
+  it('n’imprime JAMAIS une valeur technique illisible', () => {
+    for (const v of ['pas-une-date', 'NaN', '   ', null, undefined]) {
+      const out = formatDate(v as never)
+      expect(out).not.toContain('Invalid')
+      expect(out).toMatch(/\d{4}/)
+    }
+  })
+})

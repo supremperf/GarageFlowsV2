@@ -56,15 +56,37 @@ export interface InspectionPrintProps {
   notes: string
   items: PrintItem[]
   categoryLabel: (category: string) => string
-  /** Date d'établissement (ISO ou lisible). */
-  createdAt?: string | null
+  /** Date d'établissement : ISO, horodatage epoch (ms) ou date lisible. */
+  createdAt?: string | number | null
 }
 
-function formatDate(value?: string | null): string {
-  if (!value) return new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+const DATE_FR: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' }
+
+/**
+ * Date d'établissement, TOUJOURS lisible.
+ *
+ * `createdAt` arrive en ISO depuis l'API, mais peut être un horodatage epoch
+ * (nombre, ou chaîne de chiffres) selon la source — SQLite le rend en
+ * millisecondes. `new Date("1786381978669")` est une date INVALIDE : l'ancien
+ * repli renvoyait alors la valeur brute, et le document client affichait
+ * « Établi le 1786381978669 » (constaté sur un PDF réellement généré).
+ */
+function formatDate(value?: string | number | null): string {
+  if (value === null || value === undefined || value === '') {
+    return new Date().toLocaleDateString('fr-FR', DATE_FR)
+  }
+  // Un horodatage numérique (ou une chaîne entièrement numérique) est traité
+  // comme des millisecondes epoch — jamais comme du texte.
+  const epoch = typeof value === 'number' ? value
+    : /^\d+$/.test(String(value).trim()) ? Number(String(value).trim())
+    : null
+  const d = epoch !== null ? new Date(epoch) : new Date(String(value))
+  if (Number.isNaN(d.getTime())) {
+    // Illisible : on n'imprime pas une valeur technique sur un document remis
+    // au client — on retombe sur la date du jour.
+    return new Date().toLocaleDateString('fr-FR', DATE_FR)
+  }
+  return d.toLocaleDateString('fr-FR', DATE_FR)
 }
 
 /** Bandeau de synthèse : un compteur par état, lisible sans couleur. */
