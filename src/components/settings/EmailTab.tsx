@@ -52,7 +52,10 @@ export function EmailTab() {
           setHost(data.smtpHost ?? '')
           setPort(String(data.smtpPort ?? 587))
           setSecure(data.smtpSecure ?? false)
-          setHasSavedPass(Boolean(data.smtpUser)) // un compte déjà configuré a un mot de passe
+          // Fait rapporté par le serveur, jamais déduit : un garage peut avoir
+          // une adresse enregistrée SANS mot de passe (le champ affichait alors
+          // « déjà enregistré » à tort, et le test échouait ensuite).
+          setHasSavedPass(Boolean(data.smtpPassConfigured))
           if (prov === 'custom' && data.smtpHost) setShowAdvanced(true)
         }
       })
@@ -100,18 +103,32 @@ export function EmailTab() {
   }
 
   async function handleTest() {
+    if (!email.trim()) { toast.error('Renseignez votre adresse email'); return }
+    if (!hasSavedPass && !password.trim()) { toast.error('Renseignez votre mot de passe'); return }
+
     setTesting(true)
     try {
+      // On teste LES VALEURS À L'ÉCRAN, pas d'anciennes données enregistrées.
+      // Le mot de passe n'est transmis que s'il vient d'être saisi ; sinon le
+      // serveur réutilise le secret chiffré qu'il détient déjà.
+      const body: Record<string, unknown> = {
+        action: 'test',
+        ...resolvedSmtp(),
+        smtpUser: email.trim(),
+        smtpFrom: (from.trim() || email.trim()),
+      }
+      if (password.trim()) body.smtpPass = password.trim()
+
       const res = await fetch('/api/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'test' }),
+        body: JSON.stringify(body),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'Échec du test')
       toast.success(t.emailTestOk ?? 'Email de test envoyé !')
-    } catch (err: any) {
-      toast.error(err?.message ?? (t.error ?? 'Erreur'))
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : (t.error ?? 'Erreur'))
     } finally {
       setTesting(false)
     }
@@ -267,7 +284,8 @@ export function EmailTab() {
         </button>
       </div>
       <p className="text-[11px] text-slate-500">
-        Astuce : enregistrez d&apos;abord, puis cliquez sur « Tester » pour recevoir un email de vérification.
+        « Tester » envoie un vrai email de vérification à {email.trim() || 'votre adresse'} en utilisant
+        les valeurs affichées ci-dessus. Pensez à enregistrer pour les conserver.
       </p>
     </div>
   )
