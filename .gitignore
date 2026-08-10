@@ -4,6 +4,14 @@ out/
 build/
 
 # Dependencies
+# Les deux formes sont nécessaires. `node_modules/` (barre finale) ne
+# correspond QU'À un répertoire : dans un clone où `node_modules` est un LIEN
+# SYMBOLIQUE vers l'installation partagée du poste, git ne l'ignore pas et le
+# voit comme un fichier non suivi. `git stash -u` et `git clean -fd`
+# SUPPRIMENT alors le lien (vérifié), ce qui casse l'installation partagée et
+# fait échouer build et tests jusqu'à un `npm ci`. La forme sans barre couvre
+# aussi bien le lien que le répertoire.
+node_modules
 node_modules/
 
 # Env
