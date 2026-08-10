@@ -130,3 +130,54 @@ describe('verify — détecte les altérations des fichiers critiques', () => {
     expect(r.present).toBe(false)
   })
 })
+
+/**
+ * RÉGRESSION — le code applicatif n'était couvert par aucune empreinte.
+ *
+ * Le manifeste protégeait app.asar, les moteurs Prisma, la clé publique et le
+ * schéma : 11 fichiers. Or les routes d'API, les règles de facturation et les
+ * contrôles d'autorisation ne sont PAS dans app.asar — electron-builder les
+ * emporte dans `resources/standalone` via extraResources. Les 219 fichiers qui
+ * décident des montants et des droits étaient donc remplaçables sans que le
+ * contrôle d'intégrité, même en mode « enforce », ne détecte quoi que ce soit.
+ *
+ * Constaté sur l'installation réelle du 2026-08-09 : `standalone` absent du
+ * manifeste. Coût mesuré de sa couverture : ~100 ms au démarrage.
+ */
+describe('intégrité — le bundle applicatif est couvert', () => {
+  let dir = ''
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-standalone-'))
+    fs.writeFileSync(path.join(dir, 'app.asar'), 'ASAR')
+    fs.mkdirSync(path.join(dir, 'standalone', '.next', 'server', 'app', 'api', 'invoices'), { recursive: true })
+    fs.writeFileSync(path.join(dir, 'standalone', '.next', 'server', 'app', 'api', 'invoices', 'route.js'), 'montants()')
+    fs.writeFileSync(path.join(dir, 'standalone', 'server.js'), 'demarrage()')
+    // Les node_modules du standalone restent HORS manifeste (volume).
+    fs.mkdirSync(path.join(dir, 'standalone', 'node_modules', 'x'), { recursive: true })
+    fs.writeFileSync(path.join(dir, 'standalone', 'node_modules', 'x', 'index.js'), 'dep')
+  })
+  afterEach(() => fs.rmSync(dir, { recursive: true, force: true }))
+
+  it('couvre les routes d\'API compilées et le point d\'entrée', () => {
+    integrity.writeManifest(dir, '1.1.0')
+    const m = JSON.parse(fs.readFileSync(path.join(dir, integrity.MANIFEST_NAME), 'utf8'))
+    const rels = m.files.map((f: { rel: string }) => f.rel)
+    expect(rels).toContain('standalone/.next/server/app/api/invoices/route.js')
+    expect(rels).toContain('standalone/server.js')
+  })
+
+  it('DÉTECTE une route d\'API remplacée', () => {
+    integrity.writeManifest(dir, '1.1.0')
+    // Un attaquant réécrit la route qui calcule les montants.
+    fs.writeFileSync(path.join(dir, 'standalone', '.next', 'server', 'app', 'api', 'invoices', 'route.js'), 'montants_truques()')
+    const r = integrity.verify(dir)
+    expect(r.ok).toBe(false)
+    expect(r.violations.some((v: string) => v.includes('invoices/route.js'))).toBe(true)
+  })
+
+  it('n\'inclut PAS les node_modules du standalone (135 Mo)', () => {
+    integrity.writeManifest(dir, '1.1.0')
+    const m = JSON.parse(fs.readFileSync(path.join(dir, integrity.MANIFEST_NAME), 'utf8'))
+    expect(m.files.some((f: { rel: string }) => f.rel.includes('standalone/node_modules'))).toBe(false)
+  })
+})

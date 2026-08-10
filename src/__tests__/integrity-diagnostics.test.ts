@@ -9,9 +9,10 @@
  *
  * Matrice exigée :
  *   A intact → autorisé ; B app.asar modifié → refusé ; C fichier protégé
- *   supprimé → refusé ; D fichier MUTABLE modifié → autorisé ; E manifeste
- *   modifié → refusé ; F manifeste invalide → refusé ; G build fraîchement
- *   généré (dist/win-unpacked réel, si présent) → aucun échec.
+ *   supprimé → refusé ; D fichier MUTABLE modifié → autorisé ; D bis code
+ *   applicatif de standalone/ modifié → refusé ; E manifeste modifié → refusé ;
+ *   F manifeste invalide → refusé ; G build fraîchement généré
+ *   (dist/win-unpacked réel, si présent) → aucun échec.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node:fs'
@@ -34,8 +35,16 @@ function makeResources() {
   // Fichiers MUTABLES légitimes présents dans resources — ne doivent JAMAIS être couverts.
   writeFileSync(join(dir, 'prisma', 'template.db'), Buffer.from('sqlite template'))
   writeFileSync(join(dir, 'app-update.yml'), 'provider: generic\n')
-  mkdirSync(join(dir, 'standalone'), { recursive: true })
+  // Le serveur Next empaqueté (extraResources : .next/standalone → standalone/).
+  // Son CODE est immuable et doit être couvert ; ce qui l'entoure ne l'est pas.
+  mkdirSync(join(dir, 'standalone', '.next', 'server', 'app', 'api'), { recursive: true })
+  mkdirSync(join(dir, 'standalone', 'prisma'), { recursive: true })
+  mkdirSync(join(dir, 'standalone', 'node_modules', 'dep'), { recursive: true })
   writeFileSync(join(dir, 'standalone', 'server.js'), 'console.log("next")')
+  writeFileSync(join(dir, 'standalone', '.next', 'server', 'app', 'api', 'route.js'), 'montants()')
+  writeFileSync(join(dir, 'standalone', '.next', 'server', 'app', 'page.html'), '<html>ISR</html>')
+  writeFileSync(join(dir, 'standalone', 'prisma', 'garageflow-template.db'), Buffer.from('sqlite template'))
+  writeFileSync(join(dir, 'standalone', 'node_modules', 'dep', 'index.js'), 'dep')
   I.writeManifest(dir, '1.0.0')
 }
 
@@ -107,19 +116,43 @@ describe('matrice A–G', () => {
     expect(d.reason).toBe('MISSING')
   })
 
-  it('D — fichiers MUTABLES modifiés (db template, app-update.yml, standalone, log) → démarrage AUTORISÉ', () => {
-    // Garantie structurelle : les mutables ne sont pas couverts par le manifeste…
+  it('D — fichiers MUTABLES modifiés (db template, app-update.yml, ISR, log) → démarrage AUTORISÉ', () => {
+    // La frontière ne passe PAS entre app.asar et standalone/ : elle passe entre
+    // ce qui est figé par la construction et ce que l'exécution réécrit. Le code
+    // applicatif empaqueté dans standalone/ (routes d'API, règles de facturation,
+    // contrôles d'autorisation) est immuable et donc couvert ; la base, le cache
+    // ISR et les dépendances tierces ne le sont pas.
     const covered = I.criticalFiles(dir).map((f: any) => f.rel)
     for (const rel of covered) {
-      expect(rel).not.toMatch(/\.db$|\.env|app-update\.yml|^standalone\/|\.log$/)
+      expect(rel).not.toMatch(/\.db$|\.env|app-update\.yml|\.log$/)
+      // Dans standalone/, seul le JavaScript produit par le build est couvert :
+      // ni la base, ni les node_modules (135 Mo), ni les pages ISR réécrites à
+      // chaud sous .next/server (.html, .rsc, .meta).
+      if (rel.startsWith('standalone/')) {
+        expect(rel).toMatch(/\.js$/)
+        expect(rel).not.toMatch(/^standalone\/(node_modules|prisma)\//)
+      }
     }
     // …et fonctionnelle : les modifier ne déclenche RIEN.
     writeFileSync(join(dir, 'prisma', 'template.db'), Buffer.from('sqlite template MODIFIÉ'))
     writeFileSync(join(dir, 'app-update.yml'), 'provider: generic\nmodifié: oui\n')
-    writeFileSync(join(dir, 'standalone', 'server.js'), 'console.log("modifié")')
+    writeFileSync(join(dir, 'standalone', '.next', 'server', 'app', 'page.html'), '<html>ISR régénéré</html>')
+    writeFileSync(join(dir, 'standalone', 'prisma', 'garageflow-template.db'), Buffer.from('sqlite MODIFIÉ'))
+    writeFileSync(join(dir, 'standalone', 'node_modules', 'dep', 'index.js'), 'dep patché')
     writeFileSync(join(dir, 'garageflow.log'), 'log runtime\n')
     const r = I.verify(dir)
     expect(r.ok).toBe(true)
+  })
+
+  it("D bis — le CODE applicatif de standalone/ est couvert, et le modifier est REFUSÉ", () => {
+    const covered = I.criticalFiles(dir).map((f: any) => f.rel)
+    expect(covered).toContain('standalone/server.js')
+    expect(covered).toContain('standalone/.next/server/app/api/route.js')
+    // Un attaquant réécrit la route qui décide des montants : détecté.
+    writeFileSync(join(dir, 'standalone', '.next', 'server', 'app', 'api', 'route.js'), 'montants_truques()')
+    const r = I.verify(dir)
+    expect(r.ok).toBe(false)
+    expect(r.violations).toContain('modified:standalone/.next/server/app/api/route.js')
   })
 
   it('E — manifeste MODIFIÉ (hash falsifié pour couvrir une altération) → refusé (MANIFEST_MAC_INVALID)', () => {

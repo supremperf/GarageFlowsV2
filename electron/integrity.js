@@ -12,9 +12,17 @@
 //    • app.asar.unpacked/**    → modules natifs déballés (moteur Prisma, DLL)
 //    • keys/public.pem         → clé publique de licence (sécurité)
 //    • prisma/schema.prisma    → schéma de base
+//    • standalone/server.js + standalone/.next/server/**/*.js
+//                              → le CODE MÉTIER : routes d'API, règles de
+//                                facturation, contrôles d'autorisation. Il vit
+//                                HORS d'app.asar (extraResources) et n'était
+//                                couvert par AUCUNE empreinte.
 //  JAMAIS de fichier MUTABLE (base .db, .env, logs, cache, config utilisateur,
-//  app-update.yml, standalone/**) : l'anti-tamper ne protège que les artefacts
-//  applicatifs immuables — garanti par un test dédié.
+//  app-update.yml, standalone/prisma/**, standalone/node_modules/**, sorties ISR
+//  .html/.rsc/.meta réécrites sous .next/server) : l'anti-tamper ne protège que
+//  les artefacts applicatifs immuables — garanti par un test dédié. La frontière
+//  passe entre ce que la CONSTRUCTION fige et ce que l'EXÉCUTION réécrit — et
+//  non entre app.asar et standalone/.
 //
 //  ⚠️ Le GÉNÉRATEUR (build) et le VÉRIFICATEUR (runtime) partagent la MÊME
 //  fonction de sélection (`criticalFiles`) : ils ne peuvent donc jamais diverger
@@ -127,6 +135,25 @@ function criticalFiles(resourcesPath) {
 
   const unpacked = path.join(resourcesPath, 'app.asar.unpacked')
   if (RAW_FS.existsSync(unpacked)) walk(unpacked, resourcesPath, out)
+
+  // Le CODE APPLICATIF — routes d'API, règles de facturation, contrôles
+  // d'autorisation — vit dans `standalone/`, hors de app.asar (electron-builder
+  // l'emporte en `extraResources`). Il n'était couvert par aucune empreinte :
+  // le manifeste protégeait la coquille Electron et les moteurs Prisma pendant
+  // que les 219 fichiers qui décident des montants et des droits restaient
+  // remplaçables sans que le contrôle d'intégrité bronche.
+  //
+  // On couvre le bundle serveur compilé et le point d'entrée, PAS les
+  // node_modules du standalone (135 Mo, dépendances tierces déjà figées par le
+  // lockfile) : mesuré à ~100 ms au démarrage pour 5,3 Mo, contre plusieurs
+  // secondes si l'on hachait tout.
+  const standaloneServer = path.join(resourcesPath, 'standalone', '.next', 'server')
+  if (RAW_FS.existsSync(standaloneServer)) {
+    const bundle = []
+    walk(standaloneServer, resourcesPath, bundle)
+    for (const f of bundle) if (f.rel.endsWith('.js')) out.push(f)
+  }
+  push('standalone/server.js')
 
   // Dédoublonne + tri déterministe par chemin relatif.
   const seen = new Set()
