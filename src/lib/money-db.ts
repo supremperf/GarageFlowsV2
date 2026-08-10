@@ -58,6 +58,80 @@ export function intQtyLineCents(unitScaled: number, qtyUnits: number): number {
   return lineTotalCentsFromScaled(unitScaled, (qtyUnits ?? 0) * MONEY_SCALE)
 }
 
+// ─── Lignes de VENTE (portail client) ───────────────────────────────────────
+//
+// Le portail ne doit JAMAIS recevoir `unitCost` (coût d'achat / marge du garage).
+// Les producteurs portail sélectionnent donc explicitement les colonnes, ce qui
+// exclut `lineToEuros` (qui exige unitCostTenThousandths). Sans helper dédié,
+// chaque route refaisait — ou OUBLIAIT — la dérivation à la main : c'est
+// exactement ce qui est arrivé (GET /api/portal/[token] et buildPortalSnapshot
+// émettaient les entiers exacts SANS `quantity`/`unitPrice`, et la page portail
+// tombait sur `line.unitPrice.toFixed(2)` → « Une erreur est survenue »).
+
+/** Ligne de VENTE : champs exacts, SANS coût d'achat. */
+export interface SalesLine {
+  quantityTenThousandths: number
+  unitPriceTenThousandths: number
+}
+
+/** Vue applicative d'une ligne de vente : champs exacts + dérivés euros/unités. */
+export type SalesLineWithEuros<T extends SalesLine> = T & {
+  quantity: number
+  unitPrice: number
+}
+
+/**
+ * Forme CANONIQUE d'une ligne dans une réponse portail : les entiers exacts
+ * (source de vérité, aucune perte JSON) ET les dérivés `quantity`/`unitPrice`
+ * en euros/unités que les pages affichent directement — jamais le coût d'achat.
+ */
+export function salesLineToEuros<T extends SalesLine>(l: T): SalesLineWithEuros<T> {
+  return {
+    ...l,
+    quantity: fromScaled(l.quantityTenThousandths),
+    unitPrice: fromScaled(l.unitPriceTenThousandths),
+  }
+}
+
+export function salesLinesToEuros<T extends SalesLine>(lines: T[]): SalesLineWithEuros<T>[] {
+  return (lines ?? []).map(salesLineToEuros)
+}
+
+/**
+ * Lecture TOLÉRANTE d'une ligne côté AFFICHAGE (pages portail).
+ *
+ * Les instantanés portail déjà publiés par un poste (`PortalSnapshot`, 7 jours
+ * de validité) contiennent la forme AVANT correction : uniquement les entiers
+ * exacts. Ces liens sont déjà entre les mains de clients — les pages doivent
+ * donc les lire sans planter, sans attendre leur expiration.
+ *
+ * Règle stricte anti-double-conversion : si le champ en euros est présent et
+ * fini, il est utilisé TEL QUEL ; la division par MONEY_SCALE n'a lieu que
+ * lorsqu'il est absent. Une valeur déjà en euros n'est jamais reconvertie.
+ */
+export function readLineAmounts(
+  line:
+    | {
+        quantity?: number | null
+        unitPrice?: number | null
+        quantityTenThousandths?: number | null
+        unitPriceTenThousandths?: number | null
+      }
+    | null
+    | undefined,
+): { quantity: number; unitPrice: number } {
+  return {
+    quantity: pickAmount(line?.quantity, line?.quantityTenThousandths),
+    unitPrice: pickAmount(line?.unitPrice, line?.unitPriceTenThousandths),
+  }
+}
+
+function pickAmount(euros: number | null | undefined, scaled: number | null | undefined): number {
+  if (typeof euros === 'number' && Number.isFinite(euros)) return euros
+  if (typeof scaled === 'number' && Number.isFinite(scaled)) return fromScaled(scaled)
+  return 0
+}
+
 /** Ligne stockée (devis/facture) — champs exacts. */
 export interface ScaledLine {
   quantityTenThousandths: number

@@ -3,8 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { jwtVerify } from 'jose'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
-import { fromScaled } from '@/lib/money'
-import { billingLines } from '@/lib/money-db'
+import { billingLines, salesLinesToEuros } from '@/lib/money-db'
 import { portalSecret } from '@/lib/portal-secret'
 import { readPhotoAsDataUrl } from '@/lib/photo-store'
 
@@ -38,12 +37,10 @@ export async function GET(_req: Request, { params }: { params: { token: string }
     const alreadySigned = ['accepted', 'refused', 'converted'].includes(quote.status)
 
     // Lignes : entiers exacts + dérivés euros (quantity/unitPrice) pour l'affichage
-    // portail. Le coût d'achat n'est jamais exposé au client.
-    const lines = quote.lines.map((l) => ({
-      ...l,
-      quantity: fromScaled(l.quantityTenThousandths),
-      unitPrice: fromScaled(l.unitPriceTenThousandths),
-    }))
+    // portail. Le coût d'achat n'est jamais exposé au client. Helper PARTAGÉ avec
+    // les autres producteurs portail — c'est la duplication de cette dérivation
+    // qui avait laissé /api/portal/[token] et l'instantané poste en arrière.
+    const lines = salesLinesToEuros(quote.lines)
     // Page publique : /api/photos est authentifié, on inline donc le logo
     // stocké sur disque (cf. src/lib/photo-store.ts).
     const garage = {

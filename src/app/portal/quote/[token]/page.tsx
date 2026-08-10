@@ -1,5 +1,6 @@
 'use client'
 import { lineCents, fromCents } from '@/lib/money'
+import { readLineAmounts } from '@/lib/money-db'
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
@@ -7,9 +8,12 @@ import { useParams } from 'next/navigation'
 interface QuoteLine {
   id: string
   description: string
-  quantity: number
-  unitPrice: number
-  unitCost: number
+  /** Euros/unités dérivés par l'API ; entiers exacts en repli (même contrat que
+   *  la page portail d'intervention). Le coût d'achat n'est jamais exposé. */
+  quantity?: number
+  unitPrice?: number
+  quantityTenThousandths?: number
+  unitPriceTenThousandths?: number
   isLabor: boolean
   sortOrder: number
 }
@@ -241,21 +245,24 @@ export default function QuoteApprovalPage() {
                 </tr>
               </thead>
               <tbody>
-                {data.lines.map((line) => (
-                  <tr key={line.id} className="border-b border-gray-50 last:border-0">
-                    <td className="py-2.5 pr-3 text-gray-800">
-                      {line.description}
-                      {line.isLabor && (
-                        <span className="ml-1.5 text-xs text-blue-500 font-medium">(MO)</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-2 text-right text-gray-600">{line.quantity}</td>
-                    <td className="py-2.5 px-2 text-right text-gray-600">{line.unitPrice.toFixed(2)} €</td>
-                    <td className="py-2.5 pl-2 text-right font-medium text-gray-800">
-                      {fromCents(lineCents(line.unitPrice, line.quantity)).toFixed(2)} €
-                    </td>
-                  </tr>
-                ))}
+                {data.lines.map((line) => {
+                  const { quantity, unitPrice } = readLineAmounts(line)
+                  return (
+                    <tr key={line.id} className="border-b border-gray-50 last:border-0">
+                      <td className="py-2.5 pr-3 text-gray-800">
+                        {line.description}
+                        {line.isLabor && (
+                          <span className="ml-1.5 text-xs text-blue-500 font-medium">(MO)</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-2 text-right text-gray-600">{quantity}</td>
+                      <td className="py-2.5 px-2 text-right text-gray-600">{unitPrice.toFixed(2)} €</td>
+                      <td className="py-2.5 pl-2 text-right font-medium text-gray-800">
+                        {fromCents(lineCents(unitPrice, quantity)).toFixed(2)} €
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

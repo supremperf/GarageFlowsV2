@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db'
 import { jwtVerify } from 'jose'
 import { portalSecret } from '@/lib/portal-secret'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
-import { billingLines } from '@/lib/money-db'
+import { billingLines, salesLinesToEuros } from '@/lib/money-db'
 import { readPhotoAsDataUrl } from '@/lib/photo-store'
 
 export async function GET(_req: Request, { params }: { params: { token: string } }) {
@@ -66,6 +66,10 @@ export async function GET(_req: Request, { params }: { params: { token: string }
     const quote = rawQuote
       ? {
           ...rawQuote,
+          // CONTRAT : entiers exacts + dérivés euros/unités. Sans `lines`
+          // dérivées, la page portail lisait `line.unitPrice` (undefined) et
+          // toute l'intervention tombait sur l'écran d'erreur générique.
+          lines: salesLinesToEuros(rawQuote.lines),
           totalHT:  roundCents(calcTotalHT(billingLines(rawQuote.lines))),
           totalTTC: roundCents(calcTotalTTC(billingLines(rawQuote.lines), rawQuote.taxRate)),
         }

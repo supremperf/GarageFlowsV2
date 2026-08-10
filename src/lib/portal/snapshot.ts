@@ -11,7 +11,7 @@
  */
 import { prisma } from '@/lib/db'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
-import { billingLines } from '@/lib/money-db'
+import { billingLines, salesLinesToEuros } from '@/lib/money-db'
 import { readPhotoAsDataUrl } from '@/lib/photo-store'
 
 /** Bornes de publication — évite d'envoyer 200 Mo de photos au serveur. */
@@ -53,6 +53,10 @@ export async function buildPortalSnapshot(jobId: string, garageId: string): Prom
   const quote = rawQuote
     ? {
         ...rawQuote,
+        // Même contrat que GET /api/portal/[token] : entiers exacts + dérivés
+        // euros/unités. L'instantané est SERVI TEL QUEL au client — s'il ne
+        // porte pas `quantity`/`unitPrice`, la page portail plante.
+        lines: salesLinesToEuros(rawQuote.lines),
         totalHT:  roundCents(calcTotalHT(billingLines(rawQuote.lines))),
         totalTTC: roundCents(calcTotalTTC(billingLines(rawQuote.lines), rawQuote.taxRate)),
       }

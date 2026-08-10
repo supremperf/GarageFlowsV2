@@ -1,5 +1,6 @@
 'use client'
 import { lineCents, fromCents } from '@/lib/money'
+import { readLineAmounts } from '@/lib/money-db'
 import { repairConfig } from '@/lib/types'
 
 import { useEffect, useState } from 'react'
@@ -23,9 +24,13 @@ interface Photo {
 interface QuoteLine {
   id: string
   description: string
-  quantity: number
-  unitPrice: number
-  unitCost: number
+  /** Euros/unités — dérivés par l'API. Absents des instantanés publiés avant
+   *  la correction du contrat : `readLineAmounts` retombe alors sur les entiers
+   *  exacts ci-dessous. JAMAIS de coût d'achat ici (marge du garage). */
+  quantity?: number
+  unitPrice?: number
+  quantityTenThousandths?: number
+  unitPriceTenThousandths?: number
   isLabor: boolean
 }
 
@@ -319,16 +324,19 @@ export default function PortalPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {quote.lines.map((line) => (
-                    <tr key={line.id} className="border-b border-gray-50">
-                      <td className="py-2 pr-3 text-gray-800">{line.description}</td>
-                      <td className="py-2 px-2 text-right text-gray-600">{line.quantity}</td>
-                      <td className="py-2 px-2 text-right text-gray-600">{line.unitPrice.toFixed(2)} €</td>
-                      <td className="py-2 pl-2 text-right font-medium text-gray-800">
-                        {fromCents(lineCents(line.unitPrice, line.quantity)).toFixed(2)} €
-                      </td>
-                    </tr>
-                  ))}
+                  {quote.lines.map((line) => {
+                    const { quantity, unitPrice } = readLineAmounts(line)
+                    return (
+                      <tr key={line.id} className="border-b border-gray-50">
+                        <td className="py-2 pr-3 text-gray-800">{line.description}</td>
+                        <td className="py-2 px-2 text-right text-gray-600">{quantity}</td>
+                        <td className="py-2 px-2 text-right text-gray-600">{unitPrice.toFixed(2)} €</td>
+                        <td className="py-2 pl-2 text-right font-medium text-gray-800">
+                          {fromCents(lineCents(unitPrice, quantity)).toFixed(2)} €
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
