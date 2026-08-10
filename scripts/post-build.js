@@ -220,6 +220,56 @@ function main() {
     }
   }
 
+  // 6 bis. AUCUNE CLÉ PRIVÉE NE DOIT QUITTER LE POSTE DE L'ÉDITEUR.
+  //
+  // `build.extraResources` copie `.next/standalone` EN ENTIER, sans filtre.
+  // Or ce dossier n'est pas nettoyé entre deux builds : une copie accidentelle
+  // de `keys/` y a laissé `private.pem`, qui s'est retrouvé dans CHAQUE
+  // installateur produit ensuite (constaté dans dist/win-unpacked/resources/
+  // standalone/keys/private.pem — clé de SIGNATURE DES LICENCES). Quiconque
+  // installe l'application peut alors forger des licences valides à volonté.
+  //
+  // On purge donc, puis on refuse de livrer si la moindre clé privée subsiste.
+  {
+    const standalone = path.join(ROOT, '.next', 'standalone')
+    const PRIVATE_MARKERS = ['BEGIN PRIVATE KEY', 'BEGIN EC PRIVATE KEY', 'BEGIN RSA PRIVATE KEY', 'BEGIN OPENSSH PRIVATE KEY']
+    const purged = []
+    const leaks = []
+
+    const walk = (dir) => {
+      let entries = []
+      try { entries = fs.readdirSync(dir, { withFileTypes: true }) } catch { return }
+      for (const e of entries) {
+        const full = path.join(dir, e.name)
+        if (e.isDirectory()) { walk(full); continue }
+        // Purge par NOM (private.pem, *.key…) : rapide et sans lecture.
+        if (/^(private|priv|server|signing)[-_.].*\.(pem|key)$|^private\.pem$|\.key$/i.test(e.name)) {
+          try { fs.rmSync(full); purged.push(path.relative(ROOT, full)); continue } catch { /* signalé ci-dessous */ }
+        }
+        // Puis par CONTENU : attrape une clé inlinée sous n'importe quel nom.
+        let head = ''
+        try {
+          const fd = fs.openSync(full, 'r')
+          const buf = Buffer.alloc(4096)
+          const n = fs.readSync(fd, buf, 0, 4096, 0)
+          fs.closeSync(fd)
+          head = buf.subarray(0, n).toString('latin1')
+        } catch { continue }
+        if (PRIVATE_MARKERS.some((m) => head.includes(m))) leaks.push(path.relative(ROOT, full))
+      }
+    }
+    walk(standalone)
+
+    for (const p of purged) console.log(`  🧹 clé privée retirée du package : ${p}`)
+    if (leaks.length > 0) {
+      console.error('  ❌ CLÉ PRIVÉE détectée dans .next/standalone — artefact NON distribuable :')
+      for (const p of leaks) console.error(`       ${p}`)
+      console.error('     Supprimez ces fichiers puis relancez la construction.')
+      process.exit(1)
+    }
+    console.log(`  ✅ aucune clé privée dans standalone (${purged.length} purgée(s))`)
+  }
+
   // 7. Ensure Windows icon exists (warn if not)
   {
     const ico = path.join(ROOT, 'icon.ico')
