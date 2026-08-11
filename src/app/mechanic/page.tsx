@@ -9,12 +9,13 @@
  * tablette et desktop.
  */
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  Loader2, LogOut, ChevronLeft, ChevronRight, Clock, AlertTriangle, Wrench, Car, User,
+  Loader2, LogOut, ChevronLeft, ChevronRight, Clock, AlertTriangle, Wrench, Car, User, RefreshCw,
 } from 'lucide-react'
 import { mechFetch, mechanicLogout } from '@/lib/mechanic-client'
+import { useMechanicLive } from '@/lib/use-mechanic-live'
 
 interface Job {
   id: string
@@ -71,24 +72,19 @@ export default function MechanicPlanningPage() {
   const router = useRouter()
   const [me, setMe] = useState<Me | null>(null)
   const [date, setDate] = useState(todayIso())
-  const [jobs, setJobs] = useState<Job[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
 
   useEffect(() => {
     mechFetch<Me>('/api/mechanic/me').then(setMe).catch(() => {})
   }, [])
 
-  const load = useCallback((d: string) => {
-    setLoading(true)
-    setError('')
-    mechFetch<{ data: Job[] }>(`/api/mechanic/schedule?date=${encodeURIComponent(d)}`)
-      .then((r) => setJobs(r.data))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [])
-
-  useEffect(() => { load(date) }, [date, load])
+  // SYNCHRONISATION VIVANTE — une intervention créée ou réaffectée côté garage
+  // apparaît (ou disparaît) ici en quelques secondes, sans reconnexion, sans
+  // fermeture de l'application et sans vidage de cache. Cf. lib/live-sync.ts
+  // pour le choix du transport et la politique de cadence/backoff.
+  const { data, error, loading, lastSyncAt, refresh } = useMechanicLive<{ data: Job[] }>(
+    `/api/mechanic/schedule?date=${encodeURIComponent(date)}`,
+  )
+  const jobs = data?.data ?? []
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-safe pb-safe-3">
@@ -106,12 +102,22 @@ export default function MechanicPlanningPage() {
             <p className="text-xs text-slate-500 truncate">{me?.garage?.name ?? ''}</p>
           </div>
         </div>
-        <button
-          onClick={() => mechanicLogout()}
-          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-red-400 px-3 py-2 rounded-lg hover:bg-white/5 transition"
-        >
-          <LogOut className="w-4 h-4" /> Quitter
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={refresh}
+            title={lastSyncAt ? `Synchronisé à ${new Date(lastSyncAt).toLocaleTimeString('fr-FR')}` : 'Synchroniser'}
+            aria-label="Synchroniser maintenant"
+            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-blue-400 px-2 py-2 rounded-lg hover:bg-white/5 transition"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => mechanicLogout()}
+            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-red-400 px-3 py-2 rounded-lg hover:bg-white/5 transition"
+          >
+            <LogOut className="w-4 h-4" /> Quitter
+          </button>
+        </div>
       </header>
 
       {/* Navigation date */}
@@ -130,10 +136,18 @@ export default function MechanicPlanningPage() {
         </button>
       </div>
 
+      {/* Bandeau d'erreur NON bloquant : si le réseau retombe, on continue
+          d'afficher la dernière liste connue plutôt que de vider l'écran. */}
+      {error && jobs.length > 0 && (
+        <div className="mb-3 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-300">
+          Hors ligne — dernières données connues. Reconnexion automatique.
+        </div>
+      )}
+
       {/* Liste */}
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-slate-500" /></div>
-      ) : error ? (
+      ) : error && jobs.length === 0 ? (
         <div className="text-center py-16 text-red-400 text-sm">{error}</div>
       ) : jobs.length === 0 ? (
         <div className="text-center py-16 text-slate-500 text-sm">

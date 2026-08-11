@@ -17,6 +17,7 @@ import {
   AlertTriangle, CheckCircle2, Car, Clock, ImagePlus,
 } from 'lucide-react'
 import { mechFetch } from '@/lib/mechanic-client'
+import { useMechanicLive } from '@/lib/use-mechanic-live'
 
 interface JobView {
   id: string; date: string; startTime: string; estimatedDuration: number
@@ -41,21 +42,23 @@ const CHK_STATUS: { value: string; label: string; style: string }[] = [
 
 export default function MechanicJobPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const [detail, setDetail] = useState<Detail | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [actionError, setActionError] = useState('')
   const [noteType, setNoteType] = useState('comment')
   const [noteBody, setNoteBody] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const load = useCallback(() => {
-    setLoading(true)
-    mechFetch<Detail>(`/api/mechanic/jobs/${params.id}`)
-      .then(setDetail).catch((e) => setError(e.message)).finally(() => setLoading(false))
-  }, [params.id])
-
-  useEffect(() => { load() }, [load])
+  // Détail VIVANT : commentaires, checklist et statut suivent les modifications
+  // faites côté garage. Si l'intervention est RÉAFFECTÉE à un autre mécanicien,
+  // le serveur répond 404 et l'on revient au planning : l'accès est retiré sans
+  // reconnexion ni rechargement.
+  const { data: detail, error: liveError, loading, refresh } = useMechanicLive<Detail>(
+    `/api/mechanic/jobs/${params.id}`,
+    { onGone: () => router.replace('/mechanic') },
+  )
+  const load = useCallback(() => { refresh() }, [refresh])
+  const error = actionError || liveError
+  const setError = setActionError
 
   async function timer(action: 'start' | 'pause' | 'resume' | 'stop') {
     setBusy(true)
