@@ -5,6 +5,7 @@
 @layer base {
   :root {
     /* Dark theme (default) */
+    color-scheme: dark;
     --app-bg: #0f1629;
     --card-bg: #111827;
     --panel-bg: #161f38;
@@ -16,8 +17,15 @@
     --text-muted: #4b5563;
     --input-bg: rgba(255,255,255,0.08);
     --input-border: rgba(255,255,255,0.15);
-    --input-text: #f8fafc;
-    --input-placeholder: #64748b;
+    /* Couleur de champ DU THÈME. `--input-text` en dérive : une SURFACE CLAIRE
+       (carte blanche, zone d'impression) la redéfinit pour tout son sous-arbre
+       sans toucher au thème, et `.gf-surface-dark` la rétablit pour un panneau
+       sombre imbriqué. Voir « Surfaces » plus bas. */
+    --input-text-theme: #f8fafc;
+    --input-placeholder-theme: #64748b;
+    --input-text: var(--input-text-theme);
+    --input-placeholder: var(--input-placeholder-theme);
+    --input-caret: #60a5fa;
     --hover-bg: rgba(255,255,255,0.07);
     --scrollbar-thumb: rgba(255,255,255,0.15);
     --scrollbar-hover: rgba(255,255,255,0.25);
@@ -34,6 +42,7 @@
 
   /* Light theme */
   [data-theme="light"] {
+    color-scheme: light;
     --app-bg: #f0f4f8;
     --card-bg: #ffffff;
     --panel-bg: #f8fafc;
@@ -45,8 +54,9 @@
     --text-muted: #64748b;
     --input-bg: rgba(0,0,0,0.04);
     --input-border: rgba(0,0,0,0.15);
-    --input-text: #0f172a;
-    --input-placeholder: #94a3b8;
+    --input-text-theme: #0f172a;
+    --input-placeholder-theme: #94a3b8;
+    --input-caret: #2563eb;
     --hover-bg: rgba(0,0,0,0.05);
     --scrollbar-thumb: rgba(0,0,0,0.15);
     --scrollbar-hover: rgba(0,0,0,0.25);
@@ -65,8 +75,9 @@
     --text-muted: #78550a;
     --input-bg: rgba(245,158,11,0.08);
     --input-border: rgba(245,158,11,0.20);
-    --input-text: #fde68a;
-    --input-placeholder: #92600a;
+    --input-text-theme: #fde68a;
+    --input-placeholder-theme: #92600a;
+    --input-caret: #f59e0b;
     --hover-bg: rgba(245,158,11,0.08);
     --scrollbar-thumb: rgba(245,158,11,0.20);
     --scrollbar-hover: rgba(245,158,11,0.35);
@@ -89,8 +100,9 @@
     --text-muted: #2563a0;
     --input-bg: rgba(96,165,250,0.07);
     --input-border: rgba(96,165,250,0.20);
-    --input-text: #e0f2fe;
-    --input-placeholder: #2e6ea0;
+    --input-text-theme: #e0f2fe;
+    --input-placeholder-theme: #2e6ea0;
+    --input-caret: #60a5fa;
     --hover-bg: rgba(96,165,250,0.08);
     --scrollbar-thumb: rgba(96,165,250,0.20);
     --scrollbar-hover: rgba(96,165,250,0.35);
@@ -163,68 +175,91 @@
     background: var(--scrollbar-hover);
   }
 
-  /* Global input visibility improvements */
-  input, textarea, select {
-    color: var(--input-text) !important;
-  }
-  input::placeholder, textarea::placeholder {
-    color: var(--input-placeholder) !important;
-    opacity: 1 !important;
+  /* ══ SURFACES : source de vérité UNIQUE de la couleur des champs ═══════════
+     Une surface CLAIRE redéfinit `--input-text` / `--input-placeholder` pour
+     TOUT son sous-arbre. Les variables CSS étant héritées, un champ imbriqué
+     à n'importe quelle profondeur (ligne de checklist sur `bg-emerald-50`
+     dans la modale « Contrôle véhicule », ligne de facture dans la zone
+     d'impression…) reçoit automatiquement la bonne couleur.
+
+     Pourquoi ce modèle et pas des sélecteurs descendants :
+     l'ancien code empilait `.bg-white input {color:#111827!important}` PUIS,
+     hors de ce layer, `.dark input {color:#f8fafc!important}`. Les deux ont la
+     MÊME spécificité (0,1,1) et sont `!important` : la dernière déclarée
+     gagnait. Comme `applyTheme()` pose `class="dark"` sur <html> pour 3 des 4
+     thèmes (dont le thème par défaut), tout champ sans classe de fond propre
+     dans une carte blanche s'affichait en #f8fafc → BLANC SUR BLANC
+     (Contrôle véhicule : Client, Véhicule, Immatriculation, Kilométrage).
+     Avec des variables, il n'y a plus qu'UNE règle de couleur : aucune course
+     de spécificité n'est possible, et les 4 thèmes restent intacts. */
+  .gf-surface-light,
+  .invoice-light,
+  #qimodal-print,
+  .bg-white, .bg-gray-50, .bg-gray-100,
+  .bg-slate-50, .bg-slate-100,
+  .bg-red-50, .bg-orange-50, .bg-amber-50, .bg-yellow-50,
+  .bg-green-50, .bg-emerald-50, .bg-teal-50,
+  .bg-blue-50, .bg-indigo-50, .bg-purple-50, .bg-pink-50 {
+    color-scheme: light;
+    --input-text: #0f172a;
+    --input-placeholder: #94a3b8;
+    --input-caret: #2563eb;
   }
 
-  /* ── Invoice/Quote modal: force dark text on white background ────────────── */
-  /* The print area uses bg-white — must override the global var */
+  /* Échappatoire explicite : un panneau SOMBRE imbriqué dans une surface claire
+     rétablit les valeurs du thème pour son propre sous-arbre. */
+  .gf-surface-dark {
+    color-scheme: dark;
+    --input-text: var(--input-text-theme);
+    --input-placeholder: var(--input-placeholder-theme);
+  }
+
+  /* La zone d'impression laisse voir le fond blanc du document. */
   #qimodal-print input,
   #qimodal-print textarea,
   #qimodal-print select,
   .invoice-light input,
   .invoice-light textarea,
   .invoice-light select {
-    color: #111827 !important;
     background-color: transparent;
   }
-  #qimodal-print input::placeholder,
-  #qimodal-print textarea::placeholder,
-  .invoice-light input::placeholder {
-    color: #9ca3af !important;
-  }
-  /* Any container explicitly marked as light-bg */
-  .bg-white input,
-  .bg-white textarea,
-  .bg-gray-50 input,
-  .bg-gray-50 textarea {
-    color: #111827 !important;
-  }
-  .bg-white input::placeholder,
-  .bg-white textarea::placeholder,
-  .bg-gray-50 input::placeholder {
-    color: #9ca3af !important;
-  }
 
-  /* Champs qui portent EUX-MÊMES un fond clair (utilitaire Tailwind posé SUR
-     l'input : recherche du « Stock pièces », formulaires sur carte blanche…).
-     Le sélecteur descendant `.bg-white input` ci-dessus ne les couvre pas, donc
-     la règle globale forçait un texte clair → texte saisi illisible sur fond
-     blanc. On force ici un texte sombre + text-fill (autofill/WebKit) + un caret
-     bleu GarageFlows visible + un placeholder gris + une sélection lisible. */
-  input.bg-white, textarea.bg-white,
-  input.bg-gray-50, textarea.bg-gray-50,
-  input.bg-gray-100, textarea.bg-gray-100 {
-    color: #0f172a !important;
-    -webkit-text-fill-color: #0f172a !important;
-    caret-color: #2563eb;
+  /* ── Règle UNIQUE de couleur des champs ─────────────────────────────────── */
+  /* `-webkit-text-fill-color` est indispensable : sous Chromium/Electron il
+     PRIME sur `color` (autofill, WebKit). L'omettre laissait une couleur
+     fantôme survivre à toute correction de `color`. */
+  input, textarea, select {
+    color: var(--input-text) !important;
+    -webkit-text-fill-color: var(--input-text) !important;
+    caret-color: var(--input-caret);
   }
-  input.bg-white::placeholder, textarea.bg-white::placeholder,
-  input.bg-gray-50::placeholder, textarea.bg-gray-50::placeholder,
-  input.bg-gray-100::placeholder, textarea.bg-gray-100::placeholder {
-    color: #94a3b8 !important;
-    -webkit-text-fill-color: #94a3b8 !important;
+  input::placeholder, textarea::placeholder {
+    color: var(--input-placeholder) !important;
+    -webkit-text-fill-color: var(--input-placeholder) !important;
+    opacity: 1 !important;
   }
-  input.bg-white::selection, textarea.bg-white::selection,
-  input.bg-gray-50::selection, input.bg-gray-100::selection {
+  /* Saisie automatique du navigateur : Chrome impose sa propre couleur de texte
+     et de fond. On réaffirme la couleur de la surface (le `color-scheme` posé
+     ci-dessus fait choisir à Chrome un fond d'autofill cohérent). */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: var(--input-text) !important;
+    caret-color: var(--input-caret);
+  }
+  /* Sélection lisible sur toute surface. */
+  input::selection, textarea::selection {
     background: #bfdbfe;
     color: #0f172a;
     -webkit-text-fill-color: #0f172a;
+  }
+  /* Champ désactivé/lecture seule : atténué MAIS jamais invisible. */
+  input:disabled, textarea:disabled, select:disabled {
+    opacity: 0.65;
+    -webkit-opacity: 0.65;
   }
 }
 
@@ -454,14 +489,15 @@
   color: #0f172a !important;
 }
 
-/* ── Dark theme explicit (when dark class applied) ─────────────────────────── */
-.dark input, .dark textarea, .dark select {
-  color: #f8fafc !important;
-}
-.dark input::placeholder, .dark textarea::placeholder {
-  color: #64748b !important;
-  opacity: 1 !important;
-}
+/* ── Thème sombre : AUCUNE règle de couleur de champ ici ────────────────────
+   Il y avait à cet endroit `.dark input {color:#f8fafc!important}`. Déclarée
+   hors de `@layer base`, elle était émise APRÈS les règles de surface claire à
+   spécificité ÉGALE (0,1,1) et gagnait donc systématiquement — d'où le texte
+   blanc sur fond blanc dans toute carte claire (Contrôle véhicule). Elle était
+   par ailleurs REDONDANTE (la valeur du thème sombre est déjà #f8fafc via
+   `--input-text-theme`) et FAUSSE pour « night-shift » et « true-tone », qui
+   reçoivent aussi `class="dark"` mais veulent de l'ambre / du bleu ciel.
+   La couleur des champs a désormais une source unique : `--input-text`. */
 
 /* ── Theme change smoothing ───────────────────────────────────────────────── */
 /* Scoped to structural surfaces only. A universal `*, *::before, *::after`

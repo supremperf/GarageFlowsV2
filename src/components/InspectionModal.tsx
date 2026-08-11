@@ -68,6 +68,17 @@ const CATEGORY_CONFIG: Record<string, { label: string; icon: string; color: stri
   filters:    { label: 'Filtres',          icon: '🌀', color: 'bg-teal-50 border-teal-200' },
 }
 
+/**
+ * Champ de saisie de la modale — la modale est une SURFACE CLAIRE (`bg-white`,
+ * cf. `.gf-surface-light` dans globals.css) : le texte saisi doit rester sombre
+ * quel que soit le thème de l'application. La couleur vient des variables
+ * `--input-text` / `--input-placeholder` héritées de la surface ; les classes
+ * ci-dessous fixent la géométrie et documentent l'intention.
+ */
+const INSP_INPUT =
+  'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 ' +
+  'placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-300'
+
 const STATUS_CONFIG = {
   ok:       { label: 'OK',       icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-50 border-emerald-200', dot: 'bg-emerald-500' },
   warning:  { label: 'Attention',icon: AlertTriangle,color: 'text-amber-600 bg-amber-50 border-amber-200',    dot: 'bg-amber-500' },
@@ -148,7 +159,7 @@ function ItemRow({
           value={item.notes ?? ''}
           onChange={e => onUpdate(item.id, 'notes', e.target.value)}
           placeholder={t.insObservationPh}
-          className="mt-1 w-full text-xs border-0 bg-transparent text-gray-500 placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-300 rounded px-1"
+          className="mt-1 w-full text-xs border-0 bg-transparent text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-300 rounded px-1"
         />
       </div>
 
@@ -453,7 +464,10 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-modal flex flex-col">
+      {/* `gf-surface-light` : déclare explicitement une surface claire — les
+          champs de tout le sous-arbre héritent d'un texte sombre lisible,
+          dans les quatre thèmes (cf. globals.css § Surfaces). */}
+      <div className="gf-surface-light bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-modal flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -500,22 +514,22 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
                   <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">{t.vmClient} *</label>
                     <input value={form.clientName} onChange={e => setForm(f => ({ ...f, clientName: e.target.value }))}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder={t.lnClientNamePh} />
+                      className={INSP_INPUT} placeholder={t.lnClientNamePh} />
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">{t.jmVehicle}</label>
                     <input value={form.vehicleModel} onChange={e => setForm(f => ({ ...f, vehicleModel: e.target.value }))}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder={t.insMakeModelPh} />
+                      className={INSP_INPUT} placeholder={t.insMakeModelPh} />
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">{t.woPlate}</label>
                     <input value={form.licensePlate} onChange={e => setForm(f => ({ ...f, licensePlate: e.target.value.toUpperCase() }))}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono" placeholder="AB-123-CD" />
+                      className={cn(INSP_INPUT, 'font-mono')} placeholder="AB-123-CD" />
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">{t.vmMileage}</label>
                     <input type="number" value={form.mileage} onChange={e => setForm(f => ({ ...f, mileage: e.target.value }))}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder={t.insMileagePh} />
+                      className={INSP_INPUT} placeholder={t.insMileagePh} />
                   </div>
                 </div>
                 <button
@@ -631,7 +645,7 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
                   value={form.notes}
                   onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                   rows={2}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  className={cn(INSP_INPUT, 'resize-none')}
                   placeholder={t.insGeneralNotesPh}
                 />
               </div>
