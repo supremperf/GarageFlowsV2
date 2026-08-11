@@ -5,6 +5,7 @@ import { useTranslation } from '@/lib/i18n'
 import { X, Printer, FileText, Receipt, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { computeTotals, multiplyCents, toCents, fromCents, lineCents } from '@/lib/money'
+import { renderElementToA4Pdf } from '@/lib/pdf/render-a4'
 
 interface Job {
   id: string
@@ -115,22 +116,19 @@ export default function InvoiceModal({ job, mode, onClose }: Props) {
   const issueDate = new Date().toLocaleDateString('fr-FR')
   const jobDate = new Date(job.date).toLocaleDateString('fr-FR')
 
+  /**
+   * Export PDF via le rendu A4 mutualisé.
+   *
+   * L'ancien code posait l'image en `Math.min(imgH, pageH - 20)` : dès que le
+   * document dépassait une page, il était ÉCRASÉ en entier sur une seule page
+   * au lieu d'être paginé. `renderElementToA4Pdf` découpe en bandes à l'échelle
+   * exacte.
+   */
   async function handleDownloadPDF() {
     try {
       const el = document.getElementById('invoice-content')
       if (!el) return
-      const { default: html2canvas } = await import('html2canvas')
-      const { default: jsPDF } = await import('jspdf')
-      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' })
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const pageW = pdf.internal.pageSize.getWidth()
-      const pageH = pdf.internal.pageSize.getHeight()
-      const imgW = pageW - 20
-      const imgH = (canvas.height * imgW) / canvas.width
-      const yOffset = imgH > pageH - 20 ? 10 : (pageH - imgH) / 2
-      pdf.addImage(imgData, 'PNG', 10, yOffset > 10 ? 10 : yOffset, imgW, Math.min(imgH, pageH - 20))
-      pdf.save(`${docNumber}.pdf`)
+      await renderElementToA4Pdf(el, { fileName: docNumber })
     } catch (err) {
       console.error('PDF generation failed', err)
     }

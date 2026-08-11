@@ -5,6 +5,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Plus, Trash2, Printer, PenLine, Check, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n'
+import toast from 'react-hot-toast'
+import { printHtmlDocument } from '@/lib/pdf/print-html'
 
 interface WorkLine { description: string; durationMin: number; unitPrice: number }
 interface PartLine  { name: string; reference: string; qty: number; unitPrice: number }
@@ -284,8 +286,7 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
       <div class="footer">${t.woAgreementFooter}</div>
     </body></html>`
 
-    const w = window.open('', '_blank')
-    if (w) { w.document.write(html); w.document.close(); w.print() }
+    printHtmlDocument(html, t.woPrintFailed, (m) => toast.error(m))
   }
 
   const tabs = [

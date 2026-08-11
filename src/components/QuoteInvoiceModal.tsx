@@ -17,6 +17,8 @@ import { dateLocale } from '@/lib/i18n/date-locale'
 import { docStatusLabel } from '@/lib/i18n/labels'
 import { computeTotals, multiplyCents, toCents, fromCents, parseAmountToScaled, fromScaled, lineCents, formatEuros, roundEurosForDisplay } from '@/lib/money'
 import { PartAutocomplete, type PartSuggestion } from '@/components/invoice/PartAutocomplete'
+import { QuoteInvoicePrintDocument } from '@/components/invoice/QuoteInvoicePrintDocument'
+import { renderElementToA4Pdf, PRINT_HOST_STYLE } from '@/lib/pdf/render-a4'
 
 interface Line {
   id?: string
@@ -113,6 +115,8 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
   const [clientSuggestions, setClientSuggestions] = useState<ClientRecord[]>([])
   const [showClientDrop, setShowClientDrop]       = useState(false)
   const clientDropRef = useRef<HTMLDivElement>(null)
+  /** Nœud du document d'impression, rendu hors écran (jamais l'interface). */
+  const printRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -332,30 +336,22 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
     }
   }
 
+  /**
+   * Export PDF — depuis le DOCUMENT D'IMPRESSION dédié, jamais depuis la modale.
+   *
+   * L'ancien export photographiait `#qimodal-print`, c'est-à-dire l'interface
+   * d'édition telle qu'elle était mise en page à l'écran. Le PDF variait donc
+   * selon l'appareil (896 px de large sur poste, 358 px sur iPhone, 328 px sur
+   * Android) et embarquait champs de saisie et boutons. Le rendu passe
+   * désormais par `renderElementToA4Pdf`, sur un nœud de largeur fixe.
+   */
   async function handleDownloadPDF() {
-    const el = document.getElementById('qimodal-print')
+    const el = printRef.current
     if (!el) return
     setPrinting(true)
     try {
-      const { default: html2canvas } = await import('html2canvas')
-      const { default: jsPDF }       = await import('jspdf')
-      const canvas  = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false })
-      const imgData = canvas.toDataURL('image/png')
-      const pdf     = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const pageW   = 210, pageH = 297
-      const imgW    = pageW - 20
-      const imgH    = (canvas.height * imgW) / canvas.width
-      let yOffset   = 10
-      let remaining = imgH
-      while (remaining > 0) {
-        const sliceH = Math.min(remaining, pageH - 20)
-        if (yOffset !== 10) pdf.addPage()
-        pdf.addImage(imgData, 'PNG', 10, yOffset, imgW, sliceH)
-        remaining -= sliceH
-        yOffset    = 10
-      }
       const number = doc?.number ?? (mode === 'quote' ? 'DEV-DRAFT' : 'FAC-DRAFT')
-      pdf.save(`${number}.pdf`)
+      await renderElementToA4Pdf(el, { fileName: number })
     } catch {
       toast.error(t.qiPdfGenError)
     } finally {
@@ -419,6 +415,19 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
 
   const docTitle  = mode === 'quote' ? t.jmQuote : t.jmInvoice
   const docNumber = doc?.number ?? (mode === 'quote' ? 'DEV-XXXX-XXX' : 'FAC-XXXX-XXX')
+
+  /**
+   * Date lisible, TOLÉRANTE à une saisie incomplète. Le document d'impression
+   * est rendu en permanence (hors écran) : pendant que l'utilisateur tape une
+   * date, la valeur intermédiaire n'est pas encore une date valide, et un
+   * `format(parseISO(…))` nu lèverait « Invalid time value » PENDANT LE RENDU —
+   * ce qui emporterait toute la modale.
+   */
+  function safeDateLabel(value: string | null | undefined): string {
+    if (!value) return '—'
+    const parsed = parseISO(value)
+    return Number.isNaN(parsed.getTime()) ? value : format(parsed, 'd MMMM yyyy', { locale: loc })
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
@@ -843,6 +852,63 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* ── Document d'impression ────────────────────────────────────────────
+          Rendu HORS ÉCRAN, à largeur A4 fixe : c'est LUI qui part dans le PDF,
+          jamais la modale ci-dessus. Le PDF est ainsi identique sur poste et
+          sur téléphone, et ne contient ni champ de saisie ni bouton. */}
+      <div aria-hidden="true" data-gf-print="quote-invoice" style={PRINT_HOST_STYLE}>
+        <div ref={printRef}>
+          <QuoteInvoicePrintDocument
+            mode={mode}
+            garage={garage}
+            documentTitle={docTitle}
+            documentNumber={docNumber}
+            issueDateLabel={`${t.woIssuedOn} ${safeDateLabel(form.issueDate)}`}
+            secondaryDateLabel={
+              mode === 'quote'
+                ? (form.validUntil ? `${t.qiValidUntil} ${safeDateLabel(form.validUntil)}` : null)
+                : (form.dueDate ? `${t.qiDueDate} : ${safeDateLabel(form.dueDate)}` : null)
+            }
+            clientName={form.clientName}
+            clientEmail={form.clientEmail}
+            clientPhone={form.clientPhone}
+            clientAddress={form.clientAddress}
+            vehicleModel={form.vehicleModel}
+            licensePlate={form.licensePlate}
+            lines={lines.map(l => ({
+              description: l.description,
+              quantity: l.quantity,
+              unitPrice: l.unitPrice,
+              // Même calcul EXACT que la ligne affichée (centimes entiers) :
+              // le PDF ne peut pas diverger du document enregistré.
+              lineTotal: fromCents(lineCents(l.unitPrice, l.quantity)),
+              isLabor: l.isLabor,
+            }))}
+            subtotalHT={subtotalHT}
+            taxRate={form.taxRate}
+            taxAmount={taxAmount}
+            totalTTC={totalTTC}
+            notes={form.notes}
+            labels={{
+              client: t.vmClient,
+              vehicle: t.jmVehicle,
+              description: t.woColDesc,
+              quantity: t.woColQty,
+              priceHT: t.qiPriceHT,
+              totalHT: t.woTotalHT,
+              subtotalHT: t.qiSubtotalHT,
+              vat: t.woVAT,
+              totalTTC: t.woTotalTTC,
+              notes: t.uiNotes,
+              labor: t.qiLaborBadge,
+              siret: t.qiSiretLabel,
+              vatNumber: t.qiVatLabel,
+              paymentTransfer: t.qiPaymentTransfer,
+            }}
+          />
         </div>
       </div>
     </div>

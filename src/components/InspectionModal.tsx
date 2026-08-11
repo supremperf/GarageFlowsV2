@@ -12,7 +12,7 @@ import toast from 'react-hot-toast'
 import { useTranslation } from '@/lib/i18n'
 import { inspectionCategoryLabel } from '@/lib/i18n/labels'
 import { InspectionPrintDocument, type PrintGarage } from '@/components/inspection/InspectionPrintDocument'
-import { planPageSlices } from '@/lib/pdf/page-slices'
+import { renderElementToA4Pdf, PRINT_HOST_STYLE } from '@/lib/pdf/render-a4'
 
 interface InspectionItem {
   id: string
@@ -418,37 +418,10 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
     if (!el) return
     setPrinting(true)
     try {
-      const { default: html2canvas } = await import('html2canvas')
-      const { default: jsPDF } = await import('jspdf')
-      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false })
-
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const margin = 10
-      const imgW = 210 - margin * 2
-
-      // DÉCOUPE CORRECTE (plan vérifié par tests, cf. lib/pdf/page-slices).
-      // L'ancien code réinjectait l'image ENTIÈRE dans chaque page en l'écrasant
-      // à la hauteur de la tranche : toutes les pages montraient le document
-      // complet, comprimé. On recadre désormais une bande par page.
-      const slices = planPageSlices(canvas.width, canvas.height, { marginMm: margin })
-      slices.forEach((slice, index) => {
-        const band = document.createElement('canvas')
-        band.width = canvas.width
-        band.height = slice.sourceHeight
-        const ctx = band.getContext('2d')
-        if (!ctx) return
-        ctx.fillStyle = '#ffffff'
-        ctx.fillRect(0, 0, band.width, band.height)
-        ctx.drawImage(
-          canvas,
-          0, slice.sourceY, canvas.width, slice.sourceHeight,
-          0, 0, canvas.width, slice.sourceHeight,
-        )
-        if (index > 0) pdf.addPage()
-        pdf.addImage(band.toDataURL('image/png'), 'PNG', margin, margin, imgW, slice.heightMm)
-      })
-
-      pdf.save(`controle-${form.licensePlate || 'vehicule'}.pdf`)
+      // Rendu A4 mutualisé (lib/pdf/render-a4) : largeur fixe + découpe en
+      // bandes. Contrôle véhicule, devis et facture partagent la même géométrie,
+      // donc le même comportement sur téléphone.
+      await renderElementToA4Pdf(el, { fileName: `controle-${form.licensePlate || 'vehicule'}` })
     } catch {
       toast.error(t.insPdfError)
     } finally {
@@ -661,7 +634,8 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
       {inspection && (
         <div
           aria-hidden="true"
-          style={{ position: 'fixed', left: -10000, top: 0, pointerEvents: 'none', zIndex: -1 }}
+          data-gf-print="inspection"
+          style={PRINT_HOST_STYLE}
         >
           <div ref={printRef}>
             <InspectionPrintDocument

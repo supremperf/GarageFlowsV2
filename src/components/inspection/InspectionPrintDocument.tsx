@@ -25,6 +25,7 @@
  * blanc ou par une personne daltonienne.
  */
 
+import { printLogoSrc } from '@/lib/pdf/render-a4'
 import {
   INK, INK_SOFT, INK_MUTED, RULE, RULE_LIGHT,
   STATUS_STYLES as STATUS, STATUS_ORDER as ORDER,
@@ -45,6 +46,8 @@ export interface PrintGarage {
   email?: string | null
   address?: string | null
   logoBase64?: string | null
+  /** Logo stocké en fichier (garages antérieurs au stockage base64). */
+  logoPath?: string | null
 }
 
 export interface InspectionPrintProps {
@@ -157,9 +160,9 @@ export function InspectionPrintDocument({
       {/* En-tête garage */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, borderBottom: `2px solid ${INK}`, paddingBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-          {garage?.logoBase64 ? (
+          {printLogoSrc(garage) ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={garage.logoBase64} alt="" style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
+            <img src={printLogoSrc(garage)!} alt="" style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
           ) : null}
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 17, fontWeight: 700, color: INK }}>{garage?.name || 'Garage'}</div>
