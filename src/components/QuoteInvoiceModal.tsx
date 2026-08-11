@@ -16,6 +16,7 @@ import { useTranslation } from '@/lib/i18n'
 import { dateLocale } from '@/lib/i18n/date-locale'
 import { docStatusLabel } from '@/lib/i18n/labels'
 import { computeTotals, multiplyCents, toCents, fromCents, parseAmountToScaled, fromScaled, lineCents, formatEuros, roundEurosForDisplay } from '@/lib/money'
+import { PartAutocomplete, type PartSuggestion } from '@/components/invoice/PartAutocomplete'
 
 interface Line {
   id?: string
@@ -25,6 +26,16 @@ interface Line {
   unitCost: number
   isLabor: boolean
   sortOrder: number
+  /**
+   * Lien INTERNE vers la pièce du stock choisie dans l'autocomplétion. C'est ce
+   * champ — jamais le libellé — qui rend fiable la décrémentation à la
+   * validation puis la restitution à l'annulation.
+   */
+  partId?: string | null
+  /** Stock disponible connu au moment du choix (affichage/garde-fou saisie). */
+  stockAvailable?: number | null
+  /** Nom exact de la pièce liée (message d'alerte lisible). */
+  partName?: string | null
 }
 
 interface QuoteOrInvoice {
@@ -78,11 +89,13 @@ const STATUS_COLORS: Record<string, string> = {
   converted: 'bg-purple-100 text-purple-700',
   paid:      'bg-emerald-100 text-emerald-700',
   overdue:   'bg-red-100 text-red-600',
+  cancelled: 'bg-gray-200 text-gray-600',
 }
 
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Brouillon', sent: 'Envoyé', accepted: 'Accepté',
   refused: 'Refusé', converted: 'Converti', paid: 'Payé', overdue: 'En retard',
+  cancelled: 'Annulée',
 }
 
 // Input class for use inside the white invoice area — always dark text
@@ -118,6 +131,8 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
   const [saving,     setSaving]     = useState(false)
   const [converting, setConverting] = useState(false)
   const [printing,   setPrinting]   = useState(false)
+  /** Un changement de statut est en vol → neutralise le double-clic. */
+  const [statusBusy, setStatusBusy] = useState(false)
   const [form, setForm] = useState({
     clientName:   prefill?.clientName   ?? '',
     clientEmail:  prefill?.clientEmail  ?? '',
@@ -166,18 +181,26 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
     fetchDoc()
   }, [fetchGarage, fetchDoc])
 
-  // Pre-fill lines from job parts if creating new from a job
+  // Pre-fill lines from job parts if creating new from a job.
+  //
+  // IMPORTANT — ces lignes NE SONT PAS rattachées au stock (`partId` absent).
+  // Les pièces d'une intervention ont DÉJÀ été sorties de l'inventaire au
+  // moment où elles ont été ajoutées à l'intervention (POST /api/jobs/:id/parts
+  // décrémente atomiquement). Les rattacher ici ferait décrémenter une SECONDE
+  // fois à la validation de la facture. Le rattachement au stock est réservé aux
+  // pièces choisies dans l'autocomplétion de la facture (vente directe).
   useEffect(() => {
     if (documentId || !jobId) return
-    fetch(`/api/jobs/${jobId}/parts`).then(r => r.ok ? r.json() : []).then((parts: { description?: string; name?: string; quantity: number; unitPrice: number; unitCost: number }[]) => {
+    fetch(`/api/jobs/${jobId}/parts`).then(r => r.ok ? r.json() : []).then((parts: { description?: string; name?: string; quantity: number; unitPrice: number; unitCost: number; part?: { name?: string } }[]) => {
       if (parts.length > 0) {
         setLines(parts.map((p, i) => ({
-          description: p.description ?? p.name ?? '',
+          description: p.description ?? p.part?.name ?? p.name ?? '',
           quantity:    p.quantity,
           unitPrice:   p.unitPrice,
           unitCost:    p.unitCost,
           isLabor:     false,
           sortOrder:   i,
+          partId:      null, // stock déjà consommé par l'intervention — cf. ci-dessus
         })))
       }
     })
@@ -209,6 +232,9 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
           unitCost:    Math.max(0, Number(l.unitCost) || 0),
           isLabor:     !!l.isLabor,
           sortOrder:   i,
+          // Lien vers la pièce du stock — le serveur revérifie qu'elle
+          // appartient bien au garage avant de l'enregistrer.
+          partId:      l.isLabor ? null : (l.partId ?? null),
         }))
       const payload = {
         ...form,
@@ -269,20 +295,40 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
     }
   }
 
+  /**
+   * Changement de statut — c'est ICI que le stock bascule pour une facture
+   * (draft → émise = décrément ; → cancelled = restitution).
+   *
+   * `statusBusy` neutralise le DOUBLE-CLIC côté interface ; l'idempotence réelle
+   * est garantie côté serveur par le verrou `stockCommittedAt` (deux requêtes
+   * simultanées ne peuvent pas décrémenter deux fois).
+   *
+   * Un refus (stock insuffisant → 409) doit être VU : l'ancien code ignorait
+   * silencieusement toute réponse non-OK, laissant croire à une validation.
+   */
   async function handleStatusChange(status: string) {
-    if (!doc) return
-    const r = await fetch(`${apiBase}/${doc.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    })
-    if (r.ok) {
-      const updated = await r.json()
-      setDoc(updated)
+    if (!doc || statusBusy) return
+    setStatusBusy(true)
+    try {
+      const r = await fetch(`${apiBase}/${doc.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      const payload = await r.json().catch(() => null)
+      if (!r.ok) {
+        toast.error(payload?.error ?? `${t.qiSaveFailedN} (${r.status})`)
+        return
+      }
+      setDoc(payload)
       toast.success(t.qiStatusUpdated)
       // Always sync stats — especially important when marking as paid
       invalidateStats()
-      onSaved?.(updated)
+      onSaved?.(payload)
+    } catch {
+      toast.error(t.qiSaveError)
+    } finally {
+      setStatusBusy(false)
     }
   }
 
@@ -331,6 +377,41 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
   function updateLine(i: number, field: keyof Line, value: string | number | boolean) {
     setLines(l => l.map((line, idx) => idx === i ? { ...line, [field]: value } : line))
   }
+
+  /**
+   * Choix d'une pièce du stock : la ligne est PRÉREMPLIE (désignation,
+   * référence, prix de vente, coût) ET rattachée par identifiant. La TVA reste
+   * celle du document — GarageFlows applique un taux par document, pas par
+   * ligne (cf. modèle Invoice.taxRate).
+   */
+  function selectPartForLine(i: number, part: PartSuggestion) {
+    setLines(l => l.map((line, idx) => idx === i ? {
+      ...line,
+      description: part.reference ? `${part.name} (réf. ${part.reference})` : part.name,
+      unitPrice: part.unitPrice,
+      unitCost: part.unitCost,
+      isLabor: false,
+      partId: part.id,
+      partName: part.name,
+      stockAvailable: part.quantity,
+    } : line))
+  }
+
+  /** La saisie libre a divergé de la pièce : on retire le lien (et son garde-fou). */
+  function unlinkPart(i: number) {
+    setLines(l => l.map((line, idx) => idx === i
+      ? { ...line, partId: null, partName: null, stockAvailable: null }
+      : line))
+  }
+
+  /**
+   * Lignes dont la quantité demandée dépasse le stock connu. Simple GARDE-FOU
+   * D'INTERFACE : la disponibilité réelle est revalidée par le serveur dans la
+   * transaction de validation — le stock affiché ici n'est jamais cru sur parole.
+   */
+  const overstockedLines = lines.filter(
+    l => l.partId && typeof l.stockAvailable === 'number' && Number(l.quantity) > l.stockAvailable,
+  )
 
   function removeLine(i: number) {
     setLines(l => l.filter((_, idx) => idx !== i))
@@ -387,10 +468,28 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                     </button>
                   </>
                 )}
-                {mode === 'invoice' && doc.status !== 'paid' && (
-                  <button onClick={() => handleStatusChange('paid')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg transition-colors">
+                {/* VALIDATION de la facture : c'est cette action qui engage le
+                    stock (décrément atomique, une seule fois). */}
+                {mode === 'invoice' && doc.status === 'draft' && (
+                  <button onClick={() => handleStatusChange('sent')} disabled={statusBusy}
+                    title="Valider et émettre la facture — le stock des pièces liées sera décrémenté."
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg disabled:opacity-50 transition-colors">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> {statusBusy ? '…' : 'Valider la facture'}
+                  </button>
+                )}
+                {mode === 'invoice' && doc.status !== 'paid' && doc.status !== 'cancelled' && (
+                  <button onClick={() => handleStatusChange('paid')} disabled={statusBusy}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg disabled:opacity-50 transition-colors">
                     <CheckCircle2 className="w-3.5 h-3.5" /> {t.qiMarkPaid}
+                  </button>
+                )}
+                {/* ANNULATION : la facture est CONSERVÉE (série séquentielle,
+                    FEC) et les pièces reviennent en stock. */}
+                {mode === 'invoice' && doc.status !== 'draft' && doc.status !== 'cancelled' && (
+                  <button onClick={() => handleStatusChange('cancelled')} disabled={statusBusy}
+                    title="Annuler la facture — les pièces liées reviennent en stock. La facture reste conservée."
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 rounded-lg disabled:opacity-50 transition-colors">
+                    <X className="w-3.5 h-3.5" /> Annuler
                   </button>
                 )}
               </>
@@ -566,8 +665,21 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                       {editing ? (
                         <div className="flex items-center gap-2">
                           {line.isLabor && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold shrink-0">{t.qiLaborBadge}</span>}
-                          <input value={line.description} onChange={e => updateLine(i, 'description', e.target.value)}
-                            placeholder={t.woColDesc} className={cn(INP, 'w-full')} />
+                          {line.isLabor ? (
+                            // MAIN-D'ŒUVRE : jamais rattachable au stock.
+                            <input value={line.description} onChange={e => updateLine(i, 'description', e.target.value)}
+                              placeholder={t.woColDesc} className={cn(INP, 'w-full')} />
+                          ) : (
+                            <PartAutocomplete
+                              value={line.description}
+                              onChange={v => updateLine(i, 'description', v)}
+                              onSelectPart={p => selectPartForLine(i, p)}
+                              onClearPart={() => unlinkPart(i)}
+                              linkedPartId={line.partId}
+                              placeholder={t.woColDesc}
+                              className={cn(INP, 'w-full', line.partId && 'pr-16')}
+                            />
+                          )}
                         </div>
                       ) : (
                         <span className="flex items-center gap-2 text-gray-800">
@@ -578,9 +690,26 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                     </td>
                     <td className="py-2 text-center text-gray-800">
                       {editing ? (
-                        <input type="number" min="0.01" step="0.01" value={line.quantity}
-                          onChange={e => updateLine(i, 'quantity', fromScaled(parseAmountToScaled(e.target.value) ?? 0))}
-                          className={cn(INP, 'w-16 text-center')} />
+                        <>
+                          <input type="number" min="0.01" step="0.01" value={line.quantity}
+                            onChange={e => updateLine(i, 'quantity', fromScaled(parseAmountToScaled(e.target.value) ?? 0))}
+                            className={cn(
+                              INP, 'w-16 text-center',
+                              line.partId && typeof line.stockAvailable === 'number'
+                                && Number(line.quantity) > line.stockAvailable
+                                && 'border-red-400 ring-1 ring-red-300',
+                            )} />
+                          {line.partId && typeof line.stockAvailable === 'number' && (
+                            <span className={cn(
+                              'mt-0.5 block text-[10px]',
+                              Number(line.quantity) > line.stockAvailable ? 'font-semibold text-red-600' : 'text-gray-400',
+                            )}>
+                              {Number(line.quantity) > line.stockAvailable
+                                ? `${line.stockAvailable} dispo.`
+                                : `stock ${line.stockAvailable}`}
+                            </span>
+                          )}
+                        </>
                       ) : line.quantity}
                     </td>
                     <td className="py-2 text-right text-gray-800">
@@ -604,6 +733,28 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                 ))}
               </tbody>
             </table>
+
+            {/* Stock insuffisant : on PRÉVIENT explicitement plutôt que de laisser
+                l'utilisateur découvrir le refus au moment de la validation. Le
+                serveur reste l'autorité (revalidation transactionnelle). */}
+            {editing && overstockedLines.length > 0 && (
+              <div className="mb-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <span className="text-base leading-none">⚠️</span>
+                <div className="text-xs text-amber-800">
+                  <p className="font-semibold">Stock insuffisant sur {overstockedLines.length} ligne(s)</p>
+                  <ul className="mt-1 space-y-0.5">
+                    {overstockedLines.map((l, idx) => (
+                      <li key={idx}>
+                        {l.partName ?? l.description} — {l.quantity} demandé(s), {l.stockAvailable} disponible(s)
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-1 opacity-80">
+                    La facture reste enregistrable en brouillon ; sa validation sera refusée tant que le stock ne suffit pas.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {editing && (
               <div className="flex gap-2 mb-6">

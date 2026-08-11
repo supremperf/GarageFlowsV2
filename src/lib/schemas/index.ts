@@ -100,6 +100,11 @@ const InvoiceLineSchema = z.object({
   unitCost:    z.number().finite().min(0).max(999_999).refine(max4Decimals, MAX4_MSG).optional(),
   isLabor:     z.boolean().optional(),
   sortOrder:   z.number().int().optional(),
+  // Pièce du STOCK choisie via l'autocomplétion. Absent/null = main-d'œuvre,
+  // prestation ou ligne libre : la ligne n'impacte alors jamais l'inventaire.
+  // L'appartenance de la pièce au garage est revérifiée côté serveur (anti-IDOR) :
+  // la présence de ce champ ne suffit jamais à engager du stock.
+  partId:      z.string().min(1).max(64).optional().nullable(),
 })
 
 export const CreateInvoiceSchema = z.object({
@@ -120,7 +125,10 @@ export const CreateInvoiceSchema = z.object({
 })
 
 export const UpdateInvoiceSchema = z.object({
-  status:    z.enum(['draft', 'sent', 'paid', 'overdue']).optional(),
+  // « cancelled » : annulation d'une facture émise. La facture est CONSERVÉE
+  // (série séquentielle, FEC) mais son stock est restitué — cf.
+  // lib/stock/invoice-stock.ts `releaseInvoiceStock`.
+  status:    z.enum(['draft', 'sent', 'paid', 'overdue', 'cancelled']).optional(),
   dueDate:   dateStr.optional().nullable(),
   notes:     z.string().max(2000).optional().nullable(),
   lines:     z.array(InvoiceLineSchema).optional(),

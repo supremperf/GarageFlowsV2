@@ -26,6 +26,7 @@ vi.mock('@/lib/db', () => ({
       delete: async () => { state.invoiceDeleted = true; return state.invoice },
     },
     invoiceLine: { deleteMany: async () => ({ count: 0 }), createMany: async () => ({ count: 0 }) },
+    part: { findMany: async () => [], updateMany: async () => ({ count: 1 }) },
     workOrder: {
       findFirst: async () => state.workOrder,
       updateMany: async () => ({ count: 1 }),
@@ -37,8 +38,18 @@ vi.mock('@/lib/db', () => ({
       invoice: {
         findFirst: async () => state.invoice,
         update: async (args: { data: Record<string, unknown> }) => { state.invoiceUpdated = true; return { ...state.invoice, ...args.data, lines: [] } },
+        // Verrou d'idempotence du décrément de stock : la revendication réussit
+        // une fois (facture jamais engagée dans ce scénario).
+        updateMany: async () => ({ count: 1 }),
       },
-      invoiceLine: { deleteMany: async () => ({ count: 0 }), createMany: async () => ({ count: 0 }) },
+      invoiceLine: {
+        deleteMany: async () => ({ count: 0 }),
+        createMany: async () => ({ count: 0 }),
+        // Aucune ligne rattachée à une pièce ⇒ aucun mouvement de stock.
+        findMany: async () => [],
+      },
+      part: { findMany: async () => [], updateMany: async () => ({ count: 1 }) },
+      stockMovement: { findMany: async () => [], createMany: async () => ({ count: 0 }) },
     }),
   },
 }))

@@ -634,6 +634,46 @@ ALTER TABLE "MechanicActionAudit" ADD COLUMN IF NOT EXISTS "targetId" TEXT;
 ALTER TABLE "MechanicActionAudit" ADD COLUMN IF NOT EXISTS "metadata" TEXT;
 ALTER TABLE "MechanicActionAudit" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
+-- Synchronisation STOCK <-> FACTURE (v1.2). Additif et non destructif.
+--   * InvoiceLine/QuoteLine."partId" : lien interne vers la piece du stock
+--     choisie par l'autocompletion (NULL = main-d'oeuvre ou ligne libre).
+--   * Invoice."stockCommittedAt" : verrou d'idempotence du decrement unique.
+--   * "StockMovement" : journal d'inventaire (SALE / CANCEL / ADJUST).
+ALTER TABLE "InvoiceLine" ADD COLUMN IF NOT EXISTS "partId" TEXT;
+ALTER TABLE "QuoteLine"   ADD COLUMN IF NOT EXISTS "partId" TEXT;
+ALTER TABLE "Invoice"     ADD COLUMN IF NOT EXISTS "stockCommittedAt" TIMESTAMP(3);
+
+CREATE TABLE IF NOT EXISTS "StockMovement" (
+    "id" TEXT NOT NULL,
+    "garageId" TEXT NOT NULL,
+    "partId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "quantityDelta" INTEGER NOT NULL,
+    "invoiceId" TEXT,
+    "invoiceLineId" TEXT,
+    "reason" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "StockMovement_pkey" PRIMARY KEY ("id")
+);
+
+-- Convergence COLONNE par COLONNE (voir la note plus haut) : une table
+-- preexistante avec un schema anterieur est reparee AVANT ses index.
+ALTER TABLE "StockMovement" ADD COLUMN IF NOT EXISTS "garageId" TEXT;
+ALTER TABLE "StockMovement" ADD COLUMN IF NOT EXISTS "partId" TEXT;
+ALTER TABLE "StockMovement" ADD COLUMN IF NOT EXISTS "type" TEXT;
+ALTER TABLE "StockMovement" ADD COLUMN IF NOT EXISTS "quantityDelta" INTEGER;
+ALTER TABLE "StockMovement" ADD COLUMN IF NOT EXISTS "invoiceId" TEXT;
+ALTER TABLE "StockMovement" ADD COLUMN IF NOT EXISTS "invoiceLineId" TEXT;
+ALTER TABLE "StockMovement" ADD COLUMN IF NOT EXISTS "reason" TEXT;
+ALTER TABLE "StockMovement" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+CREATE INDEX IF NOT EXISTS "StockMovement_garageId_createdAt_idx" ON "StockMovement"("garageId", "createdAt");
+CREATE INDEX IF NOT EXISTS "StockMovement_partId_idx" ON "StockMovement"("partId");
+CREATE INDEX IF NOT EXISTS "StockMovement_invoiceId_idx" ON "StockMovement"("invoiceId");
+CREATE INDEX IF NOT EXISTS "InvoiceLine_partId_idx" ON "InvoiceLine"("partId");
+CREATE INDEX IF NOT EXISTS "QuoteLine_partId_idx" ON "QuoteLine"("partId");
+CREATE INDEX IF NOT EXISTS "Part_garageId_name_idx" ON "Part"("garageId", "name");
+
 -- Index (IF NOT EXISTS).
 CREATE INDEX IF NOT EXISTS "LicenseKey_parentLicenseId_idx" ON "LicenseKey"("parentLicenseId");
 CREATE INDEX IF NOT EXISTS "LicenseKey_garageId_licenseType_idx" ON "LicenseKey"("garageId", "licenseType");
@@ -833,6 +873,22 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'MechanicActionAudit_jobId_fkey') THEN
     ALTER TABLE "MechanicActionAudit" ADD CONSTRAINT "MechanicActionAudit_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  -- Synchronisation stock <-> facture.
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'InvoiceLine_partId_fkey') THEN
+    ALTER TABLE "InvoiceLine" ADD CONSTRAINT "InvoiceLine_partId_fkey" FOREIGN KEY ("partId") REFERENCES "Part"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'QuoteLine_partId_fkey') THEN
+    ALTER TABLE "QuoteLine" ADD CONSTRAINT "QuoteLine_partId_fkey" FOREIGN KEY ("partId") REFERENCES "Part"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'StockMovement_garageId_fkey') THEN
+    ALTER TABLE "StockMovement" ADD CONSTRAINT "StockMovement_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'StockMovement_partId_fkey') THEN
+    ALTER TABLE "StockMovement" ADD CONSTRAINT "StockMovement_partId_fkey" FOREIGN KEY ("partId") REFERENCES "Part"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'StockMovement_invoiceId_fkey') THEN
+    ALTER TABLE "StockMovement" ADD CONSTRAINT "StockMovement_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "Invoice"("id") ON DELETE SET NULL ON UPDATE CASCADE;
   END IF;
 END
 $garageflow$;

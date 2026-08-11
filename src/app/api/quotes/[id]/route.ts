@@ -7,6 +7,7 @@ import { logAudit } from '@/lib/audit'
 import { withTotals } from '@/lib/billing'
 import { lineToScaled, linesToEuros } from '@/lib/money-db'
 import { checkStatusTransition, areAmountsLocked, isDeletable } from '@/lib/document-status'
+import { collectPartIds, findForeignPartIds } from '@/lib/stock/invoice-stock'
 
 // GET /api/quotes/[id]
 export const GET = withAuth(async (_req, { params }) => {
@@ -49,6 +50,12 @@ export const PATCH = withAuth(async (req, { params }) => {
     if (transitionError) return NextResponse.json({ error: transitionError }, { status: 409 })
   }
 
+  // SECURITY (IDOR) — une ligne ne peut référencer qu'une pièce de CE garage.
+  const foreignParts = await findForeignPartIds(prisma, session.user.garageId, collectPartIds(parsed.data.lines))
+  if (foreignParts.length > 0) {
+    return NextResponse.json({ error: 'Pièce inconnue dans le stock de ce garage', code: 'PART_NOT_FOUND' }, { status: 400 })
+  }
+
   // Remplacement des lignes + mise à jour du devis dans UNE transaction : un
   // échec partiel ne peut jamais laisser le devis avec zéro ligne.
   let lockConflict = false
@@ -66,12 +73,14 @@ export const PATCH = withAuth(async (req, { params }) => {
     if (body.lines !== undefined) {
       await tx.quoteLine.deleteMany({ where: { quoteId: params.id } })
       await tx.quoteLine.createMany({
-        data: body.lines.map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
+        data: body.lines.map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number; partId?: string | null }, i: number) => ({
           quoteId: params.id,
           description: l.description,
           ...lineToScaled(l), // saisie euros -> entiers exacts (dix-milliemes)
           isLabor: l.isLabor ?? false,
           sortOrder: l.sortOrder ?? i,
+          // Lien vers la pièce (validé ci-dessus) — un devis n'engage pas le stock.
+          partId: l.isLabor ? null : (l.partId ?? null),
         })),
       })
     }

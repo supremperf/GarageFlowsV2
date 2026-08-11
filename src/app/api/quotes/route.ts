@@ -8,6 +8,7 @@ import { logAudit } from '@/lib/audit'
 import { withTotals } from '@/lib/billing'
 import { lineToScaled, linesToEuros } from '@/lib/money-db'
 import { assertRelations } from '@/lib/tenant'
+import { collectPartIds, findForeignPartIds } from '@/lib/stock/invoice-stock'
 
 // GET /api/quotes
 export const GET = withAuth(async (req) => {
@@ -62,6 +63,12 @@ export const POST = withAuth(async (req) => {
   ])
   if (relErr) return relErr
 
+  // SECURITY (IDOR) — une ligne ne peut référencer qu'une pièce de CE garage.
+  const foreignParts = await findForeignPartIds(prisma, session.user.garageId, collectPartIds(parsed.data.lines))
+  if (foreignParts.length > 0) {
+    return NextResponse.json({ error: 'Pièce inconnue dans le stock de ce garage', code: 'PART_NOT_FOUND' }, { status: 400 })
+  }
+
   const year = new Date().getFullYear()
 
   // Réservation du numéro + création dans UNE SEULE transaction (pas de trou de
@@ -93,11 +100,15 @@ export const POST = withAuth(async (req) => {
           notes: body.notes ?? null,
           taxRate: body.taxRate ?? garage.taxRate,
           lines: {
-            create: (body.lines ?? []).map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
+            create: (body.lines ?? []).map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number; partId?: string | null }, i: number) => ({
               description: l.description,
               ...lineToScaled(l), // saisie euros -> entiers exacts (dix-milliemes)
               isLabor: l.isLabor ?? false,
               sortOrder: l.sortOrder ?? i,
+              // Un DEVIS n'engage JAMAIS le stock : le lien est conservé pour
+              // être reporté sur la facture lors de la conversion, et c'est la
+              // validation de CETTE facture qui décrémentera — une seule fois.
+              partId: l.isLabor ? null : (l.partId ?? null),
             })),
           },
         },

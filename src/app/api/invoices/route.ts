@@ -8,6 +8,7 @@ import { lineToScaled, linesToEuros } from '@/lib/money-db'
 import { CreateInvoiceSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
 import { assertRelations } from '@/lib/tenant'
+import { collectPartIds, findForeignPartIds } from '@/lib/stock/invoice-stock'
 
 // GET /api/invoices
 export const GET = withAuth(async (req) => {
@@ -63,6 +64,14 @@ export const POST = withAuth(async (req) => {
   ])
   if (relErr) return relErr
 
+  // SECURITY (IDOR) — une ligne ne peut référencer qu'une pièce de CE garage.
+  // Contrôlé AVANT toute écriture : sans cela, un `partId` étranger serait
+  // enregistré puis décrémenterait le stock d'un autre garage à la validation.
+  const foreignParts = await findForeignPartIds(prisma, session.user.garageId, collectPartIds(parsed.data.lines))
+  if (foreignParts.length > 0) {
+    return NextResponse.json({ error: 'Pièce inconnue dans le stock de ce garage', code: 'PART_NOT_FOUND' }, { status: 400 })
+  }
+
   const year = new Date().getFullYear()
 
   // Réservation du numéro ET création du document dans UNE SEULE transaction :
@@ -96,11 +105,15 @@ export const POST = withAuth(async (req) => {
           notes: body.notes ?? null,
           taxRate: body.taxRate ?? garage.taxRate,
           lines: {
-            create: (body.lines ?? []).map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
+            create: (body.lines ?? []).map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number; partId?: string | null }, i: number) => ({
               description: l.description,
               ...lineToScaled(l), // saisie euros -> entiers exacts (dix-milliemes)
               isLabor: l.isLabor ?? false,
               sortOrder: l.sortOrder ?? i,
+              // Lien interne vers la pièce du stock (validé ci-dessus). Une
+              // facture créée ici est TOUJOURS en brouillon : aucun mouvement
+              // de stock n'a lieu à la création.
+              partId: l.isLabor ? null : (l.partId ?? null),
             })),
           },
         },

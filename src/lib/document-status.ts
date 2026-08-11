@@ -25,6 +25,21 @@
 export type DocumentKind = 'invoice' | 'quote' | 'workOrder' | 'purchaseOrder' | 'warranty'
 
 /**
+ * Une facture ENGAGE-T-ELLE le stock dans cet état ?
+ *
+ * Point de bascule unique de la synchronisation stock ↔ facture :
+ *  - « draft »     : brouillon, aucun mouvement définitif ;
+ *  - émise         : le stock est décrémenté (sent / paid / overdue) ;
+ *  - « cancelled » : le stock est restitué.
+ *
+ * Centralisé ici pour que la règle ne soit jamais redécidée route par route.
+ */
+export function invoiceHoldsStock(status: string | null | undefined): boolean {
+  const s = status ?? 'draft'
+  return s !== 'draft' && s !== 'cancelled'
+}
+
+/**
  * Graphe des transitions autorisées : depuis chaque statut, l'ensemble des
  * statuts cibles admissibles (le statut lui-même est toujours admissible —
  * un PATCH idempotent ne doit pas échouer). Volontairement PERMISSIF entre
@@ -33,11 +48,15 @@ export type DocumentKind = 'invoice' | 'quote' | 'workOrder' | 'purchaseOrder' |
  * un état terminal ('converted' pour un devis).
  */
 const TRANSITIONS: Record<DocumentKind, Record<string, string[]>> = {
+  // Facture. « cancelled » est TERMINAL : une facture annulée est conservée
+  // (série séquentielle, FEC) mais son stock a été restitué — la réactiver
+  // re-décrémenterait l'inventaire sans nouvelle validation.
   invoice: {
-    draft: ['draft', 'sent', 'paid', 'overdue'],
-    sent: ['sent', 'paid', 'overdue'],
-    overdue: ['overdue', 'sent', 'paid'],
-    paid: ['paid', 'overdue'],
+    draft: ['draft', 'sent', 'paid', 'overdue', 'cancelled'],
+    sent: ['sent', 'paid', 'overdue', 'cancelled'],
+    overdue: ['overdue', 'sent', 'paid', 'cancelled'],
+    paid: ['paid', 'overdue', 'cancelled'],
+    cancelled: ['cancelled'],
   },
   quote: {
     draft: ['draft', 'sent', 'accepted', 'refused', 'converted'],

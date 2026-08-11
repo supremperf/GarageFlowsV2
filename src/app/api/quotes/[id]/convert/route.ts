@@ -56,6 +56,11 @@ export const POST = withAuth(async (_req, { params }) => {
               unitCostTenThousandths: l.unitCostTenThousandths,
               isLabor: l.isLabor,
               sortOrder: l.sortOrder,
+              // Le lien vers la pièce SUIT le devis jusqu'à la facture. La
+              // facture naît en « draft » : aucun mouvement de stock ici. Le
+              // décrément unique aura lieu à SA validation — jamais deux fois
+              // (une fois au devis puis une fois à la facture).
+              partId: l.partId,
             })),
           },
         },

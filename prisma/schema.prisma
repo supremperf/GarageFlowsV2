@@ -119,6 +119,7 @@ model Garage {
   appointments       Appointment[]
   backupRecords      BackupRecord[]
   reportSnapshots    ReportSnapshot[]
+  stockMovements     StockMovement[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -230,10 +231,18 @@ model Part {
   garage       Garage           @relation(fields: [garageId], references: [id], onDelete: Cascade)
   jobParts     JobPart[]
   defaultFor   RepairTypePart[]
+  // Lignes de documents rattachées à CETTE pièce (lien interne fiable : une
+  // ligne ne stocke pas qu'un libellé, sinon toute synchronisation ultérieure
+  // du stock serait devinée à partir de texte libre).
+  invoiceLines InvoiceLine[]
+  quoteLines   QuoteLine[]
+  movements    StockMovement[]
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
   @@index([garageId])
+  // Recherche « tape F → propose Filtre… » : index sur le couple garage+nom.
+  @@index([garageId, name])
 }
 
 // ─── Parts per job (bill of materials) ───────────────────────────────────────
@@ -355,7 +364,14 @@ model QuoteLine {
   unitCostTenThousandths  Int @default(0) // coût unitaire en DIX-MILLIÈMES d'€ (exact, 4 décimales)
   isLabor     Boolean @default(false)
   sortOrder   Int     @default(0)
+  // Pièce du stock choisie via l'autocomplétion. NULL = main-d'œuvre, prestation
+  // ou ligne libre : aucun impact inventaire. Un DEVIS n'engage JAMAIS le stock
+  // (aucun mouvement) ; le lien sert uniquement à reporter la pièce sur la
+  // facture issue de la conversion.
+  partId      String?
+  part        Part?   @relation(fields: [partId], references: [id], onDelete: SetNull)
   @@index([quoteId])
+  @@index([partId])
 }
 
 // ─── Invoice (Facture) ────────────────────────────────────────────────────────
@@ -379,12 +395,19 @@ model Invoice {
   vehicleModel  String?
   licensePlate  String?
   // Status
-  status        String        @default("draft") // draft, sent, paid, overdue
+  status        String        @default("draft") // draft, sent, paid, overdue, cancelled
   issueDate     String
   dueDate       String?
   notes         String?
   taxRate       Float         @default(20)
   lines         InvoiceLine[]
+  // ── Engagement du stock ─────────────────────────────────────────────────────
+  // Horodatage de l'UNIQUE décrément définitif du stock pour cette facture.
+  // Sert de VERROU D'IDEMPOTENCE : la revendication se fait par un updateMany
+  // conditionnel (`stockCommittedAt: null`), donc un double-clic ou deux
+  // requêtes concurrentes ne peuvent pas décrémenter deux fois.
+  stockCommittedAt DateTime?
+  stockMovements   StockMovement[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -405,6 +428,41 @@ model InvoiceLine {
   unitCostTenThousandths  Int @default(0) // coût unitaire en DIX-MILLIÈMES d'€ (exact, 4 décimales)
   isLabor     Boolean @default(false)
   sortOrder   Int     @default(0)
+  // Pièce du stock choisie via l'autocomplétion.
+  //   NULL  → main-d'œuvre, prestation, pièce commandée spécialement, ligne
+  //           libre : AUCUN impact inventaire.
+  //   défini → la validation de la facture décrémente le stock de cette pièce.
+  // Le lien est un identifiant, jamais le libellé : c'est lui qui rend la
+  // synchronisation ultérieure (modification, annulation) fiable.
+  partId      String?
+  part        Part?   @relation(fields: [partId], references: [id], onDelete: SetNull)
+  @@index([invoiceId])
+  @@index([partId])
+}
+
+// ─── Mouvements de stock (journal d'inventaire) ──────────────────────────────
+// Trace INTÉGRALE et immuable de tout changement automatique de stock déclenché
+// par un document. Une facture validée produit N lignes SALE (delta négatif) ;
+// son annulation produit les lignes CANCEL symétriques. Le stock d'une pièce
+// est toujours reconstituable : quantité initiale + somme des quantityDelta.
+model StockMovement {
+  id            String   @id @default(cuid())
+  garageId      String
+  garage        Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  partId        String
+  part          Part     @relation(fields: [partId], references: [id], onDelete: Cascade)
+  // SALE (vente sur facture) | CANCEL (annulation de facture) | ADJUST (correction)
+  type          String
+  // Signé : négatif = sortie de stock, positif = entrée. Jamais zéro.
+  quantityDelta Int
+  invoiceId     String?
+  invoice       Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  invoiceLineId String?
+  reason        String?
+  createdAt     DateTime @default(now())
+
+  @@index([garageId, createdAt])
+  @@index([partId])
   @@index([invoiceId])
 }
 
