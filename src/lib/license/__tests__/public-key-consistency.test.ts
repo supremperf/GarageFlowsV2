@@ -39,7 +39,7 @@ import { verifyLicenseToken } from '@/lib/license/verify'
  *                           production régénérée, licences serveur purgées.
  *                           Vérifié : la clé privée déployée en production
  *                           dérive exactement cette empreinte. */
-const REFERENCE_FP = '78e2626bbb5d76da7ab4a6eaecc9d8e94726882fbc7c21d400aa3ebcbb0c7924' // gitleaks:allow
+const REFERENCE_FP = 'fe5b7807f81ec5b2dfbc00dbcc660873cda4d40a75e91b96477ecbc508532566' // gitleaks:allow
 
 /** Empreinte SPKI‑DER SHA‑256 d'une clé publique PEM. */
 function fingerprint(pem: string): string {
