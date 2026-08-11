@@ -16,6 +16,38 @@ function isElectron(): boolean {
 
 export default function PwaRegister() {
   const [updateReady, setUpdateReady] = useState<ServiceWorker | null>(null)
+  const [incompatible, setIncompatible] = useState<string | null>(null)
+
+  /**
+   * Contrôle de COMPATIBILITÉ avec le serveur.
+   *
+   * Une PWA restée en cache peut se retrouver à parler à une API dont le
+   * contrat a changé : les écritures partent, le serveur les ignore ou les
+   * rejette, et l'utilisateur ne voit rien. On interroge donc /api/version au
+   * démarrage puis à chaque retour au premier plan (le seul moment où un
+   * déploiement a pu avoir lieu sans que l'onglet le sache).
+   */
+  useEffect(() => {
+    if (isElectron()) return
+    let cancelled = false
+
+    const check = () => {
+      const version = process.env.NEXT_PUBLIC_GF_VERSION ?? ''
+      fetch(`/api/version?client=pwa&version=${encodeURIComponent(version)}`, { cache: 'no-store' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((info) => {
+          if (cancelled || !info?.client?.compatibility) return
+          const c = info.client.compatibility
+          setIncompatible(c.status === 'incompatible' ? String(c.minimum ?? '') : null)
+        })
+        .catch(() => { /* hors ligne : on ne bloque jamais sur une absence de réponse */ })
+    }
+
+    check()
+    const onVisible = () => { if (document.visibilityState === 'visible') check() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { cancelled = true; document.removeEventListener('visibilitychange', onVisible) }
+  }, [])
 
   useEffect(() => {
     if (isElectron()) return
@@ -23,8 +55,13 @@ export default function PwaRegister() {
     if (!window.isSecureContext) return
 
     let cancelled = false
+    // L'URL du worker porte la version applicative : à chaque release, le
+    // navigateur voit une URL différente, ré-évalue le worker et déclenche
+    // `updatefound`. Sans cela, un sw.js inchangé d'un octet ne provoquait
+    // AUCUNE détection de mise à jour et le cache restait celui d'avant.
+    const swUrl = `/sw.js?v=${encodeURIComponent(process.env.NEXT_PUBLIC_GF_VERSION ?? 'dev')}`
     navigator.serviceWorker
-      .register('/sw.js')
+      .register(swUrl)
       .then((reg) => {
         // Détecte l'arrivée d'un nouveau SW en attente.
         reg.addEventListener('updatefound', () => {
@@ -49,6 +86,20 @@ export default function PwaRegister() {
 
     return () => { cancelled = true }
   }, [])
+
+  // L'incompatibilité prime sur la simple disponibilité d'une mise à jour :
+  // continuer à travailler dans cet état produirait des écritures perdues.
+  if (incompatible) {
+    return (
+      <div style={{ ...bar, borderColor: '#b91c1c' }} role="alert">
+        <span style={{ fontSize: 13 }}>
+          Cette version de GarageFlows n’est plus compatible avec le serveur
+          (version {incompatible} minimum). Rechargez pour la mettre à jour.
+        </span>
+        <button style={btn} onClick={() => window.location.reload()}>Recharger</button>
+      </div>
+    )
+  }
 
   if (!updateReady) return null
 

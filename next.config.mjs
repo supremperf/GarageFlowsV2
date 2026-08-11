@@ -1,6 +1,21 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+
+// Version PRODUIT injectée au build depuis package.json — l'unique source de
+// vérité (scripts/check-version.js la verrouille). Sans cette injection, le
+// client n'a aucun moyen de savoir quelle version il exécute, donc aucun moyen
+// de détecter qu'il parle à un serveur incompatible.
+const { version: GF_VERSION } = JSON.parse(
+  readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'package.json'), 'utf8'),
+)
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  env: {
+    NEXT_PUBLIC_GF_VERSION: GF_VERSION,
+  },
   experimental: {
     outputFileTracingRoot: undefined,
     instrumentationHook: true,

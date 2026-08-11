@@ -41,6 +41,10 @@ const PLATFORM_PROVIDED = new Set([
   // Harnais de test / outillage de publication, jamais lus en production.
   'GF_TEST_LICENSE', 'GF_E2E_CHROMIUM', 'GF_MANIFEST_NOW',
   'TEST_POSTGRES_URL', 'TEST_REDIS_URL',
+  // Injectée AU BUILD par next.config.mjs depuis package.json (version produit).
+  // Elle n'est jamais saisie par un exploitant et n'a donc rien à faire dans le
+  // manifeste : RESET-GARAGEFLOW ne doit ni la demander ni la régénérer.
+  'NEXT_PUBLIC_GF_VERSION',
 ])
 
 const PATTERNS = [

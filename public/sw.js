@@ -8,7 +8,17 @@
  *    On ne met jamais en cache de session, de token ni de réponse authentifiée.
  *  - invalidation : le nom de cache est versionné ; les anciens sont purgés.
  */
-const VERSION = 'gf-v1'
+/*
+ * Nom de cache VERSIONNÉ PAR RELEASE.
+ *
+ * `gf-v1` était figé dans le code : deux releases successives partageaient donc
+ * le même cache, et comme le fichier sw.js lui-même ne changeait pas d'un octet,
+ * le navigateur ne détectait aucune mise à jour du service worker.
+ * La page enregistre désormais `/sw.js?v=<version applicative>` : l'URL change à
+ * chaque release, le navigateur ré-évalue le worker, et le cache porte le numéro
+ * de version — les anciens sont purgés à l'activation (voir plus bas).
+ */
+const VERSION = `gf-${new URL(self.location.href).searchParams.get('v') || 'v1'}`
 const STATIC_CACHE = `${VERSION}-static`
 const PAGE_CACHE = `${VERSION}-pages`
 const OFFLINE_URL = '/offline.html'
@@ -26,6 +36,8 @@ self.addEventListener('install', (event) => {
 })
 
 self.addEventListener('activate', (event) => {
+  // Purge de TOUT cache d'une autre version : après une mise à jour, aucune
+  // page ni aucun asset de la version précédente ne peut resurgir.
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k))),
