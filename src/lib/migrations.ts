@@ -1203,4 +1203,36 @@ export const MIGRATIONS: Migration[] = [
   { id: '188_portal_snapshot_idx_garage', sql: 'CREATE INDEX IF NOT EXISTS "PortalSnapshot_garageId_idx" ON "PortalSnapshot"("garageId")' },
   { id: '189_portal_snapshot_idx_job',    sql: 'CREATE INDEX IF NOT EXISTS "PortalSnapshot_jobId_idx" ON "PortalSnapshot"("jobId")' },
   { id: '190_portal_snapshot_idx_exp',    sql: 'CREATE INDEX IF NOT EXISTS "PortalSnapshot_expiresAt_idx" ON "PortalSnapshot"("expiresAt")' },
+
+  // ── Synchronisation STOCK ↔ DEVIS ↔ FACTURE (poste) ─────────────────────────
+  // Contrepartie SQLite EXACTE de prisma/server/migrations/20260811000000_
+  // invoice_stock_sync (PostgreSQL). Elle manquait : les deux schémas Prisma
+  // déclaraient déjà ces champs, mais aucune migration ne les créait sur le
+  // poste. Conséquence observée sur une base réelle : « The column
+  // main.Invoice.stockCommittedAt does not exist in the current database », donc
+  // HTTP 500 sur /api/invoices ET /api/quotes — module Devis & Factures
+  // entièrement hors service, l'interface affichant « Aucune facture ».
+  //
+  // ADDITIF et IDEMPOTENT : aucune donnée existante n'est lue ni modifiée. Les
+  // factures antérieures gardent `stockCommittedAt` NULL et leurs lignes
+  // `partId` NULL : elles n'engagent aucun stock — comportement historique
+  // conservé, aucune régularisation rétroactive.
+  //
+  // Les clés étrangères ne sont pas déclarées : SQLite ne sait pas ajouter de
+  // contrainte à une table existante, et une table neuve sans FK reste
+  // cohérente avec le reste du schéma poste (cf. 187_portal_snapshot).
+  { id: '191_invoice_stock_committed_at', onlyIfColumnMissing: { table: 'Invoice',     column: 'stockCommittedAt' }, sql: 'ALTER TABLE "Invoice" ADD COLUMN "stockCommittedAt" DATETIME' },
+  { id: '192_invoiceline_part_id',        onlyIfColumnMissing: { table: 'InvoiceLine', column: 'partId' },           sql: 'ALTER TABLE "InvoiceLine" ADD COLUMN "partId" TEXT' },
+  { id: '193_quoteline_part_id',          onlyIfColumnMissing: { table: 'QuoteLine',   column: 'partId' },           sql: 'ALTER TABLE "QuoteLine" ADD COLUMN "partId" TEXT' },
+  {
+    id: '194_stock_movement',
+    sql: 'CREATE TABLE IF NOT EXISTS "StockMovement" ("id" TEXT NOT NULL PRIMARY KEY, "garageId" TEXT NOT NULL, "partId" TEXT NOT NULL, "type" TEXT NOT NULL, "quantityDelta" INTEGER NOT NULL, "invoiceId" TEXT, "invoiceLineId" TEXT, "reason" TEXT, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)',
+  },
+  { id: '195_stock_movement_idx_garage',  sql: 'CREATE INDEX IF NOT EXISTS "StockMovement_garageId_createdAt_idx" ON "StockMovement"("garageId", "createdAt")' },
+  { id: '196_stock_movement_idx_part',    sql: 'CREATE INDEX IF NOT EXISTS "StockMovement_partId_idx" ON "StockMovement"("partId")' },
+  { id: '197_stock_movement_idx_invoice', sql: 'CREATE INDEX IF NOT EXISTS "StockMovement_invoiceId_idx" ON "StockMovement"("invoiceId")' },
+  { id: '198_invoiceline_idx_part',       sql: 'CREATE INDEX IF NOT EXISTS "InvoiceLine_partId_idx" ON "InvoiceLine"("partId")' },
+  { id: '199_quoteline_idx_part',         sql: 'CREATE INDEX IF NOT EXISTS "QuoteLine_partId_idx" ON "QuoteLine"("partId")' },
+  // Recherche « tape F → propose Filtre… » : index sur le couple garage+nom.
+  { id: '200_part_idx_garage_name',       sql: 'CREATE INDEX IF NOT EXISTS "Part_garageId_name_idx" ON "Part"("garageId", "name")' },
 ]

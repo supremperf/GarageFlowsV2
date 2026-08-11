@@ -39,7 +39,9 @@ function migrationChecksum(m) {
 // chemin « C:\… » que le résolveur ESM interprète comme le schéma d'URL « c: »
 // et rejette avec ERR_UNSUPPORTED_ESM_URL_SCHEME. Le script était donc
 // inexécutable hors Linux, et avec lui le contrôle check:sqlite-template.
-const { MIGRATIONS } = await import(pathToFileURL(path.join(ROOT, 'src', 'lib', 'migrations.ts')).href)
+const { MIGRATIONS, createUniqueIndexSql } = await import(
+  pathToFileURL(path.join(ROOT, 'src', 'lib', 'migrations.ts')).href
+)
 
 const db = new DatabaseSync(dbPath)
 try {
@@ -60,9 +62,61 @@ try {
   const insert = db.prepare(
     `INSERT OR REPLACE INTO "_gf_migrations" (id, appliedAt, name, checksum, schemaVersion) VALUES (?, ?, ?, ?, ?)`,
   )
+
+  // ─── Le modèle est CONVERGÉ, pas seulement estampillé ───────────────────────
+  // Ce script se contentait d'INSCRIRE chaque migration dans le registre sans
+  // jamais l'exécuter. Le modèle livré aux installations NEUVES accusait donc un
+  // schéma « à jour » qu'il n'avait pas : PortalSnapshot (187) et
+  // LicenseKey.cloudSyncedAt (186) manquaient à l'appel. Pire, le registre les
+  // déclarant appliquées, le runner de démarrage les SAUTAIT — l'objet n'était
+  // jamais créé, sur aucune base neuve, en silence.
+  //
+  // On applique donc réellement chaque migration avant de l'enregistrer. Toutes
+  // sont idempotentes (garde de colonne, IF NOT EXISTS), donc rejouer la liste
+  // entière sur un modèle déjà à jour ne fait rien — c'est ce qui rend
+  // l'opération sûre et répétable.
+  const columnExists = (table, column) => {
+    try {
+      return db.prepare(`PRAGMA table_info("${String(table).replace(/"/g, '""')}")`)
+        .all().some((c) => c.name === column)
+    } catch {
+      return false // table absente → la colonne n'existe pas
+    }
+  }
+  const stepApplies = (s) => {
+    if (s.onlyIfColumnExists && !columnExists(s.onlyIfColumnExists.table, s.onlyIfColumnExists.column)) return false
+    if (s.onlyIfColumnMissing && columnExists(s.onlyIfColumnMissing.table, s.onlyIfColumnMissing.column)) return false
+    return true
+  }
+
   let version = 0
+  let executed = 0
   for (const m of MIGRATIONS) {
     version += 1
+    try {
+      if (m.kind === 'json-v2') {
+        // Migration de DONNÉES : le modèle est vide, il n'y a rien à convertir.
+      } else if (m.uniqueIndex) {
+        // Modèle vierge : aucun doublon possible, l'index est créable directement.
+        db.exec(createUniqueIndexSql(m.uniqueIndex)); executed += 1
+      } else if (m.steps) {
+        for (const step of m.steps) {
+          if (!stepApplies(step)) continue
+          if (step.verifySql) {
+            const rows = db.prepare(step.verifySql).all()
+            const n = Number(rows?.[0]?.n ?? 0)
+            if (n !== 0) throw new Error(`vérification non satisfaite (n=${n})`)
+            continue
+          }
+          if (step.sql) { db.exec(step.sql); executed += 1 }
+        }
+      } else if (m.sql && stepApplies(m)) {
+        db.exec(m.sql); executed += 1
+      }
+    } catch (e) {
+      console.error(`❌ Migration ${m.id} inapplicable au modèle : ${e.message}`)
+      process.exit(1)
+    }
     insert.run(m.id, now, m.id, migrationChecksum(m), version)
   }
 
@@ -78,7 +132,7 @@ try {
     process.exit(1)
   }
 
-  console.log(`✅ Baseline enregistrée : ${version} migration(s) marquées appliquées dans ${path.basename(dbPath)} (schemaVersion=${version}). Intégrité + clés étrangères OK.`)
+  console.log(`✅ Baseline : ${version} migration(s) enregistrées dans ${path.basename(dbPath)} (schemaVersion=${version}), dont ${executed} instruction(s) réellement exécutée(s) pour converger le schéma. Intégrité + clés étrangères OK.`)
 } finally {
   db.close()
 }
