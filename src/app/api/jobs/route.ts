@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { CreateJobSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
+import { scheduleJobSync, pollJobSync } from '@/lib/sync/job-sync'
 
 // GET /api/jobs?date=YYYY-MM-DD&page=1&limit=20
 export const GET = withAuth(async (req) => {
@@ -27,6 +28,11 @@ export const GET = withAuth(async (req) => {
     }),
     prisma.job.count({ where }),
   ])
+
+  // Rattrapage opportuniste (fortement limité en cadence) : c'est ce qui fait
+  // redescendre sur le poste le chrono, les commentaires et les photos du
+  // mécanicien même quand le garage ne modifie rien. Non bloquant.
+  pollJobSync(session.user.garageId)
 
   return NextResponse.json({ data: jobs, total, page, totalPages: Math.ceil(total / limit), limit })
 })
@@ -99,6 +105,11 @@ export const POST = withAuth(async (req) => {
   })
 
   await logAudit({ action: 'create', entityType: 'Job', entityId: job.id, session, req })
+
+  // Miroir vers le cloud : sans cette remontée, la PWA du mécanicien affecté ne
+  // verrait JAMAIS la tâche (bases distinctes, cf. lib/sync/job-sync).
+  // Déclenchement non bloquant — la réponse ne dépend pas du réseau.
+  scheduleJobSync(session.user.garageId)
 
   return NextResponse.json(job, { status: 201 })
 })

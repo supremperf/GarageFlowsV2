@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { UpdateJobSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
+import { scheduleJobSync } from '@/lib/sync/job-sync'
 
 // GET /api/jobs/:id
 export const GET = withAuth(async (_req, { params }: { params: { id: string } }) => {
@@ -51,6 +52,10 @@ export const PUT = withAuth(async (req, { params }: { params: { id: string } }) 
 
   await logAudit({ action: 'update', entityType: 'Job', entityId: params.id, session, req })
 
+  // Modification (horaire, statut, véhicule, AFFECTATION…) → miroir cloud, pour
+  // que le mécanicien concerné la voie — et que l'ancien la perde.
+  scheduleJobSync(session.user.garageId)
+
   return NextResponse.json(updated)
 })
 
@@ -87,6 +92,9 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
 
   await logAudit({ action: 'update', entityType: 'Job', entityId: params.id, session, req })
 
+  // Glisser-déposer, changement de statut, RÉAFFECTATION : même exigence.
+  scheduleJobSync(session.user.garageId)
+
   return NextResponse.json(updated)
 })
 
@@ -96,6 +104,10 @@ export const DELETE = withAuth(async (req, { params }: { params: { id: string } 
   await prisma.job.delete({ where: { id: params.id, garageId: session.user.garageId } })
 
   await logAudit({ action: 'delete', entityType: 'Job', entityId: params.id, session, req })
+
+  // Suppression : la remontée décrit la fenêtre entière, donc l'intervention
+  // disparaît aussi du miroir — pas de tâche fantôme dans la PWA.
+  scheduleJobSync(session.user.garageId)
 
   return NextResponse.json({ success: true })
 })

@@ -101,21 +101,29 @@ export async function POST(req: Request) {
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // 3. Rattachement de la licence garage à la première utilisation
+      // 3. Miroir MINIMAL du garage — D'ABORD.
+      //    `create` seulement : on ne réécrit jamais un garage déjà présent
+      //    (il peut appartenir à une instance PWA avec ses propres données).
+      //
+      //    L'ordre est CRITIQUE et était inversé : la licence était rattachée au
+      //    garage avant que la ligne Garage n'existe, ce qui violait la clé
+      //    étrangère LicenseKey.garageId → « Foreign key constraint violated »
+      //    puis HTTP 503. Autrement dit, la TOUTE PREMIÈRE attribution de clé
+      //    d'un poste vers un garage encore absent du cloud — le cas nominal —
+      //    échouait systématiquement, et le mécanicien restait bloqué sur
+      //    MECHANIC_KEY_UNASSIGNED.
+      const existingGarage = await tx.garage.findUnique({ where: { id: garageId }, select: { id: true } })
+      if (!existingGarage) {
+        await tx.garage.create({ data: { id: garageId, name: garageName, slug: mirrorSlug(garageId) } })
+      }
+
+      // 4. Rattachement de la licence garage à la première utilisation
       //    (même règle que /api/mechanic-licenses et validateLicensedSession).
       if (!auth.garageId) {
         await tx.licenseKey.updateMany({
           where: { licenseId: auth.licenseId, garageId: null },
           data:  { garageId },
         })
-      }
-
-      // 4. Miroir MINIMAL du garage — la FK Mechanic.garageId l'exige.
-      //    `create` seulement : on ne réécrit jamais un garage déjà présent
-      //    (il peut appartenir à une instance PWA avec ses propres données).
-      const existingGarage = await tx.garage.findUnique({ where: { id: garageId }, select: { id: true } })
-      if (!existingGarage) {
-        await tx.garage.create({ data: { id: garageId, name: garageName, slug: mirrorSlug(garageId) } })
       }
 
       // 5. Miroir MINIMAL du mécanicien (identité seule).
