@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test'
+import { AUTH_STATE } from './global-setup'
 
 /**
  * Suite responsive GarageFlow.
@@ -13,6 +14,13 @@ import { test, expect, Page } from '@playwright/test'
 
 const EMAIL = process.env.E2E_EMAIL
 const PASSWORD = process.env.E2E_PASSWORD
+/**
+ * Licence GF2 de recette. L'application est protégée par un écran d'activation :
+ * sans elle, une session authentifiée n'atteint JAMAIS l'application, et la
+ * suite « authentifiée » mesurerait l'écran d'activation en croyant mesurer le
+ * planning. Les tests concernés sont donc ignorés plutôt que faussement verts.
+ */
+const LICENSE = process.env.E2E_LICENSE
 
 /** Vérifie l'absence de scroll horizontal global (tolérance 1px d'arrondi). */
 async function expectNoHorizontalOverflow(page: Page) {
@@ -26,14 +34,6 @@ async function expectNoHorizontalOverflow(page: Page) {
     scrollWidth: document.documentElement.scrollWidth,
   }))
   expect(scrollWidth, `scrollWidth (${scrollWidth}) ≤ clientWidth (${clientWidth})`).toBeLessThanOrEqual(clientWidth + 1)
-}
-
-async function login(page: Page) {
-  await page.goto('/login')
-  await page.fill('input[type="email"], input[name="email"]', EMAIL!)
-  await page.fill('input[type="password"], input[name="password"]', PASSWORD!)
-  await page.click('button[type="submit"]')
-  await page.waitForURL('**/', { timeout: 15_000 }).catch(() => {})
 }
 
 // ── Tests publics (aucune authentification requise) ───────────────────────────
@@ -56,9 +56,21 @@ test.describe('Page de connexion — responsive', () => {
 
 // ── Tests authentifiés (app complète) ─────────────────────────────────────────
 test.describe('Application — responsive', () => {
-  test.skip(!EMAIL || !PASSWORD, 'E2E_EMAIL / E2E_PASSWORD non fournis')
+  test.skip(!EMAIL || !PASSWORD || !LICENSE, 'E2E_EMAIL / E2E_PASSWORD / E2E_LICENSE non fournis')
 
-  test.beforeEach(async ({ page }) => { await login(page) })
+  // Session ouverte UNE fois par le global setup — aucune reconnexion par test
+  // (le limiteur d'activation de licence les refuserait, et la suite mesurerait
+  // l'écran d'activation en croyant mesurer l'application).
+  test.use({ storageState: AUTH_STATE })
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await page.waitForLoadState('networkidle').catch(() => {})
+    expect(
+      new URL(page.url()).pathname,
+      'la session doit atteindre l’application (ni /login, ni /license)',
+    ).toBe('/')
+  })
 
   test('aucun débordement horizontal global (planning)', async ({ page }) => {
     await expectNoHorizontalOverflow(page)
@@ -104,7 +116,12 @@ test.describe('Application — responsive', () => {
     await page.locator('nav[aria-label="Navigation principale"]').getByText(/Plus/i).click()
     const dialog = page.getByRole('dialog')
     await expect(dialog).toBeVisible()
-    await expect(dialog.getByText(/Finances/i)).toBeVisible()
+    // La section s'intitule « Finance » (cf. i18n `secFinance`) : l'ancienne
+    // assertion cherchait « Finances » et ne pouvait donc JAMAIS passer — le
+    // menu « Plus » n'était en réalité pas vérifié. On contrôle désormais la
+    // section ET une entrée réellement cliquable de celle-ci.
+    await expect(dialog.getByText(/^Finance$/i).first()).toBeVisible()
+    await expect(dialog.getByText(/Devis\s*&\s*Factures/i).first()).toBeVisible()
     await expectNoHorizontalOverflow(page)
   })
 

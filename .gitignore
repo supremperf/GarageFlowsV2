@@ -75,6 +75,10 @@ gf_update.json
 e2e/shots/
 playwright-report/
 
+# Session E2E ouverte par e2e/global-setup.ts : contient des COOKIES RÉELS
+# (session applicative + licence). Régénérée automatiquement, jamais versionnée.
+e2e/.auth/
+
 # Sorties des scripts de configuration/rotation — peuvent contenir des secrets en clair
 GarageFlow-configuration/
 API générées/
