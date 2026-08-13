@@ -1066,3 +1066,30 @@ symbolique du dépôt. Symptôme et remède déjà consignés en mémoire projet
 Ce lot vaut surtout pour ce qu'il démontre : **un gate ne prouve quelque chose
 que là où il sera rejoué**. Deux échecs sur trois n'existaient que dans le dépôt,
 et l'un d'eux était un authentique défaut de la porte elle-même.
+
+### Deuxième rejeu : un test de l'audit lui-même
+
+Avec la porte documentaire réparée, 11 contrôles sur 12 passent — `next build`
+(93 s) et budget de performance inclus. Le douzième, la suite de tests, tombe
+sur **deux tests d'un fichier écrit par cet audit**,
+`record-mac-admin-routes.test.ts` : `2264 passés · 2 échoués · 33 ignorés`.
+
+Même fichier, mêmes deux tests, même circonstance que l'occurrence du lot 16 —
+premier `npm test` suivant un `npm ci`. Une répétition n'est plus un aléa.
+
+Mesure des durées par test : **520 ms** pour le premier, 0 à 16 ms pour les six
+autres. Chaque `it` refaisait son propre `await import()` de la route ; le
+premier payait seul le graphe de modules. Sous charge et cache disque froid, ce
+seul test peut franchir les 5 s de budget — et sa promesse abandonnée écrit
+ensuite dans l'état partagé, faisant tomber le test suivant sur un symptôme sans
+rapport avec sa cause.
+
+Corrigé en GF31-AUD-067 : import unique en `beforeAll` (premier test **9 ms**
+après correction) et écritures collectées avec exigence d'unicité, pour qu'une
+écriture parasite se nomme au lieu de se déguiser. Le budget n'a PAS été relevé.
+
+**Ce que ce lot aura surtout produit** : deux défauts que quinze exécutions dans
+la copie de travail n'avaient pas montrés. Le premier ne pouvait apparaître que
+dans le dépôt ; le second n'apparaît qu'au premier passage après un `npm ci`. La
+leçon tient en une phrase — un audit prouve quelque chose là où il s'exécute, et
+nulle part ailleurs.

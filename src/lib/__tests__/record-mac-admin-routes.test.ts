@@ -26,7 +26,7 @@
  * qui sait écrire dans la base mettait `recordMac = NULL`, puis repassait
  * `status` de `revoked` à `active` — la protection entière était contournée.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
 
 process.env.GF_DB_MAC_SECRET = 'secret-de-test-record-mac-aud-005-006'
 process.env.GARAGEFLOW_API_KEY = 'test-api-key-strong-0123456789'
@@ -45,7 +45,20 @@ interface Ligne {
   licenseType: string
 }
 
-const db = vi.hoisted(() => ({ ligne: null as unknown, ecrit: null as unknown }))
+/**
+ * Les écritures sont COLLECTÉES, pas écrasées.
+ *
+ * Avec un unique champ `ecrit`, un test qui dépasse son budget de temps voit sa
+ * requête abandonnée par vitest — mais la promesse, elle, continue et écrit
+ * dans l'état partagé pendant que le test SUIVANT s'exécute. Le suivant lisait
+ * alors l'écriture du précédent et échouait sur un MAC incohérent, à mille
+ * lieues de sa vraie cause ; dans le mauvais cas de figure, il aurait pu passer
+ * au VERT sur l'écriture d'un autre. Constaté deux fois le 2026-08-13.
+ *
+ * En collectant, l'anomalie devient visible et nommée : chaque test exige
+ * EXACTEMENT une écriture.
+ */
+const db = vi.hoisted(() => ({ ligne: null as unknown, ecrits: [] as unknown[] }))
 
 vi.mock('@/lib/db', () => ({
   prisma: {
@@ -53,7 +66,7 @@ vi.mock('@/lib/db', () => ({
       findUnique: async () => db.ligne,
       create: async (a: { data: unknown }) => a.data,
       update: async (a: { data: Record<string, unknown> }) => {
-        db.ecrit = a.data
+        db.ecrits.push(a.data)
         return { ...(db.ligne as Record<string, unknown>), ...a.data }
       },
     },
@@ -114,18 +127,44 @@ function macCoherent(ligne: Ligne, macEcrit: unknown): boolean {
   )
 }
 
+/**
+ * Les routes sont importées UNE fois, hors du budget d'un test.
+ *
+ * Chaque `it` faisait son propre `await import(...)`. Le premier payait donc
+ * seul la construction du graphe de modules de la route : 520 ms à vide contre
+ * 0 à 16 ms pour les six suivants. Sous la charge de la suite complète et avec
+ * un cache disque froid — les deux échecs observés sont survenus juste après un
+ * `npm ci` —, ce seul test peut dépasser les 5 s de budget par défaut.
+ *
+ * Relever le budget n'aurait fait que déplacer le seuil (§151) : le coût
+ * d'amorçage est le vrai problème, et il n'a rien à faire dans la mesure d'un
+ * test. `beforeAll` le paie une fois, sous le délai des hooks.
+ */
+let PATCH_LICENCE: typeof import('@/app/api/admin/licenses/[id]/route')['PATCH']
+let POST_REVOCATION: typeof import('@/app/api/admin/licenses/revoke-by-key/route')['POST']
+
+beforeAll(async () => {
+  PATCH_LICENCE = (await import('@/app/api/admin/licenses/[id]/route')).PATCH
+  POST_REVOCATION = (await import('@/app/api/admin/licenses/revoke-by-key/route')).POST
+})
+
 beforeEach(() => {
   db.ligne = null
-  db.ecrit = null
+  db.ecrits = []
 })
+
+/** L'écriture du test COURANT — et la preuve qu'il n'y en a pas d'autre. */
+function ecritureUnique(): Record<string, unknown> {
+  expect(db.ecrits, 'une écriture et une seule était attendue').toHaveLength(1)
+  return db.ecrits[0] as Record<string, unknown>
+}
 
 describe('GF31-AUD-006 — PATCH /api/admin/licenses/[id]', () => {
   it('suspendre une clé mécanicien laisse un MAC qui se re-vérifie', async () => {
-    const { PATCH } = await import('@/app/api/admin/licenses/[id]/route')
     const avant = cleMecanicien()
     db.ligne = avant
 
-    const res = await PATCH(
+    const res = await PATCH_LICENCE(
       new Request('http://127.0.0.1/api/admin/licenses/1', {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
@@ -135,18 +174,17 @@ describe('GF31-AUD-006 — PATCH /api/admin/licenses/[id]', () => {
     )
     expect(res.status).toBe(200)
 
-    const ecrit = db.ecrit as Record<string, unknown>
+    const ecrit = ecritureUnique()
     expect(typeof ecrit.recordMac).toBe('string')
     // La ligne telle qu'elle sera RELUE : nouveau statut, champs mécanicien intacts.
     expect(macCoherent({ ...avant, status: 'suspended' }, ecrit.recordMac)).toBe(true)
   })
 
   it('changer le HWID d’une clé mécanicien laisse un MAC qui se re-vérifie', async () => {
-    const { PATCH } = await import('@/app/api/admin/licenses/[id]/route')
     const avant = cleMecanicien()
     db.ligne = avant
 
-    await PATCH(
+    await PATCH_LICENCE(
       new Request('http://127.0.0.1/api/admin/licenses/1', {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
@@ -155,19 +193,18 @@ describe('GF31-AUD-006 — PATCH /api/admin/licenses/[id]', () => {
       { params: { id: '1' } },
     )
 
-    const ecrit = db.ecrit as Record<string, unknown>
+    const ecrit = ecritureUnique()
     expect(macCoherent({ ...avant, hwid: 'a'.repeat(64) }, ecrit.recordMac)).toBe(true)
   })
 
   it('une licence GARAGE (champs mécanicien nuls) reste correctement signée', async () => {
-    const { PATCH } = await import('@/app/api/admin/licenses/[id]/route')
     const avant = cleMecanicien({
       licenseId: 'lid-garage', licenseType: 'premium',
       parentLicenseId: null, mechanicId: null,
     })
     db.ligne = avant
 
-    await PATCH(
+    await PATCH_LICENCE(
       new Request('http://127.0.0.1/api/admin/licenses/1', {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
@@ -176,18 +213,17 @@ describe('GF31-AUD-006 — PATCH /api/admin/licenses/[id]', () => {
       { params: { id: '1' } },
     )
 
-    const ecrit = db.ecrit as Record<string, unknown>
+    const ecrit = ecritureUnique()
     expect(macCoherent({ ...avant, status: 'revoked' }, ecrit.recordMac)).toBe(true)
   })
 })
 
 describe('GF31-AUD-006 — POST /api/admin/licenses/revoke-by-key', () => {
   it('révoquer une clé mécanicien laisse un MAC qui se re-vérifie', async () => {
-    const { POST } = await import('@/app/api/admin/licenses/revoke-by-key/route')
     const avant = cleMecanicien()
     db.ligne = avant
 
-    const res = await POST(
+    const res = await POST_REVOCATION(
       new Request('http://127.0.0.1/api/admin/licenses/revoke-by-key', {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-gf-key': process.env.GARAGEFLOW_API_KEY! },
@@ -196,17 +232,16 @@ describe('GF31-AUD-006 — POST /api/admin/licenses/revoke-by-key', () => {
     )
     expect(res.status).toBe(200)
 
-    const ecrit = db.ecrit as Record<string, unknown>
+    const ecrit = ecritureUnique()
     expect(typeof ecrit.recordMac).toBe('string')
     expect(macCoherent({ ...avant, status: 'revoked' }, ecrit.recordMac)).toBe(true)
   })
 
   it('réactiver ensuite la même clé produit encore un MAC cohérent', async () => {
-    const { POST } = await import('@/app/api/admin/licenses/revoke-by-key/route')
     const avant = cleMecanicien({ status: 'revoked' })
     db.ligne = avant
 
-    await POST(
+    await POST_REVOCATION(
       new Request('http://127.0.0.1/api/admin/licenses/revoke-by-key', {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-gf-key': process.env.GARAGEFLOW_API_KEY! },
@@ -214,7 +249,7 @@ describe('GF31-AUD-006 — POST /api/admin/licenses/revoke-by-key', () => {
       }) as never,
     )
 
-    const ecrit = db.ecrit as Record<string, unknown>
+    const ecrit = ecritureUnique()
     expect(macCoherent({ ...avant, status: 'active' }, ecrit.recordMac)).toBe(true)
   })
 })

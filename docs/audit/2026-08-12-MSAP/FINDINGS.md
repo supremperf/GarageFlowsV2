@@ -20,7 +20,7 @@ rejeu du release gate depuis le dépôt git :
 |---|---|---|---|
 | P0 | 3 causes racines | 3 | **0** |
 | P1 | 17 (16 vague 1 + 1 vague 2 sur une correction de cet audit) | 17 | **0** |
-| P2 | 23 (22 + 1 découvert au rejeu depuis le dépôt) | 23 | **0** |
+| P2 | 24 (22 + 2 découverts au rejeu depuis le dépôt) | 24 | **0** |
 | P3 | 25 | 25 | **0** |
 
 **Aucun finding connu ne reste ouvert.** Aucun n'a été masqué ni reclassé :
@@ -1635,8 +1635,13 @@ Deux corrections méritent une note de scope honnête :
 |---|---|---|---|
 | P0 | 3 causes racines | 3 | **0** |
 | P1 | 17 | 17 | **0** |
-| P2 | 22 | 22 | **0** |
+| P2 | 24 | 24 | **0** |
 | P3 | 25 | 25 | **0** |
+
+Les deux derniers P2 — **GF31-AUD-066** et **067** — n'apparaissaient pas dans la
+copie de travail de l'audit : ils ont été découverts en rejouant le release gate
+DEPUIS LE DÉPÔT git. Un audit qui ne s'exécute qu'à un seul endroit ne prouve
+quelque chose qu'à cet endroit-là.
 
 **Aucun finding connu ne reste ouvert.** Ce qui subsiste n'est pas du code : ce
 sont les vérifications qui exigent un environnement dont celui-ci ne dispose pas
@@ -1734,3 +1739,59 @@ liste vide.
 Mutation vérifiée : sur l'ancien code, 2 des 5 tests échouent (le résidu ignoré
 et le repli disque) ; les 3 autres — vrai doublon suivi, doublon non indexé,
 repli fonctionnel — passent des deux côtés et interdisent la sur-correction.
+
+## GF31-AUD-067 — Un test de cet audit était instable, et pouvait mentir
+
+```
+Sévérité : P2
+Domaine  : fiabilité de la suite / risque de faux vert
+Fichier  : src/lib/__tests__/record-mac-admin-routes.test.ts (livré par cet audit)
+Statut   : FIXED / VERIFIED
+Découvert: 2 occurrences, toutes deux au premier `npm test` suivant un `npm ci`
+```
+
+Ce fichier — écrit pendant cet audit pour verrouiller GF31-AUD-005/006 — a fait
+échouer la suite deux fois, toujours ses **deux premiers tests**, jamais lancé
+seul. La première occurrence avait été consignée comme « non reproductible » ;
+la seconde, au release gate depuis le dépôt, a imposé un vrai diagnostic.
+
+**Mesure.** Durées par test sur machine au repos :
+
+```
+suspendre une clé mécanicien …   520 ms
+les six suivants …               0 à 16 ms
+```
+
+Chaque `it` faisait son propre `await import('@/app/api/admin/licenses/[id]/route')`.
+Le premier payait donc, seul, la construction de tout le graphe de modules de la
+route. Sous la charge de la suite complète et avec un cache disque froid — les
+deux échecs sont survenus juste après un `npm ci`, qui vide ce cache — ces
+520 ms peuvent franchir le budget de 5 s d'un test.
+
+**Le second échec est une conséquence, pas une cause.** Vitest abandonne le test
+dépassé, mais la promesse continue : la requête `PATCH` se termine et écrit dans
+`db.ecrit`, champ unique et partagé, pendant que le test SUIVANT s'exécute.
+Celui-ci lit alors l'écriture du précédent et échoue sur un MAC incohérent —
+symptôme situé à mille lieues de sa cause. Le risque symétrique est pire : un
+test dont la route n'écrit rien peut lire l'écriture d'un autre et **passer au
+vert**. Une suite qui peut mentir dans ce sens-là ne prouve plus rien (§150).
+
+**Correction, en deux temps.**
+
+1. Les deux routes sont importées une fois dans `beforeAll`, hors du budget d'un
+   test et sous le délai des hooks. Mesuré après : premier test **9 ms** au lieu
+   de 520 ms, maximum du fichier 9 ms.
+2. Les écritures sont **collectées** au lieu d'être écrasées, et chaque test
+   exige `toHaveLength(1)` via `ecritureUnique()`. Une écriture parasite n'est
+   plus silencieuse : elle nomme elle-même l'anomalie.
+
+Relever `testTimeout` aurait déplacé le seuil sans rien corriger — c'est
+exactement le geste que le dépôt s'interdit (§151), et qu'il avait déjà refusé
+pour GF31-AUD-024.
+
+**Portée résiduelle, mesurée et déclarée.** Dix fichiers de test importent
+encore dynamiquement dans un `it` ; quatre partagent en plus un état de module
+mutable. Aucun n'a échoué à ce jour et aucun n'a été modifié ici : les corriger
+sans défaut observé relèverait de la spéculation. Le motif est consigné pour
+qu'une future instabilité soit diagnostiquée en une minute plutôt qu'en une
+heure.
