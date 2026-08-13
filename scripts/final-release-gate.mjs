@@ -19,6 +19,9 @@
 
 import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
+import { createRequire } from 'node:module'
+
+const { purgerEnvStandalone } = createRequire(import.meta.url)('./lib/purge-standalone-env.cjs')
 
 const FAST = process.argv.includes('--fast')
 const results = []
@@ -145,6 +148,19 @@ run('Build de production (next build)', 'npm run build', {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:4028',
   },
 })
+// GF31-AUD-068 — laisser la sortie de build dans l'état que produit le VRAI
+// pipeline. `npm run dist` enchaîne `build` PUIS `post-build.js`, qui retire les
+// `.env` que Next trace dans `.next/standalone` (et que `extraFiles` recopierait
+// tels quels dans l'installateur). La porte, elle, ne construisait qu'à moitié :
+// elle laissait ces `.env` en place, et son propre contrôle `verify-artifact`
+// les refusait **au passage suivant**. Deux exécutions d'affilée produisaient
+// donc un rouge intitulé « Fuite de secrets » sans aucune fuite — et la porte
+// n'était pas idempotente, ce qu'une porte de release doit être avant tout.
+if (!FAST && existsSync('.next/standalone')) {
+  const retires = purgerEnvStandalone('.next/standalone')
+  if (retires.length) console.log(`  ↳ standalone assaini comme le fait post-build : ${retires.join(', ')}`)
+}
+
 run('Budget de performance (bundle client)', 'npm run check:perf-budget', {
   skip: FAST || !existsSync('.next/static'), skipReason: FAST ? '--fast' : '.next absent (lancez le build)',
 })

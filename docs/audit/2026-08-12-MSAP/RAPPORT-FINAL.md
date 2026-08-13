@@ -37,9 +37,9 @@ corrections elles-mêmes**, et enfin d'un rejeu complet de la porte de release
 |---|---|---|---|
 | P0 | 3 causes racines (8 findings bruts convergents) | 3 | **0** |
 | P1 | 17 | 17 | **0** |
-| P2 | 24 | 24 | **0** |
+| P2 | 25 | 25 | **0** |
 | P3 | 25 | 25 | **0** |
-| **Total** | **69** | **69** | **0** |
+| **Total** | **70** | **70** | **0** |
 
 **Aucun défaut connu ne subsiste.** Les trois P0 : prise de contrôle du garage
 d'un tiers par la passerelle poste→cloud, écriture de fichier arbitraire par le
@@ -57,14 +57,20 @@ correction de cet audit s'est révélée fautive de la même manière (le prêt 
 véhicule pour la journée, refusé comme « durée nulle »). Les deux sont au
 registre, à leur date.
 
-**Deux findings de plus sont apparus au tout dernier geste** — porter le code
-dans le dépôt git et y rejouer la porte de release. Ni l'un ni l'autre n'était
+**Trois findings de plus sont apparus au tout dernier geste** — porter le code
+dans le dépôt git et y rejouer la porte de release. Aucun des trois n'était
 visible depuis la copie de travail où l'audit avait tourné : le premier faisait
-dépendre le verdict de la porte d'un worktree oublié et ignoré (066), le second
-était un test de cet audit qui pouvait faire échouer — ou faire passer — un test
-voisin (067). Il aura fallu quatre passages de la porte pour l'obtenir verte.
+dépendre le verdict de la porte d'un worktree oublié et ignoré (066) ; le
+deuxième était un test de cet audit qui pouvait faire échouer — ou faire passer —
+un test voisin (067) ; le troisième n'est apparu qu'en rejouant la porte **une
+fois de plus, pour confirmer**, et c'est le plus instructif : la porte n'était
+pas idempotente, et le contrôle qui interdit un `.env` empaqueté ne regardait
+rien sur un arbre neuf (068).
+
+Il aura fallu six passages de la porte pour l'obtenir verte deux fois d'affilée.
 C'est le résultat le plus utile de cette dernière journée : **un audit ne prouve
-quelque chose que là où il s'exécute.**
+quelque chose que là où il s'exécute — et une porte de release ne prouve rien
+tant qu'on ne l'a pas jouée deux fois.**
 
 **Ce qui n'a pas pu être exercé ici** est nommé, jamais converti en PASS :
 installation Windows réelle, concurrence PostgreSQL, Redis, SMTP, bac à sable de
@@ -120,7 +126,7 @@ la lecture de ce rapport :
   `C:\Users\Mathys\.claude\jobs\2a11bc5b\tmp\repo`, et la comparaison fichier à
   fichier n'a montré **aucune divergence de code source**. Le code corrigé y a
   été porté à la clôture et la porte de release y a été rejouée : c'est là, et
-  seulement là, qu'ont été trouvés les findings 066 et 067 (§31) ;
+  seulement là, qu'ont été trouvés les findings 066, 067 et 068 (§31) ;
 * `.env` est **identique à `.env.example`** et `keys/` est **absent** :
   environnement propre, sans secret. C'est ce qui vaut validation « clean
   environment » (§180) et ce qui détermine ce qui est `BLOCKED_EXTERNAL` ;
@@ -140,7 +146,7 @@ que si un second agent, chargé de le démolir, échoue à le faire.
 | Vague 1 — audit adversarial (12 domaines) | 37 | 60 findings uniques : 8 P0, 19 P1, 29 P2, 4 P3 |
 | Triage P2/P3 contre le code corrigé | 20 | 5 déjà corrigés, 2 réfutés, **26 confirmés** |
 | Vague 2 — attaque CONTRE les corrections (§179) | 22 | **14 confirmés, 33 réfutés** |
-| Rejeu de la porte depuis le dépôt git | — | **2 confirmés** (066, 067) |
+| Rejeu de la porte depuis le dépôt git | — | **3 confirmés** (066, 067, 068) |
 
 Le taux de réfutation de la vague 2 (33/47, soit 70 %) est une donnée en soi : la
 majorité des « failles » trouvées par un attaquant isolé ne résistent pas à une
@@ -200,14 +206,14 @@ temporaire ; le code d'origine en fait tomber 13.
 
 ---
 
-## 7. Findings P2 — 24, tous corrigés
+## 7. Findings P2 — 25, tous corrigés
 
 Facturation électronique (034 à 038), véhicules de prêt (026, 027), stock (029,
 030), portail (032, 039, 040), updater (042), Electron (043), synchronisation
-(044), signatures (045), fiabilité des gates (024, 064, **066**, **067**) — plus
+(044), signatures (045), fiabilité des gates (024, 064, **066**, **067**, **068**) — plus
 les P2 traités dans les lots P0/P1.
 
-Six méritent d'être nommés :
+Sept méritent d'être nommés :
 
 * **042** — le manifeste signé n'existait que sur **une source de mise à jour sur
   trois** : la publication locale par la Zone Administrateur et le repli GitHub
@@ -235,6 +241,16 @@ Six méritent d'être nommés :
   indémontrable quand il est rouge, et bien pire quand il est vert. L'inventaire
   vient désormais de `git ls-files --cached --others --exclude-standard` : les
   fichiers non encore indexés comptent toujours, les ignorés ne comptent plus.
+* **068** — la porte de release **n'était pas idempotente**. Jouée deux fois de
+  suite sur le même arbre, elle passait puis refusait, sur le message le plus
+  alarmant du dépôt : « Fuite de secrets : `.next\standalone\.env` présent dans
+  l'artefact » — sans aucune fuite. `npm run dist` enchaîne `build` **puis**
+  `post-build.js`, qui retire les `.env` que Next trace dans `.next/standalone`
+  et que `extraFiles` recopierait tels quels dans l'installateur ; la porte, elle,
+  ne faisait que la première moitié. Pire que le faux rouge : sur un arbre neuf,
+  le contrôle ne trouve aucun standalone et **passe à vide**. Purge désormais
+  partagée entre `post-build` et la porte — sans rien assouplir, un test
+  verrouille le refus d'un `.env` empaqueté.
 * **067** — un test **écrit par cet audit** était instable, et pouvait mentir.
   Chaque `it` refaisait son propre `await import()` de la route : le premier
   payait seul 520 ms de graphe de modules contre 0 à 16 ms pour les six autres.
@@ -607,7 +623,7 @@ Installation Windows            : BLOCKED_EXTERNAL
 
 **Aucun P0. Aucun P1. Aucun P2. Aucun P3.**
 
-Les 69 findings confirmés sont corrigés et vérifiés. Le risque résiduel du
+Les 70 findings confirmés sont corrigés et vérifiés. Le risque résiduel du
 produit n'est plus un défaut connu : c'est ce qui n'a pas pu être **exercé** dans
 cet environnement (§31), plus les deux réserves de portée du §8.
 
@@ -692,12 +708,21 @@ nécessaires :
 | 2 | 11 verts · 1 échec | la suite tombait sur un test de cet audit (**067**) |
 | 3 | 11 verts · 1 échec | `next build` de nouveau, `node_modules` vidé pendant l'exécution (§27, incident 5) |
 | 4 | **PASSÉ** | 12 contrôles obligatoires verts, 3 non exécutés |
+| 5 | 11 verts · 1 échec | rejeu de confirmation : `verify-artifact` refusait le `.next/standalone/.env` laissé par le build du passage 4 (**068**) |
+| 6 | **PASSÉ** | et **7 — PASSÉ à nouveau, sans rien nettoyer entre les deux** : c'est la preuve que 068 est corrigé |
 
 L'empaquetage a produit puis vérifié un ZIP réellement extrait, sans `.git` et
 **sans aucun `.env`** — `.gitignore:18` l'exclut. Le manifeste de release est
 rattaché au commit, et la baseline aussi.
 
-La leçon est la seule chose qui mérite d'être retenue de ces quatre passages :
+La cinquième exécution — celle demandée « pour confirmer » — est celle qui a le
+plus rapporté. Elle a montré que la porte se sabotait elle-même : elle construit
+sans purger, alors que `npm run dist` purge, si bien qu'elle laissait derrière
+elle l'état que son propre contrôle refuse. Et elle a révélé la moitié la plus
+gênante : sur un arbre neuf, ce contrôle ne trouve aucun standalone et **passe à
+vide**. Une confirmation qui ne trouve rien n'aurait rien confirmé.
+
+La leçon est la seule chose qui mérite d'être retenue de ces sept passages :
 une porte de release ne prouve quelque chose **que là où elle sera réellement
 jouée**. Quinze exécutions dans la copie de travail n'avaient montré ni 066 ni
 067.
@@ -720,7 +745,7 @@ CONDITIONALLY READY
 ```
 
 **Pourquoi pas `NOT READY`.** Aucun défaut connu ne subsiste, à aucun niveau de
-gravité : 3 causes racines P0, 17 P1, 24 P2 et 25 P3 corrigés et vérifiés, chacun
+gravité : 3 causes racines P0, 17 P1, 25 P2 et 25 P3 corrigés et vérifiés, chacun
 avec un test qui échoue avant et passe après, les protections critiques éprouvées
 par mutation. **La porte de release passe depuis le dépôt git**, pas seulement
 depuis une copie de travail : 12 contrôles obligatoires verts, sans exception,

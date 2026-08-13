@@ -20,7 +20,7 @@ rejeu du release gate depuis le dépôt git :
 |---|---|---|---|
 | P0 | 3 causes racines | 3 | **0** |
 | P1 | 17 (16 vague 1 + 1 vague 2 sur une correction de cet audit) | 17 | **0** |
-| P2 | 24 (22 + 2 découverts au rejeu depuis le dépôt) | 24 | **0** |
+| P2 | 25 (22 + 3 découverts au rejeu depuis le dépôt) | 25 | **0** |
 | P3 | 25 | 25 | **0** |
 
 **Aucun finding connu ne reste ouvert.** Aucun n'a été masqué ni reclassé :
@@ -1627,6 +1627,7 @@ Deux corrections méritent une note de scope honnête :
   chiffrement au repos reste réservée au processus dédié
   (`GF_SMTP_CIPHER_KEY_OLD`), inchangé.
 
+
 ---
 
 # État du registre au terme de la session
@@ -1635,10 +1636,10 @@ Deux corrections méritent une note de scope honnête :
 |---|---|---|---|
 | P0 | 3 causes racines | 3 | **0** |
 | P1 | 17 | 17 | **0** |
-| P2 | 24 | 24 | **0** |
+| P2 | 25 | 25 | **0** |
 | P3 | 25 | 25 | **0** |
 
-Les deux derniers P2 — **GF31-AUD-066** et **067** — n'apparaissaient pas dans la
+Les trois derniers P2 — **GF31-AUD-066**, **067** et **068** — n'apparaissaient pas dans la
 copie de travail de l'audit : ils ont été découverts en rejouant le release gate
 DEPUIS LE DÉPÔT git. Un audit qui ne s'exécute qu'à un seul endroit ne prouve
 quelque chose qu'à cet endroit-là.
@@ -1795,3 +1796,64 @@ mutable. Aucun n'a échoué à ce jour et aucun n'a été modifié ici : les cor
 sans défaut observé relèverait de la spéculation. Le motif est consigné pour
 qu'une future instabilité soit diagnostiquée en une minute plutôt qu'en une
 heure.
+
+## GF31-AUD-068 — La porte de release n'était pas idempotente
+
+```
+Sévérité : P2
+Domaine  : porte de release / fiabilité du verdict
+Fichiers : scripts/final-release-gate.mjs, scripts/post-build.js
+Statut   : FIXED / VERIFIED
+Découvert: au rejeu de confirmation, 5e exécution de la porte (2026-08-13)
+```
+
+Deux exécutions consécutives de `npm run release:gate` sur le même arbre
+donnaient **vert puis rouge**, avec le message le plus alarmant du dépôt :
+
+```
+❌ Artefact NON conforme :
+  • Fuite de secrets : .next\standalone\.env présent dans l'artefact.
+```
+
+Sans la moindre fuite.
+
+**Mécanisme.** Next (`output: 'standalone'`) trace le `.env` du dépôt dans sa
+sortie, et `package.json` → `build.extraFiles` recopie **tout**
+`.next/standalone` dans l'application empaquetée. C'est exactement le chemin par
+lequel un `.env` de production s'est déjà retrouvé en clair dans un installateur,
+lisible sous `resources/standalone/.env` — le commentaire de `post-build.js` le
+raconte lui-même.
+
+Le vrai pipeline s'en protège : `npm run dist` enchaîne
+`build` **puis** `post-build.js`, qui purge. La porte, elle, ne construisait
+qu'à moitié : `npm run build` seul, sans purge. Elle laissait donc derrière elle
+l'état précis que son propre contrôle `verify-artifact` — exécuté **avant** le
+build — refuse au passage suivant.
+
+**Les deux moitiés comptent, et la seconde est la pire.** Sur un arbre neuf,
+`verify-artifact` ne trouve aucun `.next/standalone` et passe **à vide** : le
+contrôle censé interdire un `.env` empaqueté ne regardait rien. Sur un arbre déjà
+construit, il refusait un état que le pipeline réel nettoie. Ni l'un ni l'autre
+n'est le contrôle voulu.
+
+**Correction.** La purge devient une implémentation unique,
+`scripts/lib/purge-standalone-env.cjs`, appelée par `post-build.js` **et** par la
+porte juste après son build. La porte laisse ainsi l'arbre dans l'état que
+produit le vrai pipeline. En CommonJS explicite pour être requise depuis le CJS
+comme depuis le `.mjs` (`createRequire`), sans dépendre du support `require(esm)`
+d'une version de Node.
+
+**Rien n'a été assoupli** : un `.env` dans un standalone reste une fuite et
+`verify-artifact` continue de le dire — un test verrouille ce point précis, pour
+que la recherche d'idempotence ne serve jamais de prétexte à désarmer le
+contrôle.
+
+**Tests.** `src/__tests__/release-gate-idempotent.test.ts` (6). Mutation
+vérifiée : une correspondance élargie à `.env*` — qui supprimerait
+`environment.js` de l'application — et le retrait de la tolérance à l'absence de
+build font chacune tomber un test, et un seul.
+
+**Preuve directe** : la porte a été rejouée **deux fois de suite** sur le même
+arbre après correction.
+
+---

@@ -111,15 +111,13 @@ function main() {
   //    (DATABASE_URL local SQLite, NEXTAUTH_SECRET par-installation, NEXTAUTH_URL
   //    127.0.0.1) au fork du serveur — ces valeurs priment (@next/env n'écrase
   //    jamais une variable déjà définie). On supprime donc tous les .env* ici.
+  //    L'implémentation vit dans `scripts/lib/purge-standalone-env.cjs` : la
+  //    porte de release doit exécuter EXACTEMENT la même purge après son build,
+  //    faute de quoi elle laisse derrière elle ce qu'elle refuse (GF31-AUD-068).
   {
+    const { purgerEnvStandalone } = require('./lib/purge-standalone-env.cjs')
     const standaloneDir = path.join(ROOT, '.next', 'standalone')
-    const removed = []
-    for (const name of fs.readdirSync(standaloneDir)) {
-      if (name === '.env' || name.startsWith('.env.')) {
-        fs.rmSync(path.join(standaloneDir, name), { force: true })
-        removed.push(name)
-      }
-    }
+    const removed = purgerEnvStandalone(standaloneDir)
     if (removed.length) {
       console.log(`  ✅ secrets retirés du package : ${removed.join(', ')} (jamais distribués)`)
     } else {

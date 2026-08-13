@@ -1093,3 +1093,51 @@ la copie de travail n'avaient pas montrés. Le premier ne pouvait apparaître qu
 dans le dépôt ; le second n'apparaît qu'au premier passage après un `npm ci`. La
 leçon tient en une phrase — un audit prouve quelque chose là où il s'exécute, et
 nulle part ailleurs.
+
+---
+
+## Lot 19 — La porte de confirmation (2026-08-13)
+
+Rapport publié, dépôt à jour, porte verte : il ne restait qu'à rejouer la porte
+« une dernière fois pour confirmer ». Elle a échoué.
+
+```
+❌ Vérification d'artefact (identité + cohérence + secrets)  ÉCHEC
+   • Fuite de secrets : .next\standalone\.env présent dans l'artefact.
+```
+
+Le message le plus alarmant du dépôt, et aucune fuite. `next build`
+(`output: 'standalone'`) trace le `.env` du dépôt dans sa sortie ;
+`build.extraFiles` recopie **tout** `.next/standalone` dans l'application
+empaquetée — c'est par ce chemin qu'un `.env` de production s'est déjà retrouvé
+en clair dans un installateur. Le vrai pipeline s'en protège : `npm run dist`
+enchaîne `build` **puis** `post-build.js`, qui purge. La porte ne faisait que la
+première moitié : elle laissait derrière elle l'état que son propre contrôle
+refuse au passage suivant.
+
+**Deux moitiés, et la seconde est la pire.** Sur un arbre neuf, `verify-artifact`
+ne trouve aucun standalone et **passe à vide**. Le contrôle censé interdire un
+`.env` empaqueté ne regardait rien. Une confirmation qui ne trouve rien n'aurait
+rien confirmé — c'est précisément ce que les quatre passages précédents avaient
+obtenu.
+
+Corrigé en GF31-AUD-068 : purge partagée entre `post-build` et la porte, une
+seule implémentation, deux appelants. Mutation vérifiée sur les deux garde-fous
+qui comptent — élargir la correspondance à `.env*` supprimerait
+`environment.js` de l'application, retirer la tolérance à l'absence de build
+casserait la porte sur un arbre neuf : chaque mutation fait tomber un test, et un
+seul. Rien n'a été assoupli : un test verrouille le fait que `verify-artifact`
+refuse toujours un `.env` empaqueté.
+
+### Contre-épreuve du lot 18, au passage
+
+Le lot 18 attribuait la destruction du `node_modules` au nettoyage de
+`.next/standalone` à travers le lien symbolique, **sans isolation
+expérimentale**. Ce lot la fournit : lien retiré, `.next/standalone` du build
+précédent laissé en place, second build consécutif lancé — `node_modules` intact,
+591 entrées. La seule variable modifiée était le lien.
+
+### Ce que ce lot dit du programme
+
+Une porte de release ne prouve rien tant qu'on ne l'a pas jouée **deux fois**.
+Le premier passage mesure le code ; le second mesure la porte.
