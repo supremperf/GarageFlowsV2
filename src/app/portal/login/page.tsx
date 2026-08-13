@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, ShieldCheck, AlertCircle, Loader2, KeyRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { avecGarageSlug, lienPortail } from '@/lib/portal/garage-slug'
 
 type Step = 'password' | 'twofa'
 
@@ -33,12 +34,14 @@ export default function PortalLoginPage() {
       const res = await fetch('/api/portal/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+        // `garageSlug` : sans lui, le serveur ne sait pas de quel garage il
+        // s'agit dès qu'il y en a plus d'un (GF31-AUD-019).
+        body: JSON.stringify(avecGarageSlug({ email: email.trim().toLowerCase(), password })),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Connexion impossible'); return }
       if (data.requires2fa) { setChallenge(data.challenge); setStep('twofa'); return }
-      router.push('/portal/account')
+      router.push(lienPortail('/portal/account'))
     } catch {
       setError('Erreur réseau')
     } finally {
@@ -59,7 +62,7 @@ export default function PortalLoginPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Code invalide'); return }
-      router.push('/portal/account')
+      router.push(lienPortail('/portal/account'))
     } catch {
       setError('Erreur réseau')
     } finally {
@@ -95,7 +98,7 @@ export default function PortalLoginPage() {
               </Field>
               <SubmitBtn loading={loading} disabled={!email || !password}>Se connecter</SubmitBtn>
               <p className="pt-2 text-center text-xs text-slate-600">
-                Pas de compte ? <Link href="/portal/register" className="font-semibold text-blue-400 hover:text-blue-300">Créer un compte</Link>
+                Pas de compte ? <Link href={lienPortail("/portal/register")} className="font-semibold text-blue-400 hover:text-blue-300">Créer un compte</Link>
               </p>
             </form>
           ) : (

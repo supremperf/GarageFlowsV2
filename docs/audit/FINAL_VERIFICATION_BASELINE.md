@@ -18,8 +18,9 @@
 | Version | 1.1.0 |
 | Commit de mesure | voir `artifacts/verification/baseline.json` (champ `commit`) — jamais recopié à la main |
 | Branch | `claude/garageflow-final-unified-merge-ub0l67` |
-| Date UTC | 2026-08-07 |
-| Méthode de validation | `npm run release:gate` (11/11 OK) ; comptes issus du rapport JSON vitest ; PostgreSQL 16.13 et Redis 7 **locaux réels** pour les suites conditionnelles |
+| Date UTC | **2026-08-13** (regénérée à l'issue du programme MSAP) |
+| Identité de build | **absente** — `gitIdentity: false`. La mesure a été faite depuis un répertoire de travail qui n'est pas un dépôt git : les comptes sont réels, le commit ne l'est pas. **À regénérer depuis le dépôt (`npm run verify:baseline`) avant tout tag.** |
+| Méthode de validation | `npm test` (rapport JSON vitest) + `check:consistency`. `npm run release:gate` : 12 PASS · 3 ÉCHEC dus à l'absence de dépôt git · 3 NON EXÉCUTÉ (services absents) — les 3 échecs rejoués dans un checkout git passent. Détail : `docs/audit/2026-08-12-MSAP/RAPPORT-FINAL.md` §31 |
 
 ## Toolchain & tests (mesure machine)
 
@@ -54,13 +55,13 @@ de tests ou versions **résolues** de la toolchain). PostgreSQL 16.13 et Redis 7
 
 | Champ | Valeur |
 |---|---|
-| Test files | 149 |
-| Tests discovered | 1569 |
-| Tests passed | 1541 |
+| Test files | 206 |
+| Tests discovered | 2294 |
+| Tests passed | 2259 |
 | Tests failed | 0 |
-| Tests skipped | 28 |
+| Tests skipped | 35 |
 
-Commit : `bcfd1d9` · Branche : `fix/blackscreen-asar-file-protocol` · Généré (UTC) : `2026-08-09T08:26:18.630Z`
+Commit : `n/a` · Branche : `n/a` · Généré (UTC) : `2026-08-13T13:28:07.612Z`
 
 <!-- END AUTO-GENERATED BASELINE -->
 
@@ -73,7 +74,15 @@ Commit : `bcfd1d9` · Branche : `fix/blackscreen-asar-file-protocol` · Génér�
 ## Suites conditionnelles (services réels, hors compte standard)
 
 Les comptes standard (bloc AUTO ci-dessus) proviennent de la suite `npm test`,
-reproductible **sans** service externe. **En plus**, exécutées sur services
+reproductible **sans** service externe.
+
+> **Mesure du 2026-08-07**, conservée comme preuve : l'environnement disposait
+> alors de PostgreSQL et de Redis réels. **La regénération du 2026-08-13 n'en
+> disposait pas** — ces suites y sont `BLOCKED_EXTERNAL` et le bloc AUTO
+> ci-dessus ne les compte pas. Les résultats ci-dessous ne sont donc PAS une
+> revendication d'état courant.
+
+**En plus**, exécutées sur services
 réels : PostgreSQL 16.13 → **21 tests verts** (numérotation 50 requêtes
 parallèles, stock, licences/sièges, sessions) ; Redis 7 → **5 tests verts**
 (rate-limit multi-instance). **2 tests restants** exigent un jeton de licence
@@ -147,8 +156,10 @@ register (48 findings) · Data room (10 volets).
 `docs/audit/PRODUCTION_STATUS_LEVELS.md`).
 
 Justification : tout ce qui est prouvable dans l'environnement disponible est
-prouvé et reproductible en une commande (`npm run release:gate`) ; aucun risque
-critique code connu ouvert ; conditions = validations externes (rotation
+prouvé et reproductible en une commande (`npm run release:gate`) ; **aucun
+défaut connu ouvert, à aucun niveau de gravité** — 66 findings confirmés et
+corrigés au terme du programme MSAP du 2026-08-12/13
+(`docs/audit/2026-08-12-MSAP/`) ; conditions = validations externes (rotation
 secrets prouvée, build Windows signé, déploiement staging/production réel,
 raccordement e-invoicing). `PRODUCTION_VERIFIED` exigerait en plus l'exécution
 réelle sur infrastructure de production (jamais simulée ici).

@@ -18,6 +18,50 @@ function readMeta() {
   try { return JSON.parse(fs.readFileSync(metaFile(), 'utf8')) } catch { return null }
 }
 
+/** Taille maximale d'un manifeste : quelques kilo-octets suffisent largement. */
+const MANIFEST_MAX_BYTES = 64 * 1024
+
+/**
+ * Lit le manifeste signé joint à la publication (fichier `.json` ou champ texte).
+ *
+ * On ne vérifie PAS la signature ici : la clé publique de vérification vit dans
+ * le processus Electron, et c'est lui qui décide d'installer ou non. On se borne
+ * à refuser ce qui n'est manifestement pas un manifeste — de sorte qu'un
+ * fichier collé par erreur soit signalé au moment de la publication, et non
+ * découvert au moment de l'installation sur le poste d'un client.
+ */
+async function lireManifeste(
+  champ: FormDataEntryValue | null,
+): Promise<{ value: unknown } | { error: string } | null> {
+  if (champ == null) return null
+
+  let texte: string
+  if (champ instanceof File) {
+    if (champ.size === 0) return null
+    if (champ.size > MANIFEST_MAX_BYTES) {
+      return { error: 'Manifeste trop volumineux : ce n’est probablement pas le bon fichier.' }
+    }
+    texte = await champ.text()
+  } else {
+    texte = String(champ)
+  }
+  if (!texte.trim()) return null
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(texte)
+  } catch {
+    return { error: 'Manifeste illisible : un fichier JSON produit par `npm run release:manifest` est attendu.' }
+  }
+  const o = parsed as { manifest?: unknown; signature?: unknown }
+  if (!o || typeof o !== 'object' || typeof o.signature !== 'string' || !o.manifest) {
+    return {
+      error: 'Ce fichier n’est pas un manifeste signé (il doit contenir « manifest » et « signature »).',
+    }
+  }
+  return { value: parsed }
+}
+
 // GET — public : renvoie l'info de mise à jour courante (utilisé par checkUpdates).
 export async function GET() {
   return NextResponse.json(readMeta() ?? { hasUpdate: false })
@@ -66,6 +110,20 @@ export async function POST(req: NextRequest) {
       nodeStream.pipe(ws)
     })
 
+    // ── MANIFESTE SIGNÉ (facultatif à l'appel, indispensable à l'installation) ──
+    // Le processus principal refuse toute installation non signée dès qu'une clé
+    // de vérification est embarquée. Publier un installeur SANS son manifeste
+    // produisait donc un bouton « Mettre à jour » qui échouait à chaque fois,
+    // sans que rien ne l'annonce au moment de la publication (GF31-AUD-042).
+    //
+    // Le manifeste est produit par l'ÉDITEUR au moment de la release
+    // (`npm run release:manifest`) : l'administrateur du garage le téléverse tel
+    // quel, il n'a rien à signer lui-même.
+    const manifest = await lireManifeste(form.get('manifest'))
+    if (manifest && 'error' in manifest) {
+      return NextResponse.json({ error: manifest.error }, { status: 400 })
+    }
+
     const meta = {
       hasUpdate:     true,
       latestVersion: version,
@@ -74,9 +132,20 @@ export async function POST(req: NextRequest) {
       fileSize:      fs.statSync(dest).size,
       downloadPath:  `/api/admin/updates/file/${fileName}`,
       publishedAt:   new Date().toISOString(),
+      manifest:      manifest?.value ?? null,
     }
     fs.writeFileSync(metaFile(), JSON.stringify(meta, null, 2))
-    return NextResponse.json({ ok: true, update: meta })
+    return NextResponse.json({
+      ok: true,
+      update: meta,
+      // Dit franchement ce qui se passera côté poste, au moment où l'on peut
+      // encore corriger — plutôt qu'un échec inexpliqué à l'installation.
+      warning: meta.manifest
+        ? null
+        : "Aucun manifeste signé n'a été joint : les postes dont la vérification "
+          + 'de signature est active ne pourront PAS installer cette mise à jour '
+          + 'automatiquement (téléchargement manuel seulement).',
+    })
   }
 
   // ── Publication par URL (rétro-compatibilité) ─────────────────────────────

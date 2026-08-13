@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { purchaseOrderToEuros } from '@/lib/money-db'
 import { checkStatusTransition } from '@/lib/document-status'
 
@@ -14,6 +15,9 @@ export const GET = withAuth(async (_req, { params }: { params: { id: string } })
 
 export const PATCH = withAuth(async (req, { params }: { params: { id: string } }) => {
   const session = await requireSession()
+  if (!can(session.user.role, 'stock:manage')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const existing = await prisma.purchaseOrder.findFirst({ where: { id: params.id, garageId: session.user.garageId } })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   const body = await req.json()
@@ -39,6 +43,9 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
 
 export const DELETE = withAuth(async (_req, { params }: { params: { id: string } }) => {
   const session = await requireSession()
+  if (!can(session.user.role, 'stock:manage')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const existing = await prisma.purchaseOrder.findFirst({ where: { id: params.id, garageId: session.user.garageId } })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (existing.status !== 'draft') return NextResponse.json({ error: 'Seuls les brouillons peuvent être supprimés' }, { status: 400 })

@@ -12,7 +12,15 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { getEInvoicingFlags } from '@/lib/einvoicing/flags'
-import { EINVOICE_PLATFORM_CATALOG } from '@/lib/einvoicing/catalog'
+import { isPlatformConnectable } from '@/lib/einvoicing/catalog'
+// Données du registre : module SERVEUR, jamais importé par le navigateur.
+import {
+  EINVOICE_PLATFORM_CATALOG,
+  EINVOICE_CATALOG_SOURCE,
+  EINVOICE_CATALOG_IMPORTED_AT,
+} from '@/lib/einvoicing/catalog-data'
+import { einvoiceAdapterRegistry } from '@/lib/einvoicing/adapter'
+import { enregistrerAdaptateurs } from '@/lib/einvoicing/registry'
 
 export const GET = withAuth(async () => {
   const session = await requireSession()
@@ -20,6 +28,7 @@ export const GET = withAuth(async () => {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
   }
 
+  enregistrerAdaptateurs()
   const flags = getEInvoicingFlags()
   // `normalizedName` fait partie du CONTRAT attendu par le client : l'onglet
   // e-facturation passe ce tableau tel quel à `searchPlatforms()`, qui trie et
@@ -36,8 +45,27 @@ export const GET = withAuth(async () => {
     integrationStatus: p.integrationStatus,
     authenticationMethods: p.authenticationMethods,
     capabilities: p.capabilities,
+    // Provenance de l'entrée (registre officiel) et formats ANNONCÉS par la
+    // plateforme — déclaratif, distinct de ce que GarageFlows sait faire.
+    registeredAt: p.registeredAt ?? null,
+    officialWebsite: p.officialWebsite ?? null,
+    declaredFormats: p.declaredFormats ?? null,
+    // Connectable UNIQUEMENT si un adaptateur réel est enregistré.
+    connectable: isPlatformConnectable(p, (id) => einvoiceAdapterRegistry.hasAdapter(id)),
   }))
 
-  // connection: null — la persistance des connexions arrive en Phase 3.
-  return NextResponse.json({ flags, platforms, connection: null })
+  return NextResponse.json({
+    flags,
+    platforms,
+    // Provenance AFFICHÉE : l'utilisateur doit savoir d'où vient cette liste et
+    // quelle autorité fait foi (§82).
+    catalogSource: { ...EINVOICE_CATALOG_SOURCE, importedAt: EINVOICE_CATALOG_IMPORTED_AT },
+    // Connecteurs RÉELLEMENT disponibles — la liste est vide tant qu'aucun
+    // adaptateur n'est inscrit, et l'interface s'y fie.
+    adapters: einvoiceAdapterRegistry.listAvailableAdapters().map((a) => ({
+      providerId: a.providerId, displayName: a.displayName,
+    })),
+    // L'état de connexion vit sur /api/einvoicing/connection (secrets exclus).
+    connection: null,
+  })
 })

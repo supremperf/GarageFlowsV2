@@ -83,15 +83,37 @@ function readTestCounts() {
   return { measured: true, files, suites, total, discovered: total, passed, failed, skipped }
 }
 
+/**
+ * Identité git, ou `null` hors dépôt (GF31-AUD-065).
+ *
+ * Les trois appels `git` n'avaient aucun repli : hors dépôt, la génération
+ * s'arrêtait sur `fatal: not a git repository` et la baseline canonique restait
+ * FIGÉE sur une mesure ancienne — 1541 tests affichés alors que la suite en
+ * comptait 2255. Une baseline périmée est pire qu'absente : elle contredit
+ * silencieusement tout le reste de la documentation, et c'est précisément la
+ * divergence que ce fichier existe pour empêcher.
+ *
+ * On distingue donc « pas de commit » de « échec de génération ». Sans identité,
+ * la baseline reste MESURÉE et honnête ; c'est `verify-artifact` qui refuse un
+ * artefact sans commit (40 hex exigés), et cette exigence-là ne bouge pas.
+ */
+function gitOrNull(cmd) {
+  try { return sh(cmd) } catch { return null }
+}
+
+const commit = gitOrNull('git rev-parse HEAD')
 const lock = readLock()
 const baseline = {
   _note: 'Généré par scripts/generate-verification-baseline.mjs — NE PAS éditer à la main. Source machine unique du commit/toolchain/comptes de tests (anti-divergence).',
   schemaVersion: 2,
   product: 'GarageFlows',
   version: pkg.version,
-  commit: sh('git rev-parse HEAD'),
-  commitShort: sh('git rev-parse --short HEAD'),
-  branch: sh('git rev-parse --abbrev-ref HEAD'),
+  commit,
+  commitShort: commit ? gitOrNull('git rev-parse --short HEAD') : null,
+  branch: commit ? gitOrNull('git rev-parse --abbrev-ref HEAD') : null,
+  // Explicite : un consommateur ne doit pas avoir à deviner pourquoi le commit
+  // est nul. `false` = mesure faite hors dépôt, identité de build absente.
+  gitIdentity: Boolean(commit),
   generatedAtUtc: new Date().toISOString(),
   toolchain: {
     node: process.version,
@@ -125,7 +147,11 @@ if (existsSync(CANONICAL_DOC)) {
 
 const prisma = baseline.toolchain.dependencies.prisma
 console.log(`✅ ${OUT.replace(ROOT + '/', '')} écrit :`)
-console.log(`   commit ${baseline.commitShort} · version ${baseline.version} · Node ${baseline.toolchain.node}`)
+console.log(`   commit ${baseline.commitShort ?? '—'} · version ${baseline.version} · Node ${baseline.toolchain.node}`)
+if (!baseline.gitIdentity) {
+  console.log('   ⚠️  HORS DÉPÔT GIT : les comptes sont mesurés, mais la baseline ne porte')
+  console.log('      AUCUNE identité de build. Rejouez-la depuis le dépôt avant un tag.')
+}
 console.log(`   Prisma résolu ${prisma.resolved ?? prisma.status} (déclaré ${prisma.declared})`)
 console.log(`   tests : ${baseline.tests.measured ? `${baseline.tests.passed}/${baseline.tests.total} (${baseline.tests.skipped} ignorés)` : baseline.tests.note}`)
 console.log(`   doc canonique : ${docStatus}`)

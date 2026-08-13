@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { prisma, isPostgresDatabase } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can, redactLineCosts } from '@/lib/authz'
 import { UpdateInvoiceSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
 import { withTotals } from '@/lib/billing'
@@ -21,11 +22,23 @@ export const GET = withAuth(async (_req, { params }) => {
     include: { lines: { orderBy: { sortOrder: 'asc' } } },
   })
   if (!invoice) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(withTotals({ ...invoice, lines: linesToEuros(invoice.lines) }))
+  // Coût d'achat retiré pour les rôles sans `financial:read` (GF31-AUD-009).
+  return NextResponse.json(
+    withTotals({ ...invoice, lines: redactLineCosts(linesToEuros(invoice.lines), session.user.role) }),
+  )
 })
 
 export const PATCH = withAuth(async (req, { params }) => {
   const session = await requireSession()
+  // §16 — le contrôle d'accès appartient au serveur. La matrice `authz.ts`
+  // réserve `invoice:manage` à MANAGER et OWNER (un RECEPTIONIST a
+  // `quote:manage`, PAS `invoice:manage`) ; aucune route de facturation ne
+  // l'appliquait, si bien que la matrice était purement déclarative sur le
+  // document le plus sensible du produit (GF31-AUD-009). Pour ouvrir la
+  // facturation à un autre rôle, modifier la MATRICE — pas cette route.
+  if (!can(session.user.role, 'invoice:manage')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const body = await req.json()
 
   const parsed = UpdateInvoiceSchema.safeParse(body)
@@ -40,6 +53,17 @@ export const PATCH = withAuth(async (req, { params }) => {
   // A legally-issued invoice is immutable for amounts: block line/taxRate edits
   // once it leaves 'draft' (French sequential-invoice rules → use a credit note).
   const financialEdit = body.lines !== undefined || body.taxRate !== undefined
+
+  // ── IDENTITÉ DE L'ACHETEUR — scellée avec le document (§51) ────────────────
+  // Les MONTANTS d'une facture émise étaient figés, mais pas l'identité de
+  // celui à qui elle est adressée : le numéro séquentiel restait, l'acheteur
+  // changeait, et rien n'en gardait trace. C'est une falsification silencieuse
+  // d'un document comptable scellé — or le module se réclame des règles
+  // françaises, où une facture émise se corrige par avoir, jamais par
+  // réécriture. Le dépôt applique déjà cette doctrine à la SUPPRESSION
+  // (« Une facture émise ne peut pas être supprimée. Créez un avoir. »).
+  const CHAMPS_IDENTITE = ['clientName', 'clientEmail', 'clientPhone', 'clientAddress', 'vehicleModel', 'licensePlate'] as const
+  const identityEdit = CHAMPS_IDENTITE.some((f) => body[f] !== undefined)
   if (financialEdit && areAmountsLocked('invoice', existing.status)) {
     return NextResponse.json(
       { error: 'Une facture émise ne peut plus être modifiée. Créez un avoir.' },
@@ -69,6 +93,7 @@ export const PATCH = withAuth(async (req, { params }) => {
   // décrémenté » ou « stock décrémenté / facture non validée » : un stock
   // insuffisant lève et annule l'intégralité du PATCH.
   let lockConflict = false
+  let identityConflict = false
   let stockError: InventoryError | null = null
   let stockMovements = 0
   let invoice
@@ -78,9 +103,21 @@ export const PATCH = withAuth(async (req, { params }) => {
       // DANS la transaction sur l'état COURANT (le contrôle hors transaction
       // ci-dessus lit un état potentiellement périmé : deux PATCH concurrents
       // pourraient sinon franchir le verrou avec une lecture « draft » périmée).
+      // Verrou de LIGNE avant la relecture : sans lui, la relecture reste un
+      // simple `findFirst`, donc non bloquante. Sous PostgreSQL en READ
+      // COMMITTED, deux requêtes concurrentes lisent alors toutes deux l'état
+      // « draft » et franchissent le verrou d'immutabilité : la première valide
+      // le document, la seconde réécrit ses lignes par-dessus un document déjà
+      // émis (GF31-AUD-010). Même dispositif que PATCH /api/admin/licenses/[id].
+      if (isPostgresDatabase()) {
+        await tx.$executeRaw`SELECT "id" FROM "Invoice" WHERE "id" = ${params.id} FOR UPDATE`
+      }
       const fresh = await tx.invoice.findFirst({ where: { id: params.id, garageId: session.user.garageId }, select: { status: true } })
       if (fresh) {
         if (financialEdit && areAmountsLocked('invoice', fresh.status)) { lockConflict = true; return null }
+        // Même verrou que les montants, au même moment : DANS la transaction,
+        // sur l'état courant (anti-TOCTOU).
+        if (identityEdit && areAmountsLocked('invoice', fresh.status)) { identityConflict = true; return null }
         if (body.status !== undefined && checkStatusTransition('invoice', fresh.status, body.status)) { lockConflict = true; return null }
       }
       if (body.lines !== undefined) {
@@ -141,6 +178,16 @@ export const PATCH = withAuth(async (req, { params }) => {
   if (stockError) {
     return NextResponse.json({ error: stockError.message, code: stockError.code }, { status: stockError.status })
   }
+  if (identityConflict) {
+    return NextResponse.json(
+      {
+        error: "L'identité du client d'une facture émise ne peut plus être modifiée. "
+             + 'Annulez cette facture et émettez-en une nouvelle.',
+        code: 'INVOICE_IDENTITY_LOCKED',
+      },
+      { status: 409 },
+    )
+  }
   if (lockConflict || !invoice) {
     return NextResponse.json(
       { error: 'Une facture émise ne peut plus être modifiée. Créez un avoir.' },
@@ -158,11 +205,16 @@ export const PATCH = withAuth(async (req, { params }) => {
     })
   }
 
-  return NextResponse.json(withTotals({ ...invoice, lines: linesToEuros(invoice.lines) }))
+  return NextResponse.json(withTotals({ ...invoice, lines: redactLineCosts(linesToEuros(invoice.lines), session.user.role) }))
 })
 
 export const DELETE = withAuth(async (req, { params }) => {
   const session = await requireSession()
+  // Supprimer une facture est un acte de gestion : même exigence que POST/PATCH
+  // (matrice `authz.ts`, GF31-AUD-009).
+  if (!can(session.user.role, 'invoice:manage')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   // Only draft invoices may be hard-deleted. An issued (sent/paid/overdue)
   // invoice must be preserved for the sequential series and accounting/FEC — it
   // is cancelled via a credit note, never erased.
@@ -185,6 +237,20 @@ export const DELETE = withAuth(async (req, { params }) => {
       number: existing.number,
       reason: `Facture ${existing.number} supprimée (brouillon)`,
     })
+
+    // Le devis d'où venait cette facture retrouve son état d'avant conversion.
+    //
+    // `Quote.invoice` est en `onDelete: SetNull` : supprimer la facture laissait
+    // le devis au statut TERMINAL « converted » avec un `invoiceId` à nul. Il
+    // n'était alors plus convertible (« Devis déjà converti »), plus
+    // supprimable (un devis converti se conserve), et ne pointait plus sur rien :
+    // le garage devait tout ressaisir, en gardant un document mort en base
+    // (GF31-AUD-047).
+    await tx.quote.updateMany({
+      where: { garageId: session.user.garageId, invoiceId: params.id, status: 'converted' },
+      data: { status: 'accepted', invoiceId: null },
+    })
+
     await tx.invoice.delete({ where: { id: params.id, garageId: session.user.garageId } })
   })
   await logAudit({ action: 'delete', entityType: 'Invoice', entityId: params.id, session, req })

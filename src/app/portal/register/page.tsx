@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { User, Mail, Lock, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { avecGarageSlug, lienPortail } from '@/lib/portal/garage-slug'
 
 export default function PortalRegisterPage() {
   const router = useRouter()
@@ -17,6 +18,7 @@ export default function PortalRegisterPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
+  const [courrielEnvoye, setCourrielEnvoye] = useState(true)
   const [loading, setLoading] = useState(false)
 
   async function submit(e: FormEvent) {
@@ -27,12 +29,21 @@ export default function PortalRegisterPage() {
       const res = await fetch('/api/portal/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password }),
+        // `garageSlug` : idem connexion — obligatoire dès qu'il y a plus d'un
+        // garage en base, ce qui est la norme sur le déploiement PWA
+        // (GF31-AUD-019).
+        body: JSON.stringify(avecGarageSlug({ name: name.trim(), email: email.trim().toLowerCase(), password })),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Inscription impossible'); return }
       setDone(true)
-      setTimeout(() => router.push('/portal/login'), 1500)
+      // Le serveur dit s'il a RÉELLEMENT envoyé le lien de vérification. Sans
+      // ce report, un envoi raté (garage sans SMTP configuré) s'affichait
+      // « Compte créé » et le client attendait indéfiniment un courriel qui
+      // n'existait pas.
+      setCourrielEnvoye(data.verificationEmailSent !== false)
+      // On ne précipite pas la redirection quand il y a un message à lire.
+      setTimeout(() => router.push(lienPortail('/portal/login')), data.verificationEmailSent === false ? 6000 : 1500)
     } catch {
       setError('Erreur réseau')
     } finally {
@@ -52,6 +63,17 @@ export default function PortalRegisterPage() {
             <div className="flex flex-col items-center gap-2 py-6 text-emerald-400">
               <CheckCircle2 className="h-10 w-10" />
               <p className="text-sm">Compte créé. Redirection…</p>
+              {courrielEnvoye ? (
+                <p className="text-center text-xs text-slate-400">
+                  Un lien de vérification vient de vous être envoyé par courriel.
+                </p>
+              ) : (
+                <p className="text-center text-xs text-amber-400" role="status">
+                  Le lien de vérification n’a pas pu être envoyé. Contactez votre garage
+                  pour le recevoir : tant que votre adresse n’est pas vérifiée, vos
+                  documents ne s’affichent pas.
+                </p>
+              )}
             </div>
           ) : (
             <form onSubmit={submit} className="space-y-4">
@@ -70,7 +92,7 @@ export default function PortalRegisterPage() {
                 {loading ? <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Création…</span> : 'Créer mon compte'}
               </button>
               <p className="pt-2 text-center text-xs text-slate-600">
-                Déjà inscrit ? <Link href="/portal/login" className="font-semibold text-blue-400 hover:text-blue-300">Se connecter</Link>
+                Déjà inscrit ? <Link href={lienPortail("/portal/login")} className="font-semibold text-blue-400 hover:text-blue-300">Se connecter</Link>
               </p>
             </form>
           )}

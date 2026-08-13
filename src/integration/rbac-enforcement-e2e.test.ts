@@ -12,9 +12,9 @@
  * routes staff passent par `requireSession()` (OWNER/MANAGER/RECEPTIONIST).
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-rbac-e2e.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -43,10 +43,7 @@ const asOwner = () => { h.session = { user: { id: ids.ownerId, role: 'OWNER', ga
 const asReceptionist = () => { h.session = { user: { id: ids.receptionistId, role: 'RECEPTIONIST', garageId: ids.garageId } } }
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', {
-    cwd: path.resolve(__dirname, '../..'), env: { ...process.env }, stdio: 'ignore',
-  })
+  prepareTestDb(DB_PATH)
   ;({ prisma } = await import('@/lib/db'))
   api.users = await import('@/app/api/users/route')
   api.garages = await import('@/app/api/garages/route')

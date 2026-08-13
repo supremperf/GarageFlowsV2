@@ -144,12 +144,19 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    // Même exigence que PATCH /api/admin/licenses/[id] : les champs MÉCANICIEN
+    // entrent dans le message signé dès qu'ils sont non nuls. Les omettre
+    // produisait un MAC incohérent avec celui que `verifyRecordMac` recalcule
+    // depuis la ligne, si bien que révoquer puis réactiver une clé mécanicien
+    // attribuée la laissait vue comme « altérée » (GF31-AUD-006).
     const newMac = computeRecordMac({
       licenseId: record.licenseId,
       token: record.token,
       status,
       expiryAt: record.expiryAt,
       hwid: record.hwid ?? null,
+      parentLicenseId: record.parentLicenseId ?? null,
+      mechanicId: record.mechanicId ?? null,
     })
 
     const updated = await prisma.licenseKey.update({

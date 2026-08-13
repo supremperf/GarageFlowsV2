@@ -12,9 +12,9 @@
  *    supprimer une garantie réclamée.
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-status-massassign-v15.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -38,10 +38,7 @@ const jreq = (method: string, body?: unknown) =>
   new Request('http://localhost/x', { method, headers: { 'content-type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) })
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', {
-    cwd: path.resolve(__dirname, '../..'), env: { ...process.env }, stdio: 'ignore',
-  })
+  prepareTestDb(DB_PATH)
   ;({ prisma } = await import('@/lib/db'))
   ;({ serializePoLinesJsonV2 } = await import('@/lib/money-json'))
   ;({ PATCH: poPatch, DELETE: poDelete } = (await import('@/app/api/purchase-orders/[id]/route')) as any)

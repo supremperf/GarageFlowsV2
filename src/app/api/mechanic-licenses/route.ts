@@ -1,8 +1,10 @@
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { prisma, isPostgresDatabase } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
+import { activeGarageLicenseId } from '@/lib/license/session'
 import { can } from '@/lib/authz'
 import { verifyLicenseToken } from '@/lib/license/verify'
 import {
@@ -143,6 +145,33 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: 'Cette clé n\'est pas une clé mécanicien.' }, { status: 400 })
   }
   const payload = verified.payload
+
+  // ── Preuve d'ENTITLEMENT sur la licence garage parente ─────────────────────
+  //
+  // Le `plid` signé prouve à quelle licence garage cette clé mécanicien
+  // appartient — il ne prouve PAS que l'appelant a le droit d'en disposer.
+  // Quiconque possédait un jeton de clé mécanicien d'un tiers (ancien
+  // mécanicien, clé remise par erreur, clé de démonstration d'un revendeur)
+  // pouvait donc l'enregistrer dans SON garage et, si la licence garage parente
+  // n'était pas encore rattachée, se l'approprier DÉFINITIVEMENT — le
+  // propriétaire légitime ne pouvait alors plus jamais y rattacher son propre
+  // garage, le rattachement étant immuable (GF31-AUD-007).
+  //
+  // La seule preuve serveur disponible est la licence sous laquelle
+  // l'installation tourne réellement : le claim `lid` du cookie `gf_session`,
+  // JWT signé posé par /api/license/activate. On exige donc que le parent
+  // revendiqué SOIT cette licence.
+  const activeLid = await activeGarageLicenseId(cookies().get('gf_session')?.value ?? '')
+  if (!activeLid) {
+    return NextResponse.json(
+      { error: 'Aucune licence garage active sur cette installation. Activez votre licence avant d\'enregistrer une clé mécanicien.' },
+      { status: 403 },
+    )
+  }
+  if (activeLid !== payload.plid) {
+    // Message neutre : ne pas révéler l'existence de la licence d'un tiers.
+    return NextResponse.json({ error: 'Licence garage parente introuvable pour ce garage.' }, { status: 400 })
+  }
 
   // La licence Garage parente doit appartenir à CE garage.
   const parent = await prisma.licenseKey.findUnique({ where: { licenseId: payload.plid } })

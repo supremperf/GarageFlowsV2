@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'fs'
 import path from 'path'
-import { EINVOICE_PLATFORM_CATALOG, searchPlatforms } from '@/lib/einvoicing/catalog'
+import { searchPlatforms } from '@/lib/einvoicing/catalog'
+import { EINVOICE_PLATFORM_CATALOG, EINVOICE_CATALOG_SOURCE, EINVOICE_CATALOG_IMPORTED_AT } from '@/lib/einvoicing/catalog-data'
 
 /**
  * RÉGRESSION — écran des réglages détruit par une projection d'API incomplète.
@@ -60,10 +61,17 @@ describe('e-facturation — contrat entre /api/einvoicing/status et searchPlatfo
   })
 
   it('la recherche reste fonctionnelle sur le catalogue complet', () => {
-    const tous = searchPlatforms('')
+    const tous = searchPlatforms('', EINVOICE_PLATFORM_CATALOG)
     expect(tous.length).toBe(EINVOICE_PLATFORM_CATALOG.length)
-    const ciblé = searchPlatforms('alpha')
+
+    // La sonde est TIRÉE du catalogue réel plutôt que codée en dur : le
+    // catalogue est désormais importé du registre des plateformes agréées et
+    // évolue à chaque immatriculation. Un nom figé rendrait ce test faux le jour
+    // où la plateforme quitte le registre — ce qui est arrivé aux entrées de
+    // démonstration qu'il visait auparavant.
+    const sonde = EINVOICE_PLATFORM_CATALOG[0]
+    const ciblé = searchPlatforms(sonde.officialName, EINVOICE_PLATFORM_CATALOG)
     expect(ciblé.length).toBeGreaterThan(0)
-    expect(ciblé[0].officialName.toLowerCase()).toContain('alpha')
+    expect(ciblé.some((p) => p.id === sonde.id)).toBe(true)
   })
 })

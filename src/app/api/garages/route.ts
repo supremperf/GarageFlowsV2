@@ -13,10 +13,23 @@ import { UpdateGarageSchema } from '@/lib/schemas'
 export const GET = withAuth(async () => {
   const session = await requireSession()
 
+  // L'ANNUAIRE DU PERSONNEL n'est pas une information de garage.
+  //
+  // `GET /api/users` le réserve à OWNER/MANAGER (`user:manage`), mais cette
+  // route le servait — noms, e-mails, rôles de TOUS les comptes — à n'importe
+  // quel rôle authentifié : le contrôle d'accès posé sur une porte se
+  // contournait par la porte d'à côté (GF31-AUD-059). On le conditionne à la
+  // même permission, sans fermer la route : les autres rôles ont besoin des
+  // informations du garage lui-même.
+  // Exactement la même règle que `GET /api/users` — c'est le point : deux
+  // portes vers la même donnée ne doivent pas avoir deux serrures différentes.
+  const peutVoirLePersonnel = ['OWNER', 'MANAGER'].includes(session.user.role)
   const garage = await prisma.garage.findUnique({
     where: { id: session.user.garageId },
     include: {
-      users: { select: { id: true, name: true, email: true, role: true, createdAt: true } },
+      ...(peutVoirLePersonnel
+        ? { users: { select: { id: true, name: true, email: true, role: true, createdAt: true } } }
+        : {}),
       _count: { select: { mechanics: true, jobs: true } },
     },
   })

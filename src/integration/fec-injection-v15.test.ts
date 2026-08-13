@@ -10,9 +10,9 @@
  * Les montants / dates / n° de compte, générés par le programme, restent bruts.
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-fec-injection-v15.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -28,10 +28,7 @@ let GET: (req: Request) => Promise<Response>
 const HEADER_COLS = 18 // JournalCode … Idevise
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', {
-    cwd: path.resolve(__dirname, '../..'), env: { ...process.env }, stdio: 'ignore',
-  })
+  prepareTestDb(DB_PATH)
   ;({ prisma } = await import('@/lib/db'))
   ;({ GET } = (await import('@/app/api/export/fec/route')) as any)
 
@@ -79,5 +76,59 @@ describe('Export FEC — injection neutralisée (V15 P1)', () => {
     expect(cols[7]).not.toContain('\n')           // retour ligne retiré
     // Aucun champ ne commence par un caractère déclencheur de formule nu.
     for (const c of cols) expect(/^[=+@]/.test(c)).toBe(false)
+  })
+})
+
+/**
+ * NON-RÉGRESSION GF31-AUD-014.
+ *
+ * `Invoice.status` vaut draft | sent | paid | overdue | cancelled. Le filtre de
+ * l'export était `status: { not: 'draft' }` : les factures ANNULÉES produisaient
+ * donc des écritures de vente (706) et de TVA collectée (445710) dans le fichier
+ * remis à l'administration fiscale — chiffre d'affaires et TVA surdéclarés.
+ *
+ * Base SQLite réelle : c'est bien la requête Prisma qui filtre, pas un simulacre.
+ */
+describe('GF31-AUD-014 — les factures annulées ne sont pas du chiffre d’affaires', () => {
+  it('une facture ANNULÉE ne produit aucune écriture, une facture envoyée si', async () => {
+    const g = await prisma.garage.create({
+      data: { name: 'FEC annul', slug: 'fec-aud-014', siret: '99988877700011' },
+    })
+    const ligne = {
+      create: [{ description: 'L', quantityTenThousandths: 10000, unitPriceTenThousandths: 1000000, sortOrder: 0 }],
+    }
+    // 100,00 € HT chacune, TVA 20 %.
+    await prisma.invoice.create({
+      data: { number: 'FAC-OK', garageId: g.id, clientName: 'Client Actif', status: 'sent', issueDate: '2026-04-01', taxRate: 20, lines: ligne },
+    })
+    await prisma.invoice.create({
+      data: { number: 'FAC-ANNULEE', garageId: g.id, clientName: 'Client Annule', status: 'cancelled', issueDate: '2026-04-02', taxRate: 20, lines: ligne },
+    })
+    await prisma.invoice.create({
+      data: { number: 'FAC-BROUILLON', garageId: g.id, clientName: 'Client Brouillon', status: 'draft', issueDate: '2026-04-03', taxRate: 20, lines: ligne },
+    })
+
+    const precedent = h.session
+    h.session = { user: { id: 'u', role: 'OWNER', garageId: g.id } }
+    try {
+      const body = await (await GET(new Request('http://localhost/api/export/fec?year=2026'))).text()
+
+      expect(body).toContain('FAC-OK')
+      expect(body).not.toContain('FAC-ANNULEE')
+      expect(body).not.toContain('FAC-BROUILLON')
+
+      // Et surtout : les MONTANTS. Une seule facture retenue → 100,00 HT et
+      // 20,00 de TVA collectée, pas le double.
+      const lignes = body.split('\r\n').slice(1).filter(Boolean)
+      const credit = (compte: string) =>
+        lignes
+          .filter((l) => l.split('|')[4] === compte)
+          .reduce((s, l) => s + Number(l.split('|')[12].replace(',', '.')), 0)
+
+      expect(credit('706000')).toBeCloseTo(100, 2)   // produits
+      expect(credit('445710')).toBeCloseTo(20, 2)    // TVA collectée
+    } finally {
+      h.session = precedent
+    }
   })
 })

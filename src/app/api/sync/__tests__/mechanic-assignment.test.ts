@@ -27,8 +27,24 @@ const cap = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/db', () => {
+  /**
+   * Réservation d'un garage par une AUTRE licence garage (GF31-AUD-003) —
+   * même implémentation dans la transaction et hors transaction.
+   */
+  const claimFinder = async (a: {
+    where: { garageId: string; licenseType: { not: string }; NOT: { licenseId: string } }
+  }) => {
+    const hit = Array.from(cap.licenses.values()).find(
+      (row) =>
+        row.garageId === a.where.garageId &&
+        row.licenseType !== a.where.licenseType.not &&
+        row.licenseId !== a.where.NOT.licenseId,
+    )
+    return hit ? { licenseId: String(hit.licenseId) } : null
+  }
   const tx = {
     licenseKey: {
+      findFirst: claimFinder,
       findUnique: async (a: { where: { licenseId: string } }) => cap.licenses.get(a.where.licenseId) ?? null,
       updateMany: async (a: { where: Record<string, unknown>; data: Record<string, unknown> }) => {
         const row = cap.licenses.get(String(a.where.licenseId))
@@ -58,7 +74,10 @@ vi.mock('@/lib/db', () => {
   }
   return {
     prisma: {
-      licenseKey: { findUnique: async (a: { where: { licenseId: string } }) => cap.licenses.get(a.where.licenseId) ?? null },
+      licenseKey: {
+        findUnique: async (a: { where: { licenseId: string } }) => cap.licenses.get(a.where.licenseId) ?? null,
+        findFirst: claimFinder,
+      },
       $transaction: async (fn: (t: typeof tx) => Promise<unknown>) => fn(tx),
     },
     isPostgresDatabase: () => true,

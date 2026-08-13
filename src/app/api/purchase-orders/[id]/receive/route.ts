@@ -4,6 +4,7 @@ import { fromScaled } from '@/lib/money'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 
 interface POLine {
   partId?: string | null
@@ -18,6 +19,9 @@ interface POLine {
 // Idempotent: no-op if already received.
 export const POST = withAuth(async (_req, { params }: { params: { id: string } }) => {
   const session = await requireSession()
+  if (!can(session.user.role, 'stock:manage')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
 
   const order = await prisma.purchaseOrder.findFirst({
     where: { id: params.id, garageId: session.user.garageId },
@@ -32,14 +36,32 @@ export const POST = withAuth(async (_req, { params }: { params: { id: string } }
 
   // Parsing STRICT versionné (v1 historique OU v2) — plus de JSON.parse nu.
   let lines: Array<{ partId?: string | null; qty: number }> = []
+  const fractionnaires: string[] = []
   try {
-    lines = parsePoLinesJson(order.linesJson).lines.map((l) => ({
-      partId: l.partId,
-      // Stock : unités entières — la quantité exacte (dix-millièmes) est arrondie
-      // à l'unité pour l'incrément de stock (comportement historique conservé).
-      qty: Math.round(fromScaled(l.qtyTenThousandths)),
-    }))
+    lines = parsePoLinesJson(order.linesJson).lines.map((l) => {
+      // Le stock se compte en unités ENTIÈRES. Une quantité fractionnaire était
+      // silencieusement arrondie à l'entier le plus proche (2,4 → 2) sur un
+      // statut TERMINAL et non rejouable : l'écart entre ce que le fournisseur
+      // a facturé et ce que le stock enregistre devenait permanent, dans un
+      // sens comme dans l'autre, sans le moindre message (GF31-AUD-051).
+      const exact = fromScaled(l.qtyTenThousandths)
+      if (!Number.isInteger(exact)) fractionnaires.push(`${l.partName ?? l.partId ?? '?'} (${exact})`)
+      return { partId: l.partId, qty: Math.round(exact) }
+    })
   } catch { lines = [] }
+
+  // Refus AVANT la revendication du statut : la commande reste réceptionnable
+  // une fois corrigée, au lieu d'être figée sur un écart de stock invisible.
+  if (fractionnaires.length > 0) {
+    return NextResponse.json(
+      {
+        error: `Le stock se compte en unités entières. Quantité fractionnaire sur : ${fractionnaires.join(', ')}. `
+             + 'Corrigez la commande avant de la réceptionner.',
+        code: 'INVALID_STOCK_QUANTITY',
+      },
+      { status: 409 },
+    )
+  }
 
   // Run everything atomically
   try {

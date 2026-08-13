@@ -22,7 +22,12 @@ export const GET = withAuth(async (req) => {
       where: {
         garageId: session.user.garageId,
         issueDate: { gte: `${year}-01-01`, lte: `${year}-12-31` },
-        status: { not: 'draft' },
+        // `Invoice.status` vaut draft | sent | paid | overdue | cancelled.
+        // Exclure le seul brouillon laissait les factures ANNULÉES produire des
+        // écritures de vente (706) et de TVA collectée (445710) : le FEC remis à
+        // l'administration surdéclarait alors le chiffre d'affaires ET la TVA
+        // (GF31-AUD-014). Une facture annulée ne constate aucun produit.
+        status: { notIn: ['draft', 'cancelled'] },
       },
       include: { lines: true },
       orderBy: { issueDate: 'asc' },

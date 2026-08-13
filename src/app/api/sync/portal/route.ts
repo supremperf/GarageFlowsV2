@@ -33,9 +33,12 @@ import { SignJWT } from 'jose'
 import { prisma } from '@/lib/db'
 import { portalSecret } from '@/lib/portal-secret'
 import { publicUrlFor } from '@/lib/public-url'
-import { authenticateGarageLicense, shortId } from '@/lib/sync/garage-auth'
+import { authenticateGarageLicense, isGarageClaimedByAnotherLicense, shortId } from '@/lib/sync/garage-auth'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { logger } from '@/lib/logger'
+
+/** Le garage revendiqué appartient déjà à une AUTRE licence garage. */
+class GarageAlreadyClaimed extends Error {}
 
 /** Durée de validité du portail — règle métier existante, inchangée. */
 const PORTAL_TTL_DAYS = 7
@@ -46,6 +49,9 @@ const FAILURE_STATUS: Record<string, number> = {
   MISSING_LICENSE: 400, LICENSE_INVALID: 403, NOT_A_GARAGE_LICENSE: 403,
   LICENSE_UNKNOWN: 403, LICENSE_REVOKED: 403, LICENSE_SUSPENDED: 403,
   LICENSE_EXPIRED: 403, GARAGE_MISMATCH: 403,
+  // Revendication d'un garage déjà réservé / licence pas encore rattachée :
+  // conflit d'état, pas un défaut d'authentification (GF31-AUD-003).
+  GARAGE_ALREADY_CLAIMED: 409, LICENSE_NOT_BOUND: 409,
 }
 
 export async function POST(req: Request) {
@@ -81,17 +87,43 @@ export async function POST(req: Request) {
 
   try {
     // Rattachement de la licence à la première utilisation (même règle partout).
+    // Le contrôle « ce garage est-il déjà réservé ? » est REJOUÉ ici, dans la
+    // même transaction que l'écriture : celui de `authenticateGarageLicense`
+    // est fait hors transaction et resterait sujet à une course entre deux
+    // licences revendiquant le même garage au même instant (GF31-AUD-003).
     if (!auth.garageId) {
-      await prisma.licenseKey.updateMany({
-        where: { licenseId: auth.licenseId, garageId: null },
-        data:  { garageId: trustedGarageId },
+      await prisma.$transaction(async (tx) => {
+        if (await isGarageClaimedByAnotherLicense(tx, trustedGarageId, auth.licenseId)) {
+          throw new GarageAlreadyClaimed()
+        }
+        await tx.licenseKey.updateMany({
+          where: { licenseId: auth.licenseId, garageId: null },
+          data:  { garageId: trustedGarageId },
+        })
       })
     }
 
-    await prisma.portalSnapshot.upsert({
-      where:  { id: jti },
-      create: { id: jti, garageId: trustedGarageId, jobId, payload: serialized, expiresAt },
-      update: { payload: serialized, expiresAt },
+    // Une SEULE publication vivante par intervention.
+    //
+    // Chaque publication créait un instantané de plus, et les précédents
+    // restaient servis pendant sept jours. Conséquences : un garage qui
+    // s'aperçoit qu'une photo ou une ligne de devis n'aurait pas dû être
+    // publiée ne pouvait PAS se rétracter — republier ne révoquait rien, et
+    // l'ancien lien continuait de servir le contenu litigieux ; et les
+    // instantanés s'accumulaient sans borne pour une même intervention.
+    //
+    // Republier révoque donc désormais la publication précédente, dans la même
+    // transaction que la nouvelle : à aucun instant deux instantanés vivants ne
+    // coexistent pour une intervention.
+    await prisma.$transaction(async (tx) => {
+      await tx.portalSnapshot.deleteMany({
+        where: { garageId: trustedGarageId, jobId, id: { not: jti } },
+      })
+      await tx.portalSnapshot.upsert({
+        where:  { id: jti },
+        create: { id: jti, garageId: trustedGarageId, jobId, payload: serialized, expiresAt },
+        update: { payload: serialized, expiresAt },
+      })
     })
 
     // Purge opportuniste des instantanés périmés de CE garage (pas de tâche cron
@@ -113,6 +145,12 @@ export async function POST(req: Request) {
     const path = `/portal/${token}`
     return NextResponse.json({ ok: true, token, path, url: publicUrlFor(path), expiresAt: expiresAt.toISOString() })
   } catch (err) {
+    if (err instanceof GarageAlreadyClaimed) {
+      logger.warn('[sync/portal] revendication refusée — garage déjà réservé', {
+        garage: shortId(trustedGarageId), licence: shortId(auth.licenseId),
+      })
+      return NextResponse.json({ ok: false, code: 'GARAGE_ALREADY_CLAIMED' }, { status: 409 })
+    }
     logger.error('[sync/portal] erreur base', err)
     return NextResponse.json({ ok: false, code: 'SERVICE_UNAVAILABLE' }, { status: 503 })
   }

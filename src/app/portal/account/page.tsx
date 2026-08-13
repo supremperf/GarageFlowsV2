@@ -8,6 +8,7 @@
 
 import { useEffect, useState, useCallback, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
+import { lienPortail } from '@/lib/portal/garage-slug'
 import { Car, Wrench, FileText, Receipt, ShieldCheck, LogOut, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -41,7 +42,11 @@ export default function PortalAccountPage() {
   const load = useCallback(async () => {
     try {
       const res = await fetch('/api/portal/me/dashboard', { cache: 'no-store' })
-      if (res.status === 401) { router.replace('/portal/login'); return }
+      // Le garage mémorisé vit dans la session de l'ONGLET : un lien nu le perd
+        // dès qu'on n'est plus dans l'onglet d'origine, et le client retombe sur
+        // une connexion qui ne sait plus à quel garage il appartient
+        // (GF31-AUD-061).
+        if (res.status === 401) { router.replace(lienPortail('/portal/login')); return }
       if (!res.ok) throw new Error()
       setData((await res.json()) as Dashboard)
     } catch {
@@ -55,7 +60,7 @@ export default function PortalAccountPage() {
 
   async function logout() {
     await fetch('/api/portal/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => {})
-    router.replace('/portal/login')
+    router.replace(lienPortail('/portal/login'))
   }
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-[#0a0f1e]"><Loader2 className="h-8 w-8 animate-spin text-slate-600" /></div>
@@ -72,6 +77,23 @@ export default function PortalAccountPage() {
 
         {data && (
           <div className="mt-6 space-y-6">
+            {/* Compte non encore RATTACHÉ à un dossier client.
+                Le serveur le dit (`linkedClient: false`) ; l'écran l'ignorait et
+                affichait « Aucune facture », « Aucun véhicule » — un client qui
+                a bel et bien des documents concluait que son garage ne les avait
+                pas mis en ligne, alors qu'il lui manquait seulement de vérifier
+                son adresse e-mail (GF31-AUD-062). */}
+            {!data.linkedClient && (
+              <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-300" role="status">
+                <p className="font-semibold">Votre compte n’est pas encore relié à votre dossier client.</p>
+                <p className="mt-1 text-amber-300/80">
+                  Vos documents existent peut-être déjà, mais ils ne peuvent pas vous être
+                  montrés tant que votre adresse e-mail n’est pas vérifiée. Ouvrez le lien
+                  reçu par courriel, ou demandez à votre garage de vous le renvoyer.
+                </p>
+              </div>
+            )}
+
             {/* Active repairs + timelines */}
             <Section icon={<Wrench className="h-4 w-4 text-blue-400" />} title="Réparations en cours">
               {data.activeRepairs.length === 0 ? <Empty>Aucune réparation en cours.</Empty> : data.activeRepairs.map(r => (

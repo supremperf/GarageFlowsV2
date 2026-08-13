@@ -136,6 +136,12 @@ export const UpdateInvoiceSchema = z.object({
   clientEmail:   email,
   clientPhone:   phone,
   clientAddress: z.string().max(500).optional().nullable(),
+  // `vehicleModel` et `licensePlate` étaient ÉCRITS par la route sans figurer
+  // ici : la promesse « toute écriture passe par un schéma » était fausse pour
+  // ces deux champs, qui partaient donc en base sans borne de longueur
+  // (GF31-AUD-046).
+  vehicleModel:  z.string().max(200).optional().nullable(),
+  licensePlate:  z.string().max(20).optional().nullable(),
   taxRate:   z.number().min(0).max(100).optional(),
 })
 
@@ -267,7 +273,101 @@ export const CreatePartSchema = z.object({
   location:    z.string().max(100).optional().nullable(),
 })
 
-export const UpdatePartSchema = CreatePartSchema.partial()
+export const UpdatePartSchema = CreatePartSchema.partial().extend({
+  /**
+   * Quantité OBSERVÉE par l'appelant au moment où il a préparé sa correction.
+   * Obligatoire dès que `quantity` est fourni : l'écriture n'est appliquée que
+   * si le stock vaut encore cette valeur, sinon 409. Sans elle, une correction
+   * d'inventaire écrasait en silence une vente concurrente (mise à jour perdue).
+   */
+  expectedQuantity: z.number().int().min(0).optional(),
+})
+
+// ─── Véhicules de prêt ────────────────────────────────────────────────────────
+
+/**
+ * Les quatre états d'un prêt. La colonne est un `String` libre côté Prisma, et
+ * son commentaire de modèle énumère déjà ces quatre valeurs — mais rien ne les
+ * imposait à l'écriture : `PATCH /api/loaner-reservations/[id]` recopiait
+ * `body.status` verbatim. Un statut hors énumération (« en cours », « actif »)
+ * faisait disparaître le prêt de TOUTES les vues et de TOUS les garde-fous, qui
+ * filtrent sur `['reserved','active']` : planning, fiche véhicule, détection de
+ * chevauchement, et refus de supprimer un véhicule encore prêté.
+ */
+export const LOANER_STATUSES = ['reserved', 'active', 'returned', 'cancelled'] as const
+export type LoanerStatus = typeof LOANER_STATUSES[number]
+
+/** Date-heure réellement interprétable — refuse ce qui deviendrait `Invalid Date`. */
+const dateTimeStr = z
+  .string()
+  .min(1, 'Date requise')
+  .refine((v) => !Number.isNaN(new Date(v).getTime()), 'Date invalide')
+
+/**
+ * Montant saisi (nombre OU chaîne de formulaire) → entier EXACT dans l'unité de
+ * stockage. On passe par `parseAmountToScaled`, seul parseur borné du projet :
+ * il refuse le non-numérique, la notation exponentielle, les décimales en trop,
+ * le négatif, et surtout tout dépassement de `MAX_SCALED` (colonnes Int 32 bits).
+ *
+ * Le repli `toScaled(NaN) = 0` — défensif et légitime DANS la couche monétaire —
+ * enregistrait ici un tarif et une caution à **0 €** sans le moindre message :
+ * recette et garantie financière perdues en silence.
+ */
+const montantEntier = (unite: 'dixMillièmes' | 'centimes') =>
+  z.preprocess(
+    (v) => (v === '' || v === null || v === undefined ? undefined : v),
+    z
+      .union([z.number(), z.string()])
+      .transform((v, ctx) => {
+        const maxDecimals = unite === 'centimes' ? 2 : 4
+        const scaled = parseAmountToScaled(v, { maxDecimals, allowNegative: false })
+        if (scaled === null) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Montant invalide' })
+          return z.NEVER
+        }
+        // `parseAmountToScaled` rend des dix-millièmes ; avec 2 décimales au plus,
+        // la division par 100 est exacte (le reste est nécessairement nul).
+        return unite === 'centimes' ? scaled / 100 : scaled
+      })
+      .optional(),
+  )
+
+/** Kilométrage : entier positif, jamais `Number('abc') = NaN` persisté. */
+const kilometrage = z.preprocess(
+  (v) => (v === '' || v === null || v === undefined ? undefined : v),
+  z.coerce.number().int().min(0).max(9_999_999).optional(),
+)
+
+export const CreateLoanerReservationSchema = z.object({
+  vehicleId:    z.string().min(1, 'vehicleId requis'),
+  jobId:        z.string().min(1).optional().nullable(),
+  clientName:   z.string().trim().min(1, 'clientName requis').max(200),
+  clientPhone:  phone,
+  startDate:    dateTimeStr,
+  endDate:      dateTimeStr,
+  mileageOut:   kilometrage,
+  conditionOut: z.string().max(2000).optional().nullable(),
+  notes:        z.string().max(2000).optional().nullable(),
+  isPaid:       z.boolean().optional(),
+  dailyRate:      montantEntier('dixMillièmes'),
+  depositAmount:  montantEntier('centimes'),
+})
+
+export const UpdateLoanerReservationSchema = z.object({
+  status:       z.enum(LOANER_STATUSES).optional(),
+  clientName:   z.string().trim().min(1).max(200).optional(),
+  clientPhone:  phone,
+  startDate:    dateTimeStr.optional(),
+  endDate:      dateTimeStr.optional(),
+  mileageOut:   kilometrage,
+  mileageIn:    kilometrage,
+  conditionOut: z.string().max(2000).optional().nullable(),
+  conditionIn:  z.string().max(2000).optional().nullable(),
+  notes:        z.string().max(2000).optional().nullable(),
+  isPaid:       z.boolean().optional(),
+  dailyRate:      montantEntier('dixMillièmes'),
+  depositAmount:  montantEntier('centimes'),
+})
 
 // ─── Pagination helper ────────────────────────────────────────────────────────
 

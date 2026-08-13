@@ -15,10 +15,10 @@
  * (les RDV entrent par le portail client, testé séparément).
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { SignJWT } from 'jose'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-business-e2e.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -46,10 +46,7 @@ const jsonReq = (method: string, url: string, body?: unknown) =>
   })
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', {
-    cwd: path.resolve(__dirname, '../..'), env: { ...process.env }, stdio: 'ignore',
-  })
+  prepareTestDb(DB_PATH)
   ;({ prisma } = await import('@/lib/db'))
   api.mechanics = await import('@/app/api/mechanics/route')
   api.clients = await import('@/app/api/clients/route')

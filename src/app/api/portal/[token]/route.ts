@@ -57,7 +57,10 @@ export async function GET(_req: Request, { params }: { params: { token: string }
           orderBy: { createdAt: 'desc' },
           take: 1,
         },
-        garage: { select: { name: true, phone: true, email: true, logoBase64: true, logoPath: true } },
+        // `slug` : identifiant PUBLIC du garage, nécessaire au portail multi-garage
+        // (`?garage=<slug>`). Sans lui, la convention n'était produite nulle part et
+        // connexion comme inscription restaient impossibles sur le déploiement PWA.
+        garage: { select: { name: true, slug: true, phone: true, email: true, logoBase64: true, logoPath: true } },
       },
     })
     if (!job) return NextResponse.json({ error: 'Introuvable' }, { status: 404 })

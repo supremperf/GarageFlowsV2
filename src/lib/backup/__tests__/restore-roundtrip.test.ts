@@ -14,11 +14,11 @@
  *      intégrité (blob altéré → refus).
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import { prepareTestDb } from '../../../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../../../.tmp-backup-restore.db')
 const BACKUP_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-backups-'))
@@ -33,10 +33,7 @@ const ids = { gA: '', gB: '', cA1: '', cA2: '', pA1: '', invA: '', cB: '', pB: '
 const scaled = (n: number) => Math.round(n * 10000)
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', {
-    cwd: path.resolve(__dirname, '../../../..'), env: { ...process.env }, stdio: 'ignore',
-  })
+  prepareTestDb(DB_PATH)
   ;({ prisma } = await import('@/lib/db'))
   ;({ createBackup, verifyBackup, restoreBackup } = await import('@/lib/backup/service'))
 

@@ -103,8 +103,45 @@ function validateManifest(signed, opts) {
   return { ok: true, manifest: m }
 }
 
+/**
+ * Une URL de téléchargement est-elle acceptable ? (GF31-AUD-057)
+ *
+ * `validateManifest` contrôlait l'URL du manifeste, mais le téléchargeur
+ * suivait ensuite les redirections SANS rien revalider : un simple en-tête
+ * `Location` suffisait à sortir de la liste blanche et à retomber en HTTP clair,
+ * annulant les deux garanties. La règle vit donc ici, en un seul endroit, et
+ * s'applique à CHAQUE saut.
+ *
+ * Le bouclage local est admis : c'est le serveur embarqué de l'application
+ * elle-même qui sert les publications de la Zone Administrateur.
+ *
+ * @param {string} rawUrl
+ * @returns {{ ok: true } | { ok: false, reason: string }}
+ */
+function checkDownloadUrl(rawUrl) {
+  let u
+  try {
+    u = new URL(String(rawUrl))
+  } catch {
+    return { ok: false, reason: 'URL de téléchargement invalide.' }
+  }
+  const host = u.hostname
+  const boucleLocale = host === '127.0.0.1' || host === '::1' || host === 'localhost'
+  if (boucleLocale) {
+    return u.protocol === 'http:' || u.protocol === 'https:'
+      ? { ok: true }
+      : { ok: false, reason: `Protocole non autorisé : ${u.protocol}` }
+  }
+  if (u.protocol !== 'https:') return { ok: false, reason: 'URL de téléchargement non HTTPS.' }
+  if (!ALLOWED_DOWNLOAD_HOSTS.has(host)) {
+    return { ok: false, reason: `Domaine de téléchargement non autorisé : ${host}.` }
+  }
+  return { ok: true }
+}
+
 module.exports = {
   canonicalize,
+  checkDownloadUrl,
   verifySignature,
   validateManifest,
   signingConfigured,

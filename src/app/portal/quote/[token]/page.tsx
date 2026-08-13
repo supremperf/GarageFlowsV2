@@ -49,6 +49,17 @@ interface QuoteData {
   totalHT: number
   totalTTC: number
   alreadySigned: boolean
+  /**
+   * Preuve d'accord CLIENT, ou `null` quand le statut a été posé côté garage.
+   * `matchesCurrentDocument` retombe à faux si le devis a changé depuis
+   * l'accord : une preuve périmée ne doit pas être affichée comme valide (§74).
+   */
+  acceptation?: {
+    signedAt: string
+    contentHash: string
+    matchesCurrentDocument: boolean
+    signerName: string
+  } | null
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -305,6 +316,26 @@ export default function QuoteApprovalPage() {
                   </div>
                   <h3 className="font-semibold text-emerald-800 text-lg mb-1">Devis accepté</h3>
                   <p className="text-emerald-700 text-sm">Merci ! Votre accord a bien été enregistré. Le garage vous contactera prochainement.</p>
+                  {/* La preuve, ou son absence, est dite telle quelle : un statut
+                      posé par le garage n'est pas un accord du client (§74). */}
+                  {data.acceptation ? (
+                    <p className="mt-3 text-[11px] text-emerald-700/80">
+                      Accord enregistré le{' '}
+                      {new Date(data.acceptation.signedAt).toLocaleString('fr-FR')} ·
+                      empreinte du devis accepté{' '}
+                      <span className="font-mono">{data.acceptation.contentHash.slice(0, 12)}…</span>
+                      {!data.acceptation.matchesCurrentDocument && (
+                        <span className="block mt-1 font-semibold text-amber-700">
+                          Attention : ce devis a été modifié depuis votre accord — l’accord
+                          enregistré ne porte pas sur la version affichée ici.
+                        </span>
+                      )}
+                    </p>
+                  ) : (
+                    <p className="mt-3 text-[11px] text-emerald-700/80">
+                      Statut enregistré par le garage (aucun accord signé depuis ce lien).
+                    </p>
+                  )}
                 </>
               ) : (
                 <>

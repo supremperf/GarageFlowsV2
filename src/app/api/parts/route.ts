@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { parseAmountToScaled } from '@/lib/money'
 import { partToEuros } from '@/lib/money-db'
 import { CreatePartSchema } from '@/lib/schemas'
@@ -51,6 +52,9 @@ export const GET = withAuth(async (req) => {
 // POST /api/parts
 export const POST = withAuth(async (req) => {
   const session = await requireSession()
+  if (!can(session.user.role, 'stock:manage')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
 
   // VALIDATION — `CreatePartSchema` existait déjà mais n'était pas appliqué :
   // seul le nom était contrôlé. Une quantité NÉGATIVE partait donc en base

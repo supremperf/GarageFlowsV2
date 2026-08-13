@@ -101,12 +101,28 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
 // DELETE /api/jobs/:id
 export const DELETE = withAuth(async (req, { params }: { params: { id: string } }) => {
   const session = await requireSession()
-  await prisma.job.delete({ where: { id: params.id, garageId: session.user.garageId } })
+
+  // Suppression ET pierre tombale dans la MÊME transaction.
+  //
+  // Le cloud déduisait les suppressions de l'ABSENCE d'une intervention dans la
+  // fenêtre remontée. Deux cas échappent à cette inférence : une suppression
+  // faite hors ligne dont la date sort ensuite de la fenêtre, et une remontée
+  // tronquée (où toute purge par inférence est suspendue, GF31-AUD-017). Dans
+  // les deux cas l'intervention restait visible indéfiniment dans la PWA du
+  // mécanicien, qui pouvait se déplacer sur une intervention annulée
+  // (GF31-AUD-044). La trace explicite survit à la coupure réseau et à
+  // l'extinction du poste : elle n'est effacée qu'une fois le cloud averti.
+  await prisma.$transaction(async (tx) => {
+    await tx.job.delete({ where: { id: params.id, garageId: session.user.garageId } })
+    await tx.jobTombstone.upsert({
+      where:  { jobId: params.id },
+      create: { jobId: params.id, garageId: session.user.garageId },
+      update: { deletedAt: new Date() },
+    })
+  })
 
   await logAudit({ action: 'delete', entityType: 'Job', entityId: params.id, session, req })
 
-  // Suppression : la remontée décrit la fenêtre entière, donc l'intervention
-  // disparaît aussi du miroir — pas de tâche fantôme dans la PWA.
   scheduleJobSync(session.user.garageId)
 
   return NextResponse.json({ success: true })

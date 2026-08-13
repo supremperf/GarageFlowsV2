@@ -27,7 +27,7 @@
     "db:desktop:push": "prisma db push",
     "db:desktop:validate": "prisma validate",
     "db:server:generate": "prisma generate --schema prisma/server/schema.prisma",
-    "db:server:validate": "prisma validate --schema prisma/server/schema.prisma",
+    "db:server:validate": "node scripts/validate-server-schema.mjs",
     "db:server:migrate": "prisma migrate dev --schema prisma/server/schema.prisma",
     "db:server:deploy": "prisma migrate deploy --schema prisma/server/schema.prisma",
     "db:server:check": "node scripts/validate-server-db.js",
@@ -40,7 +40,7 @@
     "db:reset": "prisma db push --force-reset && npm run db:seed",
     "icons": "node scripts/generate-icons.js",
     "electron:dev": "cross-env ELECTRON_DEV=1 electron .",
-    "dist": "npm run build && node scripts/post-build.js && electron-builder --win --x64 && npm run check:artifact-secrets",
+    "dist": "npm run build && node scripts/post-build.js && electron-builder --win --x64 && npm run check:artifact-secrets && npm run check:artifact-fuses",
     "dist:win": "npm run dist",
     "license:gen": "python scripts\\keygen.py --gen",
     "env:configure": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/configurer-api-garageflow.ps1",
@@ -84,7 +84,8 @@
     "test:postgres-migrations": "node scripts/validate-server-db.js",
     "test:migration": "vitest run src/lib/__tests__/money-schema-migration.test.ts src/lib/__tests__/money-json.test.ts src/lib/__tests__/pre-migration-backup.test.ts src/lib/__tests__/user-data-path.test.ts",
     "typecheck": "tsc --noEmit",
-    "check:artifact-secrets": "node scripts/check-artifact-secrets.mjs"
+    "check:artifact-secrets": "node scripts/check-artifact-secrets.mjs",
+    "check:artifact-fuses": "node scripts/check-artifact-fuses.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.79.0",

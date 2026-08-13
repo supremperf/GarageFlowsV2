@@ -23,6 +23,9 @@ const FAILURE_STATUS: Record<string, number> = {
   MISSING_LICENSE: 400, LICENSE_INVALID: 403, NOT_A_GARAGE_LICENSE: 403,
   LICENSE_UNKNOWN: 403, LICENSE_REVOKED: 403, LICENSE_SUSPENDED: 403,
   LICENSE_EXPIRED: 403, GARAGE_MISMATCH: 403,
+  // Revendication d'un garage déjà réservé / licence pas encore rattachée :
+  // conflit d'état, pas un défaut d'authentification (GF31-AUD-003).
+  GARAGE_ALREADY_CLAIMED: 409, LICENSE_NOT_BOUND: 409,
 }
 
 export async function POST(req: Request) {
@@ -34,17 +37,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 })
   }
 
-  const garageId = typeof body.garageId === 'string' ? body.garageId.trim().slice(0, 64) : ''
+  // REVENDICATION du client — jamais l'identité retenue (voir `garageId` plus bas).
+  const claimedGarageId = typeof body.garageId === 'string' ? body.garageId.trim().slice(0, 64) : ''
   const photoId = typeof body.photoId === 'string' ? body.photoId.trim().slice(0, 64) : ''
-  if (!garageId || !photoId) {
+  if (!claimedGarageId || !photoId) {
     return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 })
   }
 
-  const auth = await authenticateGarageLicense(body.garageLicense, garageId)
+  // Route de LECTURE seule : elle ne rattache aucune licence, donc elle exige
+  // une licence déjà rattachée. Sans cela, le commentaire ci-dessous (« le
+  // garageId du filtre vient de la licence vérifiée ») était FAUX : le filtre
+  // utilisait la revendication du client, et n'importe quelle licence garage non
+  // rattachée pouvait lire la photo d'un autre garage (GF31-AUD-003).
+  const auth = await authenticateGarageLicense(body.garageLicense, claimedGarageId, { requireBound: true })
   if (!auth.ok) {
-    logger.warn('[sync/job-photo] refus auth', { code: auth.code, garage: shortId(garageId) })
+    logger.warn('[sync/job-photo] refus auth', { code: auth.code, garage: shortId(claimedGarageId) })
     return NextResponse.json({ ok: false, code: auth.code }, { status: FAILURE_STATUS[auth.code] ?? 403 })
   }
+  // Identité EFFECTIVE, issue de la licence vérifiée.
+  const garageId: string = auth.garageId as string
 
   try {
     // Le garageId du filtre vient de la licence vérifiée : impossible de lire

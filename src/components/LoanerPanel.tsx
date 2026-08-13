@@ -9,6 +9,17 @@ import { CAR_DATABASE } from '@/lib/car-database'
 import { DateField } from '@/components/DateField'
 import { useTranslation } from '@/lib/i18n'
 import { dateLocale } from '@/lib/i18n/date-locale'
+import { formatEuros, fromCents, lineTotalCentsFromScaled, toScaled } from '@/lib/money'
+
+/**
+ * Durée facturée d'un prêt, en jours entiers, plancher à 1 : un prêt rendu le
+ * jour même reste facturé une journée. Extrait pour que l'estimation affichée et
+ * son libellé s'appuient sur la MÊME valeur — ils étaient recalculés deux fois.
+ */
+function joursEstimes(debut: string, fin: string): number {
+  const d = differenceInDays(parseISO(fin), parseISO(debut))
+  return Number.isFinite(d) ? Math.max(1, d) : 1
+}
 
 // ── Types (match actual API field names) ─────────────────────────────────────
 interface LoanerVehicle {
@@ -576,7 +587,11 @@ export default function LoanerPanel({ onClose }: { onClose: () => void }) {
                     </div>
                     {resForm.dailyRate && resForm.startDate && resForm.endDate && (
                       <div className="col-span-2 text-xs text-emerald-400 bg-emerald-500/10 rounded-lg px-3 py-2">
-                        {t.lnEstTotal} {Math.max(1, differenceInDays(parseISO(resForm.endDate), parseISO(resForm.startDate)))} {t.lnDayShort} × {resForm.dailyRate}€ = <strong>{Math.max(1, differenceInDays(parseISO(resForm.endDate), parseISO(resForm.startDate))) * Number(resForm.dailyRate)}€</strong>
+                        {/* Le total était un produit flottant BRUT : 3 × 19,90 s'affichait
+                            « 59.699999999999996€ » au comptoir, au moment même où l'on
+                            annonce le prix au client. Passage par la couche monétaire
+                            entière (dix-millièmes) puis rendu au centime. */}
+                        {t.lnEstTotal} {joursEstimes(resForm.startDate, resForm.endDate)} {t.lnDayShort} × {resForm.dailyRate}€ = <strong>{formatEuros(fromCents(lineTotalCentsFromScaled(toScaled(Number(resForm.dailyRate) || 0), toScaled(joursEstimes(resForm.startDate, resForm.endDate)))))}</strong>
                         {resForm.depositAmount ? ` + ${t.lnPlusDeposit} ${resForm.depositAmount}€` : ''}
                       </div>
                     )}

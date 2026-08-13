@@ -26,7 +26,7 @@ const fs      = require('fs')
 const http    = require('http')
 const crypto  = require('crypto')
 const os      = require('os')
-const { resolveMainSecret } = require('./secret')
+const { resolveMainSecret, resolveSmtpCipherKey, loadOrCreateInstallSecret } = require('./secret')
 const { sign: signState, verify: verifyState } = require('./signed-state')
 const { activationReport } = require('./activation-report')
 const {
@@ -204,6 +204,7 @@ let activeDeviceToken = null   // device token issued by the server on activatio
 let desktopExportTimer = null
 let onlineCheckTimer  = null   // periodic internet connectivity check
 let installSecret     = null   // secret par installation (session JWT + NEXTAUTH_SECRET serveur)
+let smtpCipherKey     = null   // clé de chiffrement AU REPOS des identifiants SMTP
 let updateTimer       = null   // periodic app-update check (startup + hourly)
 let lastNotifiedUpdate = null  // version already announced to the renderer (anti-spam)
 
@@ -258,11 +259,40 @@ function sha256File(filePath) {
   })
 }
 
+/**
+ * Annote une mise à jour avec son caractère RÉELLEMENT installable.
+ *
+ * Quand une clé de vérification est embarquée, `app:install-update` exige un
+ * manifeste signé. Deux des trois sources n'en fournissaient aucun : l'interface
+ * proposait donc un bouton « Mettre à jour » qui échouait systématiquement sur
+ * « Mise à jour non signée ». On le dit maintenant AVANT, et l'écran propose le
+ * téléchargement manuel au lieu d'une promesse intenable (GF31-AUD-042).
+ */
+function annoterInstallabilite(info) {
+  if (!info || !info.hasUpdate) return info
+  const signatureExigee = updateVerify.signingConfigured()
+  const installable = !signatureExigee || Boolean(info.manifest)
+  return {
+    ...info,
+    signatureExigee,
+    installable,
+    unsignedReason: installable
+      ? null
+      : "Cette mise à jour n'est pas accompagnée d'un manifeste signé : "
+        + 'elle ne peut pas être installée automatiquement. Téléchargez-la et '
+        + 'installez-la manuellement, ou demandez à votre éditeur une publication signée.',
+  }
+}
+
 // Interroge le serveur central et renvoie un objet de mise à jour homogène.
 // Ordre : serveur central (/api/update/latest) → fichier local admin →
 // Releases GitHub (repli, non vérifiable). Si le serveur central répond
 // « pas de maj », on s'y fie (pas de repli GitHub qui ferait un faux positif).
 async function fetchLatestUpdate() {
+  return annoterInstallabilite(await fetchLatestUpdateBrut())
+}
+
+async function fetchLatestUpdateBrut() {
   const currentVersion = app.getVersion()
 
   if (UPDATE_SERVER) {
@@ -311,6 +341,11 @@ async function fetchLatestUpdate() {
         sha256:        localUpdate.sha256 ?? null,
         size:          localUpdate.fileSize ?? null,
         mandatory:     Boolean(localUpdate.mandatory),
+        // Manifeste signé publié EN MÊME TEMPS que l'installeur par la Zone
+        // Administrateur. Sans lui, `app:install-update` refuse l'installation
+        // dès qu'une clé de vérification est embarquée : la publication locale
+        // était donc morte de bout en bout (GF31-AUD-042).
+        manifest:      localUpdate.manifest ?? null,
         source:        'local-admin',
       }
     }
@@ -370,6 +405,14 @@ function resolveInstallSecret() {
   // Aligne process.env pour tout code aval qui lirait encore NEXTAUTH_SECRET.
   process.env.NEXTAUTH_SECRET = secret
   log(`Secret local prêt (source: ${source})`)   // ne journalise jamais la valeur
+
+  // Clé de chiffrement AU REPOS des identifiants SMTP. Sans elle, /api/email
+  // refuse d'enregistrer un mot de passe (503) — l'envoi d'e-mails était donc
+  // inconfigurable sur le poste (GF31-AUD-012). Stable entre démarrages : une
+  // clé régénérée rendrait les mots de passe déjà stockés indéchiffrables.
+  const smtp = resolveSmtpCipherKey(APP_DATA, process.env.GF_SMTP_CIPHER_KEY)
+  smtpCipherKey = smtp.key
+  log(`Clé de chiffrement SMTP prête (source: ${smtp.source})`)   // jamais la valeur
 }
 
 // ── Online check state ────────────────────────────────────────────────────────
@@ -631,9 +674,26 @@ function verifyEccToken(token) {
 function hwidMatches(stored, current) {
   if (!stored) return true   // licence non liée au matériel
   const a = String(stored).trim().toLowerCase()
-  const b = String(current).trim().toLowerCase()
   const hex64 = /^[0-9a-f]{64}$/
-  if (!hex64.test(a) || !hex64.test(b)) return false
+  const v1re  = /^hwid1-[0-9a-f]{64}$/
+
+  // La VERSION LIÉE commande la version calculée. Le serveur accepte les deux
+  // formats (`verify.ts` : `HWID_V1_RE`), et V1 est documentée comme canonique
+  // — mais le client ne reconnaissait que le format v0 (64 hex nus) et
+  // `getHwidV1()` n'avait AUCUN appelant. Une licence liée avec l'empreinte
+  // canonique verrouillait donc définitivement l'utilisateur hors de son
+  // logiciel, alors même que le serveur la déclarait valide (GF31-AUD-055).
+  const estV1 = v1re.test(a)
+  const b = estV1
+    ? String(getHwidV1()).trim().toLowerCase()
+    : String(current).trim().toLowerCase()
+
+  if (estV1) {
+    if (!v1re.test(b)) return false
+  } else if (!hex64.test(a) || !hex64.test(b)) {
+    return false
+  }
+
   const ba = Buffer.from(a, 'utf8')
   const bb = Buffer.from(b, 'utf8')
   return ba.length === bb.length && crypto.timingSafeEqual(ba, bb)
@@ -643,6 +703,8 @@ function hwidMatches(stored, current) {
 
 const LIC_SALT     = 'GarageFlow-License-Storage-Salt-v2'
 const DB_MAC_SALT  = 'GarageFlow-DB-MAC-Salt-v1'
+/** Secret d'installation mêlé au HWID pour le MAC de base (GF31-AUD-056). */
+const DB_MAC_SECRET_FILE = 'gf_db_mac.key'
 
 function deriveStorageKey() {
   const hwid = getHwid()
@@ -655,8 +717,32 @@ function deriveStorageKey() {
  * on every request). The secret is passed to Next.js via GF_DB_MAC_SECRET env.
  */
 function deriveDbMacSecret() {
+  // Le secret ne se dérive plus du SEUL HWID.
+  //
+  // HWID + sel en dur + algorithme public = un secret que n'importe quel
+  // processus tournant sur la machine pouvait RECALCULER, donc forger un MAC
+  // valide et réécrire l'état d'une licence sans que le contrôle d'intégrité
+  // n'y voie rien. On y mêle donc un secret d'installation aléatoire, généré
+  // une fois et conservé dans `userData` avec les mêmes garanties que le secret
+  // de session (256 bits, écriture atomique, permissions restreintes, jamais
+  // journalisé) — même mécanisme que la clé de chiffrement SMTP (GF31-AUD-056).
+  //
+  // Portée HONNÊTE de cette correction : elle élève le coût de l'attaque de
+  // « recalculer une fonction publique » à « lire un fichier protégé de
+  // userData ». Un adversaire disposant déjà des droits d'administration
+  // locaux reste capable de le lire — s'en prémunir exigerait un scellement
+  // ASYMÉTRIQUE par l'éditeur, hors du périmètre de cette correction.
   const hwid = getHwid()
-  return crypto.pbkdf2Sync(hwid, DB_MAC_SALT, 10_000, 32, 'sha256').toString('hex')
+  let installSecret = ''
+  try {
+    installSecret = loadOrCreateInstallSecret(app.getPath('userData'), DB_MAC_SECRET_FILE)
+  } catch (err) {
+    // Sans le fichier, on retombe sur l'ancienne dérivation plutôt que de
+    // priver la base de tout contrôle d'intégrité : un MAC faible vaut mieux
+    // qu'aucun MAC, et la dégradation est journalisée.
+    log('[db-mac] secret d’installation indisponible — dérivation dégradée :', err.message)
+  }
+  return crypto.pbkdf2Sync(`${hwid}:${installSecret}`, DB_MAC_SALT, 10_000, 32, 'sha256').toString('hex')
 }
 
 function saveLicense(token, payload, deviceToken = activeDeviceToken) {
@@ -863,8 +949,15 @@ async function reportCrash({ message, stack, fatal = true, kind = 'crash' }) {
 
 /** Vide la file de crash vers le serveur (best-effort ; garde ce qui échoue). */
 async function flushCrashQueue() {
-  const base = cp.resolveRemoteBase(process.env)
-  if (!base) return
+  // `isPackaged` est indispensable : sans lui, une installation packagée — qui
+  // n'embarque aucun .env — ne résolvait aucune base et sortait EN SILENCE
+  // (GF31-AUD-043).
+  const base = cp.resolveRemoteBase(process.env, { isPackaged: app.isPackaged })
+  if (!base) {
+    // Un canal muet ne doit plus l'être sans le dire.
+    if (readCrashQueue().length > 0) log('[crash] aucune base distante résolue — envoi ignoré')
+    return
+  }
   let queue = readCrashQueue()
   if (queue.length === 0) return
   const remaining = []
@@ -878,9 +971,12 @@ async function flushCrashQueue() {
 
 // ── Notifications (récupération + diffusion au renderer) ──────────────────────
 async function fetchNotifications() {
-  const base = cp.resolveRemoteBase(process.env)
+  const base = cp.resolveRemoteBase(process.env, { isPackaged: app.isPackaged })
   const lid  = activeLicense?.payload?.lid
-  if (!base || !lid) return
+  if (!base || !lid) {
+    if (!base) log('[notifications] aucune base distante résolue — récupération ignorée')
+    return
+  }
   const url = `${base}/api/notifications?licenseId=${encodeURIComponent(lid)}`
           + `&version=${encodeURIComponent(app.getVersion())}&channel=${encodeURIComponent(UPDATE_CHANNEL)}`
   const res = await httpGetJson(url).catch(() => null)
@@ -1426,7 +1522,12 @@ async function periodicLicenseCheck() {
 
   // Télémétrie technique jointe au heartbeat (jamais de donnée métier).
   const info = getSystemInfo()
-  const body = { licenseId, deviceToken: activeDeviceToken, version: info.version, os: info.os, arch: info.arch, hwid: getHwid() }
+  // `platform` est ANNONCÉE : le serveur ne peut pas la deviner (le cloud sert
+  // les deux surfaces depuis le même processus). Sans elle, tout client Electron
+  // était classé « unknown » côté autorité et échappait à la politique de
+  // version minimale — le mécanisme d'arrêt des versions obsolètes ne
+  // s'appliquait donc à personne (GF31-AUD-053).
+  const body = { licenseId, deviceToken: activeDeviceToken, platform: 'electron', version: info.version, os: info.os, arch: info.arch, hwid: getHwid() }
 
   // 1. Check remote license server — authoritative. URL officielle compilée :
   //    toujours interrogée (révocation/suspension), même sans .env.
@@ -2044,6 +2145,9 @@ function startNextServer() {
       // le serveur Next.js (vérification). Aucun repli codé en dur.
       NEXTAUTH_SECRET:   installSecret,
       GF_DB_MAC_SECRET:         deriveDbMacSecret(),
+      // Chiffrement AU REPOS des identifiants SMTP — sans quoi /api/email
+      // refuse tout enregistrement de mot de passe (GF31-AUD-012).
+      GF_SMTP_CIPHER_KEY:       smtpCipherKey,
       GF_INTERNAL_EXPORT_KEY:   INTERNAL_EXPORT_KEY,
       GF_PHOTOS_DIR:            PHOTOS_DIR,
       ELECTRON:                 '1',
@@ -2521,9 +2625,12 @@ function setupIPC() {
     return { notifications: currentNotifs }
   })
   ipcMain.handle('app:ack-notification', async (_e, notificationId) => {
-    const base = cp.resolveRemoteBase(process.env)
+    const base = cp.resolveRemoteBase(process.env, { isPackaged: app.isPackaged })
     const lid  = activeLicense?.payload?.lid
-    if (!base || !lid || !notificationId) return { ok: false }
+    if (!base || !lid || !notificationId) {
+      if (!base) log('[notifications] aucune base distante résolue — accusé de réception ignoré')
+      return { ok: false }
+    }
     const res = await httpPost(`${base}/api/notifications/ack`, {
       licenseId: lid, notificationId, hwid: getHwid(),
     }).catch(() => null)
@@ -2629,6 +2736,16 @@ function setupIPC() {
         let settled = false
         const doReq = (u, redirects) => {
           if (redirects > 5) { settled = true; return reject(new Error('Trop de redirections')) }
+          // Chaque saut est revalidé : sans cela, un en-tête `Location` suffisait
+          // à quitter la liste blanche et à retomber en HTTP clair, annulant les
+          // deux garanties que l'URL initiale avait pourtant subies
+          // (GF31-AUD-057).
+          const autorisee = updateVerify.checkDownloadUrl(u)
+          if (!autorisee.ok) {
+            settled = true
+            log('[install-update] SECURITY: redirection refusée —', autorisee.reason)
+            return reject(new Error(autorisee.reason))
+          }
           const mod = u.startsWith('https') ? require('https') : http
           const existing = fs.existsSync(partPath) ? fs.statSync(partPath).size : 0
           const headers = { 'User-Agent': 'GarageFlow/' + app.getVersion() }
@@ -2642,7 +2759,14 @@ function setupIPC() {
           }
           const req = mod.get(u, { timeout: 300_000, headers }, res => {
             if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-              res.resume(); doReq(res.headers.location, redirects + 1); return
+              // Résolution RELATIVE à l'URL courante : un `Location` relatif est
+              // licite, et le résoudre nous-mêmes évite de laisser la
+              // bibliothèque HTTP décider à notre place.
+              let suivante
+              try { suivante = new URL(res.headers.location, u).toString() } catch { suivante = '' }
+              res.resume()
+              if (!suivante) { fail(new Error('Redirection illisible')); return }
+              doReq(suivante, redirects + 1); return
             }
             let append, total
             if (res.statusCode === 206) {

@@ -1,19 +1,31 @@
 /**
  * Catalogue des plateformes de facturation électronique.
  *
- * STRUCTURE centralisée et actualisable, DISTINCTE des connecteurs réellement
- * développés (voir adapter.ts). Une plateforme peut apparaître dans le catalogue,
- * mais elle n'est « connectable » QUE si un adaptateur réel et testé existe et est
- * enregistré dans `einvoiceAdapterRegistry`. Aucune plateforme n'est présentée
- * comme fonctionnelle sans connecteur réel.
+ * ─── Provenance (§82) ───────────────────────────────────────────────────────
+ * Les entrées proviennent du registre des PLATEFORMES AGRÉÉES (PA, ex-PDP)
+ * importé par `scripts/refresh-einvoicing-catalog.mjs` dans
+ * `data/plateformes-agreees.json`. Ce fichier porte sa propre provenance :
+ * jeu de données ouvert publié sur data.gouv.fr (licence ODbL), lui-même
+ * republication ENRICHIE du registre DGFiP — seule la page impots.gouv.fr fait
+ * foi, et c'est elle qui est affichée à l'utilisateur.
  *
- * IMPORTANT — le seed ci-dessous est un PLACEHOLDER de démonstration (mêmes noms
- * d'exemple que la spécification). Il DOIT être remplacé par le registre officiel
- * en vigueur (voir docs/EINVOICING_PROVIDER_CATALOG.md). On ne fabrique donc AUCUN
- * numéro d'agrément : `officialRegistrationNumber` reste absent tant que la donnée
- * officielle n'est pas importée, et tous les `integrationStatus` valent
- * `coming_soon` (rien n'est encore connectable).
+ * Le catalogue livré auparavant contenait quatre entrées INVENTÉES (« Alpha
+ * Facturation », « Axion », « Azer », « Beta Invoice ») présentées à l'écran
+ * comme des plateformes agréées. Un catalogue réglementaire ne se fabrique pas.
+ *
+ * ─── Ce que le catalogue ne dit PAS ─────────────────────────────────────────
+ * `capabilities` décrit ce que GARAGEFLOWS sait faire avec une plateforme — pas
+ * ce que la plateforme annonce. Tant qu'aucun adaptateur réel n'est enregistré
+ * dans `einvoiceAdapterRegistry`, aucune plateforme n'est connectable
+ * (`isPlatformConnectable`). Les formats annoncés par la plateforme dans le
+ * registre sont conservés à part, sous `declaredFormats`, pour que la
+ * distinction reste lisible.
+ *
+ * Les méthodes d'authentification ne figurent PAS dans le registre : elles ne
+ * sont donc pas inventées ici (`authenticationMethods` reste vide tant qu'un
+ * adaptateur ne la renseigne pas).
  */
+
 
 export type EInvoiceApprovalStatus =
   | 'approved'
@@ -45,6 +57,14 @@ export interface EInvoicePlatformCapabilities {
   sandbox: boolean
 }
 
+/** Formats ANNONCÉS par la plateforme dans le registre (déclaratif, non vérifié). */
+export interface DeclaredFormats {
+  facturX: boolean
+  ubl: boolean
+  cii: boolean
+  peppolBis: boolean
+}
+
 export interface ApprovedEInvoicePlatform {
   id: string
   officialName: string
@@ -52,13 +72,39 @@ export interface ApprovedEInvoicePlatform {
   slug: string
   approvalStatus: EInvoiceApprovalStatus
   officialRegistrationNumber?: string
+  /** Date d'immatriculation au registre (YYYY-MM-DD). */
+  registeredAt?: string
   officialWebsite?: string
   adapterId?: string
   integrationStatus: EInvoiceIntegrationStatus
   authenticationMethods: EInvoiceAuthMethod[]
   capabilities: EInvoicePlatformCapabilities
   registryUpdatedAt: string
+  declaredFormats?: DeclaredFormats
+  declaredEReporting?: boolean
 }
+
+/** Provenance du catalogue — affichée à l'utilisateur, jamais masquée. */
+export interface CatalogProvenance {
+  jeuDeDonnees: string
+  portail: string
+  fichier: string
+  licence: string
+  autoriteDeReference: string
+  avertissement: string
+}
+
+/**
+ * Le CATALOGUE lui-même (135 entrées, ~54 Ko) vit dans `catalog-data.ts`.
+ *
+ * Ce fichier-ci ne contient que des TYPES et des fonctions pures : il est
+ * importé par l'onglet e-facturation, donc par le navigateur. Y laisser
+ * l'importation du JSON embarquait tout le registre dans le bundle client —
+ * mesuré à **+78 Ko sur le plus gros chunk**, ne laissant plus que 102 octets
+ * sous le budget de performance (GF31-AUD-023). Le client reçoit déjà le
+ * catalogue par `/api/einvoicing/status` : il n'a aucune raison de l'embarquer
+ * une seconde fois.
+ */
 
 /**
  * Normalise une saisie de recherche : insensible à la casse et aux accents,
@@ -75,36 +121,19 @@ export function normalizePlatformSearch(value: string): string {
     .trim()
 }
 
-const NO_CAPABILITIES: EInvoicePlatformCapabilities = {
-  outgoingInvoices: false,
-  incomingInvoices: false,
-  invoiceStatuses: false,
-  webhooks: false,
-  eReporting: false,
-  paymentReporting: false,
-  sandbox: true,
-}
-
-/**
- * SEED de démonstration — à REMPLACER par le registre officiel. Noms d'exemple
- * (aucune donnée réglementaire réelle affirmée), tous en `coming_soon`.
- */
-export const EINVOICE_PLATFORM_CATALOG: ApprovedEInvoicePlatform[] = [
-  { id: 'example-alpha-facturation', officialName: 'Alpha Facturation', normalizedName: 'alpha facturation', slug: 'alpha-facturation', approvalStatus: 'provisionally_approved', integrationStatus: 'coming_soon', authenticationMethods: ['oauth2'], capabilities: { ...NO_CAPABILITIES }, registryUpdatedAt: '2026-01-01' },
-  { id: 'example-axion', officialName: 'Axion', normalizedName: 'axion', slug: 'axion', approvalStatus: 'provisionally_approved', integrationStatus: 'coming_soon', authenticationMethods: ['api_key'], capabilities: { ...NO_CAPABILITIES }, registryUpdatedAt: '2026-01-01' },
-  { id: 'example-azer', officialName: 'Azer', normalizedName: 'azer', slug: 'azer', approvalStatus: 'provisionally_approved', integrationStatus: 'coming_soon', authenticationMethods: ['client_credentials'], capabilities: { ...NO_CAPABILITIES }, registryUpdatedAt: '2026-01-01' },
-  { id: 'example-beta-invoice', officialName: 'Beta Invoice', normalizedName: 'beta invoice', slug: 'beta-invoice', approvalStatus: 'provisionally_approved', integrationStatus: 'coming_soon', authenticationMethods: ['oauth2', 'api_key'], capabilities: { ...NO_CAPABILITIES }, registryUpdatedAt: '2026-01-01' },
-]
-
 /**
  * Recherche de plateformes : tri alphabétique stable, insensible casse/accents.
+ *
+ * Le catalogue est FOURNI par l'appelant : ce module ne charge aucune donnée,
+ * pour rester utilisable côté navigateur sans y embarquer le registre
+ * (GF31-AUD-023). Côté serveur, `catalog-data.ts` expose `EINVOICE_PLATFORM_CATALOG`.
  * Priorité aux entrées dont le nom COMMENCE par la requête (comportement « tapez
  * A → toutes celles en A »), puis correspondance partielle. Performant pour
  * plusieurs centaines d'entrées (filtre linéaire simple).
  */
 export function searchPlatforms(
   query: string,
-  catalog: ApprovedEInvoicePlatform[] = EINVOICE_PLATFORM_CATALOG,
+  catalog: ApprovedEInvoicePlatform[],
 ): ApprovedEInvoicePlatform[] {
   // Cette fonction accepte un catalogue FOURNI PAR L'APPELANT (l'onglet
   // e-facturation lui passe la réponse de /api/einvoicing/status). On ne peut

@@ -18,7 +18,7 @@ import { cloudPost, isDesktopInstance } from '@/lib/sync/cloud-client'
 import { logger } from '@/lib/logger'
 import { shortId } from '@/lib/sync/garage-auth'
 import {
-  syncWindow, SYNC_MAX_JOBS, shouldApplyCloudExecution, type SyncJob,
+  syncWindow, SYNC_MAX_JOBS, SYNC_MAX_TOMBSTONES, shouldApplyCloudExecution, type SyncJob,
 } from '@/lib/sync/job-fields'
 
 export interface JobSyncResult {
@@ -68,8 +68,16 @@ async function returnCursor(garageId: string): Promise<Date | null> {
   ])
   const stamps = [note?.createdAt, photo?.createdAt].filter((d): d is Date => d instanceof Date)
   if (stamps.length === 0) return null
-  const latest = new Date(Math.max(...stamps.map((d) => d.getTime())))
-  return new Date(latest.getTime() - CURSOR_OVERLAP_MS)
+  // Le curseur est COMMUN aux deux flux : prendre le PLUS RÉCENT des deux le
+  // faisait avancer au rythme du flux le plus bavard. Un garage où les
+  // commentaires arrivent souvent et les photos rarement voyait donc le curseur
+  // dépasser des photos jamais rapatriées — définitivement invisibles côté poste
+  // (GF31-AUD-017). On retient le PLUS ANCIEN : le flux le plus en retard
+  // commande. Le surcoût est nul en pratique — la voie de retour est
+  // idempotente (upserts par identifiant) et déjà conçue pour rejouer, comme en
+  // témoigne le recouvrement ci-dessous.
+  const oldest = new Date(Math.min(...stamps.map((d) => d.getTime())))
+  return new Date(oldest.getTime() - CURSOR_OVERLAP_MS)
 }
 
 /**
@@ -103,13 +111,33 @@ export async function syncGarageJobs(garageId: string, now: Date = new Date()): 
       updatedAt: j.updatedAt.toISOString(),
     }))
 
+    // Suppressions EXPLICITES en attente d'accusé de réception. Elles voyagent
+    // indépendamment de la fenêtre : c'est tout leur intérêt (GF31-AUD-044).
+    const tombstones = await prisma.jobTombstone.findMany({
+      where: { garageId },
+      select: { jobId: true },
+      orderBy: { deletedAt: 'asc' },
+      take: SYNC_MAX_TOMBSTONES,
+    })
+    const deletedIds = tombstones.map((t) => t.jobId)
+
     const since = await returnCursor(garageId)
     const out = await cloudPost('/api/sync/jobs', {
       garageLicense: token,
       garageId,
       window,
       jobs,
+      deletedIds,
       since: since ? since.toISOString() : null,
+      // La fenêtre a-t-elle été envoyée COMPLÈTE ? Le cloud supprime les
+      // interventions de la fenêtre qu'il n'a pas reçues ; avec plus de
+      // SYNC_MAX_JOBS interventions, le surplus était donc détruit à chaque
+      // remontée — et jamais recréé, `orderBy: date asc` renvoyant toujours la
+      // même tranche. Le mécanicien ne voyait plus rien au-delà (GF31-AUD-017).
+      truncated: rows.length >= SYNC_MAX_JOBS,
+      // Horloge du POSTE au moment de l'envoi : permet au serveur de neutraliser
+      // le décalage entre les deux horloges avant tout arbitrage (GF31-AUD-016).
+      clientNow: now.toISOString(),
     })
 
     if (!out.ok) {
@@ -117,6 +145,16 @@ export async function syncGarageJobs(garageId: string, now: Date = new Date()): 
         garage: shortId(garageId), code: out.code ?? 'UNKNOWN', status: out.status ?? 0,
       })
       return { synced: false, code: out.code ?? 'UNKNOWN', pushed: jobs.length }
+    }
+
+    // Le cloud accuse ce qu'il a RÉELLEMENT traité : on n'efface jamais une
+    // pierre tombale sur la seule foi d'un envoi. Ce qu'il n'a pas confirmé
+    // repartira à la prochaine remontée.
+    const acquittees = Array.isArray(out.data?.deletedApplied)
+      ? (out.data.deletedApplied as unknown[]).filter((v): v is string => typeof v === 'string')
+      : []
+    if (acquittees.length > 0) {
+      await prisma.jobTombstone.deleteMany({ where: { garageId, jobId: { in: acquittees } } })
     }
 
     const appliedBack = await applyCloudChanges(garageId, token, out.data?.changes)

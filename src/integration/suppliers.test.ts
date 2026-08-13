@@ -6,9 +6,9 @@
  * and the guarded lifecycle state machine with its atomic stock effects.
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { execSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-itest-suppliers.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -33,8 +33,7 @@ async function post(body: unknown): Promise<{ status: number; json: any }> {
 }
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', { cwd: path.resolve(__dirname, '../..'), env: { ...process.env, DATABASE_URL: `file:${DB_PATH}` }, stdio: 'ignore' })
+  prepareTestDb(DB_PATH)
   ;({ prisma } = await import('@/lib/db'))
   ;({ GET, POST } = await import('@/app/api/suppliers/route') as any)
 
@@ -58,7 +57,11 @@ beforeAll(async () => {
   ids.poB = await mkPO({ number: 'BC-2026-001', garageId: garageB, supplierName: 'Oscaro', status: 'draft', totalHtCents: 900, linesJson: '[]' })
   ids.poRace = await mkPO({ number: 'BC-2026-905', garageId: garageA, supplierName: 'Oscaro', status: 'sent', sentAt: new Date(), totalHtCents: 30000, linesJson: JSON.stringify([{ partId: ids.pRace, partName: 'Amortisseur', qty: 5, unitCost: 60 }]) })
 
-  h.session = { user: { id: 'user-a', name: 'Alice', garageId: garageA } }
+  // Un rôle RÉEL : en production, la session NextAuth en porte toujours un, et
+  // les écritures de stock exigent `stock:manage` (GF31-AUD-029). Une session
+  // sans rôle — ce que construisait cette fixture — n'existe pas en production
+  // et se fait légitimement refuser par le refus-par-défaut de `can()`.
+  h.session = { user: { id: 'user-a', name: 'Alice', role: 'OWNER', garageId: garageA } }
 })
 
 afterAll(async () => { await prisma?.$disconnect(); if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH) })
@@ -176,5 +179,102 @@ describe('POST transition (guarded lifecycle + stock effects)', () => {
     const { status } = await post({ action: 'transition', orderId: ids.poB, to: 'sent', confirm: true })
     expect(status).toBe(404)
     expect((await prisma.purchaseOrder.findFirst({ where: { id: ids.poB } })).status).toBe('draft') // untouched
+  })
+})
+
+/**
+ * NON-RÉGRESSION GF31-AUD-002.
+ *
+ * Tous les cas de cycle de vie ci-dessus sont alimentés par des fixtures écrites
+ * à la main au format V1 HISTORIQUE (tableau nu `[{ partId, qty, unitCost }]`).
+ * Or `action: 'create-orders'` — le SEUL écrivain de production, appelé par
+ * `SuppliersPanel` — persiste depuis `serializePoLinesJsonV2()`, c'est-à-dire un
+ * OBJET `{ schemaVersion: 2, lines: [...] }` avec `qtyTenThousandths`.
+ *
+ * `action: 'transition'` faisait un `JSON.parse` nu puis `lines.filter(...)` :
+ * sur un objet, `.filter` n'existe pas → TypeError non rattrapée → HTTP 500, et
+ * le stock n'était JAMAIS incrémenté à la réception. La suite restait verte
+ * uniquement parce qu'aucune fixture n'utilisait le format réellement écrit.
+ *
+ * Ce test refait le parcours COMPLET avec l'écrivain de production, sans aucune
+ * fixture : créer → envoyer → réceptionner → vérifier le stock.
+ */
+describe('GF31-AUD-002 — cycle de vie sur une commande écrite par la production (V2)', () => {
+  it('crée, envoie et réceptionne une commande issue de create-orders, et incrémente le stock', async () => {
+    // Pièce sous le seuil : elle sera reprise dans le plan de réapprovisionnement.
+    const partId = (await prisma.part.create({
+      data: {
+        garageId: garageA, name: 'Bobine allumage', quantity: 1, minQuantity: 6,
+        unitCostTenThousandths: 350000, unitPriceTenThousandths: 700000,
+        supplierName: 'AUD002-Fournisseur', supplierRef: 'AUD002-REF',
+      },
+    })).id
+
+    // 1. Création par l'écrivain de PRODUCTION (format V2 réel).
+    const create = await post({ action: 'create-orders', confirm: true, supplierName: 'AUD002-Fournisseur' })
+    expect(create.status).toBe(201)
+    const orderId: string = create.json.created[0].id
+
+    // Le stockage est bien au format versionné V2 — c'est la prémisse du défaut.
+    const stored = await prisma.purchaseOrder.findFirst({ where: { id: orderId } })
+    const parsed = JSON.parse(stored.linesJson)
+    expect(Array.isArray(parsed)).toBe(false)
+    expect(parsed.schemaVersion).toBe(2)
+
+    const before = (await prisma.part.findFirst({ where: { id: partId } })).quantity
+    const ordered = parsed.lines[0].qtyTenThousandths / 10000
+    expect(ordered).toBeGreaterThan(0)
+
+    // 2. draft → sent : doit répondre 200 (et non 500).
+    const sent = await post({ action: 'transition', orderId, to: 'sent', confirm: true })
+    expect(sent.status).toBe(200)
+
+    // 3. sent → received : doit répondre 200 ET incrémenter réellement le stock.
+    const recv = await post({ action: 'transition', orderId, to: 'received', confirm: true })
+    expect(recv.status).toBe(200)
+
+    const after = (await prisma.part.findFirst({ where: { id: partId } })).quantity
+    expect(after).toBe(before + ordered)
+  })
+})
+
+/**
+ * GF31-AUD-029 — la permission `stock:manage` n'était appliquée NULLE PART.
+ *
+ * Elle est déclarée dans la matrice (`authz.ts`) et réservée à MANAGER/OWNER,
+ * mais `grep 'stock:manage' src/app` ne renvoyait aucun résultat : un
+ * RECEPTIONIST créait des commandes fournisseur et déclenchait leur réception —
+ * donc l'entrée en stock — alors que la matrice le lui refuse. C'est le même
+ * défaut que sur les factures (GF31-AUD-009), sur le domaine voisin.
+ */
+describe('GF31-AUD-029 — `stock:manage` sur les écritures fournisseur', () => {
+  const avec = async <T>(role: string | undefined, fn: () => Promise<T>): Promise<T> => {
+    const precedent = h.session
+    h.session = { user: { id: 'u2', name: 'Bob', role, garageId: garageA } }
+    try { return await fn() } finally { h.session = precedent }
+  }
+
+  it('RECEPTIONIST : lecture du plan de réapprovisionnement autorisée', async () => {
+    const { status } = await avec('RECEPTIONIST', () => get())
+    expect(status).toBe(200)
+  })
+
+  it.each(['RECEPTIONIST', 'MECHANIC', undefined])('%s : création de commandes refusée', async (role) => {
+    const { status } = await avec(role, () => post({ action: 'create-orders', confirm: true }))
+    expect(status).toBe(403)
+  })
+
+  it('RECEPTIONIST : transition de commande refusée (pas d’entrée en stock)', async () => {
+    const avant = (await prisma.part.findFirst({ where: { id: ids.p5 } })).quantity
+    const { status } = await avec('RECEPTIONIST', () =>
+      post({ action: 'transition', orderId: ids.poRecv, to: 'received', confirm: true }))
+    expect(status).toBe(403)
+    expect((await prisma.part.findFirst({ where: { id: ids.p5 } })).quantity).toBe(avant)
+  })
+
+  it.each(['OWNER', 'MANAGER'])('%s : conserve l’accès en écriture', async (role) => {
+    const { status } = await avec(role, () => post({ action: 'create-orders', confirm: false }))
+    // `confirm: false` renvoie l'aperçu (200) : la garde de rôle est franchie.
+    expect(status).toBe(200)
   })
 })

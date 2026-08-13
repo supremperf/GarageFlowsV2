@@ -38,5 +38,17 @@ export async function GET(req: NextRequest) {
     where: { id: user.id },
     data: { emailVerified: true, emailVerifyToken: null, ...(clientId ? { clientId } : {}) },
   })
-  return NextResponse.json({ ok: true })
+  // Le client arrive ici depuis son logiciel de messagerie : lui répondre un
+  // JSON brut serait un cul-de-sac. On le renvoie vers la connexion du portail,
+  // EN PORTANT le slug de son garage — c'est le seul moment où le lien est
+  // fabriqué côté serveur, donc le seul où la convention `?garage=<slug>` peut
+  // être produite sans que personne ait à la connaître.
+  const garage = await prisma.garage.findUnique({
+    where: { id: user.garageId },
+    select: { slug: true },
+  })
+  const cible = garage?.slug
+    ? `/portal/login?garage=${encodeURIComponent(garage.slug)}&verified=1`
+    : '/portal/login?verified=1'
+  return NextResponse.redirect(new URL(cible, req.url), { status: 303 })
 }

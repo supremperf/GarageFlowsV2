@@ -451,6 +451,21 @@ model InvoiceLine {
 // par un document. Une facture validée produit N lignes SALE (delta négatif) ;
 // son annulation produit les lignes CANCEL symétriques. Le stock d'une pièce
 // est toujours reconstituable : quantité initiale + somme des quantityDelta.
+/// Trace de SUPPRESSION d'une intervention (GF31-AUD-044).
+///
+/// Écrite par le POSTE, dans la même transaction que la suppression, puis
+/// transmise à `/api/sync/jobs` indépendamment de la fenêtre de dates. Le cloud
+/// ne la produit jamais lui-même : le modèle existe ici pour que les deux
+/// schémas déclarent les mêmes modèles — `src/lib/db.ts` fait passer les deux
+/// clients Prisma pour un seul type, et cette parité est vérifiée par un test.
+model JobTombstone {
+  jobId     String   @id
+  garageId  String
+  deletedAt DateTime @default(now())
+
+  @@index([garageId, deletedAt])
+}
+
 model StockMovement {
   id            String   @id @default(cuid())
   garageId      String

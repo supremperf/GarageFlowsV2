@@ -9,9 +9,9 @@
  *   • jobs/[id] PATCH avec mechanicId d'un autre garage → refusé.
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { execSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-itest-idor.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -36,12 +36,7 @@ function patch(handler: any, id: string, body: unknown) {
 }
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', {
-    cwd: path.resolve(__dirname, '../..'),
-    env: { ...process.env, DATABASE_URL: `file:${DB_PATH}` },
-    stdio: 'ignore',
-  })
+  prepareTestDb(DB_PATH)
 
   ;({ prisma } = await import('@/lib/db'))
   ;({ PATCH: vehiclePATCH } = await import('@/app/api/vehicles/[id]/route') as any)

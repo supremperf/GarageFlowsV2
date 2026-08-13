@@ -33,6 +33,10 @@ export type GarageAuthFailure =
   | 'LICENSE_SUSPENDED'
   | 'LICENSE_EXPIRED'
   | 'GARAGE_MISMATCH'
+  /** Le garage revendiqué appartient DÉJÀ à une autre licence garage. */
+  | 'GARAGE_ALREADY_CLAIMED'
+  /** La licence n'est pas encore rattachée : opération réservée aux licences liées. */
+  | 'LICENSE_NOT_BOUND'
 
 export interface GarageAuthResult {
   ok: true
@@ -51,15 +55,63 @@ export function shortId(id: string | null | undefined): string {
   return s ? `${s.slice(0, 8)}…` : '—'
 }
 
+/** Types de licence qui RÉSERVENT un garage (tout sauf les clés mécanicien). */
+const GARAGE_OWNING_TYPES = { not: 'mechanic' } as const
+
+/**
+ * Un garage est-il DÉJÀ réservé par une autre licence garage que celle donnée ?
+ *
+ * C'est le verrou qui rend le rattachement à la première utilisation sûr : sans
+ * lui, toute licence garage encore NON rattachée pouvait revendiquer
+ * l'identifiant d'un garage existant et s'y lier définitivement (GF31-AUD-003).
+ * Exposé pour être rejoué À L'INTÉRIEUR de la transaction qui rattache.
+ */
+export interface LicenseKeyReader {
+  licenseKey: {
+    // Syntaxe de MÉTHODE (et non propriété-flèche) : la bivariance des
+    // paramètres qu'elle autorise rend `PrismaClient` comme le client de
+    // transaction assignables à ce contrat minimal, sans `any` ni cast.
+    findFirst(args: {
+      where: Record<string, unknown>
+      select: { licenseId: true }
+    }): Promise<{ licenseId: string } | null>
+  }
+}
+
+export async function isGarageClaimedByAnotherLicense(
+  db: LicenseKeyReader,
+  garageId: string,
+  ownLicenseId: string,
+): Promise<boolean> {
+  const other = await db.licenseKey.findFirst({
+    where: {
+      garageId,
+      licenseType: GARAGE_OWNING_TYPES,
+      NOT: { licenseId: ownLicenseId },
+    },
+    select: { licenseId: true },
+  })
+  return other !== null
+}
+
 /**
  * Vérifie une licence GARAGE présentée par un poste.
- * `claimedGarageId` (facultatif) : le garage que le poste prétend piloter. Il
- * n'est accepté QUE si la licence n'est pas encore rattachée (première
- * utilisation) ; sinon il doit correspondre exactement.
+ *
+ * `claimedGarageId` (facultatif) : le garage que le poste prétend piloter.
+ *   - licence DÉJÀ rattachée → le garage revendiqué doit correspondre EXACTEMENT ;
+ *   - licence NON rattachée → la revendication n'est retenue que si ce garage
+ *     n'est réservé par AUCUNE autre licence garage (sinon `GARAGE_ALREADY_CLAIMED`).
+ *
+ * `opts.requireBound` : refuse toute licence encore non rattachée. À utiliser sur
+ * les routes qui ne créent PAS le miroir du garage (jobs, photos) : elles n'ont
+ * aucune raison légitime d'être le tout premier contact d'un poste, et sans cela
+ * une licence non rattachée pouvait lire, écrire et SUPPRIMER dans un garage
+ * qu'aucune licence ne réservait encore (garage créé côté PWA, par exemple).
  */
 export async function authenticateGarageLicense(
   licenseToken: unknown,
   claimedGarageId?: string | null,
+  opts?: { requireBound?: boolean },
 ): Promise<GarageAuthResult | GarageAuthError> {
   const token = typeof licenseToken === 'string' ? licenseToken.trim() : ''
   if (!token) return { ok: false, code: 'MISSING_LICENSE' }
@@ -81,6 +133,15 @@ export async function authenticateGarageLicense(
   const claimed = typeof claimedGarageId === 'string' && claimedGarageId ? claimedGarageId : null
   if (record.garageId && claimed && record.garageId !== claimed) {
     return { ok: false, code: 'GARAGE_MISMATCH' }
+  }
+
+  if (!record.garageId) {
+    // Licence encore NON rattachée.
+    if (opts?.requireBound) return { ok: false, code: 'LICENSE_NOT_BOUND' }
+    // La revendication ne vaut que si personne ne détient déjà ce garage.
+    if (claimed && (await isGarageClaimedByAnotherLicense(prisma, claimed, record.licenseId))) {
+      return { ok: false, code: 'GARAGE_ALREADY_CLAIMED' }
+    }
   }
 
   return { ok: true, payload, licenseId: record.licenseId, garageId: record.garageId ?? null }

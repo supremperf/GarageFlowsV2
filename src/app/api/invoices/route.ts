@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can, redactLineCosts } from '@/lib/authz'
 import { format } from 'date-fns'
 import { withTotals } from '@/lib/billing'
 import { lineToScaled, linesToEuros } from '@/lib/money-db'
@@ -41,7 +42,8 @@ export const GET = withAuth(async (req) => {
 
   // Compute totals from lines (no stored computed columns in SQLite)
   const data = invoices.map(inv => {
-    return withTotals({ ...inv, lines: linesToEuros(inv.lines) })
+  // Coût d'achat retiré pour les rôles sans `financial:read` (GF31-AUD-009).
+    return withTotals({ ...inv, lines: redactLineCosts(linesToEuros(inv.lines), session.user.role) })
   })
   return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit), limit })
 })
@@ -49,6 +51,15 @@ export const GET = withAuth(async (req) => {
 // POST /api/invoices
 export const POST = withAuth(async (req) => {
   const session = await requireSession()
+  // §16 — le contrôle d'accès appartient au serveur. La matrice `authz.ts`
+  // réserve `invoice:manage` à MANAGER et OWNER (un RECEPTIONIST a
+  // `quote:manage`, PAS `invoice:manage`) ; aucune route de facturation ne
+  // l'appliquait, si bien que la matrice était purement déclarative sur le
+  // document le plus sensible du produit (GF31-AUD-009). Pour ouvrir la
+  // facturation à un autre rôle, modifier la MATRICE — pas cette route.
+  if (!can(session.user.role, 'invoice:manage')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const body = await req.json()
 
   const parsed = CreateInvoiceSchema.safeParse(body)
@@ -137,5 +148,5 @@ export const POST = withAuth(async (req) => {
   // « Cannot read properties of undefined (reading 'toFixed') » et la limite
   // d'erreur remplaçait TOUTE l'application — alors que la facture, elle,
   // était bien enregistrée.
-  return NextResponse.json(withTotals({ ...invoice, lines: linesToEuros(invoice.lines) }), { status: 201 })
+  return NextResponse.json(withTotals({ ...invoice, lines: redactLineCosts(linesToEuros(invoice.lines), session.user.role) }), { status: 201 })
 })

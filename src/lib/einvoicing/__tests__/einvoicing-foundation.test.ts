@@ -5,7 +5,8 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { getEInvoicingFlags } from '../flags'
-import { normalizePlatformSearch, searchPlatforms, isPlatformConnectable, EINVOICE_PLATFORM_CATALOG, type ApprovedEInvoicePlatform } from '../catalog'
+import { normalizePlatformSearch, searchPlatforms, isPlatformConnectable, type ApprovedEInvoicePlatform } from '../catalog'
+import { EINVOICE_PLATFORM_CATALOG } from '../catalog-data'
 import { EInvoiceAdapterRegistry, einvoiceAdapterRegistry, type EInvoiceProviderAdapter } from '../adapter'
 import { encryptCredential, decryptCredential, envelopeKeyVersion, isCredentialKeyConfigured, EInvoiceCipherError } from '../credentials-cipher'
 
@@ -54,12 +55,19 @@ describe('catalogue — recherche insensible casse/accents, tri alpha', () => {
   it('normalise accents et casse', () => {
     expect(normalizePlatformSearch('  ÉlÉctro  ')).toBe('electro')
   })
-  it('« aze » retourne Azer', () => {
-    const r = searchPlatforms('aze')
-    expect(r[0]?.officialName).toBe('Azer')
+  it('une recherche par PRÉFIXE retrouve la plateforme, en tête', () => {
+    // Sonde tirée du catalogue RÉEL (registre des plateformes agréées) : coder
+    // un nom en dur rendrait ce test faux à la prochaine mise à jour du
+    // registre. On vérifie la RÈGLE — le préfixe passe devant — pas une donnée.
+    const sonde = EINVOICE_PLATFORM_CATALOG.find((p) => p.normalizedName.length >= 4)!
+    const prefixe = sonde.normalizedName.slice(0, 4)
+    const r = searchPlatforms(prefixe, EINVOICE_PLATFORM_CATALOG)
+    expect(r.length).toBeGreaterThan(0)
+    expect(r[0].normalizedName.startsWith(prefixe)).toBe(true)
+    expect(r.some((p) => p.id === sonde.id)).toBe(true)
   })
   it('« a » place EN TÊTE les entrées commençant par A, triées (puis les autres)', () => {
-    const r = searchPlatforms('a')
+    const r = searchPlatforms('a', EINVOICE_PLATFORM_CATALOG)
     const startsA = r.filter((p) => p.normalizedName.startsWith('a')).map((p) => p.normalizedName)
     expect(startsA.length).toBeGreaterThanOrEqual(3)
     // le groupe « commence par a » est en tête du résultat…
@@ -68,7 +76,7 @@ describe('catalogue — recherche insensible casse/accents, tri alpha', () => {
     expect([...startsA].sort((a, b) => a.localeCompare(b, 'fr'))).toEqual(startsA)
   })
   it('requête vide → tout, trié alphabétiquement', () => {
-    const r = searchPlatforms('')
+    const r = searchPlatforms('', EINVOICE_PLATFORM_CATALOG)
     expect(r.length).toBe(EINVOICE_PLATFORM_CATALOG.length)
   })
   it('aucune plateforme du seed n’est connectable (pas d’adaptateur)', () => {

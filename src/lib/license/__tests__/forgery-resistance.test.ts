@@ -16,11 +16,13 @@
  */
 import { describe, it, expect, beforeAll } from 'vitest'
 import { generateKeyPairSync, createSign, createHash, type KeyObject } from 'crypto'
-import { readFileSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import path from 'path'
 import { getPublicKeyPem } from '@/lib/license/public-key'
 
 const ROOT = path.resolve(__dirname, '../../../..')
+/** Clé publique ÉMETTRICE : présente sur le poste de signature, jamais versionnée. */
+const PUBLIC_PEM = path.join(ROOT, 'keys', 'public.pem')
 
 /** Empreinte SPKI d'une clé publique PEM. */
 function fingerprint(pem: string): string {
@@ -86,8 +88,15 @@ beforeAll(async () => {
 })
 
 describe('Clé embarquée', () => {
-  it('correspond à keys/public.pem (clé émettrice réelle)', () => {
-    const pem = readFileSync(path.join(ROOT, 'keys', 'public.pem'), 'utf8')
+  // `keys/*.pem` est ignoré par git (.gitignore) et aucun fichier de `keys/`
+  // n'est suivi : sur un clone neuf, ce fichier N'EXISTE PAS. Sans garde, cette
+  // assertion levait ENOENT et faisait échouer `npm test` dans TOUT
+  // environnement propre — l'échec ne signalait alors pas une dérive de clé mais
+  // l'absence du poste de signature. Même garde que la vérification jumelle de
+  // `src/lib/__tests__/license-public-key.test.ts` (`it.skipIf(!existsSync(PEM))`),
+  // qui couvre exactement le même invariant là où la clé est présente.
+  it.skipIf(!existsSync(PUBLIC_PEM))('correspond à keys/public.pem (clé émettrice réelle)', () => {
+    const pem = readFileSync(PUBLIC_PEM, 'utf8')
     expect(fingerprint(getPublicKeyPem())).toBe(fingerprint(pem))
   })
 

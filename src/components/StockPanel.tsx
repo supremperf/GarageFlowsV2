@@ -17,7 +17,7 @@ interface StockPanelProps {
 
 function PartRow({ part, onUpdate, onDelete }: {
   part: Part
-  onUpdate: (id: string, data: Partial<Part>) => void
+  onUpdate: (id: string, data: Partial<Part> & { expectedQuantity?: number }) => void
   onDelete: (id: string) => void
 }) {
   const { t } = useTranslation()
@@ -28,9 +28,16 @@ function PartRow({ part, onUpdate, onDelete }: {
 
   async function saveQty() {
     const newQty = Math.max(0, Number(qty))
-    await onUpdate(part.id, { quantity: newQty })
+    // On transmet la quantité OBSERVÉE (celle affichée quand l'édition a
+    // commencé) : le serveur n'applique la correction que si le stock vaut
+    // encore cette valeur. Sans cela, une vente concurrente était écrasée.
+    await onUpdate(part.id, { quantity: newQty, expectedQuantity: part.quantity })
     setEditing(false)
   }
+
+  // La quantité affichée peut avoir changé sous nos pieds (vente, réception) :
+  // on resynchronise le champ d'édition sur la valeur du serveur.
+  useEffect(() => { setQty(String(part.quantity)) }, [part.quantity])
 
   return (
     <div className={cn(
@@ -222,7 +229,7 @@ export default function StockPanel({ onClose }: StockPanelProps) {
 
   useEffect(() => { fetchParts() }, [fetchParts])
 
-  async function handleUpdate(id: string, data: Partial<Part>) {
+  async function handleUpdate(id: string, data: Partial<Part> & { expectedQuantity?: number }) {
     const res = await fetch(`/api/parts/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -232,7 +239,14 @@ export default function StockPanel({ onClose }: StockPanelProps) {
       const updated = await res.json()
       setParts(p => p.map(x => x.id === id ? updated : x))
       toast.success(t.stkUpdated)
+      return
     }
+    // Un échec était AVALÉ : l'écran affichait l'ancienne valeur sans un mot, et
+    // l'utilisateur croyait sa correction enregistrée. Le refus de correction
+    // concurrente (409) exige au contraire d'être vu et de rafraîchir l'écran.
+    const err = await res.json().catch(() => ({} as { error?: string }))
+    toast.error(err.error ?? `Erreur ${res.status}`)
+    if (res.status === 409) await fetchParts()
   }
 
   async function handleDelete(id: string) {
@@ -241,7 +255,12 @@ export default function StockPanel({ onClose }: StockPanelProps) {
     if (res.ok) {
       setParts(p => p.filter(x => x.id !== id))
       toast.success(t.stkDeleted)
+      return
     }
+    // Idem : le refus de supprimer une pièce qui porte un historique de stock
+    // (GF31-AUD-015) était invisible — la pièce restait là, sans explication.
+    const err = await res.json().catch(() => ({} as { error?: string }))
+    toast.error(err.error ?? `Erreur ${res.status}`)
   }
 
   async function handleAdd(data: Partial<Part>) {

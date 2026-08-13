@@ -105,6 +105,26 @@ async function readGfSession(
 }
 
 /**
+ * Identifiant de la licence sous laquelle CETTE installation tourne réellement
+ * (claim `lid` du cookie `gf_session`, JWT signé HS256 posé par
+ * `/api/license/activate`), ou `null` si aucune session licenciée n'est présente
+ * ou si le jeton est invalide.
+ *
+ * C'est la seule preuve serveur qu'un appelant détient une licence GARAGE
+ * donnée — la possession d'un jeton de clé MÉCANICIEN n'en est pas une : le
+ * `plid` signé prouve à quelle licence garage la clé appartient, pas que celui
+ * qui la présente a le droit d'en disposer (GF31-AUD-007).
+ *
+ * Ne lève jamais. Renvoie `null` pour une session de type mécanicien : elle ne
+ * licencie pas l'application garage.
+ */
+export async function activeGarageLicenseId(rawGfSession: string): Promise<string | null> {
+  const session = await readGfSession(rawGfSession)
+  if (!session || session.typ === 'mechanic') return null
+  return session.lid
+}
+
+/**
  * Valide la session licenciée pour un utilisateur donné (garageId) à partir du
  * cookie gf_session. Ne lève jamais — renvoie un résultat structuré.
  */

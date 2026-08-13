@@ -27,10 +27,10 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { verifyRecordMac } from '@/lib/license/record-mac'
+import { verifyRecordMac, recordIntegrityUsable } from '@/lib/license/record-mac'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { validateDeviceToken, type DeviceTokenFailure } from '@/lib/license/devices'
-import { isVersionSupported, seatlessCheckTolerated, type ClientPlatform } from '@/lib/license/client-policy'
+import { isVersionSupported, seatlessCheckTolerated, parseClientPlatform, type ClientPlatform } from '@/lib/license/client-policy'
 import { logger } from '@/lib/logger'
 
 const IS_ELECTRON = () => process.env.ELECTRON === '1'
@@ -105,7 +105,15 @@ export async function POST(req: NextRequest) {
     // autre navigateur sans contrôle (voir validateDeviceToken).
     installId   = body.installId ? String(body.installId) : undefined
     version     = body.version ? String(body.version) : undefined
-    platform    = installId ? 'pwa' : IS_ELECTRON() ? 'electron' : 'unknown'
+      // La plateforme vient de la REQUÊTE. La déduire de `process.env.ELECTRON`
+      // côté serveur ne pouvait pas fonctionner : cette variable n'est jamais
+      // positionnée sur le cloud, si bien que TOUT client Electron était classé
+      // « unknown » et échappait à la politique de version (GF31-AUD-053).
+      // `installId` reste un indice fiable de PWA quand rien n'est annoncé.
+      const annoncee = parseClientPlatform(body.platform)
+      platform    = annoncee !== 'unknown'
+        ? annoncee
+        : installId ? 'pwa' : IS_ELECTRON() ? 'electron' : 'unknown'
   } catch {
     return NextResponse.json(
       { allowed: false, code: 'VALIDATION_ERROR', reason: 'Requête invalide' },
@@ -176,18 +184,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ allowed: true, status: 'unknown', deviceRequired: true })
     }
 
-    // DB integrity check — detect SQLite tampering
+    // DB integrity check — detect SQLite tampering.
+    // Un MAC absent n'est pas un vestige tolérable mais le contournement le plus
+    // simple de cette protection : refus, au même titre qu'un MAC invalide
+    // (GF31-AUD-005). Remise en conformité d'un parc existant :
+    // `scripts/repair-after-secret-rotation.js`.
     const mac = verifyRecordMac(record)
-    if (mac.tampered) {
-      logger.error('[license/check] intégrité DB compromise', { lid: record.licenseId })
+    if (!recordIntegrityUsable(mac)) {
+      logger.error('[license/check] intégrité DB compromise', {
+        lid: record.licenseId, cause: mac.missing ? 'mac-absent' : 'mac-invalide',
+      })
       return NextResponse.json({
         allowed: false,
         status:  'tampered',
         reason:  'Intégrité de la base de données compromise.',
       })
-    }
-    if (mac.missing) {
-      logger.warn('[license/check] enregistrement sans MAC (legacy)', { lid: record.licenseId })
     }
 
     if (record.status === 'revoked') {

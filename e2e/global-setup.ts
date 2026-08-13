@@ -105,6 +105,7 @@ export default async function globalSetup(_config: FullConfig) {
     // eslint-disable-next-line no-console
     console.log(`[e2e:setup] url=${finalUrl} cookies=${cookies.join(',')}`)
     await page.context().storageState({ path: AUTH_STATE })
+
   } finally {
     await browser.close()
   }

@@ -8,11 +8,11 @@
  */
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest'
 import { toScaled } from '@/lib/money'
-import { execSync } from 'node:child_process'
 import { format, subDays } from 'date-fns'
 import path from 'node:path'
 import fs from 'node:fs'
 import { __setLlmProvider } from '@/lib/copilot-llm/provider'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-itest-copilot.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -40,8 +40,7 @@ async function paidInvoice(garageId: string, number: string, issueDate: string, 
 }
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', { cwd: path.resolve(__dirname, '../..'), env: { ...process.env, DATABASE_URL: `file:${DB_PATH}` }, stdio: 'ignore' })
+  prepareTestDb(DB_PATH)
   ;({ prisma } = await import('@/lib/db'))
   ;({ POST } = await import('@/app/api/copilot/route') as any)
 

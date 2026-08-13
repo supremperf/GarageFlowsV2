@@ -61,12 +61,21 @@ export async function PATCH(
       if (body.status !== undefined || body.hwid !== undefined) {
         const current = await tx.licenseKey.findUnique({ where: { id } })
         if (!current) throw Object.assign(new Error('not found'), { code: 'P2025' })
+        // Les champs MÉCANICIEN (parentLicenseId, mechanicId) font partie du
+        // message signé dès qu'ils sont non nuls. Les omettre ici produisait un
+        // MAC calculé sur un message PLUS COURT que celui que `verifyRecordMac`
+        // reconstruit ensuite à partir de la ligne réelle : toute suspension,
+        // réactivation ou modification de HWID d'une clé mécanicien attribuée
+        // laissait donc la licence définitivement vue comme « altérée »
+        // (`MECHANIC_LICENSE_TAMPERED`) — GF31-AUD-006.
         data.recordMac = computeRecordMac({
           licenseId: current.licenseId,
           token:     current.token,
           status:    (body.status ?? current.status) as string,
           expiryAt:  current.expiryAt,
           hwid:      (body.hwid !== undefined ? body.hwid : current.hwid) ?? null,
+          parentLicenseId: current.parentLicenseId ?? null,
+          mechanicId:      current.mechanicId ?? null,
         })
       }
       return tx.licenseKey.update({ where: { id }, data })

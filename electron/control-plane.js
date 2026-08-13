@@ -15,11 +15,48 @@
 
 const crypto = require('crypto')
 
-/** Base HTTPS du serveur officiel (GF_LICENSE_SERVER), sans slash final. */
-function resolveRemoteBase(env) {
+// Même autorité que la licence : une seule URL officielle compilée dans le
+// binaire, importée depuis son module de référence pour qu'elles ne puissent
+// pas diverger.
+const { OFFICIAL_LICENSE_SERVER: OFFICIAL_CONTROL_PLANE } = require('./license-endpoint')
+
+/**
+ * Base HTTPS du plan de contrôle (crashs, notifications, accusés de réception).
+ *
+ * ─── Le défaut corrigé (GF31-AUD-043) ───────────────────────────────────────
+ * Cette fonction ne lisait QUE `GF_LICENSE_SERVER`. Or une application packagée
+ * n'embarque aucun `.env` : la variable est absente en production, la fonction
+ * rendait `null`, et ses trois consommateurs sortaient **en silence**. Rapports
+ * de crash, notifications et accusés de réception étaient donc morts sur
+ * l'intégralité du parc installé — trois fonctionnalités livrées, consenties par
+ * l'utilisateur, et sans le moindre effet ni le moindre signal.
+ *
+ * C'est mot pour mot le défaut que `license-endpoint.js` a été écrit pour
+ * corriger sur l'autorité de licence (« une app packagée sans .env doit TOUJOURS
+ * pouvoir joindre l'autorité distante »). Il subsistait ici.
+ *
+ * ─── La règle retenue ───────────────────────────────────────────────────────
+ *  1. surcharge d'environnement explicite → elle fait foi (dev, staging, self-hosted) ;
+ *  2. sinon, application PACKAGÉE → autorité officielle compilée dans le binaire ;
+ *  3. sinon (développement sans configuration) → `null`, pour qu'un poste de
+ *     développement n'envoie pas ses crashs de mise au point en production.
+ *
+ * @param {Record<string, string|undefined>} env
+ * @param {{ isPackaged?: boolean }} [opts]
+ * @returns {string|null} base sans slash final
+ */
+function resolveRemoteBase(env, opts) {
   const s = (env && env.GF_LICENSE_SERVER) || ''
   const trimmed = String(s).trim().replace(/\/+$/, '')
-  return trimmed || null
+  if (trimmed) {
+    // En production packagée, une surcharge non-https est refusée (anti-downgrade),
+    // exactement comme pour l'autorité de licence.
+    if (opts && opts.isPackaged && !/^https:\/\//i.test(trimmed)) {
+      return OFFICIAL_CONTROL_PLANE
+    }
+    return trimmed
+  }
+  return opts && opts.isPackaged ? OFFICIAL_CONTROL_PLANE : null
 }
 
 // ─── Empreinte de crash — DOIT rester identique à src/lib/crashes/service.ts ──

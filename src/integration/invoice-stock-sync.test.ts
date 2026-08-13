@@ -22,9 +22,9 @@
  * elle-même est vérifiée ici en BASCULANT de session, pas en la contournant.
  */
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
-import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-invoice-stock.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -82,10 +82,7 @@ async function setStatus(invoiceId: string, status: string) {
 }
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', {
-    cwd: path.resolve(__dirname, '../..'), env: { ...process.env }, stdio: 'ignore',
-  })
+  prepareTestDb(DB_PATH)
   ;({ prisma } = await import('@/lib/db'))
   stockLib = await import('@/lib/stock/invoice-stock')
   api.invoices = await import('@/app/api/invoices/route')

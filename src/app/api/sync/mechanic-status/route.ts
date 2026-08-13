@@ -30,6 +30,9 @@ const FAILURE_STATUS: Record<string, number> = {
   MISSING_LICENSE: 400, LICENSE_INVALID: 403, NOT_A_GARAGE_LICENSE: 403,
   LICENSE_UNKNOWN: 403, LICENSE_REVOKED: 403, LICENSE_SUSPENDED: 403,
   LICENSE_EXPIRED: 403, GARAGE_MISMATCH: 403,
+  // Revendication d'un garage déjà réservé / licence pas encore rattachée :
+  // conflit d'état, pas un défaut d'authentification (GF31-AUD-003).
+  GARAGE_ALREADY_CLAIMED: 409, LICENSE_NOT_BOUND: 409,
 }
 
 export async function POST(req: Request) {

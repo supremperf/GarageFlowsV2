@@ -6,9 +6,9 @@
  * scopé au garage. Empêche un déni de service par catalogue pathologique.
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import { prepareTestDb } from '../../../../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../../../../.tmp-parts-pagination.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -26,10 +26,7 @@ const garageId = { v: '' }
 const get = (qs = '') => GET(new Request(`http://localhost/api/parts${qs}`))
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', {
-    cwd: path.resolve(__dirname, '../../../../..'), env: { ...process.env }, stdio: 'ignore',
-  })
+  prepareTestDb(DB_PATH)
   ;({ prisma } = await import('@/lib/db'))
   ;({ GET } = (await import('@/app/api/parts/route')) as any)
 

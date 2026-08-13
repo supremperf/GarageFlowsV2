@@ -445,6 +445,29 @@ model InvoiceLine {
 // par un document. Une facture validée produit N lignes SALE (delta négatif) ;
 // son annulation produit les lignes CANCEL symétriques. Le stock d'une pièce
 // est toujours reconstituable : quantité initiale + somme des quantityDelta.
+/// Trace de SUPPRESSION d'une intervention, en attente de propagation au cloud.
+///
+/// La remontée `/api/sync/jobs` décrit une FENÊTRE de dates : le cloud en
+/// déduit les suppressions par absence. Deux cas échappent à cette inférence :
+///  - le poste est hors ligne au moment de la suppression, et quand il
+///    resynchronise, la date de l'intervention est sortie de la fenêtre —
+///    l'absence n'est alors plus interprétable ;
+///  - la remontée est TRONQUÉE (plus de SYNC_MAX_JOBS interventions), auquel cas
+///    toute purge par inférence est suspendue (GF31-AUD-017).
+///
+/// Dans les deux cas, l'intervention supprimée restait indéfiniment visible dans
+/// la PWA du mécanicien — qui pouvait se déplacer sur une intervention annulée
+/// (GF31-AUD-044). La pierre tombale rend la suppression EXPLICITE : elle est
+/// écrite dans la même transaction que la suppression, transmise indépendamment
+/// de la fenêtre, et effacée seulement quand le cloud a accusé réception.
+model JobTombstone {
+  jobId     String   @id
+  garageId  String
+  deletedAt DateTime @default(now())
+
+  @@index([garageId, deletedAt])
+}
+
 model StockMovement {
   id            String   @id @default(cuid())
   garageId      String

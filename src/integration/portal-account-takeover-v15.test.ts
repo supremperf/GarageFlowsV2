@@ -14,9 +14,9 @@
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { NextRequest } from 'next/server'
-import { execSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-portal-takeover-v15.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -31,10 +31,7 @@ const jreq = (url: string, method: string, body?: unknown) =>
   new Request(url, { method, headers: { 'content-type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) })
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', {
-    cwd: path.resolve(__dirname, '../..'), env: { ...process.env }, stdio: 'ignore',
-  })
+  prepareTestDb(DB_PATH)
   ;({ prisma } = await import('@/lib/db'))
   ;({ POST: register } = (await import('@/app/api/portal/auth/register/route')) as any)
   ;({ GET: verifyEmail } = (await import('@/app/api/portal/auth/verify-email/route')) as any)
@@ -72,7 +69,15 @@ describe('Portail — anti-prise de contrôle de compte (V15 P1)', () => {
     expect(typeof token).toBe('string')
 
     const res = await verifyEmail(new NextRequest(`http://localhost/api/portal/auth/verify-email?token=${token}`))
-    expect(res.status).toBe(200)
+    // Le client clique ce lien depuis sa messagerie : la route le REDIRIGE vers
+    // la connexion du portail, en portant le slug de son garage — c'est le seul
+    // lien fabriqué côté serveur, donc le seul endroit où la convention
+    // `?garage=<slug>` peut être produite (GF31-AUD-032). Elle répondait
+    // auparavant un JSON brut, cul-de-sac pour le client.
+    expect(res.status).toBe(303)
+    const cible = res.headers.get('location') ?? ''
+    expect(cible).toContain('/portal/login')
+    expect(cible).toContain('garage=')
 
     const linked = await prisma.portalUser.findUnique({ where: { id: account.id } })
     expect(linked.emailVerified).toBe(true)

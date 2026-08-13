@@ -29,11 +29,29 @@ vi.mock('@/lib/db', () => ({
   prisma: {
     licenseKey: {
       findUnique: async (a: { where: { licenseId: string } }) => cap.licenses.get(a.where.licenseId) ?? null,
+      // Réservation d'un garage par une AUTRE licence garage (GF31-AUD-003).
+      findFirst: async (a: {
+        where: { garageId: string; licenseType: { not: string }; NOT: { licenseId: string } }
+      }) => {
+        const hit = Array.from(cap.licenses.values()).find(
+          (row) =>
+            row.garageId === a.where.garageId &&
+            row.licenseType !== a.where.licenseType.not &&
+            row.licenseId !== a.where.NOT.licenseId,
+        )
+        return hit ? { licenseId: String(hit.licenseId) } : null
+      },
       updateMany: async (a: { where: Record<string, unknown>; data: Record<string, unknown> }) => {
         const row = cap.licenses.get(String(a.where.licenseId))
         if (!row || row.garageId != null) return { count: 0 }
         Object.assign(row, a.data); return { count: 1 }
       },
+    },
+    // Le rattachement se fait désormais dans une transaction : le simulacre la
+    // rejoue simplement sur le même client (aucune isolation à imiter ici).
+    $transaction: async (fn: (tx: unknown) => Promise<unknown>) => {
+      const { prisma } = await import('@/lib/db')
+      return fn(prisma)
     },
     portalSnapshot: {
       upsert: async (a: { where: { id: string }; create: Record<string, unknown>; update: Record<string, unknown> }) => {

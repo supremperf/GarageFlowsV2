@@ -122,6 +122,22 @@ for (const rootDir of SCAN_ROOTS) {
       ) {
         errors.push(`${loc} : JSON.stringify d'un objet à propriété monétaire flottante (format v1 interdit en écriture)`)
       }
+
+      // Règle 3 : la LECTURE doit elle aussi passer par les parseurs versionnés.
+      //
+      // Motif (GF31-AUD-002) : `/api/suppliers` action « transition » faisait
+      // `JSON.parse(order.linesJson)` puis `.filter(...)`. Comme le format v2
+      // persisté est un OBJET `{ schemaVersion: 2, lines: [...] }` et non un
+      // tableau, tout bon de commande écrit par la production provoquait
+      // « lines.filter is not a function » → HTTP 500, et le stock n'était
+      // jamais incrémenté à la réception. Les règles 1 et 2 ne voyaient rien :
+      // elles ne surveillaient que les ÉCRITURES.
+      const rawReadRe = /JSON\.parse\s*\(\s*[^)]*\b(works|parts|lines)Json\b/g
+      for (const m of V1_FIXTURE_FILES.has(rel) ? [] : line.matchAll(rawReadRe)) {
+        errors.push(
+          `${loc} : JSON.parse nu de ${m[1]}Json — utilisez parse${m[1] === 'lines' ? 'PoLines' : m[1] === 'works' ? 'Works' : 'Parts'}Json() (format versionné v1/v2)`,
+        )
+      }
     })
   }
 }
@@ -138,5 +154,5 @@ if (errors.length) {
   process.exit(1)
 }
 console.log(
-  `✅ JSON monétaires : toutes les écritures de worksJson/partsJson/linesJson passent par les sérialiseurs v2 (${ALLOWED.length} exceptions justifiées, ${V1_FIXTURE_FILES.size} fichiers de fixtures v1 en lecture).`,
+  `✅ JSON monétaires : écritures de worksJson/partsJson/linesJson via les sérialiseurs v2 ET lectures via les parseurs versionnés (${ALLOWED.length} exceptions justifiées, ${V1_FIXTURE_FILES.size} fichiers de fixtures v1).`,
 )

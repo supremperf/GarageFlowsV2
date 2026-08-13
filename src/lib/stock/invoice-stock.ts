@@ -88,9 +88,16 @@ export interface ReconcileResult {
   movements: number
   /** Détail `partId → unités retirées (négatif = restituées)`. */
   applied: Array<{ partId: string; units: number }>
+  /**
+   * Pièces qui n'existent PLUS dans le catalogue du garage : leur restitution
+   * n'a pas pu être appliquée et aucun mouvement n'a pu être journalisé (la clé
+   * étrangère `StockMovement.part` l'interdit). L'opération comptable n'est pas
+   * bloquée pour autant — l'appelant journalise cette liste (GF31-AUD-015).
+   */
+  missingParts: string[]
 }
 
-const EMPTY: ReconcileResult = { changed: false, movements: 0, applied: [] }
+const EMPTY: ReconcileResult = { changed: false, movements: 0, applied: [], missingParts: [] }
 
 /**
  * Rapproche le stock réellement engagé par une facture avec une cible donnée.
@@ -147,39 +154,47 @@ async function reconcile(
     }
   }
 
+  // Pièces disparues du catalogue depuis la vente : leur restitution est
+  // matériellement impossible. Le commentaire d'origine annonçait justement de
+  // « ne pas bloquer l'annulation pour autant » — mais le code levait, et
+  // `StockMovement.part` étant en `onDelete: Cascade`, le journal de la pièce
+  // avait de toute façon disparu avec elle. Conséquence : toute facture ayant
+  // consommé une pièce ensuite supprimée devenait **définitivement
+  // inannulable** (409 permanent), sans aucun recours (GF31-AUD-015).
+  //
+  // On restitue donc ce qui peut l'être, on IGNORE ce qui n'existe plus, et on
+  // remonte la liste à l'appelant pour qu'il la journalise. Bloquer l'opération
+  // comptable n'aurait rendu aucune unité au stock.
+  const disparues: string[] = []
   for (const d of inflows) {
     const inc = await tx.part.updateMany({
       where: { id: d.partId, garageId },
       data: { quantity: { increment: -d.units } },
     })
-    // Une pièce supprimée depuis la vente ne peut plus recevoir sa restitution :
-    // on ne bloque pas l'annulation de la facture pour autant, mais le journal
-    // ci-dessous garde la trace exacte de ce qui a été tenté.
-    if (inc.count !== 1) {
-      throw new InventoryError(
-        409,
-        'Restitution impossible : la pièce n’existe plus dans ce garage.',
-        'PART_NOT_FOUND',
-      )
-    }
+    if (inc.count !== 1) disparues.push(d.partId)
   }
 
-  await tx.stockMovement.createMany({
-    data: deltas.map((d) => ({
-      garageId,
-      partId: d.partId,
-      type,
-      // Signe côté STOCK : sortir 2 unités s'écrit −2.
-      quantityDelta: -d.units,
-      invoiceId,
-      reason,
-    })),
-  })
+  // Aucun mouvement pour une pièce absente : la clé étrangère le refuserait.
+  const ecrivables = deltas.filter((d) => !disparues.includes(d.partId))
+  if (ecrivables.length > 0) {
+    await tx.stockMovement.createMany({
+      data: ecrivables.map((d) => ({
+        garageId,
+        partId: d.partId,
+        type,
+        // Signe côté STOCK : sortir 2 unités s'écrit −2.
+        quantityDelta: -d.units,
+        invoiceId,
+        reason,
+      })),
+    })
+  }
 
   return {
     changed: true,
-    movements: deltas.length,
+    movements: ecrivables.length,
     applied: deltas.map((d) => ({ partId: d.partId, units: d.units })),
+    missingParts: disparues,
   }
 }
 

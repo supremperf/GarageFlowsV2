@@ -38,7 +38,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { verifyLicenseToken } from '@/lib/license/verify'
 import { computeRecordMac } from '@/lib/license/record-mac'
-import { authenticateGarageLicense, shortId } from '@/lib/sync/garage-auth'
+import { authenticateGarageLicense, isGarageClaimedByAnotherLicense, shortId } from '@/lib/sync/garage-auth'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { logger } from '@/lib/logger'
 
@@ -46,6 +46,9 @@ const FAILURE_STATUS: Record<string, number> = {
   MISSING_LICENSE: 400, LICENSE_INVALID: 403, NOT_A_GARAGE_LICENSE: 403,
   LICENSE_UNKNOWN: 403, LICENSE_REVOKED: 403, LICENSE_SUSPENDED: 403,
   LICENSE_EXPIRED: 403, GARAGE_MISMATCH: 403,
+  // Revendication d'un garage déjà réservé / licence pas encore rattachée :
+  // conflit d'état, pas un défaut d'authentification (GF31-AUD-003).
+  GARAGE_ALREADY_CLAIMED: 409, LICENSE_NOT_BOUND: 409,
 }
 
 /** Slug déterministe et unique — Garage.slug est @unique et obligatoire. */
@@ -119,7 +122,18 @@ export async function POST(req: Request) {
 
       // 4. Rattachement de la licence garage à la première utilisation
       //    (même règle que /api/mechanic-licenses et validateLicensedSession).
+      //
+      //    Le garage revendiqué doit être LIBRE. Sans ce contrôle, une licence
+      //    garage valide mais non rattachée pouvait revendiquer l'identifiant
+      //    d'un garage existant et s'y lier DÉFINITIVEMENT : à partir de là,
+      //    `auth.garageId` valait le garage de la victime et toutes les routes
+      //    /api/sync/* la servaient légitimement (GF31-AUD-003). Rejoué ici
+      //    dans la transaction, il ferme aussi la course entre deux licences
+      //    revendiquant le même garage au même instant.
       if (!auth.garageId) {
+        if (await isGarageClaimedByAnotherLicense(tx, garageId, auth.licenseId)) {
+          throw new SyncConflict('GARAGE_ALREADY_CLAIMED')
+        }
         await tx.licenseKey.updateMany({
           where: { licenseId: auth.licenseId, garageId: null },
           data:  { garageId },

@@ -2585,7 +2585,20 @@ try {
             continue
         }
 
-        $newValues[$name] = New-CryptoRandomValue -Bytes 32 -Format 'base64'
+        # Absente de Production — mais peut-être DÉJÀ présente en local, et donc
+        # déjà utilisée pour chiffrer des données de cette installation (mots de
+        # passe SMTP, secrets TOTP, sauvegardes). La régénérer les rendait
+        # définitivement indéchiffrables : exactement la rotation silencieuse que
+        # le bloc ci-dessus s'attache à empêcher, laissée ouverte sur ce chemin
+        # (GF31-AUD-058). On reprend donc la valeur locale existante et on la
+        # PROMEUT en Production, au lieu d'en fabriquer une nouvelle.
+        $localValue = Clean-InputValue ([string]$localEnvExisting[$name])
+        if (-not [string]::IsNullOrWhiteSpace($localValue)) {
+            $newValues[$name] = $localValue
+            Write-Host "[OK] $name reprise depuis l'environnement local : préservée (aucune donnée chiffrée perdue)." -ForegroundColor Green
+        } else {
+            $newValues[$name] = New-CryptoRandomValue -Bytes 32 -Format 'base64'
+        }
         Add-SecretToRegistry ([string]$newValues[$name])
     }
     foreach ($name in $fallbackGenerators.Keys) {

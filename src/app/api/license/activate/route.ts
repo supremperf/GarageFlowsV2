@@ -29,7 +29,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { SignJWT } from 'jose'
 import { verifyLicenseToken, verifyHwid, isValidHwidFormat, type LicensePayload } from '@/lib/license/verify'
 import { prisma } from '@/lib/db'
-import { computeRecordMac, verifyRecordMac } from '@/lib/license/record-mac'
+import { computeRecordMac, verifyRecordMac, recordIntegrityUsable } from '@/lib/license/record-mac'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { getAuthSecret } from '@/lib/auth-secret'
 import {
@@ -341,10 +341,16 @@ export async function POST(req: NextRequest) {
     const record = await prisma.licenseKey.findUnique({ where: { licenseId: payload.lid } })
 
     if (record) {
-      // DB integrity check — detect SQLite tampering
+      // DB integrity check — detect SQLite tampering.
+      // Un MAC ABSENT est traité comme une altération, exactement comme sur le
+      // chemin MÉCANICIEN ci-dessus : effacer la colonne est plus simple que de
+      // forger un HMAC, et le tolérer rendait toute la protection contournable
+      // (GF31-AUD-005).
       const mac = verifyRecordMac(record)
-      if (mac.tampered) {
-        logger.error('[license/activate] DB integrity check FAILED', { lid: record.licenseId })
+      if (!recordIntegrityUsable(mac)) {
+        logger.error('[license/activate] DB integrity check FAILED', {
+          lid: record.licenseId, cause: mac.missing ? 'mac-absent' : 'mac-invalide',
+        })
         return NextResponse.json({
           ok: false, code: 'LICENSE_INVALID',
           reason: 'Erreur d\'intégrité de la base de données. Contactez le support.',
@@ -379,14 +385,32 @@ export async function POST(req: NextRequest) {
       // licence liée + HWID identique→ autorisé
       // Aucun contournement silencieux : dès que le record porte un HWID, le
       // client DOIT présenter un HWID bien formé ET identique.
-      if (record.hwid) {
+      // La liaison matérielle SIGNÉE du jeton (`payload.hwid`) fait autorité au
+      // même titre que celle de la base. Ne contrôler que `record.hwid` laissait
+      // la liaison tomber silencieusement dès que la ligne perdait sa valeur —
+      // ce qui arrive sans aucune altération de base : la pierre tombale créée
+      // par `/api/admin/licenses/revoke-by-key` pour une licence pas encore
+      // enregistrée porte `hwid: null`, et un `PATCH /api/admin/licenses/[id]`
+      // peut poser `hwid: null` explicitement. Après réactivation, un jeton volé
+      // s'activait alors sur n'importe quelle machine, alors même que sa
+      // signature le liait à un matériel précis (GF31-AUD-008).
+      const hwidLie = record.hwid ?? payload.hwid ?? null
+      if (hwidLie) {
         if (!clientHwid || !isValidHwidFormat(clientHwid)) {
           return NextResponse.json(
             { ok: false, code: 'HWID_REQUIRED', reason: 'Cette licence est liée à un matériel : identifiant matériel requis et valide.' },
             { status: 403 },
           )
         }
-        if (!verifyHwid(record.hwid, clientHwid)) {
+        // Les DEUX liaisons connues doivent tenir : celle de la base ET celle
+        // que porte la signature du jeton.
+        if (record.hwid && !verifyHwid(record.hwid, clientHwid)) {
+          return NextResponse.json(
+            { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un autre matériel.' },
+            { status: 403 },
+          )
+        }
+        if (payload.hwid && !verifyHwid(payload.hwid, clientHwid)) {
           return NextResponse.json(
             { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un autre matériel.' },
             { status: 403 },

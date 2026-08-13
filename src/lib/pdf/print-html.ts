@@ -19,6 +19,41 @@
  */
 
 /**
+ * Échappe une valeur destinée à du CONTENU ou à un ATTRIBUT HTML.
+ *
+ * Le document imprimé est injecté par `doc.write()` dans une iframe **de même
+ * origine** : tout `<script>` qui s'y trouve s'exécute donc dans l'origine de
+ * l'application — et sous Electron, dans le renderer. Interpoler une donnée
+ * saisie par l'utilisateur (nom de client, note, libellé de ligne, référence de
+ * pièce…) sans échappement était donc un XSS stocké : il suffisait d'enregistrer
+ * un client nommé `<img src=x onerror=…>` puis d'imprimer l'ordre de réparation
+ * (GF31-AUD-011).
+ *
+ * Les cinq caractères réservés sont couverts, guillemets simples ET doubles
+ * inclus, pour que la fonction soit sûre à l'intérieur d'un attribut quoté.
+ */
+export function escapeHtml(value: unknown): string {
+  if (value === null || value === undefined) return ''
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+/**
+ * URL d'image sûre pour un attribut `src` : seules les données inline produites
+ * par l'application (`data:image/…;base64,…`) sont admises. Tout le reste — et
+ * en particulier `javascript:` — est remplacé par une chaîne vide. Retourne une
+ * valeur DÉJÀ échappée pour l'attribut.
+ */
+export function safeImageSrc(value: unknown): string {
+  const s = typeof value === 'string' ? value.trim() : ''
+  return /^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(s) ? s : ''
+}
+
+/**
  * Imprime `html` (document complet, `<!DOCTYPE html>…`).
  * @param onError appelé avec un message si l'impression est impossible.
  */

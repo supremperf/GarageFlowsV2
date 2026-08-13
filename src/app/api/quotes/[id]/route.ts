@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { prisma, isPostgresDatabase } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { redactLineCosts } from '@/lib/authz'
 import { UpdateQuoteSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
 import { withTotals } from '@/lib/billing'
@@ -17,7 +18,10 @@ export const GET = withAuth(async (_req, { params }) => {
     include: { lines: { orderBy: { sortOrder: 'asc' } } },
   })
   if (!quote) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(withTotals({ ...quote, lines: linesToEuros(quote.lines) }))
+  // Coût d'achat retiré pour les rôles sans `financial:read` (GF31-AUD-009).
+  return NextResponse.json(
+    withTotals({ ...quote, lines: redactLineCosts(linesToEuros(quote.lines), session.user.role) }),
+  )
 })
 
 // PATCH /api/quotes/[id]
@@ -65,6 +69,14 @@ export const PATCH = withAuth(async (req, { params }) => {
     // haut lit un statut potentiellement périmé : si le client ACCEPTE le devis
     // (portail) entre cette lecture et l'écriture, un PATCH « draft » périmé
     // réécrirait sinon les lignes d'un devis accepté. Miroir de invoices/[id].
+    // Verrou de LIGNE avant la relecture : sans lui, la relecture reste un
+    // simple `findFirst`, donc non bloquante. Sous PostgreSQL en READ COMMITTED,
+    // le PATCH et l'acceptation depuis le portail lisent alors tous deux l'état
+    // « draft » et franchissent le verrou (GF31-AUD-010). Même dispositif que
+    // PATCH /api/admin/licenses/[id].
+    if (isPostgresDatabase()) {
+      await tx.$executeRaw`SELECT "id" FROM "Quote" WHERE "id" = ${params.id} FOR UPDATE`
+    }
     const fresh = await tx.quote.findFirst({ where: { id: params.id, garageId: session.user.garageId }, select: { status: true } })
     if (fresh) {
       if (financialEdit && areAmountsLocked('quote', fresh.status)) { lockConflict = true; return null }
@@ -84,6 +96,31 @@ export const PATCH = withAuth(async (req, { params }) => {
         })),
       })
     }
+    // ── PREUVE D'ACCEPTATION PÉRIMÉE (§74) ────────────────────────────────────
+    // Une preuve n'est jamais supprimée, seulement marquée.
+    // La preuve atteste UNE décision sur UN contenu. Toute sortie de cet état la
+    // périme — y compris `accepted → refused`, où le garage transformerait sinon
+    // un accord client en refus tout en conservant la preuve de l'accord.
+    // Seule exception : `accepted → converted`, suite naturelle de l'accord, à
+    // contenu inchangé.
+    const quitteEtatSigne =
+      body.status !== undefined &&
+      !!fresh &&
+      ['accepted', 'refused'].includes(fresh.status) &&
+      body.status !== fresh.status &&
+      !(fresh.status === 'accepted' && body.status === 'converted')
+    if (quitteEtatSigne) {
+      await tx.signature.updateMany({
+        where: {
+          garageId: session.user.garageId,
+          entityType: 'quote',
+          entityId: params.id,
+          invalidatedAt: null,
+        },
+        data: { invalidatedAt: new Date() },
+      })
+    }
+
     return tx.quote.update({
       where: { id: params.id, garageId: session.user.garageId },
       data: {
@@ -112,7 +149,7 @@ export const PATCH = withAuth(async (req, { params }) => {
 
   await logAudit({ action: 'update', entityType: 'Quote', entityId: quote.id, session, req })
 
-  return NextResponse.json(withTotals({ ...quote, lines: linesToEuros(quote.lines) }))
+  return NextResponse.json(withTotals({ ...quote, lines: redactLineCosts(linesToEuros(quote.lines), session.user.role) }))
 })
 
 // DELETE /api/quotes/[id]

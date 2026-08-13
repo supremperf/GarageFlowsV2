@@ -11,9 +11,9 @@
  *     (c'était le bug : coût de pièces d'un job non facturé gonflait la marge).
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { execSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-itest-finance.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -29,12 +29,7 @@ let prisma: any
 let garageA = ''
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', {
-    cwd: path.resolve(__dirname, '../..'),
-    env: { ...process.env, DATABASE_URL: `file:${DB_PATH}` },
-    stdio: 'ignore',
-  })
+  prepareTestDb(DB_PATH)
   ;({ prisma } = await import('@/lib/db'))
   ;({ GET } = await import('@/app/api/finance/route') as any)
 

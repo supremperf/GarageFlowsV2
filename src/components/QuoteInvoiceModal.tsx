@@ -223,15 +223,37 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
       toast.error(t.qiNameRequired)
       return
     }
+
+    // ── QUANTITÉ : ne jamais corriger la saisie en silence ────────────────────
+    // `Math.max(0.01, Number(quantity) || 1)` transformait une quantité à 0 —
+    // ou toute saisie non numérique — en **1**. Le document enregistré ne valait
+    // alors pas le montant affiché ; sur une facture, ce montant devient immuable
+    // dès l'émission et la correction impose un avoir (GF31-AUD-052).
+    const lignesRetenues = lines.filter(
+      l => l.description.trim() !== '' || Number(l.unitPrice) > 0 || Number(l.unitCost) > 0,
+    )
+    const quantiteFautive = lignesRetenues.findIndex(l => {
+      const q = Number(l.quantity)
+      return !Number.isFinite(q) || q < 0.01
+    })
+    if (quantiteFautive !== -1) {
+      const l = lignesRetenues[quantiteFautive]
+      toast.error(
+        `Quantité invalide ligne ${quantiteFautive + 1}${l.description.trim() ? ` (${l.description.trim()})` : ''} : `
+        + 'saisissez une quantité supérieure à 0, ou supprimez la ligne.',
+      )
+      return
+    }
+
     setSaving(true)
     try {
       // Keep only meaningful lines and normalise numbers so the server-side
       // validation (description requis, quantité ≥ 0.01…) never rejects the save.
-      const cleanLines = lines
-        .filter(l => l.description.trim() !== '' || Number(l.unitPrice) > 0 || Number(l.unitCost) > 0)
+      const cleanLines = lignesRetenues
         .map((l, i) => ({
           description: l.description.trim() || t.qiServiceFallback,
-          quantity:    Math.min(9999, Math.max(0.01, Number(l.quantity) || 1)),
+          // Validée juste au-dessus : on ne fabrique plus de quantité.
+          quantity:    Math.min(9999, Number(l.quantity)),
           unitPrice:   Math.max(0, Number(l.unitPrice) || 0),
           unitCost:    Math.max(0, Number(l.unitCost) || 0),
           isLabor:     !!l.isLabor,

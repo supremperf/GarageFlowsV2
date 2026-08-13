@@ -6,7 +6,7 @@ import { X, Plus, Trash2, Printer, PenLine, Check, ChevronDown } from 'lucide-re
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n'
 import toast from 'react-hot-toast'
-import { printHtmlDocument } from '@/lib/pdf/print-html'
+import { printHtmlDocument, escapeHtml as e, safeImageSrc } from '@/lib/pdf/print-html'
 
 interface WorkLine { description: string; durationMin: number; unitPrice: number }
 interface PartLine  { name: string; reference: string; qty: number; unitPrice: number }
@@ -260,16 +260,21 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
         .footer{margin-top:20px;font-size:8pt;color:#666;border-top:1px solid #eee;padding-top:10px}
         @media print{body{padding:10mm}}
       </style>`
-    const worksRows = works.map(w => `<tr><td>${w.description}</td><td>${fmtDuration(w.durationMin)}</td><td>${fmt(w.unitPrice)}</td></tr>`).join('')
-    const partsRows = parts.map(p => `<tr><td>${p.name}</td><td>${p.reference}</td><td>${p.qty}</td><td>${fmt(p.unitPrice)}</td><td>${fmt(fromCents(lineCents(p.unitPrice, p.qty)))}</td></tr>`).join('')
-    const sigHtml = existingSig ? `<img src="${existingSig}" style="max-height:80px" />` : '<div style="height:60px"></div>'
+    // Toute donnée SAISIE est échappée : le document est écrit dans une iframe
+    // de même origine (GF31-AUD-011).
+    const worksRows = works.map(w => `<tr><td>${e(w.description)}</td><td>${fmtDuration(w.durationMin)}</td><td>${fmt(w.unitPrice)}</td></tr>`).join('')
+    const partsRows = parts.map(p => `<tr><td>${e(p.name)}</td><td>${e(p.reference)}</td><td>${e(p.qty)}</td><td>${fmt(p.unitPrice)}</td><td>${fmt(fromCents(lineCents(p.unitPrice, p.qty)))}</td></tr>`).join('')
+    // La signature n'est admise que sous forme d'image inline produite par
+    // l'application ; tout autre schéma d'URL est rejeté.
+    const sigSrc = safeImageSrc(existingSig)
+    const sigHtml = sigSrc ? `<img src="${sigSrc}" style="max-height:80px" />` : '<div style="height:60px"></div>'
 
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${t.woTitle} ${savedNumber}</title>${style}</head><body>
-      <h1>${t.woPrintTitle} — ${savedNumber || t.woDraft}</h1>
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${t.woTitle} ${e(savedNumber)}</title>${style}</head><body>
+      <h1>${t.woPrintTitle} — ${e(savedNumber) || t.woDraft}</h1>
       <p style="color:#666;font-size:9pt">${t.woIssuedOn} ${new Date().toLocaleDateString('fr-FR')}</p>
       <div class="row" style="margin-top:12px">
-        <div class="box"><div class="label">${t.vmClient}</div><div class="val">${clientName}<br>${clientPhone || ''}<br>${clientAddress || ''}</div></div>
-        <div class="box"><div class="label">${t.jmVehicle}</div><div class="val">${vehicleMake} ${vehicleModel}<br>${t.woPlateShort} ${licensePlate || '—'}<br>${t.woMileageLabel} ${mileage ? Number(mileage).toLocaleString() + ' km' : '—'}</div></div>
+        <div class="box"><div class="label">${t.vmClient}</div><div class="val">${e(clientName)}<br>${e(clientPhone)}<br>${e(clientAddress)}</div></div>
+        <div class="box"><div class="label">${t.jmVehicle}</div><div class="val">${e(vehicleMake)} ${e(vehicleModel)}<br>${t.woPlateShort} ${e(licensePlate) || '—'}<br>${t.woMileageLabel} ${mileage ? Number(mileage).toLocaleString() + ' km' : '—'}</div></div>
       </div>
       <h2>${t.woWorksPlanned}</h2>
       <table><thead><tr><th>${t.woColDesc}</th><th>${t.woDuration}</th><th>${t.woColUnitHT}</th></tr></thead><tbody>${worksRows}</tbody></table>
@@ -279,7 +284,7 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
         <tr><td>${t.woVAT} ${taxRate}%</td><td style="text-align:right">${fmt(totalTTC - totalHT)}</td></tr>
         <tr class="total-row"><td>${t.woTotalTTC}</td><td style="text-align:right">${fmt(totalTTC)}</td></tr>
       </table>
-      ${notes ? `<h2>${t.uiNotes}</h2><p>${notes}</p>` : ''}
+      ${notes ? `<h2>${t.uiNotes}</h2><p>${e(notes)}</p>` : ''}
       <h2>${t.woClientSignature}</h2>
       <p style="font-size:9pt">${t.woReadApproved}</p>
       <div class="sig-box">${sigHtml}</div>

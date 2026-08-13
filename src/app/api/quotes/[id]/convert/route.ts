@@ -2,15 +2,23 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can, redactLineCosts } from '@/lib/authz'
 import { format } from 'date-fns'
 import { withTotals } from '@/lib/billing'
 import { linesToEuros } from '@/lib/money-db'
+import { logAudit } from '@/lib/audit'
 
 // POST /api/quotes/[id]/convert  — converts a quote to an invoice
 // Atomique (une seule transaction) + idempotent : deux conversions concurrentes
 // ne peuvent pas produire deux factures ni un double numéro (anti-TOCTOU).
 export const POST = withAuth(async (_req, { params }) => {
   const session = await requireSession()
+  // La conversion ÉMET une facture : elle relève donc de `invoice:manage`, et
+  // non du seul `quote:manage`. Sans cela, le contrôle posé sur POST
+  // /api/invoices se contournait en convertissant un devis (GF31-AUD-009).
+  if (!can(session.user.role, 'invoice:manage')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const garageId = session.user.garageId
 
   try {
@@ -77,10 +85,23 @@ export const POST = withAuth(async (_req, { params }) => {
       return inv
     })
 
+    // La conversion est la voie de création de facture la plus utilisée, et la
+    // SEULE qui n'écrivait rien au journal d'audit : impossible de déterminer
+    // qui avait émis une facture issue d'un devis, alors que ce journal est le
+    // mécanisme de responsabilité de l'application (GF31-AUD-048).
+    await logAudit({
+      action: 'create',
+      entityType: 'Invoice',
+      entityId: invoice.id,
+      session,
+      req: _req,
+      details: { number: invoice.number, fromQuoteId: params.id, via: 'quote-conversion' },
+    })
+
     // MÊME projection que GET/PATCH des factures — voir le commentaire détaillé
     // dans src/app/api/invoices/route.ts. La facture issue d'une conversion est
     // consommée par le même composant client que celle créée directement.
-    return NextResponse.json(withTotals({ ...invoice, lines: linesToEuros(invoice.lines) }), { status: 201 })
+    return NextResponse.json(withTotals({ ...invoice, lines: redactLineCosts(linesToEuros(invoice.lines), session.user.role) }), { status: 201 })
   } catch (err) {
     if (err instanceof ConvertError) return NextResponse.json({ error: err.message }, { status: err.status })
     throw err

@@ -21,7 +21,12 @@ vi.mock('@/lib/security/rate-limit', () => ({
   enforceRateLimit: async () => ({ ok: true, remaining: 99 }),
   rateLimitResponse: () => { throw new Error('unexpected') },
 }))
-vi.mock('@/lib/license/record-mac', () => ({ verifyRecordMac: () => ({ tampered: false, missing: false }) }))
+vi.mock('@/lib/license/record-mac', () => ({
+  verifyRecordMac: () => ({ ok: true, tampered: false, missing: false }),
+  // La politique d'intégrité est centralisée depuis GF31-AUD-005 : le simulacre
+  // doit l'exporter aussi, sinon la route importe `undefined` et lève.
+  recordIntegrityUsable: (v: { tampered: boolean; missing: boolean }) => !v.tampered && !v.missing,
+}))
 vi.mock('@/lib/license/devices', () => ({
   validateDeviceToken: async (_token: string, opts: { hwid?: string; installId?: string } = {}) => {
     state.lastOpts = opts

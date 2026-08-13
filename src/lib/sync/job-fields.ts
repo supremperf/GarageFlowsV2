@@ -72,13 +72,27 @@ export interface SyncJob {
 export function resolveMirrorWrite(
   incoming: SyncJob,
   mirrorUpdatedAt: Date | null,
+  /**
+   * Décalage à AJOUTER à l'horodatage du poste pour l'exprimer dans l'horloge du
+   * serveur (`serverNow - clientNow`, cf. `clockOffsetMs`). `0` par défaut :
+   * un client ancien qui n'annonce pas son horloge conserve exactement le
+   * comportement précédent.
+   */
+  offsetMs = 0,
 ): { fields: Array<PlanningField | ExecutionField>; executionKept: boolean } {
   const fields: Array<PlanningField | ExecutionField> = [...PLANNING_FIELDS]
   if (mirrorUpdatedAt === null) {
     // Création : tout vient du poste.
     return { fields: [...fields, ...EXECUTION_FIELDS], executionKept: false }
   }
-  const desktopAt = Date.parse(incoming.updatedAt)
+  // Les deux horodatages comparés ci-dessous ne viennent PAS de la même horloge :
+  // `incoming.updatedAt` est produit par le POSTE, `mirrorUpdatedAt` par le
+  // SERVEUR (`@updatedAt` Prisma). Un poste dont l'horloge avance — dérive NTP,
+  // réglage manuel — gagnait donc SYSTÉMATIQUEMENT l'arbitrage et écrasait en
+  // silence le travail du mécanicien (statut, chronomètre) ; un poste en retard
+  // ne parvenait au contraire jamais à réappliquer son planning (GF31-AUD-016).
+  // On ramène d'abord l'horodatage du poste dans l'horloge du serveur.
+  const desktopAt = Date.parse(incoming.updatedAt) + offsetMs
   const cloudAt = mirrorUpdatedAt.getTime()
   // `>=` : à horodatage égal, le poste fait foi (il est la source de vérité du
   // dossier). Strictement plus récent côté cloud = le mécanicien a agi après.
@@ -86,6 +100,26 @@ export function resolveMirrorWrite(
     return { fields: [...fields, ...EXECUTION_FIELDS], executionKept: false }
   }
   return { fields, executionKept: true }
+}
+
+/**
+ * Décalage entre l'horloge du serveur et celle du poste, borné.
+ *
+ * Le poste annonce son heure (`clientNow`) ; le serveur connaît la sienne. La
+ * différence corrige la dérive systématique avant tout arbitrage. Elle est
+ * BORNÉE : au-delà, l'écart ne relève plus d'une dérive mais d'une horloge
+ * délibérément faussée, et compenser reviendrait à laisser un poste décider seul
+ * de l'issue de chaque conflit. On préfère alors ne rien compenser (offset 0) —
+ * le comportement reste celui d'avant, sans amplifier l'anomalie.
+ */
+export const MAX_CLOCK_OFFSET_MS = 24 * 60 * 60 * 1000
+
+export function clockOffsetMs(clientNow: unknown, serverNow: Date = new Date()): number {
+  if (typeof clientNow !== 'string' || !clientNow) return 0
+  const client = Date.parse(clientNow)
+  if (!Number.isFinite(client)) return 0
+  const offset = serverNow.getTime() - client
+  return Math.abs(offset) > MAX_CLOCK_OFFSET_MS ? 0 : offset
 }
 
 /**
@@ -105,6 +139,15 @@ export const SYNC_WINDOW_DAYS_AHEAD = 30
 
 /** Borne le nombre d'interventions transportées en une remontée. */
 export const SYNC_MAX_JOBS = 500
+
+/**
+ * Borne les suppressions explicites transportées en une remontée.
+ *
+ * Contrairement aux interventions, une pierre tombale non transmise n'est PAS
+ * perdue : elle reste en base et repart à la remontée suivante. Le plafond ne
+ * fait donc que lisser la charge, il ne crée aucun angle mort.
+ */
+export const SYNC_MAX_TOMBSTONES = 200
 
 export function syncWindow(today: Date): { from: string; to: string } {
   const iso = (d: Date) =>

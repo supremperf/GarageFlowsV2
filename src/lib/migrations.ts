@@ -1235,4 +1235,13 @@ export const MIGRATIONS: Migration[] = [
   { id: '199_quoteline_idx_part',         sql: 'CREATE INDEX IF NOT EXISTS "QuoteLine_partId_idx" ON "QuoteLine"("partId")' },
   // Recherche « tape F → propose Filtre… » : index sur le couple garage+nom.
   { id: '200_part_idx_garage_name',       sql: 'CREATE INDEX IF NOT EXISTS "Part_garageId_name_idx" ON "Part"("garageId", "name")' },
+  // Pierres tombales de suppression d'intervention (GF31-AUD-044). ADDITIF :
+  // table neuve, aucune donnée existante lue ni modifiée. Sans clé étrangère —
+  // et c'est délibéré : la ligne survit à la disparition de l'intervention,
+  // c'est précisément son objet. Même choix que 187_portal_snapshot / 194_stock_movement.
+  {
+    id: '201_job_tombstone',
+    sql: 'CREATE TABLE IF NOT EXISTS "JobTombstone" ("jobId" TEXT NOT NULL PRIMARY KEY, "garageId" TEXT NOT NULL, "deletedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)',
+  },
+  { id: '202_job_tombstone_idx',          sql: 'CREATE INDEX IF NOT EXISTS "JobTombstone_garageId_deletedAt_idx" ON "JobTombstone"("garageId", "deletedAt")' },
 ]

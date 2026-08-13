@@ -1,10 +1,11 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { fromScaled, toScaled, fromCents, lineTotalCentsFromScaled } from '@/lib/money'
-import { serializePoLinesJsonV2, poTotalHtCents } from '@/lib/money-json'
+import { serializePoLinesJsonV2, poTotalHtCents, parsePoLinesJson } from '@/lib/money-json'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { logAudit } from '@/lib/audit'
 import {
@@ -125,6 +126,9 @@ interface POLine {
 
 export const POST = withAuth(async (req) => {
   const session = await requireSession()
+  if (!can(session.user.role, 'stock:manage')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const garageId = session.user.garageId
 
   const rl = await enforceRateLimit('api', `suppliers:${garageId}`, { max: 30, windowSec: 60 })
@@ -217,8 +221,23 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ confirmationRequired: true, order: { id: order.id, number: order.number, status: from }, to: body.to, effects: t.effects })
   }
 
+  // Parsing STRICT versionné (v1 historique OU v2), comme
+  // `/api/purchase-orders/[id]/receive`. Un `JSON.parse` nu suivi de
+  // `lines.filter(...)` levait un TypeError sur TOUTE commande écrite par
+  // `action: 'create-orders'` ci-dessus — qui persiste un OBJET
+  // `{ schemaVersion: 2, lines: [...] }` et non un tableau : 500 systématique et
+  // stock jamais incrémenté à la réception (GF31-AUD-002).
   let lines: POLine[] = []
-  try { lines = JSON.parse(order.linesJson) } catch { lines = [] }
+  try {
+    lines = parsePoLinesJson(order.linesJson).lines.map((l) => ({
+      partId: l.partId,
+      partName: l.partName,
+      reference: l.reference,
+      // Stock en unités entières — même conversion que la route de réception.
+      qty: Math.round(fromScaled(l.qtyTenThousandths)),
+      unitCost: fromScaled(l.unitCostTenThousandths),
+    }))
+  } catch { lines = [] }
   const stockLines = lines.filter((l): l is POLine & { partId: string } => !!l.partId && l.qty > 0)
 
   const result = await prisma.$transaction(async (tx) => {

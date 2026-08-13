@@ -127,3 +127,32 @@ export function permissionsOf(role: string | null | undefined): Permission[] {
   const list = PERM_LIST[role as Role]
   return list ? [...list] : []
 }
+
+/**
+ * Projection d'autorisation : retire le COÛT D'ACHAT des lignes de devis et de
+ * factures pour les rôles dépourvus de `financial:read`.
+ *
+ * `InvoiceLine` et `QuoteLine` portent `unitCostTenThousandths` — le prix
+ * d'achat, donc la marge. `/api/finance`, `/api/profitability`, `/api/forecast`,
+ * `/api/export/fec` et `/api/copilot/*` exigent tous `financial:read` ; mais
+ * `GET /api/invoices` et `GET /api/quotes` renvoyaient les lignes brutes à tout
+ * utilisateur authentifié, coût inclus. Le contrôle posé sur la porte des
+ * rapports se contournait donc en lisant les documents eux-mêmes
+ * (GF31-AUD-009).
+ *
+ * On RETIRE le champ plutôt que de refuser la route : un RECEPTIONIST doit
+ * pouvoir consulter les documents de son garage (il a `quote:manage`), mais pas
+ * en connaître la marge.
+ */
+export function redactLineCosts<T extends Record<string, unknown>>(
+  lines: T[] | null | undefined,
+  role: string | null | undefined,
+): T[] {
+  if (can(role, 'financial:read')) return lines ?? []
+  return (lines ?? []).map((l) => {
+    const copie = { ...l }
+    delete copie.unitCost
+    delete copie.unitCostTenThousandths
+    return copie
+  })
+}

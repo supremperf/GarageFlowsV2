@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { redactLineCosts } from '@/lib/authz'
 import { format } from 'date-fns'
 import { CreateQuoteSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
@@ -40,7 +41,8 @@ export const GET = withAuth(async (req) => {
   ])
 
   const data = quotes.map(q => {
-    return withTotals({ ...q, lines: linesToEuros(q.lines) })
+  // Coût d'achat retiré pour les rôles sans `financial:read` (GF31-AUD-009).
+    return withTotals({ ...q, lines: redactLineCosts(linesToEuros(q.lines), session.user.role) })
   })
   return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit), limit })
 })
@@ -127,5 +129,5 @@ export const POST = withAuth(async (req) => {
   // MÊME projection que GET et PATCH — voir le commentaire détaillé dans
   // src/app/api/invoices/route.ts : sans elle, le client plante à l'affichage
   // du devis qu'il vient d'enregistrer (unitPrice absent → toFixed sur undefined).
-  return NextResponse.json(withTotals({ ...quote, lines: linesToEuros(quote.lines) }), { status: 201 })
+  return NextResponse.json(withTotals({ ...quote, lines: redactLineCosts(linesToEuros(quote.lines), session.user.role) }), { status: 201 })
 })

@@ -71,6 +71,16 @@ vi.mock('@/lib/api-helpers', () => ({
     },
 }))
 vi.mock('@/lib/authz', () => ({ can: () => true }))
+// L'installation tourne sous la licence GARAGE parente : c'est la preuve
+// d'entitlement exigée depuis GF31-AUD-007. Le cookie n'a pas besoin d'être un
+// vrai JWT ici — `activeGarageLicenseId` est simulé juste en dessous.
+const sessionCap = vi.hoisted(() => ({ activeLid: null as string | null }))
+vi.mock('next/headers', () => ({
+  cookies: () => ({ get: () => ({ value: 'jeton-de-session-simule' }) }),
+}))
+vi.mock('@/lib/license/session', () => ({
+  activeGarageLicenseId: async () => sessionCap.activeLid,
+}))
 vi.mock('@/lib/audit', () => ({ logAudit: async () => {} }))
 vi.mock('@/lib/license/verify', () => ({
   verifyLicenseToken: (token: string) => ({
@@ -107,6 +117,8 @@ function seedOrphanMechanicKey(over: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   cap.rows.clear(); cap.updateManyCalls = []; cap.bindCalls = []; cap.created = []; cap.count = 0
+  // Cas nominal : le poste tourne bien sous la licence garage parente.
+  sessionCap.activeLid = PLID
 })
 
 describe('POST /api/mechanic-licenses — clé pré-enregistrée par le keygen', () => {
@@ -177,5 +189,62 @@ describe('POST /api/mechanic-licenses — clé pré-enregistrée par le keygen',
     expect(res.status).toBe(403)
     expect(cap.rows.get(LID)!.garageId).toBeNull()
     delete process.env.GF_MAX_MECHANIC_KEYS
+  })
+})
+
+/**
+ * NON-RÉGRESSION GF31-AUD-007.
+ *
+ * Le `plid` d'une clé mécanicien est SIGNÉ : il prouve à quelle licence garage
+ * cette clé appartient. Il ne prouve PAS que celui qui la présente a le droit
+ * d'en disposer. Quiconque possédait le jeton d'une clé mécanicien d'un tiers —
+ * ancien mécanicien, clé remise par erreur, clé de démonstration — pouvait
+ * l'enregistrer dans SON garage ; et si la licence garage parente n'était pas
+ * encore rattachée, la route la rattachait DÉFINITIVEMENT au garage de
+ * l'appelant. Le propriétaire légitime ne pouvait alors plus jamais y rattacher
+ * le sien, le rattachement étant immuable.
+ *
+ * La garde exige désormais que la licence garage parente revendiquée soit celle
+ * sous laquelle l'installation tourne réellement (claim `lid` du cookie
+ * `gf_session`, JWT signé posé par /api/license/activate).
+ */
+describe('GF31-AUD-007 — la clé mécanicien d’un tiers ne donne aucun droit', () => {
+  it('refuse une clé dont le parent n’est pas la licence active, et ne rattache RIEN', async () => {
+    // Le poste tourne sous SA licence ; la clé présentée appartient à une autre.
+    sessionCap.activeLid = 'licence-du-poste'
+    seedParent(null) // licence parente du tiers : encore libre — la cible du vol
+    seedOrphanMechanicKey()
+
+    const res = await POST(req('GF2.vole') as never, {} as never) as Response
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toMatch(/parente introuvable/)
+
+    // L'invariant qui compte : la licence garage du tiers reste LIBRE.
+    expect(cap.rows.get(PLID)!.garageId).toBeNull()
+    expect(cap.bindCalls).toHaveLength(0)
+    // Et la clé mécanicien n'a pas été adoptée.
+    expect(cap.rows.get(LID)!.garageId).toBeNull()
+  })
+
+  it('refuse quand aucune licence garage n’est active sur l’installation', async () => {
+    sessionCap.activeLid = null
+    seedParent(null)
+    seedOrphanMechanicKey()
+
+    const res = await POST(req('GF2.new') as never, {} as never) as Response
+    expect(res.status).toBe(403)
+    expect(cap.rows.get(PLID)!.garageId).toBeNull()
+    expect(cap.bindCalls).toHaveLength(0)
+  })
+
+  it('le cas légitime reste possible : parent libre + licence active correspondante', async () => {
+    sessionCap.activeLid = PLID
+    seedParent(null) // pas encore rattachée — premier usage sur ce poste
+    seedOrphanMechanicKey()
+
+    const res = await POST(req('GF2.new') as never, {} as never) as Response
+    expect(res.status).toBe(200)
+    // Le rattachement à la première utilisation a bien eu lieu, vers CE garage.
+    expect(cap.rows.get(PLID)!.garageId).toBe(GARAGE)
   })
 })

@@ -19,6 +19,9 @@ const state = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/db', () => ({
+  // Le verrou de ligne anti-TOCTOU (GF31-AUD-010) n'est posé que sur PostgreSQL ;
+  // ce simulacre joue le poste SQLite, où les écritures sont déjà sérialisées.
+  isPostgresDatabase: () => false,
   prisma: {
     invoice: {
       findFirst: async () => state.invoice,

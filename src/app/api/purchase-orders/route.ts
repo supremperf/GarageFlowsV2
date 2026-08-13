@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { purchaseOrderToEuros } from '@/lib/money-db'
 import { parsePoLinesJson, serializePoLinesJsonV2, poTotalHtCents, poLinesToEuros } from '@/lib/money-json'
 
@@ -17,6 +18,9 @@ export const GET = withAuth(async (req) => {
 
 export const POST = withAuth(async (req) => {
   const session = await requireSession()
+  if (!can(session.user.role, 'stock:manage')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const body = await req.json()
 
   const year = new Date().getFullYear()

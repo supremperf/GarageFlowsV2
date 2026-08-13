@@ -48,6 +48,8 @@ interface Quote {
 
 interface Garage {
   name: string
+  /** Identifiant PUBLIC du garage, porté par les liens `?garage=<slug>`. */
+  slug?: string | null
   phone: string | null
   email: string | null
   logoBase64: string | null
@@ -193,6 +195,31 @@ export default function PortalPage() {
           </div>
         </div>
       </header>
+
+      {/* Le suivi par jeton est ANONYME et temporaire. C'est ici — la seule page
+          où le client se trouve déjà chez SON garage — que le lien vers l'espace
+          client peut porter le slug du garage. Sans ce lien, la convention
+          `?garage=<slug>` n'était produite nulle part et la connexion au portail
+          restait impossible sur un déploiement multi-garage. */}
+      {data.garage.slug && (
+        <div className="max-w-2xl mx-auto px-4 pt-4">
+          <div className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-xs text-blue-900">
+            Retrouvez tous vos devis et factures dans votre espace client :{' '}
+            <a
+              href={`/portal/login?garage=${encodeURIComponent(data.garage.slug)}`}
+              className="font-semibold underline underline-offset-2 hover:text-blue-700"
+            >
+              se connecter
+            </a>{' '}·{' '}
+            <a
+              href={`/portal/register?garage=${encodeURIComponent(data.garage.slug)}`}
+              className="font-semibold underline underline-offset-2 hover:text-blue-700"
+            >
+              créer un compte
+            </a>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-5">
         {/* Status card */}

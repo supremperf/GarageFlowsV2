@@ -8,9 +8,9 @@
  * duplicate-repair-type de-duplication (the double-count fix).
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { execSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-itest-quotes.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -39,12 +39,7 @@ async function call(body: unknown): Promise<{ status: number; json: any }> {
 }
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', {
-    cwd: path.resolve(__dirname, '../..'),
-    env: { ...process.env, DATABASE_URL: `file:${DB_PATH}` },
-    stdio: 'ignore',
-  })
+  prepareTestDb(DB_PATH)
 
   ;({ prisma } = await import('@/lib/db'))
   ;({ POST } = await import('@/app/api/quotes/generate/route') as any)

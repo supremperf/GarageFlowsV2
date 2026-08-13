@@ -23,10 +23,18 @@ import {
   type EInvoiceApprovalStatus,
 } from '@/lib/einvoicing/catalog'
 import type { EInvoicingFlags } from '@/lib/einvoicing/flags'
+import { EInvoicingConnectionForm } from './EInvoicingConnectionForm'
 
 interface StatusResponse {
   flags: EInvoicingFlags
-  platforms: ApprovedEInvoicePlatform[]
+  platforms: Array<ApprovedEInvoicePlatform & { connectable?: boolean; officialWebsite?: string | null }>
+  /** Provenance du catalogue — affichée, jamais masquée (§82). */
+  catalogSource?: {
+    jeuDeDonnees: string; portail: string; licence: string
+    autoriteDeReference: string; avertissement: string; importedAt: string
+  }
+  /** Connecteurs réellement disponibles côté serveur. */
+  adapters?: Array<{ providerId: string; displayName: string }>
   connection: null
 }
 
@@ -76,8 +84,12 @@ export function EInvoicingTab() {
     return () => { cancelled = true }
   }, [])
 
+  // `searchPlatforms` est typé sur le catalogue métier ; la réponse de l'API
+  // porte en plus des champs de PRÉSENTATION (connectable, site officiel) qui
+  // n'ont pas leur place dans le type du catalogue. On conserve donc le type
+  // enrichi en sortie plutôt que d'élargir le modèle métier.
   const results = useMemo(
-    () => (data ? searchPlatforms(query, data.platforms) : []),
+    () => (data ? (searchPlatforms(query, data.platforms) as StatusResponse['platforms']) : []),
     [data, query],
   )
 
@@ -104,7 +116,7 @@ export function EInvoicingTab() {
           <ReceiptText className="w-4 h-4 text-blue-400" />Facturation électronique
         </h3>
         <p className="text-xs text-slate-500 mt-0.5">
-          {"Catalogue des plateformes agréées (lecture seule). La connexion et l'envoi arrivent prochainement."}
+          {"Registre officiel des plateformes agréées, et connexion de votre garage à la sienne."}
         </p>
       </div>
 
@@ -164,21 +176,46 @@ export function EInvoicingTab() {
                 ))}
               </div>
 
-              {/* Aucune action de connexion tant qu'aucun adaptateur réel n'existe. */}
+              {/* Statut RÉEL : une plateforme n'est connectable que si un
+                  adaptateur existe côté serveur — la réponse de l'API fait foi. */}
               <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-slate-500">
-                <Lock className="w-3.5 h-3.5" />
-                {"Connexion indisponible pour l'instant (connecteur en préparation)."}
+                {p.connectable
+                  ? <>{"Connectable via le connecteur configurable ci-dessous."}</>
+                  : <><Lock className="w-3.5 h-3.5" />{"Pas de connecteur dédié : utilisez la connexion configurable ci-dessous."}</>}
               </div>
+              {p.officialWebsite && (
+                <a
+                  href={p.officialWebsite}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-block text-[11px] text-blue-400 hover:text-blue-300"
+                >
+                  Site de la plateforme
+                </a>
+              )}
             </li>
           ))}
         </ul>
       )}
 
-      {/* État de connexion du garage (placeholder honnête, Phase 3) */}
-      <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-3">
-        <h4 className="text-xs font-semibold text-slate-300">Connexion de ce garage</h4>
-        <p className="text-[11px] text-slate-500 mt-1">Aucune connexion configurée. La gestion des connexions (test réel, envoi) arrive prochainement.</p>
-      </div>
+      {/* Connexion RÉELLE du garage à sa plateforme. */}
+      <EInvoicingConnectionForm
+        connectionsEnabled={Boolean(flags.connectionsEnabled)}
+        adapters={data!.adapters ?? []}
+      />
+
+      {/* Provenance du catalogue — l'utilisateur doit savoir d'où vient cette
+          liste et quelle autorité fait foi (§82). */}
+      {data!.catalogSource && (
+        <p className="text-[10px] text-slate-600 leading-relaxed">
+          Source : {data!.catalogSource.jeuDeDonnees} ({data!.catalogSource.licence}), importée le{' '}
+          {data!.catalogSource.importedAt}.{' '}
+          <a href={data!.catalogSource.autoriteDeReference} target="_blank" rel="noopener noreferrer" className="text-blue-400/80 hover:text-blue-300">
+            Liste officielle impots.gouv.fr
+          </a>{' '}
+          — {data!.catalogSource.avertissement}
+        </p>
+      )}
     </div>
   )
 }
