@@ -7,12 +7,22 @@
 
 **Période** : 2026-08-12 → 2026-08-13
 **Base auditée** : `e0a2ef7` (branche `claude/garageflow-final-unified-merge-ub0l67`)
-**Empreinte du code source à la clôture** (concaténation triée `src` + `electron` +
-`prisma` + `scripts`, hors `src/generated`, CRLF normalisés) :
+**Code livré** : `eb84a65`, poussé sur cette même branche
 
 ```
-SHA-256 = 1d121213a486559d54f378bddecf1c95a4210971fd6167f58556c1a374684059
+a9badc3  audit(msap) — les 67 findings des trois premières campagnes
+9bd2a6f  GF31-AUD-066 — porte documentaire jugée sur des résidus ignorés
+f8e50dc  GF31-AUD-067 — un test de cet audit était instable
+eb84a65  baseline canonique rattachée à un commit réel
 ```
+
+L'identité du code source est **le commit**, vérifiable par quiconque. Une
+version antérieure de ce rapport citait en plus une empreinte SHA-256 ad hoc
+(`1d121213…`, « concaténation triée `src` + `electron` + `prisma` + `scripts`,
+hors `src/generated`, CRLF normalisés »). Cette recette, réappliquée depuis, ne
+reproduit pas la valeur publiée : le calcul d'origine comportait un détail non
+consigné. Un chiffre qu'on ne sait pas refaire ne prouve rien — il est retiré
+plutôt que reconduit.
 
 ---
 
@@ -20,15 +30,16 @@ SHA-256 = 1d121213a486559d54f378bddecf1c95a4210971fd6167f58556c1a374684059
 
 GarageFlows V31 a été soumis à un audit adversarial en trois campagnes, suivi de
 corrections de cause racine, puis d'une contre-attaque menée **contre les
-corrections elles-mêmes**.
+corrections elles-mêmes**, et enfin d'un rejeu complet de la porte de release
+**depuis le dépôt git**.
 
 | Sévérité | Confirmés | Corrigés | **Ouverts** |
 |---|---|---|---|
 | P0 | 3 causes racines (8 findings bruts convergents) | 3 | **0** |
 | P1 | 17 | 17 | **0** |
-| P2 | 22 | 22 | **0** |
+| P2 | 24 | 24 | **0** |
 | P3 | 25 | 25 | **0** |
-| **Total** | **67** | **67** | **0** |
+| **Total** | **69** | **69** | **0** |
 
 **Aucun défaut connu ne subsiste.** Les trois P0 : prise de contrôle du garage
 d'un tiers par la passerelle poste→cloud, écriture de fichier arbitraire par le
@@ -45,6 +56,15 @@ test livré avec la correction figeait ce comportement comme correct. Une second
 correction de cet audit s'est révélée fautive de la même manière (le prêt d'un
 véhicule pour la journée, refusé comme « durée nulle »). Les deux sont au
 registre, à leur date.
+
+**Deux findings de plus sont apparus au tout dernier geste** — porter le code
+dans le dépôt git et y rejouer la porte de release. Ni l'un ni l'autre n'était
+visible depuis la copie de travail où l'audit avait tourné : le premier faisait
+dépendre le verdict de la porte d'un worktree oublié et ignoré (066), le second
+était un test de cet audit qui pouvait faire échouer — ou faire passer — un test
+voisin (067). Il aura fallu quatre passages de la porte pour l'obtenir verte.
+C'est le résultat le plus utile de cette dernière journée : **un audit ne prouve
+quelque chose que là où il s'exécute.**
 
 **Ce qui n'a pas pu être exercé ici** est nommé, jamais converti en PASS :
 installation Windows réelle, concurrence PostgreSQL, Redis, SMTP, bac à sable de
@@ -98,7 +118,9 @@ la lecture de ce rapport :
 
 * le répertoire de travail **n'est pas un dépôt git** ; le dépôt réel est
   `C:\Users\Mathys\.claude\jobs\2a11bc5b\tmp\repo`, et la comparaison fichier à
-  fichier n'a montré **aucune divergence de code source** ;
+  fichier n'a montré **aucune divergence de code source**. Le code corrigé y a
+  été porté à la clôture et la porte de release y a été rejouée : c'est là, et
+  seulement là, qu'ont été trouvés les findings 066 et 067 (§31) ;
 * `.env` est **identique à `.env.example`** et `keys/` est **absent** :
   environnement propre, sans secret. C'est ce qui vaut validation « clean
   environment » (§180) et ce qui détermine ce qui est `BLOCKED_EXTERNAL` ;
@@ -118,6 +140,7 @@ que si un second agent, chargé de le démolir, échoue à le faire.
 | Vague 1 — audit adversarial (12 domaines) | 37 | 60 findings uniques : 8 P0, 19 P1, 29 P2, 4 P3 |
 | Triage P2/P3 contre le code corrigé | 20 | 5 déjà corrigés, 2 réfutés, **26 confirmés** |
 | Vague 2 — attaque CONTRE les corrections (§179) | 22 | **14 confirmés, 33 réfutés** |
+| Rejeu de la porte depuis le dépôt git | — | **2 confirmés** (066, 067) |
 
 Le taux de réfutation de la vague 2 (33/47, soit 70 %) est une donnée en soi : la
 majorité des « failles » trouvées par un attaquant isolé ne résistent pas à une
@@ -177,14 +200,14 @@ temporaire ; le code d'origine en fait tomber 13.
 
 ---
 
-## 7. Findings P2 — 22, tous corrigés
+## 7. Findings P2 — 24, tous corrigés
 
 Facturation électronique (034 à 038), véhicules de prêt (026, 027), stock (029,
 030), portail (032, 039, 040), updater (042), Electron (043), synchronisation
-(044), signatures (045), fiabilité des gates (024, 064) — plus les P2 traités
-dans les lots P0/P1.
+(044), signatures (045), fiabilité des gates (024, 064, **066**, **067**) — plus
+les P2 traités dans les lots P0/P1.
 
-Quatre méritent d'être nommés :
+Six méritent d'être nommés :
 
 * **042** — le manifeste signé n'existait que sur **une source de mise à jour sur
   trois** : la publication locale par la Zone Administrateur et le repli GitHub
@@ -204,6 +227,24 @@ Quatre méritent d'être nommés :
   défaut est apparu — `accepted → refused` est une transition autorisée, le
   garage pouvait donc transformer un accord en refus **en conservant la preuve de
   l'accord**.
+* **066** — la garde de cohérence documentaire inventoriait le disque. Le dépôt
+  porte un worktree oublié sous `.claude/`, **ignoré et non suivi**, qui embarque
+  sa propre copie de la baseline canonique : la porte annonçait « 2 sources
+  canoniques » sur un dépôt qui n'en suit qu'une, et refusait la livraison. Le
+  verdict d'une porte de release dépendait de ce qui traînait en local —
+  indémontrable quand il est rouge, et bien pire quand il est vert. L'inventaire
+  vient désormais de `git ls-files --cached --others --exclude-standard` : les
+  fichiers non encore indexés comptent toujours, les ignorés ne comptent plus.
+* **067** — un test **écrit par cet audit** était instable, et pouvait mentir.
+  Chaque `it` refaisait son propre `await import()` de la route : le premier
+  payait seul 520 ms de graphe de modules contre 0 à 16 ms pour les six autres.
+  Sous charge et cache disque froid, il dépassait son budget ; sa promesse
+  abandonnée écrivait ensuite dans l'état partagé et faisait tomber le test
+  suivant sur un symptôme sans rapport. Le risque symétrique est pire : un test
+  dont la route n'écrit rien pouvait lire l'écriture d'un autre et **passer au
+  vert**. Import déplacé en `beforeAll` (premier test à 9 ms), écritures
+  collectées avec exigence d'unicité. Le budget n'a **pas** été relevé — cela
+  n'aurait fait que déplacer le seuil (§151).
 
 ---
 
@@ -463,8 +504,10 @@ code.
 
 ## 27. Corrections, et incidents de l'audit
 
-65 identifiants `GF31-AUD-*` attribués (021 non utilisé) ; 66 findings confirmés
-corrigés. **Trois incidents doivent être écrits :**
+67 identifiants `GF31-AUD-*` alloués, `021` laissé libre. Le registre en détaille
+41 individuellement ; les autres sont traités par familles dans les sections de
+lot. Les comptes qui font foi sont ceux du tableau de sévérité (§1), pas la
+numérotation. **Cinq incidents doivent être écrits :**
 
 **1. Deux corrections de cet audit étaient fautives.** La clé d'idempotence
 e-facturation (033) et le refus du prêt d'une journée (031). Trouvées par la
@@ -484,36 +527,56 @@ binaire parfaitement conforme. Un contrôle de sécurité qui se trompe use la
 confiance qu'il est censé produire : le décodage est désormais explicite,
 commenté, et verrouillé par un test.
 
+**4. Un test de cet audit était instable — et il a fallu deux occurrences pour
+le prendre au sérieux.** La première, au lot 16, avait été consignée « non
+reproductible » ; c'était exact et insuffisant. La seconde, au rejeu de la porte
+depuis le dépôt, a imposé la mesure qui manquait : 520 ms sur le premier test
+contre 0 à 16 ms sur les six autres. Écrire « non reproductible » est honnête ;
+s'y arrêter ne l'est pas (067).
+
+**5. Le `node_modules` a de nouveau été détruit, autrement.** Trois portes
+consécutives ont donné *échec → succès → échec* sur `next build`, l'arbre
+retrouvé **vide** à la seconde près du build en échec. La configuration porte
+`output: 'standalone'` : un build réussi laisse `.next/standalone/`, que le build
+suivant nettoie — et ce nettoyage a traversé le lien symbolique `node_modules` du
+clone pour vider sa cible. Attribution par corrélation temporelle serrée, **non
+isolée expérimentalement** ; c'est dit tel quel. Le lien a été remplacé par une
+installation réelle dans le dépôt, ce qui a débloqué la porte. Ce n'est pas un
+défaut du produit : c'est un défaut de l'environnement d'audit, et il a coûté
+deux exécutions.
+
 ---
 
 ## 28. Tests ajoutés
 
-De **1932 tests / 176 fichiers** à l'ouverture à **2259 tests / 206 fichiers** à
-la clôture : **+327 tests**, tous liés à un défaut nommé.
+De **1932 tests / 176 fichiers** à l'ouverture à **2266 tests passés / 207
+fichiers** à la clôture : **+334 tests**, tous liés à un défaut nommé. Mesure du
+commit livré `f8e50dc` : 2299 découverts, 2266 passés, **0 échec**, 33 ignorés.
 
 Suites créées : `server-schema-validate-env`, `part-inventory-adjustment`,
 `loaner-estimate-formatting`, `prepare-test-db`, `job-tombstones`,
 `quote-acceptance-proof`, `invoice-document-integrity-p3`, `stock-money-p3`,
 `licence-p3`, `portal-rbac-p3`, `update-sources-installable`,
-`artifact-fuses-gate`, `baseline-git-identity`.
+`artifact-fuses-gate`, `baseline-git-identity`,
+`docs-consistency-ignored-residue`.
 
-**Tests ignorés** : 12 occurrences, toutes conditionnées à une dépendance externe
-absente (`keys/`, Python, PostgreSQL admin, Redis). Aucun test critique ignoré
-sans motif externe explicite (§142).
+**Tests ignorés** : toutes les occurrences sont conditionnées à une dépendance
+externe absente (`keys/`, Python, PostgreSQL admin, Redis, git). Aucun test
+critique ignoré sans motif externe explicite (§142).
 
 ---
 
 ## 29. Gates — état à la clôture
 
-Exécutés ce jour, sur ce code.
+Exécutés **depuis le dépôt git**, sur le code livré.
 
 ```
 TypeScript                      : PASS (0 erreur)
 ESLint                          : PASS (0 avertissement)
-Vitest                          : PASS — 206 fichiers, 2259 tests, 35 ignorés
-                                  · 4 passages consécutifs propres (§141)
-Baseline canonique              : PASS — régénérée le 2026-08-13 (2259/2294),
-                                  identité de build ABSENTE et déclarée (065)
+Vitest                          : PASS — 207 fichiers, 2299 tests, 33 ignorés
+                                  · 0 échec ; instabilité 067 corrigée
+Baseline canonique              : PASS — commit f8e50dc, gitIdentity: true,
+                                  2266/2299 — l'identité manquante est levée
 check:consistency (13 contrôles): PASS
 check:perf-budget               : PASS — 2,64/3,00 MiB
 check:desktop-audit             : PASS
@@ -528,8 +591,9 @@ Secrets dans l'artefact         : PASS — 546 fichiers + installateur
 Playwright (public)             : PASS — 54/54, 6 gabarits
 Playwright (authentifié)        : 79/90 — instabilité de harnais documentée ;
                                   chaque gabarit lancé SEUL passe (15/15)
-Release gate                    : 12 PASS · 3 ÉCHEC (hors dépôt git) · 3 NON EXÉCUTÉ
-                                  les 3 échecs rejoués dans un checkout git : PASS
+Release gate (depuis le dépôt)  : PASSÉ — 12 contrôles obligatoires verts
+                                  3 NON EXÉCUTÉ (PostgreSQL ×2, Redis), jamais
+                                  comptés comme verts
 Concurrence PostgreSQL réelle   : BLOCKED_EXTERNAL
 Rate-limit Redis multi-instance : BLOCKED_EXTERNAL
 Bac à sable e-facturation       : BLOCKED_EXTERNAL
@@ -543,22 +607,24 @@ Installation Windows            : BLOCKED_EXTERNAL
 
 **Aucun P0. Aucun P1. Aucun P2. Aucun P3.**
 
-Les 66 findings confirmés sont corrigés et vérifiés. Le risque résiduel du
+Les 69 findings confirmés sont corrigés et vérifiés. Le risque résiduel du
 produit n'est plus un défaut connu : c'est ce qui n'a pas pu être **exercé** dans
 cet environnement (§31), plus les deux réserves de portée du §8.
 
-La dette documentaire signalée plus tôt est levée :
-`docs/audit/FINAL_VERIFICATION_BASELINE.md` a été **régénérée le 2026-08-13**
-(206 fichiers, 2259 tests) après correction du générateur, qui refusait de
-s'exécuter hors dépôt git (065). Le document ne portait plus la mesure du jour
-mais celle du 2026-08-09 — 1541 tests — en se déclarant « single canonical source
-of truth ».
+La dette documentaire est levée, et cette fois complètement :
+`docs/audit/FINAL_VERIFICATION_BASELINE.md` a été régénérée **depuis le dépôt**
+par une exécution verte de la porte, et porte enfin l'identité qu'elle réclamait
+— `commit f8e50dc`, `gitIdentity: true`, 207 fichiers, 2299 tests découverts,
+2266 passés, 0 échec. Le générateur refusait auparavant de s'exécuter hors dépôt
+git (065), et le document restait figé sur la mesure du 2026-08-09 — 1541 tests —
+tout en se déclarant « single canonical source of truth ».
 
-Il reste une réserve, écrite dans le document lui-même : **l'identité de build
-est absente** (`gitIdentity: false`, `commit: null`). Les comptes sont réels, le
-commit ne l'est pas. `npm run verify:baseline` doit être rejoué **depuis le
-dépôt** avant tout tag — et `verify-artifact` continue d'exiger un commit de
-40 hex pour un artefact, exigence inchangée.
+**Une réserve subsiste, de nature différente.** Le motif qui a produit 067 —
+import dynamique dans un `it`, avec état de module partagé — se retrouve dans
+**dix fichiers de test, dont quatre partagent aussi un état mutable**. Aucun n'a
+jamais échoué et aucun n'a été modifié : corriger sans défaut observé serait de
+la spéculation. Le motif est nommé ici pour qu'une instabilité future soit
+diagnostiquée en minutes plutôt qu'en heures.
 
 ---
 
@@ -608,18 +674,33 @@ Le poids mesuré (491 Mo) **n'est pas représentatif** : la copie isolée utilis
 (180 Mo) par le traçage de fichiers de Next. Le `standalone` du dépôt (140 Mo)
 n'en contient pas.
 
-### Release gate — trois échecs, une seule cause
+### Release gate — rejoué depuis le dépôt, et ce que ça a coûté
 
-`npm run release:gate` échoue hors dépôt sur la baseline, la vérification
-d'artefact et l'empaquetage ZIP. Toutes trois exigent git. Le message le plus
-trompeur est « Fuite de secrets : `.env` présent dans l'artefact » : sans `.git`,
-`verify-artifact` classe le répertoire en MODE ARTEFACT et signale — à raison
-dans ce mode — le `.env` de développement.
+Hors dépôt, `npm run release:gate` échouait sur la baseline, la vérification
+d'artefact et l'empaquetage ZIP — trois étapes qui exigent git. Le message le
+plus trompeur était « Fuite de secrets : `.env` présent dans l'artefact » : sans
+`.git`, `verify-artifact` classe le répertoire en MODE ARTEFACT et signale — à
+raison dans ce mode — le `.env` de développement.
 
-Diagnostic **vérifié, pas affirmé** : le code audité a été déposé dans un dépôt
-git neuf et les trois étapes rejouées. Elles passent toutes, et l'empaquetage a
-produit puis vérifié un ZIP réellement extrait, sans `.git`, **sans aucun
-`.env`** — `.gitignore:18` l'exclut.
+Ces trois-là n'étaient donc pas des défauts. **Mais rejouer la porte pour de
+vrai, dans le dépôt, en a révélé deux qui en étaient.** Quatre exécutions ont été
+nécessaires :
+
+| # | Résultat | Ce qu'il a fallu corriger |
+|---|---|---|
+| 1 | 11 verts · 3 échecs | `check:consistency` et cohérence documentaire tombaient sur un worktree ignoré (**066**) ; `next build` sur un `node_modules` élagué |
+| 2 | 11 verts · 1 échec | la suite tombait sur un test de cet audit (**067**) |
+| 3 | 11 verts · 1 échec | `next build` de nouveau, `node_modules` vidé pendant l'exécution (§27, incident 5) |
+| 4 | **PASSÉ** | 12 contrôles obligatoires verts, 3 non exécutés |
+
+L'empaquetage a produit puis vérifié un ZIP réellement extrait, sans `.git` et
+**sans aucun `.env`** — `.gitignore:18` l'exclut. Le manifeste de release est
+rattaché au commit, et la baseline aussi.
+
+La leçon est la seule chose qui mérite d'être retenue de ces quatre passages :
+une porte de release ne prouve quelque chose **que là où elle sera réellement
+jouée**. Quinze exécutions dans la copie de travail n'avaient montré ni 066 ni
+067.
 
 ### E2E authentifié — instabilité de harnais, pas de mise en page
 
@@ -639,13 +720,15 @@ CONDITIONALLY READY
 ```
 
 **Pourquoi pas `NOT READY`.** Aucun défaut connu ne subsiste, à aucun niveau de
-gravité : 3 causes racines P0, 17 P1, 22 P2 et 24 P3 corrigés et vérifiés, chacun
+gravité : 3 causes racines P0, 17 P1, 24 P2 et 25 P3 corrigés et vérifiés, chacun
 avec un test qui échoue avant et passe après, les protections critiques éprouvées
-par mutation. Les gates exécutables sont verts, sans exception, sans assertion
-affaiblie, sans test ignoré sans motif externe. Les fuses sont vérifiés sur un
-binaire réel, l'artefact ne contient ni secret ni clé privée, l'artefact source
-est rattachable à son commit, et la suite responsive s'exécute désormais sur
-l'application elle-même.
+par mutation. **La porte de release passe depuis le dépôt git**, pas seulement
+depuis une copie de travail : 12 contrôles obligatoires verts, sans exception,
+sans assertion affaiblie, sans test ignoré sans motif externe. Les fuses sont
+vérifiés sur un binaire réel, l'artefact ne contient ni secret ni clé privée,
+l'artefact source est rattachable à son commit, la baseline canonique porte
+enfin ce commit, et la suite responsive s'exécute désormais sur l'application
+elle-même.
 
 **Pourquoi le verdict le plus favorable est interdit ici.** §193 l'exclut dès
 qu'une condition objective manque. Il en manque deux, et **aucune ne porte plus
@@ -669,10 +752,13 @@ C'est toute la différence entre « il reste du travail » et « il reste des pr
 | # | Condition | Effort |
 |---|---|---|
 | 1 | `npm run dist` avec les `keys/` de production — fuses et scan de secrets sont désormais des gates automatiques de `dist` — puis installation fraîche, raccourci bureau, mise à jour, désinstallation, réinstallation, préservation des données | ~1 h sur poste Windows équipé |
-| 2 | `npm run verify:baseline` puis `npm run release:gate` **depuis le dépôt réel** — la baseline est à jour mais sans identité de build | ~15 min |
-| 3 | Rejouer les suites de concurrence sur PostgreSQL réel et le rate-limit sur Redis réel | ~2 h avec les environnements |
-| 4 | Exercer le bac à sable d'une plateforme agréée avec des identifiants réels | dépend du contrat de plateforme |
-| 5 | Redéployer le cloud avec la clé `a6dd7dcd…` **avant** toute nouvelle licence | `PRODUCTION_AUTHORIZATION_REQUIRED` |
+| 2 | Rejouer les suites de concurrence sur PostgreSQL réel et le rate-limit sur Redis réel | ~2 h avec les environnements |
+| 3 | Exercer le bac à sable d'une plateforme agréée avec des identifiants réels | dépend du contrat de plateforme |
+| 4 | Redéployer le cloud avec la clé `a6dd7dcd…` **avant** toute nouvelle licence | `PRODUCTION_AUTHORIZATION_REQUIRED` |
+
+La condition qui portait sur la porte de release et la baseline — *« rejouer
+`verify:baseline` puis `release:gate` depuis le dépôt réel »* — **est remplie** :
+c'est l'objet de cette dernière journée, et elle a coûté deux findings de plus.
 
 ### Ce que ce rapport n'affirme pas
 
