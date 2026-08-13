@@ -1003,3 +1003,66 @@ repris dans `FINDINGS.md` avec leur reproduction.
   antérieurs, remplacée par `a6dd7dcd…` le 2026-08-10 ; le cloud doit être
   redéployé AVANT toute nouvelle licence, sans quoi les activations sont refusées
   à distance. Hors périmètre de cet audit de code, mais bloquant en production.
+
+---
+
+## Lot 18 — Rejeu du release gate DEPUIS LE DÉPÔT (2026-08-13)
+
+Le lot 15 avait laissé trois échecs tous imputés à « pas un dépôt git », prouvés
+par transplantation dans un dépôt neuf. Ce lot fait la chose pour de vrai : le
+code audité est synchronisé dans le clone réel
+(`origin = supremperf/GarageFlowsV2`, branche
+`claude/garageflow-final-unified-merge-ub0l67`, HEAD `e0a2ef7`), puis le gate
+est rejoué là.
+
+### Synchronisation
+
+`tar` de `src electron scripts prisma docs e2e package.json .env.example`, en
+excluant `src/generated`, `e2e/.auth`, `e2e/shots`.
+
+`git status` annonçait **822 fichiers modifiés** — alarmant. `git diff`, qui
+applique les filtres de fin de ligne, n'en voyait que **111**. Vérification
+faite fichier par fichier (`cmp` contre `git show HEAD:<f>`), les ~700 autres
+sont **byte-identiques à HEAD** après filtre : bruit d'index CRLF, jamais
+entré dans le commit. Le contenu réellement indexé le confirme :
+
+```
+164 fichiers · 53 ajouts · 111 modifications · +15872 −424
+```
+
+Contrôles avant commit : `.env` **non suivi** et ignoré (`.gitignore:110`),
+`keys/` absent, aucun fichier > 1 Mo. Commit `a9badc3`.
+
+### Le gate a échoué — et il avait raison
+
+| Contrôle | Verdict |
+|---|---|
+| TypeScript, ESLint | OK |
+| Suite de tests + baselines machine & humaine | OK (21 s) |
+| Audit dépendances, runtime desktop, manifeste, artefact, **ZIP extrait réel** | OK |
+| `check:consistency` | **ÉCHEC** |
+| Cohérence documentaire (post-baseline) | **ÉCHEC** |
+| Build de production (`next build`) | **ÉCHEC** |
+| PostgreSQL ×2, Redis, budget perf | NON EXÉCUTÉ |
+
+Deux causes racines, aucune imaginaire.
+
+**1. Un résidu ignoré faisait échouer la porte — GF31-AUD-066 (P2).**
+Le dépôt contient un ancien worktree sous `.claude/worktrees/blackscreen/`,
+ignoré et non suivi, qui embarque sa propre copie de la baseline canonique. La
+garde parcourait le disque et comptait « 2 sources canoniques » sur un dépôt qui
+n'en suit qu'une. Défaut invisible depuis la copie de travail de l'audit : le
+verdict du gate dépendait de ce qui traînait en local. Corrigé par un inventaire
+`git ls-files --cached --others --exclude-standard`, avec repli disque hors
+dépôt. **Mutation vérifiée** : 2 des 5 nouveaux tests échouent sur l'ancien code,
+les 3 autres passent des deux côtés (anti-sur-correction).
+
+**2. Le piège `node_modules` a resservi.** `next build` échouait sur
+`next/dist/compiled/jest-worker/processChild.js` introuvable — le dernier
+`npm run dist` avait élagué le `node_modules` du Desktop, cible du lien
+symbolique du dépôt. Symptôme et remède déjà consignés en mémoire projet :
+`npm ci`. Réparé.
+
+Ce lot vaut surtout pour ce qu'il démontre : **un gate ne prouve quelque chose
+que là où il sera rejoué**. Deux échecs sur trois n'existaient que dans le dépôt,
+et l'un d'eux était un authentique défaut de la porte elle-même.

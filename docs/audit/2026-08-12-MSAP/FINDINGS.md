@@ -13,13 +13,14 @@ test qui échoue AVANT et passe APRÈS.
 
 ## Tableau de bord
 
-État au **2026-08-13**, après le triage P2/P3 et la vague 2 adversariale :
+État au **2026-08-13**, après le triage P2/P3, la vague 2 adversariale et le
+rejeu du release gate depuis le dépôt git :
 
 | Sévérité | Confirmés (cumul) | Corrigés | **Ouverts** |
 |---|---|---|---|
 | P0 | 3 causes racines | 3 | **0** |
 | P1 | 17 (16 vague 1 + 1 vague 2 sur une correction de cet audit) | 17 | **0** |
-| P2 | 22 | 22 | **0** |
+| P2 | 23 (22 + 1 découvert au rejeu depuis le dépôt) | 23 | **0** |
 | P3 | 25 | 25 | **0** |
 
 **Aucun finding connu ne reste ouvert.** Aucun n'a été masqué ni reclassé :
@@ -1680,3 +1681,56 @@ mesures du 2026-08-07 sont conservées comme preuve, mais explicitement datées 
 assorties de la mention que la regénération du 2026-08-13 n'en disposait pas.
 
 **Tests.** `src/__tests__/baseline-git-identity.test.ts` (4).
+
+## GF31-AUD-066 — La porte documentaire jugeait sur des résidus ignorés
+
+```
+Sévérité : P2
+Domaine  : porte de release / reproductibilité du verdict
+Fichier  : scripts/lib/docs-consistency.mjs
+Statut   : FIXED / VERIFIED
+Découvert: en rejouant le release gate DEPUIS LE DÉPÔT (2026-08-13)
+```
+
+`checkDocsConsistency` inventoriait les documents en parcourant le disque, en
+n'écartant que `node_modules`, `.next` et `.git`. Le dépôt réel contient un
+ancien worktree oublié sous `.claude/worktrees/blackscreen/` — **ignoré** par
+`.gitignore:67`, **non suivi**, invisible pour quiconque relit le dépôt. Ce
+worktree embarque sa propre copie de `FINAL_VERIFICATION_BASELINE.md`, marqueur
+canonique compris.
+
+Résultat au gate :
+
+```
+[canonical-count] (global)  2 sources canoniques déclarées (attendu : 1) :
+   .claude/worktrees/blackscreen/docs/audit/FINAL_VERIFICATION_BASELINE.md,
+   docs/audit/FINAL_VERIFICATION_BASELINE.md
+```
+
+Deux contrôles obligatoires en échec (`check:consistency` et `Cohérence
+documentaire`) sur un dépôt dont **git ne suit qu'une seule** baseline —
+vérifié : `git ls-files '*FINAL_VERIFICATION_BASELINE.md'` en retourne une.
+
+Ce défaut n'était pas visible depuis la copie de travail de l'audit, qui ne
+contient pas ce résidu. C'est précisément ce qui le rend grave : **le verdict de
+la porte dépendait de ce qui traînait en local**. Un gate irreproductible ne
+prouve rien — ni quand il est rouge, ni, surtout, quand il est vert.
+
+**Correction.** L'inventaire passe par git :
+`git ls-files --cached --others --exclude-standard`. Les fichiers suivis **et**
+les nouveaux non encore indexés sont vus ; seuls les ignorés disparaissent. La
+propriété qui compte est conservée : un second document canonique tout juste
+écrit, pas encore `git add`, est toujours refusé — le confondre avec « ignoré »
+aurait ouvert un faux vert.
+
+Hors dépôt (copie détachée, tarball), repli sur la marche disque, avec la liste
+d'exclusions élargie aux dossiers jamais documentaires (`.claude`, `dist`,
+`out`, `build`, `coverage`, `release`, `.turbo`, `.vercel`). Et si git répond
+sans mentionner la baseline canonique alors qu'elle est sur disque, on retombe
+également sur le disque : mieux vaut un faux rouge qu'un vert obtenu sur une
+liste vide.
+
+**Tests.** `src/__tests__/docs-consistency-ignored-residue.test.ts` (5).
+Mutation vérifiée : sur l'ancien code, 2 des 5 tests échouent (le résidu ignoré
+et le repli disque) ; les 3 autres — vrai doublon suivi, doublon non indexé,
+repli fonctionnel — passent des deux côtés et interdisent la sur-correction.

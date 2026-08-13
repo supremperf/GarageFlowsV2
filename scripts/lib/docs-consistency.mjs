@@ -19,6 +19,7 @@
  * `checkDocsConsistency(root, { baseline })` → { ok, violations, scanned }.
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
 import { join, relative } from 'node:path'
 import { parseAutoBlock, COMPONENTS } from './baseline-doc.mjs'
 
@@ -61,14 +62,72 @@ function isHistoricalContext(n) {
     n.includes('not current') || n.includes('divergent') || n.includes('instantane')
 }
 
+/**
+ * Répertoires jamais documentaires : dépendances, sorties de build, dossiers
+ * d'outillage. Utilisé UNIQUEMENT par le repli hors dépôt.
+ */
+const NON_DOCUMENTAIRES = new Set([
+  'node_modules', '.next', '.git', '.claude', '.turbo', '.vercel',
+  'dist', 'out', 'build', 'coverage', 'release',
+])
+
 function collectMarkdown(dir, out) {
   for (const entry of readdirSync(dir)) {
-    if (entry === 'node_modules' || entry === '.next' || entry === '.git') continue
+    if (NON_DOCUMENTAIRES.has(entry)) continue
     const p = join(dir, entry)
     const st = statSync(p)
     if (st.isDirectory()) collectMarkdown(p, out)
     else if (entry.toLowerCase().endsWith('.md')) out.push(p)
   }
+}
+
+/**
+ * Inventaire des documents DU DÉPÔT — suivis, plus les nouveaux non encore
+ * ajoutés, jamais les ignorés.
+ *
+ * GF31-AUD-066 — la marche sur disque voyait tout ce qui traînait. Un ancien
+ * worktree oublié sous `.claude/` embarquait sa propre copie de la baseline
+ * canonique, et la garde annonçait « 2 sources canoniques déclarées » sur un
+ * dépôt qui n'en suit qu'une. La porte de release échouait donc sur un résidu
+ * local, invisible pour quiconque relit le dépôt : verdict irreproductible,
+ * et faux rouge — le symétrique exact du faux vert que ce fichier proscrit.
+ *
+ * `--others --exclude-standard` conserve la propriété qui compte : un second
+ * document canonique tout juste écrit, pas encore `git add`, est TOUJOURS vu.
+ * Seul l'ignoré disparaît.
+ *
+ * Hors dépôt (copie de travail détachée, tarball), on retombe sur la marche
+ * disque : dégradé, jamais silencieux — même principe qu'en GF31-AUD-065.
+ *
+ * @returns {string[] | null} chemins absolus, ou null si git ne répond pas.
+ */
+function gitMarkdown(root) {
+  let r
+  try {
+    r = spawnSync('git', ['-C', root, 'ls-files', '--cached', '--others', '--exclude-standard', '-z'], {
+      encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, windowsHide: true,
+    })
+  } catch {
+    return null
+  }
+  if (!r || r.error || r.status !== 0 || typeof r.stdout !== 'string') return null
+  return r.stdout
+    .split('\0')
+    .filter((p) => p.toLowerCase().endsWith('.md'))
+    .map((p) => join(root, p))
+}
+
+function listMarkdown(root) {
+  const suivis = gitMarkdown(root)
+  // Un inventaire git qui ne contient même pas la baseline canonique alors
+  // qu'elle est sur disque n'est pas digne de confiance ici (checkout partiel,
+  // fichier ignoré par erreur) : mieux vaut la marche disque qu'un vert obtenu
+  // sur une liste vide. Le faux rouge se corrige ; le faux vert se découvre en
+  // production.
+  if (suivis?.some((p) => relative(root, p).split(/[\\/]/).join('/') === CANONICAL)) return suivis
+  const out = []
+  collectMarkdown(root, out)
+  return out
 }
 
 /**
@@ -131,8 +190,7 @@ export function checkCanonicalBaseline(root, baseline) {
  */
 export function checkDocsConsistency(root, opts = {}) {
   const baseline = opts.baseline ?? null
-  const files = []
-  collectMarkdown(root, files)
+  const files = listMarkdown(root)
   const violations = []
 
   // Comptes de tests COURANTS autorisés (issus de la baseline machine).
