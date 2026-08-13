@@ -13,9 +13,9 @@
       "autoGenerate": false,
       "rotationRisk": "low",
       "consumers": [
-        "src/app/api/plate-lookup/route.ts",
         "src/app/api/plate-ocr/route.ts"
       ],
+      "notes": "plate-lookup ne consomme plus cette clé : son « repli IA » demandait au modèle de déduire marque/modèle/année d'une plaque SIV, qui n'encode rien de tel depuis 2009. Les données inventées partaient dans l'intervention, le devis et la facture (GF-FINAL-020).",
       "autoManage": true
     },
     {
@@ -1237,6 +1237,21 @@
       "autoManage": true
     },
     {
+      "name": "GF_UPDATE_SIGNING_KEY_FILE",
+      "classification": "configuration",
+      "scope": "release-tooling",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 1,
+      "autoGenerate": false,
+      "rotationRisk": "high",
+      "consumers": [
+        "scripts/sign-release-manifest.mjs"
+      ],
+      "notes": "Chemin d'un fichier contenant la clé privée de signature, alternative à GF_UPDATE_SIGNING_KEY. Outillage de release uniquement.",
+      "autoManage": false
+    },
+    {
       "name": "GF_UPDATE_SERVER",
       "classification": "external",
       "scope": "desktop",
@@ -1259,8 +1274,10 @@
       "minLength": 32,
       "autoGenerate": false,
       "rotationRisk": "critical",
-      "consumers": [],
-      "notes": "Documented but not consumed by this repository. Never configure automatically here.",
+      "consumers": [
+        "scripts/sign-release-manifest.mjs"
+      ],
+      "notes": "Clé PRIVÉE Ed25519 (PEM PKCS#8) signant les manifestes de mise à jour. Cette entrée portait « documented but not consumed by this repository » : c'était exact, et c'était le défaut — la clé publique étant embarquée en dur dans electron/update-verify.js, tout poste EXIGE un manifeste signé, qu'aucun outil du dépôt ne savait produire ; aucune mise à jour n'était donc installable (GF-FINAL-021). L'outil existe désormais (`npm run release:sign`). La clé vit UNIQUEMENT sur le poste de release ou le secret CI de l'éditeur — jamais dans un déploiement, jamais dans l'installeur, jamais dans RESET-GARAGEFLOW. Rotation : AJOUTER la nouvelle clé publique dans PUBLIC_KEYS sans retirer l'ancienne tant que des releases signées par elle circulent, sinon le parc installé perd toute possibilité de mise à jour sans recours logiciel.",
       "autoManage": false
     },
     {

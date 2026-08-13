@@ -1244,4 +1244,46 @@ export const MIGRATIONS: Migration[] = [
     sql: 'CREATE TABLE IF NOT EXISTS "JobTombstone" ("jobId" TEXT NOT NULL PRIMARY KEY, "garageId" TEXT NOT NULL, "deletedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)',
   },
   { id: '202_job_tombstone_idx',          sql: 'CREATE INDEX IF NOT EXISTS "JobTombstone_garageId_deletedAt_idx" ON "JobTombstone"("garageId", "deletedAt")' },
+
+  // ── Photo de profil du mécanicien (GF-PLAN-004) ────────────────────────────
+  // `Mechanic.avatar` est une colonne TEXTE d'initiales ; ces colonnes portent
+  // la VRAIE photo. ADDITIF : quatre colonnes nullables, aucune donnée existante
+  // lue ni modifiée, et un poste qui n'a pas encore migré continue d'afficher
+  // les initiales — le repli est le comportement nominal, pas une panne.
+  //
+  // `avatarPath` est une CLÉ DE STOCKAGE générée par le serveur, jamais un nom
+  // fourni par le client ; `avatarHash` sert de jeton d'invalidation de cache
+  // (voir jetonCache) et non d'intégrité.
+  { id: '203_mechanic_avatar_path',    onlyIfColumnMissing: { table: 'Mechanic', column: 'avatarPath' },      sql: 'ALTER TABLE "Mechanic" ADD COLUMN "avatarPath" TEXT' },
+  { id: '204_mechanic_avatar_mime',    onlyIfColumnMissing: { table: 'Mechanic', column: 'avatarMime' },      sql: 'ALTER TABLE "Mechanic" ADD COLUMN "avatarMime" TEXT' },
+  { id: '205_mechanic_avatar_hash',    onlyIfColumnMissing: { table: 'Mechanic', column: 'avatarHash' },      sql: 'ALTER TABLE "Mechanic" ADD COLUMN "avatarHash" TEXT' },
+  { id: '206_mechanic_avatar_updated', onlyIfColumnMissing: { table: 'Mechanic', column: 'avatarUpdatedAt' }, sql: 'ALTER TABLE "Mechanic" ADD COLUMN "avatarUpdatedAt" DATETIME' },
+
+  // ── Archivage du mécanicien (GF-PLAN-005) ──────────────────────────────────
+  // La suppression était destructive : `onDelete: Cascade` depuis Garage, et une
+  // suppression de mécanicien emportait ou orphelinait interventions, notes,
+  // photos et audits. Un mécanicien qui quitte le garage doit sortir du planning
+  // SANS que son historique disparaisse — c'est aussi ce que le suivi comptable
+  // et les rapports supposent.
+  //
+  // Colonne NULLABLE : `NULL` = actif. Aucun défaut à écrire sur les lignes
+  // existantes, donc aucune réécriture de table.
+  { id: '207_mechanic_archived_at', onlyIfColumnMissing: { table: 'Mechanic', column: 'archivedAt' }, sql: 'ALTER TABLE "Mechanic" ADD COLUMN "archivedAt" DATETIME' },
+  // Le planning ne lit que les mécaniciens ACTIFS d'un garage : c'est la requête
+  // la plus fréquente du module.
+  { id: '208_mechanic_idx_garage_archived', sql: 'CREATE INDEX IF NOT EXISTS "Mechanic_garageId_archivedAt_idx" ON "Mechanic"("garageId", "archivedAt")' },
+
+  // ── Cycle de vie de l'ACCÈS portail client (GF-PORT-001) ───────────────────
+  // Le modèle `PortalUser` ne portait aucun état : impossible de couper l'accès
+  // d'un client sans supprimer le compte, et donc son historique de tickets et
+  // de rendez-vous. Impossible également de distinguer un mot de passe
+  // TEMPORAIRE remis par le garage d'un mot de passe choisi par le client.
+  //
+  // ADDITIF : trois colonnes, toutes nullables ou avec défaut. `disabledAt`
+  // NULL = accès actif ; `mustChangePassword` faux par défaut, donc les comptes
+  // existants — créés par auto-inscription, avec un mot de passe déjà choisi par
+  // leur titulaire — ne sont pas soudainement contraints d'en changer.
+  { id: '209_portal_disabled_at',        onlyIfColumnMissing: { table: 'PortalUser', column: 'disabledAt' },         sql: 'ALTER TABLE "PortalUser" ADD COLUMN "disabledAt" DATETIME' },
+  { id: '210_portal_must_change_pwd',    onlyIfColumnMissing: { table: 'PortalUser', column: 'mustChangePassword' }, sql: 'ALTER TABLE "PortalUser" ADD COLUMN "mustChangePassword" BOOLEAN NOT NULL DEFAULT 0' },
+  { id: '211_portal_password_changed_at', onlyIfColumnMissing: { table: 'PortalUser', column: 'passwordChangedAt' }, sql: 'ALTER TABLE "PortalUser" ADD COLUMN "passwordChangedAt" DATETIME' },
 ]

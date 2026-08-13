@@ -40,16 +40,38 @@ describe('electron/main — activation d\'appareil, pas de boucle sans fin', () 
   })()
 
   /**
-   * Branche `deviceRequired` du battement périodique, bornée par la branche
-   * SUIVANTE plutôt que par une longueur fixe : découper à N caractères coupait
-   * la branche en deux dès qu'on y ajoutait une ligne, et le test tombait sur
-   * une modification parfaitement saine.
+   * Branche `deviceRequired` du battement périodique, bornée par ÉQUILIBRAGE
+   * D'ACCOLADES.
+   *
+   * Historique des deux bornes précédentes, toutes deux fausses :
+   *  1. une longueur fixe (N caractères) — coupait la branche en deux dès qu'on
+   *     y ajoutait une ligne, et le test tombait sur une modification saine ;
+   *  2. la chaîne littérale de la branche SUIVANTE (`if (result.allowed ===
+   *     false)`) — cette branche a été extraite dans le module pur
+   *     `electron/heartbeat-policy.js`, la chaîne a donc disparu de main.js,
+   *     `indexOf` a renvoyé -1 et le fichier de test ENTIER a cessé de
+   *     s'exécuter : les six invariants verrouillés ici ne protégeaient plus
+   *     rien, sans qu'aucun test ne le signale autrement que par une erreur de
+   *     découpage.
+   *
+   * L'équilibrage d'accolades ne dépend, lui, d'aucun code voisin.
    */
   const deviceRequiredBranch = (() => {
     const start = mainSrc.indexOf('if (result.deviceRequired)')
     expect(start).toBeGreaterThan(-1)
-    const end = mainSrc.indexOf('if (result.allowed === false)', start)
-    expect(end).toBeGreaterThan(start)
+    const open = mainSrc.indexOf('{', start)
+    expect(open).toBeGreaterThan(start)
+    let depth = 0
+    let end = -1
+    for (let i = open; i < mainSrc.length; i++) {
+      const ch = mainSrc[i]
+      if (ch === '{') depth++
+      else if (ch === '}') {
+        depth--
+        if (depth === 0) { end = i + 1; break }
+      }
+    }
+    expect(end).toBeGreaterThan(open)
     return mainSrc.slice(start, end)
   })()
 

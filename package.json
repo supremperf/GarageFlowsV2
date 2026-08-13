@@ -70,6 +70,8 @@
     "check:desktop-audit": "node scripts/check-desktop-runtime-audit.mjs",
     "release:gate": "node scripts/final-release-gate.mjs",
     "release:manifest": "node scripts/generate-release-manifest.mjs",
+    "release:sign": "node scripts/sign-release-manifest.mjs",
+    "release:sign:gen-key": "node scripts/sign-release-manifest.mjs --gen-key",
     "release:verify-artifact": "node scripts/verify-artifact.mjs",
     "release:artifact": "node scripts/package-artifact.mjs --verify",
     "release:gate:fast": "node scripts/final-release-gate.mjs --fast",

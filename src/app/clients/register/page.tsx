@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { User, Mail, Lock, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { avecGarageSlug, lienPortail } from '@/lib/portal/garage-slug'
+import { cheminPortail } from '@/lib/portal/routes'
 
 export default function PortalRegisterPage() {
   const router = useRouter()
@@ -43,7 +44,7 @@ export default function PortalRegisterPage() {
       // n'existait pas.
       setCourrielEnvoye(data.verificationEmailSent !== false)
       // On ne précipite pas la redirection quand il y a un message à lire.
-      setTimeout(() => router.push(lienPortail('/portal/login')), data.verificationEmailSent === false ? 6000 : 1500)
+      setTimeout(() => router.push(lienPortail(cheminPortail('login'))), data.verificationEmailSent === false ? 6000 : 1500)
     } catch {
       setError('Erreur réseau')
     } finally {
@@ -92,7 +93,7 @@ export default function PortalRegisterPage() {
                 {loading ? <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Création…</span> : 'Créer mon compte'}
               </button>
               <p className="pt-2 text-center text-xs text-slate-600">
-                Déjà inscrit ? <Link href={lienPortail("/portal/login")} className="font-semibold text-blue-400 hover:text-blue-300">Se connecter</Link>
+                Déjà inscrit ? <Link href={lienPortail(cheminPortail('login'))} className="font-semibold text-blue-400 hover:text-blue-300">Se connecter</Link>
               </p>
             </form>
           )}

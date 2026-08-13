@@ -21,6 +21,26 @@ const nextConfig = {
     instrumentationHook: true,
   },
 
+  /**
+   * Portail client — l'URL officielle est `https://app.garageflows.fr/clients`.
+   *
+   * Les pages vivaient sous `/portal/*` et aucune réécriture n'existait : tout
+   * lien `…/clients/login` communiqué à un client tombait sur un 404. Les pages
+   * ont été déplacées sous `/clients/*` (et non simplement réécrites — une
+   * réécriture aurait laissé la barre d'adresse repasser à `/portal` dès la
+   * première navigation interne).
+   *
+   * Cette redirection PERMANENTE couvre l'existant : QR codes déjà imprimés,
+   * e-mails et SMS déjà envoyés, instantanés portail publiés au cloud avant la
+   * bascule. Elle préserve le chemin complet, donc le jeton.
+   */
+  async redirects() {
+    return [
+      { source: '/portal', destination: '/clients', permanent: true },
+      { source: '/portal/:path*', destination: '/clients/:path*', permanent: true },
+    ]
+  },
+
   async headers() {
     // 'unsafe-eval' n'est requis que par l'outillage de DÉVELOPPEMENT de
     // Next.js (react-refresh) : en production il constituait un relâchement

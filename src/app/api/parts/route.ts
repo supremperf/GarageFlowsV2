@@ -68,7 +68,7 @@ export const POST = withAuth(async (req) => {
       { status: 400 },
     )
   }
-  const { name, reference, description, quantity = 0, minQuantity = 5, unitCost = 0, unitPrice = 0, location } = parsed.data
+  const { name, reference, description, quantity = 0, minQuantity = 5, unitCost = 0, unitPrice = 0, location, supplierName, supplierRef } = parsed.data
 
   // Le schéma garantit ≤ 4 décimales : la conversion est exacte, jamais arrondie.
   const cost = parseAmountToScaled(unitCost)
@@ -87,6 +87,10 @@ export const POST = withAuth(async (req) => {
       unitCostTenThousandths: cost,
       unitPriceTenThousandths: price,
       location: location || null,
+      // Fournisseur : sans ces deux colonnes, le module de réapprovisionnement
+      // ne peut rattacher la pièce à personne (voir CreatePartSchema).
+      supplierName: supplierName?.trim() || null,
+      supplierRef:  supplierRef?.trim() || null,
       garageId: session.user.garageId,
     },
   })

@@ -271,6 +271,25 @@ export const CreatePartSchema = z.object({
   unitCost:    z.number().finite().min(0).max(999_999).refine(max4Decimals, MAX4_MSG).optional(),
   unitPrice:   z.number().finite().min(0).max(999_999).refine(max4Decimals, MAX4_MSG).optional(),
   location:    z.string().max(100).optional().nullable(),
+  /**
+   * Fournisseur de la pièce, et référence de la pièce CHEZ ce fournisseur.
+   *
+   * Ces deux colonnes existent en base depuis les migrations 048/049 et sont
+   * LUES un peu partout : `/api/suppliers` groupe le réapprovisionnement par
+   * `supplierName`, `/api/parts/search` et l'autocomplétion des devis les
+   * affichent, la recherche de stock les indexe. Mais AUCUNE route ne les
+   * ÉCRIVAIT : elles étaient absentes de ce schéma, du `create` de
+   * `POST /api/parts` et de la liste blanche du `PATCH`. Seul le jeu de
+   * démonstration (`prisma/demo-tenant.ts`) les renseignait.
+   *
+   * Conséquence sur une installation réelle : `connectorsFromParts` ne trouvait
+   * jamais un seul fournisseur, le module « Fournisseurs » affichait
+   * en permanence 0 fournisseur / 0 €, et son bouton « Préparer les commandes »
+   * restait désactivé à jamais. La fonctionnalité était annoncée dans la
+   * navigation mais inatteignable autrement qu'avec la base de démonstration.
+   */
+  supplierName: z.string().max(120).optional().nullable(),
+  supplierRef:  z.string().max(80).optional().nullable(),
 })
 
 export const UpdatePartSchema = CreatePartSchema.partial().extend({

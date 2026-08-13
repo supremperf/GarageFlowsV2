@@ -79,16 +79,37 @@ function ReminderRow({ reminder, onStatusChange, onDelete, garagePhone }: {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: reminder.id }),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
+
+      // ── L'ÉTAT « envoyé » n'est posé que si un message est RÉELLEMENT parti ──
       if (data.sent) {
         toast.success(t.rmEmailSent)
         onStatusChange(reminder.id, 'sent')
-      } else if (data.reason === 'no_smtp') {
+        return
+      }
+
+      // Pas de SMTP configuré : on prépare le message dans le logiciel de
+      // messagerie du poste. Le rappel n'est PAS marqué « envoyé » — rien n'est
+      // encore parti, et personne ne peut savoir ici si l'utilisateur cliquera
+      // « Envoyer ». L'ancien code posait `sent` dès l'ouverture du brouillon :
+      // le garage lisait « Envoyé » sur un rappel que le client n'a jamais reçu.
+      // Sous l'application packagée, c'était même systématique : `mailto:`
+      // n'était pas dans les protocoles autorisés par le processus principal, le
+      // brouillon ne s'ouvrait donc jamais (GF-FINAL-024).
+      if (data.reason === 'no_smtp') {
         const sub = encodeURIComponent(data.subject ?? `${t.rmTitle} - ${typeName}`)
         const bod = encodeURIComponent(data.body ?? '')
         window.open(`mailto:${reminder.email}?subject=${sub}&body=${bod}`)
-        onStatusChange(reminder.id, 'sent')
+        toast(t.rmEmailDraftOpened, { icon: '✉️' })
+        return
       }
+
+      // Tout autre échec — SMTP refusé, adresse invalide, panne du serveur —
+      // ne produisait AUCUN retour : l'utilisateur cliquait et il ne se passait
+      // rien du tout, sans le moindre message.
+      toast.error(data.error || data.reason || t.rmEmailFailed)
+    } catch {
+      toast.error(t.rmEmailFailed)
     } finally {
       setSending(false)
     }

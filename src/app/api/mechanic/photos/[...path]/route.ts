@@ -27,11 +27,22 @@ export const GET = withMechanic(async (_req, { params }: { params: { path: strin
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  // La photo DOIT appartenir à une intervention attribuée à ce mécanicien.
-  const owned = await prisma.jobPhoto.count({
-    where: { photoPath: relative, garageId: ctx.garageId, job: { mechanicId: ctx.mechanicId } },
-  })
-  if (owned === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  // La photo DOIT appartenir à une intervention attribuée à ce mécanicien, OU
+  // être SA propre photo de profil.
+  //
+  // Le second cas est délibérément étroit : `id: ctx.mechanicId` ET
+  // `garageId: ctx.garageId`. Un mécanicien ne peut donc pas lire l'avatar d'un
+  // collègue en devinant son chemin, et encore moins celui d'un mécanicien d'un
+  // autre garage — la vérification ne se déduit jamais du chemin lui-même.
+  const [photoIntervention, avatarPropre] = await Promise.all([
+    prisma.jobPhoto.count({
+      where: { photoPath: relative, garageId: ctx.garageId, job: { mechanicId: ctx.mechanicId } },
+    }),
+    prisma.mechanic.count({
+      where: { id: ctx.mechanicId, garageId: ctx.garageId, avatarPath: relative },
+    }),
+  ])
+  if (photoIntervention + avatarPropre === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (!fs.existsSync(fullPath)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const buf = fs.readFileSync(fullPath)

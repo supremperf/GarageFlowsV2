@@ -11,9 +11,21 @@ export interface GarageSettings {
 export interface MechanicRecord {
   id: string
   name: string
+  /** Initiales de REPLI, affichées tant qu'aucune photo n'existe. */
   avatar: string
   color: string
   specialty: string
   order: number
   isAbsent: boolean
+  /**
+   * URL servie de la photo de profil, calculée par `GET /api/mechanics` à partir
+   * de la clé de stockage. `null` quand il n'y a pas de photo.
+   *
+   * Elle n'est jamais stockée en base : une URL figée deviendrait fausse au
+   * moindre changement de route, et contournerait le contrôle d'appartenance
+   * qu'applique la route de service.
+   */
+  avatarUrl?: string | null
+  /** Date d'archivage ; `null`/absent = mécanicien actif. */
+  archivedAt?: string | null
 }

@@ -198,6 +198,7 @@ let nextServer        = null
 let backupTimer       = null
 let licenseTimer      = null    // periodic revocation check (adaptive interval)
 let licenseBlocked    = false   // true while access is blocked (revoked/suspended/tampered)
+let lastLicenseBlock  = null    // { status, reason } du dernier blocage — pour ré-afficher l'overlay
 let licenseCheckStarted = false // guards against starting the poll loop twice
 let activeLicense     = null   // { token, payload } — set after validation
 let activeDeviceToken = null   // device token issued by the server on activation (device auth)
@@ -225,6 +226,11 @@ const UPDATE_SERVER  = (process.env.GF_UPDATE_SERVER || process.env.GF_LICENSE_S
 // dev/staging/self-hosted ; en prod packagée, une surcharge non-https est refusée.
 const { resolveLicenseServer } = require('./license-endpoint')
 const LICENSE_SERVER = resolveLicenseServer({ envUrl: process.env.GF_LICENSE_SERVER, isPackaged: app.isPackaged })
+
+// Décision du battement de licence — module PUR (voir electron/heartbeat-policy.js).
+// Règle de sécurité : seul un « active » explicite de l'autorité DISTANTE lève un
+// blocage ; le repli local n'est jamais une autorité de réactivation (GF-FINAL-001).
+const { heartbeatDecision } = require('./heartbeat-policy')
 
 // ── App-update helpers ────────────────────────────────────────────────────────
 
@@ -329,7 +335,13 @@ async function fetchLatestUpdateBrut() {
   // Fichier local publié par le serveur intégré (mono-poste / hors-ligne).
   try {
     const localUpdate = JSON.parse(fs.readFileSync(path.join(APP_DATA, 'gf_update.json'), 'utf8'))
-    if (localUpdate?.hasUpdate && localUpdate.latestVersion !== currentVersion) {
+    // Comparaison SEMVER, jamais une inégalité de chaînes : `!==` proposait
+    // comme « mise à jour » toute version DIFFÉRENTE, donc aussi une version
+    // ANTÉRIEURE republiée par erreur dans la Zone Administrateur — un retour en
+    // arrière présenté à l'utilisateur comme une nouveauté. Le chemin central
+    // (`semver.isNewer`) et le repli GitHub le faisaient déjà correctement ;
+    // seule la publication locale ne le faisait pas.
+    if (localUpdate?.hasUpdate && semver.isNewer(localUpdate.latestVersion, currentVersion)) {
       const dl = localUpdate.downloadPath ? `http://127.0.0.1:${PORT}${localUpdate.downloadPath}` : (localUpdate.releaseUrl ?? null)
       return {
         hasUpdate:     true,
@@ -417,6 +429,14 @@ function resolveInstallSecret() {
 
 // ── Online check state ────────────────────────────────────────────────────────
 const ONLINE_CHECK_FILE    = () => path.join(APP_DATA, 'last_online.json')
+// État de BLOCAGE licence persisté (revoked/suspended/tampered), signé comme
+// last_online.json (HMAC lié à l'installation + hwid). Sans lui, un simple
+// redémarrage hors ligne repartait débloqué : licenseBlocked n'était qu'une
+// variable en mémoire (GF-FINAL-001). Limite honnête identique à
+// electron/signed-state.js : supprimer le fichier efface le drapeau — c'est le
+// miroir en base locale (/api/internal/license-status) qui tient la seconde
+// couche, et l'autorité distante qui reste la source de vérité.
+const LICENSE_BLOCK_FILE   = () => path.join(APP_DATA, 'license_block.json')
 const GRACE_PERIOD_MS      = 48 * 60 * 60 * 1_000   // 48 hours
 const LOCK_PERIOD_MS       = 72 * 60 * 60 * 1_000   // 72 hours (lock after grace)
 // La sonde de connectivité vise désormais l'AUTORITÉ de licence (LICENSE_SERVER)
@@ -1474,6 +1494,41 @@ async function recordLicenseInLocalDatabase() {
 }
 
 /**
+ * Répercute la décision de l'autorité DISTANTE (revoked/suspended/active) dans
+ * la base SQLite LOCALE, via la route interne protégée par X-Internal-Key.
+ *
+ * Sans ce miroir, la base locale ignorait les révocations : dès que le serveur
+ * distant devenait injoignable, le contrôle local répondait « active » et le
+ * repli levait le blocage (GF-FINAL-001). Best-effort : le miroir n'a AUCUNE
+ * autorité propre — c'est une copie locale de la décision distante, pour que
+ * le contrôle hors ligne soit d'accord avec l'autorité.
+ */
+async function mirrorLicenseStatusLocally(status) {
+  const lid = activeLicense?.payload?.lid
+  if (!lid) return false
+  try {
+    const body = JSON.stringify({ licenseId: lid, status })
+    const { statusCode } = await new Promise((resolve, reject) => {
+      const req = http.request(
+        { hostname: '127.0.0.1', port: PORT, path: '/api/internal/license-status', method: 'POST' },
+        res => { res.resume(); res.on('end', () => resolve({ statusCode: res.statusCode ?? 0 })) }
+      )
+      req.on('error', reject)
+      req.setHeader('Content-Type', 'application/json')
+      req.setHeader('Content-Length', Buffer.byteLength(body))
+      req.setHeader('x-internal-key', INTERNAL_EXPORT_KEY)
+      req.write(body)
+      req.end()
+    })
+    log('[license] miroir local du statut —', status, statusCode === 200 ? 'OK' : `HTTP ${statusCode}`)
+    return statusCode === 200
+  } catch (err) {
+    log('[license] miroir local indisponible:', err.message)
+    return false
+  }
+}
+
+/**
  * Établit la session MÉCANICIEN locale (mono-poste). Une clé mécanicien exige
  * une session portant gid + mid ; on interroge l'activation locale pour les
  * obtenir puis on réinjecte le cookie complet. Best-effort : si la clé n'est pas
@@ -1513,6 +1568,10 @@ async function periodicLicenseCheck() {
 
   const licenseId = activeLicense.payload.lid
   let result = null
+  // Qui a produit `result` : 'remote' (autorité) ou 'local' (repli). La
+  // distinction est de SÉCURITÉ : seul un « active » DISTANT lève un blocage
+  // (voir electron/heartbeat-policy.js — GF-FINAL-001).
+  let resultAuthority = null
 
   // If we have no device token yet (fresh upgrade / offline activation), get one
   // before the heartbeat — the server rejects heartbeats without a device token.
@@ -1537,8 +1596,11 @@ async function periodicLicenseCheck() {
       result = await httpPost(`${remoteServer.replace(/\/$/, '')}/api/license/check`, body)
       // Ne jamais journaliser la réponse complète (elle pourrait contenir un jeton) :
       // uniquement les champs de décision.
-      if (result) log('[license/check] remote result — allowed:', result.allowed,
-                      '| status:', result.status ?? '?', '| deviceRequired:', !!result.deviceRequired)
+      if (result) {
+        resultAuthority = 'remote'
+        log('[license/check] remote result — allowed:', result.allowed,
+            '| status:', result.status ?? '?', '| deviceRequired:', !!result.deviceRequired)
+      }
     } catch (err) {
       log('[license/check] remote server unreachable (fail-open):', err.message)
     }
@@ -1548,8 +1610,11 @@ async function periodicLicenseCheck() {
   if (!result) {
     try {
       result = await httpPost(`http://127.0.0.1:${PORT}/api/license/check`, body)
-      if (result) log('[license/check] local result — allowed:', result.allowed,
-                      '| status:', result.status ?? '?', '| deviceRequired:', !!result.deviceRequired)
+      if (result) {
+        resultAuthority = 'local'
+        log('[license/check] local result — allowed:', result.allowed,
+            '| status:', result.status ?? '?', '| deviceRequired:', !!result.deviceRequired)
+      }
     } catch (err) {
       log('[license/check] local check error (fail-open):', err.message)
     }
@@ -1625,33 +1690,55 @@ async function periodicLicenseCheck() {
     return
   }
 
-  if (result.allowed === false) {
+  // ── Décision de blocage/réactivation — module PUR (heartbeat-policy.js) ────
+  // Invariant de sécurité (GF-FINAL-001) : un blocage n'est levé QUE par un
+  // « active » explicite de l'autorité DISTANTE. Le repli local peut BLOQUER
+  // (fail-secure), jamais réactiver — sinon couper le réseau vers l'autorité
+  // suffisait à « réactiver » une licence révoquée au battement suivant.
+  const decision = heartbeatDecision({ result, authority: resultAuthority, blocked: licenseBlocked })
+
+  if (decision.action === 'block') {
     // ── Blocked: revoked / suspended / tampered ──────────────────────────────
     // Do NOT quit. Keep the app open and tell the renderer to show a persistent
     // blocking overlay, so the customer sees why access is blocked and can pick
     // up instantly (without losing unsaved work) the moment it is reactivated.
-    const status = result.status ?? 'revoked'
-    const reason = result.reason ?? 'Licence révoquée ou suspendue.'
-    if (!licenseBlocked) log('SECURITY: access blocked —', status, '—', reason)
-    licenseBlocked = true
+    if (!licenseBlocked) log('SECURITY: access blocked —', decision.status, '—', decision.reason)
+    licenseBlocked   = true
+    lastLicenseBlock = { status: decision.status, reason: decision.reason }
+    // Persiste (signé) : le blocage survit au redémarrage, même hors ligne.
+    persistLicenseBlock(decision.status, decision.reason)
+    // Miroir en base locale : le contrôle local dira désormais la même chose
+    // que l'autorité, même serveur distant injoignable. Uniquement pour une
+    // décision DISTANTE de statut licence (jamais pour un refus d'appareil).
+    if (resultAuthority === 'remote' && (decision.status === 'revoked' || decision.status === 'suspended')) {
+      mirrorLicenseStatusLocally(decision.status).catch(() => {})
+    }
     if (mainWindow && !mainWindow.isDestroyed()) {
       // Re-sent on every blocked check so the overlay reappears even after an
       // accidental page reload.
-      mainWindow.webContents.send('license:revoked', { reason, status })
+      mainWindow.webContents.send('license:revoked', { reason: decision.reason, status: decision.status })
     }
-  } else if (result.status === 'active') {
-    // ── Confirmed active ─────────────────────────────────────────────────────
-    // Only treat as a reactivation on an explicit "active" status (never on the
-    // fail-open "unknown" status) and only when we were previously blocked.
-    if (licenseBlocked) {
-      licenseBlocked = false
-      log('License reactivated — lid:', licenseId)
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('license:reactivated', { status: 'active' })
-      }
+  } else if (decision.action === 'unblock') {
+    // ── Réactivation confirmée par l'AUTORITÉ DISTANTE uniquement ────────────
+    licenseBlocked   = false
+    lastLicenseBlock = null
+    clearPersistedLicenseBlock()
+    // La réactivation est une décision admin distante : on la reflète aussi
+    // dans la base locale (sinon le miroir 'revoked' y resterait à jamais).
+    mirrorLicenseStatusLocally('active').catch(() => {})
+    log('License reactivated — lid:', licenseId)
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('license:reactivated', { status: 'active' })
+    }
+  } else if (decision.action === 'hold') {
+    // « active » venu du repli LOCAL pendant un blocage : on ne lève RIEN.
+    log('[license/check] blocage MAINTENU — un « active » du repli local ne lève jamais un blocage (autorité distante requise)')
+    if (lastLicenseBlock && mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('license:revoked', lastLicenseBlock)
     }
   }
-  // status 'unknown' (record not yet registered / DB fail-open) → keep current state.
+  // decision.action === 'none' : statut 'unknown' (record pas encore enregistré /
+  // DB fail-open) ou déjà actif → conserver l'état courant.
 
   // ── Modules / droits (entitlements) — le serveur est la source de vérité ────
   if (Array.isArray(result.modules)) {
@@ -1707,6 +1794,30 @@ function saveLastOnline() {
   try {
     fs.writeFileSync(ONLINE_CHECK_FILE(), signState({ ts: Date.now() }, installSecret, getHwid()), 'utf8')
   } catch (_) {}
+}
+
+// ── Persistance de l'état de blocage licence (GF-FINAL-001) ───────────────────
+
+function readPersistedLicenseBlock() {
+  try {
+    return verifyState(fs.readFileSync(LICENSE_BLOCK_FILE(), 'utf8'), installSecret, getHwid())
+  } catch {
+    return null
+  }
+}
+
+function persistLicenseBlock(status, reason) {
+  if (!installSecret) return
+  try {
+    // `lid` lie le blocage à LA licence bloquée : si l'utilisateur active une
+    // autre clé (valide), le blocage persisté de l'ancienne ne la suit pas.
+    const lid = activeLicense?.payload?.lid ?? null
+    fs.writeFileSync(LICENSE_BLOCK_FILE(), signState({ status, reason, lid, ts: Date.now() }, installSecret, getHwid()), 'utf8')
+  } catch (_) {}
+}
+
+function clearPersistedLicenseBlock() {
+  try { fs.unlinkSync(LICENSE_BLOCK_FILE()) } catch (_) {}
 }
 
 function probeUrl(url) {
@@ -2484,10 +2595,20 @@ function createMainWindow() {
   const ALLOWED_EXTERNAL_HOSTS = new Set([
     'garageflows.fr', 'www.garageflows.fr', 'app.garageflows.fr', 'api.garageflows.fr',
   ])
+  // `mailto:` et `sms:` sont les deux protocoles que le produit UTILISE
+  // réellement : rappels client par courriel (repli sans SMTP configuré) et
+  // rappels par SMS. Ils n'étaient pas dans la liste, donc refusés et seulement
+  // journalisés : sous l'application packagée, les deux boutons ne faisaient
+  // RIEN — et celui du courriel marquait tout de même le rappel « Envoyé » en
+  // base (GF-FINAL-024). Ils sont remis à leur place ici, sans élargir la règle
+  // aux protocoles arbitraires : tout le reste reste refusé par défaut.
+  const ALLOWED_EXTERNAL_PROTOCOLS = new Set(['mailto:', 'sms:'])
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     try {
       const u = new URL(url)
       if (u.protocol === 'https:' && ALLOWED_EXTERNAL_HOSTS.has(u.hostname)) {
+        shell.openExternal(url)
+      } else if (ALLOWED_EXTERNAL_PROTOCOLS.has(u.protocol)) {
         shell.openExternal(url)
       } else {
         log('[security] window.open refusé :', u.protocol + '//' + u.hostname)
@@ -2697,10 +2818,41 @@ function setupIPC() {
         reportCrash({ message: 'update_manifest_invalid', fatal: false, kind: 'security' }).catch(() => {})
         return { ok: false, reason: `Mise à jour rejetée : ${v.reason}` }
       }
-      // Les valeurs SIGNÉES font autorité (on ignore toute valeur non signée).
-      url          = v.manifest.downloadUrl
+      // Les valeurs SIGNÉES font autorité pour CE QUI est installé.
       expectedSha  = String(v.manifest.sha256 || '').trim().toLowerCase()
       expectedSize = v.manifest.size
+
+      // …mais pas nécessairement pour l'ENDROIT d'où viennent les octets.
+      //
+      // Remplacer inconditionnellement l'URL par celle du manifeste rendait la
+      // publication par la Zone Administrateur inopérante de bout en bout :
+      // `fetchLatestUpdate()` construit `http://127.0.0.1:<port><downloadPath>`
+      // pour l'installeur téléversé par l'administrateur, et cette ligne
+      // l'écrasait par l'URL publique du manifeste — laquelle DOIT viser un
+      // domaine de la liste blanche, la boucle locale n'y figurant pas. Un
+      // garage sans accès Internet téléversait donc un installeur qui n'était
+      // jamais lu : le téléchargement partait vers api.garageflows.fr, échouait,
+      // et l'utilisateur recevait « le téléchargement automatique a échoué ».
+      // La contradiction était visible dans update-verify.js lui-même, où
+      // `checkDownloadUrl` admet explicitement la boucle locale « parce que
+      // c'est le serveur embarqué de l'application qui sert les publications de
+      // la Zone Administrateur » — branche devenue inatteignable.
+      //
+      // Pourquoi conserver l'URL locale ne relâche RIEN : l'autorisation
+      // d'exécuter tient à l'empreinte SHA-256 et à la taille SIGNÉES, vérifiées
+      // ci-dessous avant tout lancement. Des octets servis en local qui ne
+      // correspondent pas à ce que l'éditeur a signé sont refusés exactement
+      // comme des octets servis à distance. La source ne décide que de l'endroit
+      // d'où l'on tire un fichier dont le contenu est, lui, déjà déterminé.
+      const urlLocale = (() => {
+        try {
+          const h = new URL(String(url || '')).hostname
+          return h === '127.0.0.1' || h === '::1' || h === 'localhost'
+        } catch { return false }
+      })()
+      if (!urlLocale) url = v.manifest.downloadUrl
+      else log('[install-update] publication locale : octets servis par le serveur embarqué, empreinte signée conservée')
+
       log('[install-update] manifeste signé vérifié — v' + v.manifest.version + ' keyId=' + v.manifest.keyId)
     }
     if (!url || typeof url !== 'string') return { ok: false, reason: 'URL manquante' }
@@ -3221,6 +3373,35 @@ app.whenReady().then(async () => {
 
   // ── Open main window ──────────────────────────────────────────────────────
   createMainWindow()
+
+  // ── Restauration d'un blocage licence persisté (GF-FINAL-001) ──────────────
+  // Sans cela, licenseBlocked (variable en mémoire) repartait à false à chaque
+  // redémarrage : une licence révoquée redevenait utilisable hors ligne jusqu'à
+  // la fin de la fenêtre de grâce. Le blocage n'est restauré QUE s'il concerne
+  // la licence actuellement active (lid identique) — une nouvelle clé valide
+  // n'hérite jamais du blocage de l'ancienne.
+  if (!IS_DEV) {
+    const persisted = readPersistedLicenseBlock()
+    const activeLid = activeLicense?.payload?.lid ?? null
+    if (persisted && ['revoked', 'suspended', 'tampered'].includes(persisted.status)
+        && (!persisted.lid || persisted.lid === activeLid)) {
+      licenseBlocked   = true
+      lastLicenseBlock = { status: persisted.status, reason: persisted.reason || 'Licence bloquée.' }
+      log('SECURITY: blocage licence RESTAURÉ au démarrage —', persisted.status)
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        // L'overlay part dès que la page est chargée, puis est re-émis à chaque
+        // battement tant que le blocage tient (cadence rapide LICENSE_CHECK_BLOCKED_MS).
+        mainWindow.webContents.on('did-finish-load', () => {
+          if (licenseBlocked && lastLicenseBlock && mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('license:revoked', lastLicenseBlock)
+          }
+        })
+      }
+    } else if (persisted && persisted.lid && activeLid && persisted.lid !== activeLid) {
+      // Blocage d'une ANCIENNE licence : purge (la clé active est différente).
+      clearPersistedLicenseBlock()
+    }
+  }
 
   // Diffuse les modules connus + récupère les notifications dès l'ouverture.
   broadcastEntitlements()

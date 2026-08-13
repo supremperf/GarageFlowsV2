@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { getToken } from 'next-auth/jwt'
 import { getAuthSecret } from '@/lib/auth-secret'
+import { PORTAIL_BASE, PORTAIL_BASE_HERITE } from '@/lib/portal/routes'
 
 /**
  * GarageFlow middleware — niveau page uniquement (toutes les routes /api/* sont
@@ -11,7 +12,8 @@ import { getAuthSecret } from '@/lib/auth-secret'
  * licence gf_session, ce qui supprime les boucles /, /login, /license observées
  * quand un utilisateur était authentifié NextAuth mais pas encore licencié.
  *
- *  1. Exclure d'emblée les assets statiques / PWA, /api/* et /portal/*.
+ *  1. Exclure d'emblée les assets statiques / PWA, /api/* et le portail client
+ *     (/clients/* — officiel — ainsi que /portal/*, hérité et redirigé).
  *  2. Lire la session NextAuth (getToken) — priorité à l'authentification.
  *     `secureCookie` est déduit du protocole réel de la requête (repli sur l'autre
  *     nom de cookie) pour ne JAMAIS rater une session valide sur HTTPS.
@@ -51,7 +53,14 @@ function isPublicAsset(pathname: string): boolean {
     pathname.startsWith('/_next') ||
     pathname === '/api' ||
     pathname.startsWith('/api/') ||
-    pathname.startsWith('/portal') || // portail client public — auth dédiée
+    // Portail client public — authentification DÉDIÉE (PortalUser), jamais une
+    // session garage. `/clients` est l'URL officielle ; `/portal` reste exclu le
+    // temps que les liens déjà diffusés traversent la redirection permanente
+    // déclarée dans next.config.mjs — le middleware s'exécute AVANT elle, si
+    // bien qu'un `/portal/<jeton>` non exclu ici partirait vers /license au lieu
+    // d'être redirigé vers /clients.
+    pathname.startsWith(PORTAIL_BASE) ||
+    pathname.startsWith(PORTAIL_BASE_HERITE) ||
     pathname.startsWith('/icons/') || // icônes PWA
     PUBLIC_EXACT.has(pathname) ||
     PUBLIC_FILE.test(pathname)
@@ -235,12 +244,17 @@ export const config = {
      * Exécuter le middleware sur toutes les routes de PAGE, SAUF :
      *  - /api/*     : les API gèrent leur propre authentification ;
      *  - /_next/*   : assets internes Next.js ;
-     *  - /portal/*  : portail client public (auth dédiée) ;
+     *  - /clients/* : portail client public, URL OFFICIELLE (auth dédiée) ;
+     *  - /portal/*  : ancienne URL du portail, redirigée en 308 vers /clients —
+     *                 le middleware s'exécutant AVANT les redirections de
+     *                 next.config.mjs, l'omettre enverrait les liens déjà
+     *                 diffusés (QR codes imprimés, e-mails envoyés) vers
+     *                 /license au lieu de la redirection ;
      *  - /icons/*   : icônes PWA ;
      *  - tout chemin contenant un « . » → manifest.webmanifest, sw.js, offline.html,
      *    favicon.ico, robots.txt, sitemap.xml, *.png, *.css, *.js, *.woff2, …
      * Les ressources statiques / PWA n'entrent donc JAMAIS dans le middleware.
      */
-    '/((?!api|_next|portal|icons|.*\\.).*)',
+    '/((?!api|_next|clients|portal|icons|.*\\.).*)',
   ],
 }

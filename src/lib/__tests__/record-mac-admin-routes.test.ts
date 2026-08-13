@@ -58,7 +58,7 @@ interface Ligne {
  * En collectant, l'anomalie devient visible et nommée : chaque test exige
  * EXACTEMENT une écriture.
  */
-const db = vi.hoisted(() => ({ ligne: null as unknown, ecrits: [] as unknown[] }))
+const db = vi.hoisted(() => ({ ligne: null as unknown, ecrits: [] as unknown[], evenements: [] as unknown[] }))
 
 vi.mock('@/lib/db', () => ({
   prisma: {
@@ -68,6 +68,17 @@ vi.mock('@/lib/db', () => ({
       update: async (a: { data: Record<string, unknown> }) => {
         db.ecrits.push(a.data)
         return { ...(db.ligne as Record<string, unknown>), ...a.data }
+      },
+    },
+    // Journal du cycle de vie des licences. Cette table manquait au simulacre :
+    // la route l'écrit désormais à chaque transition de statut, et son absence
+    // faisait échouer la suspension avec un 500 — un défaut du SIMULACRE, pas de
+    // la route. La simuler ici garde le test sur son objet (le recordMac) tout
+    // en exerçant le vrai chemin.
+    licenseDeviceEvent: {
+      create: async (a: { data: unknown }) => {
+        db.evenements.push(a.data)
+        return a.data
       },
     },
     $transaction: async (fn: (tx: unknown) => Promise<unknown>) => {

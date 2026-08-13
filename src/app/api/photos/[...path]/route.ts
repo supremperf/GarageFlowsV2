@@ -38,12 +38,19 @@ export const GET = withAuth(async (_req: Request, { params }: { params: { path: 
   // sans ce troisième contrôle il tombait en 404 et le header affichait une
   // image cassée. Le filtre reste borné au garage de la session — aucun
   // relâchement de l'isolation multi-garage.
-  const [jobOwned, inspOwned, logoOwned] = await Promise.all([
+  // La photo de profil d'un mécanicien (`Mechanic.avatarPath`) est le quatrième
+  // média stocké ici. Le filtre porte sur le garage de la SESSION : le Garage A
+  // qui demanderait le chemin d'un avatar du Garage B — chemin qu'il pourrait
+  // avoir observé ailleurs — obtient un 404, exactement comme pour une photo
+  // d'intervention étrangère. Le contrôle d'appartenance ne se déduit jamais du
+  // chemin lui-même.
+  const [jobOwned, inspOwned, logoOwned, avatarOwned] = await Promise.all([
     prisma.jobPhoto.count({ where: { photoPath: relative, garageId: session.user.garageId } }),
     prisma.inspectionItem.count({ where: { photoPath: relative, inspection: { garageId: session.user.garageId } } }),
     prisma.garage.count({ where: { id: session.user.garageId, logoPath: relative } }),
+    prisma.mechanic.count({ where: { avatarPath: relative, garageId: session.user.garageId } }),
   ])
-  if (jobOwned + inspOwned + logoOwned === 0) {
+  if (jobOwned + inspOwned + logoOwned + avatarOwned === 0) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 

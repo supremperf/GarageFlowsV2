@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { portalSecret } from '@/lib/portal-secret'
 import { publicUrlFor } from '@/lib/public-url'
+import { cheminPortailToken } from '@/lib/portal/routes'
 import { buildPortalSnapshot } from '@/lib/portal/snapshot'
 import { cloudPost, isDesktopInstance } from '@/lib/sync/cloud-client'
 import { logger } from '@/lib/logger'
@@ -59,7 +60,7 @@ export const POST = withAuth(async (req) => {
       })
       return NextResponse.json({
         token: out.data.token,
-        path:  `/portal/${out.data.token}`,
+        path:  cheminPortailToken(out.data.token),
         url:   out.data.url,
         cloudPublished: true,
         photosOmitted: snapshot.photosOmitted,
@@ -83,6 +84,6 @@ async function localLink(jobId: string, garageId: string) {
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('7d')
     .sign(portalSecret())
-  const path = `/portal/${token}`
+  const path = cheminPortailToken(token)
   return { token, path, url: publicUrlFor(path), cloudPublished: true as boolean }
 }

@@ -12,7 +12,9 @@ export const GET = withMechanic(async () => {
   const [mechanic, garage, license] = await Promise.all([
     prisma.mechanic.findFirst({
       where: { id: ctx.mechanicId, garageId: ctx.garageId },
-      select: { id: true, name: true, avatar: true, color: true },
+      // `avatarPath` est la clé de STOCKAGE : elle n'est jamais renvoyée telle
+      // quelle, seulement transformée en URL servie ci-dessous.
+      select: { id: true, name: true, avatar: true, color: true, avatarPath: true },
     }),
     prisma.garage.findUnique({
       where: { id: ctx.garageId },
@@ -24,8 +26,16 @@ export const GET = withMechanic(async () => {
     }),
   ])
 
+  // La PWA reçoit une URL servie par l'espace mécanicien, pas la clé de
+  // stockage : c'est cette route qui contrôle que la photo demandée est bien la
+  // SIENNE. Sans elle, le mécanicien voyait ses initiales alors que son patron
+  // avait mis une photo depuis le poste.
+  const { avatarPath, ...profil } = mechanic ?? ({} as Record<string, unknown>)
+
   return NextResponse.json({
-    mechanic: mechanic ?? null,
+    mechanic: mechanic
+      ? { ...profil, avatarUrl: avatarPath ? `/api/mechanic/photos/${avatarPath}` : null }
+      : null,
     garage: garage ?? null,
     license: license ? { expiryAt: license.expiryAt } : null,
   })

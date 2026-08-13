@@ -124,3 +124,25 @@ export async function isAdminSession(): Promise<boolean> {
     return false
   }
 }
+
+/**
+ * Identifiant de la licence ADMIN à l'origine de la requête — pour le journal
+ * d'audit du cycle de vie des licences (« qui a réactivé cette licence ? »).
+ *
+ * À n'utiliser qu'APRÈS un `isAdminSession()` positif : cette fonction lit le
+ * même cookie signé mais ne re-contrôle pas les droits, elle nomme seulement
+ * l'acteur. Elle ne lève jamais — un journal ne doit pas pouvoir faire échouer
+ * l'opération qu'il accompagne ; hors contexte de requête (tests unitaires des
+ * routes), elle renvoie simplement `null`.
+ */
+export async function adminSessionActor(): Promise<string | null> {
+  try {
+    const raw = cookies().get('gf_session')?.value
+    if (!raw) return null
+    const secret = new TextEncoder().encode(getAuthSecret())
+    const { payload } = await jwtVerify(raw, secret)
+    return typeof payload.lid === 'string' ? payload.lid : null
+  } catch {
+    return null
+  }
+}

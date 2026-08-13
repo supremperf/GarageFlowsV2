@@ -107,6 +107,17 @@ export interface Part {
   unitCost: number
   unitPrice: number
   location?: string
+  /**
+   * Fournisseur de la pièce et référence chez ce fournisseur.
+   *
+   * Ces colonnes existent en base (migrations 048/049) et sont lues par le
+   * réapprovisionnement groupé, la recherche de stock et l'autocomplétion des
+   * devis — mais elles manquaient à ce type, au schéma de validation et aux
+   * routes d'écriture : le fournisseur d'une pièce n'était donc renseignable
+   * par aucun écran, et le module « Fournisseurs » restait vide.
+   */
+  supplierName?: string | null
+  supplierRef?: string | null
   garageId: string
 }
 

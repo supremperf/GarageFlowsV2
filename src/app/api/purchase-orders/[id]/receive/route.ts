@@ -30,6 +30,9 @@ export const POST = withAuth(async (_req, { params }: { params: { id: string } }
   if (order.status === 'received') {
     return NextResponse.json({ error: 'Commande déjà réceptionnée' }, { status: 409 })
   }
+  if (order.status === 'returned') {
+    return NextResponse.json({ error: 'Commande retournée : elle ne peut plus être réceptionnée.' }, { status: 409 })
+  }
   if (order.status === 'cancelled') {
     return NextResponse.json({ error: 'Commande annulée' }, { status: 400 })
   }
@@ -68,11 +71,21 @@ export const POST = withAuth(async (_req, { params }: { params: { id: string } }
     await prisma.$transaction(async (tx) => {
     // Claim the PO atomically: only proceed if it is NOT already received/cancelled.
     // Prevents a double-reception race (double stock increment) and cross-tenant writes.
+    // `returned` manquait à cette liste. Or un retour DÉCRÉMENTE le stock : une
+    // commande retournée puis « réceptionnée » à nouveau le ré-incrémentait,
+    // c'est-à-dire exactement le double comptage que cette revendication
+    // atomique existe pour empêcher. Le cycle est
+    // draft → sent → confirmed → received → returned : `returned` est terminal
+    // au même titre que `received` et `cancelled`.
     const claim = await tx.purchaseOrder.updateMany({
-      where: { id: params.id, garageId: session.user.garageId, status: { notIn: ['received', 'cancelled'] } },
+      where: {
+        id: params.id,
+        garageId: session.user.garageId,
+        status: { notIn: ['received', 'cancelled', 'returned'] },
+      },
       data: { status: 'received', receivedAt: new Date() },
     })
-    if (claim.count === 0) throw new ReceiveError(409, 'Commande déjà réceptionnée')
+    if (claim.count === 0) throw new ReceiveError(409, 'Commande déjà réceptionnée, retournée ou annulée')
 
     // Increment stock for each line with a known partId
     const stockUpdates = lines.filter(

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { mechFetch, mechanicLogout } from '@/lib/mechanic-client'
 import { useMechanicLive } from '@/lib/use-mechanic-live'
+import MechanicAvatar from '@/components/MechanicAvatar'
 
 interface Job {
   id: string
@@ -35,7 +36,11 @@ interface Job {
 }
 
 interface Me {
-  mechanic: { id: string; name: string; avatar: string; color: string } | null
+  mechanic: {
+    id: string; name: string; avatar: string; color: string
+    /** URL servie de la photo de profil, ou `null` si le mécanicien n'en a pas. */
+    avatarUrl?: string | null
+  } | null
   garage: { name: string } | null
   license: { expiryAt: string } | null
 }
@@ -73,8 +78,26 @@ export default function MechanicPlanningPage() {
   const [me, setMe] = useState<Me | null>(null)
   const [date, setDate] = useState(todayIso())
 
+  // Le profil était chargé UNE SEULE FOIS au montage. Une photo ajoutée par le
+  // patron atteignait donc le cloud en quelques centaines de millisecondes, mais
+  // le mécanicien ne la voyait qu'à la prochaine ouverture de l'application —
+  // c'est-à-dire, en atelier, le lendemain. On le recharge donc au retour au
+  // premier plan : pas de sondage périodique (le profil change rarement), mais
+  // plus de photo bloquée sur l'écran pendant des heures.
   useEffect(() => {
-    mechFetch<Me>('/api/mechanic/me').then(setMe).catch(() => {})
+    let annule = false
+    const charger = () => {
+      mechFetch<Me>('/api/mechanic/me').then(m => { if (!annule) setMe(m) }).catch(() => {})
+    }
+    charger()
+    const auRetour = () => { if (document.visibilityState === 'visible') charger() }
+    document.addEventListener('visibilitychange', auRetour)
+    window.addEventListener('online', charger)
+    return () => {
+      annule = true
+      document.removeEventListener('visibilitychange', auRetour)
+      window.removeEventListener('online', charger)
+    }
   }, [])
 
   // SYNCHRONISATION VIVANTE — une intervention créée ou réaffectée côté garage
@@ -91,12 +114,14 @@ export default function MechanicPlanningPage() {
       {/* En-tête */}
       <header className="flex items-center justify-between py-4 sticky top-0 bg-[#0a0f1e]/95 backdrop-blur z-10">
         <div className="flex items-center gap-3 min-w-0">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white shrink-0"
-            style={{ backgroundColor: me?.mechanic?.color ?? '#3b82f6' }}
-          >
-            {me?.mechanic?.avatar ?? '🔧'}
-          </div>
+          {/* La PWA affichait un carré coloré portant les INITIALES et rien
+              d'autre : la photo synchronisée depuis le poste arrivait bien
+              jusqu'au cloud, mais le mécanicien ne la voyait jamais. */}
+          <MechanicAvatar
+            mechanic={me?.mechanic ?? { name: 'Mécanicien' }}
+            size={40}
+            className="rounded-xl"
+          />
           <div className="min-w-0">
             <p className="font-bold text-white truncate">{me?.mechanic?.name ?? 'Mécanicien'}</p>
             <p className="text-xs text-slate-500 truncate">{me?.garage?.name ?? ''}</p>

@@ -145,6 +145,19 @@ model Mechanic {
   id         String      @id @default(cuid())
   name       String
   avatar     String
+  // ── Photo de profil (GF-PLAN-004) ──────────────────────────────────────────
+  // `avatar` ci-dessus reste les INITIALES de repli ; ces colonnes portent la
+  // vraie photo. `avatarPath` est une clé de stockage générée par le serveur —
+  // jamais un nom de fichier fourni par le client. `avatarHash` sert de jeton
+  // d'invalidation de cache : l'URL change quand la photo change.
+  avatarPath      String?
+  avatarMime      String?
+  avatarHash      String?
+  avatarUpdatedAt DateTime?
+  // ── Archivage (GF-PLAN-005) ────────────────────────────────────────────────
+  // NULL = actif. Un mécanicien archivé sort du planning et ne peut plus
+  // recevoir d'intervention, mais son historique reste intact et lisible.
+  archivedAt      DateTime?
   color      String
   isAbsent   Boolean     @default(false)
   specialty  String      @default("[]")
@@ -160,9 +173,14 @@ model Mechanic {
   actionAudits           MechanicActionAudit[]       @relation("MaaTargetMechanic")
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+
+  // Le planning ne lit que les mécaniciens ACTIFS d'un garage : c'est la
+  // requête la plus fréquente du module.
+  @@index([garageId, archivedAt])
 }
 
 // ─── Client ───────────────────────────────────────────────────────────────────
+
 model Client {
   id        String     @id @default(cuid())
   name      String
@@ -1027,6 +1045,16 @@ model PortalUser {
   twoFactorSecret  String?
   twoFactorPending String?
   backupCodes      String         @default("[]")
+  // ── Cycle de vie de l'ACCÈS (GF-PORT-001) ──────────────────────────────────
+  // `disabledAt` NULL = accès actif. Le garage doit pouvoir couper l'accès
+  // portail d'un client SANS supprimer le client métier ni son historique.
+  disabledAt       DateTime?
+  // Mot de passe TEMPORAIRE remis par le garage : tant que ce drapeau est levé,
+  // la seule action permise est le changement de mot de passe. Il est posé à la
+  // création de l'accès et à chaque réinitialisation.
+  mustChangePassword Boolean      @default(false)
+  // Sert à l'audit et à distinguer un compte jamais utilisé d'un compte actif.
+  passwordChangedAt DateTime?
   failedLoginCount Int            @default(0)
   lockedUntil      DateTime?
   lastLoginAt      DateTime?

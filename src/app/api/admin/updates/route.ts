@@ -51,12 +51,17 @@ async function lireManifeste(
   try {
     parsed = JSON.parse(texte)
   } catch {
-    return { error: 'Manifeste illisible : un fichier JSON produit par `npm run release:manifest` est attendu.' }
+    // Le message désignait `npm run release:manifest`, qui produit un fichier de
+    // PROVENANCE DE BUILD (git, toolchain, comptes de tests) — jamais un
+    // manifeste signé. L'administrateur téléversait donc consciencieusement le
+    // mauvais fichier et se voyait refuser sans savoir lequel prendre.
+    return { error: 'Manifeste illisible : un fichier JSON produit par `npm run release:sign` est attendu.' }
   }
   const o = parsed as { manifest?: unknown; signature?: unknown }
   if (!o || typeof o !== 'object' || typeof o.signature !== 'string' || !o.manifest) {
     return {
-      error: 'Ce fichier n’est pas un manifeste signé (il doit contenir « manifest » et « signature »).',
+      error: 'Ce fichier n’est pas un manifeste signé (il doit contenir « manifest » et « signature »). '
+        + 'Il est produit par `npm run release:sign` ; `release-manifest.json`, qui décrit le build, ne convient pas.',
     }
   }
   return { value: parsed }

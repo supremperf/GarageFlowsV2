@@ -2,6 +2,7 @@
 import { lineCents, fromCents } from '@/lib/money'
 import { readLineAmounts } from '@/lib/money-db'
 import { repairConfig } from '@/lib/types'
+import { cheminPortail } from '@/lib/portal/routes'
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
@@ -206,13 +207,13 @@ export default function PortalPage() {
           <div className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-xs text-blue-900">
             Retrouvez tous vos devis et factures dans votre espace client :{' '}
             <a
-              href={`/portal/login?garage=${encodeURIComponent(data.garage.slug)}`}
+              href={`${cheminPortail('login')}?garage=${encodeURIComponent(data.garage.slug)}`}
               className="font-semibold underline underline-offset-2 hover:text-blue-700"
             >
               se connecter
             </a>{' '}·{' '}
             <a
-              href={`/portal/register?garage=${encodeURIComponent(data.garage.slug)}`}
+              href={`${cheminPortail('register')}?garage=${encodeURIComponent(data.garage.slug)}`}
               className="font-semibold underline underline-offset-2 hover:text-blue-700"
             >
               créer un compte

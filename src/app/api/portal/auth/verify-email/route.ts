@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { cheminPortail } from '@/lib/portal/routes'
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token')?.trim()
@@ -47,8 +48,9 @@ export async function GET(req: NextRequest) {
     where: { id: user.garageId },
     select: { slug: true },
   })
+  const connexion = cheminPortail('login')
   const cible = garage?.slug
-    ? `/portal/login?garage=${encodeURIComponent(garage.slug)}&verified=1`
-    : '/portal/login?verified=1'
+    ? `${connexion}?garage=${encodeURIComponent(garage.slug)}&verified=1`
+    : `${connexion}?verified=1`
   return NextResponse.redirect(new URL(cible, req.url), { status: 303 })
 }

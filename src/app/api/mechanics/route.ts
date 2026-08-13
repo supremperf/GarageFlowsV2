@@ -6,16 +6,36 @@ import { CreateMechanicSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
 import { normalizeSpecialty } from '@/lib/specialty'
 
-// GET /api/mechanics
-export const GET = withAuth(async () => {
+/**
+ * GET /api/mechanics
+ *
+ * Rend l'effectif ACTIF par défaut. `?includeArchived=1` rend l'effectif complet
+ * — nécessaire aux écrans de gestion et à la lecture de l'historique, où un
+ * mécanicien parti doit rester nommable.
+ *
+ * `avatarUrl` est CALCULÉE ici et non stockée : la base ne garde que la clé de
+ * stockage (`avatarPath`). Une URL figée en base deviendrait fausse au moindre
+ * changement de route, et surtout elle contournerait le contrôle
+ * d'appartenance — c'est la route de service qui vérifie que le chemin demandé
+ * appartient bien au garage de la session.
+ */
+export const GET = withAuth(async (req) => {
   const session = await requireSession()
 
+  const inclureArchives = new URL(req.url).searchParams.get('includeArchived') === '1'
+
   const mechanics = await prisma.mechanic.findMany({
-    where: { garageId: session.user.garageId },
+    where: {
+      garageId: session.user.garageId,
+      ...(inclureArchives ? {} : { archivedAt: null }),
+    },
     orderBy: { order: 'asc' },
   })
 
-  return NextResponse.json(mechanics)
+  return NextResponse.json(mechanics.map((m) => ({
+    ...m,
+    avatarUrl: m.avatarPath ? `/api/photos/${m.avatarPath}` : null,
+  })))
 })
 
 // POST /api/mechanics

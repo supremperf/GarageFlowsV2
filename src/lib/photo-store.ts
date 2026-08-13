@@ -131,12 +131,24 @@ export function readPhotoAsDataUrl(relativePath: string | null | undefined, maxB
 }
 
 /**
- * Delete a stored photo file. Silently ignores missing files.
+ * Supprime un fichier stocké. Ignore silencieusement un fichier déjà absent.
+ *
+ * La garde anti-traversée manquait ici alors qu'elle protège `savePhoto` et
+ * `readPhotoAsDataUrl` : `path.join(PHOTOS_DIR, relativePath)` normalise
+ * « ../../ », si bien qu'un chemin remontant aurait supprimé un fichier
+ * ARBITRAIRE hors du dossier des photos. Les chemins passés aujourd'hui
+ * proviennent tous de la base et ont été générés par `savePhoto`, donc le défaut
+ * n'était pas atteignable — mais c'est exactement le genre d'asymétrie qui
+ * devient une faille le jour où un appelant transmet un chemin d'une autre
+ * origine. La règle vaut donc pour les trois fonctions, sans exception.
  */
 export function deletePhoto(relativePath: string): void {
   if (!photosEnabled() || !relativePath) return
   try {
-    const fullPath = path.join(PHOTOS_DIR, relativePath)
+    const base = path.resolve(PHOTOS_DIR)
+    const fullPath = path.resolve(base, relativePath)
+    const rel = path.relative(base, fullPath)
+    if (rel.startsWith('..') || path.isAbsolute(rel)) return
     if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath)
   } catch {}
 }

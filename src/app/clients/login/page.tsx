@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation'
 import { Mail, Lock, ShieldCheck, AlertCircle, Loader2, KeyRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { avecGarageSlug, lienPortail } from '@/lib/portal/garage-slug'
+import { cheminPortail } from '@/lib/portal/routes'
 
 type Step = 'password' | 'twofa'
 
@@ -41,7 +42,7 @@ export default function PortalLoginPage() {
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Connexion impossible'); return }
       if (data.requires2fa) { setChallenge(data.challenge); setStep('twofa'); return }
-      router.push(lienPortail('/portal/account'))
+      router.push(lienPortail(cheminPortail('account')))
     } catch {
       setError('Erreur réseau')
     } finally {
@@ -62,7 +63,7 @@ export default function PortalLoginPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Code invalide'); return }
-      router.push(lienPortail('/portal/account'))
+      router.push(lienPortail(cheminPortail('account')))
     } catch {
       setError('Erreur réseau')
     } finally {
@@ -98,7 +99,7 @@ export default function PortalLoginPage() {
               </Field>
               <SubmitBtn loading={loading} disabled={!email || !password}>Se connecter</SubmitBtn>
               <p className="pt-2 text-center text-xs text-slate-600">
-                Pas de compte ? <Link href={lienPortail("/portal/register")} className="font-semibold text-blue-400 hover:text-blue-300">Créer un compte</Link>
+                Pas de compte ? <Link href={lienPortail(cheminPortail('register'))} className="font-semibold text-blue-400 hover:text-blue-300">Créer un compte</Link>
               </p>
             </form>
           ) : (

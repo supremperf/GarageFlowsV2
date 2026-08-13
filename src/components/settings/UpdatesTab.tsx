@@ -305,14 +305,20 @@ export function UpdatesTab() {
               />
             </div>
 
-            {/* Manifeste signé — produit par l'ÉDITEUR à la release
-                (`npm run release:manifest`). Sans lui, les postes dont la
-                vérification de signature est active refusent l'installation :
-                le bouton « Mettre à jour » y échouait systématiquement sans que
-                rien ne l'annonce à la publication (GF31-AUD-042). */}
+            {/* Manifeste signé — produit par l'ÉDITEUR à la release avec
+                `npm run release:sign`. Sans lui, les postes dont la vérification
+                de signature est active refusent l'installation : le bouton
+                « Mettre à jour » y échouait systématiquement sans que rien ne
+                l'annonce à la publication (GF31-AUD-042).
+
+                L'étiquette indiquait « release-manifest.json » — le fichier de
+                PROVENANCE DE BUILD produit par `npm run release:manifest`, qui
+                ne contient ni `manifest` ni `signature`. L'administrateur
+                téléversait donc exactement le fichier nommé, et l'API le
+                refusait (GF-FINAL-021). */}
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">
-                Manifeste signé <span className="text-slate-600">(release-manifest.json)</span>
+                Manifeste signé <span className="text-slate-600">(*.manifest.json — <code>npm run release:sign</code>)</span>
               </label>
               <label className="w-full flex items-center gap-3 rounded-lg border border-dashed border-white/15 bg-white/[0.02] hover:bg-white/[0.05] px-3 py-3 text-left transition-colors cursor-pointer">
                 <FileUp className="w-5 h-5 text-emerald-400 flex-shrink-0" />

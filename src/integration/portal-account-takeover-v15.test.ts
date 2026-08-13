@@ -76,7 +76,7 @@ describe('Portail — anti-prise de contrôle de compte (V15 P1)', () => {
     // auparavant un JSON brut, cul-de-sac pour le client.
     expect(res.status).toBe(303)
     const cible = res.headers.get('location') ?? ''
-    expect(cible).toContain('/portal/login')
+    expect(cible).toContain('/clients/login')
     expect(cible).toContain('garage=')
 
     const linked = await prisma.portalUser.findUnique({ where: { id: account.id } })

@@ -9,6 +9,7 @@
 import { useEffect, useState, useCallback, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { lienPortail } from '@/lib/portal/garage-slug'
+import { cheminPortail } from '@/lib/portal/routes'
 import { Car, Wrench, FileText, Receipt, ShieldCheck, LogOut, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -46,7 +47,7 @@ export default function PortalAccountPage() {
         // dès qu'on n'est plus dans l'onglet d'origine, et le client retombe sur
         // une connexion qui ne sait plus à quel garage il appartient
         // (GF31-AUD-061).
-        if (res.status === 401) { router.replace(lienPortail('/portal/login')); return }
+        if (res.status === 401) { router.replace(lienPortail(cheminPortail('login'))); return }
       if (!res.ok) throw new Error()
       setData((await res.json()) as Dashboard)
     } catch {
@@ -60,7 +61,7 @@ export default function PortalAccountPage() {
 
   async function logout() {
     await fetch('/api/portal/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => {})
-    router.replace(lienPortail('/portal/login'))
+    router.replace(lienPortail(cheminPortail('login')))
   }
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-[#0a0f1e]"><Loader2 className="h-8 w-8 animate-spin text-slate-600" /></div>

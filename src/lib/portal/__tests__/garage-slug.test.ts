@@ -10,6 +10,10 @@
  * systématiquement, sans recours côté client.
  */
 import { describe, it, expect, beforeAll, beforeEach, afterAll, vi } from 'vitest'
+// Chemin OFFICIEL du portail — module pur, sans accès au navigateur : il peut
+// être importé statiquement, contrairement à garage-slug (chargé après le
+// simulacre de `window`).
+import { cheminPortail } from '@/lib/portal/routes'
 
 const memoire = new Map<string, string>()
 
@@ -90,23 +94,23 @@ describe('avecGarageSlug', () => {
 describe('lienPortail', () => {
   it('propage le garage dans un lien interne', () => {
     windowSimule.location.search = '?garage=gf-abc'
-    expect(lienPortail('/portal/login')).toBe('/portal/login?garage=gf-abc')
+    expect(lienPortail(cheminPortail('login'))).toBe('/clients/login?garage=gf-abc')
   })
 
   it('utilise « & » quand le chemin porte déjà une query string', () => {
     windowSimule.location.search = '?garage=gf-abc'
-    expect(lienPortail('/portal/account?tab=devis')).toBe('/portal/account?tab=devis&garage=gf-abc')
+    expect(lienPortail(cheminPortail('account') + '?tab=devis')).toBe('/clients/account?tab=devis&garage=gf-abc')
   })
 
   it('laisse le lien intact sans garage connu', () => {
-    expect(lienPortail('/portal/login')).toBe('/portal/login')
+    expect(lienPortail(cheminPortail('login'))).toBe('/clients/login')
   })
 })
 
 describe('GF31-AUD-019 — les pages transmettent réellement le slug', () => {
   it.each([
-    ['connexion', 'src/app/portal/login/page.tsx'],
-    ['inscription', 'src/app/portal/register/page.tsx'],
+    ['connexion', 'src/app/clients/login/page.tsx'],
+    ['inscription', 'src/app/clients/register/page.tsx'],
   ])('%s : le corps de la requête passe par avecGarageSlug()', async (_l, rel) => {
     const { readFileSync } = await import('node:fs')
     const path = await import('node:path')
@@ -142,16 +146,107 @@ describe('GF31-AUD-032 — le slug est réellement émis par le produit', () => 
   })
 
   it('la page de suivi propose connexion ET inscription avec le slug', async () => {
-    const src = await lire('src/app/portal/[token]/page.tsx')
-    expect(src).toContain('/portal/login?garage=')
-    expect(src).toContain('/portal/register?garage=')
+    const src = await lire('src/app/clients/[token]/page.tsx')
+    // Le préfixe n'est plus écrit en dur : il vient de `cheminPortail`, seule
+    // source de vérité du chemin portail. On vérifie donc l'appel ET le
+    // paramètre, plutôt qu'une URL littérale qui réintroduirait la duplication
+    // que ce module a précisément supprimée.
+    expect(src).toContain("cheminPortail('login')")
+    expect(src).toContain("cheminPortail('register')")
+    expect(src).toContain('?garage=')
     expect(src).toContain('encodeURIComponent(data.garage.slug)')
   })
 
   it('la vérification d’e-mail renvoie vers la connexion en portant le slug', async () => {
     const src = await lire('src/app/api/portal/auth/verify-email/route.ts')
-    expect(src).toContain('/portal/login?garage=')
+    expect(src).toContain("cheminPortail('login')")
+    expect(src).toContain('?garage=')
     // …et non plus un JSON brut affiché dans le navigateur du client.
     expect(src).toContain('NextResponse.redirect')
+  })
+})
+
+/**
+ * GF-FINAL-001 — l'URL OFFICIELLE du portail client est
+ * `https://app.garageflows.fr/clients`.
+ *
+ * Les pages vivaient sous `/portal/*` et le préfixe était réécrit en dur dans
+ * onze fichiers ; aucune réécriture n'existait dans `next.config.mjs`, si bien
+ * qu'un lien `…/clients/login` communiqué à un client tombait sur un 404. Ces
+ * contrôles empêchent le préfixe de se disperser à nouveau.
+ */
+/** Retire commentaires de ligne et de bloc — pour analyser le CODE, pas la prose. */
+function sansCommentaires(src: string): string {
+  return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+}
+
+describe('GF-FINAL-001 — le portail client vit sous /clients', () => {
+  const lire = async (rel: string) => {
+    const { readFileSync } = await import('node:fs')
+    const path = await import('node:path')
+    return readFileSync(path.resolve(__dirname, '../../../..', rel), 'utf8')
+  }
+
+  it('la base officielle est /clients', async () => {
+    const { PORTAIL_BASE, cheminPortail, cheminPortailToken } = await import('@/lib/portal/routes')
+    expect(PORTAIL_BASE).toBe('/clients')
+    expect(cheminPortail()).toBe('/clients')
+    expect(cheminPortail('login')).toBe('/clients/login')
+    // Tolérant à la barre oblique de tête : les deux formes existent dans le code.
+    expect(cheminPortail('/login')).toBe('/clients/login')
+    expect(cheminPortailToken('abc.def')).toBe('/clients/abc.def')
+  })
+
+  it('les pages du portail sont servies sous src/app/clients', async () => {
+    const { existsSync } = await import('node:fs')
+    const path = await import('node:path')
+    const racine = path.resolve(__dirname, '../../../..')
+    for (const page of ['login', 'register', 'account']) {
+      expect(existsSync(path.join(racine, 'src/app/clients', page, 'page.tsx')), page).toBe(true)
+    }
+    // L'ancien emplacement ne doit plus exister : deux arborescences en
+    // parallèle produiraient deux portails divergents.
+    expect(existsSync(path.join(racine, 'src/app/portal'))).toBe(false)
+  })
+
+  it('les liens déjà diffusés (QR codes, e-mails) restent valides par redirection', async () => {
+    // Les jetons de portail circulent sur papier et dans des boîtes mail : la
+    // bascule ne doit invalider aucun lien existant.
+    const config = await lire('next.config.mjs')
+    expect(config).toContain('async redirects()')
+    expect(config).toContain("source: '/portal/:path*'")
+    expect(config).toContain("destination: '/clients/:path*'")
+    expect(config).toContain('permanent: true')
+  })
+
+  it('aucun producteur de lien n\'écrit le préfixe en dur', async () => {
+    // Les cinq endroits qui fabriquent un lien destiné à un client.
+    for (const rel of [
+      'src/app/api/portal/token/route.ts',
+      'src/app/api/portal/generate/route.ts',
+      'src/app/api/sync/portal/route.ts',
+      'src/app/api/quotes/[id]/signature-token/route.ts',
+      'src/app/api/portal/auth/verify-email/route.ts',
+    ]) {
+      const src = await lire(rel)
+      expect(src, `${rel} doit passer par @/lib/portal/routes`).toContain('@/lib/portal/routes')
+      // Un chemin de PAGE écrit en dur (`/portal/<quelque chose>`) est interdit ;
+      // les chemins d'API (`/api/portal/...`), eux, restent inchangés.
+      const enDur = src.match(/(?<!\/api)\/portal\/\$\{/g)
+      expect(enDur, `${rel} : chemin de page portail écrit en dur`).toBeNull()
+    }
+  })
+
+  it('le lien tokenisé n\'est jamais construit depuis l\'en-tête Origin', async () => {
+    // `Origin` est fourni par le client : un lien de portail bâti dessus part
+    // vers le domaine que l'appelant choisit, jeton d'accès compris.
+    //
+    // Les COMMENTAIRES sont retirés avant l'analyse : la note qui documente ce
+    // défaut cite forcément l'expression fautive, et la faire échouer sur sa
+    // propre explication pousserait à appauvrir le commentaire pour satisfaire
+    // le test.
+    const src = sansCommentaires(await lire('src/app/api/portal/token/route.ts'))
+    expect(src).not.toMatch(/headers\.get\(\s*['"]origin['"]\s*\)/i)
+    expect(src).toContain('publicUrlFor(')
   })
 })

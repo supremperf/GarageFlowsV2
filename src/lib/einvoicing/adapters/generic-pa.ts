@@ -37,6 +37,7 @@ import type {
   SubmitInvoiceContext,
   SubmitInvoiceResult,
 } from '../adapter'
+import { verifierDestination, verifierDestinationSync } from '../ssrf-guard'
 
 /** Identifiant de l'adaptateur, référencé par `ApprovedEInvoicePlatform.adapterId`. */
 export const GENERIC_PA_ADAPTER_ID = 'generic-pa'
@@ -90,14 +91,10 @@ export const CHAMPS_PUBLICS: ReadonlyArray<keyof GenericPaCredentials> = [
 ]
 
 function estUrlHttps(v: unknown): boolean {
-  if (typeof v !== 'string' || !v) return false
-  try {
-    const u = new URL(v)
-    // HTTP en clair exposerait les identifiants ET la facture : refusé.
-    return u.protocol === 'https:'
-  } catch {
-    return false
-  }
+  // HTTPS ne suffit pas : `https://169.254.169.254/…` et `https://10.0.0.5/…`
+  // le sont aussi. La garde refuse en plus les hôtes réservés et les adresses
+  // non routables (voir ssrf-guard.ts).
+  return verifierDestinationSync(v).ok
 }
 
 function estChemin(v: unknown): boolean {
@@ -123,11 +120,29 @@ function cleCache(ctx: ProviderConnectionContext): string {
   return `${ctx.garageId}:${ctx.providerId}:${ctx.environment}`
 }
 
+/**
+ * Appel sortant borné en temps ET en destination.
+ *
+ * Deux gardes indissociables :
+ *  - `verifierDestination` (avec résolution DNS) est rejouée à CHAQUE appel, et
+ *    pas seulement à l'enregistrement de la configuration : une zone DNS peut
+ *    changer entre les deux, et `submitPath` / `statusPath` sont concaténés à
+ *    la base au moment de l'appel ;
+ *  - `redirect: 'error'` : `fetch` suit les redirections par défaut. La
+ *    garantie « HTTPS obligatoire » ne portait donc que sur le premier saut, et
+ *    une réponse `302 Location: http://169.254.169.254/…` emportait en-têtes
+ *    personnalisés et corps de facture vers l'hôte désigné. Une plateforme
+ *    agréée n'a aucune raison de rediriger un appel d'API : le refus est franc.
+ */
 async function fetchAvecDelai(url: string, init: RequestInit): Promise<Response> {
+  const verdict = await verifierDestination(url)
+  if (!verdict.ok) {
+    throw new Error(verdict.message ?? 'Destination refusée.')
+  }
   const ctrl = new AbortController()
   const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
   try {
-    return await fetch(url, { ...init, signal: ctrl.signal })
+    return await fetch(url, { ...init, signal: ctrl.signal, redirect: 'error' })
   } finally {
     clearTimeout(t)
   }

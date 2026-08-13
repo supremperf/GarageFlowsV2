@@ -33,6 +33,7 @@ import { SignJWT } from 'jose'
 import { prisma } from '@/lib/db'
 import { portalSecret } from '@/lib/portal-secret'
 import { publicUrlFor } from '@/lib/public-url'
+import { cheminPortailToken } from '@/lib/portal/routes'
 import { authenticateGarageLicense, isGarageClaimedByAnotherLicense, shortId } from '@/lib/sync/garage-auth'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { logger } from '@/lib/logger'
@@ -142,7 +143,7 @@ export async function POST(req: Request) {
       bytes: Buffer.byteLength(serialized, 'utf8'), expiresAt: expiresAt.toISOString(),
     })
 
-    const path = `/portal/${token}`
+    const path = cheminPortailToken(token)
     return NextResponse.json({ ok: true, token, path, url: publicUrlFor(path), expiresAt: expiresAt.toISOString() })
   } catch (err) {
     if (err instanceof GarageAlreadyClaimed) {

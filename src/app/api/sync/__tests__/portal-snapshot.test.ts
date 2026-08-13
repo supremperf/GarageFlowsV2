@@ -117,7 +117,7 @@ describe('TEST F — un portail créé depuis le poste se résout côté cloud',
     expect(pub.status).toBe(200)
     const { ok, token, url } = await pub.json()
     expect(ok).toBe(true)
-    expect(url).toBe(`https://app.garageflows.fr/portal/${token}`)
+    expect(url).toBe(`https://app.garageflows.fr/clients/${token}`)
     expect(cap.snapshots.size).toBe(1)
 
     // Aucun Job en base cloud (garage installé en local) : le repli instantané

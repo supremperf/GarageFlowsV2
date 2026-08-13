@@ -3,6 +3,8 @@
 import { cn } from '@/lib/utils'
 import { Save, Plus, Trash2, Edit2, Loader2, Check, Palette } from 'lucide-react'
 import type { MechanicRecord } from './types'
+import MechanicAvatar from '@/components/MechanicAvatar'
+import MechanicAvatarField from './MechanicAvatarField'
 
 export const MECHANIC_COLORS = [
   '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899',
@@ -142,6 +144,14 @@ export function MechanicsTab({
               return (
                 <div key={m.id} className="bg-white/[0.04] border border-blue-500/30 rounded-xl p-4 space-y-3">
                   <p className="text-xs font-semibold text-blue-400 uppercase tracking-wide">Modifier</p>
+                  {/* La photo s'enregistre IMMÉDIATEMENT, indépendamment du bouton
+                      « Enregistrer » : c'est un envoi de fichier, pas un champ de
+                      formulaire. La lier au reste obligerait à re-téléverser
+                      l'image si l'enregistrement du nom échouait. */}
+                  <MechanicAvatarField
+                    mechanic={editingMech}
+                    onChange={avatarUrl => setEditingMech({ ...editingMech, avatarUrl })}
+                  />
                   <div>
                     <label className="block text-xs text-slate-400 mb-1">Nom</label>
                     <input
@@ -200,12 +210,7 @@ export function MechanicsTab({
 
             return (
               <div key={m.id} className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl hover:border-white/10 transition-colors">
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-md"
-                  style={{ backgroundColor: m.color }}
-                >
-                  {m.avatar}
-                </div>
+                <MechanicAvatar mechanic={m} size={40} className="shadow-md" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white">{m.name}</p>
                   {specs.length > 0 && (

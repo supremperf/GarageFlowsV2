@@ -144,12 +144,12 @@ describe('GF31-AUD-060 — l’inscription ne révèle plus l’existence d’un
 })
 
 describe('GF31-AUD-061 / 062 — le tableau de bord client dit ce qui se passe', () => {
-  const page = () => readFileSync(path.join(RACINE, 'src/app/portal/account/page.tsx'), 'utf8')
+  const page = () => readFileSync(path.join(RACINE, 'src/app/clients/account/page.tsx'), 'utf8')
 
   it('les redirections conservent le garage', () => {
     const s = page()
-    expect(s).toContain("lienPortail('/portal/login')")
-    expect(s).not.toMatch(/router\.replace\('\/portal\/login'\)/)
+    expect(s).toContain("lienPortail(cheminPortail('login'))")
+    expect(s).not.toMatch(/router\.replace\('\/clients\/login'\)/)
   })
 
   it('un compte non rattaché est signalé, au lieu d’un « Aucune facture » trompeur', () => {

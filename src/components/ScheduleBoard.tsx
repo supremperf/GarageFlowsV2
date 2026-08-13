@@ -24,9 +24,17 @@ import {
 import { timeToMinutes, minutesToTime, cn, formatDuration, jobsOverlap } from '@/lib/utils'
 import JobCard from './JobCard'
 import VehicleModal from './VehicleModal'
+import MechanicAvatar from './MechanicAvatar'
 import { UserX, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '@/hooks/useMediaQuery'
+import {
+  nombreColonnesVisibles,
+  fenetre,
+  deplacer,
+  reconcilier,
+  trancheVisible,
+} from '@/lib/planning/mechanic-window'
 
 const HOUR_HEIGHT = 60 * SLOT_HEIGHT_PER_MINUTE
 const BOARD_START = WORKSHOP_START_HOUR * 60
@@ -165,16 +173,7 @@ function MechanicHeaderCell({
   const btn = touch ? 'gf-touch p-2' : 'p-1'
   return (
     <div className="flex items-center gap-1.5">
-      <div
-        className={cn(
-          'rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 transition-all',
-          touch ? 'w-9 h-9' : 'w-7 h-7',
-          mechanic.isAbsent && 'opacity-40 grayscale',
-        )}
-        style={{ backgroundColor: mechanic.color }}
-      >
-        {mechanic.avatar}
-      </div>
+      <MechanicAvatar mechanic={mechanic} size={touch ? 36 : 28} />
       <div className="flex-1 min-w-0">
         <p className={cn(
           'font-semibold text-xs truncate leading-tight',
@@ -296,31 +295,74 @@ export default function ScheduleBoard() {
     return map
   }, [dayJobs, mechanics])
 
-  // ── Mobile : un seul mécanicien à la fois (portrait/téléphone) ─────────────
-  // Sous md, entasser 4 colonnes sur ~360px les rend inutilisables. On affiche
-  // donc un mécanicien à la fois via un sélecteur. L'état local persiste au
-  // changement d'orientation (le composant ne se démonte pas) → le mécanicien
-  // sélectionné est conservé, conformément à l'attendu.
+  // ── Fenêtre de mécaniciens visibles ────────────────────────────────────────
+  //
+  // Le planning rendait TOUS les mécaniciens du garage, chacun en `flex-1` :
+  // à 10 les colonnes tombent sous 180 px, à 20 sous 90 px, à 50 sous 40 px.
+  // Il n'y avait donc aucune limite codée en dur à supprimer — c'était le
+  // contraire, aucune limite du tout, et le produit était de fait plafonné à
+  // quatre ou cinq mécaniciens sans que rien ne le dise.
+  //
+  // Le nombre de colonnes est désormais CALCULÉ à partir de la largeur réelle
+  // (voir src/lib/planning/mechanic-window.ts) et l'on navigue par groupes.
   const isMobile = useIsMobile()
-  const [selectedMechanicId, setSelectedMechanicId] = useState<string | null>(null)
+  const boardRef = useRef<HTMLDivElement>(null)
+  const [largeurPlanning, setLargeurPlanning] = useState(0)
+
+  // Largeur MESURÉE, pas devinée : un point de rupture CSS ne connaît pas la
+  // place réellement disponible (barre latérale ouverte/fermée, fenêtre Electron
+  // redimensionnée, écran secondaire).
+  useEffect(() => {
+    const el = boardRef.current
+    if (!el) return
+    setLargeurPlanning(el.getBoundingClientRect().width)
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(entries => {
+      for (const e of entries) setLargeurPlanning(e.contentRect.width)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const colonnesVisibles = useMemo(
+    () => nombreColonnesVisibles(largeurPlanning, mechanics.length),
+    [largeurPlanning, mechanics.length],
+  )
+
+  const [debutFenetre, setDebutFenetre] = useState(0)
+
+  // Ancres = identifiants de la fenêtre PRÉCÉDENTE. Elles permettent de suivre
+  // les mêmes PERSONNES quand la liste change sous les pieds de l'utilisateur
+  // (un collègue archive un mécanicien depuis un autre poste) au lieu de
+  // conserver un index qui désignerait soudain quelqu'un d'autre.
+  const ancresRef = useRef<string[]>([])
 
   useEffect(() => {
-    if (mechanics.length === 0) { if (selectedMechanicId !== null) setSelectedMechanicId(null); return }
-    if (!selectedMechanicId || !mechanics.some(m => m.id === selectedMechanicId)) {
-      setSelectedMechanicId(mechanics[0].id)
-    }
-  }, [mechanics, selectedMechanicId])
+    setDebutFenetre(d => reconcilier(d, ancresRef.current, mechanics.map(m => m.id), colonnesVisibles))
+  }, [mechanics, colonnesVisibles])
 
-  const selectedMechanic = mechanics.find(m => m.id === selectedMechanicId) ?? mechanics[0] ?? null
-  const visibleMechanics = isMobile && selectedMechanic ? [selectedMechanic] : mechanics
+  const vue = fenetre(debutFenetre, colonnesVisibles, mechanics.length)
+  const visibleMechanics = useMemo(
+    () => trancheVisible(mechanics, debutFenetre, colonnesVisibles),
+    [mechanics, debutFenetre, colonnesVisibles],
+  )
 
-  const stepMechanic = useCallback((dir: 1 | -1) => {
-    if (mechanics.length === 0) return
-    const idx = mechanics.findIndex(m => m.id === selectedMechanicId)
-    const base = idx === -1 ? 0 : idx
-    const next = (base + dir + mechanics.length) % mechanics.length
-    setSelectedMechanicId(mechanics[next].id)
-  }, [mechanics, selectedMechanicId])
+  useEffect(() => { ancresRef.current = visibleMechanics.map(m => m.id) }, [visibleMechanics])
+
+  // Navigation par GROUPE. Aucune écoute de la molette ni de geste horizontal :
+  // changer de mécaniciens doit rester une action INTENTIONNELLE, jamais la
+  // conséquence d'un défilement vertical ordinaire ou d'un trackpad un peu
+  // oblique (§31-35).
+  const naviguer = useCallback((dir: 1 | -1) => {
+    setDebutFenetre(d => deplacer(d, colonnesVisibles, mechanics.length, dir))
+  }, [colonnesVisibles, mechanics.length])
+
+  // Sélection directe (bandeau mobile) : on recale la fenêtre sur la personne
+  // choisie — l'index n'est qu'un moyen d'y arriver, jamais une identité.
+  const cadrerSur = useCallback((mechanicId: string) => {
+    const idx = mechanics.findIndex(m => m.id === mechanicId)
+    if (idx !== -1) setDebutFenetre(idx)
+  }, [mechanics])
 
   // Bascule d'absence + rappel de redistribution (logique partagée desktop/mobile).
   const handleToggleAbsence = useCallback((mechanic: Mechanic) => {
@@ -386,46 +428,82 @@ export default function ScheduleBoard() {
   return (
     <>
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex flex-col h-full bg-[#111827] rounded-xl shadow-sm border border-white/[0.07] overflow-hidden">
+      <div ref={boardRef} className="flex flex-col h-full bg-[#111827] rounded-xl shadow-sm border border-white/[0.07] overflow-hidden">
 
-        {/* ── Sélecteur de mécanicien (mobile / portrait uniquement) ── */}
-        {isMobile && mechanics.length > 1 && (
-          <div className="flex items-center gap-1 px-1.5 py-2 border-b border-white/[0.07] bg-[#0f1629]/80">
+        {/* ── Barre de navigation des mécaniciens ──────────────────────────────
+            Les flèches sont EN HAUT À GAUCHE et EN HAUT À DROITE du planning, et
+            n'en bougent jamais — y compris quand on change de groupe, de date ou
+            de taille de fenêtre. Elles occupent leur propre bande plutôt que de
+            flotter au-dessus des colonnes : elles ne peuvent ainsi masquer ni un
+            avatar, ni un nom, ni une carte d'intervention, et l'alignement
+            en-tête ⇄ colonnes reste intact.
+
+            La barre n'apparaît que si tout ne tient pas à l'écran : avec quatre
+            mécaniciens sur un écran large, il n'y a rien à parcourir. */}
+        {(vue.precedent || vue.suivant) && (
+          <div className="flex items-center gap-2 px-1.5 py-1.5 border-b border-white/[0.07] bg-[#0f1629]/80">
             <button
-              onClick={() => stepMechanic(-1)}
-              aria-label="Mécanicien précédent"
-              className="gf-touch flex items-center justify-center w-9 h-9 rounded-md text-slate-400 hover:bg-white/10 flex-shrink-0"
+              type="button"
+              onClick={() => naviguer(-1)}
+              disabled={!vue.precedent}
+              aria-label="Mécaniciens précédents"
+              title="Mécaniciens précédents"
+              className={cn(
+                'flex items-center justify-center rounded-md flex-shrink-0 transition-colors',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70 focus-visible:ring-offset-1 focus-visible:ring-offset-[#0f1629]',
+                isMobile ? 'gf-touch w-9 h-9' : 'w-7 h-7',
+                vue.precedent
+                  ? 'text-slate-400 hover:bg-white/10 hover:text-slate-200'
+                  : 'text-slate-700 cursor-not-allowed',
+              )}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Mécaniciens">
-              {mechanics.map(m => (
-                <button
-                  key={m.id}
-                  role="tab"
-                  onClick={() => setSelectedMechanicId(m.id)}
-                  aria-selected={m.id === selectedMechanicId}
-                  className={cn(
-                    'flex items-center gap-1.5 pl-1 pr-2.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors flex-shrink-0',
-                    m.id === selectedMechanicId
-                      ? 'bg-blue-600/20 text-blue-300 border-blue-500/40'
-                      : 'text-slate-400 border-white/10 hover:bg-white/5',
-                  )}
-                >
-                  <span
-                    className={cn('w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white flex-shrink-0', m.isAbsent && 'opacity-40 grayscale')}
-                    style={{ backgroundColor: m.color }}
-                  >
-                    {m.avatar}
-                  </span>
-                  <span className="max-w-[120px] truncate">{m.name}</span>
-                </button>
-              ))}
-            </div>
+
+            {/* Bandeau de sélection directe (mobile) ou repère de groupe. */}
+            {isMobile ? (
+              <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Mécaniciens">
+                {mechanics.map(m => {
+                  const visible = visibleMechanics.some(v => v.id === m.id)
+                  return (
+                    <button
+                      key={m.id}
+                      role="tab"
+                      onClick={() => cadrerSur(m.id)}
+                      aria-selected={visible}
+                      className={cn(
+                        'flex items-center gap-1.5 pl-1 pr-2.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors flex-shrink-0',
+                        visible
+                          ? 'bg-blue-600/20 text-blue-300 border-blue-500/40'
+                          : 'text-slate-400 border-white/10 hover:bg-white/5',
+                      )}
+                    >
+                      <MechanicAvatar mechanic={m} size={20} />
+                      <span className="max-w-[120px] truncate">{m.name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="flex-1 text-center text-[11px] text-slate-500 font-medium select-none">
+                Mécaniciens {vue.debut + 1}–{vue.fin} sur {mechanics.length}
+              </p>
+            )}
+
             <button
-              onClick={() => stepMechanic(1)}
-              aria-label="Mécanicien suivant"
-              className="gf-touch flex items-center justify-center w-9 h-9 rounded-md text-slate-400 hover:bg-white/10 flex-shrink-0"
+              type="button"
+              onClick={() => naviguer(1)}
+              disabled={!vue.suivant}
+              aria-label="Mécaniciens suivants"
+              title="Mécaniciens suivants"
+              className={cn(
+                'flex items-center justify-center rounded-md flex-shrink-0 transition-colors',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70 focus-visible:ring-offset-1 focus-visible:ring-offset-[#0f1629]',
+                isMobile ? 'gf-touch w-9 h-9' : 'w-7 h-7',
+                vue.suivant
+                  ? 'text-slate-400 hover:bg-white/10 hover:text-slate-200'
+                  : 'text-slate-700 cursor-not-allowed',
+              )}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -438,6 +516,10 @@ export default function ScheduleBoard() {
           {visibleMechanics.map(mechanic => (
             <div
               key={mechanic.id}
+              // Point d'ancrage STABLE pour les tests de navigateur : compter les
+              // colonnes par une classe de style les ferait échouer au premier
+              // ajustement visuel, ce qui pousse à relâcher les assertions.
+              data-gf-mechanic-column={mechanic.id}
               className="flex-1 min-w-0 px-2 py-2.5 border-r border-white/[0.07] last:border-r-0"
             >
               <MechanicHeaderCell

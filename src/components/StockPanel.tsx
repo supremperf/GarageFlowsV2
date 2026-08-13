@@ -128,6 +128,10 @@ function AddPartForm({ onAdd }: { onAdd: (p: Partial<Part>) => Promise<void> }) 
   const [form, setForm] = useState({
     name: '', reference: '', quantity: '0', minQuantity: '5',
     unitCost: '0', unitPrice: '0', location: '',
+    // Fournisseur : c'est ce champ qui alimente le réapprovisionnement groupé du
+    // module « Fournisseurs ». Sans lui, aucune pièce n'était rattachée à un
+    // fournisseur et ce module restait vide sur toute installation réelle.
+    supplierName: '', supplierRef: '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -143,8 +147,13 @@ function AddPartForm({ onAdd }: { onAdd: (p: Partial<Part>) => Promise<void> }) 
         unitCost: Number(form.unitCost),
         unitPrice: Number(form.unitPrice),
         location: form.location || undefined,
+        supplierName: form.supplierName || undefined,
+        supplierRef: form.supplierRef || undefined,
       })
-      setForm({ name: '', reference: '', quantity: '0', minQuantity: '5', unitCost: '0', unitPrice: '0', location: '' })
+      setForm({
+        name: '', reference: '', quantity: '0', minQuantity: '5',
+        unitCost: '0', unitPrice: '0', location: '', supplierName: '', supplierRef: '',
+      })
       setOpen(false)
     } finally {
       setSaving(false)
@@ -175,6 +184,14 @@ function AddPartForm({ onAdd }: { onAdd: (p: Partial<Part>) => Promise<void> }) 
               onChange={e => setForm(f => ({ ...f, reference: e.target.value }))} />
             <input className={input} placeholder={t.stkLocation} value={form.location}
               onChange={e => setForm(f => ({ ...f, location: e.target.value }))} />
+            {/* Fournisseur — c'est ce couple qui rend le réapprovisionnement
+                groupé possible : /api/suppliers regroupe les pièces sous le
+                seuil par `supplierName`, et interroge le connecteur avec
+                `supplierRef` comme référence catalogue. */}
+            <input className={input} placeholder={t.stkSupplier} value={form.supplierName}
+              onChange={e => setForm(f => ({ ...f, supplierName: e.target.value }))} />
+            <input className={input} placeholder={t.stkSupplierRef} value={form.supplierRef}
+              onChange={e => setForm(f => ({ ...f, supplierRef: e.target.value }))} />
             <div>
               <label className="text-xs text-gray-500 mb-0.5 block">{t.stkBuyPrice}</label>
               <input type="number" step="0.01" min="0" className={input} value={form.unitCost}

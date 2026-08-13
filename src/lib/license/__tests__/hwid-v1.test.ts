@@ -48,6 +48,19 @@ describe('HWID V1 — canonique, déterministe (AUD-036)', () => {
 
 describe('HWID V1 — parité Node ↔ Python (référence scripts/hwid_v1.py)', () => {
   const hasPy = python3Available()
+  /**
+   * Délai EXPLICITE : ce test lance un interpréteur Python par vecteur. Le coût
+   * n'est pas dans le calcul mais dans la création de processus (~100–300 ms
+   * pièce sous Windows). Isolé il tient en ~0,7 s ; exécuté en parallèle du
+   * reste de la suite il est monté à 5,6 s et dépassait le délai PAR DÉFAUT de
+   * vitest (5 s) — la suite complète rapportait alors « parité Node ↔ Python
+   * en échec », c'est-à-dire une divergence cryptographique inexistante, une
+   * fois sur deux selon la charge de la machine.
+   *
+   * Un faux échec sur un test de parité crypto est pire qu'un test lent : il
+   * discrédite la seule preuve que le générateur Python et le générateur Node
+   * produisent la même empreinte. Le budget est donc borné franchement.
+   */
   it.skipIf(!hasPy)('Python produit exactement les mêmes HWID que Node/attendu', () => {
     for (const v of vectors) {
       const out = execFileSync('python3', ['scripts/hwid_v1.py', '--stdin'], {
@@ -56,5 +69,5 @@ describe('HWID V1 — parité Node ↔ Python (référence scripts/hwid_v1.py)',
       expect(out, `python(${v.name})`).toBe(v.expected)
       expect(out, `node==python(${v.name})`).toBe(hwidV1(v.fields))
     }
-  })
+  }, 120_000)
 })

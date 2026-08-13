@@ -52,7 +52,15 @@ export interface PortalContext {
   device: PortalDevice
 }
 
-/** Load the authenticated portal user + device from the session cookie, or null. */
+/**
+ * Load the authenticated portal user + device from the session cookie, or null.
+ *
+ * ─── Accès DÉSACTIVÉ par le garage (GF-PORT-002) ────────────────────────────
+ * Le contrôle est fait ICI et non dans chaque route : c'est le seul point par
+ * lequel passent toutes les routes authentifiées du portail. Un accès coupé doit
+ * l'être immédiatement, y compris pour une session déjà ouverte — sinon un
+ * client écarté conserverait l'accès jusqu'à l'expiration de son cookie.
+ */
 export async function loadPortalContext(req: NextRequest): Promise<PortalContext | null> {
   const claims = await verifyPortalSession(req.cookies.get(PORTAL_COOKIE)?.value)
   if (!claims) return null
@@ -62,6 +70,10 @@ export async function loadPortalContext(req: NextRequest): Promise<PortalContext
 
   const user = await prisma.portalUser.findUnique({ where: { id: claims.sub } })
   if (!user || user.id !== device.portalUserId) return null
+
+  // Accès coupé par le garage : la session en cours cesse de valoir, sans
+  // attendre son expiration ni un nouveau login.
+  if (user.disabledAt) return null
 
   // Best-effort last-seen touch (never blocks the request).
   prisma.portalDevice.update({ where: { id: device.id }, data: { lastSeenAt: new Date() } }).catch(() => {})
@@ -76,16 +88,44 @@ export async function requirePortalContext(req: NextRequest): Promise<PortalCont
   return ctx
 }
 
+export interface PortalRouteOptions {
+  /**
+   * La route reste accessible tant que le mot de passe TEMPORAIRE n'a pas été
+   * changé. À réserver aux routes qui permettent précisément de le changer —
+   * sinon la contrainte serait impossible à lever.
+   */
+  autoriseMotDePasseTemporaire?: boolean
+}
+
 /**
  * Wrap an authenticated portal route: injects the {@link PortalContext}, turns a
  * thrown 401 into the response, and never leaks internal errors to the client.
+ *
+ * ─── Mot de passe temporaire (GF-PORT-003) ──────────────────────────────────
+ * Quand le garage ouvre un accès, il remet un mot de passe TEMPORAIRE. Tant
+ * qu'il n'a pas été changé, aucune donnée du portail n'est servie : ni les
+ * factures, ni les devis, ni les véhicules. Le contrôle est fait au SERVEUR et
+ * pas seulement par une redirection d'interface — masquer un écran n'empêche
+ * personne d'appeler l'API directement.
  */
 export function withPortalAuth<RouteCtx = unknown>(
   handler: (req: NextRequest, portal: PortalContext, routeCtx: RouteCtx) => Promise<NextResponse>,
+  options: PortalRouteOptions = {},
 ) {
   return async (req: NextRequest, routeCtx: RouteCtx): Promise<NextResponse> => {
     try {
       const portal = await requirePortalContext(req)
+
+      if (portal.user.mustChangePassword && !options.autoriseMotDePasseTemporaire) {
+        return NextResponse.json(
+          {
+            error: 'Vous devez d’abord définir votre mot de passe.',
+            code: 'PASSWORD_CHANGE_REQUIRED',
+          },
+          { status: 403 },
+        )
+      }
+
       return await handler(req, portal, routeCtx)
     } catch (e) {
       if (e instanceof NextResponse) return e

@@ -17,6 +17,10 @@ export type AuditEntityType =
   | 'Job' | 'Client' | 'Vehicle' | 'Invoice' | 'Quote'
   | 'User' | 'Mechanic' | 'Part' | 'Inspection' | 'Reminder' | 'Garage'
   | 'PurchaseOrder' | 'License'
+  // Accès portail d'un client : ouverture, réinitialisation, désactivation.
+  // Ce sont des décisions du garage sur qui peut voir les données d'un client —
+  // elles doivent laisser une trace au même titre qu'une facture émise.
+  | 'PortalUser'
 
 interface LogAuditOptions {
   action:     AuditAction
