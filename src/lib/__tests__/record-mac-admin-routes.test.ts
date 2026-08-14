@@ -252,11 +252,21 @@ describe('GF31-AUD-006 — POST /api/admin/licenses/revoke-by-key', () => {
     const avant = cleMecanicien({ status: 'revoked' })
     db.ligne = avant
 
+    // Le sujet de ce test est la COHÉRENCE DU MAC après réactivation, pas la
+    // politique de transition. Il empruntait un `{status:'active'}` nu parce que
+    // la route l'acceptait alors — c'était précisément le défaut GF-DUR-048 :
+    // `revoked` est terminal, on n'en sort que par un geste dédié avec motif.
+    // L'intention du test est conservée, la voie empruntée est la bonne.
     await POST_REVOCATION(
       new Request('http://127.0.0.1/api/admin/licenses/revoke-by-key', {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-gf-key': process.env.GARAGEFLOW_API_KEY! },
-        body: JSON.stringify({ licenseId: 'lid-mecanicien', status: 'active' }),
+        body: JSON.stringify({
+          licenseId: 'lid-mecanicien',
+          status: 'active',
+          confirmReactivation: true,
+          reason: 'Rétablissement après révocation par erreur (test de cohérence MAC)',
+        }),
       }) as never,
     )
 

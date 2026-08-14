@@ -18,7 +18,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
-import { isAdminSession } from '@/lib/api-helpers'
+import { isAdminSession, adminSessionActor } from '@/lib/api-helpers'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { prisma } from '@/lib/db'
 import { logger } from '@/lib/logger'
@@ -203,6 +203,43 @@ export async function POST(req: NextRequest) {
         recordMac,
       },
     })
+
+    /**
+     * TRACE DE L'ÉMISSION (GF-DUR-047).
+     *
+     * `[id]` journalisait ses transitions ; l'ÉMISSION, elle, ne laissait
+     * aucune trace. C'est pourtant la seule opération qui engage la clé privée :
+     * sans trace, une session admin volée pouvait signer des licences sans que
+     * rien n'en garde mémoire — et l'exploitant n'aurait eu, pour tout indice,
+     * que des lignes apparues en base sans auteur ni date d'acte.
+     *
+     * Ce qui est écrit : qui, quoi, quand, et les paramètres COMMERCIAUX. Jamais
+     * le jeton, jamais la clé. Le jeton complet vit déjà dans `LicenseKey.token`
+     * (il doit être affichable pour être remis au client) ; le redoubler dans un
+     * journal ne ferait qu'élargir la surface de fuite.
+     */
+    await prisma.licenseDeviceEvent.create({
+      data: {
+        licenseId: built.lid,
+        deviceId:  null, // événement de LICENCE, pas d'appareil
+        action:    'issued',
+        detail: JSON.stringify({
+          actor:       (await adminSessionActor()) ?? 'admin',
+          customerId,
+          licenseType,
+          seats,
+          years,
+          hwidLie:     Boolean(hwid),
+          expiryAt:    built.expiryAt.toISOString(),
+          at:          new Date().toISOString(),
+        }),
+      },
+    }).catch((e) => {
+      // Best-effort : une table d'audit indisponible ne doit pas annuler une
+      // licence déjà signée ET enregistrée. Mais l'écart est SIGNALÉ.
+      logger.error('[admin/generate] trace d’émission non écrite', e)
+    })
+
     return NextResponse.json(record, { status: 201 })
   } catch (err: any) {
     if (err?.code === 'P2002') {
