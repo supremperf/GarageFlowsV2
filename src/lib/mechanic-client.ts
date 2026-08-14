@@ -27,6 +27,15 @@ export async function mechanicLogout(): Promise<void> {
   window.location.href = '/license'
 }
 
+/**
+ * Vrai dès qu'une redirection de session a été enclenchée.
+ *
+ * Plusieurs requêtes partent en parallèle (profil + planning). Sans ce verrou,
+ * chacune déclenchait sa propre navigation, et les 401 concurrents se
+ * relançaient mutuellement (GF-DUR-035).
+ */
+let redirectionEnCours = false
+
 /** fetch JSON avec en-tête anti-cache ; redirige vers /license si la session tombe. */
 export async function mechFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -35,8 +44,21 @@ export async function mechFetch<T>(url: string, init?: RequestInit): Promise<T> 
     cache: 'no-store',
   })
   if (res.status === 401) {
-    await purgeLocalData()
-    window.location.href = '/license'
+    // ─── Pourquoi on EFFACE la session avant de partir ───────────────────────
+    // Le cookie `gf_session` reste cryptographiquement valide alors que l'API
+    // le refuse (clé révoquée, suspendue, expirée, réattribuée, ou licence
+    // garage parente expirée). Le middleware, lui, ne voit que la signature :
+    // il laissait donc l'appareil revenir sur /mechanic, qui rappelait l'API,
+    // qui répondait 401… Mesuré : 737 requêtes/minute, écarts de ~140 ms.
+    //
+    // Se contenter de naviguer ne suffit pas : tant que le cookie est présenté,
+    // la boucle peut se reformer. On demande donc au serveur de le retirer.
+    if (!redirectionEnCours) {
+      redirectionEnCours = true
+      try { await fetch('/api/mechanic/logout', { method: 'POST' }) } catch { /* ignore */ }
+      await purgeLocalData()
+      window.location.href = '/license'
+    }
     throw new Error('session expirée')
   }
   const data = await res.json().catch(() => ({}))

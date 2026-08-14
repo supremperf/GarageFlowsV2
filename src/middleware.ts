@@ -127,12 +127,41 @@ function redirectTo(req: NextRequest, target: string): NextResponse {
 }
 
 /**
- * Un mécanicien ne voit QUE l'espace /mechanic. On confine sa navigation ici
- * (les autorisations réelles restent vérifiées côté API — ce garde-fou n'est
- * qu'une couche d'ergonomie/UX, jamais l'unique protection).
+ * Un mécanicien ne voit QUE l'espace /mechanic — ET la page de licence.
+ *
+ * ─── Le défaut que l'exception à `/license` corrige (GF-DUR-035) ────────────
+ * Le confinement renvoyait TOUT vers `/mechanic`, y compris `/license`. Or
+ * `mechFetch` envoie précisément vers `/license` quand une route mécanicien
+ * répond 401. Composés, les deux produisaient une boucle de navigation
+ * infinie :
+ *
+ *     /mechanic → GET /api/mechanic/me → 401
+ *              → window.location = /license
+ *              → middleware : cookie mécanicien valide → redirection /mechanic
+ *              → …
+ *
+ * Mesuré dans un vrai navigateur : **737 requêtes/minute**, des écarts de
+ * ~140 ms (le temps d'un aller-retour), là où la politique de sondage annonce
+ * 3 s. L'écran est inutilisable, la batterie se vide, et surtout la limite de
+ * débit — indexée sur l'IP, donc PARTAGÉE par tout le garage derrière son NAT —
+ * est épuisée en quelques secondes : le poste du garage lui-même se met à
+ * recevoir des 429 à cause d'un téléphone.
+ *
+ * Ce n'est pas un cas de laboratoire. `validateMechanicSession` répond 401,
+ * avec un cookie que le middleware accepte, dès que : la clé est révoquée,
+ * suspendue, expirée, réattribuée à un autre mécanicien, ou que la licence
+ * GARAGE parente expire. Autrement dit, à chaque geste normal du responsable.
+ *
+ * `/license` est donc autorisée : c'est là qu'un mécanicien réactive son
+ * appareil, et lui interdire la seule page qui le débloque n'avait pas de sens.
  */
 function confineMechanic(pathname: string, req: NextRequest): NextResponse {
   if (pathname === '/mechanic' || pathname.startsWith('/mechanic/')) {
+    return NextResponse.next()
+  }
+  // Seule sortie autorisée : la page d'activation/licence — la destination de
+  // `mechFetch` quand la session est refusée par l'API.
+  if (pathname === '/license') {
     return NextResponse.next()
   }
   return redirectTo(req, '/mechanic')

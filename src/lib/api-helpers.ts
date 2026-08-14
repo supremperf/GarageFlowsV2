@@ -42,8 +42,22 @@ export async function requireSession() {
   return session
 }
 
-/** Wraps an async route handler and catches thrown NextResponse.
- *  Applies rate limiting: 120 req/min per authenticated user (by garageId). */
+/**
+ * Enveloppe un handler et intercepte les `NextResponse` levées.
+ *
+ * Limite de débit : 120 req/min **par ADRESSE IP** (`RATE_LIMIT_API_*`).
+ *
+ * Le commentaire disait auparavant « per authenticated user (by garageId) »,
+ * alors que le code passe `clientIpFrom(req)`. L'écart n'est pas anodin : dans
+ * un garage, tous les appareils sortent derrière la MÊME adresse publique, et
+ * partagent donc ce quota — postes, PWA mécaniciens, portail client compris.
+ * C'est ce qui a rendu si coûteuse la boucle de redirection GF-DUR-035 : un
+ * seul téléphone à ~740 req/min épuisait le quota de tout l'atelier.
+ *
+ * Le comportement N'EST PAS changé ici (indexer sur le garage affaiblirait la
+ * protection contre un appelant non authentifié) ; c'est la description qui est
+ * remise en accord avec le code.
+ */
 export function withAuth(
   handler: (req: Request, ctx?: any) => Promise<NextResponse>
 ) {
