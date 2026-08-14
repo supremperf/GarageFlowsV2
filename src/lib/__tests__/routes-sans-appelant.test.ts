@@ -101,7 +101,6 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
   // Le portail client, en particulier : messagerie, prise de rendez-vous,
   // double facteur et gestion des appareils sont écrits, testés, et absents des
   // cinq pages du portail.
-  '/api/portal/auth/email': { motif: 'sans-interface', note: 'le client ne peut pas demander le changement de son adresse depuis le portail', classe: 'PRODUCT_REQUIRED' },
   // Remplacée par `/api/portal/generate`, que `JobQRCode` appelle réellement.
   // La différence n'est pas cosmétique : `generate` signe `{ typ, jobId,
   // garageId }` et publie l'instantané au cloud pour un poste installé, tandis

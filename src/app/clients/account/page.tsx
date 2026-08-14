@@ -12,10 +12,11 @@ import Link from 'next/link'
 import { lienPortail } from '@/lib/portal/garage-slug'
 import { cheminPortail } from '@/lib/portal/routes'
 import { redirectionPortail } from '@/lib/portal/redirection'
-import { Car, Wrench, FileText, Receipt, ShieldCheck, LogOut, Loader2, MonitorSmartphone, MessageSquare, CalendarClock, KeyRound } from 'lucide-react'
+import { Car, Wrench, FileText, Receipt, ShieldCheck, LogOut, Loader2, MonitorSmartphone, MessageSquare, CalendarClock, KeyRound, Mail } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PortalSessions } from '@/components/portal/PortalSessions'
 import { PortalTwoFactor } from '@/components/portal/PortalTwoFactor'
+import { PortalEmail } from '@/components/portal/PortalEmail'
 
 type StageState = 'done' | 'current' | 'pending' | 'cancelled'
 interface Stage { key: string; label: string; state: StageState }
@@ -189,6 +190,14 @@ export default function PortalAccountPage() {
                 que vous ne reconnaissez pas.
               </p>
               <PortalSessions />
+            </Section>
+
+            {/* Adresse de connexion. La route existait, éprouvée ; seul le
+                garage pouvait s'en servir. Le client devait téléphoner pour
+                corriger sa propre adresse — y compris quand c'est cette
+                boîte-là qu'il venait de perdre (GF-DUR-028). */}
+            <Section icon={<Mail className="h-4 w-4 text-blue-400" />} title="Mon adresse e-mail">
+              <PortalEmail />
             </Section>
 
             {/* Second facteur. Tout existait côté serveur — enrôlement, secrets

@@ -619,6 +619,43 @@ describe('le client peut ACTIVER sa double authentification (GF-DUR-026)', () =>
   })
 })
 
+describe('le client peut changer SON adresse de connexion (GF-DUR-028)', () => {
+  const src = lire('src/components/portal/PortalEmail.tsx')
+  const espace = lire('src/app/clients/account/page.tsx')
+
+  it('« Mon espace » monte le panneau', () => {
+    expect(espace).toContain("import { PortalEmail } from '@/components/portal/PortalEmail'")
+    expect(espace).toContain('<PortalEmail />')
+  })
+
+  it('la demande porte le mot de passe — le serveur l\'exige', () => {
+    // Sans lui, un cookie volé suffirait à changer l'identifiant de connexion,
+    // donc à s'approprier le compte définitivement.
+    expect(src).toMatch(/method: 'PUT'/)
+    expect(src).toMatch(/currentPassword: motDePasse/)
+  })
+
+  it('l\'écran dit que l\'adresse ne change PAS tout de suite', () => {
+    // Le taire produirait un client persuadé d'avoir changé d'identifiant, qui
+    // ne parvient plus à se reconnecter.
+    expect(src).toMatch(/l’ancienne reste/)
+    expect(src).toMatch(/Changement en attente/)
+  })
+
+  it('une demande en attente survit au rechargement', () => {
+    // Elle est relue depuis le serveur, pas gardée en mémoire de page.
+    expect(src).toMatch(/pendingEmail/)
+    expect(lire('src/app/api/portal/auth/me/route.ts')).toMatch(/pendingEmail: user\.pendingEmail/)
+  })
+
+  it('un e-mail non parti n\'est pas annoncé comme envoyé', () => {
+    // Sans message reçu, le client n'a AUCUN moyen de confirmer : le lui
+    // cacher le laisserait attendre un lien qui n'existe pas.
+    expect(src).toMatch(/d\.emailEnvoye === false/)
+    expect(src).toMatch(/envoiManque/)
+  })
+})
+
 describe('anti-régression : les autres chaînes récemment recâblées restent branchées', () => {
   it('la réception fournisseur est toujours déclenchée par le panneau', () => {
     expect(lire('src/components/SuppliersPanel.tsx')).toMatch(/\/api\/purchase-orders\/\$\{[^}]+\}\/receive/)
