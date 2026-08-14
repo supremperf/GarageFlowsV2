@@ -1286,4 +1286,11 @@ export const MIGRATIONS: Migration[] = [
   { id: '209_portal_disabled_at',        onlyIfColumnMissing: { table: 'PortalUser', column: 'disabledAt' },         sql: 'ALTER TABLE "PortalUser" ADD COLUMN "disabledAt" DATETIME' },
   { id: '210_portal_must_change_pwd',    onlyIfColumnMissing: { table: 'PortalUser', column: 'mustChangePassword' }, sql: 'ALTER TABLE "PortalUser" ADD COLUMN "mustChangePassword" BOOLEAN NOT NULL DEFAULT 0' },
   { id: '211_portal_password_changed_at', onlyIfColumnMissing: { table: 'PortalUser', column: 'passwordChangedAt' }, sql: 'ALTER TABLE "PortalUser" ADD COLUMN "passwordChangedAt" DATETIME' },
+
+  // ── Changement d'adresse en attente (GF-PORT-006) ──────────────────────────
+  // L'adresse est l'IDENTIFIANT de connexion du portail. La remplacer sans
+  // vérification enfermerait le client dehors sur une simple faute de frappe, et
+  // permettrait de revendiquer l'adresse d'un tiers. La nouvelle adresse attend
+  // donc ici jusqu'à confirmation par le lien envoyé sur ELLE.
+  { id: '212_portal_pending_email', onlyIfColumnMissing: { table: 'PortalUser', column: 'pendingEmail' }, sql: 'ALTER TABLE "PortalUser" ADD COLUMN "pendingEmail" TEXT' },
 ]

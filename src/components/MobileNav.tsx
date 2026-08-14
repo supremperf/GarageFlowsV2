@@ -5,7 +5,7 @@ import { signOut } from 'next-auth/react'
 import {
   CalendarDays, ClipboardList, Plus, Sparkles, Menu,
   BarChart3, Package, ShieldCheck, Car, Bell, BookOpen,
-  FileText, BarChart2, ScanLine, Truck, Boxes, Settings,
+  FileText, BarChart2, ScanLine, Truck, Users, Boxes, Settings,
   Sun, Moon, LogOut,
 } from 'lucide-react'
 import { useScheduleStore } from '@/store/schedule-store'
@@ -28,6 +28,7 @@ export interface MobileNavActions {
   onOpenCopilot: () => void
   onOpenOcr: () => void
   onOpenSuppliers: () => void
+  onOpenClients: () => void
   onOpenCatalog: () => void
   onOpenSettings: () => void
   warrantyAlerts?: number
@@ -199,6 +200,7 @@ export default function MobileNav(props: MobileNavActions) {
           <MoreItem icon={Sparkles} label={t.navCopilot} onClick={() => run(props.onOpenCopilot)} tone="finance" />
           <MoreItem icon={ScanLine} label={t.navOcr} onClick={() => run(props.onOpenOcr)} tone="finance" />
           <MoreItem icon={Truck} label={t.navSuppliers} onClick={() => run(props.onOpenSuppliers)} tone="finance" />
+          <MoreItem icon={Users} label={t.navClients} onClick={() => run(props.onOpenClients)} tone="finance" />
           <MoreItem icon={Boxes} label={t.navCatalog} onClick={() => run(props.onOpenCatalog)} tone="finance" />
         </div>
 

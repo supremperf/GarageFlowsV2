@@ -1041,6 +1041,12 @@ model PortalUser {
   name             String?
   emailVerified    Boolean        @default(false)
   emailVerifyToken String?
+  // ── Changement d'adresse en attente (GF-PORT-006) ──────────────────────────
+  // L'adresse est l'IDENTIFIANT de connexion. La remplacer sans vérification
+  // enfermerait le client dehors sur une simple faute de frappe, et permettrait
+  // de revendiquer l'adresse d'un tiers. La nouvelle adresse attend donc ici
+  // jusqu'à confirmation par le lien envoyé sur ELLE.
+  pendingEmail     String?
   twoFactorEnabled Boolean        @default(false)
   twoFactorSecret  String?
   twoFactorPending String?

@@ -48,6 +48,42 @@ export function genererMotDePasseTemporaire(longueur = MOT_DE_PASSE_TEMPORAIRE_L
   return out
 }
 
+/**
+ * Message remis au client avec ses identifiants.
+ *
+ * Fonction PURE : elle ne journalise rien et n'envoie rien. Le mot de passe ne
+ * traverse donc qu'un seul chemin — celui de l'envoi — et n'apparaît dans aucune
+ * trace intermédiaire.
+ *
+ * Le texte dit explicitement que le mot de passe est provisoire : sans cela, un
+ * client le note et s'étonne qu'on le lui refuse à la connexion suivante.
+ */
+export function messageAccesPortail(params: {
+  nomGarage: string
+  nomClient?: string | null
+  identifiant: string
+  motDePasseTemporaire: string
+  urlConnexion: string
+}): { subject: string; text: string } {
+  const salutation = params.nomClient ? `Bonjour ${params.nomClient},` : 'Bonjour,'
+  return {
+    subject: `${params.nomGarage} — accès à votre espace client`,
+    text: [
+      salutation,
+      '',
+      `${params.nomGarage} vous a ouvert un accès à votre espace client : vous y retrouverez vos véhicules, vos devis, vos factures et le suivi de vos interventions.`,
+      '',
+      `Adresse    : ${params.urlConnexion}`,
+      `Identifiant: ${params.identifiant}`,
+      `Mot de passe provisoire: ${params.motDePasseTemporaire}`,
+      '',
+      'Ce mot de passe est provisoire : il vous sera demandé d’en choisir un nouveau dès votre première connexion.',
+      '',
+      'Si vous n’êtes pas à l’origine de cette demande, ignorez ce message et prévenez votre garage.',
+    ].join('\n'),
+  }
+}
+
 export type VerdictIdentifiant =
   | { ok: true; email: string }
   | { ok: false; code: 'CLIENT_SANS_EMAIL' | 'EMAIL_INVALIDE'; message: string }

@@ -25,6 +25,7 @@ import LoanerPanel from '@/components/LoanerPanel'
 import CopilotPanel from '@/components/CopilotPanel'
 import OcrPanel from '@/components/OcrPanel'
 import SuppliersPanel from '@/components/SuppliersPanel'
+import ClientsPanel from '@/components/ClientsPanel'
 import CatalogPanel from '@/components/CatalogPanel'
 import LicenseRevokedOverlay from '@/components/LicenseRevokedOverlay'
 import UpdateModal from '@/components/UpdateModal'
@@ -92,6 +93,7 @@ export default function Home() {
   const [isCopilotOpen,        setIsCopilotOpen]        = useState(false)
   const [isOcrOpen,            setIsOcrOpen]            = useState(false)
   const [isSuppliersOpen,      setIsSuppliersOpen]      = useState(false)
+  const [isClientsOpen,        setIsClientsOpen]        = useState(false)
   const [isCatalogOpen,        setIsCatalogOpen]        = useState(false)
   const [isAssistantOpen,      setIsAssistantOpen]      = useState(false)
   const [warrantyAlerts,       setWarrantyAlerts]       = useState(0)
@@ -285,6 +287,7 @@ export default function Home() {
         onOpenCopilot={() => setIsCopilotOpen(true)}
         onOpenOcr={() => setIsOcrOpen(true)}
         onOpenSuppliers={() => setIsSuppliersOpen(true)}
+        onOpenClients={() => setIsClientsOpen(true)}
         onOpenCatalog={() => setIsCatalogOpen(true)}
         warrantyAlerts={warrantyAlerts}
       />
@@ -339,6 +342,7 @@ export default function Home() {
         onOpenCopilot={() => setIsCopilotOpen(true)}
         onOpenOcr={() => setIsOcrOpen(true)}
         onOpenSuppliers={() => setIsSuppliersOpen(true)}
+        onOpenClients={() => setIsClientsOpen(true)}
         onOpenCatalog={() => setIsCatalogOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         warrantyAlerts={warrantyAlerts}
@@ -382,6 +386,7 @@ export default function Home() {
       {isCopilotOpen          && <CopilotPanel          onClose={() => setIsCopilotOpen(false)} onAction={handleCopilotAction} />}
       {isOcrOpen              && <OcrPanel              onClose={() => setIsOcrOpen(false)} onUseVehicle={handleOcrVehicle} />}
       {isSuppliersOpen        && <SuppliersPanel        onClose={() => setIsSuppliersOpen(false)} />}
+      {isClientsOpen          && <ClientsPanel          onClose={() => setIsClientsOpen(false)} />}
       {isCatalogOpen          && <CatalogPanel          onClose={() => setIsCatalogOpen(false)} />}
       {isSettingsOpen         && <SettingsModal        onClose={() => setIsSettingsOpen(false)} />}
 

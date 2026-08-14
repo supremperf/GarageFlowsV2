@@ -20,9 +20,51 @@ export async function GET(req: NextRequest) {
 
   const user = await prisma.portalUser.findFirst({
     where: { emailVerifyToken: token },
-    select: { id: true, garageId: true, email: true, clientId: true },
+    select: { id: true, garageId: true, email: true, clientId: true, pendingEmail: true },
   })
   if (!user) return NextResponse.json({ error: 'Lien invalide ou déjà utilisé' }, { status: 400 })
+
+  // ── CHANGEMENT d'adresse confirmé (GF-PORT-006) ────────────────────────────
+  // Le clic prouve la possession de la NOUVELLE adresse : elle devient
+  // l'identifiant de connexion. C'est aussi ici que la fiche client du garage
+  // est mise à jour — sinon le garage continuerait d'écrire à l'ancienne adresse
+  // et les deux vérités divergeraient en silence (§47).
+  if (user.pendingEmail) {
+    const nouvelle = user.pendingEmail
+    try {
+      await prisma.$transaction([
+        prisma.portalUser.update({
+          where: { id: user.id },
+          data: { email: nouvelle, pendingEmail: null, emailVerified: true, emailVerifyToken: null },
+        }),
+        // Propagation vers la fiche GARAGE, uniquement si le compte y est
+        // rattaché. Le filtre porte aussi sur `garageId` : un identifiant de
+        // client ne suffit jamais à désigner une ligne.
+        ...(user.clientId
+          ? [prisma.client.updateMany({
+              where: { id: user.clientId, garageId: user.garageId },
+              data: { email: nouvelle },
+            })]
+          : []),
+      ])
+    } catch {
+      // Collision avec un autre compte du même garage (@@unique[garageId,email])
+      // survenue entre la demande et la confirmation. L'ancienne adresse reste
+      // valide : le client n'est pas enfermé dehors.
+      await prisma.portalUser.update({
+        where: { id: user.id },
+        data: { pendingEmail: null, emailVerifyToken: null },
+      }).catch(() => {})
+      const echec = `${cheminPortail('account')}?email=conflit`
+      return NextResponse.redirect(new URL(echec, req.url), { status: 303 })
+    }
+
+    const g = await prisma.garage.findUnique({ where: { id: user.garageId }, select: { slug: true } })
+    const ok = g?.slug
+      ? `${cheminPortail('login')}?garage=${encodeURIComponent(g.slug)}&email=modifie`
+      : `${cheminPortail('login')}?email=modifie`
+    return NextResponse.redirect(new URL(ok, req.url), { status: 303 })
+  }
 
   // Rattachement DIFFÉRÉ : email désormais prouvé → on peut lier le compte au
   // Client du même garage/email s'il existe et si le compte n'est pas déjà lié.

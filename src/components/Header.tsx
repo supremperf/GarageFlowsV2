@@ -32,6 +32,7 @@ import {
   Sparkles,
   ScanLine,
   Truck,
+  Users,
   Boxes,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -130,6 +131,7 @@ interface HeaderProps {
   onOpenCopilot?:       () => void
   onOpenOcr?:           () => void
   onOpenSuppliers?:     () => void
+  onOpenClients?:       () => void
   onOpenCatalog?:       () => void
   warrantyAlerts?:      number
 }
@@ -147,6 +149,7 @@ export default function Header({
   onOpenCopilot,
   onOpenOcr,
   onOpenSuppliers,
+  onOpenClients,
   onOpenCatalog,
   warrantyAlerts = 0,
 }: HeaderProps) {
@@ -570,6 +573,15 @@ export default function Header({
               icon={Truck}
               label={t.navSuppliers}
               title={t.ttSuppliers}
+              variant="finance"
+            />
+          )}
+          {onOpenClients && (
+            <ToolBtn
+              onClick={onOpenClients}
+              icon={Users}
+              label={t.navClients}
+              title={t.ttClients}
               variant="finance"
             />
           )}

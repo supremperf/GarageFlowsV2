@@ -26,7 +26,50 @@ import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { logAudit } from '@/lib/audit'
 import { logger } from '@/lib/logger'
-import { genererMotDePasseTemporaire, identifiantDepuisClient } from '@/lib/portal/acces'
+import { genererMotDePasseTemporaire, identifiantDepuisClient, messageAccesPortail } from '@/lib/portal/acces'
+import { sendGarageMail } from '@/lib/mail/send-garage-mail'
+import { publicUrlFor } from '@/lib/public-url'
+import { cheminPortail } from '@/lib/portal/routes'
+
+/**
+ * Envoie ses identifiants au client — best-effort, JAMAIS journalisé.
+ *
+ * Le mot de passe ne traverse que ce chemin : il n'apparaît ni dans le journal
+ * d'audit (qui ne reçoit que l'identifiant du client), ni dans les traces
+ * applicatives, ni dans le message d'erreur en cas d'échec SMTP. `sendGarageMail`
+ * ne journalise que l'hôte et le garage, jamais le corps.
+ *
+ * Un échec d'envoi n'annule pas l'ouverture de l'accès : le mot de passe est de
+ * toute façon affiché une fois au garage, qui peut le communiquer autrement.
+ * Mais l'issue est RENDUE, pour que l'écran dise « accès créé · e-mail non
+ * envoyé » plutôt que de laisser croire que le client a été prévenu.
+ */
+async function envoyerIdentifiants(params: {
+  garageId: string
+  nomGarage: string
+  nomClient: string | null
+  identifiant: string
+  motDePasse: string
+}): Promise<boolean> {
+  const message = messageAccesPortail({
+    nomGarage: params.nomGarage,
+    nomClient: params.nomClient,
+    identifiant: params.identifiant,
+    motDePasseTemporaire: params.motDePasse,
+    urlConnexion: publicUrlFor(cheminPortail('login')),
+  })
+  const envoi = await sendGarageMail({
+    garageId: params.garageId,
+    to: params.identifiant,
+    subject: message.subject,
+    text: message.text,
+  })
+  if (!envoi.ok) {
+    // `envoi.reason` est un code (SMTP absent, refus serveur…) — jamais le corps.
+    logger.info('[portal/access] identifiants non envoyés par e-mail', { motif: envoi.reason })
+  }
+  return envoi.ok
+}
 
 /** Rôles autorisés à ouvrir ou couper un accès client. */
 const ROLES_GESTION = new Set(['OWNER', 'MANAGER'])
@@ -132,8 +175,20 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
   })
   logger.info('[portal/access] accès ouvert', { client: client.id })
 
+  const garage = await prisma.garage.findUnique({
+    where: { id: session.user.garageId },
+    select: { name: true },
+  })
+  const emailEnvoye = await envoyerIdentifiants({
+    garageId: session.user.garageId,
+    nomGarage: garage?.name ?? 'Votre garage',
+    nomClient: client.name,
+    identifiant: identifiant.email,
+    motDePasse,
+  })
+
   // Mot de passe en clair rendu UNE SEULE FOIS.
-  return NextResponse.json({ ...etat(cree), motDePasseTemporaireEnClair: motDePasse }, { status: 201 })
+  return NextResponse.json({ ...etat(cree), motDePasseTemporaireEnClair: motDePasse, emailEnvoye }, { status: 201 })
 })
 
 export const PUT = withAuth(async (req, { params }: { params: { id: string } }) => {
@@ -179,7 +234,19 @@ export const PUT = withAuth(async (req, { params }: { params: { id: string } }) 
   await logAudit({ action: 'update', entityType: 'PortalUser', entityId: acces.id, session, req, details: { extra: { reset: true } } })
   logger.info('[portal/access] accès réinitialisé', { client: client.id })
 
-  return NextResponse.json({ ...etat(maj), motDePasseTemporaireEnClair: motDePasse })
+  const garage = await prisma.garage.findUnique({
+    where: { id: session.user.garageId },
+    select: { name: true },
+  })
+  const emailEnvoye = await envoyerIdentifiants({
+    garageId: session.user.garageId,
+    nomGarage: garage?.name ?? 'Votre garage',
+    nomClient: client.name,
+    identifiant: maj.email,
+    motDePasse,
+  })
+
+  return NextResponse.json({ ...etat(maj), motDePasseTemporaireEnClair: motDePasse, emailEnvoye })
 })
 
 export const PATCH = withAuth(async (req, { params }: { params: { id: string } }) => {
