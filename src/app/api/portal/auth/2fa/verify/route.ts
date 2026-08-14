@@ -51,7 +51,14 @@ export async function POST(req: NextRequest) {
   if (!ok) return NextResponse.json({ error: 'Code invalide' }, { status: 401 })
 
   const { token: sessionToken } = await issuePortalSession(user.id, req)
-  const res = NextResponse.json({ ok: true, backupCodeUsed: backupUsed, user: { id: user.id, email: user.email, name: user.name } })
+  // Même information qu'à la connexion simple : sans elle, un compte à mot de
+  // passe provisoire ET double facteur passerait par une page vide.
+  const res = NextResponse.json({
+    ok: true,
+    backupCodeUsed: backupUsed,
+    mustChangePassword: user.mustChangePassword,
+    user: { id: user.id, email: user.email, name: user.name },
+  })
   setPortalCookie(res, sessionToken)
   return res
 }

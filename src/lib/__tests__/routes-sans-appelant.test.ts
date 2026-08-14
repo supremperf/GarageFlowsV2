@@ -43,8 +43,12 @@ const API = path.join(RACINE, 'src/app/api')
  *  `exploitation`  — destinée à un opérateur ou à un outil externe, appelée à la
  *      main ou par une sonde ; aucune interface n'est attendue.
  *  `cadre`         — imposée par le framework, jamais appelée par notre code.
+ *  `chemin-calcule`— ATTEINTE, mais par une URL assemblée à l'exécution que la
+ *      recherche textuelle ne peut pas voir. C'est l'angle mort assumé de cette
+ *      garde : la note doit alors DÉSIGNER la construction, faute de quoi
+ *      l'étiquette servirait à faire taire un vrai constat.
  */
-type Motif = 'sans-interface' | 'double' | 'exploitation' | 'cadre'
+type Motif = 'sans-interface' | 'double' | 'exploitation' | 'cadre' | 'chemin-calcule'
 
 const INVENTAIRE: Record<string, { motif: Motif; note: string }> = {
   '/api/auth/[...nextauth]': { motif: 'cadre', note: 'point d’entrée NextAuth, atteint par signIn()' },
@@ -54,6 +58,23 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string }> = {
   '/api/admin/backups/[id]/download': { motif: 'exploitation', note: 'récupération d’une archive par l’exploitant, hors interface' },
   '/api/admin/backups/[id]/restore': { motif: 'exploitation', note: 'restauration : geste délibérément sans bouton, jamais à un clic' },
   '/api/admin/backups/[id]/verify': { motif: 'exploitation', note: 'contrôle d’intégrité d’une archive, lancé à la main' },
+
+  // ── Angle mort de la recherche : URL assemblée à l'exécution ──────────────
+  '/api/invoices/[id]': {
+    motif: 'chemin-calcule',
+    note: 'QuoteInvoiceModal : `apiBase = mode === \'quote\' ? \'/api/quotes\' : \'/api/invoices\'`, puis `${apiBase}/${id}`',
+  },
+  '/api/admin/updates/file/[name]': {
+    motif: 'chemin-calcule',
+    note: 'ouverte via `info.downloadUrl`, que le serveur assemble (UpdateModal, UpdatesTab)',
+  },
+
+  // ── Contrat avec l'outil de génération de clés (x-gf-key) ─────────────────
+  // Documenté par `license/__tests__/keygen-api-contract.test.ts` : ces routes
+  // servent `scripts/keygen_gui.py`, pas l'interface web.
+  '/api/admin/licenses/create': { motif: 'exploitation', note: 'enregistrement d’une licence par l’outil keygen (en-tête x-gf-key)' },
+  '/api/admin/licenses/revoke-by-key': { motif: 'exploitation', note: 'révocation par l’outil keygen, par clé et non par identifiant' },
+  '/api/portal/auth/verify-email': { motif: 'exploitation', note: 'ouverte par le client depuis le lien reçu par courriel, jamais par du code' },
 
   '/api/vin': { motif: 'double', note: 'vinEngine atteint via /api/copilot, /api/ocr et /api/catalog' },
   '/api/diagnostic': { motif: 'double', note: 'diagnose() atteint via /api/copilot' },
@@ -65,7 +86,21 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string }> = {
   // Le portail client, en particulier : messagerie, prise de rendez-vous,
   // double facteur et gestion des appareils sont écrits, testés, et absents des
   // cinq pages du portail.
+  // ── Rendez-vous : les DEUX côtés sont absents ─────────────────────────────
+  // Le côté garage n'était pas visible avant que les tests soient retirés du
+  // corpus : deux tests d'isolation l'importaient, ce qui suffisait à le faire
+  // passer pour branché.
   '/api/portal/appointments': { motif: 'sans-interface', note: 'prise de rendez-vous par le client : créneaux et demande, aucune page' },
+  '/api/appointments': { motif: 'sans-interface', note: 'liste des rendez-vous côté garage : aucun panneau du poste ne l’affiche' },
+  '/api/appointments/[id]': { motif: 'sans-interface', note: 'confirmation, annulation et clôture d’un rendez-vous par le garage, sans écran' },
+
+  '/api/portal/auth/email': { motif: 'sans-interface', note: 'le client ne peut pas demander le changement de son adresse depuis le portail' },
+  '/api/portal/token': { motif: 'sans-interface', note: 'émission d’un lien tokenisé de portail : aucun appelant, ni écran ni synchronisation' },
+  '/api/sync/portal': { motif: 'sans-interface', note: 'rattachement poste ⇄ cloud du portail : aucun `cloudPost` ne l’appelle' },
+  '/api/users': { motif: 'sans-interface', note: 'annuaire et création du personnel : le garage ne peut pas ajouter de collègue' },
+  '/api/loaner-vehicles/[id]': { motif: 'sans-interface', note: 'suppression d’un véhicule de prêt : le panneau ne liste et ne crée que' },
+  '/api/quotes/[id]/signature-token': { motif: 'sans-interface', note: 'lien de signature d’un devis : aucun bouton ne le produit' },
+  '/api/quotes/generate': { motif: 'sans-interface', note: 'génération assistée de devis : aucun écran ne la déclenche' },
   '/api/portal/appointments/[id]': { motif: 'sans-interface', note: 'report et annulation d’un rendez-vous client, sans interface' },
   '/api/portal/auth/2fa/setup': { motif: 'sans-interface', note: 'génération du secret de double facteur, sans écran de configuration' },
   '/api/portal/auth/2fa/enable': { motif: 'sans-interface', note: 'activation du double facteur : le schéma le porte, le portail ne l’offre pas' },
@@ -135,13 +170,21 @@ function sansCommentaires(src: string): string {
 }
 
 /**
- * Corpus appelant : tout le code SAUF les routes elles-mêmes.
+ * Corpus appelant : le code qu'un UTILISATEUR peut atteindre.
  *
- * Les tests en font partie à dessein — une route dont seul un test parle reste
- * orpheline pour l'utilisateur, et c'est exactement ce qu'il faut voir. Les
- * routes sont exclues pour la raison inverse : une route qui s'appelle
- * elle-même, ou qu'une route voisine appelle, ne fait pas d'elle une
- * fonctionnalité atteignable.
+ * Trois familles en sont exclues, et pour trois raisons distinctes.
+ *
+ *  · Les ROUTES elles-mêmes : une route qui s'appelle, ou qu'une route voisine
+ *    appelle, n'en fait pas une fonctionnalité atteignable.
+ *
+ *  · Les TESTS. Première version : ils étaient inclus, alors que le commentaire
+ *    d'à côté affirmait le contraire. Conséquence exacte de l'écart :
+ *    `/api/appointments` et `/api/appointments/[id]` — toute la confirmation de
+ *    rendez-vous côté garage — passaient pour branchées parce que deux tests
+ *    d'isolation les importaient. Une route que seul un test touche est morte
+ *    pour l'utilisateur ; c'est précisément ce que cette garde doit montrer.
+ *
+ *  · Ce fichier : il cite toutes les routes, et se rendrait aveugle lui-même.
  */
 function corpusAppelant(): string {
   const sources = [
@@ -151,8 +194,10 @@ function corpusAppelant(): string {
     .filter((f) => /\.(ts|tsx|js|jsx)$/.test(f))
     .filter((f) => !f.includes(`${path.sep}app${path.sep}api${path.sep}`))
     .filter((f) => !f.includes(`${path.sep}generated${path.sep}`))
-    // Ce fichier cite toutes les routes : il se rendrait aveugle lui-même.
-    .filter((f) => !f.endsWith('routes-sans-appelant.test.ts'))
+    .filter((f) => !/\.(test|spec)\.(ts|tsx|js|jsx)$/.test(f))
+    .filter((f) => !f.includes(`${path.sep}__tests__${path.sep}`))
+    .filter((f) => !f.includes(`${path.sep}integration${path.sep}`))
+    .filter((f) => !f.includes(`${path.sep}test-utils${path.sep}`))
   return sources.map((f) => sansCommentaires(fs.readFileSync(f, 'utf8'))).join('\n')
 }
 

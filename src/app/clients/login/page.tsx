@@ -16,6 +16,20 @@ import { cheminPortail } from '@/lib/portal/routes'
 
 type Step = 'password' | 'twofa'
 
+/**
+ * Où va le client une fois authentifié.
+ *
+ * Avec un mot de passe PROVISOIRE remis par le garage, toutes les routes du
+ * portail restent fermées tant qu'il n'est pas remplacé. L'envoyer vers son
+ * espace lui ferait traverser une page vide avant d'être réorienté — ce qui
+ * ressemble à une panne. On l'envoie donc directement là où il peut agir.
+ */
+function apresConnexion(motDePasseProvisoire: unknown): string {
+  if (motDePasseProvisoire !== true) return lienPortail(cheminPortail('account'))
+  const cible = lienPortail(cheminPortail('password'))
+  return `${cible}${cible.includes('?') ? '&' : '?'}requis=1`
+}
+
 export default function PortalLoginPage() {
   const router = useRouter()
   const [step, setStep] = useState<Step>('password')
@@ -42,7 +56,7 @@ export default function PortalLoginPage() {
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Connexion impossible'); return }
       if (data.requires2fa) { setChallenge(data.challenge); setStep('twofa'); return }
-      router.push(lienPortail(cheminPortail('account')))
+      router.push(apresConnexion(data.mustChangePassword))
     } catch {
       setError('Erreur réseau')
     } finally {
@@ -63,7 +77,7 @@ export default function PortalLoginPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Code invalide'); return }
-      router.push(lienPortail(cheminPortail('account')))
+      router.push(apresConnexion(data.mustChangePassword))
     } catch {
       setError('Erreur réseau')
     } finally {

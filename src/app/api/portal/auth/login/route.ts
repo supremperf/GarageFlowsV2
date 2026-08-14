@@ -74,7 +74,16 @@ export async function POST(req: NextRequest) {
   }
 
   const { token } = await issuePortalSession(user.id, req)
-  const res = NextResponse.json({ ok: true, user: { id: user.id, email: user.email, name: user.name, emailVerified: user.emailVerified } })
+  // `mustChangePassword` est rendu pour que l'écran de connexion envoie
+  // DIRECTEMENT vers la définition du mot de passe. Sans lui, le client passait
+  // par son espace, y recevait un 403 sur chaque route, et n'était réorienté
+  // qu'ensuite — après un aller-retour qui ressemble à une panne. L'information
+  // ne concerne que le compte qui vient de s'authentifier.
+  const res = NextResponse.json({
+    ok: true,
+    mustChangePassword: user.mustChangePassword,
+    user: { id: user.id, email: user.email, name: user.name, emailVerified: user.emailVerified },
+  })
   setPortalCookie(res, token)
   return res
 }

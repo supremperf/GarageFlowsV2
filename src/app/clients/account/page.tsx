@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { lienPortail } from '@/lib/portal/garage-slug'
 import { cheminPortail } from '@/lib/portal/routes'
+import { redirectionPortail } from '@/lib/portal/redirection'
 import { Car, Wrench, FileText, Receipt, ShieldCheck, LogOut, Loader2, MonitorSmartphone, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PortalSessions } from '@/components/portal/PortalSessions'
@@ -45,11 +46,15 @@ export default function PortalAccountPage() {
   const load = useCallback(async () => {
     try {
       const res = await fetch('/api/portal/me/dashboard', { cache: 'no-store' })
-      // Le garage mémorisé vit dans la session de l'ONGLET : un lien nu le perd
-        // dès qu'on n'est plus dans l'onglet d'origine, et le client retombe sur
-        // une connexion qui ne sait plus à quel garage il appartient
-        // (GF31-AUD-061).
-        if (res.status === 401) { router.replace(lienPortail(cheminPortail('login'))); return }
+      // Deux refus du serveur sont des ORDRES de navigation, pas des erreurs :
+      // session finie (401), et mot de passe provisoire à remplacer (403). Le
+      // second n'était traité nulle part : un client à qui le garage venait
+      // d'ouvrir un accès voyait cette page BLANCHE, sans issue (GF-DUR-016).
+      // Le garage mémorisé vit dans la session de l'ONGLET : `lienPortail` le
+      // reporte, sans quoi le client retombe sur une connexion qui ne sait plus
+      // à quel garage il appartient (GF31-AUD-061).
+      const ailleurs = await redirectionPortail(res)
+      if (ailleurs) { router.replace(ailleurs); return }
       if (!res.ok) throw new Error()
       setData((await res.json()) as Dashboard)
     } catch {

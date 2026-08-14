@@ -349,6 +349,61 @@ describe('la messagerie existe des DEUX côtés (GF-DUR-014)', () => {
   })
 })
 
+describe('le mot de passe provisoire a une sortie (GF-DUR-016)', () => {
+  /**
+   * Le défaut le plus coûteux de la série, et le plus discret : toutes les
+   * routes se comportaient correctement. Ce qui manquait, c'était l'ÉCRAN qui
+   * referme la boucle — sans lui, chaque accès ouvert par le garage produisait
+   * un client enfermé dehors devant une page blanche.
+   */
+  const page = lire('src/app/clients/password/page.tsx')
+  const redirection = lire('src/lib/portal/redirection.ts')
+
+  it('la page appelle bien la route de changement', () => {
+    expect(page).toMatch(/fetch\('\/api\/portal\/auth\/password', \{\s*method: 'PUT'/)
+    expect(page).toMatch(/currentPassword: actuel, newPassword: nouveau/)
+  })
+
+  it('un refus du serveur est rendu tel quel', () => {
+    // « mot de passe actuel incorrect » et « identique à l'actuel » n'appellent
+    // pas la même correction : les confondre laisserait le client tâtonner.
+    expect(page).toMatch(/setErreur\(d\?\.error/)
+  })
+
+  it('la divergence des deux saisies est signalée AVANT l\'envoi', () => {
+    // Le serveur ne voit qu'un seul des deux champs : il ne peut pas la détecter.
+    expect(page).toMatch(/const identiques = nouveau\.length > 0 && nouveau === confirmation/)
+    expect(page).toMatch(/Les deux saisies diffèrent/)
+  })
+
+  it('la connexion envoie DIRECTEMENT vers cet écran quand c\'est imposé', () => {
+    const login = lire('src/app/clients/login/page.tsx')
+    expect(login).toMatch(/function apresConnexion\(motDePasseProvisoire: unknown\)/)
+    expect(login).toMatch(/router\.push\(apresConnexion\(data\.mustChangePassword\)\)/)
+    // Et la route rend bien l'information sur laquelle l'écran s'appuie.
+    for (const r of ['src/app/api/portal/auth/login/route.ts', 'src/app/api/portal/auth/2fa/verify/route.ts']) {
+      expect(lire(r), r).toMatch(/mustChangePassword: user\.mustChangePassword/)
+    }
+  })
+
+  it('toute page du portail réoriente sur le code du serveur, sans le redeviner', () => {
+    expect(redirection).toMatch(/PASSWORD_CHANGE_REQUIRED/)
+    expect(redirection).toMatch(/res\.status === 401/)
+    // La réponse est CLONÉE : l'appelant doit pouvoir lire son corps ensuite.
+    expect(redirection).toMatch(/res\.clone\(\)\.json\(\)/)
+
+    for (const p of ['src/app/clients/account/page.tsx', 'src/app/clients/messages/page.tsx']) {
+      const src = lire(p)
+      expect(src, p).toContain("import { redirectionPortail } from '@/lib/portal/redirection'")
+      expect(src, p).toMatch(/const ailleurs = await redirectionPortail\(/)
+      expect(src, p).toMatch(/if \(ailleurs\) \{ router\.replace\(ailleurs\); return \}/)
+      // Le 401 n'est plus traité à la main : le redeviner ferait diverger les
+      // pages au premier ajout de code.
+      expect(src, p).not.toMatch(/if \(r(es)?\.status === 401\)/)
+    }
+  })
+})
+
 describe('anti-régression : les autres chaînes récemment recâblées restent branchées', () => {
   it('la réception fournisseur est toujours déclenchée par le panneau', () => {
     expect(lire('src/components/SuppliersPanel.tsx')).toMatch(/\/api\/purchase-orders\/\$\{[^}]+\}\/receive/)

@@ -425,13 +425,85 @@ où elle sert le plus. Le bouton du poste suit la même règle : un bouton qui m
 **Mutations sur ce lot.** 15/15 détectées (5 sur les routes du portail, 4 sur
 celles du poste, 3 sur les autorisations, plus 9 sur les deux interfaces).
 
+---
+
+## 8. La garde s'est trompée deux fois, et ce qu'elle cachait
+
+### Les tests comptaient comme des appelants
+
+Le commentaire de `corpusAppelant` affirmait qu'une route dont seul un test parle
+« reste orpheline pour l'utilisateur, et c'est exactement ce qu'il faut voir ».
+L'implémentation faisait l'inverse : les tests étaient DANS le corpus, si bien
+qu'un simple `import` dans un test d'isolation suffisait à déclarer une route
+branchée.
+
+Coût exact de l'écart : `/api/appointments` et `/api/appointments/[id]` — toute
+la confirmation de rendez-vous côté garage — passaient pour vivantes parce que
+deux tests d'isolation les importaient. Après correction, **quatorze routes
+supplémentaires** sont apparues.
+
+### L'angle mort des chemins calculés
+
+Toutes ne sont pas mortes. `/api/invoices/[id]` est bel et bien appelée, mais par
+une URL assemblée à l'exécution :
+
+```ts
+const apiBase = mode === 'quote' ? '/api/quotes' : '/api/invoices'
+```
+
+Une recherche textuelle ne peut pas la voir. Plutôt que d'ignorer le cas — ce qui
+reviendrait à laisser la garde mentir — un quatrième motif l'accueille,
+`chemin-calcule`, dont la note doit DÉSIGNER la construction. Sans cette
+exigence, l'étiquette servirait à faire taire n'importe quel constat gênant.
+
+### GF-DUR-016 [P0] — Le mot de passe provisoire enfermait le client dehors
+
+Le plus coûteux de toute la série, et le plus discret : **toutes les routes se
+comportaient correctement**.
+
+1. Le garage ouvre un accès → mot de passe provisoire, `mustChangePassword` levé.
+2. Le client se connecte : la session est bien émise.
+3. TOUTE route du portail répond alors `403 PASSWORD_CHANGE_REQUIRED` — voulu,
+   et juste.
+4. L'espace client traitait tout échec non-401 comme « pas de données » : page
+   **blanche**, sans explication.
+5. Et **aucun écran** n'appelait la route de changement.
+
+Autrement dit, chaque accès ouvert par le garage — la fonctionnalité livrée au
+commit `0b313da` — produisait un client enfermé dehors, définitivement. Le défaut
+n'était dans aucune route : il tenait à l'absence du seul écran qui refermait la
+boucle.
+
+**Correctif.** `/clients/password`, qui sert la première définition (imposée) et
+le changement volontaire — le texte distingue les deux, parce que dans le premier
+cas le client subit une obligation qu'il n'a pas demandée.
+
+La redirection est centralisée dans `lib/portal/redirection` : deux refus du
+serveur sont des ORDRES de navigation, pas des erreurs, et personne ne regardait
+le second. La connexion rend désormais `mustChangePassword` pour envoyer
+directement au bon endroit — sans quoi le client traverse une page vide avant
+d'être réorienté, ce qui ressemble à une panne.
+
+**Vérification.** `portail-mot-de-passe-provisoire.test.ts` — 6 tests sur
+l'enchaînement complet, du mot de passe remis par le garage jusqu'à la
+réouverture du portail. Mutations : 4/4.
+
+Ce test échouait d'abord en 429 dans la suite complète tout en passant seul :
+sans `TRUST_PROXY_HEADERS`, le compteur de connexions est partagé par tous les
+fichiers du même processus. Faux échec, réparé dans le test — pas dans le
+produit.
+
 ### Ce qui reste, et pourquoi
 
-L'inventaire compte **15 routes `sans-interface`**. Les plus notables : la prise
-de rendez-vous par le client, le double facteur du portail, et cinq modules
-d'analyse dont le cœur n'est appelé que par leur propre route. Chacune demande
-un arbitrage de conception — où la placer, quel parcours — qui revient au
-propriétaire du produit. **Décision requise.**
+L'inventaire compte **21 routes `sans-interface`** — davantage qu'avant, parce
+que la garde voit désormais juste. Les plus notables : les rendez-vous (les deux
+côtés), le changement d'adresse depuis le portail, le double facteur, la gestion
+du personnel (`/api/users` : le garage ne peut pas ajouter de collègue), la
+génération assistée de devis, et cinq modules d'analyse dont le cœur n'est appelé
+que par leur propre route.
+
+Chacune demande un arbitrage de conception — où la placer, quel parcours — qui
+revient au propriétaire du produit. **Décision requise.**
 
 ---
 
@@ -477,19 +549,21 @@ Reclassé honnêtement : **durcissement, pas défaut** — aucune reproduction n
 
 | Contrôle | Résultat |
 |---|---|
-| `npm test` | **234 fichiers, 2690 tests verts**, 0 échec, 28 ignorés |
+| `npm test` | **235 fichiers, 2701 tests verts**, 0 échec, 28 ignorés |
 | `tsc --noEmit` | 0 erreur |
 | `next lint` | 0 avertissement, 0 erreur |
 | `npm run check:consistency` | **12/12 gardes vertes** |
-| Tests par mutation | **52 mutations appliquées, 52 détectées** |
+| Tests par mutation | **56 mutations appliquées, 56 détectées** |
 
 ## Ce qui reste ouvert
 
-1. **15 fonctions sans interface** (§4, §6, §7) — inventoriées, verrouillées
-   contre toute aggravation. Les chaînes les plus coûteuses ont été branchées
-   (postes de licence, sessions du portail, relance commerciale, messagerie) ;
-   les restantes — rendez-vous, double facteur, cinq modules d'analyse —
-   demandent un dimensionnement produit.
+1. **21 fonctions sans interface** (§4, §6, §7, §8) — inventoriées, verrouillées
+   contre toute aggravation. Le compte a AUGMENTÉ après correction de la garde,
+   qui comptait les tests comme des appelants. Les chaînes les plus coûteuses ont
+   été branchées (postes de licence, sessions du portail, relance commerciale,
+   messagerie, mot de passe provisoire) ; les restantes — rendez-vous, double
+   facteur, gestion du personnel, cinq modules d'analyse — demandent un
+   dimensionnement produit.
 2. **Clés publiques de licence** — le dépôt reste sur `fe5b7807…`, distincte de
    celle du poste de l'exploitant (`835c1e90…`). Propager l'une ou l'autre
    invalide un parc : décision explicite requise (`npm run keys:sync`).

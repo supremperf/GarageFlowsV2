@@ -37,6 +37,7 @@ import {
 } from 'lucide-react'
 import { lienPortail } from '@/lib/portal/garage-slug'
 import { cheminPortail } from '@/lib/portal/routes'
+import { redirectionPortail } from '@/lib/portal/redirection'
 import { TICKET_CATEGORIES, type TicketCategory } from '@/lib/portal/tickets'
 import { cn } from '@/lib/utils'
 
@@ -95,7 +96,10 @@ export default function PortalMessagesPage() {
   const chargerFils = useCallback(async () => {
     try {
       const r = await fetch('/api/portal/tickets', { cache: 'no-store' })
-      if (r.status === 401) { router.replace(lienPortail(cheminPortail('login'))); return }
+      // Session finie, ou mot de passe provisoire à remplacer : dans les deux
+      // cas le serveur ordonne une navigation, il ne signale pas une panne.
+      const ailleurs = await redirectionPortail(r)
+      if (ailleurs) { router.replace(ailleurs); return }
       const d = await r.json().catch(() => null)
       if (!r.ok || !d) { setErreur('Chargement impossible.'); return }
       setErreur(null)
