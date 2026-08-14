@@ -35,6 +35,7 @@ import {
   Users,
   Boxes,
   MessageSquare,
+  CalendarClock,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { can } from '@/lib/authz'
@@ -135,6 +136,7 @@ interface HeaderProps {
   onOpenSuppliers?:     () => void
   onOpenClients?:       () => void
   onOpenTickets?:       () => void
+  onOpenAppointments?:  () => void
   onOpenCatalog?:       () => void
   warrantyAlerts?:      number
 }
@@ -154,6 +156,7 @@ export default function Header({
   onOpenSuppliers,
   onOpenClients,
   onOpenTickets,
+  onOpenAppointments,
   onOpenCatalog,
   warrantyAlerts = 0,
 }: HeaderProps) {
@@ -586,6 +589,18 @@ export default function Header({
               icon={Users}
               label={t.navClients}
               title={t.ttClients}
+              variant="finance"
+            />
+          )}
+          {/* Consulter le planning des rendez-vous concerne tout l'atelier ;
+              seul l'ENGAGEMENT auprès du client est réservé (`job:manage`), et
+              c'est le serveur qui le refuse. Le bouton reste donc ouvert. */}
+          {onOpenAppointments && (
+            <ToolBtn
+              onClick={onOpenAppointments}
+              icon={CalendarClock}
+              label="Rendez-vous"
+              title="Demandes de rendez-vous de vos clients"
               variant="finance"
             />
           )}

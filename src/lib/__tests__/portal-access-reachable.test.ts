@@ -404,6 +404,67 @@ describe('le mot de passe provisoire a une sortie (GF-DUR-016)', () => {
   })
 })
 
+describe('les rendez-vous existent des DEUX côtés (GF-DUR-017)', () => {
+  const portail = lire('src/app/clients/appointments/page.tsx')
+  const garage = lire('src/components/AppointmentsPanel.tsx')
+
+  it('le client atteint ses rendez-vous depuis son espace', () => {
+    const espace = lire('src/app/clients/account/page.tsx')
+    expect(espace).toMatch(/href=\{lienPortail\(cheminPortail\('appointments'\)\)\}/)
+    expect(espace).toContain('Mes rendez-vous')
+  })
+
+  it('les quatre opérations du portail sont déclenchables', () => {
+    expect(portail).toMatch(/fetch\('\/api\/portal\/appointments', \{ cache: 'no-store' \}\)/)
+    expect(portail).toMatch(/fetch\('\/api\/portal\/appointments', \{\s*\n?\s*method: 'POST'/)
+    expect(portail).toMatch(/method: 'PATCH'/)
+    expect(portail).toMatch(/method: 'DELETE'/)
+  })
+
+  it('le panneau garage est atteignable en navigation desktop ET mobile', () => {
+    expect(lire('src/app/page.tsx')).toMatch(/isApptsOpen\s+&& <AppointmentsPanel/)
+    expect(lire('src/components/Header.tsx')).toMatch(/onClick=\{onOpenAppointments\}/)
+    expect(lire('src/components/MobileNav.tsx')).toMatch(/run\(props\.onOpenAppointments\)/)
+  })
+
+  it('une DEMANDE n\'est jamais présentée comme un rendez-vous pris', () => {
+    // C'est la distinction qui décide si un client se présente devant un rideau
+    // fermé.
+    expect(portail).toMatch(/requested: \{ texte: 'Demande envoyée'/)
+    expect(portail).toMatch(/confirmed: \{ texte: 'Confirmé par le garage'/)
+    expect(garage).toMatch(/requested: \{ texte: 'À confirmer'/)
+  })
+
+  it('les heures d\'ouverture viennent du serveur, jamais recopiées', () => {
+    // Les recopier les ferait diverger au premier changement de réglage : le
+    // client se verrait proposer une heure que le serveur refuse.
+    expect(portail).toMatch(/if \(d\.horaires\) setHoraires\(d\.horaires\)/)
+    expect(lire('src/app/api/portal/appointments/route.ts')).toMatch(/ouverture: garage\?\.workshopStartHour/)
+  })
+
+  it('l\'écran ne propose que les transitions que le serveur accepterait', () => {
+    // `nextAppointmentStatus` est la MÊME fonction que celle du serveur, pas une
+    // copie qui divergerait — proposer une transition impossible mènerait à un
+    // 409 incompréhensible.
+    expect(garage).toContain("import { nextAppointmentStatus")
+    expect(garage).toMatch(/nextAppointmentStatus\(r\.status as AppointmentStatus, a\.action\) !== null/)
+  })
+
+  it('déplacer un créneau confirmé est annoncé comme une perte de confirmation', () => {
+    expect(portail).toMatch(/annulera la confirmation/)
+  })
+
+  it('le garage ouvre sur les demandes en attente', () => {
+    expect(garage).toMatch(/useState<'a-confirmer' \| 'a-venir' \| 'tous'>\('a-confirmer'\)/)
+    expect(garage).toMatch(/r\.status === 'requested'/)
+  })
+
+  it('annuler le rendez-vous d\'un client exige une confirmation', () => {
+    expect(garage).toMatch(/action === 'cancel' && !window\.confirm\(/)
+    expect(garage).toMatch(/prévenez-le si c’est de votre fait/)
+  })
+})
+
 describe('anti-régression : les autres chaînes récemment recâblées restent branchées', () => {
   it('la réception fournisseur est toujours déclenchée par le panneau', () => {
     expect(lire('src/components/SuppliersPanel.tsx')).toMatch(/\/api\/purchase-orders\/\$\{[^}]+\}\/receive/)

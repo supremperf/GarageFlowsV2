@@ -86,14 +86,6 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string }> = {
   // Le portail client, en particulier : messagerie, prise de rendez-vous,
   // double facteur et gestion des appareils sont écrits, testés, et absents des
   // cinq pages du portail.
-  // ── Rendez-vous : les DEUX côtés sont absents ─────────────────────────────
-  // Le côté garage n'était pas visible avant que les tests soient retirés du
-  // corpus : deux tests d'isolation l'importaient, ce qui suffisait à le faire
-  // passer pour branché.
-  '/api/portal/appointments': { motif: 'sans-interface', note: 'prise de rendez-vous par le client : créneaux et demande, aucune page' },
-  '/api/appointments': { motif: 'sans-interface', note: 'liste des rendez-vous côté garage : aucun panneau du poste ne l’affiche' },
-  '/api/appointments/[id]': { motif: 'sans-interface', note: 'confirmation, annulation et clôture d’un rendez-vous par le garage, sans écran' },
-
   '/api/portal/auth/email': { motif: 'sans-interface', note: 'le client ne peut pas demander le changement de son adresse depuis le portail' },
   '/api/portal/token': { motif: 'sans-interface', note: 'émission d’un lien tokenisé de portail : aucun appelant, ni écran ni synchronisation' },
   '/api/sync/portal': { motif: 'sans-interface', note: 'rattachement poste ⇄ cloud du portail : aucun `cloudPost` ne l’appelle' },
@@ -101,7 +93,6 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string }> = {
   '/api/loaner-vehicles/[id]': { motif: 'sans-interface', note: 'suppression d’un véhicule de prêt : le panneau ne liste et ne crée que' },
   '/api/quotes/[id]/signature-token': { motif: 'sans-interface', note: 'lien de signature d’un devis : aucun bouton ne le produit' },
   '/api/quotes/generate': { motif: 'sans-interface', note: 'génération assistée de devis : aucun écran ne la déclenche' },
-  '/api/portal/appointments/[id]': { motif: 'sans-interface', note: 'report et annulation d’un rendez-vous client, sans interface' },
   '/api/portal/auth/2fa/setup': { motif: 'sans-interface', note: 'génération du secret de double facteur, sans écran de configuration' },
   '/api/portal/auth/2fa/enable': { motif: 'sans-interface', note: 'activation du double facteur : le schéma le porte, le portail ne l’offre pas' },
   '/api/portal/auth/2fa/disable': { motif: 'sans-interface', note: 'désactivation du double facteur, inatteignable comme son activation' },
@@ -259,6 +250,10 @@ describe('routes d\'API sans appelant — inventaire figé', () => {
       '/api/portal/tickets/[id]/close',
       '/api/tickets',
       '/api/tickets/[id]',
+      '/api/portal/appointments',
+      '/api/portal/appointments/[id]',
+      '/api/appointments',
+      '/api/appointments/[id]',
     ]) {
       expect(constatees, `${r} est redevenue inatteignable`).not.toContain(r)
     }

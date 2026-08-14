@@ -13,12 +13,28 @@ import { withPortalAuth } from '@/lib/portal/auth-helpers'
 import { validateSlot } from '@/lib/portal/appointments'
 
 export const GET = withPortalAuth(async (_req, { user }) => {
-  const appointments = await prisma.appointment.findMany({
-    where: { portalUserId: user.id },
-    orderBy: [{ date: 'desc' }, { startTime: 'desc' }],
-    take: 100,
+  const [appointments, garage] = await Promise.all([
+    prisma.appointment.findMany({
+      where: { portalUserId: user.id },
+      orderBy: [{ date: 'desc' }, { startTime: 'desc' }],
+      take: 100,
+    }),
+    prisma.garage.findUnique({
+      where: { id: user.garageId },
+      select: { workshopStartHour: true, workshopEndHour: true },
+    }),
+  ])
+  // Les HORAIRES accompagnent la liste : `validateSlot` refuse tout créneau hors
+  // ouverture, et sans les connaître le client ne peut que deviner puis se voir
+  // refuser. Ce ne sont pas des données sensibles — un garage affiche ses heures
+  // sur sa devanture.
+  return NextResponse.json({
+    appointments,
+    horaires: {
+      ouverture: garage?.workshopStartHour ?? 8,
+      fermeture: garage?.workshopEndHour ?? 18,
+    },
   })
-  return NextResponse.json({ appointments })
 })
 
 export const POST = withPortalAuth(async (req, { user }) => {

@@ -493,12 +493,60 @@ sans `TRUST_PROXY_HEADERS`, le compteur de connexions est partagé par tous les
 fichiers du même processus. Faux échec, réparé dans le test — pas dans le
 produit.
 
+---
+
+## 9. Rendez-vous client ↔ garage
+
+### GF-DUR-017 [P1] — Quatre routes, et un côté que la garde ne voyait même pas
+
+**Cause racine.** La demande, la modification, l'annulation et les transitions
+côté garage existaient, avec une validation de créneau éprouvée
+(`lib/portal/appointments` : format, futur, dans les heures d'ouverture, tient
+avant la fermeture) et une machine à états. Aucun écran ne les appelait.
+
+Le côté garage n'était même pas VISIBLE dans l'inventaire : deux tests
+d'isolation importaient ces routes, ce qui suffisait à les faire passer pour
+branchées tant que les tests comptaient comme des appelants (§8).
+
+**Ce que les écrans doivent porter.**
+
+*Une DEMANDE n'est pas un rendez-vous.* C'est la distinction qui traverse tout le
+lot, parce que c'est elle qui décide si un client se présente devant un rideau
+fermé. Le client propose ; le garage confirme, ou non. Les libellés le disent —
+« Demande envoyée », « Confirmé par le garage » — au lieu de recopier `requested`
+et `confirmed`.
+
+*Les heures d'ouverture viennent du serveur.* `validateSlot` refuse tout créneau
+hors ouverture. Les recopier côté client les ferait diverger au premier
+changement de réglage : le client se verrait proposer une heure que le serveur
+refuse. Elles accompagnent donc la liste et bornent directement le champ.
+
+*Déplacer un créneau confirmé annule la confirmation* — le garage doit se
+réengager. L'écran le dit AVANT, sinon le client croit conserver sa place.
+
+*Le panneau garage ouvre sur « À confirmer ».* Les demandes en attente sont les
+seules où quelqu'un attend une réponse ; le planning complet les noierait dans
+les rendez-vous déjà réglés. Et il ne propose que les transitions que le serveur
+accepterait — en appelant `nextAppointmentStatus`, la MÊME fonction, pas une
+copie qui divergerait.
+
+### GF-DUR-018 [P2] — Un mécanicien pouvait annuler le rendez-vous d'un client
+
+`POST /api/appointments/[id]` ne contrôlait aucune permission. Consulter le
+planning de l'atelier concerne tout le monde ; s'ENGAGER auprès d'un client —
+confirmer un créneau, l'annuler — relève de la gestion des interventions. La
+route exige désormais `job:manage` ; la lecture reste ouverte, et le bouton avec
+elle.
+
+**Vérification.** `rendez-vous-client-garage.test.ts` — 16 tests sur la traversée
+(demande → confirmation → clôture), la validation des créneaux, le déplacement,
+les transitions impossibles et l'isolation. Mutations : 13/13.
+
 ### Ce qui reste, et pourquoi
 
-L'inventaire compte **21 routes `sans-interface`** — davantage qu'avant, parce
-que la garde voit désormais juste. Les plus notables : les rendez-vous (les deux
-côtés), le changement d'adresse depuis le portail, le double facteur, la gestion
-du personnel (`/api/users` : le garage ne peut pas ajouter de collègue), la
+L'inventaire compte **17 routes `sans-interface`**. Les plus notables : le
+changement d'adresse depuis le portail, le double facteur, la gestion du
+personnel (`/api/users` : le garage ne peut pas ajouter de collègue), la
 génération assistée de devis, et cinq modules d'analyse dont le cœur n'est appelé
 que par leur propre route.
 
@@ -549,21 +597,21 @@ Reclassé honnêtement : **durcissement, pas défaut** — aucune reproduction n
 
 | Contrôle | Résultat |
 |---|---|
-| `npm test` | **235 fichiers, 2701 tests verts**, 0 échec, 28 ignorés |
+| `npm test` | **236 fichiers, 2726 tests verts**, 0 échec, 28 ignorés |
 | `tsc --noEmit` | 0 erreur |
 | `next lint` | 0 avertissement, 0 erreur |
 | `npm run check:consistency` | **12/12 gardes vertes** |
-| Tests par mutation | **56 mutations appliquées, 56 détectées** |
+| Tests par mutation | **69 mutations appliquées, 69 détectées** |
 
 ## Ce qui reste ouvert
 
-1. **21 fonctions sans interface** (§4, §6, §7, §8) — inventoriées, verrouillées
-   contre toute aggravation. Le compte a AUGMENTÉ après correction de la garde,
-   qui comptait les tests comme des appelants. Les chaînes les plus coûteuses ont
-   été branchées (postes de licence, sessions du portail, relance commerciale,
-   messagerie, mot de passe provisoire) ; les restantes — rendez-vous, double
-   facteur, gestion du personnel, cinq modules d'analyse — demandent un
-   dimensionnement produit.
+1. **17 fonctions sans interface** (§4, §6 à §9) — inventoriées, verrouillées
+   contre toute aggravation. Le compte avait AUGMENTÉ au §8 après correction de
+   la garde, qui comptait les tests comme des appelants. Les chaînes les plus
+   coûteuses sont branchées : postes de licence, sessions du portail, relance
+   commerciale, messagerie, mot de passe provisoire, rendez-vous. Les restantes —
+   changement d'adresse depuis le portail, double facteur, gestion du personnel,
+   cinq modules d'analyse — demandent un dimensionnement produit.
 2. **Clés publiques de licence** — le dépôt reste sur `fe5b7807…`, distincte de
    celle du poste de l'exploitant (`835c1e90…`). Propager l'une ou l'autre
    invalide un parc : décision explicite requise (`npm run keys:sync`).

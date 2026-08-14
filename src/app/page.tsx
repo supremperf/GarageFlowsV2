@@ -27,6 +27,7 @@ import OcrPanel from '@/components/OcrPanel'
 import SuppliersPanel from '@/components/SuppliersPanel'
 import ClientsPanel from '@/components/ClientsPanel'
 import TicketsPanel from '@/components/TicketsPanel'
+import AppointmentsPanel from '@/components/AppointmentsPanel'
 import CatalogPanel from '@/components/CatalogPanel'
 import LicenseRevokedOverlay from '@/components/LicenseRevokedOverlay'
 import UpdateModal from '@/components/UpdateModal'
@@ -96,6 +97,7 @@ export default function Home() {
   const [isSuppliersOpen,      setIsSuppliersOpen]      = useState(false)
   const [isClientsOpen,        setIsClientsOpen]        = useState(false)
   const [isTicketsOpen,        setIsTicketsOpen]        = useState(false)
+  const [isApptsOpen,          setIsApptsOpen]          = useState(false)
   const [isCatalogOpen,        setIsCatalogOpen]        = useState(false)
   const [isAssistantOpen,      setIsAssistantOpen]      = useState(false)
   const [warrantyAlerts,       setWarrantyAlerts]       = useState(0)
@@ -291,6 +293,7 @@ export default function Home() {
         onOpenSuppliers={() => setIsSuppliersOpen(true)}
         onOpenClients={() => setIsClientsOpen(true)}
         onOpenTickets={() => setIsTicketsOpen(true)}
+        onOpenAppointments={() => setIsApptsOpen(true)}
         onOpenCatalog={() => setIsCatalogOpen(true)}
         warrantyAlerts={warrantyAlerts}
       />
@@ -347,6 +350,7 @@ export default function Home() {
         onOpenSuppliers={() => setIsSuppliersOpen(true)}
         onOpenClients={() => setIsClientsOpen(true)}
         onOpenTickets={() => setIsTicketsOpen(true)}
+        onOpenAppointments={() => setIsApptsOpen(true)}
         onOpenCatalog={() => setIsCatalogOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         warrantyAlerts={warrantyAlerts}
@@ -392,6 +396,7 @@ export default function Home() {
       {isSuppliersOpen        && <SuppliersPanel        onClose={() => setIsSuppliersOpen(false)} />}
       {isClientsOpen          && <ClientsPanel          onClose={() => setIsClientsOpen(false)} />}
       {isTicketsOpen          && <TicketsPanel          onClose={() => setIsTicketsOpen(false)} />}
+      {isApptsOpen            && <AppointmentsPanel     onClose={() => setIsApptsOpen(false)} />}
       {isCatalogOpen          && <CatalogPanel          onClose={() => setIsCatalogOpen(false)} />}
       {isSettingsOpen         && <SettingsModal        onClose={() => setIsSettingsOpen(false)} />}
 

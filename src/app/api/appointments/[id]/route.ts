@@ -8,12 +8,21 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { nextAppointmentStatus, type AppointmentStatus, type AppointmentAction } from '@/lib/portal/appointments'
 
 const ACTIONS: readonly AppointmentAction[] = ['confirm', 'cancel', 'complete']
 
 export const POST = withAuth(async (req, { params }: { params: { id: string } }) => {
   const session = await requireSession()
+  // CONSULTER le planning de l'atelier concerne tout le monde ; s'ENGAGER
+  // auprès d'un client — confirmer un créneau, l'annuler — relève de la
+  // gestion des interventions. La route ne contrôlait rien : un mécanicien
+  // pouvait annuler le rendez-vous d'un client sans que personne au comptoir
+  // ne l'apprenne.
+  if (!can(session.user.role, 'job:manage')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
   const action = body.action as AppointmentAction
   if (!ACTIONS.includes(action)) {
