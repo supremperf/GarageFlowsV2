@@ -60,11 +60,15 @@ type Motif = 'sans-interface' | 'double' | 'exploitation' | 'cadre' | 'chemin-ca
  *  `PRODUCT_REQUIRED` — fonction du produit : il lui faut une interface. Chaque
  *      entrée est une dette explicite, pas un constat.
  *  `INTERNAL_ONLY`    — destinée à un outil, un opérateur ou une tâche
- *      planifiée : le déclencheur réel doit être nommé.
- *  `DEPRECATED`       — remplacée ou abandonnée ; à retirer une fois le dernier
- *      consommateur éteint.
+ *      planifiée. Exige un DÉCLENCHEUR RÉEL nommé : « son code appelle une
+ *      fonction interne » ne prouve que `route → service`, jamais qu'un
+ *      appelant existe.
+ *  `DEPRECATED`       — remplacée par une autre, encore identifiable ; à retirer
+ *      une fois le dernier consommateur éteint.
+ *  `ORPHANED`         — aucun appelant réel, et aucune justification produit
+ *      actuelle. C'est la conclusion d'une recherche, pas un aveu d'ignorance.
  */
-type Classe = 'PRODUCT_REQUIRED' | 'INTERNAL_ONLY' | 'DEPRECATED'
+type Classe = 'PRODUCT_REQUIRED' | 'INTERNAL_ONLY' | 'DEPRECATED' | 'ORPHANED'
 
 const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }> = {
   '/api/auth/[...nextauth]': { motif: 'cadre', note: 'point d’entrée NextAuth, atteint par signIn()' },
@@ -80,17 +84,12 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
     motif: 'chemin-calcule',
     note: 'QuoteInvoiceModal : `apiBase = mode === \'quote\' ? \'/api/quotes\' : \'/api/invoices\'`, puis `${apiBase}/${id}`',
   },
-  '/api/admin/updates/file/[name]': {
-    motif: 'chemin-calcule',
-    note: 'ouverte via `info.downloadUrl`, que le serveur assemble (UpdateModal, UpdatesTab)',
-  },
 
   // ── Contrat avec l'outil de génération de clés (x-gf-key) ─────────────────
   // Documenté par `license/__tests__/keygen-api-contract.test.ts` : ces routes
   // servent `scripts/keygen_gui.py`, pas l'interface web.
   '/api/admin/licenses/create': { motif: 'exploitation', note: 'enregistrement d’une licence par l’outil keygen (en-tête x-gf-key)' },
   '/api/admin/licenses/revoke-by-key': { motif: 'exploitation', note: 'révocation par l’outil keygen, par clé et non par identifiant' },
-  '/api/portal/auth/verify-email': { motif: 'exploitation', note: 'ouverte par le client depuis le lien reçu par courriel, jamais par du code' },
 
   '/api/vin': { motif: 'double', note: 'vinEngine atteint via /api/copilot, /api/ocr et /api/catalog' },
   '/api/diagnostic': { motif: 'double', note: 'diagnose() atteint via /api/copilot' },
@@ -103,8 +102,13 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
   // double facteur et gestion des appareils sont écrits, testés, et absents des
   // cinq pages du portail.
   '/api/portal/auth/email': { motif: 'sans-interface', note: 'le client ne peut pas demander le changement de son adresse depuis le portail', classe: 'PRODUCT_REQUIRED' },
-  '/api/portal/token': { motif: 'sans-interface', note: 'émission d’un lien tokenisé de portail : aucun appelant, ni écran ni synchronisation', classe: 'DEPRECATED' },
-  '/api/sync/portal': { motif: 'sans-interface', note: 'rattachement poste ⇄ cloud du portail : aucun `cloudPost` ne l’appelle', classe: 'DEPRECATED' },
+  // Remplacée par `/api/portal/generate`, que `JobQRCode` appelle réellement.
+  // La différence n'est pas cosmétique : `generate` signe `{ typ, jobId,
+  // garageId }` et publie l'instantané au cloud pour un poste installé, tandis
+  // que celle-ci signe un jeton SANS `garageId` — que `/api/portal/[token]`
+  // résout alors « par identifiant seul », son chemin hérité. Elle produit donc
+  // encore, à ce jour, des jetons plus faibles que ceux du chemin courant.
+  '/api/portal/token': { motif: 'sans-interface', note: 'remplacée par /api/portal/generate ; signe des jetons sans garageId, aucun appelant', classe: 'DEPRECATED' },
   '/api/loaner-vehicles/[id]': { motif: 'sans-interface', note: 'suppression d’un véhicule de prêt : le panneau ne liste et ne crée que', classe: 'PRODUCT_REQUIRED' },
   '/api/quotes/generate': { motif: 'sans-interface', note: 'génération assistée de devis : aucun écran ne la déclenche', classe: 'PRODUCT_REQUIRED' },
   '/api/portal/auth/2fa/setup': { motif: 'sans-interface', note: 'génération du secret de double facteur, sans écran de configuration', classe: 'PRODUCT_REQUIRED' },
@@ -113,19 +117,19 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
 
   // Cinq modules dont le cœur métier n'est appelé QUE par leur propre route :
   // ni le copilote, ni le tableau de bord, ni aucun écran ne les atteint.
-  '/api/pricing': { motif: 'sans-interface', note: 'optimisation des prix : recommendPrice() n’est appelé que d’ici', classe: 'INTERNAL_ONLY' },
-  '/api/scheduling': { motif: 'sans-interface', note: 'planification intelligente : optimizeSchedule() n’est appelé que d’ici', classe: 'INTERNAL_ONLY' },
-  '/api/memory': { motif: 'sans-interface', note: 'mémoire du garage : analyzeMemory() n’est appelé que d’ici', classe: 'INTERNAL_ONLY' },
-  '/api/gamification': { motif: 'sans-interface', note: 'classement des mécaniciens : buildLeaderboard() n’est appelé que d’ici', classe: 'INTERNAL_ONLY' },
-  '/api/proactive': { motif: 'sans-interface', note: 'assistant proactif : buildAlerts() n’est appelé que d’ici', classe: 'INTERNAL_ONLY' },
+  '/api/pricing': { motif: 'sans-interface', note: 'optimisation des prix : recommendPrice() n’est appelé que d’ici', classe: 'ORPHANED' },
+  '/api/scheduling': { motif: 'sans-interface', note: 'planification intelligente : optimizeSchedule() n’est appelé que d’ici', classe: 'ORPHANED' },
+  '/api/memory': { motif: 'sans-interface', note: 'mémoire du garage : analyzeMemory() n’est appelé que d’ici', classe: 'ORPHANED' },
+  '/api/gamification': { motif: 'sans-interface', note: 'classement des mécaniciens : buildLeaderboard() n’est appelé que d’ici', classe: 'ORPHANED' },
+  '/api/proactive': { motif: 'sans-interface', note: 'assistant proactif : buildAlerts() n’est appelé que d’ici', classe: 'ORPHANED' },
   // Ces trois-là n'étaient pas visibles avant le retrait des commentaires : une
   // phrase d'en-tête les citait, et la garde les croyait branchées. Deux d'entre
   // elles figurent parmi les « modules livrés » de docs/DELIVERY_STATUS.md.
-  '/api/forecast': { motif: 'sans-interface', note: 'prévisions de chiffre d’affaires : aucun écran ne les demande', classe: 'INTERNAL_ONLY' },
-  '/api/profitability': { motif: 'sans-interface', note: 'analyse de rentabilité par intervention : aucun écran ne la demande', classe: 'INTERNAL_ONLY' },
-  '/api/suggestions': { motif: 'sans-interface', note: 'suggestions d’affectation de mécaniciens pour une journée, sans écran', classe: 'INTERNAL_ONLY' },
+  '/api/forecast': { motif: 'sans-interface', note: 'prévisions de chiffre d’affaires : aucun écran ne les demande', classe: 'ORPHANED' },
+  '/api/profitability': { motif: 'sans-interface', note: 'analyse de rentabilité par intervention : aucun écran ne la demande', classe: 'ORPHANED' },
+  '/api/suggestions': { motif: 'sans-interface', note: 'suggestions d’affectation de mécaniciens pour une journée, sans écran', classe: 'ORPHANED' },
 
-  '/api/analytics/health': { motif: 'sans-interface', note: 'score de santé — aucun écran ne l’affiche', classe: 'INTERNAL_ONLY' },
+  '/api/analytics/health': { motif: 'sans-interface', note: 'score de santé — aucun écran ne l’affiche', classe: 'ORPHANED' },
   '/api/copilot/reports/[id]/export': { motif: 'sans-interface', note: 'export de rapport du copilote — aucun bouton', classe: 'PRODUCT_REQUIRED' },
 
   // Reclassée après vérification : le panneau Stock calcule déjà le même
@@ -175,12 +179,9 @@ function sansCommentaires(src: string): string {
 }
 
 /**
- * Corpus appelant : le code qu'un UTILISATEUR peut atteindre.
+ * Fichiers susceptibles d'APPELER une route, avec leur chemin.
  *
- * Trois familles en sont exclues, et pour trois raisons distinctes.
- *
- *  · Les ROUTES elles-mêmes : une route qui s'appelle, ou qu'une route voisine
- *    appelle, n'en fait pas une fonctionnalité atteignable.
+ * Deux familles en sont exclues, et pour deux raisons distinctes.
  *
  *  · Les TESTS. Première version : ils étaient inclus, alors que le commentaire
  *    d'à côté affirmait le contraire. Conséquence exacte de l'écart :
@@ -190,34 +191,58 @@ function sansCommentaires(src: string): string {
  *    pour l'utilisateur ; c'est précisément ce que cette garde doit montrer.
  *
  *  · Ce fichier : il cite toutes les routes, et se rendrait aveugle lui-même.
+ *
+ * ─── Les routes, elles, RESTENT dans le corpus ──────────────────────────────
+ * Première version : tout `src/app/api/` en était exclu, au motif qu'« une
+ * route qui s'appelle, ou qu'une route voisine appelle, n'en fait pas une
+ * fonctionnalité atteignable ». C'était faux pour un cas bien réel : l'appel
+ * POSTE → CLOUD. `/api/portal/generate`, exécutée sur le poste, publie
+ * l'instantané au cloud par `cloudPost('/api/sync/portal', …)` — une requête
+ * HTTP entre DEUX déploiements, pas un appel interne.
+ *
+ * `/api/sync/portal` figurait donc parmi les routes mortes, classée DEPRECATED.
+ * La supprimer aurait cassé toute publication de portail depuis un poste
+ * installé. C'est exactement le faux positif contre lequel il faut se garder :
+ * l'absence de résultat n'est pas une preuve d'absence d'appelant.
+ *
+ * Le fichier de la route elle-même reste écarté, lui : une route qui cite son
+ * propre chemin — dans une trace, un message — ne s'appelle pas.
  */
-function corpusAppelant(): string {
-  const sources = [
+function fichiersAppelants(): string[] {
+  return [
     ...fichiers(path.join(RACINE, 'src')),
     ...fichiers(path.join(RACINE, 'electron')),
   ]
     .filter((f) => /\.(ts|tsx|js|jsx)$/.test(f))
-    .filter((f) => !f.includes(`${path.sep}app${path.sep}api${path.sep}`))
     .filter((f) => !f.includes(`${path.sep}generated${path.sep}`))
     .filter((f) => !/\.(test|spec)\.(ts|tsx|js|jsx)$/.test(f))
     .filter((f) => !f.includes(`${path.sep}__tests__${path.sep}`))
     .filter((f) => !f.includes(`${path.sep}integration${path.sep}`))
     .filter((f) => !f.includes(`${path.sep}test-utils${path.sep}`))
-  return sources.map((f) => sansCommentaires(fs.readFileSync(f, 'utf8'))).join('\n')
 }
 
 function orphelines(): string[] {
-  const corpus = corpusAppelant()
+  // Lus une seule fois : le corpus varie d'une route à l'autre — on en retire
+  // toujours le fichier de la route examinée — mais son contenu, non.
+  const sources = fichiersAppelants()
+    .filter((f) => !f.endsWith('routes-sans-appelant.test.ts'))
+    .map((f) => ({ f, texte: sansCommentaires(fs.readFileSync(f, 'utf8')) }))
+
   const trouvees: string[] = []
-  for (const f of fichiers(API).filter((x) => /route\.ts$/.test(x))) {
-    const chemin = '/api/' + f.slice(API.length + 1).replace(/\\/g, '/').replace(/\/route\.ts$/, '')
+  for (const fichierRoute of fichiers(API).filter((x) => /route\.ts$/.test(x))) {
+    const chemin = '/api/' + fichierRoute.slice(API.length + 1).replace(/\\/g, '/').replace(/\/route\.ts$/, '')
     // Un segment dynamique devient un joker : `/api/clients/[id]/portal-access`
     // s'écrit `/api/clients/${id}/portal-access` chez l'appelant.
     const motif = chemin
       .split('/')
       .map((s) => (s.startsWith('[') ? '[^/`\'"]+' : s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
       .join('/')
-    if (!new RegExp(motif).test(corpus)) trouvees.push(chemin)
+    const rx = new RegExp(motif)
+    // Le fichier de la route est retiré du corpus : y citer son propre chemin —
+    // dans une trace, un message d'erreur — ne fait pas d'elle une route
+    // appelée.
+    const appelee = sources.some(({ f, texte }) => f !== fichierRoute && rx.test(texte))
+    if (!appelee) trouvees.push(chemin)
   }
   return trouvees.sort()
 }

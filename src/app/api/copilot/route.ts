@@ -141,7 +141,12 @@ export const POST = withAuth(async (req) => {
         const stock = report.plans.filter((p) => p.urgency === 'critical' || p.urgency === 'high').length
         const quotes = await prisma.quote.count({ where: { garageId, status: 'sent' } })
         res.data = { lowStockUrgent: stock, pendingQuotes: quotes }
-        res.message = `Priorités : ${stock} pièce(s) en risque de rupture, ${quotes} devis en attente. Voir /api/proactive pour le détail.`
+        // Renvoyer l'utilisateur vers « /api/proactive » l'envoyait dans une
+        // impasse : c'est une route d'API, qu'aucun écran n'expose et qu'un
+        // garagiste ne peut pas ouvrir. Le copilote dit ce qu'il sait, et
+        // désigne l'écran qui existe réellement.
+        res.message = `Priorités : ${stock} pièce(s) en risque de rupture, ${quotes} devis en attente. `
+          + 'Le détail des ruptures est dans le panneau Stock, onglet « stock bas ».'
         break
       }
       default:
