@@ -556,6 +556,69 @@ describe('le garage peut enfin créer des comptes pour son personnel (GF-DUR-021
   })
 })
 
+describe('le client peut ACTIVER sa double authentification (GF-DUR-026)', () => {
+  const src = lire('src/components/portal/PortalTwoFactor.tsx')
+  const espace = lire('src/app/clients/account/page.tsx')
+
+  it('« Mon espace » monte le panneau', () => {
+    expect(espace).toContain("import { PortalTwoFactor } from '@/components/portal/PortalTwoFactor'")
+    expect(espace).toContain('<PortalTwoFactor />')
+  })
+
+  it('les trois opérations du cycle sont déclenchées', () => {
+    expect(src).toMatch(/fetch\('\/api\/portal\/auth\/2fa\/setup'/)
+    expect(src).toMatch(/fetch\('\/api\/portal\/auth\/2fa\/enable'/)
+    expect(src).toMatch(/fetch\('\/api\/portal\/auth\/2fa\/disable'/)
+    // Et l'état initial vient du serveur, pas d'une supposition locale.
+    expect(src).toMatch(/twoFactorEnabled/)
+    expect(src).toMatch(/backupCodesRemaining/)
+  })
+
+  it('les codes de secours ne peuvent pas être quittés par inadvertance', () => {
+    // Ils ne sont rendus qu'UNE fois : refermer sans les noter enferme dehors
+    // un client qui perdra ensuite son téléphone. La confirmation est donc
+    // exigée — le bouton reste inerte tant qu'elle n'est pas cochée.
+    expect(src).toMatch(/disabled=\{!compris\}/)
+    expect(src).toMatch(/ne seront plus jamais affichés/)
+    // Et il existe un moyen de les emporter sans les recopier à la main.
+    expect(src).toMatch(/a\.download = 'garageflows-codes-de-secours\.txt'/)
+  })
+
+  it('les codes de secours ne repartent pas sur le réseau', () => {
+    // Le téléchargement est LOCAL (Blob) : un envoi vers le serveur, même
+    // « pour sauvegarde », annulerait l'intérêt de ne stocker que des hachés.
+    const bloc = src.slice(src.indexOf('function CodesSecours'))
+    expect(bloc).not.toMatch(/fetch\(/)
+    expect(bloc).toMatch(/URL\.createObjectURL/)
+  })
+
+  it('un service sans clé de chiffrement est EXPLIQUÉ, pas rendu comme une panne', () => {
+    // 503 TWOFA_UNAVAILABLE est un refus volontaire (GF-DUR-022). Afficher
+    // « erreur » ferait réessayer indéfiniment un client qui n'y peut rien.
+    expect(src).toMatch(/TWOFA_UNAVAILABLE/)
+    expect(src).toMatch(/n’est pas une panne/)
+  })
+
+  it('le nombre de codes restants est affiché — ils s\'épuisent sans bruit', () => {
+    expect(src).toMatch(/codesRestants/)
+    expect(src).toMatch(/SEUIL_CODES_BAS/)
+  })
+
+  it('la désactivation demande le mot de passe AVANT de la tenter', () => {
+    // Le serveur l'exige ; faire cliquer puis annoncer le refus serait une
+    // impasse déguisée en bouton.
+    expect(src).toMatch(/JSON\.stringify\(\{ password: motDePasse \}\)/)
+    expect(src).toMatch(/type="password"/)
+  })
+
+  it('le changement de mot de passe est atteignable sans y être forcé', () => {
+    // `/clients/password` n'était visée que par redirection : un client qui
+    // voulait simplement changer son mot de passe n'avait aucun chemin.
+    expect(espace).toMatch(/href=\{lienPortail\(cheminPortail\('password'\)\)\}/)
+    expect(espace).toContain('Mot de passe')
+  })
+})
+
 describe('anti-régression : les autres chaînes récemment recâblées restent branchées', () => {
   it('la réception fournisseur est toujours déclenchée par le panneau', () => {
     expect(lire('src/components/SuppliersPanel.tsx')).toMatch(/\/api\/purchase-orders\/\$\{[^}]+\}\/receive/)

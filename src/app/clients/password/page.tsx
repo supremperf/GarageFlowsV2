@@ -22,7 +22,7 @@
  * demandée, et doit comprendre pourquoi.
  */
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { KeyRound, Loader2, ShieldCheck } from 'lucide-react'
 import { lienPortail } from '@/lib/portal/garage-slug'
@@ -31,7 +31,28 @@ import { cheminPortail } from '@/lib/portal/routes'
 /** Même minimum que le serveur — il refuserait de toute façon en dessous. */
 const MINIMUM = 10
 
+/**
+ * Frontière Suspense obligatoire autour de `useSearchParams` (GF-DUR-027).
+ *
+ * Sans elle, `next build` échoue au prérendu de cette page :
+ *
+ *     useSearchParams() should be wrapped in a suspense boundary
+ *     at page "/clients/password"
+ *
+ * Ce qui bloquait le build de TOUTE l'application — donc le paquet Electron et
+ * le déploiement PWA — à cause de la page qui sert précisément à débloquer un
+ * client enfermé dehors. Aucun test ne le voyait : la suite monte le composant
+ * directement, sans jamais passer par le prérendu.
+ */
 export default function PortalPasswordPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#0a0f1e]"><Loader2 className="h-8 w-8 animate-spin text-slate-600" /></div>}>
+      <FormulaireMotDePasse />
+    </Suspense>
+  )
+}
+
+function FormulaireMotDePasse() {
   const router = useRouter()
   const params = useSearchParams()
   /** Arrivé par redirection depuis une route refusée : la définition est imposée. */

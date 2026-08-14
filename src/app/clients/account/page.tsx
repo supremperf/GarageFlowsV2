@@ -12,9 +12,10 @@ import Link from 'next/link'
 import { lienPortail } from '@/lib/portal/garage-slug'
 import { cheminPortail } from '@/lib/portal/routes'
 import { redirectionPortail } from '@/lib/portal/redirection'
-import { Car, Wrench, FileText, Receipt, ShieldCheck, LogOut, Loader2, MonitorSmartphone, MessageSquare, CalendarClock } from 'lucide-react'
+import { Car, Wrench, FileText, Receipt, ShieldCheck, LogOut, Loader2, MonitorSmartphone, MessageSquare, CalendarClock, KeyRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PortalSessions } from '@/components/portal/PortalSessions'
+import { PortalTwoFactor } from '@/components/portal/PortalTwoFactor'
 
 type StageState = 'done' | 'current' | 'pending' | 'cancelled'
 interface Stage { key: string; label: string; state: StageState }
@@ -93,6 +94,17 @@ export default function PortalAccountPage() {
               className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/[0.08]"
             >
               <MessageSquare className="h-3.5 w-3.5" /> Mes messages
+            </Link>
+            {/* `/clients/password` n'était atteinte QUE par redirection, quand le
+                serveur impose un changement. Un client qui voulait simplement
+                changer son mot de passe — parce qu'il le soupçonne connu — n'avait
+                aucun chemin pour y aller. Même défaut que la double
+                authentification, en plus discret. */}
+            <Link
+              href={lienPortail(cheminPortail('password'))}
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/[0.08]"
+            >
+              <KeyRound className="h-3.5 w-3.5" /> Mot de passe
             </Link>
             <button onClick={logout} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/[0.08]">
               <LogOut className="h-3.5 w-3.5" /> Déconnexion
@@ -177,6 +189,14 @@ export default function PortalAccountPage() {
                 que vous ne reconnaissez pas.
               </p>
               <PortalSessions />
+            </Section>
+
+            {/* Second facteur. Tout existait côté serveur — enrôlement, secrets
+                chiffrés, codes de secours, étape de connexion — sauf l'écran qui
+                permet de l'activer. La protection était donc inatteignable, quoi
+                que fasse le client (GF-DUR-026). */}
+            <Section icon={<ShieldCheck className="h-4 w-4 text-blue-400" />} title="Double authentification">
+              <PortalTwoFactor />
             </Section>
           </div>
         )}

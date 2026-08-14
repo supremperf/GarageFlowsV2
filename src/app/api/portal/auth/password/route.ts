@@ -30,31 +30,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { withPortalAuth, type PortalContext } from '@/lib/portal/auth-helpers'
+import { motDePasseAcceptable } from '@/lib/portal/mot-de-passe'
 import { logger } from '@/lib/logger'
-
-/** Longueur minimale. Voir aussi `MOT_DE_PASSE_TEMPORAIRE_LONGUEUR` côté garage. */
-export const MOT_DE_PASSE_MIN = 10
-
-/**
- * Le mot de passe est-il acceptable ?
- *
- * On borne la longueur et on refuse les valeurs manifestement inutilisables,
- * sans imposer un jeu de caractères : les règles de composition poussent aux
- * mots de passe courts et prévisibles, là où la longueur protège réellement.
- */
-export function motDePasseAcceptable(v: unknown): { ok: true } | { ok: false; raison: string } {
-  if (typeof v !== 'string') return { ok: false, raison: 'Mot de passe manquant.' }
-  if (v.length < MOT_DE_PASSE_MIN) {
-    return { ok: false, raison: `Le mot de passe doit contenir au moins ${MOT_DE_PASSE_MIN} caractères.` }
-  }
-  // bcrypt ne considère que les 72 premiers octets : au-delà, deux mots de passe
-  // différents deviendraient équivalents. On refuse plutôt que de tronquer.
-  if (Buffer.byteLength(v, 'utf8') > 72) {
-    return { ok: false, raison: 'Mot de passe trop long (72 octets maximum).' }
-  }
-  if (v.trim().length === 0) return { ok: false, raison: 'Mot de passe invalide.' }
-  return { ok: true }
-}
 
 export const PUT = withPortalAuth(
   async (req: NextRequest, portal: PortalContext) => {

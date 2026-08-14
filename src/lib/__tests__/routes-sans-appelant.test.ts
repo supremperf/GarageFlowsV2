@@ -111,9 +111,11 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
   '/api/portal/token': { motif: 'sans-interface', note: 'remplacée par /api/portal/generate ; signe des jetons sans garageId, aucun appelant', classe: 'DEPRECATED' },
   '/api/loaner-vehicles/[id]': { motif: 'sans-interface', note: 'suppression d’un véhicule de prêt : le panneau ne liste et ne crée que', classe: 'PRODUCT_REQUIRED' },
   '/api/quotes/generate': { motif: 'sans-interface', note: 'génération assistée de devis : aucun écran ne la déclenche', classe: 'PRODUCT_REQUIRED' },
-  '/api/portal/auth/2fa/setup': { motif: 'sans-interface', note: 'génération du secret de double facteur, sans écran de configuration', classe: 'PRODUCT_REQUIRED' },
-  '/api/portal/auth/2fa/enable': { motif: 'sans-interface', note: 'activation du double facteur : le schéma le porte, le portail ne l’offre pas', classe: 'PRODUCT_REQUIRED' },
-  '/api/portal/auth/2fa/disable': { motif: 'sans-interface', note: 'désactivation du double facteur, inatteignable comme son activation', classe: 'PRODUCT_REQUIRED' },
+  // Les trois routes de double authentification ont été RETIRÉES d'ici le
+  // 14/08/2026 : `PortalTwoFactor` les appelle, et « Mon espace » le monte
+  // (GF-DUR-026). C'était le cas le plus coûteux de l'inventaire — second
+  // facteur complet, chiffré, testé, avec son étape de connexion déjà écrite,
+  // et aucun moyen pour un client de l'activer.
 
   // Cinq modules dont le cœur métier n'est appelé QUE par leur propre route :
   // ni le copilote, ni le tableau de bord, ni aucun écran ne les atteint.
