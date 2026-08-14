@@ -108,3 +108,18 @@ dist-artifact/
 
 .vercel
 .env*
+
+# Sauvegardes locales laissées par les scripts de rotation/configuration
+# (`*.before-<version>-<horodatage>`), et copies manuelles.
+#
+# Ce n'est PAS qu'une question de propreté du dépôt : `package.json` déclare
+# `files: ["electron/**/*"]` pour electron-builder — un joker SANS filtre
+# d'extension. Une sauvegarde déposée dans `electron/` part donc dans
+# `app.asar`, et c'est arrivé : `electron/main.js.before-v171-20260813-164006`
+# a été retrouvée dans l'installateur 1.1.0 livré (GF-DUR-034). Le `files` porte
+# désormais des exclusions explicites, et un garde les vérifie.
+*.before-*
+*.bak
+*.backup
+*.orig
+*.rej

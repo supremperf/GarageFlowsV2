@@ -101,34 +101,69 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
   // Le portail client, en particulier : messagerie, prise de rendez-vous,
   // double facteur et gestion des appareils sont écrits, testés, et absents des
   // cinq pages du portail.
-  // Remplacée par `/api/portal/generate`, que `JobQRCode` appelle réellement.
-  // La différence n'est pas cosmétique : `generate` signe `{ typ, jobId,
-  // garageId }` et publie l'instantané au cloud pour un poste installé, tandis
-  // que celle-ci signe un jeton SANS `garageId` — que `/api/portal/[token]`
-  // résout alors « par identifiant seul », son chemin hérité. Elle produit donc
-  // encore, à ce jour, des jetons plus faibles que ceux du chemin courant.
-  '/api/portal/token': { motif: 'sans-interface', note: 'remplacée par /api/portal/generate ; signe des jetons sans garageId, aucun appelant', classe: 'DEPRECATED' },
+  // `/api/portal/token` a été SUPPRIMÉE le 14/08/2026 (GF-DUR-033).
+  //
+  // Elle signait `{ jobId, typ }` SANS `garageId`, et `/api/portal/[token]`
+  // résout un tel jeton par `{ id: jobId }` seul — son chemin hérité, non
+  // cloisonné par garage. Elle était le SEUL producteur de jetons empruntant ce
+  // chemin. `/api/portal/generate`, qu'appelle réellement `JobQRCode`, signe
+  // `{ typ, jobId, garageId }` et publie en plus l'instantané au cloud pour un
+  // poste installé — ce que les jetons hérités ne savaient pas faire (la branche
+  // instantané exige `payload.garageId`, donc ils échouaient déjà).
+  //
+  // La suppression ne repose donc PAS sur « aucun fetch trouvé » : elle a une
+  // remplaçante nommée, et elle retirait la seule source de jetons plus faibles.
+  // Un garde de `garage-slug.test.ts` empêche qu'un émetteur équivalent
+  // réapparaisse. La branche de résolution héritée, elle, est conservée : des
+  // QR codes imprimés par une version antérieure peuvent encore circuler.
   // Les trois routes de double authentification ont été RETIRÉES d'ici le
   // 14/08/2026 : `PortalTwoFactor` les appelle, et « Mon espace » le monte
   // (GF-DUR-026). C'était le cas le plus coûteux de l'inventaire — second
   // facteur complet, chiffré, testé, avec son étape de connexion déjà écrite,
   // et aucun moyen pour un client de l'activer.
 
-  // Cinq modules dont le cœur métier n'est appelé QUE par leur propre route :
-  // ni le copilote, ni le tableau de bord, ni aucun écran ne les atteint.
-  '/api/pricing': { motif: 'sans-interface', note: 'optimisation des prix : recommendPrice() n’est appelé que d’ici', classe: 'ORPHANED' },
-  '/api/scheduling': { motif: 'sans-interface', note: 'planification intelligente : optimizeSchedule() n’est appelé que d’ici', classe: 'ORPHANED' },
-  '/api/memory': { motif: 'sans-interface', note: 'mémoire du garage : analyzeMemory() n’est appelé que d’ici', classe: 'ORPHANED' },
-  '/api/gamification': { motif: 'sans-interface', note: 'classement des mécaniciens : buildLeaderboard() n’est appelé que d’ici', classe: 'ORPHANED' },
-  '/api/proactive': { motif: 'sans-interface', note: 'assistant proactif : buildAlerts() n’est appelé que d’ici', classe: 'ORPHANED' },
-  // Ces trois-là n'étaient pas visibles avant le retrait des commentaires : une
-  // phrase d'en-tête les citait, et la garde les croyait branchées. Deux d'entre
-  // elles figurent parmi les « modules livrés » de docs/DELIVERY_STATUS.md.
-  '/api/forecast': { motif: 'sans-interface', note: 'prévisions de chiffre d’affaires : aucun écran ne les demande', classe: 'ORPHANED' },
-  '/api/profitability': { motif: 'sans-interface', note: 'analyse de rentabilité par intervention : aucun écran ne la demande', classe: 'ORPHANED' },
-  '/api/suggestions': { motif: 'sans-interface', note: 'suggestions d’affectation de mécaniciens pour une journée, sans écran', classe: 'ORPHANED' },
+  // ── Cinq moteurs que SEULE leur propre route atteint ──────────────────────
+  // Vérifié le 14/08/2026 en cherchant chaque symbole hors tests : `recommendPrice`,
+  // `optimizeSchedule`, `analyzeMemory`, `buildLeaderboard` et `buildAlerts`
+  // n'apparaissent que dans leur module (`index`/`engine`) et dans la route.
+  // C'est `route → service`, ce qui ne prouve aucun appelant.
+  //
+  // DÉCISION (14/08/2026) : CONSERVÉES, exposition NON étendue.
+  // La seule chose établie à leur sujet est « aucun fetch trouvé ». C'est
+  // exactement le motif que la consigne §30 interdit d'invoquer pour supprimer
+  // une route : rien ne prouve qu'aucun intégrateur ni aucun poste installé ne
+  // les appelle. À l'inverse de `/api/portal/token`, aucune remplaçante nommée
+  // n'existe et aucun argument de sécurité ne s'y ajoute. Les moteurs restent
+  // testés et déterministes : le jour où un écran en a besoin, il l'appelle.
+  // La documentation cesse en revanche de les présenter comme atteignables.
+  '/api/pricing': { motif: 'sans-interface', note: 'DÉCISION : conservée. recommendPrice() n’est atteint que par cette route (route → service) ; aucune remplaçante, aucun argument de sécurité — pas de suppression sur le seul « aucun fetch trouvé »', classe: 'ORPHANED' },
+  '/api/scheduling': { motif: 'sans-interface', note: 'DÉCISION : conservée. optimizeSchedule() n’est atteint que par cette route ; le planning utilise runAIEngine, pas ce moteur — voir /api/suggestions', classe: 'ORPHANED' },
+  '/api/memory': { motif: 'sans-interface', note: 'DÉCISION : conservée. analyzeMemory() n’est atteint que par cette route ; moteur testé, réexposable dès qu’un écran le demande', classe: 'ORPHANED' },
+  '/api/gamification': { motif: 'sans-interface', note: 'DÉCISION : conservée. buildLeaderboard() n’est atteint que par cette route ; classement des mécaniciens sans écran à ce jour', classe: 'ORPHANED' },
+  '/api/proactive': { motif: 'sans-interface', note: 'DÉCISION : conservée. buildAlerts() n’est atteint que par cette route ; planReorders(), qu’elle utilise aussi, l’est par /api/dashboard', classe: 'ORPHANED' },
 
-  '/api/analytics/health': { motif: 'sans-interface', note: 'score de santé — aucun écran ne l’affiche', classe: 'ORPHANED' },
+  // ── Quatre RECLASSÉES le 14/08/2026 : elles n'étaient pas orphelines ──────
+  // Erreur de la passe précédente. Le classement avait été fait sur « aucun
+  // écran n'appelle CETTE route », alors que le critère utile est « la fonction
+  // est-elle atteignable ». Les quatre le sont, par une autre route qui a, elle,
+  // un écran. Ce sont donc des seconds points d'entrée — pas des fonctions
+  // absentes du produit, et pas une dette produit.
+  '/api/forecast': {
+    motif: 'double',
+    note: 'forecast() est appelé par /api/copilot (page /copilot) et par lib/stock-forecast/plan.ts, lui-même atteint via /api/dashboard',
+  },
+  '/api/profitability': {
+    motif: 'double',
+    note: 'analyze() est appelé par /api/dashboard (DecisionSection) et par /api/copilot',
+  },
+  '/api/suggestions': {
+    motif: 'double',
+    note: 'runAIEngine() est appelé par store/schedule-store.ts, donc par l’écran de planning',
+  },
+  '/api/analytics/health': {
+    motif: 'double',
+    note: 'computeHealthScore() est appelé par lib/analytics/insights.ts → rapport du copilote, affiché par /copilot',
+  },
 
   // Reclassée après vérification : le panneau Stock calcule déjà le même
   // prédicat (`quantity <= minQuantity`) côté client depuis `/api/parts`, et
@@ -309,6 +344,30 @@ describe('routes d\'API sans appelant — inventaire figé', () => {
       .filter(([, e]) => e.motif === 'sans-interface' && !e.classe)
       .map(([r]) => r)
     expect(sansClasse, 'Classez ces routes : PRODUCT_REQUIRED, INTERNAL_ONLY ou DEPRECATED.').toEqual([])
+  })
+
+  it('toute route ORPHANED porte une DÉCISION écrite, pas un simple constat', () => {
+    // §21 : LOT 5 ne se ferme que si chaque orpheline a une décision finale.
+    // Sans cette exigence, `ORPHANED` deviendrait le tiroir où l'on range ce
+    // qu'on n'a pas voulu trancher — une dette cachée derrière une étiquette.
+    const sansDecision = Object.entries(INVENTAIRE)
+      .filter(([, e]) => e.classe === 'ORPHANED' && !e.note.includes('DÉCISION :'))
+      .map(([r]) => r)
+    expect(
+      sansDecision,
+      'Écrivez la décision dans la note, préfixée « DÉCISION : » (conservée / à supprimer, et pourquoi).',
+    ).toEqual([])
+  })
+
+  it('plus aucune route DEPRECATED ne traîne dans l\'inventaire', () => {
+    // `DEPRECATED` désigne une route remplacée dont le dernier consommateur doit
+    // s'éteindre. Ce n'est pas un état stable : une entrée qui y reste est une
+    // suppression qu'on repousse. La seule qu'il y ait eu — `/api/portal/token` —
+    // a été supprimée le 14/08/2026 (GF-DUR-033).
+    const restantes = Object.entries(INVENTAIRE)
+      .filter(([, e]) => e.classe === 'DEPRECATED')
+      .map(([r]) => r)
+    expect(restantes, 'Terminez la dépréciation : supprimez la route ou justifiez son maintien.').toEqual([])
   })
 
   it('la classe ne s\'applique qu\'aux routes sans interface', () => {

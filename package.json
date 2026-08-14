@@ -155,7 +155,20 @@
     },
     "files": [
       "electron/**/*",
-      "package.json"
+      "package.json",
+      "!**/*.before-*",
+      "!**/*.bak",
+      "!**/*.backup",
+      "!**/*.old",
+      "!**/*.orig",
+      "!**/*.rej",
+      "!**/*~",
+      "!**/*.tmp",
+      "!**/.env*",
+      "!**/*.pem",
+      "!**/*.key",
+      "!**/*.log",
+      "!**/*.map"
     ],
     "extraResources": [
       {

@@ -222,7 +222,9 @@ describe('GF-FINAL-001 — le portail client vit sous /clients', () => {
   it('aucun producteur de lien n\'écrit le préfixe en dur', async () => {
     // Les cinq endroits qui fabriquent un lien destiné à un client.
     for (const rel of [
-      'src/app/api/portal/token/route.ts',
+      // `/api/portal/token` a été SUPPRIMÉE le 14/08/2026 (GF-DUR-033) : elle
+      // signait des jetons sans `garageId`, seule à emprunter le chemin de
+      // résolution hérité non cloisonné, et `/api/portal/generate` la remplace.
       'src/app/api/portal/generate/route.ts',
       'src/app/api/sync/portal/route.ts',
       'src/app/api/quotes/[id]/signature-token/route.ts',
@@ -245,8 +247,41 @@ describe('GF-FINAL-001 — le portail client vit sous /clients', () => {
     // défaut cite forcément l'expression fautive, et la faire échouer sur sa
     // propre explication pousserait à appauvrir le commentaire pour satisfaire
     // le test.
-    const src = sansCommentaires(await lire('src/app/api/portal/token/route.ts'))
+    //
+    // La cible était `/api/portal/token`, supprimée depuis (GF-DUR-033). Le
+    // contrôle porte donc sur la route qui l'a remplacée — sans quoi il aurait
+    // disparu avec elle, et c'est précisément le genre de garde qu'on perd sans
+    // s'en apercevoir en supprimant du code.
+    const src = sansCommentaires(await lire('src/app/api/portal/generate/route.ts'))
     expect(src).not.toMatch(/headers\.get\(\s*['"]origin['"]\s*\)/i)
     expect(src).toContain('publicUrlFor(')
+  })
+
+  it('plus aucune route ne signe de jeton de portail sans garageId (GF-DUR-033)', async () => {
+    // `/api/portal/token` signait `{ jobId, typ }` SANS `garageId`. Or
+    // `/api/portal/[token]` résout un tel jeton par `{ id: jobId }` seul — son
+    // chemin hérité, non cloisonné par garage. Elle était le seul producteur de
+    // jetons empruntant ce chemin.
+    //
+    // Ce test empêche qu'un émetteur équivalent réapparaisse : toute route qui
+    // signe un jeton `typ: 'portal'` doit y mettre `garageId`.
+    const { default: fs } = await import('node:fs')
+    const { default: path } = await import('node:path')
+    const base = path.resolve(__dirname, '../../../app/api')
+    const trouves: string[] = []
+    const parcourir = (d: string) => {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const p = path.join(d, e.name)
+        if (e.isDirectory()) parcourir(p)
+        else if (e.name === 'route.ts') {
+          const src = sansCommentaires(fs.readFileSync(p, 'utf8'))
+          if (!/new SignJWT\(/.test(src)) continue
+          if (!/typ:\s*['"]portal['"]/.test(src)) continue
+          if (!/garageId/.test(src)) trouves.push(path.relative(base, p).replace(/\\/g, '/'))
+        }
+      }
+    }
+    parcourir(base)
+    expect(trouves, 'ces routes signent un jeton de portail sans garageId').toEqual([])
   })
 })
