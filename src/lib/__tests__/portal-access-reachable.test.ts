@@ -163,6 +163,119 @@ describe('la transmission à la plateforme agréée est atteignable depuis la fa
   })
 })
 
+describe('les postes de licence sont visibles et libérables (GF-DUR-010/011)', () => {
+  // Conséquence concrète du défaut : un ordinateur en panne, volé ou remplacé
+  // gardait son siège À VIE. L'auto-désactivation ne pouvait rien y faire — elle
+  // exige le `deviceToken`, que seul l'appareil détient.
+  const admin = lire('src/components/admin/LicenseDevices.tsx')
+  const exploitant = lire('src/components/LicenseChangeModal.tsx')
+
+  it('la zone d\'administration liste les postes et agit dessus', () => {
+    expect(admin).toMatch(/fetch\(`\/api\/admin\/licenses\/\$\{licenseId\}\/devices`/)
+    expect(admin).toMatch(/fetch\(`\/api\/admin\/licenses\/\$\{licenseId\}\/devices\/\$\{deviceId\}`/)
+    expect(admin).toMatch(/action, \.\.\.\(motif \? \{ reason: motif \} : \{\}\)/)
+    expect(lire('src/app/admin/licenses/page.tsx')).toContain('<LicenseDevices licenseId={item.id} />')
+  })
+
+  it('les deux gestes sont nommés par leur CONSÉQUENCE, pas par leur verbe', () => {
+    // Libérer un poste volé le laisse revenir ; révoquer un poste remplacé prive
+    // le client d'un siège payé. « reset » et « revoke » ne disent ni l'un ni
+    // l'autre à qui décide.
+    expect(admin).toContain('Libérer le siège')
+    expect(admin).toMatch(/pourra se réactiver/)
+    expect(admin).toMatch(/NE POURRA PAS se réactiver/)
+    expect(admin).toMatch(/PAS pour un poste volé/)
+  })
+
+  it('l\'état affiché vient du serveur après chaque action', () => {
+    // Après `reset` l'appareil disparaît, après `revoke` il reste : deviner
+    // finirait par mentir.
+    const agir = admin.slice(admin.indexOf('async function agir'))
+    expect(agir.indexOf('await charger()')).toBeGreaterThan(agir.indexOf('if (!r.ok)'))
+  })
+
+  it('l\'exploitant voit ses sièges consommés', () => {
+    expect(exploitant).toMatch(/fetch\('\/api\/license\/devices'/)
+    expect(exploitant).toMatch(/siège\$\{|siège/)
+  })
+
+  it('aucun bouton de libération côté exploitant — il ne pourrait pas fonctionner', () => {
+    // `/api/license/deactivate` exige le `deviceToken`, qu'aucun navigateur ne
+    // détient. Le proposer serait pire que de ne rien proposer ; l'écran dit
+    // donc quoi faire à la place.
+    expect(exploitant).not.toMatch(/fetch\([`'"]\/api\/license\/deactivate/)
+    expect(exploitant).toMatch(/demandez la libération à votre revendeur/)
+  })
+})
+
+describe('le client peut voir et fermer ses connexions (GF-DUR-012)', () => {
+  const src = lire('src/components/portal/PortalSessions.tsx')
+
+  it('la page du portail monte le panneau', () => {
+    const page = lire('src/app/clients/account/page.tsx')
+    expect(page).toContain("import { PortalSessions } from '@/components/portal/PortalSessions'")
+    expect(page).toContain('<PortalSessions />')
+  })
+
+  it('les deux opérations sont déclenchées', () => {
+    expect(src).toMatch(/fetch\('\/api\/portal\/auth\/devices', \{ cache: 'no-store' \}\)/)
+    expect(src).toMatch(/method: 'POST'[\s\S]{0,120}deviceId: s\.id/)
+  })
+
+  it('fermer SA PROPRE session prévient avant, et redirige après', () => {
+    // Sans cela, le client clique et se retrouve dehors sans comprendre : il
+    // conclut à une panne.
+    expect(src).toMatch(/s\.current && !window\.confirm\(/)
+    expect(src).toMatch(/vous déconnectera immédiatement/)
+    // Le serveur dit lui-même si la session fermée était la courante.
+    expect(src).toMatch(/d\.revokedCurrent/)
+    expect(src).toMatch(/router\.replace\(lienPortail\(cheminPortail\('login'\)\)\)/)
+  })
+})
+
+describe('le garage voit qui relancer, et peut le faire (GF-DUR-013)', () => {
+  const src = lire('src/components/reminders/ReminderSuggestions.tsx')
+
+  it('les deux sources d\'alerte sont réellement lues', () => {
+    expect(src).toMatch(/fetch\('\/api\/reminders\/suggestions'/)
+    expect(src).toMatch(/fetch\('\/api\/vehicles\/ct-alerts\?days=60'/)
+  })
+
+  it('le panneau Rappels expose l\'onglet et le monte', () => {
+    const panneau = lire('src/components/ReminderPanel.tsx')
+    expect(panneau).toContain("import { ReminderSuggestions } from '@/components/reminders/ReminderSuggestions'")
+    expect(panneau).toMatch(/\['pending', 'sent', 'all', 'suggestions'\]/)
+    expect(panneau).toMatch(/filter === 'suggestions' \? \(/)
+  })
+
+  it('une suggestion se transforme en rappel réel, pas en note à recopier', () => {
+    // Afficher une liste que l'utilisateur devrait ressaisir dans le formulaire
+    // d'à côté aurait été une décoration.
+    expect(src).toMatch(/fetch\('\/api\/reminders', \{\s*method: 'POST'/)
+    expect(src).toMatch(/Créer le rappel/)
+  })
+
+  it('la ligne ne disparaît qu\'après confirmation du serveur', () => {
+    // Sinon le garage croirait avoir relancé un client qu'il n'a pas relancé.
+    const creer = src.slice(src.indexOf('async function creer'))
+    expect(creer.indexOf('if (!r.ok)')).toBeLessThan(creer.indexOf('setTraitees('))
+  })
+
+  it('un CT dépassé n\'est pas présenté comme une échéance à venir', () => {
+    expect(src).toMatch(/CT dépassé depuis/)
+    expect(src).toMatch(/CT dans \$\{c\.daysLeft\}/)
+    // Et il se rappelle aujourd'hui, pas la veille d'une date déjà passée.
+    expect(src).toMatch(/c\.expired\s*\?\s*format\(new Date\(\), 'yyyy-MM-dd'\)/)
+  })
+
+  it('l\'onglet des suggestions n\'interroge pas la liste des rappels', () => {
+    // `?status=suggestions` renverrait tout : l'onglet afficherait des rappels
+    // existants sous un titre qui promet autre chose.
+    expect(lire('src/components/ReminderPanel.tsx'))
+      .toMatch(/if \(filter === 'suggestions'\) \{ setLoading\(false\); return \}/)
+  })
+})
+
 describe('anti-régression : les autres chaînes récemment recâblées restent branchées', () => {
   it('la réception fournisseur est toujours déclenchée par le panneau', () => {
     expect(lire('src/components/SuppliersPanel.tsx')).toMatch(/\/api\/purchase-orders\/\$\{[^}]+\}\/receive/)

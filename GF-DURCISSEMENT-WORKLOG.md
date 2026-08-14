@@ -270,17 +270,107 @@ Le dernier groupe est le seul qui compte, et il est large. En particulier :
 les promet. Ce sont des fonctions absentes, pas des mensonges à l'écran — la
 distinction a été vérifiée (aucun composant ne mentionne ces modules).
 
-**Ce qui a été fait.** `routes-sans-appelant.test.ts` fige l'inventaire. La garde
-n'exige pas que tout soit branché : elle exige que chaque route sans appelant
-soit une DÉCISION portant un motif écrit, et qu'aucune ne s'ajoute en silence.
-Elle échoue aussi si une entrée devient périmée, pour que l'inventaire ne cesse
-jamais de décrire la réalité.
+**La garde.** `routes-sans-appelant.test.ts` fige l'inventaire. Elle n'exige pas
+que tout soit branché : elle exige que chaque route sans appelant soit une
+DÉCISION portant un motif écrit, et qu'aucune ne s'ajoute en silence. Elle échoue
+aussi si une entrée devient périmée, pour que l'inventaire ne cesse jamais de
+décrire la réalité.
 
-**Ce qui n'a pas été fait, et pourquoi.** Construire ces interfaces représente
-plusieurs lots de conception produit — où placer la messagerie dans le portail,
-quel parcours de rendez-vous, quelle présentation du double facteur. Ce n'est pas
-un arbitrage technique, et le dimensionner revient au propriétaire du produit.
-**Décision requise.**
+### La garde a d'abord dû se corriger elle-même
+
+Premier usage : elle comptait une route citée **en commentaire** comme appelée.
+Le panneau de licence explique dans son en-tête pourquoi il n'appelle PAS
+`/api/license/deactivate` — et cette phrase suffisait à la déclarer branchée.
+Une garde qu'un commentaire désarme ne garde rien.
+
+Après retrait des commentaires du corpus, **trois routes de plus** sont
+apparues, jusque-là masquées par de la prose : `/api/forecast`,
+`/api/profitability` et `/api/suggestions`. Les deux premières figurent parmi les
+« modules livrés en qualité entreprise » de `docs/DELIVERY_STATUS.md`.
+
+### Reclassement après vérification
+
+`/api/parts/low-stock` était classée `sans-interface`. Vérification faite, le
+panneau Stock calcule déjà le même prédicat (`quantity <= minQuantity`) côté
+client depuis `/api/parts`, et propose un onglet « stock bas ». La fonction EST
+atteignable : la route en est un second point d'entrée. Bâtir un écran de plus
+aurait été un doublon, pas une correction. Reclassée `double`.
+
+---
+
+## 6. Branchement des fonctions absentes — premier lot
+
+### GF-DUR-010 [P1] — Un poste remplacé consommait un siège à vie
+
+**Cause racine.** `GET /api/admin/licenses/[id]/devices` et
+`POST /api/admin/licenses/[id]/devices/[deviceId]` existaient, éprouvés, sans
+aucun écran. Or l'auto-désactivation (`/api/license/deactivate`) ne peut rien y
+faire : elle exige le `deviceToken`, que **seul l'appareil détient**. Une machine
+en panne, volée ou remplacée ne se libère donc pas elle-même — il faut passer par
+l'éditeur, et c'était la seule sortie, sans porte.
+
+**Correctif.** `LicenseDevices` dans la zone d'administration, chargé à
+l'ouverture du détail d'une licence. Les deux gestes sont nommés par leur
+CONSÉQUENCE, jamais par leur verbe technique :
+
+| Écran | Route | Effet |
+|---|---|---|
+| **Libérer le siège** | `reset` | siège rendu, la machine pourra se réactiver — SAV, poste remplacé |
+| **Révoquer** | `revoke` | siège conservé, la machine bannie — poste volé |
+
+Les confondre coûte cher dans les deux sens : libérer un poste volé le laisse
+revenir, révoquer un poste remplacé prive le client d'un siège qu'il a payé.
+
+### GF-DUR-011 [P2] — L'exploitant ne voyait pas ses sièges
+
+`GET /api/license/devices` sans écran : quand l'activation échouait faute de
+siège, l'exploitant n'avait aucun moyen de comprendre pourquoi. La modale de
+licence affiche désormais `activeCount / seats` et la liste.
+
+**En lecture seule, et c'est dit.** Aucun bouton de libération n'y figure : il ne
+pourrait pas fonctionner. L'écran indique quoi faire à la place.
+
+### GF-DUR-012 [P1] — Le client ne pouvait pas fermer une session
+
+`GET` et `POST /api/portal/auth/devices` existaient ; aucune des cinq pages du
+portail ne les appelait. Le client ne pouvait ni voir où son compte était ouvert,
+ni fermer une session — pas même après avoir prêté son téléphone ou s'être
+connecté depuis un poste public. C'est la **seule action qu'il puisse
+entreprendre seul** s'il craint que son compte soit ouvert ailleurs.
+
+Section « Mes connexions » dans l'espace client. Fermer SA PROPRE session
+prévient avant et redirige après : le serveur efface le cookie, et laisser le
+client découvrir qu'il est dehors le ferait passer pour une panne. C'est le
+serveur qui dit si la session fermée était la courante — le déduire du drapeau
+local se tromperait sur une liste vieillie.
+
+### GF-DUR-013 [P2] — Le garage ne voyait jamais qui relancer
+
+`GET /api/reminders/suggestions` (véhicules dont le dernier passage dépasse le
+seuil du garage) et `GET /api/vehicles/ct-alerts` (contrôles techniques à
+échéance ou dépassés) calculaient la relance commerciale du garage sans que rien
+n'en montre le résultat.
+
+Onglet « À relancer » dans le panneau Rappels. Ce n'est **pas un filtre** de la
+liste : c'est une autre source — ce que le logiciel propose, par opposition à ce
+que le garage a décidé. Les mêler ferait passer une proposition pour un
+engagement pris.
+
+Chaque ligne porte son bouton de création : le rappel est écrit par
+`POST /api/reminders`, et l'utilisateur bascule sur « À faire » où sa décision a
+atterri. Une liste qu'il aurait fallu recopier dans le formulaire d'à côté aurait
+été une décoration. Un CT **dépassé** se rappelle aujourd'hui ; un CT à venir, la
+veille de l'échéance — ce ne sont pas les mêmes appels téléphoniques.
+
+**Mutations sur ce lot.** 9/9 détectées.
+
+### Ce qui reste, et pourquoi
+
+Après ce lot, l'inventaire compte **20 routes `sans-interface`**. Les plus
+lourdes — messagerie client, prise de rendez-vous, double facteur — représentent
+plusieurs lots de conception produit : où les placer dans le portail, quel
+parcours, quelle présentation. Ce n'est pas un arbitrage technique, et le
+dimensionner revient au propriétaire du produit. **Décision requise.**
 
 ---
 
@@ -326,16 +416,18 @@ Reclassé honnêtement : **durcissement, pas défaut** — aucune reproduction n
 
 | Contrôle | Résultat |
 |---|---|
-| `npm test` | **233 fichiers, 2651 tests verts**, 0 échec, 28 ignorés |
+| `npm test` | **233 fichiers, 2665 tests verts**, 0 échec, 28 ignorés |
 | `tsc --noEmit` | 0 erreur |
 | `next lint` | 0 avertissement, 0 erreur |
 | `npm run check:consistency` | **12/12 gardes vertes** |
-| Tests par mutation | **28 mutations appliquées, 28 détectées** |
+| Tests par mutation | **37 mutations appliquées, 37 détectées** |
 
 ## Ce qui reste ouvert
 
-1. **26 fonctions sans interface** (§4) — inventoriées, verrouillées contre toute
-   aggravation, non construites. Dimensionnement produit requis.
+1. **20 fonctions sans interface** (§4, §6) — inventoriées, verrouillées contre
+   toute aggravation. Les quatre chaînes les plus coûteuses pour l'exploitant ont
+   été branchées ; les plus lourdes (messagerie, rendez-vous, double facteur)
+   demandent un dimensionnement produit.
 2. **Clés publiques de licence** — le dépôt reste sur `fe5b7807…`, distincte de
    celle du poste de l'exploitant (`835c1e90…`). Propager l'une ou l'autre
    invalide un parc : décision explicite requise (`npm run keys:sync`).

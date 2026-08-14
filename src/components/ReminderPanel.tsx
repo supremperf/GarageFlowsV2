@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { ReminderSuggestions } from '@/components/reminders/ReminderSuggestions'
 import { X, Plus, Bell, CheckCircle2, Mail, Phone, Trash2, Loader2, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format, parseISO, isPast, isToday, isTomorrow, addDays } from 'date-fns'
@@ -293,10 +294,18 @@ export default function ReminderPanel({ onClose }: Props) {
   const [reminders, setReminders] = useState<Reminder[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
-  const [filter, setFilter] = useState<'pending' | 'sent' | 'all'>('pending')
+  // « suggestions » n'est pas un filtre de la liste : c'est une autre source —
+  // ce que le logiciel PROPOSE, par opposition à ce que le garage a déjà décidé.
+  // Les mêler dans la même liste ferait passer une proposition pour un
+  // engagement pris.
+  const [filter, setFilter] = useState<'pending' | 'sent' | 'all' | 'suggestions'>('pending')
   const [garagePhone, setGaragePhone] = useState<string | undefined>()
 
   const fetchReminders = useCallback(async () => {
+    // L'onglet des suggestions ne lit pas la liste des rappels : interroger
+    // `/api/reminders?status=suggestions` renverrait tout, et l'onglet
+    // afficherait des rappels existants sous un titre qui promet autre chose.
+    if (filter === 'suggestions') { setLoading(false); return }
     setLoading(true)
     try {
       const res = await fetch(`/api/reminders?status=${filter}`)
@@ -337,7 +346,12 @@ export default function ReminderPanel({ onClose }: Props) {
     return r.status === 'pending' && isPast(d) && !isToday(d)
   }).length
 
-  const FILTER_LABELS = { pending: t.rmFilterTodo, sent: t.rmFilterSent, all: t.catAll }
+  const FILTER_LABELS = {
+    pending: t.rmFilterTodo,
+    sent: t.rmFilterSent,
+    all: t.catAll,
+    suggestions: 'À relancer',
+  }
 
   return (
     <div className="fixed right-0 top-0 bottom-0 w-full max-w-[480px] bg-[#0f1629] z-40 shadow-2xl shadow-black/50 flex flex-col border-l border-white/[0.07] pt-safe pb-safe pr-safe">
@@ -373,7 +387,7 @@ export default function ReminderPanel({ onClose }: Props) {
 
       {/* Filters */}
       <div className="flex gap-1 px-5 py-3 border-b border-white/[0.05] flex-shrink-0">
-        {(['pending', 'sent', 'all'] as const).map(f => (
+        {(['pending', 'sent', 'all', 'suggestions'] as const).map(f => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -398,7 +412,11 @@ export default function ReminderPanel({ onClose }: Props) {
         {showAdd && (
           <AddReminderForm onAdd={fetchReminders} onCancel={() => setShowAdd(false)} />
         )}
-        {loading ? (
+        {filter === 'suggestions' ? (
+          // Le rappel créé bascule dans « À faire » : on y renvoie l'utilisateur
+          // plutôt que de le laisser deviner où sa décision a atterri.
+          <ReminderSuggestions onCreated={() => setFilter('pending')} />
+        ) : loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
           </div>

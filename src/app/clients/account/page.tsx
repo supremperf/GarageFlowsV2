@@ -10,8 +10,9 @@ import { useEffect, useState, useCallback, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { lienPortail } from '@/lib/portal/garage-slug'
 import { cheminPortail } from '@/lib/portal/routes'
-import { Car, Wrench, FileText, Receipt, ShieldCheck, LogOut, Loader2 } from 'lucide-react'
+import { Car, Wrench, FileText, Receipt, ShieldCheck, LogOut, Loader2, MonitorSmartphone } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { PortalSessions } from '@/components/portal/PortalSessions'
 
 type StageState = 'done' | 'current' | 'pending' | 'cancelled'
 interface Stage { key: string; label: string; state: StageState }
@@ -143,6 +144,17 @@ export default function PortalAccountPage() {
                 ))}
               </Section>
             </div>
+
+            {/* Sécurité du compte — la seule action qu'un client puisse
+                entreprendre seul s'il craint que son compte soit ouvert
+                ailleurs. Les routes existaient ; aucune page ne les appelait. */}
+            <Section icon={<MonitorSmartphone className="h-4 w-4 text-blue-400" />} title="Mes connexions">
+              <p className="text-[11px] text-slate-500">
+                Les appareils sur lesquels votre espace client est ouvert. Fermez toute connexion
+                que vous ne reconnaissez pas.
+              </p>
+              <PortalSessions />
+            </Section>
           </div>
         )}
       </div>

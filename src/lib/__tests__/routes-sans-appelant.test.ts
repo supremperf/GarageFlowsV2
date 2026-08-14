@@ -75,7 +75,6 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string }> = {
   '/api/portal/auth/2fa/setup': { motif: 'sans-interface', note: 'génération du secret de double facteur, sans écran de configuration' },
   '/api/portal/auth/2fa/enable': { motif: 'sans-interface', note: 'activation du double facteur : le schéma le porte, le portail ne l’offre pas' },
   '/api/portal/auth/2fa/disable': { motif: 'sans-interface', note: 'désactivation du double facteur, inatteignable comme son activation' },
-  '/api/portal/auth/devices': { motif: 'sans-interface', note: 'le client ne peut ni voir ses sessions ouvertes ni en révoquer une' },
 
   // Cinq modules dont le cœur métier n'est appelé QUE par leur propre route :
   // ni le copilote, ni le tableau de bord, ni aucun écran ne les atteint.
@@ -84,18 +83,28 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string }> = {
   '/api/memory': { motif: 'sans-interface', note: 'mémoire du garage : analyzeMemory() n’est appelé que d’ici' },
   '/api/gamification': { motif: 'sans-interface', note: 'classement des mécaniciens : buildLeaderboard() n’est appelé que d’ici' },
   '/api/proactive': { motif: 'sans-interface', note: 'assistant proactif : buildAlerts() n’est appelé que d’ici' },
+  // Ces trois-là n'étaient pas visibles avant le retrait des commentaires : une
+  // phrase d'en-tête les citait, et la garde les croyait branchées. Deux d'entre
+  // elles figurent parmi les « modules livrés » de docs/DELIVERY_STATUS.md.
+  '/api/forecast': { motif: 'sans-interface', note: 'prévisions de chiffre d’affaires : aucun écran ne les demande' },
+  '/api/profitability': { motif: 'sans-interface', note: 'analyse de rentabilité par intervention : aucun écran ne la demande' },
+  '/api/suggestions': { motif: 'sans-interface', note: 'suggestions d’affectation de mécaniciens pour une journée, sans écran' },
+
   '/api/analytics/health': { motif: 'sans-interface', note: 'score de santé — aucun écran ne l’affiche' },
   '/api/copilot/reports/[id]/export': { motif: 'sans-interface', note: 'export de rapport du copilote — aucun bouton' },
 
-  '/api/parts/low-stock': { motif: 'sans-interface', note: 'alerte de stock bas — aucun écran' },
-  '/api/reminders/suggestions': { motif: 'sans-interface', note: 'suggestions de rappels — aucun écran' },
-  '/api/vehicles/ct-alerts': { motif: 'sans-interface', note: 'alertes de contrôle technique — aucun écran' },
-  '/api/vehicles/[id]/timeline': { motif: 'sans-interface', note: 'historique véhicule — aucun écran' },
+  // Reclassée après vérification : le panneau Stock calcule déjà le même
+  // prédicat (`quantity <= minQuantity`) côté client depuis `/api/parts`, et
+  // affiche un onglet « stock bas ». La fonction EST atteignable ; cette route
+  // en est un second point d'entrée. Bâtir un écran de plus aurait été un
+  // doublon, pas une correction.
+  '/api/parts/low-stock': { motif: 'double', note: 'le panneau Stock calcule le même seuil depuis /api/parts' },
+  '/api/vehicles/[id]/timeline': { motif: 'sans-interface', note: 'chronologie d’un véhicule côté garage : aucun écran ne l’affiche' },
 
-  '/api/license/devices': { motif: 'sans-interface', note: 'l’exploitant ne peut pas voir la liste de ses postes activés' },
-  '/api/license/deactivate': { motif: 'sans-interface', note: 'ni libérer un poste : un ordinateur remplacé consomme une place à vie' },
-  '/api/admin/licenses/[id]/devices': { motif: 'sans-interface', note: 'appareils d’une licence : absent de la zone d’administration' },
-  '/api/admin/licenses/[id]/devices/[deviceId]': { motif: 'sans-interface', note: 'libération d’un poste par l’éditeur, sans écran pour le faire' },
+  // L'auto-désactivation exige le `deviceToken`, que seul l'appareil détient :
+  // aucun navigateur ne peut l'appeler. Le poste se libère depuis son propre
+  // logiciel, ou par l'éditeur via la zone d'administration — désormais câblée.
+  '/api/license/deactivate': { motif: 'exploitation', note: 'auto-désactivation par le poste lui-même, avec un jeton qu’aucun navigateur ne détient' },
 }
 
 function fichiers(dir: string, acc: string[] = []): string[] {
@@ -105,6 +114,29 @@ function fichiers(dir: string, acc: string[] = []): string[] {
     else acc.push(p)
   }
   return acc
+}
+
+/**
+ * Retire les COMMENTAIRES avant la recherche.
+ *
+ * Sans cela, une route citée en prose comptait comme appelée. Le cas s'est
+ * produit dès le premier usage : le panneau de licence explique dans son
+ * en-tête pourquoi il n'appelle PAS `/api/license/deactivate` — et cette phrase
+ * suffisait à la déclarer branchée. Une garde qu'un commentaire désarme ne garde
+ * rien.
+ *
+ * Le retrait vise les blocs `/* … *\/` et les lignes entièrement commentées,
+ * là où vit la prose. Un `//` en fin de ligne de code est laissé : y mentionner
+ * une route est assez rare pour ne pas justifier un analyseur syntaxique, et le
+ * risque restant est un faux NÉGATIF sur l'inventaire — jamais un faux positif
+ * qui masquerait une route morte.
+ */
+function sansCommentaires(src: string): string {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .split('\n')
+    .filter((l) => !/^\s*(\/\/|\*)/.test(l))
+    .join('\n')
 }
 
 /**
@@ -126,7 +158,7 @@ function corpusAppelant(): string {
     .filter((f) => !f.includes(`${path.sep}generated${path.sep}`))
     // Ce fichier cite toutes les routes : il se rendrait aveugle lui-même.
     .filter((f) => !f.endsWith('routes-sans-appelant.test.ts'))
-  return sources.map((f) => fs.readFileSync(f, 'utf8')).join('\n')
+  return sources.map((f) => sansCommentaires(fs.readFileSync(f, 'utf8'))).join('\n')
 }
 
 function orphelines(): string[] {
@@ -178,6 +210,10 @@ describe('routes d\'API sans appelant — inventaire figé', () => {
       '/api/purchase-orders/[id]/receive',
       '/api/mechanics/[id]/avatar',
       '/api/einvoicing/invoices/[id]/submit',
+      '/api/license/devices',
+      '/api/admin/licenses/[id]/devices',
+      '/api/admin/licenses/[id]/devices/[deviceId]',
+      '/api/portal/auth/devices',
     ]) {
       expect(constatees, `${r} est redevenue inatteignable`).not.toContain(r)
     }

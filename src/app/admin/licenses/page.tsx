@@ -20,6 +20,7 @@ import {
 import { cn } from '@/lib/utils'
 import { GarageFlowIcon } from '@/components/GarageFlowLogo'
 import WindowControls from '@/components/WindowControls'
+import { LicenseDevices } from '@/components/admin/LicenseDevices'
 import toast, { Toaster } from 'react-hot-toast'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -523,6 +524,11 @@ function KeyRow({ item, onUpdate, onDelete }: {
               </p>
             )}
           </div>
+
+          {/* Postes activés — chargés à l'ouverture du détail, pas avant :
+              une liste par licence à l'affichage de la page ferait autant de
+              requêtes qu'il y a de licences. */}
+          <LicenseDevices licenseId={item.id} />
 
           {/* Quick actions */}
           {item.status === 'active' && (

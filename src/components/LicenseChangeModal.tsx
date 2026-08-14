@@ -1,11 +1,92 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { X, KeyRound, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import { X, KeyRound, CheckCircle, AlertCircle, Loader2, Monitor } from 'lucide-react'
 import { GarageFlowIcon } from './GarageFlowLogo'
 
 interface Props {
   onClose: () => void
+}
+
+interface Poste {
+  deviceId: string
+  status: string
+  name: string | null
+  platform: string | null
+  lastSeenAt: string | null
+}
+
+/**
+ * Postes activés sur CETTE licence (GF-DUR-011).
+ *
+ * `GET /api/license/devices` existait sans qu'aucun écran ne l'appelle :
+ * l'exploitant ne pouvait pas savoir combien de sièges il consommait, ni
+ * lesquels. Quand l'activation échouait faute de siège, il n'avait aucun moyen
+ * de comprendre pourquoi ni quoi faire.
+ *
+ * La liste est en LECTURE SEULE, et c'est dit. Libérer un poste depuis ici est
+ * impossible : `/api/license/deactivate` exige le `deviceToken`, que seul
+ * l'appareil concerné détient. Un poste hors service ne peut donc se libérer
+ * lui-même — il faut passer par l'éditeur. Proposer un bouton qui ne pourrait
+ * pas fonctionner serait pire que de ne rien proposer.
+ */
+function PostesActives() {
+  const [etat, setEtat] = useState<{ seats: number; activeCount: number; devices: Poste[] } | null>(null)
+
+  useEffect(() => {
+    let vivant = true
+    fetch('/api/license/devices', { cache: 'no-store' })
+      .then(async (r) => {
+        const d = await r.json().catch(() => null)
+        // 401 hors contexte licence, 404 licence inconnue : le bloc disparaît
+        // plutôt que d'afficher une erreur qui n'en est pas une.
+        if (vivant && r.ok && d?.ok) setEtat({ seats: d.seats, activeCount: d.activeCount, devices: d.devices ?? [] })
+      })
+      .catch(() => {})
+    return () => { vivant = false }
+  }, [])
+
+  if (!etat) return null
+  const complet = etat.activeCount >= etat.seats
+
+  return (
+    <div className="mb-5 rounded-xl border p-3" style={{ borderColor: 'var(--border-color, rgba(255,255,255,0.1))' }}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-semibold" style={{ color: 'var(--text-secondary, #94a3b8)' }}>
+          Postes activés
+        </p>
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+          complet ? 'text-amber-400 bg-amber-500/15' : 'text-emerald-400 bg-emerald-500/15'
+        }`}>
+          {etat.activeCount} / {etat.seats} siège{etat.seats > 1 ? 's' : ''}
+        </span>
+      </div>
+
+      {etat.devices.length === 0 ? (
+        <p className="text-[11px] mt-2" style={{ color: 'var(--text-secondary, #94a3b8)' }}>Aucun poste activé.</p>
+      ) : (
+        <ul className="mt-2 space-y-1">
+          {etat.devices.map((p) => (
+            <li key={p.deviceId} className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--text-secondary, #94a3b8)' }}>
+              <Monitor className="w-3 h-3 shrink-0 opacity-60" />
+              <span className="truncate">{p.name ?? 'Poste sans nom'}</span>
+              {p.status !== 'active' && <span className="opacity-60">({p.status === 'revoked' ? 'révoqué' : 'libéré'})</span>}
+              {p.lastSeenAt && (
+                <span className="ml-auto shrink-0 opacity-50">{new Date(p.lastSeenAt).toLocaleDateString('fr-FR')}</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {complet && (
+        <p className="text-[10px] text-amber-400/90 mt-2 leading-relaxed">
+          Tous vos sièges sont pris. Un poste hors service ne se libère pas depuis ici : il faut le
+          faire depuis ce poste s’il fonctionne encore, sinon demandez la libération à votre revendeur.
+        </p>
+      )}
+    </div>
+  )
 }
 
 export default function LicenseChangeModal({ onClose }: Props) {
@@ -166,6 +247,8 @@ export default function LicenseChangeModal({ onClose }: Props) {
             </p>
           </div>
         </div>
+
+        <PostesActives />
 
         <label htmlFor="license-key-input" className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary, #94a3b8)' }}>
           Clé de licence
