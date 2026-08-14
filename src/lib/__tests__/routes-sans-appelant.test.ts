@@ -108,7 +108,6 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
   // résout alors « par identifiant seul », son chemin hérité. Elle produit donc
   // encore, à ce jour, des jetons plus faibles que ceux du chemin courant.
   '/api/portal/token': { motif: 'sans-interface', note: 'remplacée par /api/portal/generate ; signe des jetons sans garageId, aucun appelant', classe: 'DEPRECATED' },
-  '/api/loaner-vehicles/[id]': { motif: 'sans-interface', note: 'suppression d’un véhicule de prêt : le panneau ne liste et ne crée que', classe: 'PRODUCT_REQUIRED' },
   '/api/quotes/generate': { motif: 'sans-interface', note: 'génération assistée de devis : aucun écran ne la déclenche', classe: 'PRODUCT_REQUIRED' },
   // Les trois routes de double authentification ont été RETIRÉES d'ici le
   // 14/08/2026 : `PortalTwoFactor` les appelle, et « Mon espace » le monte
@@ -139,7 +138,6 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
   // en est un second point d'entrée. Bâtir un écran de plus aurait été un
   // doublon, pas une correction.
   '/api/parts/low-stock': { motif: 'double', note: 'le panneau Stock calcule le même seuil depuis /api/parts' },
-  '/api/vehicles/[id]/timeline': { motif: 'sans-interface', note: 'chronologie d’un véhicule côté garage : aucun écran ne l’affiche', classe: 'PRODUCT_REQUIRED' },
 
   // L'auto-désactivation exige le `deviceToken`, que seul l'appareil détient :
   // aucun navigateur ne peut l'appeler. Le poste se libère depuis son propre

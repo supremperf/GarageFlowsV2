@@ -656,6 +656,63 @@ describe('le client peut changer SON adresse de connexion (GF-DUR-028)', () => {
   })
 })
 
+describe('un véhicule de prêt peut sortir de la flotte (GF-DUR-029)', () => {
+  const src = lire('src/components/LoanerPanel.tsx')
+
+  it('les deux opérations de la route sont déclenchées', () => {
+    // `PATCH` et `DELETE /api/loaner-vehicles/[id]` existaient sans appelant :
+    // une plaque saisie de travers restait pour toujours, et une voiture vendue
+    // continuait d'être proposée à la réservation.
+    expect(src).toMatch(/fetch\(`\/api\/loaner-vehicles\/\$\{v\.id\}`, \{ method: 'DELETE' \}\)/)
+    expect(src).toMatch(/method: 'PATCH'[\s\S]{0,160}isActive: !v\.isActive/)
+  })
+
+  it('un refus pour cause d\'historique propose la désactivation SUR PLACE', () => {
+    // Le serveur conseille « désactivez-le ». Rendre le conseil sans le bouton
+    // correspondant serait une impasse polie.
+    expect(src).toMatch(/VEHICLE_HAS_HISTORY/)
+    expect(src).toMatch(/desactivationProposee/)
+    expect(src).toMatch(/Retirer de la flotte/)
+  })
+
+  it('un véhicule hors flotte est signalé comme tel', () => {
+    // `isActive` était porté par le composant sans jamais être affiché : un
+    // véhicule retiré semblait disponible.
+    expect(src).toMatch(/!v\.isActive && \(/)
+    expect(src).toMatch(/hors flotte/)
+  })
+
+  it('la suppression demande confirmation — elle est définitive', () => {
+    expect(src).toMatch(/window\.confirm\(`Supprimer définitivement/)
+  })
+})
+
+describe('la fiche véhicule montre les devis refusés et les garanties (GF-DUR-030)', () => {
+  const src = lire('src/components/VehicleHistoryModal.tsx')
+
+  it('la chronologie est réellement interrogée', () => {
+    expect(src).toMatch(/fetch\(`\/api\/vehicles\/\$\{vehicleId\}\/timeline`\)/)
+  })
+
+  it('on ne prend QUE ce que la fiche ne sait pas dire', () => {
+    // La fiche reste la source des interventions : elle écarte les annulées, ce
+    // que la chronologie ne fait pas. Tout reprendre ferait réapparaître des
+    // interventions annulées dans un historique qui les excluait.
+    expect(src).toMatch(/e\.type === 'quote' \|\| e\.type === 'warranty'/)
+  })
+
+  it('un échec de la chronologie ne casse pas la fiche', () => {
+    // C'est un complément : sans lui, la fiche doit rester utilisable.
+    const bloc = src.slice(src.indexOf('/timeline`'))
+    expect(bloc).toMatch(/\.catch\(\(\) =>/)
+  })
+
+  it('les deux natures d\'événement sont distinguées visuellement', () => {
+    expect(src).toMatch(/Devis refusés et garanties/)
+    expect(src).toMatch(/e\.type === 'warranty'/)
+  })
+})
+
 describe('anti-régression : les autres chaînes récemment recâblées restent branchées', () => {
   it('la réception fournisseur est toujours déclenchée par le panneau', () => {
     expect(lire('src/components/SuppliersPanel.tsx')).toMatch(/\/api\/purchase-orders\/\$\{[^}]+\}\/receive/)
