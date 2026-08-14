@@ -1218,9 +1218,24 @@
       "consumers": [
         "src/lib/portal/totp-crypto.ts"
       ],
-      "notes": "Existing gtotp1.k1 values require the same key. No automatic multi-key migration exists. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
+      "notes": "Chiffre les secrets TOTP du portail au repos (format gtotp1.<kid>.<iv>.<tag>.<ct>, AES-256-GCM avec AAD de domaine). DISTINCTE de GF_SMTP_CIPHER_KEY a dessein : une rotation SMTP ne doit pas verrouiller les comptes a double facteur. Rotation via GF_TOTP_ENC_KEY_OLD. Sans elle, l'enrolement 2FA est REFUSE (jamais de repli en clair).",
       "autoManage": false,
-      "status": "absent-consumer"
+      "status": "active"
+    },
+    {
+      "name": "GF_TOTP_ENC_KEY_OLD",
+      "classification": "dangerous",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "base64-32-bytes",
+      "minLength": 32,
+      "autoGenerate": false,
+      "rotationRisk": "critical",
+      "consumers": [
+        "src/lib/portal/totp-crypto.ts"
+      ],
+      "notes": "MIGRATION DE ROTATION de GF_TOTP_ENC_KEY : anciennes cles (separees par des virgules) conservees le temps de rechiffrer les secrets TOTP existants. Sans elle, une rotation rend les seconds facteurs deja enroles DEFINITIVEMENT illisibles, et la seule issue est la reinscription de chaque client. Ne jamais generer automatiquement.",
+      "autoManage": false
     },
     {
       "name": "GF_UPDATE_CHANNEL",

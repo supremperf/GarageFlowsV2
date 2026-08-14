@@ -27,18 +27,19 @@
  */
 
 import {
-  encryptSecret,
-  decryptSecret,
-  secretCipherConfigured,
-  isEncryptedSecret,
-} from '@/lib/security/secret-cipher'
+  chiffrerSecretTotp,
+  dechiffrerSecretTotp,
+  cleTotpConfiguree,
+  estChiffreTotp,
+} from './totp-crypto'
 
 /** Levée quand l'enrôlement est demandé sans clé de chiffrement disponible. */
 export class SecretTotpNonProtegeable extends Error {
   constructor() {
     super(
       'La double authentification exige une clé de chiffrement des secrets au repos. '
-      + 'Configurez GF_SMTP_CIPHER_KEY (« openssl rand -base64 32 ») avant de l’activer.',
+      + 'Configurez GF_TOTP_ENC_KEY (« openssl rand -base64 32 ») avant de l’activer. '
+      + 'Elle est distincte de GF_SMTP_CIPHER_KEY à dessein.',
     )
     this.name = 'SecretTotpNonProtegeable'
   }
@@ -46,7 +47,7 @@ export class SecretTotpNonProtegeable extends Error {
 
 /** Le déploiement peut-il protéger un secret TOTP au repos ? */
 export function peutProtegerSecretTotp(): boolean {
-  return secretCipherConfigured()
+  return cleTotpConfiguree()
 }
 
 /**
@@ -54,8 +55,8 @@ export function peutProtegerSecretTotp(): boolean {
  * Lève {@link SecretTotpNonProtegeable} plutôt que d'écrire en clair.
  */
 export function protegerSecretTotp(secretBase32: string): string {
-  if (!secretCipherConfigured()) throw new SecretTotpNonProtegeable()
-  return encryptSecret(secretBase32)
+  if (!cleTotpConfiguree()) throw new SecretTotpNonProtegeable()
+  return chiffrerSecretTotp(secretBase32)
 }
 
 /**
@@ -83,17 +84,14 @@ export function protegerSecretTotp(secretBase32: string): string {
  * authentification. La voie de récupération existe, et elle est éprouvée.
  */
 export function lireSecretTotp(stocke: string | null | undefined): string | null {
-  if (!isEncryptedSecret(stocke)) return null
-  try {
-    return decryptSecret(stocke)
-  } catch {
-    // Clé absente, clé changée sans rotation déclarée, données altérées : dans
-    // tous les cas on ne peut PAS affirmer connaître le secret. On ne devine pas.
-    return null
-  }
+  // `dechiffrerSecretTotp` rend déjà `null` — jamais une exception ni une valeur
+  // devinée — pour : marqueur absent (clair, ou cryptogramme d'un AUTRE
+  // domaine), structure invalide, clé absente, aucune clé ne convenant,
+  // authentification GCM en échec.
+  return dechiffrerSecretTotp(stocke)
 }
 
 /** Un secret stocké est-il déjà protégé ? (diagnostic, migration) */
 export function secretTotpProtege(stocke: string | null | undefined): boolean {
-  return isEncryptedSecret(stocke)
+  return estChiffreTotp(stocke)
 }

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GF-DUR-022 — cycle de vie du double facteur du portail, et son secret au repos.
  *
  * ─── Ce que ces tests cherchent d'abord ─────────────────────────────────────
@@ -31,7 +31,7 @@ process.env.DATABASE_URL = `file:${DB_PATH}`
 process.env.GF_PORTAL_SECRET = 'secret-portail-double-facteur-0123456789abcdef'
 // Clé de chiffrement des secrets au repos : sans elle, l'enrôlement est refusé
 // — c'est précisément ce que le dernier bloc de ce fichier vérifie.
-process.env.GF_SMTP_CIPHER_KEY = Buffer.alloc(32, 42).toString('base64')
+process.env.GF_TOTP_ENC_KEY = Buffer.alloc(32, 42).toString('base64')
 
 let setupPOST: (r: NextRequest) => Promise<Response>
 let enablePOST: (r: NextRequest) => Promise<Response>
@@ -118,7 +118,7 @@ describe('le secret TOTP n\'est plus lisible dans la base', () => {
     // Le cœur du défaut : c'est cette colonne qui part dans les sauvegardes.
     expect(u.twoFactorSecret).not.toBe(secret)
     expect(u.twoFactorSecret).not.toContain(secret)
-    expect(u.twoFactorSecret.startsWith('GFSEC1:')).toBe(true)
+    expect(u.twoFactorSecret.startsWith('gtotp1.')).toBe(true)
     // Et il reste néanmoins utilisable : c'est tout l'enjeu d'un secret TOTP.
     expect(u.twoFactorEnabled).toBe(true)
   })
@@ -129,7 +129,7 @@ describe('le secret TOTP n\'est plus lisible dans la base', () => {
     const s = await (await setupPOST(auth('/api/portal/auth/2fa/setup', {}))).json()
     const u = await prisma.portalUser.findUnique({ where: { id: userId } })
     expect(u.twoFactorPending).not.toBe(s.secret)
-    expect(u.twoFactorPending.startsWith('GFSEC1:')).toBe(true)
+    expect(u.twoFactorPending.startsWith('gtotp1.')).toBe(true)
   })
 
   it('un enrôlement abandonné ne protège PAS faussement le compte', async () => {
