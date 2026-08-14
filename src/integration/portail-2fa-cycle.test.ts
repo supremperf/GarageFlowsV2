@@ -255,6 +255,62 @@ describe('désactivation', () => {
   })
 })
 
+describe('rétrogradation du format — la porte que le repli laissait ouverte', () => {
+  /**
+   * Accepter une valeur en clair rendait le système PLUS permissif sur un
+   * format non reconnu : qui obtient une écriture en base remplace le chiffré
+   * par un secret qu'il choisit, et passe le second facteur avec ses propres
+   * codes. Le chiffrement ne protégeait alors que la lecture.
+   */
+  it('un secret remis EN CLAIR dans la colonne ne valide plus rien', async () => {
+    await activer()
+    // L'attaquant écrit un secret qu'il maîtrise, sans le chiffrer.
+    const sien = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP'
+    await prisma.portalUser.update({ where: { id: userId }, data: { twoFactorSecret: sien } })
+
+    const { challenge } = await (await connecter()).json()
+    const r = await verifyPOST(nu('/api/portal/auth/2fa/verify', { challenge, token: generateTotp(sien) }))
+    expect(r.status).toBe(401)
+    expect(r.headers.get('set-cookie')).toBeNull()
+  })
+
+  it('un chiffré ALTÉRÉ ne valide rien non plus', async () => {
+    const { secret } = await activer()
+    const u = await prisma.portalUser.findUnique({ where: { id: userId } })
+    // On casse un octet du corps chiffré : l'authentification GCM doit échouer.
+    const abime = u.twoFactorSecret.slice(0, -6) + 'AAAAAA'
+    await prisma.portalUser.update({ where: { id: userId }, data: { twoFactorSecret: abime } })
+
+    const { challenge } = await (await connecter()).json()
+    const r = await verifyPOST(nu('/api/portal/auth/2fa/verify', { challenge, token: generateTotp(secret) }))
+    expect(r.status).toBe(401)
+  })
+
+  it('mais le compte n\'est PAS enfermé : le code de secours fonctionne encore', async () => {
+    // C'est ce qui rend le refus ci-dessus tenable. Les codes de secours sont
+    // hachés à part : ils ne dépendent pas du secret devenu illisible.
+    const { backupCodes } = await activer()
+    await prisma.portalUser.update({
+      where: { id: userId },
+      data: { twoFactorSecret: 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP' },
+    })
+
+    const { challenge } = await (await connecter()).json()
+    const r = await verifyPOST(nu('/api/portal/auth/2fa/verify', { challenge, backupCode: backupCodes[0] }))
+    expect(r.status).toBe(200)
+    expect(r.headers.get('set-cookie')).toContain(PORTAL_COOKIE)
+  })
+
+  it('un enrôlement EN COURS au format clair ne s\'active pas', async () => {
+    await setupPOST(auth('/api/portal/auth/2fa/setup', {}))
+    const sien = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP'
+    await prisma.portalUser.update({ where: { id: userId }, data: { twoFactorPending: sien } })
+    const r = await enablePOST(auth('/api/portal/auth/2fa/enable', { token: generateTotp(sien) }))
+    expect(r.status).toBe(401)
+    expect((await prisma.portalUser.findUnique({ where: { id: userId } })).twoFactorEnabled).toBe(false)
+  })
+})
+
 describe('isolation entre comptes', () => {
   it('le secret d\'un compte ne valide pas la connexion d\'un autre', async () => {
     const { secret } = await activer()

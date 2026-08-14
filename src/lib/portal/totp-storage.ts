@@ -59,14 +59,38 @@ export function protegerSecretTotp(secretBase32: string): string {
 }
 
 /**
- * Secret TOTP utilisable, à partir de la valeur stockée.
+ * Secret TOTP utilisable, à partir de la valeur stockée — ou `null`.
  *
- * Une valeur non marquée est un enregistrement ANTÉRIEUR au chiffrement : elle
- * est rendue telle quelle, sans quoi les comptes déjà enrôlés cesseraient de
- * pouvoir se connecter — un verrouillage bien pire que le défaut corrigé.
+ * ─── Pourquoi AUCUN repli sur le clair ──────────────────────────────────────
+ * Première version : une valeur non marquée était rendue telle quelle, « pour ne
+ * pas verrouiller un compte déjà enrôlé ». Ce raisonnement ne tient pas, et il
+ * ouvrait une porte.
+ *
+ * Il ne tient pas, parce que l'enrôlement n'a jamais été offert par aucune
+ * interface : ni `/2fa/setup` ni `/2fa/enable` n'ont jamais eu d'appelant, à
+ * aucun moment de l'historique. Un secret en clair ne peut provenir que d'une
+ * requête forgée à la main.
+ *
+ * Il ouvrait une porte, parce qu'accepter le clair rend le système PLUS
+ * permissif sur un format non reconnu : qui obtient une écriture en base
+ * remplace le chiffré par un secret en clair qu'il choisit, et passe le second
+ * facteur avec ses propres codes. Le chiffrement ne protégeait alors plus que la
+ * lecture.
+ *
+ * ─── Et ce refus n'enferme personne ─────────────────────────────────────────
+ * Les CODES DE SECOURS sont hachés à part et restent valides : un compte dont le
+ * secret devient illisible se connecte avec l'un d'eux, puis réactive sa double
+ * authentification. La voie de récupération existe, et elle est éprouvée.
  */
 export function lireSecretTotp(stocke: string | null | undefined): string | null {
-  return decryptSecret(stocke)
+  if (!isEncryptedSecret(stocke)) return null
+  try {
+    return decryptSecret(stocke)
+  } catch {
+    // Clé absente, clé changée sans rotation déclarée, données altérées : dans
+    // tous les cas on ne peut PAS affirmer connaître le secret. On ne devine pas.
+    return null
+  }
 }
 
 /** Un secret stocké est-il déjà protégé ? (diagnostic, migration) */
