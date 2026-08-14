@@ -90,7 +90,13 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
       if (existing) {
         return tx.jobPart.update({
           where: { id: existing.id },
-          data:  { quantity: existing.quantity + qty },
+          // `existing.quantity + qty` était juste, mais pour une raison
+          // indirecte : le verrou pris sur la PIÈCE au décrément ordonne les
+          // requêtes concurrentes, si bien que la relecture voyait déjà la
+          // ligne de l'autre. Cette justesse tenait à un enchaînement, pas à
+          // une garantie — et se serait perdue au premier réagencement du bloc.
+          // `increment` la rend indépendante de l'ordre.
+          data:  { quantity: { increment: qty } },
           include: { part: true },
         })
       }

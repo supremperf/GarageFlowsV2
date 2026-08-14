@@ -5,9 +5,13 @@
 import { decodeObdCode } from './obd'
 import { CAUSES, OBD_CODE_CAUSES, SUBSYSTEM_CAUSES, SYMPTOM_RULES } from './knowledge'
 import type { Confidence, DiagnosticInput, DiagnosticResult, ProbableCause } from './types'
+import { plierApostrophes } from '@/lib/text/apostrophes'
 
 function normalize(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+  // La base de symptômes est écrite avec l'apostrophe droite (« bruit
+  // d'embrayage ») ; le mécanicien qui saisit depuis un téléphone tape la
+  // typographique. Sans pliage, le symptôme n'était jamais reconnu.
+  return plierApostrophes(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 }
 
 function confidenceFromScore(score: number): Confidence {

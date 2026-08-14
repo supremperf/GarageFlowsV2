@@ -17,6 +17,8 @@
  *    alphabétique stable.
  */
 
+import { plierApostrophes } from '@/lib/text/apostrophes'
+
 /** Pièce telle que nécessaire au classement (sous-ensemble du modèle Part). */
 export interface SearchablePart {
   id: string
@@ -32,7 +34,9 @@ export interface SearchablePart {
  * U+0300–U+036F retire les marques combinantes.
  */
 export function normalizeSearch(input: string | null | undefined): string {
-  return (input ?? '')
+  // Les apostrophes sont pliées sur une forme unique : « joint d’étanchéité »
+  // saisi au clavier ne trouvait pas « joint d'étanchéité » enregistré en stock.
+  return plierApostrophes(input ?? '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()

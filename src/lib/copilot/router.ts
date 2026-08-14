@@ -3,9 +3,13 @@
  */
 import { INTENTS } from './intents'
 import type { Classification, Confidence, Slots } from './types'
+import { plierApostrophes } from '@/lib/text/apostrophes'
 
 function normalize(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+  // Les mots-clés portent l'apostrophe droite ; l'utilisateur tape presque
+  // toujours la typographique. Sans ce pliage, « chiffre d’affaires » ne
+  // reconnaissait aucune intention.
+  return plierApostrophes(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 }
 
 function extractSlots(raw: string): Slots {

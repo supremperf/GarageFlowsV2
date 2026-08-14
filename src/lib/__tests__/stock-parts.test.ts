@@ -63,7 +63,13 @@ const H = vi.hoisted(() => {
         ) ?? null,
       update: async ({ where, data }: any) => {
         const jp = db.jobParts.find(x => x.id === where.id)!
-        if (data.quantity !== undefined) jp.quantity = data.quantity
+        // Les trois formes que Prisma accepte. Le simulacre ne connaissait que
+        // l'affectation : la route est passée à `{ increment }` pour ne plus
+        // dépendre de l'ordre des verrous, et le test échouait sur le simulacre,
+        // pas sur le produit.
+        if (data.quantity?.increment !== undefined) jp.quantity += data.quantity.increment
+        else if (data.quantity?.decrement !== undefined) jp.quantity -= data.quantity.decrement
+        else if (data.quantity !== undefined) jp.quantity = data.quantity
         return { ...jp, part: db.parts.find(p => p.id === jp.partId) }
       },
       create: async ({ data }: any) => {
