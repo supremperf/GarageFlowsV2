@@ -59,6 +59,11 @@ async function loadHandlers() {
     ['warranties', '@/app/api/warranties/[id]/route'],
     ['labor-operations', '@/app/api/labor-operations/[id]/route'],
     ['mechanics', '@/app/api/mechanics/[id]/route'],
+    // Familles ajoutées après la première rédaction de cette matrice. Chacune a
+    // ses propres tests de bout en bout ; elles doivent aussi passer
+    // l'invariant GÉNÉRIQUE — c'est lui qui attrape la route qu'on oublie.
+    ['clients', '@/app/api/clients/[id]/route'],
+    ['tickets', '@/app/api/tickets/[id]/route'],
   ]
   for (const [key, spec] of mods) {
     const m = (await import(spec)) as Record<string, Handler>
@@ -86,12 +91,22 @@ async function seedGarage(p: string) {
   const loanerReservation = await prisma.loanerReservation.create({ data: { garageId: gid, vehicleId: loanerVehicle.id, clientName: `Cust ${p}`, startDate: new Date('2026-08-04'), endDate: new Date('2026-08-06') } })
   const warranty = await prisma.warranty.create({ data: { garageId: gid, clientName: `Cust ${p}`, partName: 'Batterie', expiresAt: new Date('2027-08-04') } })
   const laborOperation = await prisma.laborOperation.create({ data: { garageId: gid, name: `Op ${p}` } })
+  const portalUser = await prisma.portalUser.create({
+    data: { garageId: gid, clientId: client.id, email: `client-${p}@test.fr`, passwordHash: 'x', emailVerified: true },
+  })
+  const ticket = await prisma.portalTicket.create({
+    data: {
+      garageId: gid, portalUserId: portalUser.id, clientId: client.id,
+      subject: `Question ${p}`, status: 'open',
+      messages: { create: { authorType: 'client', authorName: `Client ${p}`, body: 'Bonjour' } },
+    },
+  })
   return { gid, mechanicId: mechanic.id, clientId: client.id, ids: {
     vehicles: vehicle.id, jobs: job.id, invoices: invoice.id, quotes: quote.id,
     'work-orders': workOrder.id, 'purchase-orders': purchaseOrder.id, parts: part.id,
     appointments: appointment.id, inspections: inspection.id, 'loaner-vehicles': loanerVehicle.id,
     'loaner-reservations': loanerReservation.id, warranties: warranty.id, 'labor-operations': laborOperation.id,
-    mechanics: mechanic.id,
+    mechanics: mechanic.id, clients: client.id, tickets: ticket.id,
   } }
 }
 
@@ -101,7 +116,7 @@ const DELEGATE: Record<string, string> = {
   'work-orders': 'workOrder', 'purchase-orders': 'purchaseOrder', parts: 'part',
   appointments: 'appointment', inspections: 'inspection', 'loaner-vehicles': 'loanerVehicle',
   'loaner-reservations': 'loanerReservation', warranties: 'warranty', 'labor-operations': 'laborOperation',
-  mechanics: 'mechanic',
+  mechanics: 'mechanic', clients: 'client', tickets: 'portalTicket',
 }
 
 /**
@@ -113,6 +128,20 @@ const PATCH_BODY: Record<string, unknown> = {
   'work-orders': { clientName: 'X' }, 'purchase-orders': { status: 'draft' }, parts: { name: 'X' },
   inspections: { clientName: 'X' }, 'loaner-vehicles': { name: 'X' }, 'loaner-reservations': { clientName: 'X' },
   warranties: { clientName: 'X' }, 'labor-operations': { name: 'X' }, mechanics: { name: 'X' },
+  clients: { name: 'X' },
+}
+
+/**
+ * Corps VALIDES pour les POST par identifiant.
+ *
+ * Le piège de cette matrice : un handler qui rejette le CORPS avant de vérifier
+ * la propriété rend un 400, l'assertion « ≥ 400 » est satisfaite… et rien de
+ * l'isolation n'a été prouvé. Chaque POST doit donc porter un corps que le
+ * handler accepterait sur sa propre ressource.
+ */
+const POST_BODY: Record<string, unknown> = {
+  appointments: { action: 'confirm' },
+  tickets: { message: 'Réponse du garage' },
 }
 
 let A: Awaited<ReturnType<typeof seedGarage>>
@@ -163,7 +192,7 @@ describe('Isolation inter-garage — session A ne peut atteindre AUCUNE ressourc
       const verbs = Object.keys(R[fam])
       expect(verbs.length).toBeGreaterThan(0)
       for (const verb of verbs) {
-        const body = verb === 'POST' ? { action: 'confirm' } : PATCH_BODY[fam]
+        const body = verb === 'POST' ? POST_BODY[fam] : PATCH_BODY[fam]
         const status = await call(fam, verb, B.ids[fam as keyof typeof B.ids], body)
         expect(status, `${verb} ${fam}/${B.ids[fam as keyof typeof B.ids]} devrait échouer`).toBeGreaterThanOrEqual(400)
         // Quel que soit le verbe, la ressource de B doit rester présente.
@@ -181,8 +210,8 @@ describe('Contrôle positif — A accède bien à ses propres ressources', () =>
       const id = A.ids[fam as keyof typeof A.ids]
       if (verbs.includes('GET')) {
         expect(await call(fam, 'GET', id)).toBeLessThan(400)
-      } else if (fam === 'appointments') {
-        expect(await call(fam, 'POST', id, { action: 'confirm' })).toBeLessThan(400)
+      } else if (POST_BODY[fam] !== undefined) {
+        expect(await call(fam, 'POST', id, POST_BODY[fam])).toBeLessThan(400)
       } else if (verbs.includes('PATCH')) {
         expect(await call(fam, 'PATCH', id, PATCH_BODY[fam])).toBeLessThan(400)
       }
