@@ -139,7 +139,10 @@ export async function collectGarageWindows(
 
   const shared = {
     periodDays,
-    hourlyRate: garage ? fromScaled(garage.hourlyRateTenThousandths) : 60,
+    // Sans garage lisible, le tarif est INCONNU — surtout pas 60 €/h, qui
+    // ferait apparaître une valorisation d'heures et des marges calculées sur un
+    // tarif que personne n'a choisi. Zéro se voit ; un faux tarif se croit.
+    hourlyRate: garage ? fromScaled(garage.hourlyRateTenThousandths) : 0,
     workshopStartHour: garage?.workshopStartHour ?? 8,
     workshopEndHour: garage?.workshopEndHour ?? 18,
     parts: partsInput,

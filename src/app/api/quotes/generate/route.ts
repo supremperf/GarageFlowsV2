@@ -110,9 +110,14 @@ export const POST = withAuth(async (req) => {
     })
   }
 
+  // Un devis chiffré sur un tarif inventé serait remis au client. Le repli
+  // `: 60` produisait exactement cela quand le garage de la session était
+  // introuvable — sans que rien ne le distingue d'un devis correct.
+  if (!garage) return NextResponse.json({ error: 'Garage introuvable' }, { status: 404 })
+
   const proposal = generateQuote(operations, suggestions, {
-    laborRatePerHour: body.laborRatePerHour ?? (garage ? fromScaled(garage.hourlyRateTenThousandths) : 60),
-    vatRate: body.vatRate ?? garage?.taxRate ?? 20,
+    laborRatePerHour: body.laborRatePerHour ?? fromScaled(garage.hourlyRateTenThousandths),
+    vatRate: body.vatRate ?? garage.taxRate ?? 20,
     currency: garage?.currency ?? 'EUR',
   })
 

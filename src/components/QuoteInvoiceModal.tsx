@@ -18,6 +18,7 @@ import { docStatusLabel } from '@/lib/i18n/labels'
 import { computeTotals, multiplyCents, toCents, fromCents, parseAmountToScaled, fromScaled, lineCents, formatEuros, roundEurosForDisplay } from '@/lib/money'
 import { PartAutocomplete, type PartSuggestion } from '@/components/invoice/PartAutocomplete'
 import { QuoteInvoicePrintDocument } from '@/components/invoice/QuoteInvoicePrintDocument'
+import { EInvoicePanel } from '@/components/invoice/EInvoicePanel'
 import { renderElementToA4Pdf, PRINT_HOST_STYLE } from '@/lib/pdf/render-a4'
 
 interface Line {
@@ -873,6 +874,15 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                 </div>
               </div>
             </div>
+          )}
+
+          {/* ── Transmission à la plateforme agréée ───────────────────────────
+              Uniquement sur une FACTURE enregistrée, et hors édition : on ne
+              transmet pas un document en cours de modification. Le panneau se
+              retire de lui-même là où la fonctionnalité n'existe pas — sur le
+              poste, ou sans droit de lecture financière. */}
+          {mode === 'invoice' && doc?.id && !editing && (
+            <EInvoicePanel invoiceId={doc.id} statutFacture={doc.status} />
           )}
         </div>
       </div>

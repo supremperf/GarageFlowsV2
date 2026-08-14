@@ -41,7 +41,14 @@ export const GET = withAuth(async (req) => {
     }),
   ])
 
-  const hourlyRate = garage ? fromScaled(garage.hourlyRateTenThousandths) : 60
+  // Le garage de la session est introuvable : aucune donnée financière n'a de
+  // sens dans ce cas. Le repli précédent — `: 60` — présentait des marges et une
+  // valorisation d'heures calculées sur un tarif que personne n'avait choisi,
+  // sans que rien à l'écran ne le signale.
+  if (!garage) {
+    return NextResponse.json({ error: 'Garage introuvable' }, { status: 404 })
+  }
+  const hourlyRate = fromScaled(garage.hourlyRateTenThousandths)
 
   const monthlyStats = months.map(({ label, start, end }) => {
     const invoices = allInvoices.filter(inv =>

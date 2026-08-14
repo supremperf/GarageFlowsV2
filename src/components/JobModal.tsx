@@ -106,7 +106,10 @@ export default function JobModal() {
     ]).then(([garage, parts]) => {
       if (!garage) return
       const duration = editingJob.actualDuration ?? editingJob.estimatedDuration
-      const laborRevenue = fromCents(lineCents(garage.hourlyRate ?? 60, duration / 60))
+      // `?? 60` affichait une rentabilité calculée sur un tarif que le garage
+      // n'avait pas choisi. Sans tarif lisible, la main-d'œuvre ne vaut rien de
+      // connu : elle vaut zéro à l'écran, et cela se voit.
+      const laborRevenue = fromCents(lineCents(garage.hourlyRate ?? 0, duration / 60))
       const partsRevenue = parts.reduce((s: number, p: { unitPrice: number; quantity: number }) => s + fromCents(lineCents(p.unitPrice, p.quantity)), 0)
       const partsCost = parts.reduce((s: number, p: { unitCost: number; quantity: number }) => s + fromCents(lineCents(p.unitCost, p.quantity)), 0)
       const profit = fromCents(toCents(laborRevenue) + toCents(partsRevenue) - toCents(partsCost))

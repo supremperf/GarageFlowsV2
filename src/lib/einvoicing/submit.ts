@@ -83,6 +83,81 @@ export function cleIdempotence(garageId: string, invoiceId: string): string {
 const STATUTS_REJOUABLES = new Set(['error', 'rejected'])
 
 /**
+ * Au-delà de ce délai, une transmission encore « en cours » est ABANDONNÉE (§7).
+ *
+ * Le cas visé : le serveur est tué entre la réservation et le traitement de la
+ * réponse — redéploiement, coupure, plantage. La ligne reste `submission_pending`
+ * et plus aucun processus ne s'en occupe. Elle n'était alors ni rejouable (statut
+ * hors des rejouables) ni déclarable non parvenue (réservée à `unknown`) : la
+ * facture devenait réglementairement INTRANSMISSIBLE, par aucun chemin.
+ *
+ * Le seuil ne se devine pas : l'adaptateur abandonne ses appels à 20 s. Une ligne
+ * immobile depuis un quart d'heure ne peut donc plus correspondre à un appel en
+ * vol — la marge couvre largement les reprises et les horloges mal réglées.
+ *
+ * Ce qu'un dépassement N'AUTORISE PAS : le rejeu automatique. Épistémiquement,
+ * cet état est identique à `unknown` — la plateforme a peut-être reçu la facture.
+ * Il rouvre seulement le droit de DÉCLARER, c'est-à-dire de faire constater par
+ * un humain, sur le portail de la plateforme, ce que le logiciel ne peut pas
+ * savoir.
+ */
+const DELAI_ABANDON_MS = 15 * 60_000
+
+interface TransmissionEtat {
+  id: string
+  status: string
+  externalId: string | null
+  updatedAt?: Date | string | null
+}
+
+/**
+ * Une transmission peut-elle être déclarée non parvenue par l'exploitant ?
+ *
+ * Exportée parce que l'INTERFACE doit poser la même question que le serveur.
+ * Si elle la reposait à sa façon — en recopiant le seuil, par exemple — les deux
+ * réponses divergeraient au premier ajustement, et l'exploitant se verrait
+ * proposer une action qui lui serait ensuite refusée.
+ */
+export function peutEtreDeclareeNonParvenue(t: TransmissionEtat): boolean {
+  if (t.externalId) return false
+  return t.status === 'unknown' || estAbandonnee(t)
+}
+
+/** Une transmission « en cours » qu'aucun processus ne peut plus faire avancer. */
+function estAbandonnee(t: TransmissionEtat | null): boolean {
+  if (!t || t.status !== 'submission_pending' || t.externalId) return false
+  const depuis = t.updatedAt ? new Date(t.updatedAt).getTime() : NaN
+  // Sans horodatage exploitable, on ne conclut PAS à l'abandon : mieux vaut une
+  // facture à débloquer à la main qu'un rejeu autorisé à tort.
+  return Number.isFinite(depuis) && Date.now() - depuis > DELAI_ABANDON_MS
+}
+
+/**
+ * Rend l'état d'une transmission qu'on renonce à renvoyer.
+ *
+ * Le message distingue les trois situations, parce qu'elles n'appellent pas la
+ * même conduite : une facture déjà transmise se laisse tranquille, un envoi en
+ * cours se surveille, un envoi abandonné se fait vérifier sur le portail de la
+ * plateforme. Les confondre enverrait l'exploitant insister là où il ne faut
+ * pas — ou classer comme partie une facture qui ne l'est pas.
+ */
+function etatConnu(t: TransmissionEtat | null): ResultatEnvoi {
+  const message = estAbandonnee(t)
+    ? 'Un envoi précédent est resté sans issue connue. Vérifiez sur le portail de votre plateforme si la facture y figure, puis déclarez-la non parvenue si ce n’est pas le cas.'
+    : t?.status === 'submission_pending'
+      ? 'Un envoi de cette facture est déjà en cours. Actualisez son statut avant de réessayer.'
+      : 'Cette facture a déjà été transmise à la plateforme.'
+  return {
+    ok: false,
+    code: 'ALREADY_SUBMITTED',
+    message,
+    transmissionId: t?.id,
+    externalId: t?.externalId ?? undefined,
+    status: (t?.status as CanonicalEInvoiceStatus) ?? 'unknown',
+  }
+}
+
+/**
  * Violation de contrainte d'unicité, quel que soit le moteur.
  *
  * Prisma remonte `P2002` ; on reconnaît aussi les messages bruts des moteurs au
@@ -209,24 +284,36 @@ export async function envoyerFacture(e: EntreesEnvoi): Promise<ResultatEnvoi> {
       // Soit la plateforme a accusé réception (externalId présent), soit une
       // tentative est en cours / d'issue inconnue : dans les deux cas, renvoyer
       // serait risquer une double déclaration. On rend l'état, tel qu'il est.
-      const enCours = existante?.status === 'submission_pending'
-      return {
-        ok: false,
-        code: 'ALREADY_SUBMITTED',
-        message: enCours
-          ? 'Un envoi de cette facture est déjà en cours. Actualisez son statut avant de réessayer.'
-          : 'Cette facture a déjà été transmise à la plateforme.',
-        transmissionId: existante?.id,
-        externalId: existante?.externalId ?? undefined,
-        status: (existante?.status as CanonicalEInvoiceStatus) ?? 'unknown',
-      }
+      return etatConnu(existante)
     }
 
-    // REJEU : on réutilise la MÊME ligne et la MÊME clé d'idempotence. Cette clé
-    // part vers la plateforme (en-tête `Idempotency-Key`) : si celle-ci l'honore,
-    // un premier appel qu'elle aurait reçu à notre insu est dédoublonné chez elle.
-    await db.eInvoiceTransmission.update({
-      where: { id: existante.id },
+    // REJEU — PRISE EXCLUSIVE DU DROIT DE RENVOYER (§3, §4).
+    //
+    // Ici la contrainte d'unicité ne protège plus rien : la ligne existe déjà,
+    // elle a fait son office à la création. Ce qui décide de partir ou non est
+    // devenu une LECTURE de statut suivie d'une ÉCRITURE — et l'intervalle entre
+    // les deux est ouvert à tous. Deux clics, deux onglets, deux exploitants, un
+    // rejeu automatique, ou simplement deux INSTANCES du serveur derrière le même
+    // répartiteur : chacun lit « error », chacun en conclut qu'il peut renvoyer.
+    // Vingt requêtes concurrentes produisaient vingt déclarations de la même
+    // facture à la plateforme agréée, soit vingt créances pour une seule vente.
+    //
+    // Un verrou en mémoire (`Set`, mutex de processus) ne corrigerait que le cas
+    // mono-instance et donnerait l'illusion d'être protégé. La prise est donc
+    // faite par la BASE, en une seule opération : la mise à jour ne s'applique
+    // qu'aux lignes ENCORE rejouables. Le moteur verrouille la ligne, et une
+    // seconde tentative réévalue le prédicat sur la version validée par la
+    // première — elle ne trouve plus rien à mettre à jour. Un seul appelant
+    // obtient `count === 1` ; c'est lui, et lui seul, qui parle à la plateforme.
+    const prise = await db.eInvoiceTransmission.updateMany({
+      where: {
+        id: existante.id,
+        garageId: e.garageId,
+        // Les DEUX conditions du rejeu sont reportées dans le prédicat : sans
+        // elles, la prise serait inconditionnelle et ne trancherait plus rien.
+        externalId: null,
+        status: { in: Array.from(STATUTS_REJOUABLES) },
+      },
       data: {
         status: 'submission_pending',
         errorMessage: null,
@@ -238,6 +325,20 @@ export async function envoyerFacture(e: EntreesEnvoi): Promise<ResultatEnvoi> {
         environment: e.environment,
       },
     })
+
+    if (prise.count !== 1) {
+      // Perdu la course : un autre a pris le rejeu entre notre lecture et notre
+      // écriture. On relit pour rendre l'état RÉEL plutôt que celui, périmé, que
+      // nous avions lu.
+      const apres = await db.eInvoiceTransmission.findFirst({
+        where: { garageId: e.garageId, idempotencyKey },
+      })
+      return etatConnu(apres ?? existante)
+    }
+
+    // La MÊME clé d'idempotence part vers la plateforme (en-tête
+    // `Idempotency-Key`) : si celle-ci l'honore, un premier appel qu'elle aurait
+    // reçu à notre insu est dédoublonné chez elle.
     await db.eInvoiceEvent.create({
       data: {
         transmissionId: existante.id, garageId: e.garageId, type: 'submitted',
@@ -341,6 +442,13 @@ export async function envoyerFacture(e: EntreesEnvoi): Promise<ResultatEnvoi> {
  * bloquer à jamais rendrait la facture intransmissible. La seule sortie
  * honnête est une décision humaine — l'exploitant vérifie sur le portail de sa
  * plateforme — et cette décision est tracée : qui, quand, sur quelle facture.
+ *
+ * Deux états y donnent droit, et pour la même raison : nul ne sait ce que la
+ * plateforme a reçu.
+ *   · `unknown` — la connexion est tombée sans réponse ;
+ *   · `submission_pending` ABANDONNÉ — le serveur a été tué pendant l'envoi et
+ *     plus aucun processus ne reprendra la main (voir `DELAI_ABANDON_MS`).
+ * Le second manquait, et sa facture n'avait plus aucune issue.
  */
 export async function declarerNonParvenue(
   garageId: string,
@@ -358,18 +466,41 @@ export async function declarerNonParvenue(
       transmissionId: t.id, externalId: t.externalId,
     }
   }
-  if (t.status !== 'unknown') {
+  const abandonnee = estAbandonnee(t)
+  if (!peutEtreDeclareeNonParvenue(t)) {
     return {
       ok: false, code: 'PROVIDER_UNAVAILABLE',
-      message: `Seule une transmission d'issue inconnue peut être déclarée non parvenue (statut actuel : ${t.status}).`,
+      message: t.status === 'submission_pending'
+        ? 'Un envoi de cette facture est encore en cours. Attendez son issue avant de la déclarer non parvenue.'
+        : `Seule une transmission d'issue inconnue peut être déclarée non parvenue (statut actuel : ${t.status}).`,
       transmissionId: t.id,
     }
   }
 
-  await db.eInvoiceTransmission.update({
-    where: { id: t.id },
+  // Même prise exclusive qu'au rejeu : deux exploitants peuvent cliquer en même
+  // temps. Sans prédicat, chacun inscrirait sa décision au journal d'audit et
+  // l'on croirait, en relisant, que deux personnes ont vérifié la plateforme.
+  const prise = await db.eInvoiceTransmission.updateMany({
+    where: {
+      id: t.id, garageId, externalId: null,
+      // Le SEUIL d'abandon est reporté dans le prédicat, et pas seulement
+      // évalué au-dessus : entre notre lecture et notre écriture, la facture a
+      // pu être déclarée puis RELANCÉE. Elle serait de nouveau
+      // `submission_pending` — mais vivante. Sans la borne de temps, cette
+      // déclaration périmée l'abattrait en plein vol.
+      ...(abandonnee
+        ? { status: 'submission_pending', updatedAt: { lt: new Date(Date.now() - DELAI_ABANDON_MS) } }
+        : { status: 'unknown' }),
+    },
     data: { status: 'error', errorMessage: 'Déclarée non parvenue par l’exploitant : rejeu autorisé.' },
   })
+  if (prise.count !== 1) {
+    return {
+      ok: false, code: 'PROVIDER_UNAVAILABLE',
+      message: 'L’état de cette transmission vient de changer. Actualisez-le avant de la déclarer non parvenue.',
+      transmissionId: t.id,
+    }
+  }
   await db.eInvoiceEvent.create({
     data: {
       transmissionId: t.id, garageId, type: 'status_update', status: 'error',

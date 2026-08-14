@@ -36,17 +36,36 @@ vi.mock('@/lib/db', () => ({
         if (base.transmissions.some((t) => t.idempotencyKey === a.data.idempotencyKey)) {
           throw new Error('Unique constraint failed on the fields: (`idempotencyKey`)')
         }
-        const row = { id: `t${++base.seq}`, ...a.data }
+        const row = { id: `t${++base.seq}`, externalId: null, ...a.data }
         base.transmissions.push(row)
-        return row
+        return { ...row }
       },
-      findFirst: async (a: { where: Record<string, unknown> }) =>
-        base.transmissions.find((t) =>
-          Object.entries(a.where).every(([k, v]) => t[k] === v)) ?? null,
+      // Une lecture rend un INSTANTANÉ. Rendre la ligne elle-même laisserait
+      // l'écriture d'un appelant apparaître dans l'objet déjà lu par un autre,
+      // et masquerait les courses que ces tests existent pour détecter — voir
+      // `submit-concurrency.test.ts`, où ce détail décidait du verdict.
+      findFirst: async (a: { where: Record<string, unknown> }) => {
+        const t = base.transmissions.find((x) =>
+          Object.entries(a.where).every(([k, v]) => x[k] === v))
+        return t ? { ...t } : null
+      },
       update: async (a: { where: { id: string }; data: Record<string, unknown> }) => {
         const row = base.transmissions.find((t) => t.id === a.where.id)!
         Object.assign(row, a.data)
-        return row
+        return { ...row }
+      },
+      // Prédicat ET écriture d'un seul bloc, comme le verrou de ligne du moteur.
+      updateMany: async (a: { where: Record<string, unknown>; data: Record<string, unknown> }) => {
+        const cibles = base.transmissions.filter((t) =>
+          Object.entries(a.where).every(([k, v]) => {
+            if (v !== null && typeof v === 'object' && 'in' in (v as object)) {
+              return (v as { in: unknown[] }).in.includes(t[k])
+            }
+            if (v === null) return t[k] === null || t[k] === undefined
+            return t[k] === v
+          }))
+        for (const t of cibles) Object.assign(t, a.data)
+        return { count: cibles.length }
       },
     },
     eInvoiceEvent: { create: async (a: { data: Record<string, unknown> }) => { base.evenements.push(a.data); return a.data } },

@@ -17,6 +17,7 @@ import { FeaturesTab }  from './settings/FeaturesTab'
 import { EmailTab }     from './settings/EmailTab'
 import { UpdatesTab }   from './settings/UpdatesTab'
 import type { GarageSettings, MechanicRecord } from './settings/types'
+import { nombreSaisi, entierSaisi } from '@/lib/settings/saisie-numerique'
 
 interface Props { onClose: () => void }
 
@@ -109,15 +110,27 @@ export default function SettingsModal({ onClose }: Props) {
       const res = await fetch('/api/garages', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        // `|| 60` / `|| 20` ne distinguaient pas « rien saisi » de « zéro
+        // saisi » : un garage en franchise de TVA voyait 20 % réécrits sur son
+        // dos, un atelier qui ne facture pas l'heure voyait 60 €/h. Un champ
+        // illisible n'est plus envoyé du tout — le serveur garde alors sa
+        // valeur, plutôt que d'en recevoir une inventée par l'écran.
         body: JSON.stringify({
           ...s,
-          hourlyRate:        parseFloat(s.hourlyRate) || 60,
-          taxRate:           parseFloat(s.taxRate) || 20,
-          workshopStartHour: parseInt(s.workshopStartHour, 10) || 8,
-          workshopEndHour:   parseInt(s.workshopEndHour,   10) || 18,
+          hourlyRate:        nombreSaisi(s.hourlyRate),
+          taxRate:           nombreSaisi(s.taxRate),
+          workshopStartHour: entierSaisi(s.workshopStartHour),
+          workshopEndHour:   entierSaisi(s.workshopEndHour),
         }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        // Le refus du serveur porte la raison — tarif hors bornes, fermeture
+        // avant ouverture. La remplacer par « Erreur » laisserait l'utilisateur
+        // sans rien à corriger.
+        const d = await res.json().catch(() => null)
+        toast.error(d?.error ?? t.error)
+        return
+      }
       toast.success(t.success)
     } catch {
       toast.error(t.error)

@@ -15,12 +15,17 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { X, Users, Search, Loader2, KeyRound, RotateCcw, Ban, Check, Copy } from 'lucide-react'
+import { X, Users, Search, Loader2, KeyRound, RotateCcw, Ban, Check, Copy, Pencil, Save } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 
 interface Vehicule { id: string; licensePlate: string | null; make: string | null; model: string | null }
 interface ClientRow { id: string; name: string; email: string | null; phone: string | null; vehicles: Vehicule[] }
+
+/** Champ de la fiche, en cours de modification. */
+interface Brouillon { name: string; email: string; phone: string }
+
+const CHAMP = 'w-full px-2.5 py-1.5 rounded-lg bg-white/[0.05] border border-white/10 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/60'
 
 interface EtatAcces {
   exists: boolean
@@ -41,6 +46,8 @@ export default function ClientsPanel({ onClose }: { onClose: () => void }) {
   const [occupe, setOccupe] = useState<string | null>(null)
   /** Mot de passe temporaire fraîchement émis — affiché une seule fois. */
   const [motDePasse, setMotDePasse] = useState<{ clientId: string; valeur: string } | null>(null)
+  /** Fiche en cours de modification (un seul client à la fois). */
+  const [brouillon, setBrouillon] = useState<{ clientId: string; valeurs: Brouillon } | null>(null)
 
   // Recherche différée : sans cela, chaque frappe déclenche une requête.
   const minuterie = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -74,7 +81,60 @@ export default function ClientsPanel({ onClose }: { onClose: () => void }) {
     const suivant = ouvert === clientId ? null : clientId
     setOuvert(suivant)
     setMotDePasse(null)
+    setBrouillon(null)
     if (suivant && !acces[suivant]) chargerAcces(suivant)
+  }
+
+  /**
+   * Enregistre la fiche, et rend compte des conséquences PORTAIL.
+   *
+   * Changer l'adresse d'un client qui a un accès change son IDENTIFIANT de
+   * connexion : ses sessions tombent et sa vérification repart de zéro. Le
+   * garage doit l'apprendre de l'écran, pas d'un appel du client trois jours
+   * plus tard.
+   */
+  async function enregistrerFiche(clientId: string, valeurs: Brouillon) {
+    setOccupe(clientId)
+    try {
+      const r = await fetch(`/api/clients/${clientId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: valeurs.name.trim(),
+          // Une adresse effacée est une adresse RETIRÉE — `null`, pas `''` :
+          // la chaîne vide passerait la validation et s'installerait comme
+          // identifiant fantôme.
+          email: valeurs.email.trim() || null,
+          phone: valeurs.phone.trim() || null,
+        }),
+      })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) { toast.error(d?.error ?? 'Modification refusée par le serveur.'); return }
+
+      // L'affichage suit la réponse du serveur, jamais le brouillon local.
+      setClients((liste) => liste.map((c) => (c.id === clientId
+        ? { ...c, name: d.name, email: d.email, phone: d.phone }
+        : c)))
+      setBrouillon(null)
+
+      if (d.portail?.identifiantModifie) {
+        // Rechargé, sinon l'écran continuerait d'afficher l'ancien identifiant.
+        await chargerAcces(clientId)
+        toast.success('Fiche enregistrée — identifiant de connexion mis à jour')
+        toast(
+          d.portail.emailEnvoye === false
+            ? 'Sessions du client fermées. L’avis n’a PAS pu être envoyé : prévenez-le de sa nouvelle adresse de connexion.'
+            : 'Sessions du client fermées ; un avis lui a été envoyé à sa nouvelle adresse.',
+          { duration: 9000 },
+        )
+      } else {
+        toast.success('Fiche enregistrée')
+      }
+    } catch {
+      toast.error('Serveur injoignable.')
+    } finally {
+      setOccupe(null)
+    }
   }
 
   /** Appelle une route d'accès portail et rafraîchit l'état affiché. */
@@ -171,6 +231,64 @@ export default function ClientsPanel({ onClose }: { onClose: () => void }) {
 
                   {estOuvert && (
                     <div className="px-3 pb-3 border-t border-white/[0.05] pt-3">
+                      {/* ── Fiche client (GF-PORT-007) ──────────────────────
+                          Aucune route ne permettait de modifier une fiche : le
+                          garage ne pouvait pas corriger une adresse mal saisie,
+                          et continuait donc d'écrire à la mauvaise. */}
+                      {brouillon?.clientId === c.id ? (
+                        <div className="mb-3 space-y-2">
+                          <input
+                            value={brouillon.valeurs.name}
+                            onChange={(e) => setBrouillon({ clientId: c.id, valeurs: { ...brouillon.valeurs, name: e.target.value } })}
+                            placeholder="Nom du client" aria-label="Nom du client" className={CHAMP}
+                          />
+                          <input
+                            value={brouillon.valeurs.email}
+                            onChange={(e) => setBrouillon({ clientId: c.id, valeurs: { ...brouillon.valeurs, email: e.target.value } })}
+                            placeholder="Adresse e-mail" aria-label="Adresse e-mail" type="email" className={CHAMP}
+                          />
+                          <input
+                            value={brouillon.valeurs.phone}
+                            onChange={(e) => setBrouillon({ clientId: c.id, valeurs: { ...brouillon.valeurs, phone: e.target.value } })}
+                            placeholder="Téléphone" aria-label="Téléphone" className={CHAMP}
+                          />
+                          {/* L'avertissement est posé AVANT le clic : après, il
+                              serait un constat, pas un choix. */}
+                          {a?.exists && brouillon.valeurs.email.trim().toLowerCase() !== (c.email ?? '').toLowerCase() && (
+                            <p className="text-[11px] text-amber-300 bg-amber-500/[0.07] border border-amber-500/25 rounded-lg px-2.5 py-1.5">
+                              Ce client a un accès en ligne : cette adresse deviendra son identifiant de connexion.
+                              Ses sessions ouvertes seront fermées et il recevra un lien de confirmation.
+                            </p>
+                          )}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => enregistrerFiche(c.id, brouillon.valeurs)}
+                              disabled={enCours || !brouillon.valeurs.name.trim()}
+                              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold disabled:opacity-50 transition-colors"
+                            >
+                              {enCours ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                              Enregistrer
+                            </button>
+                            <button
+                              onClick={() => setBrouillon(null)}
+                              className="px-3 py-2 rounded-lg border border-white/10 text-slate-400 text-xs hover:bg-white/[0.06] transition-colors"
+                            >
+                              Annuler
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setBrouillon({
+                            clientId: c.id,
+                            valeurs: { name: c.name, email: c.email ?? '', phone: c.phone ?? '' },
+                          })}
+                          className="flex items-center gap-1.5 mb-3 px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/[0.06] transition-colors"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />Modifier la fiche
+                        </button>
+                      )}
+
                       {a === undefined ? (
                         <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
                       ) : !a.exists ? (

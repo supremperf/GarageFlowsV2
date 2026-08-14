@@ -4,14 +4,26 @@ import { useState, useEffect } from 'react'
 import { Save, Zap, ShieldCheck, Car, Bell, ClipboardList, Package } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
+import { nombreSaisi, entierSaisi } from '@/lib/settings/saisie-numerique'
+
+/**
+ * Un champ numérique VIDE n'est pas un zéro.
+ *
+ * `Number('')` vaut 0 : avec un état purement numérique, effacer le tarif
+ * horaire l'enregistrait à 0 €/h, et effacer la durée de garantie à 0 mois —
+ * en silence, sous un message « Paramètres enregistrés ». La chaîne vide est
+ * donc conservée telle quelle jusqu'à l'envoi, où elle signifie « ne touche pas
+ * à ce réglage » (voir `lib/settings/saisie-numerique`).
+ */
+type Saisie = number | ''
 
 interface FeaturesSettings {
   workOrderPrefix: string
-  warrantyMonthsDefault: number
+  warrantyMonthsDefault: Saisie
   loanerEnabled: boolean
-  smartReminderMonths: number
+  smartReminderMonths: Saisie
   purchaseOrderPrefix: string
-  hourlyRate: number
+  hourlyRate: Saisie
 }
 
 const DEFAULT: FeaturesSettings = {
@@ -53,14 +65,16 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   )
 }
 
-function NumberInput({ value, onChange, min, max }: { value: number; onChange: (v: number) => void; min?: number; max?: number }) {
+function NumberInput({ value, onChange, min, max }: { value: Saisie; onChange: (v: Saisie) => void; min?: number; max?: number }) {
   return (
     <input
       type="number"
       value={value}
       min={min}
       max={max}
-      onChange={e => onChange(Number(e.target.value))}
+      // La saisie brute est conservée : `Number('')` aurait valu 0, et un champ
+      // effacé se serait enregistré comme un zéro voulu.
+      onChange={e => onChange(e.target.value === '' ? '' : Number(e.target.value))}
       className="w-20 bg-white/[0.05] border border-white/10 rounded-lg px-2.5 py-1.5 text-white text-sm text-right focus:outline-none focus:ring-2 focus:ring-blue-500"
     />
   )
@@ -107,12 +121,21 @@ export function FeaturesTab() {
       const res = await fetch('/api/garages', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
+        // Un champ laissé vide n'est pas envoyé : le serveur conserve alors sa
+        // valeur, au lieu d'en recevoir une que personne n'a saisie.
+        body: JSON.stringify({
+          ...settings,
+          hourlyRate:            nombreSaisi(settings.hourlyRate),
+          warrantyMonthsDefault: entierSaisi(settings.warrantyMonthsDefault),
+          smartReminderMonths:   entierSaisi(settings.smartReminderMonths),
+        }),
       })
       if (res.ok) {
         toast.success('Paramètres enregistrés')
       } else {
-        toast.error('Erreur lors de l\'enregistrement')
+        // Le motif du refus vient du serveur : c'est lui qui connaît les bornes.
+        const d = await res.json().catch(() => null)
+        toast.error(d?.error ?? 'Erreur lors de l\'enregistrement')
       }
     } finally { setSaving(false) }
   }
@@ -137,8 +160,12 @@ export function FeaturesTab() {
           <Field label="Préfixe numéro" hint="ex: OR → OR-2026-001">
             <TextInput value={settings.workOrderPrefix} onChange={v => setSettings(s => ({ ...s, workOrderPrefix: v }))} placeholder="OR" />
           </Field>
+          {/* Bornes alignées sur celles du serveur (0 à 9999). `min={1}` interdisait
+              ici ce que l'API accepte explicitement — un atelier qui ne facture
+              pas la main-d'œuvre à l'heure — et `max={999}` refusait un tarif
+              que l'onglet Entreprise, lui, laissait passer. */}
           <Field label="Taux horaire (€/h)" hint="Utilisé dans les ordres de réparation">
-            <NumberInput value={settings.hourlyRate} onChange={v => setSettings(s => ({ ...s, hourlyRate: v }))} min={1} max={999} />
+            <NumberInput value={settings.hourlyRate} onChange={v => setSettings(s => ({ ...s, hourlyRate: v }))} min={0} max={9999} />
           </Field>
         </div>
       </section>

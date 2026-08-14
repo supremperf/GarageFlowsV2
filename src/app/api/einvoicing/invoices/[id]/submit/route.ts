@@ -18,7 +18,12 @@ import { requireSession, withAuth } from '@/lib/api-helpers'
 import { can } from '@/lib/authz'
 import { linesToEuros } from '@/lib/money-db'
 import { getEInvoicingFlags } from '@/lib/einvoicing/flags'
-import { envoyerFacture, declarerNonParvenue } from '@/lib/einvoicing/submit'
+import {
+  envoyerFacture,
+  declarerNonParvenue,
+  rafraichirStatut,
+  peutEtreDeclareeNonParvenue,
+} from '@/lib/einvoicing/submit'
 
 /** Statuts HTTP par cause d'échec — un rejet n'est pas une panne. */
 const STATUT: Record<string, number> = {
@@ -77,16 +82,23 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
     )
   }
 
-  // Sortie de l'impasse « issue inconnue » : l'exploitant a vérifié sur le
-  // portail de sa plateforme que la facture n'y est pas, et le déclare. La
-  // décision est tracée au journal d'audit, jamais déduite par le logiciel.
   const corps = await req.json().catch(() => ({} as Record<string, unknown>))
-  if (corps?.action === 'declare-not-received') {
+
+  // Deux actions portent sur une TRANSMISSION précise, non sur la facture. Elles
+  // partagent la même exigence d'identifiant, et la même portée garage — vérifiée
+  // en profondeur, jamais ici seulement.
+  if (corps?.action === 'declare-not-received' || corps?.action === 'refresh-status') {
     const id = typeof corps.transmissionId === 'string' ? corps.transmissionId : ''
     if (!id) {
       return NextResponse.json({ error: 'transmissionId requis', code: 'VALIDATION_ERROR' }, { status: 400 })
     }
-    const r = await declarerNonParvenue(session.user.garageId, id, session.user.id)
+    // · relecture : on redemande son verdict à la plateforme, on ne l'invente pas ;
+    // · déclaration : l'exploitant a vérifié sur le portail de sa plateforme que
+    //   la facture n'y est pas. La décision est tracée au journal d'audit, jamais
+    //   déduite par le logiciel.
+    const r = corps.action === 'refresh-status'
+      ? await rafraichirStatut(session.user.garageId, id)
+      : await declarerNonParvenue(session.user.garageId, id, session.user.id)
     return NextResponse.json(r, { status: r.ok ? 200 : (STATUT[r.code ?? ''] ?? 500) })
   }
 
@@ -142,5 +154,23 @@ export const GET = withAuth(async (_req, { params }: { params: { id: string } })
       errorMessage: true, createdAt: true, updatedAt: true,
     },
   })
-  return NextResponse.json({ transmissions })
+
+  const flags = getEInvoicingFlags()
+  return NextResponse.json({
+    // L'interface a besoin de savoir ce qu'elle a le DROIT de proposer : un
+    // bouton qui mène à un refus est pire que pas de bouton. Ces deux
+    // prédicats sont calculés ici, à la même source que les routes qui les
+    // appliqueront — les recopier côté client les ferait diverger au premier
+    // ajustement.
+    transmissions: transmissions.map((t) => ({
+      ...t,
+      peutDeclarerNonParvenue: peutEtreDeclareeNonParvenue(t),
+      peutRelireStatut: Boolean(t.externalId),
+    })),
+    outgoingEnabled: flags.outgoingEnabled,
+    environment: flags.defaultEnvironment,
+    // La permission d'émettre n'est pas celle de consulter : cette route est
+    // ouverte en lecture financière, l'envoi exige la gestion de facturation.
+    peutEmettre: can(session.user.role, 'invoice:manage'),
+  })
 })
