@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GF-DUR-038 — le COMPTE de pagination est cloisonné, comme la liste.
  *
  * ─── La question posée ──────────────────────────────────────────────────────
@@ -35,7 +35,7 @@ const LISTES = [
 ]
 
 function sansCommentaires(src: string): string {
-  return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '')
+  return src.replace(/^[ \t]*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
 }
 
 describe('pagination : le total est compté DANS le garage (GF-DUR-038)', () => {

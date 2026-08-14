@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GF-DUR-039 / GF-DUR-040 — cache PWA et chaîne de mise à jour.
  *
  * Deux défauts distincts, tous deux invisibles en développement et coûteux en
@@ -65,7 +65,7 @@ describe('service worker : rien d’anormal ne se mémorise (GF-DUR-039)', () =>
     // faire échouer sur sa propre explication pousserait à appauvrir le
     // commentaire pour satisfaire le test. Même piège déjà rencontré ailleurs
     // dans ce dépôt.
-    const propre = sw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '')
+    const propre = sw.replace(/^[ \t]*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
     const install = propre.slice(
       propre.indexOf("addEventListener('install'"),
       propre.indexOf("addEventListener('activate'"),

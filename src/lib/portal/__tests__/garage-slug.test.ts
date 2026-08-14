@@ -176,8 +176,17 @@ describe('GF31-AUD-032 — le slug est réellement émis par le produit', () => 
  * contrôles empêchent le préfixe de se disperser à nouveau.
  */
 /** Retire commentaires de ligne et de bloc — pour analyser le CODE, pas la prose. */
+/**
+ * L'ORDRE compte (GF-DUR-046) : les lignes `//` d'abord, les blocs ensuite.
+ *
+ * Un commentaire de ligne contenant une étoile après une barre oblique — par
+ * exemple un chemin `admin/licenses/…` avec joker — ouvre un faux bloc pour la
+ * seconde regex, qui le referme au prochain marqueur de fin et avale le code
+ * intermédiaire. Mesuré : 3 102 caractères disparus dans un fichier de route,
+ * dont l'appel qu'un outil d'analyse cherchait.
+ */
 function sansCommentaires(src: string): string {
-  return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+  return src.replace(/^\s*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
 }
 
 describe('GF-FINAL-001 — le portail client vit sous /clients', () => {

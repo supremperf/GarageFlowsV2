@@ -212,12 +212,39 @@ function fichiers(dir: string, acc: string[] = []): string[] {
  * risque restant est un faux NÉGATIF sur l'inventaire — jamais un faux positif
  * qui masquerait une route morte.
  */
+/**
+ * ─── L'ORDRE COMPTE (GF-DUR-046) ────────────────────────────────────────────
+ * Les lignes commentées sont retirées AVANT les blocs, et non l'inverse.
+ *
+ * Mesuré le 14/08/2026 : un commentaire de ligne contenant `admin/licenses/*`
+ * ouvre un faux bloc pour la regex, qui le referme au prochain `*` + `/` — et
+ * avale tout le code intermédiaire. Sur `generate/route.ts`, 3 102 caractères
+ * disparaissaient, dont l'appel à `enforceRateLimit` : un outil d'analyse
+ * concluait « pas de limitation de débit » sur une route qui en portait une.
+ *
+ * Cinq fichiers du dépôt déclenchent ce cas. Vérifié : aucun chemin `/api/…`
+ * n'était perdu ici, donc l'inventaire n'a jamais été faussé — mais il ne
+ * tenait qu'à l'endroit où l'on écrit ses commentaires.
+ *
+ * Retirer les lignes `//` d'abord règle le cas : le faux `/*` part avec elles.
+ * Un `/*` à l'intérieur d'une CHAÎNE de code reste un angle mort assumé ; il
+ * faudrait un analyseur syntaxique, et le risque résiduel est un faux NÉGATIF.
+ */
 function sansCommentaires(src: string): string {
   return src
+    // 1. Lignes ENTIÈREMENT en commentaire `//`. D'abord, pour qu'un début de
+    //    bloc écrit à l'intérieur (un chemin à joker, par exemple) ne puisse
+    //    pas ouvrir un faux bloc à l'étape suivante.
+    .replace(/^[ \t]*\/\/.*$/gm, '')
+    // 2. Blocs, retirés d'un seul tenant — leurs lignes internes préfixées de
+    //    `*` partent avec, y compris le marqueur de fermeture.
+    //
+    //    Ne PAS filtrer les lignes commençant par `*` avant cette étape : cela
+    //    supprimerait la fermeture des blocs, qui courraient alors jusqu'à la
+    //    suivante en avalant le code intermédiaire. Essayé, mesuré : 26 routes
+    //    bien vivantes — dont `/api/jobs/pulse` et le chrono du mécanicien —
+    //    se retrouvaient déclarées orphelines.
     .replace(/\/\*[\s\S]*?\*\//g, ' ')
-    .split('\n')
-    .filter((l) => !/^\s*(\/\/|\*)/.test(l))
-    .join('\n')
 }
 
 /**

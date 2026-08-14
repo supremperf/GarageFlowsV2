@@ -15,7 +15,9 @@ const RACINE = path.resolve(__dirname, '../../../..')
 const SRC = readFileSync(path.join(RACINE, 'src/components/ScheduleBoard.tsx'), 'utf8')
 
 /** Retire les commentaires : on analyse le CODE, pas la prose qui l'explique. */
-const CODE = SRC.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+// Lignes `//` d'abord, blocs ensuite (GF-DUR-046) : l'ordre inverse laisse un
+// faux début de bloc écrit dans un commentaire avaler le code qui suit.
+const CODE = SRC.replace(/^\s*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
 
 describe('fenêtre de mécaniciens — plus aucune colonne compressée', () => {
   it('les colonnes affichées viennent de la fenêtre calculée', () => {

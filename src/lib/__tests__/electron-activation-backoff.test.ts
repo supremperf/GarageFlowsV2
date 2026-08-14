@@ -132,9 +132,15 @@ describe('electron/main — câblage de l\'espacement', () => {
     // hors backoff : on les identifie par le reset qui les précède.
     // On raisonne sur le CODE seul : les commentaires citent `activateOnServer()`
     // en prose, et les compter donnerait de faux positifs.
+    // L'ORDRE compte (GF-DUR-046) : commentaires de LIGNE d'abord. Dans l'ordre
+    // inverse, un début de bloc écrit à l'intérieur d'un `//` ouvre un faux bloc
+    // que la regex referme bien plus loin, avalant le code intermédiaire —
+    // mesuré ailleurs dans ce dépôt : 3 102 caractères perdus, dont l'appel
+    // qu'un outil cherchait. Ici la conséquence serait un faux NÉGATIF : un
+    // appel hors backoff devenu invisible.
     const code = mainSrc
-      .replace(/\/\*[\s\S]*?\*\//g, '')       // blocs /* … */
       .replace(/(^|[^:])\/\/[^\n]*/g, '$1')   // // … (le [^:] épargne les URL)
+      .replace(/\/\*[\s\S]*?\*\//g, '')       // blocs
 
     // `activateOnServer` non suffixé de `Auto` : appel DIRECT, donc hors garde.
     const lignes = code.split('\n')

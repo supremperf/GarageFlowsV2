@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GF-DUR-027 — un fichier de route n'exporte QUE ce que Next.js autorise.
  *
  * ─── Le défaut que ce garde empêche de revenir ──────────────────────────────
@@ -56,7 +56,7 @@ function fichiersRoute(dir: string, acc: string[] = []): string[] {
 
 /** Retire commentaires et littéraux de gabarit — un `export` cité n'en est pas un. */
 function sansCommentaires(src: string): string {
-  return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, '')
+  return src.replace(/^[ \t]*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
 }
 
 /** Noms exportés par un module, hors `export default` et ré-exports. */
