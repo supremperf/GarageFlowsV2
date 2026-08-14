@@ -1,5 +1,18 @@
 # Module Premium — Planning intelligent
 
+> **MOTEUR NON EXPOSÉ EN HTTP.** La route `/api/scheduling` a été **supprimée le
+> 14/08/2026** (GF-DUR-043). Le moteur reste en place : `src/lib/scheduling/`,
+> `optimizeSchedule()`, déterministe et couvert par ses tests.
+>
+> Motif : l'historique complet du dépôt (`git log --all -S`) montre qu'**aucune
+> interface n'a jamais appelé cette route**, à aucun moment. À ne pas confondre
+> avec les suggestions d'affectation du planning, qui reposent sur
+> `runAIEngine()` (`src/lib/ai-engine.ts`) et sont, elles, bien atteintes par
+> l'écran via `store/schedule-store.ts`.
+>
+> Le contrat HTTP décrit plus bas est donc **historique**. Le rétablir demande un
+> seul fichier de route ; ce document reste la référence de ce qu'il servirait.
+
 Propose une **affectation optimisée** des interventions de la journée aux
 **mécaniciens** et **ponts (élévateurs)**, en respectant compétences,
 disponibilités, horaires et urgences — pour **réduire les temps morts** et

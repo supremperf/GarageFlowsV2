@@ -128,33 +128,29 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
   // n'apparaissent que dans leur module (`index`/`engine`) et dans la route.
   // C'est `route → service`, ce qui ne prouve aucun appelant.
   //
-  // ─── PREUVE AJOUTÉE LE 14/08/2026 (archéologie de l'historique) ───────────
-  // La première décision reposait sur « aucun fetch trouvé AUJOURD'HUI » —
-  // motif que la consigne §30 interdit d'invoquer pour supprimer. L'historique
-  // complet a depuis été interrogé :
+  // ─── CINQ ROUTES SUPPRIMÉES LE 14/08/2026 (GF-DUR-043) ────────────────────
+  // `/api/pricing`, `/api/scheduling`, `/api/memory`, `/api/gamification` et
+  // `/api/proactive` ont été retirées. Les MOTEURS restent : `src/lib/pricing/`,
+  // `scheduling/`, `memory/`, `gamification/`, `proactive/` — code déterministe,
+  // testé, réexposable par un seul fichier de route le jour où un écran en a
+  // besoin.
+  //
+  // La décision ne repose PAS sur « aucun fetch trouvé aujourd'hui », motif que
+  // la consigne §30 interdit d'invoquer. L'historique COMPLET a été interrogé :
   //
   //     git log --all -S"/api/<nom>" -- src/components src/app \
   //             ':(exclude)src/app/api'
   //
-  // Résultat pour les cinq : **0 commit**. Aucune interface ne les a appelées à
-  // AUCUN moment de la vie du dépôt. Ce n'est plus « on ne trouve pas
-  // d'appelant », c'est « il n'y en a jamais eu ». Chacune est née comme
-  // route + documentation + tests, sans jamais être branchée.
+  // Résultat pour les cinq : 0 commit. Aucune interface ne les a appelées à
+  // aucun moment de la vie du dépôt. Ce n'est pas « on ne trouve pas
+  // d'appelant », c'est « il n'y en a jamais eu » : chacune est née comme
+  // route + documentation + tests, sans jamais être branchée. Une route
+  // authentifiée sans consommateur n'est que de la surface exposée.
   //
-  // DÉCISION (14/08/2026) : CONSERVÉES EN L'ÉTAT, en attente d'arbitrage.
-  // L'option raisonnée serait de retirer l'EXPOSITION HTTP en gardant les
-  // moteurs (`src/lib/<nom>/`, testés et déterministes, réexposables par un
-  // seul fichier) : une route jamais appelée est de la surface authentifiée
-  // sans consommateur. Mais ce sont cinq points d'entrée DOCUMENTÉS
-  // (docs/PRICING.md, SCHEDULING.md, MEMORY.md, GAMIFICATION.md,
-  // PROACTIVE.md) : les retirer engage le périmètre annoncé du produit, ce qui
-  // relève de l'exploitant et non d'un audit. La suppression n'a donc pas été
-  // faite ; la preuve, elle, est désormais au dossier.
-  '/api/pricing': { motif: 'sans-interface', note: 'DÉCISION : conservée. recommendPrice() n’est atteint que par cette route (route → service) ; aucune remplaçante, aucun argument de sécurité — pas de suppression sur le seul « aucun fetch trouvé »', classe: 'ORPHANED' },
-  '/api/scheduling': { motif: 'sans-interface', note: 'DÉCISION : conservée. optimizeSchedule() n’est atteint que par cette route ; le planning utilise runAIEngine, pas ce moteur — voir /api/suggestions', classe: 'ORPHANED' },
-  '/api/memory': { motif: 'sans-interface', note: 'DÉCISION : conservée. analyzeMemory() n’est atteint que par cette route ; moteur testé, réexposable dès qu’un écran le demande', classe: 'ORPHANED' },
-  '/api/gamification': { motif: 'sans-interface', note: 'DÉCISION : conservée. buildLeaderboard() n’est atteint que par cette route ; classement des mécaniciens sans écran à ce jour', classe: 'ORPHANED' },
-  '/api/proactive': { motif: 'sans-interface', note: 'DÉCISION : conservée. buildAlerts() n’est atteint que par cette route ; planReorders(), qu’elle utilise aussi, l’est par /api/dashboard', classe: 'ORPHANED' },
+  // Suppression décidée par l'exploitant — elle engage le périmètre annoncé du
+  // produit, ce qui ne relevait pas d'un audit. Les cinq pages de documentation
+  // (docs/PRICING.md, SCHEDULING.md, MEMORY.md, GAMIFICATION.md, PROACTIVE.md)
+  // disent désormais que le moteur existe et n'est pas exposé en HTTP.
 
   // ── Quatre RECLASSÉES le 14/08/2026 : elles n'étaient pas orphelines ──────
   // Erreur de la passe précédente. Le classement avait été fait sur « aucun
