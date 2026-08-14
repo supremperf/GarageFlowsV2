@@ -1820,6 +1820,9 @@ function clearPersistedLicenseBlock() {
   try { fs.unlinkSync(LICENSE_BLOCK_FILE()) } catch (_) {}
 }
 
+// Politique d'ouverture au démarrage — module PUR (voir electron/startup-gate.js).
+const { decisionDemarrage, decisionApresActivation, purgerBlocage } = require('./startup-gate')
+
 function probeUrl(url) {
   return new Promise(resolve => {
     try {
@@ -3288,6 +3291,25 @@ app.whenReady().then(async () => {
   if (!IS_DEV) {
     let payload = checkStoredLicense()
 
+    // ── Blocage PERSISTÉ — évalué ICI, avant toute ouverture (GF-DUR-019) ────
+    //
+    // Le blocage était bien persisté et signé, mais il n'était relu qu'APRÈS
+    // `createMainWindow()` : le serveur Next démarrait, le tableau de bord se
+    // chargeait, s'affichait — planning, clients, factures — et n'était RECOUVERT
+    // d'un calque qu'au `did-finish-load`. Une licence révoquée ou suspendue
+    // ouvrait donc réellement l'application, données comprises, le temps d'un
+    // chargement de page. Le jeton ECDSA, lui, reste cryptographiquement valide :
+    // ce n'est pas lui qui porte la révocation.
+    //
+    // La décision est donc prise avant le serveur et avant la fenêtre : une
+    // licence bloquée est traitée exactement comme une licence absente.
+    const auDemarrage = decisionDemarrage({ licence: payload, blocage: readPersistedLicenseBlock() })
+    if (payload && auDemarrage.action === 'activation') {
+      log('SECURITY: licence bloquée (état persisté) —', auDemarrage.statut, '— activation requise')
+      payload = null
+      activeLicense = null
+    }
+
     if (!payload) {
       log('No valid license — showing activation window')
       const activated = await createLicenseWindow()
@@ -3301,6 +3323,28 @@ app.whenReady().then(async () => {
       activeLicense = { token: loadLicense()?.token ?? '', payload }
       log('Stored license OK — lid:', payload.lid, '| type:', payload.typ)
     }
+
+    // MÊME contrôle après activation : recoller la clé bloquée ne doit pas
+    // ouvrir l'application — y compris hors ligne, où l'activation ne peut pas
+    // interroger l'autorité de licence.
+    const blocageCourant = readPersistedLicenseBlock()
+    const apres = decisionApresActivation({ licence: payload, blocage: blocageCourant })
+    if (apres.action === 'refus') {
+      log('SECURITY: clé bloquée présentée à l’activation —', apres.statut)
+      dialog.showErrorBox(
+        'GarageFlows — Licence bloquée',
+        apres.motif +
+          '\n\nElle ne peut pas être réactivée depuis ce poste. Contactez votre revendeur ' +
+          'ou saisissez une autre clé au prochain démarrage.',
+      )
+      app.quit()
+      return
+    }
+
+    // Une clé DIFFÉRENTE et valide purge le blocage de l'ancienne : sans cela,
+    // le fichier resterait à traîner et bloquerait une licence sans rapport le
+    // jour où son `lid` viendrait à manquer.
+    if (purgerBlocage(blocageCourant, payload.lid ?? null)) clearPersistedLicenseBlock()
 
     // Inject cookies so Next.js middleware is satisfied
     await injectLicenseCookies(payload.typ, payload.lid ?? 'prod')
@@ -3374,34 +3418,19 @@ app.whenReady().then(async () => {
   // ── Open main window ──────────────────────────────────────────────────────
   createMainWindow()
 
-  // ── Restauration d'un blocage licence persisté (GF-FINAL-001) ──────────────
-  // Sans cela, licenseBlocked (variable en mémoire) repartait à false à chaque
-  // redémarrage : une licence révoquée redevenait utilisable hors ligne jusqu'à
-  // la fin de la fenêtre de grâce. Le blocage n'est restauré QUE s'il concerne
-  // la licence actuellement active (lid identique) — une nouvelle clé valide
-  // n'hérite jamais du blocage de l'ancienne.
-  if (!IS_DEV) {
-    const persisted = readPersistedLicenseBlock()
-    const activeLid = activeLicense?.payload?.lid ?? null
-    if (persisted && ['revoked', 'suspended', 'tampered'].includes(persisted.status)
-        && (!persisted.lid || persisted.lid === activeLid)) {
-      licenseBlocked   = true
-      lastLicenseBlock = { status: persisted.status, reason: persisted.reason || 'Licence bloquée.' }
-      log('SECURITY: blocage licence RESTAURÉ au démarrage —', persisted.status)
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        // L'overlay part dès que la page est chargée, puis est re-émis à chaque
-        // battement tant que le blocage tient (cadence rapide LICENSE_CHECK_BLOCKED_MS).
-        mainWindow.webContents.on('did-finish-load', () => {
-          if (licenseBlocked && lastLicenseBlock && mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send('license:revoked', lastLicenseBlock)
-          }
-        })
-      }
-    } else if (persisted && persisted.lid && activeLid && persisted.lid !== activeLid) {
-      // Blocage d'une ANCIENNE licence : purge (la clé active est différente).
-      clearPersistedLicenseBlock()
-    }
-  }
+  // ── Blocage licence persisté : décidé PLUS HAUT, pas ici (GF-DUR-019) ──────
+  //
+  // Ce bloc restaurait `licenseBlocked` APRÈS l'ouverture de la fenêtre, et
+  // comptait sur un calque envoyé au `did-finish-load` pour masquer une
+  // application déjà chargée. Le tableau de bord d'une licence révoquée
+  // s'affichait donc réellement — brièvement, mais réellement, données
+  // comprises.
+  //
+  // Un calque n'est pas un contrôle d'accès. La décision est prise avant le
+  // démarrage du serveur Next et avant toute fenêtre : une licence bloquée ne
+  // parvient jamais jusqu'ici. Le blocage EN COURS D'EXÉCUTION reste géré par
+  // le battement de cœur (`startPeriodicLicenseCheck`), qui pose l'overlay sur
+  // une application déjà ouverte — c'est son rôle, et c'est un cas différent.
 
   // Diffuse les modules connus + récupère les notifications dès l'ouverture.
   broadcastEntitlements()
