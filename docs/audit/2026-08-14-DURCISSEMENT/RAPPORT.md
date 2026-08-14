@@ -207,6 +207,80 @@ Le garde de dérive RESET ⇄ schéma serveur passe (9 tests) : table fantôme,
 convergence partielle, colonne inconnue et migration non couverte sont toutes
 détectées.
 
+## H quater. Inventaire des clés et secrets (GF-DUR-044)
+
+### Secrets à pouvoir de signature ou d'élévation — « racines »
+
+| Clé | But | Où créée | Où stockée | Qui peut lire | Rotation | Côté client ? |
+|---|---|---|---|---|---|---|
+| `keys/private.pem` | signe les licences GF2 (ECDSA P-256) | Keygen, poste de l'éditeur | poste éditeur uniquement | l'éditeur | manuelle, puis `keys:sync` | **non** |
+| `GF_PRIVATE_KEY` | même rôle, variante serveur (PEM base64) | éditeur | env serveur de publication | publication | manuelle | **non** |
+| `GF_UPDATE_SIGNING_KEY` | signe les manifestes de mise à jour (Ed25519) | éditeur | env publication | publication | manuelle | **non** |
+| `NEXTAUTH_SECRET` | signe `gf_session` **et** les sessions JWT — donc l'accès admin | déploiement | env serveur + poste | serveur | manuelle | **non** |
+| `GARAGEFLOW_API_KEY` | en-tête `x-gf-key` : **crée et révoque** des licences | éditeur | env serveur | serveur | manuelle | **non** |
+| `GF_PORTAL_SECRET` | signe jetons portail et signature de devis | déploiement | env serveur | serveur | manuelle | **non** |
+| `GF_DB_MAC_SECRET` | HMAC d'intégrité des lignes `LicenseKey` | Electron : dérivé du HWID | env / fichier `gf_db_mac.key` | serveur, poste | liée à la machine | **non** |
+| `DEVICE_TOKEN_PEPPER` | hache les jetons d'appareil | déploiement | env serveur | serveur | manuelle | **non** |
+| `GF_TOTP_ENC_KEY` (+`_OLD`) | chiffre les secrets TOTP au repos (AES-256-GCM, AAD) | déploiement | env serveur | serveur | `_OLD` pour recouvrement | **non** |
+| `GF_SMTP_CIPHER_KEY` (+`_OLD`) | chiffre les identifiants SMTP | déploiement | env serveur | serveur | `_OLD` | **non** |
+| `GF_EINVOICE_CREDENTIALS_KEY` | chiffre les accès de facturation électronique | déploiement | env serveur | serveur | manuelle | **non** |
+| `GF_SIGNATURE_SECRET` | signe les jetons de signature de devis | déploiement | env serveur | serveur | manuelle | **non** |
+| `GF_BACKUP_KEY` | chiffre les sauvegardes | déploiement | env serveur | serveur | manuelle | **non** |
+| `GF_INTERNAL_EXPORT_KEY` | protège `/api/internal/*` (migration, export) | **généré à chaque démarrage** Electron | mémoire du processus | le poste | à chaque lancement | **non** |
+| `VERCEL_TOKEN` | déploie | Vercel | env publication | publication | manuelle | **non** |
+
+Source : `scripts/garageflow-env-manifest.json` — 120 variables déclarées, dont
+18 classées `dangerous` ou `dangerous-external`. Le garde de dérive vérifie que
+toute `process.env` de `src/` y figure.
+
+### Vérification de la règle des root secrets (§10)
+
+| Vecteur | Constat |
+|---|---|
+| bundle client `.next/static` | **0 valeur de `.env`** retrouvée (51 fichiers × 16 secrets) |
+| composants `'use client'` | **0** lecture d'un secret racine (Next inlinerait la valeur) |
+| `app.asar` de l'installateur | **0** `.pem`, **0** `.env`, **0** source map hors `node_modules` |
+| `keys/private.pem` dans le paquet | **absent** — seul `public.pem` sort, via filtre `extraResources` |
+| dépôt | `keys/*.pem` ignoré par git, vérifié par `git check-ignore` |
+
+Une occurrence du **nom** `GF_PRIVATE_KEY` figure dans le bundle : c'est un
+libellé `<code>` de la page admin qui explique d'où vient la clé de signature.
+Vérifié, pas supposé.
+
+### Scan de l'historique Git (§11) — 377 commits
+
+| Recherche | Résultat |
+|---|---|
+| fichiers `.pem` / `.key` / `.p12` / `.pfx` ayant existé | **0** |
+| lignes de **corps** PEM (base64 ≥ 60 car.) ajoutées | **0** |
+| fichier `.env` réel committé | **0** (seul `.env.example`) |
+| marqueurs « BEGIN … PRIVATE KEY » | 4 commits — tous des **détecteurs** : `post-build.js` les liste pour scanner le paquet, `reset-garageflow.ps1` valide un format, 2 documents les citent |
+| secrets CI | valeurs auto-étiquetées `ci-…-not-for-production-…` |
+
+**Trois valeurs réellement exposées**, toutes dans le premier commit `0f519f0` :
+
+| Secret | Statut vérifié |
+|---|---|
+| `NEXTAUTH_SECRET` | comparé par empreinte au `.env` courant → **différent : roté** |
+| `GARAGEFLOW_API_KEY` | idem → **différent : roté**. Portait la **même valeur** que `NEXTAUTH_SECRET` (réutilisation inter-domaines, aujourd'hui corrigée) |
+| `MASTER_SECRET` codé en dur dans `scripts/generate-license-key.js` | script **supprimé** le 2026-07-29, plus référencé nulle part |
+
+Conformément à la règle « un secret committé est potentiellement compromis,
+jamais réputé sûr parce que retiré ensuite » : ces valeurs restent dans
+l'historique et doivent être tenues pour **publiques à jamais**. Elles ne
+donnent plus accès à rien — seul état acceptable.
+
+**Question ouverte pour l'exploitant** : le dépôt GitHub `supremperf/GarageFlowsV2`
+est-il public ? Si oui, l'historique — donc ces trois valeurs — est lisible par
+quiconque. La rotation étant faite, l'impact est nul aujourd'hui ; mais toute
+future fuite de secret suivrait le même chemin, et une réécriture d'historique
+(`git filter-repo`) reste la seule façon de les effacer.
+
+`src/lib/__tests__/secrets-jamais-distribues.test.ts` verrouille l'état de
+l'arbre (pas l'historique, qui ne se réécrit pas ici). Mutations vérifiées :
+secret racine lu dans un composant client → échec ; valeur d'apparence réelle
+ajoutée à `.env.example` → échec.
+
 ## I. Limites — rien n'est caché
 
 | Élément | Pourquoi non vérifié | Ce qui l'a été | Risque |
