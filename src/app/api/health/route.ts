@@ -17,6 +17,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { isWeakSecret } from '@/lib/auth-secret'
 import { logger } from '@/lib/logger'
+import { diagnostiquerSecretsTotp, type DiagnosticTotp } from '@/lib/portal/totp-storage'
 
 const NO_STORE = { 'Cache-Control': 'no-store' }
 
@@ -72,11 +73,34 @@ export async function GET() {
   }
 
   const ok = await dbReachable()
+
+  // ── Secrets TOTP encore lisibles ? (GF-DUR-024) ────────────────────────────
+  // Une rotation de `GF_TOTP_ENC_KEY` sans `_OLD` rend les seconds facteurs
+  // illisibles. Sans ce décompte, l'exploitant l'apprend par un appel de client
+  // bloqué, des heures après le redémarrage, quand le lien avec la rotation
+  // n'est plus évident. Uniquement des compteurs : aucun secret ne sort d'ici.
+  let totp: DiagnosticTotp | null = null
+  if (ok) {
+    try {
+      const { prisma } = await import('@/lib/db')
+      totp = await diagnostiquerSecretsTotp(prisma as never)
+      if (totp.illisibles > 0) {
+        logger.error('[health] secrets TOTP illisibles — rotation de clé sans GF_TOTP_ENC_KEY_OLD ?', {
+          enroles: totp.enroles, illisibles: totp.illisibles,
+        })
+      }
+    } catch (err) {
+      // Le diagnostic ne doit jamais faire échouer la sonde elle-même.
+      logger.warn('[health] diagnostic TOTP indisponible', err)
+    }
+  }
+
   return NextResponse.json(
     {
       ok,
       env: checks,
       db: ok ? 'connected' : 'error',
+      ...(totp ? { totp } : {}),
       ts: new Date().toISOString(),
     },
     { status: ok ? 200 : 503, headers: NO_STORE },

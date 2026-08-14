@@ -13,7 +13,8 @@ import { clientIp, issuePortalSession, setPortalCookie } from '@/lib/portal/auth
 import { verifyTwoFactorChallenge } from '@/lib/portal/session'
 import { verifyTotp } from '@/lib/portal/totp'
 import { lireSecretTotp } from '@/lib/portal/totp-storage'
-import { verifyBackupCode } from '@/lib/portal/backup-codes'
+import { consommerCodeSecours } from '@/lib/portal/backup-codes-store'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   const ip = clientIp(req) ?? 'local'
@@ -34,21 +35,38 @@ export async function POST(req: NextRequest) {
   let ok = false
   let backupUsed = false
 
-  // Le secret est stocké CHIFFRÉ (GF-DUR-022) ; `lireSecretTotp` rend aussi les
-  // valeurs héritées en clair, pour ne verrouiller aucun compte déjà enrôlé.
+  // Le secret est stocké CHIFFRÉ (GF-DUR-022, GF-DUR-023).
   const secretTotp = lireSecretTotp(user.twoFactorSecret)
+  if (!secretTotp) {
+    // Un secret illisible n'est PAS un mauvais code : c'est une panne de
+    // configuration — clé rotée sans `GF_TOTP_ENC_KEY_OLD`, valeur altérée. Le
+    // client reçoit la même réponse qu'un code faux (aucun oracle), mais
+    // l'exploitant doit pouvoir faire la différence dans ses traces, sinon il
+    // cherchera longtemps une panne d'application qui n'existe pas (GF-DUR-024).
+    logger.error('[portal/2fa] secret TOTP illisible — vérifiez GF_TOTP_ENC_KEY / _OLD', {
+      user: user.id,
+    })
+  }
   const token = typeof body.token === 'string' ? body.token : undefined
   if (token && secretTotp) ok = verifyTotp(token, secretTotp)
 
   const backupCode = typeof body.backupCode === 'string' ? body.backupCode : undefined
   if (!ok && backupCode) {
-    const hashes = safeParseHashes(user.backupCodes)
-    const idx = verifyBackupCode(backupCode, hashes)
-    if (idx >= 0) {
+    // Retrait ATOMIQUE (GF-DUR-025). Le lire-modifier-écrire d'origine laissait
+    // deux requêtes simultanées consommer le même code — et, avec deux codes
+    // différents, ressusciter celui déjà utilisé. La session n'est ouverte que
+    // si CETTE requête a effectivement retiré l'empreinte.
+    const issue = await consommerCodeSecours(prisma, user.id, backupCode)
+    if (issue.ok) {
       ok = true
       backupUsed = true
-      hashes.splice(idx, 1) // consume — one-time use
-      await prisma.portalUser.update({ where: { id: user.id }, data: { backupCodes: JSON.stringify(hashes) } })
+    } else if (issue.motif === 'conflit') {
+      // Écritures concurrentes non départagées : on refuse plutôt que d'ouvrir
+      // une session sans pouvoir prouver l'unicité de l'usage. L'utilisateur
+      // retente ; le message reste celui d'un code invalide (aucun oracle).
+      logger.warn('[portal/2fa] consommation de code de secours abandonnée après conflits', {
+        user: user.id,
+      })
     }
   }
 
@@ -65,13 +83,4 @@ export async function POST(req: NextRequest) {
   })
   setPortalCookie(res, sessionToken)
   return res
-}
-
-function safeParseHashes(raw: string): string[] {
-  try {
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed.filter((h): h is string => typeof h === 'string') : []
-  } catch {
-    return []
-  }
 }

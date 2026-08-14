@@ -95,3 +95,40 @@ export function lireSecretTotp(stocke: string | null | undefined): string | null
 export function secretTotpProtege(stocke: string | null | undefined): boolean {
   return estChiffreTotp(stocke)
 }
+
+/** Verdict de lisibilité des secrets TOTP enrôlés. */
+export interface DiagnosticTotp {
+  /** Comptes dont la double authentification est active. */
+  enroles: number
+  /** Parmi eux, ceux dont le secret ne peut plus être relu. */
+  illisibles: number
+}
+
+/**
+ * Les secrets TOTP enrôlés sont-ils encore lisibles ? (GF-DUR-024)
+ *
+ * ─── Ce que ce diagnostic évite ─────────────────────────────────────────────
+ * La question utile n'est pas « la clé est-elle définie » — la double
+ * authentification est optionnelle, et une installation qui ne l'utilise pas n'a
+ * aucune raison de se déclarer en panne. La question est : reste-t-il des
+ * comptes ENRÔLÉS dont le secret est devenu illisible ?
+ *
+ * C'est exactement l'accident de rotation : `GF_TOTP_ENC_KEY` remplacée sans
+ * `_OLD`, et plus personne ne peut présenter son second facteur. Sans ce
+ * décompte, l'exploitant l'apprend par un appel de client bloqué — plusieurs
+ * heures après le redémarrage, quand le lien avec la rotation n'est plus évident.
+ *
+ * Ne lit QUE des compteurs : aucun secret, même partiel, ne sort d'ici.
+ */
+export async function diagnostiquerSecretsTotp(
+  db: { portalUser: { findMany: (a: unknown) => Promise<Array<{ twoFactorSecret: string | null }>> } },
+): Promise<DiagnosticTotp> {
+  const enroles = await db.portalUser.findMany({
+    where: { twoFactorEnabled: true },
+    select: { twoFactorSecret: true },
+  })
+  return {
+    enroles: enroles.length,
+    illisibles: enroles.filter((u) => lireSecretTotp(u.twoFactorSecret) === null).length,
+  }
+}
