@@ -465,6 +465,97 @@ describe('les rendez-vous existent des DEUX côtés (GF-DUR-017)', () => {
   })
 })
 
+describe('un devis peut enfin être envoyé à la signature (GF-DUR-020)', () => {
+  /**
+   * La chaîne était coupée en son MILIEU : la page de signature du client
+   * existait et était complète — elle affiche le devis, recueille une signature,
+   * accepte ou refuse — mais aucun écran du garage n'appelait la seule route qui
+   * fabrique le jeton. La moitié cliente attendait un lien que la moitié garage
+   * ne savait pas produire.
+   */
+  const modale = lire('src/components/QuoteInvoiceModal.tsx')
+  const route = lire('src/app/api/quotes/[id]/signature-token/route.ts')
+
+  it('le bouton appelle réellement la route', () => {
+    expect(modale).toMatch(/fetch\(`\/api\/quotes\/\$\{doc\.id\}\/signature-token`, \{ method: 'POST' \}\)/)
+    expect(modale).toMatch(/onClick=\{handleSignatureLink\}/)
+  })
+
+  it('proposé seulement quand le devis est encore signable', () => {
+    // Le serveur refuse un devis accepté, refusé ou converti : autant ne pas
+    // proposer un bouton qui mène à un 409.
+    expect(modale).toMatch(/\['draft', 'sent'\]\.includes\(doc\.status\)/)
+    expect(route).toMatch(/\['draft', 'sent'\]\.includes\(quote\.status\)/)
+  })
+
+  it('le lien est AFFICHÉ, pas seulement envoyé', () => {
+    // Un garage sans SMTP, ou dont le client n'a pas d'adresse, doit pouvoir le
+    // communiquer autrement. Tout faire dépendre du courriel rendrait la
+    // signature inutilisable là où elle sert.
+    expect(modale).toMatch(/signatureUrl && \(/)
+    expect(modale).toMatch(/navigator\.clipboard\?\.writeText\(signatureUrl\)/)
+    expect(route).toMatch(/return NextResponse\.json\(\{ token, url, emailEnvoye/)
+  })
+
+  it('l\'issue de l\'envoi est dite, y compris l\'absence d\'adresse', () => {
+    const bloc = modale.slice(modale.indexOf('async function handleSignatureLink'))
+    expect(bloc).toMatch(/d\.emailEnvoye === true/)
+    expect(bloc).toMatch(/d\.emailEnvoye === false/)
+    expect(bloc).toMatch(/n’a pas d’adresse e-mail/)
+  })
+
+  it('l\'écran suit le changement d\'état côté serveur', () => {
+    // Le devis passe à « envoyé » : sans cela l'écran continue d'afficher
+    // « brouillon » sur un devis déjà parti au client.
+    expect(modale).toMatch(/prev\.status === 'draft' \? \{ \.\.\.prev, status: 'sent' \}/)
+  })
+
+  it('émettre un devis exige la permission de les gérer', () => {
+    expect(route).toMatch(/can\(session\.user\.role, 'quote:manage'\)/)
+  })
+})
+
+describe('le garage peut enfin créer des comptes pour son personnel (GF-DUR-021)', () => {
+  /**
+   * `/api/users` listait et créait les comptes depuis longtemps sans aucun
+   * écran : un garage restait à l'unique compte né de son installation. Chaque
+   * contrôle de permission écrit dans ce produit protégeait donc une distinction
+   * que personne ne pouvait créer.
+   */
+  const onglet = lire('src/components/settings/TeamTab.tsx')
+
+  it('l\'onglet est monté dans les réglages', () => {
+    const reglages = lire('src/components/SettingsModal.tsx')
+    expect(reglages).toContain("import { TeamTab } from './settings/TeamTab'")
+    expect(reglages).toMatch(/tab === 'team' && canManageAccess && <TeamTab \/>/)
+  })
+
+  it('la liste et la création sont déclenchées', () => {
+    expect(onglet).toMatch(/fetch\('\/api\/users', \{ cache: 'no-store' \}\)/)
+    expect(onglet).toMatch(/fetch\('\/api\/users', \{\s*method: 'POST'/)
+  })
+
+  it('chaque rôle porte sa CONSÉQUENCE, pas seulement son intitulé', () => {
+    // « RECEPTIONIST » ne dit rien à qui choisit ; « ni facturation ni
+    // finances » décide.
+    for (const r of ['RECEPTIONIST', 'MANAGER', 'OWNER']) expect(onglet).toContain(r)
+    expect(onglet).toMatch(/Ni facturation ni finances/)
+    expect(onglet).toMatch(/effet: string|effet:/)
+  })
+
+  it('les identifiants ne s\'affichent qu\'APRÈS création', () => {
+    // Les montrer avant les ferait communiquer pour un compte inexistant.
+    const creer = onglet.slice(onglet.indexOf('async function creer'))
+    expect(creer.indexOf('if (!r.ok)')).toBeLessThan(creer.indexOf('setCree('))
+    expect(onglet).toMatch(/ne seront plus jamais affichés/)
+  })
+
+  it('un refus de permission est DIT, pas affiché comme une équipe vide', () => {
+    expect(onglet).toMatch(/r\.status === 403/)
+    expect(onglet).toMatch(/réservée au propriétaire/)
+  })
+})
+
 describe('anti-régression : les autres chaînes récemment recâblées restent branchées', () => {
   it('la réception fournisseur est toujours déclenchée par le panneau', () => {
     expect(lire('src/components/SuppliersPanel.tsx')).toMatch(/\/api\/purchase-orders\/\$\{[^}]+\}\/receive/)

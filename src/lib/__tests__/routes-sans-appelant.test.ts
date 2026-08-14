@@ -50,7 +50,23 @@ const API = path.join(RACINE, 'src/app/api')
  */
 type Motif = 'sans-interface' | 'double' | 'exploitation' | 'cadre' | 'chemin-calcule'
 
-const INVENTAIRE: Record<string, { motif: Motif; note: string }> = {
+/**
+ * Classement PRODUIT d'une route `sans-interface` (§33).
+ *
+ * Le motif dit POURQUOI elle n'a pas d'appelant ; la classe dit CE QU'ON EN
+ * FAIT. Sans elle, l'inventaire décrit un état sans jamais engager de décision,
+ * et vingt routes mortes s'y installent confortablement.
+ *
+ *  `PRODUCT_REQUIRED` — fonction du produit : il lui faut une interface. Chaque
+ *      entrée est une dette explicite, pas un constat.
+ *  `INTERNAL_ONLY`    — destinée à un outil, un opérateur ou une tâche
+ *      planifiée : le déclencheur réel doit être nommé.
+ *  `DEPRECATED`       — remplacée ou abandonnée ; à retirer une fois le dernier
+ *      consommateur éteint.
+ */
+type Classe = 'PRODUCT_REQUIRED' | 'INTERNAL_ONLY' | 'DEPRECATED'
+
+const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }> = {
   '/api/auth/[...nextauth]': { motif: 'cadre', note: 'point d’entrée NextAuth, atteint par signIn()' },
 
   '/api/ping': { motif: 'exploitation', note: 'sonde de disponibilité ; Electron interroge le serveur de licences, pas celle-ci' },
@@ -86,33 +102,31 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string }> = {
   // Le portail client, en particulier : messagerie, prise de rendez-vous,
   // double facteur et gestion des appareils sont écrits, testés, et absents des
   // cinq pages du portail.
-  '/api/portal/auth/email': { motif: 'sans-interface', note: 'le client ne peut pas demander le changement de son adresse depuis le portail' },
-  '/api/portal/token': { motif: 'sans-interface', note: 'émission d’un lien tokenisé de portail : aucun appelant, ni écran ni synchronisation' },
-  '/api/sync/portal': { motif: 'sans-interface', note: 'rattachement poste ⇄ cloud du portail : aucun `cloudPost` ne l’appelle' },
-  '/api/users': { motif: 'sans-interface', note: 'annuaire et création du personnel : le garage ne peut pas ajouter de collègue' },
-  '/api/loaner-vehicles/[id]': { motif: 'sans-interface', note: 'suppression d’un véhicule de prêt : le panneau ne liste et ne crée que' },
-  '/api/quotes/[id]/signature-token': { motif: 'sans-interface', note: 'lien de signature d’un devis : aucun bouton ne le produit' },
-  '/api/quotes/generate': { motif: 'sans-interface', note: 'génération assistée de devis : aucun écran ne la déclenche' },
-  '/api/portal/auth/2fa/setup': { motif: 'sans-interface', note: 'génération du secret de double facteur, sans écran de configuration' },
-  '/api/portal/auth/2fa/enable': { motif: 'sans-interface', note: 'activation du double facteur : le schéma le porte, le portail ne l’offre pas' },
-  '/api/portal/auth/2fa/disable': { motif: 'sans-interface', note: 'désactivation du double facteur, inatteignable comme son activation' },
+  '/api/portal/auth/email': { motif: 'sans-interface', note: 'le client ne peut pas demander le changement de son adresse depuis le portail', classe: 'PRODUCT_REQUIRED' },
+  '/api/portal/token': { motif: 'sans-interface', note: 'émission d’un lien tokenisé de portail : aucun appelant, ni écran ni synchronisation', classe: 'DEPRECATED' },
+  '/api/sync/portal': { motif: 'sans-interface', note: 'rattachement poste ⇄ cloud du portail : aucun `cloudPost` ne l’appelle', classe: 'DEPRECATED' },
+  '/api/loaner-vehicles/[id]': { motif: 'sans-interface', note: 'suppression d’un véhicule de prêt : le panneau ne liste et ne crée que', classe: 'PRODUCT_REQUIRED' },
+  '/api/quotes/generate': { motif: 'sans-interface', note: 'génération assistée de devis : aucun écran ne la déclenche', classe: 'PRODUCT_REQUIRED' },
+  '/api/portal/auth/2fa/setup': { motif: 'sans-interface', note: 'génération du secret de double facteur, sans écran de configuration', classe: 'PRODUCT_REQUIRED' },
+  '/api/portal/auth/2fa/enable': { motif: 'sans-interface', note: 'activation du double facteur : le schéma le porte, le portail ne l’offre pas', classe: 'PRODUCT_REQUIRED' },
+  '/api/portal/auth/2fa/disable': { motif: 'sans-interface', note: 'désactivation du double facteur, inatteignable comme son activation', classe: 'PRODUCT_REQUIRED' },
 
   // Cinq modules dont le cœur métier n'est appelé QUE par leur propre route :
   // ni le copilote, ni le tableau de bord, ni aucun écran ne les atteint.
-  '/api/pricing': { motif: 'sans-interface', note: 'optimisation des prix : recommendPrice() n’est appelé que d’ici' },
-  '/api/scheduling': { motif: 'sans-interface', note: 'planification intelligente : optimizeSchedule() n’est appelé que d’ici' },
-  '/api/memory': { motif: 'sans-interface', note: 'mémoire du garage : analyzeMemory() n’est appelé que d’ici' },
-  '/api/gamification': { motif: 'sans-interface', note: 'classement des mécaniciens : buildLeaderboard() n’est appelé que d’ici' },
-  '/api/proactive': { motif: 'sans-interface', note: 'assistant proactif : buildAlerts() n’est appelé que d’ici' },
+  '/api/pricing': { motif: 'sans-interface', note: 'optimisation des prix : recommendPrice() n’est appelé que d’ici', classe: 'INTERNAL_ONLY' },
+  '/api/scheduling': { motif: 'sans-interface', note: 'planification intelligente : optimizeSchedule() n’est appelé que d’ici', classe: 'INTERNAL_ONLY' },
+  '/api/memory': { motif: 'sans-interface', note: 'mémoire du garage : analyzeMemory() n’est appelé que d’ici', classe: 'INTERNAL_ONLY' },
+  '/api/gamification': { motif: 'sans-interface', note: 'classement des mécaniciens : buildLeaderboard() n’est appelé que d’ici', classe: 'INTERNAL_ONLY' },
+  '/api/proactive': { motif: 'sans-interface', note: 'assistant proactif : buildAlerts() n’est appelé que d’ici', classe: 'INTERNAL_ONLY' },
   // Ces trois-là n'étaient pas visibles avant le retrait des commentaires : une
   // phrase d'en-tête les citait, et la garde les croyait branchées. Deux d'entre
   // elles figurent parmi les « modules livrés » de docs/DELIVERY_STATUS.md.
-  '/api/forecast': { motif: 'sans-interface', note: 'prévisions de chiffre d’affaires : aucun écran ne les demande' },
-  '/api/profitability': { motif: 'sans-interface', note: 'analyse de rentabilité par intervention : aucun écran ne la demande' },
-  '/api/suggestions': { motif: 'sans-interface', note: 'suggestions d’affectation de mécaniciens pour une journée, sans écran' },
+  '/api/forecast': { motif: 'sans-interface', note: 'prévisions de chiffre d’affaires : aucun écran ne les demande', classe: 'INTERNAL_ONLY' },
+  '/api/profitability': { motif: 'sans-interface', note: 'analyse de rentabilité par intervention : aucun écran ne la demande', classe: 'INTERNAL_ONLY' },
+  '/api/suggestions': { motif: 'sans-interface', note: 'suggestions d’affectation de mécaniciens pour une journée, sans écran', classe: 'INTERNAL_ONLY' },
 
-  '/api/analytics/health': { motif: 'sans-interface', note: 'score de santé — aucun écran ne l’affiche' },
-  '/api/copilot/reports/[id]/export': { motif: 'sans-interface', note: 'export de rapport du copilote — aucun bouton' },
+  '/api/analytics/health': { motif: 'sans-interface', note: 'score de santé — aucun écran ne l’affiche', classe: 'INTERNAL_ONLY' },
+  '/api/copilot/reports/[id]/export': { motif: 'sans-interface', note: 'export de rapport du copilote — aucun bouton', classe: 'PRODUCT_REQUIRED' },
 
   // Reclassée après vérification : le panneau Stock calcule déjà le même
   // prédicat (`quantity <= minQuantity`) côté client depuis `/api/parts`, et
@@ -120,7 +134,7 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string }> = {
   // en est un second point d'entrée. Bâtir un écran de plus aurait été un
   // doublon, pas une correction.
   '/api/parts/low-stock': { motif: 'double', note: 'le panneau Stock calcule le même seuil depuis /api/parts' },
-  '/api/vehicles/[id]/timeline': { motif: 'sans-interface', note: 'chronologie d’un véhicule côté garage : aucun écran ne l’affiche' },
+  '/api/vehicles/[id]/timeline': { motif: 'sans-interface', note: 'chronologie d’un véhicule côté garage : aucun écran ne l’affiche', classe: 'PRODUCT_REQUIRED' },
 
   // L'auto-désactivation exige le `deviceToken`, que seul l'appareil détient :
   // aucun navigateur ne peut l'appeler. Le poste se libère depuis son propre
@@ -232,6 +246,25 @@ describe('routes d\'API sans appelant — inventaire figé', () => {
     }
   })
 
+  it('toute route sans interface porte une DÉCISION produit (§33)', () => {
+    // Le motif décrit un état ; la classe engage. Sans elle, l'inventaire
+    // documenterait confortablement vingt routes mortes sans que personne
+    // n'ait jamais à trancher.
+    const sansClasse = Object.entries(INVENTAIRE)
+      .filter(([, e]) => e.motif === 'sans-interface' && !e.classe)
+      .map(([r]) => r)
+    expect(sansClasse, 'Classez ces routes : PRODUCT_REQUIRED, INTERNAL_ONLY ou DEPRECATED.').toEqual([])
+  })
+
+  it('la classe ne s\'applique qu\'aux routes sans interface', () => {
+    // Une route « double » ou « exploitation » n'a pas de dette produit : lui
+    // coller une classe brouillerait la lecture du reste à faire.
+    const malPlacees = Object.entries(INVENTAIRE)
+      .filter(([, e]) => e.motif !== 'sans-interface' && e.classe)
+      .map(([r]) => r)
+    expect(malPlacees).toEqual([])
+  })
+
   it('les chaînes récemment rebranchées ne retombent pas dans l\'inventaire', () => {
     // Anti-régression directe sur les quatre défauts déjà corrigés.
     for (const r of [
@@ -254,6 +287,8 @@ describe('routes d\'API sans appelant — inventaire figé', () => {
       '/api/portal/appointments/[id]',
       '/api/appointments',
       '/api/appointments/[id]',
+      '/api/users',
+      '/api/quotes/[id]/signature-token',
     ]) {
       expect(constatees, `${r} est redevenue inatteignable`).not.toContain(r)
     }

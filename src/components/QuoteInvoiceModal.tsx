@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   X, Plus, Trash2, Download, Send, CheckCircle2, ArrowRight,
-  FileText, Receipt, Edit3, Save
+  FileText, Receipt, Edit3, Save, PenLine, Copy
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format, parseISO, addDays } from 'date-fns'
@@ -135,6 +135,9 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
   const [editing,    setEditing]    = useState(!documentId)
   const [saving,     setSaving]     = useState(false)
   const [converting, setConverting] = useState(false)
+  const [signing,    setSigning]    = useState(false)
+  /** Lien de signature fraîchement produit — affiché pour être communiqué. */
+  const [signatureUrl, setSignatureUrl] = useState<string | null>(null)
   const [printing,   setPrinting]   = useState(false)
   /** Un changement de statut est en vol → neutralise le double-clic. */
   const [statusBusy, setStatusBusy] = useState(false)
@@ -301,6 +304,37 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
       toast.error(e instanceof Error ? e.message : t.qiSaveError)
     } finally {
       setSaving(false)
+    }
+  }
+
+  /**
+   * Produit le lien de signature du devis et l'envoie au client (GF-DUR-020).
+   *
+   * La page de signature existait, complète, mais rien ne fabriquait le jeton :
+   * la moitié cliente attendait un lien que la moitié garage ne savait pas
+   * produire. Personne ne pouvait donc faire signer un devis.
+   *
+   * Le lien est AFFICHÉ même quand l'e-mail part : un garage sans SMTP, ou dont
+   * le client n'a pas d'adresse, doit pouvoir le communiquer autrement.
+   */
+  async function handleSignatureLink() {
+    if (!doc || signing) return
+    setSigning(true)
+    try {
+      const r = await fetch(`/api/quotes/${doc.id}/signature-token`, { method: 'POST' })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) { toast.error(d?.error ?? 'Lien de signature refusé par le serveur.'); return }
+      setSignatureUrl(d.url)
+      // L'état du devis passe à « envoyé » côté serveur : l'écran doit suivre,
+      // sinon il continue d'afficher « brouillon » sur un devis déjà parti.
+      setDoc(prev => (prev && prev.status === 'draft' ? { ...prev, status: 'sent' } : prev))
+      if (d.emailEnvoye === true) toast.success(`Devis envoyé à ${d.destinataire}`)
+      else if (d.emailEnvoye === false) toast.error('Lien créé, mais l’e-mail n’a pas pu être envoyé — communiquez-le vous-même.')
+      else toast.success('Lien de signature créé — ce client n’a pas d’adresse e-mail.')
+    } catch {
+      toast.error('Serveur injoignable.')
+    } finally {
+      setSigning(false)
     }
   }
 
@@ -482,6 +516,17 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                 </button>
                 {mode === 'quote' && doc.status !== 'converted' && (
                   <>
+                    {/* Signature en ligne : la page cliente existait, mais rien
+                        ne produisait le lien qu'elle attend (GF-DUR-020). Un
+                        devis accepté ou refusé n'est plus signable — le serveur
+                        le refuse, autant ne pas le proposer. */}
+                    {['draft', 'sent'].includes(doc.status) && (
+                      <button onClick={handleSignatureLink} disabled={signing}
+                        title="Envoyer le devis au client pour signature en ligne"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg disabled:opacity-50 transition-colors">
+                        <PenLine className="w-3.5 h-3.5" /> {signing ? 'Lien…' : 'Faire signer'}
+                      </button>
+                    )}
                     {doc.status === 'draft' && (
                       <button onClick={() => handleStatusChange('sent')}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg transition-colors">
@@ -872,6 +917,35 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                     {formatEuros(profit, 'always')}
                   </p>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Lien de signature du devis ────────────────────────────────────
+              Affiché MÊME quand l'e-mail est parti : un garage sans SMTP, ou
+              dont le client n'a pas d'adresse, doit pouvoir le communiquer
+              autrement — par SMS, de vive voix, en le recopiant. */}
+          {signatureUrl && (
+            <div className="mx-8 mb-8 rounded-xl border border-purple-200 bg-purple-50/60 p-4">
+              <p className="text-xs font-semibold text-purple-800">Lien de signature du devis</p>
+              <p className="mt-0.5 text-[11px] text-purple-700/80">
+                Valable sept jours. Le client y consulte le devis, l’accepte ou le refuse.
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <code className="flex-1 select-all break-all rounded bg-white px-2.5 py-1.5 text-[11px] text-gray-700 border border-purple-200">
+                  {signatureUrl}
+                </code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard?.writeText(signatureUrl)
+                      .then(() => toast.success('Lien copié'))
+                      .catch(() => toast.error('Copie impossible — sélectionnez le texte'))
+                  }}
+                  aria-label="Copier le lien de signature"
+                  className="p-2 rounded-lg text-purple-700 hover:bg-purple-100 transition-colors"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           )}

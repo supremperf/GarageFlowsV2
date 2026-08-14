@@ -4,12 +4,13 @@ import { useState, useCallback, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useTranslation, type LangCode } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { X, Building2, Globe, Save, Users, Palette, Zap, Mail, RefreshCw, KeyRound, ReceiptText } from 'lucide-react'
+import { X, Building2, Globe, Save, Users, Palette, Zap, Mail, RefreshCw, KeyRound, ReceiptText, UserCog } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { CompanyTab }   from './settings/CompanyTab'
 import { MechanicsTab, MECHANIC_COLORS } from './settings/MechanicsTab'
 import { MechanicAccessTab } from './settings/MechanicAccessTab'
+import { TeamTab } from './settings/TeamTab'
 import { EInvoicingTab } from './settings/EInvoicingTab'
 import { ThemeTab }     from './settings/ThemeTab'
 import { LanguageTab }  from './settings/LanguageTab'
@@ -31,7 +32,7 @@ export default function SettingsModal({ onClose }: Props) {
   // OWNER. L'onglet était proposé au MANAGER, qui n'y trouvait que des 403 :
   // une fonctionnalité visible et inutilisable (GF31-AUD-063).
   const canManageSettings = role === 'OWNER'
-  const [tab, setTab] = useState<'company' | 'mechanics' | 'access' | 'einvoicing' | 'language' | 'theme' | 'features' | 'email' | 'updates'>('company')
+  const [tab, setTab] = useState<'company' | 'mechanics' | 'team' | 'access' | 'einvoicing' | 'language' | 'theme' | 'features' | 'email' | 'updates'>('company')
   const [exporting, setExporting] = useState(false)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -209,6 +210,11 @@ export default function SettingsModal({ onClose }: Props) {
   const TABS = [
     { id: 'company'   as const, label: t.companyTab  ?? 'Entreprise',  icon: <Building2  className="w-4 h-4" /> },
     { id: 'mechanics' as const, label: t.mechanics   ?? 'Mécaniciens', icon: <Users      className="w-4 h-4" /> },
+    // Comptes du PERSONNEL (OWNER/MANAGER/RECEPTIONIST) : `/api/users` existait
+    // sans écran, si bien qu'un garage restait à l'unique compte né de son
+    // installation — tout le modèle de rôles protégeait une distinction que
+    // personne ne pouvait créer (GF-DUR-021).
+    ...(canManageAccess ? [{ id: 'team' as const, label: 'Équipe', icon: <UserCog className="w-4 h-4" /> }] : []),
     ...(canManageAccess ? [{ id: 'access' as const, label: 'Accès mécaniciens', icon: <KeyRound className="w-4 h-4" /> }] : []),
     ...(canManageSettings ? [{ id: 'einvoicing' as const, label: 'Facturation électronique', icon: <ReceiptText className="w-4 h-4" /> }] : []),
     { id: 'email'     as const, label: t.emailTab    ?? 'Email',       icon: <Mail       className="w-4 h-4" /> },
@@ -268,6 +274,7 @@ export default function SettingsModal({ onClose }: Props) {
               onDelete={handleDeleteMechanic}
             />
           )}
+          {tab === 'team' && canManageAccess && <TeamTab />}
           {tab === 'access' && canManageAccess && <MechanicAccessTab />}
           {tab === 'einvoicing' && canManageSettings && <EInvoicingTab />}
           {tab === 'email'    && <EmailTab />}
