@@ -168,18 +168,57 @@ figé par un test, mutation vérifiée.
 
 ---
 
+## H bis. Migration d'une VRAIE ancienne base (§66)
+
+Éprouvé sur une copie de la base de production du poste
+(`%APPDATA%\GarageFlow\garageflow.db`, 1 118 208 octets), antérieure au schéma
+courant — son `PortalUser` n'avait ni `mustChangePassword`, ni `pendingEmail`,
+ni `clientId`, ni `disabledAt`.
+
+| | Avant | Après |
+|---|---|---|
+| version de schéma | 202 | **212** |
+| migrations appliquées | — | 10 (1 ignorée) |
+| `PRAGMA integrity_check` | ok | **ok** |
+| violations de clé étrangère | 0 | **0** |
+| Garage / Job / Invoice / Quote | 12 / 32 / 18 / 6 | **12 / 32 / 18 / 6** |
+| Part / Mechanic / LicenseKey | 6 / 56 / 29 | **6 / 56 / 29** |
+
+Colonnes ajoutées à `PortalUser` : `clientId`, `disabledAt`,
+`mustChangePassword`, `pendingEmail`. **Aucune donnée perdue.**
+
+Vérifié en plus :
+* **idempotence** — second passage : `202→212` devient `212→212`, 0 appliquée ;
+* la base migrée est **exploitable** : `/api/health` répond `db: connected` et
+  le diagnostic TOTP fonctionne ;
+* sans en-tête `x-internal-key`, la route de migration répond **401**.
+
+## H ter. Variables d'environnement et RESET (§67)
+
+Manifeste `scripts/garageflow-env-manifest.json` : **120 variables déclarées**,
+dont `GF_TOTP_ENC_KEY`, `GF_TOTP_ENC_KEY_OLD` et `GF_DB_MAC_SECRET`.
+
+Recherche de dérive — toute `process.env.X` de `src/` absente du manifeste :
+**une seule**, `NEXT_PUBLIC_GF_VERSION`, déjà exemptée explicitement dans
+`env-manifest-drift.test.ts` (injectée par `next.config.mjs`, jamais posée par
+l'exploitant). Aucun écart réel.
+
+Le garde de dérive RESET ⇄ schéma serveur passe (9 tests) : table fantôme,
+convergence partielle, colonne inconnue et migration non couverte sont toutes
+détectées.
+
 ## I. Limites — rien n'est caché
 
 | Élément | Pourquoi non vérifié | Ce qui l'a été | Risque |
 |---|---|---|---|
 | Activation de licence (`/api/license/activate`) | exige un jeton signé par la clé privée | tout l'aval : sessions garage et mécanicien, validation, révocation | moyen |
-| Installation Windows réelle | non exécutée | l'artefact déjà construit a été ouvert et scanné | moyen |
-| PWA de production (`app.garageflows.fr`) | non testée | build de production, service worker non audité | moyen |
+| Installation Windows réelle | **non exécutée volontairement** : lancer l'installateur modifie le poste de l'exploitant — action difficilement réversible, hors de ce qu'un audit doit décider seul | l'artefact déjà construit a été ouvert, listé (23 637 entrées) et scanné | moyen |
+| PWA de production (`app.garageflows.fr`) | **non testée** : c'est la production ; et Vercel n'est pas connecté à Git, un déploiement partirait du CLI (absent) | build de production vert | moyen |
 | Responsive / PDF / update PWA | non testés | — | moyen |
-| Offline / retry / file d'attente | non testés | idempotence stock et 2FA prouvées | moyen |
+| Offline / retry / file d'attente | non testés | idempotence stock et 2FA prouvées de façon déterministe | moyen |
 | Cache du service worker | non audité | — | moyen |
-| Écran garage → mutation par clic | mutations passées par l'API | l'écran garage s'ouvre et rend le planning | faible |
-| 2ᵉ et 3ᵉ passes complètes | non exécutées | — | à évaluer |
+| Écran garage → mutation par clic | mutations passées par l'API | l'écran garage s'ouvre, se connecte et rend le planning | faible |
+| 2ᵉ et 3ᵉ passes complètes | non exécutées | les chaînes les plus à risque (stock, 2FA, licence, packaging, synchronisation) l'ont été | à évaluer |
 
 **Décision de licence en suspens** : poste sur `835c1e90…`, dépôt sur
 `fe5b7807…`. L'écart porte **uniquement** sur la clé (vérifié fichier par
