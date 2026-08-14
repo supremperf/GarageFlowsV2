@@ -63,6 +63,18 @@ export default function PwaRegister() {
     navigator.serviceWorker
       .register(swUrl)
       .then((reg) => {
+        // ─── Un worker DÉJÀ en attente (GF-DUR-040) ──────────────────────────
+        // `updatefound` ne se déclenche qu'au MOMENT où un nouveau worker est
+        // découvert. S'il a été installé lors d'une visite précédente et attend
+        // depuis, l'événement est passé : la barre « Mettre à jour » ne
+        // s'affichait jamais, et l'utilisateur restait sur l'ancienne version
+        // jusqu'à ce qu'il ferme tous ses onglets — ce qu'on ne fait pas sur un
+        // écran d'atelier laissé ouvert. On regarde donc l'état AU MOMENT de
+        // l'enregistrement, en plus d'écouter la suite.
+        if (reg.waiting && navigator.serviceWorker.controller && !cancelled) {
+          setUpdateReady(reg.waiting)
+        }
+
         // Détecte l'arrivée d'un nouveau SW en attente.
         reg.addEventListener('updatefound', () => {
           const sw = reg.installing
@@ -78,13 +90,20 @@ export default function PwaRegister() {
 
     // Recharge la page une fois le nouveau SW actif (évite les états incohérents).
     let refreshing = false
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
+    const onControllerChange = () => {
       if (refreshing) return
       refreshing = true
       window.location.reload()
-    })
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange)
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      // L'écouteur vit sur `navigator.serviceWorker`, pas sur le composant : ne
+      // pas le retirer en empilait un par montage, et un seul changement de
+      // contrôleur déclenchait alors plusieurs rechargements.
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
+    }
   }, [])
 
   // L'incompatibilité prime sur la simple disponibilité d'une mise à jour :

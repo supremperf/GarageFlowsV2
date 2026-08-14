@@ -72,12 +72,29 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api/')) return
 
   // Assets statiques immuables → cache-first.
+  //
+  // ─── Pourquoi `res.ok` est INDISPENSABLE ici (GF-DUR-039) ─────────────────
+  // Cette branche mettait en cache la réponse SANS regarder son statut. Or elle
+  // est cache-first : une fois stockée, la réponse est resservie sans jamais
+  // réinterroger le réseau, pour toute la durée de vie de la version.
+  //
+  // Pendant une mise en production, un fragment `/_next/static/chunks/*.js` peut
+  // manquer quelques secondes — le HTML de la nouvelle version est servi alors
+  // que l'asset n'est pas encore en place. Le navigateur recevait un 404, LE
+  // METTAIT EN CACHE, et le resservait indéfiniment : l'application restait
+  // cassée sur cet appareil jusqu'à la version suivante, sans qu'aucun
+  // rechargement n'y change quoi que ce soit. Le cache des pages, lui, vérifiait
+  // déjà `res.ok` — c'est ce même contrôle qui manquait ici.
   if (isStaticAsset(url)) {
     event.respondWith(
       caches.match(request).then((hit) =>
         hit || fetch(request).then((res) => {
-          const copy = res.clone()
-          caches.open(STATIC_CACHE).then((c) => c.put(request, copy))
+          // On ne conserve QUE les réponses saines. Un 404/5xx transitoire est
+          // rendu à la page (elle réessaiera) mais jamais mémorisé.
+          if (res.ok) {
+            const copy = res.clone()
+            caches.open(STATIC_CACHE).then((c) => c.put(request, copy))
+          }
           return res
         }),
       ),

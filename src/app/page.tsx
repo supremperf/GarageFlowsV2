@@ -172,6 +172,57 @@ export default function Home() {
     return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [status, fetchData, fetchMechanics])
 
+  /**
+   * SENS MÉCANICIEN → POSTE (GF-DUR-041).
+   *
+   * Mesuré avant correction : un mécanicien démarre son intervention depuis la
+   * PWA, la base enregistre `status=in_progress`, et l'écran du poste reste
+   * inchangé — indéfiniment. Le rafraîchissement au retour de focus ne sert à
+   * rien sur un écran d'atelier qui ne perd jamais le focus.
+   *
+   * On sonde une EMPREINTE (`/api/jobs/pulse`, deux agrégats, aucune donnée
+   * métier) toutes les 10 s, et on ne recharge le planning que si elle change.
+   * Coût en régime stable : 6 req/min, contre ~40 pour un sondage classique des
+   * deux listes — ce qui, avec la limite de 120 req/min PAR IP partagée par tout
+   * le garage, faisait la différence entre tenir et fabriquer des 429.
+   *
+   * En arrière-plan, aucune requête : `document.hidden` suspend la boucle, et
+   * le retour au premier plan relance immédiatement.
+   */
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    let vu: string | null = null
+    let actif = true
+    let minuteur: ReturnType<typeof setTimeout> | null = null
+
+    const battre = async () => {
+      if (!actif) return
+      if (!document.hidden) {
+        try {
+          const r = await fetch(`/api/jobs/pulse?date=${encodeURIComponent(selectedDate)}`, { cache: 'no-store' })
+          if (r.ok) {
+            const { v } = await r.json()
+            // Premier passage : on mémorise sans recharger (les données
+            // viennent d'être chargées par le bootstrap).
+            if (vu !== null && v !== vu) { fetchData(); fetchMechanics() }
+            vu = v
+          }
+        } catch { /* hors ligne : on retentera au prochain battement */ }
+      }
+      if (actif) minuteur = setTimeout(battre, 10_000)
+    }
+
+    minuteur = setTimeout(battre, 10_000)
+    const auRetour = () => { if (!document.hidden) battre() }
+    document.addEventListener('visibilitychange', auRetour)
+
+    return () => {
+      actif = false
+      if (minuteur) clearTimeout(minuteur)
+      document.removeEventListener('visibilitychange', auRetour)
+    }
+  }, [status, selectedDate, fetchData, fetchMechanics])
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login')
