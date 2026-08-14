@@ -713,6 +713,92 @@ describe('la fiche véhicule montre les devis refusés et les garanties (GF-DUR-
   })
 })
 
+describe('la génération assistée de devis est déclenchable (GF-DUR-031)', () => {
+  const src = lire('src/components/billing/QuoteGenerator.tsx')
+  const panneau = lire('src/components/BillingPanel.tsx')
+
+  it('le panneau de facturation ouvre le générateur', () => {
+    expect(panneau).toContain("import { QuoteGenerator } from './billing/QuoteGenerator'")
+    expect(panneau).toMatch(/<QuoteGenerator/)
+    expect(panneau).toMatch(/setGenerateur\(true\)/)
+  })
+
+  it('l\'aperçu et la confirmation restent DEUX gestes distincts', () => {
+    // Sans `confirm: true`, la route n'écrit rien : c'est délibéré, un devis
+    // chiffré part chez un client. Enchaîner les deux appels pour « simplifier »
+    // annulerait la garde.
+    expect(src).toMatch(/\.\.\.\(confirm \? \{ confirm: true \} : \{\}\)/)
+    expect(src).toMatch(/disabled=\{occupe \|\| !apercu\}/)
+  })
+
+  it('les deux appels portent exactement la même demande', () => {
+    // Confirmer un corps différent de celui prévisualisé créerait un devis que
+    // personne n'a vu.
+    expect(src).toMatch(/function corps\(confirm: boolean\)/)
+    expect(src).toMatch(/body: corps\(confirm\)/)
+  })
+
+  it('changer la demande invalide l\'aperçu affiché', () => {
+    expect(src).toMatch(/setApercu\(null\)/)
+  })
+
+  it('les suggestions sont annoncées comme NON reprises dans le devis', () => {
+    // La route ne persiste que `lines`. Les présenter comme faisant partie du
+    // devis ferait croire au garage qu'il les a facturées.
+    expect(src).toMatch(/apercu\?\.proposal\.suggestions/)
+    expect(src).toMatch(/elles ne seront pas ajoutées au devis/)
+  })
+
+  it('les avertissements du moteur sont rendus', () => {
+    // Tarif horaire à zéro, pièce sans prix : les taire donnerait un devis
+    // chiffré sur une base fausse.
+    expect(src).toMatch(/proposal\.warnings/)
+  })
+
+  it('une plaque inconnue est signalée avant la création', () => {
+    expect(src).toMatch(/Aucun véhicule ne correspond à cette plaque/)
+  })
+})
+
+describe('les rapports historisés se relisent et s\'exportent (GF-DUR-032)', () => {
+  const src = lire('src/components/copilot/HistoriqueRapports.tsx')
+  const page = lire('src/app/copilot/page.tsx')
+
+  it('la page du copilote monte l\'historique', () => {
+    expect(page).toContain("import { HistoriqueRapports } from '@/components/copilot/HistoriqueRapports'")
+    expect(page).toMatch(/<HistoriqueRapports version=/)
+  })
+
+  it('la liste ET les deux exports sont atteignables', () => {
+    // `POST` était appelé, `GET` non : « Historiser » écrivait dans un tiroir
+    // sans poignée.
+    expect(src).toMatch(/fetch\('\/api\/copilot\/reports', \{ cache: 'no-store' \}\)/)
+    expect(src).toMatch(/\/api\/copilot\/reports\/\$\{r\.id\}\/export\?format=csv/)
+    expect(src).toMatch(/\/api\/copilot\/reports\/\$\{r\.id\}\/export\?format=json/)
+  })
+
+  it('l\'export passe par un LIEN, pas par fetch', () => {
+    // La route répond en `Content-Disposition: attachment` : c'est le navigateur
+    // qui doit recevoir la réponse. Un `fetch` la lirait en mémoire et il ne se
+    // passerait rien à l'écran.
+    const bloc = src.slice(src.indexOf('/export?format=csv') - 400)
+    expect(bloc).toMatch(/<a\s/)
+    expect(bloc).not.toMatch(/fetch\([`'"]\/api\/copilot\/reports\/\$\{r\.id\}\/export/)
+  })
+
+  it('un rapport tout juste historisé apparaît sans recharger la page', () => {
+    expect(page).toMatch(/setVersionHistorique\(v => v \+ 1\)/)
+    expect(src).toMatch(/\[charger, version\]/)
+  })
+
+  it('un refus de permission est DIT, pas rendu comme un historique vide', () => {
+    // 403 signifie « pas le droit de voir les données financières ». Afficher
+    // une liste vide ferait croire à une fonction en panne.
+    expect(src).toMatch(/r\.status === 403/)
+    expect(src).toMatch(/réservé aux comptes autorisés/)
+  })
+})
+
 describe('anti-régression : les autres chaînes récemment recâblées restent branchées', () => {
   it('la réception fournisseur est toujours déclenchée par le panneau', () => {
     expect(lire('src/components/SuppliersPanel.tsx')).toMatch(/\/api\/purchase-orders\/\$\{[^}]+\}\/receive/)

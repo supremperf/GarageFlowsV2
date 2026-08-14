@@ -1,4 +1,4 @@
-/**
+﻿/**
  * INVENTAIRE des routes d'API qu'aucun code appelant ne mentionne.
  *
  * ─── Pourquoi cette garde existe ────────────────────────────────────────────
@@ -108,7 +108,6 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
   // résout alors « par identifiant seul », son chemin hérité. Elle produit donc
   // encore, à ce jour, des jetons plus faibles que ceux du chemin courant.
   '/api/portal/token': { motif: 'sans-interface', note: 'remplacée par /api/portal/generate ; signe des jetons sans garageId, aucun appelant', classe: 'DEPRECATED' },
-  '/api/quotes/generate': { motif: 'sans-interface', note: 'génération assistée de devis : aucun écran ne la déclenche', classe: 'PRODUCT_REQUIRED' },
   // Les trois routes de double authentification ont été RETIRÉES d'ici le
   // 14/08/2026 : `PortalTwoFactor` les appelle, et « Mon espace » le monte
   // (GF-DUR-026). C'était le cas le plus coûteux de l'inventaire — second
@@ -130,7 +129,6 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
   '/api/suggestions': { motif: 'sans-interface', note: 'suggestions d’affectation de mécaniciens pour une journée, sans écran', classe: 'ORPHANED' },
 
   '/api/analytics/health': { motif: 'sans-interface', note: 'score de santé — aucun écran ne l’affiche', classe: 'ORPHANED' },
-  '/api/copilot/reports/[id]/export': { motif: 'sans-interface', note: 'export de rapport du copilote — aucun bouton', classe: 'PRODUCT_REQUIRED' },
 
   // Reclassée après vérification : le panneau Stock calcule déjà le même
   // prédicat (`quantity <= minQuantity`) côté client depuis `/api/parts`, et
@@ -246,6 +244,39 @@ function orphelines(): string[] {
   return trouvees.sort()
 }
 
+/**
+ * ─── Portée de cet inventaire : il raisonne par ROUTE, pas par VERBE ────────
+ *
+ * Limite constatée, et non théorique. `/api/copilot/reports` exporte `GET`
+ * (lister l''historique) et `POST` (historiser). La page du copilote n''appelait
+ * que le `POST`. La route avait donc « un appelant », paraissait branchée, et
+ * son `GET` restait mort — si bien que le bouton « Historiser » écrivait dans un
+ * tiroir sans poignée : l''exploitant accumulait des instantanés qu''il ne
+ * pourrait jamais relire (GF-DUR-032, corrigé).
+ *
+ * ─── Pourquoi il n''y a PAS de garde automatique sur les verbes ─────────────
+ * Une version par verbe a été écrite, exécutée, et RETIRÉE : elle accusait à
+ * tort. Deux motifs, tous deux courants ici, la mettent en échec :
+ *
+ *   · le verbe en variable — `ClientsPanel` fait `method: methode`, où `methode`
+ *     vaut POST, PUT ou DELETE selon l''action ; la lecture statique concluait
+ *     que trois verbes vivants de `/api/clients/[id]/portal-access` étaient
+ *     morts ;
+ *   · l''URL en variable — `QuoteInvoiceModal` fait
+ *     `const apiBase = mode === ''quote'' ? ''/api/quotes'' : ''/api/invoices''`, puis
+ *     appelle `${apiBase}/${id}`. Le chemin complet n''apparaît nulle part : ni
+ *     le verbe ni la route ne sont lisibles au même endroit.
+ *
+ * Rendre le garde prudent au point de se taire dans ces cas revenait à ne plus
+ * rien couvrir d''utile. On préfère une limite ÉCRITE à un garde qui ferait
+ * supprimer du code vivant — c''est déjà arrivé trois fois dans ce fichier, et
+ * chaque fois le garde avait l''air juste.
+ *
+ * Conséquence pratique pour qui relit : une route à plusieurs verbes peut être
+ * à moitié morte sans que rien ici ne le signale. La vérification reste
+ * manuelle, et le cas du copilote montre par où commencer — une écriture sans
+ * lecture correspondante.
+ */
 describe('routes d\'API sans appelant — inventaire figé', () => {
   const constatees = orphelines()
 

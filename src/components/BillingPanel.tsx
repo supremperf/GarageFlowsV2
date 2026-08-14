@@ -3,12 +3,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   X, FileText, Receipt, Plus, Search, Eye, Loader2,
-  CheckCircle2, Clock, Send, Ban, TrendingUp, Euro, RefreshCw
+  CheckCircle2, Clock, Send, Ban, TrendingUp, Euro, RefreshCw, Sparkles
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { asDocArray, docMatchesSearch, formatAmount, sumTTC } from '@/lib/billing-view'
 import toast from 'react-hot-toast'
 import QuoteInvoiceModal from './QuoteInvoiceModal'
+import { QuoteGenerator } from './billing/QuoteGenerator'
 import { useTranslation } from '@/lib/i18n'
 import { useScheduleStore } from '@/store/schedule-store'
 
@@ -109,6 +110,7 @@ export default function BillingPanel({ onClose }: Props) {
   const [loading, setLoading] = useState(true)
   const [search,  setSearch]  = useState('')
   const [openDoc, setOpenDoc] = useState<{ type: 'quote' | 'invoice'; jobId?: string | null; docId: string } | null>(null)
+  const [generateur, setGenerateur] = useState(false)
   const [creating,setCreating]= useState<'quote' | 'invoice' | null>(null)
 
   const load = useCallback(async () => {
@@ -177,6 +179,14 @@ export default function BillingPanel({ onClose }: Props) {
               <h2 className="text-base font-bold text-white">Devis &amp; Facturation</h2>
               <p className="text-[11px] text-slate-500">Gestion commerciale</p>
             </div>
+            {/* `POST /api/quotes/generate` existait — nomenclature, taux horaire,
+                TVA, pièces oubliées, numérotation — sans qu'aucun écran ne
+                l'appelle. Le garage ressaisissait à la main ce que le logiciel
+                savait composer (GF-DUR-031). */}
+            <button onClick={() => setGenerateur(true)} title="Générer un devis"
+              className="p-2 rounded-lg hover:bg-white/[0.07] text-purple-400 hover:text-purple-300 transition-all">
+              <Sparkles className="w-4 h-4" />
+            </button>
             <button onClick={load} title="Actualiser"
               className={cn('p-2 rounded-lg hover:bg-white/[0.07] text-slate-500 hover:text-white transition-all', loading && 'pointer-events-none')}>
               <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin text-blue-400')} />
@@ -314,6 +324,18 @@ export default function BillingPanel({ onClose }: Props) {
             load()
           }}
           onSaved={() => {
+            load()
+            invalidateStats()
+          }}
+        />
+      )}
+
+      {generateur && (
+        <QuoteGenerator
+          onClose={() => setGenerateur(false)}
+          onCree={() => {
+            // Le devis créé doit apparaître dans l'onglet où on le cherchera.
+            setTab('quotes')
             load()
             invalidateStats()
           }}
