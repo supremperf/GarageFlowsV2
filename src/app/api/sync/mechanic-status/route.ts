@@ -68,6 +68,21 @@ export async function POST(req: Request) {
     const applied = await prisma.$transaction(async (tx) => {
       const record = await tx.licenseKey.findUnique({ where: { licenseId: mechLid } })
       if (!record || record.licenseType !== 'mechanic') return null
+
+      // ─── Le lien parent doit tenir EN BASE, pas seulement dans le jeton ────
+      // (GF-DUR-042) Le contrôle au-dessus porte sur `mv.payload.plid`, une
+      // revendication SIGNÉE et donc figée à l'émission. Si la clé mécanicien
+      // est ensuite réattribuée à un autre garage, `parentLicenseId` change en
+      // base — mais l'ancien jeton, lui, continue de vérifier et de porter
+      // l'ancien parent. Son détenteur pouvait alors suspendre ou révoquer une
+      // clé qui ne lui appartient plus : un déni de service d'un garage sur le
+      // mécanicien d'un autre.
+      //
+      // On exige donc que la base confirme le lien AU MOMENT de l'écriture,
+      // dans la même transaction. Même logique que la garde
+      // `isGarageClaimedByAnotherLicense` des routes voisines : une preuve
+      // cryptographique dit qui a signé, jamais qui possède aujourd'hui.
+      if (record.parentLicenseId !== auth.licenseId) return 'PARENT_MISMATCH'
       // Une clé déjà RÉVOQUÉE ne se réactive jamais (règle existante côté poste).
       if (record.status === 'revoked' && status !== 'revoked') return 'REVOKED_IS_FINAL'
 
@@ -99,6 +114,9 @@ export async function POST(req: Request) {
 
     if (applied === null) return NextResponse.json({ ok: false, code: 'MECHANIC_KEY_UNKNOWN' }, { status: 409 })
     if (applied === 'REVOKED_IS_FINAL') return NextResponse.json({ ok: false, code: 'REVOKED_IS_FINAL' }, { status: 409 })
+    // Le jeton était valide, mais la clé n'appartient plus à ce garage : c'est
+    // un refus d'AUTORISATION, pas un conflit d'état (GF-DUR-042).
+    if (applied === 'PARENT_MISMATCH') return NextResponse.json({ ok: false, code: 'PARENT_MISMATCH' }, { status: 403 })
 
     logger.info('[sync/mechanic-status] statut propagé', { key: shortId(mechLid), status, source: 'desktop', at: now.toISOString() })
     return NextResponse.json({ ok: true, licenseId: mechLid, status, syncedAt: now.toISOString() })
