@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState, memo, useCallback } from 'react'
 import { format, addDays, subDays, parseISO } from 'date-fns'
@@ -26,6 +26,7 @@ import CopilotPanel from '@/components/CopilotPanel'
 import OcrPanel from '@/components/OcrPanel'
 import SuppliersPanel from '@/components/SuppliersPanel'
 import ClientsPanel from '@/components/ClientsPanel'
+import TicketsPanel from '@/components/TicketsPanel'
 import CatalogPanel from '@/components/CatalogPanel'
 import LicenseRevokedOverlay from '@/components/LicenseRevokedOverlay'
 import UpdateModal from '@/components/UpdateModal'
@@ -94,6 +95,7 @@ export default function Home() {
   const [isOcrOpen,            setIsOcrOpen]            = useState(false)
   const [isSuppliersOpen,      setIsSuppliersOpen]      = useState(false)
   const [isClientsOpen,        setIsClientsOpen]        = useState(false)
+  const [isTicketsOpen,        setIsTicketsOpen]        = useState(false)
   const [isCatalogOpen,        setIsCatalogOpen]        = useState(false)
   const [isAssistantOpen,      setIsAssistantOpen]      = useState(false)
   const [warrantyAlerts,       setWarrantyAlerts]       = useState(0)
@@ -288,6 +290,7 @@ export default function Home() {
         onOpenOcr={() => setIsOcrOpen(true)}
         onOpenSuppliers={() => setIsSuppliersOpen(true)}
         onOpenClients={() => setIsClientsOpen(true)}
+        onOpenTickets={() => setIsTicketsOpen(true)}
         onOpenCatalog={() => setIsCatalogOpen(true)}
         warrantyAlerts={warrantyAlerts}
       />
@@ -343,6 +346,7 @@ export default function Home() {
         onOpenOcr={() => setIsOcrOpen(true)}
         onOpenSuppliers={() => setIsSuppliersOpen(true)}
         onOpenClients={() => setIsClientsOpen(true)}
+        onOpenTickets={() => setIsTicketsOpen(true)}
         onOpenCatalog={() => setIsCatalogOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         warrantyAlerts={warrantyAlerts}
@@ -387,6 +391,7 @@ export default function Home() {
       {isOcrOpen              && <OcrPanel              onClose={() => setIsOcrOpen(false)} onUseVehicle={handleOcrVehicle} />}
       {isSuppliersOpen        && <SuppliersPanel        onClose={() => setIsSuppliersOpen(false)} />}
       {isClientsOpen          && <ClientsPanel          onClose={() => setIsClientsOpen(false)} />}
+      {isTicketsOpen          && <TicketsPanel          onClose={() => setIsTicketsOpen(false)} />}
       {isCatalogOpen          && <CatalogPanel          onClose={() => setIsCatalogOpen(false)} />}
       {isSettingsOpen         && <SettingsModal        onClose={() => setIsSettingsOpen(false)} />}
 

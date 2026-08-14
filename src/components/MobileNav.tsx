@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { signOut } from 'next-auth/react'
@@ -6,7 +6,7 @@ import {
   CalendarDays, ClipboardList, Plus, Sparkles, Menu,
   BarChart3, Package, ShieldCheck, Car, Bell, BookOpen,
   FileText, BarChart2, ScanLine, Truck, Users, Boxes, Settings,
-  Sun, Moon, LogOut,
+  Sun, Moon, LogOut, MessageSquare,
 } from 'lucide-react'
 import { useScheduleStore } from '@/store/schedule-store'
 import { useTranslation } from '@/lib/i18n'
@@ -29,6 +29,7 @@ export interface MobileNavActions {
   onOpenOcr: () => void
   onOpenSuppliers: () => void
   onOpenClients: () => void
+  onOpenTickets: () => void
   onOpenCatalog: () => void
   onOpenSettings: () => void
   warrantyAlerts?: number
@@ -201,6 +202,7 @@ export default function MobileNav(props: MobileNavActions) {
           <MoreItem icon={ScanLine} label={t.navOcr} onClick={() => run(props.onOpenOcr)} tone="finance" />
           <MoreItem icon={Truck} label={t.navSuppliers} onClick={() => run(props.onOpenSuppliers)} tone="finance" />
           <MoreItem icon={Users} label={t.navClients} onClick={() => run(props.onOpenClients)} tone="finance" />
+          <MoreItem icon={MessageSquare} label="Messages" onClick={() => run(props.onOpenTickets)} tone="finance" />
           <MoreItem icon={Boxes} label={t.navCatalog} onClick={() => run(props.onOpenCatalog)} tone="finance" />
         </div>
 

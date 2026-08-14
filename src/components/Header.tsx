@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Session } from 'next-auth'
 import { signOut } from 'next-auth/react'
@@ -34,8 +34,10 @@ import {
   Truck,
   Users,
   Boxes,
+  MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { can } from '@/lib/authz'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import LanguageSelector from '@/components/LanguageSelector'
 import { GarageFlowIcon } from '@/components/GarageFlowLogo'
@@ -132,6 +134,7 @@ interface HeaderProps {
   onOpenOcr?:           () => void
   onOpenSuppliers?:     () => void
   onOpenClients?:       () => void
+  onOpenTickets?:       () => void
   onOpenCatalog?:       () => void
   warrantyAlerts?:      number
 }
@@ -150,6 +153,7 @@ export default function Header({
   onOpenOcr,
   onOpenSuppliers,
   onOpenClients,
+  onOpenTickets,
   onOpenCatalog,
   warrantyAlerts = 0,
 }: HeaderProps) {
@@ -582,6 +586,17 @@ export default function Header({
               icon={Users}
               label={t.navClients}
               title={t.ttClients}
+              variant="finance"
+            />
+          )}
+          {/* La correspondance client relève de `customer:manage`, comme la fiche
+              elle-même. Un bouton qui mène à un 403 est pire que pas de bouton. */}
+          {onOpenTickets && can(role, 'customer:manage') && (
+            <ToolBtn
+              onClick={onOpenTickets}
+              icon={MessageSquare}
+              label="Messages"
+              title="Messages reçus de vos clients depuis leur espace en ligne"
               variant="finance"
             />
           )}

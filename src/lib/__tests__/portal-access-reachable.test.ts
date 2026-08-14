@@ -276,6 +276,79 @@ describe('le garage voit qui relancer, et peut le faire (GF-DUR-013)', () => {
   })
 })
 
+describe('la messagerie existe des DEUX côtés (GF-DUR-014)', () => {
+  const portail = lire('src/app/clients/messages/page.tsx')
+  const garage = lire('src/components/TicketsPanel.tsx')
+
+  it('le client atteint sa messagerie depuis son espace', () => {
+    const espace = lire('src/app/clients/account/page.tsx')
+    // Le lien porte le garage courant : un lien nu le perdrait, et le client
+    // retomberait sur une connexion qui ne sait plus à quel garage il appartient.
+    expect(espace).toMatch(/href=\{lienPortail\(cheminPortail\('messages'\)\)\}/)
+    expect(espace).toContain('Mes messages')
+  })
+
+  it('les quatre opérations du portail sont déclenchables', () => {
+    expect(portail).toMatch(/fetch\('\/api\/portal\/tickets', \{ cache: 'no-store' \}\)/)  // liste
+    expect(portail).toMatch(/fetch\('\/api\/portal\/tickets', \{\s*method: 'POST'/)        // ouverture
+    expect(portail).toMatch(/fetch\(`\/api\/portal\/tickets\/\$\{ouvert\}`, \{\s*method: 'POST'/) // réponse
+    expect(portail).toMatch(/\/close`, \{\s*method: 'POST'/)                               // clôture
+  })
+
+  it('le panneau garage est atteignable en navigation desktop ET mobile', () => {
+    expect(lire('src/app/page.tsx')).toMatch(/isTicketsOpen\s+&& <TicketsPanel/)
+    expect(lire('src/components/Header.tsx')).toMatch(/onClick=\{onOpenTickets\}/)
+    expect(lire('src/components/MobileNav.tsx')).toMatch(/run\(props\.onOpenTickets\)/)
+  })
+
+  it('le garage lit, répond, clôt et rouvre', () => {
+    expect(garage).toMatch(/fetch\('\/api\/tickets', \{ cache: 'no-store' \}\)/)
+    expect(garage).toMatch(/fetch\(`\/api\/tickets\/\$\{ouvert\}`, \{\s*method: 'POST'/)
+    expect(garage).toMatch(/agir\(\{ message: reponse\.trim\(\) \}/)
+    expect(garage).toMatch(/agir\(\{ close: true \}/)
+    expect(garage).toMatch(/agir\(\{ reopen: true \}/)
+  })
+
+  it('un fil CLOS n\'offre aucun champ de saisie, des deux côtés', () => {
+    // Le serveur refuserait le message (409) : laisser écrire pour refuser
+    // ensuite ferait perdre son texte à celui qui vient de l'écrire.
+    for (const [nom, src] of [['portail', portail], ['garage', garage]] as const) {
+      expect(src, nom).toMatch(/status === 'closed'/)
+      expect(src, nom).toMatch(/Rouvrir/)
+    }
+  })
+
+  it('le statut est traduit en « qui doit agir », jamais recopié tel quel', () => {
+    // « pending » et « answered » sont ambigus dans les deux sens pour qui ne
+    // connaît pas la machine à états.
+    expect(portail).toMatch(/answered: \{ texte: 'Réponse reçue'/)
+    expect(portail).toMatch(/pending: \{ texte: 'En attente du garage'/)
+    expect(garage).toMatch(/pending: \{ texte: 'Relance client'/)
+    expect(garage).toMatch(/open: \{ texte: 'Nouveau'/)
+  })
+
+  it('le garage voit d\'abord ce qui attend une réponse', () => {
+    // Tout montrer par défaut noierait les fils sans réponse dans l'historique.
+    expect(garage).toMatch(/const A_TRAITER = new Set\(\['open', 'pending'\]\)/)
+    expect(garage).toMatch(/useState<'a-traiter' \| 'tous'>\('a-traiter'\)/)
+  })
+
+  it('le texte des messages est rendu tel quel, jamais interprété', () => {
+    for (const [nom, src] of [['portail', portail], ['garage', garage]] as const) {
+      expect(src, nom).toMatch(/whitespace-pre-line[^>]*>\{m\.body\}/)
+      expect(src, nom).not.toMatch(/dangerouslySetInnerHTML/)
+    }
+  })
+
+  it('un envoi refusé ne fait pas perdre son texte au client', () => {
+    const nouveau = portail.slice(portail.indexOf('async function envoyer'))
+    const echec = nouveau.slice(0, nouveau.indexOf('onCree('))
+    expect(echec).toMatch(/onErreur\(d\?\.error/)
+    // Aucun vidage de champ sur le chemin d'échec.
+    expect(echec).not.toMatch(/setMessage\(''\)|setSujet\(''\)/)
+  })
+})
+
 describe('anti-régression : les autres chaînes récemment recâblées restent branchées', () => {
   it('la réception fournisseur est toujours déclenchée par le panneau', () => {
     expect(lire('src/components/SuppliersPanel.tsx')).toMatch(/\/api\/purchase-orders\/\$\{[^}]+\}\/receive/)

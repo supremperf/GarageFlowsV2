@@ -8,9 +8,10 @@
 
 import { useEffect, useState, useCallback, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { lienPortail } from '@/lib/portal/garage-slug'
 import { cheminPortail } from '@/lib/portal/routes'
-import { Car, Wrench, FileText, Receipt, ShieldCheck, LogOut, Loader2, MonitorSmartphone } from 'lucide-react'
+import { Car, Wrench, FileText, Receipt, ShieldCheck, LogOut, Loader2, MonitorSmartphone, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PortalSessions } from '@/components/portal/PortalSessions'
 
@@ -70,11 +71,22 @@ export default function PortalAccountPage() {
   return (
     <div className="min-h-screen bg-[#0a0f1e] px-4 py-8 text-slate-200 md:px-8">
       <div className="mx-auto w-full max-w-4xl">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <h1 className="text-2xl font-black text-white">Mon espace <span className="text-blue-400">GarageFlows</span></h1>
-          <button onClick={logout} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/[0.08]">
-            <LogOut className="h-3.5 w-3.5" /> Déconnexion
-          </button>
+          <div className="flex items-center gap-2">
+            {/* `lienPortail` reporte le garage courant : un lien nu le perdrait,
+                et le client retomberait sur une connexion qui ne sait plus à
+                quel garage il appartient. */}
+            <Link
+              href={lienPortail(cheminPortail('messages'))}
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/[0.08]"
+            >
+              <MessageSquare className="h-3.5 w-3.5" /> Mes messages
+            </Link>
+            <button onClick={logout} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/[0.08]">
+              <LogOut className="h-3.5 w-3.5" /> Déconnexion
+            </button>
+          </div>
         </div>
 
         {data && (

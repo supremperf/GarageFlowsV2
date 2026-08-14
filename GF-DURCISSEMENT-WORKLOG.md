@@ -364,13 +364,74 @@ veille de l'échéance — ce ne sont pas les mêmes appels téléphoniques.
 
 **Mutations sur ce lot.** 9/9 détectées.
 
+**Mutations sur ce lot.** 9/9 détectées.
+
+---
+
+## 7. Messagerie client ↔ garage
+
+### GF-DUR-014 [P1] — Cinq routes, zéro écran, des deux côtés
+
+**Cause racine.** Toute la mécanique existait : ouverture d'un fil, historique,
+réponse, clôture, réouverture, et une machine à états éprouvée
+(`lib/portal/tickets`) qui distingue qui attend qui. Aucune des cinq pages du
+portail ne l'appelait, et aucun panneau du poste non plus. Le client ne pouvait
+pas écrire à son garage depuis son espace ; le garage n'aurait rien vu s'il
+l'avait fait.
+
+**Correctif.** Deux écrans, et une traversée éprouvée de bout en bout.
+
+*Côté client* — `/clients/messages`, atteignable depuis l'espace client. Le
+statut est traduit en « qui doit agir » (« En attente du garage », « Réponse
+reçue ») plutôt que recopié : `pending` et `answered` sont ambigus dans les deux
+sens pour qui ne connaît pas la machine à états. Le fil peut être rattaché à un
+véhicule — sans quoi le garage doit demander de quelle voiture on parle.
+
+*Côté garage* — panneau « Messages », ouvert sur **« À traiter »** : les fils
+`open` et `pending`, ceux où le client attend. Tout montrer par défaut noierait
+ces deux-là dans l'historique, et un message sans réponse est exactement ce
+qu'une messagerie doit rendre impossible à manquer. `answered` n'y figure pas :
+la balle est chez le client — c'est le seul intérêt de conserver la distinction.
+
+**Deux refus assumés dans l'interface.** Un fil CLOS n'affiche aucun champ de
+saisie, des deux côtés : le serveur refuserait le message (409), et laisser
+quelqu'un écrire pour se voir refuser après coup lui ferait perdre son texte. Et
+un envoi refusé conserve la saisie à l'écran — la lui reprendre serait la pire
+réponse possible à un message qu'il vient d'écrire.
+
+Le corps des messages est rendu tel quel (`whitespace-pre-line`), jamais
+interprété comme du balisage.
+
+**Vérification.** `messagerie-client-garage.test.ts` — 16 tests sur la traversée
+réelle (client → garage → client), la clôture des deux côtés, et l'isolation :
+un garage voisin ne voit rien, un client n'atteint pas le fil d'un autre, un
+véhicule qui ne lui appartient pas est refusé.
+
+### GF-DUR-015 [P1] — La correspondance client était ouverte à tout le garage
+
+**Trouvé en construisant l'interface.** `/api/tickets` et `/api/tickets/[id]`
+n'exigeaient **aucune permission** — seulement une session. Or le modèle de rôles
+du produit est explicite : un MECHANIC n'a ni `customer:manage` ni
+`financial:read`. Il pouvait pourtant lire toutes les conversations du garage,
+litiges de facturation compris, y répondre **au nom du garage** — le message est
+signé de son nom — puis les clore.
+
+Le défaut préexistait ; l'interface l'aurait rendu commode. Les deux routes
+exigent désormais `customer:manage`, la permission de la relation client, qui
+couvre le comptoir — la refuser au RECEPTIONIST rendrait la messagerie inutile là
+où elle sert le plus. Le bouton du poste suit la même règle : un bouton qui mène
+à un 403 est pire que pas de bouton.
+
+**Mutations sur ce lot.** 15/15 détectées (5 sur les routes du portail, 4 sur
+celles du poste, 3 sur les autorisations, plus 9 sur les deux interfaces).
+
 ### Ce qui reste, et pourquoi
 
-Après ce lot, l'inventaire compte **20 routes `sans-interface`**. Les plus
-lourdes — messagerie client, prise de rendez-vous, double facteur — représentent
-plusieurs lots de conception produit : où les placer dans le portail, quel
-parcours, quelle présentation. Ce n'est pas un arbitrage technique, et le
-dimensionner revient au propriétaire du produit. **Décision requise.**
+L'inventaire compte **15 routes `sans-interface`**. Les plus notables : la prise
+de rendez-vous par le client, le double facteur du portail, et cinq modules
+d'analyse dont le cœur n'est appelé que par leur propre route. Chacune demande
+un arbitrage de conception — où la placer, quel parcours — qui revient au
+propriétaire du produit. **Décision requise.**
 
 ---
 
@@ -416,17 +477,18 @@ Reclassé honnêtement : **durcissement, pas défaut** — aucune reproduction n
 
 | Contrôle | Résultat |
 |---|---|
-| `npm test` | **233 fichiers, 2665 tests verts**, 0 échec, 28 ignorés |
+| `npm test` | **234 fichiers, 2690 tests verts**, 0 échec, 28 ignorés |
 | `tsc --noEmit` | 0 erreur |
 | `next lint` | 0 avertissement, 0 erreur |
 | `npm run check:consistency` | **12/12 gardes vertes** |
-| Tests par mutation | **37 mutations appliquées, 37 détectées** |
+| Tests par mutation | **52 mutations appliquées, 52 détectées** |
 
 ## Ce qui reste ouvert
 
-1. **20 fonctions sans interface** (§4, §6) — inventoriées, verrouillées contre
-   toute aggravation. Les quatre chaînes les plus coûteuses pour l'exploitant ont
-   été branchées ; les plus lourdes (messagerie, rendez-vous, double facteur)
+1. **15 fonctions sans interface** (§4, §6, §7) — inventoriées, verrouillées
+   contre toute aggravation. Les chaînes les plus coûteuses ont été branchées
+   (postes de licence, sessions du portail, relance commerciale, messagerie) ;
+   les restantes — rendez-vous, double facteur, cinq modules d'analyse —
    demandent un dimensionnement produit.
 2. **Clés publiques de licence** — le dépôt reste sur `fe5b7807…`, distincte de
    celle du poste de l'exploitant (`835c1e90…`). Propager l'une ou l'autre

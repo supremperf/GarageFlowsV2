@@ -65,11 +65,6 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string }> = {
   // Le portail client, en particulier : messagerie, prise de rendez-vous,
   // double facteur et gestion des appareils sont écrits, testés, et absents des
   // cinq pages du portail.
-  '/api/portal/tickets': { motif: 'sans-interface', note: 'messagerie client : liste et ouverture, aucune des cinq pages du portail ne l’appelle' },
-  '/api/portal/tickets/[id]': { motif: 'sans-interface', note: 'fil d’un message client : lecture et réponse, sans écran pour l’afficher' },
-  '/api/portal/tickets/[id]/close': { motif: 'sans-interface', note: 'clôture d’un fil par le client, sans bouton pour la déclencher' },
-  '/api/tickets': { motif: 'sans-interface', note: 'côté garage de la messagerie : aucun panneau du poste ne la lit' },
-  '/api/tickets/[id]': { motif: 'sans-interface', note: 'réponse du garage à un client, sans écran de conversation' },
   '/api/portal/appointments': { motif: 'sans-interface', note: 'prise de rendez-vous par le client : créneaux et demande, aucune page' },
   '/api/portal/appointments/[id]': { motif: 'sans-interface', note: 'report et annulation d’un rendez-vous client, sans interface' },
   '/api/portal/auth/2fa/setup': { motif: 'sans-interface', note: 'génération du secret de double facteur, sans écran de configuration' },
@@ -214,6 +209,11 @@ describe('routes d\'API sans appelant — inventaire figé', () => {
       '/api/admin/licenses/[id]/devices',
       '/api/admin/licenses/[id]/devices/[deviceId]',
       '/api/portal/auth/devices',
+      '/api/portal/tickets',
+      '/api/portal/tickets/[id]',
+      '/api/portal/tickets/[id]/close',
+      '/api/tickets',
+      '/api/tickets/[id]',
     ]) {
       expect(constatees, `${r} est redevenue inatteignable`).not.toContain(r)
     }
