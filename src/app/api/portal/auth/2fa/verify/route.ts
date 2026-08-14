@@ -12,6 +12,7 @@ import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { clientIp, issuePortalSession, setPortalCookie } from '@/lib/portal/auth-helpers'
 import { verifyTwoFactorChallenge } from '@/lib/portal/session'
 import { verifyTotp } from '@/lib/portal/totp'
+import { lireSecretTotp } from '@/lib/portal/totp-storage'
 import { verifyBackupCode } from '@/lib/portal/backup-codes'
 
 export async function POST(req: NextRequest) {
@@ -33,8 +34,11 @@ export async function POST(req: NextRequest) {
   let ok = false
   let backupUsed = false
 
+  // Le secret est stocké CHIFFRÉ (GF-DUR-022) ; `lireSecretTotp` rend aussi les
+  // valeurs héritées en clair, pour ne verrouiller aucun compte déjà enrôlé.
+  const secretTotp = lireSecretTotp(user.twoFactorSecret)
   const token = typeof body.token === 'string' ? body.token : undefined
-  if (token) ok = verifyTotp(token, user.twoFactorSecret)
+  if (token && secretTotp) ok = verifyTotp(token, secretTotp)
 
   const backupCode = typeof body.backupCode === 'string' ? body.backupCode : undefined
   if (!ok && backupCode) {
