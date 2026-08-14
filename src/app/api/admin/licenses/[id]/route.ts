@@ -32,6 +32,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma, isPostgresDatabase } from '@/lib/db'
 import { logger } from '@/lib/logger'
 import { isAdminSession, adminSessionActor } from '@/lib/api-helpers'
+import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { computeRecordMac } from '@/lib/license/record-mac'
 import {
   canTransitionLicense,
@@ -81,6 +82,13 @@ export async function PATCH(
   if (!await isAdminSession()) {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
   }
+
+  // Limitation de débit (GF-DUR-045). Cette route pilote les TRANSITIONS d'état
+  // d'une licence — suspendre, révoquer, réactiver. `create` et `revoke-by-key`
+  // en portaient une, pas elle : une session admin volée pouvait donc révoquer
+  // le parc entier en boucle, chaque appel coupant un client.
+  const rl = await enforceRateLimit('admin', `license-transition:${clientIpFrom(req)}`)
+  if (!rl.ok) return rateLimitResponse(rl)
 
   const id = parseInt(params.id, 10)
   if (isNaN(id)) {
@@ -233,12 +241,16 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   if (!await isAdminSession()) {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
   }
+
+  // Même raison que pour PATCH : suppression d'enregistrement de licence.
+  const rl = await enforceRateLimit('admin', `license-delete:${clientIpFrom(req)}`)
+  if (!rl.ok) return rateLimitResponse(rl)
 
   const id = parseInt(params.id, 10)
   if (isNaN(id)) {

@@ -19,6 +19,7 @@ import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
 import { isAdminSession } from '@/lib/api-helpers'
+import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { prisma } from '@/lib/db'
 import { logger } from '@/lib/logger'
 import { computeRecordMac } from '@/lib/license/record-mac'
@@ -98,6 +99,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
   }
 
+  // Limitation de débit (GF-DUR-045). C'est LA route qui signe avec la clé
+  // privée : ses quatre voisines de `admin/licenses/*` en portaient une, pas
+  // elle. Une session admin volée pouvait donc émettre des licences en rafale,
+  // et chacune reste valable jusqu'à révocation individuelle.
+  const rl = await enforceRateLimit('admin', `license-generate:${clientIpFrom(req)}`)
+  if (!rl.ok) return rateLimitResponse(rl)
+
   const privKeyPem = loadPrivateKeyPem()
   if (!privKeyPem) {
     return NextResponse.json(
@@ -129,8 +137,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Type invalide: ${licenseType}` }, { status: 400 })
   }
 
-  const years = Math.max(1, Math.min(10, body.years ?? 1))
-  const seats = Math.max(1, body.seats ?? 1)
+  /**
+   * Bornes des valeurs SIGNÉES (GF-DUR-045).
+   *
+   * `years` était borné [1, 10] ; `seats` ne l'était pas — `Math.max(1, …)`
+   * n'a pas de plafond, n'exige pas un entier, et laisse passer un flottant,
+   * une chaîne numérique ou `1e9`.
+   *
+   * Ce n'est pas une coquetterie de validation : la valeur part dans le PAYLOAD
+   * SIGNÉ. Une licence est immuable une fois émise — un `seats` aberrant (faute
+   * de frappe sur un formulaire d'administration, corps forgé avec un cookie
+   * admin volé) ne se corrige qu'en révoquant la licence et en en réémettant
+   * une, côté client compris. On refuse donc à l'émission plutôt que de signer
+   * une valeur qu'on regrettera.
+   *
+   * Le plafond est délibérément large : il n'existe pas pour contrarier un
+   * usage légitime, mais pour rendre l'absurde impossible.
+   */
+  const SEATS_MAX = 1000
+  const years = Math.max(1, Math.min(10, Math.floor(Number(body.years ?? 1)) || 1))
+  const seatsDemandes = Math.floor(Number(body.seats ?? 1))
+  if (!Number.isFinite(seatsDemandes) || seatsDemandes < 1 || seatsDemandes > SEATS_MAX) {
+    return NextResponse.json(
+      { error: `Nombre de sièges invalide : attendu un entier entre 1 et ${SEATS_MAX}.` },
+      { status: 400 },
+    )
+  }
+  const seats = seatsDemandes
   const hwid  = body.hwid  ?? null
   const label = body.label ?? null
 
