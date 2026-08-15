@@ -1657,3 +1657,58 @@ effectif de 1500 ms.
 ---
 
 *Journal tenu au fil de la campagne. Les entrées suivantes s'ajoutent ici.*
+
+---
+
+## 15/08/2026 — Le travail entre sous contrôle de version
+
+Demande : régénérer la baseline depuis le dépôt Git, pour qu'elle porte enfin une
+identité de build.
+
+**La demande reposait sur une prémisse fausse.** Le dépôt
+(`claude/garageflow-final-unified-merge-ub0l67`, commit `0c9d468` du 14/08) était
+en retard de **180 fichiers** : 110 différents, 70 absents. Il lui manquait non
+seulement l'audit d'environnement du 15/08, mais l'essentiel de la campagne
+elle-même — `erreur-affichable.ts`, `return-path.ts` et le reste n'existaient sur
+**aucune branche**, locale ou distante. Lancer `baseline:generate` là aurait
+mesuré un autre code et l'aurait estampillé d'un commit : précisément l'artefact
+« vert mais mensonger » que cette campagne combat.
+
+Le vrai risque révélé n'était donc pas la baseline, mais que 180 fichiers de
+travail audité vivent hors contrôle de version.
+
+### Report, et ce qu'il a fait apparaître
+
+228 fichiers reportés, avec exclusion de `.env`, `keys/` et des artefacts. Deux
+pièges évités : `keys/licenses_db.json` et `keys/server_config.json` seraient
+devenus **suivis** (`.gitignore` ne couvre que `keys/*.pem`) ; et
+`electron/main.js` porte la clé publique en dur — le porter aligne le dépôt sur
+la clé réellement en service, sens déjà retenu par un commit antérieur.
+
+La première suite dans le dépôt a **échoué** : 3 rouges, 40 ignorés. Trois causes,
+aucune de code :
+
+1. Mon report copiait sans **supprimer**. Deux fichiers effacés pendant la
+   campagne survivaient (`client-memory.ts`,
+   `JobDefaultPartsSuggestion.tsx`) et faisaient échouer les tests d'ABSENCE qui
+   les traquent — ils faisaient exactement leur travail.
+2. `prisma/garageflow-template.db` est **suivi** par git mais mon exclusion
+   `*.db` l'écartait : le modèle livré datait d'avant les dernières colonnes, le
+   contrôle de parité échouait et l'interférence faisait tomber
+   `tenant-isolation` au passage.
+3. Cinq tests de signature de licence s'ignoraient faute de `keys/private.pem`
+   dans le dépôt — écart d'environnement, pas de code. Clé copiée localement
+   (ignorée par git, jamais commitée).
+
+Après correction : **3296 verts / 0 rouge / 28 ignorés (3324)**, parité exacte
+avec le dossier de build.
+
+### Résultat
+
+```
+2793633  feat(env): un nom canonique par configuration, et la campagne d'audit au complet
+5228dca  chore(baseline): régénérée DEPUIS le dépôt — elle porte enfin une identité de build
+```
+
+Baseline : `commit 27936330…`, `gitIdentity: true`. Aucun `git push` — le travail
+s'arrête au commit local, comme convenu.

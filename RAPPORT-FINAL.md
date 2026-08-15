@@ -127,9 +127,19 @@ PostgreSQL/Redis réelles non provisionnées, matériel Apple). Aucun `.skip` n'
 
 Baseline canonique régénérée par `npm run baseline:generate` (jamais recopiée à
 la main) : `artifacts/verification/baseline.json` et
-`docs/audit/FINAL_VERIFICATION_BASELINE.md`. Elle ne porte **aucune identité de
-build** (`gitIdentity: false`) : le répertoire de travail n'est pas un dépôt
-git. **À régénérer depuis le dépôt avant tout tag.**
+`docs/audit/FINAL_VERIFICATION_BASELINE.md`.
+
+**Elle porte désormais une identité de build** (`gitIdentity: true`) :
+
+```
+commit  27936330e20b72e77e1afc942948f70364646899
+branche claude/garageflow-final-unified-merge-ub0l67
+tests   3296 / 3324 (28 ignorés) · 289 fichiers
+```
+
+Régénérée **depuis le dépôt** le 15/08/2026, après y avoir reporté les 180
+fichiers qui n'existaient que dans le dossier de build. La réserve « à
+régénérer depuis le dépôt avant tout tag » est donc levée.
 
 ### Stabilité de la suite — six exécutions complètes
 
