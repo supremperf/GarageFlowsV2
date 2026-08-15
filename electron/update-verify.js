@@ -18,9 +18,24 @@ const semver = require('./semver')
 // Clés publiques de signature connues (rotation : ajouter la nouvelle sans retirer
 // l'ancienne tant que des releases signées par elle circulent). keyId → PEM SPKI.
 const PUBLIC_KEYS = {
+  // CONSERVÉE, et elle doit l'être. Tout poste installé avant le 15/08/2026 ne
+  // connaît QUE cette clé : la retirer couperait son canal de mise à jour, sans
+  // recours logiciel. Sa clé privée est introuvable — recherche exhaustive du
+  // disque le 15/08/2026, cf. AUDIT_PROGRESS.md — donc plus aucune release ne
+  // peut être signée avec elle. L'ancre reste au cas où elle ressortirait d'un
+  // coffre : c'est le SEUL chemin qui rétablirait la mise à jour du parc actuel.
   'gf-update-2026':
     '-----BEGIN PUBLIC KEY-----\n' +
     'MCowBQYDK2VwAyEAIOtQbThNMbHLi3LHn0W16TzE6CAm98T+/0ImUXGdQdk=\n' +
+    '-----END PUBLIC KEY-----\n',
+  // Clé COURANTE, créée le 15/08/2026 faute de pouvoir retrouver la précédente.
+  // Elle ne vaut que pour les postes installés depuis un exécutable qui la
+  // contient : les installations antérieures n'en ont pas connaissance et
+  // rejetteront tout manifeste qu'elle signe. Une nouvelle clé ne répare pas un
+  // parc, elle n'ouvre que l'avenir.
+  'gf-update-2026-2':
+    '-----BEGIN PUBLIC KEY-----\n' +
+    'MCowBQYDK2VwAyEAMg/QIcT17B3ijL3tJh92rsh4a6Kco5AR2ySe4kKEa98=\n' +
     '-----END PUBLIC KEY-----\n',
 }
 

@@ -1712,3 +1712,55 @@ avec le dossier de build.
 
 Baseline : `commit 27936330…`, `gitIdentity: true`. Aucun `git push` — le travail
 s'arrête au commit local, comme convenu.
+
+---
+
+## 15/08/2026 — Clé de signature des mises à jour : recherche, puis rotation
+
+`release:publish` butait notamment sur l'absence de clé de signature. Recherche
+exhaustive avant toute génération, car une rotation mal menée coupe le canal de
+mise à jour du parc **sans recours logiciel** — l'en-tête du script le dit
+lui-même.
+
+### La clé `gf-update-2026` n'est pas sur cette machine
+
+Balayage du profil (`Desktop`, `Downloads`, `Documents`, `.claude`,
+`AppData\Roaming`), des dossiers de rotation, des autres volumes (il n'y a que
+`C:`) et de tout dossier GarageFlows hors profil.
+
+- **7 fichiers `private.pem` trouvés — tous EC**, ce sont les paires de
+  *licences*. Aucune ne dérive vers l'ancre Ed25519.
+- L'unique occurrence du préfixe PKCS#8 Ed25519 sur le disque est une phrase de
+  la conversation d'audit elle-même. Aucune matière.
+- `keys/server_config.json` ne contient que `url, api_key` ;
+  `keygen_audit.log` ne trace que des licences ; aucun workflow CI ne référence
+  de secret.
+
+**Explication** : `sign-release-manifest.mjs --gen-key` n'écrit AUCUN fichier, il
+affiche la clé avec la consigne « à conserver HORS du dépôt (coffre / secret
+CI) ». La clé n'a donc jamais été écrite ici — ce n'est pas une perte par
+négligence, c'est le comportement voulu de l'outil.
+
+### Rotation
+
+Nouvelle paire Ed25519 `gf-update-2026-2`, générée avec redirection vers un
+fichier **hors du dépôt** : la clé privée n'a transité par aucun message.
+Vérifiée : type ed25519, paire cohérente, distincte de l'ancienne, signature
+d'essai validée.
+
+`gf-update-2026` est **CONSERVÉE** dans `PUBLIC_KEYS`. La retirer couperait le
+canal des postes qui ne connaissent qu'elle, et l'ancre reste le seul chemin qui
+rétablirait leur mise à jour si la clé ressortait d'un coffre.
+
+Défaut de `--key-id` porté à `gf-update-2026-2` : signer sous l'ancien
+identifiant échouerait, faute de clé.
+
+### Ce que cette rotation ne fait PAS
+
+Elle **ne répare pas le parc existant**. Un poste installé avant aujourd'hui
+exécute un code qui ne connaît que `gf-update-2026` et rejettera tout manifeste
+signé par la nouvelle clé. Pour l'atteindre, il faudrait lui livrer une version
+portant les deux ancres — livraison qui devrait elle-même être signée avec
+`gf-update-2026`. Une nouvelle clé n'ouvre que l'avenir.
+
+Vérification : 3296 verts / 0 rouge / 28 ignorés (3324) · tsc 0 · 13 gardes.

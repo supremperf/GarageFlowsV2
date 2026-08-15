@@ -164,7 +164,7 @@ const AIDE = `
     --channel <nom>          défaut : stable
     --platform <os>          défaut : win32   (win32 | darwin | linux)
     --arch <arch>            défaut : x64
-    --key-id <id>            défaut : gf-update-2026 — DOIT être connu des postes
+    --key-id <id>            défaut : gf-update-2026-2 — DOIT être connu des postes
                              (PUBLIC_KEYS dans electron/update-verify.js)
     --min-version <x.y.z>    version minimale pouvant appliquer cette mise à jour
     --release-notes <texte>  2000 caractères au plus
@@ -285,7 +285,10 @@ function main() {
     sha256,
     size:               octets.length,
     fileName:           path.basename(fichier),
-    keyId:              a['key-id'] === undefined || a['key-id'] === true ? 'gf-update-2026' : a['key-id'],
+    // Défaut porté à gf-update-2026-2 le 15/08/2026 : la clé privée de
+    // gf-update-2026 est introuvable, signer sous cet identifiant échouerait
+    // faute de clé. Son ancre publique reste néanmoins déclarée côté postes.
+    keyId:              a['key-id'] === undefined || a['key-id'] === true ? 'gf-update-2026-2' : a['key-id'],
     signatureAlgorithm: ALGO,
     releasedAt:         new Date().toISOString(),
     ...(a['min-version'] && a['min-version'] !== true ? { minVersion: a['min-version'] } : {}),
