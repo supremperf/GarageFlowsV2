@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { pushTicketAnswer } from '@/lib/sync/ticket-sync'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { can } from '@/lib/authz'
 import { canReply, nextTicketStatus, type TicketStatus, type TicketAction } from '@/lib/portal/tickets'
@@ -57,7 +58,14 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
         data: { status: nextTicketStatus(ticket.status as TicketStatus, 'staff_reply'), lastMessageAt: new Date() },
       }),
     ])
-    return NextResponse.json({ ok: true, status: 'answered' })
+    // La conversation se déroule dans l'espace client, servi par le service en
+    // ligne : sans cette remontée, le garage répondrait dans le vide et le
+    // client continuerait d'attendre. L'issue est RENDUE — l'écran ne doit pas
+    // laisser croire que le client a reçu la réponse.
+    const remontee = await pushTicketAnswer(session.user.garageId, ticket.id, 'staff_reply', {
+      message, authorName: session.user.name ?? session.user.email,
+    })
+    return NextResponse.json({ ok: true, status: 'answered', clientPrevenu: remontee.remonte })
   }
 
   const status = nextTicketStatus(ticket.status as TicketStatus, action)
@@ -65,5 +73,6 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
     where: { id: ticket.id },
     data: { status, closedAt: action === 'close' ? new Date() : null },
   })
-  return NextResponse.json({ ok: true, status })
+  const remontee = await pushTicketAnswer(session.user.garageId, ticket.id, action)
+  return NextResponse.json({ ok: true, status, clientPrevenu: remontee.remonte })
 })

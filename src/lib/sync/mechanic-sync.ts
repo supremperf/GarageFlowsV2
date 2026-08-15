@@ -135,6 +135,13 @@ export async function pushMechanicStatus(licenseId: string, status: string): Pro
       status,
     })
     if (out.ok) {
+      // Marquer la confirmation, exactement comme pour une attribution : sans
+      // cette écriture, une révocation poussée avec succès restait « en attente »
+      // et le rattrapage la rejouait à chaque passage.
+      await prisma.licenseKey.update({
+        where: { licenseId },
+        data: { cloudSyncedAt: new Date() },
+      }).catch(() => { /* le suivi ne doit jamais casser l'action */ })
       logger.info('[sync/mechanic-status:push] confirmé', { key: shortId(licenseId), status })
       return { synced: true }
     }
@@ -147,20 +154,49 @@ export async function pushMechanicStatus(licenseId: string, status: string): Pro
 }
 
 /**
- * Rattrapage : re-pousse les attributions du garage jamais confirmées par le
- * cloud (poste hors ligne au moment de l'attribution). Borné, best-effort.
+ * Rattrapage : re-pousse vers le cloud tout état de clé mécanicien qu'il n'a
+ * jamais confirmé (poste hors ligne au moment du geste). Borné, best-effort.
+ *
+ * `cloudSyncedAt: null` signifie « le cloud ne connaît pas l'état ACTUEL de
+ * cette clé ». Le filtre exigeait auparavant `mechanicId: { not: null }`, si
+ * bien qu'il ne rattrapait que les ATTRIBUTIONS : une révocation ou une
+ * suspension effectuée pendant une coupure n'était jamais rejouée, et le
+ * mécanicien concerné gardait l'accès à sa PWA indéfiniment. C'est le geste le
+ * plus urgent des trois — on le traite donc en premier.
  */
 export async function retryPendingMechanicSyncs(garageId: string, max = 5): Promise<number> {
   if (!isDesktopInstance()) return 0
   try {
-    const pending = await prisma.licenseKey.findMany({
-      where: { garageId, licenseType: 'mechanic', mechanicId: { not: null }, cloudSyncedAt: null },
-      select: { licenseId: true },
+    // Retirer un accès prime sur en accorder un : les clés qui ne sont plus
+    // actives passent devant, quel que soit le plafond. La priorité est exprimée
+    // par DEUX requêtes, et non par un `orderBy` sur le statut : un tri
+    // alphabétique plaçait « active » avant « revoked » — l'inverse de
+    // l'intention — et aurait resilencieusement changé au premier statut ajouté.
+    const nonActives = await prisma.licenseKey.findMany({
+      where: { garageId, licenseType: 'mechanic', cloudSyncedAt: null, status: { not: 'active' } },
+      select: { licenseId: true, status: true, mechanicId: true },
       take: max,
     })
+    const reste = max - nonActives.length
+    const actives = reste > 0
+      ? await prisma.licenseKey.findMany({
+        // Une clé active SANS titulaire n'a rien à annoncer au cloud.
+        where: { garageId, licenseType: 'mechanic', cloudSyncedAt: null, status: 'active', mechanicId: { not: null } },
+        select: { licenseId: true, status: true, mechanicId: true },
+        take: reste,
+      })
+      : []
+    const pending = [...nonActives, ...actives]
     let done = 0
     for (const p of pending) {
-      const r = await pushMechanicAssignment(p.licenseId)
+      // Un état non actif se propage par le canal STATUT ; une clé active et
+      // attribuée par celui de l'attribution. Une clé active sans titulaire n'a
+      // rien à annoncer.
+      const r = p.status !== 'active'
+        ? await pushMechanicStatus(p.licenseId, p.status)
+        : p.mechanicId
+          ? await pushMechanicAssignment(p.licenseId)
+          : { synced: false as const }
       if (r.synced) done++
     }
     return done

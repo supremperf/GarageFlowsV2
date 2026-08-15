@@ -39,6 +39,9 @@ const cloud = vi.hoisted(() => ({
 }))
 vi.mock('@/lib/sync/cloud-client', () => ({
   isDesktopInstance: () => true,
+  // Preuve d'identité du poste : sans elle la remontée s'arrête avant tout
+  // appel réseau. Simulée ici — sa recherche en base a ses propres tests.
+  garageLicenseToken: async () => 'GF2.jeton-licence-test',
   cloudPost: async (chemin: string, corps: Record<string, unknown>) => {
     cloud.corps.push({ chemin, ...corps })
     if (chemin === '/api/sync/job-photo') {

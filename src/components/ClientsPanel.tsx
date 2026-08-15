@@ -160,9 +160,29 @@ export default function ClientsPanel({ onClose }: { onClose: () => void }) {
       if (!r.ok) { toast.error(d?.error ?? 'Action refusée par le serveur.'); return }
 
       setAcces((a) => ({ ...a, [clientId]: d }))
+
+      // Le portail client est servi par le service en ligne. Tant que l'accès n'y
+      // est pas parvenu, le client se heurtera à un refus de connexion : annoncer
+      // « accès prêt, communiquez le mot de passe » ferait dicter à voix haute un
+      // identifiant pour un service qui ne le connaît pas.
+      const nonPublie = d.publieEnLigne === false
+      const motif: Record<string, string> = {
+        HORS_LIGNE: 'service en ligne injoignable — réessayez avec « Réinitialiser » une fois reconnecté',
+        LICENCE_ABSENTE: 'aucune licence garage active sur ce poste',
+        EMAIL_TAKEN_CLOUD: 'cette adresse a déjà un accès en ligne',
+        REFUS: 'refusé par le service en ligne',
+      }
+      const detail = motif[String(d.motifPublication)] ?? 'cause inconnue'
+
       if (typeof d.motDePasseTemporaireEnClair === 'string') {
         setMotDePasse({ clientId, valeur: d.motDePasseTemporaireEnClair })
-        toast.success('Accès prêt — communiquez le mot de passe maintenant')
+        if (nonPublie) {
+          toast.error(`Accès créé mais PAS ENCORE en ligne : ${detail}. Ne communiquez pas encore le mot de passe.`)
+        } else {
+          toast.success('Accès prêt — communiquez le mot de passe maintenant')
+        }
+      } else if (nonPublie) {
+        toast.error(`Changement enregistré localement mais PAS appliqué en ligne : ${detail}.`)
       } else {
         toast.success(d.actif === false ? 'Accès désactivé' : 'Accès réactivé')
       }

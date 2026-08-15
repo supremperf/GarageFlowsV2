@@ -21,7 +21,7 @@ import { portalSecret } from '@/lib/portal-secret'
 import { publicUrlFor } from '@/lib/public-url'
 import { cheminPortail } from '@/lib/portal/routes'
 import { sendGarageMail } from '@/lib/mail/send-garage-mail'
-import { isDesktopInstance } from '@/lib/sync/cloud-client'
+import { isDesktopInstance, cloudPost, garageLicenseToken } from '@/lib/sync/cloud-client'
 import { logger } from '@/lib/logger'
 
 // POST /api/quotes/[id]/signature-token
@@ -48,34 +48,89 @@ export const POST = withAuth(async (req: Request, { params }: { params: { id: st
   // signature (publication du devis + remontée de l'accord) : c'est une
   // fonctionnalité à part entière, pas un correctif — elle est signalée comme
   // telle plutôt que simulée.
-  if (isDesktopInstance()) {
-    logger.info('[quotes/signature] refus — instance poste, devis non publiable', { quote: params.id })
-    return NextResponse.json({
-      error: 'La signature à distance n’est pas disponible depuis un poste installé : '
-        + 'le lien serait illisible pour votre client. Faites signer le devis sur place, '
-        + 'ou utilisez l’espace en ligne de GarageFlows.',
-      code: 'SIGNATURE_DISTANTE_INDISPONIBLE',
-    }, { status: 409 })
-  }
-
   const quote = await prisma.quote.findFirst({
     where: { id: params.id, garageId: session.user.garageId },
-    select: { id: true, number: true, status: true, clientName: true, clientEmail: true },
+    select: {
+      id: true, number: true, status: true, issueDate: true, validUntil: true,
+      notes: true, taxRate: true, jobId: true,
+      clientName: true, clientEmail: true, clientPhone: true, clientAddress: true,
+      vehicleModel: true, licensePlate: true,
+    },
   })
   if (!quote) return NextResponse.json({ error: 'Devis introuvable' }, { status: 404 })
   if (!['draft', 'sent'].includes(quote.status)) {
     return NextResponse.json({ error: 'Ce devis ne peut plus être signé' }, { status: 409 })
   }
 
-  const token = await new SignJWT({ quoteId: params.id, typ: 'quote-sign', garageId: session.user.garageId })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('7d')
-    .sign(portalSecret())
+  let token: string | null = null
+  let url: string
 
-  // URL PUBLIQUE (envoyée au client pour signer) : jamais l'origine de la
-  // requête — sous Electron elle vaut `http://localhost:4028`.
-  const url = publicUrlFor(cheminPortail(`quote/${token}`))
+  if (isDesktopInstance()) {
+    // ── Poste installé : le devis est PUBLIÉ au cloud, qui émet le lien ──────
+    // Le poste ne peut pas forger le jeton lui-même : il le signerait avec son
+    // secret d'installation, que le cloud ignore. Et lui confier GF_PORTAL_SECRET
+    // poserait le secret du portail sur chaque machine de garage. C'est donc le
+    // cloud — seul détenteur de son secret — qui signe, après avoir reçu le
+    // devis par le canal licence déjà en place (cf. /api/sync/quote).
+    //
+    // Historique : cette branche renvoyait 409 SIGNATURE_DISTANTE_INDISPONIBLE,
+    // parce que le devis n'était répliqué nulle part. Le refus valait mieux que
+    // les trois mensonges d'avant (lien parti, devis « envoyé », écran de
+    // confirmation, pendant que le client lisait « Token invalide »). La voie de
+    // publication existant désormais, le refus n'a plus lieu d'être.
+    const licence = await garageLicenseToken(session.user.garageId)
+    if (!licence) {
+      logger.info('[quotes/signature] poste sans licence garage active', { quote: params.id })
+      return NextResponse.json({
+        error: 'Aucune licence garage active sur ce poste : impossible de publier le devis '
+          + 'pour signature à distance. Faites signer le devis sur place.',
+        code: 'LICENCE_GARAGE_ABSENTE',
+      }, { status: 409 })
+    }
+
+    const lignes = await prisma.quoteLine.findMany({
+      where: { quoteId: params.id },
+      orderBy: { sortOrder: 'asc' },
+      select: {
+        id: true, description: true, quantityTenThousandths: true,
+        unitPriceTenThousandths: true, unitCostTenThousandths: true,
+        isLabor: true, sortOrder: true,
+      },
+    })
+
+    const publication = await cloudPost('/api/sync/quote', {
+      garageLicense: licence,
+      quote,
+      lines: lignes,
+    })
+    if (!publication.ok || typeof publication.data?.url !== 'string') {
+      // On ne marque RIEN comme envoyé et l'on n'expédie aucun courriel : un
+      // lien qui n'existe pas ne doit pas être annoncé au patron.
+      logger.info('[quotes/signature] publication cloud refusée', {
+        quote: params.id, code: publication.code ?? 'REPONSE_INATTENDUE',
+      })
+      const injoignable = publication.code === 'NETWORK' || publication.code === 'TIMEOUT'
+      return NextResponse.json({
+        error: injoignable
+          ? 'GarageFlows en ligne est injoignable : le devis n’a pas pu être publié pour '
+            + 'signature à distance. Votre devis reste enregistré ; réessayez dans un instant.'
+          : 'La publication du devis pour signature à distance a été refusée par GarageFlows '
+            + 'en ligne. Faites signer le devis sur place.',
+        code: publication.code ?? 'PUBLICATION_REFUSEE',
+      }, { status: injoignable ? 503 : 409 })
+    }
+    url = publication.data.url as string
+  } else {
+    token = await new SignJWT({ quoteId: params.id, typ: 'quote-sign', garageId: session.user.garageId })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('7d')
+      .sign(portalSecret())
+
+    // URL PUBLIQUE (envoyée au client pour signer) : jamais l'origine de la
+    // requête — sous Electron elle vaut `http://localhost:4028`.
+    url = publicUrlFor(cheminPortail(`quote/${token}`))
+  }
 
   // Mark quote as sent if it was draft
   if (quote.status === 'draft') {

@@ -156,3 +156,29 @@ export function redactLineCosts<T extends Record<string, unknown>>(
     return copie
   })
 }
+
+/**
+ * Même projection, appliquée aux PLANS DE RÉAPPROVISIONNEMENT.
+ *
+ * `ReorderPlan.estimatedCost` est le coût d'achat de la quantité recommandée :
+ * divisé par `recommendedOrderQty`, il rend le prix d'achat unitaire — donc la
+ * marge, exactement ce que `redactLineCosts` protège sur les documents. Le
+ * contrôle posé sur `/api/finance` et `/api/profitability` se contournait en
+ * demandant au copilote « quelles pièces sont en rupture ? » : la réponse
+ * annonçait « coût estimé 450 € » à n'importe quel rôle authentifié.
+ *
+ * On RETIRE le champ plutôt que de refuser : savoir QUELLES pièces manquent est
+ * un besoin d'atelier légitime pour un mécanicien ; connaître leur prix d'achat
+ * ne l'est pas.
+ */
+export function redactReorderCosts<T extends Record<string, unknown>>(
+  plans: T[] | null | undefined,
+  role: string | null | undefined,
+): T[] {
+  if (can(role, 'financial:read')) return plans ?? []
+  return (plans ?? []).map((p) => {
+    const copie = { ...p }
+    delete copie.estimatedCost
+    return copie
+  })
+}

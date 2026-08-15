@@ -4,7 +4,7 @@ import { fromScaled } from '@/lib/money'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { can } from '@/lib/authz'
+import { can, redactReorderCosts } from '@/lib/authz'
 import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { differenceInDays, format, startOfDay, subMonths } from 'date-fns'
 import { calcTotalHT, roundCents } from '@/lib/billing'
@@ -53,6 +53,13 @@ export const POST = withAuth(async (req) => {
   const today = startOfDay(new Date())
   const todayStr = format(today, 'yyyy-MM-dd')
 
+  // Le panneau affiche un écusson « Chiffres ancrés sur les données · vérifié ».
+  // Cette affirmation n'a de sens que si la réponse porte VRAIMENT des données du
+  // garage. Ces deux drapeaux distinguent les réponses qui n'en portent aucune —
+  // une panne de lecture, ou une demande de précision — de celles qui en portent.
+  let erreurResolveur = false
+  let demandeDePrecision = false
+
   try {
     switch (res.resolver) {
       case 'quotes_pending': {
@@ -87,8 +94,20 @@ export const POST = withAuth(async (req) => {
       case 'low_stock': {
         const report = await stockReport(garageId, today)
         const toOrder = report.plans.filter((p) => p.shouldReorder)
-        res.data = toOrder.slice(0, 20)
-        res.message = toOrder.length ? `${toOrder.length} pièce(s) à réapprovisionner (coût estimé ${report.summary.totalOrderCost} €).` : 'Aucune pièce à commander.'
+        // Le coût d'achat est une donnée financière : il révèle la marge
+        // (GF31-AUD-009). `low_stock` ne figure pas dans FINANCIAL_RESOLVERS —
+        // à raison, savoir quelles pièces manquent est un besoin d'atelier — mais
+        // il en livrait le PRIX. La porte de /api/finance se contournait donc en
+        // demandant au copilote « quelles pièces sont en rupture ? ».
+        // Remède déjà retenu pour les lignes de documents : retirer le champ,
+        // pas refuser la réponse.
+        const voitLesCouts = can(session.user.role, 'financial:read')
+        res.data = redactReorderCosts(toOrder.slice(0, 20) as unknown as Record<string, unknown>[], session.user.role)
+        res.message = toOrder.length
+          ? (voitLesCouts
+            ? `${toOrder.length} pièce(s) à réapprovisionner (coût estimé ${report.summary.totalOrderCost} €).`
+            : `${toOrder.length} pièce(s) à réapprovisionner.`)
+          : 'Aucune pièce à commander.'
         break
       }
       case 'forecast': {
@@ -126,6 +145,9 @@ export const POST = withAuth(async (req) => {
       case 'diagnostic': {
         const result = diagnose({ symptoms: res.slots.text ? [res.slots.text] : [], obdCodes: res.slots.obdCode ? [res.slots.obdCode] : [] })
         res.data = result
+        // Sans symptôme ni code, il n'y a pas de diagnostic : c'est une demande
+        // de précision, pas une réponse tirée des données.
+        demandeDePrecision = result.causes.length === 0
         res.message = result.causes.length ? `Cause la plus probable : ${result.causes[0].name} (${result.causes[0].probability}%).` : 'Précisez un symptôme ou un code défaut.'
         break
       }
@@ -154,6 +176,7 @@ export const POST = withAuth(async (req) => {
     }
   } catch (e) {
     console.error('[copilot] resolver error', e)
+    erreurResolveur = true
     res.message = 'Erreur lors de la récupération des données.'
   }
 
@@ -163,7 +186,42 @@ export const POST = withAuth(async (req) => {
   // blob would let a fabricated figure launder through an incidental internal
   // number (an id, a date, leadTimeDays, a per-row reorderPoint, …).
   const phrased = await phraseAnswer({ query: parsed.data.query, facts: res.message ?? '', fallback: res.message ?? '' }, resolveLlmProvider())
-  return NextResponse.json({ ...res, phrasing: phrased.text })
+
+  // ── Ce que l'écusson « vérifié » a le droit d'affirmer ──────────────────────
+  //
+  // Il affirmait jusqu'ici la seule chose que le client savait voir : que le
+  // champ `phrasing` existait. Or il existe TOUJOURS sur ce chemin. L'écusson
+  // s'affichait donc sous « Erreur lors de la récupération des données. », sous
+  // « Intention reconnue mais non encore câblée. » et sous une demande de VIN —
+  // des phrases qui ne portent aucun chiffre du garage. Le seul signal de
+  // confiance de l'interface ne signalait rien.
+  //
+  // On ne peut pas non plus se fier à `phrased.grounded` : il vaut `false`
+  // précisément quand le garde-fou a REJETÉ une reformulation inventée et rendu
+  // le texte déterministe — c'est-à-dire au moment où la réponse est la plus
+  // sûre. S'y fier inverserait le signal.
+  //
+  // Le bon critère est celui-ci : un résolveur a-t-il réellement lu les données
+  // de CE garage, et le texte affiché est-il soit ce calcul déterministe, soit
+  // une reformulation qui a passé le contrôle d'ancrage ?
+  //
+  // Des quatre clauses, deux seulement décident aujourd'hui : `demandeDePrecision`
+  // et `res.data != null`. Une épreuve par mutation le montre — sur une panne
+  // comme sur une demande de VIN, `res.data` n'est de toute façon jamais assignée.
+  // `erreurResolveur` et le contrôle de type sont conservés délibérément : ils
+  // énoncent la règle, et couvrent le jour où un résolveur posera ses données
+  // AVANT de lever, ou basculera son type après les avoir posées.
+  const porteDesDonnees =
+    !erreurResolveur && !demandeDePrecision && res.type === 'answer' && res.data != null
+
+  return NextResponse.json({
+    ...res,
+    phrasing: phrased.text,
+    // `source` est propagée pour que la provenance cesse d'être indevinable :
+    // 'fallback' = calcul déterministe, 'llm' = reformulation ancrée acceptée,
+    // 'fallback_ungrounded' = reformulation rejetée, texte déterministe rendu.
+    ancrage: { verifie: porteDesDonnees, source: phrased.source },
+  })
 })
 
 // ── Shared helpers ────────────────────────────────────────────────────────────

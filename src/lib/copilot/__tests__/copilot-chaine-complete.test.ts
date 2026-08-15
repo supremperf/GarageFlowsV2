@@ -31,9 +31,35 @@ const PAGE_CODE = sansCommentaires(PAGE)
 const AIGUILLAGE = (() => {
   const debut = PAGE_CODE.indexOf('handleCopilotAction')
   expect(debut, 'le point d’atterrissage du copilote a disparu').toBeGreaterThan(-1)
-  const fin = PAGE_CODE.indexOf('}, [openCreateModal])', debut)
-  return PAGE_CODE.slice(debut, fin > debut ? fin : debut + 1500)
+  // La borne était `}, [openCreateModal])` avec repli SILENCIEUX sur 1500
+  // caractères arbitraires : ajouter une dépendance au useCallback faisait
+  // disparaître la borne sans que rien ne le signale, et le garde se mettait à
+  // inspecter une fenêtre qui n'a plus de sens. On tolère donc n'importe quelle
+  // liste de dépendances, mais on REFUSE de continuer si la fin est introuvable.
+  const fin = PAGE_CODE.slice(debut).search(/\}\s*,\s*\[[^\]]*\]\s*\)/)
+  expect(fin, 'la fin de handleCopilotAction est introuvable : ce garde inspecterait une fenêtre arbitraire')
+    .toBeGreaterThan(-1)
+  return PAGE_CODE.slice(debut, debut + fin)
 })()
+
+/**
+ * Corps EXACT d'une branche : de son étiquette jusqu'à la branche suivante.
+ *
+ * Une fenêtre de longueur fixe ne convient pas : les cinq branches tiennent sur
+ * une ligne d'une cinquantaine de caractères, si bien qu'une fenêtre de 120
+ * débordait systématiquement sur le corps de la branche SUIVANTE. Vider
+ * `case 'order_parts'` laissait donc le garde au vert — il lisait l'ouverture
+ * d'écran de `send_reminder`. Seule la dernière branche était réellement
+ * protégée.
+ */
+function corpsDeLaBranche(id: string): string | null {
+  const etiquette = `case '${id}'`
+  const debut = AIGUILLAGE.indexOf(etiquette)
+  if (debut === -1) return null
+  const apres = AIGUILLAGE.slice(debut + etiquette.length)
+  const fin = apres.search(/case\s+'|default\s*:|\}/)
+  return fin === -1 ? apres : apres.slice(0, fin)
+}
 
 const ACTIONS = INTENTS.filter((i) => i.kind === 'action')
 
@@ -51,11 +77,25 @@ describe('étape 15 — toute intention d’ACTION mène à un écran réel', ()
   })
 
   it('chaque destination ouvre RÉELLEMENT quelque chose', () => {
-    // Un `case` vide serait aussi mort qu'un `case` absent.
+    // Un `case` vide serait aussi mort qu'un `case` absent. Chaque branche est
+    // lue SEULE : sinon, une branche vide emprunte l'ouverture d'écran de sa
+    // voisine et le garde ne protège plus que la dernière.
     for (const { id } of ACTIONS) {
-      const pos = AIGUILLAGE.indexOf(`case '${id}'`)
-      const suite = AIGUILLAGE.slice(pos, pos + 120)
-      expect(suite, `« ${id} » n’ouvre aucun écran`).toMatch(/set\w+\(true\)|openCreateModal\(/)
+      const corps = corpsDeLaBranche(id)
+      expect(corps, `« ${id} » n’a aucune branche d’aiguillage`).not.toBeNull()
+      expect(corps as string, `« ${id} » n’ouvre aucun écran : le garagiste confirmerait dans le vide`)
+        .toMatch(/set\w+\(true\)|openCreateModal\(/)
+    }
+  })
+
+  it('le découpage isole bien chaque branche — sinon ce garde ne prouverait rien', () => {
+    // Épreuve du garde par lui-même : le corps d'une branche ne doit jamais
+    // contenir l'ouverture d'écran d'une AUTRE. C'est exactement ce que la
+    // fenêtre de 120 caractères laissait passer.
+    const ouvertures = ACTIONS
+      .map(({ id }) => [id, (corpsDeLaBranche(id) ?? '').match(/set\w+\(true\)|openCreateModal\(/g) ?? []] as const)
+    for (const [id, trouvees] of ouvertures) {
+      expect(trouvees.length, `la branche « ${id} » déborde sur sa voisine`).toBe(1)
     }
   })
 

@@ -2,6 +2,7 @@
  * Predictive reorder planning — pure, deterministic.
  */
 import { forecast } from '@/lib/forecast'
+import { fromCents, lineCents, toCents } from '@/lib/money'
 import { mean, stddev } from '@/lib/forecast'
 import type {
   ReorderPlan,
@@ -10,6 +11,18 @@ import type {
   Urgency,
 } from './types'
 
+/**
+ * Arrondi à deux décimales pour les grandeurs NON MONÉTAIRES de ce module :
+ * consommation moyenne, taux journalier, jours avant rupture.
+ *
+ * Il ne doit JAMAIS servir à de l'argent. `Math.round(n * 100) / 100` est naïf
+ * face au bruit IEEE-754 — 1,005 € y donne 1,00 € là où la couche monétaire
+ * centrale rend 1,01 € (`toCents` ajoute une tolérance de 1e-7 centime APRÈS
+ * passage en centimes, précisément pour ça). Les deux montants de ce fichier
+ * passent donc par `lineCents`/`toCents`, comme partout ailleurs dans le
+ * produit : deux écrans affichant le même coût estimé doivent afficher le même
+ * chiffre.
+ */
 function round2(n: number): number {
   return Math.round(n * 100) / 100
 }
@@ -62,7 +75,8 @@ export function computeReorderPlan(item: StockItemInput, consumption: number[]):
     minStock,
   )
   const recommendedOrderQty = shouldReorder ? ceilToPack(targetStock - item.currentStock, packSize) : 0
-  const estimatedCost = round2(recommendedOrderQty * item.unitCost)
+  // Argent : couche centrale obligatoire (quantité × prix unitaire → centimes exacts).
+  const estimatedCost = fromCents(lineCents(item.unitCost, recommendedOrderQty))
 
   const bestOrderInDays =
     daysToStockout === null ? null : Math.max(0, Math.floor(daysToStockout - leadTimeDays))
@@ -120,7 +134,9 @@ export function planReorders(
     summary: {
       itemsAnalyzed: plans.length,
       itemsToReorder: toReorder.length,
-      totalOrderCost: round2(toReorder.reduce((s, p) => s + p.estimatedCost, 0)),
+      // Somme en CENTIMES ENTIERS puis conversion unique : additionner des
+      // euros flottants réintroduirait l'erreur que la couche centrale élimine.
+      totalOrderCost: fromCents(toReorder.reduce((s, p) => s + toCents(p.estimatedCost), 0)),
       currency,
     },
   }

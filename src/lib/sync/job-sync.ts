@@ -14,9 +14,13 @@
  * Ne lève jamais. Ne bloque jamais l'appelant.
  */
 import { prisma } from '@/lib/db'
-import { cloudPost, isDesktopInstance } from '@/lib/sync/cloud-client'
+import { cloudPost, isDesktopInstance, garageLicenseToken } from '@/lib/sync/cloud-client'
 import { logger } from '@/lib/logger'
 import { shortId } from '@/lib/sync/garage-auth'
+import { pullQuoteSignatures } from '@/lib/sync/quote-return'
+import { pushGarageInvoices } from '@/lib/sync/invoice-sync'
+import { pullGarageAppointments } from '@/lib/sync/appointment-sync'
+import { pullGarageTickets } from '@/lib/sync/ticket-sync'
 import {
   syncWindow, SYNC_MAX_JOBS, SYNC_MAX_TOMBSTONES, shouldApplyCloudExecution, clockOffsetMs,
   type SyncJob,
@@ -44,15 +48,9 @@ const MAX_PHOTO_PULLS_PER_RUN = 10
  */
 const CURSOR_OVERLAP_MS = 60_000
 
-/** Licence GARAGE active servant de preuve d'identité au poste. */
-async function garageLicenseToken(garageId: string): Promise<string | null> {
-  const license = await prisma.licenseKey.findFirst({
-    where: { garageId, status: 'active', licenseType: { not: 'mechanic' } },
-    select: { token: true },
-    orderBy: { createdAt: 'desc' },
-  })
-  return license?.token ?? null
-}
+// `garageLicenseToken` vit désormais dans cloud-client.ts : la publication de
+// devis en a besoin elle aussi, et « quelle licence prouve ce garage » ne doit
+// avoir qu'UNE définition.
 
 /** Recul du curseur d'un flux, ou `null` si ce flux n'a encore rien reçu. */
 function recule(d: Date | null | undefined): Date | null {
@@ -423,6 +421,45 @@ async function runNow(garageId: string, enchainement = 0): Promise<void> {
   try {
     const res = await syncGarageJobs(garageId)
     reste = res.resteAPuiser === true
+
+    // Accords clients sur les devis publiés, puis remontée des factures — même
+    // cycle, jamais un second. Chacun dans son propre try : un cloud qui refuse
+    // l'une de ces voies ne doit pas empêcher les interventions de remonter, ni
+    // faire croire à un échec global.
+    try {
+      const devis = await pullQuoteSignatures(garageId)
+      if (devis.resteAPuiser) reste = true
+    } catch (e) {
+      logger.info('[sync] rapatriement des accords devis ignoré ce passage', {
+        motif: e instanceof Error ? e.message.slice(0, 80) : 'inconnu',
+      })
+    }
+    try {
+      // Demandes de rendez-vous du portail : sans ce rapatriement, la table
+      // reste vide sur un poste et le garage croit qu'aucun client n'en demande.
+      await pullGarageAppointments(garageId)
+    } catch (e) {
+      logger.info('[sync] rapatriement des rendez-vous ignoré ce passage', {
+        motif: e instanceof Error ? e.message.slice(0, 80) : 'inconnu',
+      })
+    }
+    try {
+      // Messagerie client : même silence sans elle — le panneau « Messages »
+      // restait vide et le garage croyait qu'aucun client ne lui écrivait.
+      await pullGarageTickets(garageId)
+    } catch (e) {
+      logger.info('[sync] rapatriement des messages ignoré ce passage', {
+        motif: e instanceof Error ? e.message.slice(0, 80) : 'inconnu',
+      })
+    }
+    try {
+      const factures = await pushGarageInvoices(garageId)
+      if (factures.resteAPuiser) reste = true
+    } catch (e) {
+      logger.info('[sync] remontée des factures ignorée ce passage', {
+        motif: e instanceof Error ? e.message.slice(0, 80) : 'inconnu',
+      })
+    }
     // `skipped` = instance non-Desktop : il n'y a rien à synchroniser, ce n'est
     // pas une attente.
     if (!res.skipped) dernierResultat.set(garageId, res.synced ? 'ok' : 'attente')

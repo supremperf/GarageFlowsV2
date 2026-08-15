@@ -45,7 +45,16 @@ export interface ClassifyResult extends LlmClassification {
 }
 
 export interface PhraseInput {
-  /** The user's question — for tone/context and as an allowed number source. */
+  /**
+   * The user's question — for tone and context ONLY.
+   *
+   * NOT an allowed number source, contrary to what this comment claimed until
+   * the 15/08/2026. `phrase.ts:23` grounds against `facts` alone, and the header
+   * of that file states why: a number typed by the user must never become an
+   * allow-list entry that launders a fabrication. The doc said the opposite of
+   * the code — an invitation to "fix" the code to match it, which would have
+   * removed the guarantee.
+   */
   query: string
   /** Deterministic facts the answer MUST stick to (numbers & text). */
   facts: string

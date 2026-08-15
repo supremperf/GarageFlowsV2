@@ -61,7 +61,13 @@ export const POST = withAuth(async (req, { params }: { params: { lid: string } }
     }
     await tx.licenseKey.update({
       where: { id: license.id },
-      data: { mechanicId, assignedAt: now, assignedBy: session.user.id, recordMac: newMac },
+      // `cloudSyncedAt: null` — la clé change de titulaire, le cloud ne connaît
+      // donc plus son état. Sans cette remise à zéro, une RÉATTRIBUTION gardait
+      // l'horodatage de l'attribution précédente : l'écran affichait
+      // « Synchronisée » alors que le cloud associait encore la clé à l'ancien
+      // mécanicien, et le rattrapage — qui filtre sur `cloudSyncedAt: null` —
+      // ne la voyait jamais. (`cloudSyncedAt` n'entre pas dans `recordMac`.)
+      data: { mechanicId, assignedAt: now, assignedBy: session.user.id, recordMac: newMac, cloudSyncedAt: null },
     })
     await tx.mechanicLicenseAssignment.create({
       data: {

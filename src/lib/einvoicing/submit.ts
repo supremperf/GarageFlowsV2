@@ -123,6 +123,35 @@ export function peutEtreDeclareeNonParvenue(t: TransmissionEtat): boolean {
   return t.status === 'unknown' || estAbandonnee(t)
 }
 
+/**
+ * Une facture dans cet état peut-elle partir vers la plateforme agréée ?
+ *
+ * Un brouillon n'est pas un document opposable : rien à transmettre. Une facture
+ * ANNULÉE non plus — la déclarer créerait une créance que le garage a précisément
+ * retirée.
+ *
+ * Exportée parce que DEUX chemins mènent à l'envoi depuis le 15/08/2026 : la
+ * route de session (déploiement serveur) et le tunnel licence `/api/sync/
+ * einvoicing` (poste installé). Un poste est un client comme un autre : la
+ * garantie ne peut pas reposer sur le contrôle qu'il veut bien faire avant
+ * d'appeler. Les deux chemins interrogent donc cette fonction — recopier la
+ * liste des états refusés garantirait qu'un jour l'un accepte ce que l'autre
+ * refuse.
+ *
+ * Rend `null` quand la facture est transmissible.
+ */
+export function motifNonTransmissible(status: string | null | undefined):
+  { code: 'INVOICE_DRAFT' | 'INVOICE_CANCELLED'; message: string } | null {
+  switch (status ?? 'draft') {
+    case 'draft':
+      return { code: 'INVOICE_DRAFT', message: 'Une facture en brouillon ne peut pas être transmise. Validez-la d’abord.' }
+    case 'cancelled':
+      return { code: 'INVOICE_CANCELLED', message: 'Une facture annulée ne peut pas être transmise à la plateforme.' }
+    default:
+      return null
+  }
+}
+
 /** Une transmission « en cours » qu'aucun processus ne peut plus faire avancer. */
 function estAbandonnee(t: TransmissionEtat | null): boolean {
   if (!t || t.status !== 'submission_pending' || t.externalId) return false

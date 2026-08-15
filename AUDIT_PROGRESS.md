@@ -1589,7 +1589,7 @@ avant le même refus. Hors production PWA, repli sur le défaut sans blocage.
 
 ---
 
-## 15/08/2026 — Mise en production de la version auditée
+## 15/08/2026 — Mise en production de la version auditée (instantané figé)
 
 Objectif : que le code portant **3 296 tests verts** soit exactement celui qui
 tourne en production — pas un code rebâti après coup.
@@ -1764,3 +1764,531 @@ portant les deux ancres — livraison qui devrait elle-même être signée avec
 `gf-update-2026`. Une nouvelle clé n'ouvre que l'avenir.
 
 Vérification : 3296 verts / 0 rouge / 28 ignorés (3324) · tsc 0 · 13 gardes.
+
+---
+
+## 15/08/2026 — Budget de performance relevé, sur décision de l'exploitant
+
+La campagne avait **refusé** de relever ce budget, au motif qu'il mettrait le
+contrôle au vert sans alléger le produit. L'exploitant a tranché autrement pour
+débloquer `release:publish`. La décision lui appartient ; elle est consignée ici
+et dans `perf-budget.json` telle qu'elle est — un relèvement, pas une correction.
+
+| | Avant | Après |
+|---|---|---|
+| Mesure réelle | 3 452 669 o (3,293 MiB) | **inchangée** |
+| Budget | 3 145 728 o (3,00 MiB) | 3 625 984 o (3,46 MiB) |
+| Marge | dépassement de +9,8 % | +5,0 % de marge |
+
+Marge de 5 % retenue plutôt que les ~16 % de la référence d'origine : assez pour
+absorber une variation mineure entre deux builds, assez serrée pour qu'une vraie
+régression déclenche encore. Un budget large aurait transformé le contrôle en
+décoration.
+
+Le plus gros bloc reste à 322,5 KiB pour 512 de budget — 37 % de marge, acquis
+par le découpage dynamique de la campagne. C'est le **total** qui n'a pas bougé,
+et le réduire suppose d'alléger les dépendances, pas de redécouper.
+
+`perf-budget.json` porte désormais les champs `raisedOn`, `raisedFrom` et
+`raisedWhy` : quiconque relira ce budget saura qu'il a été déplacé, quand, et que
+le produit n'a pas changé. Statut au rapport final : **BUDGET RELEVÉ**, jamais
+« corrigé ».
+
+---
+
+## 15/08/2026 — LOT 3 : la facturation électronique cesse de refuser les postes
+
+### Le défaut
+
+Quatre routes répondaient `501 SERVER_ONLY` dès que l'installation tournait sur
+un poste : configuration de la plateforme agréée, test de connexion, envoi d'une
+facture, suivi du statut. Le motif technique était **exact** — les quatre
+modèles d'e-facturation (`GarageEInvoiceConnection`, `EInvoiceTransmission`,
+`EInvoiceEvent`, `EInvoiceAuditEvent`) n'existent que dans le schéma PostgreSQL,
+dérogation documentée — mais la conséquence l'était tout autant : la
+facturation électronique était **annoncée et inaccessible à tous les garages
+travaillant sur poste**, c'est-à-dire à tous.
+
+Retirer la garde `isPostgresDatabase()` aurait fait disparaître le 501 en le
+remplaçant par un 500 opaque (`serverPrisma()` lève sur SQLite). Ce n'était pas
+la garde qu'il fallait corriger, c'était l'architecture.
+
+### La correction
+
+```
+Poste ──[licence GF2]──▶ /api/sync/einvoicing ──▶ PostgreSQL ──▶ adaptateur ──▶ plateforme
+```
+
+| Fichier | Rôle |
+|---|---|
+| `src/app/api/sync/einvoicing/route.ts` *(nouveau)* | Tunnel authentifié par licence GARAGE, 8 actions |
+| `src/lib/einvoicing/desktop-bridge.ts` *(nouveau)* | Transport côté poste, aucune logique métier |
+| `src/lib/einvoicing/test-connection.ts` *(nouveau)* | Test de connexion extrait, partagé par les deux chemins |
+| `src/lib/einvoicing/submit.ts` | `motifNonTransmissible()` exporté et partagé |
+| `connection/route.ts`, `connection/test/route.ts`, `invoices/[id]/submit/route.ts` | Délèguent au lieu de refuser |
+
+La garde `isPostgresDatabase()` est **conservée** partout : seul ce qu'elle
+déclenche a changé. Les identifiants de plateforme restent chiffrés au repos
+côté cloud et ne redescendent jamais en clair.
+
+### Trois divergences trouvées en chemin
+
+Le tunnel est un canal ouvert à des postes : un poste est donc un client comme
+un autre, et une garantie qui repose sur le contrôle qu'il veut bien faire avant
+d'appeler n'est pas une garantie. Trois verrous de la route de session
+manquaient côté tunnel et ont été ajoutés :
+
+- `outgoingEnabled` sur `invoice.submit` — sans lui, un poste émettait malgré
+  l'interrupteur fermé ;
+- `connectionsEnabled` sur `connection.delete` — on pouvait **détruire** des
+  identifiants sans pouvoir les ressaisir, le PUT étant fermé ;
+- refus des factures en brouillon et annulées — transmettre une facture annulée
+  créerait à la plateforme agréée une créance que le garage a précisément
+  retirée.
+
+Les drapeaux consultés sont ceux du **service**, jamais ceux du poste : un poste
+n'a pas les variables `EINVOICING_*` (le reset ne les provisionne jamais), et
+les lire localement aurait rendu la délégation inatteignable.
+
+### Vérification
+
+| Élément | Mesure |
+|---|---|
+| `status: 501` dans `src/app/api/einvoicing/**` | **0** (garde de corpus dédiée) |
+| Tests ajoutés | 30 — `einvoicing-tunnel` (13), `desktop-bridge` (17) |
+| Suite complète | 3 368 verts / 0 rouge / 28 ignorés (3 396) |
+| `tsc --noEmit` | 0 erreur |
+| Gardes `check:consistency` | 13 vertes |
+
+**Épreuve par mutation** — quatre verrous retirés un à un, tests rejoués, code
+restauré à l'identique (comparaison octet à octet) :
+
+| Verrou retiré | Résultat |
+|---|---|
+| `outgoingEnabled` | 1 échec |
+| refus brouillon/annulée | 2 échecs |
+| `connectionsEnabled` | 1 échec |
+| portée garage des transmissions | 1 échec |
+
+### Statut
+
+`FIXED_AND_VERIFIED` pour la chaîne poste → cloud : refus, portée garage,
+identité par licence, verrous et relais sont exercés par des tests qui échouent
+quand le code cesse de les honorer.
+
+`BLOCKED_EXTERNAL_REQUIREMENT` pour le dernier maillon : l'émission **réelle**
+vers une plateforme de dématérialisation partenaire exige un compte sur une
+telle plateforme. Aucun n'est disponible. Ce maillon reste `NOT_VERIFIED` et
+n'est pas présenté autrement.
+
+### Hors périmètre, constaté et non corrigé
+
+Trois `501` subsistent dans l'application, tous de cause différente — le
+stockage photo (`GF_PHOTOS_DIR`) : `mechanics/[id]/avatar`, `photos/[...path]`,
+`sync/mechanic-avatar`. Sur un poste packagé, Electron fixe toujours cette
+variable et crée le dossier (`electron/main.js`) : ces gardes ne se déclenchent
+jamais, elles sont légitimement fail-closed. Côté cloud, la variable n'est pas
+provisionnée et un stockage sur disque y serait vain (système de fichiers
+éphémère) : les avatars poussés par un poste reçoivent un 501, journalisé, sans
+boucle de relance. Corriger cela suppose un stockage objet (Vercel Blob, S3),
+c'est-à-dire un service externe à provisionner —
+`BLOCKED_EXTERNAL_REQUIREMENT`, pas un défaut de code.
+
+---
+
+## 15/08/2026 — LOT 4 : le Copilot, audité puis corrigé
+
+### La découverte qui commande tout le reste
+
+`resolveLlmProvider()` rend `null` **en dur** (`src/lib/copilot-llm/provider.ts`).
+Aucune variable d'environnement n'est lue — zéro `process.env` dans tout
+`src/lib/copilot-llm/`. Le Copilot livré est un **routeur déterministe par
+mots-clés** ; `phrasing === message`, toujours.
+
+Ce n'est pas un défaut : c'est un point d'extension documenté, et le repli sert
+au garagiste une vraie réponse chiffrée. Mais il classe tout le reste : les
+faiblesses du prompt et du garde-fou d'ancrage sont **latentes**, pas
+exploitables. Les présenter comme des failles ouvertes aurait été faux.
+
+Statut du fournisseur LLM réel : **`BLOCKED_EXTERNAL_REQUIREMENT`** — aucune clé
+`ANTHROPIC_API_KEY` n'est configurée, et le manifeste rattache cette variable au
+seul `plate-ocr`.
+
+### Méthode
+
+Cinq lecteurs indépendants (fournisseur, isolation, injection, écritures,
+couverture), puis un **réfutateur par dimension** chargé de démolir chaque
+constat en relisant le code lui-même. Sur **43 défauts allégués, 12 ont
+survécu** — les 31 autres décrivaient du code exact mais des conséquences
+inatteignables. Le tri comptait autant que la recherche.
+
+### Corrigé et vérifié
+
+| Défaut | Correction | Épreuve par mutation |
+|---|---|---|
+| **P2 — Le coût d'achat fuyait** : « quelles pièces sont en rupture ? » livrait `estimatedCost` et « coût estimé 450 € » à tout rôle authentifié ; `/api/stock-forecast` faisait de même, sans aucun contrôle | `redactReorderCosts` (authz.ts), appliqué au copilote **et** à la route jumelle — on retire le champ, pas la réponse (GF31-AUD-009) | 3 mutations → 3 échecs |
+| **P3 — L'écusson « vérifié » ne signalait rien** : affiché dès que `phrasing` existait, donc aussi sous une erreur de base | Le serveur rend son verdict (`ancrage.verifie`) et la provenance (`source`) ; le panneau le lit | 5 mutations → 3 détectées, 2 clauses défensives assumées |
+| **P3 — Montant calculé hors couche monétaire** : `round2` maison sur `estimatedCost` et `totalOrderCost` (1,005 € → 1,00 € au lieu de 1,01 €) | `lineCents`/`toCents`, somme en centimes entiers ; `round2` conservé pour les grandeurs NON monétaires | 3 tests dédiés |
+| **P1 — Un test qui ne testait pas** : la fenêtre de 120 caractères de `copilot-chaine-complete` débordait sur la branche suivante ; vider 4 des 5 actions du copilote ne rougissait rien | Découpage du corps réel de chaque branche + refus de se rabattre en silence quand la borne disparaît | branche du milieu vidée → 2 échecs (0 avant) |
+| **P2 — Porte financière prouvée sur 1 résolveur sur 4** | Les quatre sont éprouvés contre RECEPTIONIST et MECHANIC | retrait d'un résolveur de la liste → 2 échecs |
+| **P1 — Isolation garage prouvée sur 2 résolveurs sur 11** | Devis, meilleurs clients, marge, mécaniciens, retards — croisés avec un second garage, plus le contrôle symétrique | `garageId` retiré d'un `where` → échec |
+| **P3 — Le type promettait l'inverse du code** : `PhraseInput.query` documenté comme « allowed number source » alors que l'ancrage porte sur les faits seuls | Commentaire corrigé — il invitait à « réparer » le code en supprimant la garantie | — |
+
+### Consigné, non corrigé : les limites du garde-fou d'ancrage
+
+Mesurées en exécutant `isGrounded`, pas supposées, et inscrites dans
+`ground.ts` : il ne vérifie ni la **polarité** (« Aucun devis en attente » face à
+« 12 devis en attente » → fondé), ni l'**unité** (250 % pour 250 €), ni
+l'**appariement** chiffre ↔ grandeur, et sa tolérance est **relative** (999 €
+d'écart acceptés sur un million).
+
+Ce garde protège d'un montant **inventé** — ce pour quoi il a été écrit — pas
+d'un mensonge construit avec les bons chiffres. Rien de tout cela n'est
+atteignable sans fournisseur câblé. **Ces quatre points sont à traiter AVANT
+d'en câbler un**, sans quoi l'écusson « vérifié » couvrirait des réponses
+fausses. Ils ne sont pas « corrigés » ici : les corriger à l'aveugle, sans
+fournisseur pour éprouver les faux positifs, aurait produit une garantie de
+façade.
+
+### Vérification
+
+Suite : **3 435 verts / 0 rouge / 28 ignorés (3 463)** · `tsc` 0 · ESLint 0 ·
+13 gardes vertes. **+67 tests** sur ce lot.
+
+### Reste dû
+
+`GET /api/parts` expose `unitCost` (prix d'achat) à tout rôle authentifié, comme
+le faisaient les deux surfaces corrigées ici. Ce n'est pas traité : le champ
+irrigue la construction des devis et le tableau de bord, et l'en retirer est une
+**décision de produit**, pas un correctif évident. Signalé, mesuré, en attente
+d'arbitrage.
+
+---
+
+## 15/08/2026 — LOT 2 : ce qui change entre le cloud et un poste installé
+
+### Une garantie qu'on croyait perdue, et qui ne l'est pas
+
+Cinq routes posent un verrou de ligne (`FOR UPDATE`, `pg_advisory_xact_lock`)
+UNIQUEMENT `if (isPostgresDatabase())`. Sur un poste, ces verrous sont absents :
+la garantie semblait s'évaporer selon le déploiement.
+
+Elle a été **mesurée**, pas déduite. Deux transactions concurrentes lisant puis
+écrivant la même facture, dans les deux configurations possibles :
+
+```
+journal_mode = delete   busy_timeout = 5000
+un seul client, deux transactions  → la seconde lit APRÈS le commit → renonce
+deux connexions distinctes         → la seconde lit APRÈS le commit → renonce
+```
+
+Prisma ouvre ses transactions SQLite en `BEGIN IMMEDIATE` ; la seconde attend au
+lieu de lire une valeur périmée. PostgreSQL exige un verrou explicite parce qu'il
+est MVCC — les lecteurs n'y bloquent pas les écrivains. **Le code est correct tel
+qu'il est écrit** ; les cinq gardes ne sont pas un oubli. Ce résultat vaut tant
+que le lire-puis-écrire reste DANS la transaction.
+
+### Méthode
+
+Quatre lecteurs (verrous, hors ligne, promesses d'écran, routes internes) puis un
+réfutateur par dimension. **24 défauts allégués, 20 confirmés, 4 réfutés.**
+
+### Corrigé et vérifié
+
+**1. Régression que j'avais introduite au LOT 3.** `PUT /api/einvoicing/connection`
+testait `connectionsEnabled` AVANT de déléguer au tunnel. Un poste n'a jamais les
+variables `EINVOICING_*` : le drapeau y vaut toujours faux, donc **aucun garage
+installé ne pouvait enregistrer sa plateforme** — alors que `DELETE`, lui,
+déléguait avant le contrôle, si bien qu'on pouvait détruire une connexion sans
+pouvoir la ressaisir. J'avais écrit ce raisonnement dans la route `submit` sans
+l'appliquer ici. Corrigé, plus l'action `flags.get` : l'onglet affiche désormais
+les drapeaux du SERVICE, et dit « service injoignable » au lieu de
+« fonctionnalité désactivée ». *Mutation : l'ordre remis comme avant → 1 échec.*
+
+**2. La sauvegarde n'était pas restaurable.** `runBackup()` copiait le fichier de
+base avec `fs.copyFileSync`, toutes les heures, depuis le processus Electron,
+pendant que le serveur écrivait. Le mode de journalisation mesuré est `delete` :
+les pages modifiées vont dans le fichier PRINCIPAL pendant un commit, l'état
+antérieur dans `-journal`. Une copie prise à cet instant est déchirée — elle a
+l'air d'une sauvegarde et ne se restaure pas.
+
+Remplacée par `POST /api/internal/backup`, qui exécute `VACUUM INTO` depuis le
+processus qui DÉTIENT la connexion. **Aucun repli par copie d'octets** : une
+sauvegarde manquante et signalée vaut mieux qu'une sauvegarde présente et
+illisible. Deux faux succès corrigés au passage — le bouton « Sauvegarder »
+répondait `success: true` sans attendre, et la sauvegarde pré-mise à jour ne
+faisait que démarrer avant que l'installation ne commence.
+
+`pre-migration-backup.js` copiait `-wal` et `-shm`, qui n'existent jamais en mode
+`delete`, et **pas** `-journal`, qui existe. Corrigé. *Mutations : 4 échecs.*
+
+**3. Une clé mécanicien révoquée hors ligne gardait son accès.** Deux défauts
+enchaînés : une RÉATTRIBUTION ne remettait pas `cloudSyncedAt` à null — l'écran
+affichait « Synchronisée » alors que le cloud associait encore la clé à l'ancien
+mécanicien — et le rattrapage ne rejouait QUE les attributions, jamais les
+révocations. Un mécanicien licencié pendant une panne ADSL conservait sa PWA
+indéfiniment. `cloudSyncedAt` signifie désormais « le cloud connaît l'état ACTUEL
+de cette clé » ; le rattrapage traite les deux canaux, et **retirer un accès
+passe avant en accorder un**. *Mutations : 3 sur 3 détectées.*
+
+### Vérification
+
+Suite : **3 457 verts / 0 rouge / 28 ignorés (3 485)** · `tsc` 0 · ESLint 0 ·
+13 gardes vertes. **+22 tests** sur ce lot.
+
+### Reste dû — 17 constats confirmés, non traités
+
+Les plus sérieux, dans l'ordre où je les traiterais :
+
+- **« Ouvrir un accès » à l'espace client, sur un poste**, crée un `PortalUser`
+  dans le SQLite local et dicte au garagiste un mot de passe à communiquer — pour
+  un service qui ne le connaîtra jamais : aucune route `/api/sync/*` ne réplique
+  ce modèle, et le serveur du poste n'écoute que sur `127.0.0.1`. P1.
+- **Le lien de connexion envoyé au client ne porte pas `?garage=<slug>`.**
+- **Les boutons « Messages » et « Rendez-vous »** ouvrent, sur un poste, des
+  panneaux qui ne peuvent pas fonctionner.
+- **Un poste installé pendant une coupure réseau se verrouille 30 s après
+  l'ouverture** — `last_online.json` n'est écrit que dans la branche « en ligne ».
+- **Le démarrage tient pour « prêt » n'importe quel serveur répondant sur le port
+  4028**, sans vérifier que c'est le sien.
+- **Le champ `recoverable` d'un échec de migration** est calculé par la route puis
+  jeté par le poste : un échec rattrapable est présenté comme définitif.
+- **Le panneau e-facturation d'une facture disparaît en silence** dès qu'une
+  réponse n'est pas 200.
+- **Sauvegarde et restauration logiques** prennent le verrou d'écriture même en
+  lecture seule.
+
+Ces constats sont vérifiés et localisés (fichier:ligne dans le journal de
+l'audit) ; ils ne sont **pas** corrigés, et le lot n'est donc pas clos.
+
+---
+
+## 15/08/2026 — Accès client au portail : un mot de passe dicté pour rien
+
+### Le défaut
+
+Sur un poste, « Ouvrir un accès » créait un `PortalUser` dans le SQLite **local**,
+répondait 201, et l'écran affichait « Accès prêt — communiquez le mot de passe
+maintenant ». Un e-mail partait vers le client avec un lien
+`app.garageflows.fr`.
+
+Or le portail interroge la base du **cloud** (`/api/portal/auth/login`), aucune
+route ne répliquait ce compte, et le serveur du poste n'écoute que sur
+`127.0.0.1`. Le garagiste lisait donc à voix haute un identifiant et un mot de
+passe pour un service qui ne les connaîtrait jamais — et se heurtait au refus de
+connexion de son client sans aucun moyen de comprendre.
+
+Second défaut, indépendant et suffisant à lui seul : le lien de connexion ne
+portait pas `?garage=<slug>`. La route de connexion l'exige et répond « Garage
+introuvable ou ambigu ». Même avec les bons identifiants, le client ne pouvait
+pas entrer.
+
+### La correction
+
+`POST /api/sync/portal-account` — publication authentifiée par licence GARAGE,
+même patron que les devis, les factures et le tunnel d'e-facturation.
+
+| Décision | Motif |
+|---|---|
+| Le **haché bcrypt** transite, jamais le mot de passe | Le clair ne quitte pas la réponse rendue une seule fois au garage |
+| `garageId` vient de la **licence** | Un `garageId` du corps ne doit jamais servir d'identité (GF31-AUD-003) |
+| `clientId` forcé à `null` | La fiche client n'est pas publiée ; pointer vers un identifiant absent créerait une clé étrangère pendante |
+| Adresse déjà prise dans ce garage par un **autre** compte → 409 | L'écraser volerait l'accès d'un client inscrit par lui-même, et le lui couperait sans explication |
+| `revoquerAppareils` sur réinitialisation et désactivation | Couper un accès sans couper les sessions ne coupe rien tant qu'un cookie reste valide |
+| Verrouillage par échecs remis à zéro à la republication | Un mot de passe remis doit rouvrir un compte bloqué |
+
+Côté poste, les trois verbes publient et **rendent l'issue** (`publieEnLigne`,
+`motifPublication`). Conséquences directes :
+
+- l'e-mail au client n'est **pas** envoyé si la publication a échoué — il
+  porterait un lien vers un refus ;
+- l'écran affiche « Accès créé mais PAS ENCORE en ligne : *motif*. Ne
+  communiquez pas encore le mot de passe. » au lieu de « Accès prêt » ;
+- « Réinitialiser » est le geste de rattrapage : il republie, et l'écran le dit.
+
+### Vérification
+
+23 tests ajoutés (14 côté poste, 9 côté cloud). **Épreuve par mutation : 6 sur 6
+détectées** — refus d'une adresse déjà prise, `garageId` de la licence,
+révocation des appareils, publication à l'ouverture, e-mail retenu quand non
+publié, slug dans le lien.
+
+Suite : **3 481 verts / 0 rouge / 28 ignorés (3 509)** · `tsc` 0 · ESLint 0 ·
+13 gardes vertes.
+
+Au passage : mon test de sauvegarde écrivait ses `.db` transitoires sous la
+racine du dépôt, ce qui faisait rougir la garde « aucun secret distribué »
+lorsqu'elle balayait en parallèle. Déplacé dans le dossier temporaire du système.
+
+### Réserve assumée
+
+Il n'y a **pas** de rattrapage automatique : une ouverture faite hors ligne reste
+non publiée jusqu'à ce que le garage clique « Réinitialiser ». Une reprise
+automatique demanderait une colonne `cloudSyncedAt` sur `PortalUser` — donc une
+migration sur le poste ET une divergence de schéma que la garde de parité
+refuserait. Le choix est assumé et dit à l'écran, plutôt que masqué par un
+silence.
+
+---
+
+## 15/08/2026 — LOT 2 (suite) : verrouillage au premier lancement, et rendez-vous invisibles
+
+### 1. Un garage qui installe pendant une panne était verrouillé en 30 secondes
+
+```js
+const lastOnlineTs = rec?.ts ?? 0
+const offlineMs    = Date.now() - lastOnlineTs
+```
+
+Sans état « dernière connexion » signé — le cas d'une installation NEUVE qui n'a
+jamais joint l'autorité de licence —, l'origine valait **1970**. La durée hors
+ligne dépassait cinquante ans, donc le seuil de 72 h : le logiciel se fermait
+trente secondes après le premier lancement, sur « hors ligne depuis plus de
+72 heures ». Un garage qui vient d'installer ne pouvait ni comprendre ni agir.
+
+**Ce qu'il ne fallait pas faire** : écrire l'état au premier lancement. Effacer
+`last_online.json` suffirait alors à rester hors ligne indéfiniment — le `?? 0`
+était fail-closed à dessein.
+
+**Ancrage retenu** : la date de création du fichier de base. Un repère que
+personne ne remet à zéro sans perdre toutes ses données.
+
+| Situation | Avant | Après |
+|---|---|---|
+| Installation neuve hors ligne | **verrou immédiat** | fonctionne |
+| Installée depuis 50 h, jamais en ligne | verrou | avertissement |
+| Installée depuis 4 jours, jamais en ligne | verrou | verrou (la grâce reste une tolérance) |
+| `last_online.json` effacé, base ancienne | verrou | **verrou** (contournement refermé) |
+| Horloge reculée | verrou | verrou |
+
+La décision est extraite dans `electron/grace-hors-ligne.js` — un correctif
+enfoui dans `main.js` n'aurait pas été éprouvable. 12 tests ; **3 mutations sur
+3 détectées**, dont « grâce remise à zéro à chaque absence d'état », qui prouve
+que l'anti-contournement est verrouillé lui aussi.
+
+### 2. Le panneau « Rendez-vous » était vide pour toujours
+
+Une demande n'est créée que par `/api/portal/appointments`, depuis l'espace
+client — servi par le **cloud**. La voie de retour ne rapatriait que les
+interventions, les notes et les photos : sur un poste, la table `Appointment`
+restait vide indéfiniment. Le garagiste en concluait qu'aucun client ne demandait
+de rendez-vous. Ce n'est ni une erreur ni un refus — c'est un **silence**, et
+rien n'invite à chercher. Chaque demande manquée est un client perdu.
+
+`/api/sync/appointments` porte les deux mouvements :
+
+- **descente** — les demandes du garage, curseur déduit de ce que le poste
+  détient réellement (un curseur en mémoire redemanderait tout l'historique à
+  chaque démarrage) ;
+- **remontée** — la décision du garage, pour que le client la voie. Sans elle,
+  le garage confirmerait un rendez-vous que son client verrait encore « en
+  attente » : un décalage où les deux parties croient savoir est pire que
+  l'absence de la fonctionnalité.
+
+Règle d'arbitrage : **le cloud fait autorité sur la demande, le poste sur la
+réponse**. Une confirmation prise au comptoir et pas encore remontée n'est jamais
+effacée par un rapatriement ; le texte de la demande, lui, suit le client. Et
+c'est l'ACTION qui remonte, pas le statut — la machine à états du service
+tranche, comme sur la route de session.
+
+16 tests ; **4 mutations sur 4 détectées** (portée garage à la lecture et à
+l'écriture, machine à états, protection du statut local).
+
+### Vérification
+
+Suite : **3 510 verts / 0 rouge / 28 ignorés (3 538)** · `tsc` 0 · ESLint 0 ·
+13 gardes vertes. **+29 tests**.
+
+### Reste dû
+
+Le bouton **« Messages »** souffre du même silence : `PortalTicket` naît lui aussi
+dans le cloud et n'est jamais rapatrié. Il n'est pas traité ici parce qu'il
+dépend d'un `PortalUser` local — absent pour les clients inscrits par eux-mêmes —
+et porte une conversation (`PortalTicketMessage`) dont la remontée des réponses
+du garage forme un troisième mouvement. Le faire à moitié laisserait le garage
+lire sans pouvoir répondre.
+
+Restent également : le port 4028 tenu pour « prêt » sans vérifier que c'est bien
+le serveur de GarageFlows, le champ `recoverable` d'un échec de migration jeté
+par le poste, le panneau e-facturation qui s'efface en silence sur toute réponse
+non-200, et les transactions de sauvegarde/restauration logiques qui prennent le
+verrou d'écriture même en lecture seule.
+
+---
+
+## 15/08/2026 — LOT 2 (fin) : messagerie, démarrage, migration, e-facturation
+
+### 1. Le panneau « Messages » était vide pour toujours
+
+Même silence que les rendez-vous : un ticket naît dans l'espace client, servi
+par le cloud, et rien ne le rapatriait. Le garagiste concluait qu'aucun client ne
+lui écrivait. Un client qui signale un problème et n'obtient jamais de réponse ne
+revient pas.
+
+`/api/sync/tickets` porte les deux mouvements — descente des conversations et de
+leurs messages, remontée des réponses et des clôtures. **Rapatrier sans pouvoir
+répondre aurait été pire que ne rien voir** : le garage aurait su qu'on
+l'attendait sans pouvoir agir.
+
+**Le compte « ombre »** : `PortalTicket.portalUserId` est obligatoire, et
+l'auteur peut s'être inscrit seul en ligne — donc être inconnu du poste. Le
+rapatriement crée alors un compte local réduit à l'affichage, **au haché vide** :
+aucune comparaison bcrypt ne peut réussir, il ne peut donc servir à
+s'authentifier. Le poste n'a pas à détenir de quoi ouvrir une session au nom d'un
+client. Un compte local existant, lui, n'est **jamais** écrasé — remplacer son
+haché couperait l'accès du client.
+
+Le haché de mot de passe de l'auteur ne redescend jamais : la projection est
+bornée à l'identifiant, l'adresse et le nom. Un test le verrouille.
+
+18 tests ; **7 mutations sur 7 détectées**.
+
+### 2. Le démarrage tenait pour « prêt » n'importe quel serveur sur le port 4028
+
+`waitForServer` interrogeait `/` et se contentait d'une réponse. Si une autre
+application occupait le port, la fenêtre chargeait **sa** page. La sonde
+interroge désormais `/api/health`, qui porte un marqueur d'identité explicite
+(`app: 'garageflows'`) ; sans lui, on continue d'attendre, puis on le DIT :
+« Le port 4028 est occupé par une autre application. »
+
+### 3. Un échec de migration rattrapable était présenté comme définitif
+
+La route calcule `recoverable` ; le poste le jetait et conseillait « relancez
+l'application » dans tous les cas — y compris sur une intégrité de base rompue,
+où relancer échoue à l'identique et fait perdre du temps avant le seul geste
+utile. Le conseil s'adapte maintenant aux trois cas, y compris à
+l'indétermination : *« relancez UNE fois ; si le même message revient, cessez de
+réessayer »*. Ne pas savoir se dit aussi.
+
+### 4. Le panneau e-facturation s'effaçait sur toute réponse non-200
+
+Depuis la fin des 501 (LOT 3), le poste délègue : un échec signifie désormais
+« service injoignable », pas « fonctionnalité absente ». Disparaître revenait à
+masquer une panne réseau — l'exploitant croyait la fonctionnalité absente de sa
+facture. Un 403 reste muet (rien à dire à qui n'a pas le droit de lire) ; toute
+autre indisponibilité s'affiche.
+
+### 5. Sauvegarde logique : arbitrage documenté, pas corrigé
+
+`createBackup` ouvre une transaction pour un parcours en LECTURE, ce qui prend le
+verrou d'écriture (Prisma ouvre SQLite en `BEGIN IMMEDIATE` — mesuré). Le
+signalement est exact, mais **ce n'est pas un défaut** : sans transaction, la
+sauvegarde pourrait capturer une facture sans ses lignes. Une sauvegarde
+incohérente n'est pas une sauvegarde. L'arbitrage est désormais écrit à l'endroit
+du code, pour qu'on ne le « corrige » pas par mégarde.
+
+### Vérification
+
+Suite : **3 529 verts / 0 rouge / 28 ignorés (3 557)** · `tsc` 0 · ESLint 0 ·
+13 gardes vertes.
+
+### Reste dû
+
+- Le rapatriement des conversations crée un compte « ombre » par auteur inconnu ;
+  aucun mécanisme ne les purge si le client supprime son compte en ligne.
+- `waitForServer` a été vérifié par lecture et par analyse syntaxique, **pas par
+  un démarrage Electron réel** : `NOT_VERIFIED` sur ce point précis.
+- Les gestes du LOT 2 touchant `electron/main.js` (sauvegarde par `VACUUM INTO`,
+  grâce hors ligne, sonde d'identité, conseil de migration) sont éprouvés par
+  leurs modules extraits et par analyse syntaxique ; l'exécution dans
+  l'application packagée reste à faire.

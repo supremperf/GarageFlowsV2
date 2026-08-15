@@ -24,6 +24,7 @@ const { app, BrowserWindow, ipcMain, shell, dialog, Menu, session, utilityProces
 const path    = require('path')
 const fs      = require('fs')
 const http    = require('http')
+const { evaluerGraceHorsLigne } = require('./grace-hors-ligne')
 const crypto  = require('crypto')
 const os      = require('os')
 const { resolveMainSecret, resolveSmtpCipherKey, loadOrCreateInstallSecret } = require('./secret')
@@ -1893,8 +1894,30 @@ async function enforceOnlineGracePeriod() {
   // Anti-contournement : détecte un recul de l'horloge Windows.
   checkClockIntegrity()
   const rec = readLastOnline()
-  const lastOnlineTs = rec?.ts ?? 0
-  const offlineMs = Date.now() - lastOnlineTs
+
+  // Sans etat signe — installation NEUVE qui n'a jamais joint l'autorite —,
+  // l'origine valait 0, soit 1970 : le logiciel se verrouillait trente secondes
+  // apres le premier lancement d'un garage installant pendant une panne.
+  // L'origine devient la creation du fichier de base : un repere qu'on ne remet
+  // pas a zero sans perdre toutes ses donnees. Voir electron/grace-hors-ligne.js.
+  let naissanceBase = null
+  try {
+    const st = fs.statSync(DB_PATH)
+    naissanceBase = st.birthtimeMs || st.ctimeMs || null
+  } catch (_) { /* base pas encore creee : tout premier demarrage */ }
+
+  const verdict = evaluerGraceHorsLigne({
+    enregistrement: rec,
+    naissanceBase,
+    maintenant: Date.now(),
+    horlogeIncoherente: clockTampered,
+    seuilAvertissementMs: GRACE_PERIOD_MS,
+    seuilVerrouMs: LOCK_PERIOD_MS,
+  })
+  const offlineMs = verdict.offlineMs
+  if (verdict.premierLancement) {
+    log('[online-check] aucun etat de connexion : grace ancree sur la creation de la base')
+  }
 
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('app:online-status', { online: false, offlineMs })
@@ -1903,11 +1926,11 @@ async function enforceOnlineGracePeriod() {
   // Verrouillage si : hors ligne trop longtemps OU horloge incohérente (recul
   // détecté / durée hors ligne négative) — impossible de gagner du temps en
   // reculant la date Windows.
-  if (offlineMs > LOCK_PERIOD_MS || offlineMs < 0 || clockTampered) {
-    const why = clockTampered || offlineMs < 0
+  if (verdict.decision === 'verrou') {
+    const why = verdict.motif === 'horloge'
       ? 'Incohérence de l\'horloge système détectée.'
       : 'Votre logiciel est hors ligne depuis plus de 72 heures.'
-    log('[online-check] locking app —', clockTampered || offlineMs < 0 ? 'clock tamper' : 'offline > 72h')
+    log('[online-check] locking app —', verdict.motif === 'horloge' ? 'clock tamper' : 'offline > 72h')
     const { dialog: d } = require('electron')
     await d.showMessageBox(mainWindow ?? { webContents: null }, {
       type:    'error',
@@ -1917,7 +1940,7 @@ async function enforceOnlineGracePeriod() {
       buttons: ['Fermer'],
     }).catch(() => {})
     app.quit()
-  } else if (offlineMs > GRACE_PERIOD_MS) {
+  } else if (verdict.decision === 'avertissement') {
     const remaining = Math.ceil((LOCK_PERIOD_MS - offlineMs) / (60 * 60 * 1_000))
     log(`[online-check] offline > 48h — warning (${remaining}h remaining)`)
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -1966,8 +1989,55 @@ function isoWeek(d) {
   return [tmp.getUTCFullYear(), Math.ceil(((tmp - yearStart) / 86400000 + 1) / 7)]
 }
 
-function runBackup() {
-  if (!fs.existsSync(DB_PATH)) return
+/**
+ * Demande au SERVEUR un instantané cohérent (VACUUM INTO) vers `destination`.
+ *
+ * La sauvegarde ne peut pas être faite ici : ce processus n'a pas la connexion
+ * SQLite. Un `fs.copyFileSync` depuis Electron pendant que le serveur écrit
+ * produit une base DÉCHIRÉE — le mode de journalisation d'un poste est `delete`,
+ * donc les pages modifiées vont dans le fichier principal pendant qu'un commit
+ * est en cours. Le fichier obtenu a l'air d'une sauvegarde et ne se restaure pas.
+ */
+function backupViaServeur(destination) {
+  const body = JSON.stringify({ destination })
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      { hostname: '127.0.0.1', port: PORT, path: '/api/internal/backup', method: 'POST' },
+      res => {
+        let acc = ''
+        res.setEncoding('utf8')
+        res.on('data', c => { acc += c })
+        res.on('end', () => resolve({ statusCode: res.statusCode ?? 0, raw: acc }))
+      }
+    )
+    req.on('error', reject)
+    req.setHeader('Content-Type', 'application/json')
+    req.setHeader('Content-Length', Buffer.byteLength(body))
+    req.setHeader('x-internal-key', INTERNAL_EXPORT_KEY)
+    req.write(body)
+    req.end()
+  })
+}
+
+/** Écrit une sauvegarde et dit la vérité si elle n'a PAS pu être écrite. */
+async function ecrireSauvegarde(destination, etiquette) {
+  try {
+    const { statusCode, raw } = await backupViaServeur(destination)
+    if (statusCode === 200) { log(`Backup ${etiquette}:`, destination); return true }
+    // Aucun repli par copie d'octets : elle ressemblerait à une sauvegarde
+    // valide sans en être une. Mieux vaut une sauvegarde manquante et signalée
+    // qu'une sauvegarde présente et illisible le jour où on en a besoin.
+    log(`Backup ${etiquette} ÉCHOUÉE (HTTP ${statusCode}):`, String(raw).slice(0, 200))
+    return false
+  } catch (err) {
+    log(`Backup ${etiquette} ÉCHOUÉE (serveur injoignable):`, err.message)
+    return false
+  }
+}
+
+async function runBackup() {
+  if (!fs.existsSync(DB_PATH)) return false
+  let toutOk = true
   try {
     const d    = new Date()
     const yyyy = d.getFullYear()
@@ -1978,29 +2048,27 @@ function runBackup() {
     // ── Hourly ──────────────────────────────────────────────────────────────
     fs.mkdirSync(BAK_HOURLY, { recursive: true })
     const hourlyFile = path.join(BAK_HOURLY, `garageflow_${yyyy}${mm}${dd}_${HH}.db`)
-    fs.copyFileSync(DB_PATH, hourlyFile)
-    pruneDir(BAK_HOURLY, 'garageflow_', 24)
-    log('Backup hourly:', hourlyFile)
+    if (await ecrireSauvegarde(hourlyFile, 'hourly')) pruneDir(BAK_HOURLY, 'garageflow_', 24)
+    else toutOk = false
 
     // ── Daily (once per calendar day) ───────────────────────────────────────
     fs.mkdirSync(BAK_DAILY, { recursive: true })
     const dailyFile = path.join(BAK_DAILY, `garageflow_${yyyy}${mm}${dd}.db`)
     if (!fs.existsSync(dailyFile)) {
-      fs.copyFileSync(DB_PATH, dailyFile)
-      pruneDir(BAK_DAILY, 'garageflow_', 7)
-      log('Backup daily:', dailyFile)
+      if (await ecrireSauvegarde(dailyFile, 'daily')) pruneDir(BAK_DAILY, 'garageflow_', 7)
+      else toutOk = false
 
       // ── Weekly (once per ISO week, triggered by first daily of the week) ──
       fs.mkdirSync(BAK_WEEKLY, { recursive: true })
       const [wyear, wnum] = isoWeek(d)
       const weeklyFile    = path.join(BAK_WEEKLY, `garageflow_${wyear}-W${String(wnum).padStart(2,'0')}.db`)
       if (!fs.existsSync(weeklyFile)) {
-        fs.copyFileSync(DB_PATH, weeklyFile)
-        pruneDir(BAK_WEEKLY, 'garageflow_', 4)
-        log('Backup weekly:', weeklyFile)
+        if (await ecrireSauvegarde(weeklyFile, 'weekly')) pruneDir(BAK_WEEKLY, 'garageflow_', 4)
+        else toutOk = false
       }
     }
-  } catch (err) { log('Backup error:', err.message) }
+    return toutOk
+  } catch (err) { log('Backup error:', err.message); return false }
 }
 
 // ── Next.js standalone server ─────────────────────────────────────────────────
@@ -2019,18 +2087,46 @@ function resolveServerPaths() {
   }
 }
 
+/**
+ * Attend que NOTRE serveur reponde — pas n'importe lequel.
+ *
+ * La sonde interrogeait `/` et tenait pour « pret » tout serveur ecoutant sur
+ * 127.0.0.1:4028. Si une autre application occupait deja ce port, la fenetre
+ * chargeait SA page, et le garagiste voyait un ecran inexplicable. On interroge
+ * donc `/api/health`, qui porte un marqueur d'identite : sans lui, on continue
+ * d'attendre, puis on le DIT clairement.
+ */
 function waitForServer(timeoutMs = 30_000) {
   return new Promise((resolve, reject) => {
     const start = Date.now()
+    let etranger = false
     const check = setInterval(() => {
-      http.get(`http://127.0.0.1:${PORT}/`, res => {
-        clearInterval(check)
-        resolve(res.statusCode)
-      }).on('error', () => {
+      const echoue = (raison) => {
         if (Date.now() - start > timeoutMs) {
           clearInterval(check)
-          reject(new Error(`Server did not respond within ${timeoutMs / 1000}s`))
+          reject(new Error(raison))
         }
+      }
+      http.get(`http://127.0.0.1:${PORT}/api/health`, res => {
+        let acc = ''
+        res.setEncoding('utf8')
+        res.on('data', c => { acc += c })
+        res.on('end', () => {
+          let identite = null
+          try { identite = JSON.parse(acc).app } catch (_) { /* corps illisible */ }
+          if (identite === 'garageflows') {
+            clearInterval(check)
+            resolve(res.statusCode)
+            return
+          }
+          if (!etranger) {
+            etranger = true
+            log(`[demarrage] le port ${PORT} repond, mais ce n'est pas GarageFlows — on continue d'attendre`)
+          }
+          echoue(`Le port ${PORT} est occupe par une autre application. Fermez-la puis relancez GarageFlows.`)
+        })
+      }).on('error', () => {
+        echoue(`Server did not respond within ${timeoutMs / 1000}s`)
       })
     }, 400)
   })
@@ -2057,6 +2153,29 @@ function toCsv(rows, headers) {
  * illisible, ou ok !== true — un HTTP 500 n'est JAMAIS traité comme une
  * migration terminée. L'appelant applique le fail-closed (pas de fenêtre).
  */
+/**
+ * Conseil adapté à la NATURE de la panne.
+ *
+ * La route de migration distingue déjà les échecs rattrapables (verrou
+ * concurrent, interruption) de ceux qui ne le sont pas (intégrité de base
+ * rompue, empreinte de migration incohérente). Ce champ était JETÉ par le
+ * poste, qui conseillait « relancez » dans tous les cas — y compris là où
+ * relancer échoue à l'identique, et fait perdre du temps avant le seul geste
+ * utile : appeler le support et conserver la sauvegarde.
+ */
+function conseilMigration(recoverable) {
+  if (recoverable === true) {
+    return 'Relancez le logiciel ; si le problème persiste, contactez le support avec la référence ci-dessous.'
+  }
+  if (recoverable === false) {
+    return 'Un simple redémarrage ne corrigera PAS ce problème : contactez le support avec la référence '
+      + 'ci-dessous, et conservez la sauvegarde indiquée — c’est elle qui protège vos données.'
+  }
+  // La route n'a pas tranché : on ne prétend pas savoir, et on borne les essais.
+  return 'Relancez le logiciel UNE fois ; si le même message revient, cessez de réessayer et contactez le '
+    + 'support avec la référence ci-dessous.'
+}
+
 async function runInternalMigration() {
   const body = JSON.stringify({})
   const { statusCode, raw } = await new Promise((resolve, reject) => {
@@ -2068,7 +2187,13 @@ async function runInternalMigration() {
         res.on('end', () => resolve({ statusCode: res.statusCode ?? 0, raw: acc }))
       }
     )
-    req.on('error', err => reject(new Error(`MIGRATION_HTTP_ERROR: ${err.message}`)))
+    req.on('error', err => {
+      // Panne de transport vers notre propre serveur : relancer a de bonnes
+      // chances de suffire.
+      const e = new Error(`MIGRATION_HTTP_ERROR: ${err.message}`)
+      e.recoverable = true
+      reject(e)
+    })
     req.setHeader('Content-Type', 'application/json')
     req.setHeader('Content-Length', Buffer.byteLength(body))
     req.setHeader('x-internal-key', INTERNAL_EXPORT_KEY)
@@ -2087,7 +2212,13 @@ async function runInternalMigration() {
     const code = result.errorCode ?? `HTTP_${statusCode}`
     const stage = result.stage ? ` (étape ${result.stage})` : ''
     const failed = result.failedMigration ? ` [${result.failedMigration}]` : ''
-    throw new Error(`MIGRATION_FAILED:${code}${stage}${failed}`)
+    // `recoverable` est calculé par la route (verrou concurrent, échec SQL
+    // rattrapable…) puis était JETÉ ici — voir conseilMigration().
+    const echec = new Error(`MIGRATION_FAILED:${code}${stage}${failed}`)
+    echec.recoverable = result.recoverable === true ? true
+      : result.recoverable === false ? false
+      : null   // la route ne tranche pas : on ne prétendra pas savoir
+    throw echec
   }
   return result
 }
@@ -2716,9 +2847,12 @@ function setupIPC() {
   ipcMain.handle('app:open-backups', () => { fs.mkdirSync(BAK_HOURLY, { recursive: true }); shell.openPath(BAK_DIR) })
   ipcMain.handle('app:open-logs',    () => shell.openPath(LOG_PATH))
 
-  ipcMain.handle('app:backup', () => {
-    runBackup()
-    return { success: true, dir: BAK_DIR }
+  ipcMain.handle('app:backup', async () => {
+    // `runBackup()` est asynchrone depuis qu'il passe par le serveur : rendre
+    // `success: true` sans l'attendre annonçait une sauvegarde qui n'avait pas
+    // encore eu lieu — et qui pouvait échouer.
+    const ok = await runBackup()
+    return { success: ok, dir: BAK_DIR }
   })
 
   ipcMain.handle('win:minimize',          () => mainWindow?.minimize())
@@ -2959,8 +3093,11 @@ function setupIPC() {
       return { ok: true, method: 'browser', url }
     }
 
-    // Sauvegarde de sécurité de la base AVANT toute installation
-    try { runBackup() } catch (e) { log('[install-update] pre-update backup failed:', e.message) }
+    // Sauvegarde de sécurité de la base AVANT toute installation.
+    // `await` indispensable : sans lui, l'installation démarrait pendant que la
+    // sauvegarde était encore en cours — une sauvegarde « de sécurité » qui
+    // n'existe pas encore au moment où l'on en aurait besoin.
+    try { await runBackup() } catch (e) { log('[install-update] pre-update backup failed:', e.message) }
 
     const emit = (pct) => { try { mainWindow?.webContents.send('app:update-progress', pct) } catch (_) {} }
 
@@ -3510,7 +3647,7 @@ app.whenReady().then(async () => {
       detail:
         `${backupInfo}\n\n` +
         'GarageFlows va se fermer par sécurité (aucune donnée ne sera modifiée en l\'état).\n' +
-        'Relancez l\'application ; si le problème persiste, contactez le support avec la référence ci-dessous.\n\n' +
+        conseilMigration(err.recoverable) + '\n\n' +
         `Référence : ${String(err.message).slice(0, 160)}`,
       buttons: preBackup.skipped ? ['Fermer'] : ['Ouvrir le dossier de sauvegarde', 'Fermer'],
       defaultId: preBackup.skipped ? 0 : 1,

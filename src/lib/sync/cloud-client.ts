@@ -33,6 +33,24 @@ export function isDesktopInstance(): boolean {
   return !isPostgresDatabase()
 }
 
+/**
+ * Licence GARAGE active du poste — SA seule preuve d'identité auprès du cloud.
+ *
+ * Vit ici plutôt que dans un module métier : plusieurs voies de remontée en ont
+ * besoin (interventions, mécaniciens, publication de devis) et il ne doit
+ * exister qu'UNE définition de « quelle licence prouve ce garage ». Une clé
+ * mécanicien est explicitement écartée : elle ne pilote rien.
+ */
+export async function garageLicenseToken(garageId: string): Promise<string | null> {
+  const { prisma } = await import('@/lib/db')
+  const license = await prisma.licenseKey.findFirst({
+    where: { garageId, status: 'active', licenseType: { not: 'mechanic' } },
+    select: { token: true },
+    orderBy: { createdAt: 'desc' },
+  })
+  return license?.token ?? null
+}
+
 export interface CloudSyncOutcome {
   ok: boolean
   /** Code renvoyé par le cloud, ou 'NETWORK'/'TIMEOUT' si injoignable. */

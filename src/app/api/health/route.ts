@@ -97,6 +97,11 @@ export async function GET() {
 
   return NextResponse.json(
     {
+      // Identité EXPLICITE : le démarrage d'Electron tenait pour « prêt » tout
+      // serveur répondant sur 127.0.0.1:4028. Si une autre application occupe
+      // ce port, la fenêtre chargeait la sienne. Ce marqueur permet de le
+      // distinguer, et de le DIRE au lieu d'afficher n'importe quoi.
+      app: 'garageflows',
       ok,
       env: checks,
       db: ok ? 'connected' : 'error',

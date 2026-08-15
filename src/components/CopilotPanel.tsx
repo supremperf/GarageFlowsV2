@@ -16,6 +16,12 @@ interface CopilotResponse {
   intent?: string
   message?: string
   phrasing?: string
+  /**
+   * Provenance de la réponse, décidée par le serveur — seul à savoir si un
+   * résolveur a réellement lu les données du garage. Le panneau ne la recalcule
+   * pas : la déduire ici de la présence d'un champ était précisément le défaut.
+   */
+  ancrage?: { verifie?: boolean; source?: 'llm' | 'fallback' | 'fallback_ungrounded' }
   data?: unknown
   action?: { id?: string; confirmationRequired?: boolean; endpoint?: string; method?: string }
 }
@@ -120,7 +126,11 @@ function Bubble({ m, onConfirm, onDecline }: { m: Msg; onConfirm: () => void; on
       </div>
     )
   }
-  const grounded = !!m.res?.phrasing
+  // `!!m.res?.phrasing` affichait l'écusson sur TOUTE réponse — y compris sur un
+  // message d'erreur de base ou une demande de précision, qui ne portent aucun
+  // chiffre. Un écusson qui ne distingue rien ne vaut rien : c'est le serveur
+  // qui tranche, et l'absence d'information vaut « non vérifié ».
+  const grounded = m.res?.ancrage?.verifie === true
   const action = m.res?.action?.confirmationRequired
   return (
     <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>

@@ -12,6 +12,8 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { getEInvoicingFlags } from '@/lib/einvoicing/flags'
+import { drapeauxDuService } from '@/lib/einvoicing/desktop-bridge'
+import { isPostgresDatabase } from '@/lib/db'
 import { isPlatformConnectable } from '@/lib/einvoicing/catalog'
 // Données du registre : module SERVEUR, jamais importé par le navigateur.
 import {
@@ -29,7 +31,19 @@ export const GET = withAuth(async () => {
   }
 
   enregistrerAdaptateurs()
-  const flags = getEInvoicingFlags()
+
+  // Sur un POSTE, les drapeaux locaux sont tous faux — les variables
+  // `EINVOICING_*` n'y sont jamais provisionnées. Les servir tels quels faisait
+  // afficher « fonctionnalité désactivée » et grisait le formulaire de connexion,
+  // alors que c'est le SERVICE qui décide et qu'un tunnel existe pour l'atteindre.
+  // Injoignable, on le DIT — au lieu de laisser croire à une désactivation.
+  let flags = getEInvoicingFlags()
+  let serviceInjoignable = false
+  if (!isPostgresDatabase()) {
+    const distants = await drapeauxDuService(session.user.garageId)
+    if (distants) flags = distants as unknown as typeof flags
+    else serviceInjoignable = true
+  }
   // `normalizedName` fait partie du CONTRAT attendu par le client : l'onglet
   // e-facturation passe ce tableau tel quel à `searchPlatforms()`, qui trie et
   // filtre dessus. L'omettre de la projection le rendait `undefined` et faisait
@@ -56,6 +70,9 @@ export const GET = withAuth(async () => {
 
   return NextResponse.json({
     flags,
+    // Vrai UNIQUEMENT sur un poste dont le service en ligne n'a pas répondu :
+    // l'onglet doit alors parler d'indisponibilité, pas de désactivation.
+    serviceInjoignable,
     platforms,
     // Provenance AFFICHÉE : l'utilisateur doit savoir d'où vient cette liste et
     // quelle autorité fait foi (§82).

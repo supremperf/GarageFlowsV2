@@ -42,6 +42,10 @@ const cloud = vi.hoisted(() => ({
 }))
 vi.mock('@/lib/sync/cloud-client', () => ({
   isDesktopInstance: () => true,
+  // La licence garage est la preuve d'identité du poste : sans elle la remontée
+  // s'arrête avant tout appel réseau. Elle est simulée ici — sa recherche en
+  // base a ses propres tests, et ce fichier éprouve les pierres tombales.
+  garageLicenseToken: async () => 'GF2.jeton-licence-test',
   cloudPost: async (_chemin: string, corps: Record<string, unknown>) => {
     cloud.dernierCorps = corps
     return cloud.reponse

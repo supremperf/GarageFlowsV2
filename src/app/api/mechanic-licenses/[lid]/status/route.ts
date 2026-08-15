@@ -69,6 +69,11 @@ export const POST = withAuth(async (req, { params }: { params: { lid: string } }
     data: {
       status,
       recordMac: newMac,
+      // Le cloud ne connaît plus l'état de cette clé : révocation et suspension
+      // doivent être RATTRAPÉES si le poste est hors ligne. Sans cette remise à
+      // zéro, une clé révoquée pendant une coupure gardait son accès à la PWA
+      // indéfiniment, et rien ne le rappelait à l'exploitant.
+      cloudSyncedAt: null,
       revokedAt: status === 'revoked' ? now : status === 'active' ? null : license.revokedAt,
       suspendedAt: status === 'suspended' ? now : status === 'active' ? null : license.suspendedAt,
     },

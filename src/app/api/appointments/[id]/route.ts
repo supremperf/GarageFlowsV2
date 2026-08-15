@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { pushAppointmentDecision } from '@/lib/sync/appointment-sync'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { can } from '@/lib/authz'
 import { nextAppointmentStatus, type AppointmentStatus, type AppointmentAction } from '@/lib/portal/appointments'
@@ -78,5 +79,13 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
   if (moved.count === 0) {
     return NextResponse.json({ error: 'Le rendez-vous a été modifié entre-temps. Réessayez.' }, { status: 409 })
   }
-  return NextResponse.json({ ok: true, status })
+
+  // La demande vient de l'espace client, servi par le service en ligne : sans
+  // cette remontée, le garage confirmerait un rendez-vous que son client verrait
+  // encore « en attente ». Un décalage où les deux parties croient savoir est
+  // pire que l'absence de la fonctionnalité. L'ISSUE est rendue — l'écran ne
+  // doit pas laisser croire que le client a été prévenu.
+  const remontee = await pushAppointmentDecision(session.user.garageId, appointment.id, action)
+
+  return NextResponse.json({ ok: true, status, clientPrevenu: remontee.remonte })
 })

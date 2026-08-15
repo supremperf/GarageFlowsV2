@@ -23,7 +23,9 @@ import {
   declarerNonParvenue,
   rafraichirStatut,
   peutEtreDeclareeNonParvenue,
+  motifNonTransmissible,
 } from '@/lib/einvoicing/submit'
+import { factureLocale, relayerVersCloud } from '@/lib/einvoicing/desktop-bridge'
 
 /** Statuts HTTP par cause d'échec — un rejet n'est pas une panne. */
 const STATUT: Record<string, number> = {
@@ -44,12 +46,41 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
   }
 
-  // Modèles réservés au déploiement serveur : refus explicite sur le poste.
+  // ── Poste installé ────────────────────────────────────────────────────────
+  // Les modèles d'e-facturation n'existent qu'en PostgreSQL : le poste délègue
+  // au service en ligne au lieu de refuser. Les drapeaux consultés sont ALORS
+  // ceux du service — un poste n'a pas les variables `EINVOICING_*` (le reset ne
+  // les provisionne jamais), et gater ici sur des drapeaux locaux toujours faux
+  // rendrait la délégation inatteignable.
   if (!isPostgresDatabase()) {
-    return NextResponse.json(
-      { error: 'La facturation électronique est gérée par le service en ligne, pas par le poste.', code: 'SERVER_ONLY' },
-      { status: 501 },
-    )
+    const corpsPoste = await req.json().catch(() => ({} as Record<string, unknown>))
+
+    // Portée garage AVANT tout appel réseau : un identifiant inconnu ici ne doit
+    // pas devenir une sonde vers le service en ligne.
+    const locale = await factureLocale(session.user.garageId, params.id)
+    if (!locale) return NextResponse.json({ error: 'Facture introuvable' }, { status: 404 })
+
+    if (corpsPoste?.action === 'declare-not-received' || corpsPoste?.action === 'refresh-status') {
+      const transmissionId = typeof corpsPoste.transmissionId === 'string' ? corpsPoste.transmissionId : ''
+      if (!transmissionId) {
+        return NextResponse.json({ error: 'transmissionId requis', code: 'VALIDATION_ERROR' }, { status: 400 })
+      }
+      return relayerVersCloud(
+        session.user.garageId,
+        corpsPoste.action === 'refresh-status' ? 'invoice.status' : 'invoice.not-received',
+        { transmissionId },
+      )
+    }
+
+    // Refus d'état rendu ici AUSSI : immédiat, sans réseau. Le service en ligne
+    // le refait de son côté — c'est lui qui GARANTIT ; ce contrôle-ci ne fait
+    // qu'épargner un aller-retour et rendre la même phrase au même moment.
+    const interdit = motifNonTransmissible(locale.status)
+    if (interdit) {
+      return NextResponse.json({ error: interdit.message, code: interdit.code }, { status: 409 })
+    }
+
+    return relayerVersCloud(session.user.garageId, 'invoice.submit', { invoiceId: params.id })
   }
 
   const flags = getEInvoicingFlags()
@@ -67,19 +98,12 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
   })
   if (!facture) return NextResponse.json({ error: 'Facture introuvable' }, { status: 404 })
 
-  // Un brouillon n'est pas un document opposable : rien à transmettre. Une
-  // facture ANNULÉE non plus — la déclarer à la plateforme agréée créerait une
-  // créance que le garage a précisément retirée. Seul 'draft' était bloqué.
-  const NON_TRANSMISSIBLES: Record<string, string> = {
-    draft: 'Une facture en brouillon ne peut pas être transmise. Validez-la d’abord.',
-    cancelled: 'Une facture annulée ne peut pas être transmise à la plateforme.',
-  }
-  const refus = NON_TRANSMISSIBLES[facture.status ?? 'draft']
+  // Brouillon et facture annulée ne sont pas transmissibles. Le verdict vient de
+  // `motifNonTransmissible` — partagé avec le tunnel poste → cloud depuis le
+  // 15/08/2026 : deux listes d'états refusés finiraient par diverger.
+  const refus = motifNonTransmissible(facture.status)
   if (refus) {
-    return NextResponse.json(
-      { error: refus, code: facture.status === 'cancelled' ? 'INVOICE_CANCELLED' : 'INVOICE_DRAFT' },
-      { status: 409 },
-    )
+    return NextResponse.json({ error: refus.message, code: refus.code }, { status: 409 })
   }
 
   const corps = await req.json().catch(() => ({} as Record<string, unknown>))
@@ -137,10 +161,15 @@ export const GET = withAuth(async (_req, { params }: { params: { id: string } })
   if (!can(session.user.role, 'financial:read')) {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
   }
+  // Poste : les transmissions vivent dans la base du service en ligne. On les y
+  // lit, et on n'y ajoute qu'une chose — `peutEmettre`, qui dépend du RÔLE de la
+  // session locale, que la licence garage n'identifie pas.
   if (!isPostgresDatabase()) {
-    return NextResponse.json(
-      { error: 'La facturation électronique est gérée par le service en ligne, pas par le poste.', code: 'SERVER_ONLY' },
-      { status: 501 },
+    return relayerVersCloud(
+      session.user.garageId,
+      'invoice.transmissions',
+      { invoiceId: params.id },
+      (donnees) => ({ ...donnees, peutEmettre: can(session.user.role, 'invoice:manage') }),
     )
   }
 

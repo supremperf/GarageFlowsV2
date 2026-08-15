@@ -28,6 +28,7 @@ import {
 import { GENERIC_PA_ADAPTER_ID } from '@/lib/einvoicing/registry'
 import type { GenericPaCredentials } from '@/lib/einvoicing/adapters/generic-pa'
 import { serverPrisma, isPostgresDatabase } from '@/lib/db'
+import { relayerVersCloud } from '@/lib/einvoicing/desktop-bridge'
 import { logger } from '@/lib/logger'
 
 /** Environnement effectif : la configuration ne peut pas forcer la production. */
@@ -39,18 +40,16 @@ function environnement(): EInvoiceEnvironment {
 /**
  * La facturation électronique vit UNIQUEMENT côté serveur : ses quatre modèles
  * n'existent que dans le schéma PostgreSQL (dérogation documentée). Sur une
- * installation poste (SQLite), `serverPrisma()` lève — sans cette garde, l'appel
- * remonterait en 500 opaque au lieu d'une réponse compréhensible.
+ * installation poste (SQLite), `serverPrisma()` lève.
+ *
+ * Cette route répondait donc 501 SERVER_ONLY — motif exact, conséquence
+ * inacceptable : la fonctionnalité était annoncée et inaccessible à qui
+ * travaille sur un poste, c'est-à-dire à tous les garages.
+ *
+ * La garde `isPostgresDatabase()` est CONSERVÉE (la retirer remplacerait une
+ * erreur claire par un 500 opaque) ; ce qu'elle déclenche a changé : le poste
+ * délègue au service en ligne par le canal licence, au lieu de refuser.
  */
-function indisponibleSurPoste() {
-  return NextResponse.json(
-    {
-      error: 'La facturation électronique est gérée par le service en ligne, pas par le poste.',
-      code: 'SERVER_ONLY',
-    },
-    { status: 501 },
-  )
-}
 
 function refusRole() {
   return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
@@ -67,7 +66,9 @@ function refusDrapeau() {
 export const GET = withAuth(async () => {
   const session = await requireSession()
   if (!can(session.user.role, 'settings:manage')) return refusRole()
-  if (!isPostgresDatabase()) return indisponibleSurPoste()
+  // Poste : les modèles n'existent qu'en PostgreSQL — on délègue au service en
+  // ligne au lieu de répondre 501 (cf. src/lib/einvoicing/desktop-bridge.ts).
+  if (!isPostgresDatabase()) return relayerVersCloud(session.user.garageId, 'connection.get')
 
   const env = environnement()
   const ligne = await lireConnexion(session.user.garageId, env)
@@ -81,13 +82,27 @@ export const GET = withAuth(async () => {
 export const PUT = withAuth(async (req) => {
   const session = await requireSession()
   if (!can(session.user.role, 'settings:manage')) return refusRole()
-  if (!isPostgresDatabase()) return indisponibleSurPoste()
-  if (!getEInvoicingFlags().connectionsEnabled) return refusDrapeau()
 
   let body: Record<string, unknown>
   try { body = await req.json() } catch {
     return NextResponse.json({ error: 'Corps invalide' }, { status: 400 })
   }
+
+  // Poste : la validation et le CHIFFREMENT des identifiants restent côté
+  // cloud, exécutés une seule fois. Rien n'est stocké en clair sur le poste.
+  //
+  // Cette délégation précède le contrôle du drapeau, et ce n'est pas un oubli :
+  // un poste n'a JAMAIS les variables `EINVOICING_*` (le reset ne les
+  // provisionne pas — cf. flags.ts), donc `connectionsEnabled` y vaut toujours
+  // faux. Tester le drapeau LOCAL avant de déléguer rendait le tunnel
+  // inatteignable : aucun garage installé ne pouvait enregistrer sa plateforme,
+  // alors que DELETE, lui, déléguait déjà avant le contrôle — on pouvait donc
+  // détruire une connexion sans jamais pouvoir la ressaisir. C'est le SERVICE
+  // qui décide, et il applique sa propre garde (`/api/sync/einvoicing`,
+  // action `connection.put`).
+  if (!isPostgresDatabase()) return relayerVersCloud(session.user.garageId, 'connection.put', body)
+
+  if (!getEInvoicingFlags().connectionsEnabled) return refusDrapeau()
 
   const chaine = (v: unknown): string | undefined =>
     typeof v === 'string' && v.trim() !== '' ? v.trim() : undefined
@@ -144,7 +159,7 @@ export const PUT = withAuth(async (req) => {
 export const DELETE = withAuth(async () => {
   const session = await requireSession()
   if (!can(session.user.role, 'settings:manage')) return refusRole()
-  if (!isPostgresDatabase()) return indisponibleSurPoste()
+  if (!isPostgresDatabase()) return relayerVersCloud(session.user.garageId, 'connection.delete')
   // Le drapeau ne gardait que l'écriture. Fonctionnalité coupée, on pouvait donc
   // encore DÉTRUIRE les identifiants d'une plateforme — sans pouvoir les
   // ressaisir ensuite, puisque le PUT, lui, était fermé. Un interrupteur qui

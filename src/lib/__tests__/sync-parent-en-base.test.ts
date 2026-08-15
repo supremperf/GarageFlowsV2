@@ -61,7 +61,24 @@ describe('sync : le lien parent est confirmé EN BASE (GF-DUR-042)', () => {
 })
 
 describe('sync : toutes les routes s’authentifient par licence GARAGE', () => {
-  const ROUTES = ['jobs', 'portal', 'job-photo', 'mechanic-avatar', 'mechanic-status', 'mechanic-assignment']
+  const ROUTES = ['jobs', 'portal', 'job-photo', 'mechanic-avatar', 'mechanic-status', 'mechanic-assignment',
+    // Publication d'un devis avant émission du lien de signature (15/08/2026),
+    // et sa contrepartie : le rapatriement de l'accord client. Même exigence que
+    // leurs voisines — l'identité vient de la licence GARAGE.
+    'quote', 'quote-return', 'invoice',
+    // Tunnel de facturation électronique (15/08/2026) : le poste n'ayant pas les
+    // modèles PostgreSQL, il délègue ici. C'est un canal ouvert à des postes —
+    // donc soumis à la même exigence d'identité que tous les autres.
+    'einvoicing',
+    // Publication de l'accès portail d'un client (15/08/2026) : le portail est
+    // servi par le cloud, un compte resté sur le poste n'existe pour personne.
+    'portal-account',
+    // Demandes de rendez-vous du portail (15/08/2026) : elles naissent dans le
+    // cloud et ne parvenaient jamais au poste — panneau vide pour toujours.
+    'appointments',
+    // Messagerie client (15/08/2026) : même silence que les rendez-vous — les
+    // conversations naissent dans le cloud et n'atteignaient jamais le poste.
+    'tickets']
 
   it('le corpus est complet — sinon ce garde ne prouverait rien', () => {
     const dir = path.join(RACINE, 'src/app/api/sync')

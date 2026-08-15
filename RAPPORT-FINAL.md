@@ -31,7 +31,7 @@ que le logiciel est sans défaut : elle dit ce qui a été **exercé** et ce qui
 | `eslint` | 0 erreur / 0 avertissement | **0 / 0** | ✅ |
 | `check:docs` | **❌ 4 incohérences** | **✅ 157 documents** | ✅ |
 | `check:perf-budget` — plus gros bloc | **❌ 596,9 Kio** (budget 512) | **✅ 322,5 Kio** | ✅ |
-| `check:perf-budget` — total JS | **❌ 3,28 Mio** (budget 3,00) | **❌ 3,29 Mio** | **FAILED** |
+| `check:perf-budget` — total JS | **❌ 3,28 Mio** (budget 3,00) | **3,29 Mio** — budget **relevé à 3,46** le 15/08 | **BUDGET RELEVÉ** |
 
 **+346 tests, +36 fichiers de test.** Aucun test n'a été supprimé, ignoré,
 affaibli, ni doté d'un délai d'attente pour masquer une course. Les tests
@@ -111,15 +111,22 @@ l'exécution s'il est strictement plus récent.
 ## 5. Décompte exact des tests (§133)
 
 ```
-Fichiers de test : 289  →  284 verts, 0 rouge, 5 ignorés
-Tests            : 3324 →  3296 verts, 0 rouge, 28 ignorés
-Durée            : ~29 s
+Fichiers de test : 308  →  303 verts, 0 rouge, 5 ignorés
+Tests            : 3557 →  3529 verts, 0 rouge, 28 ignorés
+Durée            : ~33 s
 ```
 
-Décompte au 15/08/2026, après l'audit des variables d'environnement (+22 tests
-depuis le décompte de fin de campagne : contrat d'environnement, URL publique
-canonique, délai Upstash configurable). **C'est ce décompte qui correspond au
-code réellement promu en production** (`dpl_CRsSnWNwZG7cwgtwueniuMgM1nN7`).
+Décompte au 15/08/2026, après les lots de finalisation V34 (+139 tests depuis
+la mise en production : publication des devis et des factures vers le cloud,
+remontée des signatures, tunnel de facturation électronique, l'audit du
+Copilot — écusson « vérifié », coût d'achat, exactitude monétaire, portée
+garage et porte financière).
+
+Décompte historique du code réellement promu en production
+(`dpl_CRsSnWNwZG7cwgtwueniuMgM1nN7`) : 3 296 verts / 0 rouge / 28 ignorés
+(3 324). Les tests ajoutés depuis portent des fonctions **non encore
+déployées** — le dire autrement laisserait croire que la production a été
+revérifiée alors qu'elle n'a pas bougé.
 
 Les 5 fichiers et 28 tests ignorés l'étaient **avant** la campagne (bases
 PostgreSQL/Redis réelles non provisionnées, matériel Apple). Aucun `.skip` n'a
@@ -216,7 +223,7 @@ pointant une base SQLite jetable.
 | Orphelin `partId` sur poste migré (GF-037) | **FIXED_NOT_FULLY_VERIFIED** | Le test s'exécute sur une base construite depuis le schéma Prisma, donc avec la clé étrangère. L'orphelin n'existe que sur un SQLite migré par `migrations.ts`. |
 | Rendu **WebKit/Safari réel** | **NON TESTÉ** | Seul Chromium est installé ; les gabarits iPhone/iPad sont émulés sous Chromium. Validation externe sur matériel Apple. |
 | Installateur `.exe` signé, mise à jour du parc | **NON TESTÉ** | `npm run dist` exige `keys/` et une signature Authenticode ; générer une clé casserait le parc installé. |
-| Total JS client (3,29 Mio > 3,00) | **FAILED** | Réduire le total suppose d'alléger les dépendances — hors périmètre. Le budget n'a **pas** été relevé pour faire passer le contrôle. |
+| Total JS client (3,29 Mio) | **BUDGET RELEVÉ** *(15/08/2026)* | Le budget est passé de 3,00 à 3,46 Mio pour débloquer `release:publish`, **sur décision de l'exploitant après que la campagne l'eut refusé**. Le produit n'a pas été allégé d'un octet : la dette de 3,29 Mio demeure entière, et le contrôle ne mesure plus qu'une non-régression à partir de ce nouveau plancher. Motif complet dans `perf-budget.json` (`raisedWhy`). |
 | Comportement sous Windows en conditions réelles | **NON TESTÉ** | La campagne s'est déroulée sous Windows 10, mais l'application **packagée** n'a pas été lancée : seul le serveur de développement l'a été. |
 
 ---
@@ -250,7 +257,7 @@ fausser une conclusion :
 
 ---
 
-## 10. Mise en production du 15/08/2026 — preuves
+## 10. Mise en production du 15/08/2026 — preuves (instantané figé)
 
 ### Déploiement promu
 
@@ -261,9 +268,10 @@ Domaine  : app.garageflows.fr
 Décompte : 3296 verts / 0 rouge / 28 ignorés (3324)
 ```
 
-Le code portant ces 3 296 tests verts est **exactement** celui qui tourne en
-production : construit avec `--skip-domain` (aucun aliasage automatique),
-vérifié en isolation, puis promu **sans reconstruction**.
+Le code portant ces 3 296 tests verts — décompte historique arrêté au
+15/08/2026 — est **exactement** celui qui tourne en production : construit avec
+`--skip-domain` (aucun aliasage automatique), vérifié en isolation, puis promu
+**sans reconstruction**. Les tests ajoutés depuis ne sont pas en production.
 
 ### Contrôles sur le domaine public
 

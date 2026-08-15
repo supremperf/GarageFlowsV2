@@ -1,14 +1,15 @@
 {
-  "totalClientJsBytes": 3145728,
+  "totalClientJsBytes": 3625984,
   "largestChunkBytes": 524288,
   "reference": {
-    "measuredAt": "2026-08-07",
+    "measuredAt": "2026-08-15",
     "buildId": "next build (production)",
-    "totalClientJsBytes": 2709219,
-    "totalClientJsGzipBytes": 794328,
-    "largestChunkBytes": 444849,
-    "largestChunkGzipBytes": 102015,
-    "largestChunkPath": ".next/static/chunks/app/page-*.js",
-    "note": "Budgets exprimés en OCTETS BRUTS sur disque (déterministes, vérifiés par scripts/check-perf-budget.mjs après `npm run build`). Le gzip est informatif (le poids réellement transféré est ~0,76 MiB total / ~100 KiB pour le plus gros chunk). Marge volontaire d'environ 16 % (total) et 18 % (plus gros chunk) au-dessus de la mesure de référence pour absorber les variations mineures sans masquer une régression."
+    "totalClientJsBytes": 3452669,
+    "largestChunkBytes": 330288,
+    "largestChunkPath": ".next/static/chunks/164f4fb6-*.js",
+    "note": "Budgets en OCTETS BRUTS sur disque, vérifiés par scripts/check-perf-budget.mjs après `npm run build`. Marge d'environ 5 % au-dessus de la mesure de référence : assez pour absorber une variation mineure, assez serrée pour qu'une régression réelle déclenche encore.",
+    "raisedOn": "2026-08-15",
+    "raisedFrom": 3145728,
+    "raisedWhy": "DÉCISION ASSUMÉE, PAS UNE CORRECTION. Le total JS client est passé de 3,00 à 3,29 MiB et le budget a été relevé pour débloquer `release:publish` — le produit n'a PAS été allégé d'un octet. La campagne d'audit du 14-15/08/2026 avait explicitement REFUSÉ ce geste (cf. RAPPORT-FINAL.md §2 et §7, statut FAILED assumé) au motif qu'il met le contrôle au vert sans rien changer pour l'utilisateur. Le relèvement est intervenu ensuite, sur décision de l'exploitant. Ce que le budget mesure reste donc un plafond de non-régression, pas un objectif de performance : la dette de 3,29 MiB demeure entière. La réduire suppose d'alléger les dépendances — le découpage dynamique, lui, a déjà été fait (plus gros bloc ramené de 596,9 à 322,5 KiB, soit 37 % sous son propre budget)."
   }
 }

@@ -36,6 +36,22 @@ describe('pre-migration-backup', () => {
     expect(verifySqliteFile(r.path).ok).toBe(true)
   })
 
+  it('copie le fichier -journal, celui qui existe RÉELLEMENT sur un poste', () => {
+    // Le mode de journalisation d'un poste est `delete`, pas WAL : le fichier
+    // annexe s'appelle `-journal`. Il ne figurait pas dans la liste copiée, si
+    // bien qu'une base interrompue en plein commit était sauvegardée SANS
+    // l'information qui permet de la ramener à un état cohérent. Restaurer une
+    // telle copie rendait une base à moitié écrite.
+    const db = path.join(dir, 'garageflow.db')
+    fs.writeFileSync(db, SQLITE_HEADER)
+    fs.writeFileSync(db + '-journal', Buffer.from('journal de restauration'))
+    const r = createPreMigrationBackup(db, path.join(dir, 'bak'), { now: new Date('2026-08-15T09:00:00') })
+    expect(r.ok).toBe(true)
+    expect(fs.existsSync(r.path + '-journal'), 'sans le journal, la copie n’est pas restaurable').toBe(true)
+    expect(fs.readFileSync(r.path + '-journal', 'utf8')).toBe('journal de restauration')
+    expect(r.files).toHaveLength(2) // db + -journal ; -wal/-shm absents en mode delete
+  })
+
   it('base absente (première installation) → skip explicite, pas de blocage', () => {
     const r = createPreMigrationBackup(path.join(dir, 'absent.db'), path.join(dir, 'bak'))
     expect(r).toMatchObject({ ok: true, skipped: true })

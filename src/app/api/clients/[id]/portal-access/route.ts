@@ -30,6 +30,7 @@ import { genererMotDePasseTemporaire, identifiantDepuisClient, messageAccesPorta
 import { sendGarageMail } from '@/lib/mail/send-garage-mail'
 import { publicUrlFor } from '@/lib/public-url'
 import { cheminPortail } from '@/lib/portal/routes'
+import { publierAccesPortail } from '@/lib/portal/publier-acces'
 
 /**
  * Envoie ses identifiants au client — best-effort, JAMAIS journalisé.
@@ -47,16 +48,28 @@ import { cheminPortail } from '@/lib/portal/routes'
 async function envoyerIdentifiants(params: {
   garageId: string
   nomGarage: string
+  slugGarage: string | null
   nomClient: string | null
   identifiant: string
   motDePasse: string
 }): Promise<boolean> {
+  // `?garage=<slug>` est INDISPENSABLE : la route de connexion exige un
+  // `garageSlug` et refuse « Garage introuvable ou ambigu » sans lui. Le lien
+  // était envoyé nu, si bien que le client ne pouvait pas se connecter même
+  // avec les bons identifiants. Les helpers `lienPortail`/`avecGarageSlug` sont
+  // côté navigateur (ils lisent `window`) : ici, le slug vient de la fiche
+  // garage, seule source disponible côté serveur.
+  const base = publicUrlFor(cheminPortail('login'))
+  const urlConnexion = params.slugGarage
+    ? `${base}${base.includes('?') ? '&' : '?'}garage=${encodeURIComponent(params.slugGarage)}`
+    : base
+
   const message = messageAccesPortail({
     nomGarage: params.nomGarage,
     nomClient: params.nomClient,
     identifiant: params.identifiant,
     motDePasseTemporaire: params.motDePasse,
-    urlConnexion: publicUrlFor(cheminPortail('login')),
+    urlConnexion,
   })
   const envoi = await sendGarageMail({
     garageId: params.garageId,
@@ -175,20 +188,37 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
   })
   logger.info('[portal/access] accès ouvert', { client: client.id })
 
+  // Le portail client est servi par le SERVICE EN LIGNE : un accès resté sur le
+  // poste n'existe pour personne. On publie AVANT d'annoncer quoi que ce soit —
+  // et l'issue est rendue, pour que l'écran ne dise jamais « communiquez le mot
+  // de passe » alors que le client ne pourra pas s'en servir.
+  const publication = await publierAccesPortail(cree.id)
+
   const garage = await prisma.garage.findUnique({
     where: { id: session.user.garageId },
-    select: { name: true },
+    select: { name: true, slug: true },
   })
-  const emailEnvoye = await envoyerIdentifiants({
-    garageId: session.user.garageId,
-    nomGarage: garage?.name ?? 'Votre garage',
-    nomClient: client.name,
-    identifiant: identifiant.email,
-    motDePasse,
-  })
+  // L'e-mail porte le lien de connexion : l'envoyer alors que le compte n'est
+  // pas en ligne enverrait le client sur un refus. On s'abstient.
+  const emailEnvoye = publication.publie
+    ? await envoyerIdentifiants({
+      garageId: session.user.garageId,
+      nomGarage: garage?.name ?? 'Votre garage',
+      slugGarage: garage?.slug ?? null,
+      nomClient: client.name,
+      identifiant: identifiant.email,
+      motDePasse,
+    })
+    : false
 
   // Mot de passe en clair rendu UNE SEULE FOIS.
-  return NextResponse.json({ ...etat(cree), motDePasseTemporaireEnClair: motDePasse, emailEnvoye }, { status: 201 })
+  return NextResponse.json({
+    ...etat(cree),
+    motDePasseTemporaireEnClair: motDePasse,
+    emailEnvoye,
+    publieEnLigne: publication.publie,
+    motifPublication: publication.motif ?? null,
+  }, { status: 201 })
 })
 
 export const PUT = withAuth(async (req, { params }: { params: { id: string } }) => {
@@ -234,19 +264,34 @@ export const PUT = withAuth(async (req, { params }: { params: { id: string } }) 
   await logAudit({ action: 'update', entityType: 'PortalUser', entityId: acces.id, session, req, details: { extra: { reset: true } } })
   logger.info('[portal/access] accès réinitialisé', { client: client.id })
 
+  // Republication : le nouveau haché doit atteindre le service, et les sessions
+  // ouvertes en ligne tomber — sinon l'ancien mot de passe continue d'ouvrir le
+  // portail alors que le garage croit l'avoir remplacé. C'est aussi le geste qui
+  // rattrape une ouverture faite hors ligne.
+  const publication = await publierAccesPortail(maj.id, { revoquerAppareils: true })
+
   const garage = await prisma.garage.findUnique({
     where: { id: session.user.garageId },
-    select: { name: true },
+    select: { name: true, slug: true },
   })
-  const emailEnvoye = await envoyerIdentifiants({
-    garageId: session.user.garageId,
-    nomGarage: garage?.name ?? 'Votre garage',
-    nomClient: client.name,
-    identifiant: maj.email,
-    motDePasse,
-  })
+  const emailEnvoye = publication.publie
+    ? await envoyerIdentifiants({
+      garageId: session.user.garageId,
+      nomGarage: garage?.name ?? 'Votre garage',
+      slugGarage: garage?.slug ?? null,
+      nomClient: client.name,
+      identifiant: maj.email,
+      motDePasse,
+    })
+    : false
 
-  return NextResponse.json({ ...etat(maj), motDePasseTemporaireEnClair: motDePasse, emailEnvoye })
+  return NextResponse.json({
+    ...etat(maj),
+    motDePasseTemporaireEnClair: motDePasse,
+    emailEnvoye,
+    publieEnLigne: publication.publie,
+    motifPublication: publication.motif ?? null,
+  })
 })
 
 export const PATCH = withAuth(async (req, { params }: { params: { id: string } }) => {
@@ -299,5 +344,13 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
   })
   logger.info('[portal/access] accès ' + (desactiver ? 'désactivé' : 'réactivé'), { client: client.id })
 
-  return NextResponse.json(etat(maj))
+  // Une désactivation qui ne parvient pas au service ne coupe RIEN : c'est lui
+  // qui sert le portail. On propage, et on coupe aussi les sessions en ligne.
+  const publication = await publierAccesPortail(maj.id, { revoquerAppareils: desactiver })
+
+  return NextResponse.json({
+    ...etat(maj),
+    publieEnLigne: publication.publie,
+    motifPublication: publication.motif ?? null,
+  })
 })

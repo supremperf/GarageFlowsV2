@@ -81,16 +81,29 @@ const BTN = 'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg disabled:o
 export function EInvoicePanel({ invoiceId, statutFacture }: { invoiceId: string; statutFacture: string }) {
   const [etat, setEtat] = useState<Etat | null>(null)
   const [occupe, setOccupe] = useState<string | null>(null)
+  /** Motif d'indisponibilité à AFFICHER — distinct d'une absence de droit. */
+  const [indisponible, setIndisponible] = useState<string | null>(null)
 
   const recharger = useCallback(async () => {
     try {
       const res = await fetch(`/api/einvoicing/invoices/${invoiceId}/submit`, { cache: 'no-store' })
-      // 501 sur le poste (base SQLite), 403 sans droit de lecture financière :
-      // dans les deux cas le panneau n'a rien à dire, il disparaît. Afficher une
-      // erreur ferait croire à une panne là où il n'y a qu'une absence.
-      setEtat(res.ok ? ((await res.json()) as Etat) : null)
+      if (res.ok) {
+        setEtat((await res.json()) as Etat)
+        setIndisponible(null)
+        return
+      }
+      // Une ABSENCE de droit et une INDISPONIBILITÉ ne se disent pas de la même
+      // façon. Le panneau s'effaçait sur toute réponse non-200 : depuis que le
+      // poste délègue au service en ligne (fin des 501), disparaître revenait à
+      // masquer une panne réseau — l'exploitant croyait la fonctionnalité
+      // absente de sa facture, sans jamais apprendre qu'elle existe et qu'elle
+      // reviendra. Un 403 reste muet : il n'y a rien à dire à qui n'a pas le
+      // droit de lire.
+      setEtat(null)
+      setIndisponible(res.status === 403 ? null : 'Service en ligne momentanément injoignable.')
     } catch {
       setEtat(null)
+      setIndisponible('Service en ligne momentanément injoignable.')
     }
   }, [invoiceId])
 
@@ -121,7 +134,21 @@ export function EInvoicePanel({ invoiceId, statutFacture }: { invoiceId: string;
     }
   }
 
-  if (!etat) return null
+  if (!etat) {
+    // Rien à dire (pas de droit) → rien du tout. Une indisponibilité, en
+    // revanche, se DIT : sinon l'exploitant croit la fonctionnalité absente.
+    if (!indisponible) return null
+    return (
+      <div className="mx-8 mb-8 rounded-xl border border-gray-200 bg-gray-50/70 p-4" data-gf-einvoice-panel>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+          <Landmark className="w-3.5 h-3.5" /> Facturation électronique
+        </p>
+        <p className="mt-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
+          {indisponible} Votre facture reste enregistrée ; réessayez une fois la connexion rétablie.
+        </p>
+      </div>
+    )
+  }
 
   const derniere = etat.transmissions[0] ?? null
   const aboutie = Boolean(derniere?.externalId)

@@ -20,14 +20,22 @@
  * Pendant ce temps le garage voyait « Devis envoyé à … », le devis passait de
  * « brouillon » à « envoyé », et l'e-mail contenant le lien mort était parti.
  *
- * ─── Ce qui est corrigé ici, et ce qui ne l'est pas ─────────────────────────
- * CORRIGÉ : plus de faux succès, plus d'e-mail dans le vide, plus de changement
- * d'état pour une signature qui ne peut pas avoir lieu. Le refus est explicite.
+ * ─── Premier temps : le refus honnête ───────────────────────────────────────
+ * Plus de faux succès, plus d'e-mail dans le vide, plus de changement d'état
+ * pour une signature qui ne pouvait pas avoir lieu. Le refus était explicite —
+ * mais la fonctionnalité restait absente.
  *
- * PAS CORRIGÉ (fonctionnalité manquante, signalée comme telle) : faire signer un
- * devis À DISTANCE depuis un poste. Cela demande une vraie voie de retour —
- * publication du devis au cloud puis remontée de l'accord signé vers le SQLite
- * du poste — c'est-à-dire l'équivalent de `/api/sync/portal` dans les DEUX sens.
+ * ─── Second temps (15/08/2026) : la fonctionnalité ──────────────────────────
+ * Le devis est désormais PUBLIÉ au cloud avant émission du lien, par
+ * `/api/sync/quote`, sur le canal licence déjà en place. Le poste ne forge plus
+ * aucun jeton : il ne détient pas le secret du portail, et lui confier
+ * GF_PORTAL_SECRET reviendrait à poser ce secret sur chaque machine de garage.
+ * C'est le cloud qui signe et rend l'URL.
+ *
+ * Ce fichier vérifie donc la BRANCHE DU POSTE : qu'elle publie ce qu'il faut,
+ * qu'elle rend l'URL du cloud, et surtout qu'aucun faux succès ne réapparaît
+ * quand la publication échoue — licence absente, cloud injoignable, refus.
+ * La route de publication elle-même est éprouvée par ses propres tests.
  */
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import fs from 'node:fs'
@@ -44,6 +52,12 @@ const h = vi.hoisted(() => ({
   poste: true,
   /** Courriels réellement demandés au module d'envoi. */
   courriels: [] as Array<{ to: string; subject: string; text: string }>,
+  /** Licence GARAGE dont dispose le poste (null = aucune licence active). */
+  licence: null as string | null,
+  /** Publications réellement tentées vers le cloud. */
+  publications: [] as Array<{ path: string; body: any }>,
+  /** Ce que le cloud répond à la publication. */
+  reponseCloud: { ok: true, data: { url: 'https://app.garageflows.fr/clients/quote/JETON-CLOUD' } } as any,
 }))
 
 vi.mock('@/lib/api-helpers', () => ({
@@ -58,9 +72,28 @@ vi.mock('@/lib/api-helpers', () => ({
 }))
 
 // Le commutateur EXACT sous test : « suis-je un poste ? ». La base reste réelle.
+//
+// `cloudPost` est intercepté pour OBSERVER ce que le poste publie et pour
+// choisir la réponse du cloud — refus, panne réseau, succès. Ce n'est pas une
+// preuve que la route /api/sync/quote fonctionne : celle-ci est éprouvée par
+// ses propres tests. Ici on éprouve la BRANCHE du poste, et notamment qu'aucun
+// faux succès ne subsiste quand la publication échoue.
+//
+// `garageLicenseToken` est également piloté : trouver la licence est un simple
+// findFirst, déjà couvert ailleurs, et le fabriquer en fixture demanderait un
+// enregistrement de licence complet (MAC, expiration) sans rapport avec ce qui
+// est testé ici.
 vi.mock('@/lib/sync/cloud-client', async (importOriginal) => {
   const reel = await importOriginal<typeof import('@/lib/sync/cloud-client')>()
-  return { ...reel, isDesktopInstance: () => h.poste }
+  return {
+    ...reel,
+    isDesktopInstance: () => h.poste,
+    garageLicenseToken: async () => h.licence,
+    cloudPost: async (path: string, body: unknown) => {
+      h.publications.push({ path, body })
+      return h.reponseCloud
+    },
+  }
 })
 
 // L'envoi est intercepté pour PROUVER qu'aucun courriel ne part sur le chemin
@@ -94,6 +127,9 @@ afterAll(async () => {
 
 beforeEach(async () => {
   h.courriels = []
+  h.publications = []
+  h.licence = null
+  h.reponseCloud = { ok: true, data: { url: 'https://app.garageflows.fr/clients/quote/JETON-CLOUD' } }
   await prisma.quote.deleteMany({})
   const devis = await prisma.quote.create({
     data: {
@@ -120,14 +156,71 @@ const demander = () =>
 describe('signature de devis — depuis un POSTE installé (GF-003)', () => {
   beforeEach(() => { h.poste = true })
 
-  it('refuse explicitement au lieu de produire un lien illisible', async () => {
+  it('sans licence garage active : refuse explicitement, sans rien laisser fuir', async () => {
+    h.licence = null
     const res = await demander()
     expect(res.status).toBe(409)
     const corps = await res.json()
-    expect(corps.code).toBe('SIGNATURE_DISTANTE_INDISPONIBLE')
-    expect(corps.error, 'le motif doit être compréhensible par le garage').toMatch(/poste installé/i)
+    expect(corps.code).toBe('LICENCE_GARAGE_ABSENTE')
+    expect(corps.error, 'le motif doit être compréhensible par le garage').toMatch(/licence garage/i)
     expect(corps.token, 'aucun jeton ne doit sortir').toBeUndefined()
     expect(corps.url, 'aucune URL ne doit sortir').toBeUndefined()
+    expect(h.publications, 'rien ne doit être publié sans preuve d’identité').toHaveLength(0)
+  })
+
+  it('publie le devis au cloud et rend le lien QUE LE CLOUD a émis', async () => {
+    h.licence = 'GF2.jeton-licence-garage'
+    const res = await demander()
+    expect(res.status).toBe(200)
+    const corps = await res.json()
+
+    // L'URL vient du cloud, jamais d'un jeton forgé localement : le poste ne
+    // détient pas le secret du portail.
+    expect(corps.url).toBe('https://app.garageflows.fr/clients/quote/JETON-CLOUD')
+    expect(corps.token, 'le poste ne forge AUCUN jeton').toBeNull()
+
+    expect(h.publications).toHaveLength(1)
+    expect(h.publications[0].path).toBe('/api/sync/quote')
+    expect(h.publications[0].body.garageLicense).toBe('GF2.jeton-licence-garage')
+  })
+
+  it('la charge publiée porte les montants ENTIERS, à l’unité près', async () => {
+    h.licence = 'GF2.jeton-licence-garage'
+    await demander()
+    const lignes = h.publications[0].body.lines
+    expect(lignes).toHaveLength(1)
+    // 90,00 € — recopié tel quel. Une conversion ferait diverger le montant vu
+    // par le client de celui du poste.
+    expect(lignes[0].unitPriceTenThousandths).toBe(900_000)
+    expect(lignes[0].quantityTenThousandths).toBe(10_000)
+    expect(lignes[0].unitCostTenThousandths).toBe(400_000)
+    expect(typeof lignes[0].unitPriceTenThousandths).toBe('number')
+  })
+
+  it('cloud injoignable : 503, aucun courriel, devis intact', async () => {
+    h.licence = 'GF2.jeton-licence-garage'
+    h.reponseCloud = { ok: false, code: 'NETWORK' }
+    const res = await demander()
+    expect(res.status).toBe(503)
+    const corps = await res.json()
+    expect(corps.error, 'le garage doit comprendre que ses données sont sauves').toMatch(/reste enregistré/i)
+    expect(corps.url).toBeUndefined()
+    expect(h.courriels, 'aucun lien inexistant ne part par courriel').toHaveLength(0)
+    const apres = await prisma.quote.findUnique({ where: { id: ids.devis }, select: { status: true } })
+    expect(apres.status, 'un devis non publié n’est pas « envoyé »').toBe('draft')
+  })
+
+  it('publication refusée par le cloud : 409, aucun faux succès', async () => {
+    h.licence = 'GF2.jeton-licence-garage'
+    h.reponseCloud = { ok: false, code: 'QUOTE_NUMBER_TAKEN' }
+    const res = await demander()
+    expect(res.status).toBe(409)
+    const corps = await res.json()
+    expect(corps.code).toBe('QUOTE_NUMBER_TAKEN')
+    expect(corps.url).toBeUndefined()
+    expect(h.courriels).toHaveLength(0)
+    const apres = await prisma.quote.findUnique({ where: { id: ids.devis }, select: { status: true } })
+    expect(apres.status).toBe('draft')
   })
 
   it('ne fait PAS basculer le devis en « envoyé »', async () => {
