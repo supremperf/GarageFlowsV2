@@ -104,10 +104,24 @@ export default function MechanicPlanningPage() {
   // apparaît (ou disparaît) ici en quelques secondes, sans reconnexion, sans
   // fermeture de l'application et sans vidage de cache. Cf. lib/live-sync.ts
   // pour le choix du transport et la politique de cadence/backoff.
-  const { data, error, loading, lastSyncAt, refresh } = useMechanicLive<{ data: Job[] }>(
+  const { data, error, loading, lastSyncAt, refresh } = useMechanicLive<{
+    data: Job[]
+    window?: { from: string; to: string }
+    outOfWindow?: boolean
+  }>(
     `/api/mechanic/schedule?date=${encodeURIComponent(date)}`,
   )
   const jobs = data?.data ?? []
+
+  // ── En dehors de la fenêtre synchronisée, on le DIT (GF-038) ───────────────
+  // Le miroir cloud n'est tenu à jour que sur [J−7, J+30]. Au-delà, ce qui
+  // s'afficherait serait figé — une affectation peut-être révoquée depuis des
+  // semaines. Le serveur ne sert donc plus rien, et les flèches s'arrêtent aux
+  // bornes plutôt que de mener à un écran vide sans explication.
+  const fenetre = data?.window
+  const horsFenetre = data?.outOfWindow === true
+  const avantPossible = !fenetre || shiftDate(date, -1) >= fenetre.from
+  const apresPossible = !fenetre || shiftDate(date, 1) <= fenetre.to
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-safe pb-safe-3">
@@ -147,7 +161,12 @@ export default function MechanicPlanningPage() {
 
       {/* Navigation date */}
       <div className="flex items-center justify-between gap-2 mb-4 bg-[#111827] rounded-xl p-2 border border-white/[0.06]">
-        <button onClick={() => setDate(shiftDate(date, -1))} className="p-2 rounded-lg hover:bg-white/5 text-slate-300" aria-label="Jour précédent">
+        <button
+          onClick={() => setDate(shiftDate(date, -1))}
+          disabled={!avantPossible}
+          className="p-2 rounded-lg hover:bg-white/5 text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent"
+          aria-label="Jour précédent"
+        >
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div className="text-center">
@@ -156,10 +175,22 @@ export default function MechanicPlanningPage() {
             <button onClick={() => setDate(todayIso())} className="text-[11px] text-blue-400 hover:text-blue-300">Aujourd&apos;hui</button>
           )}
         </div>
-        <button onClick={() => setDate(shiftDate(date, 1))} className="p-2 rounded-lg hover:bg-white/5 text-slate-300" aria-label="Jour suivant">
+        <button
+          onClick={() => setDate(shiftDate(date, 1))}
+          disabled={!apresPossible}
+          className="p-2 rounded-lg hover:bg-white/5 text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent"
+          aria-label="Jour suivant"
+        >
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
+
+      {horsFenetre && (
+        <div className="mb-3 rounded-lg border border-slate-500/25 bg-slate-500/10 px-3 py-2 text-[11px] text-slate-300">
+          Cette date sort du planning synchronisé. Revenez vers aujourd&apos;hui pour
+          voir vos interventions à jour.
+        </div>
+      )}
 
       {/* Bandeau d'erreur NON bloquant : si le réseau retombe, on continue
           d'afficher la dernière liste connue plutôt que de vider l'écran. */}

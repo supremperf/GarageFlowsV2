@@ -54,14 +54,23 @@ export function isUsablePublicBase(candidate: string | undefined | null): boolea
 /**
  * Base publique effective, sans slash final.
  *
- * Ordre : `NEXT_PUBLIC_APP_URL` → `GF_APP_URL` → `NEXTAUTH_URL` → officielle.
- * Chaque candidat est VALIDÉ : sous Electron `NEXTAUTH_URL` vaut
- * `http://localhost:4028` (cf. electron/main.js), il est donc écarté et on
- * retombe sur l'URL officielle — jamais sur une adresse locale.
+ * Ordre : `GF_APP_URL` → `NEXTAUTH_URL` → officielle.
+ *
+ * `GF_APP_URL` est le nom CANONIQUE de l'URL publique : c'est celui que
+ * RESET-GARAGEFLOW et le configurateur provisionnent réellement.
+ * `NEXT_PUBLIC_APP_URL` a été retirée le 15/08/2026 — troisième nom pour la
+ * même donnée, jamais provisionnée par aucun outil, et dont le préfixe
+ * annonçait à tort une exposition au navigateur : ce module n'est importé que
+ * par des routes d'API.
+ *
+ * `NEXTAUTH_URL` n'est PAS un alias : elle appartient à next-auth (base des
+ * rappels d'authentification) et n'est lue ici qu'en dernier recours, validée
+ * comme les autres. Sous Electron elle vaut `http://localhost:4028`
+ * (cf. electron/main.js) : elle est alors écartée et l'on retombe sur l'URL
+ * officielle — jamais sur une adresse locale.
  */
 export function publicAppUrl(): string {
   const candidates = [
-    process.env.NEXT_PUBLIC_APP_URL,
     process.env.GF_APP_URL,
     process.env.NEXTAUTH_URL,
   ]

@@ -9,6 +9,59 @@ import { isWeakSecret } from '@/lib/auth-secret'
 
 export type EnvIssue = { name: string; problem: string }
 
+/**
+ * Schéma d'un URL, destiné à un message d'erreur — JAMAIS la valeur, qui porte
+ * l'hôte et les identifiants.
+ *
+ * Tout caractère inattendu est rendu par son POINT DE CODE (`U+0022`) et non par
+ * un « ? » : un guillemet, une espace insécable, une marque d'ordre d'octets ou
+ * une espace de largeur nulle produisent sinon le même symbole, alors que les
+ * trois dernières sont INVISIBLES dans une interface web. Nommer le caractère
+ * évite de corriger à l'aveugle une variable qui semble déjà correcte.
+ */
+function schemeOf(url: string): string {
+  const i = url.indexOf('://')
+  const brut = i > 0 ? url.slice(0, i) : url.slice(0, 12)
+  return brut
+    .slice(0, 16)
+    .replace(/[^A-Za-z0-9+._-]/g, (c) => `U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}`)
+}
+
+/**
+ * Délai d'attente d'un appel Upstash, en millisecondes.
+ *
+ * DÉFAUT 1500 : la valeur qui était codée en dur dans `rate-limit.ts`. Sans
+ * variable définie, le comportement reste donc rigoureusement inchangé.
+ *
+ * L'arbitrage n'est pas neutre : ce client sert un limiteur **fail-closed** en
+ * production PWA. Quand Upstash ne répond pas, les routes critiques (connexion,
+ * activation de licence) sont REFUSÉES. Un délai court coupe vite et renvoie une
+ * erreur franche ; un délai long fait patienter l'appelant d'autant, requête
+ * après requête, avant le même refus. D'où des bornes étroites — et un REFUS DE
+ * DÉMARRER hors bornes en production PWA, plutôt qu'un rognage silencieux qui
+ * masquerait une erreur de configuration (un `15000` saisi pour `1500`).
+ *
+ * La résolution vit ici, et non dans `rate-limit.ts`, pour deux raisons : la
+ * validation est centralisée (un seul endroit décide de ce qui est acceptable),
+ * et `rate-limit.ts` importe déjà ce module — l'inverse créerait un cycle.
+ */
+export const UPSTASH_TIMEOUT_DEFAUT_MS = 1500
+export const UPSTASH_TIMEOUT_MIN_MS = 100
+export const UPSTASH_TIMEOUT_MAX_MS = 10_000
+
+/** Vrai si la valeur brute est un entier dans les bornes admises. */
+function delaiUpstashValide(brut: string): boolean {
+  if (!/^\d+$/.test(brut.trim())) return false
+  const v = Number.parseInt(brut, 10)
+  return v >= UPSTASH_TIMEOUT_MIN_MS && v <= UPSTASH_TIMEOUT_MAX_MS
+}
+
+export function upstashTimeoutMs(): number {
+  const brut = process.env.UPSTASH_REDIS_TIMEOUT_MS
+  if (!brut || !delaiUpstashValide(brut)) return UPSTASH_TIMEOUT_DEFAUT_MS
+  return Number.parseInt(brut, 10)
+}
+
 function checkPresent(name: string, min: number, issues: EnvIssue[]): void {
   const v = process.env[name]
   if (!v || v.trim() === '') issues.push({ name, problem: 'absente ou vide' })
@@ -33,10 +86,20 @@ export function validateEnv(): { ok: boolean; issues: EnvIssue[] } {
     const isSqlite = url.startsWith('file:') || /\.db(\?|$)/.test(url) || /sqlite/i.test(url)
     if (!url) {
       issues.push({ name: 'DATABASE_URL', problem: 'PostgreSQL requis en production PWA (absent)' })
-    } else if (isSqlite || !isPostgres) {
+    } else if (isSqlite) {
       issues.push({
         name: 'DATABASE_URL',
         problem: 'SQLite/stockage local interdit en production PWA — PostgreSQL requis',
+      })
+    } else if (!isPostgres) {
+      // Un URL non reconnu N'EST PAS forcément du SQLite : confondre les deux
+      // envoie chercher une base locale là où le défaut est un URL malformé
+      // (guillemets conservés à la saisie, espace ou saut de ligne en tête,
+      // schéma absent). On expose le SCHÉMA SEUL — jamais la valeur, qui porte
+      // les identifiants de connexion.
+      issues.push({
+        name: 'DATABASE_URL',
+        problem: `schéma non reconnu (« ${schemeOf(url)} ») — postgresql:// requis en production PWA`,
       })
     }
 
@@ -63,6 +126,20 @@ export function validateEnv(): { ok: boolean; issues: EnvIssue[] } {
       issues.push({
         name: 'UPSTASH_REDIS_REST_URL',
         problem: 'doit être l\'URL REST https:// (…upstash.io) — pas rediss:// ni une valeur malformée',
+      })
+    }
+
+    // Délai d'appel Upstash : facultatif, mais s'il est FOURNI il doit être
+    // exploitable. Le rogner en silence masquerait un « 15000 » saisi pour
+    // « 1500 » — et ferait patienter chaque requête critique dix fois trop
+    // longtemps avant le même refus.
+    const delaiBrut = process.env.UPSTASH_REDIS_TIMEOUT_MS
+    if (delaiBrut !== undefined && delaiBrut.trim() !== '' && !delaiUpstashValide(delaiBrut)) {
+      issues.push({
+        name: 'UPSTASH_REDIS_TIMEOUT_MS',
+        problem:
+          `doit être un entier de millisecondes entre ${UPSTASH_TIMEOUT_MIN_MS} et ${UPSTASH_TIMEOUT_MAX_MS} ` +
+          `(absente = ${UPSTASH_TIMEOUT_DEFAUT_MS} par défaut)`,
       })
     }
 

@@ -5,6 +5,7 @@
 
 import { z } from 'zod'
 import { parseAmountToScaled } from '@/lib/money'
+import { verifierIban, verifierBic } from '@/lib/banque/iban'
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
 
@@ -25,6 +26,24 @@ const phone   = z.string().max(30).optional().nullable()
 const email = z.preprocess(
   v => (typeof v === 'string' && v.trim() === '' ? null : v),
   z.string().email('Email invalide').max(255).optional().nullable(),
+)
+/**
+ * ADRESSE WEB FACULTATIVE — même leçon que ci-dessus, non appliquée (GF-010).
+ *
+ * `z.string().url()` refuse la chaîne vide. Or l'écran des réglages charge
+ * `website: data.website ?? ''` puis renvoie TOUT son état à chaque
+ * enregistrement : un garage sans site web envoyait donc `website: ''` et
+ * `PATCH /api/garages` répondait 400 « Réglages invalides ». Conséquence : ce
+ * garage ne pouvait enregistrer AUCUN réglage — ni son adresse, ni son taux de
+ * TVA, ni ses coordonnées bancaires — et l'écran ne disait pas quel champ était
+ * en cause. Un site web est facultatif ; ne pas en avoir ne doit pas bloquer le
+ * reste du formulaire.
+ *
+ * Une adresse réellement saisie reste vérifiée à l'identique.
+ */
+const urlFacultative = z.preprocess(
+  v => (typeof v === 'string' && v.trim() === '' ? null : v),
+  z.string().url('Adresse web invalide').max(255).optional().nullable(),
 )
 const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format date invalide (YYYY-MM-DD)')
 
@@ -229,12 +248,30 @@ export const UpdateGarageSchema = z.object({
   address:           z.string().max(500).optional().nullable(),
   phone,
   email,
-  website:           z.string().url().max(255).optional().nullable(),
+  website:           urlFacultative,
   siret:             z.string().max(20).optional().nullable(),
   vatNumber:         z.string().max(30).optional().nullable(),
   taxRate:           z.number().min(0).max(100).optional(),
-  iban:              z.string().max(34).optional().nullable(),
-  bic:               z.string().max(11).optional().nullable(),
+  // ── IBAN et BIC : vérifiés, pas seulement bornés en longueur (GF-023) ──────
+  // `max(34)` / `max(11)` laissaient passer un IBAN amputé d'un chiffre ou un
+  // BIC de six lettres — enregistrés, puis IMPRIMÉS au pied de chaque facture.
+  // La clé de contrôle ISO 13616 se vérifie hors ligne et détecte une faute de
+  // frappe avec une probabilité de 1/97 : il n'y avait aucune raison de s'en
+  // priver. Un champ VIDE reste accepté (les coordonnées sont facultatives).
+  iban: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() === '' ? null : v),
+    z.string().max(42).refine(
+      (v) => verifierIban(v).valide,
+      'IBAN invalide — vérifiez la saisie (la clé de contrôle ne correspond pas).',
+    ).optional().nullable(),
+  ),
+  bic: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() === '' ? null : v),
+    z.string().max(15).refine(
+      (v) => verifierBic(v).valide,
+      'BIC invalide — 8 ou 11 caractères (ex. BNPAFRPP).',
+    ).optional().nullable(),
+  ),
   bankName:          z.string().max(100).optional().nullable(),
   currency:          z.string().length(3).optional(),
   paymentTerms:      z.string().max(100).optional().nullable(),
@@ -250,14 +287,36 @@ export const UpdateGarageSchema = z.object({
   // toujours, absents de ce schéma : ils passaient donc sans aucun contrôle.
   workshopStartHour: z.number().int().min(0).max(23).optional(),
   workshopEndHour:   z.number().int().min(1).max(24).optional(),
+  // Granularité DEMI-HEURE (GF-021) : seules 0 et 30 sont acceptées. Autoriser
+  // n'importe quelle minute donnerait des grilles de planning aux lignes
+  // irrégulières, sans que rien ne le demande.
+  workshopStartMinute: z.number().int().refine((m) => m === 0 || m === 30, 'Minutes : 0 ou 30').optional(),
+  workshopEndMinute:   z.number().int().refine((m) => m === 0 || m === 30, 'Minutes : 0 ou 30').optional(),
   workOrderPrefix:      z.string().min(1).max(10).optional(),
   purchaseOrderPrefix:  z.string().min(1).max(10).optional(),
   warrantyMonthsDefault: z.number().int().min(0).max(120).optional(),
   smartReminderMonths:   z.number().int().min(0).max(60).optional(),
   loanerEnabled:         z.boolean().optional(),
 }).refine(
-  (g) => g.workshopStartHour === undefined || g.workshopEndHour === undefined || g.workshopEndHour > g.workshopStartHour,
+  (g) => {
+    // La comparaison portait sur les seules HEURES : « 8 h 30 → 8 h 00 » passait,
+    // puisque 8 n'est pas supérieur à 8. On compare les bornes complètes.
+    if (g.workshopStartHour === undefined || g.workshopEndHour === undefined) return true
+    const debut = g.workshopStartHour * 60 + (g.workshopStartMinute ?? 0)
+    const fin = g.workshopEndHour * 60 + (g.workshopEndMinute ?? 0)
+    return fin > debut
+  },
   { message: "L'heure de fermeture doit suivre l'heure d'ouverture", path: ['workshopEndHour'] },
+).refine(
+  (g) => {
+    // Une amplitude d'une demi-heure n'est pas une journée d'atelier : c'est
+    // presque toujours une saisie inversée ou incomplète.
+    if (g.workshopStartHour === undefined || g.workshopEndHour === undefined) return true
+    const debut = g.workshopStartHour * 60 + (g.workshopStartMinute ?? 0)
+    const fin = g.workshopEndHour * 60 + (g.workshopEndMinute ?? 0)
+    return fin - debut >= 60
+  },
+  { message: "L'atelier doit rester ouvert au moins une heure", path: ['workshopEndHour'] },
 )
 
 // ─── Part ─────────────────────────────────────────────────────────────────────

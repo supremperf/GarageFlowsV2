@@ -43,6 +43,18 @@ const ALLOWED = [
     needle: "partsJson: entity.partsJson ?? '[]'",
     reason: 'Idem : passage verbatim du JSON signé, jamais reconstruit.',
   },
+  {
+    file: 'src/components/job-modal/JobPartsSection.tsx',
+    needle: 'JSON.stringify({ partId: choisie.id, quantity: q })',
+    reason:
+      "CORPS DE REQUÊTE HTTP, pas une persistance ni une ligne monétaire : l'objet ne porte AUCUNE propriété de prix, seulement un identifiant de pièce et une quantité ENTIÈRE (rejetée plus haut si `!Number.isInteger(q) || q <= 0`). La règle 2 se déclenche sur le `quantity:` isolé ; l'API /api/jobs/[id]/parts revalide et calcule elle-même les montants.",
+  },
+  {
+    file: 'src/integration/stock-suppression-et-entrees.test.ts',
+    needle: 'linesJson: lignesBon(',
+    reason:
+      "Le helper local `lignesBon` DÉLÈGUE au sérialiseur v2 : `serialiserLignes` est déstructuré depuis `serializePoLinesJsonV2` (@/lib/money-json) et reçoit des champs v2 exacts (qtyTenThousandths, unitCostTenThousandths, lineTotalCents). SAFE_RHS ne reconnaît que l'appel direct au sérialiseur, d'où le faux positif de la règle 1 sur un simple alias de nommage.",
+  },
 ]
 
 // Fixtures v1 de test : prouvent la LECTURE du format historique (chemin de
@@ -51,6 +63,10 @@ const V1_FIXTURE_FILES = new Set([
   'src/integration/suppliers.test.ts',
   'src/lib/__tests__/money-json.test.ts',
   'src/lib/__tests__/money-schema-migration.test.ts',
+  // Prouve que `parsePartsJson` LIT le format v1 sans fabriquer de `partId`, et
+  // qu'un identifiant aberrant est refusé plutôt que tronqué : les fixtures v1
+  // y sont donc indispensables (GF-040).
+  'src/lib/__tests__/or-pieces-rattachees.test.ts',
 ])
 
 const EXTS = new Set(['.ts', '.tsx', '.js', '.mjs'])

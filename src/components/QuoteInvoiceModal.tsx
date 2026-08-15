@@ -9,13 +9,13 @@ import { cn } from '@/lib/utils'
 import { format, parseISO, addDays } from 'date-fns'
 import toast from 'react-hot-toast'
 import { useScheduleStore } from '@/store/schedule-store'
-import { searchClients } from '@/lib/client-memory'
-import type { ClientRecord } from '@/lib/client-memory'
+import { useRechercheClient } from '@/lib/clients/use-recherche-client'
+import { AddressAutocomplete } from '@/components/AddressAutocomplete'
 import { DateField } from '@/components/DateField'
 import { useTranslation } from '@/lib/i18n'
 import { dateLocale } from '@/lib/i18n/date-locale'
 import { docStatusLabel } from '@/lib/i18n/labels'
-import { computeTotals, multiplyCents, toCents, fromCents, parseAmountToScaled, fromScaled, lineCents, formatEuros, roundEurosForDisplay } from '@/lib/money'
+import { computeTotals, toCents, fromCents, parseAmountToScaled, fromScaled, lineCents, formatEuros, roundEurosForDisplay } from '@/lib/money'
 import { PartAutocomplete, type PartSuggestion } from '@/components/invoice/PartAutocomplete'
 import { QuoteInvoicePrintDocument } from '@/components/invoice/QuoteInvoicePrintDocument'
 import { EInvoicePanel } from '@/components/invoice/EInvoicePanel'
@@ -73,6 +73,10 @@ interface Garage {
   logoPath?:   string | null
   invoiceFooter?: string | null
   paymentTerms?: string | null
+  /** Taux de TVA du garage — n'était pas déclaré, donc jamais lu (GF-026). */
+  taxRate?: number
+  /** Tarif horaire du garage, en euros. */
+  hourlyRate?: number
 }
 
 interface Props {
@@ -113,7 +117,10 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
   const loc = dateLocale(lang)
   const { invalidateStats } = useScheduleStore()
 
-  const [clientSuggestions, setClientSuggestions] = useState<ClientRecord[]>([])
+  // Depuis la BASE, plus depuis le `localStorage` du poste : un téléphone
+  // corrigé dans l'écran Clients ressortait ici avec l'ANCIENNE valeur, et
+  // était recopié tel quel dans la facture émise (GF-016).
+  const { suggestions: clientSuggestions, chercher: chercherClient, vider: viderClients } = useRechercheClient()
   const [showClientDrop, setShowClientDrop]       = useState(false)
   const clientDropRef = useRef<HTMLDivElement>(null)
   /** Nœud du document d'impression, rendu hors écran (jamais l'interface). */
@@ -159,8 +166,25 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
 
   const fetchGarage = useCallback(async () => {
     const r = await fetch('/api/garages')
-    if (r.ok) setGarage(await r.json())
-  }, [])
+    if (!r.ok) return
+    const g: Garage = await r.json()
+    setGarage(g)
+
+    // ── Le taux de TVA du garage est APPLIQUÉ (GF-026) ─────────────────────
+    // L'état initial valait `prefill?.taxRate ?? 20`, et aucun appelant ne
+    // fournit `prefill.taxRate` : tout devis et toute facture partaient donc à
+    // 20 %. Le repli côté serveur (`body.taxRate ?? garage.taxRate`) ne se
+    // déclenchait jamais, puisque le corps portait toujours une valeur. Un
+    // garage en franchise de TVA, en outre-mer ou à taux réduit facturait ainsi
+    // 20 % à son insu — sur CHAQUE document.
+    //
+    // `!documentId` : on ne touche pas au taux d'un document existant, que
+    // `fetchDoc` réinjecte — le taux appliqué à une facture émise ne doit pas
+    // bouger parce que le garage a changé son réglage depuis.
+    if (!documentId && prefill?.taxRate == null && typeof g.taxRate === 'number') {
+      setForm(f => ({ ...f, taxRate: g.taxRate as number }))
+    }
+  }, [documentId, prefill?.taxRate])
 
   const fetchDoc = useCallback(async () => {
     if (!documentId) return
@@ -217,7 +241,14 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
   // Totaux EXACTS en centimes entiers (identiques à l'API/DB via lib/money).
   const _t          = computeTotals(lines.map(l => ({ quantity: l.quantity, unitPrice: l.unitPrice })), form.taxRate)
   const subtotalHT  = _t.totalHT
-  const totalCost   = fromCents(lines.reduce((c, l) => c + multiplyCents(toCents(l.unitCost), l.quantity), 0))
+  // ── Le coût suit la MÊME formule que le serveur (GF-036) ──────────────────
+  // `multiplyCents(toCents(prix), qté)` arrondit le prix AVANT de multiplier —
+  // le motif que `lib/money.ts` documente comme fautif. Le coût d'achat admet
+  // quatre décimales (les pièces sont stockées en dix-millièmes) : sur
+  // 0,3333 € × 900, l'ancienne formule rendait 297,00 € là où le serveur
+  // (`profitability`, `finance`, `analytics`) compte 299,97 €. La carte de
+  // rentabilité affichait donc une marge que les rapports contredisaient.
+  const totalCost   = fromCents(lines.reduce((c, l) => c + lineCents(l.unitCost, l.quantity), 0))
   const taxAmount   = _t.taxAmount
   const totalTTC    = _t.totalTTC
   const profit      = fromCents(toCents(subtotalHT) - toCents(totalCost))
@@ -245,6 +276,27 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
       toast.error(
         `Quantité invalide ligne ${quantiteFautive + 1}${l.description.trim() ? ` (${l.description.trim()})` : ''} : `
         + 'saisissez une quantité supérieure à 0, ou supprimez la ligne.',
+      )
+      return
+    }
+
+    // ── Une ligne LIÉE AU STOCK se compte en unités entières (GF-037) ─────────
+    // Le champ accepte le pas de 0,01 et rien ne distinguait une ligne libre
+    // d'une ligne rattachée à une pièce. Le document s'enregistrait donc sans
+    // broncher, et le refus n'arrivait qu'à la VALIDATION de la facture —
+    // « Quantité invalide pour la pièce … : le stock se gère en unités
+    // entières », sans dire laquelle sur un document de vingt lignes, ni que
+    // délier la pièce suffisait. La règle du moteur de stock reste intacte : on
+    // la fait simplement respecter là où l'on sait encore désigner la ligne.
+    const fractionFautive = lignesRetenues.findIndex(
+      l => l.partId && !Number.isInteger(Number(l.quantity)),
+    )
+    if (fractionFautive !== -1) {
+      const l = lignesRetenues[fractionFautive]
+      toast.error(
+        `Ligne ${fractionFautive + 1}${l.description.trim() ? ` (${l.description.trim()})` : ''} : `
+        + 'une pièce du stock se compte en unités entières. '
+        + 'Arrondissez la quantité, ou déliez la ligne de la pièce.',
       )
       return
     }
@@ -417,10 +469,17 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
   }
 
   function addLine(isLabor = false) {
+    // Le tarif horaire du GARAGE, pas 60 € codés en dur (GF-026) : le réglage
+    // existait, était persisté, et cette ligne l'ignorait — chaque ligne de
+    // main-d'œuvre partait au tarif d'un autre atelier, et le garage devait la
+    // corriger à la main sur chaque document.
+    const tarifHoraire = typeof garage?.hourlyRate === 'number' && garage.hourlyRate > 0
+      ? garage.hourlyRate
+      : 60
     setLines(l => [...l, {
       description: isLabor ? t.jmLabor : '',
       quantity:    1,
-      unitPrice:   isLabor ? 60 : 0,
+      unitPrice:   isLabor ? tarifHoraire : 0,
       unitCost:    0,
       isLabor,
       sortOrder:   l.length,
@@ -662,10 +721,10 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                         value={form.clientName}
                         onChange={e => {
                           setForm(f => ({ ...f, clientName: e.target.value }))
-                          setClientSuggestions(searchClients(e.target.value))
+                          chercherClient(e.target.value)
                           setShowClientDrop(true)
                         }}
-                        onFocus={() => { setClientSuggestions(searchClients(form.clientName)); setShowClientDrop(true) }}
+                        onFocus={() => { chercherClient(form.clientName); setShowClientDrop(true) }}
                         placeholder={t.qiClientNamePh}
                         autoComplete="off"
                         className={cn(INP, 'w-full font-semibold')}
@@ -673,17 +732,23 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                       {showClientDrop && clientSuggestions.length > 0 && (
                         <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl bg-[#1a2235] border border-white/10 shadow-2xl overflow-hidden">
                           {clientSuggestions.map(c => (
-                            <button key={c.customerName} type="button"
+                            <button key={c.cle} type="button"
                               onMouseDown={e => {
                                 e.preventDefault()
                                 setForm(f => ({
                                   ...f,
-                                  clientName:   c.customerName,
-                                  licensePlate: c.licensePlate ?? f.licensePlate,
-                                  vehicleModel: c.vehicleModel ?? f.vehicleModel,
-                                  clientPhone:  c.phone        ?? f.clientPhone,
+                                  clientName:    c.customerName,
+                                  licensePlate:  c.licensePlate ?? f.licensePlate,
+                                  vehicleModel:  c.vehicleModel ?? f.vehicleModel,
+                                  clientPhone:   c.phone        ?? f.clientPhone,
+                                  // L'adresse et l'e-mail viennent de la fiche
+                                  // client : les laisser vides obligeait à les
+                                  // ressaisir sur chaque document.
+                                  clientEmail:   c.email        ?? f.clientEmail,
+                                  clientAddress: c.address      ?? f.clientAddress,
                                 }))
                                 setShowClientDrop(false)
+                                viderClients()
                               }}
                               className="w-full text-left px-3 py-2 text-sm text-slate-200 hover:bg-white/[0.07] border-b border-white/[0.05] last:border-0"
                             >
@@ -697,7 +762,14 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                     </div>
                     <input value={form.clientEmail}   onChange={e => setForm(f => ({ ...f, clientEmail:   e.target.value }))} placeholder={t.uiEmail}    className={cn(INP, 'w-full')} />
                     <input value={form.clientPhone}   onChange={e => setForm(f => ({ ...f, clientPhone:   e.target.value }))} placeholder={t.uiPhone}    className={cn(INP, 'w-full')} />
-                    <input value={form.clientAddress} onChange={e => setForm(f => ({ ...f, clientAddress: e.target.value }))} placeholder={t.woAddress}  className={cn(INP, 'w-full')} />
+                    {/* Adresse avec propositions (GF-022) — saisie libre conservée. */}
+                    <AddressAutocomplete
+                      value={form.clientAddress}
+                      onChange={v => setForm(f => ({ ...f, clientAddress: v }))}
+                      placeholder={t.woAddress}
+                      aria-label={t.woAddress}
+                      className={cn(INP, 'w-full')}
+                    />
                   </div>
                 ) : (
                   <>

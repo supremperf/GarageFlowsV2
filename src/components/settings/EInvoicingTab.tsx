@@ -24,6 +24,8 @@ import {
 } from '@/lib/einvoicing/catalog'
 import type { EInvoicingFlags } from '@/lib/einvoicing/flags'
 import { EInvoicingConnectionForm } from './EInvoicingConnectionForm'
+import toast from 'react-hot-toast'
+import { ouvrirLienExterne, messageRefusLien } from '@/lib/lien-externe'
 
 interface StatusResponse {
   flags: EInvoicingFlags
@@ -62,6 +64,15 @@ export function EInvoicingTab() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
+
+  /**
+   * Ouverture d'un lien du catalogue. Sous Electron, elle passe par le pont
+   * dédié ; un refus est DIT, jamais avalé — c'était tout le défaut (GF-025).
+   */
+  async function ouvrir(e: React.MouseEvent<HTMLAnchorElement>) {
+    const r = await ouvrirLienExterne(e)
+    if (!r.ouvert) toast.error(messageRefusLien(r))
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -188,6 +199,10 @@ export function EInvoicingTab() {
                   href={p.officialWebsite}
                   target="_blank"
                   rel="noopener noreferrer"
+                  // Dans l'application packagée, ce lien ne faisait RIEN : aucun
+                  // hôte du catalogue n'est dans la liste blanche d'ouverture
+                  // externe (GF-025).
+                  onClick={ouvrir}
                   className="mt-1 inline-block text-[11px] text-blue-400 hover:text-blue-300"
                 >
                   Site de la plateforme
@@ -210,7 +225,7 @@ export function EInvoicingTab() {
         <p className="text-[10px] text-slate-600 leading-relaxed">
           Source : {data!.catalogSource.jeuDeDonnees} ({data!.catalogSource.licence}), importée le{' '}
           {data!.catalogSource.importedAt}.{' '}
-          <a href={data!.catalogSource.autoriteDeReference} target="_blank" rel="noopener noreferrer" className="text-blue-400/80 hover:text-blue-300">
+          <a href={data!.catalogSource.autoriteDeReference} target="_blank" rel="noopener noreferrer" onClick={ouvrir} className="text-blue-400/80 hover:text-blue-300">
             Liste officielle impots.gouv.fr
           </a>{' '}
           — {data!.catalogSource.avertissement}

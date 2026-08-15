@@ -172,7 +172,7 @@ function LoginForm() {
                   autoComplete="email"
                   autoFocus
                   placeholder="jean@mongarage.fr"
-                  className="w-full pl-9 pr-4 py-2.5 bg-white/[0.05] border border-white/[0.10] rounded-xl text-white placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/40 transition-all"
+                  className="w-full pl-9 pr-4 py-3 bg-white/[0.05] border border-white/[0.10] rounded-xl text-white placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/40 transition-all"
                 />
               </div>
             </div>
@@ -191,12 +191,20 @@ function LoginForm() {
                   required
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="w-full pl-9 pr-10 py-2.5 bg-white/[0.05] border border-white/[0.10] rounded-xl text-white placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/40 transition-all"
+                  className="w-full pl-9 pr-10 py-3 bg-white/[0.05] border border-white/[0.10] rounded-xl text-white placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/40 transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 transition-colors"
+                  // ── Cible tactile de 44 px, icône inchangée (GF-042) ────────
+                  // Mesuré en navigateur réel : ce bouton faisait 16 × 16 px.
+                  // Un doigt le rate, et l'utilisateur tape à côté — dans le
+                  // champ de mot de passe, dont il déplace alors le curseur.
+                  // La surface cliquable s'élargit sans bouger l'icône ni la
+                  // mise en page : le bouton reste centré, l'espace pris est
+                  // celui du `pr-10` déjà réservé sur le champ.
+                  className="absolute right-1 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center text-slate-600 hover:text-slate-400 transition-colors"
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -209,9 +217,9 @@ function LoginForm() {
               type="submit"
               disabled={loading || !email || !password}
               className={cn(
-                'w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-all mt-1',
+                'w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all mt-1',
                 loading || !email || !password
-                  ? 'bg-blue-600/20 text-blue-400/40 cursor-not-allowed'
+                  ? 'gf-btn-inactif'
                   : 'bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-600/25 active:scale-[0.98]'
               )}
             >

@@ -7,6 +7,7 @@ import {
   ChevronDown, ChevronRight, ZoomIn,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { reduirePhoto } from '@/lib/photo-client'
 import { groupPendingUpdates, pendingKeysForItem } from '@/lib/inspection-autosave'
 import toast from 'react-hot-toast'
 import { useTranslation } from '@/lib/i18n'
@@ -105,28 +106,8 @@ function ItemRow({
     if (!file) return
     setUploading(true)
     try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = ev => {
-          const img = new Image()
-          img.onload = () => {
-            const canvas = document.createElement('canvas')
-            const MAX = 600
-            let { width, height } = img
-            if (width > MAX || height > MAX) {
-              if (width > height) { height = Math.round(height * MAX / width); width = MAX }
-              else { width = Math.round(width * MAX / height); height = MAX }
-            }
-            canvas.width = width; canvas.height = height
-            canvas.getContext('2d')?.drawImage(img, 0, 0, width, height)
-            resolve(canvas.toDataURL('image/jpeg', 0.8))
-          }
-          img.onerror = reject
-          img.src = ev.target?.result as string
-        }
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
+      // Réduction par le module partagé (GF-038) — vignette de contrôle : 600 px.
+      const base64 = await reduirePhoto(file, { coteMax: 600, qualite: 0.8 })
       onUpdate(item.id, 'photoBase64', base64)
     } finally {
       setUploading(false)

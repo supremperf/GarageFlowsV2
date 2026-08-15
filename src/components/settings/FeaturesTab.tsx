@@ -23,7 +23,6 @@ interface FeaturesSettings {
   loanerEnabled: boolean
   smartReminderMonths: Saisie
   purchaseOrderPrefix: string
-  hourlyRate: Saisie
 }
 
 const DEFAULT: FeaturesSettings = {
@@ -32,7 +31,6 @@ const DEFAULT: FeaturesSettings = {
   loanerEnabled: false,
   smartReminderMonths: 11,
   purchaseOrderPrefix: 'BC',
-  hourlyRate: 60,
 }
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
@@ -108,7 +106,6 @@ export function FeaturesTab() {
             loanerEnabled:         data.loanerEnabled         ?? DEFAULT.loanerEnabled,
             smartReminderMonths:   data.smartReminderMonths   ?? DEFAULT.smartReminderMonths,
             purchaseOrderPrefix:   data.purchaseOrderPrefix   ?? DEFAULT.purchaseOrderPrefix,
-            hourlyRate:            data.hourlyRate            ?? DEFAULT.hourlyRate,
           })
         }
         setLoading(false)
@@ -125,7 +122,6 @@ export function FeaturesTab() {
         // valeur, au lieu d'en recevoir une que personne n'a saisie.
         body: JSON.stringify({
           ...settings,
-          hourlyRate:            nombreSaisi(settings.hourlyRate),
           warrantyMonthsDefault: entierSaisi(settings.warrantyMonthsDefault),
           smartReminderMonths:   entierSaisi(settings.smartReminderMonths),
         }),
@@ -160,13 +156,14 @@ export function FeaturesTab() {
           <Field label="Préfixe numéro" hint="ex: OR → OR-2026-001">
             <TextInput value={settings.workOrderPrefix} onChange={v => setSettings(s => ({ ...s, workOrderPrefix: v }))} placeholder="OR" />
           </Field>
-          {/* Bornes alignées sur celles du serveur (0 à 9999). `min={1}` interdisait
-              ici ce que l'API accepte explicitement — un atelier qui ne facture
-              pas la main-d'œuvre à l'heure — et `max={999}` refusait un tarif
-              que l'onglet Entreprise, lui, laissait passer. */}
-          <Field label="Taux horaire (€/h)" hint="Utilisé dans les ordres de réparation">
-            <NumberInput value={settings.hourlyRate} onChange={v => setSettings(s => ({ ...s, hourlyRate: v }))} min={0} max={9999} />
-          </Field>
+          {/* ── Le taux horaire ne se saisit PLUS ici (GF-039) ────────────────
+              Il l'était aussi dans l'onglet Entreprise, du même modal, avec un
+              état indépendant : chaque onglet chargeait son instantané à SON
+              montage et renvoyait l'objet complet. Enregistrer l'un écrasait
+              donc la saisie de l'autre — dans les deux sens, sans le moindre
+              signe. Le réglage reste éditable au seul endroit qui le décrit
+              correctement, et cet onglet cesse de réécrire une valeur qu'il n'a
+              pas relue. */}
         </div>
       </section>
 

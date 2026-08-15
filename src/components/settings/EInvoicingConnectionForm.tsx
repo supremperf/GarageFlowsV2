@@ -130,10 +130,29 @@ export function EInvoicingConnectionForm({ connectionsEnabled, adapters }: Props
   async function deconnecter() {
     setEnregistrement(true)
     try {
-      await fetch('/api/einvoicing/connection', { method: 'DELETE' })
+      // ── Le refus du serveur était ignoré (GF-024) ─────────────────────────
+      // Contrairement à `enregistrer` et `testerConnexion` juste au-dessus —
+      // qui lisent tous deux la réponse — la déconnexion affirmait « Plateforme
+      // déconnectée. » sans rien vérifier. Un rôle sans `settings:manage`
+      // reçoit 403, un déploiement où les connexions sont désactivées reçoit
+      // 409 : dans les deux cas l'écran effaçait la connexion À L'AFFICHAGE
+      // seulement, et le garage la croyait coupée alors qu'elle restait active.
+      const r = await fetch('/api/einvoicing/connection', { method: 'DELETE' })
+      const j = await r.json().catch(() => ({} as { ok?: boolean; error?: string; disconnected?: boolean }))
+      if (!r.ok || j?.ok === false) {
+        setMessage({ ok: false, texte: j?.error ?? 'Déconnexion refusée par le serveur.' })
+        return
+      }
       setConnexion(null)
       setChamps({})
-      setMessage({ ok: true, texte: 'Plateforme déconnectée.' })
+      // `disconnected` distingue « j'ai coupé la connexion » de « il n'y avait
+      // rien à couper » — le champ était renvoyé par la route et jamais lu.
+      setMessage({
+        ok: true,
+        texte: j?.disconnected === false ? 'Aucune connexion à supprimer.' : 'Plateforme déconnectée.',
+      })
+    } catch {
+      setMessage({ ok: false, texte: 'Erreur réseau' })
     } finally {
       setEnregistrement(false)
     }

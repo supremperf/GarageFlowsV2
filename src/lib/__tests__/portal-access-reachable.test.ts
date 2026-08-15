@@ -96,7 +96,10 @@ describe('la fiche client est modifiable depuis le panneau (GF-PORT-007)', () =>
 describe('le panneau est atteignable depuis la navigation', () => {
   it('la page principale le monte et sait l\'ouvrir', () => {
     const page = lire('src/app/page.tsx')
-    expect(page).toContain("import ClientsPanel from '@/components/ClientsPanel'")
+    // Le panneau est chargé À LA DEMANDE (budget de performance) : ce qui
+    // compte est qu'il soit RÉFÉRENCÉ et monté, pas la forme de son import.
+    expect(page).toMatch(/(import ClientsPanel from|const ClientsPanel = dynamic\()/)
+    expect(page).toContain("import('@/components/ClientsPanel')")
     expect(page).toMatch(/isClientsOpen\s+&&\s+<ClientsPanel/)
     expect(page).toMatch(/onOpenClients=\{\(\) => setIsClientsOpen\(true\)\}/)
   })

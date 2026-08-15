@@ -5,6 +5,8 @@ export interface GarageSettings {
   currency: string; paymentTerms: string; invoicePrefix: string
   quotePrefix: string; invoiceFooter: string; logoBase64: string; logoPath: string; hourlyRate: string
   workshopStartHour: string; workshopEndHour: string
+  /** Minutes des bornes — `'0'` ou `'30'` (granularité demi-heure, GF-021). */
+  workshopStartMinute: string; workshopEndMinute: string
   smsPhone: string
 }
 

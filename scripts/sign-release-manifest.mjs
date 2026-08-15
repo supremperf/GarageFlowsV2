@@ -49,10 +49,30 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const ALGO = 'Ed25519'
 const PRODUIT = 'GarageFlow'
 const HOTES_AUTORISES = new Set(['api.garageflows.fr', 'garageflows.fr', 'app.garageflows.fr'])
+const RACINE = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
+
+/** Extensions d'installeur acceptées, par plateforme. */
+const EXTENSIONS = { win32: ['.exe'], darwin: ['.dmg', '.zip'], linux: ['.AppImage', '.deb'] }
+
+/** Première version SemVer trouvée dans un texte (nom de fichier, URL…). */
+function versionDans(texte) {
+  const m = String(texte).match(/(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)/)
+  return m ? m[1] : null
+}
+
+/** Version déclarée par le dépôt — la seule qui fasse autorité. */
+function versionDuDepot() {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(RACINE, 'package.json'), 'utf8')).version ?? null
+  } catch {
+    return null
+  }
+}
 
 // ─── Sérialisation canonique — DOIT être identique à electron/update-verify.js ─
 // Toute divergence produit une signature que le client rejette sans expliquer
@@ -126,26 +146,74 @@ function genererPaire(keyId) {
   console.log('  utilisée coupe la mise à jour du parc installé, sans recours logiciel.\n')
 }
 
+const AIDE = `
+  Signature d'un manifeste de mise à jour GarageFlows (Ed25519).
+
+  USAGE
+    node scripts/sign-release-manifest.mjs \\
+      --file <chemin de l'installeur> \\
+      --version <x.y.z> \\
+      --download-url <https://…>
+
+  OBLIGATOIRE
+    --file <chemin>          installeur à signer (doit exister)
+    --version <x.y.z>        version SemVer de CETTE release
+    --download-url <url>     URL HTTPS publique de l'installeur
+
+  FACULTATIF
+    --channel <nom>          défaut : stable
+    --platform <os>          défaut : win32   (win32 | darwin | linux)
+    --arch <arch>            défaut : x64
+    --key-id <id>            défaut : gf-update-2026 — DOIT être connu des postes
+                             (PUBLIC_KEYS dans electron/update-verify.js)
+    --min-version <x.y.z>    version minimale pouvant appliquer cette mise à jour
+    --release-notes <texte>  2000 caractères au plus
+    --out <chemin>           défaut : <installeur>.manifest.json
+    --allow-mismatch         signe MALGRÉ une incohérence de version (voir plus bas)
+    --gen-key --key-id <id>  génère une paire Ed25519 et sort
+    --help                   affiche cette aide
+
+  CONTRÔLES DE COHÉRENCE
+    Un manifeste dont la version ne correspond pas à l'installeur qu'il désigne
+    met TOUT LE PARC en boucle : chaque poste télécharge, vérifie l'empreinte
+    (elle est juste), installe, redémarre sur l'ancienne version, et recommence.
+    Il n'existe aucun recours logiciel côté poste. Sont donc vérifiés :
+      · --version == version de package.json ;
+      · la version présente dans le NOM du fichier == --version ;
+      · la version présente dans l'URL de téléchargement == --version ;
+      · extension du fichier cohérente avec --platform ;
+      · URL en HTTPS et hôte dans la liste blanche des postes.
+    --allow-mismatch lève les trois premiers contrôles, un par un et bruyamment.
+
+  CLÉ PRIVÉE
+    Lue dans GF_UPDATE_SIGNING_KEY (PEM PKCS#8) ou GF_UPDATE_SIGNING_KEY_FILE.
+    Jamais lue depuis le dépôt, jamais écrite.
+`
+
 function main() {
   const a = args()
 
+  if (a.help || a.h) { console.log(AIDE); return }
   if (a['gen-key']) return genererPaire(a['key-id'])
 
   const fichier = a.file
-  if (!fichier || fichier === true) mourir('--file <chemin de l\'installeur> est obligatoire.')
+  if (!fichier || fichier === true) mourir(`--file <chemin de l'installeur> est obligatoire.\n${AIDE}`)
   if (!fs.existsSync(fichier)) mourir(`Fichier introuvable : ${fichier}`)
+  if (!fs.statSync(fichier).isFile()) mourir(`Ce n'est pas un fichier : ${fichier}`)
 
   const version = a.version
-  if (!version || version === true) mourir('--version <x.y.z> est obligatoire.')
+  if (!version || version === true) mourir(`--version <x.y.z> est obligatoire.\n${AIDE}`)
   if (!/^\d+\.\d+\.\d+(?:[-+].+)?$/.test(version)) mourir(`Version non SemVer : ${version}`)
 
   const downloadUrl = a['download-url']
-  if (!downloadUrl || downloadUrl === true) mourir('--download-url <https://…> est obligatoire.')
+  if (!downloadUrl || downloadUrl === true) mourir(`--download-url <https://…> est obligatoire.\n${AIDE}`)
   let hôte
+  let cheminUrl = ''
   try {
     const u = new URL(downloadUrl)
     if (u.protocol !== 'https:') mourir('--download-url doit être en HTTPS.')
     hôte = u.hostname
+    cheminUrl = decodeURIComponent(u.pathname)
   } catch {
     mourir(`--download-url invalide : ${downloadUrl}`)
   }
@@ -160,7 +228,50 @@ function main() {
     )
   }
 
+  // ── Cohérence des TROIS identités (GF-013) ─────────────────────────────────
+  // Le script contrôlait l'existence du fichier, le format de la version et le
+  // domaine de l'URL — jamais leur CONCORDANCE. Signer l'installeur 1.1.0 encore
+  // présent dans dist/ avec « --version 1.2.0 » produisait un manifeste
+  // cryptographiquement valide dont l'empreinte correspondait bien aux octets
+  // servis. Chaque poste l'acceptait (1.2.0 > 1.1.0), téléchargeait, vérifiait,
+  // installait, quittait — puis redémarrait sur 1.1.0, et la vérification
+  // horaire re-proposait 1.2.0. Boucle sans fin sur tout le parc, l'application
+  // se fermant à chaque tentative, sans aucun recours logiciel côté poste.
+  const plateforme = a.platform === undefined || a.platform === true ? 'win32' : a.platform
+  const laisserPasser = a['allow-mismatch'] === true || a['allow-mismatch'] === 'true'
+  const avertir = (message) => {
+    if (!laisserPasser) mourir(`${message}\n    (--allow-mismatch pour signer malgré tout, en connaissance de cause)`)
+    console.warn(`\n  ⚠ INCOHÉRENCE ACCEPTÉE PAR --allow-mismatch : ${message}\n`)
+  }
+
+  const versionDepot = versionDuDepot()
+  if (versionDepot && versionDepot !== version) {
+    avertir(`--version (${version}) ≠ version de package.json (${versionDepot}).`)
+  }
+
+  const nomFichier = path.basename(fichier)
+  const versionNom = versionDans(nomFichier)
+  if (!versionNom) {
+    avertir(`Le nom « ${nomFichier} » ne porte aucune version : impossible de vérifier qu'il s'agit bien de l'installeur ${version}.`)
+  } else if (versionNom !== version) {
+    avertir(`Le fichier signé s'appelle « ${nomFichier} » (version ${versionNom}) alors que --version vaut ${version}.`)
+  }
+
+  const versionUrl = versionDans(path.basename(cheminUrl))
+  if (versionUrl && versionUrl !== version) {
+    avertir(`L'URL de téléchargement désigne la version ${versionUrl}, pas ${version} :\n    ${downloadUrl}`)
+  }
+
+  const extensionsAttendues = EXTENSIONS[plateforme]
+  if (extensionsAttendues && !extensionsAttendues.includes(path.extname(nomFichier))) {
+    mourir(
+      `Extension « ${path.extname(nomFichier) || '(aucune)'} » incohérente avec --platform ${plateforme}.\n`
+      + `    Attendu : ${extensionsAttendues.join(', ')}`,
+    )
+  }
+
   const octets = fs.readFileSync(fichier)
+  if (octets.length === 0) mourir(`Fichier vide : ${fichier}`)
   const sha256 = crypto.createHash('sha256').update(octets).digest('hex')
 
   const manifest = {
@@ -168,7 +279,7 @@ function main() {
     product:            PRODUIT,
     version,
     channel:            a.channel === undefined || a.channel === true ? 'stable' : a.channel,
-    platform:           a.platform === undefined || a.platform === true ? 'win32' : a.platform,
+    platform:           plateforme,
     architecture:       a.arch === undefined || a.arch === true ? 'x64' : a.arch,
     downloadUrl,
     sha256,

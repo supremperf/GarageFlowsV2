@@ -300,9 +300,19 @@ export const genericPaAdapter: EInvoiceProviderAdapter = {
       const entetes = await entetesAuth(ctx)
       const r = await fetchAvecDelai(joindre(c.apiBaseUrl, c.submitPath), { method: 'GET', headers: entetes })
 
-      // 404/405 sur une LECTURE d'un point d'envoi est normal : l'authentification
-      // a été acceptée, c'est ce que ce test cherche à établir.
-      if (r.ok || r.status === 404 || r.status === 405) {
+      // 404/405 sur une LECTURE d'un point d'envoi est normal — MAIS SEULEMENT
+      // EN OAUTH2 (GF-025). Là, `entetesAuth` a réellement exécuté l'échange
+      // `client_credentials` et lève sur refus : l'authentification est prouvée
+      // avant l'appel, et le code de retour du point d'envoi n'apporte rien.
+      //
+      // En mode CLÉ D'API, rien de tel : l'en-tête est simplement recopié, aucun
+      // aller-retour d'authentification n'a lieu. Un 404 y signifiait donc
+      // seulement « quelque chose a répondu à cette adresse » — un site vitrine
+      // suffisait. La connexion était alors enregistrée `lastTestOk: true`,
+      // `status: 'connected'`, et l'écran affichait une pastille « Testée » sur
+      // une plateforme qui n'a jamais vu passer la moindre facture.
+      const c404Acceptable = (r.status === 404 || r.status === 405) && c.authMode === 'oauth2'
+      if (r.ok || c404Acceptable) {
         return {
           ok: true,
           environment: ctx.environment,

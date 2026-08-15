@@ -1,3 +1,14 @@
+---
+doc-status: historique
+---
+
+> **DOCUMENT HISTORIQUE.** Il décrit la campagne du 14/08/2026 et ses chiffres
+> de l'époque (2 800 puis 2 873 tests, « production ready with reservations »).
+> Une campagne postérieure l'a dépassé : l'état courant et ses réserves sont
+> dans `AUDIT_PROGRESS.md` et `docs/audit/FINAL_VERIFICATION_BASELINE.md`.
+> Conservé tel quel — le réécrire effacerait la trace de ce qui était su ce
+> jour-là.
+
 # GarageFlows — durcissement du 14/08/2026
 
 Branche `claude/garageflow-final-unified-merge-ub0l67`, de `32bf76c` à `525f2bf`.

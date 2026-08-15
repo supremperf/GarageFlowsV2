@@ -5,6 +5,7 @@ import { requireSession, withAuth } from '@/lib/api-helpers'
 import { runAIEngine } from '@/lib/ai-engine'
 import { Job, Mechanic } from '@/lib/types'
 import { parseSpecialty } from '@/lib/specialty'
+import { bornesAtelier } from '@/lib/planning/horaires'
 
 // GET /api/suggestions?date=YYYY-MM-DD
 export const GET = withAuth(async (req) => {
@@ -12,13 +13,23 @@ export const GET = withAuth(async (req) => {
   const { searchParams } = new URL(req.url)
   const date = searchParams.get('date') || new Date().toISOString().split('T')[0]
 
-  const [dbJobs, dbMechanics] = await Promise.all([
+  const [dbJobs, dbMechanics, garage] = await Promise.all([
     prisma.job.findMany({
       where: { garageId: session.user.garageId, date },
     }),
     prisma.mechanic.findMany({
       where: { garageId: session.user.garageId },
       orderBy: { order: 'asc' },
+    }),
+    // Les horaires bornent tout le raisonnement du moteur (créneaux libres,
+    // surcharge, rééquilibrage). Ils étaient enregistrés et jamais lus ici :
+    // les suggestions parlaient d'une journée 8 h – 18 h imaginaire.
+    prisma.garage.findUnique({
+      where: { id: session.user.garageId },
+      select: {
+        workshopStartHour: true, workshopEndHour: true,
+        workshopStartMinute: true, workshopEndMinute: true,
+      },
     }),
   ])
 
@@ -56,7 +67,7 @@ export const GET = withAuth(async (req) => {
     updatedAt: m.updatedAt.toISOString(),
   }))
 
-  const suggestions = runAIEngine({ jobs, mechanics, date })
+  const suggestions = runAIEngine({ jobs, mechanics, date, bornes: bornesAtelier(garage) })
 
   return NextResponse.json(suggestions)
 })

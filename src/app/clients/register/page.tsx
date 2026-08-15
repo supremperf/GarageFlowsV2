@@ -88,8 +88,8 @@ export default function PortalRegisterPage() {
                 <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} autoComplete="new-password" className={inputCls} placeholder="••••••••" />
               </Field>
               <button type="submit" disabled={loading || !email || password.length < 8}
-                className={cn('mt-1 w-full rounded-xl px-4 py-2.5 text-sm font-semibold transition-all',
-                  loading || !email || password.length < 8 ? 'cursor-not-allowed bg-blue-600/20 text-blue-400/40' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/25 hover:bg-blue-500 active:scale-[0.98]')}>
+                className={cn('mt-1 w-full rounded-xl px-4 py-3 text-sm font-semibold transition-all',
+                  loading || !email || password.length < 8 ? 'gf-btn-inactif' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/25 hover:bg-blue-500 active:scale-[0.98]')}>
                 {loading ? <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Création…</span> : 'Créer mon compte'}
               </button>
               <p className="pt-2 text-center text-xs text-slate-600">
@@ -103,7 +103,7 @@ export default function PortalRegisterPage() {
   )
 }
 
-const inputCls = 'w-full rounded-xl border border-white/[0.10] bg-white/[0.05] py-2.5 pl-9 pr-4 text-sm text-white placeholder-slate-600 transition-all focus:border-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500/60'
+const inputCls = 'w-full rounded-xl border border-white/[0.10] bg-white/[0.05] py-3 pl-9 pr-4 text-sm text-white placeholder-slate-600 transition-all focus:border-blue-500/40 focus:outline-none focus:ring-2 focus:ring-blue-500/60'
 
 function Field({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
   return (

@@ -120,9 +120,17 @@ describe('sens PWA → poste : sondage d’EMPREINTE, pas de données (GF-DUR-04
   it('l’empreinte ne divulgue NI donnée métier NI volumétrie', () => {
     // La réponse est un haché tronqué : ni horodatage ni compte en clair, sinon
     // elle renseignerait sur l'activité du garage à qui l'observe.
+    //
+    // Depuis GF-039 elle porte aussi l'état de la remontée cloud — deux valeurs
+    // fermées, `ok` ou `attente`. Elles ne disent rien de l'activité du garage,
+    // seulement si le poste parle au cloud ; c'est précisément ce que l'écran
+    // du comptoir devait pouvoir afficher.
     expect(pulse).toMatch(/createHash\('sha256'\)/)
-    expect(pulse).toMatch(/NextResponse\.json\(\{ v \}/)
+    expect(pulse).toMatch(/cloud \? \{ v, cloud \} : \{ v \}/)
     expect(pulse).not.toMatch(/findMany/)
+    // Aucun agrégat brut ne sort : ni compte, ni horodatage.
+    expect(pulse).not.toMatch(/_count: \w+\._count/)
+    expect(pulse).not.toMatch(/json\(\{[^}]*updatedAt/)
   })
 
   it('l’empreinte est bornée au garage de la SESSION', () => {

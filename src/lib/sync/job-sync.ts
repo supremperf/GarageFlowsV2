@@ -18,7 +18,8 @@ import { cloudPost, isDesktopInstance } from '@/lib/sync/cloud-client'
 import { logger } from '@/lib/logger'
 import { shortId } from '@/lib/sync/garage-auth'
 import {
-  syncWindow, SYNC_MAX_JOBS, SYNC_MAX_TOMBSTONES, shouldApplyCloudExecution, type SyncJob,
+  syncWindow, SYNC_MAX_JOBS, SYNC_MAX_TOMBSTONES, shouldApplyCloudExecution, clockOffsetMs,
+  type SyncJob,
 } from '@/lib/sync/job-fields'
 
 export interface JobSyncResult {
@@ -28,6 +29,8 @@ export interface JobSyncResult {
   deleted?: number
   appliedBack?: number
   skipped?: boolean
+  /** Le cloud a annoncé un reste, et ce passage a fait avancer les curseurs. */
+  resteAPuiser?: boolean
 }
 
 /** Photos rapatriées au maximum par passage — la suite au tour suivant. */
@@ -51,12 +54,39 @@ async function garageLicenseToken(garageId: string): Promise<string | null> {
   return license?.token ?? null
 }
 
+/** Recul du curseur d'un flux, ou `null` si ce flux n'a encore rien reçu. */
+function recule(d: Date | null | undefined): Date | null {
+  return d instanceof Date ? new Date(d.getTime() - CURSOR_OVERLAP_MS) : null
+}
+
 /**
- * Curseur de la voie de retour : le plus récent élément déjà rapatrié.
- * Déduit des données locales — aucun stockage supplémentaire, donc rien à
- * réparer si la base est restaurée depuis une sauvegarde.
+ * Heure du SERVEUR au dernier passage réussi, telle qu'il l'a datée
+ * (`syncedAt`). Volontairement en mémoire : au redémarrage du poste, le curseur
+ * repart à zéro et un passage complet remet tout à plat — c'est correct, et ça
+ * évite une colonne de plus à réparer après une restauration de sauvegarde.
  */
-async function returnCursor(garageId: string): Promise<Date | null> {
+const dernierSyncedAt = new Map<string, string>()
+
+/**
+ * Curseurs de la voie de retour — UN PAR FLUX.
+ *
+ * Commentaires et photos se déduisent des données locales : aucun stockage
+ * supplémentaire, donc rien à réparer si la base est restaurée depuis une
+ * sauvegarde.
+ *
+ * Un curseur COMMUN aux deux n'a pas de bon réglage. Le plus récent avance au
+ * rythme du flux le plus bavard et saute définitivement les éléments de l'autre
+ * (GF31-AUD-017). Le plus ancien — le réglage précédent — se fixe sur le flux le
+ * plus en retard : un garage dont la dernière photo date de trois mois
+ * redemandait à chaque passage tout ce qui s'était écrit depuis, et le serveur
+ * n'en renvoyait que les 200 plus ANCIENS. Passé ce volume, la réponse ne
+ * contenait plus que du déjà-appliqué : les nouveaux commentaires du mécanicien
+ * ne redescendaient JAMAIS.
+ *
+ * Séparer les curseurs supprime le choix : chaque flux avance seul, sans
+ * bloquer ni se faire dépasser.
+ */
+async function returnCursors(garageId: string): Promise<{ jobs: Date | null; notes: Date | null; photos: Date | null }> {
   const [note, photo] = await Promise.all([
     prisma.jobMechanicNote.findFirst({
       where: { garageId }, select: { createdAt: true }, orderBy: { createdAt: 'desc' },
@@ -66,18 +96,20 @@ async function returnCursor(garageId: string): Promise<Date | null> {
       select: { createdAt: true }, orderBy: { createdAt: 'desc' },
     }),
   ])
-  const stamps = [note?.createdAt, photo?.createdAt].filter((d): d is Date => d instanceof Date)
-  if (stamps.length === 0) return null
-  // Le curseur est COMMUN aux deux flux : prendre le PLUS RÉCENT des deux le
-  // faisait avancer au rythme du flux le plus bavard. Un garage où les
-  // commentaires arrivent souvent et les photos rarement voyait donc le curseur
-  // dépasser des photos jamais rapatriées — définitivement invisibles côté poste
-  // (GF31-AUD-017). On retient le PLUS ANCIEN : le flux le plus en retard
-  // commande. Le surcoût est nul en pratique — la voie de retour est
-  // idempotente (upserts par identifiant) et déjà conçue pour rejouer, comme en
-  // témoigne le recouvrement ci-dessous.
-  const oldest = new Date(Math.min(...stamps.map((d) => d.getTime())))
-  return new Date(oldest.getTime() - CURSOR_OVERLAP_MS)
+  // Le flux « exécution » ne peut PAS se déduire des données locales :
+  // `Job.updatedAt` bouge à chaque écriture du poste, y compris celles qui n'ont
+  // rien à voir avec le mécanicien — s'en servir masquerait son travail dès que
+  // le garage touche la fiche. Le repère est donc l'heure que le SERVEUR a
+  // lui-même donnée à son dernier passage : deux horodatages de la même horloge,
+  // comparés entre eux. Tant qu'il n'y en a pas (premier passage, redémarrage du
+  // poste), on demande la fenêtre entière.
+  const dernier = dernierSyncedAt.get(garageId)
+  const jobs = dernier ? recule(new Date(dernier)) : null
+  return {
+    jobs: jobs && !Number.isNaN(jobs.getTime()) ? jobs : null,
+    notes: recule(note?.createdAt),
+    photos: recule(photo?.createdAt),
+  }
 }
 
 /**
@@ -121,14 +153,24 @@ export async function syncGarageJobs(garageId: string, now: Date = new Date()): 
     })
     const deletedIds = tombstones.map((t) => t.jobId)
 
-    const since = await returnCursor(garageId)
+    const curseurs = await returnCursors(garageId)
+    // Repli pour un serveur antérieur à cette version, qui ne connaît que
+    // `since` : on lui donne le plus ancien des curseurs, c'est-à-dire
+    // exactement ce qu'il recevait avant. Il ne régresse donc pas ; un serveur à
+    // jour ignore ce champ au profit des trois curseurs précis.
+    const stamps = [curseurs.notes, curseurs.photos].filter((d): d is Date => d instanceof Date)
+    const sinceCompat = stamps.length > 0 ? new Date(Math.min(...stamps.map((d) => d.getTime()))) : null
+
     const out = await cloudPost('/api/sync/jobs', {
       garageLicense: token,
       garageId,
       window,
       jobs,
       deletedIds,
-      since: since ? since.toISOString() : null,
+      since: sinceCompat ? sinceCompat.toISOString() : null,
+      sinceJobs: curseurs.jobs ? curseurs.jobs.toISOString() : null,
+      sinceNotes: curseurs.notes ? curseurs.notes.toISOString() : null,
+      sincePhotos: curseurs.photos ? curseurs.photos.toISOString() : null,
       // La fenêtre a-t-elle été envoyée COMPLÈTE ? Le cloud supprime les
       // interventions de la fenêtre qu'il n'a pas reçues ; avec plus de
       // SYNC_MAX_JOBS interventions, le surplus était donc détruit à chaque
@@ -157,7 +199,27 @@ export async function syncGarageJobs(garageId: string, now: Date = new Date()): 
       await prisma.jobTombstone.deleteMany({ where: { garageId, jobId: { in: acquittees } } })
     }
 
-    const appliedBack = await applyCloudChanges(garageId, token, out.data?.changes)
+    // ── Décalage d'horloge, mesuré sur la MÊME réponse ───────────────────────
+    // Le serveur date sa réponse (`syncedAt`). L'écart avec l'heure du poste au
+    // moment de l'envoi donne le décalage, borné exactement comme à la montée.
+    // Sans lui, la descente arbitrait deux horloges différentes l'une contre
+    // l'autre — le défaut que `resolveMirrorWrite` corrige déjà dans l'autre
+    // sens (GF31-AUD-016).
+    const decalageMs = clockOffsetMs(
+      typeof out.data?.syncedAt === 'string' ? out.data.syncedAt : null,
+      now,
+    )
+
+    // Curseur du flux « exécution » : l'heure du SERVEUR au dernier passage
+    // réussi, telle qu'il l'a lui-même datée. Le prochain envoi ne redemande
+    // donc que les miroirs modifiés depuis — au lieu de la fenêtre entière, à
+    // chaque passage, toutes les dix secondes.
+    if (typeof out.data?.syncedAt === 'string') {
+      dernierSyncedAt.set(garageId, out.data.syncedAt)
+    }
+
+    const { applied: appliedBack, resteAPuiser } =
+      await applyCloudChanges(garageId, token, out.data?.changes, decalageMs)
 
     logger.info('[sync/jobs:push] confirmée', {
       garage: shortId(garageId),
@@ -166,12 +228,18 @@ export async function syncGarageJobs(garageId: string, now: Date = new Date()): 
       deleted: Number(out.data?.deleted ?? 0),
       executionKept: Number(out.data?.executionKept ?? 0),
       appliedBack,
+      resteAPuiser,
     })
     return {
       synced: true,
       pushed: jobs.length,
       deleted: Number(out.data?.deleted ?? 0),
       appliedBack,
+      // Il reste de l'arriéré ET ce passage a fait avancer les curseurs :
+      // l'appelant peut enchaîner immédiatement au lieu d'attendre le prochain
+      // déclencheur. Sans progrès, on ne repasse pas — c'est ce qui empêche de
+      // boucler sur un élément que le cloud ne saurait pas servir.
+      resteAPuiser: resteAPuiser && appliedBack > 0,
     }
   } catch (err) {
     logger.warn('[sync/jobs:push] erreur', { garage: shortId(garageId), message: (err as Error)?.message })
@@ -183,28 +251,48 @@ interface CloudChanges {
   jobs?: Array<Record<string, unknown>>
   notes?: Array<Record<string, unknown>>
   photos?: Array<Record<string, unknown>>
+  truncated?: { notes?: boolean; photos?: boolean }
 }
 
-/** Applique localement ce que le mécanicien a produit. Ne lève jamais. */
+/**
+ * Applique localement ce que le mécanicien a produit. Ne lève jamais.
+ *
+ * @param decalageMs décalage à ajouter à un horodatage SERVEUR pour l'exprimer
+ *   dans l'horloge du poste (`posteNow - serverNow`).
+ */
 async function applyCloudChanges(
   garageId: string,
   token: string,
   raw: unknown,
-): Promise<number> {
+  decalageMs = 0,
+): Promise<{ applied: number; resteAPuiser: boolean }> {
   const changes = (raw ?? {}) as CloudChanges
   let applied = 0
 
   // 1. Exécution (statut, chrono) — uniquement si le cloud est plus récent que
   //    la version locale, sinon on écraserait une décision du garage.
-  for (const j of changes.jobs ?? []) {
-    const id = typeof j.id === 'string' ? j.id : ''
-    const cloudAt = typeof j.updatedAt === 'string' ? new Date(j.updatedAt) : null
-    if (!id || !cloudAt || Number.isNaN(cloudAt.getTime())) continue
-    const local = await prisma.job.findFirst({
-      where: { id, garageId }, select: { id: true, updatedAt: true },
-    })
-    if (!local) continue
-    if (!shouldApplyCloudExecution(local.updatedAt, cloudAt)) continue
+  //
+  // Les états locaux sont lus en UNE requête. Un `findFirst` par intervention
+  // faisait, sur une fenêtre pleine, cinq cents allers-retours SQLite à chaque
+  // passage — toutes les dix secondes — pour n'en écrire le plus souvent aucune.
+  const recues = (changes.jobs ?? [])
+    .map((j) => ({
+      brut: j,
+      id: typeof j.id === 'string' ? j.id : '',
+      cloudAt: typeof j.updatedAt === 'string' ? new Date(j.updatedAt) : null,
+    }))
+    .filter((e) => e.id && e.cloudAt && !Number.isNaN(e.cloudAt.getTime()))
+
+  const locaux = recues.length === 0 ? [] : await prisma.job.findMany({
+    where: { garageId, id: { in: recues.map((e) => e.id) } },
+    select: { id: true, updatedAt: true },
+  })
+  const parId = new Map(locaux.map((l) => [l.id, l.updatedAt]))
+
+  for (const { brut: j, id, cloudAt } of recues) {
+    const localAt = parId.get(id)
+    if (!localAt) continue
+    if (!shouldApplyCloudExecution(localAt, cloudAt as Date, decalageMs)) continue
     await prisma.job.updateMany({
       where: { id, garageId },
       data: {
@@ -283,7 +371,15 @@ async function applyCloudChanges(
     applied += 1
   }
 
-  return applied
+  // Reste-t-il de l'arriéré ? Deux sources : le plafond du SERVEUR (il a coupé
+  // sa réponse) et celui du POSTE (`MAX_PHOTO_PULLS_PER_RUN`). Dans les deux cas
+  // le passage suivant reprendra là où celui-ci s'arrête, les curseurs ayant
+  // avancé.
+  const resteAPuiser = Boolean(changes.truncated?.notes)
+    || Boolean(changes.truncated?.photos)
+    || pulled >= MAX_PHOTO_PULLS_PER_RUN
+
+  return { applied, resteAPuiser }
 }
 
 /**
@@ -307,24 +403,59 @@ export function scheduleJobSync(garageId: string | null | undefined): void {
   state.timer = setTimeout(() => { void runNow(garageId) }, DEBOUNCE_MS)
 }
 
-async function runNow(garageId: string): Promise<void> {
+/**
+ * Passages d'affilée autorisés pour écouler un arriéré.
+ *
+ * L'arriéré s'écoule par tranches (200 commentaires, 10 photos) : sans
+ * enchaînement, un garage rentrant de congés mettait des heures à rapatrier le
+ * travail du mécanicien, à raison d'une tranche par déclenchement. La borne
+ * évite qu'un cloud renvoyant éternellement « il en reste » ne fasse tourner le
+ * poste sans fin — et l'enchaînement exige de toute façon un PROGRÈS réel.
+ */
+const MAX_ENCHAINEMENTS = 20
+
+async function runNow(garageId: string, enchainement = 0): Promise<void> {
   const state = pending.get(garageId)
   if (!state) return
   state.timer = null
   state.running = true
+  let reste = false
   try {
-    await syncGarageJobs(garageId)
+    const res = await syncGarageJobs(garageId)
+    reste = res.resteAPuiser === true
+    // `skipped` = instance non-Desktop : il n'y a rien à synchroniser, ce n'est
+    // pas une attente.
+    if (!res.skipped) dernierResultat.set(garageId, res.synced ? 'ok' : 'attente')
     lastRunAt.set(garageId, Date.now())
   } finally {
     state.running = false
     if (state.again) {
       state.again = false
       scheduleJobSync(garageId)
+    } else if (reste && enchainement < MAX_ENCHAINEMENTS) {
+      state.timer = setTimeout(() => { void runNow(garageId, enchainement + 1) }, DEBOUNCE_MS)
     }
   }
 }
 
 const lastRunAt = new Map<string, number>()
+
+/**
+ * Issue du dernier passage, par garage — pour que l'écran puisse la DIRE.
+ *
+ * Une remontée non confirmée était seulement journalisée : l'écran du comptoir
+ * ne distinguait pas « le mécanicien a bien reçu l'affectation » de « le cloud
+ * ne répond pas depuis dix minutes ». Le rattrapage existe (la fenêtre entière
+ * repart au passage suivant), mais tant que l'application tourne sans réseau,
+ * personne ne le sait.
+ */
+const dernierResultat = new Map<string, 'ok' | 'attente'>()
+
+/** État de la dernière remontée : `null` si aucune n'a encore eu lieu. */
+export function etatSyncCloud(garageId: string | null | undefined): 'ok' | 'attente' | null {
+  if (!garageId) return null
+  return dernierResultat.get(garageId) ?? null
+}
 
 /**
  * Intervalle minimal entre deux remontées déclenchées par une simple LECTURE.
@@ -356,4 +487,6 @@ export function __resetJobSyncScheduler(): void {
   }
   pending.clear()
   lastRunAt.clear()
+  dernierSyncedAt.clear()
+  dernierResultat.clear()
 }

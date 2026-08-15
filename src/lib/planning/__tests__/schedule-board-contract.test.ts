@@ -20,15 +20,24 @@ const SRC = readFileSync(path.join(RACINE, 'src/components/ScheduleBoard.tsx'), 
 const CODE = SRC.replace(/^\s*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
 
 describe('fenêtre de mécaniciens — plus aucune colonne compressée', () => {
+  // La fenêtre porte désormais sur `mecaniciensAffichables` et non plus sur
+  // `mechanics` : le magasin charge aussi les ARCHIVÉS, faute de quoi leurs
+  // interventions ne trouvaient plus de colonne et disparaissaient de l'écran
+  // (GF-040). Un archivé n'occupe une colonne que s'il lui reste du travail.
   it('les colonnes affichées viennent de la fenêtre calculée', () => {
-    expect(CODE).toMatch(/trancheVisible\(mechanics,\s*debutFenetre,\s*colonnesVisibles\)/)
+    expect(CODE).toMatch(/trancheVisible\(mecaniciensAffichables,\s*debutFenetre,\s*colonnesVisibles\)/)
   })
 
   it('le nombre de colonnes est CALCULÉ sur la largeur mesurée', () => {
-    expect(CODE).toMatch(/nombreColonnesVisibles\(largeurPlanning,\s*mechanics\.length\)/)
+    expect(CODE).toMatch(/nombreColonnesVisibles\(largeurPlanning,\s*mecaniciensAffichables\.length\)/)
     // Mesure réelle et non point de rupture CSS : la place disponible dépend de
     // la barre latérale et de la taille de fenêtre, pas seulement de l'écran.
     expect(CODE).toContain('ResizeObserver')
+  })
+
+  it('un ARCHIVÉ sans intervention n’occupe plus de colonne', () => {
+    // Sinon la grille se remplirait de colonnes vides pour des gens partis.
+    expect(CODE).toMatch(/!m\.archivedAt \|\| \(jobsByMechanic\[m\.id\]\?\.length \?\? 0\) > 0/)
   })
 
   it('plus aucun rendu inconditionnel de TOUS les mécaniciens', () => {

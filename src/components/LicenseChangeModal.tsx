@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, KeyRound, CheckCircle, AlertCircle, Loader2, Monitor } from 'lucide-react'
 import { GarageFlowIcon } from './GarageFlowLogo'
+import { getOrCreateInstallId } from '@/lib/pwa-install-id'
 
 interface Props {
   onClose: () => void
@@ -154,17 +155,30 @@ export default function LicenseChangeModal({ onClose }: Props) {
           setResult({ ok: false, message: res.reason ?? 'Licence invalide' })
         }
       } else {
+        // ── Trois défauts cumulés, corrigés ensemble (GF-008) ─────────────────
+        // 1. le corps portait `token`, alors que la route lit `body.license`
+        //    (src/app/api/license/activate/route.ts:293) : le serveur recevait
+        //    une licence VIDE et refusait TOUTE clé, même parfaitement valide ;
+        // 2. aucun `installId` n'était transmis, alors que la route l'exige
+        //    hors Electron pour toute licence non-admin — l'appel serait resté
+        //    refusé (DEVICE_REQUIRED) même après correction du nom de champ ;
+        // 3. le message affiché lisait `data.error`, champ que cette route
+        //    n'émet JAMAIS (elle émet `reason`) : le motif réel du refus était
+        //    systématiquement remplacé par un « Licence invalide » générique.
+        // La branche Electron, elle, fonctionnait — ce qui masquait le défaut
+        // en recette sur poste.
+        const installId = getOrCreateInstallId()
         const res = await fetch('/api/license/activate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: t }),
+          body: JSON.stringify({ license: t, ...(installId ? { installId } : {}) }),
         })
         const data = await res.json()
-        if (res.ok && data.licenseType) {
+        if (data.ok && data.licenseType) {
           setResult({ ok: true, message: `Licence activée (${data.licenseType})`, licenseType: data.licenseType })
           setTimeout(() => { onClose(); window.location.reload() }, 1500)
         } else {
-          setResult({ ok: false, message: data.error ?? 'Licence invalide' })
+          setResult({ ok: false, message: data.reason ?? data.error ?? 'Licence invalide' })
         }
       }
     } catch {

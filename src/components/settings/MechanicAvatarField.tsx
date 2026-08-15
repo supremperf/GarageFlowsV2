@@ -48,7 +48,16 @@ export default function MechanicAvatarField({ mechanic, onChange }: MechanicAvat
       if (!res.ok) { toast.error(corps?.error || 'Envoi de la photo refusé.'); return }
 
       onChange(corps.avatarUrl ?? null)
-      toast.success('Photo mise à jour')
+      // `cloudSynced` est renvoyé exprès par la route pour que l'écran puisse
+      // dire la vérité : la photo est bien enregistrée sur CE poste, mais tant
+      // qu'elle n'est pas propagée le mécanicien continue de voir ses initiales
+      // dans sa PWA. Annoncer « Photo mise à jour » tout court laissait croire
+      // que les deux surfaces étaient à jour.
+      if (corps.cloudSynced === false) {
+        toast('Photo enregistrée sur ce poste — synchronisation avec l’espace en ligne en attente.', { icon: '⚠️' })
+      } else {
+        toast.success('Photo mise à jour')
+      }
     } catch {
       toast.error('Envoi impossible — vérifiez votre connexion.')
     } finally {
@@ -63,7 +72,11 @@ export default function MechanicAvatarField({ mechanic, onChange }: MechanicAvat
       const corps = await res.json().catch(() => ({}))
       if (!res.ok) { toast.error(corps?.error || 'Suppression refusée.'); return }
       onChange(null)
-      toast.success('Photo supprimée')
+      if (corps.cloudSynced === false) {
+        toast('Photo retirée sur ce poste — synchronisation avec l’espace en ligne en attente.', { icon: '⚠️' })
+      } else {
+        toast.success('Photo supprimée')
+      }
     } catch {
       toast.error('Suppression impossible — vérifiez votre connexion.')
     } finally {

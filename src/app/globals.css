@@ -30,6 +30,34 @@
     --scrollbar-thumb: rgba(255,255,255,0.15);
     --scrollbar-hover: rgba(255,255,255,0.25);
 
+    /* ── Jetons de SURFACE (GF-014) ─────────────────────────────────────────
+       Les composants écrivent leurs fonds en dur (`bg-[#111827]`, `bg-[#0d1424]`,
+       `bg-[#0f1629]/80`…). Le thème clair les rattrapait par une LISTE LITTÉRALE
+       de classes — donc uniquement celles qui y figuraient. Relevé : huit fonds
+       sombres utilisés dans vingt-trois fichiers n'y étaient pas, dont
+       `bg-[#111827]/95`, la carte des écrans de CONNEXION, d'ACTIVATION DE
+       LICENCE et de tout le portail client. Là, `[data-theme="light"] .text-white`
+       et `--input-text` passaient bien en encre foncée… sur un fond resté
+       quasi noir : le texte saisi devenait invisible (1,12:1), et l'utilisateur
+       croyait que la saisie ne fonctionnait pas.
+       Les thèmes « Night Shift » et « True Tone », eux, n'avaient AUCUNE liste :
+       ils ne changeaient donc quasiment rien.
+
+       Un jeton par surface, décliné dans les quatre thèmes, et une règle qui
+       rattache la classe au jeton (plus bas). En thème sombre, chaque valeur est
+       EXACTEMENT celle qui était codée en dur : aucun changement d'apparence.
+       Une nouvelle nuance d'opacité ne casse plus rien — le sélecteur porte sur
+       la BASE de la classe, pas sur ses variantes. */
+    --surface-app:           #0f1629;
+    --surface-app-deep:      #0a0f1e;
+    --surface-card:          #111827;
+    --surface-card-alt:      #0b1220;
+    --surface-card-deep:     #0d1424;
+    --surface-panel:         #161f38;
+    --surface-panel-alt:     #161f33;
+    --surface-panel-strong:  #1a2540;
+    --surface-dropdown:      #1a2235;
+
     /* Legacy vars */
     --background: 15 22 41;
     --foreground: 248 250 252;
@@ -60,6 +88,16 @@
     --hover-bg: rgba(0,0,0,0.05);
     --scrollbar-thumb: rgba(0,0,0,0.15);
     --scrollbar-hover: rgba(0,0,0,0.25);
+
+    --surface-app:           #f0f4f8;
+    --surface-app-deep:      #e8eef5;
+    --surface-card:          #ffffff;
+    --surface-card-alt:      #ffffff;
+    --surface-card-deep:     #ffffff;
+    --surface-panel:         #f1f5f9;
+    --surface-panel-alt:     #f1f5f9;
+    --surface-panel-strong:  #e2e8f0;
+    --surface-dropdown:      #ffffff;
   }
 
   /* Night Shift — teintes chaudes ambrées, repose les yeux le soir */
@@ -85,6 +123,16 @@
     --navy-800: #211808;
     --navy-700: #2e230c;
     --navy-600: #3d2e10;
+
+    --surface-app:           #1a1208;
+    --surface-app-deep:      #120c05;
+    --surface-card:          #211808;
+    --surface-card-alt:      #1c1407;
+    --surface-card-deep:     #1c1407;
+    --surface-panel:         #281e0a;
+    --surface-panel-alt:     #281e0a;
+    --surface-panel-strong:  #33270d;
+    --surface-dropdown:      #2e230c;
   }
 
   /* True Tone — adaptatif, teinte bleue douce, hauts contrastes, confort visuel */
@@ -110,6 +158,16 @@
     --navy-800: #122338;
     --navy-700: #162c44;
     --navy-600: #1a3350;
+
+    --surface-app:           #0d1b2e;
+    --surface-app-deep:      #091524;
+    --surface-card:          #122338;
+    --surface-card-alt:      #0f1e30;
+    --surface-card-deep:     #0f1e30;
+    --surface-panel:         #162c44;
+    --surface-panel-alt:     #162c44;
+    --surface-panel-strong:  #1a3350;
+    --surface-dropdown:      #1a3350;
   }
 
   html {
@@ -539,6 +597,60 @@ button:not(:disabled):active,
   .gf-app-main { padding: 6px !important; }
   .gf-compact-scroll { scrollbar-width: thin; }
 }
+
+/* ── Bouton principal DÉSACTIVÉ (GF-019) ──────────────────────────────────────
+   Les quatre écrans d'entrée — connexion, activation de licence, connexion et
+   inscription du portail client — habillaient leur bouton inactif en
+   `bg-blue-600/20 text-blue-400/40` : du bleu à 40 % d'opacité sur du bleu à
+   20 %. Contraste mesuré dans un vrai navigateur : 1,25:1 en thème clair, 2,11
+   à 2,16:1 dans les trois autres. Le libellé « Se connecter » était illisible
+   DANS TOUS LES THÈMES — et c'est le premier élément que voit l'utilisateur,
+   puisque le bouton n'est actif qu'une fois le formulaire rempli.
+
+   Un bouton inactif doit rester lisible : il indique ce qui se passera. On le
+   grise avec les jetons du thème plutôt qu'avec de la transparence empilée. */
+.gf-btn-inactif {
+  background-color: var(--panel-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  cursor: not-allowed;
+}
+
+/* ── Surfaces codées en dur → jetons de thème (GF-014) ────────────────────────
+   Le sélecteur porte sur la BASE de la classe, pas sur ses variantes : toutes
+   les nuances d'opacité (`/95`, `/90`, `/80`, et celles à venir) sont couvertes
+   par la même règle. C'est ce qui manquait — la correction précédente
+   énumérait les classes une par une, et `bg-[#111827]/95` n'y figurait pas.
+
+   Ces règles NE PORTENT PAS `!important` : les surcharges littérales du thème
+   clair, qui en portent, restent prioritaires là où elles existent. En thème
+   sombre les jetons valent EXACTEMENT les couleurs d'origine — donc aucun
+   changement d'apparence. Les thèmes « Night Shift » et « True Tone », qui
+   n'avaient aucune surcharge, deviennent enfin effectifs.
+
+   Aucune de ces classes n'est employée avec un préfixe d'état (`hover:`, `md:`…)
+   dans le dépôt — vérifié — donc le sélecteur d'attribut ne peut pas appliquer
+   par erreur un fond conditionnel de façon permanente. */
+[class*="bg-[#0f1629]"] { background-color: var(--surface-app); }
+[class*="bg-[#0a0f1e]"],
+[class*="bg-[#070d1b]"] { background-color: var(--surface-app-deep); }
+[class*="bg-[#111827]"] { background-color: var(--surface-card); }
+[class*="bg-[#0b1220]"] { background-color: var(--surface-card-alt); }
+[class*="bg-[#0d1424]"] { background-color: var(--surface-card-deep); }
+[class*="bg-[#161f38]"] { background-color: var(--surface-panel); }
+[class*="bg-[#161f33]"] { background-color: var(--surface-panel-alt); }
+[class*="bg-[#1a2540]"] { background-color: var(--surface-panel-strong); }
+[class*="bg-[#1a2235]"] { background-color: var(--surface-dropdown); }
+
+/* Variantes TRANSLUCIDES : l'opacité voulue est conservée, la teinte vient du
+   jeton. La déclaration pleine sert de repli aux moteurs sans `color-mix`. */
+[class*="bg-[#0f1629]/95"] { background-color: var(--surface-app); background-color: color-mix(in srgb, var(--surface-app) 95%, transparent); }
+[class*="bg-[#0f1629]/90"] { background-color: var(--surface-app); background-color: color-mix(in srgb, var(--surface-app) 90%, transparent); }
+[class*="bg-[#0f1629]/80"] { background-color: var(--surface-app); background-color: color-mix(in srgb, var(--surface-app) 80%, transparent); }
+[class*="bg-[#0a0f1e]/95"] { background-color: var(--surface-app-deep); background-color: color-mix(in srgb, var(--surface-app-deep) 95%, transparent); }
+[class*="bg-[#111827]/95"] { background-color: var(--surface-card); background-color: color-mix(in srgb, var(--surface-card) 95%, transparent); }
+[class*="bg-[#111827]/90"] { background-color: var(--surface-card); background-color: color-mix(in srgb, var(--surface-card) 90%, transparent); }
+[class*="bg-[#111827]/80"] { background-color: var(--surface-card); background-color: color-mix(in srgb, var(--surface-card) 80%, transparent); }
 
 /* ── Réduction des animations si l'utilisateur le demande ────────────────────*/
 @media (prefers-reduced-motion: reduce) {

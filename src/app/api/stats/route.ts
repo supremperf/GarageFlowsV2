@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { subDays, format, eachDayOfInterval, parseISO } from 'date-fns'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
-import { fromCents, fromScaled } from '@/lib/money'
+import { fromCents, toCents, lineCents, fromScaled } from '@/lib/money'
 import { linesToEuros, intQtyLineCents } from '@/lib/money-db'
 import { logger } from '@/lib/logger'
 
@@ -41,6 +41,9 @@ export const GET = withAuth(async (req) => {
       include: {
         jobParts: { include: { part: true } },
         mechanic: true,
+        // Identité RÉELLE du client, pour le classement (voir plus bas) :
+        // `customerName` est du texte libre, saisi à chaque intervention.
+        vehicle: { select: { clientId: true, client: { select: { name: true } } } },
       },
     }),
 
@@ -80,14 +83,22 @@ export const GET = withAuth(async (req) => {
     const dayJobs  = jobs.filter(j => j.date === dateStr)
     const completed = dayJobs.filter(j => j.status === 'completed')
 
+    // ── Cumul en CENTIMES, arrondi une seule fois (GF-036) ───────────────────
+    // Chaque journée était arrondie à l'EURO (`Math.round`) puis les journées
+    // étaient additionnées. Sept jours à 1 h 30 × 65 €/h font 682,50 € réels ;
+    // arrondis jour par jour (98 €), ils en faisaient 686. Sur la fenêtre
+    // maximale de 90 jours, la dérive atteint ±45 €, et une marge réelle de
+    // 0,80 € disparaissait quand produit et coût s'arrondissaient au même euro.
+    // `lib/money` pose la règle : les calculs financiers se font en entiers de
+    // centimes, et l'arrondi vient EN DERNIER.
     const billedMinutes = completed.reduce((s, j) => s + (j.actualDuration ?? j.estimatedDuration), 0)
     const billedHours   = billedMinutes / 60
-    const laborRevenue  = billedHours * hourlyRate
+    const laborCents    = lineCents(hourlyRate, billedHours)
 
-    const partsRevenue  = dayJobs.reduce((s, j) =>
-      s + j.jobParts.reduce((ps, jp) => ps + fromCents(intQtyLineCents(jp.unitPriceTenThousandths, jp.quantity)), 0), 0)
-    const partsCost     = dayJobs.reduce((s, j) =>
-      s + j.jobParts.reduce((ps, jp) => ps + fromCents(intQtyLineCents(jp.unitCostTenThousandths, jp.quantity)), 0), 0)
+    const partsRevenueCents = dayJobs.reduce((s, j) =>
+      s + j.jobParts.reduce((ps, jp) => ps + intQtyLineCents(jp.unitPriceTenThousandths, jp.quantity), 0), 0)
+    const partsCostCents    = dayJobs.reduce((s, j) =>
+      s + j.jobParts.reduce((ps, jp) => ps + intQtyLineCents(jp.unitCostTenThousandths, jp.quantity), 0), 0)
 
     // Invoice revenue for this specific day
     const dayInvoiceRevenue = invoiceByDate.get(dateStr) ?? 0
@@ -102,10 +113,10 @@ export const GET = withAuth(async (req) => {
       jobCount:         dayJobs.length,
       completedCount:   completed.length,
       billedHours:      Math.round(billedHours * 10) / 10,
-      laborRevenue:     Math.round(laborRevenue),
-      partsRevenue:     Math.round(partsRevenue),
-      partsCost:        Math.round(partsCost),
-      totalRevenue:     Math.round(laborRevenue + partsRevenue),
+      laborRevenue:     fromCents(laborCents),
+      partsRevenue:     fromCents(partsRevenueCents),
+      partsCost:        fromCents(partsCostCents),
+      totalRevenue:     fromCents(laborCents + partsRevenueCents),
       invoiceRevenue:   Math.round(dayInvoiceRevenue), // ← paid invoice revenue
       utilizationRate,
     }
@@ -140,7 +151,8 @@ export const GET = withAuth(async (req) => {
       jobCount:             mJobs.length,
       completedCount:       completed.length,
       billedHours:          Math.round(billedHrs * 10) / 10,
-      laborRevenue:         Math.round(billedHrs * hourlyRate),
+      // Même règle que les journées : centimes exacts, arrondi en dernier.
+      laborRevenue:         fromCents(lineCents(hourlyRate, billedHrs)),
       invoiceRevenue:       Math.round(mechanicInvoiceRevenue),
       utilizationRate,
       efficiency,
@@ -150,9 +162,12 @@ export const GET = withAuth(async (req) => {
   })
 
   // ── Global totals ─────────────────────────────────────────────────────────
-  const laborTotal  = dailyStats.reduce((s, d) => s + d.laborRevenue,  0)
-  const partsTotal  = dailyStats.reduce((s, d) => s + d.partsRevenue,  0)
-  const partsCTotal = dailyStats.reduce((s, d) => s + d.partsCost,     0)
+  // Les cumuls repassent par les centimes : additionner des euros décimaux
+  // réintroduirait, en flottant, l'imprécision que l'arrondi journalier venait
+  // de créer en entier.
+  const laborTotal  = fromCents(dailyStats.reduce((s, d) => s + toCents(d.laborRevenue),  0))
+  const partsTotal  = fromCents(dailyStats.reduce((s, d) => s + toCents(d.partsRevenue),  0))
+  const partsCTotal = fromCents(dailyStats.reduce((s, d) => s + toCents(d.partsCost),     0))
 
   const totals = {
     jobCount:         jobs.length,
@@ -161,14 +176,20 @@ export const GET = withAuth(async (req) => {
     laborRevenue:     laborTotal,
     partsRevenue:     partsTotal,
     partsCost:        partsCTotal,
-    partsMargin:      partsTotal - partsCTotal,
-    totalRevenue:     laborTotal + partsTotal,
+    partsMargin:      fromCents(toCents(partsTotal) - toCents(partsCTotal)),
+    totalRevenue:     fromCents(toCents(laborTotal) + toCents(partsTotal)),
     // ── Invoice-based revenue (paid invoices = confirmed cash) ──
     invoiceRevenue:   Math.round(invoiceRevenue),  // TTC
     invoiceHT:        Math.round(invoiceHT),
     invoiceCount,
-    // Combined true revenue = max(job-based, invoice-based) — avoid double-counting
-    confirmedRevenue: Math.round(invoiceRevenue > 0 ? invoiceRevenue : laborTotal + partsTotal),
+    // ── Le `max` annoncé est maintenant appliqué, sur DEUX grandeurs HT ──────
+    // Le commentaire promettait « max(job-based, invoice-based) » ; le code
+    // écrivait un ternaire, et surtout comparait le TTC des factures payées au
+    // HT du planning. Dès qu'une seule facture était encaissée, la branche
+    // « planning » disparaissait — un mois entier de travail pouvait se réduire
+    // au montant de cette facture. `invoiceHT` est déjà calculé plus haut : les
+    // deux grandeurs sont désormais comparables.
+    confirmedRevenue: Math.round(Math.max(invoiceHT, laborTotal + partsTotal)),
     utilizationRate:  dailyStats.length
       ? Math.round(dailyStats.reduce((s, d) => s + d.utilizationRate, 0) / dailyStats.length)
       : 0,
@@ -178,10 +199,19 @@ export const GET = withAuth(async (req) => {
   const stockAlerts = lowStockParts.filter(p => p.quantity <= p.minQuantity)
 
   // ── Top clients (by job count in period) ─────────────────────────────────
+  // ── Le classement suit le CLIENT, plus l'orthographe de son nom (GF-036) ──
+  // `customerName` est du texte libre, ressaisi à chaque intervention :
+  // « Jean Dupont », « jean dupont » et « J. Dupont » comptaient pour trois
+  // clients distincts, et aucun d'eux n'atteignait le podium. Renommer une
+  // fiche client ne changeait rien non plus — rien ne propage vers `Job`.
+  // L'identité fiable existe depuis GF-015 : intervention → véhicule → client,
+  // dès qu'une plaque est saisie. Le repli sur le nom couvre l'historique et
+  // les interventions sans plaque.
   const clientCounts = new Map<string, { name: string; count: number; revenue: number }>()
   for (const j of jobs) {
-    const key = j.customerName
-    const entry = clientCounts.get(key) ?? { name: key, count: 0, revenue: 0 }
+    const key = j.vehicle?.clientId ?? `nom:${j.customerName.trim().toLowerCase()}`
+    const nom = j.vehicle?.client?.name ?? j.customerName
+    const entry = clientCounts.get(key) ?? { name: nom, count: 0, revenue: 0 }
     entry.count++
     entry.revenue += j.jobParts.reduce((s, p) => s + fromCents(intQtyLineCents(p.unitPriceTenThousandths, p.quantity)), 0)
     clientCounts.set(key, entry)

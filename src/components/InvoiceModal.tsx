@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from '@/lib/i18n'
 import { X, Printer, FileText, Receipt, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { computeTotals, multiplyCents, toCents, fromCents, lineCents } from '@/lib/money'
+import { computeTotals, fromCents, lineCents } from '@/lib/money'
 import { renderElementToA4Pdf } from '@/lib/pdf/render-a4'
 
 interface Job {
@@ -106,8 +106,15 @@ export default function InvoiceModal({ job, mode, onClose }: Props) {
   const laborLine  = { quantity: laborHours, unitPrice: garage.hourlyRate }
   const partLines  = parts.map(p => ({ quantity: p.quantity, unitPrice: p.unitPrice }))
   const totals     = computeTotals([laborLine, ...partLines], garage.taxRate)
-  const laborHT    = fromCents(multiplyCents(toCents(garage.hourlyRate), laborHours))
-  const partsHT    = fromCents(partLines.reduce((c, l) => c + multiplyCents(toCents(l.unitPrice), l.quantity), 0))
+  // ── Le total de la ligne MO suit la formule du sous-total (GF-036) ────────
+  // `multiplyCents(toCents(taux), heures)` arrondit le taux AVANT de
+  // multiplier, alors que `computeTotals` — donc le sous-total imprimé juste
+  // en dessous — passe par `lineCents`. Le taux horaire admettant quatre
+  // décimales (colonne en dix-millièmes), les deux divergeaient : à 62,5050 €/h
+  // sur 1 h 45, la ligne affichait 109,39 € et le sous-total comptait 109,38 €.
+  // Une facture dont les lignes ne s'additionnent pas au sous-total est une
+  // facture qu'un client conteste.
+  const laborHT    = fromCents(lineCents(garage.hourlyRate, laborHours))
   const totalHT    = totals.totalHT
   const tva        = totals.taxAmount
   const totalTTC   = totals.totalTTC

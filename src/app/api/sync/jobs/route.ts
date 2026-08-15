@@ -36,6 +36,7 @@ import { authenticateGarageLicense, shortId } from '@/lib/sync/garage-auth'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { logger } from '@/lib/logger'
 import { resolveMirrorWrite, clockOffsetMs, SYNC_MAX_JOBS, SYNC_MAX_TOMBSTONES, type SyncJob } from '@/lib/sync/job-fields'
+import { parseReturnCursors, collectMechanicChanges } from '@/lib/sync/return-path'
 
 const FAILURE_STATUS: Record<string, number> = {
   MISSING_LICENSE: 400, LICENSE_INVALID: 403, NOT_A_GARAGE_LICENSE: 403,
@@ -115,7 +116,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, code: 'TOO_MANY_JOBS' }, { status: 413 })
   }
   const jobs = rawJobs.map(parseJob).filter((j): j is SyncJob => j !== null)
-  const since = date(body.since)
+  // Curseurs de la voie de retour, un par flux. Un poste antérieur à ce serveur
+  // n'envoie que `since` : il sert alors de repli pour les trois.
+  const cursors = parseReturnCursors(body)
   // Le poste annonce-t-il avoir TRONQUÉ sa fenêtre ? Si oui, l'absence d'une
   // intervention ne prouve rien : on ne purge pas (GF31-AUD-017).
   const truncated = body.truncated === true
@@ -234,11 +237,12 @@ export async function POST(req: Request) {
       deleted = res.count
     }
 
-    // ── Voie de retour : ce que le MÉCANICIEN a produit depuis `since` ────────
+    // ── Voie de retour : ce que le MÉCANICIEN a produit depuis les curseurs ───
+    // Un curseur PAR FLUX : voir `src/lib/sync/return-path.ts`. Un curseur
+    // commun bloquait définitivement les commentaires d'un garage dont les
+    // photos étaient plus rares.
     const windowJobIds = jobs.map((j) => j.id)
-    const changes = windowJobIds.length === 0
-      ? { jobs: [], notes: [], photos: [] }
-      : await collectMechanicChanges(garageId, windowJobIds, since)
+    const changes = await collectMechanicChanges(prisma, garageId, windowJobIds, cursors)
 
     logger.info('[sync/jobs] miroir mis à jour', {
       garage: shortId(garageId), applied, deleted, deletedExplicit, executionKept,
@@ -266,37 +270,3 @@ export async function POST(req: Request) {
   }
 }
 
-/** Bornes de la voie de retour — une remontée reste petite et prévisible. */
-const MAX_RETURNED_NOTES = 200
-const MAX_RETURNED_PHOTOS = 200
-
-async function collectMechanicChanges(garageId: string, jobIds: string[], since: Date | null) {
-  const [jobs, notes, photos] = await Promise.all([
-    prisma.job.findMany({
-      where: { garageId, id: { in: jobIds }, ...(since ? { updatedAt: { gt: since } } : {}) },
-      select: {
-        id: true, status: true, actualDuration: true, delayMinutes: true,
-        timerStartedAt: true, timerAccumulatedSec: true, updatedAt: true,
-      },
-    }),
-    prisma.jobMechanicNote.findMany({
-      where: { garageId, jobId: { in: jobIds }, ...(since ? { createdAt: { gt: since } } : {}) },
-      select: { id: true, jobId: true, mechanicId: true, type: true, body: true, createdAt: true },
-      orderBy: { createdAt: 'asc' },
-      take: MAX_RETURNED_NOTES,
-    }),
-    // Métadonnées seulement : les octets se récupèrent un par un via
-    // /api/sync/job-photo, pour ne jamais construire une réponse démesurée
-    // (8 Mo × 50 photos × N interventions).
-    prisma.jobPhoto.findMany({
-      where: {
-        garageId, jobId: { in: jobIds }, mechanicId: { not: null },
-        ...(since ? { createdAt: { gt: since } } : {}),
-      },
-      select: { id: true, jobId: true, phase: true, caption: true, mechanicId: true, createdAt: true },
-      orderBy: { createdAt: 'asc' },
-      take: MAX_RETURNED_PHOTOS,
-    }),
-  ])
-  return { jobs, notes, photos }
-}

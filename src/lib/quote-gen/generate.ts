@@ -76,6 +76,9 @@ export function generateQuote(
       const unitPrice = roundMoney(price)
       lines.push({
         kind: 'part',
+        // Le lien vers le catalogue traverse la génération (GF-040) : sans lui,
+        // la facture issue de la conversion ne décrémentait aucun stock.
+        partId: p.partId ?? null,
         description: p.name,
         reference: p.reference ?? null,
         quantity: p.quantity,
@@ -92,6 +95,7 @@ export function generateQuote(
     const priced = s.unitPrice != null && Number.isFinite(s.unitPrice) && s.unitPrice >= 0
     const unit = priced ? roundMoney(s.unitPrice as number) : null
     return {
+      partId: s.partId ?? null,
       name: s.name,
       reference: s.reference ?? null,
       quantity: s.quantity,

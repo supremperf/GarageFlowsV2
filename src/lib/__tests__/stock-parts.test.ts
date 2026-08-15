@@ -20,17 +20,20 @@ const GARAGE = 'garage-A'
 const H = vi.hoisted(() => {
   interface Part { id: string; garageId: string; quantity: number; unitPrice: number; unitCost: number }
   interface JobPart { id: string; jobId: string; partId: string; quantity: number; unitPrice: number; unitCost: number }
+  interface Movement { garageId: string; partId: string; type: string; quantityDelta: number; reason?: string }
   const G = 'garage-A'
   const db = {
-    jobs:     [] as { id: string; garageId: string }[],
-    parts:    [] as Part[],
-    jobParts: [] as JobPart[],
+    jobs:      [] as { id: string; garageId: string }[],
+    parts:     [] as Part[],
+    jobParts:  [] as JobPart[],
+    movements: [] as Movement[],
     seq: 0,
   }
   const resetDb = () => {
     db.jobs = [{ id: 'job-1', garageId: G }]
     db.parts = [{ id: 'part-1', garageId: G, quantity: 10, unitPrice: 20, unitCost: 12 }]
     db.jobParts = []
+    db.movements = []
     db.seq = 0
   }
   const client = {
@@ -83,8 +86,13 @@ const H = vi.hoisted(() => {
         return {}
       },
     },
+    // Journal des mouvements : tout déplacement de stock DOIT y laisser sa
+    // trace, y compris ceux venant d'une intervention (GF-028).
+    stockMovement: {
+      create: async ({ data }: any) => { db.movements.push(data); return data },
+    },
   }
-  return { db, resetDb, client }
+  return { db, resetDb, client, role: 'OWNER' as string }
 })
 
 const db = H.db
@@ -96,8 +104,10 @@ vi.mock('@/lib/db', () => ({
     $transaction: async (fn: any) => fn(H.client),
   },
 }))
+// Le rôle manquait : les routes exigent désormais `job:manage` explicitement
+// (GF-038), et `can(undefined, …)` refuse — à raison.
 vi.mock('@/lib/api-helpers', () => ({
-  requireSession: async () => ({ user: { id: 'u1', name: 'U', garageId: GARAGE } }),
+  requireSession: async () => ({ user: { id: 'u1', name: 'U', garageId: GARAGE, role: H.role } }),
   withAuth: (h: any) => h,
 }))
 vi.mock('@/lib/audit', () => ({ logAudit: async () => {} }))
@@ -113,7 +123,32 @@ function del(body: unknown) {
     { params: { id: 'job-1' } } as never)
 }
 
-beforeEach(() => { resetDb(); vi.clearAllMocks() })
+beforeEach(() => { resetDb(); H.role = 'OWNER'; vi.clearAllMocks() })
+
+describe('droit requis sur les pièces d’intervention (GF-038)', () => {
+  it('le COMPTOIR garde l’accès — l’écran le lui propose', async () => {
+    // RECEPTIONIST détient `job:manage` : lui imposer `stock:manage`
+    // casserait un usage nominal.
+    H.role = 'RECEPTIONIST'
+    expect((await post({ partId: 'part-1', quantity: 1 })).status).toBe(201)
+    expect(db.parts[0].quantity).toBe(9)
+  })
+
+  it('un rôle SANS droit sur les interventions est refusé, sans toucher au stock', async () => {
+    H.role = 'MECHANIC'
+    expect((await post({ partId: 'part-1', quantity: 1 })).status).toBe(403)
+    expect(db.parts[0].quantity, 'aucun décrément sur un refus').toBe(10)
+    expect(db.movements).toEqual([])
+  })
+
+  it('le retrait exige le même droit que l’ajout', async () => {
+    await post({ partId: 'part-1', quantity: 2 })
+    const id = db.jobParts[0].id
+    H.role = 'MECHANIC'
+    expect((await del({ jobPartId: id })).status).toBe(403)
+    expect(db.parts[0].quantity, 'aucune restitution non plus').toBe(8)
+  })
+})
 
 describe('stock — ajout de pièce (POST)', () => {
   it('ajout simple : déduit la quantité du stock', async () => {
@@ -137,6 +172,18 @@ describe('stock — ajout de pièce (POST)', () => {
     expect(res.status).toBe(409)
     expect(db.parts[0].quantity).toBe(10)
     expect(db.jobParts.length).toBe(0)
+    expect(db.movements, 'un refus ne journalise rien').toEqual([])
+  })
+
+  it('le décrément est JOURNALISÉ (GF-028)', async () => {
+    // Le stock d'une pièce doit rester reconstituable à partir de
+    // `StockMovement` : ce chemin-là n'écrivait rien.
+    await post({ partId: 'part-1', quantity: 3 })
+    expect(db.movements).toHaveLength(1)
+    expect(db.movements[0].quantityDelta).toBe(-3)
+    expect(db.movements[0].partId).toBe('part-1')
+    expect(db.movements[0].garageId).toBe(GARAGE)
+    expect(10 + db.movements.reduce((s, m) => s + m.quantityDelta, 0)).toBe(db.parts[0].quantity)
   })
 
   it('refuse les quantités invalides (0, négatif, NaN, décimal, absent)', async () => {
@@ -177,6 +224,8 @@ describe('stock — suppression de ligne (DELETE)', () => {
     expect(res.status).toBe(200)
     expect(db.parts[0].quantity).toBe(10)           // restitué
     expect(db.jobParts.length).toBe(0)
+    // Mouvements symétriques : l'aller-retour laisse un solde nul, pas un blanc.
+    expect(db.movements.map(m => m.quantityDelta)).toEqual([-4, 4])
   })
 
   it('ligne d’un autre garage → 404, aucun stock restitué', async () => {
@@ -185,5 +234,6 @@ describe('stock — suppression de ligne (DELETE)', () => {
     const res = await del({ jobPartId: 'jp-x' })
     expect(res.status).toBe(404)
     expect(db.parts[0].quantity).toBe(10)
+    expect(db.movements, 'un refus ne journalise rien').toEqual([])
   })
 })

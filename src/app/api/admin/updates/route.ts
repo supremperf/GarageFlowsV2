@@ -4,8 +4,22 @@ export const runtime = 'nodejs'
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
+import { createHash } from 'crypto'
 import { Readable } from 'stream'
 import { isAdminSession } from '@/lib/api-helpers'
+
+/**
+ * SemVer strict — la MÊME expression que `scripts/check-version.js` (GF-027).
+ *
+ * `version` n'était que « non vide » : une saisie comme « Version 1.2.0 » ou
+ * « MAJ 1.2.0 » était acceptée et publiée avec un message de succès. Or la
+ * comparaison côté poste passe par `semver.parseVersion`, qui rend `null` sur
+ * une telle chaîne : `isNewer` vaut alors faux, et TOUT LE PARC affiche « Vous
+ * utilisez la dernière version » sur une mise à jour pourtant publiée. Le
+ * défaut est invisible côté administrateur — rien n'échoue chez lui.
+ */
+const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-.]+)?(?:\+[0-9A-Za-z-.]+)?$/
+const ERREUR_SEMVER = 'Numéro de version attendu au format X.Y.Z (ex. 1.2.0) — sans texte autour.'
 
 // Répertoire de données persistant (userData en Electron, cwd en dev).
 function dataRoot() {
@@ -90,6 +104,7 @@ export async function POST(req: NextRequest) {
     const file         = form.get('file')
 
     if (!version) return NextResponse.json({ error: 'Numéro de version requis' }, { status: 400 })
+    if (!SEMVER.test(version)) return NextResponse.json({ error: ERREUR_SEMVER }, { status: 400 })
     if (!(file instanceof File)) return NextResponse.json({ error: 'Fichier .exe requis' }, { status: 400 })
     if (!file.name.toLowerCase().endsWith('.exe')) {
       return NextResponse.json({ error: 'Le fichier doit être un installeur .exe' }, { status: 400 })
@@ -106,14 +121,19 @@ export async function POST(req: NextRequest) {
     const dest = path.join(updatesDir(), fileName)
 
     // Écriture en flux vers le disque (pas de mise en mémoire du fichier entier).
+    // L'empreinte est calculée AU PASSAGE : elle sert à confronter l'installeur
+    // au manifeste signé, sans relire le fichier.
+    const empreinte = createHash('sha256')
     await new Promise<void>((resolve, reject) => {
       const nodeStream = Readable.fromWeb(file.stream() as unknown as import('stream/web').ReadableStream)
       const ws = fs.createWriteStream(dest)
+      nodeStream.on('data', (c: Buffer) => empreinte.update(c))
       nodeStream.on('error', reject)
       ws.on('error', reject)
       ws.on('finish', () => resolve())
       nodeStream.pipe(ws)
     })
+    const sha256Publie = empreinte.digest('hex')
 
     // ── MANIFESTE SIGNÉ (facultatif à l'appel, indispensable à l'installation) ──
     // Le processus principal refuse toute installation non signée dès qu'une clé
@@ -127,6 +147,33 @@ export async function POST(req: NextRequest) {
     const manifest = await lireManifeste(form.get('manifest'))
     if (manifest && 'error' in manifest) {
       return NextResponse.json({ error: manifest.error }, { status: 400 })
+    }
+
+    // ── L'installeur et son manifeste doivent parler du MÊME objet (GF-027) ──
+    // Ni la version saisie ni l'empreinte du fichier n'étaient confrontées au
+    // manifeste signé joint. Deux conséquences, toutes deux invisibles au
+    // moment de la publication :
+    //   · versions divergentes → la pastille de mise à jour suit le champ
+    //     libre, l'installation suit le manifeste : le parc voit une mise à
+    //     jour qu'il refuse ensuite, ou l'inverse ;
+    //   · empreinte divergente → chaque poste télécharge puis refuse le fichier
+    //     (« Fichier corrompu »), et l'administrateur n'apprend le problème que
+    //     par ses clients.
+    // Le manifeste étant l'autorité côté poste, c'est LUI qui fait foi ici.
+    const signe = (manifest?.value ?? null) as { manifest?: { version?: unknown; sha256?: unknown } } | null
+    const m = signe?.manifest
+    if (m?.version && String(m.version) !== version) {
+      fs.unlinkSync(dest)
+      return NextResponse.json({
+        error: `Le manifeste signé porte la version ${String(m.version)}, différente de la version saisie (${version}).`,
+      }, { status: 400 })
+    }
+    if (m?.sha256 && String(m.sha256).toLowerCase() !== sha256Publie) {
+      fs.unlinkSync(dest)
+      return NextResponse.json({
+        error: 'L’installeur téléversé ne correspond pas au manifeste signé (empreinte SHA-256 différente). '
+          + 'Vérifiez que vous publiez bien le fichier qui a été signé.',
+      }, { status: 400 })
     }
 
     const meta = {
@@ -157,6 +204,8 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
   const version = String(body.version || '').trim()
   if (!version) return NextResponse.json({ error: 'Numéro de version requis' }, { status: 400 })
+  // La branche de rétro-compatibilité présentait exactement le même trou.
+  if (!SEMVER.test(version)) return NextResponse.json({ error: ERREUR_SEMVER }, { status: 400 })
 
   const meta = {
     hasUpdate:     true,

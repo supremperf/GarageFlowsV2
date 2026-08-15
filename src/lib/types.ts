@@ -38,9 +38,26 @@ export type SuggestionType =
 export interface Mechanic {
   id: string
   name: string
+  /** Initiales de REPLI, affichées tant qu'aucune photo n'existe. */
   avatar: string
+  /**
+   * URL servie de la photo de profil, CALCULÉE par `GET /api/mechanics` depuis
+   * `avatarPath` (jamais stockée en base). Absente du type, elle arrivait bien
+   * dans les données du planning mais aucun écran ne pouvait la lire sans
+   * cast — c'est le pendant typé de GF-004.
+   */
+  avatarUrl?: string | null
   color: string
   isAbsent: boolean
+  /**
+   * Mécanicien ARCHIVÉ : retiré du planning, historique conservé.
+   *
+   * À distinguer de `isAbsent`, qui est une absence du JOUR. L'archivage est la
+   * sortie de secours que `DELETE /api/mechanics/:id` propose quand la
+   * suppression est refusée — le champ existait en base et dans l'API mais
+   * n'était typé nulle part côté produit, donc illisible sans cast (GF-040).
+   */
+  archivedAt?: string | null
   specialty: RepairType[]
   order: number
   garageId: string

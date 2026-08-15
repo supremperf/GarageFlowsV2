@@ -23,11 +23,19 @@ const ENV_KEYS = [
   'ELECTRON', 'NODE_ENV', 'VERCEL', 'TRUST_PROXY_HEADERS',
   'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN',
   'RATE_LIMIT_LOGIN_MAX', 'RATE_LIMIT_LOGIN_WINDOW_SECONDS',
+  'GF_TEST_ALLOW_UPSTASH',
 ] as const
 let saved: Record<string, string | undefined>
 
 beforeEach(() => {
   saved = Object.fromEntries(ENV_KEYS.map((k) => [k, process.env[k]]))
+  // Ce fichier est le SEUL à examiner la sélection du backend : il lui faut
+  // donc voir la configuration Upstash — celle qu'il pose lui-même, jamais
+  // celle de l'environnement. Partout ailleurs, la suite reste en mémoire pour
+  // ne pas dépendre d'un service partagé, ni l'alimenter (GF-041).
+  process.env.GF_TEST_ALLOW_UPSTASH = '1'
+  delete (process.env as Record<string, string | undefined>).UPSTASH_REDIS_REST_URL
+  delete (process.env as Record<string, string | undefined>).UPSTASH_REDIS_REST_TOKEN
   __setRateLimitBackendForTests(undefined)
 })
 
@@ -40,6 +48,42 @@ afterEach(() => {
   vi.unstubAllEnvs()
   __setRateLimitBackendForTests(undefined)
   vi.restoreAllMocks()
+})
+
+describe('GF-041 — la suite de tests ne parle jamais au Redis de production', () => {
+  it('une configuration Upstash AMBIANTE est ignorée sous vitest', async () => {
+    // Le poste porte un `.env` avec des identifiants réels. Sans cette garde,
+    // `npm test` ouvrait des compteurs sur le magasin PARTAGÉ : les tests
+    // devenaient dépendants de leur ordre — un fichier consommait le quota
+    // d'inscription portail, le suivant recevait un 429 inexplicable — et
+    // chaque exécution laissait des clés dans un service de production.
+    delete (process.env as Record<string, string | undefined>).GF_TEST_ALLOW_UPSTASH
+    process.env.UPSTASH_REDIS_REST_URL = 'https://exemple.upstash.io'
+    process.env.UPSTASH_REDIS_REST_TOKEN = 'jeton-fictif'
+    __setRateLimitBackendForTests(undefined)
+
+    // Aucun appel réseau ne doit partir : `fetch` est piégé.
+    const reseau = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('réseau interdit'))
+    const sujet = `gf041-${Math.random()}`
+    const d = await enforceRateLimit('login', sujet, { max: 2, windowSec: 60 })
+
+    expect(d.ok, 'le backend mémoire doit répondre').toBe(true)
+    expect(d.degraded, 'ni fail-open ni fail-closed : un vrai compteur local').toBeUndefined()
+    expect(reseau, 'aucune requête vers Upstash').not.toHaveBeenCalled()
+  })
+
+  it('le fichier qui TESTE la sélection garde accès à Upstash', async () => {
+    // Sans cette porte, ce fichier ne pourrait plus vérifier le fail-closed ni
+    // le nettoyage des valeurs d'environnement.
+    process.env.GF_TEST_ALLOW_UPSTASH = '1'
+    process.env.UPSTASH_REDIS_REST_URL = 'https://exemple.upstash.io'
+    process.env.UPSTASH_REDIS_REST_TOKEN = 'jeton-fictif'
+    __setRateLimitBackendForTests(undefined)
+
+    const reseau = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('hors ligne'))
+    await enforceRateLimit('login', `gf041b-${Math.random()}`, { max: 2, windowSec: 60 })
+    expect(reseau, 'le backend distant est bien sélectionné').toHaveBeenCalled()
+  })
 })
 
 describe('backend mémoire (Electron/dev/test)', () => {

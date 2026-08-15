@@ -46,6 +46,7 @@ import { NextResponse } from 'next/server'
 import { createHash } from 'crypto'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { pollJobSync, etatSyncCloud } from '@/lib/sync/job-sync'
 
 export const GET = withAuth(async (req) => {
   const session = await requireSession()
@@ -55,16 +56,44 @@ export const GET = withAuth(async (req) => {
   const dateBrute = url.searchParams.get('date')
   const date = dateBrute && /^\d{4}-\d{2}-\d{2}$/.test(dateBrute) ? dateBrute : undefined
 
+  // ── La boucle était fermée sur elle-même (GF-012) ───────────────────────────
+  // L'empreinte ci-dessous est calculée sur la base LOCALE du poste. L'action du
+  // mécanicien, elle, vit dans la base du CLOUD : elle ne peut donc pas la faire
+  // bouger. Or la voie de retour cloud → poste n'était déclenchée que par
+  // `pollJobSync`, appelée uniquement depuis `GET /api/jobs` — que le poste
+  // n'appelle QUE lorsque cette empreinte a changé.
+  //
+  //   empreinte inchangée → pas de GET /api/jobs → pas de pollJobSync
+  //   → pas de synchronisation → base locale inchangée → empreinte inchangée
+  //
+  // Dépendance circulaire : le mécanicien terminait son intervention et l'écran
+  // du comptoir affichait « Prévu » indéfiniment, tant qu'un humain ne touchait
+  // pas au poste. La route qui prétendait résoudre ce défaut (GF-DUR-041) en
+  // était donc structurellement incapable.
+  //
+  // Le battement DÉCLENCHE désormais la voie de retour. `pollJobSync` est
+  // lui-même limité à une remontée toutes les 10 s et ne bloque jamais : le coût
+  // réseau ne change pas d'ordre de grandeur, et la réponse reste immédiate.
+  // Latence résultante : une remontée (≤ 10 s) puis le battement suivant
+  // (≤ 10 s) — soit ~10 à 20 s, contre « jamais » auparavant.
+  pollJobSync(garageId)
+
   // Portée STRICTEMENT bornée au garage de la session — comme partout ailleurs,
   // le paramètre client ne peut que restreindre, jamais élargir.
   const ouJobs = { garageId, ...(date ? { date } : {}) }
 
-  // Deux agrégats seulement. `_max.updatedAt` bouge à toute modification, et le
+  // Agrégats seulement. `_max.updatedAt` bouge à toute modification, et le
   // compte capte créations et suppressions : ensemble ils détectent tout ce que
   // le planning affiche, sans lire une seule ligne.
-  const [jobs, mecas] = await Promise.all([
+  //
+  // Les COMMENTAIRES et les PHOTOS du mécanicien vivent dans leurs propres
+  // tables : rapatriés par la voie de retour, ils ne touchent pas `Job.updatedAt`
+  // et n'auraient donc rien déclenché. Ils entrent dans l'empreinte.
+  const [jobs, mecas, notes, photos] = await Promise.all([
     prisma.job.aggregate({ where: ouJobs, _count: { _all: true }, _max: { updatedAt: true } }),
     prisma.mechanic.aggregate({ where: { garageId }, _count: { _all: true }, _max: { updatedAt: true } }),
+    prisma.jobMechanicNote.aggregate({ where: { garageId }, _count: { _all: true }, _max: { createdAt: true } }),
+    prisma.jobPhoto.aggregate({ where: { garageId }, _count: { _all: true }, _max: { createdAt: true } }),
   ])
 
   const brut = [
@@ -72,11 +101,26 @@ export const GET = withAuth(async (req) => {
     jobs._max.updatedAt?.toISOString() ?? '-',
     mecas._count._all,
     mecas._max.updatedAt?.toISOString() ?? '-',
+    notes._count._all,
+    notes._max.createdAt?.toISOString() ?? '-',
+    photos._count._all,
+    photos._max.createdAt?.toISOString() ?? '-',
   ].join('|')
 
   // Empreinte courte : ni horodatage ni volumétrie ne transitent en clair. Sans
   // cela, la réponse renseignerait sur l'activité du garage à qui l'observe.
   const v = createHash('sha256').update(brut).digest('hex').slice(0, 16)
 
-  return NextResponse.json({ v }, { headers: { 'Cache-Control': 'no-store' } })
+  // ── L'état de la remontée cloud est REMONTÉ à l'écran (GF-039) ─────────────
+  // Une remontée non confirmée n'était que journalisée : le comptoir ne
+  // distinguait pas « le mécanicien a reçu l'affectation » de « le cloud ne
+  // répond plus depuis dix minutes ». Le rattrapage existe — la fenêtre entière
+  // repart au passage suivant — mais tant qu'il n'a pas eu lieu, personne ne le
+  // sait. Aucune donnée sensible : deux valeurs, `ok` ou `attente`.
+  const cloud = etatSyncCloud(garageId)
+
+  return NextResponse.json(
+    cloud ? { v, cloud } : { v },
+    { headers: { 'Cache-Control': 'no-store' } },
+  )
 })

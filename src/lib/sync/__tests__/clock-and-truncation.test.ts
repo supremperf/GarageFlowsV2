@@ -19,6 +19,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { resolveMirrorWrite, clockOffsetMs, MAX_CLOCK_OFFSET_MS, type SyncJob } from '@/lib/sync/job-fields'
+import { parseReturnCursors } from '@/lib/sync/return-path'
 
 const CLOUD = new Date('2026-08-12T10:00:00.000Z')
 
@@ -96,15 +97,26 @@ describe('GF31-AUD-016 — calcul du décalage, borné', () => {
   })
 })
 
-describe('GF31-AUD-017 — le curseur de retour suit le flux le PLUS EN RETARD', () => {
-  it('prend le plus ancien des deux flux, pas le plus récent', async () => {
-    const { readFileSync } = await import('node:fs')
-    const path = await import('node:path')
-    const src = readFileSync(path.resolve(__dirname, '../job-sync.ts'), 'utf8')
-    // Un `Math.max` ferait avancer le curseur au rythme du flux le plus bavard et
-    // sauterait définitivement les éléments de l'autre.
-    expect(src).toContain('Math.min(...stamps.map')
-    expect(src).not.toContain('Math.max(...stamps.map')
+describe('GF31-AUD-017 / GF-030 — un curseur de retour PAR FLUX', () => {
+  // L'assertion précédente lisait le texte source (`Math.min(...stamps.map`)
+  // pour vérifier que le curseur commun suivait le flux le plus en retard. Ce
+  // réglage a été remplacé : un curseur commun n'a pas de bon choix (le plus
+  // récent saute des éléments, le plus ancien bloque tout, voir
+  // `src/lib/sync/return-path.ts`). Le comportement se vérifie désormais sur
+  // les données, plus sur la forme du code.
+  it('chaque flux avance indépendamment', () => {
+    const c = parseReturnCursors({
+      sinceNotes: '2026-08-13T00:00:00.000Z',
+      sincePhotos: '2026-05-16T00:00:00.000Z',
+    })
+    expect(c.notes?.toISOString()).toBe('2026-08-13T00:00:00.000Z')
+    expect(c.photos?.toISOString()).toBe('2026-05-16T00:00:00.000Z')
+  })
+
+  it('un poste ANTÉRIEUR, qui n’envoie que `since`, garde son comportement', () => {
+    const c = parseReturnCursors({ since: '2026-05-16T00:00:00.000Z' })
+    expect(c.notes?.toISOString()).toBe('2026-05-16T00:00:00.000Z')
+    expect(c.photos?.toISOString()).toBe('2026-05-16T00:00:00.000Z')
   })
 
   it('le poste annonce la troncature et son horloge', async () => {

@@ -55,6 +55,7 @@ const EXPLICIT_EXCLUSIONS = [
   { file: 'electron/main.js', needle: "app.getPath('appData'), 'GarageFlow'", reason: "épinglage du dossier userData historique — préserve BD/licence/secret des installs existantes" },
   { file: 'electron/update-verify.js', needle: "EXPECTED_PRODUCT = 'GarageFlow'", reason: 'doit correspondre au champ « product » du flux de MàJ (identité interne, non visible)' },
   { file: 'src/lib/__tests__/update-verify.test.ts', needle: "product: 'GarageFlow'", reason: "reflète l'identité « product » du flux de MàJ (voir EXPECTED_PRODUCT)" },
+  { file: 'src/integration/publication-mise-a-jour.test.ts', needle: "product: 'GarageFlow'", reason: "manifeste de test de PUBLICATION : le champ « product » doit valoir EXPECTED_PRODUCT, sinon le poste rejette la mise à jour — écrire « GarageFlows » ici ferait affirmer au test un contrat que la production refuse" },
   { file: 'scripts/sign-release-manifest.mjs', needle: "PRODUIT = 'GarageFlow'", reason: 'le manifeste signé DOIT porter la même identité « product » que EXPECTED_PRODUCT, sinon chaque poste rejette la mise à jour (identité interne, non visible)' },
   { file: 'electron/user-data-path.js', needle: "LEGACY_DATA_DIR_NAME = 'GarageFlow'", reason: 'nom du dossier de données HISTORIQUE — compat installations existantes' },
   { file: 'src/lib/__tests__/user-data-path.test.ts', needle: "toBe('GarageFlow')", reason: 'assertion de compat : le dossier historique ne doit JAMAIS être renommé' },

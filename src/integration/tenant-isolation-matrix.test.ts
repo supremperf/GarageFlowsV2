@@ -85,7 +85,11 @@ async function seedGarage(p: string) {
   const workOrder = await prisma.workOrder.create({ data: { number: `OR-${p}-001`, garageId: gid, clientName: `Cust ${p}`, status: 'draft' } })
   const purchaseOrder = await prisma.purchaseOrder.create({ data: { number: `BC-${p}-001`, garageId: gid, status: 'draft' } })
   const part = await prisma.part.create({ data: { name: `Filtre ${p}`, garageId: gid } })
-  const appointment = await prisma.appointment.create({ data: { garageId: gid, clientName: `Cust ${p}`, reason: 'Révision', date: '2026-08-04', startTime: '10:00', status: 'requested' } })
+  // Date DISTINCTE de celle de l'intervention ci-dessus : confirmer un
+  // rendez-vous refuse désormais une journée déjà saturée (GF-040), et le
+  // garage n'a qu'un mécanicien. Ce test vérifie l'ISOLATION, pas la capacité —
+  // il ne doit pas buter sur une règle métier sans rapport.
+  const appointment = await prisma.appointment.create({ data: { garageId: gid, clientName: `Cust ${p}`, reason: 'Révision', date: '2026-08-05', startTime: '10:00', status: 'requested' } })
   const inspection = await prisma.inspection.create({ data: { garageId: gid, clientName: `Cust ${p}` } })
   const loanerVehicle = await prisma.loanerVehicle.create({ data: { garageId: gid, name: `Prêt ${p}`, licensePlate: `${p}-LOAN-1` } })
   const loanerReservation = await prisma.loanerReservation.create({ data: { garageId: gid, vehicleId: loanerVehicle.id, clientName: `Cust ${p}`, startDate: new Date('2026-08-04'), endDate: new Date('2026-08-06') } })

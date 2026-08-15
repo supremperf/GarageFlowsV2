@@ -18,12 +18,18 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { X, Users, Search, Loader2, KeyRound, RotateCcw, Ban, Check, Copy, Pencil, Save } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
+import { AddressAutocomplete } from '@/components/AddressAutocomplete'
 
 interface Vehicule { id: string; licensePlate: string | null; make: string | null; model: string | null }
-interface ClientRow { id: string; name: string; email: string | null; phone: string | null; vehicles: Vehicule[] }
+interface ClientRow {
+  id: string; name: string; email: string | null; phone: string | null
+  /** Adresse POSTALE — la colonne existait, aucun écran ne la remplissait. */
+  address: string | null
+  vehicles: Vehicule[]
+}
 
 /** Champ de la fiche, en cours de modification. */
-interface Brouillon { name: string; email: string; phone: string }
+interface Brouillon { name: string; email: string; phone: string; address: string }
 
 const CHAMP = 'w-full px-2.5 py-1.5 rounded-lg bg-white/[0.05] border border-white/10 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/60'
 
@@ -106,6 +112,10 @@ export default function ClientsPanel({ onClose }: { onClose: () => void }) {
           // identifiant fantôme.
           email: valeurs.email.trim() || null,
           phone: valeurs.phone.trim() || null,
+          // L'adresse postale n'était envoyée par AUCUN écran : la colonne
+          // `Client.address` restait vide, et les documents imprimés n'avaient
+          // rien à reprendre (GF-022).
+          address: valeurs.address.trim() || null,
         }),
       })
       const d = await r.json().catch(() => ({}))
@@ -113,7 +123,7 @@ export default function ClientsPanel({ onClose }: { onClose: () => void }) {
 
       // L'affichage suit la réponse du serveur, jamais le brouillon local.
       setClients((liste) => liste.map((c) => (c.id === clientId
-        ? { ...c, name: d.name, email: d.email, phone: d.phone }
+        ? { ...c, name: d.name, email: d.email, phone: d.phone, address: d.address ?? null }
         : c)))
       setBrouillon(null)
 
@@ -252,6 +262,17 @@ export default function ClientsPanel({ onClose }: { onClose: () => void }) {
                             onChange={(e) => setBrouillon({ clientId: c.id, valeurs: { ...brouillon.valeurs, phone: e.target.value } })}
                             placeholder="Téléphone" aria-label="Téléphone" className={CHAMP}
                           />
+                          {/* Adresse postale avec propositions (GF-022) : la
+                              colonne existait et n'était remplie par aucun
+                              écran — les documents imprimés n'avaient donc
+                              jamais d'adresse à reprendre. */}
+                          <AddressAutocomplete
+                            value={brouillon.valeurs.address}
+                            onChange={(v) => setBrouillon({ clientId: c.id, valeurs: { ...brouillon.valeurs, address: v } })}
+                            placeholder="Adresse postale"
+                            aria-label="Adresse postale"
+                            className={CHAMP}
+                          />
                           {/* L'avertissement est posé AVANT le clic : après, il
                               serait un constat, pas un choix. */}
                           {a?.exists && brouillon.valeurs.email.trim().toLowerCase() !== (c.email ?? '').toLowerCase() && (
@@ -281,7 +302,7 @@ export default function ClientsPanel({ onClose }: { onClose: () => void }) {
                         <button
                           onClick={() => setBrouillon({
                             clientId: c.id,
-                            valeurs: { name: c.name, email: c.email ?? '', phone: c.phone ?? '' },
+                            valeurs: { name: c.name, email: c.email ?? '', phone: c.phone ?? '', address: c.address ?? '' },
                           })}
                           className="flex items-center gap-1.5 mb-3 px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 text-xs hover:bg-white/[0.06] transition-colors"
                         >

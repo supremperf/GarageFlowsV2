@@ -20,10 +20,38 @@ const JOB_ID     = 'job-1'
 
 const cap = vi.hoisted(() => ({
   licenses: new Map<string, Record<string, unknown>>(),
-  snapshots: new Map<string, Record<string, unknown>>(),
+  snapshots: new Map<string, Record<string, any>>(),
   jobs: [] as Array<Record<string, unknown>>,
   tokens: new Map<string, Record<string, unknown>>(),
+  /** Horloge monotone : ordonne les `createdAt` sans dépendre du temps réel. */
+  horloge: 1,
 }))
+
+/**
+ * Filtre Prisma minimal — égalité, `{ not }`, `{ lt }`, `{ gt }`.
+ * Juste assez pour que le simulacre suive les clauses RÉELLEMENT écrites par la
+ * route ; toute clause non reconnue échoue bruyamment plutôt que de filtrer au
+ * hasard (un `where` mal interprété rendrait le test vert pour de mauvaises
+ * raisons — exactement ce qu'on corrige ici).
+ */
+const correspond = vi.hoisted(() => (row: Record<string, any>, where: Record<string, any>): boolean => {
+  for (const [cle, attendu] of Object.entries(where ?? {})) {
+    const valeur = row[cle]
+    if (attendu !== null && typeof attendu === 'object' && !(attendu instanceof Date)) {
+      const clauses = Object.keys(attendu)
+      const inconnues = clauses.filter((c) => !['not', 'lt', 'gt', 'lte', 'gte'].includes(c))
+      if (inconnues.length) throw new Error(`clause Prisma non simulée : ${cle}.${inconnues.join(',')}`)
+      if ('not' in attendu && valeur === attendu.not) return false
+      if ('lt' in attendu && !(Number(valeur) < Number(attendu.lt))) return false
+      if ('lte' in attendu && !(Number(valeur) <= Number(attendu.lte))) return false
+      if ('gt' in attendu && !(Number(valeur) > Number(attendu.gt))) return false
+      if ('gte' in attendu && !(Number(valeur) >= Number(attendu.gte))) return false
+    } else if (attendu instanceof Date) {
+      if (Number(valeur) !== Number(attendu)) return false
+    } else if (valeur !== attendu) return false
+  }
+  return true
+})
 
 vi.mock('@/lib/db', () => ({
   prisma: {
@@ -53,14 +81,36 @@ vi.mock('@/lib/db', () => ({
       const { prisma } = await import('@/lib/db')
       return fn(prisma)
     },
+    // Simulacre FIDÈLE de la table.
+    //
+    // `deleteMany` était un no-op (`async () => ({ count: 0 })`) alors que la
+    // route supprime réellement. Le test « republier reste exploitable » passait
+    // donc contre une base qui ne se comporte pas comme la vraie : en
+    // production l'ancien lien était bel et bien supprimé et répondait
+    // « Lien invalide ou expiré » (GF-002). Un simulacre qui neutralise
+    // l'opération testée ne prouve rien — il fabrique un faux vert.
     portalSnapshot: {
       upsert: async (a: { where: { id: string }; create: Record<string, unknown>; update: Record<string, unknown> }) => {
         const cur = cap.snapshots.get(a.where.id)
-        const row = cur ? { ...cur, ...a.update } : a.create
+        const row = cur ? { ...cur, ...a.update } : { createdAt: new Date(cap.horloge++), ...a.create }
         cap.snapshots.set(a.where.id, row); return row
       },
       findUnique: async (a: { where: { id: string } }) => cap.snapshots.get(a.where.id) ?? null,
-      deleteMany: async () => ({ count: 0 }),
+      findFirst: async (a: { where: Record<string, any>; orderBy?: { createdAt?: string } }) => {
+        const hits = Array.from(cap.snapshots.entries())
+          .filter(([id, row]) => correspond({ ...row, id }, a.where))
+          .sort((x, y) => Number(y[1].createdAt) - Number(x[1].createdAt))
+        return hits.length ? { ...hits[0][1], id: hits[0][0] } : null
+      },
+      count: async (a?: { where?: Record<string, any> }) =>
+        Array.from(cap.snapshots.entries()).filter(([id, row]) => correspond({ ...row, id }, a?.where ?? {})).length,
+      deleteMany: async (a: { where: Record<string, any> }) => {
+        let count = 0
+        for (const [id, row] of Array.from(cap.snapshots.entries())) {
+          if (correspond({ ...row, id }, a.where)) { cap.snapshots.delete(id); count++ }
+        }
+        return { count }
+      },
     },
     job: { findFirst: async () => cap.jobs[0] ?? null },
   },
@@ -100,7 +150,7 @@ const read = (token: string) =>
   READ(new Request('http://x'), { params: { token } })
 
 beforeEach(() => {
-  cap.licenses.clear(); cap.snapshots.clear(); cap.jobs = []; cap.tokens.clear()
+  cap.licenses.clear(); cap.snapshots.clear(); cap.jobs = []; cap.tokens.clear(); cap.horloge = 1
   cap.tokens.set('GF2.garage', {
     valid: true, isMechanic: false,
     payload: { lid: GARAGE_LID, typ: 'premium', exp: Math.floor(Date.now() / 1000) + 86_400 },
@@ -131,12 +181,19 @@ describe('TEST F — un portail créé depuis le poste se résout côté cloud',
     expect(JSON.stringify(data)).not.toContain('unitCost')
   })
 
-  it('republier la même intervention reste exploitable (nouveau jeton)', async () => {
+  it('republier CONSERVE le lien déjà distribué (GF-002)', async () => {
+    // Formulation d'origine : « republier reste exploitable (nouveau jeton) »,
+    // avec la même attente 200/200 — mais elle ne tenait que parce que le
+    // simulacre ne supprimait rien. En production le premier lien mourait.
     const a = await (await SYNC(publish())).json()
     const b = await (await SYNC(publish())).json()
-    expect(a.token).not.toBe(b.token)
-    expect((await read(a.token)).status).toBe(200)
+
+    expect((await read(a.token)).status, 'le lien déjà remis au client').toBe(200)
     expect((await read(b.token)).status).toBe(200)
+    // Le lien ne CHANGE plus d'une publication à l'autre : c'est ce qui rend le
+    // premier encore valide.
+    expect(b.url).toBe(a.url)
+    expect(cap.snapshots.size, 'une seule publication vivante par intervention').toBe(1)
   })
 
   it('expiration 7 jours', async () => {

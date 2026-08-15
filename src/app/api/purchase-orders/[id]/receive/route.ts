@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { can } from '@/lib/authz'
+import { MOVEMENT } from '@/lib/stock/invoice-stock'
 
 interface POLine {
   partId?: string | null
@@ -101,6 +102,21 @@ export const POST = withAuth(async (_req, { params }: { params: { id: string } }
         await tx.part.update({
           where: { id: line.partId, garageId: session.user.garageId },
           data: { quantity: { increment: line.qty } },
+        })
+        // ── L'entrée en stock est journalisée elle aussi (GF-037) ────────────
+        // Le schéma pose que le stock d'une pièce est reconstituable à partir
+        // de `StockMovement`. La réception fournisseur — la principale ENTRÉE
+        // de stock d'un garage — n'y écrivait rien : le journal ne montrait que
+        // des sorties, et un inventaire qui ne tombe pas juste n'avait aucune
+        // trace d'entrée à confronter.
+        await tx.stockMovement.create({
+          data: {
+            garageId: session.user.garageId,
+            partId: line.partId,
+            type: MOVEMENT.ADJUST,
+            quantityDelta: line.qty,
+            reason: `Réception du bon de commande ${order.number}`,
+          },
         })
       }
     }

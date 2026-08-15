@@ -1,36 +1,37 @@
 ﻿'use client'
 
 import { useEffect, useRef, useState, memo, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { format, addDays, subDays, parseISO } from 'date-fns'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useScheduleStore } from '@/store/schedule-store'
 import Header from '@/components/Header'
 import ScheduleBoard from '@/components/ScheduleBoard'
-import WeekView from '@/components/WeekView'
+const WeekView = dynamic(() => import('@/components/WeekView'), { ssr: false })
 import SuggestionPanel from '@/components/SuggestionPanel'
 import JobModal from '@/components/JobModal'
-import Dashboard from '@/components/Dashboard'
-import StockPanel from '@/components/StockPanel'
-import CompanySetup from '@/components/CompanySetup'
-import SettingsModal from '@/components/SettingsModal'
-import LanguageSelector from '@/components/LanguageSelector'
-import ReceptionBoard from '@/components/ReceptionBoard'
-import ReminderPanel from '@/components/ReminderPanel'
-import BillingPanel from '@/components/BillingPanel'
-import FinancialDashboard from '@/components/FinancialDashboard'
-import LaborCatalogPanel from '@/components/LaborCatalogPanel'
-import WarrantyPanel from '@/components/WarrantyPanel'
-import LoanerPanel from '@/components/LoanerPanel'
-import CopilotPanel from '@/components/CopilotPanel'
-import OcrPanel from '@/components/OcrPanel'
-import SuppliersPanel from '@/components/SuppliersPanel'
-import ClientsPanel from '@/components/ClientsPanel'
-import TicketsPanel from '@/components/TicketsPanel'
-import AppointmentsPanel from '@/components/AppointmentsPanel'
-import CatalogPanel from '@/components/CatalogPanel'
+const Dashboard = dynamic(() => import('@/components/Dashboard'), { ssr: false })
+const StockPanel = dynamic(() => import('@/components/StockPanel'), { ssr: false })
+const CompanySetup = dynamic(() => import('@/components/CompanySetup'), { ssr: false })
+const SettingsModal = dynamic(() => import('@/components/SettingsModal'), { ssr: false })
+const LanguageSelector = dynamic(() => import('@/components/LanguageSelector'), { ssr: false })
+const ReceptionBoard = dynamic(() => import('@/components/ReceptionBoard'), { ssr: false })
+const ReminderPanel = dynamic(() => import('@/components/ReminderPanel'), { ssr: false })
+const BillingPanel = dynamic(() => import('@/components/BillingPanel'), { ssr: false })
+const FinancialDashboard = dynamic(() => import('@/components/FinancialDashboard'), { ssr: false })
+const LaborCatalogPanel = dynamic(() => import('@/components/LaborCatalogPanel'), { ssr: false })
+const WarrantyPanel = dynamic(() => import('@/components/WarrantyPanel'), { ssr: false })
+const LoanerPanel = dynamic(() => import('@/components/LoanerPanel'), { ssr: false })
+const CopilotPanel = dynamic(() => import('@/components/CopilotPanel'), { ssr: false })
+const OcrPanel = dynamic(() => import('@/components/OcrPanel'), { ssr: false })
+const SuppliersPanel = dynamic(() => import('@/components/SuppliersPanel'), { ssr: false })
+const ClientsPanel = dynamic(() => import('@/components/ClientsPanel'), { ssr: false })
+const TicketsPanel = dynamic(() => import('@/components/TicketsPanel'), { ssr: false })
+const AppointmentsPanel = dynamic(() => import('@/components/AppointmentsPanel'), { ssr: false })
+const CatalogPanel = dynamic(() => import('@/components/CatalogPanel'), { ssr: false })
 import LicenseRevokedOverlay from '@/components/LicenseRevokedOverlay'
-import UpdateModal from '@/components/UpdateModal'
+const UpdateModal = dynamic(() => import('@/components/UpdateModal'), { ssr: false })
 import MobileNav from '@/components/MobileNav'
 import GfDrawer from '@/components/GfDrawer'
 import { Loader2, Sparkles, RefreshCw } from 'lucide-react'
@@ -66,6 +67,11 @@ export default function Home() {
   const {
     fetchData,
     fetchMechanics,
+    fetchHoraires,
+    // Le réglage `loanerEnabled` commande l'entrée de menu (GF-039). Le panneau
+    // lui-même n'est PAS démonté : une réservation ouverte resterait sinon
+    // inaccessible du jour où le garage décoche la case.
+    loanerActif,
     runAI,
     isDashboardOpen,
     isStockPanelOpen,
@@ -189,6 +195,8 @@ export default function Home() {
    * En arrière-plan, aucune requête : `document.hidden` suspend la boucle, et
    * le retour au premier plan relance immédiatement.
    */
+  const [syncCloud, setSyncCloud] = useState<'attente' | null>(null)
+
   useEffect(() => {
     if (status !== 'authenticated') return
     let vu: string | null = null
@@ -201,11 +209,17 @@ export default function Home() {
         try {
           const r = await fetch(`/api/jobs/pulse?date=${encodeURIComponent(selectedDate)}`, { cache: 'no-store' })
           if (r.ok) {
-            const { v } = await r.json()
+            const { v, cloud } = await r.json()
             // Premier passage : on mémorise sans recharger (les données
             // viennent d'être chargées par le bootstrap).
             if (vu !== null && v !== vu) { fetchData(); fetchMechanics() }
             vu = v
+            // ── L'état de la remontée cloud devient VISIBLE (GF-039) ────────
+            // Une remontée non confirmée n'était que journalisée : rien ne
+            // distinguait « le mécanicien a reçu l'affectation » de « le cloud
+            // ne répond plus ». Le rattrapage a lieu au passage suivant, mais
+            // tant qu'il n'a pas abouti, le comptoir doit le savoir.
+            setSyncCloud(cloud === 'attente' ? 'attente' : null)
           }
         } catch { /* hors ligne : on retentera au prochain battement */ }
       }
@@ -270,6 +284,12 @@ export default function Home() {
     // `alive` évite de créer l'intervalle APRÈS un démontage survenu pendant les
     // deux fetch de bootstrap (sinon runAI tournait indéfiniment sur un composant
     // démonté, jamais nettoyé).
+    // Les horaires d'atelier bornent la grille du planning : sans ce chargement,
+    // elle repart des constantes 8 h – 18 h et le réglage du garage reste sans
+    // effet (GF-021). Non bloquant : la grille s'affiche avec le repli en
+    // attendant la réponse.
+    void fetchHoraires()
+
     let alive = true
     fetchMechanics().then(() => {
       fetchData().then(() => {
@@ -284,7 +304,7 @@ export default function Home() {
       alive = false
       if (aiIntervalRef.current) clearInterval(aiIntervalRef.current)
     }
-  }, [status, fetchData, fetchMechanics, runAI])
+  }, [status, fetchData, fetchMechanics, fetchHoraires, runAI])
 
   // Backend setup error — show clear instructions instead of blue screen
   if (setupError) {
@@ -338,7 +358,7 @@ export default function Home() {
         onOpenFinance={() => setIsFinanceOpen(true)}
         onOpenLaborCatalog={() => setIsLaborCatalogOpen(true)}
         onOpenWarranties={() => setIsWarrantyPanelOpen(true)}
-        onOpenLoaner={() => setIsLoanerPanelOpen(true)}
+        onOpenLoaner={loanerActif ? () => setIsLoanerPanelOpen(true) : undefined}
         onOpenCopilot={() => setIsCopilotOpen(true)}
         onOpenOcr={() => setIsOcrOpen(true)}
         onOpenSuppliers={() => setIsSuppliersOpen(true)}
@@ -352,6 +372,17 @@ export default function Home() {
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden min-h-0">
         <main className="gf-app-main flex-1 min-w-0 p-3 overflow-hidden flex flex-col">
+          {/* ── Remontée cloud en attente : le comptoir doit le savoir (GF-039)
+              Le planning reste pleinement utilisable — l'écriture locale est
+              déjà faite. Ce qui est en attente, c'est sa propagation vers la
+              PWA du mécanicien, rejouée au passage suivant. */}
+          {syncCloud === 'attente' && (
+            <div className="mb-2 flex-shrink-0 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-1.5 text-[11px] text-amber-300">
+              Synchronisation cloud en attente — les affectations n’ont pas encore
+              atteint l’espace mécanicien. Nouvel essai automatique.
+            </div>
+          )}
+
           {/* ── View toggle ─────────────────────────────────────────────────── */}
           {!isDashboardOpen && (
             <div className="flex items-center gap-1 mb-2 flex-shrink-0">
@@ -395,7 +426,7 @@ export default function Home() {
         onOpenFinance={() => setIsFinanceOpen(true)}
         onOpenLaborCatalog={() => setIsLaborCatalogOpen(true)}
         onOpenWarranties={() => setIsWarrantyPanelOpen(true)}
-        onOpenLoaner={() => setIsLoanerPanelOpen(true)}
+        onOpenLoaner={loanerActif ? () => setIsLoanerPanelOpen(true) : undefined}
         onOpenCopilot={() => setIsCopilotOpen(true)}
         onOpenOcr={() => setIsOcrOpen(true)}
         onOpenSuppliers={() => setIsSuppliersOpen(true)}

@@ -34,9 +34,19 @@ let clePubliquePem: string
 /** Paire de test — la clé publique est injectée dans le vérificateur réel. */
 const KEY_ID = 'gf-test-signing'
 
+/**
+ * Version du DÉPÔT — et non un « 9.9.9 » arbitraire.
+ *
+ * Le signeur refuse désormais de produire un manifeste dont la version, le nom
+ * du fichier et l'URL ne concordent pas (GF-013) : signer l'installeur d'une
+ * version avec le numéro d'une autre mettait tout le parc en boucle de mise à
+ * jour perpétuelle. Ce test suit donc la même règle qu'une vraie release.
+ */
+const VERSION = JSON.parse(fs.readFileSync(path.join(RACINE, 'package.json'), 'utf8')).version as string
+
 beforeAll(() => {
   dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-release-'))
-  installeur = path.join(dossier, 'GarageFlows-Setup-9.9.9.exe')
+  installeur = path.join(dossier, `GarageFlows-Setup-${VERSION}.exe`)
   // Un contenu quelconque mais STABLE : c'est son empreinte qui est signée.
   fs.writeFileSync(installeur, Buffer.from('installeur-de-test-garageflows'))
 
@@ -59,8 +69,8 @@ function signer(extra: string[] = [], env: Record<string, string> = {}) {
   execFileSync(process.execPath, [
     SIGNEUR,
     '--file', installeur,
-    '--version', '9.9.9',
-    '--download-url', 'https://api.garageflows.fr/downloads/GarageFlows-Setup-9.9.9.exe',
+    '--version', VERSION,
+    '--download-url', `https://api.garageflows.fr/downloads/GarageFlows-Setup-${VERSION}.exe`,
     '--key-id', KEY_ID,
     '--out', sortie,
     ...extra,
@@ -71,7 +81,8 @@ function signer(extra: string[] = [], env: Record<string, string> = {}) {
   return JSON.parse(fs.readFileSync(sortie, 'utf8'))
 }
 
-const optionsClient = { currentVersion: '1.0.0', channel: 'stable', platform: 'win32', arch: 'x64' }
+/** Poste plus ANCIEN que la version signée — sinon la mise à jour est refusée. */
+const optionsClient = { currentVersion: '0.0.1', channel: 'stable', platform: 'win32', arch: 'x64' }
 
 describe('le script de signature produit un manifeste que le client ACCEPTE', () => {
   it('signe et passe la validation complète du vérificateur Electron', () => {
@@ -98,7 +109,7 @@ describe('le script de signature produit un manifeste que le client ACCEPTE', ()
     expect(m.channel).toBe('stable')
     expect(m.platform).toBe('win32')
     expect(m.architecture).toBe('x64')
-    expect(m.version).toBe('9.9.9')
+    expect(m.version).toBe(VERSION)
   })
 })
 

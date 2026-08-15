@@ -174,7 +174,10 @@ describe('GF31-AUD-044 — la suppression laisse une trace explicite', () => {
         estimatedDuration: 30, startTime: '10:00', date: '2026-08-20', status: 'scheduled',
       },
     })
-    await expect(supprimer(j.id)).rejects.toBeTruthy()
+    // La route répondait par une exception Prisma (P2025), donc un 500
+    // « erreur interne » ; elle répond désormais 404. L'invariant vérifié ici
+    // est inchangé : rien n'est supprimé, aucune pierre tombale n'est posée.
+    expect((await supprimer(j.id)).status).toBe(404)
     expect(await prisma.job.findUnique({ where: { id: j.id } })).not.toBeNull()
     expect(await prisma.jobTombstone.findUnique({ where: { jobId: j.id } })).toBeNull()
   })

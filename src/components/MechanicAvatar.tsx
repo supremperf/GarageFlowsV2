@@ -13,13 +13,32 @@ import { texteAvatar, texteAlternatifAvatar } from '@/lib/planning/avatar'
  *  - le repli doit rester lisible — deux caractères au plus, jamais un ancien
  *    libellé de position (`M1`, `M2`), qui n'a jamais été une identité ;
  *  - l'image porte un texte alternatif qui nomme la PERSONNE, pas « avatar ».
+ *
+ * ─── Le champ lu s'appelle `avatarUrl` (GF-004) ─────────────────────────────
+ * Il s'est appelé `photoUrl` ici, et NULLE PART ailleurs : les producteurs —
+ * `GET /api/mechanics`, `PUT /api/mechanics/:id/avatar`, `GET /api/mechanic/me`,
+ * le type `MechanicRecord` — renvoient tous `avatarUrl`. Ce composant lisait
+ * donc une propriété que personne ne remplissait, et affichait les initiales
+ * EN TOUTES CIRCONSTANCES : écran Équipe, planning, sélecteur de mécanicien,
+ * en-tête de la PWA mécanicien.
+ *
+ * Le symptôme rapporté était « je change la photo, ça dit Enregistré, et rien
+ * ne change ». L'envoi réussissait pourtant : image validée, fichier écrit,
+ * base à jour, photo propagée au cloud. Seul l'affichage regardait ailleurs.
+ *
+ * TypeScript ne pouvait pas l'attraper : `mechanic={m}` passe une VARIABLE, et
+ * le contrôle des propriétés excédentaires ne s'applique qu'aux littéraux — un
+ * objet portant `avatarUrl` satisfait donc un contrat qui déclare `photoUrl`
+ * optionnel. Le garde-fou est dans `src/lib/mechanics/__tests__/`.
  */
 export interface MechanicAvatarProps {
   mechanic: {
     name?: string | null
+    /** Initiales de REPLI, affichées tant qu'aucune photo n'existe. */
     avatar?: string | null
     color?: string | null
-    photoUrl?: string | null
+    /** URL servie de la photo — MÊME NOM que dans toutes les réponses d'API. */
+    avatarUrl?: string | null
     isAbsent?: boolean
   }
   /** Diamètre en pixels. Le planning utilise 28–36 px. */
@@ -33,9 +52,9 @@ export default function MechanicAvatar({ mechanic, size = 28, className }: Mecha
   // Une nouvelle photo doit pouvoir réussir après l'échec de la précédente :
   // sans cette remise à zéro, remplacer une image cassée laissait le repli
   // affiché jusqu'au prochain montage du composant.
-  useEffect(() => { setEchecImage(false) }, [mechanic.photoUrl])
+  useEffect(() => { setEchecImage(false) }, [mechanic.avatarUrl])
 
-  const photo = mechanic.photoUrl && !echecImage ? mechanic.photoUrl : null
+  const photo = mechanic.avatarUrl && !echecImage ? mechanic.avatarUrl : null
   const initiales = texteAvatar(mechanic)
 
   return (

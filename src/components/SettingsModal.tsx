@@ -44,6 +44,7 @@ export default function SettingsModal({ onClose }: Props) {
     invoicePrefix: 'FAC', quotePrefix: 'DEV',
     invoiceFooter: '', logoBase64: '', logoPath: '', hourlyRate: '60',
     workshopStartHour: '8', workshopEndHour: '18',
+    workshopStartMinute: '0', workshopEndMinute: '0',
     smsPhone: '',
   })
 
@@ -81,6 +82,8 @@ export default function SettingsModal({ onClose }: Props) {
             hourlyRate: String(data.hourlyRate ?? 60),
             workshopStartHour: String(data.workshopStartHour ?? 8),
             workshopEndHour: String(data.workshopEndHour ?? 18),
+            workshopStartMinute: String(data.workshopStartMinute ?? 0),
+            workshopEndMinute: String(data.workshopEndMinute ?? 0),
             smsPhone: data.smsPhone ?? '',
           })
         }
@@ -91,7 +94,10 @@ export default function SettingsModal({ onClose }: Props) {
   const loadMechanics = useCallback(async () => {
     setMechLoading(true)
     try {
-      const res = await fetch('/api/mechanics')
+      // L'écran de GESTION doit voir les archivés : sans eux, le bouton de
+      // réactivation n'aurait jamais de ligne où s'afficher, et l'archivage
+      // serait une porte à sens unique (GF-040).
+      const res = await fetch('/api/mechanics?includeArchived=1')
       if (res.ok) setMechanics(await res.json())
     } finally {
       setMechLoading(false)
@@ -122,6 +128,8 @@ export default function SettingsModal({ onClose }: Props) {
           taxRate:           nombreSaisi(s.taxRate),
           workshopStartHour: entierSaisi(s.workshopStartHour),
           workshopEndHour:   entierSaisi(s.workshopEndHour),
+          workshopStartMinute: entierSaisi(s.workshopStartMinute),
+          workshopEndMinute:   entierSaisi(s.workshopEndMinute),
         }),
       })
       if (!res.ok) {
@@ -199,11 +207,44 @@ export default function SettingsModal({ onClose }: Props) {
     if (!confirm(`Supprimer ${name} ? Les interventions planifiées seront annulées.`)) return
     try {
       const res = await fetch(`/api/mechanics/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error()
+      const corps = await res.json().catch(() => ({}))
+      // Le refus « archivez-le plutôt » porte son motif : sans lui, la
+      // suppression échouait sur un message générique et l'utilisateur n'avait
+      // aucune piste (GF-040).
+      if (!res.ok) { toast.error(corps?.error ?? 'Erreur lors de la suppression'); return }
       toast.success('Mécanicien supprimé')
       loadMechanics()
     } catch {
       toast.error('Erreur lors de la suppression')
+    }
+  }
+
+  /**
+   * ARCHIVAGE — la sortie de secours que le produit annonçait sans l'offrir.
+   *
+   * `DELETE /api/mechanics/:id` refuse en 409 un mécanicien qui porte des
+   * interventions, avec le message « Archivez-le : il sortira du planning en
+   * conservant ses données ». La route `PATCH { archived: true }` existait et
+   * fonctionnait — mais AUCUN écran ne l'appelait : l'utilisateur était renvoyé
+   * vers un bouton inexistant, sans autre issue que d'abandonner (GF-040).
+   */
+  async function basculerArchive(id: string, name: string, archived: boolean) {
+    const question = archived
+      ? `Archiver ${name} ? Il sortira du planning ; ses interventions et son historique sont conservés.`
+      : `Réactiver ${name} ? Il réapparaîtra dans le planning.`
+    if (!confirm(question)) return
+    try {
+      const res = await fetch(`/api/mechanics/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ archived }),
+      })
+      const corps = await res.json().catch(() => ({}))
+      if (!res.ok) { toast.error(corps?.error ?? 'Opération refusée par le serveur.'); return }
+      toast.success(archived ? 'Mécanicien archivé' : 'Mécanicien réactivé')
+      loadMechanics()
+    } catch {
+      toast.error(archived ? 'Erreur lors de l’archivage' : 'Erreur lors de la réactivation')
     }
   }
 
@@ -272,6 +313,9 @@ export default function SettingsModal({ onClose }: Props) {
               onAdd={handleAddMechanic}
               onUpdate={handleUpdateMechanic}
               onDelete={handleDeleteMechanic}
+              onArchive={(id, name) => basculerArchive(id, name, true)}
+              onUnarchive={(id, name) => basculerArchive(id, name, false)}
+              onAvatarChanged={loadMechanics}
             />
           )}
           {tab === 'team' && canManageAccess && <TeamTab />}

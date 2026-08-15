@@ -24,7 +24,8 @@ export interface MobileNavActions {
   onOpenFinance: () => void
   onOpenLaborCatalog: () => void
   onOpenWarranties: () => void
-  onOpenLoaner: () => void
+  /** Absent quand le garage a désactivé les véhicules de prêt (GF-039). */
+  onOpenLoaner?: () => void
   onOpenCopilot: () => void
   onOpenOcr: () => void
   onOpenSuppliers: () => void
@@ -190,7 +191,9 @@ export default function MobileNav(props: MobileNavActions) {
         <div className="grid grid-cols-2 gap-2">
           <MoreItem icon={Package} label={t.navStock} onClick={() => run(toggleStockPanel)} />
           <MoreItem icon={ShieldCheck} label={t.navWarranties} onClick={() => run(props.onOpenWarranties)} badge={props.warrantyAlerts} />
-          <MoreItem icon={Car} label={t.navLoaner} onClick={() => run(props.onOpenLoaner)} />
+          {props.onOpenLoaner && (
+            <MoreItem icon={Car} label={t.navLoaner} onClick={() => run(props.onOpenLoaner!)} />
+          )}
           <MoreItem icon={Bell} label={t.navReminders} onClick={() => run(props.onOpenReminders)} />
           <MoreItem icon={BookOpen} label={t.navLaborCatalog} onClick={() => run(props.onOpenLaborCatalog)} />
         </div>

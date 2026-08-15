@@ -83,8 +83,11 @@ export async function POST(req: Request) {
   }
 
   // `jti` imprévisible : adresse l'instantané sans jamais stocker le jeton.
-  const jti = crypto.randomBytes(24).toString('base64url')
+  const jtiNeuf = crypto.randomBytes(24).toString('base64url')
   const expiresAt = new Date(Date.now() + PORTAL_TTL_DAYS * 86_400_000)
+  // Identité RÉELLE de la publication : celle de l'instantané vivant s'il y en a
+  // un (cf. bloc « une seule publication vivante », plus bas), sinon la neuve.
+  let jti = jtiNeuf
 
   try {
     // Rattachement de la licence à la première utilisation (même règle partout).
@@ -104,19 +107,42 @@ export async function POST(req: Request) {
       })
     }
 
-    // Une SEULE publication vivante par intervention.
+    // Une SEULE publication vivante par intervention — et TOUJOURS LA MÊME.
     //
-    // Chaque publication créait un instantané de plus, et les précédents
-    // restaient servis pendant sept jours. Conséquences : un garage qui
-    // s'aperçoit qu'une photo ou une ligne de devis n'aurait pas dû être
-    // publiée ne pouvait PAS se rétracter — republier ne révoquait rien, et
-    // l'ancien lien continuait de servir le contenu litigieux ; et les
-    // instantanés s'accumulaient sans borne pour une même intervention.
+    // Historique : chaque publication créait un instantané de plus et les
+    // précédents restaient servis sept jours. Un garage qui s'apercevait qu'une
+    // photo n'aurait pas dû être publiée ne pouvait pas se rétracter. La
+    // première correction a fait REVOQUER la publication précédente à chaque
+    // republication — ce qui a créé un défaut plus grave (GF-002) :
     //
-    // Republier révoque donc désormais la publication précédente, dans la même
-    // transaction que la nouvelle : à aucun instant deux instantanés vivants ne
-    // coexistent pour une intervention.
+    //   - l'ouverture d'une fiche d'intervention déclenche DEUX publications
+    //     concurrentes (le QR code et le lien « copier » en demandaient chacun
+    //     une) : la seconde tuait la première, si bien que le QR code affiché
+    //     à l'écran pointait DÉJÀ vers un lien mort — « Lien invalide ou
+    //     expiré » sur un lien qui venait d'être créé ;
+    //   - rouvrir la fiche une semaine plus tard tuait le lien que le client
+    //     avait reçu, sans que personne n'ait rien demandé.
+    //
+    // On REMPLOIE donc l'instantané vivant de l'intervention au lieu d'en créer
+    // un autre : son identifiant, donc son URL, ne change plus. L'intention
+    // d'origine reste entièrement satisfaite — le contenu est REMPLACÉ, donc ce
+    // qui est retiré disparaît aussi de l'ancien lien. Ce qui disparaît, c'est
+    // seulement la révocation ACCIDENTELLE d'une URL déjà distribuée.
+    //
+    // Un instantané PÉRIMÉ n'est pas remployé : sa republication rouvrirait un
+    // lien que la règle des sept jours a déjà fermé.
     await prisma.$transaction(async (tx) => {
+      const vivant = await tx.portalSnapshot.findFirst({
+        where:   { garageId: trustedGarageId, jobId, expiresAt: { gt: new Date() } },
+        orderBy: { createdAt: 'desc' },
+        select:  { id: true },
+      })
+      if (vivant) jti = vivant.id
+
+      // Les instantanés périmés de cette intervention, et tout doublon hérité
+      // des publications d'avant cette correction, s'en vont maintenant : leur
+      // lien est de toute façon inutilisable et ils n'ont plus à occuper de
+      // place. L'instantané retenu est explicitement épargné.
       await tx.portalSnapshot.deleteMany({
         where: { garageId: trustedGarageId, jobId, id: { not: jti } },
       })

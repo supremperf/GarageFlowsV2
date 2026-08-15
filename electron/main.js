@@ -168,8 +168,8 @@ const ROOT     = path.join(__dirname, '..')               // project root (dev) 
 //  tandis que les licences émises l'étaient par celle de keys/public.pem.)
 const _PK = [
   '-----BEGIN PUBLIC KEY-----',
-  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEQEgCY61r9bigvGiOmS9rMpNQiYh1',
-  'vHTgxlVvKech10XzNtGFKBgooS4wtM+qqw985VCFeAu5OoKuqvJV93nLEg==',
+  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIVtbteqeKb9jLJkGpxbMxFVW49WY',
+  '+h+CO9gEsAnjADBOeQa3D2R4ofgpxLZP0Sx3qysalzV6SVLslLzreiF/FQ==',
   '-----END PUBLIC KEY-----',
 ]
 const PUBLIC_KEY_PEM = _PK.join('\n')
@@ -300,6 +300,9 @@ async function fetchLatestUpdate() {
 
 async function fetchLatestUpdateBrut() {
   const currentVersion = app.getVersion()
+  // Une source a-t-elle RÉPONDU ? Sans cette trace, « aucune source joignable »
+  // et « vous êtes à jour » rendaient le même objet (GF-024).
+  let sourceRepondu = false
 
   if (UPDATE_SERVER) {
     // Le HWID permet le déploiement progressif côté serveur (rollout ciblé).
@@ -335,6 +338,9 @@ async function fetchLatestUpdateBrut() {
   // Fichier local publié par le serveur intégré (mono-poste / hors-ligne).
   try {
     const localUpdate = JSON.parse(fs.readFileSync(path.join(APP_DATA, 'gf_update.json'), 'utf8'))
+    // Le fichier existe et se lit : c'est une réponse, même s'il n'annonce
+    // aucune version plus récente.
+    sourceRepondu = true
     // Comparaison SEMVER, jamais une inégalité de chaînes : `!==` proposait
     // comme « mise à jour » toute version DIFFÉRENTE, donc aussi une version
     // ANTÉRIEURE republiée par erreur dans la Zone Administrateur — un retour en
@@ -365,6 +371,7 @@ async function fetchLatestUpdateBrut() {
 
   // Repli : Releases GitHub (pas d'empreinte → non vérifiable, ouverture navigateur).
   const gh = await httpGetJson('https://api.github.com/repos/garageflow/garageflow/releases/latest', 8000)
+  if (gh !== null) sourceRepondu = true
   if (gh?.tag_name) {
     const latest = String(gh.tag_name).replace(/^v/, '')
     return {
@@ -381,7 +388,22 @@ async function fetchLatestUpdateBrut() {
     }
   }
 
-  return { hasUpdate: false, currentVersion }
+  // ── « Pas de mise à jour » ≠ « je n'ai pas pu regarder » (GF-024) ──────────
+  // Ce retour était le MÊME dans les deux cas, et l'écran affichait un bandeau
+  // vert « Vous utilisez la dernière version » alors qu'aucune source n'avait
+  // répondu. `httpGetJson` ne lève jamais (elle résout `null` sur erreur, sur
+  // délai dépassé et sur JSON illisible) : le `catch` du gestionnaire IPC était
+  // donc mort, et personne ne pouvait distinguer les deux situations.
+  //
+  // `checked` dit si une source a réellement répondu. Les retours de succès
+  // plus haut ne le portent pas — leur comportement est inchangé.
+  if (!sourceRepondu) {
+    return {
+      hasUpdate: false, currentVersion, checked: false,
+      error: 'Aucune source de mise à jour joignable.',
+    }
+  }
+  return { hasUpdate: false, currentVersion, checked: true }
 }
 
 // Contrôle au démarrage (~25 s) puis toutes les heures ; notifie le renderer.
@@ -2096,7 +2118,10 @@ async function runDesktopExport() {
 
     if (res.status !== 200) {
       log('Desktop export: API error', res.status, res.body)
-      return
+      // Verdict RENDU (GF-024) : ce `return` muet laissait l'écran annoncer
+      // « Export terminé — vérifiez votre bureau » alors qu'aucun fichier
+      // n'avait été écrit, le dossier ayant été créé juste avant.
+      return { ok: false, raison: `l'API d'export a répondu ${res.status}` }
     }
 
     const data = JSON.parse(res.body)
@@ -2195,8 +2220,12 @@ async function runDesktopExport() {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('app:desktop-export-done', { dir, stamp })
     }
+    let fichiers = 0
+    try { fichiers = fs.readdirSync(dir).length } catch { /* dossier illisible */ }
+    return { ok: true, dir, fichiers }
   } catch (err) {
     log('Desktop export error:', err.message)
+    return { ok: false, raison: err.message }
   }
 }
 
@@ -2606,12 +2635,37 @@ function createMainWindow() {
   // base (GF-FINAL-024). Ils sont remis à leur place ici, sans élargir la règle
   // aux protocoles arbitraires : tout le reste reste refusé par défaut.
   const ALLOWED_EXTERNAL_PROTOCOLS = new Set(['mailto:', 'sms:'])
+  // ── Le repli « téléchargement manuel » n'ouvrait rien (GF-024) ─────────────
+  // Quand une mise à jour n'est pas signée, l'écran propose de la télécharger à
+  // la main via `window.open(downloadUrl)`. Or les deux sources concernées sont
+  // précisément celles qui ne portent pas de manifeste :
+  //   · le repli GitHub  → https://github.com/…  (hôte hors liste) ;
+  //   · la publication locale de la Zone Administrateur
+  //     → http://127.0.0.1:<port>/api/admin/updates/file/… (protocole http).
+  // Les deux étaient refusées et seulement journalisées : le bouton ne faisait
+  // RIEN, sans le moindre message. On ouvre ces deux cas — et uniquement eux :
+  // hôte exact pour GitHub, préfixe de chemin exact sur NOTRE propre serveur.
+  const PREFIXE_INSTALLEUR_LOCAL = '/api/admin/updates/file/'
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     try {
       const u = new URL(url)
+      // Boucle locale : `APP_ORIGIN` dit « localhost » alors que l'URL de
+      // l'installeur publié est construite sur « 127.0.0.1 » (main.js, repli
+      // local-admin). Comparer les origines telles quelles échouerait donc
+      // toujours — on accepte les deux écritures de la boucle, sur NOTRE port,
+      // et sur ce seul préfixe de chemin.
+      const estServeurEmbarque = u.protocol === 'http:'
+        && (u.hostname === '127.0.0.1' || u.hostname === 'localhost')
+        && u.port === String(PORT)
       if (u.protocol === 'https:' && ALLOWED_EXTERNAL_HOSTS.has(u.hostname)) {
         shell.openExternal(url)
       } else if (ALLOWED_EXTERNAL_PROTOCOLS.has(u.protocol)) {
+        // `mailto:` / `sms:` — rappels client. Sans cette branche, les deux
+        // boutons de rappel ne font RIEN dans l'application packagée.
+        shell.openExternal(url)
+      } else if (u.protocol === 'https:' && u.hostname === 'github.com') {
+        shell.openExternal(url)
+      } else if (estServeurEmbarque && u.pathname.startsWith(PREFIXE_INSTALLEUR_LOCAL)) {
         shell.openExternal(url)
       } else {
         log('[security] window.open refusé :', u.protocol + '//' + u.hostname)
@@ -2694,8 +2748,39 @@ function setupIPC() {
 
   // Manual desktop export trigger from the UI
   ipcMain.handle('app:desktop-export-now', async () => {
-    await runDesktopExport()
-    return { ok: true }
+    // `{ ok: true }` était rendu INCONDITIONNELLEMENT, et `runDesktopExport`
+    // avalait toutes ses erreurs : l'écran ne pouvait pas savoir qu'aucun
+    // fichier n'avait été écrit (GF-024).
+    const r = await runDesktopExport()
+    return r ?? { ok: false, raison: 'export interrompu' }
+  })
+
+  /**
+   * Ouverture d'un lien EXTERNE demandée explicitement par l'utilisateur.
+   *
+   * Le gestionnaire `setWindowOpenHandler` ne connaît que les domaines du
+   * produit : tout `<a target="_blank">` vers un site tiers était refusé et
+   * seulement journalisé. Les 135 liens « Site de la plateforme » du catalogue
+   * de facturation électronique — publiés par impots.gouv.fr, donc par
+   * construction hors de notre liste blanche — ne faisaient RIEN (GF-025).
+   *
+   * Ce point d'entrée est DÉLIBÉRÉMENT plus étroit qu'une liste blanche
+   * d'hôtes : il n'ouvre que du HTTPS, refuse tout autre protocole (`file:`,
+   * `javascript:`, `smb:`…) et rend un motif exploitable par l'écran. Le
+   * renderer ne peut donc pas obtenir plus que « ouvrir une page web sûre ».
+   */
+  ipcMain.handle('app:open-external', async (_e, url) => {
+    try {
+      const u = new URL(String(url ?? ''))
+      if (u.protocol !== 'https:') {
+        log('[security] open-external refusé (protocole) :', u.protocol)
+        return { ok: false, raison: 'non-https' }
+      }
+      await shell.openExternal(u.toString())
+      return { ok: true }
+    } catch {
+      return { ok: false, raison: 'url-invalide' }
+    }
   })
 
   ipcMain.handle('app:open-desktop-export', () => {
@@ -3084,6 +3169,10 @@ function setupIPC() {
       // clearAppSessionCookies() pour ce qui restait accessible sans ce nettoyage.
       const ancienne = activeLicense?.payload ?? null
       const licenceDifferente = !ancienne || ancienne.lid !== payload.lid || ancienne.typ !== payload.typ
+      // État complet d'AVANT la bascule — nécessaire pour revenir en arrière si
+      // l'autorité refuse la nouvelle clé (voir plus bas).
+      const licencePrecedente = activeLicense
+      const jetonAppareilPrecedent = activeDeviceToken
       // A new license key = a new device binding: drop the old device token.
       activeLicense = { token: token.trim(), payload }
       activeDeviceToken = null
@@ -3092,8 +3181,43 @@ function setupIPC() {
       // Register this device against the new license to obtain a fresh token.
       // Changement de licence à l'initiative de l'utilisateur : le délai calculé
       // pour l'ANCIENNE clé ne doit pas retarder celle qu'il vient de saisir.
+      // (`resetActivationBackoff` remet aussi `lastActivationRefusal` à null :
+      // le motif lu juste après provient donc bien de CETTE tentative.)
       resetActivationBackoff()
-      await activateOnServer()
+      const autorite = await activateOnServer()
+
+      // ── Le verdict de l'autorité était jeté (GF-009) ───────────────────────
+      // `activateOnServer()` était appelée sans lire sa valeur, puis le handler
+      // renvoyait inconditionnellement `{ ok: true }`. Une clé explicitement
+      // REFUSÉE — siège déjà consommé, licence révoquée, empreinte matérielle
+      // d'une autre machine — s'affichait donc « Licence activée (premium) » et
+      // l'application se rechargeait, alors que la clé avait déjà été écrite sur
+      // le disque et ses cookies posés.
+      //
+      // On distingue les deux causes possibles d'un `null` :
+      //   · autorité INJOIGNABLE → aucun refus enregistré. C'est le cas hors
+      //     ligne, et le produit doit continuer de fonctionner : on accepte,
+      //     le contrôle périodique tranchera au retour du réseau ;
+      //   · REFUS EXPLICITE de l'autorité distante → réponse définitive. On
+      //     restaure l'état précédent et on renvoie le motif.
+      if (!autorite && lastActivationRefusal?.authority === 'remote') {
+        const motif = lastActivationRefusal.reason
+        activeLicense = licencePrecedente
+        activeDeviceToken = jetonAppareilPrecedent
+        try {
+          if (licencePrecedente?.token) {
+            saveLicense(licencePrecedente.token, licencePrecedente.payload, jetonAppareilPrecedent ?? null)
+          } else if (fs.existsSync(LIC_PATH)) {
+            // Aucune licence avant la tentative : ne pas laisser sur le disque
+            // une clé que l'autorité vient de refuser.
+            fs.unlinkSync(LIC_PATH)
+          }
+        } catch (e) {
+          log('[update-license] restauration de la licence précédente impossible:', e.message)
+        }
+        log('[update-license] REFUSÉ par l’autorité —', motif)
+        return { ok: false, reason: motif }
+      }
       // Re-inject session cookies so Next.js picks up the new type
       await injectLicenseCookies(payload.typ, payload.lid ?? 'runtime')
       if (licenceDifferente) await clearAppSessionCookies()

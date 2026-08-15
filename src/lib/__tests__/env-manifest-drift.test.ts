@@ -31,21 +31,19 @@ const SCAN_EXT = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs', '.py'])
  * aux harnais de test : elles ne se configurent pas et n'ont donc pas à figurer
  * au manifeste.
  */
-const PLATFORM_PROVIDED = new Set([
-  'NODE_ENV', 'CI', 'PATH', 'HOME', 'USERPROFILE', 'APPDATA', 'LOCALAPPDATA',
-  'TEMP', 'TMP', 'PWD', 'OS', 'HOSTNAME', 'TZ', 'LANG', 'SHELL', 'TERM',
-  'NODE_OPTIONS', 'NODE_INSPECTOR_IPC', 'FORCE_COLOR', 'DEBUG',
-  'ELECTRON', 'ELECTRON_DEV', 'ELECTRON_RUN_AS_NODE', 'NEXT_RUNTIME',
-  'VERCEL', 'VERCEL_ENV', 'VERCEL_URL', 'VERCEL_REGION',
-  'PYTHONPATH', 'PYTHONIOENCODING',
-  // Harnais de test / outillage de publication, jamais lus en production.
-  'GF_TEST_LICENSE', 'GF_E2E_CHROMIUM', 'GF_MANIFEST_NOW',
-  'TEST_POSTGRES_URL', 'TEST_REDIS_URL',
-  // Injectée AU BUILD par next.config.mjs depuis package.json (version produit).
-  // Elle n'est jamais saisie par un exploitant et n'a donc rien à faire dans le
-  // manifeste : RESET-GARAGEFLOW ne doit ni la demander ni la régénérer.
-  'NEXT_PUBLIC_GF_VERSION',
-])
+// La liste vit désormais DANS le manifeste (`platformProvided`) : ce test et la
+// garde `check:env-consistency` doivent lire la MÊME source. Deux listes
+// recopiées finissent toujours par diverger, et c'est exactement ce genre de
+// divergence — un même rôle décrit à deux endroits — que l'audit du 15/08/2026
+// avait pour objet d'éliminer.
+//
+// Elle couvre : ce que fournit la plateforme (Node, Electron, Vercel, CI), les
+// harnais de test jamais lus en production (dont GF_TEST_ALLOW_UPSTASH, qui
+// autorise le SEUL fichier testant la sélection du backend de quotas à voir une
+// configuration Upstash — sans quoi `npm test` ouvrait des compteurs sur le
+// Redis de PRODUCTION, GF-041), et NEXT_PUBLIC_GF_VERSION, injectée au build
+// par next.config.mjs depuis package.json.
+let PLATFORM_PROVIDED: Set<string>
 
 const PATTERNS = [
   /process\.env\.([A-Za-z_][A-Za-z0-9_]*)/g,
@@ -66,7 +64,7 @@ interface ManifestVariable {
 }
 
 const usage = new Map<string, Set<string>>()
-let manifest: { variables: ManifestVariable[] }
+let manifest: { variables: ManifestVariable[]; platformProvided?: string[] }
 
 function record(name: string, file: string) {
   if (!/^[A-Z][A-Z0-9_]{2,}$/.test(name)) return
@@ -99,6 +97,7 @@ function walk(dir: string) {
 
 beforeAll(() => {
   manifest = JSON.parse(readFileSync(MANIFEST, 'utf8'))
+  PLATFORM_PROVIDED = new Set(manifest.platformProvided ?? [])
   for (const root of SCAN_ROOTS) {
     const dir = path.join(ROOT, root)
     if (existsSync(dir)) walk(dir)
@@ -109,6 +108,10 @@ describe('Manifeste ⇄ code', () => {
   it('le balayage trouve réellement des variables (le test ne peut pas devenir vide)', () => {
     expect(usage.size).toBeGreaterThan(20)
     expect(manifest.variables.length).toBeGreaterThan(50)
+    // `platformProvided` vient du manifeste : si la clé disparaissait, la liste
+    // deviendrait vide et le test échouerait en signalant des dizaines de
+    // fausses variables non déclarées. On préfère l'échec explicite ici.
+    expect(PLATFORM_PROVIDED.size).toBeGreaterThan(20)
   })
 
   it('toute variable lue par le produit est DÉCLARÉE au manifeste', () => {
@@ -191,8 +194,8 @@ describe('Politique de rotation des secrets', () => {
 
 describe('URLs de production', () => {
   it('la base publique documente que localhost est écarté', () => {
-    const v = manifest.variables.find(x => x.name === 'NEXT_PUBLIC_APP_URL')
-    expect(v, 'NEXT_PUBLIC_APP_URL doit être déclarée : elle construit les liens portail').toBeTruthy()
-    expect(v!.notes ?? '').toMatch(/app\.garageflows\.fr/)
+    const v = manifest.variables.find(x => x.name === 'GF_APP_URL')
+    expect(v, 'GF_APP_URL doit être déclarée : elle construit les liens portail').toBeTruthy()
+    expect(v!.notes ?? '').toMatch(/localhost/)
   })
 })

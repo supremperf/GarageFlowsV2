@@ -21,6 +21,7 @@ import { portalSecret } from '@/lib/portal-secret'
 import { publicUrlFor } from '@/lib/public-url'
 import { cheminPortail } from '@/lib/portal/routes'
 import { sendGarageMail } from '@/lib/mail/send-garage-mail'
+import { isDesktopInstance } from '@/lib/sync/cloud-client'
 import { logger } from '@/lib/logger'
 
 // POST /api/quotes/[id]/signature-token
@@ -30,6 +31,33 @@ export const POST = withAuth(async (req: Request, { params }: { params: { id: st
   if (!can(session.user.role, 'quote:manage')) {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
   }
+
+  // ── Un poste installé ne peut pas encore faire signer à distance (GF-003) ───
+  // Le jeton est signé avec le secret D'INSTALLATION du poste (per-install,
+  // cf. electron/secret.js) et l'URL remise au client pointe sur la PWA
+  // officielle, qui ne connaît ni ce secret ni ce devis : le devis n'est pas
+  // répliqué (la passerelle /api/sync/* ne porte que les interventions, les
+  // photos, les mécaniciens et l'instantané portail).
+  //
+  // Ce qui se passait : le lien partait quand même par e-mail, le devis
+  // basculait en « envoyé », et l'écran affichait « Devis envoyé à … ». Le
+  // client, lui, ouvrait « Token invalide ou expiré ». Trois mensonges pour un
+  // seul défaut. On refuse donc explicitement, sans rien modifier ni envoyer.
+  //
+  // Lever la limite demande une vraie voie de retour poste ⇄ cloud pour la
+  // signature (publication du devis + remontée de l'accord) : c'est une
+  // fonctionnalité à part entière, pas un correctif — elle est signalée comme
+  // telle plutôt que simulée.
+  if (isDesktopInstance()) {
+    logger.info('[quotes/signature] refus — instance poste, devis non publiable', { quote: params.id })
+    return NextResponse.json({
+      error: 'La signature à distance n’est pas disponible depuis un poste installé : '
+        + 'le lien serait illisible pour votre client. Faites signer le devis sur place, '
+        + 'ou utilisez l’espace en ligne de GarageFlows.',
+      code: 'SIGNATURE_DISTANTE_INDISPONIBLE',
+    }, { status: 409 })
+  }
+
   const quote = await prisma.quote.findFirst({
     where: { id: params.id, garageId: session.user.garageId },
     select: { id: true, number: true, status: true, clientName: true, clientEmail: true },

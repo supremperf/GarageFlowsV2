@@ -123,3 +123,6 @@ dist-artifact/
 *.backup
 *.orig
 *.rej
+
+.vercel
+.env*

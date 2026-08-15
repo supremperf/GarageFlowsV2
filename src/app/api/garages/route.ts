@@ -6,7 +6,7 @@ import { parseAmountToScaled } from '@/lib/money'
 import { garageToEuros } from '@/lib/money-db'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import bcrypt from 'bcryptjs'
-import { savePhoto } from '@/lib/photo-store'
+import { savePhoto, deletePhoto } from '@/lib/photo-store'
 import { UpdateGarageSchema } from '@/lib/schemas'
 
 // GET /api/garages  — returns the current user's garage info
@@ -93,6 +93,35 @@ export const PATCH = withAuth(async (req) => {
     scaledHourlyRate = scaled
   }
 
+  // ── Le logo (GF-006) ────────────────────────────────────────────────────────
+  // Quand le logo est stocké en FICHIER, `GET /api/garages` renvoie
+  // `logoBase64: null` et `logoPath: 'logos/…'`. L'écran des réglages charge
+  // cela dans son état (`logoBase64: data.logoBase64 ?? ''`) puis renvoie TOUT
+  // son état à chaque enregistrement. Le serveur recevait donc `logoBase64: ''`
+  // — vide — et l'interprétait comme « supprime le logo » : corriger un numéro
+  // de téléphone effaçait le logo du garage de toutes les factures, de tous les
+  // devis et du portail client. Le fichier restait sur le disque, orphelin,
+  // sans aucun moyen de le retrouver depuis l'application.
+  //
+  // Un champ vide ne dit pas « supprime » : il dit « je n'apporte pas d'image ».
+  // La SUPPRESSION, elle, est explicite — l'écran vide les DEUX champs (la
+  // croix de CompanyTab fait `set('logoBase64','')` ET `set('logoPath','')`).
+  //
+  // `raw.logoPath` sert de simple SIGNAL DE PRÉSENCE et n'est jamais écrit : il
+  // est retiré par le schéma zod, donc il ne peut désigner ni un chemin
+  // arbitraire ni le fichier d'un autre garage. Au pire, un appelant malveillant
+  // empêche la suppression de SON propre logo.
+  const logoConserve = typeof raw.logoPath === 'string' && raw.logoPath.trim() !== ''
+  const logoTouche = body.logoBase64 !== undefined && (Boolean(body.logoBase64) || !logoConserve)
+
+  // Chemin actuel, lu AVANT l'écriture : sans lui, remplacer ou supprimer un
+  // logo laissait l'ancien fichier sur le disque pour toujours.
+  const ancienLogoPath = logoTouche
+    ? (await prisma.garage.findUnique({
+        where: { id: session.user.garageId }, select: { logoPath: true },
+      }))?.logoPath ?? null
+    : null
+
   const garage = await prisma.garage.update({
     where: { id: session.user.garageId },
     data: {
@@ -112,8 +141,8 @@ export const PATCH = withAuth(async (req) => {
       ...(body.invoicePrefix !== undefined && { invoicePrefix: body.invoicePrefix }),
       ...(body.quotePrefix !== undefined && { quotePrefix: body.quotePrefix }),
       ...(body.invoiceFooter !== undefined && { invoiceFooter: body.invoiceFooter || null }),
-      ...(body.logoBase64 !== undefined && (() => {
-        // Suppression du logo → on efface les deux champs
+      ...(logoTouche && (() => {
+        // Suppression EXPLICITE (les deux champs vides) → on efface les deux.
         if (!body.logoBase64) return { logoBase64: null, logoPath: null }
         // Sinon : on stocke de préférence en fichier (logoPath), repli base64
         const logoPath = savePhoto(body.logoBase64, 'logos')
@@ -127,6 +156,8 @@ export const PATCH = withAuth(async (req) => {
       ...(body.hourlyRate !== undefined && { hourlyRateTenThousandths: scaledHourlyRate }),
       ...(body.workshopStartHour !== undefined && { workshopStartHour: body.workshopStartHour }),
       ...(body.workshopEndHour   !== undefined && { workshopEndHour:   body.workshopEndHour }),
+      ...(body.workshopStartMinute !== undefined && { workshopStartMinute: body.workshopStartMinute }),
+      ...(body.workshopEndMinute   !== undefined && { workshopEndMinute:   body.workshopEndMinute }),
       ...(body.smsPhone !== undefined && { smsPhone: body.smsPhone || null }),
       ...(body.workOrderPrefix        !== undefined && { workOrderPrefix:        body.workOrderPrefix }),
       ...(body.warrantyMonthsDefault  !== undefined && { warrantyMonthsDefault:  body.warrantyMonthsDefault }),
@@ -135,6 +166,11 @@ export const PATCH = withAuth(async (req) => {
       ...(body.purchaseOrderPrefix    !== undefined && { purchaseOrderPrefix:    body.purchaseOrderPrefix }),
     },
   })
+
+  // L'ancien fichier n'est retiré qu'APRÈS que la base ne le référence plus :
+  // dans l'autre ordre, un échec d'écriture laisserait la fiche pointant sur un
+  // fichier supprimé, donc un logo cassé sur les documents déjà émis.
+  if (ancienLogoPath && ancienLogoPath !== garage.logoPath) deletePhoto(ancienLogoPath)
 
   return NextResponse.json(garage ? garageToEuros(garage) : garage)
 })

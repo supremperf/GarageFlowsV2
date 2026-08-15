@@ -4,11 +4,23 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from '@/lib/i18n'
 import { RefreshCw, Download, CheckCircle, AlertCircle, Upload, Shield, FileUp, HardDriveDownload } from 'lucide-react'
 
+/**
+ * Version compilée dans le bundle, injectée par `next.config.mjs` depuis
+ * `package.json`. Lue ICI plutôt que via `@/lib/version` : ce module importe
+ * `MIGRATIONS`, du code serveur qui n'a rien à faire dans le paquet client.
+ */
+const VERSION_COMPILEE = process.env.NEXT_PUBLIC_GF_VERSION ?? '0.0.0'
+
 interface UpdateInfo {
   hasUpdate: boolean
   latestVersion?: string
   releaseUrl?: string
   downloadUrl?: string
+  /**
+   * Chemin relatif du fichier publié, tel que l'API le renvoie. Electron le
+   * transforme en `downloadUrl` absolue ; un navigateur ne reçoit que celui-ci.
+   */
+  downloadPath?: string
   releaseNotes?: string
   fileName?: string
   sha256?: string | null
@@ -28,7 +40,9 @@ interface UpdateInfo {
 
 export function UpdatesTab() {
   const { t } = useTranslation()
-  const [currentVersion, setCurrentVersion] = useState('1.0.0')
+  // Version RÉELLE compilée dans le bundle : « 1.0.0 » en dur était faux à
+  // chaque release, et hors Electron rien ne venait jamais la corriger.
+  const [currentVersion, setCurrentVersion] = useState(VERSION_COMPILEE)
   const [checking, setChecking] = useState(false)
   const [info, setInfo]         = useState<UpdateInfo | null>(null)
   const [error, setError]       = useState<string | null>(null)
@@ -84,7 +98,18 @@ export function UpdatesTab() {
     setChecking(true); setError(null); setInfo(null)
     try {
       if (electron?.checkUpdates) {
-        setInfo(await electron.checkUpdates())
+        // ── « À jour » n'est affirmé que si une source a RÉPONDU (GF-024) ────
+        // Quand aucune source n'était joignable, le processus principal rendait
+        // exactement le même objet que pour « vous êtes à jour » : l'écran
+        // affichait un bandeau vert rassurant sur une vérification qui n'avait
+        // pas eu lieu. Le champ `checked` les distingue désormais.
+        const r = await electron.checkUpdates()
+        if (r?.error || r?.checked === false) {
+          setError(r?.error ?? 'Vérification impossible : serveur de mise à jour injoignable.')
+          setInfo(null)
+          return
+        }
+        setInfo(r)
       } else {
         // En dehors d'Electron : lit l'info publiée par l'admin.
         const r = await fetch('/api/admin/updates')
@@ -99,8 +124,18 @@ export function UpdatesTab() {
   }
 
   async function installUpdate() {
-    const url = info?.downloadUrl ?? info?.releaseUrl
-    if (!url) return
+    // ── Hors Electron, le lien s'appelle `downloadPath` (GF-039) ─────────────
+    // `downloadUrl` et `releaseUrl` ne sont FABRIQUÉS que par le processus
+    // principal d'Electron. Dans un navigateur, `GET /api/admin/updates` rend le
+    // méta brut, qui porte `downloadPath` : les deux lectures échouaient et le
+    // bouton « Mettre à jour » sortait en silence — un clic, rien, aucun
+    // message. Le chemin est explicitement public et neutralise la traversée de
+    // répertoire côté serveur.
+    const url = info?.downloadUrl ?? info?.releaseUrl ?? info?.downloadPath
+    if (!url) {
+      setError('Aucun lien de téléchargement publié pour cette version.')
+      return
+    }
     // Une mise à jour sans manifeste signé ne PEUT pas s'installer : on ouvre
     // directement le téléchargement plutôt que de lancer une opération dont on
     // sait déjà qu'elle sera refusée (GF31-AUD-042).

@@ -125,12 +125,26 @@ export function clockOffsetMs(clientNow: unknown, serverNow: Date = new Date()):
 /**
  * Que faut-il réappliquer sur le POSTE à partir du miroir cloud ?
  * Uniquement l'exécution, et uniquement si le cloud est strictement plus récent.
+ *
+ * ─── La compensation d'horloge vaut DANS LES DEUX SENS ──────────────────────
+ * `resolveMirrorWrite` neutralise le décalage poste ↔ serveur avant d'arbitrer
+ * la montée (GF31-AUD-016) ; la descente comparait, elle, `local.updatedAt`
+ * (horloge du POSTE) à `cloudAt` (horloge du SERVEUR) sans rien corriger. La
+ * même dérive produisait donc l'effet inverse à celui qu'on venait de corriger :
+ * un poste en AVANCE ne réappliquait plus jamais le travail du mécanicien — il
+ * paraissait toujours plus vieux — et un poste en RETARD réappliquait à chaque
+ * passage un miroir pourtant périmé, écrasant les saisies du garage.
+ *
+ * @param offsetMs décalage à AJOUTER à l'horodatage du cloud pour l'exprimer
+ *   dans l'horloge du poste (`posteNow - serverNow`). `0` par défaut : sans
+ *   mesure fiable, on garde exactement le comportement précédent.
  */
 export function shouldApplyCloudExecution(
   localUpdatedAt: Date,
   cloudUpdatedAt: Date,
+  offsetMs = 0,
 ): boolean {
-  return cloudUpdatedAt.getTime() > localUpdatedAt.getTime()
+  return cloudUpdatedAt.getTime() + offsetMs > localUpdatedAt.getTime()
 }
 
 /** Fenêtre de synchronisation : les interventions utiles au mécanicien. */

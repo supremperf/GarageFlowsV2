@@ -317,6 +317,30 @@ console.log(JSON.stringify(res));
     Write-Host "[OK] Auto-test cryptographique de la paire candidate : signature vérifiée, altérations rejetées, $ancienne." -ForegroundColor Green
 }
 
+function Get-PublicKeyFingerprint {
+    param([Parameter(Mandatory=$true)][AllowEmptyString()][string]$Pem)
+    # Empreinte canonique = SHA-256 du DER SPKI. Or le corps base64 d'un PEM
+    # « PUBLIC KEY » EST ce DER : aucune API cryptographique n'est nécessaire —
+    # ce qui compte ici, le .NET Framework de Windows PowerShell 5.1 ne sachant
+    # pas importer une clé EC depuis un SubjectPublicKeyInfo.
+    $body = (($Pem -split "`r?`n") | Where-Object { $_ -notmatch '-----' -and -not [string]::IsNullOrWhiteSpace($_) }) -join ''
+    if ([string]::IsNullOrWhiteSpace($body)) { return $null }
+    try { $der = [Convert]::FromBase64String($body.Trim()) } catch { return $null }
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try { return (-join ($sha.ComputeHash($der) | ForEach-Object { $_.ToString('x2') })) } finally { $sha.Dispose() }
+}
+
+function Get-PemFromJsLiteral {
+    param([Parameter(Mandatory=$true)][string]$Path, [Parameter(Mandatory=$true)][string]$VarName)
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $null }
+    $raw = [IO.File]::ReadAllText($Path)
+    $m = [regex]::Match($raw, "(?s)(?:const|let|var)\s+$([regex]::Escape($VarName))\s*=\s*\[(.*?)\]")
+    if (-not $m.Success) { return $null }
+    $lines = @([regex]::Matches($m.Groups[1].Value, "'([^']*)'") | ForEach-Object { $_.Groups[1].Value })
+    if ($lines.Count -lt 3) { return $null }
+    return ($lines -join "`n")
+}
+
 function Set-LicensePublicKeyInProject {
     param(
         [Parameter(Mandatory=$true)][string]$Root,
@@ -326,8 +350,29 @@ function Set-LicensePublicKeyInProject {
     if ($lines.Count -lt 3) { throw 'Clé publique PEM invalide pour le patch du projet.' }
     $arrayLines = ($lines | ForEach-Object { "  '$($_.Replace("'", "''"))'," }) -join "`r`n"
 
+    $publicKeyTs = Join-Path $Root 'src\lib\license\public-key.ts'
+    $testAnchor  = Join-Path $Root 'src\lib\license\__tests__\public-key-consistency.test.ts'
+    $criticalJs  = Join-Path $Root 'scripts\check-critical-files.js'
+    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+
+    # Empreinte SORTANTE, lue AVANT tout patch : passé ce point la clé précédente
+    # n'existe plus nulle part dans l'arbre et ne peut plus être inscrite parmi
+    # les retirées.
+    $outgoingFp = Get-PublicKeyFingerprint (Get-PemFromJsLiteral -Path $publicKeyTs -VarName '_LINES')
+    $newFp = Get-PublicKeyFingerprint $PublicPem
+    if ([string]::IsNullOrWhiteSpace($newFp)) { throw 'Empreinte de la clé publique candidate incalculable — patch du projet refusé.' }
+
+    # Sauvegarde + écriture, en enregistrant le rollback (bloc catch du script).
+    $writePatched = {
+        param([string]$Path, [string]$Content)
+        $backup = $Path + '.before-v171-' + $stamp
+        Copy-Item -LiteralPath $Path -Destination $backup -Force
+        $script:PatchedSourceBackups += , ([pscustomobject]@{ Original = $Path; Backup = $backup })
+        [IO.File]::WriteAllText($Path, $Content, $script:Utf8NoBom)
+    }
+
     $targets = @(
-        @{ Path = (Join-Path $Root 'src\lib\license\public-key.ts'); Name = '_LINES' },
+        @{ Path = $publicKeyTs; Name = '_LINES' },
         @{ Path = (Join-Path $Root 'electron\main.js'); Name = '_PK' }
     )
     foreach ($target in $targets) {
@@ -339,12 +384,50 @@ function Set-LicensePublicKeyInProject {
         $replacement = "const $([string]$target.Name) = [`r`n$arrayLines`r`n]"
         $patched = [regex]::Replace($raw, $pattern, $replacement, 1)
         if ($patched -eq $raw) { throw "Tableau $([string]$target.Name) introuvable dans $path" }
-        $backup = $path + '.before-v171-' + (Get-Date -Format 'yyyyMMdd-HHmmss')
-        Copy-Item -LiteralPath $path -Destination $backup -Force
-        $script:PatchedSourceBackups += , ([pscustomobject]@{ Original = $path; Backup = $backup })
-        [IO.File]::WriteAllText($path, $patched, $script:Utf8NoBom)
+        & $writePatched $path $patched
     }
-    Write-Host '[OK] Nouvelle clé publique de licence appliquée au serveur et à Electron.' -ForegroundColor Green
+
+    # ── Les DEUX ancrages que ce script oubliait ────────────────────────────────
+    # Ne patcher que `_LINES` et `_PK` laissait `REFERENCE_FP` et la liste des
+    # empreintes retirées sur la clé PRÉCÉDENTE. Conséquence observée après la
+    # rotation du 14/08/2026 17:23 : `check:critical-files`, `keys:check` et le
+    # test de cohérence passaient au ROUGE alors que la rotation était correcte —
+    # exactement les gardes censées signaler une clé morte. Une garde qui crie à
+    # chaque rotation légitime n'est plus lue le jour où elle a raison.
+    if (Test-Path -LiteralPath $testAnchor -PathType Leaf) {
+        $raw = [IO.File]::ReadAllText($testAnchor)
+        $patched = [regex]::Replace($raw, "(?<pre>const\s+REFERENCE_FP\s*=\s*')(?<fp>[0-9a-f]{64})(?<post>')", ('${pre}' + $newFp + '${post}'))
+        if ($patched -eq $raw -and $raw -notmatch "REFERENCE_FP\s*=\s*'$newFp'") {
+            throw "Ancre REFERENCE_FP introuvable dans $testAnchor — la garde de cohérence de clé a changé de forme : METTEZ CE SCRIPT À JOUR, ne le contournez pas."
+        }
+        if ($patched -ne $raw) { & $writePatched $testAnchor $patched }
+    }
+
+    if ((Test-Path -LiteralPath $criticalJs -PathType Leaf) -and -not [string]::IsNullOrWhiteSpace($outgoingFp)) {
+        $raw = [IO.File]::ReadAllText($criticalJs)
+        $m = [regex]::Match($raw, "(?s)(const\s+RETIRED_FINGERPRINTS\s*=\s*\[)(.*?)(\r?\n\])")
+        if (-not $m.Success) {
+            Write-Host "[ATTENTION] RETIRED_FINGERPRINTS introuvable dans $criticalJs — inscrivez l'empreinte sortante $outgoingFp à la main." -ForegroundColor Yellow
+        } elseif ($outgoingFp -ne $newFp) {
+            $entries = @([regex]::Matches($m.Groups[2].Value, "\{\s*fp:\s*'([0-9a-f]{64})',\s*retired:\s*'([^']*)'\s*\},?") |
+                ForEach-Object { [pscustomobject]@{ Fp = $_.Groups[1].Value; Retired = $_.Groups[2].Value } })
+            # Une re-rotation peut ramener une clé anciennement retirée : elle
+            # redevient active et doit QUITTER la liste, sinon la garde refuse la
+            # bonne clé.
+            $kept = @($entries | Where-Object { $_.Fp -ne $newFp })
+            if (-not ($kept | Where-Object { $_.Fp -eq $outgoingFp })) {
+                $kept += , ([pscustomobject]@{ Fp = $outgoingFp; Retired = ((Get-Date -Format 'yyyy-MM-dd') + ' (rotation)') })
+            }
+            $body = "`n" + (($kept | ForEach-Object { "  { fp: '$($_.Fp)', retired: '$($_.Retired)' }," }) -join "`n")
+            $patched = $raw.Remove($m.Index, $m.Length).Insert($m.Index, ($m.Groups[1].Value + $body + $m.Groups[3].Value))
+            if ($patched -ne $raw) { & $writePatched $criticalJs $patched }
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($outgoingFp)) {
+        Write-Host '[ATTENTION] Empreinte sortante illisible : inscrivez-la à la main dans RETIRED_FINGERPRINTS.' -ForegroundColor Yellow
+    }
+    Write-Host "[OK] Nouvelle clé publique de licence appliquée : serveur, Electron, ancre de test et liste des empreintes retirées ($($newFp.Substring(0,16))…)." -ForegroundColor Green
 }
 
 function Repair-LegacyLicenseColumns {
@@ -530,6 +613,12 @@ ALTER TABLE "LicenseKey" ADD COLUMN IF NOT EXISTS "suspendedAt" TIMESTAMP(3);
 
 -- JobPhoto.mechanicId (nullable).
 ALTER TABLE "JobPhoto" ADD COLUMN IF NOT EXISTS "mechanicId" TEXT;
+
+-- Horaires d'atelier à la DEMI-HEURE (GF-021) : minutes des bornes d'ouverture
+-- et de fermeture. NOT NULL DEFAULT 0 -> sûr sur table peuplée, et les garages
+-- existants conservent exactement leurs horaires.
+ALTER TABLE "Garage" ADD COLUMN IF NOT EXISTS "workshopStartMinute" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "Garage" ADD COLUMN IF NOT EXISTS "workshopEndMinute"   INTEGER NOT NULL DEFAULT 0;
 
 -- Job.timerAccumulatedSec (chrono cumulé, NOT NULL DEFAULT 0 -> sûr sur table peuplée).
 ALTER TABLE "Job" ADD COLUMN IF NOT EXISTS "timerAccumulatedSec" INTEGER NOT NULL DEFAULT 0;
@@ -1500,57 +1589,6 @@ function Test-ProtectedApiKeyEndpoint {
 }
 
 
-function Ensure-PwaRuntimeDatabaseOverride {
-    param([Parameter(Mandatory=$true)][string]$Root)
-
-    $instrumentationPath = Join-Path $Root 'src\instrumentation.ts'
-    if (-not (Test-Path -LiteralPath $instrumentationPath -PathType Leaf)) {
-        throw 'src/instrumentation.ts introuvable : impossible de sécuriser le runtime PWA.'
-    }
-
-    $raw = [IO.File]::ReadAllText($instrumentationPath)
-    $tag = 'GF_PWA_DATABASE_OVERRIDE_V167'
-    if ($raw.Contains($tag)) {
-        Write-Host '[OK] Priorité PWA Neon déjà présente dans src/instrumentation.ts.' -ForegroundColor Green
-        return
-    }
-
-    $block = @"
-    // GF_PWA_DATABASE_OVERRIDE_V167
-    // Sur Vercel uniquement, la connexion PWA dédiée doit être appliquée avant
-    // validateEnv() et avant toute initialisation Prisma. Electron n-est pas affecté.
-    if (process.env.VERCEL === '1') {
-      const pwaDatabaseUrl = process.env.PWA_DATABASE_URL?.trim()
-      const pwaDirectUrl = process.env.PWA_DIRECT_URL?.trim()
-      if (pwaDatabaseUrl && /^postgres(?:ql)?:\/\//i.test(pwaDatabaseUrl)) {
-        process.env.DATABASE_URL = pwaDatabaseUrl
-      }
-      if (pwaDirectUrl && /^postgres(?:ql)?:\/\//i.test(pwaDirectUrl)) {
-        process.env.DIRECT_URL = pwaDirectUrl
-      }
-    }
-"@
-
-    $pattern = '(?m)^(\s*)if \(process\.env\.NEXT_RUNTIME === [''"]nodejs[''"]\) \{\s*$'
-    $match = [regex]::Match($raw, $pattern)
-    if (-not $match.Success) {
-        throw 'Bloc NEXT_RUNTIME=nodejs introuvable dans src/instrumentation.ts ; aucun patch approximatif appliqué.'
-    }
-
-    $replacement = $match.Value + "`r`n" + $block.TrimEnd()
-    $patched = $raw.Substring(0, $match.Index) + $replacement + $raw.Substring($match.Index + $match.Length)
-    $backup = $instrumentationPath + '.before-v167-' + (Get-Date -Format 'yyyyMMdd-HHmmss')
-    Copy-Item -LiteralPath $instrumentationPath -Destination $backup -Force
-    [IO.File]::WriteAllText($instrumentationPath, $patched, $script:Utf8NoBom)
-
-    $verify = [IO.File]::ReadAllText($instrumentationPath)
-    if (-not $verify.Contains($tag) -or $verify -notmatch 'process\.env\.DATABASE_URL\s*=\s*pwaDatabaseUrl') {
-        throw 'Le patch PWA Neon n-a pas pu être vérifié après écriture.'
-    }
-    Write-Host '[OK] src/instrumentation.ts corrigé : PWA_DATABASE_URL prioritaire sur Vercel.' -ForegroundColor Green
-}
-
-
 function Ensure-LicenseActivationDiagnostics {
     param([Parameter(Mandatory=$true)][string]$Root)
 
@@ -1754,7 +1792,6 @@ function Ensure-UpstashRuntimeReliability {
 function Invoke-ProductionDeployFromCleanCopy {
     param([Parameter(Mandatory=$true)][string]$StagingDirectory)
     Copy-CleanDeploymentTree -Destination $StagingDirectory -LinkedProjectDirectory $script:ProjectRoot
-    Ensure-PwaRuntimeDatabaseOverride -Root $StagingDirectory
     Ensure-LicenseActivationDiagnostics -Root $StagingDirectory
     Ensure-UpstashRuntimeReliability -Root $StagingDirectory
     $oldRoot = $script:ProjectRoot
@@ -2147,7 +2184,7 @@ function Add-AllProductionVariables {
         # explicitement toutes les entrées Production puis recréer une entrée
         # unique avec la valeur Neon saisie. Les autres secrets ne sont jamais
         # supprimés avant leur mise à jour.
-        if ($name -in @('DATABASE_URL','DIRECT_URL','PWA_DATABASE_URL','PWA_DIRECT_URL')) {
+        if ($name -in @('DATABASE_URL','DIRECT_URL')) {
             if ($existingNames.Contains([string]$name)) {
                 $remove = Invoke-VercelCommand -Arguments @('env','rm',$name,'production','--yes','--no-color') -AllowFailure
                 if ($remove.ExitCode -ne 0 -and ([string]$remove.Output -notmatch 'not found|does not exist|introuvable')) {
@@ -2375,7 +2412,7 @@ $remoteBackup = @{}
 $newValues = @{}
 $deletedNames = @()
 $sensitiveNames = @(
-    'DATABASE_URL','DIRECT_URL','PWA_DATABASE_URL','PWA_DIRECT_URL','NEXTAUTH_SECRET','GARAGEFLOW_API_KEY','DEVICE_TOKEN_PEPPER',
+    'DATABASE_URL','DIRECT_URL','NEXTAUTH_SECRET','GARAGEFLOW_API_KEY','DEVICE_TOKEN_PEPPER',
     'UPSTASH_REDIS_REST_TOKEN','GF_PORTAL_SECRET','ANTHROPIC_API_KEY','GF_TOTP_ENC_KEY',
     'GF_SMTP_CIPHER_KEY','GF_SIGNATURE_SECRET','GF_BACKUP_KEY','GF_DB_MAC_SECRET','GF_PRIVATE_KEY'
 )
@@ -2617,14 +2654,25 @@ try {
         $newValues[$name] = Clean-InputValue ([string]$generated[$name])
     }
 
+    # UN NOM CANONIQUE, LE MÊME PARTOUT. Les doublons PWA_DATABASE_URL /
+    # PWA_DIRECT_URL ont été supprimés : ils portaient la MÊME valeur que
+    # DATABASE_URL / DIRECT_URL et n'existaient que pour être recopiés par un
+    # patch de runtime injecté dans src/instrumentation.ts. Ce patch rendait la
+    # production dépendante d'un code absent du dépôt : un déploiement fait
+    # autrement (vercel deploy --prod) n'avait pas la recopie et refusait de
+    # démarrer. Voir ENVIRONMENT-VARIABLES.md.
     $newValues['DATABASE_URL'] = $databaseUrl
     $newValues['DIRECT_URL'] = $directUrl
-    $newValues['PWA_DATABASE_URL'] = $databaseUrl
-    $newValues['PWA_DIRECT_URL'] = $directUrl
     $newValues['NEXTAUTH_URL'] = $appUrl
     $newValues['GF_APP_URL'] = $appUrl
     $newValues['UPSTASH_REDIS_REST_URL'] = $upstashUrl
-    $newValues['UPSTASH_REDIS_TIMEOUT_MS'] = '8000'
+    # UPSTASH_REDIS_TIMEOUT_MS n'est plus provisionnée : AUCUN code ne la lit.
+    # Le délai d'appel Upstash est codé en dur à 1500 ms dans
+    # src/lib/security/rate-limit.ts. La variable affichait 8000 dans le tableau
+    # de bord Vercel et laissait croire à un délai de 8 s : une variable inerte
+    # qui ment sur le comportement réel est pire qu'une variable absente.
+    # La recâbler ferait passer le délai de 1,5 s à 8 s en production — décision
+    # produit, à prendre séparément (audit du 15/08/2026).
     $newValues['UPSTASH_REDIS_REST_TOKEN'] = $upstashToken
     if (-not [string]::IsNullOrEmpty($anthropic)) { $newValues['ANTHROPIC_API_KEY'] = $anthropic }
     if (-not [string]::IsNullOrEmpty($privateKey)) { $newValues['GF_PRIVATE_KEY'] = $privateKey }
@@ -2703,14 +2751,20 @@ try {
     if ($script:GfDryRun) {
         Write-Host '[DRY-RUN] Mise à jour des variables Vercel Production IGNORÉE.' -ForegroundColor Magenta
     } else {
-    $desktopRemove = Invoke-VercelCommand -Arguments @('env','rm','DESKTOP_DATABASE_URL','production','--yes','--no-color') -AllowFailure
-    if ($desktopRemove.ExitCode -eq 0) { Write-Host '[OK] DESKTOP_DATABASE_URL supprimée de Vercel Production.' -ForegroundColor Green }
+    # Convergence vers les noms canoniques : tout alias historique d'une même
+    # configuration est SUPPRIMÉ de Vercel. Laisser une variable inerte en place
+    # entretient le doute sur celle qui fait foi — c'est précisément ce qui a
+    # coûté un incident de production le 15/08/2026.
+    foreach ($aliasName in @('DESKTOP_DATABASE_URL','PWA_DATABASE_URL','PWA_DIRECT_URL','DATABASE_URL_UNPOOLED')) {
+        $aliasRemove = Invoke-VercelCommand -Arguments @('env','rm',$aliasName,'production','--yes','--no-color') -AllowFailure
+        if ($aliasRemove.ExitCode -eq 0) { Write-Host "[OK] Alias $aliasName supprimé de Vercel Production." -ForegroundColor Green }
+    }
     Add-AllProductionVariables -Values $newValues -SensitiveNames $sensitiveNames
     Assert-ProductionDatabaseVariables `
         -ExpectedDatabaseUrl ([string]$newValues['DATABASE_URL']) `
         -ExpectedDirectUrl ([string]$newValues['DIRECT_URL']) `
         -TemporaryDirectory $backupDir
-    Write-Host '[OK] PWA_DATABASE_URL/PWA_DIRECT_URL appliquées avant instrumentation ; validation finale sur le runtime Vercel.' -ForegroundColor Green
+    Write-Host '[OK] DATABASE_URL/DIRECT_URL appliquées sous leur nom canonique ; validation finale sur le runtime Vercel.' -ForegroundColor Green
     }
 
     if ($script:GfDryRun -or $script:GfSkipDatabaseReset) {
@@ -2833,6 +2887,38 @@ try {
         Write-Host '[SUCCÈS] Tous les secrets ont été régénérés ; les anciennes licences ont été invalidées et supprimées.' -ForegroundColor Green
     }
     Write-Host "[SUCCÈS] Fichiers sécurisés : $runDir" -ForegroundColor Green
+
+    # ── Les sauvegardes `.before-*` quittent l'arbre de build ───────────────────
+    # Elles n'existent que pour le rollback du bloc catch ; le run ayant réussi,
+    # elles n'ont plus de rôle ICI. Laissées sur place elles sont doublement
+    # nuisibles : `electron/**/*` les a déjà embarquées dans un `app.asar` livré
+    # (GF-DUR-034), et la garde qui l'interdit reste rouge après CHAQUE rotation.
+    # On les DÉPLACE — jamais supprimées — dans le dossier du run, dont l'ACL est
+    # déjà restreinte (Set-PrivateFileAcl), à côté des autres sauvegardes.
+    if (-not $script:GfDryRun -and $script:PatchedSourceBackups.Count -gt 0) {
+        try {
+            $srcBackupDir = Join-Path $runDir 'sources-avant-rotation'
+            New-Item -ItemType Directory -Path $srcBackupDir -Force | Out-Null
+            $rootFull = [IO.Path]::GetFullPath($script:ProjectRoot).TrimEnd('\', '/')
+            $deplaces = 0
+            foreach ($psb in $script:PatchedSourceBackups) {
+                if (-not $psb -or -not (Test-Path -LiteralPath $psb.Backup)) { continue }
+                $full = [IO.Path]::GetFullPath([string]$psb.Backup)
+                $rel = if ($full.StartsWith($rootFull, [StringComparison]::OrdinalIgnoreCase)) {
+                    $full.Substring($rootFull.Length).TrimStart('\', '/')
+                } else { [IO.Path]::GetFileName($full) }
+                Move-Item -LiteralPath $full -Destination (Join-Path $srcBackupDir ($rel -replace '[\\/]', '__')) -Force
+                $deplaces++
+            }
+            if ($deplaces -gt 0) {
+                Write-Host "[OK] $deplaces sauvegarde(s) de sources déplacée(s) hors de l'arbre de build : $srcBackupDir" -ForegroundColor Green
+            }
+        } catch {
+            # Un déplacement raté ne doit pas transformer un run réussi en échec :
+            # on le DIT, l'opérateur retire les fichiers à la main.
+            Write-Host "[ATTENTION] Sauvegardes `.before-*` laissées dans le projet ($($_.Exception.Message)). Retirez-les de l'arbre de build avant tout « npm run dist »." -ForegroundColor Yellow
+        }
+    }
 } catch {
     Write-Host "[ERREUR] $($_.Exception.Message)" -ForegroundColor Red
     if ($remoteMutationStarted) {

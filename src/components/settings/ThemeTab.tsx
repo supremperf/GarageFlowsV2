@@ -102,8 +102,21 @@ export function ThemeTab({ theme, setTheme, t, exporting, setExporting }: Props)
             if (!api?.exportToDesktop) { toast.error("Disponible uniquement dans l'application"); return }
             setExporting(true)
             try {
-              await api.exportToDesktop()
-              toast.success(t.exportDone ?? 'Export terminé — vérifiez votre bureau')
+              // ── Le verdict de l'export est LU (GF-024) ────────────────────
+              // Le retour était ignoré, et il valait de toute façon `{ok:true}`
+              // en toutes circonstances : « Export terminé — vérifiez votre
+              // bureau » s'affichait sur un dossier vide, l'API d'export ayant
+              // pu répondre en erreur sans que rien ne le dise.
+              const r = await api.exportToDesktop()
+              if (!r?.ok) {
+                toast.error(`Export échoué : ${r?.raison ?? 'aucun fichier écrit'}`)
+                return
+              }
+              toast.success(
+                typeof r.fichiers === 'number'
+                  ? `Export terminé — ${r.fichiers} fichier${r.fichiers > 1 ? 's' : ''} sur votre bureau`
+                  : (t.exportDone ?? 'Export terminé — vérifiez votre bureau'),
+              )
             } catch { toast.error("Erreur lors de l'export") }
             finally { setExporting(false) }
           }}

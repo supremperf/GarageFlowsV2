@@ -110,9 +110,34 @@ describe('testConnection — appel RÉSEAU réel, jamais de succès simulé', ()
     expect((appels[0].init.headers as Record<string, string>)['x-api-key']).toBe(BASE.apiKey)
   })
 
-  it('404/405 sur la LECTURE d’un point d’envoi vaut authentification acceptée', async () => {
+  /**
+   * ─── 404/405 ne valent « authentification acceptée » qu'en OAUTH2 (GF-025) ──
+   *
+   * Le test affirmait auparavant l'inverse pour TOUS les modes. Le raisonnement
+   * — « le point d'envoi refuse la lecture, donc l'authentification est passée »
+   * — ne tient qu'en OAuth2, où `entetesAuth` a réellement exécuté l'échange
+   * `client_credentials` et lève sur refus.
+   *
+   * En mode CLÉ D'API, aucun aller-retour d'authentification n'a lieu : l'en-tête
+   * est simplement recopié. Un 404 y prouve seulement que « quelque chose a
+   * répondu à cette adresse » — un site vitrine suffisait. La connexion était
+   * alors enregistrée `lastTestOk: true`, `status: 'connected'`, et l'écran
+   * affichait une pastille « Testée » sur une plateforme qui n'avait jamais vu
+   * passer la moindre facture.
+   */
+  it('CLÉ D’API : un 405 n’est PAS un succès — rien n’a authentifié quoi que ce soit', async () => {
     espionner([reponse({}, 405)])
-    expect((await genericPaAdapter.testConnection(ctx())).ok).toBe(true)
+    const r = await genericPaAdapter.testConnection(ctx())
+    expect(r.ok).toBe(false)
+    expect(r.message, 'le motif doit être actionnable').toMatch(/405|introuvable|autorisée|URL/i)
+  })
+
+  it('OAUTH2 : un 405 après un échange de jeton RÉUSSI vaut authentification acceptée', async () => {
+    // Première réponse : le point de jeton. Seconde : la lecture du point d'envoi.
+    espionner([reponse({ access_token: 'jeton-de-test', expires_in: 3600 }, 200), reponse({}, 405)])
+    const r = await genericPaAdapter.testConnection(ctx(OAUTH))
+    expect(r.ok, r.message).toBe(true)
+    expect(appels.length, 'l’échange de jeton doit avoir eu lieu').toBeGreaterThanOrEqual(2)
   })
 
   it.each([[401], [403], [500]])('HTTP %i → échec avec message actionnable', async (status) => {

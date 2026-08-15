@@ -17,6 +17,7 @@ import {
   type PartQuery,
   type SupplierConnector,
 } from '@/lib/suppliers'
+import { MOVEMENT } from '@/lib/stock/invoice-stock'
 
 // Assumed lead time (days) for a garage's habitual supplier when unknown, and the
 // sentinel "available to order" quantity for a catalogue we don't hold stock for.
@@ -253,10 +254,27 @@ export const POST = withAuth(async (req) => {
     })
     if (claim.count === 0) return { raced: true }
 
+    // ── Les mouvements fournisseur sont journalisés (GF-037) ─────────────────
+    // Réception et retour sont les deux ENTRÉES/SORTIES fournisseur du garage,
+    // et n'écrivaient rien dans `StockMovement`. Le journal ne montrait donc
+    // que les ventes : un inventaire qui ne tombe pas juste n'avait aucune
+    // entrée à confronter, alors que le schéma pose le stock comme
+    // reconstituable à partir de ce journal.
+    const journaliser = (partId: string, delta: number) =>
+      tx.stockMovement.create({
+        data: {
+          garageId, partId, type: MOVEMENT.ADJUST, quantityDelta: delta,
+          reason: `Commande fournisseur ${order.number} — ${from} → ${body.to}`,
+        },
+      })
+
     if (t.effects.incrementStock) {
       for (const l of stockLines) {
         const part = await tx.part.findFirst({ where: { id: l.partId, garageId }, select: { id: true } })
-        if (part) await tx.part.update({ where: { id: l.partId }, data: { quantity: { increment: l.qty } } })
+        if (part) {
+          await tx.part.update({ where: { id: l.partId }, data: { quantity: { increment: l.qty } } })
+          await journaliser(l.partId, l.qty)
+        }
       }
     } else if (t.effects.decrementStock) {
       for (const l of stockLines) {
@@ -267,14 +285,25 @@ export const POST = withAuth(async (req) => {
           where: { id: l.partId, garageId, quantity: { gte: l.qty } },
           data: { quantity: { decrement: l.qty } },
         })
+        if (dec.count === 1) {
+          await journaliser(l.partId, -l.qty)
+          continue
+        }
         // Stock insuffisant (donnée incohérente) : on plafonne à 0 de façon atomique
         // (condition quantity < qty → set 0), sans jamais passer sous zéro.
-        if (dec.count === 0) {
-          await tx.part.updateMany({
-            where: { id: l.partId, garageId, quantity: { lt: l.qty } },
-            data: { quantity: 0 },
-          })
-        }
+        //
+        // Le mouvement journalisé est alors celui RÉELLEMENT appliqué — la
+        // quantité qui restait — et non celui demandé : le journal doit décrire
+        // le stock, pas l'intention.
+        const avant = await tx.part.findFirst({
+          where: { id: l.partId, garageId }, select: { quantity: true },
+        })
+        if (!avant) continue
+        await tx.part.updateMany({
+          where: { id: l.partId, garageId, quantity: { lt: l.qty } },
+          data: { quantity: 0 },
+        })
+        if (avant.quantity > 0) await journaliser(l.partId, -avant.quantity)
       }
     }
     return { raced: false }

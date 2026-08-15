@@ -36,16 +36,30 @@ export function jobsOverlap(a: Job, b: Job): boolean {
   return aStart < bEnd && bStart < aEnd
 }
 
+/**
+ * Bornes de l'atelier en MINUTES depuis minuit (§14-15).
+ *
+ * Ces quatre fonctions prenaient deux entiers d'HEURES : un atelier ouvrant à
+ * 8 h 30 ne pouvait pas s'exprimer, et l'arrondi tombait toujours sur l'heure
+ * pleine. Les minutes sont la seule unité qui couvre la demi-heure exigée.
+ */
+export interface BornesAtelier { debut: number; fin: number }
+
+/** Repli identique aux constantes historiques (8 h → 18 h). */
+export const BORNES_PAR_DEFAUT: BornesAtelier = {
+  debut: WORKSHOP_START_HOUR * 60,
+  fin:   WORKSHOP_END_HOUR * 60,
+}
+
 export function findAvailableSlots(
   mechanicId: string,
   jobs: Job[],
   date: string,
   duration: number,
-  workshopStartHour = WORKSHOP_START_HOUR,
-  workshopEndHour   = WORKSHOP_END_HOUR,
+  bornes: BornesAtelier = BORNES_PAR_DEFAUT,
 ): string[] {
-  const workshopStart = workshopStartHour * 60
-  const workshopEnd = workshopEndHour * 60
+  const workshopStart = bornes.debut
+  const workshopEnd = bornes.fin
 
   const mechanicJobs = jobs
     .filter(j => j.mechanicId === mechanicId && j.date === date && j.status !== 'cancelled')
@@ -76,14 +90,13 @@ export function findBestSlot(
   mechanics: Mechanic[],
   date: string,
   duration: number,
-  workshopStartHour = WORKSHOP_START_HOUR,
-  workshopEndHour   = WORKSHOP_END_HOUR,
+  bornes: BornesAtelier = BORNES_PAR_DEFAUT,
 ): { mechanicId: string; startTime: string } | null {
   const activeMechanics = mechanics.filter(m => !m.isAbsent)
   let bestSlot: { mechanicId: string; startTime: string; startMinutes: number } | null = null
 
   for (const mechanic of activeMechanics) {
-    const slots = findAvailableSlots(mechanic.id, jobs, date, duration, workshopStartHour, workshopEndHour)
+    const slots = findAvailableSlots(mechanic.id, jobs, date, duration, bornes)
     for (const slot of slots) {
       const slotMinutes = timeToMinutes(slot)
       if (!bestSlot || slotMinutes < bestSlot.startMinutes) {
@@ -99,11 +112,10 @@ export function detectEmptySlots(
   jobs: Job[],
   mechanics: Mechanic[],
   date: string,
-  workshopStartHour = WORKSHOP_START_HOUR,
-  workshopEndHour   = WORKSHOP_END_HOUR,
+  bornes: BornesAtelier = BORNES_PAR_DEFAUT,
 ): { mechanicId: string; startTime: string; duration: number }[] {
-  const workshopStart = workshopStartHour * 60
-  const workshopEnd = workshopEndHour * 60
+  const workshopStart = bornes.debut
+  const workshopEnd = bornes.fin
   const gaps: { mechanicId: string; startTime: string; duration: number }[] = []
 
   for (const mechanic of mechanics.filter(m => !m.isAbsent)) {
@@ -135,13 +147,12 @@ export function calculateUtilizationRate(
   jobs: Job[],
   mechanics: Mechanic[],
   date: string,
-  workshopStartHour = WORKSHOP_START_HOUR,
-  workshopEndHour   = WORKSHOP_END_HOUR,
+  bornes: BornesAtelier = BORNES_PAR_DEFAUT,
 ): number {
   const activeMechanics = mechanics.filter(m => !m.isAbsent)
   if (activeMechanics.length === 0) return 0
 
-  const workshopDuration = (workshopEndHour - workshopStartHour) * 60
+  const workshopDuration = bornes.fin - bornes.debut
   // Garde : heures d'atelier égales/inversées → capacité 0 → division par zéro
   // (taux affiché à 100 % ou NaN sur une config invalide).
   if (workshopDuration <= 0) return 0

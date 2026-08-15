@@ -34,21 +34,6 @@
       "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
     },
     {
-      "name": "CI",
-      "classification": "runtime-system",
-      "scope": "runtime-system",
-      "requiredProduction": false,
-      "format": "string",
-      "minLength": 0,
-      "autoGenerate": false,
-      "autoManage": false,
-      "rotationRisk": "low",
-      "consumers": [
-        "playwright.config.ts"
-      ],
-      "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
-    },
-    {
       "name": "DATABASE_URL",
       "classification": "external",
       "scope": "both",
@@ -361,11 +346,10 @@
       "autoGenerate": false,
       "rotationRisk": "low",
       "consumers": [
-        "src/lib/app-url.ts"
+        "src/lib/public-url.ts"
       ],
-      "autoManage": false,
-      "status": "absent-consumer",
-      "notes": "Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin."
+      "autoManage": true,
+      "notes": "URL publique de l'application, base des liens du portail client (publicUrlFor). Nom CANONIQUE depuis le 15/08/2026 : NEXT_PUBLIC_APP_URL a été retirée (jamais exposée au navigateur, jamais provisionnée). Chaque candidat est validé par isUsablePublicBase() : HTTPS et hôte non privé. À défaut, publicAppUrl() retombe sur NEXTAUTH_URL — variable DISTINCTE, propriété de next-auth, employée ici comme indice de dernier recours et écartée sous Electron où elle vaut http://localhost:4028."
     },
     {
       "name": "GF_BACKUP_DIR",
@@ -1182,11 +1166,12 @@
       "generationFormat": "base64",
       "rotationRisk": "critical",
       "consumers": [
-        "src/lib/email/smtp-crypto.ts"
+        "src/lib/security/secret-cipher.ts",
+        "electron/main.js",
+        "src/lib/env.ts"
       ],
-      "notes": "Existing gsmtp1.k1 values require the same key. No automatic multi-key migration exists. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour éviter un secret orphelin.",
-      "autoManage": false,
-      "status": "absent-consumer"
+      "notes": "Existing gsmtp1.k1 values require the same key. No automatic multi-key migration exists. — Statut « absent-consumer » corrigé le 15/08/2026 : la variable est bel et bien lue (chiffrement au repos des identifiants SMTP). Rotation DESTRUCTIVE : régénérer cette clé rend illisibles les identifiants déjà chiffrés (voir GF_SMTP_CIPHER_KEY_OLD).",
+      "autoManage": false
     },
     {
       "name": "GF_SMTP_CIPHER_KEY_OLD",
@@ -1252,21 +1237,6 @@
       "autoManage": true
     },
     {
-      "name": "GF_UPDATE_SIGNING_KEY_FILE",
-      "classification": "configuration",
-      "scope": "release-tooling",
-      "requiredProduction": false,
-      "format": "string",
-      "minLength": 1,
-      "autoGenerate": false,
-      "rotationRisk": "high",
-      "consumers": [
-        "scripts/sign-release-manifest.mjs"
-      ],
-      "notes": "Chemin d'un fichier contenant la clé privée de signature, alternative à GF_UPDATE_SIGNING_KEY. Outillage de release uniquement.",
-      "autoManage": false
-    },
-    {
       "name": "GF_UPDATE_SERVER",
       "classification": "external",
       "scope": "desktop",
@@ -1296,6 +1266,21 @@
       "autoManage": false
     },
     {
+      "name": "GF_UPDATE_SIGNING_KEY_FILE",
+      "classification": "configuration",
+      "scope": "release-tooling",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 1,
+      "autoGenerate": false,
+      "rotationRisk": "high",
+      "consumers": [
+        "scripts/sign-release-manifest.mjs"
+      ],
+      "notes": "Chemin d'un fichier contenant la clé privée de signature, alternative à GF_UPDATE_SIGNING_KEY. Outillage de release uniquement.",
+      "autoManage": false
+    },
+    {
       "name": "HOSTNAME",
       "classification": "runtime-system",
       "scope": "runtime-system",
@@ -1322,20 +1307,6 @@
       "consumers": [
         "src/lib/license/session.ts"
       ],
-      "autoManage": true
-    },
-    {
-      "name": "NEXT_PUBLIC_APP_URL",
-      "classification": "configuration",
-      "scope": "both",
-      "requiredProduction": false,
-      "format": "https-url",
-      "autoGenerate": false,
-      "rotationRisk": "medium",
-      "consumers": [
-        "src/lib/public-url.ts"
-      ],
-      "notes": "Base des URL PUBLIQUES (liens portail, signature de devis, e-mails). Premier candidat devant GF_APP_URL puis NEXTAUTH_URL ; toute valeur non-HTTPS ou pointant vers un hôte privé (localhost, RFC1918) est ÉCARTÉE et l'on retombe sur https://app.garageflows.fr. Ne jamais y mettre l'URL Electron locale.",
       "autoManage": true
     },
     {
@@ -1596,34 +1567,6 @@
       "notes": "Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually."
     },
     {
-      "name": "PWA_DATABASE_URL",
-      "classification": "external",
-      "scope": "server-publisher",
-      "requiredProduction": false,
-      "format": "postgres-url",
-      "autoGenerate": false,
-      "rotationRisk": "high",
-      "consumers": [
-        "scripts/reset-garageflow.ps1"
-      ],
-      "notes": "URL PostgreSQL (pooled) poussée vers Vercel comme DATABASE_URL de la PWA. Saisie par l'opérateur pendant le reset ; distincte du DATABASE_URL du poste (file:./dev.db).",
-      "autoManage": false
-    },
-    {
-      "name": "PWA_DIRECT_URL",
-      "classification": "external",
-      "scope": "server-publisher",
-      "requiredProduction": false,
-      "format": "postgres-url",
-      "autoGenerate": false,
-      "rotationRisk": "high",
-      "consumers": [
-        "scripts/reset-garageflow.ps1"
-      ],
-      "notes": "URL PostgreSQL NON poolée (Neon « direct »), nécessaire aux migrations Prisma. Saisie par l'opérateur pendant le reset.",
-      "autoManage": false
-    },
-    {
       "name": "RATE_LIMIT_ADMIN_MAX",
       "classification": "configuration",
       "scope": "server",
@@ -1865,6 +1808,21 @@
       "autoManage": true
     },
     {
+      "name": "UPSTASH_REDIS_TIMEOUT_MS",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "integer-ms",
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/env.ts",
+        "src/lib/security/rate-limit.ts"
+      ],
+      "notes": "Délai d'attente d'un appel Upstash, en millisecondes. Facultative : absente, le défaut est 1500 ms — la valeur qui était codée en dur, donc comportement inchangé. Bornée à [100, 10000] : le limiteur est fail-closed en production PWA, un délai long fait patienter chaque requête critique avant le même refus. Une valeur hors bornes fait ÉCHOUER le démarrage plutôt que d'être rognée en silence."
+    },
+    {
       "name": "VERCEL",
       "classification": "runtime-system",
       "scope": "runtime-system",
@@ -1905,23 +1863,108 @@
       "consumers périmés corrigés vers les fichiers réels"
     ],
     "lastSync": {
-      "date": "2026-08-10",
-      "by": "remédiation E2E — inventaire process.env / os.environ / $env: sur le code courant",
-      "added": [
-        "NEXT_PUBLIC_APP_URL",
-        "GF_SMTP_CIPHER_KEY_OLD",
-        "GF_ALLOW_INSECURE_SYNC",
-        "GF_MAX_MECHANIC_KEYS",
-        "GF_KEYGEN_MAX_MECHANIC",
-        "GF_MECHANIC_TIMER_AUTOCOMPLETE",
-        "GF_DEBUG",
-        "SEED_ADMIN_PASSWORD",
-        "DEMO_RESET_FORCE",
+      "date": "2026-08-15",
+      "by": "audit total des variables d'environnement — normalisation canonique",
+      "removed": [
         "PWA_DATABASE_URL",
         "PWA_DIRECT_URL",
-        "VERCEL_TOKEN",
-        "GF_CONFIGURER_API_TEST_MODE"
+        "NEXT_PUBLIC_APP_URL",
+        "CI"
+      ],
+      "added": [
+        "UPSTASH_REDIS_TIMEOUT_MS (délai Upstash rendu configurable, défaut inchangé)"
+      ],
+      "notes": "Introduction de `forbiddenAliases` (un nom canonique par configuration) et de `platformProvided`, déplacée depuis env-manifest-drift.test.ts pour que le test et la garde check:env-consistency lisent la même source.",
+      "fixed": [
+        "GF_APP_URL (status absent-consumer périmé + consommateur inexistant)"
       ]
+    }
+  },
+  "platformProvided": [
+    "ALLOW_PROD",
+    "APPDATA",
+    "BASE_URL",
+    "CHROME_PATH",
+    "CI",
+    "DEBUG",
+    "E2E_EMAIL",
+    "E2E_LICENSE",
+    "E2E_PASSWORD",
+    "ELECTRON",
+    "ELECTRON_DEV",
+    "ELECTRON_RUN_AS_NODE",
+    "FORCE_COLOR",
+    "GF_E2E_CHROMIUM",
+    "GF_MANIFEST_NOW",
+    "GF_SCRIPT_TO_PARSE",
+    "GF_TEST_ALLOW_UPSTASH",
+    "GF_TEST_LICENSE",
+    "HEADER_COOKIE",
+    "HOME",
+    "HOSTNAME",
+    "LANG",
+    "LOCALAPPDATA",
+    "NEXT_PUBLIC_GF_VERSION",
+    "NEXT_RUNTIME",
+    "NODE_ENV",
+    "NODE_INSPECTOR_IPC",
+    "NODE_OPTIONS",
+    "OS",
+    "PATH",
+    "PWD",
+    "PYTHONIOENCODING",
+    "PYTHONPATH",
+    "SHELL",
+    "TEMP",
+    "TERM",
+    "TEST_POSTGRES_URL",
+    "TEST_REDIS_URL",
+    "TMP",
+    "TZ",
+    "USERPROFILE",
+    "VERCEL",
+    "VERCEL_ENV",
+    "VERCEL_REGION",
+    "VERCEL_URL",
+    "VITEST"
+  ],
+  "forbiddenAliases": {
+    "PWA_DATABASE_URL": {
+      "canonical": "DATABASE_URL",
+      "reason": "Portait la MÊME valeur que DATABASE_URL sur Vercel. Un patch injecté par RESET-GARAGEFLOW dans src/instrumentation.ts la recopiait vers DATABASE_URL au démarrage — patch absent du dépôt, donc tout déploiement fait autrement (vercel deploy --prod) démarrait sans la recopie et échouait. Incident de production du 15/08/2026.",
+      "removedOn": "2026-08-15"
+    },
+    "PWA_DIRECT_URL": {
+      "canonical": "DIRECT_URL",
+      "reason": "Doublon de DIRECT_URL, même mécanisme de recopie que PWA_DATABASE_URL.",
+      "removedOn": "2026-08-15"
+    },
+    "DESKTOP_DATABASE_URL": {
+      "canonical": "DATABASE_URL",
+      "reason": "Nom historique pour la connexion du poste. DATABASE_URL est volontairement POLYMORPHE (file: sur le poste, postgresql:// sur le cloud) : c'est son schéma qui sélectionne le client Prisma dans src/lib/db.ts, pas son nom.",
+      "removedOn": "2026-08-15"
+    },
+    "DATABASE_URL_UNPOOLED": {
+      "canonical": "DIRECT_URL",
+      "reason": "Nom employé par Neon pour la connexion non poolée. GarageFlows retient DIRECT_URL, qui est le nom attendu par `directUrl` dans les schémas Prisma.",
+      "removedOn": "2026-08-15"
+    },
+    "SERVER_DATABASE_URL": {
+      "canonical": "DATABASE_URL",
+      "reason": "Jamais employé dans ce dépôt ; déclaré pour empêcher sa réintroduction."
+    },
+    "NEXT_DATABASE_URL": {
+      "canonical": "DATABASE_URL",
+      "reason": "Jamais employé dans ce dépôt ; déclaré pour empêcher sa réintroduction."
+    },
+    "DB_URL": {
+      "canonical": "DATABASE_URL",
+      "reason": "Abréviation ambiguë ; déclarée pour empêcher sa réintroduction."
+    },
+    "NEXT_PUBLIC_APP_URL": {
+      "canonical": "GF_APP_URL",
+      "reason": "Troisième nom pour « URL publique de l'application ». publicAppUrl() n'est importée que par des routes d'API : la valeur n'atteint jamais le navigateur, le préfixe NEXT_PUBLIC_ y annonçait donc une exposition inexistante (§48). Aucun outillage ne la provisionnait.",
+      "removedOn": "2026-08-15"
     }
   }
 }

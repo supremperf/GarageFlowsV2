@@ -208,6 +208,9 @@ export const PATCH = withAuth(async (req, { params }) => {
   return NextResponse.json(withTotals({ ...invoice, lines: redactLineCosts(linesToEuros(invoice.lines), session.user.role) }))
 })
 
+/** La facture est passée à « émise » pendant la suppression : 409, pas 500. */
+class FactureEmiseEntreTemps extends Error {}
+
 export const DELETE = withAuth(async (req, { params }) => {
   const session = await requireSession()
   // Supprimer une facture est un acte de gestion : même exigence que POST/PATCH
@@ -230,29 +233,53 @@ export const DELETE = withAuth(async (req, { params }) => {
   // `releaseInvoiceStock` est donc normalement un no-op. On l'appelle malgré tout,
   // DANS la même transaction que la suppression, pour qu'aucune quantité ne
   // puisse rester bloquée si un état incohérent existait déjà en base.
-  await prisma.$transaction(async (tx) => {
-    await releaseInvoiceStock(tx as unknown as StockTxClient, {
-      invoiceId: params.id,
-      garageId: session.user.garageId,
-      number: existing.number,
-      reason: `Facture ${existing.number} supprimée (brouillon)`,
-    })
+  try {
+    await prisma.$transaction(async (tx) => {
+      await releaseInvoiceStock(tx as unknown as StockTxClient, {
+        invoiceId: params.id,
+        garageId: session.user.garageId,
+        number: existing.number,
+        reason: `Facture ${existing.number} supprimée (brouillon)`,
+      })
 
-    // Le devis d'où venait cette facture retrouve son état d'avant conversion.
-    //
-    // `Quote.invoice` est en `onDelete: SetNull` : supprimer la facture laissait
-    // le devis au statut TERMINAL « converted » avec un `invoiceId` à nul. Il
-    // n'était alors plus convertible (« Devis déjà converti »), plus
-    // supprimable (un devis converti se conserve), et ne pointait plus sur rien :
-    // le garage devait tout ressaisir, en gardant un document mort en base
-    // (GF31-AUD-047).
-    await tx.quote.updateMany({
-      where: { garageId: session.user.garageId, invoiceId: params.id, status: 'converted' },
-      data: { status: 'accepted', invoiceId: null },
-    })
+      // Le devis d'où venait cette facture retrouve son état d'avant conversion.
+      //
+      // `Quote.invoice` est en `onDelete: SetNull` : supprimer la facture laissait
+      // le devis au statut TERMINAL « converted » avec un `invoiceId` à nul. Il
+      // n'était alors plus convertible (« Devis déjà converti »), plus
+      // supprimable (un devis converti se conserve), et ne pointait plus sur rien :
+      // le garage devait tout ressaisir, en gardant un document mort en base
+      // (GF31-AUD-047).
+      await tx.quote.updateMany({
+        where: { garageId: session.user.garageId, invoiceId: params.id, status: 'converted' },
+        data: { status: 'accepted', invoiceId: null },
+      })
 
-    await tx.invoice.delete({ where: { id: params.id, garageId: session.user.garageId } })
-  })
+      // ── Le statut est REVÉRIFIÉ ici, dans la transaction ───────────────────
+      // Le contrôle `isDeletable` ci-dessus lit la facture AVANT d'ouvrir la
+      // transaction. Entre cette lecture et cette ligne, un autre onglet — ou la
+      // seconde moitié d'un double-clic — pouvait émettre la facture : la
+      // suppression partait quand même et effaçait physiquement une facture
+      // ÉMISE, avec son numéro de la série séquentielle. Rien ne la reconstitue,
+      // et le contrôle FEC voit un trou dans la numérotation.
+      //
+      // `deleteMany` avec `status: 'draft'` rend le contrôle et l'effacement
+      // atomiques : si le statut a bougé, `count` vaut 0 et toute la transaction
+      // est annulée, y compris la restitution de stock déjà écrite au-dessus.
+      const supprimee = await tx.invoice.deleteMany({
+        where: { id: params.id, garageId: session.user.garageId, status: 'draft' },
+      })
+      if (supprimee.count === 0) throw new FactureEmiseEntreTemps()
+    })
+  } catch (e) {
+    if (e instanceof FactureEmiseEntreTemps) {
+      return NextResponse.json(
+        { error: 'La facture a été émise entre-temps. Créez un avoir.' },
+        { status: 409 },
+      )
+    }
+    throw e
+  }
   await logAudit({ action: 'delete', entityType: 'Invoice', entityId: params.id, session, req })
   return NextResponse.json({ success: true })
 })

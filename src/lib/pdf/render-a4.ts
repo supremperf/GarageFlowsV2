@@ -35,6 +35,14 @@ import { planPageSlices } from './page-slices'
  */
 export const A4_CONTENT_WIDTH_PX = 794
 
+/**
+ * Qualité JPEG des pages du PDF.
+ *
+ * 0,85 est le point où le texte reste net à `scale: 2` tout en divisant le
+ * poids du fichier par ~30 face au PNG (voir la mesure dans `addImage`).
+ */
+export const JPEG_QUALITY = 0.85
+
 export interface RenderA4Options {
   /** Nom du fichier proposé au téléchargement (avec ou sans .pdf). */
   fileName: string
@@ -118,7 +126,21 @@ export async function renderElementToA4Pdf(
       0, 0, canvas.width, slice.sourceHeight,
     )
     if (index > 0) pdf.addPage()
-    pdf.addImage(band.toDataURL('image/png'), 'PNG', margin, margin, imageWidthMm, slice.heightMm)
+    // ── JPEG et non PNG : un PDF que l'on peut ENVOYER (GF-043) ──────────────
+    // Mesuré en navigateur réel, même document, même échelle :
+    //
+    //     facture 1 page  · PNG 4,61 Mo · JPEG q=0,85 0,13 Mo   (×35)
+    //     facture 4 pages · PNG 35,8 Mo · JPEG q=0,85 1,13 Mo   (×32)
+    //
+    // Une facture d'une page à 4,6 Mo passe mal en pièce jointe ; à quatre
+    // pages, 35,8 Mo dépassent la limite de toutes les messageries courantes
+    // (Gmail : 25 Mo). Le garage produisait donc un document qu'il ne pouvait
+    // pas transmettre — sans qu'aucun message ne l'explique.
+    //
+    // Le JPEG n'a pas de couche alpha : c'est sans conséquence ici, la bande
+    // est remplie en blanc opaque juste au-dessus. À `scale: 2`, le texte reste
+    // net — l'image source fait 1684 px de large pour 190 mm imprimés.
+    pdf.addImage(band.toDataURL('image/jpeg', JPEG_QUALITY), 'JPEG', margin, margin, imageWidthMm, slice.heightMm)
   })
 
   const name = options.fileName.toLowerCase().endsWith('.pdf') ? options.fileName : `${options.fileName}.pdf`

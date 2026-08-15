@@ -35,6 +35,39 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
   const status = nextAppointmentStatus(appointment.status as AppointmentStatus, action)
   if (!status) return NextResponse.json({ error: `Transition « ${action} » impossible depuis « ${appointment.status} »` }, { status: 409 })
 
+  // ── CONFIRMER, c'est s'engager : on regarde d'abord la charge (GF-040) ─────
+  // Rendez-vous et interventions vivent dans deux tables indépendantes, sans
+  // aucun lien : le portail proposait un créneau que rien ne vérifiait, et le
+  // comptoir confirmait au client une journée déjà pleine. Personne ne s'en
+  // apercevait avant le matin même.
+  //
+  // Le contrôle reste volontairement grossier — une confirmation ne CRÉE pas
+  // l'intervention (`Job.mechanicId` est obligatoire : il faudrait choisir un
+  // mécanicien, ce qui est un autre chantier). Il refuse simplement de promettre
+  // une journée où il n'y a déjà plus un mécanicien de libre.
+  if (status === 'confirmed') {
+    const [actifs, occupes] = await Promise.all([
+      prisma.mechanic.count({ where: { garageId: session.user.garageId, archivedAt: null, isAbsent: false } }),
+      prisma.job.count({
+        where: { garageId: session.user.garageId, date: appointment.date, status: { not: 'cancelled' } },
+      }),
+    ])
+    // Un garage SANS mécanicien enregistré n'a pas de capacité modélisée : il
+    // n'utilise pas le planning, et lui refuser toute confirmation casserait
+    // une fonction qui marchait. On ne bloque que sur une saturation MESURÉE.
+    if (actifs > 0 && occupes >= actifs) {
+      return NextResponse.json(
+        {
+          error: `L'atelier est complet le ${appointment.date} `
+               + `(${occupes} intervention(s) pour ${actifs} mécanicien(s) disponible(s)). `
+               + 'Proposez une autre date au client.',
+          code: 'WORKSHOP_FULL',
+        },
+        { status: 409 },
+      )
+    }
+  }
+
   // Transition ATOMIQUE (anti-TOCTOU) : l'update n'aboutit que si le statut n'a
   // pas changé depuis la lecture. Deux actions concurrentes (ex. confirm/cancel)
   // ne peuvent donc pas s'écraser l'une l'autre — la seconde reçoit un 409.

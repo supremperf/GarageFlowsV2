@@ -227,7 +227,19 @@ function GenerateModal({
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ license: generated.token }),
                       })
-                      if (r.ok) setActivated(true)
+                      // ── Un 200 n'est pas un succès sur cette route (GF-024) ──
+                      // Cinq refus répondent en HTTP 200 avec `{ ok: false }` :
+                      // licence invalide, intégrité de base, révoquée, suspendue,
+                      // expirée. Se fier au seul `r.ok` affichait donc
+                      // « ✓ Licence activée » sur une clé refusée. Et les refus
+                      // en 4xx (HWID requis, appareil requis) ne montraient RIEN
+                      // du tout — aucune branche `else` n'existait.
+                      const d = await r.json().catch(() => ({} as { ok?: boolean; reason?: string; error?: string }))
+                      if (!r.ok || d?.ok === false) {
+                        toast.error(d?.reason ?? d?.error ?? 'Activation refusée par le serveur.')
+                        return
+                      }
+                      setActivated(true)
                     } finally {
                       setActivating(false)
                     }

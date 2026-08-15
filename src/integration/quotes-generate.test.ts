@@ -91,6 +91,37 @@ describe('POST /api/quotes/generate (integration)', () => {
     expect(persisted.lines).toHaveLength(2)
   })
 
+  it('la ligne de pièce PORTE son rattachement au stock (GF-040)', async () => {
+    // Seul `InvoiceLine.partId` engage l'inventaire, et la conversion recopie
+    // fidèlement `QuoteLine.partId`. Sans lui, la facture issue d'un devis
+    // généré ne décrémentait JAMAIS rien : les pièces sortaient de l'atelier
+    // sans quitter l'inventaire.
+    const piece = await prisma.part.findFirst({ where: { garageId: garageA, reference: 'OIL-9' } })
+    const { status, json } = await call({ repairTypes: ['oil_change'], confirm: true })
+    expect(status).toBe(201)
+
+    const persisted = await prisma.quote.findFirst({
+      where: { id: json.quote.id }, include: { lines: true },
+    })
+    const lignePiece = persisted.lines.find((l: any) => !l.isLabor)
+    expect(lignePiece.partId, 'le lien vers le catalogue était perdu').toBe(piece.id)
+
+    const ligneMo = persisted.lines.find((l: any) => l.isLabor)
+    expect(ligneMo.partId, 'la main-d’œuvre ne consomme aucun stock').toBeNull()
+  })
+
+  it('une pièce hors catalogue reste sans rattachement', async () => {
+    // Le rattachement ne s'invente pas : une ligne sans pièce connue doit
+    // rester libre, sinon la validation de la facture décrémenterait au hasard.
+    const { json } = await call({ repairTypes: ['brake_pads'], confirm: true })
+    const persisted = await prisma.quote.findFirst({
+      where: { id: json.quote.id }, include: { lines: true },
+    })
+    for (const l of persisted.lines) {
+      if (!l.isLabor) expect(l.partId).toBeNull()
+    }
+  })
+
   it('drops a clientId that belongs to another garage (tenant isolation)', async () => {
     const { status, json } = await call({ repairTypes: ['oil_change'], clientId: clientB, clientName: 'Walk-in', confirm: true })
     expect(status).toBe(201)

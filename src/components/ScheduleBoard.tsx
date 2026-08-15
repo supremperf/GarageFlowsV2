@@ -13,8 +13,6 @@ import {
 } from '@dnd-kit/core'
 import { useScheduleStore } from '@/store/schedule-store'
 import {
-  WORKSHOP_START_HOUR,
-  WORKSHOP_END_HOUR,
   SLOT_HEIGHT_PER_MINUTE,
   Job,
   REPAIR_TYPES,
@@ -35,12 +33,16 @@ import {
   reconcilier,
   trancheVisible,
 } from '@/lib/planning/mechanic-window'
+import { FournisseurBornes, useBornesPlanning } from '@/lib/planning/bornes-contexte'
+import { bornesAtelier } from '@/lib/planning/horaires'
 
 const HOUR_HEIGHT = 60 * SLOT_HEIGHT_PER_MINUTE
-const BOARD_START = WORKSHOP_START_HOUR * 60
-const BOARD_END = WORKSHOP_END_HOUR * 60
-const TOTAL_MINUTES = BOARD_END - BOARD_START
-const BOARD_HEIGHT = TOTAL_MINUTES * SLOT_HEIGHT_PER_MINUTE
+
+// ── Les bornes ne sont plus des constantes de module (GF-021) ────────────────
+// `BOARD_START` / `BOARD_END` naissaient de `WORKSHOP_START_HOUR` et
+// `WORKSHOP_END_HOUR`, évaluées au chargement du fichier : la grille était donc
+// figée de 8 h à 18 h, quels que soient les horaires enregistrés par le garage.
+// Elles viennent maintenant du contexte, alimenté par les réglages.
 
 // ──────────────────────────────────────────────
 // Droppable column component
@@ -57,6 +59,13 @@ interface DroppableColumnProps {
 function DroppableColumn({ mechanic, jobs, conflictJobIds, onCellClick, onResizeStart, onOpenVehicle }: DroppableColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: `col-${mechanic.id}` })
   const colRef = useRef<HTMLDivElement>(null)
+  const { debut: BOARD_START, fin: BOARD_END } = useBornesPlanning()
+  const BOARD_HEIGHT = (BOARD_END - BOARD_START) * SLOT_HEIGHT_PER_MINUTE
+  // Les traits d'heure ne peuvent plus se calculer sur des bornes entières : une
+  // ouverture à 8 h 30 décale toute l'échelle d'une demi-heure.
+  const premiereHeurePleine = Math.ceil(BOARD_START / 60) * 60
+  const nbTraitsHeure = Math.floor((BOARD_END - premiereHeurePleine) / 60) + 1
+  const nbTraitsDemi = Math.floor((BOARD_END - BOARD_START) / 30)
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -68,7 +77,7 @@ function DroppableColumn({ mechanic, jobs, conflictJobIds, onCellClick, onResize
       const clamped = Math.min(Math.max(rawMinutes, BOARD_START), BOARD_END - 30)
       onCellClick(mechanic.id, clamped)
     },
-    [mechanic.id, onCellClick]
+    [mechanic.id, onCellClick, BOARD_START, BOARD_END]
   )
 
   return (
@@ -86,15 +95,15 @@ function DroppableColumn({ mechanic, jobs, conflictJobIds, onCellClick, onResize
       <div ref={setNodeRef} className="absolute inset-0" />
 
       {/* Hour gridlines */}
-      {Array.from({ length: WORKSHOP_END_HOUR - WORKSHOP_START_HOUR + 1 }, (_, i) => (
+      {Array.from({ length: Math.max(0, nbTraitsHeure) }, (_, i) => (
         <div
           key={`hour-${i}`}
           className="absolute left-0 right-0 border-t border-white/[0.05] pointer-events-none"
-          style={{ top: `${i * HOUR_HEIGHT}px` }}
+          style={{ top: `${(premiereHeurePleine + i * 60 - BOARD_START) * SLOT_HEIGHT_PER_MINUTE}px` }}
         />
       ))}
       {/* Half-hour gridlines */}
-      {Array.from({ length: (WORKSHOP_END_HOUR - WORKSHOP_START_HOUR) * 2 }, (_, i) => (
+      {Array.from({ length: Math.max(0, nbTraitsDemi) }, (_, i) => (
         <div
           key={`half-${i}`}
           className="absolute left-0 right-0 border-t border-white/[0.025] pointer-events-none"
@@ -140,6 +149,7 @@ function DroppableColumn({ mechanic, jobs, conflictJobIds, onCellClick, onResize
 // Current time indicator
 // ──────────────────────────────────────────────
 function CurrentTimeIndicator() {
+  const { debut: BOARD_START, fin: BOARD_END } = useBornesPlanning()
   const now = new Date()
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
   if (currentMinutes < BOARD_START || currentMinutes > BOARD_END) return null
@@ -220,6 +230,7 @@ export default function ScheduleBoard() {
   const {
     jobs,
     mechanics,
+    horaires,
     selectedDate,
     moveJob,
     openCreateModal,
@@ -227,6 +238,14 @@ export default function ScheduleBoard() {
     updateJobDurationLocal,
     updateJob,
   } = useScheduleStore()
+
+  // Bornes RÉELLES du garage. `bornesAtelier` retombe sur 8 h – 18 h tant que
+  // les réglages ne sont pas chargés, ou s'ils sont incohérents : la grille ne
+  // devient jamais vide ni inversée.
+  const bornes = useMemo(() => bornesAtelier(horaires), [horaires])
+  const BOARD_START = bornes.debut
+  const BOARD_END = bornes.fin
+  const BOARD_HEIGHT = (BOARD_END - BOARD_START) * SLOT_HEIGHT_PER_MINUTE
 
   const [activeJob, setActiveJob] = useState<Job | null>(null)
   const [vehiclePlate, setVehiclePlate] = useState<string | null>(null)
@@ -247,15 +266,17 @@ export default function ScheduleBoard() {
       const newDuration = Math.max(15, startDuration + deltaMins)
       updateJobDurationLocal(jobId, newDuration)
     }
-    function handleMouseUp() {
+    async function handleMouseUp() {
       if (!resizeRef.current) return
       const { jobId } = resizeRef.current
       const job = jobs.find(j => j.id === jobId)
-      if (job) {
-        updateJob(jobId, { estimatedDuration: job.estimatedDuration })
-        toast.success(`Durée modifiée : ${formatDuration(job.estimatedDuration)}`)
-      }
       resizeRef.current = null
+      if (!job) return
+      // Le succès attend le verdict du serveur (GF-024) : la durée était
+      // annoncée « modifiée » avant même la requête, et un refus ramenait
+      // silencieusement la carte à sa taille d'origine.
+      const ok = await updateJob(jobId, { estimatedDuration: job.estimatedDuration })
+      if (ok) toast.success(`Durée modifiée : ${formatDuration(job.estimatedDuration)}`)
     }
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
@@ -295,6 +316,19 @@ export default function ScheduleBoard() {
     return map
   }, [dayJobs, mechanics])
 
+  // ── Un ARCHIVÉ garde sa colonne tant qu'il lui reste du travail (GF-040) ───
+  // Le planning répartit les interventions par mécanicien CONNU : celles d'un
+  // mécanicien absent de la liste ne trouvaient plus de colonne et
+  // disparaissaient de l'écran. Le magasin charge donc aussi les archivés —
+  // mais leur colonne n'a de sens que s'il y reste des interventions ce
+  // jour-là, sinon on encombrerait la grille de colonnes vides pour des gens
+  // partis. Un archivé ne réapparaît jamais spontanément : il s'efface le jour
+  // où son dernier travail est terminé ou déplacé.
+  const mecaniciensAffichables = useMemo(
+    () => mechanics.filter(m => !m.archivedAt || (jobsByMechanic[m.id]?.length ?? 0) > 0),
+    [mechanics, jobsByMechanic],
+  )
+
   // ── Fenêtre de mécaniciens visibles ────────────────────────────────────────
   //
   // Le planning rendait TOUS les mécaniciens du garage, chacun en `flex-1` :
@@ -325,8 +359,8 @@ export default function ScheduleBoard() {
   }, [])
 
   const colonnesVisibles = useMemo(
-    () => nombreColonnesVisibles(largeurPlanning, mechanics.length),
-    [largeurPlanning, mechanics.length],
+    () => nombreColonnesVisibles(largeurPlanning, mecaniciensAffichables.length),
+    [largeurPlanning, mecaniciensAffichables.length],
   )
 
   const [debutFenetre, setDebutFenetre] = useState(0)
@@ -338,13 +372,13 @@ export default function ScheduleBoard() {
   const ancresRef = useRef<string[]>([])
 
   useEffect(() => {
-    setDebutFenetre(d => reconcilier(d, ancresRef.current, mechanics.map(m => m.id), colonnesVisibles))
-  }, [mechanics, colonnesVisibles])
+    setDebutFenetre(d => reconcilier(d, ancresRef.current, mecaniciensAffichables.map(m => m.id), colonnesVisibles))
+  }, [mecaniciensAffichables, colonnesVisibles])
 
-  const vue = fenetre(debutFenetre, colonnesVisibles, mechanics.length)
+  const vue = fenetre(debutFenetre, colonnesVisibles, mecaniciensAffichables.length)
   const visibleMechanics = useMemo(
-    () => trancheVisible(mechanics, debutFenetre, colonnesVisibles),
-    [mechanics, debutFenetre, colonnesVisibles],
+    () => trancheVisible(mecaniciensAffichables, debutFenetre, colonnesVisibles),
+    [mecaniciensAffichables, debutFenetre, colonnesVisibles],
   )
 
   useEffect(() => { ancresRef.current = visibleMechanics.map(m => m.id) }, [visibleMechanics])
@@ -354,8 +388,8 @@ export default function ScheduleBoard() {
   // conséquence d'un défilement vertical ordinaire ou d'un trackpad un peu
   // oblique (§31-35).
   const naviguer = useCallback((dir: 1 | -1) => {
-    setDebutFenetre(d => deplacer(d, colonnesVisibles, mechanics.length, dir))
-  }, [colonnesVisibles, mechanics.length])
+    setDebutFenetre(d => deplacer(d, colonnesVisibles, mecaniciensAffichables.length, dir))
+  }, [colonnesVisibles, mecaniciensAffichables.length])
 
   // Sélection directe (bandeau mobile) : on recale la fenêtre sur la personne
   // choisie — l'index n'est qu'un moyen d'y arriver, jamais une identité.
@@ -378,7 +412,7 @@ export default function ScheduleBoard() {
   }, [])
 
   const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
+    async (event: DragEndEvent) => {
       setActiveJob(null)
       const { active, over, delta } = event
       if (!over) return
@@ -402,11 +436,18 @@ export default function ScheduleBoard() {
 
       if (targetMechanicId !== job.mechanicId || newStartTime !== job.startTime) {
         const mechName = mechanics.find(m => m.id === targetMechanicId)?.name ?? ''
-        moveJob(job.id, targetMechanicId, newStartTime)
-        toast.success(`${job.customerName} → ${mechName} à ${newStartTime}`)
+        // Le déplacement n'est confirmé qu'une fois ACCEPTÉ (GF-024). Il était
+        // annoncé avant l'aller-retour : sur un refus, la carte revenait à sa
+        // place d'origine juste après un message de succès.
+        const ok = await moveJob(job.id, targetMechanicId, newStartTime)
+        if (ok) toast.success(`${job.customerName} → ${mechName} à ${newStartTime}`)
       }
     },
-    [mechanics, moveJob]
+    // Les bornes DOIVENT figurer ici : elles arrivent après coup (les horaires
+    // sont chargés en asynchrone). Sans elles, le glisser-déposer continuait de
+    // borner sur 8 h – 18 h une fois les vrais horaires connus — précisément le
+    // défaut que la grille venait de corriger (GF-021).
+    [mechanics, moveJob, BOARD_START, BOARD_END]
   )
 
   const handleCellClick = useCallback(
@@ -420,13 +461,17 @@ export default function ScheduleBoard() {
     [openCreateModal, selectedDate]
   )
 
+  // Échelle horaire : on part de la première heure PLEINE contenue dans les
+  // bornes — une ouverture à 8 h 30 ne doit pas produire un libellé « 8 h » au
+  // sommet d'une colonne qui commence une demi-heure plus tard.
+  const premiereHeurePleine = Math.ceil(bornes.debut / 60)
   const hours = Array.from(
-    { length: WORKSHOP_END_HOUR - WORKSHOP_START_HOUR + 1 },
-    (_, i) => WORKSHOP_START_HOUR + i
+    { length: Math.max(1, Math.floor(bornes.fin / 60) - premiereHeurePleine + 1) },
+    (_, i) => premiereHeurePleine + i,
   )
 
   return (
-    <>
+    <FournisseurBornes value={bornes}>
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div ref={boardRef} className="flex flex-col h-full bg-[#111827] rounded-xl shadow-sm border border-white/[0.07] overflow-hidden">
 
@@ -486,7 +531,7 @@ export default function ScheduleBoard() {
               </div>
             ) : (
               <p className="flex-1 text-center text-[11px] text-slate-500 font-medium select-none">
-                Mécaniciens {vue.debut + 1}–{vue.fin} sur {mechanics.length}
+                Mécaniciens {vue.debut + 1}–{vue.fin} sur {mecaniciensAffichables.length}
               </p>
             )}
 
@@ -544,7 +589,7 @@ export default function ScheduleBoard() {
                   key={h}
                   className="absolute left-0 w-full flex items-start justify-end pr-2"
                   style={{
-                    top: `${(h - WORKSHOP_START_HOUR) * HOUR_HEIGHT}px`,
+                    top: `${(h * 60 - BOARD_START) * SLOT_HEIGHT_PER_MINUTE}px`,
                     height: `${HOUR_HEIGHT}px`,
                   }}
                 >
@@ -603,6 +648,7 @@ export default function ScheduleBoard() {
         onClose={() => setVehiclePlate(null)}
       />
     )}
-    </>
+    </FournisseurBornes>
   )
 }
+

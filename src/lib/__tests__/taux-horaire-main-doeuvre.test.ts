@@ -70,19 +70,30 @@ describe('les écrans de réglages n\'écrasent plus les valeurs du garage', () 
 
   it('l\'onglet Fonctionnalités ne transforme plus un champ effacé en zéro', () => {
     const src = lire('src/components/settings/FeaturesTab.tsx')
-    // `Number('')` vaut 0 : effacer le tarif l'enregistrait à 0 €/h.
+    // `Number('')` vaut 0 : effacer un champ l'enregistrait à 0.
     expect(src).not.toMatch(/onChange\(Number\(e\.target\.value\)\)/)
     expect(src).toContain("e.target.value === '' ? '' : Number(e.target.value)")
-    expect(src).toContain('nombreSaisi(settings.hourlyRate)')
   })
 
-  it('les deux écrans qui modifient le tarif emploient les mêmes bornes que le serveur', () => {
-    // `min={1}` interdisait ici ce que l'API accepte (un atelier qui ne facture
-    // pas l'heure), et `max={999}` refusait ce que l'autre écran laissait passer.
+  it('le tarif ne se saisit QUE dans l\'onglet Entreprise (GF-039)', () => {
+    // Il l'était aussi dans Fonctionnalités, du MÊME modal, avec un état
+    // indépendant : chaque onglet chargeait son instantané à son montage et
+    // renvoyait l'objet complet. Enregistrer l'un écrasait la saisie de l'autre,
+    // dans les deux sens, sans le moindre signe. Un seul écran l'édite désormais.
     const features = lire('src/components/settings/FeaturesTab.tsx')
-    expect(features).toMatch(/hourlyRate: v \}\)\)\} min=\{0\} max=\{9999\}/)
+    expect(features, 'FeaturesTab ne doit plus lire ni écrire le tarif').not.toMatch(/\bhourlyRate\b/)
+
+    const modal = lire('src/components/SettingsModal.tsx')
+    expect(modal, 'l\'onglet Entreprise reste le seul éditeur').toContain('nombreSaisi(s.hourlyRate)')
+  })
+
+  it('l\'écran qui modifie le tarif emploie les bornes du serveur', () => {
+    // `min={1}` interdirait ce que l'API accepte (un atelier qui ne facture pas
+    // l'heure), et `max={999}` refuserait un tarif que le serveur laisse passer.
     const schema = lire('src/lib/schemas/index.ts')
     expect(schema).toMatch(/hourlyRate:\s+z\.number\(\)\.finite\(\)\.min\(0\)\.max\(9999\)/)
+    const company = lire('src/components/settings/CompanyTab.tsx')
+    expect(company).toContain("k: 'hourlyRate'")
   })
 
   it('un refus du serveur est affiché avec son motif', () => {

@@ -146,7 +146,14 @@ function etatConnu(t: TransmissionEtat | null): ResultatEnvoi {
     ? 'Un envoi précédent est resté sans issue connue. Vérifiez sur le portail de votre plateforme si la facture y figure, puis déclarez-la non parvenue si ce n’est pas le cas.'
     : t?.status === 'submission_pending'
       ? 'Un envoi de cette facture est déjà en cours. Actualisez son statut avant de réessayer.'
-      : 'Cette facture a déjà été transmise à la plateforme.'
+      // ── « Transmise » n'est affirmé que si la plateforme l'a IDENTIFIÉE ────
+      // Sans identifiant externe, on ne sait pas ce qu'est devenu l'envoi. Le
+      // fourre-tout d'origine annonçait pourtant « déjà transmise à la
+      // plateforme » : l'exploitant classait l'affaire, et une facture jamais
+      // reçue restait invisible jusqu'à la relance du client (GF-025).
+      : !t?.externalId
+        ? 'L’issue du précédent envoi est inconnue : vérifiez sur le portail de votre plateforme, puis déclarez la facture non parvenue si elle n’y figure pas.'
+        : 'Cette facture a déjà été transmise à la plateforme.'
   return {
     ok: false,
     code: 'ALREADY_SUBMITTED',

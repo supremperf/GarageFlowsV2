@@ -12,6 +12,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { reduirePhoto } from '@/lib/photo-client'
 import {
   Loader2, ChevronLeft, Camera, Play, Pause, Square, Send, MessageSquarePlus,
   AlertTriangle, CheckCircle2, Car, Clock, ImagePlus,
@@ -80,15 +81,18 @@ export default function MechanicJobPage({ params }: { params: { id: string } }) 
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file || busy) return
-    // Lecture en data URL puis envoi (validation/type réel vérifiés côté serveur).
+    // ── La photo est RÉDUITE avant l'envoi, comme sur les autres écrans ───────
+    // C'est l'écran qui prend le plus de photos, et le seul qui envoyait le
+    // fichier brut de l'appareil. Un cliché de smartphone récent se faisait
+    // refuser « Photo trop volumineuse » ; ceux qui passaient partaient entiers
+    // vers le cloud, étaient recopiés entiers sur le poste, et gonflaient
+    // l'instantané portail au point de le faire refuser en bloc (GF-034). Le
+    // ré-encodage en JPEG règle au passage le HEIC des sélecteurs Android, que
+    // la validation reconnaît mais que le stockage fichier ignore.
+    // Le type réel reste vérifié côté serveur.
     setBusy(true)
     try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const r = new FileReader()
-        r.onload = () => resolve(String(r.result))
-        r.onerror = () => reject(new Error('Lecture du fichier impossible'))
-        r.readAsDataURL(file)
-      })
+      const base64 = await reduirePhoto(file)
       await mechFetch(`/api/mechanic/jobs/${params.id}/photos`, { method: 'POST', body: JSON.stringify({ base64, phase: 'during' }) })
       load()
     } catch (e) { setError((e as Error).message) } finally { setBusy(false) }

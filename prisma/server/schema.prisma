@@ -35,6 +35,11 @@ model Garage {
   hourlyRateTenThousandths Int @default(600000) // taux horaire en DIX-MILLIÈMES d'€/h (600000 = 60 €/h) — exact, 4 décimales
   workshopStartHour Int    @default(8) // opening hour (e.g. 8 → 08:00)
   workshopEndHour   Int    @default(18) // closing hour (e.g. 18 → 18:00)
+  /// Minutes de l'heure d'ouverture — 0 ou 30. Un atelier qui ouvre à 8 h 30 ne
+  /// pouvait pas le déclarer : les bornes n'étaient que des heures pleines.
+  workshopStartMinute Int  @default(0)
+  /// Minutes de l'heure de fermeture — 0 ou 30.
+  workshopEndMinute   Int  @default(0)
 
   // ── Company identity ──────────────────────────────────────────
   address    String?

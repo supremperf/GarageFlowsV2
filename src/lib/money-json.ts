@@ -87,7 +87,22 @@ export interface WorkLineExact {
 
 // ─── WorkOrder.partsJson ─────────────────────────────────────────────────────
 
+/**
+ * `partId` — rattachement au catalogue, exactement comme sur les lignes de bon
+ * de commande (`PoLineV1`/`PoLineV2`, plus bas).
+ *
+ * Les deux champs étaient de la saisie 100 % libre : le magasinier recopiait à
+ * la main une référence pendant que la pièce existait au catalogue (GF-040).
+ * Le lien est purement DOCUMENTAIRE : un ordre de réparation est prévisionnel
+ * et ne consomme aucun stock — seules la validation d'une facture et la pose
+ * d'une pièce sur une intervention décrémentent l'inventaire.
+ *
+ * Sans ce champ, `PartLineV1` (permissif) l'aurait STRIPPÉ en silence et
+ * `PartLineV2` (`.strict()`) aurait refusé le document : le rattachement aurait
+ * disparu au rechargement sans le moindre message.
+ */
 const PartLineV1 = z.object({
+  partId: z.string().max(64).optional().nullable(),
   name: z.string().max(300).default(''),
   reference: z.string().max(120).optional().nullable(),
   qty: euroV1(-99_999, 99_999).default(0),
@@ -95,6 +110,7 @@ const PartLineV1 = z.object({
 }) // v1 historique : strip
 
 const PartLineV2 = z.object({
+  partId: z.string().max(64).optional().nullable(),
   name: z.string().max(300),
   reference: z.string().max(120).optional().nullable(),
   qtyTenThousandths: scaledInt(),
@@ -109,6 +125,7 @@ export const PartsJsonV2 = z.object({
 }).strict()
 
 export interface PartLineExact {
+  partId?: string | null
   name: string
   reference?: string | null
   qtyTenThousandths: number
@@ -183,6 +200,10 @@ function partLineToExact(l: z.infer<typeof PartLineV1>): PartLineExact {
   const qtyTenThousandths = toScaled(l.qty)
   const unitPriceTenThousandths = toScaled(l.unitPrice)
   return {
+    // Omis quand il est absent : une ligne v1 historique doit produire
+    // EXACTEMENT le même JSON canonique qu'avant, sinon les signatures déjà
+    // scellées ne se revérifieraient plus.
+    ...(l.partId !== undefined ? { partId: l.partId } : {}),
     name: l.name,
     ...(l.reference !== undefined ? { reference: l.reference } : {}),
     qtyTenThousandths,
@@ -270,6 +291,9 @@ export function workLinesToEuros(lines: WorkLineExact[]) {
 }
 export function partLinesToEuros(lines: PartLineExact[]) {
   return lines.map((l) => ({
+    // Sans lui, le rattachement au catalogue disparaissait au rechargement du
+    // document : la ligne redevenait de la saisie libre (GF-040).
+    partId: l.partId ?? null,
     name: l.name,
     reference: l.reference ?? '',
     qty: fromScaled(l.qtyTenThousandths),

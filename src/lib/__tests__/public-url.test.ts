@@ -1,6 +1,9 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { OFFICIAL_PUBLIC_APP_URL, isUsablePublicBase, publicAppUrl, publicUrlFor } from '../public-url'
 
+// NEXT_PUBLIC_APP_URL reste dans la liste pour être RESTAURÉE proprement et
+// pour prouver, plus bas, qu'elle n'a plus aucun effet : c'est un alias retiré
+// le 15/08/2026, pas une variable oubliée.
 const KEYS = ['NEXT_PUBLIC_APP_URL', 'GF_APP_URL', 'NEXTAUTH_URL'] as const
 const saved = Object.fromEntries(KEYS.map(k => [k, process.env[k]]))
 
@@ -58,15 +61,31 @@ describe('publicAppUrl — repli sur le domaine officiel', () => {
 
   it('avec une IP LAN injectée', () => {
     clear()
-    process.env.NEXT_PUBLIC_APP_URL = 'http://192.168.195.1:4028'
+    process.env.GF_APP_URL = 'http://192.168.195.1:4028'
     process.env.NEXTAUTH_URL = 'http://localhost:4028'
     expect(publicAppUrl()).toBe('https://app.garageflows.fr')
   })
 
   it('honore un domaine public alternatif valide', () => {
     clear()
-    process.env.NEXT_PUBLIC_APP_URL = 'https://demo.garageflows.fr/'
+    process.env.GF_APP_URL = 'https://demo.garageflows.fr/'
     expect(publicAppUrl()).toBe('https://demo.garageflows.fr')
+  })
+
+  // Un alias retiré doit être INERTE, pas silencieusement honoré : sinon deux
+  // noms continuent de désigner la même donnée et la garde de cohérence ne
+  // protège plus rien.
+  it('NEXT_PUBLIC_APP_URL, alias retiré, n’a plus AUCUN effet', () => {
+    clear()
+    process.env.NEXT_PUBLIC_APP_URL = 'https://alias-retire.example'
+    expect(publicAppUrl()).toBe('https://app.garageflows.fr')
+  })
+
+  it('GF_APP_URL prime sur NEXTAUTH_URL quand les deux sont publiques', () => {
+    clear()
+    process.env.GF_APP_URL = 'https://canonique.garageflows.fr'
+    process.env.NEXTAUTH_URL = 'https://next-auth.garageflows.fr'
+    expect(publicAppUrl()).toBe('https://canonique.garageflows.fr')
   })
 })
 

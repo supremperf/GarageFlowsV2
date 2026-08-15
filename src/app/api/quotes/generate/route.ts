@@ -51,9 +51,10 @@ export const POST = withAuth(async (req) => {
     prisma.garage.findUnique({ where: { id: garageId }, select: { hourlyRateTenThousandths: true, taxRate: true, currency: true } }),
     prisma.repairTypePart.findMany({
       where: { garageId, repairType: { in: validTypes } },
-      select: { repairType: true, defaultQty: true, part: { select: { name: true, reference: true, unitPriceTenThousandths: true, unitCostTenThousandths: true } } },
+      // `id` manquait : c'est lui qui rattache la ligne au stock (GF-040).
+      select: { repairType: true, defaultQty: true, part: { select: { id: true, name: true, reference: true, unitPriceTenThousandths: true, unitCostTenThousandths: true } } },
     }),
-    prisma.part.findMany({ where: { garageId }, select: { name: true, reference: true, unitPriceTenThousandths: true }, take: 5000 }),
+    prisma.part.findMany({ where: { garageId }, select: { id: true, name: true, reference: true, unitPriceTenThousandths: true }, take: 5000 }),
   ])
 
   // Default parts (BOM) grouped by repair type.
@@ -62,6 +63,7 @@ export const POST = withAuth(async (req) => {
     if (!rtp.part) continue
     const list = partsByType.get(rtp.repairType) ?? []
     list!.push({
+      partId: rtp.part.id,
       name: rtp.part.name,
       reference: rtp.part.reference,
       unitPrice: fromScaled(rtp.part.unitPriceTenThousandths),
@@ -82,9 +84,20 @@ export const POST = withAuth(async (req) => {
   let suggestions: QuoteSuggestionInput[] = []
   if (body.includeSuggestions !== false) {
     const catalog = new Map<string, number>()
+    // Index parallèle nom/référence → identifiant de pièce. Le moteur de
+    // suggestions ne connaît que des PRIX ; sans cette table, la ligne suggérée
+    // arrivait dépourvue de `partId` et la facture issue de la conversion ne
+    // décrémentait rien (GF-040).
+    const idsCatalogue = new Map<string, string>()
     for (const p of parts) {
-      if (p.name) catalog.set(p.name.toLowerCase(), fromScaled(p.unitPriceTenThousandths))
-      if (p.reference) catalog.set(p.reference.toLowerCase(), fromScaled(p.unitPriceTenThousandths))
+      if (p.name) {
+        catalog.set(p.name.toLowerCase(), fromScaled(p.unitPriceTenThousandths))
+        idsCatalogue.set(p.name.toLowerCase(), p.id)
+      }
+      if (p.reference) {
+        catalog.set(p.reference.toLowerCase(), fromScaled(p.unitPriceTenThousandths))
+        idsCatalogue.set(p.reference.toLowerCase(), p.id)
+      }
     }
     const partsOnJob = operations.flatMap((o) => (o.parts ?? []).map((p) => ({ name: p.name, reference: p.reference })))
     const recs = forgottenPartsEngine.analyze({
@@ -94,6 +107,9 @@ export const POST = withAuth(async (req) => {
       currency: garage?.currency ?? 'EUR',
     })
     suggestions = recs.map((r) => ({
+      partId: idsCatalogue.get(r.name.toLowerCase())
+        ?? (r.reference ? idsCatalogue.get(r.reference.toLowerCase()) : undefined)
+        ?? null,
       name: r.name,
       reference: r.reference ?? null,
       unitPrice: r.estimatedImpact.unitPrice,
@@ -173,6 +189,12 @@ export const POST = withAuth(async (req) => {
             description: l.description,
             // Proposition en euros → entiers exacts (dix-millièmes) au stockage.
             ...lineToScaled(l),
+            // ── Le rattachement au stock est PERSISTÉ (GF-040) ───────────────
+            // Seul `InvoiceLine.partId` engage l'inventaire, et la conversion
+            // recopie fidèlement `QuoteLine.partId`. Sans cette ligne, la
+            // facture issue d'un devis généré ne décrémentait jamais rien : les
+            // pièces sortaient de l'atelier sans quitter l'inventaire.
+            partId: l.partId ?? null,
             isLabor: l.isLabor,
             sortOrder: i,
           })),

@@ -76,20 +76,48 @@ describe('l\'état « envoyé » n\'est posé que si un message est parti', () =
 describe('les protocoles réellement utilisés par le produit sont autorisés', () => {
   const main = lire('electron/main.js')
 
+  /**
+   * Corps ENTIER du gestionnaire d'ouverture externe.
+   *
+   * La version précédente découpait les 700 (puis 900) premiers caractères. Ce
+   * n'était pas une borne du code mais une supposition sur sa longueur : une
+   * explication ajoutée au début du gestionnaire a suffi à repousser les lignes
+   * cherchées hors de la fenêtre, et le garde a échoué sur du code parfaitement
+   * correct. On délimite maintenant le bloc par sa FERMETURE.
+   */
+  function gestionnaireOuverture(): string {
+    const debut = main.indexOf('setWindowOpenHandler')
+    expect(debut, 'setWindowOpenHandler introuvable').toBeGreaterThan(-1)
+    // Le refus par défaut est la DERNIÈRE instruction du gestionnaire : on
+    // borne dessus plutôt que sur un nombre de caractères.
+    const fin = main.indexOf("return { action: 'deny' }", debut)
+    expect(fin, 'refus par défaut introuvable dans le gestionnaire').toBeGreaterThan(debut)
+    return main.slice(debut, fin + 40)
+  }
+
   it('`mailto:` et `sms:` passent par shell.openExternal', () => {
     // Sans cela, les deux boutons de rappel ne font RIEN dans l'application
     // packagée — ils sont refusés puis seulement journalisés.
     expect(main).toContain("ALLOWED_EXTERNAL_PROTOCOLS = new Set(['mailto:', 'sms:'])")
-    const bloc = main.slice(main.indexOf('setWindowOpenHandler'))
-    expect(bloc.slice(0, 700)).toMatch(/ALLOWED_EXTERNAL_PROTOCOLS\.has\(u\.protocol\)/)
+    expect(gestionnaireOuverture()).toMatch(/ALLOWED_EXTERNAL_PROTOCOLS\.has\(u\.protocol\)/)
   })
 
   it('le refus par défaut est conservé pour tout le reste', () => {
-    const bloc = main.slice(main.indexOf('setWindowOpenHandler'))
-    const handler = bloc.slice(0, 900)
+    const handler = gestionnaireOuverture()
     // La liste blanche de domaines HTTPS reste en place…
     expect(handler).toMatch(/u\.protocol === 'https:' && ALLOWED_EXTERNAL_HOSTS\.has\(u\.hostname\)/)
     // …et la fonction refuse toujours d'ouvrir une fenêtre elle-même.
     expect(handler).toMatch(/return \{ action: 'deny' \}/)
+  })
+
+  it('le pont d’ouverture explicite n’accepte QUE le HTTPS', () => {
+    // Ajouté avec `app:open-external` (GF-025) : c'est ce qui rend les liens du
+    // catalogue de facturation électronique réellement cliquables, sans ouvrir
+    // la porte à un protocole arbitraire depuis le renderer.
+    const i = main.indexOf("ipcMain.handle('app:open-external'")
+    expect(i, 'pont app:open-external introuvable').toBeGreaterThan(-1)
+    const pont = main.slice(i, i + 900)
+    expect(pont).toMatch(/u\.protocol !== 'https:'/)
+    expect(pont).toMatch(/raison: 'non-https'/)
   })
 })

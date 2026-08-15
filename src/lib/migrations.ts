@@ -1293,4 +1293,15 @@ export const MIGRATIONS: Migration[] = [
   // permettrait de revendiquer l'adresse d'un tiers. La nouvelle adresse attend
   // donc ici jusqu'à confirmation par le lien envoyé sur ELLE.
   { id: '212_portal_pending_email', onlyIfColumnMissing: { table: 'PortalUser', column: 'pendingEmail' }, sql: 'ALTER TABLE "PortalUser" ADD COLUMN "pendingEmail" TEXT' },
+
+  // ── Horaires d'atelier à la DEMI-HEURE (GF-021) ────────────────────────────
+  // `workshopStartHour` / `workshopEndHour` sont des entiers : un atelier qui
+  // ouvre à 8 h 30 ou ferme à 18 h 30 ne pouvait pas le déclarer. Deux colonnes
+  // de MINUTES s'ajoutent, valant 0 par défaut — les garages existants gardent
+  // donc exactement leurs horaires actuels, à la minute près.
+  //
+  // ADDITIF et sans réécriture : on ne touche pas aux colonnes d'heures, dont
+  // dépendent le moteur de suggestions et la synchronisation.
+  { id: '213_workshop_start_minute', onlyIfColumnMissing: { table: 'Garage', column: 'workshopStartMinute' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "workshopStartMinute" INTEGER NOT NULL DEFAULT 0' },
+  { id: '214_workshop_end_minute',   onlyIfColumnMissing: { table: 'Garage', column: 'workshopEndMinute' },   sql: 'ALTER TABLE "Garage" ADD COLUMN "workshopEndMinute" INTEGER NOT NULL DEFAULT 0' },
 ]

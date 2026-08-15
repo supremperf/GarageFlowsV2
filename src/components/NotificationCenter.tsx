@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Bell, X, AlertTriangle, Info, Wrench, Gift, DownloadCloud } from 'lucide-react'
 import { useElectronApi } from '@/lib/use-electron-api'
+import { ouvrirLienExterne, messageRefusLien } from '@/lib/lien-externe'
 
 interface Notif {
   id: string
@@ -76,12 +77,32 @@ export default function NotificationCenter() {
     }
   }, [api, enabled, load])
 
+  /** Motif du dernier accusé de réception non transmis — affiché à l'écran. */
+  const [echecAck, setEchecAck] = useState<string | null>(null)
+
+  /**
+   * « En savoir plus » d'une notification de l'éditeur. Sans ce passage par le
+   * pont, le lien ne faisait RIEN dans l'application packagée : le gestionnaire
+   * d'ouverture externe ne connaît que les domaines GarageFlows (GF-025).
+   */
+  const ouvrirLien = useCallback(async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const r = await ouvrirLienExterne(e)
+    if (!r.ouvert) setEchecAck(messageRefusLien(r))
+  }, [])
+
   const ack = useCallback(
     async (id: string) => {
-      try {
-        await api?.ackNotification?.(id)
-      } catch {
-        /* ignore */
+      // ── L'accusé de réception était présumé (GF-024) ──────────────────────
+      // Le `setNotifs` optimiste était HORS du `try` : il s'exécutait même
+      // lorsque la transmission échouait, et le verdict `{ ok }` rendu par le
+      // processus principal n'était jamais lu. La surimpression obligatoire
+      // disparaissait donc de l'écran alors que l'éditeur n'avait rien reçu —
+      // puis revenait au prochain relevé, sans explication.
+      setEchecAck(null)
+      const r = await api?.ackNotification?.(id).catch(() => null)
+      if (!r?.ok) {
+        setEchecAck('Accusé de réception non transmis — vous serez à nouveau sollicité.')
+        return
       }
       setNotifs((prev) => prev.map((n) => (n.id === id ? { ...n, acknowledged: true, read: true } : n)))
     },
@@ -139,7 +160,7 @@ export default function NotificationCenter() {
                       </div>
                       <p className="mt-0.5 whitespace-pre-line text-xs text-slate-300">{n.body}</p>
                       {n.link && (
-                        <a href={n.link} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-sky-400 hover:underline">
+                        <a href={n.link} target="_blank" rel="noreferrer" onClick={ouvrirLien} className="mt-1 inline-block text-xs text-sky-400 hover:underline">
                           En savoir plus
                         </a>
                       )}
@@ -163,9 +184,14 @@ export default function NotificationCenter() {
             </div>
             <p className="whitespace-pre-line text-sm text-slate-200">{blocking.body}</p>
             {blocking.link && (
-              <a href={blocking.link} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm text-sky-400 hover:underline">
+              <a href={blocking.link} target="_blank" rel="noreferrer" onClick={ouvrirLien} className="mt-3 inline-block text-sm text-sky-400 hover:underline">
                 En savoir plus
               </a>
+            )}
+            {echecAck && (
+              <p role="alert" className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/[0.08] px-3 py-2 text-[12px] text-amber-300">
+                {echecAck}
+              </p>
             )}
             <button
               onClick={() => ack(blocking.id)}

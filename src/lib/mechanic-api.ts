@@ -18,6 +18,7 @@ import { validateMechanicSession, type MechanicContext } from '@/lib/license/mec
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/db'
+import { syncWindow } from '@/lib/sync/job-fields'
 
 /**
  * Vérifie la session mécanicien. Lève une NextResponse d'erreur (capturée par
@@ -71,8 +72,17 @@ export function withMechanic(
  */
 export async function findAssignedJob(ctx: MechanicContext, jobId: string) {
   if (!jobId) return null
+  // Bornée à la fenêtre effectivement synchronisée, comme la liste (GF-038).
+  // Hors de cette fenêtre le miroir cloud n'est plus rafraîchi : ouvrir la
+  // fiche y montrerait une affectation figée, potentiellement révoquée depuis
+  // des semaines côté garage — et laisserait le mécanicien y pointer son
+  // chrono.
+  const fenetre = syncWindow(new Date())
   return prisma.job.findFirst({
-    where: { id: jobId, garageId: ctx.garageId, mechanicId: ctx.mechanicId },
+    where: {
+      id: jobId, garageId: ctx.garageId, mechanicId: ctx.mechanicId,
+      date: { gte: fenetre.from, lte: fenetre.to },
+    },
   })
 }
 

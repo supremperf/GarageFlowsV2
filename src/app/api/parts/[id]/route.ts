@@ -154,6 +154,54 @@ export const DELETE = withAuth(async (_req, { params }: { params: { id: string }
     )
   }
 
-  await prisma.part.delete({ where: { id: params.id, garageId: session.user.garageId } })
+  // ── Pièce POSÉE sur une intervention : refus métier, pas une 500 (GF-037) ──
+  // `JobPart.partId` est en `RESTRICT` (schéma comme migration SQLite) : la
+  // suppression échouait sur une violation de clé étrangère, que le filet
+  // générique de `withAuth` traduisait en « Une erreur interne est survenue »
+  // (500). Le garage n'apprenait ni la cause ni le remède. La garde
+  // précédente ne regardait que `StockMovement`, et poser une pièce sur une
+  // intervention n'en écrivait aucun jusqu'à GF-028 — le compteur valait donc
+  // zéro et laissait passer.
+  const posees = await prisma.jobPart.count({
+    where: { partId: params.id, job: { garageId: session.user.garageId } },
+  })
+  if (posees > 0) {
+    return NextResponse.json(
+      {
+        error:
+          `« ${existing.name} » est posée sur ${posees} intervention(s). Retirez-la de ces ` +
+          'interventions avant de la supprimer, ou mettez sa quantité à 0 pour la retirer de la vente.',
+        code: 'PART_USED_BY_JOB',
+      },
+      { status: 409 },
+    )
+  }
+
+  // ── Détacher les lignes de documents AVANT de supprimer (GF-037) ───────────
+  // Le schéma déclare `onDelete: SetNull` sur `InvoiceLine.partId` et
+  // `QuoteLine.partId`, et la migration du CLOUD crée bien la contrainte. La
+  // migration SQLite du POSTE, elle, n'a ajouté que des colonnes TEXT nues —
+  // SQLite ne sait pas poser une contrainte sur une table existante. Sur un
+  // poste, la suppression laissait donc un `partId` ORPHELIN : à la validation
+  // de la facture, le moteur de stock ne retrouvait plus la pièce et refusait
+  // le document en 409 « Pièce introuvable », sans que rien n'indique quoi
+  // faire. Le même geste passait sans encombre côté cloud.
+  //
+  // Plutôt que d'interdire une suppression aujourd'hui légitime, on FAIT ce que
+  // la contrainte manquante aurait fait. Sur le cloud, le détachement précède
+  // simplement celui de la clé étrangère : même état final, des deux côtés.
+  // (Recréer les tables SQLite pour poser la contrainte serait tout sauf
+  // minimal.)
+  await prisma.$transaction(async (tx) => {
+    await tx.invoiceLine.updateMany({
+      where: { partId: params.id, invoice: { garageId: session.user.garageId } },
+      data:  { partId: null },
+    })
+    await tx.quoteLine.updateMany({
+      where: { partId: params.id, quote: { garageId: session.user.garageId } },
+      data:  { partId: null },
+    })
+    await tx.part.delete({ where: { id: params.id, garageId: session.user.garageId } })
+  })
   return NextResponse.json({ success: true })
 })

@@ -221,7 +221,7 @@ export default function LicensePage() {
                 className={cn(
                   'w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2',
                   !tokenReady || status === 'checking'
-                    ? 'bg-blue-600/20 text-blue-400/40 cursor-not-allowed'
+                    ? 'gf-btn-inactif'
                     : 'bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-600/25 active:scale-[0.98]'
                 )}
               >

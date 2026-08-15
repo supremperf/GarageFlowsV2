@@ -38,8 +38,18 @@ import { verifyLicenseToken } from '@/lib/license/verify'
  *                           (22:16) : nouvelle paire, GF_PRIVATE_KEY de
  *                           production régénérée, licences serveur purgées.
  *                           Vérifié : la clé privée déployée en production
- *                           dérive exactement cette empreinte. */
-const REFERENCE_FP = '835c1e907fa5be21d50f0b283959340872bb32465f04ddfcee32ff6f637f775d' // gitleaks:allow
+ *                           dérive exactement cette empreinte.
+ *    2026‑08‑14  e6605999…  rotation par reset-garageflow.ps1 (17:23:57). Le
+ *                           script ne patchait que `_LINES` et `_PK` : cette
+ *                           ancre restait sur 835c1e90… et les DEUX gardes
+ *                           (ce test + check:critical-files) tombaient au
+ *                           rouge après CHAQUE rotation. Corrigé à la racine —
+ *                           le script appelle désormais keys:sync lui-même.
+ *                           Vérifié ici : keys/public.pem, la clé dérivée de
+ *                           keys/private.pem, `_PK` et `_LINES` donnent tous
+ *                           e6605999…, qui valide 4/4 licences réelles de
+ *                           keys/licenses_db.json — 835c1e90… en valide 0/4. */
+const REFERENCE_FP = 'e6605999e336c28ee37102c721a93eafc08dfd79dee9db9f5e41ba8b76cff5a6' // gitleaks:allow
 
 /** Empreinte SPKI‑DER SHA‑256 d'une clé publique PEM. */
 function fingerprint(pem: string): string {

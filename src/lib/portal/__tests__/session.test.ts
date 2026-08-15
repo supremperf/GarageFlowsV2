@@ -45,7 +45,20 @@ describe('portal session — signature & vérification', () => {
   it('jeton FALSIFIÉ (signature altérée) → null', async () => {
     const token = await signPortalSession({ sub: 'user-1', sid: 'dev-1' })
     const parts = token.split('.')
-    parts[2] = parts[2].slice(0, -2) + (parts[2].endsWith('A') ? 'BB' : 'AA')
+    // On altère un caractère au MILIEU de la signature.
+    //
+    // L'ancienne version remplaçait les DEUX DERNIERS caractères. Or le dernier
+    // caractère base64url d'un HMAC-SHA256 (32 octets → 43 caractères) ne porte
+    // que 4 bits utiles : plusieurs caractères distincts y décodent les MÊMES
+    // octets. Quand l'avant-dernier valait déjà « A », la « falsification »
+    // reproduisait donc la signature d'origine — le jeton restait VALIDE et le
+    // test échouait au hasard, environ une exécution sur trois cents. Le
+    // produit, lui, refusait correctement : c'était le test qui ne falsifiait
+    // rien. Même correction que `api/sync/__tests__/portal-snapshot.test.ts`.
+    const s = parts[2]
+    const i = Math.floor(s.length / 2)
+    parts[2] = s.slice(0, i) + (s[i] === 'A' ? 'B' : 'A') + s.slice(i + 1)
+    expect(parts[2], 'la falsification doit réellement modifier la signature').not.toBe(s)
     expect(await verifyPortalSession(parts.join('.'))).toBeNull()
   })
 

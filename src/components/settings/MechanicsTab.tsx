@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { Save, Plus, Trash2, Edit2, Loader2, Check, Palette } from 'lucide-react'
+import { Save, Plus, Trash2, Edit2, Loader2, Check, Palette, Archive, ArchiveRestore } from 'lucide-react'
 import type { MechanicRecord } from './types'
 import MechanicAvatar from '@/components/MechanicAvatar'
 import MechanicAvatarField from './MechanicAvatarField'
@@ -32,6 +32,16 @@ interface Props {
   onAdd: () => void
   onUpdate: () => void
   onDelete: (id: string, name: string) => void
+  /** Retire du planning en conservant l'historique (GF-040). */
+  onArchive: (id: string, name: string) => void
+  /** Remet un mécanicien archivé dans le planning. */
+  onUnarchive: (id: string, name: string) => void
+  /**
+   * La photo s'enregistre HORS du formulaire : sans rechargement de la liste,
+   * la vignette de la ligne gardait l'ancienne photo jusqu'au prochain passage
+   * sur l'onglet — l'écran affichait donc deux vérités en même temps.
+   */
+  onAvatarChanged: () => void
 }
 
 function toggleSpecialty(arr: string[], sp: string): string[] {
@@ -44,7 +54,7 @@ export function MechanicsTab({
   newMech, setNewMech,
   showAddForm, setShowAddForm,
   adding = false,
-  onAdd, onUpdate, onDelete,
+  onAdd, onUpdate, onDelete, onArchive, onUnarchive, onAvatarChanged,
 }: Props) {
   return (
     <div className="space-y-4">
@@ -150,7 +160,7 @@ export function MechanicsTab({
                       l'image si l'enregistrement du nom échouait. */}
                   <MechanicAvatarField
                     mechanic={editingMech}
-                    onChange={avatarUrl => setEditingMech({ ...editingMech, avatarUrl })}
+                    onChange={avatarUrl => { setEditingMech({ ...editingMech, avatarUrl }); onAvatarChanged() }}
                   />
                   <div>
                     <label className="block text-xs text-slate-400 mb-1">Nom</label>
@@ -225,6 +235,31 @@ export function MechanicsTab({
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
+                  {/* ── L'ARCHIVAGE était une impasse (GF-040) ────────────────
+                      La suppression d'un mécanicien qui porte des
+                      interventions est refusée en 409, avec le message
+                      « Archivez-le : il sortira du planning en conservant ses
+                      données. » — vers un bouton qui n'existait nulle part.
+                      La route `PATCH { archived: true }` était pourtant écrite
+                      et fonctionnelle. */}
+                  {!m.archivedAt && (
+                    <button
+                      onClick={() => onArchive(m.id, m.name)}
+                      className="p-1.5 rounded-lg hover:bg-amber-500/15 text-slate-500 hover:text-amber-400 transition-colors"
+                      title="Archiver — le retire du planning en conservant son historique"
+                    >
+                      <Archive className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {m.archivedAt && (
+                    <button
+                      onClick={() => onUnarchive(m.id, m.name)}
+                      className="p-1.5 rounded-lg hover:bg-emerald-500/15 text-slate-500 hover:text-emerald-400 transition-colors"
+                      title="Réactiver — le remet dans le planning"
+                    >
+                      <ArchiveRestore className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   <button
                     onClick={() => onDelete(m.id, m.name)}
                     className="p-1.5 rounded-lg hover:bg-red-500/15 text-slate-500 hover:text-red-400 transition-colors"

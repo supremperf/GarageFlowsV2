@@ -18,6 +18,8 @@ import { prisma } from '@/lib/db'
 import { authenticateGarageLicense, shortId } from '@/lib/sync/garage-auth'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { logger } from '@/lib/logger'
+import { readPhotoAsDataUrl } from '@/lib/photo-store'
+import { MECHANIC_PHOTO_MAX_BYTES } from '@/lib/mechanic-photo'
 
 const FAILURE_STATUS: Record<string, number> = {
   MISSING_LICENSE: 400, LICENSE_INVALID: 403, NOT_A_GARAGE_LICENSE: 403,
@@ -62,12 +64,35 @@ export async function POST(req: Request) {
     // la photo d'un autre garage même en connaissant son identifiant.
     const photo = await prisma.jobPhoto.findFirst({
       where: { id: photoId, garageId },
-      select: { id: true, jobId: true, phase: true, caption: true, mechanicId: true, base64: true, createdAt: true },
+      select: {
+        id: true, jobId: true, phase: true, caption: true, mechanicId: true,
+        base64: true, photoPath: true, createdAt: true,
+      },
     })
     if (!photo) return NextResponse.json({ ok: false, code: 'NOT_FOUND' }, { status: 404 })
-    if (!photo.base64) return NextResponse.json({ ok: false, code: 'NO_INLINE_DATA' }, { status: 409 })
 
-    return NextResponse.json({ ok: true, photo })
+    // ── Une photo écrite sur DISQUE doit redescendre elle aussi ───────────────
+    // `POST /api/mechanic/jobs/[id]/photos` met `base64: ''` dès que le stockage
+    // fichier est actif : la photo existait, était affichée dans la PWA, et
+    // cette passerelle répondait pourtant « NO_INLINE_DATA ». Le poste la
+    // redemandait à chaque passage sans jamais l'obtenir — le garage ne voyait
+    // AUCUNE photo de son mécanicien, et le curseur de ce flux restait bloqué
+    // sur elle. On relit donc le fichier quand la colonne est vide.
+    // La borne de relecture est celle du dépôt d'une photo de mécanicien
+    // (8 Mo) : le défaut de 2 Mo de `readPhotoAsDataUrl`, taillé pour un logo,
+    // aurait rejeté silencieusement la plupart des photos d'atelier.
+    const { photoPath, ...sansChemin } = photo
+    const donnees = photo.base64 || readPhotoAsDataUrl(photoPath, MECHANIC_PHOTO_MAX_BYTES)
+    if (!donnees) {
+      // Ni colonne, ni fichier lisible : c'est un défaut de stockage côté
+      // serveur, pas une demande invalide. Le poste passe au suivant.
+      logger.warn('[sync/job-photo] octets introuvables', {
+        garage: shortId(garageId), stockage: photoPath ? 'fichier' : 'aucun',
+      })
+      return NextResponse.json({ ok: false, code: 'NO_INLINE_DATA' }, { status: 409 })
+    }
+
+    return NextResponse.json({ ok: true, photo: { ...sansChemin, base64: donnees } })
   } catch (err) {
     logger.error('[sync/job-photo] erreur base', err)
     return NextResponse.json({ ok: false, code: 'SERVICE_UNAVAILABLE' }, { status: 503 })
