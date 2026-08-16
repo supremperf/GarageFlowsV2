@@ -125,6 +125,76 @@ export async function activeGarageLicenseId(rawGfSession: string): Promise<strin
 }
 
 /**
+ * RATTACHEMENT au garage — bind-on-first-use atomique, puis immuable.
+ *
+ * Rend le garage auquel la licence est RÉELLEMENT rattachée après l'opération :
+ * celui déjà en base s'il existe, sinon `candidat` si le rattachement a réussi,
+ * sinon celui qu'une requête concurrente a posé entre-temps. L'appelant compare
+ * lui-même au garage attendu — cette fonction ne refuse rien, elle constate.
+ *
+ * Le `updateMany ... where garageId: null` est la garde de concurrence : deux
+ * requêtes simultanées ne peuvent pas rattacher la même licence à deux garages.
+ */
+async function bindGarageOnFirstUse(
+  licenseId: string,
+  garageIdEnBase: string | null,
+  candidat: string,
+): Promise<string | null> {
+  if (garageIdEnBase) return garageIdEnBase
+  const upd = await prisma.licenseKey.updateMany({
+    where: { licenseId, garageId: null },
+    data: { garageId: candidat },
+  })
+  if (upd.count > 0) return candidat
+  // Une requête concurrente a rattaché la licence entre-temps : relire.
+  const fresh = await prisma.licenseKey.findUnique({ where: { licenseId } })
+  return fresh?.garageId ?? null
+}
+
+/**
+ * RATTACHEMENT SEUL, sans le moindre contrôle d'accès — pour le poste Electron.
+ *
+ * LE DÉFAUT QU'ELLE CORRIGE (mesuré le 2026-08-16 sur un poste fraîchement
+ * installé). `licenseEnforcementEnabled()` rend `false` sous Electron, et à bon
+ * droit : la licence y est déjà contrôlée par la fenêtre native, le heartbeat et
+ * l'overlay. Mais le rattachement au garage ne vivait QUE dans
+ * `validateLicensedSession`, c'est-à-dire dans le chemin désactivé. Conséquence :
+ * sur un poste packagé, `LicenseKey.garageId` restait `null` POUR TOUJOURS.
+ *
+ * Or `garageLicenseToken()` (src/lib/sync/cloud-client.ts) cherche la licence
+ * PAR garageId : elle ne trouvait rien, `syncGarageJobs` sortait aussitôt en
+ * `NO_GARAGE_LICENSE`, et la remontée vers l'espace mécanicien ne partait
+ * jamais — l'écran du comptoir affichant « Synchronisation cloud en attente »
+ * indéfiniment, sans une ligne de journal pour l'expliquer.
+ *
+ * Ce que cette fonction fait, et surtout ce qu'elle NE fait PAS : elle rattache,
+ * point. Elle ne refuse aucune requête, ne lève jamais, et ne réintroduit aucun
+ * contrôle par requête sous Electron. Le `lid` vient du cookie `gf_session`
+ * SIGNÉ (HS256) et le garage de la session authentifiée : les deux sont de
+ * confiance. Une session mécanicien est ignorée — une clé mécanicien ne
+ * licencie pas le garage et ne doit jamais être rattachée par cette voie.
+ */
+export async function attachLicenseToGarage(opts: {
+  rawGfSession: string
+  garageId: string
+}): Promise<void> {
+  try {
+    const session = await readGfSession(opts.rawGfSession)
+    if (!session || session.typ === 'mechanic' || !opts.garageId) return
+
+    const license = await prisma.licenseKey.findUnique({ where: { licenseId: session.lid } })
+    // Déjà rattachée (au bon garage ou à un autre) : immuable, on ne touche à
+    // rien. Le type en BASE fait foi, comme partout ailleurs dans ce module.
+    if (!license || license.garageId || license.licenseType === 'mechanic') return
+
+    await bindGarageOnFirstUse(session.lid, null, opts.garageId)
+  } catch {
+    // Best-effort STRICT : un poste hors ligne, une base verrouillée ou une
+    // migration en cours ne doivent jamais empêcher l'application de servir.
+  }
+}
+
+/**
  * Valide la session licenciée pour un utilisateur donné (garageId) à partir du
  * cookie gf_session. Ne lève jamais — renvoie un résultat structuré.
  */
@@ -152,20 +222,7 @@ export async function validateLicensedSession(opts: {
   if (license.expiryAt.getTime() < Date.now()) return fail('LICENSE_EXPIRED')
 
   // 6. Rattachement au garage — bind-on-first-use (atomique), puis immuable.
-  let boundGarageId = license.garageId
-  if (!boundGarageId) {
-    const upd = await prisma.licenseKey.updateMany({
-      where: { licenseId: lid, garageId: null },
-      data: { garageId: opts.garageId },
-    })
-    if (upd.count > 0) {
-      boundGarageId = opts.garageId
-    } else {
-      // Une requête concurrente a rattaché la licence entre-temps : relire.
-      const fresh = await prisma.licenseKey.findUnique({ where: { licenseId: lid } })
-      boundGarageId = fresh?.garageId ?? null
-    }
-  }
+  const boundGarageId = await bindGarageOnFirstUse(lid, license.garageId, opts.garageId)
   if (boundGarageId !== opts.garageId) return fail('LICENSE_GARAGE_MISMATCH')
 
   // 7-9. Appareil : présence du did, existence, appartenance, statut actif.

@@ -139,7 +139,18 @@ export async function syncGarageJobs(garageId: string, now: Date = new Date()): 
 
   try {
     const token = await garageLicenseToken(garageId)
-    if (!token) return { synced: false, code: 'NO_GARAGE_LICENSE' }
+    if (!token) {
+      // ── Le seul échec de remontée qui ne disait RIEN (mesuré le 2026-08-16) ──
+      // Les refus du cloud sont journalisés plus bas ; celui-ci, non. Le comptoir
+      // affichait « Synchronisation cloud en attente » indéfiniment et le journal
+      // ne portait pas une ligne pour l'expliquer — la panne la plus coûteuse à
+      // diagnostiquer est celle qui ne laisse aucune trace.
+      logger.warn('[sync/jobs:push] aucune licence garage rattachée — remontée impossible', {
+        garage: shortId(garageId),
+        code: 'NO_GARAGE_LICENSE',
+      })
+      return { synced: false, code: 'NO_GARAGE_LICENSE' }
+    }
 
     const window = syncWindow(now)
     const rows = await prisma.job.findMany({

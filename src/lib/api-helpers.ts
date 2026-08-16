@@ -6,7 +6,7 @@ import { jwtVerify } from 'jose'
 import { getAuthSecret } from '@/lib/auth-secret'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { logger } from '@/lib/logger'
-import { licenseEnforcementEnabled, validateLicensedSession } from '@/lib/license/session'
+import { attachLicenseToGarage, licenseEnforcementEnabled, validateLicensedSession } from '@/lib/license/session'
 import { prisma } from '@/lib/db'
 
 // Rate limiting : implémentation UNIQUE dans src/lib/security/rate-limit.ts
@@ -31,12 +31,24 @@ export async function requireSession() {
     throw NextResponse.json({ error: 'Non autorisé', code: 'UNAUTHENTICATED' }, { status: 401 })
   }
 
+  const rawGfSession = cookies().get('gf_session')?.value ?? ''
   if (licenseEnforcementEnabled()) {
-    const raw = cookies().get('gf_session')?.value ?? ''
-    const check = await validateLicensedSession({ rawGfSession: raw, garageId: session.user.garageId })
+    const check = await validateLicensedSession({ rawGfSession, garageId: session.user.garageId })
     if (!check.ok) {
       throw NextResponse.json({ error: check.reason, code: check.code }, { status: check.status })
     }
+  } else {
+    // ── Le rattachement n'est PAS un contrôle d'accès (mesuré le 2026-08-16) ──
+    // Sous Electron l'application des licences est désactivée, à bon droit. Mais
+    // le rattachement de la licence au garage ne vivait QUE dans le chemin
+    // ci-dessus : sur un poste packagé, `LicenseKey.garageId` restait donc `null`
+    // définitivement, et `garageLicenseToken()` — qui cherche PAR garageId — ne
+    // trouvait jamais rien. La remontée vers l'espace mécanicien ne partait
+    // jamais, et le comptoir lisait « Synchronisation cloud en attente » sans fin.
+    //
+    // On rattache donc ici aussi, SANS rien refuser : aucune route ne se met à
+    // répondre autrement qu'avant à cause de cette ligne.
+    await attachLicenseToGarage({ rawGfSession, garageId: session.user.garageId })
   }
 
   return session
