@@ -702,13 +702,63 @@ function Invoke-NativeCommand {
         # la préférence globale après la capture stdout/stderr.
         $raw = $null
         $previousErrorActionPreference = $ErrorActionPreference
+        $previousInputEncoding = $null
+        $previousOutputEncoding = $null
         try {
             $ErrorActionPreference = 'Continue'
-            if ($PSBoundParameters.ContainsKey('InputText')) { $raw = @($InputText | & $Executable @Arguments 2>&1) }
+            if ($PSBoundParameters.ContainsKey('InputText')) {
+                # ── INCIDENT DU 2026-08-16 : LE BOM INVISIBLE ────────────────────
+                # Le lanceur .cmd exécute « chcp 65001 ». [Console]::InputEncoding
+                # devient alors Encoding.GetEncoding(65001) — un UTF8Encoding dont
+                # GetPreamble() vaut EF-BB-BF. Or c'est CETTE encodage que
+                # PowerShell 5.1 emploie pour écrire sur l'entrée standard d'un
+                # programme natif : le préambule part AVANT la valeur.
+                #
+                # « vercel env add DATABASE_URL » a donc enregistré
+                # « <U+FEFF>postgresql://… ». Le caractère est strictement
+                # invisible dans le tableau de bord ; src/lib/env.ts a refusé le
+                # schéma, le hook d'instrumentation a refusé de démarrer, et
+                # Next.js a renvoyé sa page HTML 500 sur TOUTES les routes.
+                # Les 13 variables poussées ce jour-là portaient le même préambule.
+                #
+                # Mesuré : sans correctif 19 octets pour 14 attendus (3 de
+                # préambule + 2 de CRLF) ; avec, 16. $OutputEncoding n'a AUCUN
+                # effet sur ce chemin — seul InputEncoding compte.
+                # Test-StdinTransport (préflight) vérifie l'invariant à chaque run.
+                # DEUX réglages distincts gouvernent ce tube, et il faut LES DEUX :
+                #   • $OutputEncoding      → l'encodage du contenu. Windows PowerShell
+                #     5.1 le laisse par défaut sur ASCII : tout caractère non-ASCII
+                #     part alors en « ? ». Un mot de passe accentué serait accepté
+                #     par Vercel et n'ouvrirait plus jamais la session — corruption
+                #     silencieuse, sans le moindre message. (Détecté par
+                #     Test-StdinTransport, sentinelle « clé-accentuée-é€ ».)
+                #   • [Console]::InputEncoding → le PRÉAMBULE. Sur codepage 65001
+                #     (« chcp 65001 » du lanceur .cmd), c'est un UTF8Encoding dont
+                #     GetPreamble() vaut EF-BB-BF, écrit AVANT la valeur.
+                # Corriger l'un sans l'autre laisse la moitié du défaut en place.
+                $previousOutputEncoding = $OutputEncoding
+                $global:OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+                try {
+                    $previousInputEncoding = [Console]::InputEncoding
+                    [Console]::InputEncoding = New-Object System.Text.UTF8Encoding($false)
+                } catch {
+                    # Sans console attachée (tâche planifiée, CI), InputEncoding
+                    # est inaccessible. On le DIT : la valeur peut alors partir
+                    # avec un préambule, et seule la vérification d'empreinte
+                    # après écriture le révélerait.
+                    $previousInputEncoding = $null
+                    Write-Host "[ATTENTION] [Console]::InputEncoding inaccessible ($($_.Exception.Message)) — l'entrée standard n'est pas garantie exempte de préambule." -ForegroundColor Yellow
+                }
+                $raw = @($InputText | & $Executable @Arguments 2>&1)
+            }
             else { $raw = @(& $Executable @Arguments 2>&1) }
             $code = $LASTEXITCODE
         } finally {
             $ErrorActionPreference = $previousErrorActionPreference
+            if ($null -ne $previousInputEncoding) {
+                try { [Console]::InputEncoding = $previousInputEncoding } catch { }
+            }
+            if ($null -ne $previousOutputEncoding) { $global:OutputEncoding = $previousOutputEncoding }
         }
         $output = Protect-LogText (($raw | ForEach-Object { [string]$_ }) -join [Environment]::NewLine)
         if ($code -ne 0 -and -not $AllowFailure) { throw "Commande externe en échec (code $code) : $output" }
@@ -718,6 +768,67 @@ function Invoke-NativeCommand {
             foreach ($key in $EnvironmentVariables.Keys) { [Environment]::SetEnvironmentVariable($key, $saved[$key], 'Process') }
         }
     }
+}
+
+function Test-StdinTransport {
+    <#
+      Prouve que l'entrée standard transmise à un programme natif arrive OCTET
+      POUR OCTET. Sans ce contrôle, l'incident du 2026-08-16 se reproduit en
+      silence : un préambule UTF-8 (EF BB BF) précède la valeur, `vercel env add`
+      l'enregistre, et rien ne le montre — ni le tableau de bord, ni
+      `vercel env pull` (qui rend « [SENSITIVE] »), ni une relecture visuelle.
+
+      À exécuter en PRÉFLIGHT, avant toute mutation distante : c'est la seule
+      fenêtre où l'échec ne coûte rien.
+
+      MESURÉ sur la CLI Vercel 58.4.4 : elle retire les CR/LF de FIN mais
+      conserve un préambule de TÊTE. Le contrôle porte donc sur la tête ; un
+      résidu de fin est signalé sans être bloquant.
+    #>
+    $node = Get-Command node -ErrorAction SilentlyContinue
+    if (-not $node) { throw 'node introuvable : impossible de vérifier le transport de l-entrée standard.' }
+
+    $probePath = Join-Path ([IO.Path]::GetTempPath()) ('gf-stdin-probe-' + [Guid]::NewGuid().ToString('N') + '.js')
+    $probe = 'const c=[];process.stdin.on("data",d=>c.push(d));process.stdin.on("end",()=>{const b=Buffer.concat(c);process.stdout.write(b.length+":"+b.toString("hex"))});'
+    [IO.File]::WriteAllText($probePath, $probe, $script:Utf8NoBom)
+    try {
+        # Trois formes : ASCII pur, base64 (les clés), accentué (les libellés).
+        foreach ($sentinelle in @('postgresql://u:p@h/d?sslmode=require', 'LS0tLS1CRUdJTiBQUklW', 'clé-accentuée-é€')) {
+            $resultat = Invoke-NativeCommand -Executable $node.Source -Arguments @($probePath) -InputText $sentinelle -AllowFailure
+            if ($resultat.ExitCode -ne 0) { throw "sonde d-entrée standard en échec (code $($resultat.ExitCode))." }
+
+            $sortie = ([string]$resultat.Output).Trim()
+            $separateur = $sortie.IndexOf(':')
+            if ($separateur -lt 1) { throw "sonde d-entrée standard illisible : « $sortie »." }
+            $recu = [int]$sortie.Substring(0, $separateur)
+            $hex = $sortie.Substring($separateur + 1)
+
+            $attenduHex = -join ([Text.Encoding]::UTF8.GetBytes($sentinelle) | ForEach-Object { '{0:x2}' -f $_ })
+            if ($hex.StartsWith('efbbbf')) {
+                throw ('TRANSPORT CORROMPU : un préambule UTF-8 (EF BB BF) précède la valeur écrite sur ' +
+                       'l-entrée standard. Toute variable poussée vers Vercel porterait ce caractère ' +
+                       'INVISIBLE et le déploiement refuserait de démarrer (incident du 2026-08-16). ' +
+                       'Cause connue : « chcp 65001 » place [Console]::InputEncoding sur un UTF8Encoding ' +
+                       'à préambule. AUCUNE mutation distante n-a été effectuée.')
+            }
+            if (-not $hex.StartsWith($attenduHex)) {
+                throw ("TRANSPORT CORROMPU : les octets reçus ne commencent pas par la valeur envoyée. " +
+                       "attendu $($attenduHex.Substring(0, [Math]::Min(24, $attenduHex.Length)))… " +
+                       "reçu $($hex.Substring(0, [Math]::Min(24, $hex.Length)))…")
+            }
+            $surplus = $hex.Substring($attenduHex.Length)
+            if ($surplus -and $surplus -notmatch '^(0d|0a)+$') {
+                throw "TRANSPORT CORROMPU : octets inattendus après la valeur (« $surplus »)."
+            }
+            $attendu = [Text.Encoding]::UTF8.GetByteCount($sentinelle)
+            if ($recu -gt $attendu + 2) {
+                Write-Host "[ATTENTION] Entrée standard : $recu octets pour $attendu attendus (surplus « $surplus »)." -ForegroundColor Yellow
+            }
+        }
+    } finally {
+        Remove-Item -LiteralPath $probePath -Force -ErrorAction SilentlyContinue
+    }
+    Write-Host '[OK] Auto-test transport entrée standard : aucun octet ajouté (pas de préambule UTF-8).' -ForegroundColor Green
 }
 
 function Invoke-VercelCommand {

@@ -34,7 +34,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 
 ## Contrat par catégorie
 
-### Configuration fonctionnelle (62)
+### Configuration fonctionnelle (63)
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
@@ -85,6 +85,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `GF_MECHANIC_TIMER_AUTOCOMPLETE` | CONFIGURATION | non | server | Bascule l'achèvement automatique d'une intervention à l'arrêt du chronomètre mécanicien. |
 | `GF_MIN_ELECTRON_VERSION` | CONFIGURATION | non | server | — |
 | `GF_MIN_PWA_VERSION` | CONFIGURATION | non | server | — |
+| `GF_PROBE_NAMES` | CONFIGURATION | non | maintenance-tool | Liste de noms, separes par des virgules, que la sonde de verification post-rotation doit mesurer. Posee par reset-garageflow.ps1 juste avant `vercel … |
 | `GF_UPDATE_CHANNEL` | CONFIGURATION | non | desktop | — |
 | `GF_UPDATE_SIGNING_KEY_FILE` | SECRET | non | release-tooling | Chemin d'un fichier contenant la clé privée de signature, alternative à GF_UPDATE_SIGNING_KEY. Outillage de release uniquement. |
 | `LICENSE_ENFORCEMENT` | CONFIGURATION | non | development | — |
@@ -211,7 +212,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 Node, Electron, Vercel, la CI ou les harnais de test les définissent :
 elles ne se provisionnent pas et ne figurent pas au contrat à provisionner.
 
-`ALLOW_PROD` · `APPDATA` · `BASE_URL` · `CHROME_PATH` · `CI` · `DEBUG` · `E2E_EMAIL` · `E2E_LICENSE` · `E2E_PASSWORD` · `ELECTRON` · `ELECTRON_DEV` · `ELECTRON_RUN_AS_NODE` · `FORCE_COLOR` · `GF_E2E_CHROMIUM` · `GF_MANIFEST_NOW` · `GF_SCRIPT_TO_PARSE` · `GF_TEST_ALLOW_UPSTASH` · `GF_TEST_LICENSE` · `HEADER_COOKIE` · `HOME` · `HOSTNAME` · `LANG` · `LOCALAPPDATA` · `NEXT_PUBLIC_GF_VERSION` · `NEXT_RUNTIME` · `NODE_ENV` · `NODE_INSPECTOR_IPC` · `NODE_OPTIONS` · `OS` · `PATH` · `PWD` · `PYTHONIOENCODING` · `PYTHONPATH` · `SHELL` · `TEMP` · `TERM` · `TEST_POSTGRES_URL` · `TEST_REDIS_URL` · `TMP` · `TZ` · `USERPROFILE` · `VERCEL` · `VERCEL_ENV` · `VERCEL_REGION` · `VERCEL_URL` · `VITEST`
+`ALLOW_PROD` · `APPDATA` · `BASE_URL` · `CHROME_PATH` · `CI` · `DEBUG` · `E2E_EMAIL` · `E2E_LICENSE` · `E2E_PASSWORD` · `ELECTRON` · `ELECTRON_DEV` · `ELECTRON_RUN_AS_NODE` · `FORCE_COLOR` · `GF_E2E_CHROMIUM` · `GF_MANIFEST_NOW` · `GF_SCRIPT_TO_PARSE` · `GF_TEST_ALLOW_UPSTASH` · `GF_TEST_LICENSE` · `HEADER_COOKIE` · `HOME` · `HOSTNAME` · `LANG` · `LOCALAPPDATA` · `NEXT_PUBLIC_GF_VERSION` · `NEXT_RUNTIME` · `NODE_ENV` · `NODE_INSPECTOR_IPC` · `NODE_OPTIONS` · `OS` · `PATH` · `PWD` · `PYTHONIOENCODING` · `PYTHONPATH` · `SHELL` · `TEMP` · `TERM` · `TEST_POSTGRES_URL` · `TEST_REDIS_URL` · `TMP` · `TZ` · `USERPROFILE` · `VERCEL` · `VERCEL_DEPLOYMENT_ID` · `VERCEL_ENV` · `VERCEL_REGION` · `VERCEL_URL` · `VITEST`
 
 ## Contrôles
 

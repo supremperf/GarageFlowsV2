@@ -8,7 +8,12 @@ param(
     [switch]$SkipDeploy,
     [switch]$SkipDatabaseReset,
     [switch]$SkipLicenseReset,
-    [switch]$VerboseDiagnostics
+    [switch]$VerboseDiagnostics,
+    # Exécute UNIQUEMENT les auto-tests locaux puis sort. Aucune connexion
+    # Vercel, aucune lecture Neon, aucune invite, aucune mutation. Sert à
+    # prouver — avant et après toute modification du script — que le transport
+    # de l'entrée standard n'ajoute aucun octet (incident du 2026-08-16).
+    [switch]$SelfTest
 )
 
 Set-StrictMode -Version Latest
@@ -1807,7 +1812,20 @@ function Invoke-ProductionDeployFromCleanCopy {
         [Environment]::SetEnvironmentVariable('DATABASE_URL_UNPOOLED', $null, 'Process')
         [Environment]::SetEnvironmentVariable('DESKTOP_DATABASE_URL', $null, 'Process')
 
-        $deploy = Invoke-VercelCommand -Arguments @('--prod','--yes','--force','--no-color') -AllowFailure
+        # ── POURQUOI --skip-domain (incident du 2026-08-16 au soir) ─────────────
+        # Sans lui, « vercel --prod » attribue app.garageflows.fr AU MOMENT du
+        # déploiement. Toutes les portes de vérification qui suivent — santé,
+        # convergence, clé d'API — s'exécutent alors sur un déploiement DÉJÀ
+        # servi au public : quand elles refusent le candidat, la production est
+        # tombée depuis plusieurs minutes. C'est exactement ce qui s'est produit
+        # (DATABASE_URL précédée d'un U+FEFF → HTTP 500 sur toutes les routes).
+        #
+        # Avec --skip-domain, le candidat est bien construit avec les variables
+        # Production et reçoit une URL unique, mais l'alias public continue de
+        # pointer sur le déploiement précédent. On mesure la réalité sans exposer
+        # personne, et Publish-VerifiedDeployment ne promeut qu'une fois toutes
+        # les portes vertes. Un échec ne coûte alors AUCUNE minute de panne.
+        $deploy = Invoke-VercelCommand -Arguments @('--prod','--yes','--force','--skip-domain','--no-color') -AllowFailure
         $deploymentUrl = Get-DeploymentUrlFromOutput -Output ([string]$deploy.Output)
         return [pscustomobject]@{
             ExitCode = $deploy.ExitCode
@@ -1842,6 +1860,56 @@ function Get-HttpFailureDetails {
         }
         return [pscustomobject]@{ Ok = $false; StatusCode = $status; Body = $body; Error = $_.Exception.Message }
     }
+}
+
+function Publish-VerifiedDeployment {
+    <#
+      PROMOTION — la seule action de ce script qui change ce que voient les
+      clients, et volontairement la DERNIÈRE.
+
+      POURQUOI ELLE EXISTE (incident du 2026-08-16 au soir)
+      Le déploiement se faisait avec « vercel --prod » seul : l'alias public
+      était attribué immédiatement, AVANT la moindre vérification. Le candidat
+      portait une DATABASE_URL précédée d'un U+FEFF ; le contrôle de santé l'a
+      correctement refusé — mais douze minutes trop tard, app.garageflows.fr
+      servait déjà une page 500 sur toutes les routes.
+
+      La séquence est donc : déployer sans domaine → mesurer → promouvoir.
+      Tant que cette fonction n'est pas appelée, un échec ne coûte rien : le
+      déploiement précédent continue de servir le public.
+
+      La promotion n'est pas considérée comme faite parce que la CLI a rendu 0 :
+      elle est mesurée sur l'URL PUBLIQUE, celle que voient réellement les
+      clients. C'est la dernière occasion de dire la vérité.
+    #>
+    param(
+        [Parameter(Mandatory=$true)][string]$DeploymentUrl,
+        [Parameter(Mandatory=$true)][string]$PublicUrl
+    )
+
+    $promotion = Invoke-VercelCommand -Arguments @('promote', $DeploymentUrl, '--yes', '--no-color') -AllowFailure
+    if ($promotion.ExitCode -ne 0) {
+        throw ("Promotion refusée par Vercel (code $($promotion.ExitCode)) : $($promotion.Output). " +
+               'L-alias public n-a PAS été déplacé : la production continue de servir le déploiement précédent.')
+    }
+    Write-Host "[OK] Candidat promu en production : $DeploymentUrl" -ForegroundColor Green
+
+    # L'attribution de l'alias se propage sur quelques secondes. On ne déclare
+    # « vert » qu'après l'avoir constaté sur l'URL publique, anonymement — donc
+    # exactement comme un client.
+    $sante = $null
+    for ($tentative = 1; $tentative -le 6; $tentative++) {
+        $sante = Get-HttpFailureDetails -Url ($PublicUrl.TrimEnd('/') + '/api/health')
+        if ([bool]$sante.Ok -and ([string]$sante.Body) -match '"status"\s*:\s*"ok"') {
+            Write-Host "[OK] Production publique vérifiée : $($PublicUrl.TrimEnd('/'))/api/health = status ok." -ForegroundColor Green
+            return
+        }
+        if ($tentative -lt 6) { Start-Sleep -Seconds 5 }
+    }
+
+    throw ("Le candidat a été promu mais l-URL publique ne répond pas « status ok » " +
+           "(HTTP $($sante.StatusCode)). La production est en panne MAINTENANT : " +
+           'revenez au déploiement précédent par « vercel rollback », puis diagnostiquez.')
 }
 
 function Start-VercelLiveLogCapture {
@@ -2056,6 +2124,100 @@ function Test-NewDeploymentHealth {
     }
 }
 
+function Assert-DeployedConvergence {
+    <#
+      PORTE DE VÉRIFICATION POST-DÉPLOIEMENT — l'unique appelant de
+      GET /api/admin/diagnostics.
+
+      POURQUOI ELLE EXISTE (incident du 2026-08-16)
+      `/api/health` répond « ok » dès que la base répond. Il ne dit RIEN de la
+      valeur réellement injectée dans la fonction. Ce jour-là, les treize
+      variables poussées portaient un U+FEFF de tête ; seule DATABASE_URL a fait
+      tomber le démarrage, les douze autres étaient corrompues en silence — un
+      secret altéré ne casse pas le démarrage, il fait échouer plus tard une
+      signature, une session ou un limiteur de débit.
+
+      POURQUOI CE CANAL, ET PAS UN AUTRE
+      `vercel env pull` rend « [SENSITIVE] » pour tout secret : illisible.
+      `vercel env run` charge les `.env` du projet, qui ÉCRASENT les valeurs
+      Production : mesuré, DATABASE_URL y revient à « file:./dev.db ». Seule la
+      fonction déployée voit ce que la plateforme lui donne vraiment.
+
+      CE QUI EST VÉRIFIÉ
+        · licenseKey.converged — la clé publique du build et GF_PRIVATE_KEY
+          désignent-elles la MÊME paire ? Sinon toute licence émise par ce
+          déploiement serait refusée par ce même déploiement ;
+        · aucun caractère invisible dans une variable poussée par ce run ;
+        · l'empreinte de chaque valeur, comparée à celle calculée sur la valeur
+          envoyée : la seule preuve d'un transport exact de bout en bout.
+    #>
+    param(
+        [Parameter(Mandatory=$true)][string]$DeploymentUrl,
+        [Parameter(Mandatory=$true)][string]$ApiKey,
+        [hashtable]$ExpectedValues
+    )
+
+    $reponse = Invoke-ProtectedDeploymentRequest `
+        -Path '/api/admin/diagnostics' `
+        -DeploymentUrl $DeploymentUrl `
+        -Headers @{ 'Accept' = 'application/json'; 'x-gf-key' = $ApiKey }
+
+    if (-not $reponse.Ok -or -not $reponse.Payload) {
+        throw ('La sonde de convergence /api/admin/diagnostics n-a pas répondu correctement. ' +
+               'Sans elle, on ne peut PAS affirmer que le déploiement porte les bonnes valeurs.')
+    }
+
+    $charge = $reponse.Payload
+    $ecarts = @()
+
+    if (-not [bool]$charge.licenseKey.converged) {
+        $ecarts += ('DIVERGENCE CRYPTOGRAPHIQUE : la clé publique embarquée (' +
+                    "$([string]$charge.licenseKey.embeddedPublicFingerprint)) et celle dérivée de " +
+                    "GF_PRIVATE_KEY ($([string]$charge.licenseKey.privateKeyPublicFingerprint)) diffèrent. " +
+                    'Toute licence émise par ce déploiement serait refusée par lui-même.')
+    }
+
+    foreach ($variable in @($charge.env)) {
+        if (-not [bool]$variable.present) { continue }
+        $invisibles = @($variable.invisibles)
+        if ($invisibles.Count -gt 0) {
+            $ecarts += "$([string]$variable.name) : caractère(s) invisible(s) $($invisibles -join ', ') — premier point de code $([string]$variable.firstCodePoint)"
+        }
+    }
+
+    if ($ExpectedValues) {
+        foreach ($nom in @($ExpectedValues.Keys | Sort-Object)) {
+            $variable = @($charge.env) | Where-Object { [string]$_.name -eq [string]$nom } | Select-Object -First 1
+            if (-not $variable) { continue }   # non inspectée par la route : rien à conclure
+            if (-not [bool]$variable.present) { $ecarts += "$nom : ABSENTE du runtime déployé." ; continue }
+            $attendu = Get-EnvFingerprint -Name ([string]$nom) -Value ([string]$ExpectedValues[$nom])
+            if ([string]$variable.fingerprint -ne $attendu) {
+                $ecarts += "$nom : empreinte $([string]$variable.fingerprint) au lieu de $attendu — la valeur déployée n-est pas celle envoyée."
+            }
+        }
+    }
+
+    if ($ecarts.Count -gt 0) {
+        throw ("Convergence du déploiement NON prouvée ($($ecarts.Count) écart(s)) :`n   " + ($ecarts -join "`n   "))
+    }
+
+    Write-Host "[OK] Convergence vérifiée sur le déploiement : paire de licence cohérente, aucune variable altérée." -ForegroundColor Green
+}
+
+<#
+  Empreinte de configuration — DOIT reproduire exactement configFingerprint() de
+  src/app/api/admin/diagnostics/route.ts, sans quoi la comparaison ci-dessus
+  compare deux choses différentes et échoue toujours.
+  Domaine public + nom de la variable + valeur, SHA-256, 12 hexadécimaux majuscules.
+#>
+function Get-EnvFingerprint {
+    param([Parameter(Mandatory=$true)][string]$Name, [Parameter(Mandatory=$true)][AllowEmptyString()][string]$Value)
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+        $octets = [Text.Encoding]::UTF8.GetBytes("GF-ENV-FP-v1|$Name|$Value")
+        return ([BitConverter]::ToString($sha.ComputeHash($octets)).Replace('-', '')).Substring(0, 12).ToUpperInvariant()
+    } finally { $sha.Dispose() }
+}
 
 function Read-EnvFileMap {
     param([Parameter(Mandatory=$true)][string]$Path)
@@ -2219,23 +2381,44 @@ function Assert-RemoteProductionDatabaseValues {
     param(
         [Parameter(Mandatory=$true)][string]$ExpectedDatabaseUrl,
         [Parameter(Mandatory=$true)][string]$ExpectedDirectUrl,
-        [Parameter(Mandatory=$true)][string]$TemporaryDirectory
+        [Parameter(Mandatory=$true)][string]$TemporaryDirectory,
+        # Toutes les autres variables poussées : nom -> valeur envoyée. Chacune
+        # est comparée à ce que Vercel injecte RÉELLEMENT, empreinte contre
+        # empreinte. Facultatif pour rester compatible avec les appels existants.
+        [hashtable]$ExpectedValues
     )
 
     $probePath = Join-Path $TemporaryDirectory ('verify-vercel-database-' + [Guid]::NewGuid().ToString('N') + '.cjs')
     $probe = @'
 const crypto = require('crypto');
 const clean = value => String(value || '').replace(/^\uFEFF|\u200B|\u0000/g, '').trim();
-const fp = value => crypto.createHash('sha256').update(clean(value), 'utf8').digest('hex').slice(0, 8).toUpperCase();
-const database = clean(process.env.DATABASE_URL);
-const direct = clean(process.env.DIRECT_URL);
+// L'EMPREINTE ET LES TESTS PORTENT SUR LA VALEUR BRUTE — jamais nettoyée.
+// `clean()` ne sert plus qu'à DIRE ce qu'un nettoyage changerait.
+const fp = value => crypto.createHash('sha256').update(String(value), 'utf8').digest('hex').slice(0, 8).toUpperCase();
+const cp0 = v => 'U+' + v.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
+const INVISIBLES = [[0xfeff, 'U+FEFF'], [0x200b, 'U+200B'], [0x200c, 'U+200C'], [0x200d, 'U+200D'],
+                    [0x00a0, 'U+00A0'], [0x0000, 'U+0000'], [0x000a, 'U+000A'], [0x000d, 'U+000D'], [0x0009, 'U+0009']];
+const decrire = v => (v === undefined || v === '')
+  ? { present: false }
+  : { present: true, length: v.length, firstCodePoint: cp0(v),
+      invisibles: INVISIBLES.filter(([c]) => v.includes(String.fromCodePoint(c))).map(([, l]) => l),
+      cleanChangesValue: clean(v) !== v,
+      postgres: /^postgres(?:ql)?:\/\//i.test(v), file: /^file:/i.test(v), fingerprint: fp(v) };
+const database = process.env.DATABASE_URL;
+const direct = process.env.DIRECT_URL;
+const supplementaires = String(process.env.GF_PROBE_NAMES || '').split(',').filter(Boolean);
+const variables = {};
+for (const nom of supplementaires) variables[nom] = decrire(process.env[nom]);
 process.stdout.write(JSON.stringify({
-  databasePostgres: /^postgres(?:ql)?:\/\//i.test(database),
-  directPostgres: /^postgres(?:ql)?:\/\//i.test(direct),
-  databaseFile: /^file:/i.test(database),
-  directFile: /^file:/i.test(direct),
-  databaseFingerprint: fp(database),
-  directFingerprint: fp(direct)
+  databasePostgres: /^postgres(?:ql)?:\/\//i.test(String(database ?? '')),
+  directPostgres: /^postgres(?:ql)?:\/\//i.test(String(direct ?? '')),
+  databaseFile: /^file:/i.test(String(database ?? '')),
+  directFile: /^file:/i.test(String(direct ?? '')),
+  databaseFingerprint: fp(database ?? ''),
+  directFingerprint: fp(direct ?? ''),
+  databaseDetail: decrire(database),
+  directDetail: decrire(direct),
+  variables
 }));
 '@
     [IO.File]::WriteAllText($probePath, $probe, $script:Utf8NoBom)
@@ -2244,6 +2427,15 @@ process.stdout.write(JSON.stringify({
     foreach ($environmentName in @('DATABASE_URL','DIRECT_URL','DATABASE_URL_UNPOOLED','DESKTOP_DATABASE_URL')) {
         $savedProcessEnvironment[$environmentName] = [Environment]::GetEnvironmentVariable($environmentName, 'Process')
     }
+    # GF_PROBE_NAMES est sauvegardée À PART, et volontairement : la liste
+    # ci-dessus est exemptée nommément par `check:env-consistency` (aiguille
+    # exacte) parce qu'elle NEUTRALISE des alias interdits. Y ajouter un nom
+    # casse l'exemption et fait échouer la garde — le contrôle a raison, c'est
+    # bien une autre intention.
+    $probeNamesSauvegarde = [Environment]::GetEnvironmentVariable('GF_PROBE_NAMES', 'Process')
+    # La sonde s'exécute comme enfant de `vercel env run` : elle hérite de cette
+    # variable — absente de Production — et sait ainsi quoi mesurer.
+    $nomsSupplementaires = if ($ExpectedValues) { @($ExpectedValues.Keys | Sort-Object) } else { @() }
 
     try {
         # `vercel env run` peut conserver une variable déjà présente dans le
@@ -2253,6 +2445,8 @@ process.stdout.write(JSON.stringify({
         foreach ($environmentName in $savedProcessEnvironment.Keys) {
             [Environment]::SetEnvironmentVariable([string]$environmentName, $null, 'Process')
         }
+        # Posée APRÈS le nettoyage ci-dessus, qui l'effacerait sinon.
+        [Environment]::SetEnvironmentVariable('GF_PROBE_NAMES', ($nomsSupplementaires -join ','), 'Process')
 
         $result = Invoke-VercelCommand -Arguments @('env','run','-e','production','--','node',$probePath) -AllowFailure
         if ($result.ExitCode -ne 0) {
@@ -2267,17 +2461,55 @@ process.stdout.write(JSON.stringify({
         $expectedDbFp = Get-ShortFingerprint (Normalize-PostgresUrl $ExpectedDatabaseUrl)
         $expectedDirectFp = Get-ShortFingerprint (Normalize-PostgresUrl $ExpectedDirectUrl)
 
+        # Diagnostic NOMMÉ des caractères invisibles : un « U+FEFF » dans le
+        # message évite de chercher pendant une heure une variable qui « semble
+        # correcte ». Aucune valeur n'est jamais affichée.
+        $decrireEcart = {
+            param($nom, $detail)
+            if (-not $detail) { return "$nom : détail indisponible." }
+            if (-not [bool]$detail.present) { return "$nom : ABSENTE du runtime Vercel." }
+            $inv = @($detail.invisibles)
+            $suffixe = if ($inv.Count -gt 0) { " — CARACTÈRES INVISIBLES DÉTECTÉS : $($inv -join ', ')" } else { '' }
+            return "$nom : longueur $($detail.length), premier point de code $($detail.firstCodePoint)$suffixe"
+        }
+
         if (-not [bool]$payload.databasePostgres -or [bool]$payload.databaseFile) {
-            throw 'Vérification distante : DATABASE_URL réellement injectée par Vercel n-est pas PostgreSQL.'
+            throw ("Vérification distante : DATABASE_URL réellement injectée par Vercel n-est pas PostgreSQL. " +
+                   (& $decrireEcart 'DATABASE_URL' $payload.databaseDetail))
         }
         if (-not [bool]$payload.directPostgres -or [bool]$payload.directFile) {
-            throw 'Vérification distante : DIRECT_URL réellement injectée par Vercel n-est pas PostgreSQL.'
+            throw ("Vérification distante : DIRECT_URL réellement injectée par Vercel n-est pas PostgreSQL. " +
+                   (& $decrireEcart 'DIRECT_URL' $payload.directDetail))
         }
         if ([string]$payload.databaseFingerprint -ne $expectedDbFp) {
-            throw "Vérification distante : empreinte DATABASE_URL différente ($($payload.databaseFingerprint) au lieu de $expectedDbFp)."
+            throw ("Vérification distante : empreinte DATABASE_URL différente ($($payload.databaseFingerprint) au lieu de $expectedDbFp). " +
+                   (& $decrireEcart 'DATABASE_URL' $payload.databaseDetail))
         }
         if ([string]$payload.directFingerprint -ne $expectedDirectFp) {
-            throw "Vérification distante : empreinte DIRECT_URL différente ($($payload.directFingerprint) au lieu de $expectedDirectFp)."
+            throw ("Vérification distante : empreinte DIRECT_URL différente ($($payload.directFingerprint) au lieu de $expectedDirectFp). " +
+                   (& $decrireEcart 'DIRECT_URL' $payload.directDetail))
+        }
+
+        # ── Les AUTRES variables comptent tout autant ───────────────────────────
+        # Le 2026-08-16, seules DATABASE_URL et DIRECT_URL étaient vérifiées : les
+        # onze autres portaient le même caractère invisible et personne ne l'a su.
+        # Un secret corrompu ne fait pas tomber le démarrage — il fait échouer
+        # silencieusement une signature, une session ou un limiteur de débit.
+        if ($ExpectedValues -and $ExpectedValues.Count -gt 0) {
+            $ecarts = @()
+            foreach ($nom in @($ExpectedValues.Keys | Sort-Object)) {
+                $detail = $payload.variables.$nom
+                $attendu = Get-ShortFingerprint ([string]$ExpectedValues[$nom])
+                if (-not $detail -or -not [bool]$detail.present) { $ecarts += "$nom : ABSENTE du runtime Vercel." ; continue }
+                if ([string]$detail.fingerprint -ne $attendu) {
+                    $ecarts += ((& $decrireEcart $nom $detail) + " ; empreinte $($detail.fingerprint) au lieu de $attendu")
+                }
+            }
+            if ($ecarts.Count -gt 0) {
+                throw ("Vérification distante : $($ecarts.Count) variable(s) Production ne correspondent pas à la valeur envoyée.`n   " +
+                       ($ecarts -join "`n   "))
+            }
+            Write-Host "[OK] $($ExpectedValues.Count) variable(s) Production vérifiées octet pour octet dans le runtime Vercel." -ForegroundColor Green
         }
 
         Write-Host "[OK] Valeurs Vercel réellement injectées vérifiées : PostgreSQL — empreintes $expectedDbFp / $expectedDirectFp." -ForegroundColor Green
@@ -2289,6 +2521,7 @@ process.stdout.write(JSON.stringify({
                 'Process'
             )
         }
+        [Environment]::SetEnvironmentVariable('GF_PROBE_NAMES', $probeNamesSauvegarde, 'Process')
         Remove-Item -LiteralPath $probePath -Force -ErrorAction SilentlyContinue
     }
 }
@@ -2379,6 +2612,51 @@ function Invoke-GfLocalRestore {
     Write-Host '[INFO] (pour le distant : réappliquer manuellement vercel-production-avant-reset.env du run-dir).' -ForegroundColor Cyan
 }
 
+# ── AUTO-TESTS SEULS ────────────────────────────────────────────────────────────
+# Rien de distant, rien d'interactif, rien de destructeur : uniquement les
+# contrôles qui doivent passer AVANT qu'une rotation ait le droit de commencer.
+if ($SelfTest) {
+    Write-Host '=== Auto-tests locaux de reset-garageflow.ps1 ===' -ForegroundColor Cyan
+    $echecs = 0
+    foreach ($test in @(
+        @{ Nom = 'transport entrée standard'; Action = { Test-StdinTransport } },
+        @{ Nom = 'lecture env pull / normalisation Neon'; Action = { Test-EnvPullParsingRegression } },
+        @{ Nom = 'isolation des variables SQLite locales'; Action = { Test-RemoteEnvironmentIsolationRegression } }
+    )) {
+        try { & $test.Action }
+        catch { $echecs++; Write-Host "[ÉCHEC] $($test.Nom) : $($_.Exception.Message)" -ForegroundColor Red }
+    }
+    if ($echecs -gt 0) { Write-Host "`n$echecs auto-test(s) en échec." -ForegroundColor Red; exit 10 }
+    Write-Host "`nTous les auto-tests locaux passent." -ForegroundColor Green
+    exit 0
+}
+
+# ── VERROU DE RÉCUPÉRATION ──────────────────────────────────────────────────────
+# Une rotation précédente a muté Production puis échoué. Relancer une rotation
+# complète à ce stade génère une TROISIÈME paire et rend la situation
+# inextricable : on refuse, et on dit quoi faire. Le fichier est retiré à la
+# main, une fois la convergence rétablie et vérifiée.
+$verrouRotation = Join-Path $script:ProjectRoot 'rotation.lock'
+if (Test-Path -LiteralPath $verrouRotation) {
+    $etatVerrou = $null
+    try { $etatVerrou = Get-Content -LiteralPath $verrouRotation -Raw -Encoding UTF8 | ConvertFrom-Json } catch { }
+    Write-Host '================================================================' -ForegroundColor Red
+    Write-Host ' ROTATION REFUSÉE — une récupération est en cours' -ForegroundColor Red
+    Write-Host '================================================================' -ForegroundColor Red
+    Write-Host "[VERROU] $verrouRotation" -ForegroundColor Red
+    if ($etatVerrou) {
+        Write-Host "[VERROU] run $($etatVerrou.runId) — état $($etatVerrou.etat) — $($etatVerrou.date)" -ForegroundColor Red
+        Write-Host "[VERROU] erreur d-origine : $($etatVerrou.erreur)" -ForegroundColor Red
+        Write-Host "[VERROU] paire engagée en Production : $($etatVerrou.paireCandidate)" -ForegroundColor Red
+    }
+    Write-Host ''
+    Write-Host 'Production porte déjà des secrets qu-il est IMPOSSIBLE de relire ou de restaurer.' -ForegroundColor Yellow
+    Write-Host 'Une nouvelle rotation créerait une paire supplémentaire et aggraverait la divergence.' -ForegroundColor Yellow
+    Write-Host 'Rétablissez d-abord la convergence (GET /api/admin/diagnostics → licenseKey.converged),' -ForegroundColor Yellow
+    Write-Host 'puis supprimez ce fichier à la main.' -ForegroundColor Yellow
+    exit 50
+}
+
 # ── Lot B : garde-fous d'entrée AVANT tout effet de bord (run-dir) ───────────────
 if (-not [string]::IsNullOrWhiteSpace($script:GfRestorePath)) {
     try { Invoke-GfLocalRestore -RestoreDir $script:GfRestorePath; exit 0 }
@@ -2427,6 +2705,11 @@ if ($script:GfDryRun) {
 }
 
 try {
+    # AVANT TOUT : prouver que l'entrée standard arrive octet pour octet. Une
+    # valeur précédée d'un préambule UTF-8 est acceptée par Vercel, INVISIBLE
+    # partout, et met le déploiement à terre (incident du 2026-08-16). Cet
+    # auto-test échoue ici, où rien n'a encore été muté.
+    Test-StdinTransport
     Test-EnvPullParsingRegression
     Test-RemoteEnvironmentIsolationRegression
     Write-Host '================================================================' -ForegroundColor Cyan
@@ -2851,11 +3134,26 @@ try {
         }
         Write-Host '[OK] Nouveau déploiement protégé : /api/health = status ok.' -ForegroundColor Green
 
+        # « status ok » ne prouve que la joignabilité de la base. La porte
+        # suivante est celle qui manquait le 2026-08-16 : elle compare, valeur
+        # par valeur, ce que la fonction déployée reçoit RÉELLEMENT à ce qui a
+        # été envoyé, et refuse une paire de licence incohérente.
+        Assert-DeployedConvergence `
+            -DeploymentUrl ([string]$deploy.DeploymentUrl) `
+            -ApiKey ([string]$newValues['GARAGEFLOW_API_KEY']) `
+            -ExpectedValues $newValues
+
         if (-not (Test-ProtectedApiKeyEndpoint -DeploymentUrl ([string]$deploy.DeploymentUrl) -ApiKey ([string]$newValues['GARAGEFLOW_API_KEY']))) {
             $apiKeyDiag = if (-not [string]::IsNullOrWhiteSpace([string]$script:LastApiKeyDiag)) { ' ' + [string]$script:LastApiKeyDiag } else { '' }
             throw "La nouvelle GARAGEFLOW_API_KEY n-a pas passé le test runtime sur le déploiement Production (le check /api/health a réussi via vercel curl, donc la Deployment Protection n-est PAS en cause).$apiKeyDiag"
         }
         [void](Test-LicenseActivationRateLimit -DeploymentUrl ([string]$deploy.DeploymentUrl))
+
+        # Toutes les portes sont vertes sur un déploiement que PERSONNE ne sert
+        # encore. C'est seulement maintenant que le public a le droit de le voir.
+        Publish-VerifiedDeployment `
+            -DeploymentUrl ([string]$deploy.DeploymentUrl) `
+            -PublicUrl ([string]$newValues['GF_APP_URL'])
 
         # La rotation est validée côté runtime : invalider maintenant les anciennes
         # licences afin qu'aucun recordMac ni jeton signé avec les anciennes clés ne subsiste.
@@ -2921,38 +3219,87 @@ try {
     }
 } catch {
     Write-Host "[ERREUR] $($_.Exception.Message)" -ForegroundColor Red
+
+    # ── CE BLOC A CAUSÉ L'INCIDENT DU 2026-08-16 ────────────────────────────────
+    # Il restaurait INCONDITIONNELLEMENT les fichiers source patchés. Or la
+    # nouvelle clé privée était déjà engagée dans Vercel Production. Résultat :
+    # Production signait avec la NOUVELLE paire pendant que le projet local
+    # vérifiait avec l'ANCIENNE — et comme keys/*.pem n'avait pas de sauvegarde
+    # (le dossier était vide avant le run), le poste s'est même retrouvé en
+    # désaccord avec lui-même. Un « rollback » qui ne ramène qu'un seul des deux
+    # côtés ne restaure rien : il fabrique une divergence.
+    #
+    # RÈGLE : une fois l'état distant muté, AUCUNE restauration cryptographique
+    # locale automatique. On préserve les deux états et on exige un diagnostic.
+    $etatFinal = 'ECHEC_AVANT_MUTATION'
+    $codeSortie = 40
+
     if ($remoteMutationStarted) {
-        Write-Host '[SÉCURITÉ] Aucun rollback automatique destructif : les variables n-ont pas été supprimées avant la mise à jour.' -ForegroundColor Yellow
-        Write-Host '[SÉCURITÉ] Les valeurs actuellement présentes dans Vercel sont conservées pour permettre le diagnostic.' -ForegroundColor Yellow
-        # Vercel ne permet pas de relire une variable sensible : sa valeur
-        # précédente est définitivement perdue, donc AUCUN rollback distant n'est
-        # possible. Le local, lui, vient d'être restauré sur l'ancienne paire :
-        # les deux côtés divergent et toute licence sera rejetée tant que
-        # l'opérateur n'a pas tranché. On le dit explicitement plutôt que de
-        # laisser découvrir la panne à la première activation.
-        Write-Host '[ATTENTION] DIVERGENCE DE CLÉ : Production porte la NOUVELLE paire, le projet local a été restauré sur l ANCIENNE.' -ForegroundColor Red
-        Write-Host '[ATTENTION] Pour converger : copiez keys/public.pem de la sauvegarde du run, puis « npm run keys:sync » et redéployez.' -ForegroundColor Red
-        Write-Host "[ATTENTION] Paire poussée en Production : $keyPairDir" -ForegroundColor Red
-    }
-    if (Test-Path -LiteralPath $localEnvBackup) { Copy-Item -LiteralPath $localEnvBackup -Destination $localEnvPath -Force }
-    if (Test-Path -LiteralPath $keygenBackup) { Copy-Item -LiteralPath $keygenBackup -Destination $keygenPath -Force }
-    foreach ($psb in $script:PatchedSourceBackups) {
-        if ($psb -and (Test-Path -LiteralPath $psb.Backup)) {
-            Copy-Item -LiteralPath $psb.Backup -Destination $psb.Original -Force
-            Write-Host "[ROLLBACK] Fichier source restauré : $($psb.Original)" -ForegroundColor Yellow
+        $etatFinal = 'RECOVERY_REQUIRED'
+        $codeSortie = 50
+        Write-Host ''
+        Write-Host '================================================================' -ForegroundColor Red
+        Write-Host ' REMOTE_STATE_MUTATED — RECOVERY_REQUIRED — DO_NOT_RERUN_ROTATION' -ForegroundColor Red
+        Write-Host '================================================================' -ForegroundColor Red
+        Write-Host '[ÉTAT] Vercel Production porte DÉJÀ les nouvelles valeurs (dont GF_PRIVATE_KEY).' -ForegroundColor Red
+        Write-Host '[ÉTAT] Vercel ne permet pas de relire un secret : les anciennes valeurs sont DÉFINITIVEMENT perdues.' -ForegroundColor Red
+        Write-Host '[ÉTAT] Aucun rollback distant n-est donc possible. Relancer une rotation AGGRAVERAIT la situation.' -ForegroundColor Red
+        Write-Host ''
+        Write-Host '[CONSERVÉ] La nouvelle paire de licence est intacte et reste la source de vérité :' -ForegroundColor Yellow
+        Write-Host "           $keyPairDir" -ForegroundColor Yellow
+        Write-Host '[CONSERVÉ] Les fichiers source LOCAUX ne sont PAS restaurés : ils portent la même paire que Production.' -ForegroundColor Yellow
+        Write-Host ''
+        Write-Host '[SUITE] 1. Diagnostiquer l-échec ci-dessus (santé du déploiement, base, Redis).' -ForegroundColor Cyan
+        Write-Host '[SUITE] 2. Corriger la cause, puis redéployer SANS régénérer de paire.' -ForegroundColor Cyan
+        Write-Host '[SUITE] 3. Vérifier la convergence : GET /api/admin/diagnostics (licenseKey.converged doit valoir true).' -ForegroundColor Cyan
+        Write-Host ''
+    } else {
+        # Rien n'a été muté à distance : la restauration locale est intégrale et
+        # sûre. C'est le SEUL cas où elle a du sens.
+        Write-Host '[LOCAL_RESTORE_ONLY] Aucune mutation distante n-a eu lieu : restauration locale intégrale.' -ForegroundColor Yellow
+        if (Test-Path -LiteralPath $localEnvBackup) { Copy-Item -LiteralPath $localEnvBackup -Destination $localEnvPath -Force }
+        if (Test-Path -LiteralPath $keygenBackup) { Copy-Item -LiteralPath $keygenBackup -Destination $keygenPath -Force }
+        foreach ($psb in $script:PatchedSourceBackups) {
+            if ($psb -and (Test-Path -LiteralPath $psb.Backup)) {
+                Copy-Item -LiteralPath $psb.Backup -Destination $psb.Original -Force
+                Write-Host "[ROLLBACK] Fichier source restauré : $($psb.Original)" -ForegroundColor Yellow
+            }
         }
     }
+
+    # Verrou : un second lancement doit REFUSER de démarrer tant que l'opérateur
+    # n'a pas levé cet état à la main.
+    if ($remoteMutationStarted) {
+        try {
+            $verrou = [pscustomobject]@{
+                runId          = [IO.Path]::GetFileName($runDir)
+                etat           = 'RECOVERY_REQUIRED'
+                date           = [DateTime]::UtcNow.ToString('o')
+                projet         = "$($script:VercelProject.Name)"
+                paireCandidate = "$keyPairDir"
+                erreur         = "$($_.Exception.Message)"
+            } | ConvertTo-Json -Depth 4
+            [IO.File]::WriteAllText((Join-Path $script:ProjectRoot 'rotation.lock'), $verrou, $script:Utf8NoBom)
+            Write-Host "[VERROU] rotation.lock écrit — toute nouvelle rotation sera refusée jusqu-à sa suppression manuelle." -ForegroundColor Yellow
+        } catch {
+            Write-Host "[ATTENTION] Verrou rotation.lock non écrit : $($_.Exception.Message)" -ForegroundColor Yellow
+        }
+    }
+
     $failureSummary = @(
         'GarageFlows - Rotation cryptographique totale',
         "Date : $([DateTime]::UtcNow.ToString('o'))",
         "Projet : $($script:VercelProject.Name)",
         'Environnement : production',
-        'Résultat : ÉCHEC - aucun rollback destructif effectué',
+        "Résultat : $etatFinal",
+        "Code de sortie : $codeSortie",
+        "Mutation distante engagée : $remoteMutationStarted",
+        "Restauration cryptographique locale : $(if ($remoteMutationStarted) { 'AUCUNE (volontaire — voir RECOVERY_REQUIRED)' } else { 'intégrale' })",
         "Erreur : $($_.Exception.Message)"
     )
     [IO.File]::WriteAllLines((Join-Path $runDir 'rapport-validation.txt'), [string[]]$failureSummary, $script:Utf8NoBom)
     Write-Host "[INFO] Rapport et sauvegardes : $runDir" -ForegroundColor Yellow
-    exit 1
+    exit $codeSortie
 } finally {
     $env:GF_CONFIGURER_API_TEST_MODE = $null
     # Une interruption (Ctrl+C sur une invite Read-Host, fermeture de la console)

@@ -57,6 +57,12 @@ keys/*.json
 keys/licenses_db.json
 keys/server_config.json
 
+# État d'une rotation interrompue APRÈS mutation de Vercel. Propre au poste et à
+# l'incident en cours : le versionner ferait refuser la rotation sur toutes les
+# machines du dépôt, longtemps après la résolution. Voir
+# docs/ROTATION-INCIDENT-2026-08-16.md.
+rotation.lock
+
 # Generated icons (keep SVG source, not binaries)
 # icon.ico
 # icon.png

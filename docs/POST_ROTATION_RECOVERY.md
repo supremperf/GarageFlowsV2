@@ -1,5 +1,51 @@
 # Récupération après la rotation totale des secrets Production
 
+## ⚠️ Séquence obligatoire depuis le 2026‑08‑16
+
+> L'incident du 2026‑08‑16 (`docs/ROTATION-INCIDENT-2026-08-16.md`) a montré que
+> l'ordre « MUTER → DÉPLOYER → ESPÉRER » fabrique des divergences irrécupérables.
+> **Toute rotation suit désormais cette séquence, sans exception :**
+>
+> ```
+> PRÉFLIGHT          →  reset-garageflow.ps1 -SelfTest        (aucune mutation)
+> PRÉPARER           →  paire + valeurs candidates, hors Git, hors Vercel
+> POUSSER            →  variables Vercel (transport vérifié octet pour octet)
+> DÉPLOYER CANDIDAT  →  vercel deploy --prod --skip-domain    ← PAS de promotion
+> VÉRIFIER           →  GET /api/admin/diagnostics   sur le CANDIDAT
+> PROMOUVOIR         →  vercel promote <url>         ← seulement si tout est vert
+> ```
+>
+> **La vérification ne passe ni par `vercel env pull` (qui rend `[SENSITIVE]`),
+> ni par `vercel env run` (qui charge les `.env` locaux et mesure donc la valeur
+> SQLite du poste, pas Neon).** Le seul canal fiable est l'endpoint déployé
+> `GET /api/admin/diagnostics` : il observe ce que la fonction reçoit réellement.
+>
+> Trois portes doivent être vertes avant `vercel promote` :
+>
+> | Contrôle | Attendu |
+> |---|---|
+> | `/api/health` avec `x-gf-key` | `checks` : `process`/`environment`/`database`/`redis`/`migrations` = `pass` |
+> | `/api/admin/diagnostics` | `licenseKey.converged: true`, et aucune variable dont `invisibles` est non vide |
+> | Aller‑retour licence | `POST /api/admin/licenses/create` d'un jeton frais → **201** ; un jeton signé par une AUTRE clé → **400** |
+>
+> **Si le déploiement échoue APRÈS l'écriture des variables**, le script n'annule
+> plus rien localement : il écrit `rotation.lock`, sort en **50** et affiche
+> `REMOTE_STATE_MUTATED / RECOVERY_REQUIRED / DO_NOT_RERUN_ROTATION`. Ne relancez
+> jamais une rotation dans cet état — corrigez la cause et redéployez **avec la
+> même paire**.
+
+---
+
+## Historique — rotation du 2026‑08‑04
+
+> **`HISTORICAL`.** La section 3 ci‑dessous conseille de « revenir à l'ancienne
+> paire ». Ce conseil ne vaut **que** si la clé privée de cette paire est encore
+> en votre possession. Le 2026‑08‑16 elle ne l'était pas : revenir en arrière
+> aurait figé le produit — les licences déjà émises auraient survécu, mais plus
+> aucune n'aurait jamais pu être signée. **Vérifiez d'abord que vous détenez la
+> clé privée visée** (`npm run keys:check`, et l'empreinte de
+> `keys/private.pem`).
+
 > À lire AVANT tout redéploiement réussi. La rotation du 2026‑08‑04 a remplacé,
 > dans Vercel Production, des clés « au repos » **sans procédure de migration**.
 > Tant qu'aucun build n'a réussi, la production tourne encore sur l'ancien build

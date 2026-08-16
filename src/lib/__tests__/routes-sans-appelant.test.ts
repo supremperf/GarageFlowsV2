@@ -79,6 +79,21 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
   '/api/admin/backups/[id]/restore': { motif: 'exploitation', note: 'restauration : geste délibérément sans bouton, jamais à un clic' },
   '/api/admin/backups/[id]/verify': { motif: 'exploitation', note: 'contrôle d’intégrité d’une archive, lancé à la main' },
 
+  // ── Porte de vérification d'une rotation de secrets ───────────────────────
+  // DÉCLENCHEUR RÉEL : `Assert-DeployedConvergence` dans
+  // scripts/reset-garageflow.ps1, appelée juste après le contrôle /api/health et
+  // AVANT toute promotion. Aucun écran ne l'appelle, et c'est voulu : elle
+  // répond à une question que seule la fonction déployée peut trancher — « la
+  // valeur que je reçois est-elle exactement celle qui a été envoyée ? ».
+  // Ni `vercel env pull` (qui rend « [SENSITIVE] ») ni `vercel env run` (qui
+  // charge les .env locaux) ne peuvent y répondre. Le 2026-08-16, faute de cette
+  // route, treize variables Production ont porté un U+FEFF invisible pendant
+  // vingt minutes sans que rien ne le signale.
+  '/api/admin/diagnostics': {
+    motif: 'exploitation',
+    note: 'appelée par Assert-DeployedConvergence (scripts/reset-garageflow.ps1) après déploiement, et par l’exploitant lors d’un diagnostic ; ne renvoie que des empreintes, jamais une valeur',
+  },
+
   // ── Angle mort de la recherche : URL assemblée à l'exécution ──────────────
   '/api/invoices/[id]': {
     motif: 'chemin-calcule',
