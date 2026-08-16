@@ -48,20 +48,50 @@ export default function MechanicJobPage({ params }: { params: { id: string } }) 
   const [noteType, setNoteType] = useState('comment')
   const [noteBody, setNoteBody] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  /**
+   * Cliché réduit qui n'a PAS pu partir.
+   *
+   * Une photo prise hors ligne était purement détruite : le fichier d'entrée est
+   * vidé dès la sélection (`e.target.value = ''`), et l'échec d'envoi ne laissait
+   * rien. Le mécanicien devait ressortir, reprendre la photo — parfois d'un
+   * véhicule déjà remonté sur le pont. On garde donc le cliché en mémoire et on
+   * propose de le renvoyer.
+   *
+   * Limite assumée : c'est de la MÉMOIRE, pas une file persistante. Quitter
+   * l'écran perd le cliché ; le dire est plus honnête que de laisser croire à
+   * une file d'attente qui n'existe pas.
+   */
+  const [photoEnAttente, setPhotoEnAttente] = useState<string | null>(null)
 
   // Détail VIVANT : commentaires, checklist et statut suivent les modifications
   // faites côté garage. Si l'intervention est RÉAFFECTÉE à un autre mécanicien,
   // le serveur répond 404 et l'on revient au planning : l'accès est retiré sans
   // reconnexion ni rechargement.
-  const { data: detail, error: liveError, loading, refresh } = useMechanicLive<Detail>(
-    `/api/mechanic/jobs/${params.id}`,
-    { onGone: () => router.replace('/mechanic') },
-  )
+  const { data: detail, error: liveError, loading, refresh, echecsConsecutifs, invalider } =
+    useMechanicLive<Detail>(
+      `/api/mechanic/jobs/${params.id}`,
+      { onGone: () => router.replace('/mechanic') },
+    )
   const load = useCallback(() => { refresh() }, [refresh])
   const error = actionError || liveError
   const setError = setActionError
 
+  /**
+   * Préparer une action : effacer l'erreur PRÉCÉDENTE et écarter la lecture en vol.
+   *
+   * Deux défauts en un. L'erreur d'action n'était jamais effacée : un échec
+   * passager masquait ensuite l'état réel de l'écran, indéfiniment. Et les
+   * mutations ne passent pas par la boucle : une lecture partie AVANT l'action
+   * pouvait revenir APRÈS et réafficher l'état d'avant — le geste du mécanicien
+   * semblait alors sans effet.
+   */
+  const avantAction = useCallback(() => {
+    setActionError('')
+    invalider()
+  }, [invalider])
+
   async function timer(action: 'start' | 'pause' | 'resume' | 'stop') {
+    avantAction()
     setBusy(true)
     try { await mechFetch(`/api/mechanic/jobs/${params.id}/timer`, { method: 'POST', body: JSON.stringify({ action }) }); load() }
     catch (e) { setError((e as Error).message) } finally { setBusy(false) }
@@ -69,6 +99,7 @@ export default function MechanicJobPage({ params }: { params: { id: string } }) 
 
   async function addNote() {
     if (!noteBody.trim() || busy) return
+    avantAction()
     setBusy(true)
     try {
       await mechFetch(`/api/mechanic/jobs/${params.id}/notes`, { method: 'POST', body: JSON.stringify({ type: noteType, body: noteBody.trim() }) })
@@ -90,15 +121,43 @@ export default function MechanicJobPage({ params }: { params: { id: string } }) 
     // ré-encodage en JPEG règle au passage le HEIC des sélecteurs Android, que
     // la validation reconnaît mais que le stockage fichier ignore.
     // Le type réel reste vérifié côté serveur.
+    avantAction()
     setBusy(true)
+    let base64: string
     try {
-      const base64 = await reduirePhoto(file)
+      base64 = await reduirePhoto(file)
+    } catch (e) {
+      setError((e as Error).message)
+      setBusy(false)
+      return
+    }
+    await envoyerPhoto(base64)
+    setBusy(false)
+  }
+
+  /** Envoie un cliché déjà réduit ; le CONSERVE si l'envoi échoue. */
+  async function envoyerPhoto(base64: string) {
+    try {
       await mechFetch(`/api/mechanic/jobs/${params.id}/photos`, { method: 'POST', body: JSON.stringify({ base64, phase: 'during' }) })
+      setPhotoEnAttente(null)
       load()
-    } catch (e) { setError((e as Error).message) } finally { setBusy(false) }
+    } catch (e) {
+      // Le cliché survit à l'échec : c'est tout l'intérêt.
+      setPhotoEnAttente(base64)
+      setError((e as Error).message)
+    }
+  }
+
+  async function renvoyerPhoto() {
+    if (!photoEnAttente || busy) return
+    avantAction()
+    setBusy(true)
+    await envoyerPhoto(photoEnAttente)
+    setBusy(false)
   }
 
   async function setChk(itemId: string, status: string) {
+    avantAction()
     setBusy(true)
     try { await mechFetch(`/api/mechanic/jobs/${params.id}/checklist/${itemId}`, { method: 'PATCH', body: JSON.stringify({ status }) }); load() }
     catch (e) { setError((e as Error).message) } finally { setBusy(false) }
@@ -196,6 +255,22 @@ export default function MechanicJobPage({ params }: { params: { id: string } }) 
           </button>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={onPhoto} className="hidden" />
         </div>
+        {photoEnAttente && (
+          <div className="mb-3 flex items-center gap-3 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photoEnAttente} alt="cliché en attente" className="w-10 h-10 rounded object-cover" />
+            <p className="flex-1 text-[11px] text-amber-200">
+              Cette photo n’est pas partie. Elle est conservée le temps de cet écran.
+            </p>
+            <button
+              onClick={renvoyerPhoto}
+              disabled={busy}
+              className="text-xs font-semibold text-amber-200 border border-amber-500/40 rounded-lg px-2.5 py-1.5 disabled:opacity-50"
+            >
+              Renvoyer
+            </button>
+          </div>
+        )}
         {photos.length === 0 ? (
           <p className="text-xs text-slate-600 py-3 text-center">Aucune photo. Prenez ou importez une photo de l&apos;intervention.</p>
         ) : (

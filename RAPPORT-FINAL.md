@@ -111,8 +111,8 @@ l'exécution s'il est strictement plus récent.
 ## 5. Décompte exact des tests (§133)
 
 ```
-Fichiers de test : 308  →  303 verts, 0 rouge, 5 ignorés
-Tests            : 3557 →  3529 verts, 0 rouge, 28 ignorés
+Fichiers de test : 311  →  306 verts, 0 rouge, 5 ignorés
+Tests            : 3580 →  3552 verts, 0 rouge, 28 ignorés
 Durée            : ~33 s
 ```
 

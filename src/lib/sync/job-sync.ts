@@ -66,6 +66,25 @@ function recule(d: Date | null | undefined): Date | null {
 const dernierSyncedAt = new Map<string, string>()
 
 /**
+ * Empreinte de la FENÊTRE telle qu'elle a été poussée avec succès la dernière
+ * fois : nombre d'interventions et plus récente modification.
+ *
+ * Sans elle, chaque battement de 10 s renvoyait la fenêtre ENTIÈRE (jusqu'à 500
+ * interventions), que quelque chose ait changé ou non. Le cloud réécrivait
+ * alors chaque ligne — `resolveMirrorWrite` rend toujours au moins les champs
+ * de planification —, ce qui remettait leur `updatedAt` à l'heure du serveur,
+ * faisait redescendre la fenêtre entière par la voie de retour, et bougeait à
+ * son tour l'empreinte du battement. Le garage rechargeait donc son planning en
+ * permanence, atelier vide compris, et le seul détecteur de changement du
+ * produit ne détectait plus rien.
+ *
+ * En mémoire, donc remise à zéro au redémarrage : le premier passage repousse
+ * la fenêtre complète. C'est voulu — après un redémarrage, on ne sait pas ce que
+ * le cloud a reçu.
+ */
+const derniereFenetrePoussee = new Map<string, { compte: number; maxUpdatedAt: number }>()
+
+/**
  * Curseurs de la voie de retour — UN PAR FLUX.
  *
  * Commentaires et photos se déduisent des données locales : aucun stockage
@@ -151,6 +170,18 @@ export async function syncGarageJobs(garageId: string, now: Date = new Date()): 
     })
     const deletedIds = tombstones.map((t) => t.jobId)
 
+    // ── Faut-il POUSSER, ou seulement lire ? ────────────────────────────────
+    // La fenêtre est décrite par (nombre, plus récente modification). Inchangée
+    // depuis la dernière poussée confirmée, et sans suppression en attente, il
+    // n'y a rien à annoncer : on demande alors une passe EN LECTURE SEULE, qui
+    // rapatrie le travail du mécanicien sans réécrire quoi que ce soit.
+    const maxUpdatedAt = rows.reduce((m, j) => Math.max(m, j.updatedAt.getTime()), 0)
+    const precedente = derniereFenetrePoussee.get(garageId)
+    const lectureSeule = deletedIds.length === 0
+      && precedente !== undefined
+      && precedente.compte === rows.length
+      && precedente.maxUpdatedAt === maxUpdatedAt
+
     const curseurs = await returnCursors(garageId)
     // Repli pour un serveur antérieur à cette version, qui ne connaît que
     // `since` : on lui donne le plus ancien des curseurs, c'est-à-dire
@@ -163,7 +194,10 @@ export async function syncGarageJobs(garageId: string, now: Date = new Date()): 
       garageLicense: token,
       garageId,
       window,
-      jobs,
+      // Une passe en lecture seule n'annonce AUCUNE intervention : le cloud ne
+      // doit alors ni écrire, ni conclure à une suppression par absence.
+      jobs: lectureSeule ? [] : jobs,
+      pullOnly: lectureSeule,
       deletedIds,
       since: sinceCompat ? sinceCompat.toISOString() : null,
       sinceJobs: curseurs.jobs ? curseurs.jobs.toISOString() : null,
@@ -216,12 +250,23 @@ export async function syncGarageJobs(garageId: string, now: Date = new Date()): 
       dernierSyncedAt.set(garageId, out.data.syncedAt)
     }
 
+    // La fenêtre poussée est désormais celle que le cloud connaît. On ne
+    // mémorise QU'APRÈS confirmation — les refus repartent plus haut, avant ce
+    // point : un envoi rejeté doit être rejoué, pas oublié.
+    //
+    // Écrit aussi sur une passe en lecture seule : les valeurs y sont par
+    // construction identiques à celles déjà mémorisées, donc sans effet. Une
+    // garde `if (!lectureSeule)` aurait été une branche que rien ne peut
+    // distinguer — donc rien ne peut éprouver.
+    derniereFenetrePoussee.set(garageId, { compte: rows.length, maxUpdatedAt })
+
     const { applied: appliedBack, resteAPuiser } =
       await applyCloudChanges(garageId, token, out.data?.changes, decalageMs)
 
     logger.info('[sync/jobs:push] confirmée', {
       garage: shortId(garageId),
-      pushed: jobs.length,
+      mode: lectureSeule ? 'lecture-seule' : 'poussee',
+      pushed: lectureSeule ? 0 : jobs.length,
       applied: Number(out.data?.applied ?? 0),
       deleted: Number(out.data?.deleted ?? 0),
       executionKept: Number(out.data?.executionKept ?? 0),
@@ -389,7 +434,18 @@ async function applyCloudChanges(
  * marquée « à refaire » et part à la fin de celle en cours.
  */
 const pending = new Map<string, { timer: ReturnType<typeof setTimeout> | null; running: boolean; again: boolean }>()
+/**
+ * Regroupement des écritures rapprochées avant une remontée.
+ *
+ * Il servait aussi d'intervalle entre deux ENCHAÎNEMENTS de rattrapage : une
+ * rafale de vingt enchaînements émettait alors une centaine de requêtes en huit
+ * secondes — assez pour vider le seau de limitation partagé par tout le poste,
+ * et faire refuser au garage une action HUMAINE pendant que l'arriéré s'écoule.
+ * Le regroupement reste vif ; les enchaînements, eux, s'espacent.
+ */
 const DEBOUNCE_MS = 400
+/** Intervalle entre deux enchaînements de rattrapage — voir DEBOUNCE_MS. */
+const ENCHAINEMENT_MS = 2_000
 
 export function scheduleJobSync(garageId: string | null | undefined): void {
   if (!garageId || !isDesktopInstance()) return
@@ -470,7 +526,7 @@ async function runNow(garageId: string, enchainement = 0): Promise<void> {
       state.again = false
       scheduleJobSync(garageId)
     } else if (reste && enchainement < MAX_ENCHAINEMENTS) {
-      state.timer = setTimeout(() => { void runNow(garageId, enchainement + 1) }, DEBOUNCE_MS)
+      state.timer = setTimeout(() => { void runNow(garageId, enchainement + 1) }, ENCHAINEMENT_MS)
     }
   }
 }

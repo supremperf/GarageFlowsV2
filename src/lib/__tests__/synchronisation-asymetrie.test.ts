@@ -114,7 +114,20 @@ describe('sens PWA → poste : sondage d’EMPREINTE, pas de données (GF-DUR-04
     // Un écran d'atelier passe des heures masqué : y sonder viderait le quota
     // pour rien.
     expect(poste).toMatch(/if \(!document\.hidden\)/)
-    expect(poste).toMatch(/document\.hidden\) battre\(\)/)
+    // Le gestionnaire de visibilité refuse d'agir quand l'écran est masqué. La
+    // formulation exacte n'est plus figée : elle tenait sur une ligne, elle
+    // tient désormais sur plusieurs depuis qu'elle annule aussi le minuteur.
+    expect(poste).toMatch(/document\.hidden\)\s*return/)
+  })
+
+  it('un retour au premier plan REMPLACE la chaîne, il n’en ajoute pas une', () => {
+    // `battre()` se replanifie lui-même. Sans annuler le minuteur en vol, chaque
+    // bascule arrière-plan → premier plan engendrait une chaîne indépendante :
+    // vingt bascules dans la journée = 126 req/min au lieu de 6, jusqu'à ce que
+    // le poste atteigne son propre quota et refuse le travail du garage.
+    const gestionnaire = poste.slice(poste.indexOf('const auRetour'))
+    const corps = gestionnaire.slice(0, gestionnaire.indexOf('document.addEventListener'))
+    expect(corps, 'le minuteur en vol doit être annulé avant de rebattre').toMatch(/clearTimeout\(minuteur\)/)
   })
 
   it('l’empreinte ne divulgue NI donnée métier NI volumétrie', () => {

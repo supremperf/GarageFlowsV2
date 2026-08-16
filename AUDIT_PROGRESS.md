@@ -2292,3 +2292,177 @@ Suite : **3 529 verts / 0 rouge / 28 ignorés (3 557)** · `tsc` 0 · ESLint 0 �
   grâce hors ligne, sonde d'identité, conseil de migration) sont éprouvés par
   leurs modules extraits et par analyse syntaxique ; l'exécution dans
   l'application packagée reste à faire.
+
+---
+
+## 16/08/2026 — LOT 5 : le temps réel, ce qu'il promettait et ce qu'il coûtait
+
+### Méthode
+
+Quatre lecteurs (latence, coût, correction de la boucle, cohérence de l'écran)
+puis un réfutateur par dimension : **33 défauts allégués, 28 confirmés, 5
+réfutés**. J'y ai ajouté une mesure que la lecture de code ne pouvait pas donner.
+
+### La mesure qui recadre tout
+
+`/api/jobs/pulse` exécute quatre agrégats `COUNT(*) + MAX(updatedAt)`. Aucun
+index ne couvre `(garageId, updatedAt)`. Sur 20 000 interventions / 4 garages :
+
+```
+plan  : SEARCH Job USING INDEX Job_garageId_status_idx   1,19 ms/agrégat
+avec  : SEARCH Job USING COVERING INDEX (garageId, updatedAt)   0,51 ms  (2,3×)
+```
+
+Mais cette optimisation aurait été une erreur de priorité : le coût dominant
+n'était pas l'empreinte, c'était **ce qu'elle déclenchait**. L'index reste
+proposé, non posé — il touche les deux schémas, et il fallait d'abord supprimer
+le travail inutile plutôt que l'accélérer.
+
+### Corrigé
+
+**1. Le battement republiait TOUT le planning six fois par minute.**
+`/api/jobs/pulse` appelle `pollJobSync` à chaque battement, et sa garde de
+cadence vaut exactement la période du battement (10 s). Or `syncGarageJobs` ne
+remontait pas un delta : il relisait la fenêtre [J−7, J+30] entière — jusqu'à
+500 interventions — et la renvoyait, changée ou non. Le cloud réécrivait alors
+chaque ligne, ce qui remettait son `updatedAt` à l'heure du serveur ; la fenêtre
+redescendait par la voie de retour et **bougeait à son tour l'empreinte du
+battement**. Le comptoir rechargeait donc son planning en permanence, atelier
+vide compris : le seul détecteur de changement du produit ne détectait plus rien.
+
+Une passe en **LECTURE SEULE** a été introduite : quand la fenêtre n'a pas bougé
+depuis la dernière remontée confirmée et qu'aucune suppression n'attend, le poste
+n'annonce aucune intervention. Deux garde-fous, sans lesquels le remède serait
+pire que le mal :
+
+- le cloud ne conclut PAS à une suppression sur une charge utile vide — elle est
+  vide parce qu'elle est vide, pas parce que le planning a disparu ;
+- la voie de retour se borne alors à la fenêtre du MIROIR, sinon la passe ne
+  rapatrierait rien, c'est-à-dire exactement ce qu'elle existe pour faire.
+
+**2. Chaque retour au premier plan AJOUTAIT une chaîne de battement.**
+`battre()` se replanifie lui-même ; le gestionnaire de visibilité l'appelait sans
+annuler le minuteur en vol. Vingt bascules dans la journée = vingt et une
+chaînes = 126 req/min au lieu de 6. Le poste finissait par atteindre son propre
+quota (120 req/min, sujet partagé sous Electron) et le garage recevait « Trop de
+requêtes » en enregistrant une intervention — sans qu'aucune action humaine ne
+l'explique.
+
+**3. Le battement ÉCRASAIT le formulaire en cours de saisie.** `editingJob` vient
+d'un `find` non mémoïsé : chaque rechargement en fait un objet neuf, l'effet
+d'initialisation se rejouait et `setForm(editingJob)` remplaçait ce que le
+garagiste était en train de taper. L'initialisation a désormais lieu une fois par
+ouverture et par intervention éditée. Le mécanicien par défaut, lui, est complété
+séparément — et seulement si le champ est encore vide.
+
+**4. `onGone` n'a JAMAIS été appelé.** La détection cherchait
+`/introuvable|not found|404/` dans le TEXTE, alors que les routes répondent
+« Intervention non accessible. ». Un mécanicien dont l'intervention venait d'être
+réaffectée restait sur un écran mort. La décision se prend maintenant sur le
+STATUT : le libellé change avec la traduction, le statut est un contrat.
+
+**5. Une requête sans réponse tuait la boucle.** `inFlight` n'est relâché que
+dans le `finally` : une connexion ouverte puis silencieuse — cas courant quand un
+mobile bascule de réseau — le laissait à vrai pour toujours. Plus aucun appel,
+plus aucune replanification, aucune erreur affichée. L'attente est bornée à 20 s.
+
+### Vérification
+
+Suite : **3 543 verts / 0 rouge / 28 ignorés (3 571)** · `tsc` 0 · ESLint 0 ·
+13 gardes vertes. **+14 tests** ; **13 mutations sur 14 détectées** — la
+quatorzième portait sur une garde réellement inerte, que j'ai supprimée plutôt
+que de conserver du code qu'aucun test ne peut distinguer.
+
+Deux gardes de source ont été REFORMULÉES, pas affaiblies : elles figeaient une
+écriture exacte (`if (!truncated && …)`, `document.hidden) battre()`) et
+interdisaient d'ajouter une protection. Elles exigent désormais l'intention, et
+l'une d'elles a été complétée par la garantie nouvelle.
+
+### Reste dû
+
+Confirmés, non traités — les plus notables :
+
+- une réponse de la date PRÉCÉDENTE peut être appliquée à la date affichée
+  (le compteur de séquence est du code mort : il n'est pas incrémenté au bon
+  endroit) ;
+- l'écran RECULE dans le temps après une action : les mutations ne passent pas
+  par la boucle, une réponse pré-mutation peut donc écraser le résultat ;
+- aucun indicateur de péremption quand le réseau tombe sans qu'une requête
+  échoue ; l'erreur d'action n'est jamais effacée ;
+- une photo prise hors ligne est détruite — aucune file d'attente d'écriture ;
+- l'overlay de licence sonde toutes les 3 s en permanence ;
+- deux des quatre agrégats du battement ne sont bornés ni par une date ni par un
+  index ;
+- la rafale de rattrapage (20 enchaînements à 400 ms) sature à elle seule un
+  seau de limitation ;
+- démarrer ou arrêter le chronomètre depuis le comptoir ne déclenche aucune
+  synchronisation.
+
+---
+
+## 16/08/2026 — LOT 5 (fin) : les huit constats restants
+
+### Corrigés
+
+**1. Une réponse de la date PRÉCÉDENTE pouvait s'appliquer à la date affichée.**
+`mySeq !== seq.current` ne protégeait que des appels concurrents du MÊME url : le
+nettoyage de l'effet ne faisait qu'annuler le minuteur. Changer de jour laissait
+donc la réponse de la veille s'écrire sous la nouvelle date. Le nettoyage
+invalide désormais ce qui est en vol.
+
+**2. L'écran RECULAIT dans le temps après une action.** Les quatre mutations
+(chrono, commentaire, photo, checklist) ne passent pas par la boucle : une
+lecture partie AVANT l'action revenait APRÈS et réaffichait l'état d'avant — le
+geste du mécanicien semblait sans effet. Le hook expose `invalider()`, que
+chaque action appelle avant de partir.
+
+**3. L'erreur d'action n'était JAMAIS effacée** — un échec passager masquait
+ensuite l'état réel de l'écran, indéfiniment. Effacée à chaque tentative.
+
+**4. Rien ne disait que l'affichage était PÉRIMÉ.** `LiveState` portait les
+échecs consécutifs, mais dans une ref : l'écran ne pouvait pas les lire. Ils sont
+exposés, et la liste affiche « à jour à hh:mm » dès le premier échec. Un planning
+ancien ne se présente plus comme un planning frais.
+
+**5. Une photo prise hors ligne était DÉTRUITE.** Le champ fichier est vidé dès
+la sélection ; l'échec d'envoi ne laissait rien. Le mécanicien devait reprendre
+le cliché — parfois d'un véhicule déjà remonté sur le pont. Le cliché réduit est
+conservé et un bouton « Renvoyer » apparaît. **Limite assumée et écrite dans le
+code** : c'est de la mémoire d'écran, pas une file persistante ; quitter l'écran
+perd le cliché. Le dire vaut mieux que laisser croire à une file qui n'existe pas.
+
+**6. L'overlay de licence sondait toutes les 3 s en permanence**, écran masqué
+compris — à lui seul un tiers du quota partagé par tout le poste. Il s'abstient
+en arrière-plan ; le retour au premier plan garde son contrôle immédiat.
+
+**7. Deux des quatre agrégats du battement n'étaient bornés ni par une date ni
+par un index** : chaque battement relisait tout l'historique de commentaires et
+de photos du garage, six fois par minute. Bornés à 60 jours — ce qui est détecté
+ici est une NOUVEAUTÉ, donc récente par construction.
+
+**8. La rafale de rattrapage saturait un seau de limitation** : vingt
+enchaînements à 400 ms, soit une centaine de requêtes en huit secondes, de quoi
+faire refuser au garage une action HUMAINE pendant l'écoulement. Le regroupement
+d'écritures reste à 400 ms ; les enchaînements passent à 2 s.
+
+**Bonus.** Démarrer ou arrêter le chronomètre depuis le comptoir ne déclenchait
+aucune synchronisation — la seule écriture d'intervention à l'oublier. Le
+mécanicien voyait « Prévu » alors que le travail était lancé.
+
+### Vérification
+
+Suite : **3 552 verts / 0 rouge / 28 ignorés (3 580)** · `tsc` 0 · ESLint 0 ·
+13 gardes vertes. **+9 tests** ; **5 mutations sur 5 détectées**.
+
+Un avertissement ESLint est neutralisé explicitement (`exhaustive-deps` sur la
+lecture d'une ref au nettoyage) : la règle vise les refs pointant un nœud du DOM,
+ici c'est un compteur de génération dont on veut précisément la valeur à cet
+instant. Le motif est écrit à côté de la dérogation.
+
+### Réserve
+
+Ces corrections touchent des composants React que le dépôt ne sait pas monter
+(environnement `node`, pas de testing-library). Les tests portent donc sur les
+briques exécutables et sur la présence des gardes dans la source. Le rendu réel
+— bandeau de péremption, bouton « Renvoyer », absence d'écrasement de saisie —
+reste `NOT_VERIFIED` tant qu'aucune recette en navigateur ne l'a exercé.

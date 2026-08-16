@@ -132,6 +132,22 @@ describe('GF31-AUD-017 / GF-030 — un curseur de retour PAR FLUX', () => {
     const path = await import('node:path')
     const src = readFileSync(path.resolve(__dirname, '../../../app/api/sync/jobs/route.ts'), 'utf8')
     expect(src).toContain('const truncated = body.truncated === true')
-    expect(src).toContain('if (!truncated && staleIds.length > 0)')
+    // La garde s'est ENRICHIE le 16/08/2026 d'une seconde condition (passe en
+    // lecture seule) : on exige toujours `!truncated`, sans figer les voisines.
+    // Une comparaison textuelle exacte aurait interdit d'ajouter une protection.
+    expect(src).toMatch(/if \([^)]*!truncated[^)]*&& staleIds\.length > 0\)/)
+  })
+
+  it('le cloud ne purge PAS non plus sur une passe en LECTURE SEULE', async () => {
+    // Une charge utile vide l'est parce qu'elle est vide, pas parce que les
+    // interventions ont disparu : conclure à une suppression effacerait le
+    // planning entier du garage au premier battement sans changement.
+    const { readFileSync } = await import('node:fs')
+    const path = await import('node:path')
+    const src = readFileSync(path.resolve(__dirname, '../../../app/api/sync/jobs/route.ts'), 'utf8')
+    expect(src).toMatch(/if \([^)]*!lectureSeule[^)]*&& staleIds\.length > 0\)/)
+    // …et la voie de retour reste bornée à la fenêtre du MIROIR, sans quoi la
+    // passe ne rapatrierait rien — c'est-à-dire ce qu'elle existe pour faire.
+    expect(src).toContain('lectureSeule ? existing.map((j) => j.id) : jobs.map((j) => j.id)')
   })
 })

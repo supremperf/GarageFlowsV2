@@ -82,6 +82,16 @@ export const GET = withAuth(async (req) => {
   // le paramètre client ne peut que restreindre, jamais élargir.
   const ouJobs = { garageId, ...(date ? { date } : {}) }
 
+  /**
+   * Horizon des flux du mécanicien (commentaires, photos).
+   *
+   * Large au point d'être insensible à un poste resté éteint plusieurs jours,
+   * et borné au point de ne pas relire six mois d'historique six fois par
+   * minute. La voie de retour, elle, porte ses propres curseurs : cet horizon ne
+   * sert qu'à DÉTECTER, jamais à décider ce qui est rapatrié.
+   */
+  const depuis = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000)
+
   // Agrégats seulement. `_max.updatedAt` bouge à toute modification, et le
   // compte capte créations et suppressions : ensemble ils détectent tout ce que
   // le planning affiche, sans lire une seule ligne.
@@ -92,8 +102,19 @@ export const GET = withAuth(async (req) => {
   const [jobs, mecas, notes, photos] = await Promise.all([
     prisma.job.aggregate({ where: ouJobs, _count: { _all: true }, _max: { updatedAt: true } }),
     prisma.mechanic.aggregate({ where: { garageId }, _count: { _all: true }, _max: { updatedAt: true } }),
-    prisma.jobMechanicNote.aggregate({ where: { garageId }, _count: { _all: true }, _max: { createdAt: true } }),
-    prisma.jobPhoto.aggregate({ where: { garageId }, _count: { _all: true }, _max: { createdAt: true } }),
+    // Bornés dans le TEMPS, comme les interventions le sont par la date. Sans
+    // borne, ces deux agrégats parcouraient tout l'historique du garage à chaque
+    // battement — six fois par minute, indéfiniment croissant. Or ce qui est
+    // détecté ici est une NOUVEAUTÉ : elle est nécessairement récente, et une
+    // note vieille de six mois ne peut pas apparaître maintenant.
+    prisma.jobMechanicNote.aggregate({
+      where: { garageId, createdAt: { gte: depuis } },
+      _count: { _all: true }, _max: { createdAt: true },
+    }),
+    prisma.jobPhoto.aggregate({
+      where: { garageId, createdAt: { gte: depuis } },
+      _count: { _all: true }, _max: { createdAt: true },
+    }),
   ])
 
   const brut = [

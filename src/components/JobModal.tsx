@@ -128,9 +128,27 @@ export default function JobModal() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobModalMode, editingJob?.id, isJobModalOpen])
 
+  /**
+   * Ce pour quoi le formulaire a DÉJÀ été initialisé.
+   *
+   * Sans ce repère, l'effet ci-dessous se rejouait à chaque changement de
+   * référence de `editingJob` — or `editingJob` vient d'un `jobs.find(...)` non
+   * mémoïsé, donc c'est un objet NEUF à chaque rendu du parent. Le battement de
+   * 10 s recharge le planning, le parent se rend, l'effet se rejoue et
+   * `setForm(editingJob)` REMPLAÇAIT ce que le garagiste était en train de
+   * taper. Même chose en création à chaque rafraîchissement des mécaniciens.
+   *
+   * L'initialisation doit avoir lieu une fois par ouverture et par intervention
+   * éditée — pas à chaque fois que le serveur répond.
+   */
+  const initialisePour = useRef<string | null>(null)
+
   // Initialize form
   useEffect(() => {
-    if (!isJobModalOpen) return
+    if (!isJobModalOpen) { initialisePour.current = null; return }
+    const cle = jobModalMode === 'edit' ? `edit:${editingJob?.id ?? ''}` : 'create'
+    if (initialisePour.current === cle) return
+    initialisePour.current = cle
     if (jobModalMode === 'edit' && editingJob) {
       setForm(editingJob)
       setPlateSearch(editingJob.licensePlate || '')
@@ -155,6 +173,22 @@ export default function JobModal() {
     setActiveTab('details')
     setShowVehicleHistory(false)
   }, [isJobModalOpen, jobModalMode, editingJob, jobModalPreset, selectedDate, mechanics])
+
+  /**
+   * Mécanicien par défaut arrivé APRÈS l'ouverture.
+   *
+   * L'initialisation ci-dessus ne se rejoue plus quand la liste des mécaniciens
+   * se rafraîchit — c'était précisément la cause de l'écrasement de saisie. Mais
+   * en création, si la liste n'était pas encore chargée à l'ouverture, le champ
+   * serait resté vide. On complète donc CE SEUL champ, et seulement s'il est
+   * encore vide : aucune autre saisie n'est touchée.
+   */
+  useEffect(() => {
+    if (!isJobModalOpen || jobModalMode === 'edit') return
+    if (form.mechanicId) return
+    const defaut = mechanics.find(m => !m.isAbsent)?.id
+    if (defaut) setForm(prev => (prev.mechanicId ? prev : { ...prev, mechanicId: defaut }))
+  }, [isJobModalOpen, jobModalMode, mechanics, form.mechanicId])
 
   const setField = useCallback(<K extends keyof Job>(key: K, value: Job[K]) => {
     setForm(prev => ({ ...prev, [key]: value }))

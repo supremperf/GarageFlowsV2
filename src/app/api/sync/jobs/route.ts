@@ -175,7 +175,15 @@ export async function POST(req: Request) {
     let executionKept = 0
     const rejected: Array<{ id: string; code: string }> = []
 
-    for (const job of jobs) {
+    // ── Passe en LECTURE SEULE ────────────────────────────────────────────────
+    // Le poste annonce que sa fenêtre n'a pas bougé depuis la dernière remontée
+    // confirmée. Il n'y a donc rien à écrire — et surtout rien à conclure d'une
+    // absence : la charge utile est vide parce qu'elle est vide, pas parce que
+    // les interventions ont disparu. Réécrire ici remettait leur `updatedAt` à
+    // l'heure du serveur, ce qui relançait toute la chaîne de rafraîchissement.
+    const lectureSeule = body.pullOnly === true
+
+    for (const job of lectureSeule ? [] : jobs) {
       if (!knownMechanics.has(job.mechanicId)) {
         rejected.push({ id: job.id, code: 'MECHANIC_UNKNOWN' })
         continue
@@ -232,7 +240,7 @@ export async function POST(req: Request) {
         garage: shortId(garageId), candidats: staleIds.length, plafond: SYNC_MAX_JOBS,
       })
     }
-    if (!truncated && staleIds.length > 0) {
+    if (!lectureSeule && !truncated && staleIds.length > 0) {
       const res = await prisma.job.deleteMany({ where: { garageId, id: { in: staleIds } } })
       deleted = res.count
     }
@@ -241,7 +249,11 @@ export async function POST(req: Request) {
     // Un curseur PAR FLUX : voir `src/lib/sync/return-path.ts`. Un curseur
     // commun bloquait définitivement les commentaires d'un garage dont les
     // photos étaient plus rares.
-    const windowJobIds = jobs.map((j) => j.id)
+    // En lecture seule, la fenêtre est celle du MIROIR : sans cela, une charge
+    // utile vide bornerait la voie de retour à l'ensemble vide et le poste ne
+    // rapatrierait plus rien — c'est-à-dire exactement ce que cette passe existe
+    // pour faire.
+    const windowJobIds = lectureSeule ? existing.map((j) => j.id) : jobs.map((j) => j.id)
     const changes = await collectMechanicChanges(prisma, garageId, windowJobIds, cursors)
 
     logger.info('[sync/jobs] miroir mis à jour', {

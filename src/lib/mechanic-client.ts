@@ -36,6 +36,22 @@ export async function mechanicLogout(): Promise<void> {
  */
 let redirectionEnCours = false
 
+/**
+ * Erreur d'API portant le STATUT HTTP.
+ *
+ * Reconnaître une panne à son libellé est fragile : le libellé change avec la
+ * traduction, la reformulation, ou simplement la route. Le statut, lui, est un
+ * contrat.
+ */
+export class ErreurMecanicien extends Error {
+  readonly status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ErreurMecanicien'
+    this.status = status
+  }
+}
+
 /** fetch JSON avec en-tête anti-cache ; redirige vers /license si la session tombe. */
 export async function mechFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -63,7 +79,12 @@ export async function mechFetch<T>(url: string, init?: RequestInit): Promise<T> 
   }
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
-    throw new Error((data as { error?: string }).error ?? 'Erreur')
+    // Le STATUT accompagne l'erreur. Sans lui, l'appelant en était réduit à
+    // reconnaître la panne au TEXTE du message — et la détection du 404 dans
+    // `use-mechanic-live` cherchait « introuvable / not found / 404 » alors que
+    // les routes répondent « Intervention non accessible. ». Elle n'a donc
+    // jamais rien détecté.
+    throw new ErreurMecanicien((data as { error?: string }).error ?? 'Erreur', res.status)
   }
   return data as T
 }

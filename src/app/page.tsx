@@ -227,7 +227,24 @@ export default function Home() {
     }
 
     minuteur = setTimeout(battre, 10_000)
-    const auRetour = () => { if (!document.hidden) battre() }
+
+    /**
+     * Retour au premier plan : on REMPLACE la chaîne en cours, on n'en ajoute
+     * pas une seconde.
+     *
+     * `battre()` se replanifie lui-même. Sans annuler le minuteur déjà en vol,
+     * chaque bascule arrière-plan → premier plan engendrait une chaîne
+     * indépendante et durable : vingt bascules dans la journée = vingt et une
+     * chaînes, soit 126 requêtes/min au lieu de 6. Le poste finissait par
+     * atteindre son propre quota (120 req/min, sujet partagé sous Electron) et
+     * le garage recevait « Trop de requêtes » en enregistrant une intervention,
+     * sans qu'aucune action humaine ne l'explique.
+     */
+    const auRetour = () => {
+      if (document.hidden) return
+      if (minuteur) { clearTimeout(minuteur); minuteur = null }
+      battre()
+    }
     document.addEventListener('visibilitychange', auRetour)
 
     return () => {

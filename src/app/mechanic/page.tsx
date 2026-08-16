@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Loader2, LogOut, ChevronLeft, ChevronRight, Clock, AlertTriangle, Wrench, Car, User, RefreshCw,
+  WifiOff,
 } from 'lucide-react'
 import { mechFetch, mechanicLogout } from '@/lib/mechanic-client'
 import { useMechanicLive } from '@/lib/use-mechanic-live'
@@ -104,7 +105,7 @@ export default function MechanicPlanningPage() {
   // apparaît (ou disparaît) ici en quelques secondes, sans reconnexion, sans
   // fermeture de l'application et sans vidage de cache. Cf. lib/live-sync.ts
   // pour le choix du transport et la politique de cadence/backoff.
-  const { data, error, loading, lastSyncAt, refresh } = useMechanicLive<{
+  const { data, error, loading, lastSyncAt, refresh, echecsConsecutifs } = useMechanicLive<{
     data: Job[]
     window?: { from: string; to: string }
     outOfWindow?: boolean
@@ -142,6 +143,24 @@ export default function MechanicPlanningPage() {
           </div>
         </div>
         <div className="flex items-center gap-1">
+          {/* Ce qui est affiché est-il encore à jour ?
+              Sans ce signal, un planning ancien s'affichait avec l'assurance
+              d'un planning frais : le mécanicien ne pouvait pas savoir que le
+              rafraîchissement échouait, et travaillait sur une donnée périmée
+              en croyant l'inverse. */}
+          {echecsConsecutifs > 0 && (
+            <span
+              title={lastSyncAt
+                ? `Dernière synchronisation réussie à ${new Date(lastSyncAt).toLocaleTimeString('fr-FR')}`
+                : 'Aucune synchronisation réussie'}
+              className="flex items-center gap-1 text-[11px] font-medium text-amber-300 bg-amber-500/10 border border-amber-500/25 rounded-full px-2 py-1"
+            >
+              <WifiOff className="w-3 h-3" />
+              {lastSyncAt
+                ? `à jour à ${new Date(lastSyncAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+                : 'hors ligne'}
+            </span>
+          )}
           <button
             onClick={refresh}
             title={lastSyncAt ? `Synchronisé à ${new Date(lastSyncAt).toLocaleTimeString('fr-FR')}` : 'Synchroniser'}

@@ -110,7 +110,12 @@ export default function LicenseRevokedOverlay() {
     }
 
     poll() // immediate check on mount
-    const id = setInterval(poll, POLL_MS)
+    // Rien en arrière-plan : un écran d'atelier passe des heures masqué, et
+    // sonder toutes les 3 secondes y consommait à lui seul un tiers du quota
+    // partagé par tout le poste — sans qu'aucun humain ne regarde. Le retour au
+    // premier plan déclenche de toute façon un contrôle immédiat, ci-dessous :
+    // la réactivité annoncée est conservée.
+    const id = setInterval(() => { if (!document.hidden) poll() }, POLL_MS)
 
     // Also re-check the moment the window/tab is focused for instant feedback.
     const onFocus = () => poll()
