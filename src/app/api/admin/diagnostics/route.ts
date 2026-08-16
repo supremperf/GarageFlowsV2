@@ -83,14 +83,16 @@ function codePointLabel(cp: number | undefined): string {
   return `U+${cp.toString(16).toUpperCase().padStart(4, '0')}`
 }
 
+/** Étiquettes des caractères invisibles présents dans `value`. */
+function invisiblesIn(value: string): string[] {
+  return INVISIBLES.filter(([cp]) => value.includes(String.fromCodePoint(cp))).map(([, label]) => label)
+}
+
 function inspect(name: string) {
   const raw = process.env[name]
   if (raw === undefined || raw === '') {
     return { name, present: false as const }
   }
-  const invisibles = INVISIBLES
-    .filter(([cp]) => raw.includes(String.fromCodePoint(cp)))
-    .map(([, label]) => label)
   return {
     name,
     present: true as const,
@@ -98,7 +100,23 @@ function inspect(name: string) {
     firstCodePoint: codePointLabel(raw.codePointAt(0)),
     lastCodePoint: codePointLabel(raw.codePointAt(raw.length - 1)),
     trimChangesValue: raw.trim() !== raw,
-    invisibles,
+    invisibles: invisiblesIn(raw),
+    // CE QUI SURVIT À `.trim()` — la seule mesure qui dise si un caractère
+    // invisible a un EFFET, et pas seulement une présence.
+    //
+    // `trim()` retire U+FEFF en JavaScript (production WhiteSpace d'ECMAScript).
+    // Un consommateur qui écrit `process.env.X?.trim()` obtient donc EXACTEMENT
+    // la même valeur avec ou sans BOM de tête : l'anomalie est cosmétique.
+    // Un invisible au MILIEU d'une valeur, lui, survit à tout trim et corrompt
+    // la valeur pour n'importe quel lecteur — c'est un défaut réel.
+    //
+    // Sans cette distinction, la porte de convergence ne peut que tout refuser
+    // en bloc. Le 2026-08-16 elle a refusé un déploiement sain pour trois BOM
+    // portés par des clés de chiffrement au repos DÉLIBÉRÉMENT préservées (donc
+    // que la rotation ne réécrit pas) et lues avec `.trim()` : un refus que
+    // AUCUNE rotation ultérieure ne pouvait lever, pendant que la production
+    // restait sur un déploiement en panne.
+    invisiblesAfterTrim: invisiblesIn(raw.trim()),
     fingerprint: configFingerprint(name, raw),
   }
 }

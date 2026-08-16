@@ -5,6 +5,12 @@ param(
     [switch]$ConfirmDestructiveReset,
     [switch]$BackupOnly,
     [string]$Restore,
+    # REPRISE après un échec survenu APRÈS l'écriture des variables (rotation.lock).
+    # Prend le dossier du run concerné (« API générées\<horodatage> ») et rejoue
+    # UNIQUEMENT la fin de la séquence : déployer un candidat, le vérifier, le
+    # promouvoir. Aucune valeur n'est demandée, AUCUNE variable Vercel n'est
+    # écrite, AUCUNE paire n'est générée — c'est ce qui la rend rejouable.
+    [string]$ResumePublish,
     [switch]$SkipDeploy,
     [switch]$SkipDatabaseReset,
     [switch]$SkipLicenseReset,
@@ -27,6 +33,7 @@ $script:GfNonInteractive     = [bool]$NonInteractive
 $script:GfConfirmDestructive = [bool]$ConfirmDestructiveReset
 $script:GfBackupOnly         = [bool]$BackupOnly
 $script:GfRestorePath        = [string]$Restore
+$script:GfResumePublishPath  = [string]$ResumePublish
 $script:GfSkipDeploy         = [bool]$SkipDeploy
 $script:GfSkipDatabaseReset  = [bool]$SkipDatabaseReset
 $script:GfSkipLicenseReset   = [bool]$SkipLicenseReset
@@ -47,6 +54,9 @@ $script:ResetVersion = '1.8.5'
 #   -ConfirmDestructiveReset Confirme explicitement une execution destructrice.
 #   -BackupOnly              Sauvegarde puis arret (aucune modification).
 #   -Restore <dossier>       Restaure .env + keys/server_config.json depuis une sauvegarde.
+#   -ResumePublish <dossier> REPRISE apres rotation.lock : deploie un candidat,
+#                            le verifie et le promeut. N ecrit AUCUNE variable,
+#                            ne genere AUCUNE cle, ne supprime AUCUNE licence.
 #   -SkipDeploy              Pas de deploiement Vercel ni de tests runtime.
 #   -SkipDatabaseReset       N execute pas la reparation legacyIdV* (no-op ici).
 #   -SkipLicenseReset        Ne supprime pas les anciennes licences.
@@ -2124,6 +2134,142 @@ function Test-NewDeploymentHealth {
     }
 }
 
+function Get-PayloadProperty {
+    <#
+      Lecture DÉFENSIVE d'une propriété d'une charge JSON. Set-StrictMode
+      transforme l'accès à une propriété absente en erreur bloquante : sans cette
+      aide, une sonde d'un déploiement plus ancien (un champ en moins) ferait
+      échouer la porte pour une raison qui n'a rien à voir avec la convergence.
+    #>
+    param([AllowNull()]$Object, [Parameter(Mandatory=$true)][string]$Name)
+    if ($null -eq $Object) { return $null }
+    $propriete = $Object.PSObject.Properties[$Name]
+    if ($null -eq $propriete) { return $null }
+    return $propriete.Value
+}
+
+function Test-PayloadProperty {
+    <#
+      La PRÉSENCE d'un champ, qui ne peut PAS se déduire de sa valeur : une
+      fonction PowerShell qui rend un tableau vide n'émet aucun objet, et
+      l'appelant reçoit $null — exactement comme pour un champ absent.
+      Confondre les deux ferait passer « invisiblesAfterTrim: [] » (mesure faite,
+      rien ne survit à trim) pour « sonde trop ancienne » et bloquerait un
+      déploiement sain : la régression même que ce lot corrige.
+    #>
+    param([AllowNull()]$Object, [Parameter(Mandatory=$true)][string]$Name)
+    if ($null -eq $Object) { return $false }
+    return ($null -ne $Object.PSObject.Properties[$Name])
+}
+
+function Get-ConvergenceReport {
+    <#
+      CŒUR PUR de la porte de convergence : aucune E/S, aucune dépendance
+      distante. Il prend la charge JSON de /api/admin/diagnostics et rend deux
+      listes — ce qui BLOQUE et ce qui AVERTIT. Isolé ici pour être démontrable
+      hors ligne par -SelfTest, sans muter quoi que ce soit.
+
+      LE PÉRIMÈTRE — la correction du 2026-08-16 au soir.
+      La règle « aucun caractère invisible » s'appliquait à TOUTES les variables
+      inspectées par la sonde, alors que la rotation n'en écrit que treize. Les
+      clés de chiffrement AU REPOS (GF_TOTP_ENC_KEY, GF_SMTP_CIPHER_KEY,
+      GF_BACKUP_KEY) sont DÉLIBÉRÉMENT préservées — les régénérer rendrait les
+      données déjà chiffrées illisibles — et Vercel ne permet pas de relire un
+      secret pour le réécrire nettoyé. Un BOM hérité sur l'une d'elles produisait
+      donc un refus que RIEN ne pouvait lever : chaque rotation ultérieure
+      mutait Production puis échouait sur le même point, en laissant l'alias
+      public sur le déploiement précédent — en panne le 16/08 à 19:57.
+
+      D'où deux régimes, et la mesure qui les sépare :
+        · variable DANS le périmètre du run → tolérance zéro. Ce run l'a écrite,
+          il répond de sa valeur au caractère près (l'empreinte le prouve) ;
+        · variable HORS périmètre → seul compte ce qui SURVIT à `trim()`.
+          `trim()` retire U+FEFF en JavaScript, et ces trois clés sont lues avec
+          `?.trim()` (src/lib/env.ts, src/lib/security/secret-cipher.ts,
+          src/lib/portal/totp-crypto.ts) : un BOM de tête y est sans effet, la
+          clé dérivée est identique. Un invisible INTERNE, lui, survit à tout
+          trim et corrompt la valeur pour n'importe quel lecteur : il bloque,
+          périmètre ou non.
+    #>
+    param(
+        [Parameter(Mandatory=$true)][AllowNull()]$Payload,
+        [AllowNull()][hashtable]$ExpectedValues
+    )
+
+    $ecarts = New-Object System.Collections.ArrayList
+    $avertissements = New-Object System.Collections.ArrayList
+
+    $licence = Get-PayloadProperty -Object $Payload -Name 'licenseKey'
+    if (-not [bool](Get-PayloadProperty -Object $licence -Name 'converged')) {
+        [void]$ecarts.Add('DIVERGENCE CRYPTOGRAPHIQUE : la clé publique embarquée (' +
+            "$([string](Get-PayloadProperty -Object $licence -Name 'embeddedPublicFingerprint'))) et celle dérivée de " +
+            "GF_PRIVATE_KEY ($([string](Get-PayloadProperty -Object $licence -Name 'privateKeyPublicFingerprint'))) diffèrent. " +
+            'Toute licence émise par ce déploiement serait refusée par lui-même.')
+    }
+
+    # Périmètre = ce que CE run a réellement poussé.
+    $perimetre = @{}
+    if ($ExpectedValues) {
+        foreach ($nom in @($ExpectedValues.Keys)) { $perimetre[[string]$nom] = $true }
+    }
+
+    foreach ($variable in @(Get-PayloadProperty -Object $Payload -Name 'env')) {
+        if ($null -eq $variable) { continue }
+        if (-not [bool](Get-PayloadProperty -Object $variable -Name 'present')) { continue }
+        $invisibles = @(Get-PayloadProperty -Object $variable -Name 'invisibles')
+        if ($invisibles.Count -eq 0) { continue }
+
+        $nom = [string](Get-PayloadProperty -Object $variable -Name 'name')
+        $constat = "$nom : caractère(s) invisible(s) $($invisibles -join ', ') — premier point de code " +
+                   "$([string](Get-PayloadProperty -Object $variable -Name 'firstCodePoint'))"
+
+        if ($perimetre.ContainsKey($nom)) {
+            [void]$ecarts.Add($constat + ' — variable poussée par ce run : transport corrompu.')
+            continue
+        }
+
+        if (-not (Test-PayloadProperty -Object $variable -Name 'invisiblesAfterTrim')) {
+            # Sonde antérieure au champ : on ne peut RIEN prouver. On ne devine
+            # pas — on bloque en disant exactement ce qui manque pour trancher.
+            [void]$ecarts.Add($constat + ' — la sonde de ce déploiement ne rapporte pas ' +
+                '« invisiblesAfterTrim » : impossible de prouver que trim() le neutralise. Redéployez pour trancher.')
+            continue
+        }
+
+        $survivants = @(Get-PayloadProperty -Object $variable -Name 'invisiblesAfterTrim')
+        if ($survivants.Count -gt 0) {
+            [void]$ecarts.Add($constat + " — SURVIT à trim() ($($survivants -join ', ')) : " +
+                'la valeur est corrompue pour tout lecteur, périmètre ou non.')
+        } else {
+            [void]$avertissements.Add($constat + ' — hors du périmètre de ce run (valeur préservée, ' +
+                'non réécrite) et retiré par trim() : aucun effet sur la valeur utilisée. ' +
+                'À nettoyer par une rotation dédiée de cette clé, jamais par ce script.')
+        }
+    }
+
+    if ($ExpectedValues) {
+        foreach ($nom in @($ExpectedValues.Keys | Sort-Object)) {
+            $variable = @(Get-PayloadProperty -Object $Payload -Name 'env') |
+                Where-Object { $null -ne $_ -and [string](Get-PayloadProperty -Object $_ -Name 'name') -eq [string]$nom } |
+                Select-Object -First 1
+            if (-not $variable) { continue }   # non inspectée par la route : rien à conclure
+            if (-not [bool](Get-PayloadProperty -Object $variable -Name 'present')) {
+                [void]$ecarts.Add("$nom : ABSENTE du runtime déployé.") ; continue
+            }
+            $attendu = Get-EnvFingerprint -Name ([string]$nom) -Value ([string]$ExpectedValues[$nom])
+            $mesure = [string](Get-PayloadProperty -Object $variable -Name 'fingerprint')
+            if ($mesure -ne $attendu) {
+                [void]$ecarts.Add("$nom : empreinte $mesure au lieu de $attendu — la valeur déployée n-est pas celle envoyée.")
+            }
+        }
+    }
+
+    return [pscustomobject]@{
+        Ecarts         = @($ecarts)
+        Avertissements = @($avertissements)
+    }
+}
+
 function Assert-DeployedConvergence {
     <#
       PORTE DE VÉRIFICATION POST-DÉPLOIEMENT — l'unique appelant de
@@ -2150,6 +2296,10 @@ function Assert-DeployedConvergence {
         · aucun caractère invisible dans une variable poussée par ce run ;
         · l'empreinte de chaque valeur, comparée à celle calculée sur la valeur
           envoyée : la seule preuve d'un transport exact de bout en bout.
+
+      Le tri entre « bloquant » et « à signaler » vit dans Get-ConvergenceReport,
+      fonction pure vérifiée par -SelfTest. Ici : l'appel réseau, l'affichage
+      des avertissements, et la levée si un écart demeure.
     #>
     param(
         [Parameter(Mandatory=$true)][string]$DeploymentUrl,
@@ -2167,36 +2317,16 @@ function Assert-DeployedConvergence {
                'Sans elle, on ne peut PAS affirmer que le déploiement porte les bonnes valeurs.')
     }
 
-    $charge = $reponse.Payload
-    $ecarts = @()
+    $rapport = Get-ConvergenceReport -Payload $reponse.Payload -ExpectedValues $ExpectedValues
 
-    if (-not [bool]$charge.licenseKey.converged) {
-        $ecarts += ('DIVERGENCE CRYPTOGRAPHIQUE : la clé publique embarquée (' +
-                    "$([string]$charge.licenseKey.embeddedPublicFingerprint)) et celle dérivée de " +
-                    "GF_PRIVATE_KEY ($([string]$charge.licenseKey.privateKeyPublicFingerprint)) diffèrent. " +
-                    'Toute licence émise par ce déploiement serait refusée par lui-même.')
+    # Les avertissements sont dits AVANT la levée éventuelle : une anomalie réelle
+    # mais inoffensive ne doit jamais disparaître de la sortie, même quand un
+    # écart bloquant l'accompagne.
+    foreach ($avertissement in @($rapport.Avertissements)) {
+        Write-Host "[ATTENTION] $avertissement" -ForegroundColor Yellow
     }
 
-    foreach ($variable in @($charge.env)) {
-        if (-not [bool]$variable.present) { continue }
-        $invisibles = @($variable.invisibles)
-        if ($invisibles.Count -gt 0) {
-            $ecarts += "$([string]$variable.name) : caractère(s) invisible(s) $($invisibles -join ', ') — premier point de code $([string]$variable.firstCodePoint)"
-        }
-    }
-
-    if ($ExpectedValues) {
-        foreach ($nom in @($ExpectedValues.Keys | Sort-Object)) {
-            $variable = @($charge.env) | Where-Object { [string]$_.name -eq [string]$nom } | Select-Object -First 1
-            if (-not $variable) { continue }   # non inspectée par la route : rien à conclure
-            if (-not [bool]$variable.present) { $ecarts += "$nom : ABSENTE du runtime déployé." ; continue }
-            $attendu = Get-EnvFingerprint -Name ([string]$nom) -Value ([string]$ExpectedValues[$nom])
-            if ([string]$variable.fingerprint -ne $attendu) {
-                $ecarts += "$nom : empreinte $([string]$variable.fingerprint) au lieu de $attendu — la valeur déployée n-est pas celle envoyée."
-            }
-        }
-    }
-
+    $ecarts = @($rapport.Ecarts)
     if ($ecarts.Count -gt 0) {
         throw ("Convergence du déploiement NON prouvée ($($ecarts.Count) écart(s)) :`n   " + ($ecarts -join "`n   "))
     }
@@ -2289,6 +2419,132 @@ function Test-RemoteEnvironmentIsolationRegression {
         }
     }
     Write-Host '[OK] Auto-test isolation des variables SQLite locales.' -ForegroundColor Green
+}
+
+function New-DiagnosticsVariableStub {
+    param(
+        [Parameter(Mandatory=$true)][string]$Name,
+        [Parameter(Mandatory=$true)][AllowEmptyString()][string]$Value,
+        [string[]]$Invisibles = @(),
+        [string[]]$InvisiblesAfterTrim = @(),
+        # Reproduit une sonde déployée AVANT l'ajout du champ invisiblesAfterTrim.
+        [switch]$SondeAncienne,
+        [switch]$Absente,
+        [string]$FingerprintOverride
+    )
+    $champs = [ordered]@{
+        name             = $Name
+        present          = (-not [bool]$Absente)
+        length           = $Value.Length
+        firstCodePoint   = $(if ($Invisibles.Count -gt 0) { 'U+FEFF' } else { 'U+0041' })
+        lastCodePoint    = 'U+003D'
+        trimChangesValue = ($Value.Trim() -ne $Value)
+        invisibles       = @($Invisibles)
+        fingerprint      = $(if ($PSBoundParameters.ContainsKey('FingerprintOverride')) { $FingerprintOverride }
+                             else { Get-EnvFingerprint -Name $Name -Value $Value })
+    }
+    if (-not $SondeAncienne) { $champs['invisiblesAfterTrim'] = @($InvisiblesAfterTrim) }
+    return [pscustomobject]$champs
+}
+
+function New-DiagnosticsPayloadStub {
+    param([bool]$Converged = $true, [object[]]$Variables = @())
+    return [pscustomobject]@{
+        ok         = $true
+        licenseKey = [pscustomobject]@{
+            embeddedPublicFingerprint   = 'aaaaaaaa'
+            privateKeyPublicFingerprint = $(if ($Converged) { 'aaaaaaaa' } else { 'bbbbbbbb' })
+            privateKeyError             = $null
+            converged                   = $Converged
+        }
+        env        = @($Variables)
+    }
+}
+
+function Test-ConvergenceScopeRegression {
+    <#
+      RÉGRESSION DU 2026-08-16 AU SOIR — le refus qu'aucune rotation ne pouvait
+      lever. La porte refusait tout caractère invisible sur TOUTE variable
+      inspectée. Trois clés de chiffrement au repos, délibérément PRÉSERVÉES
+      (donc jamais réécrites) et illisibles côté Vercel, portaient un BOM hérité :
+      la rotation mutait Production puis échouait systématiquement sur elles,
+      laissant l'alias public sur un déploiement en panne.
+
+      Ce test fixe la frontière exacte : ce que ce run a écrit ne tolère rien ;
+      ce qu'il n'a pas écrit n'est jugé que sur ce qui SURVIT à trim().
+    #>
+    $perimetre = @{ 'DATABASE_URL' = 'postgresql://u:p@h/db'; 'NEXTAUTH_SECRET' = 'secret-de-session' }
+
+    $sain = New-DiagnosticsPayloadStub -Converged $true -Variables @(
+        (New-DiagnosticsVariableStub -Name 'DATABASE_URL' -Value 'postgresql://u:p@h/db'),
+        (New-DiagnosticsVariableStub -Name 'NEXTAUTH_SECRET' -Value 'secret-de-session'),
+        (New-DiagnosticsVariableStub -Name 'GF_BACKUP_KEY' -Value 'cle-preservee')
+    )
+    $r = Get-ConvergenceReport -Payload $sain -ExpectedValues $perimetre
+    if ($r.Ecarts.Count -ne 0 -or $r.Avertissements.Count -ne 0) {
+        throw "Un déploiement sain doit passer sans écart ni avertissement (obtenu : $($r.Ecarts.Count)/$($r.Avertissements.Count))."
+    }
+
+    # 1. BOM sur une variable POUSSÉE par ce run : toujours bloquant.
+    $dansPerimetre = New-DiagnosticsPayloadStub -Converged $true -Variables @(
+        (New-DiagnosticsVariableStub -Name 'DATABASE_URL' -Value "$([char]0xFEFF)postgresql://u:p@h/db" -Invisibles @('U+FEFF')),
+        (New-DiagnosticsVariableStub -Name 'NEXTAUTH_SECRET' -Value 'secret-de-session')
+    )
+    $r = Get-ConvergenceReport -Payload $dansPerimetre -ExpectedValues $perimetre
+    if ($r.Ecarts.Count -lt 1) { throw 'Un BOM sur une variable poussée par ce run DOIT bloquer.' }
+
+    # 2. BOM sur une clé PRÉSERVÉE, retiré par trim() : signalé, jamais bloquant.
+    #    C'est très exactement l'échec du 2026-08-16 20:37.
+    $horsPerimetre = New-DiagnosticsPayloadStub -Converged $true -Variables @(
+        (New-DiagnosticsVariableStub -Name 'DATABASE_URL' -Value 'postgresql://u:p@h/db'),
+        (New-DiagnosticsVariableStub -Name 'NEXTAUTH_SECRET' -Value 'secret-de-session'),
+        (New-DiagnosticsVariableStub -Name 'GF_TOTP_ENC_KEY' -Value 'cle-au-repos' -Invisibles @('U+FEFF') -InvisiblesAfterTrim @()),
+        (New-DiagnosticsVariableStub -Name 'GF_SMTP_CIPHER_KEY' -Value 'cle-au-repos' -Invisibles @('U+FEFF') -InvisiblesAfterTrim @()),
+        (New-DiagnosticsVariableStub -Name 'GF_BACKUP_KEY' -Value 'cle-au-repos' -Invisibles @('U+FEFF') -InvisiblesAfterTrim @())
+    )
+    $r = Get-ConvergenceReport -Payload $horsPerimetre -ExpectedValues $perimetre
+    if ($r.Ecarts.Count -ne 0) { throw "Un BOM neutralisé par trim() sur une clé préservée ne doit PAS bloquer (obtenu : $($r.Ecarts -join ' | '))." }
+    if ($r.Avertissements.Count -ne 3) { throw "Les trois clés préservées doivent être SIGNALÉES (obtenu : $($r.Avertissements.Count))." }
+
+    # 3. Invisible qui SURVIT à trim() (donc interne) : bloquant même hors périmètre.
+    $interne = New-DiagnosticsPayloadStub -Converged $true -Variables @(
+        (New-DiagnosticsVariableStub -Name 'DATABASE_URL' -Value 'postgresql://u:p@h/db'),
+        (New-DiagnosticsVariableStub -Name 'NEXTAUTH_SECRET' -Value 'secret-de-session'),
+        (New-DiagnosticsVariableStub -Name 'GF_BACKUP_KEY' -Value 'cle-coupee' -Invisibles @('U+00A0') -InvisiblesAfterTrim @('U+00A0'))
+    )
+    $r = Get-ConvergenceReport -Payload $interne -ExpectedValues $perimetre
+    if ($r.Ecarts.Count -ne 1) { throw 'Un invisible INTERNE doit bloquer même hors périmètre.' }
+
+    # 4. Sonde antérieure au champ : on ne devine pas, on bloque en le disant.
+    $ancienne = New-DiagnosticsPayloadStub -Converged $true -Variables @(
+        (New-DiagnosticsVariableStub -Name 'DATABASE_URL' -Value 'postgresql://u:p@h/db'),
+        (New-DiagnosticsVariableStub -Name 'NEXTAUTH_SECRET' -Value 'secret-de-session'),
+        (New-DiagnosticsVariableStub -Name 'GF_BACKUP_KEY' -Value 'cle-au-repos' -Invisibles @('U+FEFF') -SondeAncienne)
+    )
+    $r = Get-ConvergenceReport -Payload $ancienne -ExpectedValues $perimetre
+    if ($r.Ecarts.Count -ne 1) { throw 'Une sonde sans invisiblesAfterTrim ne permet aucune conclusion : elle doit bloquer.' }
+
+    # 5. Paire de licence divergente : bloquant, quoi qu'il arrive par ailleurs.
+    $r = Get-ConvergenceReport -Payload (New-DiagnosticsPayloadStub -Converged $false -Variables @()) -ExpectedValues @{}
+    if ($r.Ecarts.Count -ne 1) { throw 'Une paire de licence divergente doit bloquer.' }
+
+    # 6. Empreinte différente de la valeur envoyée : le transport a menti.
+    $empreinte = New-DiagnosticsPayloadStub -Converged $true -Variables @(
+        (New-DiagnosticsVariableStub -Name 'DATABASE_URL' -Value 'postgresql://u:p@h/db' -FingerprintOverride 'DEADBEEF0000'),
+        (New-DiagnosticsVariableStub -Name 'NEXTAUTH_SECRET' -Value 'secret-de-session')
+    )
+    $r = Get-ConvergenceReport -Payload $empreinte -ExpectedValues $perimetre
+    if ($r.Ecarts.Count -ne 1) { throw 'Une empreinte divergente doit bloquer.' }
+
+    # 7. Variable du périmètre absente du runtime : bloquant.
+    $absente = New-DiagnosticsPayloadStub -Converged $true -Variables @(
+        (New-DiagnosticsVariableStub -Name 'DATABASE_URL' -Value 'postgresql://u:p@h/db'),
+        (New-DiagnosticsVariableStub -Name 'NEXTAUTH_SECRET' -Value 'secret-de-session' -Absente)
+    )
+    $r = Get-ConvergenceReport -Payload $absente -ExpectedValues $perimetre
+    if ($r.Ecarts.Count -ne 1) { throw 'Une variable du périmètre absente du runtime doit bloquer.' }
+
+    Write-Host '[OK] Auto-test portée de la porte de convergence (périmètre du run vs clés préservées).' -ForegroundColor Green
 }
 
 function Write-EnvMap {
@@ -2612,6 +2868,114 @@ function Invoke-GfLocalRestore {
     Write-Host '[INFO] (pour le distant : réappliquer manuellement vercel-production-avant-reset.env du run-dir).' -ForegroundColor Cyan
 }
 
+function Invoke-GfResumeVerifyAndPublish {
+    <#
+      REPRISE APRÈS `rotation.lock` — la moitié de la séquence qui manquait.
+
+      Une rotation qui échoue APRÈS l'écriture des variables laisse un état sans
+      issue outillée : Production porte les nouvelles valeurs, aucune ne peut
+      être relue, relancer la rotation fabriquerait une paire de plus, et
+      l'alias public reste sur le déploiement PRÉCÉDENT — le 2026-08-16 au soir,
+      un déploiement en panne. La seule sortie correcte est de reprendre la
+      séquence à l'étape « DÉPLOYER CANDIDAT », avec la paire DÉJÀ engagée.
+
+      C'est ce que fait cette fonction, et rien d'autre :
+        · elle ne demande aucune valeur externe ;
+        · elle n'écrit AUCUNE variable Vercel ;
+        · elle ne génère AUCUNE clé ;
+        · elle ne supprime AUCUNE licence (étape destructrice, laissée à la
+          décision de l'opérateur, hors reprise).
+
+      Elle reste donc rejouable autant de fois que nécessaire. Les valeurs
+      attendues sont relues dans `secrets.env` du run : la comparaison
+      d'empreintes garde ainsi toute sa force, exactement comme dans le run
+      d'origine.
+    #>
+    param([Parameter(Mandatory=$true)][string]$RunDirectory)
+
+    if (-not (Test-Path -LiteralPath $RunDirectory -PathType Container)) {
+        throw "Dossier de run introuvable : $RunDirectory"
+    }
+    $secretsPath = Join-Path $RunDirectory 'secrets.env'
+    if (-not (Test-Path -LiteralPath $secretsPath -PathType Leaf)) {
+        throw ("secrets.env est absent de $RunDirectory : sans lui, impossible de vérifier " +
+               'que le déploiement porte les valeurs réellement poussées.')
+    }
+
+    $attendues = Read-EnvFileMap $secretsPath
+    foreach ($obligatoire in @('GARAGEFLOW_API_KEY','GF_APP_URL')) {
+        if (-not $attendues.ContainsKey($obligatoire) -or [string]::IsNullOrWhiteSpace([string]$attendues[$obligatoire])) {
+            throw "$obligatoire est absente de secrets.env : reprise impossible."
+        }
+    }
+    foreach ($valeur in @($attendues.Values)) { Add-SecretToRegistry ([string]$valeur) }
+
+    Write-Host '================================================================' -ForegroundColor Cyan
+    Write-Host ' REPRISE — déployer, vérifier, promouvoir (aucune mutation de variable)' -ForegroundColor Cyan
+    Write-Host '================================================================' -ForegroundColor Cyan
+    Write-Host "[INFO] Valeurs attendues relues : $($attendues.Count) variables ($secretsPath)." -ForegroundColor Cyan
+
+    $script:Vercel = Resolve-VercelCommand
+    Ensure-VercelConnection
+    Ensure-VercelLink
+    $curlCommand = Get-Command curl.exe -ErrorAction SilentlyContinue
+    if (-not $curlCommand) {
+        throw 'curl.exe est requis pour valider un déploiement Vercel protégé.'
+    }
+
+    $stagingDir = Join-Path $env:TEMP ('garageflow-vercel-staging-' + [Guid]::NewGuid().ToString('N'))
+    try {
+        $deploy = Invoke-ProductionDeployFromCleanCopy -StagingDirectory $stagingDir
+        if ($deploy.ExitCode -ne 0) { throw "Déploiement Vercel en échec : $($deploy.Output)" }
+        if ([string]::IsNullOrWhiteSpace([string]$deploy.DeploymentUrl)) {
+            throw 'Le déploiement a réussi mais son URL Vercel n-a pas pu être détectée.'
+        }
+        Write-Host "[OK] Candidat créé (alias public NON déplacé) : $($deploy.DeploymentUrl)" -ForegroundColor Green
+
+        $healthCheck = Assert-SingleHealthResult -Result (Test-NewDeploymentHealth `
+            -DeploymentUrl ([string]$deploy.DeploymentUrl) -RunDirectory $RunDirectory)
+        if (-not [bool]$healthCheck.Ok) {
+            $bodySafe = Protect-LogText ([string]$healthCheck.Health.Output)
+            if ($bodySafe.Length -gt 1200) { $bodySafe = $bodySafe.Substring(0,1200) }
+            throw ("/api/health a refusé le candidat. Réponse : $bodySafe. " +
+                   "Logs : $($healthCheck.DiagnosticPath). La production n-a PAS bougé.")
+        }
+        Write-Host '[OK] Candidat : /api/health = status ok.' -ForegroundColor Green
+
+        Assert-DeployedConvergence `
+            -DeploymentUrl ([string]$deploy.DeploymentUrl) `
+            -ApiKey ([string]$attendues['GARAGEFLOW_API_KEY']) `
+            -ExpectedValues $attendues
+
+        if (-not (Test-ProtectedApiKeyEndpoint -DeploymentUrl ([string]$deploy.DeploymentUrl) -ApiKey ([string]$attendues['GARAGEFLOW_API_KEY']))) {
+            $apiKeyDiag = if (-not [string]::IsNullOrWhiteSpace([string]$script:LastApiKeyDiag)) { ' ' + [string]$script:LastApiKeyDiag } else { '' }
+            throw "La GARAGEFLOW_API_KEY du run ne fonctionne pas sur le candidat.$apiKeyDiag"
+        }
+        [void](Test-LicenseActivationRateLimit -DeploymentUrl ([string]$deploy.DeploymentUrl))
+
+        Publish-VerifiedDeployment `
+            -DeploymentUrl ([string]$deploy.DeploymentUrl) `
+            -PublicUrl ([string]$attendues['GF_APP_URL'])
+    } finally {
+        if (Test-Path -LiteralPath $stagingDir) { Remove-Item -LiteralPath $stagingDir -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+
+    # Le verrou n'existe que pour empêcher une rotation tant que la convergence
+    # n'est pas rétablie ET prouvée. Elle vient de l'être, sur le déploiement que
+    # le public voit : le laisser en place n'apporterait plus rien.
+    $verrou = Join-Path $script:ProjectRoot 'rotation.lock'
+    if (Test-Path -LiteralPath $verrou) {
+        Remove-Item -LiteralPath $verrou -Force
+        Write-Host '[OK] rotation.lock retiré : convergence prouvée sur le déploiement public.' -ForegroundColor Green
+    }
+
+    Write-Host ''
+    Write-Host '[SUCCÈS] Reprise terminée : production publique servie par un déploiement vérifié.' -ForegroundColor Green
+    Write-Host '[RESTE] La purge des anciennes licences n-est PAS faite par la reprise (étape destructrice).' -ForegroundColor Yellow
+    Write-Host '[RESTE] Si la paire de licence a changé, les licences déjà émises sont de toute façon refusées :' -ForegroundColor Yellow
+    Write-Host '[RESTE] voir docs/POST_ROTATION_RECOVERY.md §3 avant de supprimer quoi que ce soit.' -ForegroundColor Yellow
+}
+
 # ── AUTO-TESTS SEULS ────────────────────────────────────────────────────────────
 # Rien de distant, rien d'interactif, rien de destructeur : uniquement les
 # contrôles qui doivent passer AVANT qu'une rotation ait le droit de commencer.
@@ -2621,7 +2985,8 @@ if ($SelfTest) {
     foreach ($test in @(
         @{ Nom = 'transport entrée standard'; Action = { Test-StdinTransport } },
         @{ Nom = 'lecture env pull / normalisation Neon'; Action = { Test-EnvPullParsingRegression } },
-        @{ Nom = 'isolation des variables SQLite locales'; Action = { Test-RemoteEnvironmentIsolationRegression } }
+        @{ Nom = 'isolation des variables SQLite locales'; Action = { Test-RemoteEnvironmentIsolationRegression } },
+        @{ Nom = 'portée de la porte de convergence'; Action = { Test-ConvergenceScopeRegression } }
     )) {
         try { & $test.Action }
         catch { $echecs++; Write-Host "[ÉCHEC] $($test.Nom) : $($_.Exception.Message)" -ForegroundColor Red }
@@ -2629,6 +2994,21 @@ if ($SelfTest) {
     if ($echecs -gt 0) { Write-Host "`n$echecs auto-test(s) en échec." -ForegroundColor Red; exit 10 }
     Write-Host "`nTous les auto-tests locaux passent." -ForegroundColor Green
     exit 0
+}
+
+# ── REPRISE (déployer / vérifier / promouvoir) ──────────────────────────────────
+# Placée AVANT le verrou, et c'est délibéré : le verrou interdit une ROTATION,
+# alors que la reprise est justement le moyen prévu d-en sortir. Elle ne mute
+# aucune variable et ne génère aucune clé, donc elle est sans danger dans l-état
+# verrouillé — c'est même le seul état où elle a un sens.
+if (-not [string]::IsNullOrWhiteSpace($script:GfResumePublishPath)) {
+    try { Invoke-GfResumeVerifyAndPublish -RunDirectory $script:GfResumePublishPath; exit 0 }
+    catch {
+        Write-Host "[ERREUR] Reprise interrompue : $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host '[ÉTAT] Aucune variable Vercel modifiée par la reprise.' -ForegroundColor Yellow
+        Write-Host '[ÉTAT] L-alias public n-a été déplacé que si « Candidat promu » a été affiché.' -ForegroundColor Yellow
+        exit 51
+    }
 }
 
 # ── VERROU DE RÉCUPÉRATION ──────────────────────────────────────────────────────

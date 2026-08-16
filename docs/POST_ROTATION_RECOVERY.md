@@ -25,7 +25,7 @@
 > | Contrôle | Attendu |
 > |---|---|
 > | `/api/health` avec `x-gf-key` | `checks` : `process`/`environment`/`database`/`redis`/`migrations` = `pass` |
-> | `/api/admin/diagnostics` | `licenseKey.converged: true`, et aucune variable dont `invisibles` est non vide |
+> | `/api/admin/diagnostics` | `licenseKey.converged: true` ; aucune variable **poussée par ce run** dont `invisibles` est non vide ; aucune variable, poussée ou non, dont `invisiblesAfterTrim` est non vide |
 > | Aller‑retour licence | `POST /api/admin/licenses/create` d'un jeton frais → **201** ; un jeton signé par une AUTRE clé → **400** |
 >
 > **Si le déploiement échoue APRÈS l'écriture des variables**, le script n'annule
@@ -33,6 +33,77 @@
 > `REMOTE_STATE_MUTATED / RECOVERY_REQUIRED / DO_NOT_RERUN_ROTATION`. Ne relancez
 > jamais une rotation dans cet état — corrigez la cause et redéployez **avec la
 > même paire**.
+
+## Portée de la porte de convergence — et le refus insoluble du 2026‑08‑16 (20:37)
+
+La rotation de 20:28 a poussé treize variables **sans une seule anomalie** : le
+transport corrigé le matin tenait. Elle a pourtant échoué, sur trois écarts —
+`GF_TOTP_ENC_KEY`, `GF_SMTP_CIPHER_KEY`, `GF_BACKUP_KEY` portaient un `U+FEFF`
+de tête hérité d'un run antérieur.
+
+Or ces trois clés sont exactement celles que la rotation **s'interdit d'écrire** :
+ce sont les clés de chiffrement **au repos**, et les régénérer rendrait secrets
+TOTP, mots de passe SMTP et sauvegardes définitivement illisibles. Vercel, de son
+côté, ne permet pas de **relire** un secret pour le réécrire nettoyé. La porte
+exigeait donc la correction d'une valeur que rien, dans ce script, ne peut
+corriger : **chaque rotation ultérieure aurait muté Production puis échoué au
+même endroit**, en laissant l'alias public sur le déploiement précédent — ce
+soir‑là, un déploiement en panne. Production a servi un HTTP 500 pendant
+47 minutes pour un défaut qui n'avait aucun effet.
+
+**Aucun effet, et c'est mesurable.** `trim()` retire `U+FEFF` en JavaScript
+(production *WhiteSpace* d'ECMAScript), et les trois clés sont lues avec
+`?.trim()` :
+
+| Clé | Lecture | Fichier |
+|---|---|---|
+| `GF_BACKUP_KEY` | `process.env.GF_BACKUP_KEY?.trim()` | `src/lib/env.ts` (`backupKey()`) |
+| `GF_SMTP_CIPHER_KEY` | `process.env.GF_SMTP_CIPHER_KEY?.trim()` | `src/lib/security/secret-cipher.ts` |
+| `GF_TOTP_ENC_KEY` | `process.env.GF_TOTP_ENC_KEY?.trim()` | `src/lib/portal/totp-crypto.ts` |
+
+La clé dérivée est donc **identique** avec ou sans BOM : ne nettoyez pas ces
+valeurs « pour faire propre », et surtout ne les régénérez pas.
+
+**La règle, depuis :** la sonde rapporte `invisiblesAfterTrim` — ce qui *survit*
+à `trim()`, seule mesure d'un **effet** plutôt que d'une présence. Et la porte
+distingue deux régimes (`Get-ConvergenceReport`, vérifié par `-SelfTest`) :
+
+| Variable | Caractère invisible | Verdict |
+|---|---|---|
+| poussée par ce run | n'importe lequel | **BLOQUE** — ce run répond de sa valeur au caractère près |
+| préservée (hors périmètre) | retiré par `trim()` | **AVERTIT** — signalé à chaque run, jamais bloquant |
+| préservée (hors périmètre) | survit à `trim()` (donc interne) | **BLOQUE** — la valeur est corrompue pour tout lecteur |
+| n'importe laquelle | sonde sans `invisiblesAfterTrim` | **BLOQUE** — déploiement trop ancien pour trancher ; redéployez |
+
+### Reprise après un `rotation.lock` — sans jamais relancer la rotation
+
+La rotation n'a pas de mode reprise : après `RECOVERY_REQUIRED`, les étapes
+restantes se rejouent **à la main**, dans cet ordre, avec la paire **déjà**
+engagée en Production (jamais une nouvelle) :
+
+```powershell
+# 1. Diagnostiquer le candidat non promu (jamais l'URL publique).
+#    La clé API est la NOUVELLE, dans « API générées\<run>\secrets.env ».
+vercel curl /api/admin/diagnostics --deployment <url-candidat> -- --config <fichier-entetes>
+#    Attendu : licenseKey.converged=true, envValidation.ok=true,
+#    et « invisiblesAfterTrim: [] » partout.
+
+# 2. Santé réelle du candidat.
+vercel curl /api/health --deployment <url-candidat>
+#    Attendu : process/environment/database/redis/migrations = pass.
+
+# 3. Seulement alors : exposer au public, puis le vérifier en client anonyme.
+vercel promote <url-candidat> --yes
+curl https://app.garageflows.fr/api/health
+
+# 4. Étapes finales que la rotation n'a pas atteintes (dans cet ordre) :
+#    purge des licences invalidées, puis synchronisation des clés du dépôt.
+node scripts/repair-after-secret-rotation.js --help
+npm run keys:sync   # depuis le dépôt, après avoir copié keys/public.pem
+
+# 5. Le verrou ne se retire qu'une fois la convergence PROUVÉE.
+Remove-Item rotation.lock
+```
 
 ---
 
