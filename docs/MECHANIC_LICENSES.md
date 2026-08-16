@@ -77,6 +77,50 @@ Interface : **Paramètres → Accès mécaniciens** (OWNER/MANAGER).
 API : `GET/POST /api/mechanic-licenses`, `POST /api/mechanic-licenses/[lid]/assign`,
 `/status`, `/disconnect`, `GET /api/mechanic-licenses/[lid]/token`.
 
+## Amorçage de la remontée cloud d'un poste neuf
+
+Sur un poste fraîchement installé, **le planning ne remonte pas tant que le
+garage n'a pas été réservé côté cloud**, et l'écran affiche « Synchronisation
+cloud en attente ». Ce n'est pas une panne : `/api/sync/jobs` et
+`/api/sync/job-photo` passent `requireBound: true` — elles « n'ont aucune raison
+légitime d'être le tout premier contact d'un poste » (garde anti-usurpation
+GF31-AUD-003, `src/lib/sync/garage-auth.ts`). Seules les voies qui rattachent
+(`/api/sync/portal`, `/api/sync/mechanic-assignment`) peuvent réserver le garage,
+et uniquement s'il est libre.
+
+Séquence complète, vérifiée de bout en bout le 2026-08-16 :
+
+| # | Geste | Où | Vérification |
+|---|---|---|---|
+| 1 | licence GARAGE enregistrée côté cloud | keygen → `POST /api/admin/licenses/create` | 201 |
+| 2 | licence activée sur le poste | fenêtre d'activation | `License saved` + `device token obtained — remote` |
+| 3 | licence rattachée au garage LOCAL | automatique au premier appel d'API métier (`attachLicenseToGarage`) | `LicenseKey.garageId` non nul en base locale |
+| 4 | clé MÉCANICIEN enregistrée côté **cloud** | keygen → `POST /api/admin/licenses/create` | 201 |
+| 5 | clé enregistrée puis attribuée sur le **poste** | Paramètres → Accès mécaniciens | `cloudSynced: true` |
+| 6 | remontée du planning | automatique (battement 10 s) | `[sync/jobs:push] confirmée` |
+
+**L'étape 4 est celle qu'on oublie.** Sans elle, l'attribution locale réussit
+(HTTP 200) mais la remontée est refusée en `MECHANIC_KEY_UNKNOWN` (409) : le
+cloud ne connaît pas la clé. L'attribution locale, elle, est définitive et n'est
+PAS rejouée par la route `/assign` (elle répond 409 « déjà attribuée »). Le
+rattrapage existe : `retryPendingMechanicSyncs()` est déclenché par
+`GET /api/mechanic-licenses`, c'est-à-dire **en rouvrant l'onglet Accès
+mécaniciens**.
+
+Codes rencontrés et ce qu'ils signifient réellement :
+
+| Code | Sens | Geste |
+|---|---|---|
+| `NO_GARAGE_LICENSE` | aucune licence garage rattachée en base LOCALE | étapes 2–3 |
+| `LICENSE_NOT_BOUND` (409) | garage pas encore réservé côté cloud | étapes 4–5 |
+| `MECHANIC_KEY_UNKNOWN` (409) | clé mécanicien absente du cloud | étape 4, puis rouvrir l'onglet |
+| `GARAGE_ALREADY_CLAIMED` | ce garage appartient déjà à une autre licence | ne pas insister : le rattachement est immuable |
+
+⚠️ Le battement du planning est suspendu quand `document.hidden` est vrai
+(fenêtre en arrière-plan) : l'état affiché peut rester figé sur sa dernière
+valeur tant que la fenêtre n'est pas revenue au premier plan. Mesurer avec
+`GET /api/jobs/pulse`, pas avec le bandeau.
+
 ## Activation & session (PWA + EXE)
 
 `POST /api/license/activate` détecte le type mechanic et, après vérification de la
