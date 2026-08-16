@@ -63,7 +63,15 @@ export default function PortalRegisterPage() {
           {done ? (
             <div className="flex flex-col items-center gap-2 py-6 text-emerald-400">
               <CheckCircle2 className="h-10 w-10" />
-              <p className="text-sm">Compte créé. Redirection…</p>
+              {/* La réponse du serveur est VOLONTAIREMENT indifférenciable :
+                  une adresse déjà inscrite reçoit la même réponse qu'une
+                  nouvelle, pour ne pas révéler qui possède un compte. Annoncer
+                  « Compte créé » trahissait cette prudence dans l'autre sens :
+                  le client qui en avait déjà un repartait persuadé d'en avoir
+                  créé un second, et attendait un courriel de vérification qui
+                  ne viendrait jamais — celui qu'il reçoit lui dit l'inverse.
+                  On dit donc ce qui est vrai dans les DEUX cas. */}
+              <p className="text-sm">Vérifiez votre boîte mail</p>
               {courrielEnvoye ? (
                 <p className="text-center text-xs text-slate-400">
                   Un lien de vérification vient de vous être envoyé par courriel.
@@ -107,12 +115,18 @@ const inputCls = 'w-full rounded-xl border border-white/[0.10] bg-white/[0.05] p
 
 function Field({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
   return (
-    <div>
-      <label className="mb-1.5 block text-xs font-semibold tracking-wide text-slate-400">{label}</label>
+    // Le champ est ENGLOBÉ par l'étiquette : l'association est alors implicite,
+    // sans identifiant à propager. Auparavant `<label>` et `<input>` étaient
+    // frères, sans `htmlFor` ni `id` — un client qui utilise le retour vocal de
+    // son téléphone ne savait pas quel champ il remplissait, sur les deux
+    // premiers écrans du portail. Toucher l'étiquette ne donnait pas non plus
+    // le focus au champ.
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-semibold tracking-wide text-slate-300">{label}</span>
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2">{icon}</span>
         {children}
       </div>
-    </div>
+    </label>
   )
 }

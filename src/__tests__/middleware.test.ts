@@ -333,3 +333,46 @@ describe('non-régression — aucune boucle de redirection', () => {
     expect(redirectPath(res)).toBe('/license')
   })
 })
+
+/**
+ * Un mécanicien dont la session a expiré ne doit pas atterrir sur le login du
+ * PERSONNEL.
+ *
+ * Son jeton vit 30 jours sur le cloud, le cookie qui le porte cinq ans : passé
+ * ce délai il est traité comme un visiteur anonyme. Il était alors renvoyé vers
+ * `/login` — e-mail + mot de passe, qu'il n'a pas — dont le seul autre lien
+ * propose de « créer un garage ». Même `/mechanic` y menait : la page ne se
+ * chargeait jamais, donc le code client qui sait rediriger vers `/license` ne
+ * s'exécutait pas. Le seul chemin de réparation était de taper `/license` de
+ * mémoire.
+ */
+describe('mécanicien à session expirée : renvoyé vers sa page de réactivation', () => {
+  const aller = async (pathname: string, cookies: Record<string, string>) => {
+    const req = new NextRequest(new URL(`https://app.garageflows.fr${pathname}`), {
+      headers: { cookie: Object.entries(cookies).map(([k, v]) => `${k}=${v}`).join('; ') },
+    })
+    return middleware(req)
+  }
+
+  it('depuis la racine — la destination de l’icône installée', async () => {
+    const res = await aller('/', { gf_license_type: 'mechanic' })
+    expect(res.headers.get('location') ?? '').toMatch(/\/license$/)
+  })
+
+  it('depuis /mechanic — le chemin qu’il tape de lui-même', async () => {
+    const res = await aller('/mechanic', { gf_license_type: 'mechanic' })
+    expect(res.headers.get('location') ?? '').toMatch(/\/license$/)
+  })
+
+  it('un visiteur ordinaire va toujours au login du personnel', async () => {
+    // La correction ne doit pas détourner les autres : elle ne s'applique qu'au
+    // porteur d'une licence mécanicien.
+    const res = await aller('/', {})
+    expect(res.headers.get('location') ?? '').toMatch(/\/login/)
+  })
+
+  it('un porteur de licence GARAGE va au login, pas à /license', async () => {
+    const res = await aller('/', { gf_license_type: 'premium' })
+    expect(res.headers.get('location') ?? '').toMatch(/\/login/)
+  })
+})

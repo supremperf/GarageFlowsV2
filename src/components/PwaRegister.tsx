@@ -16,6 +16,8 @@ function isElectron(): boolean {
 
 export default function PwaRegister() {
   const [updateReady, setUpdateReady] = useState<ServiceWorker | null>(null)
+  /** Le bandeau demande confirmation avant de recharger — voir plus bas. */
+  const [confirmation, setConfirmation] = useState(false)
   const [incompatible, setIncompatible] = useState<string | null>(null)
 
   /**
@@ -89,9 +91,20 @@ export default function PwaRegister() {
       .catch(() => {})
 
     // Recharge la page une fois le nouveau SW actif (évite les états incohérents).
+    //
+    // Mais PAS à la toute première visite : il n'y a alors aucun contrôleur, le
+    // worker s'installe, s'active, appelle `clients.claim()` — et le contrôleur
+    // passe de `null` au worker, ce qui déclenche `controllerchange`. La page
+    // se rechargeait donc toute seule quelques secondes après l'arrivée d'un
+    // visiteur, sans qu'aucune version n'ait changé : un formulaire à moitié
+    // rempli était perdu, et le rechargement passait pour un défaut.
+    //
+    // On ne recharge que si un contrôleur existait DÉJÀ — c'est-à-dire quand un
+    // worker en REMPLACE un autre.
+    const avaitUnControleur = navigator.serviceWorker.controller !== null
     let refreshing = false
     const onControllerChange = () => {
-      if (refreshing) return
+      if (refreshing || !avaitUnControleur) return
       refreshing = true
       window.location.reload()
     }
@@ -124,10 +137,30 @@ export default function PwaRegister() {
 
   return (
     <div style={bar} role="status">
-      <span style={{ fontSize: 13 }}>Une nouvelle version est disponible.</span>
-      <button style={btn} onClick={() => updateReady.postMessage('SKIP_WAITING')}>
-        Mettre à jour
-      </button>
+      {/* Le bouton recharge la page : tout ce qui n'a pas été envoyé est perdu —
+          un commentaire en cours de frappe, une photo prise et pas encore
+          partie. Il l'annonçait comme une simple mise à jour. On le dit, et on
+          laisse le choix du moment : une nouvelle version n'a jamais l'urgence
+          d'une saisie en cours. */}
+      <span style={{ fontSize: 13 }}>
+        {confirmation
+          ? 'Recharger maintenant ? Ce qui n’a pas été envoyé sera perdu.'
+          : 'Une nouvelle version est disponible.'}
+      </span>
+      {confirmation ? (
+        <>
+          <button style={btn} onClick={() => updateReady.postMessage('SKIP_WAITING')}>
+            Recharger
+          </button>
+          <button style={btnSecondaire} onClick={() => setConfirmation(false)}>
+            Plus tard
+          </button>
+        </>
+      ) : (
+        <button style={btn} onClick={() => setConfirmation(true)}>
+          Mettre à jour
+        </button>
+      )}
     </div>
   )
 }
@@ -136,6 +169,10 @@ const bar: React.CSSProperties = {
   position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 9998,
   display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', color: '#f8fafc',
   border: '1px solid #1e293b', borderRadius: 12, padding: '10px 14px', boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+}
+const btnSecondaire: React.CSSProperties = {
+  background: 'transparent', color: '#cbd5e1', border: '1px solid #334155', borderRadius: 8,
+  padding: '7px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
 }
 const btn: React.CSSProperties = {
   background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 12px',

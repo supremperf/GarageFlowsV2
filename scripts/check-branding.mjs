@@ -164,7 +164,7 @@ for (const file of files) {
 
 // Contrôle de marque des manifestes (name/short_name). Dimensions d'icônes → check-pwa.
 const manifestIssues = []
-for (const mf of ['public/manifest.webmanifest', 'public/site.webmanifest']) {
+for (const mf of ['public/manifest.webmanifest', 'public/manifest-mecanicien.webmanifest', 'public/manifest-client.webmanifest']) {
   const abs = join(ROOT, mf)
   if (!existsSync(abs)) continue
   try {

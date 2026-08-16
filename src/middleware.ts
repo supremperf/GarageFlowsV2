@@ -239,6 +239,21 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
 
   // ── 5. Pages privées : exiger une session NextAuth AVANT la licence ────────
   if (!isLoggedIn) {
+    // ── Le mécanicien n'a PAS de compte staff ────────────────────────────────
+    // Son jeton de session expire à 30 jours sur le déploiement cloud, alors que
+    // le cookie qui le porte vit cinq ans : passé ce délai, il est traité comme
+    // un visiteur anonyme et renvoyé vers `/login` — un formulaire e-mail + mot
+    // de passe qu'il ne peut pas franchir, et dont le seul autre lien propose de
+    // « créer un garage ». Même `/mechanic` y menait : la page ne se chargeait
+    // jamais, donc le code client qui sait rediriger vers `/license` ne
+    // s'exécutait pas. Le seul chemin de réparation était de taper `/license`
+    // de mémoire, avec des gants, dans un atelier.
+    //
+    // `gf_license_type` n'est pas HttpOnly et n'accorde AUCUN droit : on ne
+    // change ici qu'une DESTINATION, vers une page déjà publique (§4).
+    if (req.cookies.get('gf_license_type')?.value === 'mechanic') {
+      return redirectTo(req, '/license')
+    }
     const loginUrl = new URL('/login', req.url)
     loginUrl.searchParams.set('callbackUrl', pathname + req.nextUrl.search)
     // On NE supprime PAS le cookie ici (voir §3) : une purge automatique

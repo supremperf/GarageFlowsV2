@@ -2466,3 +2466,166 @@ Ces corrections touchent des composants React que le dépôt ne sait pas monter
 briques exécutables et sur la présence des gardes dans la source. Le rendu réel
 — bandeau de péremption, bouton « Renvoyer », absence d'écrasement de saisie —
 reste `NOT_VERIFIED` tant qu'aucune recette en navigateur ne l'a exercé.
+
+---
+
+## 16/08/2026 — LOT 6 : UX et PWA
+
+Quatre lecteurs, puis un réfutateur par dimension. **33 défauts allégués** ; les
+deux dimensions réfutées à ce jour l'ont été **intégralement** (5/5 et 11/11) —
+et sur le défaut principal, le réfutateur est allé PLUS LOIN que le constat.
+
+### 1. Trois publics partageaient un seul manifeste
+
+`start_url: '/'`, `scope: '/'`. L'icône installée par un **mécanicien**
+n'ouvrait jamais `/mechanic` : elle y arrivait par ricochet, le middleware
+redirigeant tant que sa session valait. Or son jeton expire à **30 jours** sur le
+cloud alors que le cookie qui le porte vit **cinq ans** : au 31ᵉ jour, l'icône
+ouvre le formulaire de connexion du PERSONNEL — e-mail et mot de passe qu'il n'a
+pas, avec pour seule autre issue « créer un garage ».
+
+Le réfutateur a corrigé le constat sur un point décisif : `/mechanic` **aussi**
+y menait. La page ne se chargeait jamais, donc le code client qui sait rediriger
+vers `/license` ne s'exécutait pas. Le seul chemin de réparation était de taper
+`/license` de mémoire, avec des gants, dans un atelier.
+
+Deux corrections, car le manifeste seul n'y suffisait pas :
+
+- un manifeste **par public** — mécanicien (`/mechanic`), client
+  (`/clients/login`), garage (`/`) — avec des périmètres distincts et, pour le
+  mécanicien, la teinte de SON écran ;
+- dans le middleware, un porteur de licence mécanicien sans session valide est
+  renvoyé vers `/license`, sa page de réactivation. `gf_license_type` n'est pas
+  `HttpOnly` et n'accorde aucun droit : seule une DESTINATION change, vers une
+  page déjà publique.
+
+Au passage : le **portail client** proposait d'installer le logiciel de gestion
+du garage — icône morte pour un client. Il a désormais le sien.
+
+### 2. Ce que le manifeste promettait sans le tenir
+
+Trois raccourcis (`?view=schedule`, `?view=quotes`, `?view=invoices`)
+aboutissaient tous au même écran : **aucune ligne du code ne lit ce paramètre**.
+Retirés — un raccourci qui ment est pire que pas de raccourci. Une garde vérifie
+désormais que tout raccourci réintroduit voie son paramètre effectivement lu.
+
+`site.webmanifest` : mort, référencé par aucun HTML, mais servi sous le nom de
+convention le plus répandu **et validé par la CI comme s'il comptait**. Supprimé,
+les deux gardes énumèrent les trois manifestes vivants.
+
+### 3. La page hors ligne mentait
+
+Elle affirmait : « Vos actions ne sont enregistrées sur le serveur qu'une fois la
+connexion rétablie. » Cette phrase décrit une file d'attente différée. **Il n'y
+en a aucune** — ni localStorage, ni IndexedDB, ni file d'envoi nulle part. Un
+mécanicien pouvait croire son travail mis de côté alors qu'il était perdu.
+
+Elle dit maintenant ce qui se passe vraiment, détecte le retour du réseau au lieu
+d'attendre un appui, et offre un retour vers le planning.
+
+Pire : la **déconnexion la détruisait**. `purgeLocalData()` effaçait tous les
+caches, y compris le statique qui la porte — et le worker ne le reprécharge qu'à
+une prochaine installation. Un mécanicien qui se déconnectait puis perdait le
+réseau n'avait plus d'écran du tout. Le cache statique ne contient aucune donnée
+privée : il est désormais épargné.
+
+### 4. Les erreurs remontaient en anglais brut
+
+« Failed to fetch », « NetworkError », « Load failed » atteignaient l'écran d'un
+mécanicien en atelier. Traduites — et les messages **métier** du serveur, eux,
+restent intacts : ce sont eux qui portent l'information utile.
+
+Changer de jour hors réseau affichait les interventions de la **veille** sous la
+nouvelle date : `data` n'était jamais remise à null. Mieux vaut un écran vide et
+honnête.
+
+### 5. Le parcours du client
+
+- Un accès **coupé par le garage** : la connexion RÉUSSISSAIT. Le client recevait
+  un cookie, puis chaque route le rejetait — il tournait indéfiniment entre le
+  formulaire et un espace vide, sans jamais lire pourquoi. Le refus a lieu
+  maintenant à la connexion, avec le geste à faire. Le dire ne divulgue rien : il
+  a fourni le bon mot de passe.
+- L'inscription annonçait « **Compte créé** » à qui en possédait déjà un. La
+  réponse du serveur est volontairement indifférenciable — pour ne pas révéler
+  qui possède un compte — mais l'écran trahissait cette prudence dans l'autre
+  sens. Il dit désormais ce qui est vrai dans les deux cas.
+- Le **mot de passe oublié** n'avait aucune issue à l'écran. Il n'existe pas de
+  réinitialisation autonome dans ce produit ; le garage, lui, peut en remettre
+  un. On indique le chemin qui EXISTE plutôt que d'inventer une fonctionnalité.
+- **Accepter un devis** était irréversible, sans confirmation, et sans dire que
+  le clic vaut engagement — deux boutons qui se touchent sur un téléphone. Une
+  confirmation explicite précède désormais les deux réponses.
+
+### Vérification
+
+Suite : **3 590 verts / 0 rouge / 28 ignorés (3 618)** · `tsc` 0 · ESLint 0 ·
+13 gardes vertes. **+38 tests** ; **11 mutations sur 11 détectées**.
+
+### Reste dû
+
+- **Ouverture à froid hors réseau** : aucune page de l'espace mécanicien n'entre
+  en cache (`force-dynamic` impose `no-store`), et taper une intervention hors
+  réseau éjecte vers la page hors ligne. Mettre la coquille en cache est une
+  décision d'architecture — elle touche l'isolement voulu de cet espace — que je
+  signale sans la prendre.
+- Lien de vérification d'e-mail déjà utilisé : réponse JSON brute.
+- Retour des liens de courriel muet (`?verified=1`, `?email=modifie`).
+- Étiquettes non liées aux champs sur connexion et inscription.
+- `/clients` sans chemin renvoie un 404 sans issue.
+- Contraste insuffisant sur les phrases explicatives du portail.
+- Rechargement non sollicité à la première visite (`clients.claim`).
+- « Mettre à jour » recharge sans avertir et détruit un cliché non envoyé.
+
+---
+
+## 16/08/2026 — LOT 6 (fin) : les huit derniers culs-de-sac
+
+Chacun avait la même forme : l'utilisateur fait un geste normal et se retrouve
+quelque part d'où rien ne le sort.
+
+| Cul-de-sac | Correction |
+|---|---|
+| Taper une intervention **hors réseau** éjectait vers la page hors ligne, emportant le planning — le seul contenu qui restait | la navigation est refusée et **dite** ; le planning reste |
+| Le **lien de vérification déjà utilisé** répondait en JSON brut, dans un navigateur, à un client qu'on venait d'inviter à cliquer | redirection vers la connexion, avec le motif |
+| Les retours de courriel (`?verified=1`, `?email=modifie`) étaient **ignorés** : le client ne savait pas si son changement d'adresse avait abouti, ni laquelle était devenue son identifiant | affichés sur l'écran où il en a besoin |
+| **Étiquettes non liées** aux champs sur connexion et inscription : rien ne les associait, et toucher l'étiquette ne donnait pas le focus | le champ est englobé par son étiquette — association implicite, sans identifiant à propager |
+| **`/clients`** sans chemin : 404 anglophone sans issue, pour un QR code imprimé ou une adresse dictée | redirection vers la connexion |
+| **Contraste** : le client lisait le titre et les boutons, pas la phrase qui explique pourquoi on lui impose un changement de mot de passe | `text-slate-300` |
+| **Rechargement non sollicité** à la première visite (`clients.claim` → `controllerchange`) : la page se rechargeait seule, formulaire compris, sans qu'aucune version n'ait changé | on ne recharge que si un contrôleur existait DÉJÀ |
+| **« Mettre à jour »** rechargeait sans avertir, détruisant un commentaire en cours ou un cliché non envoyé | confirmation explicite, et un « Plus tard » — une version n'a jamais l'urgence d'une saisie |
+
+### Sur la navigation hors réseau
+
+Le correctif refuse l'ouverture et garde le planning. Il ne rend pas la
+navigation possible hors ligne : cela demanderait de mettre en cache la coquille
+de l'espace mécanicien, ce que `force-dynamic` interdit délibérément. **La
+décision d'architecture n'est pas prise ici** — elle touche l'isolement voulu de
+cet espace. Ce qui est corrigé, c'est que le geste le plus naturel de l'écran ne
+détruise plus son contenu.
+
+`navigator.onLine` ne sert QU'À refuser : il ment dans un sens — réseau présent,
+serveur injoignable — mais pas dans l'autre. Les échecs consécutifs de la boucle
+complètent la mesure.
+
+### Trois tests mis à jour, pas affaiblis
+
+Trois assertions figeaient la FORME du refus d'un jeton (`status === 400`) alors
+que leur intention est le refus lui-même. La route étant ouverte depuis un client
+de messagerie, elle refuse désormais par une redirection. Les assertions vérifient
+la redirection ET son motif, en plus de l'absence de changement d'état — qu'elles
+vérifiaient déjà, et qui reste la vraie preuve.
+
+### Vérification
+
+Suite : **3 602 verts / 0 rouge / 28 ignorés (3 630)** · `tsc` 0 · ESLint 0 ·
+13 gardes vertes. **+12 tests** ; **6 mutations sur 6 détectées**.
+
+### Réserve
+
+Ces corrections sont des composants React que le dépôt ne sait pas monter
+(environnement `node`, pas de testing-library). Les tests portent sur les briques
+exécutables et sur la présence des gardes dans la source. Le rendu réel —
+bandeau de refus hors ligne, bandeau de confirmation de mise à jour, association
+étiquette/champ — reste `NOT_VERIFIED` tant qu'aucune recette en navigateur ne
+l'a exercé. C'est consigné au §6 de `docs/BLOCAGES_EXTERNES.md`.

@@ -168,7 +168,13 @@ describe('confirmation — c\'est là que tout bascule', () => {
     await demander({ email: NOUVELLE, currentPassword: MDP })
     const jeton = await jetonCourant()
     await confirmer(jeton)
-    expect((await confirmer(jeton)).status).toBe(400)
+    // Le refus prend désormais la forme d'une REDIRECTION : cette route est
+    // ouverte depuis un client de messagerie, ses réponses sont lues par un
+    // humain dans un navigateur. Ce qui compte reste le REFUS — et l'état,
+    // vérifié juste après, ne bouge pas.
+    const rejoue = await confirmer(jeton)
+    expect(rejoue.status).toBe(303)
+    expect(rejoue.headers.get('location')).toMatch(/lien=utilise/)
   })
 
   it('une collision survenue ENTRE la demande et la confirmation ne casse rien', async () => {
@@ -191,7 +197,9 @@ describe('confirmation — c\'est là que tout bascule', () => {
   })
 
   it('un jeton inconnu est refusé', async () => {
-    expect((await confirmer('jeton-invente')).status).toBe(400)
+    const inconnu = await confirmer('jeton-invente')
+    expect(inconnu.status, 'refusé — par une page, pas par du JSON brut').toBe(303)
+    expect(inconnu.headers.get('location')).toMatch(/lien=utilise/)
   })
 })
 

@@ -88,6 +88,16 @@ export default function QuoteApprovalPage() {
   const [actionLoading, setActionLoading] = useState(false)
   const [actionDone, setActionDone] = useState<'accepted' | 'refused' | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  /**
+   * Action en attente de CONFIRMATION.
+   *
+   * Accepter un devis engage les travaux et le montant, et c'est irréversible :
+   * la route refuse ensuite tout second passage. Un seul contact suffisait
+   * pourtant à le faire — un client qui voulait relire, ou qui visait
+   * « Refuser », découvrait l'irréversibilité après coup. Sur un téléphone, les
+   * deux boutons se touchent.
+   */
+  const [aConfirmer, setAConfirmer] = useState<'accept' | 'refuse' | null>(null)
 
   useEffect(() => {
     if (!token) return
@@ -105,6 +115,7 @@ export default function QuoteApprovalPage() {
   }, [token])
 
   const handleAction = async (action: 'accept' | 'refuse') => {
+    setAConfirmer(null)
     setActionLoading(true)
     setActionError(null)
     try {
@@ -353,7 +364,8 @@ export default function QuoteApprovalPage() {
             <>
               <h3 className="font-semibold text-gray-800 mb-1">Votre réponse</h3>
               <p className="text-sm text-gray-500 mb-4">
-                Acceptez ou refusez ce devis en cliquant sur l&apos;un des boutons ci-dessous. Votre réponse sera immédiatement transmise au garage.
+                Acceptez ou refusez ce devis ci-dessous. Votre réponse est <strong>définitive</strong> et
+                sera immédiatement transmise au garage : accepter vaut accord sur les travaux et le montant.
               </p>
 
               {actionError && (
@@ -362,9 +374,38 @@ export default function QuoteApprovalPage() {
                 </div>
               )}
 
+              {aConfirmer && (
+                <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-4" role="alertdialog" aria-live="polite">
+                  <p className="text-sm font-semibold text-amber-900 mb-1">
+                    {aConfirmer === 'accept' ? 'Accepter ce devis ?' : 'Refuser ce devis ?'}
+                  </p>
+                  <p className="text-sm text-amber-800 mb-3">
+                    {aConfirmer === 'accept'
+                      ? 'Vous vous engagez sur les travaux et le montant indiqués. Cette réponse ne pourra plus être modifiée.'
+                      : 'Le garage sera informé de votre refus. Cette réponse ne pourra plus être modifiée.'}
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      onClick={() => handleAction(aConfirmer)}
+                      disabled={actionLoading}
+                      className="flex-1 px-4 py-3 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-semibold text-sm"
+                    >
+                      Oui, {aConfirmer === 'accept' ? 'j’accepte' : 'je refuse'}
+                    </button>
+                    <button
+                      onClick={() => setAConfirmer(null)}
+                      disabled={actionLoading}
+                      className="flex-1 px-4 py-3 rounded-xl border border-amber-300 text-amber-900 font-semibold text-sm"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={() => handleAction('accept')}
+                  onClick={() => setAConfirmer('accept')}
                   disabled={actionLoading}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-base transition-colors shadow-sm"
                 >
@@ -379,7 +420,7 @@ export default function QuoteApprovalPage() {
                 </button>
 
                 <button
-                  onClick={() => handleAction('refuse')}
+                  onClick={() => setAConfirmer('refuse')}
                   disabled={actionLoading}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl border-2 border-red-300 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed text-red-700 font-semibold text-base transition-colors"
                 >

@@ -37,6 +37,11 @@ const nextConfig = {
   async redirects() {
     return [
       { source: '/portal', destination: '/clients', permanent: true },
+      // `/clients` n'a pas de page : un client à qui l'on donne l'adresse du
+      // portail sans chemin — QR code imprimé, adresse dictée au téléphone, URL
+      // raccourcie par une messagerie — tombait sur un 404 anglophone sans la
+      // moindre issue. On l'amène là où il doit aller.
+      { source: '/clients', destination: '/clients/login', permanent: false },
       { source: '/portal/:path*', destination: '/clients/:path*', permanent: true },
     ]
   },

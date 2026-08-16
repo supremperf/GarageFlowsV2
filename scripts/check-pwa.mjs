@@ -20,7 +20,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..')
-const MANIFESTS = ['public/manifest.webmanifest', 'public/site.webmanifest']
+const MANIFESTS = ['public/manifest.webmanifest', 'public/manifest-mecanicien.webmanifest', 'public/manifest-client.webmanifest']
 
 /** Lit les dimensions réelles d'un PNG (entête IHDR : largeur/hauteur en BE). */
 function pngSize(absPath) {

@@ -249,7 +249,10 @@ describe('conflit entre les deux sens (§25)', () => {
     const res = await verifyGET(
       new NextRequest(`http://localhost/api/portal/auth/verify-email?token=${encodeURIComponent(jetonClient)}`),
     )
-    expect(res.status).toBe(400)
+    // Refusé par une redirection : la route est ouverte depuis un courriel.
+    expect(res.status).toBe(303)
+    expect(res.headers.get('location')).toMatch(/lien=utilise/)
+    // Ce qui compte : l'ancien jeton n'a RIEN changé.
     expect((await compte()).email).toBe(NOUVELLE)
   })
 

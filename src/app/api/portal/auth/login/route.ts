@@ -62,6 +62,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(locked ? { error: 'Compte verrouillé suite à trop de tentatives.' } : GENERIC_401, { status: locked ? 429 : 401 })
   }
 
+  // ── Accès coupé par le garage ─────────────────────────────────────────────
+  // `auth-helpers.ts` refuse déjà un compte désactivé sur CHAQUE route
+  // protégée — mais la connexion, elle, aboutissait : le client recevait un
+  // cookie, puis se faisait rejeter partout. Il tournait indéfiniment entre le
+  // formulaire et un espace vide, sans jamais lire une phrase expliquant
+  // pourquoi, et en concluait que le logiciel est cassé.
+  //
+  // Le dire ici ne divulgue rien : il a fourni le bon mot de passe. C'est
+  // précisément la seule personne à qui l'information est due.
+  if (user.disabledAt) {
+    await prisma.portalUser.update({
+      where: { id: user.id },
+      data: { failedLoginCount: 0, lockedUntil: null },
+    })
+    return NextResponse.json(
+      {
+        error: 'Votre accès en ligne a été désactivé par votre garage. '
+          + 'Contactez-le pour le rétablir.',
+        code: 'ACCESS_DISABLED',
+      },
+      { status: 403 },
+    )
+  }
+
   // Success — clear lockout counters.
   await prisma.portalUser.update({
     where: { id: user.id },

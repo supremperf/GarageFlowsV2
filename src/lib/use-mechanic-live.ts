@@ -59,6 +59,28 @@ export interface MechanicLiveResult<T> {
 export const DELAI_REQUETE_MS = 20_000
 
 /**
+ * Traduit une panne de transport en phrase compréhensible.
+ *
+ * `fetch` rejette avec le texte BRUT du navigateur — « Failed to fetch » sous
+ * Chrome, « NetworkError when attempting to fetch resource. » sous Firefox,
+ * « Load failed » sous Safari. Ces messages remontaient tels quels à l'écran
+ * d'un mécanicien en atelier : de l'anglais technique, sans indication de ce
+ * qu'il faut faire. Les messages MÉTIER du serveur, eux, sont conservés
+ * intacts — ce sont eux qui portent l'information utile.
+ */
+export function messageLisible(e: unknown): string {
+  if (!(e instanceof Error)) return 'Connexion au serveur impossible.'
+  const brut = e.message ?? ''
+  if (/failed to fetch|networkerror|load failed|network request failed/i.test(brut)) {
+    return 'Connexion au serveur impossible. Vérifiez votre réseau.'
+  }
+  if (/délai dépassé/i.test(brut)) {
+    return 'Le serveur met trop de temps à répondre. Nouvelle tentative en cours…'
+  }
+  return brut || 'Connexion au serveur impossible.'
+}
+
+/**
  * Rejette si la promesse n'a pas abouti dans le délai imparti.
  *
  * Exportée pour être ÉPROUVÉE : un garde-fou qu'aucun test ne peut exercer n'est
@@ -145,7 +167,7 @@ export function useMechanicLive<T>(
       stateRef.current = reduceLive(stateRef.current, 'success', { baseIntervalMs: intervalMs })
     } catch (e) {
       if (!mounted.current || mySeq !== seq.current) return
-      const message = e instanceof Error ? e.message : 'Erreur réseau'
+      const message = messageLisible(e)
       // 404 = la ressource ne nous est plus attribuée (réaffectation à un autre
       // mécanicien, suppression). Ce n'est pas une panne : on prévient l'appelant.
       //
@@ -177,6 +199,10 @@ export function useMechanicLive<T>(
     mounted.current = true
     if (!url || !enabled) { setLoading(false); return }
     setLoading(true)
+    // La donnée de l'URL PRÉCÉDENTE ne doit pas rester à l'écran : hors réseau,
+    // changer de jour affichait les interventions de la veille sous la nouvelle
+    // date, sans rien qui le signale. Mieux vaut un écran vide et honnête.
+    setData(null)
     stateRef.current = initialLiveState({ baseIntervalMs: intervalMs })
     dispatch('start')
     return () => {

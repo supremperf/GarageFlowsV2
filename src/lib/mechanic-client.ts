@@ -14,7 +14,13 @@ export async function purgeLocalData(): Promise<void> {
   try {
     if (typeof caches !== 'undefined') {
       const keys = await caches.keys()
-      await Promise.all(keys.map((k) => caches.delete(k)))
+      // Le cache STATIQUE ne contient aucune donnée de mécanicien : il porte la
+      // page hors ligne, le manifeste et les icônes. L'effacer avec le reste
+      // supprimait `offline.html` — et le worker ne le reprécharge qu'à une
+      // prochaine INSTALLATION. Un mécanicien qui se déconnecte puis perd le
+      // réseau n'avait donc plus d'écran du tout, jusqu'à la version suivante.
+      const prives = keys.filter((k) => !k.endsWith('-static'))
+      await Promise.all(prives.map((k) => caches.delete(k)))
     }
   } catch { /* ignore */ }
 }

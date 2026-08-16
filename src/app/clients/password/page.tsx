@@ -114,7 +114,11 @@ function FormulaireMotDePasse() {
             <h1 className="text-base font-bold text-white">
               {impose ? 'Définissez votre mot de passe' : 'Changer mon mot de passe'}
             </h1>
-            <p className="text-[11px] text-slate-500">
+            {/* `text-slate-500` sur ce fond passe sous le seuil de contraste :
+                en extérieur ou dans un atelier mal éclairé, le client lisait le
+                titre et les boutons, mais pas la phrase qui EXPLIQUE pourquoi on
+                lui impose un changement. */}
+            <p className="text-xs text-slate-300">
               {impose
                 ? 'Votre garage vous a remis un mot de passe provisoire. Choisissez le vôtre pour accéder à votre espace.'
                 : 'Vos autres appareils connectés seront déconnectés.'}

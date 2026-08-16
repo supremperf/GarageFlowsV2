@@ -15,14 +15,23 @@ import { prisma } from '@/lib/db'
 import { cheminPortail } from '@/lib/portal/routes'
 
 export async function GET(req: NextRequest) {
+  // Cette route est ouverte depuis un CLIENT DE MESSAGERIE : ses réponses sont
+  // lues par un humain dans un navigateur, jamais par du code. Les chemins de
+  // succès redirigeaient déjà vers une page ; les échecs, eux, rendaient du JSON
+  // brut — un cul-de-sac pour le client à qui l'on venait d'écrire « ouvrez le
+  // lien reçu, sinon vos documents ne s'affichent pas ». Ils redirigent
+  // désormais eux aussi, avec le motif.
+  const versConnexion = (motif: string) =>
+    NextResponse.redirect(new URL(`${cheminPortail('login')}?lien=${motif}`, req.url), { status: 303 })
+
   const token = req.nextUrl.searchParams.get('token')?.trim()
-  if (!token) return NextResponse.json({ error: 'Jeton manquant' }, { status: 400 })
+  if (!token) return versConnexion('absent')
 
   const user = await prisma.portalUser.findFirst({
     where: { emailVerifyToken: token },
     select: { id: true, garageId: true, email: true, clientId: true, pendingEmail: true },
   })
-  if (!user) return NextResponse.json({ error: 'Lien invalide ou déjà utilisé' }, { status: 400 })
+  if (!user) return versConnexion('utilise')
 
   // ── CHANGEMENT d'adresse confirmé (GF-PORT-006) ────────────────────────────
   // Le clic prouve la possession de la NOUVELLE adresse : elle devient

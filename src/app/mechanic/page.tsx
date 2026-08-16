@@ -105,6 +105,25 @@ export default function MechanicPlanningPage() {
   // apparaît (ou disparaît) ici en quelques secondes, sans reconnexion, sans
   // fermeture de l'application et sans vidage de cache. Cf. lib/live-sync.ts
   // pour le choix du transport et la politique de cadence/backoff.
+  /**
+   * Refus de navigation hors réseau.
+   *
+   * Ouvrir une intervention déclenche une navigation Next, qui a besoin du
+   * réseau : hors ligne, elle bascule en navigation navigateur complète, le
+   * service worker ne trouve rien en cache (l'espace mécanicien est
+   * `force-dynamic`, donc jamais mis en cache) et sert la page hors ligne.
+   * L'application ENTIÈRE disparaît — y compris le planning déjà chargé, le
+   * seul contenu dont le mécanicien disposait encore.
+   *
+   * Le geste le plus naturel de l'écran était donc celui qui détruisait son
+   * contenu. On refuse la navigation et on le DIT, en gardant le planning.
+   *
+   * Réserve : mettre la coquille de cet espace en cache permettrait de naviguer
+   * vraiment hors ligne. C'est une décision d'architecture — elle touche
+   * l'isolement voulu de cet espace — qui n'est pas prise ici.
+   */
+  const [refusHorsLigne, setRefusHorsLigne] = useState(false)
+
   const { data, error, loading, lastSyncAt, refresh, echecsConsecutifs } = useMechanicLive<{
     data: Job[]
     window?: { from: string; to: string }
@@ -113,6 +132,21 @@ export default function MechanicPlanningPage() {
     `/api/mechanic/schedule?date=${encodeURIComponent(date)}`,
   )
   const jobs = data?.data ?? []
+
+  /**
+   * N'ouvre une intervention QUE si le réseau peut suivre.
+   *
+   * `navigator.onLine` ment dans un sens (réseau présent, serveur injoignable)
+   * mais pas dans l'autre : quand il dit « hors ligne », il l'est. On s'en sert
+   * donc uniquement pour REFUSER, et on complète avec les échecs consécutifs de
+   * la boucle, qui, eux, mesurent l'état réel du serveur.
+   */
+  const ouvrirIntervention = (id: string) => {
+    const horsLigne = (typeof navigator !== 'undefined' && navigator.onLine === false) || echecsConsecutifs > 0
+    if (horsLigne) { setRefusHorsLigne(true); return }
+    setRefusHorsLigne(false)
+    router.push(`/mechanic/jobs/${id}`)
+  }
 
   // ── En dehors de la fenêtre synchronisée, on le DIT (GF-038) ───────────────
   // Le miroir cloud n'est tenu à jour que sur [J−7, J+30]. Au-delà, ce qui
@@ -230,11 +264,24 @@ export default function MechanicPlanningPage() {
           Aucune intervention prévue ce jour.
         </div>
       ) : (
+        <>
+        {refusHorsLigne && (
+          <div
+            role="alert"
+            className="mb-3 flex items-start gap-2 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2.5 text-[13px] text-amber-200"
+          >
+            <WifiOff className="mt-0.5 h-4 w-4 flex-shrink-0" />
+            <span>
+              Le détail d’une intervention a besoin du réseau. Votre planning reste affiché ;
+              réessayez dès que la connexion revient.
+            </span>
+          </div>
+        )}
         <ul className="space-y-3">
           {jobs.map((job) => (
             <li key={job.id}>
               <button
-                onClick={() => router.push(`/mechanic/jobs/${job.id}`)}
+                onClick={() => ouvrirIntervention(job.id)}
                 className="w-full text-left bg-[#111827] hover:bg-[#161f33] border border-white/[0.06] rounded-xl p-4 transition active:scale-[0.99]"
               >
                 <div className="flex items-start justify-between gap-3">
@@ -264,6 +311,7 @@ export default function MechanicPlanningPage() {
             </li>
           ))}
         </ul>
+        </>
       )}
     </div>
   )
