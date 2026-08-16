@@ -49,7 +49,7 @@ import { verifyLicenseToken } from '@/lib/license/verify'
  *                           keys/private.pem, `_PK` et `_LINES` donnent tous
  *                           e6605999…, qui valide 4/4 licences réelles de
  *                           keys/licenses_db.json — 835c1e90… en valide 0/4. */
-const REFERENCE_FP = '2f3c1693a70d99ea3280e74a6b4c6d8c510019a984c1d50cd4f6d9966b1217ce' // gitleaks:allow
+const REFERENCE_FP = 'bd8c08451489fb83cef0347b04801018c24cb026f88caffe8995bf9a7a9861e3' // gitleaks:allow
 
 /** Empreinte SPKI‑DER SHA‑256 d'une clé publique PEM. */
 function fingerprint(pem: string): string {
