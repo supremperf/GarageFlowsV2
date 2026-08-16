@@ -25,6 +25,8 @@ const path    = require('path')
 const fs      = require('fs')
 const http    = require('http')
 const { evaluerGraceHorsLigne } = require('./grace-hors-ligne')
+const { evaluerSauvegardes, formulerAge } = require('./sauvegarde-en-souffrance')
+const { evaluerEcheanceExport } = require('./echeance-export')
 const crypto  = require('crypto')
 const os      = require('os')
 const { resolveMainSecret, resolveSmtpCipherKey, loadOrCreateInstallSecret } = require('./secret')
@@ -196,6 +198,14 @@ let breadcrumbs       = []      // last user actions before a crash (bounded)
 let clockTampered     = false   // set when a backward clock jump is detected
 let splashWindow      = null
 let nextServer        = null
+/**
+ * Vrai quand c'est NOUS qui arrêtons le serveur (fermeture, mise à jour).
+ *
+ * Sans cette distinction, l'annonce de panne se déclencherait aussi à chaque
+ * fermeture normale — et un message d'erreur qui apparaît quand tout va bien
+ * finit par être ignoré quand tout va mal.
+ */
+let arretVoulu        = false
 let backupTimer       = null
 let licenseTimer      = null    // periodic revocation check (adaptive interval)
 let licenseBlocked    = false   // true while access is blocked (revoked/suspended/tampered)
@@ -243,7 +253,31 @@ function httpGetJson(url, timeoutMs = 6000, redirects = 0) {
       const mod = url.startsWith('https') ? require('https') : http
       const req = mod.get(url, { timeout: timeoutMs, headers: { 'User-Agent': 'GarageFlow/' + app.getVersion() } }, res => {
         if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-          res.resume(); resolve(httpGetJson(res.headers.location, timeoutMs, redirects + 1)); return
+          res.resume()
+          // ── Une redirection ne doit pas AFFAIBLIR le transport ────────────────
+          // L'en-tête `Location` était suivi tel quel. Deux conséquences :
+          //
+          //  · une redirection RELATIVE (« /api/update/latest-v2 ») n'était pas
+          //    résolue contre l'URL d'origine ; la chaîne partait au module
+          //    `http`, qui refusait, et la vérification de mise à jour échouait
+          //    en silence ;
+          //  · une redirection de `https:` vers `http:` était acceptée. La
+          //    métadonnée — dont l'URL de téléchargement et l'empreinte —
+          //    provenait alors d'une source en clair, modifiable en route. La
+          //    signature du manifeste protège encore les OCTETS installés quand
+          //    elle est configurée, mais elle ne protège rien lorsqu'elle ne
+          //    l'est pas, et un manifeste retiré par un tiers suffit à priver
+          //    durablement le poste de mises à jour.
+          let suivante = null
+          try { suivante = new URL(res.headers.location, url) } catch (_) {}
+          const protocoleAdmis = suivante && (suivante.protocol === 'https:' || suivante.protocol === 'http:')
+          const retrograde = url.startsWith('https') && suivante?.protocol !== 'https:'
+          if (!protocoleAdmis || retrograde) {
+            log('[update] redirection refusée:', String(res.headers.location).slice(0, 120))
+            return resolve(null)
+          }
+          resolve(httpGetJson(suivante.toString(), timeoutMs, redirects + 1))
+          return
         }
         let raw = ''
         res.on('data', c => (raw += c))
@@ -254,6 +288,9 @@ function httpGetJson(url, timeoutMs = 6000, redirects = 0) {
     } catch { resolve(null) }
   })
 }
+
+// Réduit une chaîne à un NOM de fichier, jamais à un chemin (update-verify.js).
+const nomFichierSur = updateVerify.nomFichierInstallateur
 
 // Empreinte SHA-256 (hex) d'un fichier, en flux (pas de mise en mémoire).
 function sha256File(filePath) {
@@ -278,16 +315,30 @@ function sha256File(filePath) {
 function annoterInstallabilite(info) {
   if (!info || !info.hasUpdate) return info
   const signatureExigee = updateVerify.signingConfigured()
-  const installable = !signatureExigee || Boolean(info.manifest)
+
+  // ── Palier obligatoire annoncé par la source ────────────────────────────────
+  // `minVersion` était collecté par `fetchLatestUpdateBrut` puis ignoré partout.
+  // La garde qui compte est dans `update-verify.js` — elle porte sur le
+  // manifeste SIGNÉ, seule autorité. Celle-ci est en amont et sert l'écran :
+  // proposer un bouton « Mettre à jour » que le processus principal refusera
+  // ensuite, c'est promettre puis se dédire.
+  const palierManquant = Boolean(
+    info.minVersion && semver.isNewer(info.minVersion, info.currentVersion),
+  )
+
+  const installable = palierManquant ? false : (!signatureExigee || Boolean(info.manifest))
+  const motif = palierManquant
+    ? `Cette mise à jour exige la version ${info.minVersion} au minimum : `
+      + `installez d'abord la version ${info.minVersion}, puis relancez la mise à jour.`
+    : "Cette mise à jour n'est pas accompagnée d'un manifeste signé : "
+      + 'elle ne peut pas être installée automatiquement. Téléchargez-la et '
+      + 'installez-la manuellement, ou demandez à votre éditeur une publication signée.'
+
   return {
     ...info,
     signatureExigee,
     installable,
-    unsignedReason: installable
-      ? null
-      : "Cette mise à jour n'est pas accompagnée d'un manifeste signé : "
-        + 'elle ne peut pas être installée automatiquement. Téléchargez-la et '
-        + 'installez-la manuellement, ou demandez à votre éditeur une publication signée.',
+    unsignedReason: installable ? null : motif,
   }
 }
 
@@ -407,12 +458,89 @@ async function fetchLatestUpdateBrut() {
   return { hasUpdate: false, currentVersion, checked: true }
 }
 
+// ── Mémoire des tentatives de mise à jour ─────────────────────────────────────
+//
+// `lastNotifiedUpdate` ne vivait qu'en mémoire. Une installation qui échoue —
+// l'utilisateur annule l'assistant, l'antivirus bloque, l'installateur se
+// termine sans rien faire — laissait le poste rouvrir sur la MÊME version, et
+// la proposition revenait au démarrage suivant, identique. Le garagiste
+// racceptait, l'installateur retéléchargeait deux cents mégaoctets, échouait
+// pareil. Rien n'apprenait de la tentative précédente.
+//
+// On garde donc une trace : quelle version a été lancée, et quand. Tant que le
+// poste n'a pas changé de version et que la tentative est fraîche, on se tait —
+// SAUF pour une mise à jour obligatoire, qu'on n'a pas le droit de masquer.
+const UPDATE_TRY_PATH = () => path.join(APP_DATA, 'gf_update_tentative.json')
+/** Une tentative reste « fraîche » pendant six heures. */
+const UPDATE_TRY_TTL_MS = 6 * 60 * 60 * 1_000
+
+function lireTentativeMaj() {
+  try {
+    const v = JSON.parse(fs.readFileSync(UPDATE_TRY_PATH(), 'utf8'))
+    if (typeof v?.version === 'string' && Number.isFinite(v?.ts)) return v
+  } catch (_) { /* absente ou illisible : aucune tentative connue */ }
+  return null
+}
+
+function ecrireTentativeMaj(version) {
+  try {
+    fs.mkdirSync(APP_DATA, { recursive: true })
+    fs.writeFileSync(UPDATE_TRY_PATH(), JSON.stringify({ version, ts: Date.now() }), 'utf8')
+  } catch (e) { log('[update] tentative non mémorisée:', e.message) }
+}
+
+function oublierTentativeMaj() {
+  try { fs.rmSync(UPDATE_TRY_PATH(), { force: true }) } catch (_) {}
+}
+
+/** Faut-il taire cette proposition parce qu'on vient déjà de l'essayer ? */
+function tentativeRecente(info) {
+  if (!info || info.mandatory) return false
+  const t = lireTentativeMaj()
+  if (!t) return false
+  // Le poste tourne enfin sur la version visée (ou plus récente) : la tentative
+  // a abouti, la mémoire n'a plus d'objet.
+  if (!semver.isNewer(t.version, app.getVersion())) { oublierTentativeMaj(); return false }
+  const age = Date.now() - t.ts
+  if (age < 0 || age > UPDATE_TRY_TTL_MS) { oublierTentativeMaj(); return false }
+  return t.version === info.latestVersion
+}
+
+/**
+ * Retire les installateurs abandonnés dans `%TEMP%\gf-update`.
+ *
+ * Chaque tentative laissait un exécutable de plusieurs centaines de mégaoctets,
+ * que rien ne supprimait : on ne peut pas effacer un installateur pendant qu'il
+ * s'exécute, et l'application est fermée juste après l'avoir lancé. Sur un
+ * poste qui a vu passer quelques mises à jour, le dossier temporaire se remplit
+ * de gigaoctets — et un disque plein est précisément ce qui fait échouer la
+ * mise à jour suivante.
+ */
+function purgerTelechargementsMaj(ageMaxMs = 7 * 24 * 60 * 60 * 1_000) {
+  const dossier = path.join(require('os').tmpdir(), 'gf-update')
+  let retires = 0
+  try {
+    for (const nom of fs.readdirSync(dossier)) {
+      const p = path.join(dossier, nom)
+      try {
+        if (Date.now() - fs.statSync(p).mtimeMs > ageMaxMs) { fs.rmSync(p, { force: true }); retires++ }
+      } catch (_) { /* fichier verrouillé ou disparu : on passe */ }
+    }
+  } catch (_) { /* dossier absent : rien à purger */ }
+  if (retires) log(`[update] ${retires} téléchargement(s) abandonné(s) supprimé(s)`)
+  return retires
+}
+
 // Contrôle au démarrage (~25 s) puis toutes les heures ; notifie le renderer.
 function startPeriodicUpdateCheck() {
   const runCheck = async () => {
     try {
       const info = await fetchLatestUpdate()
       if (info?.hasUpdate && info.latestVersion && info.latestVersion !== lastNotifiedUpdate) {
+        if (tentativeRecente(info)) {
+          log('[update] proposition tue — version', info.latestVersion, 'déjà tentée récemment')
+          return
+        }
         lastNotifiedUpdate = info.latestVersion
         try { mainWindow?.webContents.send('app:update-available', info) } catch (_) {}
         log('[update] version disponible:', info.latestVersion, '| obligatoire:', !!info.mandatory)
@@ -467,10 +595,81 @@ const LOCK_PERIOD_MS       = 72 * 60 * 60 * 1_000   // 72 hours (lock after grac
 
 // ── Logging ───────────────────────────────────────────────────────────────────
 
+/**
+ * Taille au-delà de laquelle le journal est basculé.
+ *
+ * Il n'avait AUCUNE borne. Le poste écrit à chaque vérification de licence
+ * (toutes les 2 minutes), à chaque battement de synchronisation, et relaie en
+ * plus la sortie du serveur Next ligne par ligne. Sur une installation qui
+ * tourne depuis deux ans, `garageflow.log` atteint des centaines de mégaoctets :
+ * il remplit le disque du poste, et `app:open-logs` ouvre un fichier que le
+ * Bloc-notes ne sait plus afficher.
+ */
+const LOG_MAX_OCTETS = 5 * 1024 * 1024
+/** On ne consulte pas la taille à chaque ligne : ce serait un `stat` par log. */
+const LOG_PAS_CONTROLE = 256 * 1024
+// Amorcé au seuil : le tout premier `log()` contrôle la taille. Sans cela, un
+// poste qui redémarre avec un journal déjà énorme écrirait encore 256 Ko dedans
+// avant qu'on s'en aperçoive — et un poste qu'on redémarre souvent ne
+// basculerait jamais.
+let octetsDepuisControle = LOG_PAS_CONTROLE
+
+/**
+ * Bascule `garageflow.log` en `garageflow.log.1` quand il devient trop gros.
+ *
+ * UN seul fichier précédent est conservé : deux générations de 5 Mo bornent le
+ * journal à 10 Mo, ce qui laisse largement de quoi comprendre un incident sans
+ * jamais devenir un problème de place.
+ */
+function faireTournerJournal() {
+  try {
+    const taille = fs.statSync(LOG_PATH).size
+    if (taille < LOG_MAX_OCTETS) return
+    try { fs.rmSync(LOG_PATH + '.1', { force: true }) } catch (_) {}
+    fs.renameSync(LOG_PATH, LOG_PATH + '.1')
+  } catch (_) { /* journal absent ou verrouillé : rien à basculer */ }
+}
+
 function log(...args) {
   const line = `[${new Date().toISOString()}] ${args.join(' ')}\n`
   try { process.stdout.write(line) } catch (_) {}   // EPIPE-safe: no terminal in packaged app
-  try { fs.appendFileSync(LOG_PATH, line) } catch (_) {}
+  try {
+    octetsDepuisControle += Buffer.byteLength(line)
+    if (octetsDepuisControle >= LOG_PAS_CONTROLE) {
+      octetsDepuisControle = 0
+      faireTournerJournal()
+    }
+    fs.appendFileSync(LOG_PATH, line)
+  } catch (_) {}
+}
+
+/**
+ * Rend les derniers octets du journal SANS le charger en entier.
+ *
+ * `readFileSync(...).slice(-4000)` lisait tout le fichier pour n'en garder que
+ * quatre kilo-octets — au moment précis où l'on prépare un rapport d'incident,
+ * c'est-à-dire quand la mémoire est déjà le problème.
+ */
+function lireQueueJournal(octets) {
+  let fd = null
+  try {
+    const taille = fs.statSync(LOG_PATH).size
+    const depuis = Math.max(0, taille - octets)
+    const tampon = Buffer.alloc(Math.min(octets, taille))
+    fd = fs.openSync(LOG_PATH, 'r')
+    const lus = fs.readSync(fd, tampon, 0, tampon.length, depuis)
+    const texte = tampon.subarray(0, lus).toString('utf8')
+    // Une lecture qui commence au milieu du fichier peut couper un caractère
+    // accentué en deux. On repart de la première ligne entière : le rapport
+    // d'incident perd une ligne tronquée et gagne un texte lisible.
+    if (depuis === 0) return texte
+    const coupure = texte.indexOf('\n')
+    return coupure === -1 ? texte : texte.slice(coupure + 1)
+  } catch (_) {
+    return null
+  } finally {
+    if (fd !== null) { try { fs.closeSync(fd) } catch (_) {} }
+  }
 }
 
 // ── Anti-debug (non-fatal in dev mode) ────────────────────────────────────────
@@ -498,7 +697,41 @@ function checkDebugger() {
 
 // ── Hardware fingerprint ──────────────────────────────────────────────────────
 
+// ── Sondes matérielles : interrogées UNE fois par exécution ───────────────────
+//
+// `wmic diskdrive get serialnumber` coûte 63 ms mesurés sur un poste Windows 10
+// (5 appels : 81, 59, 59, 59, 58 ms), et `execSync` GÈLE le processus principal
+// pendant ce temps : pas de redessin de fenêtre, pas d'IPC servi. La
+// vérification de licence a lieu toutes les 2 minutes — toutes les 20 secondes
+// quand un accès est bloqué — et l'empreinte est calculée plusieurs fois par
+// vérification. Soit ~46 s de gel par jour en cadence normale, ~4,6 min en
+// cadence bloquée. La V1 était pire encore : `collectHwidFieldsV1` appelait
+// `getDiskSerial()` DEUX fois dans la même expression, plus une requête au
+// registre.
+//
+// Mais le coût n'est pas l'argument décisif : c'est la STABILITÉ. Le disque ne
+// change pas pendant qu'un logiciel tourne ; `wmic`, lui, peut échouer
+// ponctuellement (service WMI occupé, dépôt WMI en réparation — et l'outil est
+// retiré des versions récentes de Windows). UNE seule sonde ratée en cours de
+// session remplaçait le numéro de série par « unknown-disk », donc changeait
+// l'empreinte, donc :
+//   · `hwidMatches` refusait la licence — la comparaison y est exacte ;
+//   · la licence stockée devenait indéchiffrable, sa clé étant dérivée du HWID.
+// Le garage se retrouvait dehors à cause d'un sous-processus qui a hoqueté.
+//
+// Une valeur par exécution : l'empreinte ne bouge plus en cours de session.
+// L'algorithme lui-même est inchangé — mêmes champs, même sel, mêmes vecteurs
+// (tests/fixtures/hwid-v1-vectors.json).
+let sondeDisque    = null
+let sondeMachineId = null
+
 function getDiskSerial() {
+  if (sondeDisque !== null) return sondeDisque
+  sondeDisque = lireSerieDisque()
+  return sondeDisque
+}
+
+function lireSerieDisque() {
   const { execSync } = require('child_process')
   try {
     if (os.platform() === 'win32') {
@@ -519,7 +752,23 @@ function getDiskSerial() {
   return 'unknown-disk'
 }
 
+/**
+ * Empreinte v0 — calculée UNE fois, pour la même raison que les sondes.
+ *
+ * Le choix de la MAC (« première interface non-loopback ») dépend de l'ordre
+ * rendu par `os.networkInterfaces()`. Un adaptateur qui apparaît en cours de
+ * session — VPN qui se connecte, clé Wi-Fi branchée, carte virtuelle d'une
+ * machine invitée — pouvait donc changer l'empreinte SANS que le poste ait
+ * changé, et refermer le logiciel sur son propriétaire.
+ */
+let empreinteV0 = null
 function getHwid() {
+  if (empreinteV0 !== null) return empreinteV0
+  empreinteV0 = calculerHwid()
+  return empreinteV0
+}
+
+function calculerHwid() {
   const cpu      = (os.cpus()[0]?.model ?? 'unknown').trim()
   const platform = `${os.platform()}-${os.arch()}`
   const hostname = crypto.createHash('sha256').update(os.hostname()).digest('hex').slice(0, 16)
@@ -550,6 +799,12 @@ function getHwid() {
 
 /** Identifiant machine stable, par OS. Vide si indisponible (l'empreinte reste définie). */
 function getMachineId() {
+  if (sondeMachineId !== null) return sondeMachineId
+  sondeMachineId = lireMachineId()
+  return sondeMachineId
+}
+
+function lireMachineId() {
   const { execSync } = require('child_process')
   try {
     if (os.platform() === 'win32') {
@@ -601,9 +856,13 @@ function collectHwidFieldsV1() {
       }
     }
   }
+  // Une seule lecture : l'expression appelait `getDiskSerial()` deux fois, donc
+  // sondait le disque deux fois par empreinte — et, avant la mémorisation,
+  // pouvait obtenir deux réponses différentes dans la même expression.
+  const serie = getDiskSerial()
   return {
     cpu:        os.cpus()[0]?.model ?? '',
-    diskSerial: getDiskSerial() === 'unknown-disk' ? '' : getDiskSerial(),
+    diskSerial: serie === 'unknown-disk' ? '' : serie,
     mac,
     machineId:  getMachineId(),
     platform:   `${os.platform()}-${os.arch()}`,
@@ -614,7 +873,14 @@ function collectHwidFieldsV1() {
 const HWID_V1_CANONICAL_KEYS = ['cpu', 'diskSerial', 'mac', 'machineId', 'platform']
 
 /** Empreinte V1 canonique « HWID1-<sha256hex> » (== hwidV1() TS / hwid_v1.py). */
+let empreinteV1 = null
 function getHwidV1() {
+  if (empreinteV1 !== null) return empreinteV1
+  empreinteV1 = calculerHwidV1()
+  return empreinteV1
+}
+
+function calculerHwidV1() {
   const fields = collectHwidFieldsV1()
   const lines = HWID_V1_CANONICAL_KEYS.map((k) => `${k}=${normalizeHwidFieldV1(fields[k])}`)
   const serialized = 'GF-HWID-V1\n' + lines.join('\n')
@@ -963,7 +1229,7 @@ async function reportCrash({ message, stack, fatal = true, kind = 'crash' }) {
   if (!crashConsent()) return
   try {
     const info = getSystemInfo()
-    const logsTail = (() => { try { return fs.readFileSync(LOG_PATH, 'utf8').slice(-4000) } catch { return null } })()
+    const logsTail = lireQueueJournal(4000)
     // Redaction centralisée + minimisation (jamais de secret/token/chemin utilisateur/HWID brut).
     const payload = cp.sanitizeCrashReport({
       licenseId:   activeLicense?.payload?.lid ?? null,
@@ -1239,6 +1505,7 @@ function setupDatabase() {
       log('Database initialised from template:', src)
     } else {
       log('FATAL: No database template found in resources — installation may be corrupted')
+      ecarterSplash()
       dialog.showErrorBox(
         'GarageFlows — Base de données manquante',
         'Le fichier de base de données n\'a pas été trouvé dans les ressources de l\'application.\n\n' +
@@ -1932,6 +2199,7 @@ async function enforceOnlineGracePeriod() {
       : 'Votre logiciel est hors ligne depuis plus de 72 heures.'
     log('[online-check] locking app —', verdict.motif === 'horloge' ? 'clock tamper' : 'offline > 72h')
     const { dialog: d } = require('electron')
+    ecarterSplash()
     await d.showMessageBox(mainWindow ?? { webContents: null }, {
       type:    'error',
       title:   'GarageFlows — Connexion requise',
@@ -1944,6 +2212,7 @@ async function enforceOnlineGracePeriod() {
     const remaining = Math.ceil((LOCK_PERIOD_MS - offlineMs) / (60 * 60 * 1_000))
     log(`[online-check] offline > 48h — warning (${remaining}h remaining)`)
     if (mainWindow && !mainWindow.isDestroyed()) {
+      ecarterSplash()
       require('electron').dialog.showMessageBox(mainWindow, {
         type:    'warning',
         title:   'GarageFlows — Mode hors ligne',
@@ -2069,6 +2338,85 @@ async function runBackup() {
     }
     return toutOk
   } catch (err) { log('Backup error:', err.message); return false }
+}
+
+/** Dernier avertissement « sauvegardes en souffrance » (0 = jamais). */
+let dernierAvertissementSauvegarde = 0
+
+/**
+ * Lit l'état RÉEL des sauvegardes horaires sur le disque.
+ *
+ * On ne tient pas un compteur d'échecs en mémoire : il repartirait à zéro à
+ * chaque redémarrage, et un poste qu'on éteint tous les soirs n'atteindrait
+ * jamais le seuil. Les fichiers déjà écrits sont la seule trace qui survit.
+ */
+function listerSauvegardesHoraires() {
+  try {
+    return fs.readdirSync(BAK_HOURLY)
+      .filter(n => n.startsWith('garageflow_') && n.endsWith('.db'))
+      .map(n => {
+        try { return { nom: n, mtimeMs: fs.statSync(path.join(BAK_HOURLY, n)).mtimeMs } }
+        catch (_) { return null }
+      })
+      .filter(Boolean)
+  } catch (_) { return [] }
+}
+
+/**
+ * Prévient quand plus AUCUNE sauvegarde ne réussit depuis assez longtemps.
+ *
+ * L'échec n'allait que dans `garageflow.log`. Un fichier que personne n'ouvre
+ * n'avertit personne : le poste continuait à fonctionner, l'écran ne changeait
+ * pas, et la dernière sauvegarde valide vieillissait en silence.
+ */
+async function signalerSauvegardesEnSouffrance() {
+  let creationBase = null
+  try { creationBase = fs.statSync(DB_PATH).birthtimeMs || null } catch (_) {}
+
+  const verdict = evaluerSauvegardes({
+    sauvegardes: listerSauvegardesHoraires(),
+    maintenant: Date.now(),
+    dernierAvertissement: dernierAvertissementSauvegarde,
+    premierDemarrage: creationBase,
+  })
+  if (!verdict.alerter) return
+
+  dernierAvertissementSauvegarde = Date.now()
+  log(`[backup] AVERTISSEMENT — sauvegardes en souffrance (${verdict.motif}, âge ${verdict.ageMs})`)
+
+  const quand = verdict.motif === 'aucune'
+    ? 'Aucune sauvegarde n’a jamais pu être écrite sur ce poste.'
+    : `La dernière sauvegarde réussie remonte à ${formulerAge(verdict.ageMs)}.`
+
+  ecarterSplash()
+  const r = await dialog.showMessageBox(mainWindow ?? { webContents: null }, {
+    type: 'warning',
+    title: 'GarageFlows — Sauvegarde impossible',
+    message: 'GarageFlows n’arrive plus à sauvegarder vos données.',
+    detail:
+      quand + '\n\n'
+      + 'Vos données actuelles sont intactes, mais elles ne sont plus protégées : '
+      + 'en cas de panne du disque, il n’y aurait rien à restaurer.\n\n'
+      + 'Causes fréquentes : disque plein, dossier verrouillé par un antivirus, '
+      + 'ou disque externe débranché.\n\n'
+      + 'Dossier des sauvegardes :\n' + BAK_DIR,
+    buttons: ['Ouvrir le dossier', 'Plus tard'],
+    defaultId: 0,
+    cancelId: 1,
+    noLink: true,
+  }).catch(() => null)
+
+  if (r && r.response === 0) {
+    try { fs.mkdirSync(BAK_DIR, { recursive: true }) } catch (_) {}
+    try { shell.openPath(BAK_DIR) } catch (_) {}
+  }
+}
+
+/** Sauvegarde périodique : elle s'exécute, et elle se PLAINT quand elle échoue. */
+async function sauvegardePeriodique() {
+  const ok = await runBackup()
+  if (!ok) await signalerSauvegardesEnSouffrance()
+  return ok
 }
 
 // ── Next.js standalone server ─────────────────────────────────────────────────
@@ -2360,25 +2708,79 @@ async function runDesktopExport() {
   }
 }
 
+/** Mémoire de la dernière exportation RÉUSSIE (horloge murale). */
+const EXPORT_STATE_PATH = path.join(APP_DATA, 'export-quotidien.json')
+
+/**
+ * Repli en mémoire : si `%APPDATA%` n'est pas inscriptible (dossier verrouillé
+ * par une stratégie d'entreprise, disque plein), le fichier ne se relit jamais
+ * et l'export repartirait à chaque passage — toutes les cinq minutes. Cette
+ * variable dégrade proprement le comportement à « une fois par exécution ».
+ */
+let dernierExportMemoire = null
+
+function lireDernierExport() {
+  let surDisque = null
+  try {
+    const v = JSON.parse(fs.readFileSync(EXPORT_STATE_PATH, 'utf8'))?.dernierExport
+    if (Number.isFinite(v)) surDisque = v
+  } catch (_) {
+    // Illisible, absent, corrompu : on considère qu'aucun export n'a eu lieu.
+    // Le défaut penche du côté de l'export en trop, jamais de l'export manqué.
+  }
+  if (surDisque === null) return dernierExportMemoire
+  if (dernierExportMemoire === null) return surDisque
+  return Math.max(surDisque, dernierExportMemoire)
+}
+
+function ecrireDernierExport(ts) {
+  dernierExportMemoire = ts
+  try {
+    fs.mkdirSync(APP_DATA, { recursive: true })
+    fs.writeFileSync(EXPORT_STATE_PATH, JSON.stringify({ dernierExport: ts }), 'utf8')
+  } catch (e) { log('[export] mémoire non écrite:', e.message) }
+}
+
+/**
+ * Vérifie l'échéance à intervalle court plutôt que de compter sur un long
+ * minuteur.
+ *
+ * Un `setTimeout` de dix heures suppose que la machine reste éveillée et
+ * allumée — deux suppositions fausses dans un garage. On regarde donc l'horloge
+ * toutes les cinq minutes : c'est assez rare pour ne rien coûter, et assez
+ * fréquent pour que l'export parte dans les minutes qui suivent 20 h, ou dans
+ * les minutes qui suivent le rallumage quand 20 h est passé sans nous.
+ */
+const PAS_VERIFICATION_EXPORT_MS = 5 * 60 * 1_000
+
 function scheduleDailyDesktopExport() {
-  function msUntil20h() {
-    const now  = new Date()
-    const next = new Date(now)
-    next.setHours(20, 0, 0, 0)
-    if (next <= now) next.setDate(next.getDate() + 1)
-    return next - now
+  let enCours = false
+
+  async function verifier() {
+    if (enCours) return
+    const verdict = evaluerEcheanceExport({
+      maintenant: Date.now(),
+      dernierExport: lireDernierExport(),
+    })
+    if (!verdict.doitExporter) return
+
+    enCours = true
+    try {
+      log(`[export] déclenchement (${verdict.motif})`)
+      const r = await runDesktopExport()
+      // On ne mémorise QUE le succès : marquer un échec comme fait ferait sauter
+      // la journée entière, alors que le prochain passage pourrait réussir.
+      if (r && r.ok) ecrireDernierExport(Date.now())
+      else log('[export] échec — nouvelle tentative au prochain passage:', r?.raison ?? 'motif inconnu')
+    } catch (err) {
+      log('Desktop export error:', err.message)
+    } finally {
+      enCours = false
+    }
   }
 
-  function arm() {
-    const delay = msUntil20h()
-    log(`Desktop export scheduled in ${Math.round(delay / 60000)} min`)
-    desktopExportTimer = setTimeout(async () => {
-      try { await runDesktopExport() } catch (err) { log('Desktop export error:', err.message) }
-      arm()   // re-schedule for next day regardless of errors
-    }, delay)
-  }
-
-  arm()
+  verifier().catch(() => {})
+  desktopExportTimer = setInterval(() => { verifier().catch(() => {}) }, PAS_VERIFICATION_EXPORT_MS)
 }
 
 function startNextServer() {
@@ -2453,6 +2855,45 @@ function startNextServer() {
     nextServer.on('exit', code => {
       log(`Next.js exited — code=${code}`)
       nextServer = null
+
+      // ── Mort du serveur : détectée, ANNONCÉE, et rattrapable ─────────────────
+      // Elle n'était que journalisée. Sur un poste de comptoir allumé toute la
+      // journée — épuisement mémoire du moteur Prisma au bout de quelques heures,
+      // exception non rattrapée dans une route, arrêt par un antivirus — la
+      // fenêtre restait ouverte sur une application qui ne répondait plus à
+      // aucune requête. Aucun message, aucune relance : le garagiste voyait un
+      // écran figé, et concluait « le logiciel a planté ».
+      //
+      // On ne relance PAS automatiquement en boucle : un serveur qui meurt d'une
+      // base illisible remourrait aussitôt, et une boucle silencieuse masquerait
+      // la panne au lieu de la traiter. On propose UNE relance, et on laisse
+      // choisir.
+      // On ne prévient pas l'écran par IPC : le préchargement n'expose aucun
+      // canal pour cela, et l'écran est justement ce qui ne répond plus. La
+      // boîte native est le seul chemin qui marche encore.
+      if (arretVoulu) return
+      ecarterSplash()
+      dialog.showMessageBox(mainWindow ?? { webContents: null }, {
+        type: 'error',
+        title: 'GarageFlows — Le service interne s’est arrêté',
+        message: 'GarageFlows ne peut plus enregistrer ni afficher vos données.',
+        detail:
+          'Le service interne du logiciel s’est arrêté de façon inattendue.\n\n'
+          + 'Vos données ne sont pas perdues : elles restent sur ce poste.\n\n'
+          + 'Relancez le service pour continuer à travailler. Si le problème revient, '
+          + 'contactez le support en indiquant ce fichier :\n' + LOG_PATH,
+        buttons: ['Relancer le service', 'Fermer GarageFlows'],
+        defaultId: 0,
+        cancelId: 1,
+        noLink: true,
+      }).then((r) => {
+        if (r && r.response === 0) {
+          log('[serveur] relance demandée par l’utilisateur')
+          startNextServer().catch(e => log('[serveur] relance impossible:', e.message))
+        } else {
+          app.quit()
+        }
+      }).catch(() => {})
     })
 
     waitForServer(35_000)
@@ -2462,6 +2903,23 @@ function startNextServer() {
 }
 
 // ── Windows ───────────────────────────────────────────────────────────────────
+
+/**
+ * Écarte le splash avant d'afficher un dialogue.
+ *
+ * Le splash est `alwaysOnTop` — c'est ce qui lui permet de rester visible
+ * pendant un démarrage lent. Mais TOUS les dialogues d'échec du démarrage
+ * s'affichaient DERRIÈRE lui : le garagiste ne voyait qu'un écran bloqué sur
+ * « Presque prêt… », et tout le soin mis à écrire des messages français
+ * actionnables était annulé au moment précis où ils comptent.
+ *
+ * On le retire du premier plan et on le masque : il n'a plus rien à dire dès
+ * lors qu'un dialogue prend la parole.
+ */
+function ecarterSplash() {
+  try { splashWindow?.setAlwaysOnTop(false) } catch (_) {}
+  try { splashWindow?.hide() } catch (_) {}
+}
 
 function createSplash() {
   splashWindow = new BrowserWindow({
@@ -3018,6 +3476,9 @@ function setupIPC() {
     let expectedSha  = String(opts.sha256 || '').trim().toLowerCase() || null
     let expectedSize = Number(opts.size) || null
     const manifest   = opts.manifest || null
+    // Version RÉELLEMENT visée. Celle transmise par l'écran n'est qu'une
+    // indication ; le manifeste signé, lorsqu'il y en a un, la remplace.
+    let versionVisee = String(opts.version || '').trim() || null
 
     // ── VÉRIFICATION DU MANIFESTE SIGNÉ (Ed25519) — autorité de confiance ──────
     // Un SHA-256 seul (fourni par le même serveur que le binaire) ne protège pas
@@ -3043,6 +3504,7 @@ function setupIPC() {
       // Les valeurs SIGNÉES font autorité pour CE QUI est installé.
       expectedSha  = String(v.manifest.sha256 || '').trim().toLowerCase()
       expectedSize = v.manifest.size
+      versionVisee = String(v.manifest.version || '').trim() || versionVisee
 
       // …mais pas nécessairement pour l'ENDROIT d'où viennent les octets.
       //
@@ -3101,9 +3563,37 @@ function setupIPC() {
 
     const emit = (pct) => { try { mainWindow?.webContents.send('app:update-progress', pct) } catch (_) {} }
 
-    const fileName = (opts.fileName && String(opts.fileName).replace(/[^0-9A-Za-z._-]/g, '')) ||
-      decodeURIComponent((url.split('/').pop() || 'GarageFlows-Setup.exe').split('?')[0]) || 'GarageFlows-Setup.exe'
-    const destPath = path.join(tmpDir, fileName)
+    // ── Nom de fichier : assaini des DEUX côtés ────────────────────────────────
+    // Seul `opts.fileName` l'était. Le repli — le dernier segment de l'URL —
+    // passait par `decodeURIComponent` SANS filtre : un chemin se terminant par
+    // « %2E%2E%5CGarageFlows.exe » redevenait « ..\GarageFlows.exe », et
+    // `path.join(tmpDir, …)` écrivait alors HORS du dossier temporaire, à un
+    // emplacement choisi par celui qui sert l'URL.
+    const fileName = nomFichierSur(
+      opts.fileName,
+      nomFichierSur(
+        decodeURIComponent((url.split('/').pop() || '').split('?')[0]),
+        'GarageFlows-Setup.exe',
+      ),
+    )
+
+    // ── Un dossier à nous, dans le dossier temporaire ──────────────────────────
+    // Le fichier atterrissait directement dans `%TEMP%`, au milieu de tout le
+    // reste : une collision de nom avec le résidu d'un autre programme, et le
+    // `.part` repris n'était pas le nôtre. Un sous-dossier dédié isole le
+    // téléchargement, et le garde STABLE d'un appel à l'autre — ce qui préserve
+    // la reprise : un garagiste qui interrompt 200 Mo et reclique une heure plus
+    // tard repart d'où il en était.
+    //
+    // Ce que cela ne prétend PAS faire : fermer la fenêtre entre la vérification
+    // de l'empreinte et le lancement. Sous Windows, `%TEMP%` appartient déjà à
+    // l'utilisateur courant ; un programme capable d'y échanger le fichier
+    // tourne avec ses droits et pourrait tout aussi bien modifier l'application
+    // elle-même. Un dossier tiré au sort donnerait l'illusion d'une barrière
+    // sans en être une, et coûterait la reprise.
+    const tmpDirGf = path.join(tmpDir, 'gf-update')
+    try { fs.mkdirSync(tmpDirGf, { recursive: true }) } catch (_) {}
+    const destPath = path.join(tmpDirGf, fileName)
     const partPath = destPath + '.part'
 
     // Téléchargement REPRENABLE : requête Range, reprise du .part sur coupure,
@@ -3111,6 +3601,18 @@ function setupIPC() {
     function downloadOnce(startUrl) {
       return new Promise((resolve, reject) => {
         let settled = false
+        /**
+         * Un `.part` résiduel a-t-il déjà été purgé pour cette tentative ?
+         *
+         * La reprise envoie `Range: bytes=<taille du .part>-`. Si ce reliquat est
+         * PLUS GROS que le fichier visé — une release précédente plus lourde, un
+         * fichier corrompu — le serveur répond 416 et la tentative échoue. Rien
+         * ne nettoyait ce fichier : toutes les tentatives suivantes échouaient à
+         * l'identique, et le poste perdait la mise à jour automatique
+         * DURABLEMENT, le seul remède étant un vidage manuel de %TEMP%.
+         */
+        let reliquatPurge = false
+
         const doReq = (u, redirects) => {
           if (redirects > 5) { settled = true; return reject(new Error('Trop de redirections')) }
           // Chaque saut est revalidé : sans cela, un en-tête `Location` suffisait
@@ -3153,8 +3655,23 @@ function setupIPC() {
             } else if (res.statusCode === 200) {
               append = false // le serveur ignore Range → on repart de zéro
               total = parseInt(res.headers['content-length'] || '0', 10)
+            } else if (res.statusCode === 416 && !reliquatPurge) {
+              // « Range Not Satisfiable » : le reliquat ne correspond plus à ce
+              // fichier. On le jette et on repart de zéro — une seule fois, pour
+              // qu'une réponse 416 obstinée ne fasse pas boucler.
+              res.resume()
+              reliquatPurge = true
+              log('[install-update] reliquat incohérent — reprise depuis le début')
+              try { fs.rmSync(partPath, { force: true }) } catch (_) {}
+              doReq(u, redirects)
+              return
             } else {
-              res.resume(); return fail(new Error('HTTP ' + res.statusCode))
+              res.resume()
+              // Un échec laisse un reliquat qui ferait échouer la tentative
+              // suivante de la même façon : on ne le conserve que s'il a une
+              // chance de servir (reprise partielle valide).
+              if (res.statusCode >= 400) { try { fs.rmSync(partPath, { force: true }) } catch (_) {} }
+              return fail(new Error('HTTP ' + res.statusCode))
             }
             let received = append ? existing : 0
             ws = fs.createWriteStream(partPath, { flags: append ? 'a' : 'w' })
@@ -3260,22 +3777,95 @@ function setupIPC() {
       try { mainWindow?.webContents.send('app:update-installing') } catch (_) {}
       log('[install-update] launching installer and quitting app:', destPath)
 
-      const launchInstaller = () => {
+      /**
+       * Lance l'installateur et RÉPOND s'il a réellement démarré.
+       *
+       * L'échec était avalé deux fois : `spawn` en `catch`, puis `openPath` dans
+       * un `catch` vide — et l'application quittait de toute façon. Un antivirus
+       * qui bloque l'exécutable, un fichier verrouillé, un disque plein : l'écran
+       * affichait « fermeture… », l'application disparaissait, et rien ne
+       * s'installait. Aucun message, aucune trace pour le garagiste, qui
+       * relançait un logiciel identique en se demandant ce qu'il avait raté.
+       *
+       * `spawn` ne lève pas toujours en synchrone sous Windows : l'échec arrive
+       * par l'événement `error`. On attend donc brièvement de voir.
+       */
+      const launchInstaller = () => new Promise((resolve) => {
+        let regle = false
+        const finir = (ok) => { if (!regle) { regle = true; resolve(ok) } }
         try {
           const child = spawn(destPath, [], { detached: true, stdio: 'ignore' })
+          child.on('error', (e) => {
+            log('[install-update] spawn error:', e.message)
+            finir(false)
+          })
+          // Un pid attribué et aucune erreur : Windows a créé le processus.
+          setTimeout(() => finir(Boolean(child.pid)), 500)
           child.unref()
         } catch (e) {
-          log('[install-update] spawn failed, fallback openPath:', e.message)
-          try { shell.openPath(destPath) } catch (_) {}
+          log('[install-update] spawn failed:', e.message)
+          finir(false)
         }
-      }
+      })
 
       // Laisse ~1,2 s à l'UI pour afficher « fermeture… », lance l'installeur,
       // puis ferme proprement (le serveur Next est arrêté dans window-all-closed).
-      setTimeout(() => {
-        launchInstaller()
+      setTimeout(async () => {
+        let lance = await launchInstaller()
+
+        if (!lance) {
+          // Repli : demander au shell d'ouvrir le fichier. `openPath` rend une
+          // chaîne VIDE en cas de succès, le motif sinon — on la lit, au lieu de
+          // l'ignorer comme avant.
+          try {
+            const motif = await shell.openPath(destPath)
+            lance = motif === ''
+            if (!lance) log('[install-update] openPath refusé:', motif)
+          } catch (e) {
+            log('[install-update] openPath a levé:', e.message)
+          }
+        }
+
+        if (!lance) {
+          // On NE QUITTE PAS : fermer maintenant laisserait le garagiste sans
+          // logiciel ET sans mise à jour. Mieux vaut rester en l'état et le dire.
+          log('[install-update] installateur non démarré — l’application reste ouverte')
+          // `app:update-error` — le SEUL canal de mise à jour que le préchargement
+          // expose (`onUpdateError`) et que `UpdateModal` écoute réellement. Un
+          // canal inventé serait du code mort qui laisserait croire que l'écran
+          // est prévenu.
+          try {
+            mainWindow?.webContents.send(
+              'app:update-error',
+              'La mise à jour n’a pas pu démarrer. GarageFlows reste utilisable.',
+            )
+          } catch (_) {}
+          try {
+            ecarterSplash()
+            await dialog.showMessageBox(mainWindow ?? { webContents: null }, {
+              type: 'warning',
+              title: 'GarageFlows — Mise à jour non lancée',
+              message: 'La mise à jour n’a pas pu démarrer.',
+              detail:
+                'GarageFlows reste utilisable : rien n’a été modifié.\n\n'
+                + 'Le fichier téléchargé se trouve ici :\n' + destPath + '\n\n'
+                + 'Un antivirus peut avoir bloqué son exécution. Vous pouvez le lancer '
+                + 'vous-même, ou réessayer plus tard.',
+              buttons: ['Fermer'],
+              noLink: true,
+            })
+          } catch (_) {}
+          return
+        }
+
+        // L'installateur est parti : on le NOTE avant de fermer. Si la version
+        // installée n'a pas changé au prochain démarrage, on saura que cette
+        // tentative-là n'a rien donné, et on ne la reproposera pas en boucle.
+        if (versionVisee) ecrireTentativeMaj(versionVisee)
+
         // Petit délai pour que le process détaché démarre avant le quit.
         setTimeout(() => {
+          arretVoulu = true
           try { if (nextServer) { nextServer.kill(); nextServer = null } } catch (_) {}
           app.quit()
           // Filet de sécurité si un handler retient le quit.
@@ -3397,6 +3987,7 @@ app.whenReady().then(async () => {
   // (perte silencieuse pour les installations existantes). On informe et on sort
   // AVANT toute écriture. Message utilisateur sans chemin sensible inutile.
   if (!USER_DATA_PIN.ok) {
+    ecarterSplash()
     dialog.showErrorBox(
       'GarageFlows — Erreur de démarrage',
       'Le dossier de données de GarageFlows est inaccessible.\n\n' +
@@ -3418,6 +4009,7 @@ app.whenReady().then(async () => {
     resolveInstallSecret()
   } catch (err) {
     log('FATAL: secret local indisponible')   // ne journalise jamais la valeur
+    ecarterSplash()
     dialog.showErrorBox(
       'Erreur de sécurité GarageFlows',
       `Impossible d'initialiser le secret local de façon sûre.\n\n${err.message}\n\n` +
@@ -3464,6 +4056,7 @@ app.whenReady().then(async () => {
         } catch (e) { log('[integrity] rapport non écrit:', e && e.message); return null }
       }
       const blockCorrupt = (reportPath) => {
+        ecarterSplash()
         dialog.showErrorBox(
           'GarageFlows — installation corrompue',
           'Des fichiers essentiels de GarageFlows ont été modifiés, remplacés ou supprimés.\n\n' +
@@ -3504,6 +4097,7 @@ app.whenReady().then(async () => {
         if (integrity.detectDebugger()) {
           log('[integrity] débogueur/inspecteur détecté')
           if (mode === 'enforce' && process.env.GF_ANTIDEBUG === '1') {
+            ecarterSplash()
             dialog.showErrorBox('GarageFlows', "Un outil de débogage a été détecté. Fermeture par sécurité.")
             app.exit(1)
             return
@@ -3535,6 +4129,7 @@ app.whenReady().then(async () => {
   const preBackup = createPreMigrationBackup(DB_PATH, PRE_MIGRATION_DIR)
   if (!preBackup.ok) {
     log('[FATAL] sauvegarde pré-migration invalide:', preBackup.error)
+    ecarterSplash()
     dialog.showErrorBox(
       'GarageFlows — Sauvegarde impossible',
       'La sauvegarde de sécurité de votre base de données n\'a pas pu être créée ou vérifiée.\n\n' +
@@ -3592,6 +4187,7 @@ app.whenReady().then(async () => {
     const apres = decisionApresActivation({ licence: payload, blocage: blocageCourant })
     if (apres.action === 'refus') {
       log('SECURITY: clé bloquée présentée à l’activation —', apres.statut)
+      ecarterSplash()
       dialog.showErrorBox(
         'GarageFlows — Licence bloquée',
         apres.motif +
@@ -3620,6 +4216,7 @@ app.whenReady().then(async () => {
     await startNextServer()
   } catch (err) {
     log('FATAL:', err.message)
+    ecarterSplash()
     dialog.showErrorBox(
       'Erreur de démarrage GarageFlows',
       `Impossible de démarrer le serveur.\n\n${err.message}\n\nRéinstallez l'application.`
@@ -3640,6 +4237,7 @@ app.whenReady().then(async () => {
     const backupInfo = preBackup.skipped
       ? 'Aucune donnée antérieure (première installation).'
       : `Une sauvegarde intacte de vos données a été créée AVANT toute modification :\n${preBackup.path}`
+    ecarterSplash()
     const { response } = await dialog.showMessageBox({
       type: 'error',
       title: 'GarageFlows — Migration de la base interrompue',
@@ -3700,8 +4298,14 @@ app.whenReady().then(async () => {
   }
 
   // ── Auto-backup ────────────────────────────────────────────────────────────
-  runBackup()
-  backupTimer = setInterval(runBackup, 60 * 60 * 1_000)
+  // `sauvegardePeriodique` et non `runBackup` : c'est elle qui avertit quand la
+  // sauvegarde ne passe plus. `runBackup` reste le geste nu, utilisé là où
+  // l'appelant traite déjà l'échec (bouton manuel, pré-mise à jour).
+  sauvegardePeriodique().catch(e => log('[backup] boucle:', e.message))
+  backupTimer = setInterval(
+    () => { sauvegardePeriodique().catch(e => log('[backup] boucle:', e.message)) },
+    60 * 60 * 1_000,
+  )
 
   // ── Daily desktop export at 20:00 ─────────────────────────────────────────
   scheduleDailyDesktopExport()
@@ -3713,6 +4317,9 @@ app.whenReady().then(async () => {
   }
 
   // ── Vérification des mises à jour : au démarrage puis toutes les heures ────
+  // La purge passe d'abord : un disque encombré par d'anciens installateurs est
+  // ce qui fera échouer la prochaine mise à jour.
+  purgerTelechargementsMaj()
   startPeriodicUpdateCheck()
 })
 
@@ -3721,10 +4328,13 @@ app.on('window-all-closed', () => {
   if (licenseTimer)      { clearTimeout(licenseTimer);         licenseTimer      = null }
   if (onlineCheckTimer)  { clearInterval(onlineCheckTimer);    onlineCheckTimer  = null }
   if (updateTimer)       { clearInterval(updateTimer);         updateTimer       = null }
-  if (desktopExportTimer){ clearTimeout(desktopExportTimer);   desktopExportTimer = null }
+  // `clearInterval` — l'échéance d'export est un intervalle depuis qu'elle ne
+  // dépend plus d'un compte à rebours de dix heures.
+  if (desktopExportTimer){ clearInterval(desktopExportTimer);  desktopExportTimer = null }
   if (nextServer) {
     const pid = nextServer.pid
     log('Stopping Next.js server (pid ' + pid + ')…')
+    arretVoulu = true
     try { nextServer.kill() } catch (_) {}
     nextServer = null
   }
@@ -3737,9 +4347,29 @@ if (!gotLock) {
   app.quit()
 } else {
   app.on('second-instance', () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore()
-      mainWindow.focus()
-    }
+    // ── Pendant le démarrage, la fenêtre principale n'existe PAS encore ────────
+    // Le poste attend le serveur Next : jusqu'à 35 secondes sur une machine
+    // lente, davantage au premier lancement après une mise à jour. Un garagiste
+    // qui double-clique pendant ce temps ne voyait STRICTEMENT rien — la
+    // deuxième instance rendait la main en silence. Il recliquait, deux fois,
+    // cinq fois, convaincu que le logiciel ne se lançait pas.
+    //
+    // À défaut de fenêtre principale, on ramène le splash au premier plan :
+    // c'est lui qui dit « GarageFlows démarre », et c'est exactement la réponse
+    // attendue.
+    // Un splash MASQUÉ l'a été volontairement, pour laisser la place à une boîte
+    // de dialogue (`ecarterSplash`). Le remettre devant volerait le focus au
+    // message qu'on veut justement faire lire.
+    const splashUtilisable =
+      splashWindow && !splashWindow.isDestroyed() && splashWindow.isVisible()
+    const fenetre = (mainWindow && !mainWindow.isDestroyed())
+      ? mainWindow
+      : (splashUtilisable ? splashWindow : null)
+    if (!fenetre) return
+    try {
+      if (fenetre.isMinimized()) fenetre.restore()
+      fenetre.show()
+      fenetre.focus()
+    } catch (_) { /* fenêtre détruite entre-temps */ }
   })
 }

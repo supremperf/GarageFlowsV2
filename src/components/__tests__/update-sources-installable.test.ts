@@ -73,9 +73,29 @@ describe('GF31-AUD-042 — une mise à jour non installable est annoncée comme 
     expect(src).toMatch(/async function fetchLatestUpdate\(\) \{\s*\n\s*return annoterInstallabilite\(await fetchLatestUpdateBrut\(\)\)/)
   })
 
-  it('l’installabilité vaut : aucune signature exigée OU manifeste présent', () => {
+  it('l’installabilité exige : aucune signature requise, OU un manifeste présent', () => {
+    // Cette garde figeait l'expression AU CARACTÈRE PRÈS. Elle interdisait donc
+    // d'ajouter une condition — c'est-à-dire d'ajouter une protection : la
+    // vérification du palier `minVersion` (LOT 7) l'a fait rougir alors qu'elle
+    // ne faisait que RESSERRER l'installabilité. On exprime maintenant la règle,
+    // pas son orthographe.
     const src = main()
-    expect(src).toMatch(/const installable = !signatureExigee \|\| Boolean\(info\.manifest\)/)
+    const i = src.indexOf('const installable')
+    expect(i, 'l’installabilité n’est plus calculée').toBeGreaterThan(-1)
+    const expression = src.slice(i).split('\n').slice(0, 3).join('\n')
+    expect(expression).toMatch(/signatureExigee/)
+    expect(expression).toMatch(/info\.manifest/)
+  })
+
+  it('un palier `minVersion` non atteint rend la mise à jour NON installable', () => {
+    // `minVersion` était collecté puis ignoré partout. Proposer un bouton
+    // « Mettre à jour » que le processus principal refusera ensuite, c'est
+    // promettre puis se dédire — le défaut même que GF31-AUD-042 corrigeait.
+    const src = main()
+    const i = src.indexOf('function annoterInstallabilite')
+    const corps = src.slice(i).split('\n').slice(0, 40).join('\n')
+    expect(corps).toMatch(/minVersion/)
+    expect(corps, 'la comparaison doit être SemVer, jamais lexicographique').toMatch(/semver\.isNewer/)
   })
 
   it.each([

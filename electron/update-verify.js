@@ -104,6 +104,25 @@ function validateManifest(signed, opts) {
     return { ok: false, reason: `Version non supérieure à l'installée (${m.version} ≤ ${currentVersion}).` }
   }
 
+  // ── Palier obligatoire (`minVersion`) ───────────────────────────────────────
+  // `scripts/sign-release-manifest.mjs` sait poser `minVersion` dans le manifeste
+  // et le serveur central le transmet — mais PERSONNE ne le lisait. Ce champ
+  // existe pour les publications qui ne savent pas partir de n'importe où :
+  // migrations de base enchaînées, format de licence changé, dossier de données
+  // déplacé. Un poste resté longtemps sur une vieille version sautait le palier
+  // et appliquait directement la dernière : l'installation réussissait, et c'est
+  // au premier démarrage que les données ne se lisaient plus.
+  //
+  // Refuser ici, c'est refuser AVANT de télécharger et avant de remplacer quoi
+  // que ce soit. Le poste reste sur une version qui fonctionne.
+  if (currentVersion && m.minVersion && semver.isNewer(m.minVersion, currentVersion)) {
+    return {
+      ok: false,
+      reason: `Cette mise à jour exige la version ${m.minVersion} au minimum `
+        + `(vous avez ${currentVersion}) : installez d'abord la version ${m.minVersion}.`,
+    }
+  }
+
   // URL de téléchargement : HTTPS + domaine explicitement autorisé.
   let host = ''
   try {
@@ -154,9 +173,31 @@ function checkDownloadUrl(rawUrl) {
   return { ok: true }
 }
 
+/**
+ * Réduit une chaîne à un NOM de fichier, jamais à un chemin.
+ *
+ * Le téléchargeur nommait l'installateur d'après le dernier segment de l'URL,
+ * décodé par `decodeURIComponent` et utilisé tel quel dans `path.join`. Un
+ * chemin se terminant par « %2E%2E%5CGarageFlows.exe » redevenait
+ * « ..\GarageFlows.exe » : le fichier s'écrivait HORS du dossier temporaire, à
+ * un emplacement choisi par celui qui sert l'URL.
+ *
+ * On coupe donc tout séparateur — y compris ceux réapparus au décodage — puis
+ * on ne garde que des caractères inertes. Un nom vide, ou fait uniquement de
+ * points, retombe sur la valeur par défaut : `path.join(dossier, '..')`
+ * désignerait le dossier parent.
+ */
+function nomFichierInstallateur(brut, defaut) {
+  const nu = String(brut ?? '').replace(/\\/g, '/').split('/').pop() || ''
+  const propre = nu.replace(/[^0-9A-Za-z._-]/g, '')
+  if (!propre || /^\.+$/.test(propre)) return defaut
+  return propre.slice(0, 120)
+}
+
 module.exports = {
   canonicalize,
   checkDownloadUrl,
+  nomFichierInstallateur,
   verifySignature,
   validateManifest,
   signingConfigured,

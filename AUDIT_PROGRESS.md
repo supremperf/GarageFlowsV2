@@ -2629,3 +2629,143 @@ exécutables et sur la présence des gardes dans la source. Le rendu réel —
 bandeau de refus hors ligne, bandeau de confirmation de mise à jour, association
 étiquette/champ — reste `NOT_VERIFIED` tant qu'aucune recette en navigateur ne
 l'a exercé. C'est consigné au §6 de `docs/BLOCAGES_EXTERNES.md`.
+
+---
+
+## 16/08/2026 — LOT 7 : le poste Windows
+
+Quatre lecteurs, puis un réfutateur par dimension. **36 défauts allégués.** Deux
+dimensions réfutées intégralement (9/9 et 5/6) — et le réfutateur a **invalidé ma
+première correction**, ce qui a évité d'ajouter un défaut au lieu d'en retirer un.
+
+Le fil conducteur de ce lot : l'application **continuait de s'afficher
+normalement** pendant que quelque chose d'essentiel ne se faisait plus. Un
+garagiste n'a aucun moyen de deviner qu'un service interne est mort, qu'aucune
+sauvegarde ne passe depuis trois semaines, ou que l'export du soir n'a plus lieu
+depuis qu'il éteint son PC en partant.
+
+### 1. L'installateur désinstallait AVANT toute confirmation — et ma première correction était fausse
+
+`scripts/installer.nsh` définissait `customInit`, que electron-builder insère
+dans `.onInit` : **avant la première page de l'assistant**. La version installée
+disparaissait donc avant que l'utilisateur ait confirmé quoi que ce soit. Un clic
+sur « Annuler », un antivirus, un disque plein — et le poste se retrouvait **sans
+GarageFlows** : plus d'exécutable, plus de raccourci, plus d'entrée dans
+« Applications ». Les données restaient, sans rien pour les ouvrir.
+
+J'ai d'abord **déplacé** ce nettoyage vers `customInstall`. Le réfutateur a
+montré que c'était inutile et nuisible :
+`app-builder-lib/templates/nsis/installSection.nsh:52` appelle déjà
+`uninstallOldVersion` **à l'intérieur de la section d'installation** — donc après
+confirmation —, depuis `$PLUGINSDIR`, avec `--updated` et `--keep-shortcuts`.
+Vérifié dans `node_modules`. La macro maison ne faisait que dupliquer cette étape
+au pire instant et **sans les drapeaux** : c'est précisément ce qui faisait
+disparaître les raccourcis. `customInit` a donc été **supprimé**, et mon doublon
+avec lui. La raison reste écrite en tête du fichier, pour qu'on ne le remette pas.
+
+### 2. La mort du serveur interne n'était que journalisée
+
+`nextServer.on('exit')` écrivait une ligne et remettait la variable à `null`.
+Épuisement mémoire du moteur Prisma au bout de quelques heures, exception non
+rattrapée dans une route, arrêt par un antivirus : la fenêtre restait ouverte sur
+une application qui ne répondait plus à **aucune** requête. Écran figé, aucune
+explication.
+
+La sortie ouvre maintenant une boîte qui propose **« Relancer le service »** ou
+**« Fermer GarageFlows »**. On ne relance pas en boucle automatiquement : un
+serveur qui meurt d'une base illisible remourrait aussitôt, et une boucle
+silencieuse masquerait la panne. Un drapeau `arretVoulu` distingue nos propres
+arrêts (fermeture, mise à jour) — sans lui, l'alerte se déclencherait à chaque
+fermeture normale, et un avertissement qui apparaît quand tout va bien finit par
+être ignoré quand tout va mal.
+
+### 3. Trois semaines sans sauvegarde, et personne ne le sait
+
+`runBackup()` rendait `false` en cas d'échec ; `setInterval(runBackup, …)` jetait
+ce retour. L'échec n'existait que dans `garageflow.log`, un fichier que personne
+n'ouvre.
+
+Un module pur (`electron/sauvegarde-en-souffrance.js`) décide **quand** parler :
+jamais au premier échec — une sauvegarde ratée à 14 h alors que celle de 13 h est
+passée n'est pas un incident —, mais dès qu'aucune n'a réussi depuis 24 h, et au
+plus une fois par jour. L'état vient des **fichiers déjà écrits**, pas d'un
+compteur en mémoire qui repartirait à zéro à chaque redémarrage.
+
+### 4. L'export de 20 h : un compte à rebours n'est pas une horloge
+
+`setTimeout` de plusieurs heures, réarmé après coup. Deux façons de ne jamais
+exporter : le poste **dort** (le décompte ne suit pas l'horloge murale), ou le
+poste est **éteint** — aucun minuteur ne survit, et rien ne rattrapait au
+rallumage. Un garage qui éteint son PC en partant n'a **jamais** eu d'export
+quotidien.
+
+L'échéance est maintenant comparée à l'horloge murale toutes les cinq minutes,
+contre la dernière exportation **réussie** mémorisée sur disque. Règle unique :
+au plus un export par jour, à 20 h, ou dès que possible après. Seul un succès est
+mémorisé — noter un échec ferait sauter la journée entière.
+
+### 5. L'empreinte matérielle gelait le processus… et pouvait fermer le logiciel sur son propriétaire
+
+`wmic diskdrive get serialnumber` : **63 ms mesurés** ici (5 appels : 81, 59, 59,
+59, 58 ms), en synchrone, donc sans redessin de fenêtre ni IPC servi. L'empreinte
+est recalculée toutes les 2 minutes — **toutes les 20 s** quand un accès est
+bloqué —, et `collectHwidFieldsV1` appelait `getDiskSerial()` **deux fois dans la
+même expression**. Soit ~46 s de gel par jour en cadence normale, ~4,6 min en
+cadence bloquée.
+
+Le coût n'est pas l'argument décisif : c'est la **stabilité**. `wmic` peut
+échouer ponctuellement — et il est retiré des Windows récents. Une seule sonde
+ratée en cours de session remplaçait le numéro de série par `unknown-disk`, donc
+changeait l'empreinte, donc : `hwidMatches` refusait la licence (comparaison
+exacte), et la licence stockée devenait indéchiffrable, sa clé étant dérivée du
+HWID. **Le garage se retrouvait dehors à cause d'un sous-processus qui a
+hoqueté.** Les sondes et les deux empreintes sont désormais calculées une fois
+par exécution. L'algorithme est inchangé — mêmes champs, même sel, mêmes vecteurs.
+
+### 6. Le journal sans borne, relu en entier au pire moment
+
+`garageflow.log` n'avait aucune limite : écriture à chaque vérification de
+licence, à chaque battement, plus le relais ligne à ligne du serveur Next. Et le
+rapport d'incident faisait `readFileSync(LOG_PATH).slice(-4000)` — charger des
+centaines de mégaoctets pour n'en garder que quatre kilo-octets, au moment précis
+où la mémoire est déjà le problème. Rotation à 5 Mo (une génération conservée) et
+lecture positionnée de la seule queue.
+
+### 7. Les autres
+
+| Défaut | Correction |
+| --- | --- |
+| **Double-clic pendant le démarrage** : jusqu'à 35 s d'attente du serveur, et relancer l'application ne produisait STRICTEMENT rien | à défaut de fenêtre principale, le splash est ramené devant — sauf s'il a été volontairement masqué pour une boîte de dialogue |
+| **`Location` suivi tel quel** : une redirection relative cassait la vérification, et un passage `https:` → `http:` faisait venir la métadonnée en clair | résolution contre l'URL d'origine, refus de tout rétrogradage de protocole |
+| **Nom de fichier repris de l'URL** sans assainissement : `%2E%2E%5C…` redevenait `..\…`, et `path.join` écrivait hors du dossier temporaire | assaini des deux côtés (`nomFichierInstallateur`, testé) |
+| **`minVersion` signé et ignoré** : un poste ancien sautait le palier, l'installation réussissait, et c'est au premier démarrage que les données ne se lisaient plus | refusé dans `validateManifest`, et annoncé à l'écran avant le bouton |
+| **Aucune mémoire d'une tentative** : après un échec, la même proposition revenait à chaque démarrage, et l'installateur se retéléchargeait | tentative mémorisée 6 h ; jamais pour une mise à jour obligatoire |
+| **Installateurs abandonnés** : plusieurs centaines de Mo par tentative, jamais supprimés — et un disque plein est ce qui fait échouer la mise à jour suivante | purge des téléchargements de plus de 7 jours au démarrage |
+
+### Une mesure plutôt qu'une supposition
+
+Le motif `dialog.showMessageBox(mainWindow ?? { webContents: null }, …)` existait
+déjà dans le fichier. Plutôt que de le réécrire par prudence, il a été **éprouvé
+sur Electron 31** : les trois formes (leurre, appel sans fenêtre, `null`
+explicite) rendent une promesse sans lever. Le motif est sûr, il n'a pas été
+touché.
+
+### Vérification
+
+Suite : **3 671 verts / 0 rouge / 28 ignorés (3 699)** · `tsc` 0 · ESLint 0 ·
+13 gardes vertes. **+69 tests** ; **17 mutations sur 17 détectées**.
+
+Une garde existante figeait l'expression d'installabilité **au caractère près**.
+Elle interdisait donc d'ajouter une condition — c'est-à-dire une protection : le
+palier `minVersion` l'a fait rougir alors qu'il ne faisait que resserrer la règle.
+Elle a été **reformulée pour exprimer la règle**, et complétée par le contrôle du
+palier. Elle n'est pas affaiblie : elle exige toujours les deux termes.
+
+### Réserve
+
+Aucun de ces correctifs n'a été exercé sur un **poste Windows packagé** : ni
+installation NSIS réelle, ni mort de serveur provoquée, ni mise en veille, ni
+cycle de mise à jour de bout en bout. Les modules de décision sont testés pour de
+vrai ; le câblage dans `electron/main.js` est vérifié par gardes de source, faute
+de pouvoir charger ce fichier hors d'Electron. Statut : **PARTIALLY_VERIFIED**.
+C'est consigné dans `docs/BLOCAGES_EXTERNES.md`.

@@ -139,13 +139,30 @@ faible qu'un rendu, et c'est dit à chaque fois.
 
 ## 7. Exécution de l'application packagée
 
-**Manque** : un lancement d'Electron dans cette session de travail.
+**Manque** : un démarrage de GarageFlows lui-même — fenêtre, serveur Next
+embarqué, base du poste.
+
+**Ce qui EST possible, et a servi** : lancer le binaire Electron du dépôt sur une
+application d'essai. Cela a permis de **mesurer** le comportement de
+`dialog.showMessageBox` sur Electron 31 (LOT 7) au lieu de le supposer. La limite
+n'est donc pas « Electron ne démarre pas » : c'est que `electron/main.js` exige
+une installation réelle — licence, base, serveur `standalone` construit — que
+cette session n'a pas.
 
 **Ce qui reste `NOT_VERIFIED`** : les corrections touchant `electron/main.js` —
 sauvegarde par `VACUUM INTO`, période de grâce hors ligne ancrée sur la création
 de la base, sonde d'identité du serveur au démarrage, conseil adapté à un échec
-de migration. Elles sont éprouvées par leurs **modules extraits** (testables) et
-par analyse syntaxique, jamais par un démarrage réel.
+de migration. S'y ajoutent, depuis le LOT 7 : la **boîte de relance** après mort
+du serveur enfant, l'**avertissement de sauvegarde en souffrance**, le
+**rattrapage de l'export de 20 h** après veille ou extinction, la **rotation du
+journal**, et le comportement de `second-instance` pendant le démarrage. Toutes
+sont éprouvées par leurs **modules extraits** (testables) et par gardes de
+source, jamais par un démarrage réel.
+
+**Ce qui reste hors de portée même avec un démarrage** : une **installation NSIS
+réelle** (voir §4 — l'installateur ne peut pas être signé), une **mise en veille**
+de la machine, et un **cycle de mise à jour de bout en bout** vers un serveur de
+publication.
 
 **Pour lever** : `node scripts/post-build.js` puis `ELECTRON_DEV=1 npx electron .`,
 et relire `%APPDATA%/GarageFlow/garageflow.log`.

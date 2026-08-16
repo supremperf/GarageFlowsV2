@@ -111,16 +111,17 @@ l'exécution s'il est strictement plus récent.
 ## 5. Décompte exact des tests (§133)
 
 ```
-Fichiers de test : 315  →  310 verts, 0 rouge, 5 ignorés
-Tests            : 3630 →  3602 verts, 0 rouge, 28 ignorés
+Fichiers de test : 318  →  313 verts, 0 rouge, 5 ignorés
+Tests            : 3699 →  3671 verts, 0 rouge, 28 ignorés
 Durée            : ~33 s
 ```
 
-Décompte au 15/08/2026, après les lots de finalisation V34 (+139 tests depuis
+Décompte au 16/08/2026, après les lots de finalisation V34 (+208 tests depuis
 la mise en production : publication des devis et des factures vers le cloud,
 remontée des signatures, tunnel de facturation électronique, l'audit du
 Copilot — écusson « vérifié », coût d'achat, exactitude monétaire, portée
-garage et porte financière).
+garage et porte financière —, le temps réel, l'UX et la PWA, puis le poste
+Windows).
 
 Décompte historique du code réellement promu en production
 (`dpl_CRsSnWNwZG7cwgtwueniuMgM1nN7`) : 3 296 verts / 0 rouge / 28 ignorés
