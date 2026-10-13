@@ -150,10 +150,26 @@ describe('un manifeste ALTÉRÉ est refusé', () => {
 describe('anti-régression : le manifeste de BUILD n\'est pas un manifeste signé', () => {
   it('release-manifest.json est refusé par le vérificateur', () => {
     // C'est exactement le fichier que l'écran de publication demandait.
-    const provenance = JSON.parse(fs.readFileSync(path.join(RACINE, 'release-manifest.json'), 'utf8'))
-    expect(provenance.manifest).toBeUndefined()
-    expect(provenance.signature).toBeUndefined()
-    expect(updateVerify.validateManifest(provenance, optionsClient)).toMatchObject({ ok: false })
+    // Il est GÉNÉRÉ et gitignoré : sur un checkout propre il n'existe pas, et
+    // le test échouait en ENOENT au lieu d'exercer le vérificateur. On le
+    // génère donc avec le vrai script — puis on le retire si c'est nous qui
+    // l'avons créé, pour laisser l'arbre exactement comme on l'a trouvé.
+    const chemin = path.join(RACINE, 'release-manifest.json')
+    const creePourLeTest = !fs.existsSync(chemin)
+    if (creePourLeTest) {
+      execFileSync(process.execPath, [path.join(RACINE, 'scripts/generate-release-manifest.mjs')], {
+        cwd: RACINE,
+        stdio: 'pipe',
+      })
+    }
+    try {
+      const provenance = JSON.parse(fs.readFileSync(chemin, 'utf8'))
+      expect(provenance.manifest).toBeUndefined()
+      expect(provenance.signature).toBeUndefined()
+      expect(updateVerify.validateManifest(provenance, optionsClient)).toMatchObject({ ok: false })
+    } finally {
+      if (creePourLeTest) fs.rmSync(chemin, { force: true })
+    }
   })
 
   it('l\'écran de publication et l\'API désignent désormais `release:sign`', () => {

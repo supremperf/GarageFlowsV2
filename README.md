@@ -29,8 +29,10 @@ npm run db:seed       # Insère les données de démo
 ## Développement
 
 ```bash
-npm run dev           # Serveur Next.js (port 3000)
-npm run electron:dev  # Lance Electron en mode dev (pointe vers :3000)
+npm run dev           # Serveur Next.js seul (port 3000)
+# Desktop en développement — deux terminaux :
+npm run dev:electron  # Terminal 1 : Next.js sur le port 4028 (celui d'Electron)
+npm run electron:dev  # Terminal 2 : Electron en mode dev (pointe vers :4028)
 ```
 
 ---

@@ -39,6 +39,14 @@ const ALLOW = {
       'majeure, planifiée séparément.',
     until: '2026-10-31',
   },
+  'next-auth': {
+    reason:
+      'Entrée purement transitive : next-auth 4 n\'est signalé que via sa ' +
+      'dépendance nodemailer (même advisory, même correctif que la dérogation ' +
+      'nodemailer ci-dessus). next-auth n\'envoie aucun courriel dans ce code ' +
+      '(provider credentials uniquement, transport SMTP propre à l\'application).',
+    until: '2026-10-31',
+  },
   postcss: {
     reason:
       'XSS au stringify CSS : outillage de build, aucune CSS d\'origine attaquant ' +
