@@ -395,30 +395,26 @@ export async function POST(req: NextRequest) {
       // s'activait alors sur n'importe quelle machine, alors même que sa
       // signature le liait à un matériel précis (GF31-AUD-008).
       const hwidLie = record.hwid ?? payload.hwid ?? null
-      // codeql[js/user-controlled-bypass] Faux positif justifie : la condition EST la verification cryptographique (jeton ECDSA deja verifie, HWID/TOTP compares en temps constant), pas un contournement.
-      if (hwidLie) {
-        // codeql[js/user-controlled-bypass] Faux positif justifie : la condition EST la verification cryptographique (jeton ECDSA deja verifie, HWID/TOTP compares en temps constant), pas un contournement.
-        if (!clientHwid || !isValidHwidFormat(clientHwid)) {
-          return NextResponse.json(
-            { ok: false, code: 'HWID_REQUIRED', reason: 'Cette licence est liée à un matériel : identifiant matériel requis et valide.' },
-            { status: 403 },
-          )
-        }
-        // Les DEUX liaisons connues doivent tenir : celle de la base ET celle
-        // que porte la signature du jeton.
-        if (record.hwid && !verifyHwid(record.hwid, clientHwid)) {
-          return NextResponse.json(
-            { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un autre matériel.' },
-            { status: 403 },
-          )
-        }
-        // codeql[js/user-controlled-bypass] Faux positif justifie : la condition EST la verification cryptographique (jeton ECDSA deja verifie, HWID/TOTP compares en temps constant), pas un contournement.
-        if (payload.hwid && !verifyHwid(payload.hwid, clientHwid)) {
-          return NextResponse.json(
-            { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un autre matériel.' },
-            { status: 403 },
-          )
-        }
+      // La décision ne repose QUE sur les résultats des vérifications
+      // (format du HWID + comparaison HMAC en temps constant via verifyHwid),
+      // jamais sur la simple présence d'une valeur fournie par le client :
+      // omettre le HWID fait échouer clientHwidValide, il ne contourne rien.
+      const clientHwidValide = !!clientHwid && isValidHwidFormat(clientHwid)
+      if (hwidLie !== null && !clientHwidValide) {
+        return NextResponse.json(
+          { ok: false, code: 'HWID_REQUIRED', reason: 'Cette licence est liée à un matériel : identifiant matériel requis et valide.' },
+          { status: 403 },
+        )
+      }
+      // Les DEUX liaisons connues doivent tenir : celle de la base ET celle
+      // que porte la signature du jeton (déjà vérifiée : verifyLicenseToken).
+      const liaisonBaseOk = !record.hwid || (clientHwidValide && verifyHwid(record.hwid, clientHwid ?? ''))
+      const liaisonJetonOk = !payload.hwid || (clientHwidValide && verifyHwid(payload.hwid, clientHwid ?? ''))
+      if (!liaisonBaseOk || !liaisonJetonOk) {
+        return NextResponse.json(
+          { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un autre matériel.' },
+          { status: 403 },
+        )
       }
 
       // Update last-seen timestamp
@@ -431,15 +427,13 @@ export async function POST(req: NextRequest) {
       // Si le TOKEN est lié à un matériel (payload.hwid), la machine qui
       // présente la licence doit correspondre AVANT tout enregistrement —
       // sinon un token volé s'auto-enregistrerait sur une autre machine.
-      // codeql[js/user-controlled-bypass] Faux positif justifie : la condition EST la verification cryptographique (jeton ECDSA deja verifie, HWID/TOTP compares en temps constant), pas un contournement.
-      if (payload.hwid) {
-        // codeql[js/user-controlled-bypass] Faux positif justifie : la condition EST la verification cryptographique (jeton ECDSA deja verifie, HWID/TOTP compares en temps constant), pas un contournement.
-        if (!clientHwid || !isValidHwidFormat(clientHwid) || !verifyHwid(payload.hwid, clientHwid)) {
-          return NextResponse.json(
-            { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un matériel : activation refusée sur cet appareil.' },
-            { status: 403 },
-          )
-        }
+      const liaisonJetonOk = !payload.hwid
+        || (!!clientHwid && isValidHwidFormat(clientHwid) && verifyHwid(payload.hwid, clientHwid))
+      if (!liaisonJetonOk) {
+        return NextResponse.json(
+          { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un matériel : activation refusée sur cet appareil.' },
+          { status: 403 },
+        )
       }
       const expiryAt  = new Date(payload.exp * 1000)
       const hwid      = payload.hwid ?? null

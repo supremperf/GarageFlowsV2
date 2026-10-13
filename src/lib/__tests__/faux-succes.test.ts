@@ -138,7 +138,7 @@ describe('aucun succès annoncé avant le verdict du serveur (GF-024)', () => {
     expect(main, 'le chemin des installeurs publiés doit être déclaré')
       .toContain("PREFIXE_INSTALLEUR_LOCAL = '/api/admin/updates/file/'")
     const b = bloc(main, 'setWindowOpenHandler', 1600)
-    expect(b.includes('github.com')).toBe(true)
+    expect(b).toContain('github.com')
     expect(b).toMatch(/PREFIXE_INSTALLEUR_LOCAL/)
     expect(b, 'la boucle locale s’écrit 127.0.0.1 ET localhost').toMatch(/127\.0\.0\.1/)
     expect(b, 'aucune ouverture arbitraire').toMatch(/return \{ action: 'deny' \}/)

@@ -48,8 +48,10 @@ export async function POST(req: NextRequest) {
     })
   }
   const token = typeof body.token === 'string' ? body.token : undefined
-  // codeql[js/user-controlled-bypass] Faux positif justifie : la condition EST la verification cryptographique (jeton ECDSA deja verifie, HWID/TOTP compares en temps constant), pas un contournement.
-  if (token && secretTotp) ok = verifyTotp(token, secretTotp)
+  // `ok` ne vaut true que si verifyTotp (HMAC, fenêtre ±1 pas, comparaison
+  // en temps constant) valide le code : aucun chemin ne dépend de la seule
+  // présence de la valeur fournie par le client.
+  ok = !!token && !!secretTotp && verifyTotp(token, secretTotp)
 
   const backupCode = typeof body.backupCode === 'string' ? body.backupCode : undefined
   if (!ok && backupCode) {

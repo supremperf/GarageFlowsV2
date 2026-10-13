@@ -133,25 +133,30 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Chemin 1 : preuve d'appareil (clients récents) ──────────────────────────
-  // codeql[js/user-controlled-bypass] Faux positif justifie : la condition EST la verification cryptographique (jeton ECDSA deja verifie, HWID/TOTP compares en temps constant), pas un contournement.
+  // La décision repose sur le RÉSULTAT de validateDeviceToken (preuve
+  // cryptographique, révocation, liaison HWID), jamais sur la simple
+  // présence du jeton fourni : l'omettre mène au chemin 2, refus par défaut.
+  let validationAppareil: Awaited<ReturnType<typeof validateDeviceToken>> | null = null
   if (deviceToken) {
     try {
-      const validation = await validateDeviceToken(deviceToken, { hwid, installId })
-      if (!validation.ok) return deviceFailureResponse(validation.code)
-
-      // Jeton valide, licence active — bump lastSeenAt licence (best-effort).
-      try {
-        await prisma.licenseKey.update({
-          where: { licenseId: validation.licenseId },
-          data:  { lastSeenAt: new Date() },
-        })
-      } catch { /* best-effort */ }
-
-      return NextResponse.json({ allowed: true, status: 'active' })
+      validationAppareil = await validateDeviceToken(deviceToken, { hwid, installId })
     } catch (err) {
       logger.error('[license/check] erreur infra (validation jeton)', err)
       return infraFailure()
     }
+  }
+  if (validationAppareil) {
+    if (!validationAppareil.ok) return deviceFailureResponse(validationAppareil.code)
+
+    // Jeton valide, licence active — bump lastSeenAt licence (best-effort).
+    try {
+      await prisma.licenseKey.update({
+        where: { licenseId: validationAppareil.licenseId },
+        data:  { lastSeenAt: new Date() },
+      })
+    } catch { /* best-effort */ }
+
+    return NextResponse.json({ allowed: true, status: 'active' })
   }
 
   // ── Chemin 2 : SANS jeton d'appareil ────────────────────────────────────────
