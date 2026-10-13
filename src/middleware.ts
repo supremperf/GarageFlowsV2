@@ -73,6 +73,11 @@ function getJwtSecret(): Uint8Array {
   return new TextEncoder().encode(getAuthSecret())
 }
 
+/** Valeur sûre à journaliser : jamais de saut de ligne (injection de journal). */
+function journalSure(v: string): string {
+  return v.replace(/[\r\n\u2028\u2029]+/g, ' ').slice(0, 200)
+}
+
 /**
  * Vérifie cryptographiquement le cookie gf_session (HS256) et renvoie {typ, lid}
  * ou null en cas d'échec. Journalise UNIQUEMENT le chemin et le type d'erreur —
@@ -87,7 +92,7 @@ async function verifySessionJwt(
   try {
     const { payload } = await jwtVerify(raw, getJwtSecret())
     if (typeof payload.typ !== 'string' || typeof payload.lid !== 'string') {
-      console.warn(`[middleware] gf_session rejeté (charge utile invalide) chemin=${pathname}`)
+      console.warn(`[middleware] gf_session rejeté (charge utile invalide) chemin=${journalSure(pathname)}`)
       return null
     }
     return { typ: payload.typ, lid: payload.lid }
@@ -116,7 +121,7 @@ async function verifySessionJwt(
       'ERR_JWT_CLAIM_VALIDATION_FAILED',
     ])
     if (!EXPECTED_SESSION_FAILURES.has(code)) {
-      console.warn(`[middleware] échec vérification gf_session INATTENDU chemin=${pathname} code=${code}`)
+      console.warn(`[middleware] échec vérification gf_session INATTENDU chemin=${journalSure(pathname)} code=${journalSure(code)}`)
     }
     return null
   }
@@ -196,7 +201,7 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
     if (!token) token = await getToken({ req, secret, secureCookie: !isSecureReq })
   } catch (err) {
     const kind = err instanceof Error ? err.name : 'ErreurInconnue'
-    console.error(`[middleware] getToken a échoué chemin=${pathname} erreur=${kind}`)
+    console.error(`[middleware] getToken a échoué chemin=${journalSure(pathname)} erreur=${journalSure(kind)}`)
     token = null
   }
   const isLoggedIn = Boolean(token?.sub || token?.id)

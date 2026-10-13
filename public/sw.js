@@ -47,6 +47,8 @@ self.addEventListener('activate', (event) => {
 
 // Messages de la page : activation forcée + purge des caches à la déconnexion.
 self.addEventListener('message', (event) => {
+  // Seules les pages de NOTRE origine peuvent piloter le service worker.
+  if (event.origin && event.origin !== self.location.origin) return
   if (event.data === 'SKIP_WAITING') self.skipWaiting()
   // À la déconnexion, on efface le cache de pages (aucune page privée ne doit
   // survivre pour un autre utilisateur du même appareil). Le cache statique

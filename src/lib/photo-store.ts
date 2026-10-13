@@ -118,7 +118,8 @@ export function readPhotoAsDataUrl(relativePath: string | null | undefined, maxB
     const full = path.resolve(base, relativePath)
     const rel  = path.relative(base, full)
     if (rel.startsWith('..') || path.isAbsolute(rel)) return null
-    if (!fs.existsSync(full)) return null
+    // Pas de existsSync préalable (course check-then-use) : statSync lève si
+    // le fichier est absent, et le catch ci-dessous rend null de toute façon.
     const stat = fs.statSync(full)
     if (!stat.isFile() || stat.size > maxBytes) return null
     const ext  = path.extname(full).slice(1).toLowerCase()

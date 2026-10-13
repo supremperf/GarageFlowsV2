@@ -22,7 +22,20 @@ import { sendGarageMail } from '@/lib/mail/send-garage-mail'
 import { publicUrlFor } from '@/lib/public-url'
 import { logger } from '@/lib/logger'
 
-const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
+/**
+ * Validation d'email SANS expression régulière : le motif historique
+ * (/^[^@\s]+@[^@\s]+\.[^@\s]+$/) présentait un risque de retour arrière
+ * polynomial sur une entrée non bornée (route publique). Découpage explicite,
+ * longueur bornée (RFC 5321), mêmes acceptations pour les adresses usuelles.
+ */
+function emailValide(email: string): boolean {
+  if (!email || email.length > 254 || /\s/.test(email)) return false
+  const at = email.indexOf('@')
+  if (at <= 0 || at !== email.lastIndexOf('@')) return false
+  const domaine = email.slice(at + 1)
+  const dernierPoint = domaine.lastIndexOf('.')
+  return dernierPoint > 0 && dernierPoint < domaine.length - 1 && !domaine.includes('..')
+}
 
 export async function POST(req: NextRequest) {
   const ip = clientIp(req) ?? 'local'
@@ -43,7 +56,7 @@ export async function POST(req: NextRequest) {
   // ci-dessus (5 tentatives / 15 min / IP, fail-closed en production).
   const name = body.name ? String(body.name).replace(/\s+/g, ' ').trim().slice(0, 100) : null
 
-  if (!EMAIL_RE.test(email)) return NextResponse.json({ error: 'Email invalide' }, { status: 400 })
+  if (!emailValide(email)) return NextResponse.json({ error: 'Email invalide' }, { status: 400 })
   if (password.length < 8) return NextResponse.json({ error: 'Mot de passe trop court (min 8 caractères)' }, { status: 400 })
 
   const garageId = await resolveGarageId(typeof body.garageSlug === 'string' ? body.garageSlug : null)
