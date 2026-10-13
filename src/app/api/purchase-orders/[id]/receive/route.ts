@@ -67,8 +67,20 @@ export const POST = withAuth(async (_req, { params }: { params: { id: string } }
     )
   }
 
-  // Run everything atomically
-  try {
+  // Run everything atomically — avec RELANCE bornée sur contention SQLite.
+  // Sur le poste (SQLite), deux réceptions simultanées du même bon (double-clic,
+  // double fenêtre) se sérialisent sur le verrou d'écriture du fichier : la
+  // transaction perdante expirait en P1008 (« database failed to respond ») et
+  // remontait en 500, alors que la revendication atomique ci-dessous aurait
+  // répondu proprement 409 une fois la gagnante committée. On relance donc
+  // quelques fois sur les seuls codes de contention ; toute autre erreur —
+  // et ReceiveError, qui est un verdict métier — repart immédiatement.
+  const contention = (err: unknown): boolean =>
+    typeof err === 'object' && err !== null && 'code' in err &&
+    ['P1008', 'P2028', 'P2034'].includes(String((err as { code: unknown }).code))
+
+  for (let tentative = 1; ; tentative++) {
+   try {
     await prisma.$transaction(async (tx) => {
     // Claim the PO atomically: only proceed if it is NOT already received/cancelled.
     // Prevents a double-reception race (double stock increment) and cross-tenant writes.
@@ -121,9 +133,15 @@ export const POST = withAuth(async (_req, { params }: { params: { id: string } }
       }
     }
     })
-  } catch (err) {
+    break
+   } catch (err) {
     if (err instanceof ReceiveError) return NextResponse.json({ error: err.message }, { status: err.status })
+    if (contention(err) && tentative < 5) {
+      await new Promise((r) => setTimeout(r, 100 * tentative))
+      continue
+    }
     throw err
+   }
   }
 
   return NextResponse.json({ success: true, stockUpdated: lines.filter(l => l.partId && l.qty > 0).length })
