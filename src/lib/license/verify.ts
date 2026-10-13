@@ -276,6 +276,25 @@ export function verifyHwid(storedHwid: string, currentHwid: string): boolean {
 }
 
 /**
+ * La liaison matériel est-elle satisfaite ?
+ *  - aucune liaison enregistrée (`storedHwid` absent) → satisfaite : la
+ *    licence n'est tout simplement pas liée à un matériel ;
+ *  - liaison enregistrée → le HWID client doit être présent, bien formé,
+ *    et égal au HWID enregistré (verifyHwid, temps constant).
+ * Centraliser la règle évite que chaque appelant réinterprète la présence
+ * d'une valeur comme un droit de passage : seul le RÉSULTAT de cette
+ * vérification autorise la suite.
+ */
+export function hwidBindingSatisfied(
+  storedHwid: string | null | undefined,
+  currentHwid: string | null | undefined,
+): boolean {
+  if (storedHwid == null) return true
+  if (!currentHwid || !isValidHwidFormat(currentHwid)) return false
+  return verifyHwid(storedHwid, currentHwid)
+}
+
+/**
  * Decode and return the watermark embedded in a (already-verified) payload.
  * Used for forensic tracing: if a cracked license appears online, the watermark
  * identifies which customer it was issued to.

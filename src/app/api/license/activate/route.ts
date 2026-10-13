@@ -27,7 +27,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { SignJWT } from 'jose'
-import { verifyLicenseToken, verifyHwid, isValidHwidFormat, type LicensePayload } from '@/lib/license/verify'
+import { verifyLicenseToken, verifyHwid, hwidBindingSatisfied, isValidHwidFormat, type LicensePayload } from '@/lib/license/verify'
 import { prisma } from '@/lib/db'
 import { computeRecordMac, verifyRecordMac, recordIntegrityUsable } from '@/lib/license/record-mac'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
@@ -408,8 +408,8 @@ export async function POST(req: NextRequest) {
       }
       // Les DEUX liaisons connues doivent tenir : celle de la base ET celle
       // que porte la signature du jeton (déjà vérifiée : verifyLicenseToken).
-      const liaisonBaseOk = !record.hwid || (clientHwidValide && verifyHwid(record.hwid, clientHwid ?? ''))
-      const liaisonJetonOk = !payload.hwid || (clientHwidValide && verifyHwid(payload.hwid, clientHwid ?? ''))
+      const liaisonBaseOk = hwidBindingSatisfied(record.hwid, clientHwid)
+      const liaisonJetonOk = hwidBindingSatisfied(payload.hwid, clientHwid)
       if (!liaisonBaseOk || !liaisonJetonOk) {
         return NextResponse.json(
           { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un autre matériel.' },
@@ -427,8 +427,7 @@ export async function POST(req: NextRequest) {
       // Si le TOKEN est lié à un matériel (payload.hwid), la machine qui
       // présente la licence doit correspondre AVANT tout enregistrement —
       // sinon un token volé s'auto-enregistrerait sur une autre machine.
-      const liaisonJetonOk = !payload.hwid
-        || (!!clientHwid && isValidHwidFormat(clientHwid) && verifyHwid(payload.hwid, clientHwid))
+      const liaisonJetonOk = hwidBindingSatisfied(payload.hwid, clientHwid)
       if (!liaisonJetonOk) {
         return NextResponse.json(
           { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un matériel : activation refusée sur cet appareil.' },

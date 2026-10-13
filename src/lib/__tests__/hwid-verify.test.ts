@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { verifyHwid, isValidHwidFormat, normalizeHwid, hwidVersionOf } from '../license/verify'
+import { verifyHwid, isValidHwidFormat, normalizeHwid, hwidVersionOf, hwidBindingSatisfied } from '../license/verify'
 
 const A = 'a'.repeat(64)                       // HWID bien formé
 const B = 'b'.repeat(64)                       // HWID différent
@@ -104,5 +104,19 @@ describe('HWID V1 — accepté par verify (v0 et v1 coexistent, sans confusion)'
     expect(hwidVersionOf('pas-un-hwid')).toBe(null)
     expect(hwidVersionOf('')).toBe(null)
     expect(hwidVersionOf(null)).toBe(null)
+  })
+})
+
+describe('hwidBindingSatisfied — règle de liaison centralisée', () => {
+  it('aucune liaison enregistrée → satisfaite, même sans HWID client', () => {
+    expect(hwidBindingSatisfied(null, undefined)).toBe(true)
+    expect(hwidBindingSatisfied(undefined, A)).toBe(true)
+  })
+
+  it('liaison enregistrée → HWID client exact exigé', () => {
+    expect(hwidBindingSatisfied(A, A)).toBe(true)
+    expect(hwidBindingSatisfied(A, B)).toBe(false)
+    expect(hwidBindingSatisfied(A, undefined)).toBe(false)
+    expect(hwidBindingSatisfied(A, 'pas-un-hwid')).toBe(false)
   })
 })
