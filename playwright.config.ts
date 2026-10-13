@@ -16,6 +16,9 @@ import { defineConfig, devices } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './e2e',
+  // Ouvre UNE session applicative (connexion + activation de licence) réutilisée
+  // par toute la suite : voir e2e/global-setup.ts.
+  globalSetup: './e2e/global-setup.ts',
   timeout: 30_000,
   expect: { timeout: 5_000 },
   fullyParallel: true,
@@ -25,13 +28,33 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
+  // Démarrage automatique de l'app pour l'E2E (local ET CI) — sauf si BASE_URL
+  // pointe déjà vers une instance en cours. On lance le serveur de DÉVELOPPEMENT
+  // (`next dev`) : le mode production refuse volontairement SQLite et exige
+  // Postgres + secrets (validation fail-closed de l'instrumentation), inadapté à
+  // un E2E de mise en page. Ainsi `npx playwright test` est auto-suffisant et
+  // intégrable en CI sans provisionner tout l'environnement de production.
+  webServer: process.env.BASE_URL
+    ? undefined
+    : {
+        command: 'npm run dev',
+        url: 'http://localhost:3000',
+        timeout: 180_000,
+        reuseExistingServer: !process.env.CI,
+      },
   // Chaque « projet » = un gabarit d'écran testé (portrait, paysage, tablette, desktop).
+  // Les gabarits iPhone/iPad sont ÉMULÉS SOUS CHROMIUM (viewport + user-agent +
+  // tactile) : la CI comme l'environnement d'audit n'installent que Chromium —
+  // les descripteurs Apple par défaut exigeaient WebKit et faisaient échouer le
+  // job au lancement du navigateur (jamais au test). Le rendu du VRAI moteur
+  // WebKit/Safari reste une validation externe sur matériel Apple (documentée
+  // dans EXTERNAL_VALIDATIONS).
   projects: [
     { name: 'mobile-portrait-small',  use: { ...devices['Desktop Chrome'], viewport: { width: 320, height: 568 } } },
-    { name: 'mobile-portrait',        use: { ...devices['iPhone 12'] } },
-    { name: 'mobile-landscape',       use: { ...devices['iPhone 12 landscape'] } },
-    { name: 'tablet-portrait',        use: { ...devices['iPad Mini'] } },
-    { name: 'tablet-landscape',       use: { ...devices['iPad Mini landscape'] } },
+    { name: 'mobile-portrait',        use: { ...devices['iPhone 12'], browserName: 'chromium' } },
+    { name: 'mobile-landscape',       use: { ...devices['iPhone 12 landscape'], browserName: 'chromium' } },
+    { name: 'tablet-portrait',        use: { ...devices['iPad Mini'], browserName: 'chromium' } },
+    { name: 'tablet-landscape',       use: { ...devices['iPad Mini landscape'], browserName: 'chromium' } },
     { name: 'desktop',                use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
   ],
 })

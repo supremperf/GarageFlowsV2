@@ -21,6 +21,21 @@ regexes = [
   # par cet en-tête est PUBLIQUE (sûre à distribuer) — jamais une clé privée ni un
   # secret. Couvre la clé inline d'electron/main.js et ses rotations.
   '''MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE[A-Za-z0-9+/=]+''',
+  # Valeurs FIXTURES de test (jamais des secrets réels) — utilisées pour prouver
+  # le comportement des routes/scripts avec une clé factice déterministe.
+  '''test-api-key-strong-[0-9]+''',
+  '''parity-test-secret-[0-9]+''',
+  # Fixtures des suites d'intégration (mots de passe / secrets / jetons factices,
+  # jamais émis ni déployés) — chacune nommée explicitement, pas d'exemption
+  # globale des fichiers de test.
+  '''Y2xlLWRlLXNhdXZlZ2FyZGUtdHJlcy1mb3J0ZQ==''',
+  '''mauvaise-cle-0123456789abcdef''',
+  '''NouveauMotDePasse12''',
+  '''secret-de-test-signature-devis-0123456789abcdef''',
+  '''GF2\.licence-garage-de-recette''',
+  '''MonNouveauMotDePasse2026''',
+  '''GF2\.jeton\.mecanicien''',
+  '''eyJhbGciOiJIUzI1NiJ9\.eyJ0eXAiOiJwb3J0YWwifQ\.sig''',
 ]
 paths = [
   '''.*public-key\.ts''',
@@ -31,6 +46,13 @@ paths = [
   # PROUVER qu'elles sont masquées. Aucune de ces valeurs n'est un secret réel.
   '''src/lib/__tests__/redact\.test\.ts''',
   '''\.env\.example''',
-  '''.*\.md''',
+  # Faux positif documentaire ISOLÉ : un exemple de chaîne de LOG (pas un secret)
+  # dans ce rapport historique confond le heuristique generic-api-key. Exemption
+  # d'UN fichier précis — sans commune mesure avec l'ancien « .*\.md » global.
+  '''docs/AUDIT_FINALISATION_2026-08\.md''',
+  # NB : PLUS d'exemption globale « .*\.md » (AUD-032) — elle soustrayait ~55
+  # runbooks au scan (dont les procédures de rotation où un secret se colle par
+  # accident). Les rares faux positifs documentaires sont couverts ci-dessus par
+  # des regexes ciblées et cette unique exemption de fichier.
 ]
 stopwords = ["BEGIN PUBLIC KEY"]

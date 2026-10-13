@@ -21,6 +21,19 @@
 
 export type ClientPlatform = 'electron' | 'pwa' | 'unknown'
 
+/**
+ * Plateforme ANNONCÉE par le client, validée contre une liste blanche.
+ *
+ * Elle ne peut pas être devinée côté serveur : le cloud sert les deux surfaces
+ * depuis le même processus. Une valeur inconnue ou absente retombe sur
+ * `unknown`, qui est désormais le cas le plus STRICT (cf. `minVersionFor`) —
+ * annoncer une plateforme ne peut donc qu'ajouter de la précision, jamais
+ * relâcher un contrôle.
+ */
+export function parseClientPlatform(value: unknown): ClientPlatform {
+  return value === 'electron' || value === 'pwa' ? value : 'unknown'
+}
+
 /** Compare deux versions numériques « a.b.c ». -1 / 0 / 1. Non-numériques ⇒ 0. */
 export function compareVersions(a: string, b: string): number {
   const pa = a.split('.').map((n) => parseInt(n, 10))
@@ -35,11 +48,28 @@ export function compareVersions(a: string, b: string): number {
   return 0
 }
 
-/** Version minimale exigée pour une plateforme (vide = pas de minimum). */
+/**
+ * Version minimale exigée pour une plateforme (vide = pas de minimum).
+ *
+ * `unknown` retenait `null` : n'importe quel client qui ne s'identifiait pas
+ * échappait donc à la politique. Or c'était précisément le cas de TOUS les
+ * clients Electron, la plateforme étant déduite côté serveur de
+ * `process.env.ELECTRON`, jamais positionné sur le cloud — le mécanisme d'arrêt
+ * des versions obsolètes ne s'appliquait à personne (GF31-AUD-053).
+ *
+ * Un client non identifié se voit désormais appliquer le minimum le PLUS
+ * CONTRAIGNANT parmi ceux configurés : ne pas se nommer ne peut plus être un
+ * moyen d'échapper à la règle. Quand aucun minimum n'est configuré — le défaut —
+ * rien ne change.
+ */
 export function minVersionFor(platform: ClientPlatform): string | null {
-  if (platform === 'electron') return process.env.GF_MIN_ELECTRON_VERSION?.trim() || null
-  if (platform === 'pwa') return process.env.GF_MIN_PWA_VERSION?.trim() || null
-  return null
+  const electron = process.env.GF_MIN_ELECTRON_VERSION?.trim() || null
+  const pwa = process.env.GF_MIN_PWA_VERSION?.trim() || null
+  if (platform === 'electron') return electron
+  if (platform === 'pwa') return pwa
+  if (!electron) return pwa
+  if (!pwa) return electron
+  return compareVersions(electron, pwa) >= 0 ? electron : pwa
 }
 
 /**

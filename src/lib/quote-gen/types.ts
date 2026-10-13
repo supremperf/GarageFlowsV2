@@ -8,6 +8,15 @@
  */
 
 export interface QuotePartInput {
+  /**
+   * Pièce du catalogue dont cette ligne provient (GF-040).
+   *
+   * Seul `InvoiceLine.partId` engage le stock : la facture issue de la
+   * conversion d'un devis ne décrémentait donc RIEN, parce que le devis généré
+   * ne transportait pas l'identifiant. Les pièces sortaient physiquement de
+   * l'atelier sans jamais quitter l'inventaire.
+   */
+  partId?: string | null
   name: string
   reference?: string | null
   /** Selling price excl. tax. */
@@ -28,6 +37,8 @@ export interface QuoteOperation {
 
 /** A complementary item proposed (e.g. from the forgotten-parts engine). */
 export interface QuoteSuggestionInput {
+  /** Pièce du catalogue d'où vient la suggestion, si elle en a une (GF-040). */
+  partId?: string | null
   name: string
   reference?: string | null
   /** Selling price excl. tax, or null when unknown. */
@@ -51,6 +62,8 @@ export type QuoteLineKind = 'labor' | 'part'
 
 export interface QuoteLine {
   kind: QuoteLineKind
+  /** Pièce du catalogue à rattacher à la ligne du devis (GF-040). */
+  partId?: string | null
   description: string
   reference?: string | null
   quantity: number
@@ -63,6 +76,8 @@ export interface QuoteLine {
 
 /** A suggested optional line — not counted in the quote totals. */
 export interface SuggestionLine {
+  /** Pièce du catalogue d'où vient la suggestion (GF-040). */
+  partId?: string | null
   name: string
   reference?: string | null
   quantity: number

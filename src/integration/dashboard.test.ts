@@ -7,10 +7,11 @@
  * garage scoping (one tenant's data never leaks into another's dashboard).
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { execSync } from 'node:child_process'
+import { toScaled } from '@/lib/money'
 import { format } from 'date-fns'
 import path from 'node:path'
 import fs from 'node:fs'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-itest-dashboard.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -38,18 +39,13 @@ async function paidInvoice(garageId: string, number: string, ht: number, cost: n
   await prisma.invoice.create({
     data: {
       number, garageId, clientName: 'C', status: 'paid', issueDate: `${thisMonth}-05`, taxRate: 20,
-      lines: { create: [{ description: 'Prestation', quantity: 1, unitPrice: ht, unitCost: cost, isLabor: false, sortOrder: 0 }] },
+      lines: { create: [{ description: 'Prestation', quantityTenThousandths: 10000, unitPriceTenThousandths: toScaled(ht), unitCostTenThousandths: toScaled(cost), isLabor: false, sortOrder: 0 }] },
     },
   })
 }
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', {
-    cwd: path.resolve(__dirname, '../..'),
-    env: { ...process.env, DATABASE_URL: `file:${DB_PATH}` },
-    stdio: 'ignore',
-  })
+  prepareTestDb(DB_PATH)
   ;({ prisma } = await import('@/lib/db'))
   ;({ GET } = await import('@/app/api/dashboard/route') as any)
 

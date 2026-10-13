@@ -1,4 +1,4 @@
-# GarageFlow
+# GarageFlows
 
 Application de gestion et de planning d'atelier automobile — bureau Windows (Electron + Next.js).
 
@@ -29,8 +29,10 @@ npm run db:seed       # Insère les données de démo
 ## Développement
 
 ```bash
-npm run dev           # Serveur Next.js (port 3000)
-npm run electron:dev  # Lance Electron en mode dev (pointe vers :3000)
+npm run dev           # Serveur Next.js seul (port 3000)
+# Desktop en développement — deux terminaux :
+npm run dev:electron  # Terminal 1 : Next.js sur le port 4028 (celui d'Electron)
+npm run electron:dev  # Terminal 2 : Electron en mode dev (pointe vers :4028)
 ```
 
 ---
@@ -38,7 +40,7 @@ npm run electron:dev  # Lance Electron en mode dev (pointe vers :3000)
 ## Architecture
 
 ```
-GarageFlow/
+GarageFlows/ (racine du depot)
 ├── electron/
 │   ├── main.js        # Processus principal Electron (IPC, backup, export)
 │   └── preload.js     # Pont sécurisé contextBridge ↔ renderer
@@ -117,7 +119,7 @@ Sélection dans **Paramètres → Thèmes**.
 Chaque soir à **20 h**, l'application crée un dossier horodaté sur le Bureau :
 
 ```
-Bureau/GarageFlow_Export_AAAA-MM-JJ/
+Bureau/GarageFlows_Export_AAAA-MM-JJ/
 ├── clients.csv
 ├── vehicules.csv
 ├── interventions.csv

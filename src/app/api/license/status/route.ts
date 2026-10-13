@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 import { prisma } from '@/lib/db'
-import { verifyRecordMac } from '@/lib/license/record-mac'
+import { verifyRecordMac, recordIntegrityUsable } from '@/lib/license/record-mac'
 import { getAuthSecret } from '@/lib/auth-secret'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { logger } from '@/lib/logger'
@@ -57,8 +57,9 @@ export async function GET(req: NextRequest) {
     const record = await prisma.licenseKey.findUnique({ where: { licenseId } })
     if (!record) return NextResponse.json(OK_UNKNOWN)
 
+    // MAC absent = altération (GF31-AUD-005) : voir record-mac.ts.
     const mac = verifyRecordMac(record)
-    if (mac.tampered) {
+    if (!recordIntegrityUsable(mac)) {
       return NextResponse.json({
         allowed: false,
         status:  'tampered',

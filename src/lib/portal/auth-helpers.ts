@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import type { PortalUser, PortalDevice } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { verifyPortalSession, signPortalSession } from '@/lib/portal/session'
+import { clientIpFrom } from '@/lib/security/rate-limit'
 import { logger } from '@/lib/logger'
 
 export const PORTAL_COOKIE = 'gf_portal'
@@ -28,10 +29,18 @@ export function clearPortalCookie(res: NextResponse): void {
   res.headers.append('Set-Cookie', `${PORTAL_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax; HttpOnly`)
 }
 
+/**
+ * IP cliente pour le rate limiting du portail (sujet de limite).
+ *
+ * SÉCURITÉ : n'utilise PAS directement x-forwarded-for/x-real-ip (forgeables
+ * hors proxy de confiance — un attaquant ferait tourner l'en-tête pour obtenir
+ * un bucket distinct par requête et neutraliser la limite). On délègue à
+ * clientIpFrom() (source UNIQUE, même modèle de confiance que le reste de l'app :
+ * en-têtes pris en compte uniquement derrière Vercel/TRUST_PROXY_HEADERS, sinon
+ * clé constante « unverified »). Retourne toujours une valeur exploitable.
+ */
 export function clientIp(req: NextRequest): string | null {
-  const fwd = req.headers.get('x-forwarded-for')
-  const ip = fwd ? fwd.split(',')[0].trim() : req.headers.get('x-real-ip')
-  return ip || null
+  return clientIpFrom(req)
 }
 
 export function userAgent(req: NextRequest): string | null {
@@ -43,7 +52,15 @@ export interface PortalContext {
   device: PortalDevice
 }
 
-/** Load the authenticated portal user + device from the session cookie, or null. */
+/**
+ * Load the authenticated portal user + device from the session cookie, or null.
+ *
+ * ─── Accès DÉSACTIVÉ par le garage (GF-PORT-002) ────────────────────────────
+ * Le contrôle est fait ICI et non dans chaque route : c'est le seul point par
+ * lequel passent toutes les routes authentifiées du portail. Un accès coupé doit
+ * l'être immédiatement, y compris pour une session déjà ouverte — sinon un
+ * client écarté conserverait l'accès jusqu'à l'expiration de son cookie.
+ */
 export async function loadPortalContext(req: NextRequest): Promise<PortalContext | null> {
   const claims = await verifyPortalSession(req.cookies.get(PORTAL_COOKIE)?.value)
   if (!claims) return null
@@ -53,6 +70,10 @@ export async function loadPortalContext(req: NextRequest): Promise<PortalContext
 
   const user = await prisma.portalUser.findUnique({ where: { id: claims.sub } })
   if (!user || user.id !== device.portalUserId) return null
+
+  // Accès coupé par le garage : la session en cours cesse de valoir, sans
+  // attendre son expiration ni un nouveau login.
+  if (user.disabledAt) return null
 
   // Best-effort last-seen touch (never blocks the request).
   prisma.portalDevice.update({ where: { id: device.id }, data: { lastSeenAt: new Date() } }).catch(() => {})
@@ -67,16 +88,44 @@ export async function requirePortalContext(req: NextRequest): Promise<PortalCont
   return ctx
 }
 
+export interface PortalRouteOptions {
+  /**
+   * La route reste accessible tant que le mot de passe TEMPORAIRE n'a pas été
+   * changé. À réserver aux routes qui permettent précisément de le changer —
+   * sinon la contrainte serait impossible à lever.
+   */
+  autoriseMotDePasseTemporaire?: boolean
+}
+
 /**
  * Wrap an authenticated portal route: injects the {@link PortalContext}, turns a
  * thrown 401 into the response, and never leaks internal errors to the client.
+ *
+ * ─── Mot de passe temporaire (GF-PORT-003) ──────────────────────────────────
+ * Quand le garage ouvre un accès, il remet un mot de passe TEMPORAIRE. Tant
+ * qu'il n'a pas été changé, aucune donnée du portail n'est servie : ni les
+ * factures, ni les devis, ni les véhicules. Le contrôle est fait au SERVEUR et
+ * pas seulement par une redirection d'interface — masquer un écran n'empêche
+ * personne d'appeler l'API directement.
  */
 export function withPortalAuth<RouteCtx = unknown>(
   handler: (req: NextRequest, portal: PortalContext, routeCtx: RouteCtx) => Promise<NextResponse>,
+  options: PortalRouteOptions = {},
 ) {
   return async (req: NextRequest, routeCtx: RouteCtx): Promise<NextResponse> => {
     try {
       const portal = await requirePortalContext(req)
+
+      if (portal.user.mustChangePassword && !options.autoriseMotDePasseTemporaire) {
+        return NextResponse.json(
+          {
+            error: 'Vous devez d’abord définir votre mot de passe.',
+            code: 'PASSWORD_CHANGE_REQUIRED',
+          },
+          { status: 403 },
+        )
+      }
+
       return await handler(req, portal, routeCtx)
     } catch (e) {
       if (e instanceof NextResponse) return e

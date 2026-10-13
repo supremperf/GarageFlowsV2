@@ -1,4 +1,5 @@
 'use client'
+import { lineCents, fromCents } from '@/lib/money'
 
 import { useState, useEffect, useCallback } from 'react'
 import { Part } from '@/lib/types'
@@ -16,7 +17,7 @@ interface StockPanelProps {
 
 function PartRow({ part, onUpdate, onDelete }: {
   part: Part
-  onUpdate: (id: string, data: Partial<Part>) => void
+  onUpdate: (id: string, data: Partial<Part> & { expectedQuantity?: number }) => void
   onDelete: (id: string) => void
 }) {
   const { t } = useTranslation()
@@ -27,9 +28,16 @@ function PartRow({ part, onUpdate, onDelete }: {
 
   async function saveQty() {
     const newQty = Math.max(0, Number(qty))
-    await onUpdate(part.id, { quantity: newQty })
+    // On transmet la quantité OBSERVÉE (celle affichée quand l'édition a
+    // commencé) : le serveur n'applique la correction que si le stock vaut
+    // encore cette valeur. Sans cela, une vente concurrente était écrasée.
+    await onUpdate(part.id, { quantity: newQty, expectedQuantity: part.quantity })
     setEditing(false)
   }
+
+  // La quantité affichée peut avoir changé sous nos pieds (vente, réception) :
+  // on resynchronise le champ d'édition sur la valeur du serveur.
+  useEffect(() => { setQty(String(part.quantity)) }, [part.quantity])
 
   return (
     <div className={cn(
@@ -104,7 +112,9 @@ function PartRow({ part, onUpdate, onDelete }: {
 
       <button
         onClick={() => onDelete(part.id)}
-        className="p-1.5 rounded hover:bg-red-50 text-gray-300 hover:text-red-400 transition-colors"
+        aria-label={`Supprimer ${part.name}`}
+        title={`Supprimer ${part.name}`}
+        className="p-1.5 rounded hover:bg-red-50 text-gray-500 hover:text-red-500 transition-colors"
       >
         <Trash2 className="w-3.5 h-3.5" />
       </button>
@@ -118,6 +128,10 @@ function AddPartForm({ onAdd }: { onAdd: (p: Partial<Part>) => Promise<void> }) 
   const [form, setForm] = useState({
     name: '', reference: '', quantity: '0', minQuantity: '5',
     unitCost: '0', unitPrice: '0', location: '',
+    // Fournisseur : c'est ce champ qui alimente le réapprovisionnement groupé du
+    // module « Fournisseurs ». Sans lui, aucune pièce n'était rattachée à un
+    // fournisseur et ce module restait vide sur toute installation réelle.
+    supplierName: '', supplierRef: '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -133,8 +147,13 @@ function AddPartForm({ onAdd }: { onAdd: (p: Partial<Part>) => Promise<void> }) 
         unitCost: Number(form.unitCost),
         unitPrice: Number(form.unitPrice),
         location: form.location || undefined,
+        supplierName: form.supplierName || undefined,
+        supplierRef: form.supplierRef || undefined,
       })
-      setForm({ name: '', reference: '', quantity: '0', minQuantity: '5', unitCost: '0', unitPrice: '0', location: '' })
+      setForm({
+        name: '', reference: '', quantity: '0', minQuantity: '5',
+        unitCost: '0', unitPrice: '0', location: '', supplierName: '', supplierRef: '',
+      })
       setOpen(false)
     } finally {
       setSaving(false)
@@ -165,6 +184,14 @@ function AddPartForm({ onAdd }: { onAdd: (p: Partial<Part>) => Promise<void> }) 
               onChange={e => setForm(f => ({ ...f, reference: e.target.value }))} />
             <input className={input} placeholder={t.stkLocation} value={form.location}
               onChange={e => setForm(f => ({ ...f, location: e.target.value }))} />
+            {/* Fournisseur — c'est ce couple qui rend le réapprovisionnement
+                groupé possible : /api/suppliers regroupe les pièces sous le
+                seuil par `supplierName`, et interroge le connecteur avec
+                `supplierRef` comme référence catalogue. */}
+            <input className={input} placeholder={t.stkSupplier} value={form.supplierName}
+              onChange={e => setForm(f => ({ ...f, supplierName: e.target.value }))} />
+            <input className={input} placeholder={t.stkSupplierRef} value={form.supplierRef}
+              onChange={e => setForm(f => ({ ...f, supplierRef: e.target.value }))} />
             <div>
               <label className="text-xs text-gray-500 mb-0.5 block">{t.stkBuyPrice}</label>
               <input type="number" step="0.01" min="0" className={input} value={form.unitCost}
@@ -219,7 +246,7 @@ export default function StockPanel({ onClose }: StockPanelProps) {
 
   useEffect(() => { fetchParts() }, [fetchParts])
 
-  async function handleUpdate(id: string, data: Partial<Part>) {
+  async function handleUpdate(id: string, data: Partial<Part> & { expectedQuantity?: number }) {
     const res = await fetch(`/api/parts/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -229,7 +256,14 @@ export default function StockPanel({ onClose }: StockPanelProps) {
       const updated = await res.json()
       setParts(p => p.map(x => x.id === id ? updated : x))
       toast.success(t.stkUpdated)
+      return
     }
+    // Un échec était AVALÉ : l'écran affichait l'ancienne valeur sans un mot, et
+    // l'utilisateur croyait sa correction enregistrée. Le refus de correction
+    // concurrente (409) exige au contraire d'être vu et de rafraîchir l'écran.
+    const err = await res.json().catch(() => ({} as { error?: string }))
+    toast.error(err.error ?? `Erreur ${res.status}`)
+    if (res.status === 409) await fetchParts()
   }
 
   async function handleDelete(id: string) {
@@ -238,7 +272,12 @@ export default function StockPanel({ onClose }: StockPanelProps) {
     if (res.ok) {
       setParts(p => p.filter(x => x.id !== id))
       toast.success(t.stkDeleted)
+      return
     }
+    // Idem : le refus de supprimer une pièce qui porte un historique de stock
+    // (GF31-AUD-015) était invisible — la pièce restait là, sans explication.
+    const err = await res.json().catch(() => ({} as { error?: string }))
+    toast.error(err.error ?? `Erreur ${res.status}`)
   }
 
   async function handleAdd(data: Partial<Part>) {
@@ -266,11 +305,11 @@ export default function StockPanel({ onClose }: StockPanelProps) {
 
   const lowCount = parts.filter(p => p.quantity <= p.minQuantity).length
   const inStockCount = parts.filter(p => p.quantity > 0).length
-  const totalValue = parts.reduce((s, p) => s + p.quantity * p.unitCost, 0)
+  const totalValue = parts.reduce((s, p) => s + fromCents(lineCents(p.unitCost, p.quantity)), 0)
 
   return (
     <div className="fixed inset-0 z-40 flex items-start justify-end p-4 pointer-events-none">
-      <div className="pointer-events-auto w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-modal flex flex-col animate-slide-in">
+      <div role="dialog" aria-modal="true" aria-label={t.stkTitle} className="pointer-events-auto w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-modal flex flex-col animate-slide-in">
         {/* Header */}
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -284,10 +323,10 @@ export default function StockPanel({ onClose }: StockPanelProps) {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={fetchParts} className="p-1.5 rounded hover:bg-gray-100 text-gray-400">
+            <button onClick={fetchParts} aria-label="Rafraîchir le stock" title="Rafraîchir" className="p-1.5 rounded hover:bg-gray-100 text-gray-500">
               <RefreshCw className="w-4 h-4" />
             </button>
-            <button onClick={onClose} className="gf-close p-1.5 rounded hover:bg-gray-100 text-gray-400">
+            <button onClick={onClose} aria-label="Fermer" title="Fermer" className="gf-close p-1.5 rounded hover:bg-gray-100 text-gray-500">
               <X className="w-4 h-4" />
             </button>
           </div>

@@ -26,7 +26,7 @@ sans perte de fonctionnalité ni régression desktop / Electron.
 | `lg` | ≥ 1024 px | Tablette paysage / petit ordinateur | Libellés des boutons d'outils, assistant plus large |
 | `xl` | ≥ 1280 px | Desktop | Pleine densité |
 
-Une seule source de vérité : les mêmes valeurs sont exposées à JS via `src/hooks/useMediaQuery.ts` (`BP`).
+Une référence unique de breakpoints : les mêmes valeurs sont exposées à JS via `src/hooks/useMediaQuery.ts` (`BP`).
 
 ## 3. Différences portrait / paysage / tablette / desktop
 
@@ -64,7 +64,9 @@ BASE_URL=http://localhost:3000 npm run test:e2e   # E2E (app en cours d'exécuti
 ## 8. Résultats
 
 - `next build` : ✅ succès (15 pages).
-- `vitest` : ✅ 679 tests OK (24 skip).
+- `vitest` : suite verte. Le **compte de tests faisant foi** (unique, daté,
+  rattaché à un commit) est tenu dans `docs/PRODUCTION-READINESS.md` §3 — ne pas
+  dupliquer de chiffre ici pour éviter toute divergence (AUD-042).
 
 ## 9. Limites restantes
 

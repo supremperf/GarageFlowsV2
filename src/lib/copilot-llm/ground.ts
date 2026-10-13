@@ -62,6 +62,29 @@ export function numbersMatch(a: number, b: number): boolean {
 /**
  * True when every number in `text` also appears in `allowedText`. Text with no
  * numbers is trivially grounded.
+ *
+ * ── CE QUE CE GARDE NE VÉRIFIE PAS ──────────────────────────────────────────
+ * À lire AVANT de câbler un fournisseur LLM dans `provider.ts` — aujourd'hui il
+ * rend `null` en dur, donc rien de ce qui suit n'est atteignable. Ces quatre
+ * limites ont été mesurées en exécutant la fonction, pas supposées :
+ *
+ *   · LA POLARITÉ. `isGrounded("Aucun devis n'est en attente.",
+ *     "12 devis en attente de réponse.")` → true. Une phrase SANS chiffre est
+ *     réputée fondée : une inversion de sens traverse intacte.
+ *   · L'UNITÉ. `isGrounded('Marge de 250 %', 'CA du jour : 250 €')` → true.
+ *     Le nombre est présent, l'unité ne l'est pas.
+ *   · L'APPARIEMENT chiffre ↔ grandeur. C'est une appartenance à un ensemble :
+ *     « 450 pièces pour 3 € » est réputé fondé sur les faits
+ *     « 3 pièces (coût estimé 450 €) ». Les chiffres peuvent être permutés.
+ *   · L'ÉCHELLE DE LA TOLÉRANCE. `numbersMatch` accepte 0,1 % d'écart RELATIF :
+ *     `isGrounded('Total : 1 000 999 €', 'CA : 1 000 000 €')` → true, soit
+ *     999 € d'écart sur un million.
+ *
+ * Autrement dit ce garde protège contre un montant INVENTÉ, ce pour quoi il a
+ * été écrit — pas contre un mensonge construit avec les bons chiffres. Tant
+ * qu'aucun fournisseur n'est câblé, `phrasing === message` et la question ne se
+ * pose pas ; le jour où l'un le sera, ces quatre points sont à traiter AVANT,
+ * sans quoi l'écusson « vérifié » couvrirait des réponses fausses.
  */
 export function isGrounded(text: string, allowedText: string): boolean {
   const allowed = extractNumbers(allowedText)

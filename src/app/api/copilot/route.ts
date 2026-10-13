@@ -1,11 +1,14 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
+import { fromScaled } from '@/lib/money'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can, redactReorderCosts } from '@/lib/authz'
 import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { differenceInDays, format, startOfDay, subMonths } from 'date-fns'
 import { calcTotalHT, roundCents } from '@/lib/billing'
+import { billingLines, linesToEuros } from '@/lib/money-db'
 import { handleQuery, type CopilotResponse } from '@/lib/copilot'
 import { analyze } from '@/lib/profitability'
 import { forecast } from '@/lib/forecast'
@@ -15,6 +18,12 @@ import { planReorders, type StockItemInput } from '@/lib/stock-forecast'
 import { phraseAnswer, resolveLlmProvider } from '@/lib/copilot-llm'
 
 const BodySchema = z.object({ query: z.string().trim().min(1).max(500) })
+
+// Résolveurs exposant des données FINANCIÈRES (CA, marge, revenu par client,
+// prévision de CA) — réservés à financial:read (OWNER/MANAGER). Les intentions
+// opérationnelles (mécaniciens dispo, VIN, diagnostic, retards…) restent
+// ouvertes à tous les rôles authentifiés.
+const FINANCIAL_RESOLVERS = new Set(['margin', 'revenue_today', 'top_clients', 'forecast'])
 
 // POST /api/copilot — conversational routing over the platform's engines.
 // Read intents are answered with real data; action intents return a
@@ -35,8 +44,21 @@ export const POST = withAuth(async (req) => {
   // Actions & unknown pass through unchanged (actions require confirmation).
   if (res.type !== 'answer' || !res.resolver) return NextResponse.json(res)
 
+  // Contrôle d'accès financier : une intention financière posée par un rôle sans
+  // financial:read est refusée (pas de fuite de CA/marge via le copilote).
+  if (FINANCIAL_RESOLVERS.has(res.resolver) && !can(session.user.role, 'financial:read')) {
+    return NextResponse.json({ error: 'Accès refusé : données financières réservées.' }, { status: 403 })
+  }
+
   const today = startOfDay(new Date())
   const todayStr = format(today, 'yyyy-MM-dd')
+
+  // Le panneau affiche un écusson « Chiffres ancrés sur les données · vérifié ».
+  // Cette affirmation n'a de sens que si la réponse porte VRAIMENT des données du
+  // garage. Ces deux drapeaux distinguent les réponses qui n'en portent aucune —
+  // une panne de lecture, ou une demande de précision — de celles qui en portent.
+  let erreurResolveur = false
+  let demandeDePrecision = false
 
   try {
     switch (res.resolver) {
@@ -49,8 +71,8 @@ export const POST = withAuth(async (req) => {
         break
       }
       case 'revenue_today': {
-        const invoices = await prisma.invoice.findMany({ where: { garageId, status: 'paid', issueDate: todayStr }, select: { lines: { select: { quantity: true, unitPrice: true } } } })
-        const ht = roundCents(invoices.reduce((s, inv) => s + calcTotalHT(inv.lines), 0))
+        const invoices = await prisma.invoice.findMany({ where: { garageId, status: 'paid', issueDate: todayStr }, select: { lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true } } } })
+        const ht = roundCents(invoices.reduce((s, inv) => s + calcTotalHT(billingLines(inv.lines)), 0))
         res.data = { revenueHT: ht, invoiceCount: invoices.length, date: todayStr }
         res.message = `Chiffre d'affaires HT du jour : ${ht} € sur ${invoices.length} facture(s) payée(s).`
         break
@@ -58,12 +80,12 @@ export const POST = withAuth(async (req) => {
       case 'margin': {
         const since = format(subMonths(today, 1), 'yyyy-MM-dd')
         const [invoices, jobParts] = await Promise.all([
-          prisma.invoice.findMany({ where: { garageId, status: 'paid', issueDate: { gte: since } }, select: { id: true, number: true, status: true, lines: { select: { description: true, quantity: true, unitPrice: true, unitCost: true } } } }),
-          prisma.jobPart.findMany({ where: { job: { garageId, date: { gte: since } } }, select: { partId: true, quantity: true, unitPrice: true, unitCost: true, part: { select: { name: true } } } }),
+          prisma.invoice.findMany({ where: { garageId, status: 'paid', issueDate: { gte: since } }, select: { id: true, number: true, status: true, lines: { select: { description: true, quantityTenThousandths: true, unitPriceTenThousandths: true, unitCostTenThousandths: true } } } }),
+          prisma.jobPart.findMany({ where: { job: { garageId, date: { gte: since } } }, select: { partId: true, quantity: true, unitPriceTenThousandths: true, unitCostTenThousandths: true, part: { select: { name: true } } } }),
         ])
         const report = analyze({
-          invoices: invoices.map((i) => ({ id: i.id, number: i.number, status: i.status, lines: i.lines })),
-          jobParts: jobParts.map((jp) => ({ partId: jp.partId, partName: jp.part?.name ?? '—', quantity: jp.quantity, unitPrice: jp.unitPrice, unitCost: jp.unitCost })),
+          invoices: invoices.map((i) => ({ id: i.id, number: i.number, status: i.status, lines: linesToEuros(i.lines) })),
+          jobParts: jobParts.map((jp) => ({ partId: jp.partId, partName: jp.part?.name ?? '—', quantity: jp.quantity, unitPrice: fromScaled(jp.unitPriceTenThousandths), unitCost: fromScaled(jp.unitCostTenThousandths) })),
         })
         res.data = report.totals
         res.message = `Sur 30 jours : marge ${report.totals.margin} € (${report.totals.marginPct ?? 0}%) pour ${report.totals.revenueHT} € de CA HT.`
@@ -72,8 +94,20 @@ export const POST = withAuth(async (req) => {
       case 'low_stock': {
         const report = await stockReport(garageId, today)
         const toOrder = report.plans.filter((p) => p.shouldReorder)
-        res.data = toOrder.slice(0, 20)
-        res.message = toOrder.length ? `${toOrder.length} pièce(s) à réapprovisionner (coût estimé ${report.summary.totalOrderCost} €).` : 'Aucune pièce à commander.'
+        // Le coût d'achat est une donnée financière : il révèle la marge
+        // (GF31-AUD-009). `low_stock` ne figure pas dans FINANCIAL_RESOLVERS —
+        // à raison, savoir quelles pièces manquent est un besoin d'atelier — mais
+        // il en livrait le PRIX. La porte de /api/finance se contournait donc en
+        // demandant au copilote « quelles pièces sont en rupture ? ».
+        // Remède déjà retenu pour les lignes de documents : retirer le champ,
+        // pas refuser la réponse.
+        const voitLesCouts = can(session.user.role, 'financial:read')
+        res.data = redactReorderCosts(toOrder.slice(0, 20) as unknown as Record<string, unknown>[], session.user.role)
+        res.message = toOrder.length
+          ? (voitLesCouts
+            ? `${toOrder.length} pièce(s) à réapprovisionner (coût estimé ${report.summary.totalOrderCost} €).`
+            : `${toOrder.length} pièce(s) à réapprovisionner.`)
+          : 'Aucune pièce à commander.'
         break
       }
       case 'forecast': {
@@ -84,12 +118,12 @@ export const POST = withAuth(async (req) => {
         break
       }
       case 'top_clients': {
-        const invoices = await prisma.invoice.findMany({ where: { garageId, status: 'paid' }, select: { clientId: true, clientName: true, lines: { select: { quantity: true, unitPrice: true } } } })
+        const invoices = await prisma.invoice.findMany({ where: { garageId, status: 'paid' }, select: { clientId: true, clientName: true, lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true } } } })
         const by = new Map<string, { name: string; total: number }>()
         for (const inv of invoices) {
           const k = inv.clientId ?? inv.clientName ?? '—'
           const cur = by.get(k) ?? { name: inv.clientName ?? '—', total: 0 }
-          cur.total = roundCents(cur.total + calcTotalHT(inv.lines))
+          cur.total = roundCents(cur.total + calcTotalHT(billingLines(inv.lines)))
           by.set(k, cur)
         }
         res.data = Array.from(by.values()).sort((a, b) => b.total - a.total).slice(0, 5)
@@ -111,6 +145,9 @@ export const POST = withAuth(async (req) => {
       case 'diagnostic': {
         const result = diagnose({ symptoms: res.slots.text ? [res.slots.text] : [], obdCodes: res.slots.obdCode ? [res.slots.obdCode] : [] })
         res.data = result
+        // Sans symptôme ni code, il n'y a pas de diagnostic : c'est une demande
+        // de précision, pas une réponse tirée des données.
+        demandeDePrecision = result.causes.length === 0
         res.message = result.causes.length ? `Cause la plus probable : ${result.causes[0].name} (${result.causes[0].probability}%).` : 'Précisez un symptôme ou un code défaut.'
         break
       }
@@ -126,7 +163,12 @@ export const POST = withAuth(async (req) => {
         const stock = report.plans.filter((p) => p.urgency === 'critical' || p.urgency === 'high').length
         const quotes = await prisma.quote.count({ where: { garageId, status: 'sent' } })
         res.data = { lowStockUrgent: stock, pendingQuotes: quotes }
-        res.message = `Priorités : ${stock} pièce(s) en risque de rupture, ${quotes} devis en attente. Voir /api/proactive pour le détail.`
+        // Renvoyer l'utilisateur vers « /api/proactive » l'envoyait dans une
+        // impasse : c'est une route d'API, qu'aucun écran n'expose et qu'un
+        // garagiste ne peut pas ouvrir. Le copilote dit ce qu'il sait, et
+        // désigne l'écran qui existe réellement.
+        res.message = `Priorités : ${stock} pièce(s) en risque de rupture, ${quotes} devis en attente. `
+          + 'Le détail des ruptures est dans le panneau Stock, onglet « stock bas ».'
         break
       }
       default:
@@ -134,6 +176,7 @@ export const POST = withAuth(async (req) => {
     }
   } catch (e) {
     console.error('[copilot] resolver error', e)
+    erreurResolveur = true
     res.message = 'Erreur lors de la récupération des données.'
   }
 
@@ -143,7 +186,42 @@ export const POST = withAuth(async (req) => {
   // blob would let a fabricated figure launder through an incidental internal
   // number (an id, a date, leadTimeDays, a per-row reorderPoint, …).
   const phrased = await phraseAnswer({ query: parsed.data.query, facts: res.message ?? '', fallback: res.message ?? '' }, resolveLlmProvider())
-  return NextResponse.json({ ...res, phrasing: phrased.text })
+
+  // ── Ce que l'écusson « vérifié » a le droit d'affirmer ──────────────────────
+  //
+  // Il affirmait jusqu'ici la seule chose que le client savait voir : que le
+  // champ `phrasing` existait. Or il existe TOUJOURS sur ce chemin. L'écusson
+  // s'affichait donc sous « Erreur lors de la récupération des données. », sous
+  // « Intention reconnue mais non encore câblée. » et sous une demande de VIN —
+  // des phrases qui ne portent aucun chiffre du garage. Le seul signal de
+  // confiance de l'interface ne signalait rien.
+  //
+  // On ne peut pas non plus se fier à `phrased.grounded` : il vaut `false`
+  // précisément quand le garde-fou a REJETÉ une reformulation inventée et rendu
+  // le texte déterministe — c'est-à-dire au moment où la réponse est la plus
+  // sûre. S'y fier inverserait le signal.
+  //
+  // Le bon critère est celui-ci : un résolveur a-t-il réellement lu les données
+  // de CE garage, et le texte affiché est-il soit ce calcul déterministe, soit
+  // une reformulation qui a passé le contrôle d'ancrage ?
+  //
+  // Des quatre clauses, deux seulement décident aujourd'hui : `demandeDePrecision`
+  // et `res.data != null`. Une épreuve par mutation le montre — sur une panne
+  // comme sur une demande de VIN, `res.data` n'est de toute façon jamais assignée.
+  // `erreurResolveur` et le contrôle de type sont conservés délibérément : ils
+  // énoncent la règle, et couvrent le jour où un résolveur posera ses données
+  // AVANT de lever, ou basculera son type après les avoir posées.
+  const porteDesDonnees =
+    !erreurResolveur && !demandeDePrecision && res.type === 'answer' && res.data != null
+
+  return NextResponse.json({
+    ...res,
+    phrasing: phrased.text,
+    // `source` est propagée pour que la provenance cesse d'être indevinable :
+    // 'fallback' = calcul déterministe, 'llm' = reformulation ancrée acceptée,
+    // 'fallback_ungrounded' = reformulation rejetée, texte déterministe rendu.
+    ancrage: { verifie: porteDesDonnees, source: phrased.source },
+  })
 })
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
@@ -151,8 +229,8 @@ async function monthlyRevenue(garageId: string, today: Date, months: number): Pr
   const keys = Array.from({ length: months }, (_, i) => format(subMonths(today, months - 1 - i), 'yyyy-MM'))
   const idx = new Map(keys.map((k, i) => [k, i]))
   const values = new Array(months).fill(0)
-  const invoices = await prisma.invoice.findMany({ where: { garageId, status: 'paid', issueDate: { gte: `${keys[0]}-01` } }, select: { issueDate: true, lines: { select: { quantity: true, unitPrice: true } } } })
-  for (const inv of invoices) { const i = idx.get(inv.issueDate.slice(0, 7)); if (i !== undefined) values[i] += calcTotalHT(inv.lines) }
+  const invoices = await prisma.invoice.findMany({ where: { garageId, status: 'paid', issueDate: { gte: `${keys[0]}-01` } }, select: { issueDate: true, lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true } } } })
+  for (const inv of invoices) { const i = idx.get(inv.issueDate.slice(0, 7)); if (i !== undefined) values[i] += calcTotalHT(billingLines(inv.lines)) }
   return values.map((v) => roundCents(v))
 }
 
@@ -161,11 +239,11 @@ async function stockReport(garageId: string, today: Date) {
   const keys = Array.from({ length: months }, (_, i) => format(subMonths(today, months - 1 - i), 'yyyy-MM'))
   const idx = new Map(keys.map((k, i) => [k, i]))
   const [parts, jobParts] = await Promise.all([
-    prisma.part.findMany({ where: { garageId }, select: { id: true, name: true, reference: true, quantity: true, unitCost: true, minQuantity: true } }),
+    prisma.part.findMany({ where: { garageId }, select: { id: true, name: true, reference: true, quantity: true, unitCostTenThousandths: true, minQuantity: true } }),
     prisma.jobPart.findMany({ where: { job: { garageId, date: { gte: `${keys[0]}-01` } } }, select: { partId: true, quantity: true, job: { select: { date: true } } } }),
   ])
   const consumption = new Map<string, number[]>()
   for (const p of parts) consumption.set(p.id, new Array(months).fill(0))
   for (const jp of jobParts) { const arr = consumption.get(jp.partId); if (arr && jp.job) { const i = idx.get(jp.job.date.slice(0, 7)); if (i !== undefined) arr[i] += jp.quantity } }
-  return planReorders(parts.map((p): { item: StockItemInput; consumption: number[] } => ({ item: { id: p.id, name: p.name, reference: p.reference, currentStock: p.quantity, unitCost: p.unitCost, minStock: p.minQuantity, leadTimeDays: 7, periodDays: 30 }, consumption: consumption.get(p.id) ?? [] })))
+  return planReorders(parts.map((p): { item: StockItemInput; consumption: number[] } => ({ item: { id: p.id, name: p.name, reference: p.reference, currentStock: p.quantity, unitCost: fromScaled(p.unitCostTenThousandths), minStock: p.minQuantity, leadTimeDays: 7, periodDays: 30 }, consumption: consumption.get(p.id) ?? [] })))
 }

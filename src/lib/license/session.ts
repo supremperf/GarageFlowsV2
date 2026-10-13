@@ -48,6 +48,7 @@ export type LicensedFailureCode =
   | 'LICENSE_SUSPENDED'
   | 'LICENSE_EXPIRED'
   | 'LICENSE_GARAGE_MISMATCH' // licence rattachée à un AUTRE garage
+  | 'LICENSE_WRONG_TYPE'      // clé MECHANIC utilisée comme licence Garage
   | 'DEVICE_REQUIRED'         // session sans appareil (ancienne) → réactiver
   | 'DEVICE_UNKNOWN'          // appareil supprimé/réinitialisé → réactiver
   | 'DEVICE_REVOKED'
@@ -63,6 +64,7 @@ const FAIL: Record<LicensedFailureCode, { status: number; reason: string }> = {
   LICENSE_SUSPENDED:       { status: 403, reason: 'Cette licence est temporairement suspendue.' },
   LICENSE_EXPIRED:         { status: 403, reason: 'Cette licence a expiré.' },
   LICENSE_GARAGE_MISMATCH: { status: 403, reason: 'Cette licence est rattachée à un autre garage.' },
+  LICENSE_WRONG_TYPE:      { status: 403, reason: 'Cette clé est réservée à l\'espace mécanicien.' },
   DEVICE_REQUIRED:         { status: 401, reason: 'Appareil non enregistré. Réactivez votre licence.' },
   DEVICE_UNKNOWN:          { status: 401, reason: 'Appareil inconnu. Réactivez votre licence.' },
   DEVICE_REVOKED:          { status: 403, reason: 'Cet appareil a été révoqué.' },
@@ -103,6 +105,96 @@ async function readGfSession(
 }
 
 /**
+ * Identifiant de la licence sous laquelle CETTE installation tourne réellement
+ * (claim `lid` du cookie `gf_session`, JWT signé HS256 posé par
+ * `/api/license/activate`), ou `null` si aucune session licenciée n'est présente
+ * ou si le jeton est invalide.
+ *
+ * C'est la seule preuve serveur qu'un appelant détient une licence GARAGE
+ * donnée — la possession d'un jeton de clé MÉCANICIEN n'en est pas une : le
+ * `plid` signé prouve à quelle licence garage la clé appartient, pas que celui
+ * qui la présente a le droit d'en disposer (GF31-AUD-007).
+ *
+ * Ne lève jamais. Renvoie `null` pour une session de type mécanicien : elle ne
+ * licencie pas l'application garage.
+ */
+export async function activeGarageLicenseId(rawGfSession: string): Promise<string | null> {
+  const session = await readGfSession(rawGfSession)
+  if (!session || session.typ === 'mechanic') return null
+  return session.lid
+}
+
+/**
+ * RATTACHEMENT au garage — bind-on-first-use atomique, puis immuable.
+ *
+ * Rend le garage auquel la licence est RÉELLEMENT rattachée après l'opération :
+ * celui déjà en base s'il existe, sinon `candidat` si le rattachement a réussi,
+ * sinon celui qu'une requête concurrente a posé entre-temps. L'appelant compare
+ * lui-même au garage attendu — cette fonction ne refuse rien, elle constate.
+ *
+ * Le `updateMany ... where garageId: null` est la garde de concurrence : deux
+ * requêtes simultanées ne peuvent pas rattacher la même licence à deux garages.
+ */
+async function bindGarageOnFirstUse(
+  licenseId: string,
+  garageIdEnBase: string | null,
+  candidat: string,
+): Promise<string | null> {
+  if (garageIdEnBase) return garageIdEnBase
+  const upd = await prisma.licenseKey.updateMany({
+    where: { licenseId, garageId: null },
+    data: { garageId: candidat },
+  })
+  if (upd.count > 0) return candidat
+  // Une requête concurrente a rattaché la licence entre-temps : relire.
+  const fresh = await prisma.licenseKey.findUnique({ where: { licenseId } })
+  return fresh?.garageId ?? null
+}
+
+/**
+ * RATTACHEMENT SEUL, sans le moindre contrôle d'accès — pour le poste Electron.
+ *
+ * LE DÉFAUT QU'ELLE CORRIGE (mesuré le 2026-08-16 sur un poste fraîchement
+ * installé). `licenseEnforcementEnabled()` rend `false` sous Electron, et à bon
+ * droit : la licence y est déjà contrôlée par la fenêtre native, le heartbeat et
+ * l'overlay. Mais le rattachement au garage ne vivait QUE dans
+ * `validateLicensedSession`, c'est-à-dire dans le chemin désactivé. Conséquence :
+ * sur un poste packagé, `LicenseKey.garageId` restait `null` POUR TOUJOURS.
+ *
+ * Or `garageLicenseToken()` (src/lib/sync/cloud-client.ts) cherche la licence
+ * PAR garageId : elle ne trouvait rien, `syncGarageJobs` sortait aussitôt en
+ * `NO_GARAGE_LICENSE`, et la remontée vers l'espace mécanicien ne partait
+ * jamais — l'écran du comptoir affichant « Synchronisation cloud en attente »
+ * indéfiniment, sans une ligne de journal pour l'expliquer.
+ *
+ * Ce que cette fonction fait, et surtout ce qu'elle NE fait PAS : elle rattache,
+ * point. Elle ne refuse aucune requête, ne lève jamais, et ne réintroduit aucun
+ * contrôle par requête sous Electron. Le `lid` vient du cookie `gf_session`
+ * SIGNÉ (HS256) et le garage de la session authentifiée : les deux sont de
+ * confiance. Une session mécanicien est ignorée — une clé mécanicien ne
+ * licencie pas le garage et ne doit jamais être rattachée par cette voie.
+ */
+export async function attachLicenseToGarage(opts: {
+  rawGfSession: string
+  garageId: string
+}): Promise<void> {
+  try {
+    const session = await readGfSession(opts.rawGfSession)
+    if (!session || session.typ === 'mechanic' || !opts.garageId) return
+
+    const license = await prisma.licenseKey.findUnique({ where: { licenseId: session.lid } })
+    // Déjà rattachée (au bon garage ou à un autre) : immuable, on ne touche à
+    // rien. Le type en BASE fait foi, comme partout ailleurs dans ce module.
+    if (!license || license.garageId || license.licenseType === 'mechanic') return
+
+    await bindGarageOnFirstUse(session.lid, null, opts.garageId)
+  } catch {
+    // Best-effort STRICT : un poste hors ligne, une base verrouillée ou une
+    // migration en cours ne doivent jamais empêcher l'application de servir.
+  }
+}
+
+/**
  * Valide la session licenciée pour un utilisateur donné (garageId) à partir du
  * cookie gf_session. Ne lève jamais — renvoie un résultat structuré.
  */
@@ -113,30 +205,24 @@ export async function validateLicensedSession(opts: {
   const session = await readGfSession(opts.rawGfSession)
   if (!session) return fail('LICENSE_SESSION_MISSING')
 
+  // Une session MECHANIC ne licencie JAMAIS l'application garage : les API
+  // métier (clients, factures, paramètres…) exigent une licence Garage.
+  if (session.typ === 'mechanic') return fail('LICENSE_WRONG_TYPE')
+
   const { lid, did } = session
 
   // 2-5. Licence : existence, statut, révocation, expiration.
   const license = await prisma.licenseKey.findUnique({ where: { licenseId: lid } })
   if (!license) return fail('LICENSE_UNKNOWN')
+  // Défense en profondeur : même si le cookie prétend un autre type, le type
+  // en BASE fait foi — une clé mécanicien ne passe jamais côté garage.
+  if (license.licenseType === 'mechanic') return fail('LICENSE_WRONG_TYPE')
   if (license.status === 'revoked' || license.revokedAt) return fail('LICENSE_REVOKED')
   if (license.status === 'suspended') return fail('LICENSE_SUSPENDED')
   if (license.expiryAt.getTime() < Date.now()) return fail('LICENSE_EXPIRED')
 
   // 6. Rattachement au garage — bind-on-first-use (atomique), puis immuable.
-  let boundGarageId = license.garageId
-  if (!boundGarageId) {
-    const upd = await prisma.licenseKey.updateMany({
-      where: { licenseId: lid, garageId: null },
-      data: { garageId: opts.garageId },
-    })
-    if (upd.count > 0) {
-      boundGarageId = opts.garageId
-    } else {
-      // Une requête concurrente a rattaché la licence entre-temps : relire.
-      const fresh = await prisma.licenseKey.findUnique({ where: { licenseId: lid } })
-      boundGarageId = fresh?.garageId ?? null
-    }
-  }
+  const boundGarageId = await bindGarageOnFirstUse(lid, license.garageId, opts.garageId)
   if (boundGarageId !== opts.garageId) return fail('LICENSE_GARAGE_MISMATCH')
 
   // 7-9. Appareil : présence du did, existence, appartenance, statut actif.

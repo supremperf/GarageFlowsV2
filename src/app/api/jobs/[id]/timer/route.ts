@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
+import { scheduleJobSync } from '@/lib/sync/job-sync'
 
 // POST /api/jobs/:id/timer  body: { action: 'start' | 'stop' }
 export const POST = withAuth(async (req, { params }: { params: { id: string } }) => {
@@ -21,6 +22,12 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
         status: 'in_progress',
       },
     })
+    // Démarrer ou arrêter le chrono CHANGE le statut de l'intervention : sans
+    // cette remontée, le mécanicien voyait « Prévu » alors que le comptoir avait
+    // lancé le travail, jusqu'au prochain passage opportuniste. Toutes les
+    // autres écritures d'intervention la déclenchent déjà ; celle-ci était la
+    // seule oubliée.
+    scheduleJobSync(session.user.garageId)
     return NextResponse.json(updated)
   }
 
@@ -38,6 +45,12 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
         status: 'completed',
       },
     })
+    // Démarrer ou arrêter le chrono CHANGE le statut de l'intervention : sans
+    // cette remontée, le mécanicien voyait « Prévu » alors que le comptoir avait
+    // lancé le travail, jusqu'au prochain passage opportuniste. Toutes les
+    // autres écritures d'intervention la déclenchent déjà ; celle-ci était la
+    // seule oubliée.
+    scheduleJobSync(session.user.garageId)
     return NextResponse.json(updated)
   }
 

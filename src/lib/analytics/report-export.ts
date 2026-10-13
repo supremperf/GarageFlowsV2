@@ -6,9 +6,13 @@
 
 import type { CopilotReport } from './insights'
 
-/** Escape a value for a CSV cell (RFC 4180). */
+/** Escape a value for a CSV cell (RFC 4180) + neutralisation d'injection de formule. */
 function csvCell(value: unknown): string {
-  const s = value == null ? '' : String(value)
+  let s = value == null ? '' : String(value)
+  // Anti-injection de formule : une cellule débutant par = + - @ (ou TAB/CR) est
+  // interprétée comme formule par Excel/LibreOffice → préfixe apostrophe (texte).
+  // Exception : un nombre fini est laissé intact (reste numérique dans le tableur).
+  if (/^[=+\-@\t\r]/.test(s) && !Number.isFinite(Number(s))) s = "'" + s
   return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
 }
 
@@ -25,7 +29,7 @@ function row(...cells: unknown[]): string {
 export function reportToCSV(report: CopilotReport): string {
   const lines: string[] = []
 
-  lines.push(row('Rapport GarageFlow', `Généré le ${report.generatedAt}`))
+  lines.push(row('Rapport GarageFlows', `Généré le ${report.generatedAt}`))
   lines.push(row('Période (jours)', report.periodDays))
   lines.push(row('Score de santé', `${report.healthScore}/100 (${report.healthGrade})`))
   lines.push(row('Résumé', report.summary))

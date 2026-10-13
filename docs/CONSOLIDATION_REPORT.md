@@ -1,3 +1,8 @@
+<!-- doc-status: historique -->
+> **⚠️ DOCUMENT HISTORIQUE — instantané daté, ne fait plus foi.**
+> Ne pas utiliser comme source de vérité pour un déploiement actuel.
+> Source de vérité : **[./PRODUCTION-READINESS.md](./PRODUCTION-READINESS.md)**.
+
 # Rapport de consolidation — `integration/garageflow-complete-latest`
 
 Ce document trace la synchronisation complète des branches de `GarageFlowsV2`

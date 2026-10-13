@@ -51,6 +51,14 @@ export async function createBackup(
   garageId: string,
   opts: { passphrase?: string; note?: string } = {},
 ): Promise<BackupRecord> {
+  // Transaction volontaire, MALGRÉ son coût : Prisma ouvre ses transactions
+  // SQLite en `BEGIN IMMEDIATE` (mesuré), donc ce parcours en LECTURE prend le
+  // verrou d'écriture pour toute sa durée et fait patienter les écritures du
+  // poste. C'est un arbitrage assumé, pas un oubli — une sauvegarde lue sans
+  // transaction pourrait capturer une facture sans ses lignes, ou une
+  // intervention sans ses pièces. Une sauvegarde incohérente n'est pas une
+  // sauvegarde ; quelques secondes d'attente valent mieux qu'une restauration
+  // qui échoue le jour où l'on en a besoin.
   const snapshot = await prisma.$transaction(tx => snapshotGarage(tx, garageId))
   const plaintext = JSON.stringify(snapshot)
   const checksum = sha256(plaintext)

@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
-import { savePhoto } from '@/lib/photo-store'
+import { savePhoto, deletePhoto } from '@/lib/photo-store'
 
 // GET /api/inspections/[id]
 export const GET = withAuth(async (_req, { params }) => {
@@ -35,15 +35,39 @@ export const PATCH = withAuth(async (req, { params }) => {
     if (body.status !== undefined) data.status = body.status
     if (body.notes !== undefined) data.notes = body.notes
     if (body.photoBase64 !== undefined) {
+      // ── Les DEUX colonnes sont écrites, dans les deux branches (GF-026) ────
+      // Retirer une photo posait `photoBase64 = null` et laissait `photoPath`
+      // intact. Or la lecture donne la PRIORITÉ au fichier
+      // (`item.photoPath ? /api/photos/… : item.photoBase64`) : la photo
+      // réapparaissait au rechargement de l'inspection, et le fichier restait
+      // sur le disque. Le garage la « supprimait » sans effet, indéfiniment.
+      const ancienChemin = body.photoBase64
+        ? null
+        : (await prisma.inspectionItem.findFirst({
+            where: { id: body.itemId, inspectionId: params.id }, select: { photoPath: true },
+          }))?.photoPath ?? null
+
       const photoPath = body.photoBase64 ? savePhoto(body.photoBase64, `inspections/${params.id}`) : null
-      if (photoPath) { data.photoBase64 = null; data.photoPath = photoPath }
-      else data.photoBase64 = body.photoBase64 || null
+      if (photoPath) {
+        data.photoBase64 = null
+        data.photoPath = photoPath
+      } else {
+        data.photoBase64 = body.photoBase64 || null
+        // Suppression explicite : le chemin doit tomber avec le contenu.
+        if (!body.photoBase64) data.photoPath = null
+      }
+      // Le fichier n'est retiré qu'après l'écriture réussie, plus bas.
+      if (ancienChemin) data.__ancienChemin = ancienChemin
     }
+    const ancienChemin = typeof data.__ancienChemin === 'string' ? data.__ancienChemin : null
+    delete data.__ancienChemin
     const res = await prisma.inspectionItem.updateMany({
       where: { id: body.itemId, inspectionId: params.id },
       data,
     })
     if (res.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    // La base ne référence plus le fichier : on peut le retirer du disque.
+    if (ancienChemin) deletePhoto(ancienChemin)
     const item = await prisma.inspectionItem.findFirst({ where: { id: body.itemId, inspectionId: params.id } })
     return NextResponse.json(item)
   }

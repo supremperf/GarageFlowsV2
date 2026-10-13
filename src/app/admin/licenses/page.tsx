@@ -20,6 +20,7 @@ import {
 import { cn } from '@/lib/utils'
 import { GarageFlowIcon } from '@/components/GarageFlowLogo'
 import WindowControls from '@/components/WindowControls'
+import { LicenseDevices } from '@/components/admin/LicenseDevices'
 import toast, { Toaster } from 'react-hot-toast'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -226,7 +227,19 @@ function GenerateModal({
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ license: generated.token }),
                       })
-                      if (r.ok) setActivated(true)
+                      // ── Un 200 n'est pas un succès sur cette route (GF-024) ──
+                      // Cinq refus répondent en HTTP 200 avec `{ ok: false }` :
+                      // licence invalide, intégrité de base, révoquée, suspendue,
+                      // expirée. Se fier au seul `r.ok` affichait donc
+                      // « ✓ Licence activée » sur une clé refusée. Et les refus
+                      // en 4xx (HWID requis, appareil requis) ne montraient RIEN
+                      // du tout — aucune branche `else` n'existait.
+                      const d = await r.json().catch(() => ({} as { ok?: boolean; reason?: string; error?: string }))
+                      if (!r.ok || d?.ok === false) {
+                        toast.error(d?.reason ?? d?.error ?? 'Activation refusée par le serveur.')
+                        return
+                      }
+                      setActivated(true)
                     } finally {
                       setActivating(false)
                     }
@@ -273,10 +286,24 @@ function KeyRow({ item, onUpdate, onDelete }: {
   const [labelVal,     setLabelVal]     = useState(item.label ?? '')
   const [loading,      setLoading]      = useState(false)
   const [expanded,     setExpanded]     = useState(false)
+  // Réactivation d'une licence RÉVOQUÉE : geste dédié + motif obligatoire
+  // (la révocation est un état terminal côté serveur — voir state-machine.ts).
+  const [reactivating, setReactivating] = useState(false)
+  const [reason,       setReason]       = useState('')
 
   const expired = item.expiryAt ? new Date(item.expiryAt) < new Date() : false
 
-  async function patch(data: object) {
+  /**
+   * Envoie la modification et rend le VERDICT du serveur.
+   *
+   * L'ancienne version ignorait l'échec : `if (res.ok) onUpdate(…)` puis, chez
+   * l'appelant, un `toast.success(…)` inconditionnel. Un refus du serveur
+   * s'affichait donc « Réactivée » alors que rien n'avait changé — la ligne
+   * restait rouge sous un message vert. Ce faux succès est devenu bien plus
+   * qu'un défaut cosmétique le jour où le serveur s'est mis à refuser
+   * légitimement certaines transitions.
+   */
+  async function patch(data: object): Promise<boolean> {
     setLoading(true)
     try {
       const res = await fetch(`/api/admin/licenses/${item.id}`, {
@@ -284,17 +311,34 @@ function KeyRow({ item, onUpdate, onDelete }: {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(data),
       })
-      if (res.ok) onUpdate(item.id, await res.json())
+      const corps = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(corps?.error || 'Modification refusée par le serveur.')
+        return false
+      }
+      onUpdate(item.id, corps)
+      return true
+    } catch {
+      toast.error('Serveur injoignable.')
+      return false
     } finally { setLoading(false) }
   }
 
   async function patchStatus(status: 'active' | 'revoked' | 'suspended') {
-    await patch({ status })
+    if (!await patch({ status })) return
     toast.success(status === 'active' ? 'Réactivée' : status === 'revoked' ? 'Révoquée' : 'Suspendue')
   }
 
+  /** Réactivation administrative explicite d'une licence révoquée. */
+  async function confirmReactivation() {
+    if (!await patch({ status: 'active', confirmReactivation: true, reason })) return
+    setReactivating(false)
+    setReason('')
+    toast.success('Licence réactivée — action journalisée')
+  }
+
   async function saveLabel() {
-    await patch({ label: labelVal || null })
+    if (!await patch({ label: labelVal || null })) return
     setEditingLabel(false)
     toast.success('Étiquette mise à jour')
   }
@@ -304,7 +348,16 @@ function KeyRow({ item, onUpdate, onDelete }: {
     setLoading(true)
     try {
       const res = await fetch(`/api/admin/licenses/${item.id}`, { method: 'DELETE' })
-      if (res.ok) { onDelete(item.id); toast.success('Supprimée') }
+      const corps = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        // Notamment 409 : supprimer une licence bloquée la réactiverait.
+        toast.error(corps?.error || 'Suppression refusée par le serveur.')
+        return
+      }
+      onDelete(item.id)
+      toast.success('Supprimée')
+    } catch {
+      toast.error('Serveur injoignable.')
     } finally { setLoading(false) }
   }
 
@@ -380,7 +433,9 @@ function KeyRow({ item, onUpdate, onDelete }: {
                 <ToggleRight className="w-4 h-4" />
               </button>
             ) : (
-              <button onClick={() => patchStatus('active')} title="Réactiver"
+              <button
+                onClick={() => (item.status === 'revoked' ? setReactivating(v => !v) : patchStatus('active'))}
+                title={item.status === 'revoked' ? 'Réactiver (motif requis)' : 'Réactiver'}
                 className="p-1.5 rounded-lg hover:bg-emerald-500/15 text-slate-500 hover:text-emerald-400 transition-all">
                 <ToggleLeft className="w-4 h-4" />
               </button>
@@ -400,6 +455,47 @@ function KeyRow({ item, onUpdate, onDelete }: {
           </button>
         </div>
       </div>
+
+      {/* Réactivation d'une licence révoquée — geste dédié, motif obligatoire.
+          La révocation est un état terminal : le serveur refuse un simple
+          PATCH {status:'active'}. Le motif et l'acteur sont journalisés. */}
+      {reactivating && item.status === 'revoked' && (
+        <div className="px-3 pb-3 border-t border-emerald-500/20 bg-emerald-500/[0.03]">
+          <p className="text-[10px] text-emerald-300/80 mt-3 mb-1.5 leading-relaxed">
+            Réactiver une licence révoquée est une décision administrative journalisée
+            (acteur, horodatage, motif). Indiquez le motif :
+          </p>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <input
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              autoFocus
+              placeholder="Ex. régularisation du paiement le 12/08"
+              className="flex-1 px-2.5 py-1.5 rounded-lg bg-white/[0.08] border border-white/[0.15] text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/40"
+              onKeyDown={e => {
+                if (e.key === 'Enter' && reason.trim().length >= 5) confirmReactivation()
+                if (e.key === 'Escape') { setReactivating(false); setReason('') }
+              }}
+            />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={confirmReactivation}
+                disabled={loading || reason.trim().length < 5}
+                className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                Confirmer la réactivation
+              </button>
+              <button
+                onClick={() => { setReactivating(false); setReason('') }}
+                className="px-2.5 py-1.5 rounded-lg bg-white/[0.06] text-slate-400 text-xs hover:bg-white/[0.1] transition-all">
+                Annuler
+              </button>
+            </div>
+          </div>
+          {reason.trim().length > 0 && reason.trim().length < 5 && (
+            <p className="text-[10px] text-amber-400/80 mt-1.5">Motif trop court (5 caractères minimum).</p>
+          )}
+        </div>
+      )}
 
       {/* Expanded details */}
       {expanded && (
@@ -440,6 +536,11 @@ function KeyRow({ item, onUpdate, onDelete }: {
               </p>
             )}
           </div>
+
+          {/* Postes activés — chargés à l'ouverture du détail, pas avant :
+              une liste par licence à l'affichage de la page ferait autant de
+              requêtes qu'il y a de licences. */}
+          <LicenseDevices licenseId={item.id} />
 
           {/* Quick actions */}
           {item.status === 'active' && (
@@ -546,7 +647,7 @@ export default function AdminLicensesPage() {
           <div className="flex items-center gap-3" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
             <GarageFlowIcon size={36} />
             <div>
-              <h1 className="font-black text-white text-base leading-tight">GarageFlow</h1>
+              <h1 className="font-black text-white text-base leading-tight">GarageFlows</h1>
               <div className="flex items-center gap-1.5">
                 <Shield className="w-3 h-3 text-amber-400" />
                 <span className="text-[10px] text-amber-400 font-black tracking-[0.15em] uppercase">Panneau Administrateur · ECC v2</span>

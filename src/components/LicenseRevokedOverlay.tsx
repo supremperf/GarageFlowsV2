@@ -29,14 +29,14 @@ const STATUS_CONFIG: Record<
     color: 'text-red-400',
     ring:  'rgba(239,68,68,0.15)',
     title: 'Compte révoqué',
-    hint:  "Votre licence GarageFlow a été révoquée. L'accès au logiciel est bloqué. Veuillez contacter votre revendeur pour rétablir votre compte.",
+    hint:  "Votre licence GarageFlows a été révoquée. L'accès au logiciel est bloqué. Veuillez contacter votre revendeur pour rétablir votre compte.",
   },
   suspended: {
     icon:  Clock,
     color: 'text-amber-400',
     ring:  'rgba(245,158,11,0.15)',
     title: 'Compte suspendu',
-    hint:  "Votre licence GarageFlow est temporairement suspendue. L'accès est bloqué jusqu'à sa réactivation. Contactez votre revendeur pour plus d'informations.",
+    hint:  "Votre licence GarageFlows est temporairement suspendue. L'accès est bloqué jusqu'à sa réactivation. Contactez votre revendeur pour plus d'informations.",
   },
   tampered: {
     icon:  ShieldOff,
@@ -44,6 +44,18 @@ const STATUS_CONFIG: Record<
     ring:  'rgba(239,68,68,0.15)',
     title: 'Sécurité compromise',
     hint:  "L'intégrité de la licence n'a pas pu être vérifiée. Contactez votre revendeur pour rétablir votre compte.",
+  },
+  // L'autorité a REFUSÉ d'enregistrer cet appareil (limite atteinte, clé
+  // mécanicien pas encore attribuée…). Ce n'est PAS une révocation : sans
+  // cette entrée, le repli affichait « Compte révoqué » à quelqu'un dont la
+  // licence est parfaitement valide. Le motif exact du serveur est affiché
+  // juste en dessous — c'est lui qui indique le geste à faire.
+  activation_refused: {
+    icon:  Clock,
+    color: 'text-amber-400',
+    ring:  'rgba(245,158,11,0.15)',
+    title: 'Appareil non enregistré',
+    hint:  "Votre licence est valide, mais cet appareil n'a pas pu être enregistré :",
   },
 }
 
@@ -98,7 +110,12 @@ export default function LicenseRevokedOverlay() {
     }
 
     poll() // immediate check on mount
-    const id = setInterval(poll, POLL_MS)
+    // Rien en arrière-plan : un écran d'atelier passe des heures masqué, et
+    // sonder toutes les 3 secondes y consommait à lui seul un tiers du quota
+    // partagé par tout le poste — sans qu'aucun humain ne regarde. Le retour au
+    // premier plan déclenche de toute façon un contrôle immédiat, ci-dessous :
+    // la réactivité annoncée est conservée.
+    const id = setInterval(() => { if (!document.hidden) poll() }, POLL_MS)
 
     // Also re-check the moment the window/tab is focused for instant feedback.
     const onFocus = () => poll()

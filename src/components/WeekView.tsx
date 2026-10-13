@@ -126,7 +126,9 @@ export default function WeekView() {
             const dateStr = format(day, 'yyyy-MM-dd')
             const dayJobs = weekJobs
               .filter(j => j.date === dateStr && j.status !== 'cancelled')
-              .sort((a, b) => a.startTime.localeCompare(b.startTime))
+              // Défensif : un `startTime` manquant ne doit pas faire tomber la
+              // vue semaine (voir DashboardCharts — même classe de défaut).
+              .sort((a, b) => (a.startTime ?? '').localeCompare(b.startTime ?? ''))
             const isToday = isSameDay(day, new Date())
 
             return (

@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
-import Anthropic from '@anthropic-ai/sdk'
 
 // GET /api/plate-lookup?plate=AB-123-CD
 export const GET = withAuth(async (req) => {
@@ -49,37 +48,32 @@ export const GET = withAuth(async (req) => {
     // fall through to AI
   }
 
-  // AI fallback — Claude parses the plate format and provides best-effort info
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
-    return NextResponse.json({
-      plate,
-      make: null,
-      model: null,
-      year: null,
-      fuel: null,
-      color: null,
-      source: 'unknown',
-      error: 'no_api',
-    })
-  }
-
-  const client = new Anthropic({ apiKey })
-  const msg = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 200,
-    messages: [{
-      role: 'user',
-      content: `French license plate: "${plate}". Based on the plate format and any encoding, provide the most likely vehicle info in JSON only (no explanation): {"make":"","model":"","year":null,"fuel":"","color":"","confidence":"low"}. If you cannot determine, use null values. Reply with only valid JSON.`,
-    }],
+  // ── Aucune donnée : on le DIT, on n'en invente pas ──────────────────────────
+  //
+  // Il existait ici un « repli IA » qui demandait à un modèle de langue :
+  //   « French license plate: "AB-123-CD". Based on the plate format and any
+  //     encoding, provide the most likely vehicle info… »
+  // et renvoyait sa réponse sous `source: 'ai'`. `JobModal.handlePlateLookup`
+  // la traitait comme n'importe quel autre résultat : remplissage du champ
+  // `vehicleModel` et message « Véhicule détecté ». La marque, le modèle et
+  // l'année ainsi obtenus partaient ensuite dans l'intervention, l'ordre de
+  // réparation, le devis et la facture.
+  //
+  // Or, depuis 2009, une plaque du SIV est attribuée SÉQUENTIELLEMENT au niveau
+  // national : elle n'encode ni la marque, ni le modèle, ni l'année, ni le
+  // département. Aucun modèle ne peut donc l'en déduire — la consigne
+  // « most likely vehicle info » ne pouvait produire qu'une invention
+  // plausible, présentée à l'utilisateur comme une consultation officielle.
+  //
+  // Le repli est supprimé. Une information indisponible est annoncée comme
+  // telle ; c'est au garagiste de saisir le véhicule, ce qu'il fait déjà.
+  return NextResponse.json({
+    plate,
+    make:   null,
+    model:  null,
+    year:   null,
+    fuel:   null,
+    color:  null,
+    source: 'unavailable',
   })
-
-  try {
-    const text = msg.content[0].type === 'text' ? msg.content[0].text : '{}'
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : {}
-    return NextResponse.json({ plate, ...parsed, source: 'ai' })
-  } catch {
-    return NextResponse.json({ plate, make: null, model: null, year: null, source: 'unknown' })
-  }
 })

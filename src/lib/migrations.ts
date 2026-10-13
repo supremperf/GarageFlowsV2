@@ -1,57 +1,143 @@
-export interface Migration { id: string; sql: string }
+/**
+ * Spécification d'un index UNIQUE créé par le runner avec CONTRÔLE DE DOUBLONS.
+ * Le runner détecte d'abord les groupes en doublon : s'il en existe, l'index
+ * n'est PAS créé (statut « deferred », réessayé au prochain démarrage) — jamais
+ * d'échec bloquant ni de suppression de données. Sinon l'index UNIQUE est créé.
+ */
+export interface UniqueIndexMigration {
+  /** Nom d'index (convention Prisma : <Table>_<col..>_key) — idempotent. */
+  name: string
+  table: string
+  columns: string[]
+}
+
+/** Garde conditionnelle : la migration ne s'applique que selon l'état RÉEL du schéma. */
+export interface ColumnGuard {
+  table: string
+  column: string
+}
+
+/**
+ * Étape d'une migration COMPOSITE. Les étapes d'une même migration s'exécutent
+ * dans UNE SEULE transaction : tout réussit (et la migration est enregistrée)
+ * ou tout est annulé (ROLLBACK) — jamais d'état intermédiaire persistant.
+ */
+export interface MigrationStep {
+  /** L'étape ne s'exécute que si la colonne EXISTE (ex. backfill/drop d'une ancienne colonne). */
+  onlyIfColumnExists?: ColumnGuard
+  /** L'étape ne s'exécute que si la colonne MANQUE (idempotence des ADD COLUMN). */
+  onlyIfColumnMissing?: ColumnGuard
+  /** Instruction SQL de l'étape (mutuellement exclusif avec verifySql). */
+  sql?: string
+  /**
+   * VÉRIFICATION BLOQUANTE : la requête doit renvoyer une ligne `{ n }` avec
+   * n === 0. Tout n > 0 fait ÉCHOUER la migration (rollback complet) — aucune
+   * étape destructive (DROP) ne peut donc suivre un backfill divergent.
+   */
+  verifySql?: string
+}
+
+export interface Migration {
+  id: string
+  /** Instruction SQL unique (forme historique, entrées 001-161). */
+  sql?: string
+  /** Création d'un index UNIQUE sûre (contrôle de doublons — non destructif, différable). */
+  uniqueIndex?: UniqueIndexMigration
+  /**
+   * Migration COMPOSITE atomique : ADD → BACKFILL → VERIFY → DROP dans une seule
+   * transaction, enregistrée uniquement après réussite complète.
+   */
+  steps?: MigrationStep[]
+  /**
+   * Migration de DONNÉES en code (pas en SQL) : 'json-v2' convertit les JSON
+   * monétaires persistés v1 (euros flottants) au format v2 (entiers exacts).
+   * Implémentée dans /api/internal/migrate (transactionnelle, vérifiée).
+   */
+  kind?: 'json-v2'
+  /** Forme historique : garde sur la migration entière (entrées 001-161). */
+  onlyIfColumnExists?: ColumnGuard
+  onlyIfColumnMissing?: ColumnGuard
+}
+
+/** SQL listant les colonnes d'une table (PRAGMA) — pour les gardes ci-dessus. */
+export function tableColumnsSql(table: string): string {
+  return `PRAGMA table_info(${quoteIdent(table)})`
+}
+
+/** Échappe un identifiant SQLite (guillemets doubles). */
+function quoteIdent(id: string): string {
+  return `"${id.replace(/"/g, '""')}"`
+}
+
+/**
+ * SQL détectant les groupes en doublon qui EMPÊCHERAIENT un index UNIQUE.
+ * Les NULL sont exclus : SQLite autorise plusieurs NULL sous une contrainte
+ * UNIQUE (NULL ≠ NULL), donc ils ne créent jamais de conflit.
+ */
+export function duplicateGroupsSql(u: UniqueIndexMigration): string {
+  const cols = u.columns.map(quoteIdent).join(', ')
+  const notNull = u.columns.map((c) => `${quoteIdent(c)} IS NOT NULL`).join(' AND ')
+  return `SELECT ${cols} FROM ${quoteIdent(u.table)} WHERE ${notNull} GROUP BY ${cols} HAVING COUNT(*) > 1 LIMIT 5`
+}
+
+/** SQL de création idempotente de l'index UNIQUE. */
+export function createUniqueIndexSql(u: UniqueIndexMigration): string {
+  const cols = u.columns.map(quoteIdent).join(', ')
+  return `CREATE UNIQUE INDEX IF NOT EXISTS ${quoteIdent(u.name)} ON ${quoteIdent(u.table)}(${cols})`
+}
 
 export const MIGRATIONS: Migration[] = [
   // ── JobPhoto ──────────────────────────────────────────────────────────────
-  { id: '001_job_photo_path',             sql: 'ALTER TABLE "JobPhoto" ADD COLUMN "photoPath" TEXT' },
+  { id: '001_job_photo_path',             onlyIfColumnMissing: { table: 'JobPhoto', column: 'photoPath' }, sql: 'ALTER TABLE "JobPhoto" ADD COLUMN "photoPath" TEXT' },
   // ── InspectionItem ────────────────────────────────────────────────────────
-  { id: '002_inspection_item_photo_path', sql: 'ALTER TABLE "InspectionItem" ADD COLUMN "photoPath" TEXT' },
+  { id: '002_inspection_item_photo_path', onlyIfColumnMissing: { table: 'InspectionItem', column: 'photoPath' }, sql: 'ALTER TABLE "InspectionItem" ADD COLUMN "photoPath" TEXT' },
   // ── Garage columns ────────────────────────────────────────────────────────
-  { id: '003_garage_logo_path',           sql: 'ALTER TABLE "Garage" ADD COLUMN "logoPath" TEXT' },
-  { id: '004_garage_workshop_start_hour', sql: 'ALTER TABLE "Garage" ADD COLUMN "workshopStartHour" INTEGER DEFAULT 8' },
-  { id: '005_garage_workshop_end_hour',   sql: 'ALTER TABLE "Garage" ADD COLUMN "workshopEndHour" INTEGER DEFAULT 18' },
-  { id: '006_garage_hourly_rate',         sql: 'ALTER TABLE "Garage" ADD COLUMN "hourlyRate" REAL DEFAULT 60' },
-  { id: '007_garage_tax_rate',            sql: 'ALTER TABLE "Garage" ADD COLUMN "taxRate" REAL DEFAULT 20' },
-  { id: '008_garage_currency',            sql: 'ALTER TABLE "Garage" ADD COLUMN "currency" TEXT DEFAULT "EUR"' },
-  { id: '009_garage_payment_terms',       sql: 'ALTER TABLE "Garage" ADD COLUMN "paymentTerms" TEXT' },
-  { id: '010_garage_invoice_prefix',      sql: 'ALTER TABLE "Garage" ADD COLUMN "invoicePrefix" TEXT DEFAULT "FAC"' },
-  { id: '011_garage_invoice_counter',     sql: 'ALTER TABLE "Garage" ADD COLUMN "invoiceCounter" INTEGER DEFAULT 0' },
-  { id: '012_garage_quote_prefix',        sql: 'ALTER TABLE "Garage" ADD COLUMN "quotePrefix" TEXT DEFAULT "DEV"' },
-  { id: '013_garage_quote_counter',       sql: 'ALTER TABLE "Garage" ADD COLUMN "quoteCounter" INTEGER DEFAULT 0' },
-  { id: '014_garage_invoice_footer',      sql: 'ALTER TABLE "Garage" ADD COLUMN "invoiceFooter" TEXT' },
-  { id: '015_garage_language',            sql: 'ALTER TABLE "Garage" ADD COLUMN "language" TEXT DEFAULT "fr"' },
-  { id: '016_garage_onboarding_complete', sql: 'ALTER TABLE "Garage" ADD COLUMN "onboardingComplete" INTEGER DEFAULT 0' },
-  { id: '017_garage_sms_phone',           sql: 'ALTER TABLE "Garage" ADD COLUMN "smsPhone" TEXT' },
-  { id: '018_garage_work_order_prefix',   sql: 'ALTER TABLE "Garage" ADD COLUMN "workOrderPrefix" TEXT DEFAULT "OR"' },
-  { id: '019_garage_work_order_counter',  sql: 'ALTER TABLE "Garage" ADD COLUMN "workOrderCounter" INTEGER DEFAULT 0' },
-  { id: '020_garage_warranty_months',     sql: 'ALTER TABLE "Garage" ADD COLUMN "warrantyMonthsDefault" INTEGER DEFAULT 12' },
-  { id: '021_garage_loaner_enabled',      sql: 'ALTER TABLE "Garage" ADD COLUMN "loanerEnabled" INTEGER DEFAULT 0' },
-  { id: '022_garage_smart_reminder',      sql: 'ALTER TABLE "Garage" ADD COLUMN "smartReminderMonths" INTEGER DEFAULT 11' },
-  { id: '023_garage_po_prefix',           sql: 'ALTER TABLE "Garage" ADD COLUMN "purchaseOrderPrefix" TEXT DEFAULT "BC"' },
-  { id: '024_garage_po_counter',          sql: 'ALTER TABLE "Garage" ADD COLUMN "purchaseOrderCounter" INTEGER DEFAULT 0' },
-  { id: '025_garage_website',             sql: 'ALTER TABLE "Garage" ADD COLUMN "website" TEXT' },
-  { id: '026_garage_email',               sql: 'ALTER TABLE "Garage" ADD COLUMN "email" TEXT' },
-  { id: '027_garage_siret',               sql: 'ALTER TABLE "Garage" ADD COLUMN "siret" TEXT' },
-  { id: '028_garage_vat_number',          sql: 'ALTER TABLE "Garage" ADD COLUMN "vatNumber" TEXT' },
-  { id: '029_garage_iban',                sql: 'ALTER TABLE "Garage" ADD COLUMN "iban" TEXT' },
-  { id: '030_garage_bic',                 sql: 'ALTER TABLE "Garage" ADD COLUMN "bic" TEXT' },
-  { id: '031_garage_bank_name',           sql: 'ALTER TABLE "Garage" ADD COLUMN "bankName" TEXT' },
+  { id: '003_garage_logo_path',           onlyIfColumnMissing: { table: 'Garage', column: 'logoPath' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "logoPath" TEXT' },
+  { id: '004_garage_workshop_start_hour', onlyIfColumnMissing: { table: 'Garage', column: 'workshopStartHour' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "workshopStartHour" INTEGER DEFAULT 8' },
+  { id: '005_garage_workshop_end_hour',   onlyIfColumnMissing: { table: 'Garage', column: 'workshopEndHour' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "workshopEndHour" INTEGER DEFAULT 18' },
+  { id: '006_garage_hourly_rate',         onlyIfColumnMissing: { table: 'Garage', column: 'hourlyRate' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "hourlyRate" REAL DEFAULT 60' },
+  { id: '007_garage_tax_rate',            onlyIfColumnMissing: { table: 'Garage', column: 'taxRate' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "taxRate" REAL DEFAULT 20' },
+  { id: '008_garage_currency',            onlyIfColumnMissing: { table: 'Garage', column: 'currency' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "currency" TEXT DEFAULT "EUR"' },
+  { id: '009_garage_payment_terms',       onlyIfColumnMissing: { table: 'Garage', column: 'paymentTerms' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "paymentTerms" TEXT' },
+  { id: '010_garage_invoice_prefix',      onlyIfColumnMissing: { table: 'Garage', column: 'invoicePrefix' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "invoicePrefix" TEXT DEFAULT "FAC"' },
+  { id: '011_garage_invoice_counter',     onlyIfColumnMissing: { table: 'Garage', column: 'invoiceCounter' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "invoiceCounter" INTEGER DEFAULT 0' },
+  { id: '012_garage_quote_prefix',        onlyIfColumnMissing: { table: 'Garage', column: 'quotePrefix' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "quotePrefix" TEXT DEFAULT "DEV"' },
+  { id: '013_garage_quote_counter',       onlyIfColumnMissing: { table: 'Garage', column: 'quoteCounter' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "quoteCounter" INTEGER DEFAULT 0' },
+  { id: '014_garage_invoice_footer',      onlyIfColumnMissing: { table: 'Garage', column: 'invoiceFooter' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "invoiceFooter" TEXT' },
+  { id: '015_garage_language',            onlyIfColumnMissing: { table: 'Garage', column: 'language' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "language" TEXT DEFAULT "fr"' },
+  { id: '016_garage_onboarding_complete', onlyIfColumnMissing: { table: 'Garage', column: 'onboardingComplete' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "onboardingComplete" INTEGER DEFAULT 0' },
+  { id: '017_garage_sms_phone',           onlyIfColumnMissing: { table: 'Garage', column: 'smsPhone' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "smsPhone" TEXT' },
+  { id: '018_garage_work_order_prefix',   onlyIfColumnMissing: { table: 'Garage', column: 'workOrderPrefix' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "workOrderPrefix" TEXT DEFAULT "OR"' },
+  { id: '019_garage_work_order_counter',  onlyIfColumnMissing: { table: 'Garage', column: 'workOrderCounter' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "workOrderCounter" INTEGER DEFAULT 0' },
+  { id: '020_garage_warranty_months',     onlyIfColumnMissing: { table: 'Garage', column: 'warrantyMonthsDefault' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "warrantyMonthsDefault" INTEGER DEFAULT 12' },
+  { id: '021_garage_loaner_enabled',      onlyIfColumnMissing: { table: 'Garage', column: 'loanerEnabled' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "loanerEnabled" INTEGER DEFAULT 0' },
+  { id: '022_garage_smart_reminder',      onlyIfColumnMissing: { table: 'Garage', column: 'smartReminderMonths' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "smartReminderMonths" INTEGER DEFAULT 11' },
+  { id: '023_garage_po_prefix',           onlyIfColumnMissing: { table: 'Garage', column: 'purchaseOrderPrefix' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "purchaseOrderPrefix" TEXT DEFAULT "BC"' },
+  { id: '024_garage_po_counter',          onlyIfColumnMissing: { table: 'Garage', column: 'purchaseOrderCounter' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "purchaseOrderCounter" INTEGER DEFAULT 0' },
+  { id: '025_garage_website',             onlyIfColumnMissing: { table: 'Garage', column: 'website' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "website" TEXT' },
+  { id: '026_garage_email',               onlyIfColumnMissing: { table: 'Garage', column: 'email' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "email" TEXT' },
+  { id: '027_garage_siret',               onlyIfColumnMissing: { table: 'Garage', column: 'siret' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "siret" TEXT' },
+  { id: '028_garage_vat_number',          onlyIfColumnMissing: { table: 'Garage', column: 'vatNumber' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "vatNumber" TEXT' },
+  { id: '029_garage_iban',                onlyIfColumnMissing: { table: 'Garage', column: 'iban' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "iban" TEXT' },
+  { id: '030_garage_bic',                 onlyIfColumnMissing: { table: 'Garage', column: 'bic' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "bic" TEXT' },
+  { id: '031_garage_bank_name',           onlyIfColumnMissing: { table: 'Garage', column: 'bankName' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "bankName" TEXT' },
   // ── Mechanic columns ──────────────────────────────────────────────────────
-  { id: '032_mechanic_is_absent',         sql: 'ALTER TABLE "Mechanic" ADD COLUMN "isAbsent" INTEGER DEFAULT 0' },
-  { id: '033_mechanic_specialty',         sql: 'ALTER TABLE "Mechanic" ADD COLUMN "specialty" TEXT DEFAULT "[]"' },
-  { id: '034_mechanic_order',             sql: 'ALTER TABLE "Mechanic" ADD COLUMN "order" INTEGER DEFAULT 0' },
+  { id: '032_mechanic_is_absent',         onlyIfColumnMissing: { table: 'Mechanic', column: 'isAbsent' }, sql: 'ALTER TABLE "Mechanic" ADD COLUMN "isAbsent" INTEGER DEFAULT 0' },
+  { id: '033_mechanic_specialty',         onlyIfColumnMissing: { table: 'Mechanic', column: 'specialty' }, sql: 'ALTER TABLE "Mechanic" ADD COLUMN "specialty" TEXT DEFAULT "[]"' },
+  { id: '034_mechanic_order',             onlyIfColumnMissing: { table: 'Mechanic', column: 'order' }, sql: 'ALTER TABLE "Mechanic" ADD COLUMN "order" INTEGER DEFAULT 0' },
   // ── Job columns ───────────────────────────────────────────────────────────
-  { id: '035_job_garage_id',              sql: 'ALTER TABLE "Job" ADD COLUMN "garageId" TEXT' },
+  { id: '035_job_garage_id',              onlyIfColumnMissing: { table: 'Job', column: 'garageId' }, sql: 'ALTER TABLE "Job" ADD COLUMN "garageId" TEXT' },
   // ── Email SMTP columns ────────────────────────────────────────────────────
-  { id: '036_garage_smtp_host',           sql: 'ALTER TABLE "Garage" ADD COLUMN "smtpHost" TEXT' },
-  { id: '037_garage_smtp_port',           sql: 'ALTER TABLE "Garage" ADD COLUMN "smtpPort" INTEGER' },
-  { id: '038_garage_smtp_user',           sql: 'ALTER TABLE "Garage" ADD COLUMN "smtpUser" TEXT' },
-  { id: '039_garage_smtp_pass',           sql: 'ALTER TABLE "Garage" ADD COLUMN "smtpPass" TEXT' },
-  { id: '040_garage_smtp_from',           sql: 'ALTER TABLE "Garage" ADD COLUMN "smtpFrom" TEXT' },
-  { id: '041_garage_smtp_secure',         sql: 'ALTER TABLE "Garage" ADD COLUMN "smtpSecure" INTEGER DEFAULT 1' },
+  { id: '036_garage_smtp_host',           onlyIfColumnMissing: { table: 'Garage', column: 'smtpHost' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "smtpHost" TEXT' },
+  { id: '037_garage_smtp_port',           onlyIfColumnMissing: { table: 'Garage', column: 'smtpPort' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "smtpPort" INTEGER' },
+  { id: '038_garage_smtp_user',           onlyIfColumnMissing: { table: 'Garage', column: 'smtpUser' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "smtpUser" TEXT' },
+  { id: '039_garage_smtp_pass',           onlyIfColumnMissing: { table: 'Garage', column: 'smtpPass' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "smtpPass" TEXT' },
+  { id: '040_garage_smtp_from',           onlyIfColumnMissing: { table: 'Garage', column: 'smtpFrom' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "smtpFrom" TEXT' },
+  { id: '041_garage_smtp_secure',         onlyIfColumnMissing: { table: 'Garage', column: 'smtpSecure' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "smtpSecure" INTEGER DEFAULT 1' },
   // ── LoanerReservation paid fields ────────────────────────────────────────────
-  { id: '042_loaner_is_paid',            sql: 'ALTER TABLE "LoanerReservation" ADD COLUMN "isPaid" INTEGER DEFAULT 0' },
-  { id: '043_loaner_daily_rate',         sql: 'ALTER TABLE "LoanerReservation" ADD COLUMN "dailyRate" REAL' },
-  { id: '044_loaner_deposit_amount',     sql: 'ALTER TABLE "LoanerReservation" ADD COLUMN "depositAmount" REAL' },
+  { id: '042_loaner_is_paid',            onlyIfColumnMissing: { table: 'LoanerReservation', column: 'isPaid' }, sql: 'ALTER TABLE "LoanerReservation" ADD COLUMN "isPaid" INTEGER DEFAULT 0' },
+  { id: '043_loaner_daily_rate',         onlyIfColumnMissing: { table: 'LoanerReservation', column: 'dailyRate' }, sql: 'ALTER TABLE "LoanerReservation" ADD COLUMN "dailyRate" REAL' },
+  { id: '044_loaner_deposit_amount',     onlyIfColumnMissing: { table: 'LoanerReservation', column: 'depositAmount' }, sql: 'ALTER TABLE "LoanerReservation" ADD COLUMN "depositAmount" REAL' },
   // ── Ensure Loaner tables exist (CREATE TABLE IF NOT EXISTS) ──────────────────
   // Must run AFTER 042-044 attempts so the tables exist when those retry.
   { id: '045_create_loaner_vehicle_table', sql: `CREATE TABLE IF NOT EXISTS "LoanerVehicle" (
@@ -115,8 +201,8 @@ export const MIGRATIONS: Migration[] = [
     "updatedAt"        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
   )` },
   // ── Part table — missing columns ─────────────────────────────────────────────
-  { id: '048_part_supplier_name', sql: 'ALTER TABLE "Part" ADD COLUMN "supplierName" TEXT' },
-  { id: '049_part_supplier_ref',  sql: 'ALTER TABLE "Part" ADD COLUMN "supplierRef" TEXT' },
+  { id: '048_part_supplier_name', onlyIfColumnMissing: { table: 'Part', column: 'supplierName' }, sql: 'ALTER TABLE "Part" ADD COLUMN "supplierName" TEXT' },
+  { id: '049_part_supplier_ref',  onlyIfColumnMissing: { table: 'Part', column: 'supplierRef' }, sql: 'ALTER TABLE "Part" ADD COLUMN "supplierRef" TEXT' },
   // ── Ensure ALL tables exist (idempotent) — répare les bases mises à niveau
   //    depuis une ancienne version où certaines tables manquaient. ─────────────
   { id: '050_ensure_garage_table', sql: `CREATE TABLE IF NOT EXISTS "Garage" (
@@ -569,7 +655,7 @@ export const MIGRATIONS: Migration[] = [
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 )` },
-  { id: '075_reminder_scheduled_time', sql: 'ALTER TABLE "Reminder" ADD COLUMN "scheduledTime" TEXT' },
+  { id: '075_reminder_scheduled_time', onlyIfColumnMissing: { table: 'Reminder', column: 'scheduledTime' }, sql: 'ALTER TABLE "Reminder" ADD COLUMN "scheduledTime" TEXT' },
   // ── Unicité de la numérotation par garage (factures, devis, OR, BC) ──────────
   // Filet de sécurité au niveau base : deux documents du même garage ne peuvent
   // jamais partager un numéro. Si des doublons historiques existent, la création
@@ -612,7 +698,7 @@ export const MIGRATIONS: Migration[] = [
   { id: '085_licensedevice_status_idx',       sql: 'CREATE INDEX IF NOT EXISTS "LicenseDevice_licenseId_status_idx" ON "LicenseDevice"("licenseId", "status")' },
   { id: '086_licensedeviceevent_idx',         sql: 'CREATE INDEX IF NOT EXISTS "LicenseDeviceEvent_licenseId_createdAt_idx" ON "LicenseDeviceEvent"("licenseId", "createdAt")' },
   // ── Liaison licence ↔ garage (parité avec le schéma serveur ; null en desktop) ──
-  { id: '087_licensekey_garageid',            sql: 'ALTER TABLE "LicenseKey" ADD COLUMN "garageId" TEXT' },
+  { id: '087_licensekey_garageid',            onlyIfColumnMissing: { table: 'LicenseKey', column: 'garageId' }, sql: 'ALTER TABLE "LicenseKey" ADD COLUMN "garageId" TEXT' },
   { id: '088_licensekey_garageid_idx',        sql: 'CREATE INDEX IF NOT EXISTS "LicenseKey_garageId_idx" ON "LicenseKey"("garageId")' },
   // ── Modules Premium (intégration complete-platform) : VIN, signature, notif ──
   { id: '089_vinsearch_table', sql: `CREATE TABLE IF NOT EXISTS "VinSearch" (
@@ -784,4 +870,438 @@ export const MIGRATIONS: Migration[] = [
 )` },
   { id: '118_reportsnapshot_idx_garage', sql: 'CREATE INDEX IF NOT EXISTS "ReportSnapshot_garageId_idx" ON "ReportSnapshot"("garageId")' },
   { id: '119_reportsnapshot_idx_garage_created', sql: 'CREATE INDEX IF NOT EXISTS "ReportSnapshot_garageId_createdAt_idx" ON "ReportSnapshot"("garageId", "createdAt")' },
+  // ── Index UNIQUE du schéma manquants sur une base réparée table-par-table ────
+  // Les entrées `NNN_ensure_*_table` créent les tables SANS contrainte UNIQUE en
+  // ligne ; ces migrations rétablissent les 6 contraintes d'unicité du schéma
+  // (prisma/schema.prisma) avec CONTRÔLE DE DOUBLONS (voir migrate/route.ts) :
+  // en présence de doublons, l'index est différé (jamais d'échec ni de perte).
+  { id: '120_unique_garage_slug',              uniqueIndex: { name: 'Garage_slug_key',                  table: 'Garage',     columns: ['slug'] } },
+  { id: '121_unique_user_email',               uniqueIndex: { name: 'User_email_key',                   table: 'User',       columns: ['email'] } },
+  { id: '122_unique_vehicle_plate_garage',     uniqueIndex: { name: 'Vehicle_licensePlate_garageId_key', table: 'Vehicle',   columns: ['licensePlate', 'garageId'] } },
+  { id: '123_unique_workorder_job',            uniqueIndex: { name: 'WorkOrder_jobId_key',              table: 'WorkOrder',  columns: ['jobId'] } },
+  { id: '124_unique_licensekey_licenseid',     uniqueIndex: { name: 'LicenseKey_licenseId_key',         table: 'LicenseKey', columns: ['licenseId'] } },
+  { id: '125_unique_licensekey_token',         uniqueIndex: { name: 'LicenseKey_token_key',             table: 'LicenseKey', columns: ['token'] } },
+
+  // RepairTypePart.garageId : index pour les lectures filtrées (garageId, repairType).
+  // La relation/cascade vers Garage est appliquée par `prisma db push` (schéma) ;
+  // cet index couvre aussi les bases desktop existantes (SQLite ne permet pas
+  // d'ajouter une FK par ALTER, mais Prisma génère la cascade au niveau client).
+  { id: '126_repairtypepart_idx_garage_type', sql: 'CREATE INDEX IF NOT EXISTS "RepairTypePart_garageId_repairType_idx" ON "RepairTypePart"("garageId", "repairType")' },
+  // Colonnes chaudes / clés étrangères non indexées (perf lectures + jointures).
+  { id: '127_part_idx_garage', sql: 'CREATE INDEX IF NOT EXISTS "Part_garageId_idx" ON "Part"("garageId")' },
+  { id: '128_jobpart_idx_job', sql: 'CREATE INDEX IF NOT EXISTS "JobPart_jobId_idx" ON "JobPart"("jobId")' },
+  { id: '129_jobpart_idx_part', sql: 'CREATE INDEX IF NOT EXISTS "JobPart_partId_idx" ON "JobPart"("partId")' },
+
+  // ── Licences MECHANIC (subordonnées à une licence Garage) ────────────────────
+  // Portées depuis la branche mechanic-licenses (renumérotées 130+ pour éviter la
+  // collision avec les index UNIQUE de durcissement 120-129 ci-dessus). Toutes les
+  // colonnes ajoutées sont NULLABLES → migration additive sans perte sur base existante.
+  { id: '130_licensekey_parent_license_id', onlyIfColumnMissing: { table: 'LicenseKey', column: 'parentLicenseId' }, sql: 'ALTER TABLE "LicenseKey" ADD COLUMN "parentLicenseId" TEXT' },
+  { id: '131_licensekey_mechanic_id',       onlyIfColumnMissing: { table: 'LicenseKey', column: 'mechanicId' }, sql: 'ALTER TABLE "LicenseKey" ADD COLUMN "mechanicId" TEXT' },
+  { id: '132_licensekey_mechanic_hint',     onlyIfColumnMissing: { table: 'LicenseKey', column: 'mechanicHint' }, sql: 'ALTER TABLE "LicenseKey" ADD COLUMN "mechanicHint" TEXT' },
+  { id: '133_licensekey_assigned_at',       onlyIfColumnMissing: { table: 'LicenseKey', column: 'assignedAt' }, sql: 'ALTER TABLE "LicenseKey" ADD COLUMN "assignedAt" DATETIME' },
+  { id: '134_licensekey_assigned_by',       onlyIfColumnMissing: { table: 'LicenseKey', column: 'assignedBy' }, sql: 'ALTER TABLE "LicenseKey" ADD COLUMN "assignedBy" TEXT' },
+  { id: '135_licensekey_suspended_at',      onlyIfColumnMissing: { table: 'LicenseKey', column: 'suspendedAt' }, sql: 'ALTER TABLE "LicenseKey" ADD COLUMN "suspendedAt" DATETIME' },
+  { id: '136_licensekey_parent_idx',        sql: 'CREATE INDEX IF NOT EXISTS "LicenseKey_parentLicenseId_idx" ON "LicenseKey"("parentLicenseId")' },
+  { id: '137_licensekey_garage_type_idx',   sql: 'CREATE INDEX IF NOT EXISTS "LicenseKey_garageId_licenseType_idx" ON "LicenseKey"("garageId", "licenseType")' },
+  { id: '138_jobphoto_mechanic_id',         onlyIfColumnMissing: { table: 'JobPhoto', column: 'mechanicId' }, sql: 'ALTER TABLE "JobPhoto" ADD COLUMN "mechanicId" TEXT' },
+  // NOTE : les clauses FOREIGN KEY en ligne ci-dessous (§5) ne sont appliquées que
+  // sur une base desktop NEUVE — SQLite ne permet pas d'ajouter une FK par ALTER,
+  // donc une base existante conserve la table SANS FK ; les relations/cascades
+  // Prisma restent effectives côté client (même principe que la migration
+  // RepairTypePart 126 ci-dessus). garageId (+ jobId côté note) = CASCADE ;
+  // licenseId/mechanicId/assignedBy/previousMechanicId = SET NULL (colonnes optionnelles).
+  { id: '139_mechanic_license_assignment_table', sql: `CREATE TABLE IF NOT EXISTS "MechanicLicenseAssignment" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "licenseId" TEXT,
+    "mechanicId" TEXT,
+    "garageId" TEXT NOT NULL,
+    "assignedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "assignedBy" TEXT,
+    "unassignedAt" DATETIME,
+    "previousMechanicId" TEXT,
+    CONSTRAINT "MechanicLicenseAssignment_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "MechanicLicenseAssignment_licenseId_fkey" FOREIGN KEY ("licenseId") REFERENCES "LicenseKey" ("licenseId") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "MechanicLicenseAssignment_mechanicId_fkey" FOREIGN KEY ("mechanicId") REFERENCES "Mechanic" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "MechanicLicenseAssignment_assignedBy_fkey" FOREIGN KEY ("assignedBy") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "MechanicLicenseAssignment_previousMechanicId_fkey" FOREIGN KEY ("previousMechanicId") REFERENCES "Mechanic" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+)` },
+  { id: '140_mechanic_license_assignment_idx1', sql: 'CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_licenseId_assignedAt_idx" ON "MechanicLicenseAssignment"("licenseId", "assignedAt")' },
+  { id: '141_mechanic_license_assignment_idx2', sql: 'CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_garageId_idx" ON "MechanicLicenseAssignment"("garageId")' },
+  { id: '142_job_mechanic_note_table', sql: `CREATE TABLE IF NOT EXISTS "JobMechanicNote" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "jobId" TEXT NOT NULL,
+    "garageId" TEXT NOT NULL,
+    "mechanicId" TEXT,
+    "licenseId" TEXT,
+    "type" TEXT NOT NULL,
+    "body" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "JobMechanicNote_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "JobMechanicNote_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "JobMechanicNote_mechanicId_fkey" FOREIGN KEY ("mechanicId") REFERENCES "Mechanic" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "JobMechanicNote_licenseId_fkey" FOREIGN KEY ("licenseId") REFERENCES "LicenseKey" ("licenseId") ON DELETE SET NULL ON UPDATE CASCADE
+)` },
+  { id: '143_job_mechanic_note_idx1', sql: 'CREATE INDEX IF NOT EXISTS "JobMechanicNote_jobId_createdAt_idx" ON "JobMechanicNote"("jobId", "createdAt")' },
+  { id: '144_job_mechanic_note_idx2', sql: 'CREATE INDEX IF NOT EXISTS "JobMechanicNote_garageId_mechanicId_idx" ON "JobMechanicNote"("garageId", "mechanicId")' },
+  // MechanicActionAudit — schéma CORRIGÉ (§6) : acteur (actorUserId/actorRole) et
+  // cible (targetMechanicId) séparés ; colonnes non applicables NULL, jamais ''.
+  { id: '145_mechanic_action_audit_table', sql: `CREATE TABLE IF NOT EXISTS "MechanicActionAudit" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "garageId" TEXT NOT NULL,
+    "actorUserId" TEXT,
+    "actorRole" TEXT,
+    "targetMechanicId" TEXT,
+    "licenseId" TEXT,
+    "jobId" TEXT,
+    "action" TEXT NOT NULL,
+    "targetType" TEXT,
+    "targetId" TEXT,
+    "metadata" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "MechanicActionAudit_garageId_fkey" FOREIGN KEY ("garageId") REFERENCES "Garage" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "MechanicActionAudit_actorUserId_fkey" FOREIGN KEY ("actorUserId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "MechanicActionAudit_targetMechanicId_fkey" FOREIGN KEY ("targetMechanicId") REFERENCES "Mechanic" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "MechanicActionAudit_licenseId_fkey" FOREIGN KEY ("licenseId") REFERENCES "LicenseKey" ("licenseId") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "MechanicActionAudit_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "Job" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+)` },
+  { id: '146_mechanic_action_audit_idx1', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_garageId_createdAt_idx" ON "MechanicActionAudit"("garageId", "createdAt")' },
+  { id: '147_mechanic_action_audit_idx2', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_targetMechanicId_createdAt_idx" ON "MechanicActionAudit"("targetMechanicId", "createdAt")' },
+  { id: '148_mechanic_action_audit_idx3', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_jobId_idx" ON "MechanicActionAudit"("jobId")' },
+  { id: '149_mechanic_action_audit_idx4', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_actorUserId_createdAt_idx" ON "MechanicActionAudit"("actorUserId", "createdAt")' },
+  // ── Index FK-enfant (§5) : colonnes de jointure/cascade non déjà en tête d'un
+  //    index composite existant. Additifs, idempotents (IF NOT EXISTS). ─────────
+  { id: '150_licensekey_mechanic_idx',           sql: 'CREATE INDEX IF NOT EXISTS "LicenseKey_mechanicId_idx" ON "LicenseKey"("mechanicId")' },
+  { id: '151_licensekey_assignedby_idx',         sql: 'CREATE INDEX IF NOT EXISTS "LicenseKey_assignedBy_idx" ON "LicenseKey"("assignedBy")' },
+  { id: '152_mla_mechanic_idx',                  sql: 'CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_mechanicId_idx" ON "MechanicLicenseAssignment"("mechanicId")' },
+  { id: '153_mla_assignedby_idx',                sql: 'CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_assignedBy_idx" ON "MechanicLicenseAssignment"("assignedBy")' },
+  { id: '154_mla_prevmechanic_idx',              sql: 'CREATE INDEX IF NOT EXISTS "MechanicLicenseAssignment_previousMechanicId_idx" ON "MechanicLicenseAssignment"("previousMechanicId")' },
+  { id: '155_jobmechanicnote_license_idx',       sql: 'CREATE INDEX IF NOT EXISTS "JobMechanicNote_licenseId_idx" ON "JobMechanicNote"("licenseId")' },
+  { id: '156_mechanic_action_audit_license_idx', sql: 'CREATE INDEX IF NOT EXISTS "MechanicActionAudit_licenseId_idx" ON "MechanicActionAudit"("licenseId")' },
+
+  // Chrono mécanicien (§6) : secondes accumulées sur les segments terminés
+  // (pause/reprise sans perte). Additif, valeur par défaut 0 sur les lignes existantes.
+  { id: '157_job_timer_accumulated_sec', onlyIfColumnMissing: { table: 'Job', column: 'timerAccumulatedSec' }, sql: 'ALTER TABLE "Job" ADD COLUMN "timerAccumulatedSec" INTEGER NOT NULL DEFAULT 0' },
+  // ── Migration monétaire : colonnes en CENTIMES entiers (additif, nullable) ────
+  // Source de vérité écrite par l'app ; les colonnes Float existantes deviennent un
+  // miroir dérivé. NULL sur les lignes antérieures → l'app lit `cents ?? toCents(float)`.
+  // Voir docs/MIGRATION-MONEY.md. Aucune donnée supprimée, aucune colonne retirée.
+  { id: '158_workorder_total_ht_cents',   onlyIfColumnMissing: { table: 'WorkOrder', column: 'totalHtCents' }, sql: 'ALTER TABLE "WorkOrder" ADD COLUMN "totalHtCents" INTEGER' },
+  { id: '159_workorder_total_ttc_cents',  onlyIfColumnMissing: { table: 'WorkOrder', column: 'totalTtcCents' }, sql: 'ALTER TABLE "WorkOrder" ADD COLUMN "totalTtcCents" INTEGER' },
+  { id: '160_purchaseorder_total_ht_cents', onlyIfColumnMissing: { table: 'PurchaseOrder', column: 'totalHtCents' }, sql: 'ALTER TABLE "PurchaseOrder" ADD COLUMN "totalHtCents" INTEGER' },
+  { id: '161_loaner_deposit_amount_cents', onlyIfColumnMissing: { table: 'LoanerReservation', column: 'depositAmountCents' }, sql: 'ALTER TABLE "LoanerReservation" ADD COLUMN "depositAmountCents" INTEGER' },
+  // ── MIGRATION MONÉTAIRE FINALE — COMPOSITES ATOMIQUES ──────────────────────
+  // Chaque colonne = UNE migration : ADD → BACKFILL → VERIFY (bloquant) → DROP,
+  // exécutée dans UNE transaction (rollback complet à la moindre erreur ; la
+  // migration n'est enregistrée qu'après réussite TOTALE). Les gardes rendent
+  // chaque étape idempotente : base ancienne → migre ; base neuve → no-op ;
+  // relance après interruption → reprend proprement (aucun duplicate column).
+  {
+    id: '162_money_garage_hourlyrate',
+    steps: [
+      { onlyIfColumnMissing: { table: 'Garage', column: 'hourlyRateTenThousandths' }, sql: 'ALTER TABLE \"Garage\" ADD COLUMN \"hourlyRateTenThousandths\" INTEGER NOT NULL DEFAULT 600000' },
+      { onlyIfColumnExists: { table: 'Garage', column: 'hourlyRate' }, sql: 'UPDATE \"Garage\" SET \"hourlyRateTenThousandths\" = CAST(ROUND(\"hourlyRate\" * 10000) AS INTEGER) WHERE \"hourlyRate\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'Garage', column: 'hourlyRate' }, verifySql: 'SELECT count(*) AS n FROM \"Garage\" WHERE (\"hourlyRate\" IS NOT NULL AND ABS(CAST(ROUND(\"hourlyRate\" * 10000) AS INTEGER) - \"hourlyRateTenThousandths\") > 0)' },
+      { onlyIfColumnExists: { table: 'Garage', column: 'hourlyRate' }, sql: 'ALTER TABLE \"Garage\" DROP COLUMN \"hourlyRate\"' },
+    ],
+  },
+  {
+    id: '163_money_part_unitcost',
+    steps: [
+      { onlyIfColumnMissing: { table: 'Part', column: 'unitCostTenThousandths' }, sql: 'ALTER TABLE \"Part\" ADD COLUMN \"unitCostTenThousandths\" INTEGER NOT NULL DEFAULT 0' },
+      { onlyIfColumnExists: { table: 'Part', column: 'unitCost' }, sql: 'UPDATE \"Part\" SET \"unitCostTenThousandths\" = CAST(ROUND(\"unitCost\" * 10000) AS INTEGER) WHERE \"unitCost\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'Part', column: 'unitCost' }, verifySql: 'SELECT count(*) AS n FROM \"Part\" WHERE (\"unitCost\" IS NOT NULL AND ABS(CAST(ROUND(\"unitCost\" * 10000) AS INTEGER) - \"unitCostTenThousandths\") > 0)' },
+      { onlyIfColumnExists: { table: 'Part', column: 'unitCost' }, sql: 'ALTER TABLE \"Part\" DROP COLUMN \"unitCost\"' },
+    ],
+  },
+  {
+    id: '164_money_part_unitprice',
+    steps: [
+      { onlyIfColumnMissing: { table: 'Part', column: 'unitPriceTenThousandths' }, sql: 'ALTER TABLE \"Part\" ADD COLUMN \"unitPriceTenThousandths\" INTEGER NOT NULL DEFAULT 0' },
+      { onlyIfColumnExists: { table: 'Part', column: 'unitPrice' }, sql: 'UPDATE \"Part\" SET \"unitPriceTenThousandths\" = CAST(ROUND(\"unitPrice\" * 10000) AS INTEGER) WHERE \"unitPrice\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'Part', column: 'unitPrice' }, verifySql: 'SELECT count(*) AS n FROM \"Part\" WHERE (\"unitPrice\" IS NOT NULL AND ABS(CAST(ROUND(\"unitPrice\" * 10000) AS INTEGER) - \"unitPriceTenThousandths\") > 0)' },
+      { onlyIfColumnExists: { table: 'Part', column: 'unitPrice' }, sql: 'ALTER TABLE \"Part\" DROP COLUMN \"unitPrice\"' },
+    ],
+  },
+  {
+    id: '165_money_jobpart_unitprice',
+    steps: [
+      { onlyIfColumnMissing: { table: 'JobPart', column: 'unitPriceTenThousandths' }, sql: 'ALTER TABLE \"JobPart\" ADD COLUMN \"unitPriceTenThousandths\" INTEGER NOT NULL DEFAULT 0' },
+      { onlyIfColumnExists: { table: 'JobPart', column: 'unitPrice' }, sql: 'UPDATE \"JobPart\" SET \"unitPriceTenThousandths\" = CAST(ROUND(\"unitPrice\" * 10000) AS INTEGER) WHERE \"unitPrice\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'JobPart', column: 'unitPrice' }, verifySql: 'SELECT count(*) AS n FROM \"JobPart\" WHERE (\"unitPrice\" IS NOT NULL AND ABS(CAST(ROUND(\"unitPrice\" * 10000) AS INTEGER) - \"unitPriceTenThousandths\") > 0)' },
+      { onlyIfColumnExists: { table: 'JobPart', column: 'unitPrice' }, sql: 'ALTER TABLE \"JobPart\" DROP COLUMN \"unitPrice\"' },
+    ],
+  },
+  {
+    id: '166_money_jobpart_unitcost',
+    steps: [
+      { onlyIfColumnMissing: { table: 'JobPart', column: 'unitCostTenThousandths' }, sql: 'ALTER TABLE \"JobPart\" ADD COLUMN \"unitCostTenThousandths\" INTEGER NOT NULL DEFAULT 0' },
+      { onlyIfColumnExists: { table: 'JobPart', column: 'unitCost' }, sql: 'UPDATE \"JobPart\" SET \"unitCostTenThousandths\" = CAST(ROUND(\"unitCost\" * 10000) AS INTEGER) WHERE \"unitCost\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'JobPart', column: 'unitCost' }, verifySql: 'SELECT count(*) AS n FROM \"JobPart\" WHERE (\"unitCost\" IS NOT NULL AND ABS(CAST(ROUND(\"unitCost\" * 10000) AS INTEGER) - \"unitCostTenThousandths\") > 0)' },
+      { onlyIfColumnExists: { table: 'JobPart', column: 'unitCost' }, sql: 'ALTER TABLE \"JobPart\" DROP COLUMN \"unitCost\"' },
+    ],
+  },
+  {
+    id: '167_money_quoteline_quantity',
+    steps: [
+      { onlyIfColumnMissing: { table: 'QuoteLine', column: 'quantityTenThousandths' }, sql: 'ALTER TABLE \"QuoteLine\" ADD COLUMN \"quantityTenThousandths\" INTEGER NOT NULL DEFAULT 10000' },
+      { onlyIfColumnExists: { table: 'QuoteLine', column: 'quantity' }, sql: 'UPDATE \"QuoteLine\" SET \"quantityTenThousandths\" = CAST(ROUND(\"quantity\" * 10000) AS INTEGER) WHERE \"quantity\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'QuoteLine', column: 'quantity' }, verifySql: 'SELECT count(*) AS n FROM \"QuoteLine\" WHERE (\"quantity\" IS NOT NULL AND ABS(CAST(ROUND(\"quantity\" * 10000) AS INTEGER) - \"quantityTenThousandths\") > 0)' },
+      { onlyIfColumnExists: { table: 'QuoteLine', column: 'quantity' }, sql: 'ALTER TABLE \"QuoteLine\" DROP COLUMN \"quantity\"' },
+    ],
+  },
+  {
+    id: '168_money_quoteline_unitprice',
+    steps: [
+      { onlyIfColumnMissing: { table: 'QuoteLine', column: 'unitPriceTenThousandths' }, sql: 'ALTER TABLE \"QuoteLine\" ADD COLUMN \"unitPriceTenThousandths\" INTEGER NOT NULL DEFAULT 0' },
+      { onlyIfColumnExists: { table: 'QuoteLine', column: 'unitPrice' }, sql: 'UPDATE \"QuoteLine\" SET \"unitPriceTenThousandths\" = CAST(ROUND(\"unitPrice\" * 10000) AS INTEGER) WHERE \"unitPrice\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'QuoteLine', column: 'unitPrice' }, verifySql: 'SELECT count(*) AS n FROM \"QuoteLine\" WHERE (\"unitPrice\" IS NOT NULL AND ABS(CAST(ROUND(\"unitPrice\" * 10000) AS INTEGER) - \"unitPriceTenThousandths\") > 0)' },
+      { onlyIfColumnExists: { table: 'QuoteLine', column: 'unitPrice' }, sql: 'ALTER TABLE \"QuoteLine\" DROP COLUMN \"unitPrice\"' },
+    ],
+  },
+  {
+    id: '169_money_quoteline_unitcost',
+    steps: [
+      { onlyIfColumnMissing: { table: 'QuoteLine', column: 'unitCostTenThousandths' }, sql: 'ALTER TABLE \"QuoteLine\" ADD COLUMN \"unitCostTenThousandths\" INTEGER NOT NULL DEFAULT 0' },
+      { onlyIfColumnExists: { table: 'QuoteLine', column: 'unitCost' }, sql: 'UPDATE \"QuoteLine\" SET \"unitCostTenThousandths\" = CAST(ROUND(\"unitCost\" * 10000) AS INTEGER) WHERE \"unitCost\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'QuoteLine', column: 'unitCost' }, verifySql: 'SELECT count(*) AS n FROM \"QuoteLine\" WHERE (\"unitCost\" IS NOT NULL AND ABS(CAST(ROUND(\"unitCost\" * 10000) AS INTEGER) - \"unitCostTenThousandths\") > 0)' },
+      { onlyIfColumnExists: { table: 'QuoteLine', column: 'unitCost' }, sql: 'ALTER TABLE \"QuoteLine\" DROP COLUMN \"unitCost\"' },
+    ],
+  },
+  {
+    id: '170_money_invoiceline_quantity',
+    steps: [
+      { onlyIfColumnMissing: { table: 'InvoiceLine', column: 'quantityTenThousandths' }, sql: 'ALTER TABLE \"InvoiceLine\" ADD COLUMN \"quantityTenThousandths\" INTEGER NOT NULL DEFAULT 10000' },
+      { onlyIfColumnExists: { table: 'InvoiceLine', column: 'quantity' }, sql: 'UPDATE \"InvoiceLine\" SET \"quantityTenThousandths\" = CAST(ROUND(\"quantity\" * 10000) AS INTEGER) WHERE \"quantity\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'InvoiceLine', column: 'quantity' }, verifySql: 'SELECT count(*) AS n FROM \"InvoiceLine\" WHERE (\"quantity\" IS NOT NULL AND ABS(CAST(ROUND(\"quantity\" * 10000) AS INTEGER) - \"quantityTenThousandths\") > 0)' },
+      { onlyIfColumnExists: { table: 'InvoiceLine', column: 'quantity' }, sql: 'ALTER TABLE \"InvoiceLine\" DROP COLUMN \"quantity\"' },
+    ],
+  },
+  {
+    id: '171_money_invoiceline_unitprice',
+    steps: [
+      { onlyIfColumnMissing: { table: 'InvoiceLine', column: 'unitPriceTenThousandths' }, sql: 'ALTER TABLE \"InvoiceLine\" ADD COLUMN \"unitPriceTenThousandths\" INTEGER NOT NULL DEFAULT 0' },
+      { onlyIfColumnExists: { table: 'InvoiceLine', column: 'unitPrice' }, sql: 'UPDATE \"InvoiceLine\" SET \"unitPriceTenThousandths\" = CAST(ROUND(\"unitPrice\" * 10000) AS INTEGER) WHERE \"unitPrice\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'InvoiceLine', column: 'unitPrice' }, verifySql: 'SELECT count(*) AS n FROM \"InvoiceLine\" WHERE (\"unitPrice\" IS NOT NULL AND ABS(CAST(ROUND(\"unitPrice\" * 10000) AS INTEGER) - \"unitPriceTenThousandths\") > 0)' },
+      { onlyIfColumnExists: { table: 'InvoiceLine', column: 'unitPrice' }, sql: 'ALTER TABLE \"InvoiceLine\" DROP COLUMN \"unitPrice\"' },
+    ],
+  },
+  {
+    id: '172_money_invoiceline_unitcost',
+    steps: [
+      { onlyIfColumnMissing: { table: 'InvoiceLine', column: 'unitCostTenThousandths' }, sql: 'ALTER TABLE \"InvoiceLine\" ADD COLUMN \"unitCostTenThousandths\" INTEGER NOT NULL DEFAULT 0' },
+      { onlyIfColumnExists: { table: 'InvoiceLine', column: 'unitCost' }, sql: 'UPDATE \"InvoiceLine\" SET \"unitCostTenThousandths\" = CAST(ROUND(\"unitCost\" * 10000) AS INTEGER) WHERE \"unitCost\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'InvoiceLine', column: 'unitCost' }, verifySql: 'SELECT count(*) AS n FROM \"InvoiceLine\" WHERE (\"unitCost\" IS NOT NULL AND ABS(CAST(ROUND(\"unitCost\" * 10000) AS INTEGER) - \"unitCostTenThousandths\") > 0)' },
+      { onlyIfColumnExists: { table: 'InvoiceLine', column: 'unitCost' }, sql: 'ALTER TABLE \"InvoiceLine\" DROP COLUMN \"unitCost\"' },
+    ],
+  },
+  {
+    id: '173_money_laboroperation_unitprice',
+    steps: [
+      { onlyIfColumnMissing: { table: 'LaborOperation', column: 'unitPriceTenThousandths' }, sql: 'ALTER TABLE \"LaborOperation\" ADD COLUMN \"unitPriceTenThousandths\" INTEGER NOT NULL DEFAULT 0' },
+      { onlyIfColumnExists: { table: 'LaborOperation', column: 'unitPrice' }, sql: 'UPDATE \"LaborOperation\" SET \"unitPriceTenThousandths\" = CAST(ROUND(\"unitPrice\" * 10000) AS INTEGER) WHERE \"unitPrice\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'LaborOperation', column: 'unitPrice' }, verifySql: 'SELECT count(*) AS n FROM \"LaborOperation\" WHERE (\"unitPrice\" IS NOT NULL AND ABS(CAST(ROUND(\"unitPrice\" * 10000) AS INTEGER) - \"unitPriceTenThousandths\") > 0)' },
+      { onlyIfColumnExists: { table: 'LaborOperation', column: 'unitPrice' }, sql: 'ALTER TABLE \"LaborOperation\" DROP COLUMN \"unitPrice\"' },
+    ],
+  },
+  {
+    id: '174_money_loanerreservation_dailyrate',
+    steps: [
+      { onlyIfColumnMissing: { table: 'LoanerReservation', column: 'dailyRateTenThousandths' }, sql: 'ALTER TABLE \"LoanerReservation\" ADD COLUMN \"dailyRateTenThousandths\" INTEGER' },
+      { onlyIfColumnExists: { table: 'LoanerReservation', column: 'dailyRate' }, sql: 'UPDATE \"LoanerReservation\" SET \"dailyRateTenThousandths\" = CASE WHEN \"dailyRate\" IS NULL THEN NULL ELSE CAST(ROUND(\"dailyRate\" * 10000) AS INTEGER) END WHERE \"dailyRateTenThousandths\" IS NULL' },
+      { onlyIfColumnExists: { table: 'LoanerReservation', column: 'dailyRate' }, verifySql: 'SELECT count(*) AS n FROM \"LoanerReservation\" WHERE (\"dailyRate\" IS NOT NULL AND (\"dailyRateTenThousandths\" IS NULL OR ABS(CAST(ROUND(\"dailyRate\" * 10000) AS INTEGER) - \"dailyRateTenThousandths\") > 0))' },
+      { onlyIfColumnExists: { table: 'LoanerReservation', column: 'dailyRate' }, sql: 'ALTER TABLE \"LoanerReservation\" DROP COLUMN \"dailyRate\"' },
+    ],
+  },
+  {
+    id: '175_money_loanerreservation_depositamount',
+    steps: [
+      { onlyIfColumnMissing: { table: 'LoanerReservation', column: 'depositAmountCents' }, sql: 'ALTER TABLE \"LoanerReservation\" ADD COLUMN \"depositAmountCents\" INTEGER' },
+      { onlyIfColumnExists: { table: 'LoanerReservation', column: 'depositAmount' }, sql: 'UPDATE \"LoanerReservation\" SET \"depositAmountCents\" = CASE WHEN \"depositAmount\" IS NULL THEN NULL ELSE CAST(ROUND(\"depositAmount\" * 100) AS INTEGER) END WHERE \"depositAmountCents\" IS NULL' },
+      { onlyIfColumnExists: { table: 'LoanerReservation', column: 'depositAmount' }, verifySql: 'SELECT count(*) AS n FROM \"LoanerReservation\" WHERE (\"depositAmount\" IS NOT NULL AND (\"depositAmountCents\" IS NULL OR ABS(CAST(ROUND(\"depositAmount\" * 100) AS INTEGER) - \"depositAmountCents\") > 0))' },
+      { onlyIfColumnExists: { table: 'LoanerReservation', column: 'depositAmount' }, sql: 'ALTER TABLE \"LoanerReservation\" DROP COLUMN \"depositAmount\"' },
+    ],
+  },
+  {
+    id: '176_money_workorder_totalht',
+    steps: [
+      { onlyIfColumnMissing: { table: 'WorkOrder', column: 'totalHtCents' }, sql: 'ALTER TABLE \"WorkOrder\" ADD COLUMN \"totalHtCents\" INTEGER NOT NULL DEFAULT 0' },
+      { onlyIfColumnExists: { table: 'WorkOrder', column: 'totalHT' }, sql: 'UPDATE \"WorkOrder\" SET \"totalHtCents\" = CAST(ROUND(\"totalHT\" * 100) AS INTEGER) WHERE \"totalHT\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'WorkOrder', column: 'totalHT' }, verifySql: 'SELECT count(*) AS n FROM \"WorkOrder\" WHERE (\"totalHT\" IS NOT NULL AND ABS(CAST(ROUND(\"totalHT\" * 100) AS INTEGER) - \"totalHtCents\") > 0)' },
+      { onlyIfColumnExists: { table: 'WorkOrder', column: 'totalHT' }, sql: 'ALTER TABLE \"WorkOrder\" DROP COLUMN \"totalHT\"' },
+    ],
+  },
+  {
+    id: '177_money_workorder_totalttc',
+    steps: [
+      { onlyIfColumnMissing: { table: 'WorkOrder', column: 'totalTtcCents' }, sql: 'ALTER TABLE \"WorkOrder\" ADD COLUMN \"totalTtcCents\" INTEGER NOT NULL DEFAULT 0' },
+      { onlyIfColumnExists: { table: 'WorkOrder', column: 'totalTTC' }, sql: 'UPDATE \"WorkOrder\" SET \"totalTtcCents\" = CAST(ROUND(\"totalTTC\" * 100) AS INTEGER) WHERE \"totalTTC\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'WorkOrder', column: 'totalTTC' }, verifySql: 'SELECT count(*) AS n FROM \"WorkOrder\" WHERE (\"totalTTC\" IS NOT NULL AND ABS(CAST(ROUND(\"totalTTC\" * 100) AS INTEGER) - \"totalTtcCents\") > 0)' },
+      { onlyIfColumnExists: { table: 'WorkOrder', column: 'totalTTC' }, sql: 'ALTER TABLE \"WorkOrder\" DROP COLUMN \"totalTTC\"' },
+    ],
+  },
+  {
+    id: '178_money_purchaseorder_totalht',
+    steps: [
+      { onlyIfColumnMissing: { table: 'PurchaseOrder', column: 'totalHtCents' }, sql: 'ALTER TABLE \"PurchaseOrder\" ADD COLUMN \"totalHtCents\" INTEGER NOT NULL DEFAULT 0' },
+      { onlyIfColumnExists: { table: 'PurchaseOrder', column: 'totalHT' }, sql: 'UPDATE \"PurchaseOrder\" SET \"totalHtCents\" = CAST(ROUND(\"totalHT\" * 100) AS INTEGER) WHERE \"totalHT\" IS NOT NULL' },
+      { onlyIfColumnExists: { table: 'PurchaseOrder', column: 'totalHT' }, verifySql: 'SELECT count(*) AS n FROM \"PurchaseOrder\" WHERE (\"totalHT\" IS NOT NULL AND ABS(CAST(ROUND(\"totalHT\" * 100) AS INTEGER) - \"totalHtCents\") > 0)' },
+      { onlyIfColumnExists: { table: 'PurchaseOrder', column: 'totalHT' }, sql: 'ALTER TABLE \"PurchaseOrder\" DROP COLUMN \"totalHT\"' },
+    ],
+  },
+  // JSON monétaires persistés v1 (euros flottants) → v2 (entiers exacts).
+  // Code dans /api/internal/migrate : ordres SIGNÉS exclus (JSON gelé par la
+  // signature), totaux re-vérifiés, transactionnel, enregistré après réussite.
+  { id: '179_money_json_v2', kind: 'json-v2' },
+
+  // ── Index de clés étrangères sur tables chaudes (perf) ───────────────────────
+  // Ces tables sont interrogées/écrites par leur FK (ex. InvoiceLine par
+  // invoiceId lors du remplacement des lignes, JobPhoto par jobId/garageId).
+  // Sans index, ce sont des balayages complets qui se dégradent avec le volume.
+  // Additif et idempotent (IF NOT EXISTS) ; réversible par DROP INDEX.
+  { id: '180_quoteline_idx_quote',       sql: 'CREATE INDEX IF NOT EXISTS "QuoteLine_quoteId_idx" ON "QuoteLine"("quoteId")' },
+  { id: '181_invoiceline_idx_invoice',   sql: 'CREATE INDEX IF NOT EXISTS "InvoiceLine_invoiceId_idx" ON "InvoiceLine"("invoiceId")' },
+  { id: '182_jobphoto_idx_job',          sql: 'CREATE INDEX IF NOT EXISTS "JobPhoto_jobId_idx" ON "JobPhoto"("jobId")' },
+  { id: '183_jobphoto_idx_garage',       sql: 'CREATE INDEX IF NOT EXISTS "JobPhoto_garageId_idx" ON "JobPhoto"("garageId")' },
+  { id: '184_inspectionitem_idx_insp',   sql: 'CREATE INDEX IF NOT EXISTS "InspectionItem_inspectionId_idx" ON "InspectionItem"("inspectionId")' },
+
+  // ── Rattrapage : colonne oubliée par une migration « ensure table » ──────────
+  // `054_ensure_vehicle_table` crée Vehicle avec `CREATE TABLE IF NOT EXISTS` en
+  // incluant "ctDate". Sur toute base où Vehicle EXISTAIT DÉJÀ sans cette colonne,
+  // l'instruction entière est un NO-OP silencieux : la colonne n'a jamais été
+  // ajoutée, et aucune migration ADD COLUMN ne la rattrapait.
+  // Conséquence mesurée sur la base de production de l'opérateur :
+  //   GET /api/vehicles → 500 INTERNAL_ERROR
+  //   Invalid `prisma.vehicle.findMany()` : The column `main.Vehicle.ctDate`
+  //   does not exist in the current database.
+  // La recherche par plaque, la fiche véhicule et les alertes de contrôle
+  // technique étaient donc TOTALEMENT hors service, sans message exploitable.
+  // ATTENTION, PIÈGE GÉNÉRAL : toute colonne ajoutée plus tard à un
+  // `CREATE TABLE IF NOT EXISTS` n'atteint QUE les bases neuves. Sur les bases
+  // déjà en service, il faut TOUJOURS une migration ADD COLUMN dédiée en fin de
+  // liste. Régression couverte par
+  // src/lib/__tests__/migrations-vehicle-ctdate.test.ts, qui rejoue la séquence
+  // sur une base portant l'ANCIENNE forme de Vehicle.
+  { id: '185_vehicle_ct_date',           onlyIfColumnMissing: { table: 'Vehicle', column: 'ctDate' }, sql: 'ALTER TABLE "Vehicle" ADD COLUMN "ctDate" TEXT' },
+
+  // ── Synchronisation POSTE → CLOUD des attributions de clés mécanicien ────────
+  // Horodatage du dernier accusé de réception du serveur officiel. NULL = jamais
+  // confirmé (l'interface l'affiche et la remontée est retentée). Additif,
+  // idempotent, sans valeur par défaut : aucune donnée existante n'est touchée.
+  // Réversible : la colonne peut être retirée sans perte (elle n'exprime aucun
+  // droit, seulement l'horodatage du dernier accusé de réception du serveur).
+  { id: '186_licensekey_cloud_synced_at', onlyIfColumnMissing: { table: 'LicenseKey', column: 'cloudSyncedAt' }, sql: 'ALTER TABLE "LicenseKey" ADD COLUMN "cloudSyncedAt" DATETIME' },
+
+  // Table PortalSnapshot — présente aussi côté poste pour que les deux schémas
+  // Prisma restent strictement identiques (src/lib/db.ts partage l'API). Le
+  // poste ne l'alimente pas : il PUBLIE ses instantanés vers le cloud.
+  // Additif et idempotent ; réversible (table de cache, aucune donnée maîtresse).
+  {
+    id: '187_portal_snapshot',
+    sql: 'CREATE TABLE IF NOT EXISTS "PortalSnapshot" ("id" TEXT NOT NULL PRIMARY KEY, "garageId" TEXT NOT NULL, "jobId" TEXT NOT NULL, "payload" TEXT NOT NULL, "expiresAt" DATETIME NOT NULL, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)',
+  },
+  { id: '188_portal_snapshot_idx_garage', sql: 'CREATE INDEX IF NOT EXISTS "PortalSnapshot_garageId_idx" ON "PortalSnapshot"("garageId")' },
+  { id: '189_portal_snapshot_idx_job',    sql: 'CREATE INDEX IF NOT EXISTS "PortalSnapshot_jobId_idx" ON "PortalSnapshot"("jobId")' },
+  { id: '190_portal_snapshot_idx_exp',    sql: 'CREATE INDEX IF NOT EXISTS "PortalSnapshot_expiresAt_idx" ON "PortalSnapshot"("expiresAt")' },
+
+  // ── Synchronisation STOCK ↔ DEVIS ↔ FACTURE (poste) ─────────────────────────
+  // Contrepartie SQLite EXACTE de prisma/server/migrations/20260811000000_
+  // invoice_stock_sync (PostgreSQL). Elle manquait : les deux schémas Prisma
+  // déclaraient déjà ces champs, mais aucune migration ne les créait sur le
+  // poste. Conséquence observée sur une base réelle : « The column
+  // main.Invoice.stockCommittedAt does not exist in the current database », donc
+  // HTTP 500 sur /api/invoices ET /api/quotes — module Devis & Factures
+  // entièrement hors service, l'interface affichant « Aucune facture ».
+  //
+  // ADDITIF et IDEMPOTENT : aucune donnée existante n'est lue ni modifiée. Les
+  // factures antérieures gardent `stockCommittedAt` NULL et leurs lignes
+  // `partId` NULL : elles n'engagent aucun stock — comportement historique
+  // conservé, aucune régularisation rétroactive.
+  //
+  // Les clés étrangères ne sont pas déclarées : SQLite ne sait pas ajouter de
+  // contrainte à une table existante, et une table neuve sans FK reste
+  // cohérente avec le reste du schéma poste (cf. 187_portal_snapshot).
+  { id: '191_invoice_stock_committed_at', onlyIfColumnMissing: { table: 'Invoice',     column: 'stockCommittedAt' }, sql: 'ALTER TABLE "Invoice" ADD COLUMN "stockCommittedAt" DATETIME' },
+  { id: '192_invoiceline_part_id',        onlyIfColumnMissing: { table: 'InvoiceLine', column: 'partId' },           sql: 'ALTER TABLE "InvoiceLine" ADD COLUMN "partId" TEXT' },
+  { id: '193_quoteline_part_id',          onlyIfColumnMissing: { table: 'QuoteLine',   column: 'partId' },           sql: 'ALTER TABLE "QuoteLine" ADD COLUMN "partId" TEXT' },
+  {
+    id: '194_stock_movement',
+    sql: 'CREATE TABLE IF NOT EXISTS "StockMovement" ("id" TEXT NOT NULL PRIMARY KEY, "garageId" TEXT NOT NULL, "partId" TEXT NOT NULL, "type" TEXT NOT NULL, "quantityDelta" INTEGER NOT NULL, "invoiceId" TEXT, "invoiceLineId" TEXT, "reason" TEXT, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)',
+  },
+  { id: '195_stock_movement_idx_garage',  sql: 'CREATE INDEX IF NOT EXISTS "StockMovement_garageId_createdAt_idx" ON "StockMovement"("garageId", "createdAt")' },
+  { id: '196_stock_movement_idx_part',    sql: 'CREATE INDEX IF NOT EXISTS "StockMovement_partId_idx" ON "StockMovement"("partId")' },
+  { id: '197_stock_movement_idx_invoice', sql: 'CREATE INDEX IF NOT EXISTS "StockMovement_invoiceId_idx" ON "StockMovement"("invoiceId")' },
+  { id: '198_invoiceline_idx_part',       sql: 'CREATE INDEX IF NOT EXISTS "InvoiceLine_partId_idx" ON "InvoiceLine"("partId")' },
+  { id: '199_quoteline_idx_part',         sql: 'CREATE INDEX IF NOT EXISTS "QuoteLine_partId_idx" ON "QuoteLine"("partId")' },
+  // Recherche « tape F → propose Filtre… » : index sur le couple garage+nom.
+  { id: '200_part_idx_garage_name',       sql: 'CREATE INDEX IF NOT EXISTS "Part_garageId_name_idx" ON "Part"("garageId", "name")' },
+  // Pierres tombales de suppression d'intervention (GF31-AUD-044). ADDITIF :
+  // table neuve, aucune donnée existante lue ni modifiée. Sans clé étrangère —
+  // et c'est délibéré : la ligne survit à la disparition de l'intervention,
+  // c'est précisément son objet. Même choix que 187_portal_snapshot / 194_stock_movement.
+  {
+    id: '201_job_tombstone',
+    sql: 'CREATE TABLE IF NOT EXISTS "JobTombstone" ("jobId" TEXT NOT NULL PRIMARY KEY, "garageId" TEXT NOT NULL, "deletedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)',
+  },
+  { id: '202_job_tombstone_idx',          sql: 'CREATE INDEX IF NOT EXISTS "JobTombstone_garageId_deletedAt_idx" ON "JobTombstone"("garageId", "deletedAt")' },
+
+  // ── Photo de profil du mécanicien (GF-PLAN-004) ────────────────────────────
+  // `Mechanic.avatar` est une colonne TEXTE d'initiales ; ces colonnes portent
+  // la VRAIE photo. ADDITIF : quatre colonnes nullables, aucune donnée existante
+  // lue ni modifiée, et un poste qui n'a pas encore migré continue d'afficher
+  // les initiales — le repli est le comportement nominal, pas une panne.
+  //
+  // `avatarPath` est une CLÉ DE STOCKAGE générée par le serveur, jamais un nom
+  // fourni par le client ; `avatarHash` sert de jeton d'invalidation de cache
+  // (voir jetonCache) et non d'intégrité.
+  { id: '203_mechanic_avatar_path',    onlyIfColumnMissing: { table: 'Mechanic', column: 'avatarPath' },      sql: 'ALTER TABLE "Mechanic" ADD COLUMN "avatarPath" TEXT' },
+  { id: '204_mechanic_avatar_mime',    onlyIfColumnMissing: { table: 'Mechanic', column: 'avatarMime' },      sql: 'ALTER TABLE "Mechanic" ADD COLUMN "avatarMime" TEXT' },
+  { id: '205_mechanic_avatar_hash',    onlyIfColumnMissing: { table: 'Mechanic', column: 'avatarHash' },      sql: 'ALTER TABLE "Mechanic" ADD COLUMN "avatarHash" TEXT' },
+  { id: '206_mechanic_avatar_updated', onlyIfColumnMissing: { table: 'Mechanic', column: 'avatarUpdatedAt' }, sql: 'ALTER TABLE "Mechanic" ADD COLUMN "avatarUpdatedAt" DATETIME' },
+
+  // ── Archivage du mécanicien (GF-PLAN-005) ──────────────────────────────────
+  // La suppression était destructive : `onDelete: Cascade` depuis Garage, et une
+  // suppression de mécanicien emportait ou orphelinait interventions, notes,
+  // photos et audits. Un mécanicien qui quitte le garage doit sortir du planning
+  // SANS que son historique disparaisse — c'est aussi ce que le suivi comptable
+  // et les rapports supposent.
+  //
+  // Colonne NULLABLE : `NULL` = actif. Aucun défaut à écrire sur les lignes
+  // existantes, donc aucune réécriture de table.
+  { id: '207_mechanic_archived_at', onlyIfColumnMissing: { table: 'Mechanic', column: 'archivedAt' }, sql: 'ALTER TABLE "Mechanic" ADD COLUMN "archivedAt" DATETIME' },
+  // Le planning ne lit que les mécaniciens ACTIFS d'un garage : c'est la requête
+  // la plus fréquente du module.
+  { id: '208_mechanic_idx_garage_archived', sql: 'CREATE INDEX IF NOT EXISTS "Mechanic_garageId_archivedAt_idx" ON "Mechanic"("garageId", "archivedAt")' },
+
+  // ── Cycle de vie de l'ACCÈS portail client (GF-PORT-001) ───────────────────
+  // Le modèle `PortalUser` ne portait aucun état : impossible de couper l'accès
+  // d'un client sans supprimer le compte, et donc son historique de tickets et
+  // de rendez-vous. Impossible également de distinguer un mot de passe
+  // TEMPORAIRE remis par le garage d'un mot de passe choisi par le client.
+  //
+  // ADDITIF : trois colonnes, toutes nullables ou avec défaut. `disabledAt`
+  // NULL = accès actif ; `mustChangePassword` faux par défaut, donc les comptes
+  // existants — créés par auto-inscription, avec un mot de passe déjà choisi par
+  // leur titulaire — ne sont pas soudainement contraints d'en changer.
+  { id: '209_portal_disabled_at',        onlyIfColumnMissing: { table: 'PortalUser', column: 'disabledAt' },         sql: 'ALTER TABLE "PortalUser" ADD COLUMN "disabledAt" DATETIME' },
+  { id: '210_portal_must_change_pwd',    onlyIfColumnMissing: { table: 'PortalUser', column: 'mustChangePassword' }, sql: 'ALTER TABLE "PortalUser" ADD COLUMN "mustChangePassword" BOOLEAN NOT NULL DEFAULT 0' },
+  { id: '211_portal_password_changed_at', onlyIfColumnMissing: { table: 'PortalUser', column: 'passwordChangedAt' }, sql: 'ALTER TABLE "PortalUser" ADD COLUMN "passwordChangedAt" DATETIME' },
+
+  // ── Changement d'adresse en attente (GF-PORT-006) ──────────────────────────
+  // L'adresse est l'IDENTIFIANT de connexion du portail. La remplacer sans
+  // vérification enfermerait le client dehors sur une simple faute de frappe, et
+  // permettrait de revendiquer l'adresse d'un tiers. La nouvelle adresse attend
+  // donc ici jusqu'à confirmation par le lien envoyé sur ELLE.
+  { id: '212_portal_pending_email', onlyIfColumnMissing: { table: 'PortalUser', column: 'pendingEmail' }, sql: 'ALTER TABLE "PortalUser" ADD COLUMN "pendingEmail" TEXT' },
+
+  // ── Horaires d'atelier à la DEMI-HEURE (GF-021) ────────────────────────────
+  // `workshopStartHour` / `workshopEndHour` sont des entiers : un atelier qui
+  // ouvre à 8 h 30 ou ferme à 18 h 30 ne pouvait pas le déclarer. Deux colonnes
+  // de MINUTES s'ajoutent, valant 0 par défaut — les garages existants gardent
+  // donc exactement leurs horaires actuels, à la minute près.
+  //
+  // ADDITIF et sans réécriture : on ne touche pas aux colonnes d'heures, dont
+  // dépendent le moteur de suggestions et la synchronisation.
+  { id: '213_workshop_start_minute', onlyIfColumnMissing: { table: 'Garage', column: 'workshopStartMinute' }, sql: 'ALTER TABLE "Garage" ADD COLUMN "workshopStartMinute" INTEGER NOT NULL DEFAULT 0' },
+  { id: '214_workshop_end_minute',   onlyIfColumnMissing: { table: 'Garage', column: 'workshopEndMinute' },   sql: 'ALTER TABLE "Garage" ADD COLUMN "workshopEndMinute" INTEGER NOT NULL DEFAULT 0' },
 ]

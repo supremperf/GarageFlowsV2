@@ -13,6 +13,24 @@ interface Line { partId: string; name: string; reference?: string | null; quanti
 interface Order { supplierId: string; supplierName: string; lines: Line[]; totalHT: number; maxLeadTimeDays: number }
 interface Plan { orders: Order[]; unfulfillable: { name: string }[]; summary: { parts: number; suppliers: number; totalHT: number } }
 
+/** Bon de commande PERSISTÉ (à distinguer d'une ligne du plan, non enregistrée). */
+interface BonDeCommande {
+  id: string
+  number: string
+  supplierName: string | null
+  status: string
+  totalHT: number
+  createdAt: string
+}
+
+/** Statuts depuis lesquels une réception est encore possible. */
+const RECEPTIONNABLES = new Set(['draft', 'sent', 'confirmed'])
+
+const LIBELLE_STATUT: Record<string, string> = {
+  draft: 'Brouillon', sent: 'Envoyée', confirmed: 'Confirmée',
+  received: 'Réceptionnée', returned: 'Retournée', cancelled: 'Annulée',
+}
+
 export default function SuppliersPanel({ onClose }: { onClose: () => void }) {
   const { t, lang } = useTranslation()
   const [plan, setPlan] = useState<Plan | null>(null)
@@ -21,11 +39,29 @@ export default function SuppliersPanel({ onClose }: { onClose: () => void }) {
   const [created, setCreated] = useState<number | null>(null)
   const [busy, setBusy] = useState(false)
 
+  // ── Commandes déjà passées ─────────────────────────────────────────────────
+  // Ce panneau savait CRÉER des bons de commande et rien d'autre : aucune liste,
+  // aucun bouton de réception. Le stock n'était donc jamais réapprovisionné —
+  // la route `/api/purchase-orders/[id]/receive` existait et incrémentait
+  // correctement le stock, mais rien dans le produit ne l'appelait.
+  const [bons, setBons] = useState<BonDeCommande[]>([])
+  const [receptionEnCours, setReceptionEnCours] = useState<string | null>(null)
+  const [erreurReception, setErreurReception] = useState<string | null>(null)
+
+  async function chargerBons() {
+    try {
+      const r = await fetch('/api/purchase-orders')
+      const d = await r.json().catch(() => null)
+      if (r.ok && Array.isArray(d)) setBons(d)
+    } catch { /* la liste reste en l'état ; le plan fonctionne quand même */ }
+  }
+
   useEffect(() => {
     let alive = true
     fetch('/api/suppliers')
       .then(async (r) => { const d = await r.json().catch(() => null); if (!alive) return; if (!r.ok || !d) { setState('error'); return } setPlan(d); setState('ok') })
       .catch(() => { if (alive) setState('error') })
+    chargerBons()
     return () => { alive = false }
   }, [])
 
@@ -34,8 +70,30 @@ export default function SuppliersPanel({ onClose }: { onClose: () => void }) {
     try {
       const r = await fetch('/api/suppliers', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'create-orders', confirm: true }) })
       const d = await r.json()
-      if (r.ok) setCreated(d.created?.length ?? 0)
+      if (r.ok) { setCreated(d.created?.length ?? 0); await chargerBons() }
     } finally { setBusy(false); setConfirming(false) }
+  }
+
+  /**
+   * Réception d'un bon : c'est CETTE action qui incrémente le stock.
+   *
+   * Le bouton est désactivé pendant l'appel — un double-clic enverrait deux
+   * requêtes. La route les rattrape (revendication atomique du statut), mais
+   * l'utilisateur verrait un message d'erreur pour une action qui a réussi.
+   */
+  async function receptionner(bon: BonDeCommande) {
+    setErreurReception(null)
+    setReceptionEnCours(bon.id)
+    try {
+      const r = await fetch(`/api/purchase-orders/${bon.id}/receive`, { method: 'POST' })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) { setErreurReception(d?.error ?? 'Réception refusée.'); return }
+      await chargerBons()
+    } catch {
+      setErreurReception('Réception impossible — vérifiez votre connexion.')
+    } finally {
+      setReceptionEnCours(null)
+    }
   }
 
   return (
@@ -92,6 +150,65 @@ export default function SuppliersPanel({ onClose }: { onClose: () => void }) {
                   ))}
                 </div>
               ))}
+
+              {/* ── Commandes passées : c'est ICI que le stock se réapprovisionne ──
+                  Sans cette section, un bon de commande créé restait indéfiniment
+                  au statut « brouillon » et aucune pièce n'entrait jamais en
+                  stock : la route de réception existait, mais rien ne l'appelait. */}
+              <div style={{ marginTop: 22 }}>
+                <p style={{ color: '#e8edf4', fontSize: 13.5, fontWeight: 700, marginBottom: 10 }}>
+                  Commandes fournisseur
+                </p>
+
+                {erreurReception && (
+                  <div style={{ ...card, padding: '10px 14px', marginBottom: 10, color: '#fca5a5', fontSize: 12.5, borderColor: 'rgba(239,68,68,0.3)' }}>
+                    {erreurReception}
+                  </div>
+                )}
+
+                {bons.length === 0 ? (
+                  <div style={{ ...card, padding: 18, textAlign: 'center', color: '#64748b', fontSize: 13 }}>
+                    Aucune commande enregistrée.
+                  </div>
+                ) : bons.map((b) => {
+                  const receptionnable = RECEPTIONNABLES.has(b.status)
+                  const enCours = receptionEnCours === b.id
+                  return (
+                    <div key={b.id} style={{ ...card, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ color: '#e8edf4', fontSize: 13.5, fontWeight: 650, margin: 0 }}>
+                          {b.number}
+                          <span style={{ color: '#64748b', fontWeight: 500 }}> · {b.supplierName ?? '—'}</span>
+                        </p>
+                        <p style={{ color: '#64748b', fontSize: 11.5, margin: '2px 0 0' }}>
+                          {LIBELLE_STATUT[b.status] ?? b.status} · {b.totalHT.toLocaleString(lang)} € {t.supHT}
+                        </p>
+                      </div>
+
+                      {receptionnable ? (
+                        <button
+                          onClick={() => receptionner(b)}
+                          disabled={enCours}
+                          style={{ ...btnPri, opacity: enCours ? 0.6 : 1 }}
+                          title="Réceptionner : les quantités entrent en stock"
+                        >
+                          {enCours ? '…' : 'Réceptionner'}
+                        </button>
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: 11.5, fontWeight: 700, padding: '5px 10px', borderRadius: 999,
+                            color: b.status === 'received' ? '#4ade80' : '#94a3b8',
+                            background: b.status === 'received' ? 'rgba(74,222,128,0.12)' : 'rgba(148,163,184,0.12)',
+                          }}
+                        >
+                          {LIBELLE_STATUT[b.status] ?? b.status}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </>
           )}
         </div>

@@ -4,9 +4,23 @@ import { useRef } from 'react'
 import { Image as ImageIcon, X, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import type { GarageSettings } from './types'
+import { AddressAutocomplete } from '@/components/AddressAutocomplete'
+import { CoordonneesBancaires } from './CoordonneesBancaires'
+import {
+  CRENEAUX_30MIN, CRENEAUX_FERMETURE, creneauEnMinutes, minutesEnCreneau,
+  enHeureEtMinute, DEBUT_PAR_DEFAUT, FIN_PAR_DEFAUT,
+} from '@/lib/planning/horaires'
 
 const CURRENCIES    = ['EUR', 'USD', 'GBP', 'CHF', 'CAD', 'AUD', 'JPY', 'MAD', 'TND', 'DZD', 'XOF']
 const PAYMENT_TERMS = ['À réception', '15 jours net', '30 jours net', '45 jours net', '60 jours net']
+
+/** Valeur affichée par la liste : `HH:MM` reconstitué depuis l'heure + minutes. */
+function creneauCourant(heure: string, minute: string): string {
+  const h = Number.parseInt(heure, 10)
+  const m = Number.parseInt(minute, 10)
+  if (!Number.isFinite(h)) return minutesEnCreneau(DEBUT_PAR_DEFAUT)
+  return minutesEnCreneau(h * 60 + (Number.isFinite(m) ? m : 0))
+}
 
 // Redimensionne une image (fichier) à `maxSide` px max, renvoie un data URL PNG léger.
 function downscaleImage(file: File, maxSide: number): Promise<string> {
@@ -124,7 +138,21 @@ export function CompanyTab({ s, set, loading }: Props) {
       </div>
 
       {f({ label: 'Nom du garage *', k: 'name', placeholder: 'Mon Garage SARL' })}
-      {f({ label: 'Adresse', k: 'address', placeholder: '12 rue de la Mécanique', optional: true })}
+
+      {/* Adresse avec propositions (GF-022) — la saisie reste libre : un
+          lieu-dit ou une adresse absente de la base doit rester possible. */}
+      <div>
+        <label className="block text-xs font-medium text-slate-400 mb-1" htmlFor="gf-adresse-garage">
+          Adresse<span className="ml-1 text-slate-600">(optionnel)</span>
+        </label>
+        <AddressAutocomplete
+          id="gf-adresse-garage"
+          value={s.address}
+          onChange={(v) => set('address', v)}
+          placeholder="12 rue de la Mécanique"
+          className="w-full rounded-lg border border-white/10 bg-white/[0.05] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-600"
+        />
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         {f({ label: 'Téléphone', k: 'phone', type: 'tel', placeholder: '+33 1 23 45 67', optional: true })}
@@ -150,26 +178,52 @@ export function CompanyTab({ s, set, loading }: Props) {
         {f({ label: 'Taux horaire (€/h)', k: 'hourlyRate', type: 'number', placeholder: '60' })}
       </div>
 
+      {/* ── Horaires d'atelier, au pas de 30 minutes (GF-021) ──────────────────
+          Les deux listes n'offraient que des heures PLEINES, et seulement de 6 h
+          à 18 h pour l'ouverture, 12 h à 24 h pour la fermeture : un atelier qui
+          ouvre à 8 h 30, ferme à 18 h 30, ou travaille de nuit ne pouvait pas se
+          déclarer. La journée entière est proposée, par demi-heures. */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1">Heure d&apos;ouverture</label>
-          <select value={s.workshopStartHour} onChange={e => set('workshopStartHour', e.target.value)}
+          <label className="block text-xs font-medium text-slate-400 mb-1" htmlFor="gf-ouverture">
+            Heure d&apos;ouverture
+          </label>
+          <select
+            id="gf-ouverture"
+            value={creneauCourant(s.workshopStartHour, s.workshopStartMinute)}
+            onChange={e => {
+              const { heure, minute } = enHeureEtMinute(creneauEnMinutes(e.target.value) ?? DEBUT_PAR_DEFAUT)
+              set('workshopStartHour', String(heure))
+              set('workshopStartMinute', String(minute))
+            }}
             className="w-full rounded-lg border border-white/10 bg-white/[0.05] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            {Array.from({ length: 13 }, (_, i) => i + 6).map(h => (
-              <option key={h} value={h} className="bg-[#111827]">{String(h).padStart(2, '0')}:00</option>
+            {CRENEAUX_30MIN.map(c => (
+              <option key={c} value={c} className="bg-[#111827]">{c.replace(':', 'h')}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1">Heure de fermeture</label>
-          <select value={s.workshopEndHour} onChange={e => set('workshopEndHour', e.target.value)}
+          <label className="block text-xs font-medium text-slate-400 mb-1" htmlFor="gf-fermeture">
+            Heure de fermeture
+          </label>
+          <select
+            id="gf-fermeture"
+            value={creneauCourant(s.workshopEndHour, s.workshopEndMinute)}
+            onChange={e => {
+              const { heure, minute } = enHeureEtMinute(creneauEnMinutes(e.target.value) ?? FIN_PAR_DEFAUT)
+              set('workshopEndHour', String(heure))
+              set('workshopEndMinute', String(minute))
+            }}
             className="w-full rounded-lg border border-white/10 bg-white/[0.05] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            {Array.from({ length: 13 }, (_, i) => i + 12).map(h => (
-              <option key={h} value={h} className="bg-[#111827]">{String(h).padStart(2, '0')}:00</option>
+            {CRENEAUX_FERMETURE.map(c => (
+              <option key={c} value={c} className="bg-[#111827]">{c.replace(':', 'h')}</option>
             ))}
           </select>
         </div>
       </div>
+      <p className="text-[10px] text-slate-600 -mt-1">
+        Ces horaires bornent la grille du planning. L&apos;atelier doit rester ouvert au moins une heure.
+      </p>
 
       <div className="border-t border-white/[0.07] pt-4">
         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Informations légales</p>
@@ -182,14 +236,9 @@ export function CompanyTab({ s, set, loading }: Props) {
         </div>
       </div>
 
-      <div className="border-t border-white/[0.07] pt-4">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Coordonnées bancaires</p>
-        {f({ label: 'Banque', k: 'bankName', placeholder: 'BNP Paribas', optional: true })}
-        <div className="grid grid-cols-2 gap-3 mt-3">
-          {f({ label: 'IBAN', k: 'iban', placeholder: 'FR76 3000…', optional: true })}
-          {f({ label: 'BIC', k: 'bic', placeholder: 'BNPAFRPP', optional: true })}
-        </div>
-      </div>
+      {/* Recherche de banque, BIC proposé seulement quand il est SÛR, et clé de
+          contrôle de l'IBAN vérifiée à la saisie (GF-023). */}
+      <CoordonneesBancaires s={s} set={set} />
 
       <div className="border-t border-white/[0.07] pt-4">
         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Facturation</p>

@@ -154,8 +154,56 @@ export function countTables(snapshot: GarageSnapshot): Record<string, number> {
 }
 
 /**
+ * COMPATIBILITÉ des sauvegardes ANTÉRIEURES à la migration monétaire : les
+ * anciens snapshots stockent des euros flottants (unitPrice, unitCost,
+ * quantity fractionnaire, hourlyRate, dailyRate, depositAmount, totalHT/TTC).
+ * Le schéma actuel stocke des ENTIERS exacts. Cette fonction convertit chaque
+ * ligne d'un ancien format vers le format actuel — déterministe
+ * (round(x×10000) / round(x×100)), idempotente (une ligne déjà au nouveau
+ * format est laissée telle quelle). Aucune sauvegarde n'est perdue.
+ */
+export function migrateLegacyRow(tableKey: string, row: Row): Row {
+  const r: Row = { ...row }
+  const toScaled = (v: unknown) => Math.round((v as number) * 10_000)
+  const toCents = (v: unknown) => Math.round((v as number) * 100)
+  const move = (from: string, to: string, conv: (v: unknown) => number) => {
+    if (r[from] !== undefined && r[to] === undefined && typeof r[from] === 'number') {
+      r[to] = conv(r[from])
+    }
+    delete r[from]
+  }
+  switch (tableKey) {
+    case 'parts':
+      move('unitCost', 'unitCostTenThousandths', toScaled)
+      move('unitPrice', 'unitPriceTenThousandths', toScaled)
+      break
+    case 'jobParts':
+      move('unitPrice', 'unitPriceTenThousandths', toScaled)
+      move('unitCost', 'unitCostTenThousandths', toScaled)
+      break
+    case 'quoteLines':
+    case 'invoiceLines':
+      move('quantity', 'quantityTenThousandths', toScaled)
+      move('unitPrice', 'unitPriceTenThousandths', toScaled)
+      move('unitCost', 'unitCostTenThousandths', toScaled)
+      break
+    case 'laborOperations':
+      move('unitPrice', 'unitPriceTenThousandths', toScaled)
+      break
+    case 'workOrders':
+      move('totalHT', 'totalHtCents', toCents)
+      move('totalTTC', 'totalTtcCents', toCents)
+      break
+  }
+  return r
+}
+
+/**
  * Atomically replace a garage's data with a snapshot: delete child→parent, then
  * re-create parent→child. Prisma coerces ISO date strings to DateTime.
+ * Les lignes d'anciens snapshots (euros flottants) sont converties à la volée
+ * vers les entiers exacts (voir migrateLegacyRow) — les anciennes sauvegardes
+ * restent restaurables sans perte.
  */
 export async function restoreSnapshot(tx: Tx, snapshot: GarageSnapshot): Promise<Record<string, number>> {
   const restored: Record<string, number> = {}
@@ -165,7 +213,7 @@ export async function restoreSnapshot(tx: Tx, snapshot: GarageSnapshot): Promise
   }
   // Re-create in order (parent → child).
   for (const spec of TABLE_SPECS) {
-    const rows = snapshot.tables[spec.key] ?? []
+    const rows = (snapshot.tables[spec.key] ?? []).map((row) => migrateLegacyRow(spec.key, row))
     if (rows.length > 0) await spec.create(tx, rows)
     restored[spec.key] = rows.length
   }

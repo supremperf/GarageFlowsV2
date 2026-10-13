@@ -1,15 +1,16 @@
 """
-keygen_db.py — GarageFlow Licence DB locale (JSON)
+keygen_db.py — GarageFlows Licence DB locale (JSON)
 Stockage, révocation, réactivation des licences générées.
 """
 
-import json, time
+import json, os, time
 from pathlib import Path
 from typing import Optional
 
 ROOT_DIR        = Path(__file__).resolve().parent.parent
 DB_FILE         = ROOT_DIR / "keys" / "licenses_db.json"
 SERVER_CFG_FILE = ROOT_DIR / "keys" / "server_config.json"
+AUDIT_FILE      = ROOT_DIR / "keys" / "keygen_audit.log"
 
 
 def _load() -> list:
@@ -42,6 +43,8 @@ def add_license(info: dict, client: dict) -> None:
         "expires_at": info["expires_at"],
         "seats":      info["seats"],
         "hwid":       info.get("hwid") or "",
+        "parent_lid":    info.get("parent_lid") or "",
+        "mechanic_name": info.get("mechanic_name") or "",
         "status":     "active",
         "client": {
             "prenom":    client.get("prenom", ""),
@@ -60,6 +63,19 @@ def add_license(info: dict, client: dict) -> None:
 
 def list_licenses() -> list:
     return _load()
+
+
+def list_children(parent_lid: str) -> list:
+    """Retourne les clés mécanicien rattachées à une licence garage (par lid parent)."""
+    return [
+        r for r in _load()
+        if r.get("type") == "mechanic" and r.get("parent_lid") == parent_lid
+    ]
+
+
+def garage_licenses() -> list:
+    """Retourne les licences non-mechanic (garage), pour les sélecteurs."""
+    return [r for r in _load() if r.get("type") != "mechanic"]
 
 
 def set_status(lid: str, status: str) -> bool:
@@ -121,3 +137,26 @@ def save_server_config(url: str, api_key: str) -> None:
                    indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
+    # Durcit les permissions (fichier contenant la clé API), comme pour private.pem.
+    # Sur Windows le chmod POSIX est sans effet réel : on ignore toute erreur.
+    try:
+        os.chmod(SERVER_CFG_FILE, 0o600)
+    except Exception:
+        pass
+
+
+# ── Journal d'audit local (keys/keygen_audit.log) ────────────────────────────
+
+def audit_log(action: str, lid: str = "", detail: str = "") -> None:
+    """Journalise un événement dans keys/keygen_audit.log.
+    Format : "ISO8601 | action | lid tronqué à 8 chars + '…' | detail".
+    JAMAIS de token complet ni de données client dans ce journal."""
+    ts       = time.strftime("%Y-%m-%dT%H:%M:%S")
+    lid_safe = (lid[:8] + "…") if lid else ""
+    line     = f"{ts} | {action} | {lid_safe} | {detail}\n"
+    try:
+        AUDIT_FILE.parent.mkdir(exist_ok=True)
+        with AUDIT_FILE.open("a", encoding="utf-8") as f:
+            f.write(line)
+    except Exception:
+        pass  # le journal ne doit jamais bloquer une opération

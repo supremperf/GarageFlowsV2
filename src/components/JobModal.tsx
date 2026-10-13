@@ -1,6 +1,8 @@
 'use client'
+import { lineCents, fromCents, toCents } from '@/lib/money'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import dynamic from 'next/dynamic'
 import { useScheduleStore } from '@/store/schedule-store'
 import {
   Job,
@@ -14,11 +16,19 @@ import {
   cn,
   getTodayString,
 } from '@/lib/utils'
+import { bornesAtelier } from '@/lib/planning/horaires'
 import { X, Zap, Car, User, Wrench, Camera } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useTranslation } from '@/lib/i18n'
 import { repairTypeLabel } from '@/lib/i18n/labels'
 import QuoteInvoiceModal from '@/components/QuoteInvoiceModal'
+// ── Chargé à la DEMANDE (budget de performance) ─────────────────────────────
+// L'ordre de réparation embarque son propre document imprimable, le canevas de
+// signature et l'autocomplétion de pièces. Importé statiquement, tout cela
+// entrait dans le paquet de la page d'accueil — payé par chaque garagiste à
+// chaque ouverture, pour un écran que beaucoup n'ouvriront jamais. Il n'est
+// monté qu'après un clic : le chargement différé est invisible.
+const WorkOrderModal = dynamic(() => import('@/components/WorkOrderModal'), { ssr: false })
 import VehicleHistoryModal from '@/components/VehicleHistoryModal'
 import JobPhotos from '@/components/JobPhotos'
 import InspectionModal from '@/components/InspectionModal'
@@ -26,15 +36,12 @@ import { PlateSearchField, VehicleSuggestion } from '@/components/job-modal/Plat
 import { VehicleHistoryCard, VehicleHistorySummary } from '@/components/job-modal/VehicleHistoryCard'
 import { AIEstimationCard, EstimateResult } from '@/components/job-modal/AIEstimationCard'
 import { JobModalFooter } from '@/components/job-modal/JobModalFooter'
-import { JobDefaultPartsSuggestion } from '@/components/job-modal/JobDefaultPartsSuggestion'
+import { JobPartsSection } from '@/components/job-modal/JobPartsSection'
 import { JobScheduleSection } from '@/components/job-modal/JobScheduleSection'
 import { VehicleAutocompleteField } from '@/components/job-modal/VehicleAutocompleteField'
-import { upsertClient, searchClients, findClientByPlate, ClientRecord } from '@/lib/client-memory'
+import { useRechercheClient } from '@/lib/clients/use-recherche-client'
+import { normaliserPlaque } from '@/lib/recherche/normalisation'
 
-interface DefaultPart {
-  part: Part
-  defaultQuantity: number
-}
 
 export default function JobModal() {
   const { t } = useTranslation()
@@ -45,6 +52,7 @@ export default function JobModal() {
     jobModalPreset,
     jobs,
     mechanics,
+    horaires,
     selectedDate,
     closeModal,
     addJob,
@@ -70,14 +78,14 @@ export default function JobModal() {
   const [showMechanicComparison, setShowMechanicComparison] = useState(false)
   const estimateDebounceRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Default parts
-  const [defaultParts, setDefaultParts] = useState<DefaultPart[]>([])
-
   // Invoice / quote
   const [invoiceMode, setInvoiceMode] = useState<'invoice' | 'quote' | null>(null)
 
   // Inspection
   const [isInspectionOpen, setIsInspectionOpen] = useState(false)
+
+  // Ordre de réparation (GF-040)
+  const [isWorkOrderOpen, setIsWorkOrderOpen] = useState(false)
 
   // Vehicle history modal
   const [showVehicleHistory, setShowVehicleHistory] = useState(false)
@@ -89,7 +97,10 @@ export default function JobModal() {
   const [lookingUpPlate, setLookingUpPlate] = useState(false)
 
   // Client memory (autocomplete from localStorage)
-  const [clientSuggestions, setClientSuggestions] = useState<ClientRecord[]>([])
+  // Les suggestions viennent de la BASE (GET /api/clients), plus du localStorage
+  // du poste : un téléphone corrigé dans l'écran Clients devait ressortir ici,
+  // et les clients réellement enregistrés devaient être proposés (GF-016).
+  const { suggestions: clientSuggestions, chercher: chercherClient, vider: viderClients } = useRechercheClient()
   const [showClientSuggestions, setShowClientSuggestions] = useState(false)
 
   // Job profitability (edit mode only)
@@ -105,18 +116,39 @@ export default function JobModal() {
     ]).then(([garage, parts]) => {
       if (!garage) return
       const duration = editingJob.actualDuration ?? editingJob.estimatedDuration
-      const laborRevenue = Math.round((duration / 60) * (garage.hourlyRate ?? 60) * 100) / 100
-      const partsRevenue = parts.reduce((s: number, p: { unitPrice: number; quantity: number }) => s + p.unitPrice * p.quantity, 0)
-      const partsCost = parts.reduce((s: number, p: { unitCost: number; quantity: number }) => s + p.unitCost * p.quantity, 0)
-      const profit = Math.round((laborRevenue + partsRevenue - partsCost) * 100) / 100
+      // `?? 60` affichait une rentabilité calculée sur un tarif que le garage
+      // n'avait pas choisi. Sans tarif lisible, la main-d'œuvre ne vaut rien de
+      // connu : elle vaut zéro à l'écran, et cela se voit.
+      const laborRevenue = fromCents(lineCents(garage.hourlyRate ?? 0, duration / 60))
+      const partsRevenue = parts.reduce((s: number, p: { unitPrice: number; quantity: number }) => s + fromCents(lineCents(p.unitPrice, p.quantity)), 0)
+      const partsCost = parts.reduce((s: number, p: { unitCost: number; quantity: number }) => s + fromCents(lineCents(p.unitCost, p.quantity)), 0)
+      const profit = fromCents(toCents(laborRevenue) + toCents(partsRevenue) - toCents(partsCost))
       setJobProfit({ laborRevenue, partsRevenue, partsCost, profit })
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobModalMode, editingJob?.id, isJobModalOpen])
 
+  /**
+   * Ce pour quoi le formulaire a DÉJÀ été initialisé.
+   *
+   * Sans ce repère, l'effet ci-dessous se rejouait à chaque changement de
+   * référence de `editingJob` — or `editingJob` vient d'un `jobs.find(...)` non
+   * mémoïsé, donc c'est un objet NEUF à chaque rendu du parent. Le battement de
+   * 10 s recharge le planning, le parent se rend, l'effet se rejoue et
+   * `setForm(editingJob)` REMPLAÇAIT ce que le garagiste était en train de
+   * taper. Même chose en création à chaque rafraîchissement des mécaniciens.
+   *
+   * L'initialisation doit avoir lieu une fois par ouverture et par intervention
+   * éditée — pas à chaque fois que le serveur répond.
+   */
+  const initialisePour = useRef<string | null>(null)
+
   // Initialize form
   useEffect(() => {
-    if (!isJobModalOpen) return
+    if (!isJobModalOpen) { initialisePour.current = null; return }
+    const cle = jobModalMode === 'edit' ? `edit:${editingJob?.id ?? ''}` : 'create'
+    if (initialisePour.current === cle) return
+    initialisePour.current = cle
     if (jobModalMode === 'edit' && editingJob) {
       setForm(editingJob)
       setPlateSearch(editingJob.licensePlate || '')
@@ -137,11 +169,26 @@ export default function JobModal() {
     }
     setEstimate(null)
     setVehicleHistory(null)
-    setDefaultParts([])
     setVehicleSuggestions([])
     setActiveTab('details')
     setShowVehicleHistory(false)
   }, [isJobModalOpen, jobModalMode, editingJob, jobModalPreset, selectedDate, mechanics])
+
+  /**
+   * Mécanicien par défaut arrivé APRÈS l'ouverture.
+   *
+   * L'initialisation ci-dessus ne se rejoue plus quand la liste des mécaniciens
+   * se rafraîchit — c'était précisément la cause de l'écrasement de saisie. Mais
+   * en création, si la liste n'était pas encore chargée à l'ouverture, le champ
+   * serait resté vide. On complète donc CE SEUL champ, et seulement s'il est
+   * encore vide : aucune autre saisie n'est touchée.
+   */
+  useEffect(() => {
+    if (!isJobModalOpen || jobModalMode === 'edit') return
+    if (form.mechanicId) return
+    const defaut = mechanics.find(m => !m.isAbsent)?.id
+    if (defaut) setForm(prev => (prev.mechanicId ? prev : { ...prev, mechanicId: defaut }))
+  }, [isJobModalOpen, jobModalMode, mechanics, form.mechanicId])
 
   const setField = useCallback(<K extends keyof Job>(key: K, value: Job[K]) => {
     setForm(prev => ({ ...prev, [key]: value }))
@@ -178,29 +225,11 @@ export default function JobModal() {
     }, 500)
   }, [form.repairType, form.vehicleModel, form.mechanicId, jobModalMode, durationOverridden])
 
-  // Fetch default parts when repair type changes
-  useEffect(() => {
-    if (!form.repairType || jobModalMode === 'edit') return
-    fetch(`/api/parts?repairType=${form.repairType}`)
-      .then(r => r.ok ? r.json() : [])
-      .then((parts: DefaultPart[]) => setDefaultParts(parts))
-      .catch(() => setDefaultParts([]))
-  }, [form.repairType, jobModalMode])
-
   const handlePlateChange = useCallback((value: string) => {
     const upper = value.toUpperCase()
     setPlateSearch(upper)
     setField('licensePlate', upper)
     setVehicleHistory(null)
-
-    // Client memory: auto-fill from known plate
-    if (upper.length >= 4) {
-      const known = findClientByPlate(upper)
-      if (known) {
-        if (known.customerName) setField('customerName', known.customerName)
-        if (known.vehicleModel) setField('vehicleModel', known.vehicleModel)
-      }
-    }
 
     if (plateDebounceRef.current) clearTimeout(plateDebounceRef.current)
     if (upper.length < 2) {
@@ -211,12 +240,56 @@ export default function JobModal() {
 
     plateDebounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/vehicles?query=${encodeURIComponent(upper)}`)
+        // `q` — le nom que la route lit RÉELLEMENT (src/app/api/vehicles/route.ts:14,
+        // qui compose un OR sur plaque / marque / modèle / nom du client).
+        // Ce paramètre s'appelait ici `query`, que la route ignore : la requête
+        // partait donc SANS aucun critère et renvoyait les quinze véhicules les
+        // plus récemment touchés du garage. La liste proposée n'avait aucun
+        // rapport avec la saisie, et choisir une suggestion écrasait d'un coup
+        // plaque, modèle, `vehicleId` ET nom du client — l'intervention était
+        // enregistrée sur le véhicule et le client de quelqu'un d'autre, sans
+        // le moindre signe à l'écran.
+        const res = await fetch(`/api/vehicles?q=${encodeURIComponent(upper)}`)
         if (!res.ok) return
         const raw = await res.json()
-        const data = raw?.data ?? raw ?? []
+
+        // ── Conversion explicite vers la forme attendue (GF-017) ─────────────
+        // La route renvoie `{ make, model, client: { name, phone } }` ; le
+        // composant de suggestion lit `model` et `clientName`. Les objets bruts
+        // étaient passés tels quels : le NOM DU CLIENT n'apparaissait donc
+        // jamais dans la liste — précisément l'information qui permet de ne pas
+        // se tromper de voiture — et `selectVehicle` ne le reprenait pas non
+        // plus. La marque était perdue de la même façon (« Clio » au lieu de
+        // « Renault Clio »).
+        interface VehiculeApi {
+          id: string; licensePlate: string; make?: string | null; model?: string | null
+          client?: { name?: string | null; phone?: string | null } | null
+        }
+        const brut: VehiculeApi[] = raw?.data ?? raw ?? []
+        const data: VehicleSuggestion[] = brut.map((v) => ({
+          id: v.id,
+          licensePlate: v.licensePlate,
+          model: [v.make, v.model].filter(Boolean).join(' ').trim(),
+          clientName: v.client?.name ?? undefined,
+          clientPhone: v.client?.phone ?? undefined,
+        }))
         setVehicleSuggestions(data.slice(0, 5))
         setShowSuggestions(data.length > 0)
+
+        // Pré-remplissage sur une plaque EXACTEMENT reconnue — depuis la base,
+        // et non depuis l'annuaire local du poste, qui pouvait ressortir un nom
+        // ou un modèle périmés (GF-016). Aucune requête de plus : on se sert de
+        // la réponse déjà reçue. Les séparateurs sont ignorés des deux côtés :
+        // « ab123cd » reconnaît « AB-123-CD ».
+        const cible = normaliserPlaque(upper)
+        const exact = cible.length >= 4
+          ? data.find((v) => normaliserPlaque(v.licensePlate) === cible)
+          : undefined
+        if (exact) {
+          if (exact.clientName) setField('customerName', exact.clientName)
+          if (exact.model) setField('vehicleModel', exact.model)
+          setField('vehicleId', exact.id)
+        }
       } catch {
         // ignore
       }
@@ -277,14 +350,23 @@ export default function JobModal() {
 
   const handleAutoSlot = useCallback(() => {
     if (!form.repairType || !form.estimatedDuration) return
-    const slot = findBestSlot(jobs, mechanics, form.date || selectedDate, form.estimatedDuration)
+    // ── Le créneau proposé suit les horaires du GARAGE (§14-15) ──────────────
+    // `findBestSlot` était appelé sans bornes : il retombait donc sur 8 h – 18 h
+    // quoi qu'ait enregistré le garage. Un atelier ouvrant à 7 h se voyait
+    // proposer 8 h et perdait une heure chaque matin ; un atelier fermant à 16 h
+    // se voyait proposer un créneau APRÈS la fermeture, que la grille du
+    // planning refusait ensuite d'afficher.
+    const slot = findBestSlot(
+      jobs, mechanics, form.date || selectedDate, form.estimatedDuration,
+      bornesAtelier(horaires),
+    )
     if (slot) {
       setForm(prev => ({ ...prev, mechanicId: slot.mechanicId, startTime: slot.startTime }))
       toast.success(t.jmSlotFound)
     } else {
       toast.error(t.jmNoSlot)
     }
-  }, [form, jobs, mechanics, selectedDate, t])
+  }, [form, jobs, mechanics, horaires, selectedDate, t])
 
   const isValid =
     form.customerName &&
@@ -295,26 +377,38 @@ export default function JobModal() {
     form.estimatedDuration &&
     form.date
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!isValid) {
       toast.error(t.jmFillRequired)
       return
     }
-    // Save to client memory for future autocomplete
-    if (form.customerName) {
-      upsertClient({
-        customerName: form.customerName,
-        licensePlate: form.licensePlate,
-        vehicleModel: form.vehicleModel,
-      })
+    // L'annuaire d'autocomplétion n'est plus tenu ici : le SERVEUR matérialise
+    // le client et le véhicule à l'écriture de l'intervention (GF-015), et la
+    // recherche lit la base (GF-016). Écrire en plus dans le `localStorage`
+    // recréait la seconde vérité qu'on vient de supprimer.
+    // ── Le succès n'est plus annoncé avant la réponse du serveur (GF-024) ────
+    // `handleSubmit` était SYNCHRONE : `updateJob` (asynchrone) n'était ni
+    // attendu ni surveillé, le toast « Intervention mise à jour » partait tout
+    // de suite et la modale se fermait. Un refus — mécanicien introuvable, 404 —
+    // arrivait ensuite : la ligne revenait à sa place, sans que rien ne relie
+    // ce retour au message de succès déjà affiché.
+    //
+    // Le `try/catch` est indispensable : `addJob` RELANCE son erreur, et une
+    // promesse rejetée non gérée est transformée par le processus principal en
+    // surimpression plein écran indélébile.
+    try {
+      if (jobModalMode === 'edit' && editingJob) {
+        const ok = await updateJob(editingJob.id, form)
+        if (!ok) return   // le magasin a déjà affiché le motif du refus
+        toast.success(t.jmUpdated)
+      } else {
+        await addJob(form as Omit<Job, 'id' | 'createdAt'>)
+      }
+      closeModal()
+    } catch {
+      // Le magasin a déjà affiché l'erreur ; la modale reste ouverte pour que
+      // la saisie ne soit pas perdue.
     }
-    if (jobModalMode === 'edit' && editingJob) {
-      updateJob(editingJob.id, form)
-      toast.success(t.jmUpdated)
-    } else {
-      addJob(form as Omit<Job, 'id' | 'createdAt'>)
-    }
-    closeModal()
   }, [isValid, jobModalMode, editingJob, form, updateJob, addJob, closeModal, t])
 
   const handleDelete = useCallback(() => {
@@ -421,11 +515,11 @@ export default function JobModal() {
               value={form.customerName || ''}
               onChange={e => {
                 setField('customerName', e.target.value)
-                setClientSuggestions(searchClients(e.target.value))
+                chercherClient(e.target.value)
                 setShowClientSuggestions(true)
               }}
               onFocus={() => {
-                setClientSuggestions(searchClients(form.customerName || ''))
+                chercherClient(form.customerName || '')
                 setShowClientSuggestions(true)
               }}
               onBlur={() => setTimeout(() => setShowClientSuggestions(false), 150)}
@@ -436,14 +530,18 @@ export default function JobModal() {
               <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl bg-[#1a2235] border border-white/10 shadow-2xl overflow-hidden">
                 {clientSuggestions.map(c => (
                   <button
-                    key={c.customerName}
+                    key={c.cle}
                     type="button"
                     onMouseDown={e => {
                       e.preventDefault()
                       setField('customerName', c.customerName)
                       if (c.licensePlate) { setPlateSearch(c.licensePlate); setField('licensePlate', c.licensePlate) }
                       if (c.vehicleModel) setField('vehicleModel', c.vehicleModel)
+                      // Le véhicule CHOISI est propagé : sans lui, l'intervention
+                      // repartait en texte libre et perdait le rattachement.
+                      if (c.vehicleId) setField('vehicleId', c.vehicleId)
                       setShowClientSuggestions(false)
+                      viderClients()
                     }}
                     className="w-full flex items-start gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-white/[0.07] text-left transition-colors"
                   >
@@ -505,10 +603,15 @@ export default function JobModal() {
             </div>
           </div>
 
-          {/* Default parts suggestion */}
-          {jobModalMode === 'create' && (
-            <JobDefaultPartsSuggestion parts={defaultParts} />
-          )}
+          {/* ── Bloc « pièces habituelles » RETIRÉ (GF-040) ────────────────────
+              Il lisait `RepairTypePart`, une table qu'AUCUN code n'écrit : ni
+              route, ni écran, ni jeu de démonstration, ni sauvegarde. Le bloc
+              était donc structurellement vide sur toute installation, et
+              relançait une requête à chaque changement de type d'intervention
+              pour un résultat toujours nul. La route reste en place et sa
+              lecture est correcte : c'est le côté ÉCRITURE qui n'existe pas.
+              Rétablir la fonction demande un écran de paramétrage, pas ce
+              bloc. */}
 
           {/* Mechanic selection */}
           <div>
@@ -573,6 +676,13 @@ export default function JobModal() {
             onAutoSlot={handleAutoSlot}
             onResetDuration={() => setDurationOverridden(false)}
           />
+
+          {/* Pièces posées — seule voie de saisie de `JobPart`, dont dépendent la
+              rentabilité, la prévision de stock et l'historique du véhicule.
+              L'intervention doit exister : le stock est engagé sur SON identité. */}
+          {jobModalMode === 'edit' && editingJob && (
+            <JobPartsSection jobId={editingJob.id} />
+          )}
         </div>
         )}
 
@@ -584,6 +694,7 @@ export default function JobModal() {
           jobProfit={jobProfit}
           onDelete={handleDelete}
           onInspection={() => setIsInspectionOpen(true)}
+          onWorkOrder={() => setIsWorkOrderOpen(true)}
           onQuote={() => setInvoiceMode('quote')}
           onInvoice={() => setInvoiceMode('invoice')}
           onCancel={closeModal}
@@ -591,6 +702,25 @@ export default function JobModal() {
         />
       </div>
     </div>
+
+    {/* ── L'ORDRE DE RÉPARATION redevient atteignable (GF-040) ────────────────
+        Le module était complet — routes, signature du client, impression,
+        préfixe de numérotation réglable dans les paramètres — mais
+        `WorkOrderModal` n'était importé nulle part : aucun écran ne pouvait
+        l'ouvrir. Le catalogue de main-d'œuvre, dont il est le seul
+        consommateur, était par ricochet une saisie sans débouché. */}
+    {isWorkOrderOpen && editingJob && (
+      <WorkOrderModal
+        jobId={editingJob.id}
+        prefill={{
+          clientName: editingJob.customerName,
+          vehicleModel: editingJob.vehicleModel,
+          licensePlate: editingJob.licensePlate ?? undefined,
+          mechanicId: editingJob.mechanicId ?? undefined,
+        }}
+        onClose={() => setIsWorkOrderOpen(false)}
+      />
+    )}
 
     {invoiceMode && editingJob && (
       <QuoteInvoiceModal
@@ -616,6 +746,10 @@ export default function JobModal() {
     {isInspectionOpen && editingJob && (
       <InspectionModal
         jobId={editingJob.id}
+        vehicleId={editingJob.vehicleId ?? undefined}
+        // Affichage IMMÉDIAT depuis l'intervention ; la modale complète ensuite
+        // avec les relations réelles (fiche véhicule, kilométrage) résolues par
+        // /api/inspections/prefill.
         prefill={{
           clientName: editingJob.customerName,
           vehicleModel: editingJob.vehicleModel,

@@ -46,3 +46,26 @@ export const prisma = global.prisma ?? createClient()
 if (process.env.NODE_ENV !== 'production') {
   global.prisma = prisma
 }
+
+/**
+ * Accès TYPÉ aux modèles présents UNIQUEMENT dans le schéma serveur.
+ *
+ * Quatre modèles de facturation électronique — `GarageEInvoiceConnection`,
+ * `EInvoiceTransmission`, `EInvoiceEvent`, `EInvoiceAuditEvent` — n'existent que
+ * côté PostgreSQL : c'est la dérogation explicite déclarée dans le contrôle de
+ * parité des schémas (`desktop-schema-migration-parity.test.ts`). Le client
+ * exporté ci-dessus est typé sur le schéma DESKTOP, qui ne les connaît pas.
+ *
+ * Cette fonction rend l'accès explicite et localisé, au lieu de laisser chaque
+ * appelant faire son propre transtypage. Elle REFUSE de servir hors PostgreSQL :
+ * appeler ces modèles sur SQLite échouerait de toute façon à l'exécution, mais
+ * avec une erreur Prisma opaque plutôt qu'un message compréhensible.
+ */
+export function serverPrisma(): ServerPrismaClient {
+  if (!isPostgresDatabase()) {
+    throw new Error(
+      'Modèle réservé au déploiement serveur (PostgreSQL) : indisponible sur une installation poste.',
+    )
+  }
+  return prisma as unknown as ServerPrismaClient
+}

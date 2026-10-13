@@ -13,25 +13,36 @@ import {
 } from '@dnd-kit/core'
 import { useScheduleStore } from '@/store/schedule-store'
 import {
-  WORKSHOP_START_HOUR,
-  WORKSHOP_END_HOUR,
   SLOT_HEIGHT_PER_MINUTE,
   Job,
   REPAIR_TYPES,
+  repairConfig,
   Mechanic,
 } from '@/lib/types'
 import { timeToMinutes, minutesToTime, cn, formatDuration, jobsOverlap } from '@/lib/utils'
 import JobCard from './JobCard'
 import VehicleModal from './VehicleModal'
+import MechanicAvatar from './MechanicAvatar'
 import { UserX, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '@/hooks/useMediaQuery'
+import {
+  nombreColonnesVisibles,
+  fenetre,
+  deplacer,
+  reconcilier,
+  trancheVisible,
+} from '@/lib/planning/mechanic-window'
+import { FournisseurBornes, useBornesPlanning } from '@/lib/planning/bornes-contexte'
+import { bornesAtelier } from '@/lib/planning/horaires'
 
 const HOUR_HEIGHT = 60 * SLOT_HEIGHT_PER_MINUTE
-const BOARD_START = WORKSHOP_START_HOUR * 60
-const BOARD_END = WORKSHOP_END_HOUR * 60
-const TOTAL_MINUTES = BOARD_END - BOARD_START
-const BOARD_HEIGHT = TOTAL_MINUTES * SLOT_HEIGHT_PER_MINUTE
+
+// ── Les bornes ne sont plus des constantes de module (GF-021) ────────────────
+// `BOARD_START` / `BOARD_END` naissaient de `WORKSHOP_START_HOUR` et
+// `WORKSHOP_END_HOUR`, évaluées au chargement du fichier : la grille était donc
+// figée de 8 h à 18 h, quels que soient les horaires enregistrés par le garage.
+// Elles viennent maintenant du contexte, alimenté par les réglages.
 
 // ──────────────────────────────────────────────
 // Droppable column component
@@ -48,6 +59,13 @@ interface DroppableColumnProps {
 function DroppableColumn({ mechanic, jobs, conflictJobIds, onCellClick, onResizeStart, onOpenVehicle }: DroppableColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: `col-${mechanic.id}` })
   const colRef = useRef<HTMLDivElement>(null)
+  const { debut: BOARD_START, fin: BOARD_END } = useBornesPlanning()
+  const BOARD_HEIGHT = (BOARD_END - BOARD_START) * SLOT_HEIGHT_PER_MINUTE
+  // Les traits d'heure ne peuvent plus se calculer sur des bornes entières : une
+  // ouverture à 8 h 30 décale toute l'échelle d'une demi-heure.
+  const premiereHeurePleine = Math.ceil(BOARD_START / 60) * 60
+  const nbTraitsHeure = Math.floor((BOARD_END - premiereHeurePleine) / 60) + 1
+  const nbTraitsDemi = Math.floor((BOARD_END - BOARD_START) / 30)
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -59,7 +77,7 @@ function DroppableColumn({ mechanic, jobs, conflictJobIds, onCellClick, onResize
       const clamped = Math.min(Math.max(rawMinutes, BOARD_START), BOARD_END - 30)
       onCellClick(mechanic.id, clamped)
     },
-    [mechanic.id, onCellClick]
+    [mechanic.id, onCellClick, BOARD_START, BOARD_END]
   )
 
   return (
@@ -77,15 +95,15 @@ function DroppableColumn({ mechanic, jobs, conflictJobIds, onCellClick, onResize
       <div ref={setNodeRef} className="absolute inset-0" />
 
       {/* Hour gridlines */}
-      {Array.from({ length: WORKSHOP_END_HOUR - WORKSHOP_START_HOUR + 1 }, (_, i) => (
+      {Array.from({ length: Math.max(0, nbTraitsHeure) }, (_, i) => (
         <div
           key={`hour-${i}`}
           className="absolute left-0 right-0 border-t border-white/[0.05] pointer-events-none"
-          style={{ top: `${i * HOUR_HEIGHT}px` }}
+          style={{ top: `${(premiereHeurePleine + i * 60 - BOARD_START) * SLOT_HEIGHT_PER_MINUTE}px` }}
         />
       ))}
       {/* Half-hour gridlines */}
-      {Array.from({ length: (WORKSHOP_END_HOUR - WORKSHOP_START_HOUR) * 2 }, (_, i) => (
+      {Array.from({ length: Math.max(0, nbTraitsDemi) }, (_, i) => (
         <div
           key={`half-${i}`}
           className="absolute left-0 right-0 border-t border-white/[0.025] pointer-events-none"
@@ -131,6 +149,7 @@ function DroppableColumn({ mechanic, jobs, conflictJobIds, onCellClick, onResize
 // Current time indicator
 // ──────────────────────────────────────────────
 function CurrentTimeIndicator() {
+  const { debut: BOARD_START, fin: BOARD_END } = useBornesPlanning()
   const now = new Date()
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
   if (currentMinutes < BOARD_START || currentMinutes > BOARD_END) return null
@@ -164,16 +183,7 @@ function MechanicHeaderCell({
   const btn = touch ? 'gf-touch p-2' : 'p-1'
   return (
     <div className="flex items-center gap-1.5">
-      <div
-        className={cn(
-          'rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 transition-all',
-          touch ? 'w-9 h-9' : 'w-7 h-7',
-          mechanic.isAbsent && 'opacity-40 grayscale',
-        )}
-        style={{ backgroundColor: mechanic.color }}
-      >
-        {mechanic.avatar}
-      </div>
+      <MechanicAvatar mechanic={mechanic} size={touch ? 36 : 28} />
       <div className="flex-1 min-w-0">
         <p className={cn(
           'font-semibold text-xs truncate leading-tight',
@@ -220,6 +230,7 @@ export default function ScheduleBoard() {
   const {
     jobs,
     mechanics,
+    horaires,
     selectedDate,
     moveJob,
     openCreateModal,
@@ -227,6 +238,14 @@ export default function ScheduleBoard() {
     updateJobDurationLocal,
     updateJob,
   } = useScheduleStore()
+
+  // Bornes RÉELLES du garage. `bornesAtelier` retombe sur 8 h – 18 h tant que
+  // les réglages ne sont pas chargés, ou s'ils sont incohérents : la grille ne
+  // devient jamais vide ni inversée.
+  const bornes = useMemo(() => bornesAtelier(horaires), [horaires])
+  const BOARD_START = bornes.debut
+  const BOARD_END = bornes.fin
+  const BOARD_HEIGHT = (BOARD_END - BOARD_START) * SLOT_HEIGHT_PER_MINUTE
 
   const [activeJob, setActiveJob] = useState<Job | null>(null)
   const [vehiclePlate, setVehiclePlate] = useState<string | null>(null)
@@ -247,15 +266,17 @@ export default function ScheduleBoard() {
       const newDuration = Math.max(15, startDuration + deltaMins)
       updateJobDurationLocal(jobId, newDuration)
     }
-    function handleMouseUp() {
+    async function handleMouseUp() {
       if (!resizeRef.current) return
       const { jobId } = resizeRef.current
       const job = jobs.find(j => j.id === jobId)
-      if (job) {
-        updateJob(jobId, { estimatedDuration: job.estimatedDuration })
-        toast.success(`Durée modifiée : ${formatDuration(job.estimatedDuration)}`)
-      }
       resizeRef.current = null
+      if (!job) return
+      // Le succès attend le verdict du serveur (GF-024) : la durée était
+      // annoncée « modifiée » avant même la requête, et un refus ramenait
+      // silencieusement la carte à sa taille d'origine.
+      const ok = await updateJob(jobId, { estimatedDuration: job.estimatedDuration })
+      if (ok) toast.success(`Durée modifiée : ${formatDuration(job.estimatedDuration)}`)
     }
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
@@ -295,31 +316,87 @@ export default function ScheduleBoard() {
     return map
   }, [dayJobs, mechanics])
 
-  // ── Mobile : un seul mécanicien à la fois (portrait/téléphone) ─────────────
-  // Sous md, entasser 4 colonnes sur ~360px les rend inutilisables. On affiche
-  // donc un mécanicien à la fois via un sélecteur. L'état local persiste au
-  // changement d'orientation (le composant ne se démonte pas) → le mécanicien
-  // sélectionné est conservé, conformément à l'attendu.
+  // ── Un ARCHIVÉ garde sa colonne tant qu'il lui reste du travail (GF-040) ───
+  // Le planning répartit les interventions par mécanicien CONNU : celles d'un
+  // mécanicien absent de la liste ne trouvaient plus de colonne et
+  // disparaissaient de l'écran. Le magasin charge donc aussi les archivés —
+  // mais leur colonne n'a de sens que s'il y reste des interventions ce
+  // jour-là, sinon on encombrerait la grille de colonnes vides pour des gens
+  // partis. Un archivé ne réapparaît jamais spontanément : il s'efface le jour
+  // où son dernier travail est terminé ou déplacé.
+  const mecaniciensAffichables = useMemo(
+    () => mechanics.filter(m => !m.archivedAt || (jobsByMechanic[m.id]?.length ?? 0) > 0),
+    [mechanics, jobsByMechanic],
+  )
+
+  // ── Fenêtre de mécaniciens visibles ────────────────────────────────────────
+  //
+  // Le planning rendait TOUS les mécaniciens du garage, chacun en `flex-1` :
+  // à 10 les colonnes tombent sous 180 px, à 20 sous 90 px, à 50 sous 40 px.
+  // Il n'y avait donc aucune limite codée en dur à supprimer — c'était le
+  // contraire, aucune limite du tout, et le produit était de fait plafonné à
+  // quatre ou cinq mécaniciens sans que rien ne le dise.
+  //
+  // Le nombre de colonnes est désormais CALCULÉ à partir de la largeur réelle
+  // (voir src/lib/planning/mechanic-window.ts) et l'on navigue par groupes.
   const isMobile = useIsMobile()
-  const [selectedMechanicId, setSelectedMechanicId] = useState<string | null>(null)
+  const boardRef = useRef<HTMLDivElement>(null)
+  const [largeurPlanning, setLargeurPlanning] = useState(0)
+
+  // Largeur MESURÉE, pas devinée : un point de rupture CSS ne connaît pas la
+  // place réellement disponible (barre latérale ouverte/fermée, fenêtre Electron
+  // redimensionnée, écran secondaire).
+  useEffect(() => {
+    const el = boardRef.current
+    if (!el) return
+    setLargeurPlanning(el.getBoundingClientRect().width)
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(entries => {
+      for (const e of entries) setLargeurPlanning(e.contentRect.width)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const colonnesVisibles = useMemo(
+    () => nombreColonnesVisibles(largeurPlanning, mecaniciensAffichables.length),
+    [largeurPlanning, mecaniciensAffichables.length],
+  )
+
+  const [debutFenetre, setDebutFenetre] = useState(0)
+
+  // Ancres = identifiants de la fenêtre PRÉCÉDENTE. Elles permettent de suivre
+  // les mêmes PERSONNES quand la liste change sous les pieds de l'utilisateur
+  // (un collègue archive un mécanicien depuis un autre poste) au lieu de
+  // conserver un index qui désignerait soudain quelqu'un d'autre.
+  const ancresRef = useRef<string[]>([])
 
   useEffect(() => {
-    if (mechanics.length === 0) { if (selectedMechanicId !== null) setSelectedMechanicId(null); return }
-    if (!selectedMechanicId || !mechanics.some(m => m.id === selectedMechanicId)) {
-      setSelectedMechanicId(mechanics[0].id)
-    }
-  }, [mechanics, selectedMechanicId])
+    setDebutFenetre(d => reconcilier(d, ancresRef.current, mecaniciensAffichables.map(m => m.id), colonnesVisibles))
+  }, [mecaniciensAffichables, colonnesVisibles])
 
-  const selectedMechanic = mechanics.find(m => m.id === selectedMechanicId) ?? mechanics[0] ?? null
-  const visibleMechanics = isMobile && selectedMechanic ? [selectedMechanic] : mechanics
+  const vue = fenetre(debutFenetre, colonnesVisibles, mecaniciensAffichables.length)
+  const visibleMechanics = useMemo(
+    () => trancheVisible(mecaniciensAffichables, debutFenetre, colonnesVisibles),
+    [mecaniciensAffichables, debutFenetre, colonnesVisibles],
+  )
 
-  const stepMechanic = useCallback((dir: 1 | -1) => {
-    if (mechanics.length === 0) return
-    const idx = mechanics.findIndex(m => m.id === selectedMechanicId)
-    const base = idx === -1 ? 0 : idx
-    const next = (base + dir + mechanics.length) % mechanics.length
-    setSelectedMechanicId(mechanics[next].id)
-  }, [mechanics, selectedMechanicId])
+  useEffect(() => { ancresRef.current = visibleMechanics.map(m => m.id) }, [visibleMechanics])
+
+  // Navigation par GROUPE. Aucune écoute de la molette ni de geste horizontal :
+  // changer de mécaniciens doit rester une action INTENTIONNELLE, jamais la
+  // conséquence d'un défilement vertical ordinaire ou d'un trackpad un peu
+  // oblique (§31-35).
+  const naviguer = useCallback((dir: 1 | -1) => {
+    setDebutFenetre(d => deplacer(d, colonnesVisibles, mecaniciensAffichables.length, dir))
+  }, [colonnesVisibles, mecaniciensAffichables.length])
+
+  // Sélection directe (bandeau mobile) : on recale la fenêtre sur la personne
+  // choisie — l'index n'est qu'un moyen d'y arriver, jamais une identité.
+  const cadrerSur = useCallback((mechanicId: string) => {
+    const idx = mechanics.findIndex(m => m.id === mechanicId)
+    if (idx !== -1) setDebutFenetre(idx)
+  }, [mechanics])
 
   // Bascule d'absence + rappel de redistribution (logique partagée desktop/mobile).
   const handleToggleAbsence = useCallback((mechanic: Mechanic) => {
@@ -335,7 +412,7 @@ export default function ScheduleBoard() {
   }, [])
 
   const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
+    async (event: DragEndEvent) => {
       setActiveJob(null)
       const { active, over, delta } = event
       if (!over) return
@@ -359,11 +436,18 @@ export default function ScheduleBoard() {
 
       if (targetMechanicId !== job.mechanicId || newStartTime !== job.startTime) {
         const mechName = mechanics.find(m => m.id === targetMechanicId)?.name ?? ''
-        moveJob(job.id, targetMechanicId, newStartTime)
-        toast.success(`${job.customerName} → ${mechName} à ${newStartTime}`)
+        // Le déplacement n'est confirmé qu'une fois ACCEPTÉ (GF-024). Il était
+        // annoncé avant l'aller-retour : sur un refus, la carte revenait à sa
+        // place d'origine juste après un message de succès.
+        const ok = await moveJob(job.id, targetMechanicId, newStartTime)
+        if (ok) toast.success(`${job.customerName} → ${mechName} à ${newStartTime}`)
       }
     },
-    [mechanics, moveJob]
+    // Les bornes DOIVENT figurer ici : elles arrivent après coup (les horaires
+    // sont chargés en asynchrone). Sans elles, le glisser-déposer continuait de
+    // borner sur 8 h – 18 h une fois les vrais horaires connus — précisément le
+    // défaut que la grille venait de corriger (GF-021).
+    [mechanics, moveJob, BOARD_START, BOARD_END]
   )
 
   const handleCellClick = useCallback(
@@ -377,54 +461,94 @@ export default function ScheduleBoard() {
     [openCreateModal, selectedDate]
   )
 
+  // Échelle horaire : on part de la première heure PLEINE contenue dans les
+  // bornes — une ouverture à 8 h 30 ne doit pas produire un libellé « 8 h » au
+  // sommet d'une colonne qui commence une demi-heure plus tard.
+  const premiereHeurePleine = Math.ceil(bornes.debut / 60)
   const hours = Array.from(
-    { length: WORKSHOP_END_HOUR - WORKSHOP_START_HOUR + 1 },
-    (_, i) => WORKSHOP_START_HOUR + i
+    { length: Math.max(1, Math.floor(bornes.fin / 60) - premiereHeurePleine + 1) },
+    (_, i) => premiereHeurePleine + i,
   )
 
   return (
-    <>
+    <FournisseurBornes value={bornes}>
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex flex-col h-full bg-[#111827] rounded-xl shadow-sm border border-white/[0.07] overflow-hidden">
+      <div ref={boardRef} className="flex flex-col h-full bg-[#111827] rounded-xl shadow-sm border border-white/[0.07] overflow-hidden">
 
-        {/* ── Sélecteur de mécanicien (mobile / portrait uniquement) ── */}
-        {isMobile && mechanics.length > 1 && (
-          <div className="flex items-center gap-1 px-1.5 py-2 border-b border-white/[0.07] bg-[#0f1629]/80">
+        {/* ── Barre de navigation des mécaniciens ──────────────────────────────
+            Les flèches sont EN HAUT À GAUCHE et EN HAUT À DROITE du planning, et
+            n'en bougent jamais — y compris quand on change de groupe, de date ou
+            de taille de fenêtre. Elles occupent leur propre bande plutôt que de
+            flotter au-dessus des colonnes : elles ne peuvent ainsi masquer ni un
+            avatar, ni un nom, ni une carte d'intervention, et l'alignement
+            en-tête ⇄ colonnes reste intact.
+
+            La barre n'apparaît que si tout ne tient pas à l'écran : avec quatre
+            mécaniciens sur un écran large, il n'y a rien à parcourir. */}
+        {(vue.precedent || vue.suivant) && (
+          <div className="flex items-center gap-2 px-1.5 py-1.5 border-b border-white/[0.07] bg-[#0f1629]/80">
             <button
-              onClick={() => stepMechanic(-1)}
-              aria-label="Mécanicien précédent"
-              className="gf-touch flex items-center justify-center w-9 h-9 rounded-md text-slate-400 hover:bg-white/10 flex-shrink-0"
+              type="button"
+              onClick={() => naviguer(-1)}
+              disabled={!vue.precedent}
+              aria-label="Mécaniciens précédents"
+              title="Mécaniciens précédents"
+              className={cn(
+                'flex items-center justify-center rounded-md flex-shrink-0 transition-colors',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70 focus-visible:ring-offset-1 focus-visible:ring-offset-[#0f1629]',
+                isMobile ? 'gf-touch w-9 h-9' : 'w-7 h-7',
+                vue.precedent
+                  ? 'text-slate-400 hover:bg-white/10 hover:text-slate-200'
+                  : 'text-slate-700 cursor-not-allowed',
+              )}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Mécaniciens">
-              {mechanics.map(m => (
-                <button
-                  key={m.id}
-                  role="tab"
-                  onClick={() => setSelectedMechanicId(m.id)}
-                  aria-selected={m.id === selectedMechanicId}
-                  className={cn(
-                    'flex items-center gap-1.5 pl-1 pr-2.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors flex-shrink-0',
-                    m.id === selectedMechanicId
-                      ? 'bg-blue-600/20 text-blue-300 border-blue-500/40'
-                      : 'text-slate-400 border-white/10 hover:bg-white/5',
-                  )}
-                >
-                  <span
-                    className={cn('w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white flex-shrink-0', m.isAbsent && 'opacity-40 grayscale')}
-                    style={{ backgroundColor: m.color }}
-                  >
-                    {m.avatar}
-                  </span>
-                  <span className="max-w-[120px] truncate">{m.name}</span>
-                </button>
-              ))}
-            </div>
+
+            {/* Bandeau de sélection directe (mobile) ou repère de groupe. */}
+            {isMobile ? (
+              <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Mécaniciens">
+                {mechanics.map(m => {
+                  const visible = visibleMechanics.some(v => v.id === m.id)
+                  return (
+                    <button
+                      key={m.id}
+                      role="tab"
+                      onClick={() => cadrerSur(m.id)}
+                      aria-selected={visible}
+                      className={cn(
+                        'flex items-center gap-1.5 pl-1 pr-2.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors flex-shrink-0',
+                        visible
+                          ? 'bg-blue-600/20 text-blue-300 border-blue-500/40'
+                          : 'text-slate-400 border-white/10 hover:bg-white/5',
+                      )}
+                    >
+                      <MechanicAvatar mechanic={m} size={20} />
+                      <span className="max-w-[120px] truncate">{m.name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="flex-1 text-center text-[11px] text-slate-500 font-medium select-none">
+                Mécaniciens {vue.debut + 1}–{vue.fin} sur {mecaniciensAffichables.length}
+              </p>
+            )}
+
             <button
-              onClick={() => stepMechanic(1)}
-              aria-label="Mécanicien suivant"
-              className="gf-touch flex items-center justify-center w-9 h-9 rounded-md text-slate-400 hover:bg-white/10 flex-shrink-0"
+              type="button"
+              onClick={() => naviguer(1)}
+              disabled={!vue.suivant}
+              aria-label="Mécaniciens suivants"
+              title="Mécaniciens suivants"
+              className={cn(
+                'flex items-center justify-center rounded-md flex-shrink-0 transition-colors',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70 focus-visible:ring-offset-1 focus-visible:ring-offset-[#0f1629]',
+                isMobile ? 'gf-touch w-9 h-9' : 'w-7 h-7',
+                vue.suivant
+                  ? 'text-slate-400 hover:bg-white/10 hover:text-slate-200'
+                  : 'text-slate-700 cursor-not-allowed',
+              )}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -437,6 +561,10 @@ export default function ScheduleBoard() {
           {visibleMechanics.map(mechanic => (
             <div
               key={mechanic.id}
+              // Point d'ancrage STABLE pour les tests de navigateur : compter les
+              // colonnes par une classe de style les ferait échouer au premier
+              // ajustement visuel, ce qui pousse à relâcher les assertions.
+              data-gf-mechanic-column={mechanic.id}
               className="flex-1 min-w-0 px-2 py-2.5 border-r border-white/[0.07] last:border-r-0"
             >
               <MechanicHeaderCell
@@ -461,7 +589,7 @@ export default function ScheduleBoard() {
                   key={h}
                   className="absolute left-0 w-full flex items-start justify-end pr-2"
                   style={{
-                    top: `${(h - WORKSHOP_START_HOUR) * HOUR_HEIGHT}px`,
+                    top: `${(h * 60 - BOARD_START) * SLOT_HEIGHT_PER_MINUTE}px`,
                     height: `${HOUR_HEIGHT}px`,
                   }}
                 >
@@ -497,8 +625,8 @@ export default function ScheduleBoard() {
           <div
             className="rounded-lg shadow-2xl px-3 py-2 pointer-events-none border border-white/20 opacity-90"
             style={{
-              backgroundColor: REPAIR_TYPES[activeJob.repairType].color + '25',
-              borderLeftColor: REPAIR_TYPES[activeJob.repairType].color,
+              backgroundColor: repairConfig(activeJob.repairType).color + '25',
+              borderLeftColor: repairConfig(activeJob.repairType).color,
               borderLeftWidth: '3px',
               width: '150px',
               backdropFilter: 'blur(8px)',
@@ -507,7 +635,7 @@ export default function ScheduleBoard() {
             <p className="text-xs font-bold text-white truncate">{activeJob.customerName}</p>
             <p className="text-[10px] text-slate-300 truncate">{activeJob.vehicleModel}</p>
             <p className="text-[10px] text-slate-400">
-              {REPAIR_TYPES[activeJob.repairType].icon} {formatDuration(activeJob.estimatedDuration)}
+              {repairConfig(activeJob.repairType).icon} {formatDuration(activeJob.estimatedDuration)}
             </p>
           </div>
         ) : null}
@@ -520,6 +648,7 @@ export default function ScheduleBoard() {
         onClose={() => setVehiclePlate(null)}
       />
     )}
-    </>
+    </FournisseurBornes>
   )
 }
+

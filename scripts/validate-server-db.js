@@ -29,11 +29,14 @@ function fail(msg) {
   process.exit(1)
 }
 
+// Les lanceurs de node_modules/.bin ne sont pas exécutables directement :
+// sous Windows ce sont des `.cmd`, et depuis Node 18.20/20.12 `execFile` les
+// REFUSE (EINVAL) sauf à activer `shell: true` — ce qui rouvrirait les questions
+// de découpage d'arguments. On exécute donc l'entrée JS de chaque CLI avec le
+// Node courant : portable, sans shell, et insensible à PATHEXT.
 function run(args) {
-  const bin = path.join(
-    root, 'node_modules', '.bin', process.platform === 'win32' ? 'prisma.cmd' : 'prisma'
-  )
-  return execFileSync(bin, args, {
+  const cli = require.resolve('prisma/build/index.js')
+  return execFileSync(process.execPath, [cli, ...args], {
     cwd: root,
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, DIRECT_URL: process.env.DIRECT_URL || process.env.DATABASE_URL },
@@ -100,6 +103,26 @@ async function main() {
     }
   } catch (err) {
     fail(`migrate status a échoué : ${err.message}`)
+  }
+
+  // ── 1bis. Migration JSON monétaire v1 → v2 (exécution RÉELLE) ───────────────
+  // Fait partie du déploiement standard (docs/MIGRATION-MONEY.md) : la lancer
+  // ici prouve qu'elle s'exécute de bout en bout (base vide → 0 document,
+  // base existante → migration effective ou ÉCHEC bloquant).
+  console.log('▶  Migration JSON monétaire v1 → v2 (scripts/migrate-money-json.ts)…')
+  try {
+    // Même raison que `run()` ci-dessus : entrée JS + Node courant, jamais le
+    // lanceur .bin (`.cmd` refusé par execFile depuis Node 18.20/20.12).
+    const tsNodeCli = require.resolve('ts-node/dist/bin.js')
+    const out = execFileSync(
+      process.execPath,
+      [tsNodeCli, '--project', 'tsconfig.scripts.json', 'scripts/migrate-money-json.ts'],
+      { cwd: root, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env } }
+    ).toString()
+    process.stdout.write(out)
+  } catch (err) {
+    const detail = err.stderr ? err.stderr.toString() : err.message
+    fail(`Migration JSON v2 échouée : ${detail}`)
   }
 
   // ── 2. Smoke test CRUD via le client serveur ────────────────────────────────

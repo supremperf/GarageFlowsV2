@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { Minus, Maximize2, Minimize2, X } from 'lucide-react'
+import { useElectronApi } from '@/lib/use-electron-api'
 
 export default function WindowControls() {
   const [isMaximized,   setIsMaximized]   = useState(false)
   const [isFullscreen,  setIsFullscreen]  = useState(false)
 
-  const winAPI =
-    typeof window !== 'undefined'
-      ? (window as any).electronAPI?.windowAPI
-      : undefined
+  // Lu APRÈS montage (voir useElectronApi) : `winAPI` pilote un `return null`,
+  // donc le lire pendant le rendu faisait diverger le premier rendu client du
+  // HTML serveur — le Header étant présent sur toutes les pages authentifiées.
+  const winAPI = useElectronApi<any>()?.windowAPI
 
   useEffect(() => {
     if (!winAPI) return

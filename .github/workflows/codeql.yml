@@ -1,0 +1,54 @@
+# SAST — GitHub CodeQL (JavaScript/TypeScript).
+# Ferme AUD-048 (« aucune analyse statique de sécurité »). Analyse le code à
+# chaque PR, à chaque push sur les branches principales, et une fois par semaine
+# (les bases CodeQL évoluent — un scan planifié rattrape les nouvelles règles).
+#
+# Aucune alerte n'est supprimée pour « faire du vert » : les faux positifs se
+# traitent via des dismissals justifiés dans l'onglet Security, jamais en retirant
+# la règle.
+name: CodeQL
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '27 3 * * 1' # lundi 03:27 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write # requis pour publier les résultats CodeQL
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # security-extended ajoute des requêtes de sécurité au-delà du set par
+          # défaut (injection, path traversal, SSRF, crypto faible, etc.).
+          queries: security-extended
+
+      # Projet Next.js/TypeScript : pas de compilation à piloter pour CodeQL JS/TS
+      # (analyse directe des sources). Autobuild reste sûr et no-op ici.
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:${{ matrix.language }}'

@@ -40,6 +40,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ── Desktop export ────────────────────────────────────────────────────────
   exportToDesktop:    () => ipcRenderer.invoke('app:desktop-export-now'),
   openDesktopExports: () => ipcRenderer.invoke('app:open-desktop-export'),
+
+  /**
+   * Ouvre un lien EXTERNE dans le navigateur du système (GF-025).
+   *
+   * Sans ce pont, un `<a target="_blank">` vers un site hors de la liste blanche
+   * ne faisait RIEN dans l'application packagée : le gestionnaire d'ouverture
+   * refuse tout le reste. Les 135 liens « Site de la plateforme » du catalogue
+   * de facturation électronique — dont aucun hôte n'est dans la liste — étaient
+   * donc tous morts, sans le moindre message.
+   *
+   * Le processus principal reste seul juge : il n'ouvre qu'en HTTPS et rend un
+   * motif de refus. Ce pont n'élargit pas la liste blanche.
+   */
+  openExternal: (url) => ipcRenderer.invoke('app:open-external', url),
   onDesktopExportDone:(cb) => {
     ipcRenderer.on('app:desktop-export-done', (_e, info) => cb(info))
     return () => ipcRenderer.removeAllListeners('app:desktop-export-done')

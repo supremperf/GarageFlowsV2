@@ -1,7 +1,14 @@
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 
 const prisma = new PrismaClient()
+
+// Mot de passe du compte démo : JAMAIS de secret en clair dans le dépôt.
+// Fourni via SEED_ADMIN_PASSWORD, sinon généré aléatoirement et affiché UNE fois.
+const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD
+const seedAdminPassword = SEED_ADMIN_PASSWORD || crypto.randomBytes(12).toString('base64url')
+const seedPasswordWasGenerated = !SEED_ADMIN_PASSWORD
 
 async function main() {
   console.log('🌱 Seeding demo garage...')
@@ -29,12 +36,12 @@ async function main() {
   // Create owner account.
   // NOTE: l'authentification recherche l'email en minuscules — on stocke donc
   // l'email en minuscules pour que le compte démo soit connectable.
-  const hashedPassword = await bcrypt.hash('AdminMDPgarageFlow2026..Flow', 12)
+  const hashedPassword = await bcrypt.hash(seedAdminPassword, 12)
   await prisma.user.create({
     data: {
       email: 'admingarageflow@admin.fr',
       password: hashedPassword,
-      name: 'Admin GarageFlow',
+      name: 'Admin GarageFlows',
       role: 'OWNER',
       garageId: garage.id,
     },
@@ -125,7 +132,14 @@ async function main() {
   }
 
   console.log(`✅ Seeded garage "${garage.name}" with ${mechanics.length} mechanics and ${sampleJobs.length} jobs.`)
-  console.log('   Login: AdminGarageFlow@admin.fr / AdminMDPgarageFlow2026..Flow')
+  console.log('   Login: admingarageflow@admin.fr')
+  if (seedPasswordWasGenerated) {
+    // Affiché UNE fois (mot de passe généré). Pour un mot de passe fixe et
+    // reproductible, définissez SEED_ADMIN_PASSWORD avant `npm run db:seed`.
+    console.log(`   Mot de passe (généré, à noter) : ${seedAdminPassword}`)
+  } else {
+    console.log('   Mot de passe : valeur de $SEED_ADMIN_PASSWORD')
+  }
 }
 
 main()

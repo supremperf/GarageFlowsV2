@@ -2,13 +2,20 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
-import { calcTotalHT, calcTotalTTC } from '@/lib/billing'
+import { can } from '@/lib/authz'
+import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
+import { lineCents, fromCents, fromScaled } from '@/lib/money'
+import { linesToEuros } from '@/lib/money-db'
 import { subMonths, format, startOfMonth, endOfMonth } from 'date-fns'
 
 // GET /api/finance?months=6
 // Returns monthly revenue, margins, quote→invoice conversion rate
 export const GET = withAuth(async (req) => {
   const session = await requireSession()
+  // §Autorisation — données financières réservées à financial:read (OWNER/MANAGER).
+  if (!can(session.user.role, 'financial:read')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const { searchParams } = new URL(req.url)
   const monthCount = Math.min(24, Math.max(1, Number(searchParams.get('months') ?? '6')))
   const garageId = session.user.garageId
@@ -20,30 +27,28 @@ export const GET = withAuth(async (req) => {
     return { label: format(d, 'MMM yyyy'), start: startOfMonth(d), end: endOfMonth(d) }
   })
 
-  const [garage, allInvoices, allQuotes, allJobParts] = await Promise.all([
+  const [garage, allInvoices, allQuotes] = await Promise.all([
     prisma.garage.findUnique({ where: { id: garageId } }),
 
     prisma.invoice.findMany({
       where: { garageId, createdAt: { gte: months[0].start } },
       include: { lines: true },
-    }),
+    }).then(rows => rows.map(i => ({ ...i, lines: linesToEuros(i.lines) }))), // entiers exacts -> vue euros
 
     prisma.quote.findMany({
       where: { garageId, createdAt: { gte: months[0].start } },
       select: { id: true, status: true, createdAt: true },
     }),
-
-    prisma.jobPart.findMany({
-      where: {
-        job: { garageId, date: { gte: format(months[0].start, 'yyyy-MM-dd') } },
-      },
-      // Include the job date: the per-month bucketing below reads jp.job.date, so
-      // without this relation partsCost was always 0 and every margin read 100%.
-      include: { part: { select: { unitCost: true } }, job: { select: { date: true } } },
-    }),
   ])
 
-  const hourlyRate = garage?.hourlyRate ?? 60
+  // Le garage de la session est introuvable : aucune donnée financière n'a de
+  // sens dans ce cas. Le repli précédent — `: 60` — présentait des marges et une
+  // valorisation d'heures calculées sur un tarif que personne n'avait choisi,
+  // sans que rien à l'écran ne le signale.
+  if (!garage) {
+    return NextResponse.json({ error: 'Garage introuvable' }, { status: 404 })
+  }
+  const hourlyRate = fromScaled(garage.hourlyRateTenThousandths)
 
   const monthlyStats = months.map(({ label, start, end }) => {
     const invoices = allInvoices.filter(inv =>
@@ -55,13 +60,18 @@ export const GET = withAuth(async (req) => {
     const caTTC       = paidInvoices.reduce((s, inv) => s + calcTotalTTC(inv.lines, inv.taxRate), 0)
     const tva         = caTTC - caHT
 
-    // Parts-only margin (labor cost not deducted — labeled "Marge pièces" in UI)
-    const partsCost   = allJobParts
-      .filter(jp => {
-        const jobDate = (jp as any).job?.date
-        return jobDate && jobDate >= format(start, 'yyyy-MM-dd') && jobDate <= format(end, 'yyyy-MM-dd')
-      })
-      .reduce((s, jp) => s + (jp.part?.unitCost ?? 0) * jp.quantity, 0)
+    // Marge pièces — POPULATIONS COHÉRENTES : le coût des pièces est calculé sur
+    // EXACTEMENT les mêmes factures payées (même bucketing par date de facture)
+    // qui composent le CA. On somme le coût (unitCost) des lignes NON main-d'œuvre
+    // de ces factures. Auparavant le coût provenait de TOUTES les pièces
+    // consommées (jobPart) filtrées par date d'intervention — population et
+    // fenêtre temporelles différentes du CA (pièces d'un job non encore
+    // facturé/payé), rendant la marge incohérente (jusqu'à négative ou > 100 %).
+    // NB : la main-d'œuvre n'est pas déduite (marge « pièces » brute, par intention).
+    const partsCost   = paidInvoices.reduce((s, inv) =>
+      s + inv.lines
+        .filter(l => !l.isLabor)
+        .reduce((ls, l) => ls + fromCents(lineCents(l.unitCost, l.quantity)), 0), 0)
 
     const quotesCreated  = allQuotes.filter(q => new Date(q.createdAt) >= start && new Date(q.createdAt) <= end)
     const quotesAccepted = quotesCreated.filter(q => ['accepted', 'converted'].includes(q.status))
@@ -73,11 +83,11 @@ export const GET = withAuth(async (req) => {
 
     return {
       label,
-      caHT:            Math.round(caHT * 100) / 100,
-      caTTC:           Math.round(caTTC * 100) / 100,
-      tva:             Math.round(tva * 100) / 100,
+      caHT:            roundCents(caHT),
+      caTTC:           roundCents(caTTC),
+      tva:             roundCents(tva),
       invoiceCount:    paidInvoices.length,
-      partsCost:       Math.round(partsCost * 100) / 100,
+      partsCost:       roundCents(partsCost),
       margin,
       quotesCreated:   quotesCreated.length,
       quotesAccepted:  quotesAccepted.length,
@@ -100,9 +110,9 @@ export const GET = withAuth(async (req) => {
   return NextResponse.json({
     months: monthlyStats,
     totals: {
-      caHT:            Math.round(totalCAHT * 100) / 100,
-      caTTC:           Math.round(totalCATTC * 100) / 100,
-      tva:             Math.round(totalTVA * 100) / 100,
+      caHT:            roundCents(totalCAHT),
+      caTTC:           roundCents(totalCATTC),
+      tva:             roundCents(totalTVA),
       avgMargin:       Math.round(avgMargin),
       globalConversion,
       invoiceCount:    monthlyStats.reduce((s, m) => s + m.invoiceCount, 0),

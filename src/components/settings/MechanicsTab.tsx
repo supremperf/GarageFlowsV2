@@ -1,8 +1,10 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { Save, Plus, Trash2, Edit2, Loader2, Check, Palette } from 'lucide-react'
+import { Save, Plus, Trash2, Edit2, Loader2, Check, Palette, Archive, ArchiveRestore } from 'lucide-react'
 import type { MechanicRecord } from './types'
+import MechanicAvatar from '@/components/MechanicAvatar'
+import MechanicAvatarField from './MechanicAvatarField'
 
 export const MECHANIC_COLORS = [
   '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899',
@@ -26,9 +28,20 @@ interface Props {
   setNewMech: React.Dispatch<React.SetStateAction<NewMechState>>
   showAddForm: boolean
   setShowAddForm: React.Dispatch<React.SetStateAction<boolean>>
+  adding?: boolean
   onAdd: () => void
   onUpdate: () => void
   onDelete: (id: string, name: string) => void
+  /** Retire du planning en conservant l'historique (GF-040). */
+  onArchive: (id: string, name: string) => void
+  /** Remet un mécanicien archivé dans le planning. */
+  onUnarchive: (id: string, name: string) => void
+  /**
+   * La photo s'enregistre HORS du formulaire : sans rechargement de la liste,
+   * la vignette de la ligne gardait l'ancienne photo jusqu'au prochain passage
+   * sur l'onglet — l'écran affichait donc deux vérités en même temps.
+   */
+  onAvatarChanged: () => void
 }
 
 function toggleSpecialty(arr: string[], sp: string): string[] {
@@ -40,7 +53,8 @@ export function MechanicsTab({
   editingMech, setEditingMech,
   newMech, setNewMech,
   showAddForm, setShowAddForm,
-  onAdd, onUpdate, onDelete,
+  adding = false,
+  onAdd, onUpdate, onDelete, onArchive, onUnarchive, onAvatarChanged,
 }: Props) {
   return (
     <div className="space-y-4">
@@ -107,13 +121,14 @@ export function MechanicsTab({
             </div>
           </div>
           <div className="flex gap-2 pt-1">
-            <button onClick={onAdd}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors">
-              <Check className="w-3.5 h-3.5" />
-              Confirmer
+            <button onClick={onAdd} disabled={adding || !newMech.name.trim()}
+              aria-busy={adding}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+              {adding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+              {adding ? 'Création…' : 'Confirmer'}
             </button>
-            <button onClick={() => setShowAddForm(false)}
-              className="px-4 py-2 rounded-lg border border-white/10 text-slate-400 text-xs hover:bg-white/[0.05] transition-colors">
+            <button onClick={() => setShowAddForm(false)} disabled={adding}
+              className="px-4 py-2 rounded-lg border border-white/10 text-slate-400 text-xs hover:bg-white/[0.05] transition-colors disabled:opacity-60">
               Annuler
             </button>
           </div>
@@ -139,6 +154,14 @@ export function MechanicsTab({
               return (
                 <div key={m.id} className="bg-white/[0.04] border border-blue-500/30 rounded-xl p-4 space-y-3">
                   <p className="text-xs font-semibold text-blue-400 uppercase tracking-wide">Modifier</p>
+                  {/* La photo s'enregistre IMMÉDIATEMENT, indépendamment du bouton
+                      « Enregistrer » : c'est un envoi de fichier, pas un champ de
+                      formulaire. La lier au reste obligerait à re-téléverser
+                      l'image si l'enregistrement du nom échouait. */}
+                  <MechanicAvatarField
+                    mechanic={editingMech}
+                    onChange={avatarUrl => { setEditingMech({ ...editingMech, avatarUrl }); onAvatarChanged() }}
+                  />
                   <div>
                     <label className="block text-xs text-slate-400 mb-1">Nom</label>
                     <input
@@ -197,12 +220,7 @@ export function MechanicsTab({
 
             return (
               <div key={m.id} className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl hover:border-white/10 transition-colors">
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-md"
-                  style={{ backgroundColor: m.color }}
-                >
-                  {m.avatar}
-                </div>
+                <MechanicAvatar mechanic={m} size={40} className="shadow-md" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white">{m.name}</p>
                   {specs.length > 0 && (
@@ -217,6 +235,31 @@ export function MechanicsTab({
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
+                  {/* ── L'ARCHIVAGE était une impasse (GF-040) ────────────────
+                      La suppression d'un mécanicien qui porte des
+                      interventions est refusée en 409, avec le message
+                      « Archivez-le : il sortira du planning en conservant ses
+                      données. » — vers un bouton qui n'existait nulle part.
+                      La route `PATCH { archived: true }` était pourtant écrite
+                      et fonctionnelle. */}
+                  {!m.archivedAt && (
+                    <button
+                      onClick={() => onArchive(m.id, m.name)}
+                      className="p-1.5 rounded-lg hover:bg-amber-500/15 text-slate-500 hover:text-amber-400 transition-colors"
+                      title="Archiver — le retire du planning en conservant son historique"
+                    >
+                      <Archive className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {m.archivedAt && (
+                    <button
+                      onClick={() => onUnarchive(m.id, m.name)}
+                      className="p-1.5 rounded-lg hover:bg-emerald-500/15 text-slate-500 hover:text-emerald-400 transition-colors"
+                      title="Réactiver — le remet dans le planning"
+                    >
+                      <ArchiveRestore className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   <button
                     onClick={() => onDelete(m.id, m.name)}
                     className="p-1.5 rounded-lg hover:bg-red-500/15 text-slate-500 hover:text-red-400 transition-colors"

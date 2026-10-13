@@ -131,6 +131,42 @@ export class InvalidHwidError extends Error {
   }
 }
 
+// ─── Cycle de vie d'un appareil (§1) ─────────────────────────────────────────
+/**
+ * États canoniques d'un appareil :
+ *  - 'active'      : session possible ; CONSOMME un siège.
+ *  - 'deactivated' : « disconnected » — session coupée, siège LIBÉRÉ, RÉACTIVABLE
+ *                    (l'appareil peut se reconnecter si la licence reste valide).
+ *  - 'revoked'     : PERMANENT — ne consomme plus de siège et n'est JAMAIS
+ *                    réactivable en self-service (activateDevice lève DeviceRevokedError).
+ *
+ * Transitions autorisées : active→deactivated, deactivated→active, active→revoked,
+ * deactivated→revoked. INTERDIT (irréversible) : revoked→active, revoked→deactivated.
+ *
+ * La suspension d'une clé mécanicien est portée au niveau LICENCE : une licence
+ * 'suspended' bloque toute session (validateDeviceToken/validateMechanicSession)
+ * tout en laissant l'appareil 'active' — le siège est donc CONSERVÉ pendant la
+ * suspension (les clés suspendues comptent dans le quota) et l'accès est rétabli
+ * INSTANTANÉMENT au retour en 'active', sans re-consommer de siège.
+ */
+export const DEVICE_STATES = ['active', 'deactivated', 'revoked'] as const
+export type DeviceState = (typeof DEVICE_STATES)[number]
+
+/** Un appareil dans cet état consomme-t-il un siège ? (seul 'active' le fait.) */
+export function isSeatConsumingStatus(status: string): boolean {
+  return status === 'active'
+}
+
+/** Transition d'état autorisée ? 'revoked' est TERMINAL (révocation irréversible). */
+export function canTransitionDevice(from: string, to: DeviceState): boolean {
+  if (from === 'revoked') return false // terminal
+  const allowed: Record<string, DeviceState[]> = {
+    active:      ['deactivated', 'revoked'],
+    deactivated: ['active', 'revoked'],
+  }
+  return (allowed[from] ?? []).includes(to)
+}
+
 // ─── Activation atomique ─────────────────────────────────────────────────────
 
 export interface ActivateDeviceInput {

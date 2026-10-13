@@ -99,56 +99,83 @@ describe('Job overlap detection', () => {
 })
 
 describe('findAvailableSlots — workshop hours respected', () => {
+  // Les bornes sont désormais exprimées en MINUTES : c'est la seule unité qui
+  // sache dire « ouvre à 8 h 30 » (§14-15). Deux entiers d'heures ne le
+  // pouvaient pas, et le créneau proposé tombait toujours sur l'heure pleine.
+  const h = (heures: number, minutes = 0) => heures * 60 + minutes
+
   it('returns workshop start when mechanic is free all day', () => {
-    const slots = findAvailableSlots('m1', [], '2026-04-28', 60, 8, 18)
+    const slots = findAvailableSlots('m1', [], '2026-04-28', 60, { debut: h(8), fin: h(18) })
     expect(slots[0]).toBe('08:00')
   })
 
   it('skips past existing job', () => {
     const job = makeJob({ startTime: '08:00', estimatedDuration: 120 })
-    const slots = findAvailableSlots('m1', [job], '2026-04-28', 60, 8, 18)
+    const slots = findAvailableSlots('m1', [job], '2026-04-28', 60, { debut: h(8), fin: h(18) })
     expect(slots[0]).toBe('10:00')
   })
 
   it('returns empty when no time fits', () => {
     // Fill the whole day
     const jobs = [makeJob({ startTime: '08:00', estimatedDuration: 600 })]
-    const slots = findAvailableSlots('m1', jobs, '2026-04-28', 60, 8, 18)
+    const slots = findAvailableSlots('m1', jobs, '2026-04-28', 60, { debut: h(8), fin: h(18) })
     expect(slots).toHaveLength(0)
   })
 
   it('respects custom workshop hours', () => {
     // 06:00–12:00 workshop (6h)
-    const slots = findAvailableSlots('m1', [], '2026-04-28', 60, 6, 12)
+    const slots = findAvailableSlots('m1', [], '2026-04-28', 60, { debut: h(6), fin: h(12) })
     expect(slots[0]).toBe('06:00')
     // Nothing should be offered starting at 12:00 or later
     expect(slots.every(s => parseInt(s.split(':')[0]) < 12)).toBe(true)
+  })
+
+  it('respecte une ouverture à la DEMI-HEURE (§14-15)', () => {
+    const slots = findAvailableSlots('m1', [], '2026-04-28', 60, { debut: h(8, 30), fin: h(18, 30) })
+    expect(slots[0], 'un atelier ouvrant à 8 h 30 ne doit pas se voir proposer 8 h').toBe('08:30')
+  })
+
+  it('ne propose rien qui déborde une fermeture à la demi-heure', () => {
+    // Ouvert 08:30 → 12:30 (240 min), déjà occupé 08:30 → 12:00.
+    const job = makeJob({ startTime: '08:30', estimatedDuration: 210 })
+    const slots = findAvailableSlots('m1', [job], '2026-04-28', 60, { debut: h(8, 30), fin: h(12, 30) })
+    expect(slots, 'il ne reste que 30 min avant la fermeture').toHaveLength(0)
   })
 })
 
 describe('calculateUtilizationRate', () => {
   const mech: Mechanic = { id: 'm1', name: 'Alice', avatar: 'A', color: '#3b82f6', specialty: [], order: 1, isAbsent: false, garageId: 'g1', createdAt: '', updatedAt: '' }
 
+  const JOURNEE = { debut: 8 * 60, fin: 18 * 60 }
+
   it('returns 0 when no jobs', () => {
-    expect(calculateUtilizationRate([], [mech], '2026-04-28', 8, 18)).toBe(0)
+    expect(calculateUtilizationRate([], [mech], '2026-04-28', JOURNEE)).toBe(0)
   })
 
   it('returns 50% when half the day is booked', () => {
     // 10h workshop (600 min), 300 min booked
     const job = makeJob({ estimatedDuration: 300 })
-    expect(calculateUtilizationRate([job], [mech], '2026-04-28', 8, 18)).toBe(50)
+    expect(calculateUtilizationRate([job], [mech], '2026-04-28', JOURNEE)).toBe(50)
   })
 
   it('caps at 100% on overloaded day', () => {
     const job = makeJob({ estimatedDuration: 1000 })
-    expect(calculateUtilizationRate([job], [mech], '2026-04-28', 8, 18)).toBe(100)
+    expect(calculateUtilizationRate([job], [mech], '2026-04-28', JOURNEE)).toBe(100)
   })
 
   it('excludes absent mechanics from capacity', () => {
     const absent: Mechanic = { ...mech, id: 'm2', isAbsent: true }
     // Only m1 active, 300/600 = 50%
     const job = makeJob({ estimatedDuration: 300 })
-    expect(calculateUtilizationRate([job], [mech, absent], '2026-04-28', 8, 18)).toBe(50)
+    expect(calculateUtilizationRate([job], [mech, absent], '2026-04-28', JOURNEE)).toBe(50)
+  })
+
+  it('mesure sur l’amplitude RÉELLE, pas sur une journée de 10 h', () => {
+    // Garage ouvert 08:00 → 12:00 (240 min) : 240 min posées = complet.
+    // Sans bornes, le même garage plafonnait à 40 % en étant plein.
+    const job = makeJob({ estimatedDuration: 240 })
+    expect(calculateUtilizationRate([job], [mech], '2026-04-28', { debut: 8 * 60, fin: 12 * 60 })).toBe(100)
+    expect(calculateUtilizationRate([job], [mech], '2026-04-28', JOURNEE)).toBe(40)
   })
 })
 

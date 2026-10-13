@@ -1,8 +1,10 @@
 'use client'
+import { lineCents, fromCents } from '@/lib/money'
 
 import { useState, useEffect, useMemo } from 'react'
 import { useScheduleStore } from '@/store/schedule-store'
 import { formatDuration, calculateUtilizationRate } from '@/lib/utils'
+import { bornesAtelier } from '@/lib/planning/horaires'
 import { Euro, Package, Clock, TrendingUp, AlertTriangle, Wrench } from 'lucide-react'
 import {
   StatsData, DailyStat,
@@ -28,7 +30,7 @@ export function StockSection({ stats }: { stats: StatsData | null }) {
   }, [])
 
   const lowStock = parts.filter(p => p.quantity <= p.minQuantity)
-  const totalValue = parts.reduce((s, p) => s + p.quantity * p.unitCost, 0)
+  const totalValue = parts.reduce((s, p) => s + fromCents(lineCents(p.unitCost, p.quantity)), 0)
 
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -101,7 +103,7 @@ export function StockSection({ stats }: { stats: StatsData | null }) {
                   </td>
                   <td style={{ padding: '10px 14px', color: isLow ? '#f59e0b' : '#94a3b8', fontSize: 13, fontWeight: 600 }}>{p.quantity}</td>
                   <td style={{ padding: '10px 14px', color: '#94a3b8', fontSize: 13 }}>{p.unitPrice} €</td>
-                  <td style={{ padding: '10px 14px', color: '#3b82f6', fontSize: 13, fontWeight: 600 }}>{(p.quantity * p.unitCost).toFixed(0)} €</td>
+                  <td style={{ padding: '10px 14px', color: '#3b82f6', fontSize: 13, fontWeight: 600 }}>{fromCents(lineCents(p.unitCost, p.quantity)).toFixed(0)} €</td>
                   <td style={{ padding: '10px 14px' }}>
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999,
@@ -243,7 +245,7 @@ export function MechanicsSection({ stats }: { stats: StatsData | null }) {
 
 export function OverviewSection({ stats, period }: { stats: StatsData | null; period: number }) {
   const [chartSeries, setChartSeries] = useState({ mo: true, parts: true })
-  const { jobs, mechanics, selectedDate } = useScheduleStore()
+  const { jobs, mechanics, horaires, selectedDate } = useScheduleStore()
 
   const todayMetrics = useMemo(() => {
     const dayJobs = jobs.filter(j => j.date === selectedDate && j.status !== 'cancelled')
@@ -252,9 +254,13 @@ export function OverviewSection({ stats, period }: { stats: StatsData | null; pe
       completed: dayJobs.filter(j => j.status === 'completed').length,
       inProgress: dayJobs.filter(j => j.status === 'in_progress').length,
       delayed: dayJobs.filter(j => j.status === 'delayed').length,
-      utilization: calculateUtilizationRate(dayJobs, mechanics, selectedDate),
+      // Le taux d'occupation se mesure sur l'amplitude RÉELLE de l'atelier.
+      // Sans bornes, il était calculé sur une journée de 10 h quelle que soit
+      // l'ouverture déclarée : un garage ouvert de 8 h à 12 h, complet, ne
+      // dépassait jamais 40 %.
+      utilization: calculateUtilizationRate(dayJobs, mechanics, selectedDate, bornesAtelier(horaires)),
     }
-  }, [jobs, mechanics, selectedDate])
+  }, [jobs, mechanics, horaires, selectedDate])
 
   const moSpark = stats?.dailyStats.map(d => d.laborRevenue) ?? []
   const hoursSpark = stats?.dailyStats.map(d => d.billedHours) ?? []
@@ -267,8 +273,15 @@ export function OverviewSection({ stats, period }: { stats: StatsData | null; pe
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+        {/* ── Deux « CA » coexistaient sans qu'aucun écran les distingue ──────
+            Celui-ci est valorisé depuis le PLANNING (heures terminées × tarif
+            + pièces posées) : il mesure l'activité de l'atelier, pas
+            l'encaissement. L'écran Facturation en affiche un autre, calculé
+            sur les factures PAYÉES. Les deux calculs sont justes ; c'est leur
+            nom identique qui trompait, jusqu'à faire croire à un écart de
+            caisse. Chacun porte désormais ce qu'il mesure. */}
         <KpiCard
-          label="CA Total"
+          label="CA potentiel atelier"
           value={stats ? `${stats.totals.totalRevenue.toLocaleString('fr-FR')} €` : '—'}
           delta={stats ? `MO ${stats.totals.laborRevenue} € + Pièces ${stats.totals.partsRevenue} €` : undefined}
           positive color="#3b82f6" sparkValues={moSpark} uid="ca" icon={<Euro size={16} />}
@@ -372,9 +385,17 @@ export function RevenueSection({ stats }: { stats: StatsData | null }) {
   const { totals, dailyStats } = stats
   const partsMarginPct = totals.partsRevenue > 0
     ? Math.round((totals.partsMargin / totals.partsRevenue) * 100) : 0
-  const netProfit = Math.round(totals.totalRevenue - totals.partsCost)
-  const netMarginPct = totals.totalRevenue > 0
-    ? Math.round((netProfit / totals.totalRevenue) * 100) : 0
+  // ── « Bénéfice net » désignait une MARGE BRUTE (GF-036) ────────────────────
+  // La grandeur est (chiffre d'affaires − coût des pièces). Aucun coût de
+  // main-d'œuvre n'entre dedans, et pour cause : le modèle n'en porte aucun —
+  // `Mechanic` n'a ni salaire ni taux de revient, et `hourlyRate` est un tarif
+  // de VENTE. Annoncer « bénéfice net » revenait à présenter comme un résultat
+  // après charges un chiffre dont la principale charge d'un garage est absente.
+  // Les seuils suivaient le même malentendu : 20 % est un plancher de marge
+  // NETTE, très bas pour une marge brute d'atelier.
+  const margeBrute = Math.round(totals.totalRevenue - totals.partsCost)
+  const tauxMargeBrute = totals.totalRevenue > 0
+    ? Math.round((margeBrute / totals.totalRevenue) * 100) : 0
 
   return (
     <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -385,16 +406,16 @@ export function RevenueSection({ stats }: { stats: StatsData | null }) {
         display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap',
       }}>
         <div>
-          <p style={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}>BÉNÉFICE NET (période)</p>
-          <p style={{ color: netProfit >= 0 ? '#10b981' : '#ef4444', fontSize: 28, fontWeight: 800 }}>
-            {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString('fr-FR')} €
+          <p style={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}>MARGE BRUTE (période)</p>
+          <p style={{ color: margeBrute >= 0 ? '#10b981' : '#ef4444', fontSize: 28, fontWeight: 800 }}>
+            {margeBrute >= 0 ? '+' : ''}{margeBrute.toLocaleString('fr-FR')} €
           </p>
         </div>
         <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.08)' }} />
         <div>
-          <p style={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}>MARGE NETTE</p>
-          <p style={{ color: netMarginPct >= 20 ? '#10b981' : netMarginPct >= 10 ? '#f59e0b' : '#ef4444', fontSize: 22, fontWeight: 700 }}>
-            {netMarginPct}%
+          <p style={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}>TAUX DE MARGE BRUTE</p>
+          <p style={{ color: tauxMargeBrute >= 45 ? '#10b981' : tauxMargeBrute >= 30 ? '#f59e0b' : '#ef4444', fontSize: 22, fontWeight: 700 }}>
+            {tauxMargeBrute}%
           </p>
         </div>
         <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.08)' }} />
@@ -411,10 +432,10 @@ export function RevenueSection({ stats }: { stats: StatsData | null }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
         {[
-          { label: 'CA Total', value: `${totals.totalRevenue.toLocaleString('fr-FR')} €`, color: '#3b82f6', icon: <Euro size={14} /> },
+          { label: 'CA potentiel atelier', value: `${totals.totalRevenue.toLocaleString('fr-FR')} €`, color: '#3b82f6', icon: <Euro size={14} /> },
           { label: 'CA Main d\'œuvre', value: `${totals.laborRevenue} €`, color: '#8b5cf6', icon: <Wrench size={14} /> },
           { label: 'CA Pièces', value: `${totals.partsRevenue} €`, color: '#22d3ee', icon: <Package size={14} /> },
-          { label: 'Bénéfice net', value: `${netProfit >= 0 ? '+' : ''}${netProfit} €`, color: netProfit >= 0 ? '#10b981' : '#ef4444', icon: <TrendingUp size={14} /> },
+          { label: 'Marge brute', value: `${margeBrute >= 0 ? '+' : ''}${margeBrute} €`, color: margeBrute >= 0 ? '#10b981' : '#ef4444', icon: <TrendingUp size={14} /> },
         ].map(card => (
           <div key={card.label} style={{
             background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',

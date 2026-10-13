@@ -3,8 +3,10 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { subMonths, format } from 'date-fns'
 import { calcTotalHT } from '@/lib/billing'
+import { billingLines } from '@/lib/money-db'
 import { forecast, type ForecastMethod } from '@/lib/forecast'
 
 const METRICS = ['revenue', 'appointments', 'workshop_load'] as const
@@ -26,12 +28,12 @@ async function buildSeries(metric: Metric, garageId: string, months: number): Pr
   if (metric === 'revenue') {
     const invoices = await prisma.invoice.findMany({
       where: { garageId, status: 'paid', issueDate: { gte: startDate } },
-      select: { issueDate: true, lines: { select: { quantity: true, unitPrice: true } } },
+      select: { issueDate: true, lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true } } },
     })
     for (const inv of invoices) {
       const k = inv.issueDate.slice(0, 7)
       const i = index.get(k)
-      if (i !== undefined) values[i] += calcTotalHT(inv.lines)
+      if (i !== undefined) values[i] += calcTotalHT(billingLines(inv.lines))
     }
   } else {
     // appointments (count) and workshop_load (sum of estimated minutes → hours)
@@ -53,6 +55,9 @@ async function buildSeries(metric: Metric, garageId: string, months: number): Pr
 // GET /api/forecast?metric=revenue&months=12&horizon=3
 export const GET = withAuth(async (req) => {
   const session = await requireSession()
+  if (!can(session.user.role, 'financial:read')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const { searchParams } = new URL(req.url)
   const metricParam = (searchParams.get('metric') ?? 'revenue') as Metric
   const metric: Metric = METRICS.includes(metricParam) ? metricParam : 'revenue'

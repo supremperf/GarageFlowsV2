@@ -64,8 +64,13 @@ describe.skipIf(!ADMIN_URL)('session licenciée — PostgreSQL réel', () => {
   beforeAll(async () => {
     TEST_URL = withDb(ADMIN_URL as string, DB_NAME)
     const root = path.resolve(__dirname, '../../..')
-    const prismaBin = path.join(root, 'node_modules', '.bin', 'prisma')
-    execFileSync(prismaBin, ['migrate', 'deploy', '--schema', 'prisma/server/schema.prisma'],
+    // On invoque l'ENTRÉE JS de la CLI avec le Node courant, jamais le lanceur
+    // de node_modules/.bin : sous Windows celui-ci est un script sans extension
+    // (`prisma`, doublé de `prisma.cmd`) que `execFileSync` ne sait pas lancer —
+    // ENOENT — et les `.cmd` exigeraient `shell: true`. Cette forme est portable
+    // et n'introduit aucun shell.
+    const prismaCli = require.resolve('prisma/build/index.js')
+    execFileSync(process.execPath, [prismaCli, 'migrate', 'deploy', '--schema', 'prisma/server/schema.prisma'],
       { cwd: root, env: { ...process.env, DATABASE_URL: TEST_URL, DIRECT_URL: TEST_URL } })
     process.env.DATABASE_URL = TEST_URL
     db = await import('@/lib/db')

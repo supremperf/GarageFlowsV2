@@ -17,6 +17,8 @@
  * Edge-runtime safe (used by middleware.ts): only process.env + TextEncoder.
  */
 
+import { isWeakSecret } from '@/lib/auth-secret'
+
 /** Legacy hardcoded secrets that were previously shipped in source — refused. */
 const REJECTED_SECRETS = new Set([
   'gf-electron-local-secret-2026-xK9mP3qR',
@@ -54,9 +56,14 @@ export function getSessionSecret(): Uint8Array {
  */
 export function getPortalSecret(): Uint8Array {
   const dedicated = process.env.GF_PORTAL_SECRET
-  if (dedicated && dedicated.trim().length > 0 && !REJECTED_SECRETS.has(dedicated)) {
+  // On n'accepte GF_PORTAL_SECRET que s'il est FORT (isWeakSecret couvre longueur
+  // <16, constantes historiques et marqueurs génériques) — même règle que
+  // auth-secret.ts. Sinon un GF_PORTAL_SECRET faible (optionnel, non validé au
+  // démarrage) signerait les cookies de session portail + jetons 2FA avec une clé
+  // devinable → forge de session portail. Un secret faible retombe donc sur le
+  // secret de session (garanti fort, fail-closed).
+  if (dedicated && !isWeakSecret(dedicated)) {
     return new TextEncoder().encode(dedicated)
   }
-  // No dedicated secret → derive from the session secret (fails closed if unset).
   return getSessionSecret()
 }

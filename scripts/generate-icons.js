@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * GarageFlow icon generator
+ * GarageFlows icon generator
  * Creates icon.png (512x512) from the app's SVG logo, then wraps it as icon.ico
  * Requires: npm install --save-dev sharp png2icons
  */
@@ -12,7 +12,7 @@ const path = require('path')
 
 const ROOT = path.join(__dirname, '..')
 
-// ── GarageFlow logo SVG ──────────────────────────────────────────────────────
+// ── GarageFlows logo SVG ──────────────────────────────────────────────────────
 // Canvas 512×512 — fond sombre, hexagone métallique « G », flèche bleue « Flow »
 const LOGO_SVG = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512">
@@ -57,7 +57,7 @@ const LOGO_SVG = `<?xml version="1.0" encoding="UTF-8"?>
 </svg>`
 
 async function main() {
-  console.log('\n🎨 GarageFlow icon generator\n')
+  console.log('\n🎨 GarageFlows icon generator\n')
 
   // Write SVG
   const svgPath = path.join(ROOT, 'icon.svg')

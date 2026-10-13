@@ -1,0 +1,7 @@
+# Empreintes SHA-256 de référence — audit GarageFlows, 2026-08-06T13:43Z
+# Méthode : git archive HEAD | sha256sum  (arbre suivi, déterministe par commit)
+#
+# supremperf/GarageFlowsV2 @ cec75887d8223fdfe4e3932e60653fff0f9b6d0c
+d5b7ac61d47812d458f065bdeaffcd547a4adc5eec085de7c9383e88f5bd93f8  GarageFlowsV2.tar (git archive cec7588)
+# supremperf/garagesite3 @ 2d5614255c6be143e9e26213d0130e32eaafa6e1
+3643e508c6f0995b4a9b386acf9e6405e7d118c73d8a99ab52ce763303ce33aa  garagesite3.tar (git archive 2d56142)

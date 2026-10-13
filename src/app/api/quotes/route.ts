@@ -2,11 +2,14 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { redactLineCosts } from '@/lib/authz'
 import { format } from 'date-fns'
 import { CreateQuoteSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
 import { withTotals } from '@/lib/billing'
+import { lineToScaled, linesToEuros } from '@/lib/money-db'
 import { assertRelations } from '@/lib/tenant'
+import { collectPartIds, findForeignPartIds } from '@/lib/stock/invoice-stock'
 
 // GET /api/quotes
 export const GET = withAuth(async (req) => {
@@ -38,7 +41,8 @@ export const GET = withAuth(async (req) => {
   ])
 
   const data = quotes.map(q => {
-    return withTotals(q)
+  // Coût d'achat retiré pour les rôles sans `financial:read` (GF31-AUD-009).
+    return withTotals({ ...q, lines: redactLineCosts(linesToEuros(q.lines), session.user.role) })
   })
   return NextResponse.json({ data, total, page, totalPages: Math.ceil(total / limit), limit })
 })
@@ -60,6 +64,12 @@ export const POST = withAuth(async (req) => {
     { model: 'job', id: body.jobId, label: 'Intervention' },
   ])
   if (relErr) return relErr
+
+  // SECURITY (IDOR) — une ligne ne peut référencer qu'une pièce de CE garage.
+  const foreignParts = await findForeignPartIds(prisma, session.user.garageId, collectPartIds(parsed.data.lines))
+  if (foreignParts.length > 0) {
+    return NextResponse.json({ error: 'Pièce inconnue dans le stock de ce garage', code: 'PART_NOT_FOUND' }, { status: 400 })
+  }
 
   const year = new Date().getFullYear()
 
@@ -92,13 +102,15 @@ export const POST = withAuth(async (req) => {
           notes: body.notes ?? null,
           taxRate: body.taxRate ?? garage.taxRate,
           lines: {
-            create: (body.lines ?? []).map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number }, i: number) => ({
+            create: (body.lines ?? []).map((l: { description: string; quantity: number; unitPrice: number; unitCost?: number; isLabor?: boolean; sortOrder?: number; partId?: string | null }, i: number) => ({
               description: l.description,
-              quantity: l.quantity ?? 1,
-              unitPrice: l.unitPrice ?? 0,
-              unitCost: l.unitCost ?? 0,
+              ...lineToScaled(l), // saisie euros -> entiers exacts (dix-milliemes)
               isLabor: l.isLabor ?? false,
               sortOrder: l.sortOrder ?? i,
+              // Un DEVIS n'engage JAMAIS le stock : le lien est conservé pour
+              // être reporté sur la facture lors de la conversion, et c'est la
+              // validation de CETTE facture qui décrémentera — une seule fois.
+              partId: l.isLabor ? null : (l.partId ?? null),
             })),
           },
         },
@@ -114,5 +126,8 @@ export const POST = withAuth(async (req) => {
 
   await logAudit({ action: 'create', entityType: 'Quote', entityId: quote.id, session, req })
 
-  return NextResponse.json(quote, { status: 201 })
+  // MÊME projection que GET et PATCH — voir le commentaire détaillé dans
+  // src/app/api/invoices/route.ts : sans elle, le client plante à l'affichage
+  // du devis qu'il vient d'enregistrer (unitPrice absent → toFixed sur undefined).
+  return NextResponse.json(withTotals({ ...quote, lines: redactLineCosts(linesToEuros(quote.lines), session.user.role) }), { status: 201 })
 })

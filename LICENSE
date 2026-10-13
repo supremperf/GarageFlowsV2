@@ -1,0 +1,29 @@
+GarageFlows — Licence propriétaire (« Tous droits réservés »)
+
+Copyright (c) 2026 GarageFlows. Tous droits réservés.
+
+CE LOGICIEL EST PROPRIÉTAIRE ET CONFIDENTIEL.
+
+Le code source, les binaires, la documentation et tous les éléments associés de
+GarageFlows (le « Logiciel ») sont la propriété exclusive de l'éditeur. Aucune
+licence, aucun droit d'utilisation, de copie, de modification, de fusion, de
+publication, de distribution, de sous-licence ou de vente du Logiciel n'est
+accordé, en tout ou partie, sans un accord écrit préalable et explicite de
+l'éditeur.
+
+L'usage du Logiciel par un client final est régi exclusivement par le contrat de
+licence utilisateur (CLUF/EULA) et/ou les conditions générales de vente conclus
+séparément avec l'éditeur. À défaut d'un tel accord, aucun droit n'est concédé.
+
+Les composants tiers intégrés au Logiciel restent soumis à leurs licences
+respectives, reproduites dans THIRD_PARTY_NOTICES.md.
+
+LE LOGICIEL EST FOURNI « EN L'ÉTAT », SANS GARANTIE D'AUCUNE SORTE, EXPRESSE OU
+IMPLICITE, DANS LES LIMITES AUTORISÉES PAR LE DROIT APPLICABLE.
+
+—
+NOTE (préparation data room) : ce fichier affirme la titularité et l'absence de
+concession de droits. Les instruments contractuels opposables (CLUF/EULA, CGV,
+cession de droits des contributeurs) doivent être établis/validés par un conseil
+en propriété intellectuelle avant toute cession ou distribution — voir
+docs/PROVENANCE.md et docs/audit/RISK_REGISTER.md (AUD-013/016).

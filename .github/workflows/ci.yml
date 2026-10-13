@@ -5,6 +5,14 @@ on:
     branches: [main, master, develop, 'claude/**', 'integration/**']
   pull_request:
     branches: [main, master, develop]
+  # Déclenchement manuel du release gate complet (validation avant tag/release).
+  workflow_dispatch:
+
+# Moindre privilège : aucun job ne pousse, ne commente ni n'appelle l'API GitHub
+# (Gitleaks scanne l'arbre local). Le GITHUB_TOKEN n'a donc besoin que de la
+# lecture du contenu — on retire tout droit d'écriture par défaut.
+permissions:
+  contents: read
 
 jobs:
   secrets:
@@ -65,7 +73,9 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Node ≥ 22.5 OBLIGATOIRE : node:sqlite est utilisé par les tests de
+          # migration (vitest) et les gardes du modèle SQLite (check:sqlite-template).
+          node-version: 22
           cache: npm
 
       - name: Install dependencies (reproducible)
@@ -95,6 +105,49 @@ jobs:
       - name: ESLint
         run: npx next lint
 
+      # Garde-fou marque : « GarageFlows » partout dans le visible (exceptions techniques précises).
+      - name: Branding consistency (strict)
+        run: node scripts/check-branding.mjs
+
+      # Garde-fou PWA : manifestes cohérents + icônes aux dimensions RÉELLES déclarées.
+      - name: PWA manifests & icon dimensions
+        run: node scripts/check-pwa.mjs
+
+      # Garde-fou monnaie STRICT : ZÉRO champ monétaire Float dans les schémas.
+      - name: Money fields (ZERO monetary Float)
+        run: node scripts/check-money-fields.mjs
+
+      # Garde-fou calculs : aucun calcul financier direct hors couche centrale.
+      - name: Money calculations (no direct float math)
+        run: node scripts/check-money-calculations.mjs
+
+      # Garde-fou JSON monétaires : toute écriture de worksJson/partsJson/linesJson
+      # passe par les sérialiseurs v2 (entiers exacts) — zéro flottant persisté.
+      - name: Money JSON (v2 writers only)
+        run: node scripts/check-money-json.mjs
+
+      # Garde-fou sûreté migrations : runner atomique fail-closed, DROP prouvé,
+      # ordre Electron sauvegarde → serveur → migration → fenêtre.
+      - name: Migration safety invariants
+        run: node scripts/check-migration-safety.mjs
+
+      # Garde-fou modèle SQLite : intégrité réelle + baseline complète + checksums
+      # + schéma final (exécute node:sqlite sur prisma/garageflow-template.db).
+      - name: SQLite template (integrity + baseline + checksums)
+        run: node scripts/check-sqlite-template.mjs
+
+      # Garde-fou migrations PostgreSQL : chaque DROP COLUMN a sa vérification
+      # bloquante (bijection stricte, bloc de contrôle avant tout DROP).
+      - name: PostgreSQL migrations (per-column verification)
+        run: node scripts/check-postgres-migration-verification.mjs
+
+      # Garde-fou docs : aucune affirmation de statut contradictoire dans un doc actif.
+      - name: Docs consistency
+        run: node scripts/check-docs-consistency.mjs
+
+      - name: Critical security/licence files present & coherent
+        run: node scripts/check-critical-files.js
+
       # ── Migrations PostgreSQL sur base VIDE (échec CI si une migration casse) ──
       - name: PostgreSQL migrations on empty database + smoke test
         run: node scripts/validate-server-db.js
@@ -122,13 +175,112 @@ jobs:
           NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
           NEXTAUTH_URL: http://localhost:4028
 
+      # Budget de performance du bundle client (fail-closed : exige le build
+      # ci-dessus). Échoue si le JS client régresse au-delà de perf-budget.json.
+      - name: Performance budget (client bundle)
+        run: npm run check:perf-budget
+
       # Porte bloquante : toute vulnérabilité high/critical en dépendance de
       # PRODUCTION échoue la CI, sauf dérogations documentées/datées
       # (scripts/audit-ci.js). Une nouvelle vuln prod casse le build.
       - name: Dependency audit gate (production high/critical)
         run: node scripts/audit-ci.js
 
+      # Runtime EMPAQUETÉ desktop : Electron (classé devDependency mais RÉELLEMENT
+      # distribué) est audité ici — `--omit=dev` du gate ci-dessus ne le couvre pas.
+      # Bloquant, dérogations datées uniquement (scripts/check-desktop-runtime-audit.mjs).
+      - name: Desktop packaged runtime audit gate (Electron)
+        run: node scripts/check-desktop-runtime-audit.mjs
+
       # Audit complet (dev inclus) — informatif, non bloquant.
       - name: Dependency audit (full, informational)
         run: npm audit || true
         continue-on-error: true
+
+  e2e:
+    name: E2E (Playwright — responsive, auto-démarrage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies (reproducible)
+        run: npm ci
+      - name: Install Playwright Chromium (+ deps)
+        run: npx playwright install --with-deps chromium
+      - name: Prepare local SQLite database
+        run: cp prisma/garageflow-template.db prisma/dev.db
+      # `npx playwright test` démarre l'app en mode dev via le webServer de
+      # playwright.config.ts (mode production interdit SQLite — fail-closed).
+      # Sans E2E_EMAIL/E2E_PASSWORD, seuls les tests PUBLICS (page de connexion,
+      # responsive) s'exécutent ; les parcours authentifiés sont ignorés (skip).
+      - name: Run E2E (public responsive suite)
+        run: npx playwright test
+        env:
+          DATABASE_URL: file:./prisma/dev.db
+          NEXTAUTH_SECRET: ci-e2e-secret-not-for-production-0123456789
+          NEXTAUTH_URL: http://localhost:3000
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ── Release gate complet (manuel) ──────────────────────────────────────────
+  # Porte de sortie V13 : une seule commande qui enchaîne tsc, lint, les 10
+  # gardes, la suite de tests, les tests PostgreSQL/Redis RÉELS (services),
+  # l'audit de dépendances, le build et le budget de perf. À déclencher avant
+  # tout tag/release (workflow_dispatch) — les jobs par-PR ci-dessus restent
+  # les « fast checks ».
+  release-gate:
+    name: Final release gate (full)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: garageflow
+          POSTGRES_PASSWORD: garageflow_ci
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U garageflow"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies (reproducible)
+        run: npm ci
+      - name: Generate Prisma clients
+        run: |
+          npx prisma generate
+          npx prisma generate --schema prisma/server/schema.prisma
+      - name: Run final release gate
+        run: node scripts/final-release-gate.mjs
+        env:
+          DATABASE_URL: file:./prisma/dev.db
+          NEXTAUTH_SECRET: ci-gate-secret-not-for-production-0123456789
+          NEXTAUTH_URL: http://localhost:4028
+          TEST_POSTGRES_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres
+          TEST_REDIS_URL: 127.0.0.1:6379
