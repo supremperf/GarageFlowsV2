@@ -26,13 +26,13 @@ describe('GF31-AUD-024 — modèle de base de test partagé', () => {
     const cible = path.join(ROOT, '.tmp-itest-prepare-a.db')
     try {
       prepareTestDb(cible)
-      expect(fs.existsSync(cible)).toBe(true)
-      expect(fs.statSync(cible).size).toBeGreaterThan(0)
-
       const modele = path.join(CACHE, `${empreinte()}.db`)
-      expect(fs.existsSync(modele)).toBe(true)
+      // Ni existsSync ni statSync préalables (course contrôle-puis-usage) :
+      // la lecture elle-même prouve l'existence, et sa longueur la non-vacuité.
+      const copie = fs.readFileSync(cible)
+      expect(copie.length).toBeGreaterThan(0)
       // La base rendue est bien une COPIE du modèle, à l'octet près.
-      expect(fs.readFileSync(cible).equals(fs.readFileSync(modele))).toBe(true)
+      expect(copie.equals(fs.readFileSync(modele))).toBe(true)
     } finally {
       fs.rmSync(cible, { force: true })
     }

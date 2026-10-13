@@ -51,10 +51,9 @@ const SQLITE_MAGIC_HEX = '53514c69746520666f726d61742033'
 
 function isValidSqliteFile(filePath) {
   try {
-    const stat = fs.statSync(filePath)
-    if (stat.size < 512) return false
     const buf = Buffer.alloc(15)
     const fd  = fs.openSync(filePath, 'r')
+    if (fs.fstatSync(fd).size < 512) { fs.closeSync(fd); return false }
     try { fs.readSync(fd, buf, 0, 15, 0) } finally { fs.closeSync(fd) }
     return buf.toString('hex') === SQLITE_MAGIC_HEX
   } catch {

@@ -45,23 +45,23 @@ try { process.stderr.on('error', () => {}) } catch (_) {}
   const root    = path.join(__dirname, '..')
   const envFile = path.join(root, '.env')
 
-  // Auto-create .env if missing — prevents "blue screen" on fresh clone in dev
-  if (!fs.existsSync(envFile)) {
-    try {
-      const example = path.join(root, '.env.example')
-      if (fs.existsSync(example)) {
-        fs.copyFileSync(example, envFile)
-      } else {
-        // Aucun secret codé en dur : NEXTAUTH_SECRET est résolu par installation
-        // (voir resolveInstallSecret() dans app.whenReady) et injecté à l'exécution.
-        fs.writeFileSync(envFile, [
-          'DATABASE_URL="file:./dev.db"',
-          'NEXTAUTH_URL="http://localhost:3000"',
-          '',
-        ].join('\n'), 'utf8')
-      }
-    } catch (_) { return }
-  }
+  // Auto-create .env if missing — prevents "blue screen" on fresh clone in dev.
+  // Création EXCLUSIVE ('wx') : aucun test d'existence préalable (course
+  // check-then-use) et un .env apparu entre-temps n'est jamais écrasé.
+  try {
+    let contenu
+    try { contenu = fs.readFileSync(path.join(root, '.env.example'), 'utf8') }
+    catch (_) {
+      // Aucun secret codé en dur : NEXTAUTH_SECRET est résolu par installation
+      // (voir resolveInstallSecret() dans app.whenReady) et injecté à l'exécution.
+      contenu = [
+        'DATABASE_URL="file:./dev.db"',
+        'NEXTAUTH_URL="http://localhost:3000"',
+        '',
+      ].join('\n')
+    }
+    fs.writeFileSync(envFile, contenu, { encoding: 'utf8', flag: 'wx' })
+  } catch (_) { /* .env déjà présent ou illisible : il est lu ci-dessous */ }
 
   try {
     const lines = fs.readFileSync(envFile, 'utf8').split('\n')
@@ -653,10 +653,10 @@ function log(...args) {
 function lireQueueJournal(octets) {
   let fd = null
   try {
-    const taille = fs.statSync(LOG_PATH).size
+    fd = fs.openSync(LOG_PATH, 'r')
+    const taille = fs.fstatSync(fd).size
     const depuis = Math.max(0, taille - octets)
     const tampon = Buffer.alloc(Math.min(octets, taille))
-    fd = fs.openSync(LOG_PATH, 'r')
     const lus = fs.readSync(fd, tampon, 0, tampon.length, depuis)
     const texte = tampon.subarray(0, lus).toString('utf8')
     // Une lecture qui commence au milieu du fichier peut couper un caractère
@@ -1445,13 +1445,14 @@ const SQLITE_MAGIC_HEX = '53514c69746520666f726d61742033'
 
 function isDbValid(dbPath) {
   try {
-    const stat = fs.statSync(dbPath)
-    if (stat.size < 512) {
-      log('isDbValid: too small:', stat.size, 'bytes --', dbPath)
-      return false
-    }
     const buf = Buffer.alloc(15)
     const fd  = fs.openSync(dbPath, 'r')
+    const taille = fs.fstatSync(fd).size
+    if (taille < 512) {
+      log('isDbValid: too small:', taille, 'bytes --', dbPath)
+      fs.closeSync(fd)
+      return false
+    }
     fs.readSync(fd, buf, 0, 15, 0)
     fs.closeSync(fd)
     const hex = buf.toString('hex')

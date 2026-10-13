@@ -48,10 +48,26 @@ if (process.env.VERCEL) {
 
 let createdEnv = false
 
+/** Copie .env.example vers .env ; false si la source est absente/illisible. */
+function copieExemple() {
+  try { fs.copyFileSync(envSrc, envDst); return true } catch (_) { return false }
+}
+
+/** Taille d'un fichier via son descripteur (0 si absent) — jamais de test d'existence séparé. */
+function tailleDe(p) {
+  try {
+    const fd = fs.openSync(p, 'r')
+    try { return fs.fstatSync(fd).size } finally { fs.closeSync(fd) }
+  } catch (_) { return 0 }
+}
+
 // ── 1. Create / patch .env ────────────────────────────────────────────────────
 try {
-  if (fs.existsSync(envDst)) {
-    let content = fs.readFileSync(envDst, 'utf8')
+  // Lecture directe : un .env absent lève ENOENT et bascule sur la création.
+  let contenuExistant = null
+  try { contenuExistant = fs.readFileSync(envDst, 'utf8') } catch (_) {}
+  if (contenuExistant !== null) {
+    let content = contenuExistant
     if (!content.includes('DATABASE_URL')) {
       fs.appendFileSync(envDst, `\nDATABASE_URL="${CORRECT_DB_URL}"\n`)
       console.log('✅  .env patché : DATABASE_URL ajouté.')
@@ -67,8 +83,7 @@ try {
     } else {
       console.log('✅  .env déjà présent.')
     }
-  } else if (fs.existsSync(envSrc)) {
-    fs.copyFileSync(envSrc, envDst)
+  } else if (copieExemple()) {
     createdEnv = true
     console.log('✅  .env créé depuis .env.example')
   } else {
@@ -108,10 +123,9 @@ try {
 
 // ── 2. Ensure prisma/ directory ───────────────────────────────────────────────
 try {
-  if (!fs.existsSync(prismaDir)) {
-    fs.mkdirSync(prismaDir, { recursive: true })
-    console.log('✅  Dossier prisma/ créé.')
-  }
+  // mkdir récursif est idempotent : aucun test d'existence préalable.
+  fs.mkdirSync(prismaDir, { recursive: true })
+  console.log('✅  Dossier prisma/ assuré.')
 } catch (err) {
   console.error('⚠️  Impossible de créer prisma/ :', err.message)
 }
@@ -119,23 +133,23 @@ try {
 // ── 3. Clean up a wrongly-nested prisma/prisma/dev.db from older setups ────────
 try {
   const nested = path.join(prismaDir, 'prisma', 'dev.db')
-  if (fs.existsSync(nested)) {
-    // If the real dev.db doesn't exist yet, promote the nested one; else drop it.
-    if (!fs.existsSync(devDb)) {
-      fs.copyFileSync(nested, devDb)
-      console.log('✅  Base déplacée depuis prisma/prisma/dev.db → prisma/dev.db.')
-    }
-    try { fs.rmSync(path.join(prismaDir, 'prisma'), { recursive: true, force: true }) } catch (_) {}
-  }
+  // Promotion EXCLUSIVE : COPYFILE_EXCL refuse d'écraser un dev.db existant,
+  // sans test d'existence préalable. ENOENT (aucune base imbriquée) comme
+  // EEXIST (dev.db déjà en place) sont des issues normales, pas des erreurs.
+  try {
+    fs.copyFileSync(nested, devDb, fs.constants.COPYFILE_EXCL)
+    console.log('✅  Base déplacée depuis prisma/prisma/dev.db → prisma/dev.db.')
+  } catch (_) {}
+  try { fs.rmSync(path.join(prismaDir, 'prisma'), { recursive: true, force: true }) } catch (_) {}
 } catch (err) {
   console.error('⚠️  Nettoyage prisma/prisma/ ignoré :', err.message)
 }
 
 // ── 4. Ensure prisma/dev.db exists ────────────────────────────────────────────
 try {
-  if (fs.existsSync(devDb) && fs.statSync(devDb).size > 0) {
+  if (tailleDe(devDb) > 0) {
     console.log('✅  Base de données prisma/dev.db présente.')
-  } else if (fs.existsSync(template) && fs.statSync(template).size > 0) {
+  } else if (tailleDe(template) > 0) {
     // Fast, offline path: the schema-complete template is committed to the repo.
     fs.copyFileSync(template, devDb)
     console.log('✅  Base de données créée depuis le modèle (garageflow-template.db).')

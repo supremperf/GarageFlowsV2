@@ -22,7 +22,7 @@
  *
  * Sortie : 0 = livrable, 1 = REFUSÉ.
  */
-import { readdirSync, statSync, readFileSync, existsSync } from 'fs'
+import { readdirSync, statSync, readFileSync, existsSync, openSync, fstatSync, closeSync } from 'fs'
 import { spawnSync } from 'child_process'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -67,11 +67,14 @@ function inspect(file, rel) {
   }
   const ext = path.extname(base).toLowerCase()
   if (!TEXTLIKE.has(ext)) return
-  let st
-  try { st = statSync(file) } catch { return }
-  if (st.size > 220 * 1024 * 1024) return
   let text
-  try { text = readFileSync(file).toString('latin1') } catch { return }
+  try {
+    const fd = openSync(file, 'r')
+    try {
+      if (fstatSync(fd).size > 220 * 1024 * 1024) return
+      text = readFileSync(fd).toString('latin1')
+    } finally { closeSync(fd) }
+  } catch { return }
   scanned++
   if (PRIVATE_BLOCK.test(text)) violations.push(`CORPS DE CLÉ PRIVÉE INLINÉ : ${rel}`)
   for (const s of secrets) {

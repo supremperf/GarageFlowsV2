@@ -198,8 +198,9 @@ function main() {
 
   const fichier = a.file
   if (!fichier || fichier === true) mourir(`--file <chemin de l'installeur> est obligatoire.\n${AIDE}`)
-  if (!fs.existsSync(fichier)) mourir(`Fichier introuvable : ${fichier}`)
-  if (!fs.statSync(fichier).isFile()) mourir(`Ce n'est pas un fichier : ${fichier}`)
+  // Aucun test d'existence préalable : la lecture ci-dessous échoue proprement
+  // si le fichier est absent, et un répertoire y lève EISDIR — même verdict,
+  // sans fenêtre de course entre le contrôle et l'usage.
 
   const version = a.version
   if (!version || version === true) mourir(`--version <x.y.z> est obligatoire.\n${AIDE}`)

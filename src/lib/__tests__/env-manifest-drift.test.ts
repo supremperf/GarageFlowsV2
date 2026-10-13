@@ -15,7 +15,7 @@
  * des données existantes illisibles ne doit JAMAIS être régénéré automatiquement.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
-import { readFileSync, readdirSync, statSync, existsSync } from 'fs'
+import { readFileSync, readdirSync, existsSync, type Dirent } from 'fs'
 import path from 'path'
 
 const ROOT = path.resolve(__dirname, '../../..')
@@ -73,13 +73,13 @@ function record(name: string, file: string) {
 }
 
 function walk(dir: string) {
-  let entries: string[]
-  try { entries = readdirSync(dir) } catch { return }
-  for (const entry of entries) {
+  let entries: Dirent[]
+  try { entries = readdirSync(dir, { withFileTypes: true }) } catch { return }
+  for (const dirent of entries) {
+    const entry = dirent.name
     if (SKIP_DIRS.has(entry)) continue
     const full = path.join(dir, entry)
-    const st = statSync(full)
-    if (st.isDirectory()) { walk(full); continue }
+    if (dirent.isDirectory()) { walk(full); continue }
     if (!SCAN_EXT.has(path.extname(entry))) continue
     // Les fichiers de test peuvent injecter des variables factices.
     if (/\.(test|spec)\.[tj]sx?$/.test(entry) || entry.startsWith('test_')) continue

@@ -132,8 +132,9 @@ writeFileSync(OUT, JSON.stringify(baseline, null, 2) + '\n')
 
 // Met à jour le bloc AUTO de la baseline humaine (prose intacte).
 let docStatus = 'non trouvée'
-if (existsSync(CANONICAL_DOC)) {
-  const before = readFileSync(CANONICAL_DOC, 'utf8')
+let before = null
+try { before = readFileSync(CANONICAL_DOC, 'utf8') } catch { /* absente : docStatus le dit */ }
+if (before !== null) {
   const after = replaceAutoBlock(before, renderAutoBlock(baseline))
   if (after == null) {
     docStatus = 'marqueurs AUTO absents (ajoutez BEGIN/END AUTO-GENERATED BASELINE)'
