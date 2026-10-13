@@ -22,7 +22,7 @@ const SENSIBILITE = (v) => {
   return 'CONFIGURATION'
 }
 
-const echapper = (s) => String(s ?? '').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ').trim()
+const echapper = (s) => String(s ?? '').replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ').trim()
 const resume = (s, n = 150) => {
   const t = echapper(s)
   return t.length > n ? `${t.slice(0, n - 1)}…` : t

@@ -56,7 +56,7 @@ function couverte(base: string): boolean {
   // Rattachement par sélecteur d'attribut : `[class*="bg-[#111827]"]`.
   if (CSS.includes(`[class*="${base}"]`)) return true
   // Surcharge littérale héritée : `.bg-\[\#111827\]`.
-  const echappee = base.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/#/g, '\\#')
+  const echappee = base.replace(/\\/g, '\\\\').replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/#/g, '\\#')
   return CSS.includes(`.${echappee}`)
 }
 

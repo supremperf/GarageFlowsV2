@@ -140,7 +140,10 @@ for (const file of files) {
     // et trois pages PWA. On teste donc aussi la ligne débarrassée de ses balises.
     const candidates = [line]
     if (ext === '.html' || ext === '.tsx' || ext === '.jsx') {
-      const visible = line.replace(/<[^>]*>/g, '')
+      // Retrait COMPLET : on répète jusqu'à stabilité, sinon une balise
+      // imbriquée (« <<span>span> ») survivrait en partie au premier passage.
+      let visible = line
+      for (let prev = null; prev !== visible;) { prev = visible; visible = visible.replace(/<[^>]*>/g, '') }
       if (visible !== line) candidates.push(visible)
     }
     const seen = new Set()
