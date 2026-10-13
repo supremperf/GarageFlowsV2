@@ -110,13 +110,17 @@ describe('réception d\'un bon de commande', () => {
     expect(await stock()).toBe(avant)
   })
 
+  // Délai explicite : trois transactions SQLite concurrentes se sérialisent
+  // sur le verrou d'écriture du fichier — sous charge CI, le délai par défaut
+  // de 5 s était atteint alors même que la revendication atomique fonctionnait
+  // (constaté en CI : « Test timed out in 5000ms », un seul incrément au final).
   it('deux réceptions CONCURRENTES du même bon n\'incrémentent qu\'une fois', async () => {
     const id = await bon('confirmed', 6)
     const avant = await stock()
     const resultats = await Promise.all([receptionner(id), receptionner(id), receptionner(id)])
     expect(resultats.filter((r) => r.status === 200)).toHaveLength(1)
     expect(await stock()).toBe(avant + 6)
-  })
+  }, 20_000)
 
   it('un bon d\'un AUTRE garage est introuvable', async () => {
     const autre = (await prisma.garage.create({ data: { name: 'B', slug: `b-${Math.random().toString(36).slice(2, 7)}` } })).id

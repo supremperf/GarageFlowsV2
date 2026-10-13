@@ -25,6 +25,17 @@ regexes = [
   # le comportement des routes/scripts avec une clé factice déterministe.
   '''test-api-key-strong-[0-9]+''',
   '''parity-test-secret-[0-9]+''',
+  # Fixtures des suites d'intégration (mots de passe / secrets / jetons factices,
+  # jamais émis ni déployés) — chacune nommée explicitement, pas d'exemption
+  # globale des fichiers de test.
+  '''Y2xlLWRlLXNhdXZlZ2FyZGUtdHJlcy1mb3J0ZQ==''',
+  '''mauvaise-cle-0123456789abcdef''',
+  '''NouveauMotDePasse12''',
+  '''secret-de-test-signature-devis-0123456789abcdef''',
+  '''GF2\.licence-garage-de-recette''',
+  '''MonNouveauMotDePasse2026''',
+  '''GF2\.jeton\.mecanicien''',
+  '''eyJhbGciOiJIUzI1NiJ9\.eyJ0eXAiOiJwb3J0YWwifQ\.sig''',
 ]
 paths = [
   '''.*public-key\.ts''',

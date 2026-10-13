@@ -47,7 +47,11 @@ const ids = {
   licA1: '', licA2: '', licB1: '',
   jobA1: '', jobA2: '', jobB1: '',
 }
-const TODAY = '2026-08-11'
+// Date du JOUR, jamais une date codée en dur : les lectures mécanicien sont
+// bornées à la fenêtre synchronisée [J−7, J+30] (`syncWindow`, GF-038). Une
+// date figée (2026-08-11) est sortie de la fenêtre quelques semaines plus
+// tard et toute la suite s'est mise à échouer sans qu'aucun code ait bougé.
+const TODAY = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD, heure locale
 
 const req = (method: string, url: string, body?: unknown) =>
   new Request(`http://localhost${url}`, {
