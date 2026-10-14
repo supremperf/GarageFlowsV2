@@ -239,3 +239,26 @@ test('subprocess failures retain exit status without exposing stdout or stderr',
     return true
   })
 })
+
+test('SQL difference summaries identify canonical structures without disclosing defaults, URLs or unknown names', () => {
+  const wizard = require('../config')
+  const fixture = '[+] Added tables\n  - Garage\n  - fixture_private_unknown_name\n\n[*] Changed the `Garage` table\n  [*] Altered column `hourlyRateTenThousandths` (default changed to postgresql://user:fixture-password@host/db)\n  [+] Added index on columns (slug)\n  [-] Removed column `fixture_private_unknown_column`\n'
+  const result = wizard.summarizeSqlDiff(fixture).join('\n')
+  assert.ok(result.includes('Garage'))
+  assert.ok(result.includes('hourlyRateTenThousandths'))
+  assert.ok(result.includes('index'))
+  assert.ok(result.includes('hors contrat'))
+  for (const forbidden of ['fixture-password', 'postgresql://', 'fixture_private_unknown_name', 'fixture_private_unknown_column']) assert.ok(!result.includes(forbidden))
+  assert.ok(wizard.summarizeSqlDiff('unrecognized fixture-private-value').every(line => !line.includes('fixture-private-value')))
+})
+
+test('Prisma drift exit code retains only a redacted structural summary', async () => {
+  const wizard = require('../config')
+  // Arguments are strings for a harmless local process; no actual Prisma/DB is used.
+  await assert.rejects(wizard.execute(['-e', 'console.log("[*] Changed the `Garage` table\\n  [*] Altered column `slug` (default fixture-private-value)"); process.exit(2)', 'migrate', 'diff']), error => {
+    assert.equal(error.exitCode, 2)
+    assert.ok(error.sqlDiffSummary.join('\n').includes('slug'))
+    assert.ok(!JSON.stringify(error).includes('fixture-private-value'))
+    return true
+  })
+})

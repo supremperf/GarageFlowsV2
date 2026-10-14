@@ -99,6 +99,7 @@ function execute(commandArgs, { interactive = false, input, env = process.env, l
       if (code === 0) return resolve(stdout)
       const error = new Error(`${label} : échec. Aucune validation revendiquée ; vérifiez votre connexion et vos droits, puis relancez.`)
       error.exitCode = code // Preserve status without exposing provider output or credentials.
+      if (code === 2 && commandArgs.includes('migrate') && commandArgs.includes('diff')) error.sqlDiffSummary = summarizeSqlDiff(stdout)
       reject(error)
     })
   })
@@ -338,6 +339,45 @@ async function syncVercel(env, names, expectedRemote, { authorized = false } = {
   console.log('Présence des ajouts vérifiée. Les valeurs Sensitive ne sont pas relisibles : leur contenu ne peut pas être vérifié.')
   return true
 }
+function summarizeSqlDiff(output, schema) {
+  // Only emit identifiers from the checked-in Prisma contract, never defaults,
+  // connection strings, arbitrary database names or raw engine output.
+  try { schema ||= fs.readFileSync(path.join(ROOT, 'prisma/server/schema.prisma'), 'utf8') }
+  catch { return ['Différences détectées ; contrat local indisponible pour un résumé sûr.'] }
+  const models = new Set([...schema.matchAll(/^model\s+(\w+)\s*\{/gm)].map(m => m[1]))
+  const fields = new Set([...schema.matchAll(/^\s+(\w+)\s+[A-Z]\w*[?\[\]]*(?:\s|$)/gm)].map(m => m[1]))
+  const result = []; let table = '', group = ''
+  const clean = String(output).replace(/\x1b\[[0-9;]*m/g, '')
+  for (const line of clean.split(/\r?\n/)) {
+    const header = line.match(/^\[([+*-])\] (.+)$/)
+    if (header) {
+      group = header[2]; table = ''
+      const changed = group.match(/^Changed the `(\w+)` table/)
+      if (changed) {
+        table = models.has(changed[1]) ? changed[1] : '(table hors contrat)'
+        result.push(`Table ${table} : structure différente.`)
+      }
+      continue
+    }
+    const listed = line.match(/^\s+- (\w+)\s*$/)
+    if (listed && /^(Added|Removed) tables$/.test(group)) {
+      const name = models.has(listed[1]) ? listed[1] : '(table hors contrat)'
+      result.push(`Table ${name} : ${group === 'Added tables' ? 'absente de la base, attendue par Prisma' : 'présente dans la base, absente du contrat Prisma'}.`)
+      continue
+    }
+    if (!table) continue
+    const column = line.match(/^\s+\[([+*-])\] (?:Added|Removed|Altered) column `(\w+)`/)
+    if (column) {
+      const name = fields.has(column[2]) ? column[2] : '(colonne hors contrat)'
+      result.push(`  ${table} : colonne ${name} ${column[1] === '+' ? 'à ajouter' : column[1] === '-' ? 'à retirer selon Prisma' : 'différente (type, défaut ou nullabilité)'}.`)
+      continue
+    }
+    const constraint = line.match(/^\s+\[([+*-])\] (?:Added|Removed|Changed|Renamed) (unique index|index|foreign key|primary key)/)
+    if (constraint) result.push(`  ${table} : ${constraint[2]} ${constraint[1] === '+' ? 'à ajouter' : constraint[1] === '-' ? 'à retirer selon Prisma' : 'différent'}.`)
+  }
+  if (!result.length) return ['Différences détectées ; format non reconnu pour un résumé sûr. Aucune sortie brute affichée.']
+  return result.length > 80 ? [...result.slice(0, 80), 'Résumé limité à 80 lignes.'] : result
+}
 async function diagnoseSql({ env = core.readEnv(path.join(ROOT, '.env.server.local')), run = execute } = {}) {
   const issues = core.validate({ DATABASE_URL: env.DATABASE_URL, DIRECT_URL: env.DIRECT_URL }, 'pwa', { vercel: true })
     .filter(message => message.startsWith('DATABASE_URL') || message.startsWith('DIRECT_URL'))
@@ -353,6 +393,7 @@ async function diagnoseSql({ env = core.readEnv(path.join(ROOT, '.env.server.loc
   } catch (error) {
     if (error.exitCode === 2) {
       console.log('Code Prisma 2 : différence de schéma (drift) détectée. Les migrations appliquées et/ou la base diffèrent du schéma Prisma attendu. Aucun correctif appliqué.')
+      for (const line of error.sqlDiffSummary || ['Résumé indisponible dans cette exécution.']) console.log(line)
       return 2
     }
     console.log(`Code Prisma ${Number.isInteger(error.exitCode) ? error.exitCode : 'indisponible'} : comparaison impossible (erreur technique, pas une preuve de drift). Vérifier accès réseau, URLs, droits et installation Prisma. Sorties brutes masquées.`)
@@ -476,7 +517,7 @@ async function main() {
 }
 module.exports = { root: ROOT, question, yes, select, tool, execute, npmCli,
   setupVercel, pullVercel, importRemote, configureNeon, secretField, licenseKey,
-  advanced, childEnv, syncVercel, licensePassphrase, diagnoseSql }
+  advanced, childEnv, syncVercel, licensePassphrase, diagnoseSql, summarizeSqlDiff }
 if (require.main === module) main().catch(error => {
   // Never expose raw provider payloads, JSON snippets, stacks or file error contents.
   if (error instanceof SyntaxError) console.error('Configuration interrompue : réponse/fichier JSON invalide ; contenu masqué.')
