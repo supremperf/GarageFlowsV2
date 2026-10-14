@@ -99,6 +99,8 @@ async function full(api) {
       const connectionIssues = core.validate({ DATABASE_URL: env.DATABASE_URL, DIRECT_URL: env.DIRECT_URL }, 'pwa', { vercel: true })
         .filter(message => message.startsWith('DATABASE_URL') || message.startsWith('DIRECT_URL'))
       if (connectionIssues.length) throw new Error(connectionIssues.join(' '))
+      const saved = core.saveDatabaseUrls(serverFile, env)
+      if (saved.length) console.log('URLs PostgreSQL manquantes sauvegardées dans .env.server.local (masquées), avant les étapes de licences/SQL.')
     })
     const database = await step('inspection-SQL-lecture-seule', () => tools.inspectDatabase(root, env.DIRECT_URL))
     console.log(database.empty ? 'Base sans données métier : initialisation possible.' : 'Base contient des données : préservation des clés et sauvegarde indispensables.')

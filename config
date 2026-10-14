@@ -108,8 +108,8 @@ function tool(name, commandArgs, options = {}) {
   return execute([npmCli(), 'exec', '--yes', `--package=${TOOLS[name]}`, '--', name, ...commandArgs],
     { ...options, label: options.label || name })
 }
-async function neonList(commandArgs, key) {
-  const output = await tool('neonctl', [...commandArgs, '--output', 'json'])
+async function neonList(commandArgs, key, runTool = tool) {
+  const output = await runTool('neonctl', [...commandArgs, '--output', 'json'])
   try {
     const data = JSON.parse(output)
     const list = Array.isArray(data) ? data : data[key]
@@ -117,43 +117,46 @@ async function neonList(commandArgs, key) {
     return list
   } catch { throw new Error('Neon : format JSON inattendu, aucune valeur importée.') }
 }
-async function configureNeon(env, { auto = false } = {}) {
+async function configureNeon(env, { auto = false, allowCreate = auto, api = { tool, select, yes } } = {}) {
+  const list = (args, key) => neonList(args, key, api.tool)
   console.log('\nConnexion Neon via le CLI officiel. Aucun jeton Neon stocké par config.')
   let orgs
-  try { orgs = await neonList(['orgs', 'list'], 'organizations') }
+  try { orgs = await list(['orgs', 'list'], 'organizations') }
   catch {
-    await tool('neonctl', ['auth'], { interactive: true })
-    orgs = await neonList(['orgs', 'list'], 'organizations')
+    await api.tool('neonctl', ['auth'], { interactive: true })
+    orgs = await list(['orgs', 'list'], 'organizations')
   }
-  const choose = async (label, list) => auto && list.length === 1 ? list[0] : select(label, list)
+  const choose = async (label, list) => auto && list.length === 1 ? list[0] : api.select(label, list)
   const org = orgs.length ? await choose('Organisation Neon', orgs) : null
   const orgArgs = org ? ['--org-id', org.id] : []
-  let projects = await neonList(['projects', 'list', ...orgArgs], 'projects')
-  if (!projects.length && auto) {
+  let projects = await list(['projects', 'list', ...orgArgs], 'projects')
+  if (!projects.length && allowCreate) {
     console.log('Aucun projet Neon : création possible dans le compte autorisé (région Europe). Vérifier quotas et conditions fournisseur.')
-    if (!await yes('Autoriser la création du projet PostgreSQL GarageFlows')) throw new Error('Projet Neon absent et création non autorisée.')
-    await tool('neonctl', ['projects', 'create', '--name', 'garageflows', '--region-id', 'aws-eu-central-1', '--database', 'garageflow', '--role', 'garageflow_owner', ...orgArgs])
-    projects = await neonList(['projects', 'list', ...orgArgs], 'projects')
+    if (!await api.yes('Autoriser la création du projet PostgreSQL GarageFlows')) throw new Error('Projet Neon absent et création non autorisée.')
+    await api.tool('neonctl', ['projects', 'create', '--name', 'garageflows', '--region-id', 'aws-eu-central-1', '--database', 'garageflow', '--role', 'garageflow_owner', ...orgArgs])
+    projects = await list(['projects', 'list', ...orgArgs], 'projects')
   }
+  if (!projects.length) throw new Error('Aucun projet Neon accessible dans cette organisation. Vérifiez le compte/la cible : récupération sans création de base.')
   const project = await choose('Projet Neon', projects)
-  const branches = await neonList(['branches', 'list', '--project-id', project.id], 'branches')
+  const branches = await list(['branches', 'list', '--project-id', project.id], 'branches')
   const branch = await choose('Branche Neon (choisir la base cible)', branches)
   const scope = ['--project-id', project.id, '--branch', branch.id]
-  const database = await choose('Base Neon', await neonList(['databases', 'list', ...scope], 'databases'))
-  const role = await choose('Rôle PostgreSQL', await neonList(['roles', 'list', ...scope], 'roles'))
+  const database = await choose('Base Neon', await list(['databases', 'list', ...scope], 'databases'))
+  const role = await choose('Rôle PostgreSQL', await list(['roles', 'list', ...scope], 'roles'))
   const connectionArgs = ['connection-string', branch.id, '--project-id', project.id,
     '--database-name', database.name, '--role-name', role.name]
   // Neon returns the actual endpoints; no guessing by removing '-pooler'.
-  const pooled = (await tool('neonctl', [...connectionArgs, '--pooled'])).trim()
-  const direct = (await tool('neonctl', connectionArgs)).trim()
-  if (env.DATABASE_URL) {
+  const pooled = (await api.tool('neonctl', [...connectionArgs, '--pooled'])).trim()
+  const direct = (await api.tool('neonctl', connectionArgs)).trim()
+  for (const [name, candidateUrl] of [['DATABASE_URL', pooled], ['DIRECT_URL', direct]]) {
+    if (!env[name]) continue
     try {
-      const old = new URL(env.DATABASE_URL), candidate = new URL(pooled)
+      const old = new URL(env[name]), candidate = new URL(candidateUrl)
       if (old.hostname !== candidate.hostname || old.pathname !== candidate.pathname || old.username !== candidate.username) throw new Error()
-    } catch { throw new Error('Neon : sélection différente de DATABASE_URL existante. Aucune URL remplacée ; vérifier projet/branche/base/rôle.') }
+    } catch { throw new Error(`Neon : sélection différente de ${name} existante. Aucune URL remplacée ; vérifier projet/branche/base/rôle.`) }
   }
-  env.DATABASE_URL = pooled
-  env.DIRECT_URL = direct
+  env.DATABASE_URL ||= pooled
+  env.DIRECT_URL ||= direct
   console.log('DATABASE_URL poolée et DIRECT_URL directe récupérées (valeurs masquées).')
 }
 async function pullVercel() {
@@ -378,12 +381,31 @@ function summarizeSqlDiff(output, schema) {
   if (!result.length) return ['Différences détectées ; format non reconnu pour un résumé sûr. Aucune sortie brute affichée.']
   return result.length > 80 ? [...result.slice(0, 80), 'Résumé limité à 80 lignes.'] : result
 }
-async function diagnoseSql({ env = core.readEnv(path.join(ROOT, '.env.server.local')), run = execute } = {}) {
+async function diagnoseSql({ env, run = execute, root = ROOT, requestAccess = yes, connect = configureNeon } = {}) {
+  const file = path.join(root, '.env.server.local')
+  env ||= core.readEnv(file)
+  if (!env.DATABASE_URL || !env.DIRECT_URL) {
+    console.log('URLs PostgreSQL manquantes : récupération depuis votre compte Neon, sans création de projet/base ni génération de secrets.')
+    for (const name of ['DATABASE_URL', 'DIRECT_URL']) {
+      if (!env[name]) continue
+      try { if (!new URL(env[name]).hostname.endsWith('.neon.tech')) throw new Error() }
+      catch { throw new Error('Connexion existante non-Neon ou invalide : utiliser le fournisseur d’origine, aucune sélection Neon automatique.') }
+    }
+    if (!await requestAccess('Se connecter à Neon, sélectionner la base EXISTANTE et enregistrer uniquement les URLs manquantes dans .env.server.local', true)) throw new Error('Récupération annulée : aucun fichier ni base modifié.')
+    const candidate = { ...env }
+    await connect(candidate, { auto: false, allowCreate: false })
+    const connectionIssues = core.validate({ DATABASE_URL: candidate.DATABASE_URL, DIRECT_URL: candidate.DIRECT_URL }, 'pwa', { vercel: true })
+      .filter(message => message.startsWith('DATABASE_URL') || message.startsWith('DIRECT_URL'))
+    if (connectionIssues.length) throw new Error(connectionIssues.join(' '))
+    core.saveDatabaseUrls(file, candidate)
+    env = candidate
+    console.log('DATABASE_URL et DIRECT_URL récupérées et sauvegardées localement (valeurs masquées). Les autres paramètres/secrets restent inchangés.')
+  }
   const issues = core.validate({ DATABASE_URL: env.DATABASE_URL, DIRECT_URL: env.DIRECT_URL }, 'pwa', { vercel: true })
     .filter(message => message.startsWith('DATABASE_URL') || message.startsWith('DIRECT_URL'))
   if (issues.length) throw new Error(issues.join(' '))
   console.log('Diagnostic SQL en lecture seule : profil .env.server.local, sans migration, reset, synchronisation ni déploiement.')
-  const cli = path.join(ROOT, 'node_modules/prisma/build/index.js')
+  const cli = path.join(root, 'node_modules/prisma/build/index.js')
   try {
     await run([cli, 'migrate', 'diff', '--from-schema-datasource', 'prisma/server/schema.prisma',
       '--to-schema-datamodel', 'prisma/server/schema.prisma', '--exit-code'],

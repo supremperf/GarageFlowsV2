@@ -230,7 +230,10 @@ test('existing DB missing a critical encryption key cannot silently regenerate o
   await assert.rejects(() => full(f.api), /GF_TOTP_ENC_KEY : original nécessaire/)
   assert.ok(!f.calls.includes('sync'))
   assert.ok(!f.calls.includes('deploy --prod --yes'))
-  assert.ok(!fs.existsSync(path.join(f.dir, '.env.server.local')))
+  const saved = core.readEnv(path.join(f.dir, '.env.server.local'))
+  assert.equal(saved.DATABASE_URL, f.env.DATABASE_URL)
+  assert.equal(saved.DIRECT_URL, f.env.DIRECT_URL)
+  assert.ok(!saved.GF_TOTP_ENC_KEY && !saved.NEXTAUTH_SECRET && !saved.GARAGEFLOW_API_KEY)
 })
 test('existing signature/portal fallback preserves the original session key instead of invalidating proofs and links', async t => {
   const f = fullFixture(t, { existing: true })

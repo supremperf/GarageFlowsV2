@@ -262,3 +262,76 @@ test('Prisma drift exit code retains only a redacted structural summary', async 
     return true
   })
 })
+
+test('missing diagnostic URLs request access, recover an existing Neon pair and preserve other local secrets verbatim', async t => {
+  const dir = fixture(t), file = path.join(dir, '.env.server.local')
+  const original = '# retained comment\nNEXTAUTH_SECRET="fixture-secret-to-preserve"\nCUSTOM_PATH=unmanaged-value\n'
+  fs.writeFileSync(file, original)
+  const wizard = require('../config'), env = c.readEnv(file), calls = []
+  const result = await wizard.diagnoseSql({ root: dir, env,
+    requestAccess: async () => { calls.push('permission'); return true },
+    connect: async (candidate, options) => {
+      assert.equal(options.allowCreate, false)
+      assert.equal(options.auto, false)
+      calls.push('connect')
+      candidate.DATABASE_URL = server().DATABASE_URL
+      candidate.DIRECT_URL = server().DIRECT_URL
+    },
+    run: async (_args, options) => {
+      calls.push('diff')
+      assert.equal(options.env.DATABASE_URL, server().DATABASE_URL)
+      assert.equal(c.readEnv(file).DIRECT_URL, server().DIRECT_URL)
+    },
+  })
+  assert.equal(result, 0)
+  assert.deepEqual(calls, ['permission', 'connect', 'diff'])
+  assert.ok(fs.readFileSync(file, 'utf8').startsWith(original))
+  assert.equal(c.readEnv(file).NEXTAUTH_SECRET, env.NEXTAUTH_SECRET)
+  assert.ok(!c.readEnv(file).GARAGEFLOW_API_KEY)
+})
+
+test('URL recovery cancellation never creates files or runs a SQL query', async t => {
+  const dir = fixture(t), wizard = require('../config')
+  await assert.rejects(() => wizard.diagnoseSql({ root: dir, requestAccess: async () => false,
+    connect: async () => { throw new Error('must not connect') }, run: async () => { throw new Error('must not query') },
+  }), /Récupération annulée/)
+  assert.ok(!fs.existsSync(path.join(dir, '.env.server.local')))
+})
+
+test('Neon recovery authenticates, selects existing resources, gets both connection strings and never creates a project', async () => {
+  const wizard = require('../config'), calls = []; let authenticated = false
+  const pair = server(), env = { DIRECT_URL: pair.DIRECT_URL }
+  const api = {
+    tool: async (_name, args, options) => {
+      calls.push(args)
+      if (args[0] === 'auth') { authenticated = true; assert.equal(options.interactive, true); return '' }
+      if (!authenticated) throw new Error('login needed')
+      if (args[0] === 'orgs') return JSON.stringify({ organizations: [{ id: 'fixture-org', name: 'fixture-org' }] })
+      if (args[0] === 'projects') return JSON.stringify({ projects: [{ id: 'fixture-project', name: 'garageflows' }] })
+      if (args[0] === 'branches') return JSON.stringify({ branches: [{ id: 'fixture-branch', name: 'production' }] })
+      if (args[0] === 'databases') return JSON.stringify({ databases: [{ name: 'garage' }] })
+      if (args[0] === 'roles') return JSON.stringify({ roles: [{ name: 'user' }] })
+      if (args[0] === 'connection-string') return args.includes('--pooled') ? pair.DATABASE_URL : pair.DIRECT_URL
+      throw new Error('unexpected command')
+    },
+    select: async (_label, items) => items[0], yes: async () => { throw new Error('no creation prompt') },
+  }
+  await wizard.configureNeon(env, { allowCreate: false, api })
+  assert.equal(env.DATABASE_URL, pair.DATABASE_URL)
+  assert.equal(env.DIRECT_URL, pair.DIRECT_URL)
+  assert.ok(!calls.some(args => args.includes('create')))
+  await assert.rejects(() => wizard.configureNeon({}, { auto: true, allowCreate: false, api: {
+    ...api, tool: async () => '[]',
+  } }), /Aucun projet Neon accessible/)
+  await assert.rejects(() => wizard.configureNeon({ DIRECT_URL: 'postgresql://user:pass@ep-wrong.neon.tech/garage' }, { allowCreate: false, api }), /DIRECT_URL existante/)
+})
+
+test('saving missing URLs keeps existing URLs and handles UTF-8 BOM without resetting the profile', t => {
+  const dir = fixture(t), file = path.join(dir, '.env.server.local'), env = server()
+  const original = '\uFEFFDATABASE_URL="' + env.DATABASE_URL + '"\r\nNEXTAUTH_SECRET="fixture-existing-secret"\r\n'
+  fs.writeFileSync(file, original)
+  assert.deepEqual(c.saveDatabaseUrls(file, env), ['DIRECT_URL'])
+  assert.ok(fs.readFileSync(file, 'utf8').startsWith(original))
+  assert.equal(c.readEnv(file).DATABASE_URL, env.DATABASE_URL)
+  assert.deepEqual(c.saveDatabaseUrls(file, env), [])
+})

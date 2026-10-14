@@ -53,7 +53,7 @@ function isSecret(name) {
 }
 function parseEnv(text) {
   const env = Object.create(null)
-  for (const line of text.split(/\r?\n/)) {
+  for (const line of text.replace(/^\uFEFF/, '').split(/\r?\n/)) {
     const m = line.match(/^[ \t]*(?:export[ \t]+)?([A-Z][A-Z0-9_]*)[ \t]*=[ \t]*(.*)$/)
     if (!m) continue
     let v = m[2].trim()
@@ -99,6 +99,24 @@ function writePrivate(file, text) {
     fs.renameSync(tmp, file)
     fs.chmodSync(file, 0o600)
   } finally { fs.rmSync(tmp, { force: true }) }
+}
+function saveDatabaseUrls(file, env) {
+  let original = ''
+  try { original = fs.readFileSync(file, 'utf8') } catch (error) { if (error.code !== 'ENOENT') throw new Error('Profil serveur illisible, aucune URL sauvegardée.') }
+  if (original.includes('\0')) throw new Error('Profil serveur : encodage UTF-8 requis, aucune valeur remplacée.')
+  const local = parseEnv(original)
+  const missing = ['DATABASE_URL', 'DIRECT_URL'].filter(name => !local[name])
+  if (!missing.length) return []
+  const pair = Object.fromEntries(['DATABASE_URL', 'DIRECT_URL'].map(name => [name, local[name] || env[name]]))
+  const issues = validate(pair, 'pwa', { vercel: true }).filter(message => message.startsWith('DATABASE_URL') || message.startsWith('DIRECT_URL'))
+  if (issues.length) throw new Error(issues.join(' '))
+  // Append only missing URLs: comments, unrelated secrets and existing URLs stay intact.
+  const addition = serializeEnv(pair, missing, 'pwa')
+  let current = ''
+  try { current = fs.readFileSync(file, 'utf8') } catch (error) { if (error.code !== 'ENOENT') throw new Error('Profil serveur illisible.') }
+  if (current !== original) throw new Error('Profil serveur modifié pendant la récupération ; sauvegarde annulée.')
+  writePrivate(file, original + (original && !original.endsWith('\n') ? '\n' : '') + addition)
+  return missing
 }
 function fillMissing(env, names, profile) {
   const result = { ...env }
@@ -184,5 +202,5 @@ function syncPlan(local, remote, names) {
   return { additions, conflicts }
 }
 module.exports = { DEFAULTS, GENERATED, templateNames, namesForProfile, isSecret, parseEnv,
-  serializeEnv, readEnv, writePrivate, fillMissing, validate, licenseKeyMatches,
+  serializeEnv, readEnv, writePrivate, saveDatabaseUrls, fillMissing, validate, licenseKeyMatches,
   embeddedLicenseKey, syncPlan }
