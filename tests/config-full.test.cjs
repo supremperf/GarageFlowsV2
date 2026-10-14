@@ -278,3 +278,16 @@ test('SQLite initialization honors the configured filename and never overwrites 
   assert.equal(fs.readFileSync(file, 'utf8'), 'existing-private-records')
   assert.throws(() => services.ensureDesktopDatabase(dir, 'file:../.git/new.db'), /Git interdit/)
 })
+
+test('SQL drift and technical comparison failures both stop before cloud mutations', async t => {
+  for (const code of [1, 2]) {
+    const f = fullFixture(t), execute = f.api.execute
+    f.api.execute = async (args, options) => {
+      if (args.includes('diff')) throw Object.assign(new Error('private provider response'), { exitCode: code })
+      return execute(args, options)
+    }
+    await assert.rejects(() => full(f.api), code === 2 ? /Drift SQL détecté/ : /Comparaison SQL impossible/)
+    assert.ok(!f.calls.includes('sync'))
+    assert.ok(!f.calls.some(call => call.startsWith('deploy')))
+  }
+})

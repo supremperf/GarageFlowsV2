@@ -213,3 +213,29 @@ test('interactive confirmations pass their visible label to readline (Windows re
     else delete process.stdin.isTTY
   }
 })
+
+test('SQL diagnostic is read-only, uses the server profile and distinguishes drift from technical failure', async () => {
+  const wizard = require('../config')
+  for (const code of [0, 1, 2]) {
+    const calls = []
+    const result = await wizard.diagnoseSql({ env: server(), run: async (args, options) => {
+      calls.push(args)
+      assert.equal(options.env.ELECTRON, '')
+      assert.equal(options.env.DATABASE_URL, server().DATABASE_URL)
+      if (code) throw Object.assign(new Error('raw output must remain hidden'), { exitCode: code })
+      return ''
+    } })
+    assert.equal(result, code)
+    assert.equal(calls.length, 1)
+    assert.deepEqual(calls[0].slice(1), ['migrate', 'diff', '--from-schema-datasource', 'prisma/server/schema.prisma', '--to-schema-datamodel', 'prisma/server/schema.prisma', '--exit-code'])
+  }
+})
+
+test('subprocess failures retain exit status without exposing stdout or stderr', async () => {
+  const wizard = require('../config')
+  await assert.rejects(wizard.execute(['-e', 'console.log("fixture-secret"); console.error("fixture-secret"); process.exit(2)']), error => {
+    assert.equal(error.exitCode, 2)
+    assert.ok(!error.message.includes('fixture-secret'))
+    return true
+  })
+})

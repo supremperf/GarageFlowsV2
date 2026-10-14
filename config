@@ -28,6 +28,7 @@ function help() {
   node config --profile licences      PWA + autorité de licences
   node config --check --profile pwa   Validation locale, sans écriture ni réseau
   node config --check --profile pwa --vercel  Validation pour une cible Vercel
+  node config --diagnose-sql          Diagnostic PostgreSQL en lecture seule
   node config --help
 
 Fichiers : desktop → .env ; serveur → .env.server.local (isolé des builds Electron).
@@ -94,7 +95,12 @@ function execute(commandArgs, { interactive = false, input, env = process.env, l
       child.stdin.end(input === undefined ? undefined : input)
     }
     child.once('error', () => reject(new Error(`${label} : lancement impossible.`)))
-    child.once('close', code => code === 0 ? resolve(stdout) : reject(new Error(`${label} : échec. Aucune validation revendiquée ; vérifiez votre connexion et vos droits, puis relancez.`)))
+    child.once('close', code => {
+      if (code === 0) return resolve(stdout)
+      const error = new Error(`${label} : échec. Aucune validation revendiquée ; vérifiez votre connexion et vos droits, puis relancez.`)
+      error.exitCode = code // Preserve status without exposing provider output or credentials.
+      reject(error)
+    })
   })
 }
 function tool(name, commandArgs, options = {}) {
@@ -332,13 +338,39 @@ async function syncVercel(env, names, expectedRemote, { authorized = false } = {
   console.log('Présence des ajouts vérifiée. Les valeurs Sensitive ne sont pas relisibles : leur contenu ne peut pas être vérifié.')
   return true
 }
+async function diagnoseSql({ env = core.readEnv(path.join(ROOT, '.env.server.local')), run = execute } = {}) {
+  const issues = core.validate({ DATABASE_URL: env.DATABASE_URL, DIRECT_URL: env.DIRECT_URL }, 'pwa', { vercel: true })
+    .filter(message => message.startsWith('DATABASE_URL') || message.startsWith('DIRECT_URL'))
+  if (issues.length) throw new Error(issues.join(' '))
+  console.log('Diagnostic SQL en lecture seule : profil .env.server.local, sans migration, reset, synchronisation ni déploiement.')
+  const cli = path.join(ROOT, 'node_modules/prisma/build/index.js')
+  try {
+    await run([cli, 'migrate', 'diff', '--from-schema-datasource', 'prisma/server/schema.prisma',
+      '--to-schema-datamodel', 'prisma/server/schema.prisma', '--exit-code'],
+      { env: childEnv(env, true), label: 'Diagnostic SQL' })
+    console.log('Code Prisma 0 : schéma conforme, aucune différence détectée.')
+    return 0
+  } catch (error) {
+    if (error.exitCode === 2) {
+      console.log('Code Prisma 2 : différence de schéma (drift) détectée. Les migrations appliquées et/ou la base diffèrent du schéma Prisma attendu. Aucun correctif appliqué.')
+      return 2
+    }
+    console.log(`Code Prisma ${Number.isInteger(error.exitCode) ? error.exitCode : 'indisponible'} : comparaison impossible (erreur technique, pas une preuve de drift). Vérifier accès réseau, URLs, droits et installation Prisma. Sorties brutes masquées.`)
+    return 1
+  }
+}
 async function main() {
-  const accepted = new Set(['--help', '--check', '--profile', '--vercel', '--audit'])
+  const accepted = new Set(['--help', '--check', '--profile', '--vercel', '--audit', '--diagnose-sql'])
   for (let i = 0; i < args.length; i++) {
     if (!accepted.has(args[i])) throw new Error('Option inconnue. Utilisez node config --help.')
     if (args[i] === '--profile') { if (!PROFILES.includes(args[++i])) throw new Error('Profil attendu : full | desktop | pwa | licences.') }
   }
   if (args.includes('--help')) return help()
+  if (args.includes('--diagnose-sql')) {
+    if (args.length !== 1) throw new Error('Utiliser node config --diagnose-sql seul.')
+    process.exitCode = await diagnoseSql()
+    return
+  }
   if (args.includes('--audit') && args.includes('--check')) throw new Error('--audit écrit un rapport ; ne pas le combiner avec le contrôle lecture seule --check.')
   if (args.includes('--audit')) {
     const inventory = require('./scripts/config-audit.cjs')
@@ -444,7 +476,7 @@ async function main() {
 }
 module.exports = { root: ROOT, question, yes, select, tool, execute, npmCli,
   setupVercel, pullVercel, importRemote, configureNeon, secretField, licenseKey,
-  advanced, childEnv, syncVercel, licensePassphrase }
+  advanced, childEnv, syncVercel, licensePassphrase, diagnoseSql }
 if (require.main === module) main().catch(error => {
   // Never expose raw provider payloads, JSON snippets, stacks or file error contents.
   if (error instanceof SyntaxError) console.error('Configuration interrompue : réponse/fichier JSON invalide ; contenu masqué.')

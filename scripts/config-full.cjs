@@ -226,8 +226,13 @@ async function full(api) {
       await api.execute([cli, 'migrate', 'deploy', '--schema', 'prisma/server/schema.prisma'], options)
       await api.execute([cli, 'migrate', 'status', '--schema', 'prisma/server/schema.prisma'], options)
       // Exit-code 2 means drift. Never replace migrate deploy by destructive db push.
-      await api.execute([cli, 'migrate', 'diff', '--from-schema-datasource', 'prisma/server/schema.prisma',
-        '--to-schema-datamodel', 'prisma/server/schema.prisma', '--exit-code'], { ...options, label: 'Vérification de drift SQL' })
+      try {
+        await api.execute([cli, 'migrate', 'diff', '--from-schema-datasource', 'prisma/server/schema.prisma',
+          '--to-schema-datamodel', 'prisma/server/schema.prisma', '--exit-code'], { ...options, label: 'Vérification de drift SQL' })
+      } catch (error) {
+        if (error.exitCode === 2) throw new Error('Drift SQL détecté (code Prisma 2) : la base diffère du schéma attendu. Aucun déploiement autorisé. Diagnostic lecture seule : node config --diagnose-sql. Ne pas utiliser reset/db push pour contourner ce contrôle.')
+        throw new Error(`Comparaison SQL impossible (code Prisma ${Number.isInteger(error.exitCode) ? error.exitCode : 'indisponible'}). Ce résultat ne prouve pas un drift. Aucun déploiement autorisé. Diagnostic lecture seule : node config --diagnose-sql.`)
+      }
       console.log('Migrations et schéma vérifiés.')
     })
     if (database.empty) await step('première-licence-admin', async () => {

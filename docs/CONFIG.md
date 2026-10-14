@@ -72,6 +72,7 @@ Dans un Electron **déjà installé**, les secrets session/MAC/SMTP et la clé i
 ```sh
 npm run config                         # plan complet par défaut
 node config --profile full
+node config --diagnose-sql              # lecture seule : comparer PostgreSQL au schéma attendu
 node config --profile desktop          # réglage ciblé local
 node config --profile pwa               # réglage ciblé serveur
 node config --profile licences         # réglage ciblé émetteur
@@ -106,3 +107,12 @@ Les fichiers locaux sont écrits avant synchronisation ; une interruption peut a
 Un verrou local empêche deux plans complets simultanés. Après un arrêt brutal, vérifier qu’aucun processus config ne tourne puis retirer uniquement `GarageFlow-configuration/config.lock` avant de reprendre. Ne jamais supprimer un verrou pendant une configuration active.
 
 Conserver une sauvegarde chiffrée des secrets dans un coffre indépendant. Avant migration d’une base utilisée, vérifier PITR/sauvegarde chez le fournisseur. Les contrôles unitaires et les fournisseurs simulés ne constituent pas un déploiement réel sur vos comptes : la connexion et les sondes réelles sont effectuées lors de l’exécution autorisée sur votre poste.
+
+## Arrêt à la vérification de drift SQL
+
+`migrate deploy` et `migrate status` précèdent la comparaison du schéma. Une sortie non nulle de cette comparaison arrête le plan avant synchronisation Vercel et déploiement. Le configurateur distingue maintenant :
+
+- **Code Prisma 2** : différence de schéma détectée ; il faut analyser les migrations/schéma, sans réinitialiser la base.
+- **Autre code / code indisponible** : comparaison impossible (erreur technique), ce qui ne prouve pas un drift.
+
+Après un arrêt, lancer `node config --diagnose-sql`. Ce diagnostic utilise explicitement `.env.server.local`, pas le profil SQLite `.env`. Il ne lance que `prisma migrate diff` : aucune migration, création, synchronisation cloud ou correction de données. Les sorties brutes du fournisseur restent masquées ; seuls le code et son interprétation sont affichés. Les codes de sortie 0/2/1 signifient respectivement conforme/drift/erreur technique. Un résultat non nul est donc attendu si le problème persiste. Ne pas contourner le contrôle par reset, suppression de base ou `db push`.
