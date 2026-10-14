@@ -1,0 +1,6 @@
+# Three immutable public OAuth client-ID header findings only.
+# Rationale/hashes: investigation-2026-10-14/gitleaks-triage.jsonl.
+# Mandatory guard: tests/secret-scan-policy.test.cjs, also run in the secrets job.
+docs/audit/resumption-2026-10-14/evidence/gh-code-scanning.log:generic-api-key:20
+docs/audit/resumption-2026-10-14/evidence/gh-protection.log:generic-api-key:20
+docs/audit/resumption-2026-10-14/evidence/gh-rulesets.log:generic-api-key:23

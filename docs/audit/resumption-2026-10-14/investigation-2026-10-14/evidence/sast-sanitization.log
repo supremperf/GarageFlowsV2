@@ -1,0 +1,20 @@
+{
+  "version": "1.180.0",
+  "targets": 996,
+  "selected": 996,
+  "missingTargets": [],
+  "rawSignals": 865,
+  "uniqueRuleLocations": 770,
+  "locationGroups": 748,
+  "severities": {
+    "ERROR": 14,
+    "WARNING": 354,
+    "INFO": 497
+  },
+  "categories": {
+    "security": 277,
+    "best-practice": 59,
+    "correctness": 99,
+    "portability": 430
+  }
+}

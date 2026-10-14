@@ -1,0 +1,97 @@
+{
+  "at": "2026-10-14T15:20:40.038Z",
+  "typescript": "5.9.3",
+  "files": [
+    {
+      "path": "src/integration/reglages-logo-et-cout-achat.test.ts",
+      "sourceSha256": "765e8e414c150f36d6d7189cfd40dc57b4493da3bf355bffecefefad50251221",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    },
+    {
+      "path": "src/integration/portail-lien-revoque-a-la-republication.test.ts",
+      "sourceSha256": "a10d9648fabbf3dc061f8d51593021d7ba1465796ebfc74ab8c6903aa23b8c85",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    },
+    {
+      "path": "src/integration/stock-tracabilite-et-suppression.test.ts",
+      "sourceSha256": "4bcacb7a862bcd3bfb6e4daa17307fd668a6bc3a5b6a0b675eb1009c615ba281",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    },
+    {
+      "path": "src/lib/__tests__/license-activate.test.ts",
+      "sourceSha256": "3060285db13373066921a8b52998e5a37588c14335877721ebd0c094bc47b430",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    },
+    {
+      "path": "src/integration/devis-signature-depuis-un-poste.test.ts",
+      "sourceSha256": "5ac05fbd004c9ad391211c842f8435a69c06e564d6c5cd5125bff783a53d89b7",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    },
+    {
+      "path": "src/integration/intervention-rattache-client-vehicule.test.ts",
+      "sourceSha256": "32f952aa4e73459c9276732591873b97dae6977e0a2e418a4d52e517e8553ed2",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    },
+    {
+      "path": "src/integration/planning-journee-complete.test.ts",
+      "sourceSha256": "c5fddfd19b3913728192e7d3de101bec366288714d572fdf66cdd82bfac8d8a6",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    },
+    {
+      "path": "src/integration/publication-mise-a-jour.test.ts",
+      "sourceSha256": "0b939fd997286ba7a9f916c288fce48a8d98c916ad9120e2f85e14f04a17d908",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    },
+    {
+      "path": "src/integration/pulse-boucle-de-synchronisation.test.ts",
+      "sourceSha256": "fc7046440f5d4c4de7c02afb82f858332127f907d16f49e5950a7540f163f73d",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    },
+    {
+      "path": "src/integration/pwa-fenetre-et-photos.test.ts",
+      "sourceSha256": "7fdad7763552f1d83b59e554e4badad42e041527f7fea46273b35eae00657d4c",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    },
+    {
+      "path": "src/integration/reglages-appliques.test.ts",
+      "sourceSha256": "325cdb6a40699f048ff7f8e57771702b0d2ec9490a25b92250ada1cdf859368c",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    },
+    {
+      "path": "src/integration/reglages-enfin-lus.test.ts",
+      "sourceSha256": "1225bac04e2be47dedf56c124a1029f05d03e17c6e91de2164da026d10b50c00",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    },
+    {
+      "path": "src/integration/scenario-maitre.test.ts",
+      "sourceSha256": "0d6b403f1f9b4993c4bf3b57074c87264557e101824e1fb92e5f172673da63a4",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    },
+    {
+      "path": "src/integration/statistiques-au-centime.test.ts",
+      "sourceSha256": "47735f1b9aeffe4919a81d20d1fbfd814e7161b2af2f66cba13b8a8a9731771c",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    },
+    {
+      "path": "src/integration/stock-suppression-et-entrees.test.ts",
+      "sourceSha256": "ccc2fcd4851663bebacf0069691a00a2c87b1cb1d05c0b3f9cdfea55e9204d93",
+      "syntaxDiagnostics": [],
+      "containsGenericTypeofImport": true
+    }
+  ],
+  "limits": "Syntax parse only, not semantic/manual/functional validation. Semgrep grammar gap remains open; no source/test changes or rules disabled."
+}

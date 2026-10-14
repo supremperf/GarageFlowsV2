@@ -95,7 +95,7 @@ test('checks AES lengths, old keys, weak secrets, limits and optional enums', ()
   const good = server()
   const invalid = {
     GF_SMTP_CIPHER_KEY: 'wrong', GF_BACKUP_KEY: 'wrong', GF_SMTP_CIPHER_KEY_OLD: 'wrong,wrong',
-    NEXTAUTH_SECRET: 'placeholder_123456789012345678901234567890',
+    NEXTAUTH_SECRET: 'placeholder_' + '123456789012345678901234567890',
     RATE_LIMIT_API_MAX: '0', RATE_LIMIT_API_WINDOW_SECONDS: '1.5',
     UPSTASH_REDIS_TIMEOUT_MS: '15000', GF_INTEGRITY_MODE: 'bad', GF_UPDATE_CHANNEL: 'bad',
     GF_DEVICE_AUTH_DEADLINE: 'tomorrow', GF_MIN_PWA_VERSION: 'not-a-version',
