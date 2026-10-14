@@ -1,0 +1,24 @@
+{
+  "run": 38589332331,
+  "commit": "64619b6270d7923167130246c061ad5773e3f29a",
+  "jobs": [
+    {
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "apiExit": 0,
+      "annotations": 4,
+      "gitleaksLocations": 0
+    },
+    {
+      "name": "Secret scan (Gitleaks)",
+      "apiExit": 0,
+      "annotations": 6,
+      "gitleaksLocations": 0
+    },
+    {
+      "name": "Required validation",
+      "apiExit": 0,
+      "annotations": 2,
+      "gitleaksLocations": 0
+    }
+  ]
+}

@@ -1,0 +1,808 @@
+{
+  "at": "2026-10-14T15:30:56.694847+00:00",
+  "version": "1.180.0",
+  "rawSha256": "37bc5f3f0fd20303b51b74c8a8626a555dcdd83bb2de7174e825897b3e36e9e9",
+  "targets": 996,
+  "selected": 996,
+  "missingTargets": [],
+  "rawSignals": 865,
+  "uniqueRuleLocations": 770,
+  "locationGroups": 748,
+  "severities": {
+    "ERROR": 14,
+    "WARNING": 354,
+    "INFO": 497
+  },
+  "categories": {
+    "security": 277,
+    "best-practice": 59,
+    "correctness": 99,
+    "portability": 430
+  },
+  "errors": [
+    {
+      "code": 3,
+      "type": "Syntax error",
+      "path": "src/integration/reglages-logo-et-cout-achat.test.ts",
+      "sourceSha256": "765e8e414c150f36d6d7189cfd40dc57b4493da3bf355bffecefefad50251221"
+    },
+    {
+      "code": 3,
+      "type": "Syntax error",
+      "path": "src/integration/portail-lien-revoque-a-la-republication.test.ts",
+      "sourceSha256": "a10d9648fabbf3dc061f8d51593021d7ba1465796ebfc74ab8c6903aa23b8c85"
+    },
+    {
+      "code": 3,
+      "type": "Syntax error",
+      "path": "src/integration/stock-tracabilite-et-suppression.test.ts",
+      "sourceSha256": "4bcacb7a862bcd3bfb6e4daa17307fd668a6bc3a5b6a0b675eb1009c615ba281"
+    },
+    {
+      "code": 3,
+      "type": "Syntax error",
+      "path": "src/lib/__tests__/license-activate.test.ts",
+      "sourceSha256": "3060285db13373066921a8b52998e5a37588c14335877721ebd0c094bc47b430"
+    },
+    {
+      "code": 3,
+      "type": [
+        "PartialParsing",
+        [
+          {
+            "path": "src/integration/devis-signature-depuis-un-poste.test.ts",
+            "start": {
+              "line": 87,
+              "col": 78,
+              "offset": 0
+            },
+            "end": {
+              "line": 89,
+              "col": 8,
+              "offset": 21
+            }
+          },
+          {
+            "path": "src/integration/devis-signature-depuis-un-poste.test.ts",
+            "start": {
+              "line": 91,
+              "col": 25,
+              "offset": 0
+            },
+            "end": {
+              "line": 91,
+              "col": 30,
+              "offset": 5
+            }
+          },
+          {
+            "path": "src/integration/devis-signature-depuis-un-poste.test.ts",
+            "start": {
+              "line": 92,
+              "col": 22,
+              "offset": 0
+            },
+            "end": {
+              "line": 96,
+              "col": 4,
+              "offset": 115
+            }
+          }
+        ]
+      ],
+      "path": "src/integration/devis-signature-depuis-un-poste.test.ts",
+      "spans": [
+        {
+          "file": "src/integration/devis-signature-depuis-un-poste.test.ts",
+          "start": {
+            "line": 87,
+            "col": 78,
+            "offset": 0
+          },
+          "end": {
+            "line": 89,
+            "col": 8,
+            "offset": 21
+          }
+        },
+        {
+          "file": "src/integration/devis-signature-depuis-un-poste.test.ts",
+          "start": {
+            "line": 91,
+            "col": 25,
+            "offset": 0
+          },
+          "end": {
+            "line": 91,
+            "col": 30,
+            "offset": 5
+          }
+        },
+        {
+          "file": "src/integration/devis-signature-depuis-un-poste.test.ts",
+          "start": {
+            "line": 92,
+            "col": 22,
+            "offset": 0
+          },
+          "end": {
+            "line": 96,
+            "col": 4,
+            "offset": 115
+          }
+        }
+      ],
+      "sourceSha256": "5ac05fbd004c9ad391211c842f8435a69c06e564d6c5cd5125bff783a53d89b7"
+    },
+    {
+      "code": 3,
+      "type": [
+        "PartialParsing",
+        [
+          {
+            "path": "src/integration/intervention-rattache-client-vehicule.test.ts",
+            "start": {
+              "line": 29,
+              "col": 72,
+              "offset": 0
+            },
+            "end": {
+              "line": 30,
+              "col": 15,
+              "offset": 17
+            }
+          },
+          {
+            "path": "src/integration/intervention-rattache-client-vehicule.test.ts",
+            "start": {
+              "line": 31,
+              "col": 1,
+              "offset": 0
+            },
+            "end": {
+              "line": 31,
+              "col": 2,
+              "offset": 1
+            }
+          }
+        ]
+      ],
+      "path": "src/integration/intervention-rattache-client-vehicule.test.ts",
+      "spans": [
+        {
+          "file": "src/integration/intervention-rattache-client-vehicule.test.ts",
+          "start": {
+            "line": 29,
+            "col": 72,
+            "offset": 0
+          },
+          "end": {
+            "line": 30,
+            "col": 15,
+            "offset": 17
+          }
+        },
+        {
+          "file": "src/integration/intervention-rattache-client-vehicule.test.ts",
+          "start": {
+            "line": 31,
+            "col": 1,
+            "offset": 0
+          },
+          "end": {
+            "line": 31,
+            "col": 2,
+            "offset": 1
+          }
+        }
+      ],
+      "sourceSha256": "32f952aa4e73459c9276732591873b97dae6977e0a2e418a4d52e517e8553ed2"
+    },
+    {
+      "code": 3,
+      "type": [
+        "PartialParsing",
+        [
+          {
+            "path": "src/integration/planning-journee-complete.test.ts",
+            "start": {
+              "line": 28,
+              "col": 72,
+              "offset": 0
+            },
+            "end": {
+              "line": 29,
+              "col": 15,
+              "offset": 17
+            }
+          },
+          {
+            "path": "src/integration/planning-journee-complete.test.ts",
+            "start": {
+              "line": 30,
+              "col": 1,
+              "offset": 0
+            },
+            "end": {
+              "line": 30,
+              "col": 2,
+              "offset": 1
+            }
+          }
+        ]
+      ],
+      "path": "src/integration/planning-journee-complete.test.ts",
+      "spans": [
+        {
+          "file": "src/integration/planning-journee-complete.test.ts",
+          "start": {
+            "line": 28,
+            "col": 72,
+            "offset": 0
+          },
+          "end": {
+            "line": 29,
+            "col": 15,
+            "offset": 17
+          }
+        },
+        {
+          "file": "src/integration/planning-journee-complete.test.ts",
+          "start": {
+            "line": 30,
+            "col": 1,
+            "offset": 0
+          },
+          "end": {
+            "line": 30,
+            "col": 2,
+            "offset": 1
+          }
+        }
+      ],
+      "sourceSha256": "c5fddfd19b3913728192e7d3de101bec366288714d572fdf66cdd82bfac8d8a6"
+    },
+    {
+      "code": 3,
+      "type": [
+        "PartialParsing",
+        [
+          {
+            "path": "src/integration/publication-mise-a-jour.test.ts",
+            "start": {
+              "line": 27,
+              "col": 72,
+              "offset": 0
+            },
+            "end": {
+              "line": 28,
+              "col": 15,
+              "offset": 17
+            }
+          },
+          {
+            "path": "src/integration/publication-mise-a-jour.test.ts",
+            "start": {
+              "line": 29,
+              "col": 1,
+              "offset": 0
+            },
+            "end": {
+              "line": 29,
+              "col": 2,
+              "offset": 1
+            }
+          }
+        ]
+      ],
+      "path": "src/integration/publication-mise-a-jour.test.ts",
+      "spans": [
+        {
+          "file": "src/integration/publication-mise-a-jour.test.ts",
+          "start": {
+            "line": 27,
+            "col": 72,
+            "offset": 0
+          },
+          "end": {
+            "line": 28,
+            "col": 15,
+            "offset": 17
+          }
+        },
+        {
+          "file": "src/integration/publication-mise-a-jour.test.ts",
+          "start": {
+            "line": 29,
+            "col": 1,
+            "offset": 0
+          },
+          "end": {
+            "line": 29,
+            "col": 2,
+            "offset": 1
+          }
+        }
+      ],
+      "sourceSha256": "0b939fd997286ba7a9f916c288fce48a8d98c916ad9120e2f85e14f04a17d908"
+    },
+    {
+      "code": 3,
+      "type": [
+        "PartialParsing",
+        [
+          {
+            "path": "src/integration/pulse-boucle-de-synchronisation.test.ts",
+            "start": {
+              "line": 39,
+              "col": 72,
+              "offset": 0
+            },
+            "end": {
+              "line": 40,
+              "col": 15,
+              "offset": 17
+            }
+          },
+          {
+            "path": "src/integration/pulse-boucle-de-synchronisation.test.ts",
+            "start": {
+              "line": 41,
+              "col": 1,
+              "offset": 0
+            },
+            "end": {
+              "line": 41,
+              "col": 2,
+              "offset": 1
+            }
+          }
+        ]
+      ],
+      "path": "src/integration/pulse-boucle-de-synchronisation.test.ts",
+      "spans": [
+        {
+          "file": "src/integration/pulse-boucle-de-synchronisation.test.ts",
+          "start": {
+            "line": 39,
+            "col": 72,
+            "offset": 0
+          },
+          "end": {
+            "line": 40,
+            "col": 15,
+            "offset": 17
+          }
+        },
+        {
+          "file": "src/integration/pulse-boucle-de-synchronisation.test.ts",
+          "start": {
+            "line": 41,
+            "col": 1,
+            "offset": 0
+          },
+          "end": {
+            "line": 41,
+            "col": 2,
+            "offset": 1
+          }
+        }
+      ],
+      "sourceSha256": "fc7046440f5d4c4de7c02afb82f858332127f907d16f49e5950a7540f163f73d"
+    },
+    {
+      "code": 3,
+      "type": [
+        "PartialParsing",
+        [
+          {
+            "path": "src/integration/pwa-fenetre-et-photos.test.ts",
+            "start": {
+              "line": 26,
+              "col": 73,
+              "offset": 0
+            },
+            "end": {
+              "line": 27,
+              "col": 15,
+              "offset": 17
+            }
+          },
+          {
+            "path": "src/integration/pwa-fenetre-et-photos.test.ts",
+            "start": {
+              "line": 28,
+              "col": 1,
+              "offset": 0
+            },
+            "end": {
+              "line": 28,
+              "col": 2,
+              "offset": 1
+            }
+          }
+        ]
+      ],
+      "path": "src/integration/pwa-fenetre-et-photos.test.ts",
+      "spans": [
+        {
+          "file": "src/integration/pwa-fenetre-et-photos.test.ts",
+          "start": {
+            "line": 26,
+            "col": 73,
+            "offset": 0
+          },
+          "end": {
+            "line": 27,
+            "col": 15,
+            "offset": 17
+          }
+        },
+        {
+          "file": "src/integration/pwa-fenetre-et-photos.test.ts",
+          "start": {
+            "line": 28,
+            "col": 1,
+            "offset": 0
+          },
+          "end": {
+            "line": 28,
+            "col": 2,
+            "offset": 1
+          }
+        }
+      ],
+      "sourceSha256": "7fdad7763552f1d83b59e554e4badad42e041527f7fea46273b35eae00657d4c"
+    },
+    {
+      "code": 3,
+      "type": [
+        "PartialParsing",
+        [
+          {
+            "path": "src/integration/reglages-appliques.test.ts",
+            "start": {
+              "line": 35,
+              "col": 72,
+              "offset": 0
+            },
+            "end": {
+              "line": 36,
+              "col": 15,
+              "offset": 17
+            }
+          },
+          {
+            "path": "src/integration/reglages-appliques.test.ts",
+            "start": {
+              "line": 37,
+              "col": 1,
+              "offset": 0
+            },
+            "end": {
+              "line": 37,
+              "col": 2,
+              "offset": 1
+            }
+          }
+        ]
+      ],
+      "path": "src/integration/reglages-appliques.test.ts",
+      "spans": [
+        {
+          "file": "src/integration/reglages-appliques.test.ts",
+          "start": {
+            "line": 35,
+            "col": 72,
+            "offset": 0
+          },
+          "end": {
+            "line": 36,
+            "col": 15,
+            "offset": 17
+          }
+        },
+        {
+          "file": "src/integration/reglages-appliques.test.ts",
+          "start": {
+            "line": 37,
+            "col": 1,
+            "offset": 0
+          },
+          "end": {
+            "line": 37,
+            "col": 2,
+            "offset": 1
+          }
+        }
+      ],
+      "sourceSha256": "325cdb6a40699f048ff7f8e57771702b0d2ec9490a25b92250ada1cdf859368c"
+    },
+    {
+      "code": 3,
+      "type": [
+        "PartialParsing",
+        [
+          {
+            "path": "src/integration/reglages-enfin-lus.test.ts",
+            "start": {
+              "line": 19,
+              "col": 72,
+              "offset": 0
+            },
+            "end": {
+              "line": 20,
+              "col": 15,
+              "offset": 17
+            }
+          },
+          {
+            "path": "src/integration/reglages-enfin-lus.test.ts",
+            "start": {
+              "line": 21,
+              "col": 1,
+              "offset": 0
+            },
+            "end": {
+              "line": 21,
+              "col": 2,
+              "offset": 1
+            }
+          }
+        ]
+      ],
+      "path": "src/integration/reglages-enfin-lus.test.ts",
+      "spans": [
+        {
+          "file": "src/integration/reglages-enfin-lus.test.ts",
+          "start": {
+            "line": 19,
+            "col": 72,
+            "offset": 0
+          },
+          "end": {
+            "line": 20,
+            "col": 15,
+            "offset": 17
+          }
+        },
+        {
+          "file": "src/integration/reglages-enfin-lus.test.ts",
+          "start": {
+            "line": 21,
+            "col": 1,
+            "offset": 0
+          },
+          "end": {
+            "line": 21,
+            "col": 2,
+            "offset": 1
+          }
+        }
+      ],
+      "sourceSha256": "1225bac04e2be47dedf56c124a1029f05d03e17c6e91de2164da026d10b50c00"
+    },
+    {
+      "code": 3,
+      "type": [
+        "PartialParsing",
+        [
+          {
+            "path": "src/integration/scenario-maitre.test.ts",
+            "start": {
+              "line": 32,
+              "col": 72,
+              "offset": 0
+            },
+            "end": {
+              "line": 33,
+              "col": 15,
+              "offset": 17
+            }
+          },
+          {
+            "path": "src/integration/scenario-maitre.test.ts",
+            "start": {
+              "line": 34,
+              "col": 1,
+              "offset": 0
+            },
+            "end": {
+              "line": 34,
+              "col": 2,
+              "offset": 1
+            }
+          }
+        ]
+      ],
+      "path": "src/integration/scenario-maitre.test.ts",
+      "spans": [
+        {
+          "file": "src/integration/scenario-maitre.test.ts",
+          "start": {
+            "line": 32,
+            "col": 72,
+            "offset": 0
+          },
+          "end": {
+            "line": 33,
+            "col": 15,
+            "offset": 17
+          }
+        },
+        {
+          "file": "src/integration/scenario-maitre.test.ts",
+          "start": {
+            "line": 34,
+            "col": 1,
+            "offset": 0
+          },
+          "end": {
+            "line": 34,
+            "col": 2,
+            "offset": 1
+          }
+        }
+      ],
+      "sourceSha256": "0d6b403f1f9b4993c4bf3b57074c87264557e101824e1fb92e5f172673da63a4"
+    },
+    {
+      "code": 3,
+      "type": [
+        "PartialParsing",
+        [
+          {
+            "path": "src/integration/statistiques-au-centime.test.ts",
+            "start": {
+              "line": 29,
+              "col": 72,
+              "offset": 0
+            },
+            "end": {
+              "line": 30,
+              "col": 15,
+              "offset": 17
+            }
+          },
+          {
+            "path": "src/integration/statistiques-au-centime.test.ts",
+            "start": {
+              "line": 31,
+              "col": 1,
+              "offset": 0
+            },
+            "end": {
+              "line": 31,
+              "col": 2,
+              "offset": 1
+            }
+          }
+        ]
+      ],
+      "path": "src/integration/statistiques-au-centime.test.ts",
+      "spans": [
+        {
+          "file": "src/integration/statistiques-au-centime.test.ts",
+          "start": {
+            "line": 29,
+            "col": 72,
+            "offset": 0
+          },
+          "end": {
+            "line": 30,
+            "col": 15,
+            "offset": 17
+          }
+        },
+        {
+          "file": "src/integration/statistiques-au-centime.test.ts",
+          "start": {
+            "line": 31,
+            "col": 1,
+            "offset": 0
+          },
+          "end": {
+            "line": 31,
+            "col": 2,
+            "offset": 1
+          }
+        }
+      ],
+      "sourceSha256": "47735f1b9aeffe4919a81d20d1fbfd814e7161b2af2f66cba13b8a8a9731771c"
+    },
+    {
+      "code": 3,
+      "type": [
+        "PartialParsing",
+        [
+          {
+            "path": "src/integration/stock-suppression-et-entrees.test.ts",
+            "start": {
+              "line": 32,
+              "col": 72,
+              "offset": 0
+            },
+            "end": {
+              "line": 33,
+              "col": 15,
+              "offset": 17
+            }
+          },
+          {
+            "path": "src/integration/stock-suppression-et-entrees.test.ts",
+            "start": {
+              "line": 34,
+              "col": 1,
+              "offset": 0
+            },
+            "end": {
+              "line": 34,
+              "col": 2,
+              "offset": 1
+            }
+          }
+        ]
+      ],
+      "path": "src/integration/stock-suppression-et-entrees.test.ts",
+      "spans": [
+        {
+          "file": "src/integration/stock-suppression-et-entrees.test.ts",
+          "start": {
+            "line": 32,
+            "col": 72,
+            "offset": 0
+          },
+          "end": {
+            "line": 33,
+            "col": 15,
+            "offset": 17
+          }
+        },
+        {
+          "file": "src/integration/stock-suppression-et-entrees.test.ts",
+          "start": {
+            "line": 34,
+            "col": 1,
+            "offset": 0
+          },
+          "end": {
+            "line": 34,
+            "col": 2,
+            "offset": 1
+          }
+        }
+      ],
+      "sourceSha256": "ccc2fcd4851663bebacf0069691a00a2c87b1cb1d05c0b3f9cdfea55e9204d93"
+    }
+  ],
+  "rules": {
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.browser.security.insecure-document-method": 2,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.browser.security.insecure-innerhtml": 2,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.security.html-in-template-string": 32,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.best-practice.lazy-load-module": 41,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.security.audit.detect-non-literal-fs-filename": 134,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.security.audit.path-traversal.path-join-resolve-traversal": 66,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.correctness.useless-assignment": 13,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.node-crypto.security.gcm-no-tag-length": 4,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.correctness.missing-template-string-indicator": 49,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.security.detect-child-process": 1,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.correctness.no-stringify-keys": 31,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.security.audit.detect-non-literal-regexp": 20,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.security.audit.detect-non-literal-require": 6,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.security.audit.spawn-shell-true": 1,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.python.lang.best-practice.unspecified-open-encoding": 1,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.python.lang.security.audit.dynamic-urllib-use-detected": 3,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.python.lang.correctness.return-in-init": 2,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.correctness.no-replaceall": 4,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.python.lang.best-practice.arbitrary-sleep": 2,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.typescript.react.portability.i18next.jsx-not-internationalized": 430,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.best-practice.javascript-confirm": 9,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.typescript.react.best-practice.react-props-spreading": 4,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.best-practice.javascript-alert": 1,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.best-practice.javascript-prompt": 1,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.security.audit.unsafe-dynamic-method": 3,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.lang.security.audit.detect-redos": 2,
+    "home.user.audit-resumption..cache.upstreams.rules.semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d.javascript.browser.security.js-open-redirect-from-function": 1
+  },
+  "limits": "No excerpts/Secret/Match/metavariables stored. Selected does not mean completely parsed. Same-location rules retained, not silently discarded. Scan-source hashes taken from pre-scan manifest, current file hashes recorded separately."
+}

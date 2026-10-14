@@ -1,0 +1,6103 @@
+[
+  {
+    "path": "e2e/inspection-contrast.spec.ts",
+    "startLine": 65,
+    "endLine": 88,
+    "findingIds": [
+      "SAST-20261014-0865",
+      "SAST-20261014-0866",
+      "SAST-20261014-0867"
+    ]
+  },
+  {
+    "path": "e2e/inspection-contrast.spec.ts",
+    "startLine": 226,
+    "endLine": 245,
+    "findingIds": [
+      "SAST-20261014-0868",
+      "SAST-20261014-0869",
+      "SAST-20261014-0870"
+    ]
+  },
+  {
+    "path": "electron/control-plane.js",
+    "startLine": 188,
+    "endLine": 188,
+    "findingIds": [
+      "SAST-20261014-0871"
+    ]
+  },
+  {
+    "path": "electron/integrity.js",
+    "startLine": 101,
+    "endLine": 101,
+    "findingIds": [
+      "SAST-20261014-0872"
+    ]
+  },
+  {
+    "path": "electron/integrity.js",
+    "startLine": 116,
+    "endLine": 116,
+    "findingIds": [
+      "SAST-20261014-0873",
+      "SAST-20261014-0874"
+    ]
+  },
+  {
+    "path": "electron/integrity.js",
+    "startLine": 127,
+    "endLine": 127,
+    "findingIds": [
+      "SAST-20261014-0875",
+      "SAST-20261014-0876"
+    ]
+  },
+  {
+    "path": "electron/integrity.js",
+    "startLine": 136,
+    "endLine": 136,
+    "findingIds": [
+      "SAST-20261014-0877"
+    ]
+  },
+  {
+    "path": "electron/integrity.js",
+    "startLine": 150,
+    "endLine": 150,
+    "findingIds": [
+      "SAST-20261014-0878"
+    ]
+  },
+  {
+    "path": "electron/integrity.js",
+    "startLine": 187,
+    "endLine": 187,
+    "findingIds": [
+      "SAST-20261014-0879"
+    ]
+  },
+  {
+    "path": "electron/integrity.js",
+    "startLine": 201,
+    "endLine": 201,
+    "findingIds": [
+      "SAST-20261014-0880"
+    ]
+  },
+  {
+    "path": "electron/integrity.js",
+    "startLine": 215,
+    "endLine": 215,
+    "findingIds": [
+      "SAST-20261014-0881"
+    ]
+  },
+  {
+    "path": "electron/integrity.js",
+    "startLine": 235,
+    "endLine": 235,
+    "findingIds": [
+      "SAST-20261014-0882"
+    ]
+  },
+  {
+    "path": "electron/integrity.js",
+    "startLine": 270,
+    "endLine": 270,
+    "findingIds": [
+      "SAST-20261014-0883",
+      "SAST-20261014-0884"
+    ]
+  },
+  {
+    "path": "electron/integrity.js",
+    "startLine": 324,
+    "endLine": 324,
+    "findingIds": [
+      "SAST-20261014-0885"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 27,
+    "endLine": 28,
+    "findingIds": [
+      "SAST-20261014-0886"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 28,
+    "endLine": 29,
+    "findingIds": [
+      "SAST-20261014-0887"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 32,
+    "endLine": 33,
+    "findingIds": [
+      "SAST-20261014-0888"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 33,
+    "endLine": 34,
+    "findingIds": [
+      "SAST-20261014-0889"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 34,
+    "endLine": 37,
+    "findingIds": [
+      "SAST-20261014-0890"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 253,
+    "endLine": 253,
+    "findingIds": [
+      "SAST-20261014-0891"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 299,
+    "endLine": 299,
+    "findingIds": [
+      "SAST-20261014-0892"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 520,
+    "endLine": 520,
+    "findingIds": [
+      "SAST-20261014-0893"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 679,
+    "endLine": 679,
+    "findingIds": [
+      "SAST-20261014-0894"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 735,
+    "endLine": 735,
+    "findingIds": [
+      "SAST-20261014-0895"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 808,
+    "endLine": 808,
+    "findingIds": [
+      "SAST-20261014-0896"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 1112,
+    "endLine": 1112,
+    "findingIds": [
+      "SAST-20261014-0897"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 1124,
+    "endLine": 1124,
+    "findingIds": [
+      "SAST-20261014-0898"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 1174,
+    "endLine": 1174,
+    "findingIds": [
+      "SAST-20261014-0899"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 1449,
+    "endLine": 1449,
+    "findingIds": [
+      "SAST-20261014-0900"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 1450,
+    "endLine": 1450,
+    "findingIds": [
+      "SAST-20261014-0901"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 1453,
+    "endLine": 1453,
+    "findingIds": [
+      "SAST-20261014-0902"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 1456,
+    "endLine": 1456,
+    "findingIds": [
+      "SAST-20261014-0903"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 1457,
+    "endLine": 1457,
+    "findingIds": [
+      "SAST-20261014-0904"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 1503,
+    "endLine": 1503,
+    "findingIds": [
+      "SAST-20261014-0905"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 1547,
+    "endLine": 1547,
+    "findingIds": [
+      "SAST-20261014-0906"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 2120,
+    "endLine": 2120,
+    "findingIds": [
+      "SAST-20261014-0907",
+      "SAST-20261014-0908"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 2202,
+    "endLine": 2202,
+    "findingIds": [
+      "SAST-20261014-0909"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 2217,
+    "endLine": 2217,
+    "findingIds": [
+      "SAST-20261014-0910"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 2245,
+    "endLine": 2245,
+    "findingIds": [
+      "SAST-20261014-0911"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 2249,
+    "endLine": 2249,
+    "findingIds": [
+      "SAST-20261014-0912",
+      "SAST-20261014-0913",
+      "SAST-20261014-0914",
+      "SAST-20261014-0915"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 2359,
+    "endLine": 2359,
+    "findingIds": [
+      "SAST-20261014-0916",
+      "SAST-20261014-0917"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 2986,
+    "endLine": 2991,
+    "findingIds": [
+      "SAST-20261014-0918"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3123,
+    "endLine": 3130,
+    "findingIds": [
+      "SAST-20261014-0919"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3164,
+    "endLine": 3170,
+    "findingIds": [
+      "SAST-20261014-0920"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3185,
+    "endLine": 3189,
+    "findingIds": [
+      "SAST-20261014-0921"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3273,
+    "endLine": 3273,
+    "findingIds": [
+      "SAST-20261014-0922"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3545,
+    "endLine": 3545,
+    "findingIds": [
+      "SAST-20261014-0923"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3546,
+    "endLine": 3546,
+    "findingIds": [
+      "SAST-20261014-0924"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3597,
+    "endLine": 3597,
+    "findingIds": [
+      "SAST-20261014-0925"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3629,
+    "endLine": 3629,
+    "findingIds": [
+      "SAST-20261014-0926"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3630,
+    "endLine": 3630,
+    "findingIds": [
+      "SAST-20261014-0927",
+      "SAST-20261014-0928"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3666,
+    "endLine": 3666,
+    "findingIds": [
+      "SAST-20261014-0929"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3674,
+    "endLine": 3674,
+    "findingIds": [
+      "SAST-20261014-0930"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3678,
+    "endLine": 3678,
+    "findingIds": [
+      "SAST-20261014-0931"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3698,
+    "endLine": 3698,
+    "findingIds": [
+      "SAST-20261014-0932"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3724,
+    "endLine": 3724,
+    "findingIds": [
+      "SAST-20261014-0933"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3733,
+    "endLine": 3733,
+    "findingIds": [
+      "SAST-20261014-0934"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3734,
+    "endLine": 3734,
+    "findingIds": [
+      "SAST-20261014-0935",
+      "SAST-20261014-0936"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3744,
+    "endLine": 3744,
+    "findingIds": [
+      "SAST-20261014-0937"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3751,
+    "endLine": 3751,
+    "findingIds": [
+      "SAST-20261014-0938",
+      "SAST-20261014-0939"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3752,
+    "endLine": 3752,
+    "findingIds": [
+      "SAST-20261014-0940"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3759,
+    "endLine": 3759,
+    "findingIds": [
+      "SAST-20261014-0941"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3766,
+    "endLine": 3766,
+    "findingIds": [
+      "SAST-20261014-0942"
+    ]
+  },
+  {
+    "path": "electron/main.js",
+    "startLine": 3798,
+    "endLine": 3798,
+    "findingIds": [
+      "SAST-20261014-0943"
+    ]
+  },
+  {
+    "path": "electron/pre-migration-backup.js",
+    "startLine": 65,
+    "endLine": 65,
+    "findingIds": [
+      "SAST-20261014-0944"
+    ]
+  },
+  {
+    "path": "electron/pre-migration-backup.js",
+    "startLine": 87,
+    "endLine": 87,
+    "findingIds": [
+      "SAST-20261014-0945",
+      "SAST-20261014-0946"
+    ]
+  },
+  {
+    "path": "electron/pre-migration-backup.js",
+    "startLine": 88,
+    "endLine": 88,
+    "findingIds": [
+      "SAST-20261014-0947",
+      "SAST-20261014-0948",
+      "SAST-20261014-0949"
+    ]
+  },
+  {
+    "path": "electron/pre-migration-backup.js",
+    "startLine": 134,
+    "endLine": 134,
+    "findingIds": [
+      "SAST-20261014-0950",
+      "SAST-20261014-0951"
+    ]
+  },
+  {
+    "path": "electron/pre-migration-backup.js",
+    "startLine": 136,
+    "endLine": 136,
+    "findingIds": [
+      "SAST-20261014-0952",
+      "SAST-20261014-0953"
+    ]
+  },
+  {
+    "path": "electron/secret.js",
+    "startLine": 77,
+    "endLine": 77,
+    "findingIds": [
+      "SAST-20261014-0954",
+      "SAST-20261014-0955"
+    ]
+  },
+  {
+    "path": "electron/secret.js",
+    "startLine": 81,
+    "endLine": 81,
+    "findingIds": [
+      "SAST-20261014-0956",
+      "SAST-20261014-0957"
+    ]
+  },
+  {
+    "path": "electron/secret.js",
+    "startLine": 82,
+    "endLine": 82,
+    "findingIds": [
+      "SAST-20261014-0958",
+      "SAST-20261014-0959"
+    ]
+  },
+  {
+    "path": "electron/secret.js",
+    "startLine": 96,
+    "endLine": 96,
+    "findingIds": [
+      "SAST-20261014-0960"
+    ]
+  },
+  {
+    "path": "electron/secret.js",
+    "startLine": 99,
+    "endLine": 99,
+    "findingIds": [
+      "SAST-20261014-0961",
+      "SAST-20261014-0962"
+    ]
+  },
+  {
+    "path": "electron/secret.js",
+    "startLine": 102,
+    "endLine": 102,
+    "findingIds": [
+      "SAST-20261014-0963",
+      "SAST-20261014-0964"
+    ]
+  },
+  {
+    "path": "electron/secret.js",
+    "startLine": 104,
+    "endLine": 104,
+    "findingIds": [
+      "SAST-20261014-0965",
+      "SAST-20261014-0966"
+    ]
+  },
+  {
+    "path": "electron/secret.js",
+    "startLine": 105,
+    "endLine": 105,
+    "findingIds": [
+      "SAST-20261014-0967",
+      "SAST-20261014-0968"
+    ]
+  },
+  {
+    "path": "electron/secret.js",
+    "startLine": 107,
+    "endLine": 107,
+    "findingIds": [
+      "SAST-20261014-0969",
+      "SAST-20261014-0970"
+    ]
+  },
+  {
+    "path": "electron/secret.js",
+    "startLine": 110,
+    "endLine": 110,
+    "findingIds": [
+      "SAST-20261014-0971",
+      "SAST-20261014-0972",
+      "SAST-20261014-0973",
+      "SAST-20261014-0974"
+    ]
+  },
+  {
+    "path": "electron/secret.js",
+    "startLine": 111,
+    "endLine": 111,
+    "findingIds": [
+      "SAST-20261014-0975",
+      "SAST-20261014-0976"
+    ]
+  },
+  {
+    "path": "electron/secret.js",
+    "startLine": 114,
+    "endLine": 114,
+    "findingIds": [
+      "SAST-20261014-0977",
+      "SAST-20261014-0978"
+    ]
+  },
+  {
+    "path": "electron/secret.js",
+    "startLine": 118,
+    "endLine": 118,
+    "findingIds": [
+      "SAST-20261014-0979",
+      "SAST-20261014-0980"
+    ]
+  },
+  {
+    "path": "electron/secure-resources.js",
+    "startLine": 47,
+    "endLine": 47,
+    "findingIds": [
+      "SAST-20261014-0981"
+    ]
+  },
+  {
+    "path": "electron/secure-resources.js",
+    "startLine": 59,
+    "endLine": 59,
+    "findingIds": [
+      "SAST-20261014-0982"
+    ]
+  },
+  {
+    "path": "electron/secure-resources.js",
+    "startLine": 65,
+    "endLine": 65,
+    "findingIds": [
+      "SAST-20261014-0983",
+      "SAST-20261014-0984",
+      "SAST-20261014-0985"
+    ]
+  },
+  {
+    "path": "electron/user-data-path.js",
+    "startLine": 23,
+    "endLine": 23,
+    "findingIds": [
+      "SAST-20261014-0986"
+    ]
+  },
+  {
+    "path": "prisma/seed.ts",
+    "startLine": 108,
+    "endLine": 108,
+    "findingIds": [
+      "SAST-20261014-0987"
+    ]
+  },
+  {
+    "path": "prisma/seed.ts",
+    "startLine": 109,
+    "endLine": 109,
+    "findingIds": [
+      "SAST-20261014-0988"
+    ]
+  },
+  {
+    "path": "prisma/seed.ts",
+    "startLine": 110,
+    "endLine": 110,
+    "findingIds": [
+      "SAST-20261014-0989"
+    ]
+  },
+  {
+    "path": "prisma/seed.ts",
+    "startLine": 111,
+    "endLine": 111,
+    "findingIds": [
+      "SAST-20261014-0990"
+    ]
+  },
+  {
+    "path": "prisma/seed.ts",
+    "startLine": 112,
+    "endLine": 112,
+    "findingIds": [
+      "SAST-20261014-0991"
+    ]
+  },
+  {
+    "path": "prisma/seed.ts",
+    "startLine": 113,
+    "endLine": 113,
+    "findingIds": [
+      "SAST-20261014-0992"
+    ]
+  },
+  {
+    "path": "prisma/seed.ts",
+    "startLine": 114,
+    "endLine": 114,
+    "findingIds": [
+      "SAST-20261014-0993"
+    ]
+  },
+  {
+    "path": "prisma/seed.ts",
+    "startLine": 115,
+    "endLine": 115,
+    "findingIds": [
+      "SAST-20261014-0994"
+    ]
+  },
+  {
+    "path": "prisma/seed.ts",
+    "startLine": 116,
+    "endLine": 116,
+    "findingIds": [
+      "SAST-20261014-0995"
+    ]
+  },
+  {
+    "path": "prisma/seed.ts",
+    "startLine": 117,
+    "endLine": 117,
+    "findingIds": [
+      "SAST-20261014-0996"
+    ]
+  },
+  {
+    "path": "prisma/seed.ts",
+    "startLine": 118,
+    "endLine": 118,
+    "findingIds": [
+      "SAST-20261014-0997"
+    ]
+  },
+  {
+    "path": "prisma/seed.ts",
+    "startLine": 119,
+    "endLine": 119,
+    "findingIds": [
+      "SAST-20261014-0998"
+    ]
+  },
+  {
+    "path": "prisma/seed.ts",
+    "startLine": 120,
+    "endLine": 120,
+    "findingIds": [
+      "SAST-20261014-0999"
+    ]
+  },
+  {
+    "path": "scripts/afterPack.js",
+    "startLine": 28,
+    "endLine": 28,
+    "findingIds": [
+      "SAST-20261014-1000",
+      "SAST-20261014-1001"
+    ]
+  },
+  {
+    "path": "scripts/afterPack.js",
+    "startLine": 29,
+    "endLine": 29,
+    "findingIds": [
+      "SAST-20261014-1002"
+    ]
+  },
+  {
+    "path": "scripts/afterPack.js",
+    "startLine": 34,
+    "endLine": 35,
+    "findingIds": [
+      "SAST-20261014-1003"
+    ]
+  },
+  {
+    "path": "scripts/afterPack.js",
+    "startLine": 39,
+    "endLine": 39,
+    "findingIds": [
+      "SAST-20261014-1004",
+      "SAST-20261014-1005",
+      "SAST-20261014-1006"
+    ]
+  },
+  {
+    "path": "scripts/afterPack.js",
+    "startLine": 40,
+    "endLine": 40,
+    "findingIds": [
+      "SAST-20261014-1007",
+      "SAST-20261014-1008"
+    ]
+  },
+  {
+    "path": "scripts/check-artifact-secrets.mjs",
+    "startLine": 72,
+    "endLine": 72,
+    "findingIds": [
+      "SAST-20261014-1009"
+    ]
+  },
+  {
+    "path": "scripts/check-artifact-secrets.mjs",
+    "startLine": 74,
+    "endLine": 74,
+    "findingIds": [
+      "SAST-20261014-1010"
+    ]
+  },
+  {
+    "path": "scripts/check-artifact-secrets.mjs",
+    "startLine": 75,
+    "endLine": 75,
+    "findingIds": [
+      "SAST-20261014-1011"
+    ]
+  },
+  {
+    "path": "scripts/check-artifact-secrets.mjs",
+    "startLine": 76,
+    "endLine": 76,
+    "findingIds": [
+      "SAST-20261014-1012"
+    ]
+  },
+  {
+    "path": "scripts/check-artifact-secrets.mjs",
+    "startLine": 87,
+    "endLine": 87,
+    "findingIds": [
+      "SAST-20261014-1013"
+    ]
+  },
+  {
+    "path": "scripts/check-artifact-secrets.mjs",
+    "startLine": 89,
+    "endLine": 89,
+    "findingIds": [
+      "SAST-20261014-1014",
+      "SAST-20261014-1015"
+    ]
+  },
+  {
+    "path": "scripts/check-critical-files.js",
+    "startLine": 76,
+    "endLine": 76,
+    "findingIds": [
+      "SAST-20261014-1016",
+      "SAST-20261014-1017"
+    ]
+  },
+  {
+    "path": "scripts/check-critical-files.js",
+    "startLine": 77,
+    "endLine": 77,
+    "findingIds": [
+      "SAST-20261014-1018"
+    ]
+  },
+  {
+    "path": "scripts/check-env-consistency.mjs",
+    "startLine": 402,
+    "endLine": 402,
+    "findingIds": [
+      "SAST-20261014-1019"
+    ]
+  },
+  {
+    "path": "scripts/check-public-key.mjs",
+    "startLine": 56,
+    "endLine": 56,
+    "findingIds": [
+      "SAST-20261014-1020"
+    ]
+  },
+  {
+    "path": "scripts/check-version.js",
+    "startLine": 20,
+    "endLine": 20,
+    "findingIds": [
+      "SAST-20261014-1021",
+      "SAST-20261014-1022"
+    ]
+  },
+  {
+    "path": "scripts/config-audit.cjs",
+    "startLine": 5,
+    "endLine": 6,
+    "findingIds": [
+      "SAST-20261014-1023"
+    ]
+  },
+  {
+    "path": "scripts/config-release.cjs",
+    "startLine": 6,
+    "endLine": 7,
+    "findingIds": [
+      "SAST-20261014-1024"
+    ]
+  },
+  {
+    "path": "scripts/config-release.cjs",
+    "startLine": 16,
+    "endLine": 16,
+    "findingIds": [
+      "SAST-20261014-1025"
+    ]
+  },
+  {
+    "path": "scripts/config-services.cjs",
+    "startLine": 41,
+    "endLine": 41,
+    "findingIds": [
+      "SAST-20261014-1026",
+      "SAST-20261014-1027"
+    ]
+  },
+  {
+    "path": "scripts/config-services.cjs",
+    "startLine": 59,
+    "endLine": 59,
+    "findingIds": [
+      "SAST-20261014-1028",
+      "SAST-20261014-1029"
+    ]
+  },
+  {
+    "path": "scripts/config-services.cjs",
+    "startLine": 252,
+    "endLine": 252,
+    "findingIds": [
+      "SAST-20261014-1030",
+      "SAST-20261014-1031"
+    ]
+  },
+  {
+    "path": "scripts/config-services.cjs",
+    "startLine": 283,
+    "endLine": 283,
+    "findingIds": [
+      "SAST-20261014-1032",
+      "SAST-20261014-1033"
+    ]
+  },
+  {
+    "path": "scripts/encrypt-smtp-secrets.js",
+    "startLine": 91,
+    "endLine": 91,
+    "findingIds": [
+      "SAST-20261014-1034"
+    ]
+  },
+  {
+    "path": "scripts/encrypt-smtp-secrets.js",
+    "startLine": 92,
+    "endLine": 92,
+    "findingIds": [
+      "SAST-20261014-1035"
+    ]
+  },
+  {
+    "path": "scripts/final-release-gate.mjs",
+    "startLine": 59,
+    "endLine": 59,
+    "findingIds": [
+      "SAST-20261014-1036"
+    ]
+  },
+  {
+    "path": "scripts/generate-env-doc.mjs",
+    "startLine": 117,
+    "endLine": 117,
+    "findingIds": [
+      "SAST-20261014-1037",
+      "SAST-20261014-1038",
+      "SAST-20261014-1039",
+      "SAST-20261014-1040"
+    ]
+  },
+  {
+    "path": "scripts/generate-icons.js",
+    "startLine": 69,
+    "endLine": 69,
+    "findingIds": [
+      "SAST-20261014-1041"
+    ]
+  },
+  {
+    "path": "scripts/keygen.py",
+    "startLine": 306,
+    "endLine": 306,
+    "findingIds": [
+      "SAST-20261014-1042"
+    ]
+  },
+  {
+    "path": "scripts/keygen_ui.py",
+    "startLine": 222,
+    "endLine": 222,
+    "findingIds": [
+      "SAST-20261014-1043"
+    ]
+  },
+  {
+    "path": "scripts/keygen_ui.py",
+    "startLine": 278,
+    "endLine": 278,
+    "findingIds": [
+      "SAST-20261014-1044"
+    ]
+  },
+  {
+    "path": "scripts/keygen_ui.py",
+    "startLine": 299,
+    "endLine": 299,
+    "findingIds": [
+      "SAST-20261014-1045"
+    ]
+  },
+  {
+    "path": "scripts/keygen_ui.py",
+    "startLine": 897,
+    "endLine": 897,
+    "findingIds": [
+      "SAST-20261014-1046"
+    ]
+  },
+  {
+    "path": "scripts/keygen_ui.py",
+    "startLine": 1377,
+    "endLine": 1377,
+    "findingIds": [
+      "SAST-20261014-1047"
+    ]
+  },
+  {
+    "path": "scripts/lib/baseline-doc.mjs",
+    "startLine": 102,
+    "endLine": 102,
+    "findingIds": [
+      "SAST-20261014-1048"
+    ]
+  },
+  {
+    "path": "scripts/lib/package-prisma-resources.cjs",
+    "startLine": 39,
+    "endLine": 39,
+    "findingIds": [
+      "SAST-20261014-1049"
+    ]
+  },
+  {
+    "path": "scripts/lib/purge-standalone-env.cjs",
+    "startLine": 30,
+    "endLine": 30,
+    "findingIds": [
+      "SAST-20261014-1050"
+    ]
+  },
+  {
+    "path": "scripts/lib/purge-standalone-env.cjs",
+    "startLine": 37,
+    "endLine": 37,
+    "findingIds": [
+      "SAST-20261014-1051",
+      "SAST-20261014-1052",
+      "SAST-20261014-1053"
+    ]
+  },
+  {
+    "path": "scripts/lib/repository-audit-map.cjs",
+    "startLine": 8,
+    "endLine": 8,
+    "findingIds": [
+      "SAST-20261014-1054",
+      "SAST-20261014-1055",
+      "SAST-20261014-1056",
+      "SAST-20261014-1057",
+      "SAST-20261014-1058",
+      "SAST-20261014-1059"
+    ]
+  },
+  {
+    "path": "scripts/materialize-build-public-key.cjs",
+    "startLine": 14,
+    "endLine": 14,
+    "findingIds": [
+      "SAST-20261014-1060"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 17,
+    "endLine": 17,
+    "findingIds": [
+      "SAST-20261014-1061"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 21,
+    "endLine": 21,
+    "findingIds": [
+      "SAST-20261014-1062"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 23,
+    "endLine": 23,
+    "findingIds": [
+      "SAST-20261014-1063"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 24,
+    "endLine": 24,
+    "findingIds": [
+      "SAST-20261014-1064",
+      "SAST-20261014-1065"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 25,
+    "endLine": 25,
+    "findingIds": [
+      "SAST-20261014-1066",
+      "SAST-20261014-1067"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 26,
+    "endLine": 26,
+    "findingIds": [
+      "SAST-20261014-1068"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 29,
+    "endLine": 29,
+    "findingIds": [
+      "SAST-20261014-1069",
+      "SAST-20261014-1070",
+      "SAST-20261014-1071"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 100,
+    "endLine": 100,
+    "findingIds": [
+      "SAST-20261014-1072"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 113,
+    "endLine": 113,
+    "findingIds": [
+      "SAST-20261014-1073"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 160,
+    "endLine": 160,
+    "findingIds": [
+      "SAST-20261014-1074"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 162,
+    "endLine": 162,
+    "findingIds": [
+      "SAST-20261014-1075",
+      "SAST-20261014-1076"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 166,
+    "endLine": 166,
+    "findingIds": [
+      "SAST-20261014-1077"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 171,
+    "endLine": 171,
+    "findingIds": [
+      "SAST-20261014-1078"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 173,
+    "endLine": 173,
+    "findingIds": [
+      "SAST-20261014-1079"
+    ]
+  },
+  {
+    "path": "scripts/post-build.js",
+    "startLine": 174,
+    "endLine": 174,
+    "findingIds": [
+      "SAST-20261014-1080"
+    ]
+  },
+  {
+    "path": "scripts/protect-resources.js",
+    "startLine": 31,
+    "endLine": 31,
+    "findingIds": [
+      "SAST-20261014-1081"
+    ]
+  },
+  {
+    "path": "scripts/protect-resources.js",
+    "startLine": 34,
+    "endLine": 34,
+    "findingIds": [
+      "SAST-20261014-1082"
+    ]
+  },
+  {
+    "path": "scripts/protect-resources.js",
+    "startLine": 35,
+    "endLine": 35,
+    "findingIds": [
+      "SAST-20261014-1083",
+      "SAST-20261014-1084"
+    ]
+  },
+  {
+    "path": "scripts/protect-resources.js",
+    "startLine": 36,
+    "endLine": 36,
+    "findingIds": [
+      "SAST-20261014-1085"
+    ]
+  },
+  {
+    "path": "scripts/protect-resources.js",
+    "startLine": 38,
+    "endLine": 38,
+    "findingIds": [
+      "SAST-20261014-1086"
+    ]
+  },
+  {
+    "path": "scripts/protect-resources.js",
+    "startLine": 47,
+    "endLine": 47,
+    "findingIds": [
+      "SAST-20261014-1087"
+    ]
+  },
+  {
+    "path": "scripts/protect-resources.js",
+    "startLine": 55,
+    "endLine": 55,
+    "findingIds": [
+      "SAST-20261014-1088",
+      "SAST-20261014-1089"
+    ]
+  },
+  {
+    "path": "scripts/repair-after-secret-rotation.js",
+    "startLine": 63,
+    "endLine": 63,
+    "findingIds": [
+      "SAST-20261014-1090"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 55,
+    "endLine": 55,
+    "findingIds": [
+      "SAST-20261014-1091"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 56,
+    "endLine": 56,
+    "findingIds": [
+      "SAST-20261014-1092",
+      "SAST-20261014-1093"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 57,
+    "endLine": 57,
+    "findingIds": [
+      "SAST-20261014-1094",
+      "SAST-20261014-1095"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 75,
+    "endLine": 75,
+    "findingIds": [
+      "SAST-20261014-1096"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 76,
+    "endLine": 76,
+    "findingIds": [
+      "SAST-20261014-1097"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 77,
+    "endLine": 77,
+    "findingIds": [
+      "SAST-20261014-1098"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 82,
+    "endLine": 82,
+    "findingIds": [
+      "SAST-20261014-1099",
+      "SAST-20261014-1100"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 83,
+    "endLine": 83,
+    "findingIds": [
+      "SAST-20261014-1101"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 133,
+    "endLine": 133,
+    "findingIds": [
+      "SAST-20261014-1102"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 141,
+    "endLine": 141,
+    "findingIds": [
+      "SAST-20261014-1103"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 143,
+    "endLine": 143,
+    "findingIds": [
+      "SAST-20261014-1104",
+      "SAST-20261014-1105"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 147,
+    "endLine": 147,
+    "findingIds": [
+      "SAST-20261014-1106",
+      "SAST-20261014-1107"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 152,
+    "endLine": 152,
+    "findingIds": [
+      "SAST-20261014-1108"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 153,
+    "endLine": 153,
+    "findingIds": [
+      "SAST-20261014-1109",
+      "SAST-20261014-1110"
+    ]
+  },
+  {
+    "path": "scripts/restore.js",
+    "startLine": 174,
+    "endLine": 174,
+    "findingIds": [
+      "SAST-20261014-1111"
+    ]
+  },
+  {
+    "path": "scripts/secrets.js",
+    "startLine": 42,
+    "endLine": 42,
+    "findingIds": [
+      "SAST-20261014-1112"
+    ]
+  },
+  {
+    "path": "scripts/setup-dev.js",
+    "startLine": 26,
+    "endLine": 27,
+    "findingIds": [
+      "SAST-20261014-1113"
+    ]
+  },
+  {
+    "path": "scripts/setup-dev.js",
+    "startLine": 59,
+    "endLine": 59,
+    "findingIds": [
+      "SAST-20261014-1114"
+    ]
+  },
+  {
+    "path": "scripts/setup-dev.js",
+    "startLine": 60,
+    "endLine": 60,
+    "findingIds": [
+      "SAST-20261014-1115",
+      "SAST-20261014-1116"
+    ]
+  },
+  {
+    "path": "scripts/sync-public-key.mjs",
+    "startLine": 82,
+    "endLine": 82,
+    "findingIds": [
+      "SAST-20261014-1117"
+    ]
+  },
+  {
+    "path": "scripts/sync-public-key.mjs",
+    "startLine": 102,
+    "endLine": 102,
+    "findingIds": [
+      "SAST-20261014-1118",
+      "SAST-20261014-1119",
+      "SAST-20261014-1120"
+    ]
+  },
+  {
+    "path": "scripts/test_keygen_ui_lifecycle.py",
+    "startLine": 145,
+    "endLine": 145,
+    "findingIds": [
+      "SAST-20261014-1121"
+    ]
+  },
+  {
+    "path": "scripts/test_keygen_ui_lifecycle.py",
+    "startLine": 166,
+    "endLine": 166,
+    "findingIds": [
+      "SAST-20261014-1122"
+    ]
+  },
+  {
+    "path": "scripts/validate-server-db.js",
+    "startLine": 61,
+    "endLine": 61,
+    "findingIds": [
+      "SAST-20261014-1123"
+    ]
+  },
+  {
+    "path": "scripts/validate-server-db.js",
+    "startLine": 130,
+    "endLine": 130,
+    "findingIds": [
+      "SAST-20261014-1124"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 151,
+    "endLine": 151,
+    "findingIds": [
+      "SAST-20261014-1125"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 160,
+    "endLine": 160,
+    "findingIds": [
+      "SAST-20261014-1126"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 167,
+    "endLine": 167,
+    "findingIds": [
+      "SAST-20261014-1127"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 170,
+    "endLine": 170,
+    "findingIds": [
+      "SAST-20261014-1128"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 171,
+    "endLine": 171,
+    "findingIds": [
+      "SAST-20261014-1129"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 172,
+    "endLine": 172,
+    "findingIds": [
+      "SAST-20261014-1130"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 173,
+    "endLine": 173,
+    "findingIds": [
+      "SAST-20261014-1131"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 177,
+    "endLine": 177,
+    "findingIds": [
+      "SAST-20261014-1132"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 185,
+    "endLine": 185,
+    "findingIds": [
+      "SAST-20261014-1133"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 204,
+    "endLine": 206,
+    "findingIds": [
+      "SAST-20261014-1134"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 205,
+    "endLine": 205,
+    "findingIds": [
+      "SAST-20261014-1135"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 212,
+    "endLine": 212,
+    "findingIds": [
+      "SAST-20261014-1136"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 347,
+    "endLine": 347,
+    "findingIds": [
+      "SAST-20261014-1137"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 387,
+    "endLine": 391,
+    "findingIds": [
+      "SAST-20261014-1138"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 421,
+    "endLine": 421,
+    "findingIds": [
+      "SAST-20261014-1139"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 481,
+    "endLine": 486,
+    "findingIds": [
+      "SAST-20261014-1140"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 487,
+    "endLine": 491,
+    "findingIds": [
+      "SAST-20261014-1141"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 494,
+    "endLine": 496,
+    "findingIds": [
+      "SAST-20261014-1142"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 519,
+    "endLine": 519,
+    "findingIds": [
+      "SAST-20261014-1143"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 530,
+    "endLine": 532,
+    "findingIds": [
+      "SAST-20261014-1144"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 533,
+    "endLine": 537,
+    "findingIds": [
+      "SAST-20261014-1145"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 650,
+    "endLine": 650,
+    "findingIds": [
+      "SAST-20261014-1146"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 653,
+    "endLine": 653,
+    "findingIds": [
+      "SAST-20261014-1147"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 753,
+    "endLine": 753,
+    "findingIds": [
+      "SAST-20261014-1148"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 754,
+    "endLine": 759,
+    "findingIds": [
+      "SAST-20261014-1149"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 756,
+    "endLine": 756,
+    "findingIds": [
+      "SAST-20261014-1150"
+    ]
+  },
+  {
+    "path": "src/app/admin/licenses/page.tsx",
+    "startLine": 762,
+    "endLine": 762,
+    "findingIds": [
+      "SAST-20261014-1151"
+    ]
+  },
+  {
+    "path": "src/app/api/admin/updates/route.ts",
+    "startLine": 129,
+    "endLine": 129,
+    "findingIds": [
+      "SAST-20261014-1152"
+    ]
+  },
+  {
+    "path": "src/app/api/admin/updates/route.ts",
+    "startLine": 166,
+    "endLine": 166,
+    "findingIds": [
+      "SAST-20261014-1153"
+    ]
+  },
+  {
+    "path": "src/app/api/admin/updates/route.ts",
+    "startLine": 172,
+    "endLine": 172,
+    "findingIds": [
+      "SAST-20261014-1154"
+    ]
+  },
+  {
+    "path": "src/app/api/admin/updates/route.ts",
+    "startLine": 184,
+    "endLine": 184,
+    "findingIds": [
+      "SAST-20261014-1155"
+    ]
+  },
+  {
+    "path": "src/app/api/loaner-reservations/[id]/route.ts",
+    "startLine": 99,
+    "endLine": 99,
+    "findingIds": [
+      "SAST-20261014-1156",
+      "SAST-20261014-1157",
+      "SAST-20261014-1158",
+      "SAST-20261014-1159",
+      "SAST-20261014-1160"
+    ]
+  },
+  {
+    "path": "src/app/api/loaner-reservations/route.ts",
+    "startLine": 123,
+    "endLine": 123,
+    "findingIds": [
+      "SAST-20261014-1161",
+      "SAST-20261014-1162",
+      "SAST-20261014-1163",
+      "SAST-20261014-1164",
+      "SAST-20261014-1165"
+    ]
+  },
+  {
+    "path": "src/app/api/reminders/send/route.ts",
+    "startLine": 61,
+    "endLine": 82,
+    "findingIds": [
+      "SAST-20261014-1166"
+    ]
+  },
+  {
+    "path": "src/app/api/reminders/send/route.ts",
+    "startLine": 72,
+    "endLine": 72,
+    "findingIds": [
+      "SAST-20261014-1167"
+    ]
+  },
+  {
+    "path": "src/app/api/reminders/send/route.ts",
+    "startLine": 73,
+    "endLine": 73,
+    "findingIds": [
+      "SAST-20261014-1168"
+    ]
+  },
+  {
+    "path": "src/app/api/reminders/send/route.ts",
+    "startLine": 75,
+    "endLine": 75,
+    "findingIds": [
+      "SAST-20261014-1169"
+    ]
+  },
+  {
+    "path": "src/app/api/reminders/send/route.ts",
+    "startLine": 77,
+    "endLine": 77,
+    "findingIds": [
+      "SAST-20261014-1170"
+    ]
+  },
+  {
+    "path": "src/app/api/reminders/send/route.ts",
+    "startLine": 78,
+    "endLine": 78,
+    "findingIds": [
+      "SAST-20261014-1171"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 129,
+    "endLine": 129,
+    "findingIds": [
+      "SAST-20261014-1172"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 144,
+    "endLine": 144,
+    "findingIds": [
+      "SAST-20261014-1173"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 207,
+    "endLine": 221,
+    "findingIds": [
+      "SAST-20261014-1174"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 209,
+    "endLine": 214,
+    "findingIds": [
+      "SAST-20261014-1175"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 215,
+    "endLine": 220,
+    "findingIds": [
+      "SAST-20261014-1176"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 230,
+    "endLine": 230,
+    "findingIds": [
+      "SAST-20261014-1177"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 248,
+    "endLine": 248,
+    "findingIds": [
+      "SAST-20261014-1178"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 252,
+    "endLine": 252,
+    "findingIds": [
+      "SAST-20261014-1179"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 256,
+    "endLine": 256,
+    "findingIds": [
+      "SAST-20261014-1180"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 279,
+    "endLine": 279,
+    "findingIds": [
+      "SAST-20261014-1181"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 288,
+    "endLine": 288,
+    "findingIds": [
+      "SAST-20261014-1182"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 311,
+    "endLine": 313,
+    "findingIds": [
+      "SAST-20261014-1183"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 337,
+    "endLine": 337,
+    "findingIds": [
+      "SAST-20261014-1184"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 348,
+    "endLine": 348,
+    "findingIds": [
+      "SAST-20261014-1185"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 351,
+    "endLine": 351,
+    "findingIds": [
+      "SAST-20261014-1186"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 374,
+    "endLine": 374,
+    "findingIds": [
+      "SAST-20261014-1187"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 378,
+    "endLine": 378,
+    "findingIds": [
+      "SAST-20261014-1188"
+    ]
+  },
+  {
+    "path": "src/app/clients/[token]/page.tsx",
+    "startLine": 382,
+    "endLine": 382,
+    "findingIds": [
+      "SAST-20261014-1189"
+    ]
+  },
+  {
+    "path": "src/app/clients/account/page.tsx",
+    "startLine": 82,
+    "endLine": 82,
+    "findingIds": [
+      "SAST-20261014-1190",
+      "SAST-20261014-1191"
+    ]
+  },
+  {
+    "path": "src/app/clients/account/page.tsx",
+    "startLine": 126,
+    "endLine": 126,
+    "findingIds": [
+      "SAST-20261014-1192"
+    ]
+  },
+  {
+    "path": "src/app/clients/account/page.tsx",
+    "startLine": 127,
+    "endLine": 131,
+    "findingIds": [
+      "SAST-20261014-1193"
+    ]
+  },
+  {
+    "path": "src/app/clients/account/page.tsx",
+    "startLine": 137,
+    "endLine": 137,
+    "findingIds": [
+      "SAST-20261014-1194"
+    ]
+  },
+  {
+    "path": "src/app/clients/account/page.tsx",
+    "startLine": 160,
+    "endLine": 160,
+    "findingIds": [
+      "SAST-20261014-1195"
+    ]
+  },
+  {
+    "path": "src/app/clients/account/page.tsx",
+    "startLine": 166,
+    "endLine": 166,
+    "findingIds": [
+      "SAST-20261014-1196"
+    ]
+  },
+  {
+    "path": "src/app/clients/account/page.tsx",
+    "startLine": 172,
+    "endLine": 172,
+    "findingIds": [
+      "SAST-20261014-1197"
+    ]
+  },
+  {
+    "path": "src/app/clients/account/page.tsx",
+    "startLine": 178,
+    "endLine": 178,
+    "findingIds": [
+      "SAST-20261014-1198"
+    ]
+  },
+  {
+    "path": "src/app/clients/account/page.tsx",
+    "startLine": 188,
+    "endLine": 191,
+    "findingIds": [
+      "SAST-20261014-1199"
+    ]
+  },
+  {
+    "path": "src/app/clients/appointments/page.tsx",
+    "startLine": 134,
+    "endLine": 134,
+    "findingIds": [
+      "SAST-20261014-1200",
+      "SAST-20261014-1201"
+    ]
+  },
+  {
+    "path": "src/app/clients/appointments/page.tsx",
+    "startLine": 172,
+    "endLine": 172,
+    "findingIds": [
+      "SAST-20261014-1202"
+    ]
+  },
+  {
+    "path": "src/app/clients/appointments/page.tsx",
+    "startLine": 173,
+    "endLine": 175,
+    "findingIds": [
+      "SAST-20261014-1203"
+    ]
+  },
+  {
+    "path": "src/app/clients/appointments/page.tsx",
+    "startLine": 309,
+    "endLine": 311,
+    "findingIds": [
+      "SAST-20261014-1204"
+    ]
+  },
+  {
+    "path": "src/app/clients/appointments/page.tsx",
+    "startLine": 321,
+    "endLine": 321,
+    "findingIds": [
+      "SAST-20261014-1205"
+    ]
+  },
+  {
+    "path": "src/app/clients/appointments/page.tsx",
+    "startLine": 326,
+    "endLine": 326,
+    "findingIds": [
+      "SAST-20261014-1206"
+    ]
+  },
+  {
+    "path": "src/app/clients/appointments/page.tsx",
+    "startLine": 331,
+    "endLine": 331,
+    "findingIds": [
+      "SAST-20261014-1207"
+    ]
+  },
+  {
+    "path": "src/app/clients/appointments/page.tsx",
+    "startLine": 345,
+    "endLine": 345,
+    "findingIds": [
+      "SAST-20261014-1208"
+    ]
+  },
+  {
+    "path": "src/app/clients/appointments/page.tsx",
+    "startLine": 368,
+    "endLine": 370,
+    "findingIds": [
+      "SAST-20261014-1209"
+    ]
+  },
+  {
+    "path": "src/app/clients/login/page.tsx",
+    "startLine": 116,
+    "endLine": 116,
+    "findingIds": [
+      "SAST-20261014-1210",
+      "SAST-20261014-1211"
+    ]
+  },
+  {
+    "path": "src/app/clients/login/page.tsx",
+    "startLine": 117,
+    "endLine": 117,
+    "findingIds": [
+      "SAST-20261014-1212"
+    ]
+  },
+  {
+    "path": "src/app/clients/login/page.tsx",
+    "startLine": 141,
+    "endLine": 141,
+    "findingIds": [
+      "SAST-20261014-1213"
+    ]
+  },
+  {
+    "path": "src/app/clients/login/page.tsx",
+    "startLine": 150,
+    "endLine": 150,
+    "findingIds": [
+      "SAST-20261014-1214"
+    ]
+  },
+  {
+    "path": "src/app/clients/login/page.tsx",
+    "startLine": 158,
+    "endLine": 160,
+    "findingIds": [
+      "SAST-20261014-1215"
+    ]
+  },
+  {
+    "path": "src/app/clients/login/page.tsx",
+    "startLine": 161,
+    "endLine": 163,
+    "findingIds": [
+      "SAST-20261014-1216"
+    ]
+  },
+  {
+    "path": "src/app/clients/login/page.tsx",
+    "startLine": 169,
+    "endLine": 169,
+    "findingIds": [
+      "SAST-20261014-1217"
+    ]
+  },
+  {
+    "path": "src/app/clients/messages/page.tsx",
+    "startLine": 175,
+    "endLine": 175,
+    "findingIds": [
+      "SAST-20261014-1218",
+      "SAST-20261014-1219"
+    ]
+  },
+  {
+    "path": "src/app/clients/messages/page.tsx",
+    "startLine": 237,
+    "endLine": 237,
+    "findingIds": [
+      "SAST-20261014-1220"
+    ]
+  },
+  {
+    "path": "src/app/clients/messages/page.tsx",
+    "startLine": 238,
+    "endLine": 240,
+    "findingIds": [
+      "SAST-20261014-1221"
+    ]
+  },
+  {
+    "path": "src/app/clients/messages/page.tsx",
+    "startLine": 448,
+    "endLine": 448,
+    "findingIds": [
+      "SAST-20261014-1222"
+    ]
+  },
+  {
+    "path": "src/app/clients/messages/page.tsx",
+    "startLine": 476,
+    "endLine": 478,
+    "findingIds": [
+      "SAST-20261014-1223"
+    ]
+  },
+  {
+    "path": "src/app/clients/password/page.tsx",
+    "startLine": 141,
+    "endLine": 143,
+    "findingIds": [
+      "SAST-20261014-1224"
+    ]
+  },
+  {
+    "path": "src/app/clients/password/page.tsx",
+    "startLine": 154,
+    "endLine": 156,
+    "findingIds": [
+      "SAST-20261014-1225"
+    ]
+  },
+  {
+    "path": "src/app/clients/password/page.tsx",
+    "startLine": 164,
+    "endLine": 166,
+    "findingIds": [
+      "SAST-20261014-1226"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 155,
+    "endLine": 155,
+    "findingIds": [
+      "SAST-20261014-1227"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 170,
+    "endLine": 170,
+    "findingIds": [
+      "SAST-20261014-1228"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 213,
+    "endLine": 213,
+    "findingIds": [
+      "SAST-20261014-1229"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 223,
+    "endLine": 223,
+    "findingIds": [
+      "SAST-20261014-1230"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 227,
+    "endLine": 227,
+    "findingIds": [
+      "SAST-20261014-1231"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 235,
+    "endLine": 235,
+    "findingIds": [
+      "SAST-20261014-1232"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 263,
+    "endLine": 263,
+    "findingIds": [
+      "SAST-20261014-1233"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 266,
+    "endLine": 266,
+    "findingIds": [
+      "SAST-20261014-1234"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 295,
+    "endLine": 295,
+    "findingIds": [
+      "SAST-20261014-1235"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 299,
+    "endLine": 299,
+    "findingIds": [
+      "SAST-20261014-1236"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 303,
+    "endLine": 303,
+    "findingIds": [
+      "SAST-20261014-1237"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 312,
+    "endLine": 312,
+    "findingIds": [
+      "SAST-20261014-1238"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 328,
+    "endLine": 328,
+    "findingIds": [
+      "SAST-20261014-1239"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 329,
+    "endLine": 329,
+    "findingIds": [
+      "SAST-20261014-1240"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 332,
+    "endLine": 345,
+    "findingIds": [
+      "SAST-20261014-1241"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 338,
+    "endLine": 343,
+    "findingIds": [
+      "SAST-20261014-1242"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 345,
+    "endLine": 349,
+    "findingIds": [
+      "SAST-20261014-1243"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 358,
+    "endLine": 358,
+    "findingIds": [
+      "SAST-20261014-1244"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 359,
+    "endLine": 359,
+    "findingIds": [
+      "SAST-20261014-1245"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 365,
+    "endLine": 365,
+    "findingIds": [
+      "SAST-20261014-1246"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 366,
+    "endLine": 369,
+    "findingIds": [
+      "SAST-20261014-1247"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 388,
+    "endLine": 394,
+    "findingIds": [
+      "SAST-20261014-1248"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 395,
+    "endLine": 401,
+    "findingIds": [
+      "SAST-20261014-1249"
+    ]
+  },
+  {
+    "path": "src/app/clients/quote/[token]/page.tsx",
+    "startLine": 445,
+    "endLine": 445,
+    "findingIds": [
+      "SAST-20261014-1250"
+    ]
+  },
+  {
+    "path": "src/app/clients/register/page.tsx",
+    "startLine": 59,
+    "endLine": 59,
+    "findingIds": [
+      "SAST-20261014-1251"
+    ]
+  },
+  {
+    "path": "src/app/clients/register/page.tsx",
+    "startLine": 75,
+    "endLine": 79,
+    "findingIds": [
+      "SAST-20261014-1252"
+    ]
+  },
+  {
+    "path": "src/app/clients/register/page.tsx",
+    "startLine": 79,
+    "endLine": 85,
+    "findingIds": [
+      "SAST-20261014-1253"
+    ]
+  },
+  {
+    "path": "src/app/clients/register/page.tsx",
+    "startLine": 104,
+    "endLine": 104,
+    "findingIds": [
+      "SAST-20261014-1254"
+    ]
+  },
+  {
+    "path": "src/app/copilot/page.tsx",
+    "startLine": 140,
+    "endLine": 140,
+    "findingIds": [
+      "SAST-20261014-1255"
+    ]
+  },
+  {
+    "path": "src/app/copilot/page.tsx",
+    "startLine": 169,
+    "endLine": 169,
+    "findingIds": [
+      "SAST-20261014-1256"
+    ]
+  },
+  {
+    "path": "src/app/copilot/page.tsx",
+    "startLine": 180,
+    "endLine": 180,
+    "findingIds": [
+      "SAST-20261014-1257"
+    ]
+  },
+  {
+    "path": "src/app/copilot/page.tsx",
+    "startLine": 225,
+    "endLine": 225,
+    "findingIds": [
+      "SAST-20261014-1258"
+    ]
+  },
+  {
+    "path": "src/app/error.tsx",
+    "startLine": 56,
+    "endLine": 58,
+    "findingIds": [
+      "SAST-20261014-1259"
+    ]
+  },
+  {
+    "path": "src/app/error.tsx",
+    "startLine": 59,
+    "endLine": 62,
+    "findingIds": [
+      "SAST-20261014-1260"
+    ]
+  },
+  {
+    "path": "src/app/error.tsx",
+    "startLine": 77,
+    "endLine": 77,
+    "findingIds": [
+      "SAST-20261014-1261"
+    ]
+  },
+  {
+    "path": "src/app/error.tsx",
+    "startLine": 84,
+    "endLine": 86,
+    "findingIds": [
+      "SAST-20261014-1262"
+    ]
+  },
+  {
+    "path": "src/app/global-error.tsx",
+    "startLine": 22,
+    "endLine": 22,
+    "findingIds": [
+      "SAST-20261014-1263"
+    ]
+  },
+  {
+    "path": "src/app/global-error.tsx",
+    "startLine": 23,
+    "endLine": 25,
+    "findingIds": [
+      "SAST-20261014-1264"
+    ]
+  },
+  {
+    "path": "src/app/license/page.tsx",
+    "startLine": 91,
+    "endLine": 91,
+    "findingIds": [
+      "SAST-20261014-1265"
+    ]
+  },
+  {
+    "path": "src/app/license/page.tsx",
+    "startLine": 121,
+    "endLine": 123,
+    "findingIds": [
+      "SAST-20261014-1266"
+    ]
+  },
+  {
+    "path": "src/app/license/page.tsx",
+    "startLine": 122,
+    "endLine": 122,
+    "findingIds": [
+      "SAST-20261014-1267"
+    ]
+  },
+  {
+    "path": "src/app/license/page.tsx",
+    "startLine": 124,
+    "endLine": 126,
+    "findingIds": [
+      "SAST-20261014-1268"
+    ]
+  },
+  {
+    "path": "src/app/license/page.tsx",
+    "startLine": 129,
+    "endLine": 129,
+    "findingIds": [
+      "SAST-20261014-1269"
+    ]
+  },
+  {
+    "path": "src/app/license/page.tsx",
+    "startLine": 142,
+    "endLine": 142,
+    "findingIds": [
+      "SAST-20261014-1270"
+    ]
+  },
+  {
+    "path": "src/app/license/page.tsx",
+    "startLine": 143,
+    "endLine": 145,
+    "findingIds": [
+      "SAST-20261014-1271"
+    ]
+  },
+  {
+    "path": "src/app/license/page.tsx",
+    "startLine": 173,
+    "endLine": 175,
+    "findingIds": [
+      "SAST-20261014-1272"
+    ]
+  },
+  {
+    "path": "src/app/license/page.tsx",
+    "startLine": 202,
+    "endLine": 205,
+    "findingIds": [
+      "SAST-20261014-1273"
+    ]
+  },
+  {
+    "path": "src/app/license/page.tsx",
+    "startLine": 239,
+    "endLine": 245,
+    "findingIds": [
+      "SAST-20261014-1274"
+    ]
+  },
+  {
+    "path": "src/app/license/page.tsx",
+    "startLine": 241,
+    "endLine": 244,
+    "findingIds": [
+      "SAST-20261014-1275"
+    ]
+  },
+  {
+    "path": "src/app/login/page.tsx",
+    "startLine": 42,
+    "endLine": 44,
+    "findingIds": [
+      "SAST-20261014-1276"
+    ]
+  },
+  {
+    "path": "src/app/login/page.tsx",
+    "startLine": 117,
+    "endLine": 119,
+    "findingIds": [
+      "SAST-20261014-1277"
+    ]
+  },
+  {
+    "path": "src/app/login/page.tsx",
+    "startLine": 118,
+    "endLine": 118,
+    "findingIds": [
+      "SAST-20261014-1278"
+    ]
+  },
+  {
+    "path": "src/app/login/page.tsx",
+    "startLine": 120,
+    "endLine": 122,
+    "findingIds": [
+      "SAST-20261014-1279"
+    ]
+  },
+  {
+    "path": "src/app/login/page.tsx",
+    "startLine": 126,
+    "endLine": 126,
+    "findingIds": [
+      "SAST-20261014-1280"
+    ]
+  },
+  {
+    "path": "src/app/login/page.tsx",
+    "startLine": 148,
+    "endLine": 148,
+    "findingIds": [
+      "SAST-20261014-1281"
+    ]
+  },
+  {
+    "path": "src/app/login/page.tsx",
+    "startLine": 149,
+    "endLine": 149,
+    "findingIds": [
+      "SAST-20261014-1282"
+    ]
+  },
+  {
+    "path": "src/app/login/page.tsx",
+    "startLine": 162,
+    "endLine": 164,
+    "findingIds": [
+      "SAST-20261014-1283"
+    ]
+  },
+  {
+    "path": "src/app/login/page.tsx",
+    "startLine": 182,
+    "endLine": 184,
+    "findingIds": [
+      "SAST-20261014-1284"
+    ]
+  },
+  {
+    "path": "src/app/login/page.tsx",
+    "startLine": 239,
+    "endLine": 247,
+    "findingIds": [
+      "SAST-20261014-1285"
+    ]
+  },
+  {
+    "path": "src/app/login/page.tsx",
+    "startLine": 241,
+    "endLine": 246,
+    "findingIds": [
+      "SAST-20261014-1286"
+    ]
+  },
+  {
+    "path": "src/app/mechanic/jobs/[id]/page.tsx",
+    "startLine": 196,
+    "endLine": 196,
+    "findingIds": [
+      "SAST-20261014-1287"
+    ]
+  },
+  {
+    "path": "src/app/mechanic/jobs/[id]/page.tsx",
+    "startLine": 263,
+    "endLine": 265,
+    "findingIds": [
+      "SAST-20261014-1288"
+    ]
+  },
+  {
+    "path": "src/app/mechanic/jobs/[id]/page.tsx",
+    "startLine": 266,
+    "endLine": 272,
+    "findingIds": [
+      "SAST-20261014-1289"
+    ]
+  },
+  {
+    "path": "src/app/mechanic/jobs/[id]/page.tsx",
+    "startLine": 275,
+    "endLine": 277,
+    "findingIds": [
+      "SAST-20261014-1290"
+    ]
+  },
+  {
+    "path": "src/app/mechanic/page.tsx",
+    "startLine": 194,
+    "endLine": 194,
+    "findingIds": [
+      "SAST-20261014-1291",
+      "SAST-20261014-1292"
+    ]
+  },
+  {
+    "path": "src/app/mechanic/page.tsx",
+    "startLine": 227,
+    "endLine": 229,
+    "findingIds": [
+      "SAST-20261014-1293"
+    ]
+  },
+  {
+    "path": "src/app/mechanic/page.tsx",
+    "startLine": 241,
+    "endLine": 246,
+    "findingIds": [
+      "SAST-20261014-1294"
+    ]
+  },
+  {
+    "path": "src/app/mechanic/page.tsx",
+    "startLine": 250,
+    "endLine": 254,
+    "findingIds": [
+      "SAST-20261014-1295"
+    ]
+  },
+  {
+    "path": "src/app/mechanic/page.tsx",
+    "startLine": 274,
+    "endLine": 277,
+    "findingIds": [
+      "SAST-20261014-1296"
+    ]
+  },
+  {
+    "path": "src/app/monitoring/page.tsx",
+    "startLine": 90,
+    "endLine": 90,
+    "findingIds": [
+      "SAST-20261014-1297"
+    ]
+  },
+  {
+    "path": "src/app/monitoring/page.tsx",
+    "startLine": 107,
+    "endLine": 110,
+    "findingIds": [
+      "SAST-20261014-1298"
+    ]
+  },
+  {
+    "path": "src/app/page.tsx",
+    "startLine": 54,
+    "endLine": 54,
+    "findingIds": [
+      "SAST-20261014-1299"
+    ]
+  },
+  {
+    "path": "src/app/page.tsx",
+    "startLine": 55,
+    "endLine": 55,
+    "findingIds": [
+      "SAST-20261014-1300"
+    ]
+  },
+  {
+    "path": "src/app/page.tsx",
+    "startLine": 334,
+    "endLine": 334,
+    "findingIds": [
+      "SAST-20261014-1301"
+    ]
+  },
+  {
+    "path": "src/app/page.tsx",
+    "startLine": 335,
+    "endLine": 335,
+    "findingIds": [
+      "SAST-20261014-1302"
+    ]
+  },
+  {
+    "path": "src/app/page.tsx",
+    "startLine": 343,
+    "endLine": 343,
+    "findingIds": [
+      "SAST-20261014-1303",
+      "SAST-20261014-1304"
+    ]
+  },
+  {
+    "path": "src/app/page.tsx",
+    "startLine": 344,
+    "endLine": 344,
+    "findingIds": [
+      "SAST-20261014-1305",
+      "SAST-20261014-1306"
+    ]
+  },
+  {
+    "path": "src/app/page.tsx",
+    "startLine": 396,
+    "endLine": 401,
+    "findingIds": [
+      "SAST-20261014-1307"
+    ]
+  },
+  {
+    "path": "src/app/page.tsx",
+    "startLine": 406,
+    "endLine": 415,
+    "findingIds": [
+      "SAST-20261014-1308"
+    ]
+  },
+  {
+    "path": "src/app/page.tsx",
+    "startLine": 416,
+    "endLine": 425,
+    "findingIds": [
+      "SAST-20261014-1309"
+    ]
+  },
+  {
+    "path": "src/app/register/page.tsx",
+    "startLine": 100,
+    "endLine": 102,
+    "findingIds": [
+      "SAST-20261014-1310"
+    ]
+  },
+  {
+    "path": "src/app/register/page.tsx",
+    "startLine": 101,
+    "endLine": 101,
+    "findingIds": [
+      "SAST-20261014-1311"
+    ]
+  },
+  {
+    "path": "src/app/register/page.tsx",
+    "startLine": 148,
+    "endLine": 148,
+    "findingIds": [
+      "SAST-20261014-1312"
+    ]
+  },
+  {
+    "path": "src/app/register/page.tsx",
+    "startLine": 152,
+    "endLine": 154,
+    "findingIds": [
+      "SAST-20261014-1313"
+    ]
+  },
+  {
+    "path": "src/app/register/page.tsx",
+    "startLine": 169,
+    "endLine": 171,
+    "findingIds": [
+      "SAST-20261014-1314"
+    ]
+  },
+  {
+    "path": "src/app/register/page.tsx",
+    "startLine": 186,
+    "endLine": 188,
+    "findingIds": [
+      "SAST-20261014-1315"
+    ]
+  },
+  {
+    "path": "src/app/register/page.tsx",
+    "startLine": 229,
+    "endLine": 241,
+    "findingIds": [
+      "SAST-20261014-1316"
+    ]
+  },
+  {
+    "path": "src/app/register/page.tsx",
+    "startLine": 249,
+    "endLine": 249,
+    "findingIds": [
+      "SAST-20261014-1317"
+    ]
+  },
+  {
+    "path": "src/app/register/page.tsx",
+    "startLine": 250,
+    "endLine": 250,
+    "findingIds": [
+      "SAST-20261014-1318"
+    ]
+  },
+  {
+    "path": "src/app/register/page.tsx",
+    "startLine": 254,
+    "endLine": 256,
+    "findingIds": [
+      "SAST-20261014-1319"
+    ]
+  },
+  {
+    "path": "src/app/register/page.tsx",
+    "startLine": 271,
+    "endLine": 273,
+    "findingIds": [
+      "SAST-20261014-1320"
+    ]
+  },
+  {
+    "path": "src/app/register/page.tsx",
+    "startLine": 343,
+    "endLine": 345,
+    "findingIds": [
+      "SAST-20261014-1321"
+    ]
+  },
+  {
+    "path": "src/components/AddressAutocomplete.tsx",
+    "startLine": 164,
+    "endLine": 164,
+    "findingIds": [
+      "SAST-20261014-1322"
+    ]
+  },
+  {
+    "path": "src/components/AddressAutocomplete.tsx",
+    "startLine": 205,
+    "endLine": 209,
+    "findingIds": [
+      "SAST-20261014-1323"
+    ]
+  },
+  {
+    "path": "src/components/AppointmentsPanel.tsx",
+    "startLine": 135,
+    "endLine": 135,
+    "findingIds": [
+      "SAST-20261014-1324"
+    ]
+  },
+  {
+    "path": "src/components/AppointmentsPanel.tsx",
+    "startLine": 182,
+    "endLine": 186,
+    "findingIds": [
+      "SAST-20261014-1325"
+    ]
+  },
+  {
+    "path": "src/components/BillingPanel.tsx",
+    "startLine": 94,
+    "endLine": 94,
+    "findingIds": [
+      "SAST-20261014-1326"
+    ]
+  },
+  {
+    "path": "src/components/BillingPanel.tsx",
+    "startLine": 179,
+    "endLine": 179,
+    "findingIds": [
+      "SAST-20261014-1327"
+    ]
+  },
+  {
+    "path": "src/components/BillingPanel.tsx",
+    "startLine": 180,
+    "endLine": 180,
+    "findingIds": [
+      "SAST-20261014-1328"
+    ]
+  },
+  {
+    "path": "src/components/BillingPanel.tsx",
+    "startLine": 211,
+    "endLine": 211,
+    "findingIds": [
+      "SAST-20261014-1329"
+    ]
+  },
+  {
+    "path": "src/components/ClientsPanel.tsx",
+    "startLine": 175,
+    "endLine": 175,
+    "findingIds": [
+      "SAST-20261014-1330"
+    ]
+  },
+  {
+    "path": "src/components/ClientsPanel.tsx",
+    "startLine": 204,
+    "endLine": 204,
+    "findingIds": [
+      "SAST-20261014-1331"
+    ]
+  },
+  {
+    "path": "src/components/ClientsPanel.tsx",
+    "startLine": 205,
+    "endLine": 205,
+    "findingIds": [
+      "SAST-20261014-1332"
+    ]
+  },
+  {
+    "path": "src/components/ClientsPanel.tsx",
+    "startLine": 231,
+    "endLine": 233,
+    "findingIds": [
+      "SAST-20261014-1333"
+    ]
+  },
+  {
+    "path": "src/components/ClientsPanel.tsx",
+    "startLine": 298,
+    "endLine": 303,
+    "findingIds": [
+      "SAST-20261014-1334"
+    ]
+  },
+  {
+    "path": "src/components/ClientsPanel.tsx",
+    "startLine": 313,
+    "endLine": 318,
+    "findingIds": [
+      "SAST-20261014-1335"
+    ]
+  },
+  {
+    "path": "src/components/ClientsPanel.tsx",
+    "startLine": 337,
+    "endLine": 339,
+    "findingIds": [
+      "SAST-20261014-1336"
+    ]
+  },
+  {
+    "path": "src/components/ClientsPanel.tsx",
+    "startLine": 352,
+    "endLine": 352,
+    "findingIds": [
+      "SAST-20261014-1337"
+    ]
+  },
+  {
+    "path": "src/components/ClientsPanel.tsx",
+    "startLine": 353,
+    "endLine": 355,
+    "findingIds": [
+      "SAST-20261014-1338"
+    ]
+  },
+  {
+    "path": "src/components/ClientsPanel.tsx",
+    "startLine": 356,
+    "endLine": 358,
+    "findingIds": [
+      "SAST-20261014-1339"
+    ]
+  },
+  {
+    "path": "src/components/ClientsPanel.tsx",
+    "startLine": 387,
+    "endLine": 389,
+    "findingIds": [
+      "SAST-20261014-1340"
+    ]
+  },
+  {
+    "path": "src/components/ClientsPanel.tsx",
+    "startLine": 406,
+    "endLine": 408,
+    "findingIds": [
+      "SAST-20261014-1341"
+    ]
+  },
+  {
+    "path": "src/components/CrashConsentModal.tsx",
+    "startLine": 44,
+    "endLine": 46,
+    "findingIds": [
+      "SAST-20261014-1342"
+    ]
+  },
+  {
+    "path": "src/components/CrashConsentModal.tsx",
+    "startLine": 47,
+    "endLine": 50,
+    "findingIds": [
+      "SAST-20261014-1343"
+    ]
+  },
+  {
+    "path": "src/components/CrashConsentModal.tsx",
+    "startLine": 48,
+    "endLine": 48,
+    "findingIds": [
+      "SAST-20261014-1344"
+    ]
+  },
+  {
+    "path": "src/components/CrashConsentModal.tsx",
+    "startLine": 49,
+    "endLine": 49,
+    "findingIds": [
+      "SAST-20261014-1345"
+    ]
+  },
+  {
+    "path": "src/components/CrashConsentModal.tsx",
+    "startLine": 54,
+    "endLine": 54,
+    "findingIds": [
+      "SAST-20261014-1346"
+    ]
+  },
+  {
+    "path": "src/components/CrashConsentModal.tsx",
+    "startLine": 56,
+    "endLine": 56,
+    "findingIds": [
+      "SAST-20261014-1347"
+    ]
+  },
+  {
+    "path": "src/components/CrashConsentModal.tsx",
+    "startLine": 57,
+    "endLine": 57,
+    "findingIds": [
+      "SAST-20261014-1348"
+    ]
+  },
+  {
+    "path": "src/components/CrashConsentModal.tsx",
+    "startLine": 58,
+    "endLine": 58,
+    "findingIds": [
+      "SAST-20261014-1349",
+      "SAST-20261014-1350"
+    ]
+  },
+  {
+    "path": "src/components/CrashConsentModal.tsx",
+    "startLine": 60,
+    "endLine": 64,
+    "findingIds": [
+      "SAST-20261014-1351"
+    ]
+  },
+  {
+    "path": "src/components/CrashConsentModal.tsx",
+    "startLine": 62,
+    "endLine": 63,
+    "findingIds": [
+      "SAST-20261014-1352"
+    ]
+  },
+  {
+    "path": "src/components/CrashConsentModal.tsx",
+    "startLine": 73,
+    "endLine": 73,
+    "findingIds": [
+      "SAST-20261014-1353"
+    ]
+  },
+  {
+    "path": "src/components/CrashConsentModal.tsx",
+    "startLine": 74,
+    "endLine": 74,
+    "findingIds": [
+      "SAST-20261014-1354"
+    ]
+  },
+  {
+    "path": "src/components/Dashboard.tsx",
+    "startLine": 89,
+    "endLine": 89,
+    "findingIds": [
+      "SAST-20261014-1355"
+    ]
+  },
+  {
+    "path": "src/components/Dashboard.tsx",
+    "startLine": 201,
+    "endLine": 201,
+    "findingIds": [
+      "SAST-20261014-1356"
+    ]
+  },
+  {
+    "path": "src/components/Dashboard.tsx",
+    "startLine": 207,
+    "endLine": 207,
+    "findingIds": [
+      "SAST-20261014-1357"
+    ]
+  },
+  {
+    "path": "src/components/Dashboard.tsx",
+    "startLine": 228,
+    "endLine": 230,
+    "findingIds": [
+      "SAST-20261014-1358",
+      "SAST-20261014-1359"
+    ]
+  },
+  {
+    "path": "src/components/FinancialDashboard.tsx",
+    "startLine": 77,
+    "endLine": 77,
+    "findingIds": [
+      "SAST-20261014-1360"
+    ]
+  },
+  {
+    "path": "src/components/FinancialDashboard.tsx",
+    "startLine": 100,
+    "endLine": 102,
+    "findingIds": [
+      "SAST-20261014-1361"
+    ]
+  },
+  {
+    "path": "src/components/FinancialDashboard.tsx",
+    "startLine": 206,
+    "endLine": 209,
+    "findingIds": [
+      "SAST-20261014-1362"
+    ]
+  },
+  {
+    "path": "src/components/GarageFlowLogo.tsx",
+    "startLine": 25,
+    "endLine": 28,
+    "findingIds": [
+      "SAST-20261014-1363"
+    ]
+  },
+  {
+    "path": "src/components/GarageFlowLogo.tsx",
+    "startLine": 29,
+    "endLine": 32,
+    "findingIds": [
+      "SAST-20261014-1364"
+    ]
+  },
+  {
+    "path": "src/components/Header.tsx",
+    "startLine": 274,
+    "endLine": 276,
+    "findingIds": [
+      "SAST-20261014-1365"
+    ]
+  },
+  {
+    "path": "src/components/Header.tsx",
+    "startLine": 275,
+    "endLine": 275,
+    "findingIds": [
+      "SAST-20261014-1366"
+    ]
+  },
+  {
+    "path": "src/components/InvoiceModal.tsx",
+    "startLine": 146,
+    "endLine": 154,
+    "findingIds": [
+      "SAST-20261014-1367",
+      "SAST-20261014-1368"
+    ]
+  },
+  {
+    "path": "src/components/InvoiceModal.tsx",
+    "startLine": 309,
+    "endLine": 309,
+    "findingIds": [
+      "SAST-20261014-1369"
+    ]
+  },
+  {
+    "path": "src/components/InvoiceModal.tsx",
+    "startLine": 310,
+    "endLine": 310,
+    "findingIds": [
+      "SAST-20261014-1370"
+    ]
+  },
+  {
+    "path": "src/components/InvoiceModal.tsx",
+    "startLine": 326,
+    "endLine": 326,
+    "findingIds": [
+      "SAST-20261014-1371"
+    ]
+  },
+  {
+    "path": "src/components/JobCard.tsx",
+    "startLine": 105,
+    "endLine": 105,
+    "findingIds": [
+      "SAST-20261014-1372"
+    ]
+  },
+  {
+    "path": "src/components/JobCard.tsx",
+    "startLine": 106,
+    "endLine": 106,
+    "findingIds": [
+      "SAST-20261014-1373"
+    ]
+  },
+  {
+    "path": "src/components/JobModal.tsx",
+    "startLine": 416,
+    "endLine": 416,
+    "findingIds": [
+      "SAST-20261014-1374"
+    ]
+  },
+  {
+    "path": "src/components/JobPhotos.tsx",
+    "startLine": 123,
+    "endLine": 125,
+    "findingIds": [
+      "SAST-20261014-1375"
+    ]
+  },
+  {
+    "path": "src/components/JobPhotos.tsx",
+    "startLine": 128,
+    "endLine": 128,
+    "findingIds": [
+      "SAST-20261014-1376"
+    ]
+  },
+  {
+    "path": "src/components/JobPhotos.tsx",
+    "startLine": 129,
+    "endLine": 129,
+    "findingIds": [
+      "SAST-20261014-1377"
+    ]
+  },
+  {
+    "path": "src/components/LaborCatalogPanel.tsx",
+    "startLine": 92,
+    "endLine": 92,
+    "findingIds": [
+      "SAST-20261014-1378"
+    ]
+  },
+  {
+    "path": "src/components/LicenseChangeModal.tsx",
+    "startLine": 56,
+    "endLine": 58,
+    "findingIds": [
+      "SAST-20261014-1379"
+    ]
+  },
+  {
+    "path": "src/components/LicenseChangeModal.tsx",
+    "startLine": 66,
+    "endLine": 68,
+    "findingIds": [
+      "SAST-20261014-1380"
+    ]
+  },
+  {
+    "path": "src/components/LicenseChangeModal.tsx",
+    "startLine": 83,
+    "endLine": 88,
+    "findingIds": [
+      "SAST-20261014-1381"
+    ]
+  },
+  {
+    "path": "src/components/LicenseChangeModal.tsx",
+    "startLine": 219,
+    "endLine": 222,
+    "findingIds": [
+      "SAST-20261014-1382"
+    ]
+  },
+  {
+    "path": "src/components/LicenseChangeModal.tsx",
+    "startLine": 223,
+    "endLine": 226,
+    "findingIds": [
+      "SAST-20261014-1383"
+    ]
+  },
+  {
+    "path": "src/components/LicenseChangeModal.tsx",
+    "startLine": 256,
+    "endLine": 258,
+    "findingIds": [
+      "SAST-20261014-1384"
+    ]
+  },
+  {
+    "path": "src/components/LicenseChangeModal.tsx",
+    "startLine": 259,
+    "endLine": 261,
+    "findingIds": [
+      "SAST-20261014-1385"
+    ]
+  },
+  {
+    "path": "src/components/LicenseChangeModal.tsx",
+    "startLine": 267,
+    "endLine": 269,
+    "findingIds": [
+      "SAST-20261014-1386"
+    ]
+  },
+  {
+    "path": "src/components/LicenseChangeModal.tsx",
+    "startLine": 304,
+    "endLine": 313,
+    "findingIds": [
+      "SAST-20261014-1387"
+    ]
+  },
+  {
+    "path": "src/components/LicenseRevokedOverlay.tsx",
+    "startLine": 189,
+    "endLine": 189,
+    "findingIds": [
+      "SAST-20261014-1388"
+    ]
+  },
+  {
+    "path": "src/components/LicenseRevokedOverlay.tsx",
+    "startLine": 190,
+    "endLine": 192,
+    "findingIds": [
+      "SAST-20261014-1389"
+    ]
+  },
+  {
+    "path": "src/components/LicenseRevokedOverlay.tsx",
+    "startLine": 193,
+    "endLine": 193,
+    "findingIds": [
+      "SAST-20261014-1390"
+    ]
+  },
+  {
+    "path": "src/components/LoanerPanel.tsx",
+    "startLine": 288,
+    "endLine": 288,
+    "findingIds": [
+      "SAST-20261014-1391"
+    ]
+  },
+  {
+    "path": "src/components/LoanerPanel.tsx",
+    "startLine": 457,
+    "endLine": 461,
+    "findingIds": [
+      "SAST-20261014-1392"
+    ]
+  },
+  {
+    "path": "src/components/LoanerPanel.tsx",
+    "startLine": 515,
+    "endLine": 518,
+    "findingIds": [
+      "SAST-20261014-1393"
+    ]
+  },
+  {
+    "path": "src/components/LoanerPanel.tsx",
+    "startLine": 519,
+    "endLine": 525,
+    "findingIds": [
+      "SAST-20261014-1394"
+    ]
+  },
+  {
+    "path": "src/components/NotificationCenter.tsx",
+    "startLine": 139,
+    "endLine": 139,
+    "findingIds": [
+      "SAST-20261014-1395"
+    ]
+  },
+  {
+    "path": "src/components/NotificationCenter.tsx",
+    "startLine": 145,
+    "endLine": 147,
+    "findingIds": [
+      "SAST-20261014-1396"
+    ]
+  },
+  {
+    "path": "src/components/NotificationCenter.tsx",
+    "startLine": 155,
+    "endLine": 159,
+    "findingIds": [
+      "SAST-20261014-1397"
+    ]
+  },
+  {
+    "path": "src/components/NotificationCenter.tsx",
+    "startLine": 162,
+    "endLine": 166,
+    "findingIds": [
+      "SAST-20261014-1398"
+    ]
+  },
+  {
+    "path": "src/components/NotificationCenter.tsx",
+    "startLine": 186,
+    "endLine": 190,
+    "findingIds": [
+      "SAST-20261014-1399"
+    ]
+  },
+  {
+    "path": "src/components/PwaRegister.tsx",
+    "startLine": 127,
+    "endLine": 130,
+    "findingIds": [
+      "SAST-20261014-1400"
+    ]
+  },
+  {
+    "path": "src/components/PwaRegister.tsx",
+    "startLine": 131,
+    "endLine": 131,
+    "findingIds": [
+      "SAST-20261014-1401"
+    ]
+  },
+  {
+    "path": "src/components/PwaRegister.tsx",
+    "startLine": 152,
+    "endLine": 154,
+    "findingIds": [
+      "SAST-20261014-1402"
+    ]
+  },
+  {
+    "path": "src/components/PwaRegister.tsx",
+    "startLine": 155,
+    "endLine": 157,
+    "findingIds": [
+      "SAST-20261014-1403"
+    ]
+  },
+  {
+    "path": "src/components/PwaRegister.tsx",
+    "startLine": 159,
+    "endLine": 163,
+    "findingIds": [
+      "SAST-20261014-1404"
+    ]
+  },
+  {
+    "path": "src/components/QuoteInvoiceModal.tsx",
+    "startLine": 683,
+    "endLine": 683,
+    "findingIds": [
+      "SAST-20261014-1405"
+    ]
+  },
+  {
+    "path": "src/components/QuoteInvoiceModal.tsx",
+    "startLine": 696,
+    "endLine": 696,
+    "findingIds": [
+      "SAST-20261014-1406",
+      "SAST-20261014-1407"
+    ]
+  },
+  {
+    "path": "src/components/QuoteInvoiceModal.tsx",
+    "startLine": 706,
+    "endLine": 706,
+    "findingIds": [
+      "SAST-20261014-1408",
+      "SAST-20261014-1409"
+    ]
+  },
+  {
+    "path": "src/components/QuoteInvoiceModal.tsx",
+    "startLine": 893,
+    "endLine": 893,
+    "findingIds": [
+      "SAST-20261014-1410"
+    ]
+  },
+  {
+    "path": "src/components/QuoteInvoiceModal.tsx",
+    "startLine": 901,
+    "endLine": 903,
+    "findingIds": [
+      "SAST-20261014-1411"
+    ]
+  },
+  {
+    "path": "src/components/QuoteInvoiceModal.tsx",
+    "startLine": 1002,
+    "endLine": 1002,
+    "findingIds": [
+      "SAST-20261014-1412"
+    ]
+  },
+  {
+    "path": "src/components/QuoteInvoiceModal.tsx",
+    "startLine": 1003,
+    "endLine": 1005,
+    "findingIds": [
+      "SAST-20261014-1413"
+    ]
+  },
+  {
+    "path": "src/components/ReceptionBoard.tsx",
+    "startLine": 77,
+    "endLine": 79,
+    "findingIds": [
+      "SAST-20261014-1414"
+    ]
+  },
+  {
+    "path": "src/components/ReceptionBoard.tsx",
+    "startLine": 223,
+    "endLine": 225,
+    "findingIds": [
+      "SAST-20261014-1415"
+    ]
+  },
+  {
+    "path": "src/components/ReceptionBoard.tsx",
+    "startLine": 245,
+    "endLine": 247,
+    "findingIds": [
+      "SAST-20261014-1416"
+    ]
+  },
+  {
+    "path": "src/components/ReminderPanel.tsx",
+    "startLine": 123,
+    "endLine": 123,
+    "findingIds": [
+      "SAST-20261014-1417",
+      "SAST-20261014-1418"
+    ]
+  },
+  {
+    "path": "src/components/ScheduleBoard.tsx",
+    "startLine": 194,
+    "endLine": 196,
+    "findingIds": [
+      "SAST-20261014-1419"
+    ]
+  },
+  {
+    "path": "src/components/SettingsModal.tsx",
+    "startLine": 207,
+    "endLine": 207,
+    "findingIds": [
+      "SAST-20261014-1420"
+    ]
+  },
+  {
+    "path": "src/components/SettingsModal.tsx",
+    "startLine": 235,
+    "endLine": 235,
+    "findingIds": [
+      "SAST-20261014-1421"
+    ]
+  },
+  {
+    "path": "src/components/SettingsModal.tsx",
+    "startLine": 275,
+    "endLine": 275,
+    "findingIds": [
+      "SAST-20261014-1422"
+    ]
+  },
+  {
+    "path": "src/components/StockPanel.tsx",
+    "startLine": 270,
+    "endLine": 270,
+    "findingIds": [
+      "SAST-20261014-1423"
+    ]
+  },
+  {
+    "path": "src/components/SuggestionPanel.tsx",
+    "startLine": 131,
+    "endLine": 131,
+    "findingIds": [
+      "SAST-20261014-1424"
+    ]
+  },
+  {
+    "path": "src/components/SuggestionPanel.tsx",
+    "startLine": 132,
+    "endLine": 132,
+    "findingIds": [
+      "SAST-20261014-1425"
+    ]
+  },
+  {
+    "path": "src/components/SuggestionPanel.tsx",
+    "startLine": 171,
+    "endLine": 173,
+    "findingIds": [
+      "SAST-20261014-1426"
+    ]
+  },
+  {
+    "path": "src/components/SuppliersPanel.tsx",
+    "startLine": 159,
+    "endLine": 161,
+    "findingIds": [
+      "SAST-20261014-1427"
+    ]
+  },
+  {
+    "path": "src/components/SuppliersPanel.tsx",
+    "startLine": 169,
+    "endLine": 173,
+    "findingIds": [
+      "SAST-20261014-1428"
+    ]
+  },
+  {
+    "path": "src/components/SuppliersPanel.tsx",
+    "startLine": 216,
+    "endLine": 216,
+    "findingIds": [
+      "SAST-20261014-1429",
+      "SAST-20261014-1430"
+    ]
+  },
+  {
+    "path": "src/components/TicketsPanel.tsx",
+    "startLine": 143,
+    "endLine": 143,
+    "findingIds": [
+      "SAST-20261014-1431"
+    ]
+  },
+  {
+    "path": "src/components/TicketsPanel.tsx",
+    "startLine": 272,
+    "endLine": 276,
+    "findingIds": [
+      "SAST-20261014-1432"
+    ]
+  },
+  {
+    "path": "src/components/UpdateModal.tsx",
+    "startLine": 188,
+    "endLine": 190,
+    "findingIds": [
+      "SAST-20261014-1433"
+    ]
+  },
+  {
+    "path": "src/components/UpdateModal.tsx",
+    "startLine": 201,
+    "endLine": 203,
+    "findingIds": [
+      "SAST-20261014-1434"
+    ]
+  },
+  {
+    "path": "src/components/UpdateModal.tsx",
+    "startLine": 205,
+    "endLine": 207,
+    "findingIds": [
+      "SAST-20261014-1435"
+    ]
+  },
+  {
+    "path": "src/components/UpdateModal.tsx",
+    "startLine": 213,
+    "endLine": 213,
+    "findingIds": [
+      "SAST-20261014-1436"
+    ]
+  },
+  {
+    "path": "src/components/UpdateModal.tsx",
+    "startLine": 287,
+    "endLine": 291,
+    "findingIds": [
+      "SAST-20261014-1437"
+    ]
+  },
+  {
+    "path": "src/components/VehicleHistoryModal.tsx",
+    "startLine": 134,
+    "endLine": 134,
+    "findingIds": [
+      "SAST-20261014-1438"
+    ]
+  },
+  {
+    "path": "src/components/VehicleHistoryModal.tsx",
+    "startLine": 182,
+    "endLine": 182,
+    "findingIds": [
+      "SAST-20261014-1439"
+    ]
+  },
+  {
+    "path": "src/components/VehicleHistoryModal.tsx",
+    "startLine": 188,
+    "endLine": 188,
+    "findingIds": [
+      "SAST-20261014-1440"
+    ]
+  },
+  {
+    "path": "src/components/VehicleHistoryModal.tsx",
+    "startLine": 189,
+    "endLine": 189,
+    "findingIds": [
+      "SAST-20261014-1441"
+    ]
+  },
+  {
+    "path": "src/components/VehicleHistoryModal.tsx",
+    "startLine": 190,
+    "endLine": 190,
+    "findingIds": [
+      "SAST-20261014-1442"
+    ]
+  },
+  {
+    "path": "src/components/VehicleHistoryModal.tsx",
+    "startLine": 256,
+    "endLine": 258,
+    "findingIds": [
+      "SAST-20261014-1443"
+    ]
+  },
+  {
+    "path": "src/components/VehicleHistoryModal.tsx",
+    "startLine": 278,
+    "endLine": 278,
+    "findingIds": [
+      "SAST-20261014-1444"
+    ]
+  },
+  {
+    "path": "src/components/VehicleHistoryModal.tsx",
+    "startLine": 293,
+    "endLine": 297,
+    "findingIds": [
+      "SAST-20261014-1445"
+    ]
+  },
+  {
+    "path": "src/components/VehicleHistoryModal.tsx",
+    "startLine": 315,
+    "endLine": 315,
+    "findingIds": [
+      "SAST-20261014-1446"
+    ]
+  },
+  {
+    "path": "src/components/VehicleHistoryModal.tsx",
+    "startLine": 319,
+    "endLine": 319,
+    "findingIds": [
+      "SAST-20261014-1447"
+    ]
+  },
+  {
+    "path": "src/components/VehicleModal.tsx",
+    "startLine": 163,
+    "endLine": 165,
+    "findingIds": [
+      "SAST-20261014-1448"
+    ]
+  },
+  {
+    "path": "src/components/WarrantyPanel.tsx",
+    "startLine": 162,
+    "endLine": 162,
+    "findingIds": [
+      "SAST-20261014-1449"
+    ]
+  },
+  {
+    "path": "src/components/WeekView.tsx",
+    "startLine": 75,
+    "endLine": 80,
+    "findingIds": [
+      "SAST-20261014-1450"
+    ]
+  },
+  {
+    "path": "src/components/WeekView.tsx",
+    "startLine": 82,
+    "endLine": 84,
+    "findingIds": [
+      "SAST-20261014-1451"
+    ]
+  },
+  {
+    "path": "src/components/WeekView.tsx",
+    "startLine": 143,
+    "endLine": 143,
+    "findingIds": [
+      "SAST-20261014-1452",
+      "SAST-20261014-1453"
+    ]
+  },
+  {
+    "path": "src/components/WorkOrderModal.tsx",
+    "startLine": 233,
+    "endLine": 233,
+    "findingIds": [
+      "SAST-20261014-1454"
+    ]
+  },
+  {
+    "path": "src/components/WorkOrderModal.tsx",
+    "startLine": 276,
+    "endLine": 293,
+    "findingIds": [
+      "SAST-20261014-1455",
+      "SAST-20261014-1456"
+    ]
+  },
+  {
+    "path": "src/components/WorkOrderModal.tsx",
+    "startLine": 296,
+    "endLine": 296,
+    "findingIds": [
+      "SAST-20261014-1457"
+    ]
+  },
+  {
+    "path": "src/components/WorkOrderModal.tsx",
+    "startLine": 297,
+    "endLine": 297,
+    "findingIds": [
+      "SAST-20261014-1458"
+    ]
+  },
+  {
+    "path": "src/components/WorkOrderModal.tsx",
+    "startLine": 301,
+    "endLine": 301,
+    "findingIds": [
+      "SAST-20261014-1459"
+    ]
+  },
+  {
+    "path": "src/components/WorkOrderModal.tsx",
+    "startLine": 303,
+    "endLine": 323,
+    "findingIds": [
+      "SAST-20261014-1460"
+    ]
+  },
+  {
+    "path": "src/components/WorkOrderModal.tsx",
+    "startLine": 312,
+    "endLine": 312,
+    "findingIds": [
+      "SAST-20261014-1461"
+    ]
+  },
+  {
+    "path": "src/components/WorkOrderModal.tsx",
+    "startLine": 318,
+    "endLine": 318,
+    "findingIds": [
+      "SAST-20261014-1462"
+    ]
+  },
+  {
+    "path": "src/components/admin/LicenseDevices.tsx",
+    "startLine": 118,
+    "endLine": 120,
+    "findingIds": [
+      "SAST-20261014-1463"
+    ]
+  },
+  {
+    "path": "src/components/admin/LicenseDevices.tsx",
+    "startLine": 135,
+    "endLine": 137,
+    "findingIds": [
+      "SAST-20261014-1464"
+    ]
+  },
+  {
+    "path": "src/components/admin/LicenseDevices.tsx",
+    "startLine": 167,
+    "endLine": 171,
+    "findingIds": [
+      "SAST-20261014-1465"
+    ]
+  },
+  {
+    "path": "src/components/admin/LicenseDevices.tsx",
+    "startLine": 181,
+    "endLine": 185,
+    "findingIds": [
+      "SAST-20261014-1466"
+    ]
+  },
+  {
+    "path": "src/components/billing/QuoteGenerator.tsx",
+    "startLine": 109,
+    "endLine": 112,
+    "findingIds": [
+      "SAST-20261014-1467"
+    ]
+  },
+  {
+    "path": "src/components/billing/QuoteGenerator.tsx",
+    "startLine": 142,
+    "endLine": 142,
+    "findingIds": [
+      "SAST-20261014-1468"
+    ]
+  },
+  {
+    "path": "src/components/billing/QuoteGenerator.tsx",
+    "startLine": 151,
+    "endLine": 151,
+    "findingIds": [
+      "SAST-20261014-1469"
+    ]
+  },
+  {
+    "path": "src/components/billing/QuoteGenerator.tsx",
+    "startLine": 175,
+    "endLine": 175,
+    "findingIds": [
+      "SAST-20261014-1470"
+    ]
+  },
+  {
+    "path": "src/components/billing/QuoteGenerator.tsx",
+    "startLine": 185,
+    "endLine": 185,
+    "findingIds": [
+      "SAST-20261014-1471"
+    ]
+  },
+  {
+    "path": "src/components/billing/QuoteGenerator.tsx",
+    "startLine": 215,
+    "endLine": 217,
+    "findingIds": [
+      "SAST-20261014-1472"
+    ]
+  },
+  {
+    "path": "src/components/billing/QuoteGenerator.tsx",
+    "startLine": 238,
+    "endLine": 244,
+    "findingIds": [
+      "SAST-20261014-1473"
+    ]
+  },
+  {
+    "path": "src/components/billing/QuoteGenerator.tsx",
+    "startLine": 250,
+    "endLine": 253,
+    "findingIds": [
+      "SAST-20261014-1474"
+    ]
+  },
+  {
+    "path": "src/components/billing/QuoteGenerator.tsx",
+    "startLine": 251,
+    "endLine": 251,
+    "findingIds": [
+      "SAST-20261014-1475"
+    ]
+  },
+  {
+    "path": "src/components/copilot/HistoriqueRapports.tsx",
+    "startLine": 111,
+    "endLine": 116,
+    "findingIds": [
+      "SAST-20261014-1476"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardCharts.tsx",
+    "startLine": 366,
+    "endLine": 370,
+    "findingIds": [
+      "SAST-20261014-1477"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardCharts.tsx",
+    "startLine": 427,
+    "endLine": 431,
+    "findingIds": [
+      "SAST-20261014-1478"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardCharts.tsx",
+    "startLine": 487,
+    "endLine": 489,
+    "findingIds": [
+      "SAST-20261014-1479"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 94,
+    "endLine": 94,
+    "findingIds": [
+      "SAST-20261014-1480"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 131,
+    "endLine": 131,
+    "findingIds": [
+      "SAST-20261014-1481"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 232,
+    "endLine": 237,
+    "findingIds": [
+      "SAST-20261014-1482"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 323,
+    "endLine": 327,
+    "findingIds": [
+      "SAST-20261014-1483"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 334,
+    "endLine": 334,
+    "findingIds": [
+      "SAST-20261014-1484"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 356,
+    "endLine": 356,
+    "findingIds": [
+      "SAST-20261014-1485"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 364,
+    "endLine": 364,
+    "findingIds": [
+      "SAST-20261014-1486"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 367,
+    "endLine": 369,
+    "findingIds": [
+      "SAST-20261014-1487"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 383,
+    "endLine": 383,
+    "findingIds": [
+      "SAST-20261014-1488"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 409,
+    "endLine": 409,
+    "findingIds": [
+      "SAST-20261014-1489"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 416,
+    "endLine": 416,
+    "findingIds": [
+      "SAST-20261014-1490"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 428,
+    "endLine": 428,
+    "findingIds": [
+      "SAST-20261014-1491"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 460,
+    "endLine": 464,
+    "findingIds": [
+      "SAST-20261014-1492"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 475,
+    "endLine": 477,
+    "findingIds": [
+      "SAST-20261014-1493"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 478,
+    "endLine": 480,
+    "findingIds": [
+      "SAST-20261014-1494"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 503,
+    "endLine": 505,
+    "findingIds": [
+      "SAST-20261014-1495"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 506,
+    "endLine": 508,
+    "findingIds": [
+      "SAST-20261014-1496"
+    ]
+  },
+  {
+    "path": "src/components/dashboard/DashboardSections.tsx",
+    "startLine": 551,
+    "endLine": 551,
+    "findingIds": [
+      "SAST-20261014-1497"
+    ]
+  },
+  {
+    "path": "src/components/inspection/InspectionPrintDocument.tsx",
+    "startLine": 175,
+    "endLine": 175,
+    "findingIds": [
+      "SAST-20261014-1498"
+    ]
+  },
+  {
+    "path": "src/components/inspection/InspectionPrintDocument.tsx",
+    "startLine": 255,
+    "endLine": 257,
+    "findingIds": [
+      "SAST-20261014-1499"
+    ]
+  },
+  {
+    "path": "src/components/inspection/InspectionPrintDocument.tsx",
+    "startLine": 263,
+    "endLine": 266,
+    "findingIds": [
+      "SAST-20261014-1500"
+    ]
+  },
+  {
+    "path": "src/components/inspection/InspectionPrintDocument.tsx",
+    "startLine": 268,
+    "endLine": 270,
+    "findingIds": [
+      "SAST-20261014-1501"
+    ]
+  },
+  {
+    "path": "src/components/invoice/EInvoicePanel.tsx",
+    "startLine": 174,
+    "endLine": 179,
+    "findingIds": [
+      "SAST-20261014-1502"
+    ]
+  },
+  {
+    "path": "src/components/invoice/EInvoicePanel.tsx",
+    "startLine": 176,
+    "endLine": 176,
+    "findingIds": [
+      "SAST-20261014-1503"
+    ]
+  },
+  {
+    "path": "src/components/invoice/EInvoicePanel.tsx",
+    "startLine": 193,
+    "endLine": 196,
+    "findingIds": [
+      "SAST-20261014-1504"
+    ]
+  },
+  {
+    "path": "src/components/invoice/EInvoicePanel.tsx",
+    "startLine": 205,
+    "endLine": 208,
+    "findingIds": [
+      "SAST-20261014-1505"
+    ]
+  },
+  {
+    "path": "src/components/invoice/PartAutocomplete.tsx",
+    "startLine": 228,
+    "endLine": 228,
+    "findingIds": [
+      "SAST-20261014-1506"
+    ]
+  },
+  {
+    "path": "src/components/job-modal/JobPartsSection.tsx",
+    "startLine": 121,
+    "endLine": 123,
+    "findingIds": [
+      "SAST-20261014-1507"
+    ]
+  },
+  {
+    "path": "src/components/job-modal/JobPartsSection.tsx",
+    "startLine": 123,
+    "endLine": 125,
+    "findingIds": [
+      "SAST-20261014-1508"
+    ]
+  },
+  {
+    "path": "src/components/job-modal/JobPartsSection.tsx",
+    "startLine": 151,
+    "endLine": 155,
+    "findingIds": [
+      "SAST-20261014-1509"
+    ]
+  },
+  {
+    "path": "src/components/job-modal/JobPartsSection.tsx",
+    "startLine": 159,
+    "endLine": 159,
+    "findingIds": [
+      "SAST-20261014-1510"
+    ]
+  },
+  {
+    "path": "src/components/job-modal/JobPartsSection.tsx",
+    "startLine": 197,
+    "endLine": 200,
+    "findingIds": [
+      "SAST-20261014-1511"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalEmail.tsx",
+    "startLine": 119,
+    "endLine": 122,
+    "findingIds": [
+      "SAST-20261014-1512"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalEmail.tsx",
+    "startLine": 145,
+    "endLine": 149,
+    "findingIds": [
+      "SAST-20261014-1513"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalEmail.tsx",
+    "startLine": 147,
+    "endLine": 147,
+    "findingIds": [
+      "SAST-20261014-1514"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalEmail.tsx",
+    "startLine": 180,
+    "endLine": 187,
+    "findingIds": [
+      "SAST-20261014-1515"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalSessions.tsx",
+    "startLine": 124,
+    "endLine": 128,
+    "findingIds": [
+      "SAST-20261014-1516"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalSessions.tsx",
+    "startLine": 134,
+    "endLine": 138,
+    "findingIds": [
+      "SAST-20261014-1517"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalSessions.tsx",
+    "startLine": 140,
+    "endLine": 145,
+    "findingIds": [
+      "SAST-20261014-1518"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalTwoFactor.tsx",
+    "startLine": 160,
+    "endLine": 160,
+    "findingIds": [
+      "SAST-20261014-1519"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalTwoFactor.tsx",
+    "startLine": 161,
+    "endLine": 165,
+    "findingIds": [
+      "SAST-20261014-1520"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalTwoFactor.tsx",
+    "startLine": 179,
+    "endLine": 183,
+    "findingIds": [
+      "SAST-20261014-1521"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalTwoFactor.tsx",
+    "startLine": 190,
+    "endLine": 192,
+    "findingIds": [
+      "SAST-20261014-1522"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalTwoFactor.tsx",
+    "startLine": 198,
+    "endLine": 198,
+    "findingIds": [
+      "SAST-20261014-1523"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalTwoFactor.tsx",
+    "startLine": 222,
+    "endLine": 229,
+    "findingIds": [
+      "SAST-20261014-1524"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalTwoFactor.tsx",
+    "startLine": 242,
+    "endLine": 242,
+    "findingIds": [
+      "SAST-20261014-1525"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalTwoFactor.tsx",
+    "startLine": 243,
+    "endLine": 245,
+    "findingIds": [
+      "SAST-20261014-1526"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalTwoFactor.tsx",
+    "startLine": 272,
+    "endLine": 275,
+    "findingIds": [
+      "SAST-20261014-1527"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalTwoFactor.tsx",
+    "startLine": 295,
+    "endLine": 302,
+    "findingIds": [
+      "SAST-20261014-1528"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalTwoFactor.tsx",
+    "startLine": 313,
+    "endLine": 316,
+    "findingIds": [
+      "SAST-20261014-1529"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalTwoFactor.tsx",
+    "startLine": 380,
+    "endLine": 380,
+    "findingIds": [
+      "SAST-20261014-1530"
+    ]
+  },
+  {
+    "path": "src/components/portal/PortalTwoFactor.tsx",
+    "startLine": 381,
+    "endLine": 385,
+    "findingIds": [
+      "SAST-20261014-1531"
+    ]
+  },
+  {
+    "path": "src/components/reminders/ReminderSuggestions.tsx",
+    "startLine": 130,
+    "endLine": 130,
+    "findingIds": [
+      "SAST-20261014-1532"
+    ]
+  },
+  {
+    "path": "src/components/reminders/ReminderSuggestions.tsx",
+    "startLine": 131,
+    "endLine": 135,
+    "findingIds": [
+      "SAST-20261014-1533"
+    ]
+  },
+  {
+    "path": "src/components/reminders/ReminderSuggestions.tsx",
+    "startLine": 136,
+    "endLine": 138,
+    "findingIds": [
+      "SAST-20261014-1534"
+    ]
+  },
+  {
+    "path": "src/components/reminders/ReminderSuggestions.tsx",
+    "startLine": 225,
+    "endLine": 227,
+    "findingIds": [
+      "SAST-20261014-1535"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 102,
+    "endLine": 102,
+    "findingIds": [
+      "SAST-20261014-1536"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 108,
+    "endLine": 108,
+    "findingIds": [
+      "SAST-20261014-1537"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 126,
+    "endLine": 126,
+    "findingIds": [
+      "SAST-20261014-1538"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 127,
+    "endLine": 127,
+    "findingIds": [
+      "SAST-20261014-1539"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 145,
+    "endLine": 147,
+    "findingIds": [
+      "SAST-20261014-1540"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 163,
+    "endLine": 165,
+    "findingIds": [
+      "SAST-20261014-1541"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 173,
+    "endLine": 173,
+    "findingIds": [
+      "SAST-20261014-1542"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 188,
+    "endLine": 190,
+    "findingIds": [
+      "SAST-20261014-1543"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 206,
+    "endLine": 208,
+    "findingIds": [
+      "SAST-20261014-1544"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 224,
+    "endLine": 226,
+    "findingIds": [
+      "SAST-20261014-1545"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 229,
+    "endLine": 229,
+    "findingIds": [
+      "SAST-20261014-1546"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 244,
+    "endLine": 244,
+    "findingIds": [
+      "SAST-20261014-1547"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 247,
+    "endLine": 247,
+    "findingIds": [
+      "SAST-20261014-1548"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 254,
+    "endLine": 254,
+    "findingIds": [
+      "SAST-20261014-1549"
+    ]
+  },
+  {
+    "path": "src/components/settings/CompanyTab.tsx",
+    "startLine": 266,
+    "endLine": 268,
+    "findingIds": [
+      "SAST-20261014-1550"
+    ]
+  },
+  {
+    "path": "src/components/settings/CoordonneesBancaires.tsx",
+    "startLine": 62,
+    "endLine": 62,
+    "findingIds": [
+      "SAST-20261014-1551"
+    ]
+  },
+  {
+    "path": "src/components/settings/CoordonneesBancaires.tsx",
+    "startLine": 66,
+    "endLine": 68,
+    "findingIds": [
+      "SAST-20261014-1552"
+    ]
+  },
+  {
+    "path": "src/components/settings/CoordonneesBancaires.tsx",
+    "startLine": 114,
+    "endLine": 116,
+    "findingIds": [
+      "SAST-20261014-1553"
+    ]
+  },
+  {
+    "path": "src/components/settings/CoordonneesBancaires.tsx",
+    "startLine": 131,
+    "endLine": 133,
+    "findingIds": [
+      "SAST-20261014-1554"
+    ]
+  },
+  {
+    "path": "src/components/settings/CoordonneesBancaires.tsx",
+    "startLine": 149,
+    "endLine": 151,
+    "findingIds": [
+      "SAST-20261014-1555"
+    ]
+  },
+  {
+    "path": "src/components/settings/EInvoicingConnectionForm.tsx",
+    "startLine": 94,
+    "endLine": 94,
+    "findingIds": [
+      "SAST-20261014-1556"
+    ]
+  },
+  {
+    "path": "src/components/settings/EInvoicingConnectionForm.tsx",
+    "startLine": 168,
+    "endLine": 168,
+    "findingIds": [
+      "SAST-20261014-1557"
+    ]
+  },
+  {
+    "path": "src/components/settings/EInvoicingConnectionForm.tsx",
+    "startLine": 169,
+    "endLine": 171,
+    "findingIds": [
+      "SAST-20261014-1558"
+    ]
+  },
+  {
+    "path": "src/components/settings/EInvoicingConnectionForm.tsx",
+    "startLine": 194,
+    "endLine": 199,
+    "findingIds": [
+      "SAST-20261014-1559"
+    ]
+  },
+  {
+    "path": "src/components/settings/EInvoicingConnectionForm.tsx",
+    "startLine": 197,
+    "endLine": 197,
+    "findingIds": [
+      "SAST-20261014-1560"
+    ]
+  },
+  {
+    "path": "src/components/settings/EInvoicingConnectionForm.tsx",
+    "startLine": 201,
+    "endLine": 206,
+    "findingIds": [
+      "SAST-20261014-1561"
+    ]
+  },
+  {
+    "path": "src/components/settings/EInvoicingConnectionForm.tsx",
+    "startLine": 210,
+    "endLine": 210,
+    "findingIds": [
+      "SAST-20261014-1562"
+    ]
+  },
+  {
+    "path": "src/components/settings/EInvoicingConnectionForm.tsx",
+    "startLine": 218,
+    "endLine": 218,
+    "findingIds": [
+      "SAST-20261014-1563"
+    ]
+  },
+  {
+    "path": "src/components/settings/EInvoicingTab.tsx",
+    "startLine": 139,
+    "endLine": 139,
+    "findingIds": [
+      "SAST-20261014-1564",
+      "SAST-20261014-1565"
+    ]
+  },
+  {
+    "path": "src/components/settings/EInvoicingTab.tsx",
+    "startLine": 141,
+    "endLine": 143,
+    "findingIds": [
+      "SAST-20261014-1566"
+    ]
+  },
+  {
+    "path": "src/components/settings/EInvoicingTab.tsx",
+    "startLine": 164,
+    "endLine": 166,
+    "findingIds": [
+      "SAST-20261014-1567"
+    ]
+  },
+  {
+    "path": "src/components/settings/EInvoicingTab.tsx",
+    "startLine": 197,
+    "endLine": 210,
+    "findingIds": [
+      "SAST-20261014-1568"
+    ]
+  },
+  {
+    "path": "src/components/settings/EInvoicingTab.tsx",
+    "startLine": 224,
+    "endLine": 233,
+    "findingIds": [
+      "SAST-20261014-1569"
+    ]
+  },
+  {
+    "path": "src/components/settings/EInvoicingTab.tsx",
+    "startLine": 228,
+    "endLine": 230,
+    "findingIds": [
+      "SAST-20261014-1570"
+    ]
+  },
+  {
+    "path": "src/components/settings/EmailTab.tsx",
+    "startLine": 146,
+    "endLine": 149,
+    "findingIds": [
+      "SAST-20261014-1571"
+    ]
+  },
+  {
+    "path": "src/components/settings/EmailTab.tsx",
+    "startLine": 147,
+    "endLine": 147,
+    "findingIds": [
+      "SAST-20261014-1572",
+      "SAST-20261014-1573"
+    ]
+  },
+  {
+    "path": "src/components/settings/EmailTab.tsx",
+    "startLine": 175,
+    "endLine": 175,
+    "findingIds": [
+      "SAST-20261014-1574"
+    ]
+  },
+  {
+    "path": "src/components/settings/EmailTab.tsx",
+    "startLine": 186,
+    "endLine": 186,
+    "findingIds": [
+      "SAST-20261014-1575"
+    ]
+  },
+  {
+    "path": "src/components/settings/EmailTab.tsx",
+    "startLine": 209,
+    "endLine": 211,
+    "findingIds": [
+      "SAST-20261014-1576"
+    ]
+  },
+  {
+    "path": "src/components/settings/EmailTab.tsx",
+    "startLine": 226,
+    "endLine": 226,
+    "findingIds": [
+      "SAST-20261014-1577"
+    ]
+  },
+  {
+    "path": "src/components/settings/EmailTab.tsx",
+    "startLine": 240,
+    "endLine": 240,
+    "findingIds": [
+      "SAST-20261014-1578"
+    ]
+  },
+  {
+    "path": "src/components/settings/EmailTab.tsx",
+    "startLine": 246,
+    "endLine": 246,
+    "findingIds": [
+      "SAST-20261014-1579"
+    ]
+  },
+  {
+    "path": "src/components/settings/EmailTab.tsx",
+    "startLine": 253,
+    "endLine": 253,
+    "findingIds": [
+      "SAST-20261014-1580"
+    ]
+  },
+  {
+    "path": "src/components/settings/FeaturesTab.tsx",
+    "startLine": 153,
+    "endLine": 153,
+    "findingIds": [
+      "SAST-20261014-1581"
+    ]
+  },
+  {
+    "path": "src/components/settings/FeaturesTab.tsx",
+    "startLine": 174,
+    "endLine": 174,
+    "findingIds": [
+      "SAST-20261014-1582"
+    ]
+  },
+  {
+    "path": "src/components/settings/FeaturesTab.tsx",
+    "startLine": 200,
+    "endLine": 200,
+    "findingIds": [
+      "SAST-20261014-1583"
+    ]
+  },
+  {
+    "path": "src/components/settings/FeaturesTab.tsx",
+    "startLine": 213,
+    "endLine": 213,
+    "findingIds": [
+      "SAST-20261014-1584"
+    ]
+  },
+  {
+    "path": "src/components/settings/MechanicAccessTab.tsx",
+    "startLine": 186,
+    "endLine": 186,
+    "findingIds": [
+      "SAST-20261014-1585"
+    ]
+  },
+  {
+    "path": "src/components/settings/MechanicAccessTab.tsx",
+    "startLine": 191,
+    "endLine": 191,
+    "findingIds": [
+      "SAST-20261014-1586"
+    ]
+  },
+  {
+    "path": "src/components/settings/MechanicAccessTab.tsx",
+    "startLine": 281,
+    "endLine": 283,
+    "findingIds": [
+      "SAST-20261014-1587"
+    ]
+  },
+  {
+    "path": "src/components/settings/MechanicAccessTab.tsx",
+    "startLine": 294,
+    "endLine": 300,
+    "findingIds": [
+      "SAST-20261014-1588"
+    ]
+  },
+  {
+    "path": "src/components/settings/MechanicAvatarField.tsx",
+    "startLine": 91,
+    "endLine": 91,
+    "findingIds": [
+      "SAST-20261014-1589"
+    ]
+  },
+  {
+    "path": "src/components/settings/MechanicAvatarField.tsx",
+    "startLine": 123,
+    "endLine": 126,
+    "findingIds": [
+      "SAST-20261014-1590"
+    ]
+  },
+  {
+    "path": "src/components/settings/MechanicsTab.tsx",
+    "startLine": 79,
+    "endLine": 79,
+    "findingIds": [
+      "SAST-20261014-1591"
+    ]
+  },
+  {
+    "path": "src/components/settings/MechanicsTab.tsx",
+    "startLine": 81,
+    "endLine": 81,
+    "findingIds": [
+      "SAST-20261014-1592"
+    ]
+  },
+  {
+    "path": "src/components/settings/MechanicsTab.tsx",
+    "startLine": 130,
+    "endLine": 133,
+    "findingIds": [
+      "SAST-20261014-1593"
+    ]
+  },
+  {
+    "path": "src/components/settings/MechanicsTab.tsx",
+    "startLine": 142,
+    "endLine": 146,
+    "findingIds": [
+      "SAST-20261014-1594"
+    ]
+  },
+  {
+    "path": "src/components/settings/MechanicsTab.tsx",
+    "startLine": 156,
+    "endLine": 156,
+    "findingIds": [
+      "SAST-20261014-1595"
+    ]
+  },
+  {
+    "path": "src/components/settings/MechanicsTab.tsx",
+    "startLine": 166,
+    "endLine": 166,
+    "findingIds": [
+      "SAST-20261014-1596"
+    ]
+  },
+  {
+    "path": "src/components/settings/MechanicsTab.tsx",
+    "startLine": 212,
+    "endLine": 215,
+    "findingIds": [
+      "SAST-20261014-1597"
+    ]
+  },
+  {
+    "path": "src/components/settings/MechanicsTab.tsx",
+    "startLine": 277,
+    "endLine": 279,
+    "findingIds": [
+      "SAST-20261014-1598"
+    ]
+  },
+  {
+    "path": "src/components/settings/TeamTab.tsx",
+    "startLine": 177,
+    "endLine": 179,
+    "findingIds": [
+      "SAST-20261014-1599"
+    ]
+  },
+  {
+    "path": "src/components/settings/TeamTab.tsx",
+    "startLine": 186,
+    "endLine": 188,
+    "findingIds": [
+      "SAST-20261014-1600"
+    ]
+  },
+  {
+    "path": "src/components/settings/ThemeTab.tsx",
+    "startLine": 95,
+    "endLine": 95,
+    "findingIds": [
+      "SAST-20261014-1601"
+    ]
+  },
+  {
+    "path": "src/components/settings/ThemeTab.tsx",
+    "startLine": 96,
+    "endLine": 98,
+    "findingIds": [
+      "SAST-20261014-1602"
+    ]
+  },
+  {
+    "path": "src/components/settings/ThemeTab.tsx",
+    "startLine": 133,
+    "endLine": 133,
+    "findingIds": [
+      "SAST-20261014-1603"
+    ]
+  },
+  {
+    "path": "src/components/settings/ThemeTab.tsx",
+    "startLine": 134,
+    "endLine": 136,
+    "findingIds": [
+      "SAST-20261014-1604"
+    ]
+  },
+  {
+    "path": "src/components/settings/UpdatesTab.tsx",
+    "startLine": 290,
+    "endLine": 290,
+    "findingIds": [
+      "SAST-20261014-1605"
+    ]
+  },
+  {
+    "path": "src/components/settings/UpdatesTab.tsx",
+    "startLine": 298,
+    "endLine": 303,
+    "findingIds": [
+      "SAST-20261014-1606"
+    ]
+  },
+  {
+    "path": "src/components/settings/UpdatesTab.tsx",
+    "startLine": 300,
+    "endLine": 300,
+    "findingIds": [
+      "SAST-20261014-1607"
+    ]
+  },
+  {
+    "path": "src/components/settings/UpdatesTab.tsx",
+    "startLine": 301,
+    "endLine": 301,
+    "findingIds": [
+      "SAST-20261014-1608"
+    ]
+  },
+  {
+    "path": "src/components/settings/UpdatesTab.tsx",
+    "startLine": 308,
+    "endLine": 308,
+    "findingIds": [
+      "SAST-20261014-1609"
+    ]
+  },
+  {
+    "path": "src/components/settings/UpdatesTab.tsx",
+    "startLine": 319,
+    "endLine": 319,
+    "findingIds": [
+      "SAST-20261014-1610"
+    ]
+  },
+  {
+    "path": "src/components/settings/UpdatesTab.tsx",
+    "startLine": 330,
+    "endLine": 332,
+    "findingIds": [
+      "SAST-20261014-1611"
+    ]
+  },
+  {
+    "path": "src/components/settings/UpdatesTab.tsx",
+    "startLine": 355,
+    "endLine": 357,
+    "findingIds": [
+      "SAST-20261014-1612"
+    ]
+  },
+  {
+    "path": "src/components/settings/UpdatesTab.tsx",
+    "startLine": 356,
+    "endLine": 356,
+    "findingIds": [
+      "SAST-20261014-1613"
+    ]
+  },
+  {
+    "path": "src/components/settings/UpdatesTab.tsx",
+    "startLine": 362,
+    "endLine": 364,
+    "findingIds": [
+      "SAST-20261014-1614"
+    ]
+  },
+  {
+    "path": "src/components/settings/UpdatesTab.tsx",
+    "startLine": 375,
+    "endLine": 375,
+    "findingIds": [
+      "SAST-20261014-1615"
+    ]
+  },
+  {
+    "path": "src/components/settings/UpdatesTab.tsx",
+    "startLine": 422,
+    "endLine": 422,
+    "findingIds": [
+      "SAST-20261014-1616"
+    ]
+  },
+  {
+    "path": "src/components/settings/UpdatesTab.tsx",
+    "startLine": 423,
+    "endLine": 423,
+    "findingIds": [
+      "SAST-20261014-1617"
+    ]
+  },
+  {
+    "path": "src/integration/portail-mot-de-passe-provisoire.test.ts",
+    "startLine": 112,
+    "endLine": 112,
+    "findingIds": [
+      "SAST-20261014-1618"
+    ]
+  },
+  {
+    "path": "src/integration/suppliers.test.ts",
+    "startLine": 163,
+    "endLine": 163,
+    "findingIds": [
+      "SAST-20261014-1619"
+    ]
+  },
+  {
+    "path": "src/integration/suppliers.test.ts",
+    "startLine": 164,
+    "endLine": 164,
+    "findingIds": [
+      "SAST-20261014-1620"
+    ]
+  },
+  {
+    "path": "src/integration/tenant-isolation-matrix.test.ts",
+    "startLine": 165,
+    "endLine": 166,
+    "findingIds": [
+      "SAST-20261014-1621"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/composants-atteignables.test.ts",
+    "startLine": 69,
+    "endLine": 69,
+    "findingIds": [
+      "SAST-20261014-1622"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/composants-atteignables.test.ts",
+    "startLine": 70,
+    "endLine": 70,
+    "findingIds": [
+      "SAST-20261014-1623"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/composants-atteignables.test.ts",
+    "startLine": 81,
+    "endLine": 85,
+    "findingIds": [
+      "SAST-20261014-1624"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/composants-atteignables.test.ts",
+    "startLine": 83,
+    "endLine": 83,
+    "findingIds": [
+      "SAST-20261014-1625"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/contrats-parametres-api.test.ts",
+    "startLine": 75,
+    "endLine": 75,
+    "findingIds": [
+      "SAST-20261014-1626"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/contrats-parametres-api.test.ts",
+    "startLine": 76,
+    "endLine": 76,
+    "findingIds": [
+      "SAST-20261014-1627"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/electron-fuses.test.ts",
+    "startLine": 4,
+    "endLine": 5,
+    "findingIds": [
+      "SAST-20261014-1628"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/env-manifest-drift.test.ts",
+    "startLine": 77,
+    "endLine": 77,
+    "findingIds": [
+      "SAST-20261014-1629"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/env-manifest-drift.test.ts",
+    "startLine": 81,
+    "endLine": 81,
+    "findingIds": [
+      "SAST-20261014-1630",
+      "SAST-20261014-1631"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/env-manifest-drift.test.ts",
+    "startLine": 89,
+    "endLine": 89,
+    "findingIds": [
+      "SAST-20261014-1632"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/input-contrast.test.ts",
+    "startLine": 159,
+    "endLine": 159,
+    "findingIds": [
+      "SAST-20261014-1633",
+      "SAST-20261014-1634",
+      "SAST-20261014-1635",
+      "SAST-20261014-1636"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/money-json.test.ts",
+    "startLine": 52,
+    "endLine": 52,
+    "findingIds": [
+      "SAST-20261014-1637",
+      "SAST-20261014-1638"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/or-pieces-rattachees.test.ts",
+    "startLine": 46,
+    "endLine": 46,
+    "findingIds": [
+      "SAST-20261014-1639"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/or-pieces-rattachees.test.ts",
+    "startLine": 53,
+    "endLine": 53,
+    "findingIds": [
+      "SAST-20261014-1640"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/or-pieces-rattachees.test.ts",
+    "startLine": 54,
+    "endLine": 54,
+    "findingIds": [
+      "SAST-20261014-1641"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/or-pieces-rattachees.test.ts",
+    "startLine": 71,
+    "endLine": 71,
+    "findingIds": [
+      "SAST-20261014-1642"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/pwa.test.ts",
+    "startLine": 6,
+    "endLine": 6,
+    "findingIds": [
+      "SAST-20261014-1643",
+      "SAST-20261014-1644"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/quoted-secret-redaction.test.ts",
+    "startLine": 38,
+    "endLine": 38,
+    "findingIds": [
+      "SAST-20261014-1645"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/rotation-cle-ancrages.test.ts",
+    "startLine": 58,
+    "endLine": 58,
+    "findingIds": [
+      "SAST-20261014-1646"
+    ]
+  },
+  {
+    "path": "src/lib/__tests__/toolchain-node-version.test.ts",
+    "startLine": 26,
+    "endLine": 26,
+    "findingIds": [
+      "SAST-20261014-1647",
+      "SAST-20261014-1648"
+    ]
+  },
+  {
+    "path": "src/lib/backup/__tests__/crypto.test.ts",
+    "startLine": 33,
+    "endLine": 33,
+    "findingIds": [
+      "SAST-20261014-1649"
+    ]
+  },
+  {
+    "path": "src/lib/backup/__tests__/crypto.test.ts",
+    "startLine": 40,
+    "endLine": 40,
+    "findingIds": [
+      "SAST-20261014-1650"
+    ]
+  },
+  {
+    "path": "src/lib/backup/__tests__/snapshot.test.ts",
+    "startLine": 53,
+    "endLine": 53,
+    "findingIds": [
+      "SAST-20261014-1651"
+    ]
+  },
+  {
+    "path": "src/lib/backup/service.ts",
+    "startLine": 83,
+    "endLine": 83,
+    "findingIds": [
+      "SAST-20261014-1652",
+      "SAST-20261014-1653",
+      "SAST-20261014-1654"
+    ]
+  },
+  {
+    "path": "src/lib/backup/service.ts",
+    "startLine": 98,
+    "endLine": 98,
+    "findingIds": [
+      "SAST-20261014-1655"
+    ]
+  },
+  {
+    "path": "src/lib/backup/service.ts",
+    "startLine": 99,
+    "endLine": 99,
+    "findingIds": [
+      "SAST-20261014-1656"
+    ]
+  },
+  {
+    "path": "src/lib/backup/service.ts",
+    "startLine": 166,
+    "endLine": 166,
+    "findingIds": [
+      "SAST-20261014-1657",
+      "SAST-20261014-1658",
+      "SAST-20261014-1659"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/__tests__/submit-chain.test.ts",
+    "startLine": 173,
+    "endLine": 173,
+    "findingIds": [
+      "SAST-20261014-1660"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 89,
+    "endLine": 89,
+    "findingIds": [
+      "SAST-20261014-1661"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 90,
+    "endLine": 90,
+    "findingIds": [
+      "SAST-20261014-1662"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 96,
+    "endLine": 96,
+    "findingIds": [
+      "SAST-20261014-1663"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 103,
+    "endLine": 103,
+    "findingIds": [
+      "SAST-20261014-1664"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 104,
+    "endLine": 104,
+    "findingIds": [
+      "SAST-20261014-1665"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 106,
+    "endLine": 106,
+    "findingIds": [
+      "SAST-20261014-1666"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 112,
+    "endLine": 112,
+    "findingIds": [
+      "SAST-20261014-1667"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 117,
+    "endLine": 117,
+    "findingIds": [
+      "SAST-20261014-1668"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 120,
+    "endLine": 120,
+    "findingIds": [
+      "SAST-20261014-1669"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 124,
+    "endLine": 124,
+    "findingIds": [
+      "SAST-20261014-1670"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 129,
+    "endLine": 129,
+    "findingIds": [
+      "SAST-20261014-1671"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 131,
+    "endLine": 131,
+    "findingIds": [
+      "SAST-20261014-1672"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 132,
+    "endLine": 132,
+    "findingIds": [
+      "SAST-20261014-1673"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 133,
+    "endLine": 133,
+    "findingIds": [
+      "SAST-20261014-1674"
+    ]
+  },
+  {
+    "path": "src/lib/einvoicing/cii-xml.ts",
+    "startLine": 134,
+    "endLine": 134,
+    "findingIds": [
+      "SAST-20261014-1675"
+    ]
+  },
+  {
+    "path": "src/lib/license/__tests__/forgery-resistance.test.ts",
+    "startLine": 29,
+    "endLine": 29,
+    "findingIds": [
+      "SAST-20261014-1676"
+    ]
+  },
+  {
+    "path": "src/lib/license/__tests__/forgery-resistance.test.ts",
+    "startLine": 75,
+    "endLine": 75,
+    "findingIds": [
+      "SAST-20261014-1677"
+    ]
+  },
+  {
+    "path": "src/lib/license/__tests__/forgery-resistance.test.ts",
+    "startLine": 124,
+    "endLine": 124,
+    "findingIds": [
+      "SAST-20261014-1678"
+    ]
+  },
+  {
+    "path": "src/lib/license/__tests__/keygen-api-contract.test.ts",
+    "startLine": 42,
+    "endLine": 42,
+    "findingIds": [
+      "SAST-20261014-1679"
+    ]
+  },
+  {
+    "path": "src/lib/license/__tests__/keygen-api-contract.test.ts",
+    "startLine": 47,
+    "endLine": 47,
+    "findingIds": [
+      "SAST-20261014-1680"
+    ]
+  },
+  {
+    "path": "src/lib/license/__tests__/keygen-api-contract.test.ts",
+    "startLine": 48,
+    "endLine": 48,
+    "findingIds": [
+      "SAST-20261014-1681"
+    ]
+  },
+  {
+    "path": "src/lib/license/__tests__/license-crosslang-format.test.ts",
+    "startLine": 132,
+    "endLine": 132,
+    "findingIds": [
+      "SAST-20261014-1682"
+    ]
+  },
+  {
+    "path": "src/lib/license/__tests__/public-key-consistency.test.ts",
+    "startLine": 62,
+    "endLine": 62,
+    "findingIds": [
+      "SAST-20261014-1683"
+    ]
+  },
+  {
+    "path": "src/lib/license/client-policy.ts",
+    "startLine": 82,
+    "endLine": 82,
+    "findingIds": [
+      "SAST-20261014-1684"
+    ]
+  },
+  {
+    "path": "src/lib/license/hwid.ts",
+    "startLine": 36,
+    "endLine": 36,
+    "findingIds": [
+      "SAST-20261014-1685"
+    ]
+  },
+  {
+    "path": "src/lib/license/hwid.ts",
+    "startLine": 66,
+    "endLine": 66,
+    "findingIds": [
+      "SAST-20261014-1686"
+    ]
+  },
+  {
+    "path": "src/lib/license/hwid.ts",
+    "startLine": 100,
+    "endLine": 100,
+    "findingIds": [
+      "SAST-20261014-1687"
+    ]
+  },
+  {
+    "path": "src/lib/license/protection.ts",
+    "startLine": 38,
+    "endLine": 38,
+    "findingIds": [
+      "SAST-20261014-1688"
+    ]
+  },
+  {
+    "path": "src/lib/license/protection.ts",
+    "startLine": 76,
+    "endLine": 76,
+    "findingIds": [
+      "SAST-20261014-1689"
+    ]
+  },
+  {
+    "path": "src/lib/license/protection.ts",
+    "startLine": 114,
+    "endLine": 114,
+    "findingIds": [
+      "SAST-20261014-1690"
+    ]
+  },
+  {
+    "path": "src/lib/logger.ts",
+    "startLine": 39,
+    "endLine": 39,
+    "findingIds": [
+      "SAST-20261014-1691"
+    ]
+  },
+  {
+    "path": "src/lib/mechanics/__tests__/avatar-contrat-affichage.test.ts",
+    "startLine": 90,
+    "endLine": 90,
+    "findingIds": [
+      "SAST-20261014-1692"
+    ]
+  },
+  {
+    "path": "src/lib/migrations.ts",
+    "startLine": 844,
+    "endLine": 857,
+    "findingIds": [
+      "SAST-20261014-1693",
+      "SAST-20261014-1694"
+    ]
+  },
+  {
+    "path": "src/lib/ocr/extract.ts",
+    "startLine": 18,
+    "endLine": 18,
+    "findingIds": [
+      "SAST-20261014-1695"
+    ]
+  },
+  {
+    "path": "src/lib/ocr/vin-scan.ts",
+    "startLine": 33,
+    "endLine": 33,
+    "findingIds": [
+      "SAST-20261014-1696",
+      "SAST-20261014-1697",
+      "SAST-20261014-1698"
+    ]
+  },
+  {
+    "path": "src/lib/pdf/render-a4.ts",
+    "startLine": 189,
+    "endLine": 189,
+    "findingIds": [
+      "SAST-20261014-1699"
+    ]
+  },
+  {
+    "path": "src/lib/photo-store.ts",
+    "startLine": 79,
+    "endLine": 79,
+    "findingIds": [
+      "SAST-20261014-1700"
+    ]
+  },
+  {
+    "path": "src/lib/photo-store.ts",
+    "startLine": 80,
+    "endLine": 80,
+    "findingIds": [
+      "SAST-20261014-1701"
+    ]
+  },
+  {
+    "path": "src/lib/photo-store.ts",
+    "startLine": 82,
+    "endLine": 82,
+    "findingIds": [
+      "SAST-20261014-1702",
+      "SAST-20261014-1703"
+    ]
+  },
+  {
+    "path": "src/lib/photo-store.ts",
+    "startLine": 86,
+    "endLine": 86,
+    "findingIds": [
+      "SAST-20261014-1704"
+    ]
+  },
+  {
+    "path": "src/lib/photo-store.ts",
+    "startLine": 89,
+    "endLine": 89,
+    "findingIds": [
+      "SAST-20261014-1705",
+      "SAST-20261014-1706"
+    ]
+  },
+  {
+    "path": "src/lib/photo-store.ts",
+    "startLine": 118,
+    "endLine": 118,
+    "findingIds": [
+      "SAST-20261014-1707"
+    ]
+  },
+  {
+    "path": "src/lib/photo-store.ts",
+    "startLine": 124,
+    "endLine": 124,
+    "findingIds": [
+      "SAST-20261014-1708"
+    ]
+  },
+  {
+    "path": "src/lib/photo-store.ts",
+    "startLine": 126,
+    "endLine": 126,
+    "findingIds": [
+      "SAST-20261014-1709"
+    ]
+  },
+  {
+    "path": "src/lib/photo-store.ts",
+    "startLine": 131,
+    "endLine": 131,
+    "findingIds": [
+      "SAST-20261014-1710"
+    ]
+  },
+  {
+    "path": "src/lib/photo-store.ts",
+    "startLine": 133,
+    "endLine": 133,
+    "findingIds": [
+      "SAST-20261014-1711"
+    ]
+  },
+  {
+    "path": "src/lib/photo-store.ts",
+    "startLine": 156,
+    "endLine": 156,
+    "findingIds": [
+      "SAST-20261014-1712"
+    ]
+  },
+  {
+    "path": "src/lib/photo-store.ts",
+    "startLine": 159,
+    "endLine": 159,
+    "findingIds": [
+      "SAST-20261014-1713",
+      "SAST-20261014-1714"
+    ]
+  },
+  {
+    "path": "src/lib/portal/totp-crypto.ts",
+    "startLine": 160,
+    "endLine": 160,
+    "findingIds": [
+      "SAST-20261014-1715"
+    ]
+  },
+  {
+    "path": "src/lib/redact.ts",
+    "startLine": 63,
+    "endLine": 63,
+    "findingIds": [
+      "SAST-20261014-1716"
+    ]
+  },
+  {
+    "path": "src/lib/security/rate-limit.ts",
+    "startLine": 113,
+    "endLine": 116,
+    "findingIds": [
+      "SAST-20261014-1717",
+      "SAST-20261014-1718"
+    ]
+  },
+  {
+    "path": "src/lib/version.ts",
+    "startLine": 83,
+    "endLine": 83,
+    "findingIds": [
+      "SAST-20261014-1719"
+    ]
+  },
+  {
+    "path": "src/store/schedule-store.ts",
+    "startLine": 238,
+    "endLine": 238,
+    "findingIds": [
+      "SAST-20261014-1720"
+    ]
+  },
+  {
+    "path": "tests/audit-security.test.cjs",
+    "startLine": 27,
+    "endLine": 27,
+    "findingIds": [
+      "SAST-20261014-1721"
+    ]
+  },
+  {
+    "path": "tests/build-public-key.test.cjs",
+    "startLine": 4,
+    "endLine": 5,
+    "findingIds": [
+      "SAST-20261014-1722"
+    ]
+  },
+  {
+    "path": "tests/build-public-key.test.cjs",
+    "startLine": 13,
+    "endLine": 13,
+    "findingIds": [
+      "SAST-20261014-1723"
+    ]
+  },
+  {
+    "path": "tests/config-full.test.cjs",
+    "startLine": 102,
+    "endLine": 102,
+    "findingIds": [
+      "SAST-20261014-1724"
+    ]
+  },
+  {
+    "path": "tests/config-full.test.cjs",
+    "startLine": 112,
+    "endLine": 112,
+    "findingIds": [
+      "SAST-20261014-1725"
+    ]
+  },
+  {
+    "path": "tests/gitleaks-ci.test.cjs",
+    "startLine": 15,
+    "endLine": 15,
+    "findingIds": [
+      "SAST-20261014-1726"
+    ]
+  },
+  {
+    "path": "tests/package-prisma-resources.test.cjs",
+    "startLine": 5,
+    "endLine": 6,
+    "findingIds": [
+      "SAST-20261014-1727"
+    ]
+  },
+  {
+    "path": "tests/preserve-legacy-dev-db.test.cjs",
+    "startLine": 4,
+    "endLine": 5,
+    "findingIds": [
+      "SAST-20261014-1728"
+    ]
+  },
+  {
+    "path": "tests/secret-scan-policy.test.cjs",
+    "startLine": 8,
+    "endLine": 8,
+    "findingIds": [
+      "SAST-20261014-1729"
+    ]
+  }
+]

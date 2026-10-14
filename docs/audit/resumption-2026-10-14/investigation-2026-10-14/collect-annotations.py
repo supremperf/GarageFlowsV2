@@ -5,7 +5,7 @@ run=int(sys.argv[1]);label=sys.argv[2]
 meta=json.loads(subprocess.check_output(['gh','run','view',str(run),'--json','jobs,headSha,conclusion,status,url']))
 result={'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'run':run,'commit':meta['headSha'],'runConclusion':meta['conclusion'],'jobs':[]}
 for job in meta['jobs']:
- if job['conclusion']!='failure':continue
+ if job['conclusion']!='failure' and 'Gitleaks' not in job['name']:continue
  jid=job['databaseId']
  details=json.loads(subprocess.check_output(['gh','api',f'repos/supremperf/GarageFlowsV2/actions/jobs/{jid}']))
  check=details['check_run_url']

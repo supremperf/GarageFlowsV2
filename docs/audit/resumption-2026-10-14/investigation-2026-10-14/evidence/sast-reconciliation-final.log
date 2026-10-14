@@ -1,0 +1,12 @@
+{
+  "targets": 996,
+  "selected": 996,
+  "rawSignals": 865,
+  "uniqueRuleExactRanges": 845,
+  "duplicateOccurrences": 20,
+  "retainedHistoricalIds": 864,
+  "newIds": [
+    "SAST-20261014-0865"
+  ],
+  "staleFiles": []
+}

@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-14T15:29:18.829631+00:00",
+  "total": 3829,
+  "passed": 2982,
+  "failed": 3,
+  "skipped": 844,
+  "skipCategories": {
+    "DECLARED_REAL_ARTIFACT_ABSENT": 1,
+    "SETUP_FAILURE_NOT_DECLARED_SKIP": 808,
+    "DECLARED_POSTGRES_UNAVAILABLE": 21,
+    "DECLARED_EXTERNAL_PUBLIC_KEY_ABSENT": 2,
+    "DECLARED_REDIS_UNAVAILABLE": 5,
+    "DECLARED_ISSUER_PRIVATE_KEY_ABSENT": 5,
+    "DECLARED_ISSUED_TOKEN_ABSENT": 2
+  },
+  "unhandledErrors": 4,
+  "unhandledProof": "evidence/vitest-complete.log (four Unhandled Rejection sections)",
+  "failedFiles": 78,
+  "fileCount": 325,
+  "limits": "Separate execution, no focused-run addition or inherited Redis success. Vitest numFailedTestSuites counts nested suites, not files."
+}

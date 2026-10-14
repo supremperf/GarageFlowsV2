@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/user/GarageFlowsV2/docs/audit/resumption-2026-10-14/investigation-2026-10-14/summarize-sast-final.py", line 23, in <module>
+    (B/'sast-location-groups-final.json').write_text(json.dumps([{'path':p,'startLine':s,'endLine':e,'findingIds':ids} for (p,s,e),ids in groups.items()],indent=2))
+                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/GarageFlowsV2/docs/audit/resumption-2026-10-14/investigation-2026-10-14/summarize-sast-final.py", line 23, in <listcomp>
+    (B/'sast-location-groups-final.json').write_text(json.dumps([{'path':p,'startLine':s,'endLine':e,'findingIds':ids} for (p,s,e),ids in groups.items()],indent=2))
+                                                                                                                           ^^^^^^^
+ValueError: too many values to unpack (expected 3)
