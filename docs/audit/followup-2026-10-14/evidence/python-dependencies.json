@@ -1,0 +1,26 @@
+{
+  "proofType": "official PyPI release metadata, not a complete independent Python security audit",
+  "packages": [
+    {
+      "name": "cffi",
+      "version": "2.1.1",
+      "source": "https://pypi.org/pypi/cffi/2.1.1/json",
+      "distributionHashes": 100,
+      "pypiVulnerabilities": []
+    },
+    {
+      "name": "cryptography",
+      "version": "50.0.2",
+      "source": "https://pypi.org/pypi/cryptography/50.0.2/json",
+      "distributionHashes": 59,
+      "pypiVulnerabilities": []
+    },
+    {
+      "name": "pycparser",
+      "version": "3.11",
+      "source": "https://pypi.org/pypi/pycparser/3.11/json",
+      "distributionHashes": 2,
+      "pypiVulnerabilities": []
+    }
+  ]
+}

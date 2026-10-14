@@ -81,8 +81,8 @@ export const POST = withAuth(async (req) => {
   const meta: SignatureMeta = {
     signerName,
     signerRole: signerRole ?? 'client',
-    ipAddress: headers().get('x-forwarded-for')?.split(',')[0].trim() ?? null,
-    userAgent: headers().get('user-agent'),
+    ipAddress: (await headers()).get('x-forwarded-for')?.split(',')[0].trim() ?? null,
+    userAgent: (await headers()).get('user-agent'),
     signedAt: new Date().toISOString(),
   }
 

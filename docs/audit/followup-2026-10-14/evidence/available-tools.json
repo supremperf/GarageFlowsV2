@@ -1,0 +1,13 @@
+{
+  "proofType": "executable discovery only; not a runtime integration check",
+  "tools": {
+    "gitleaks": false,
+    "chromium": false,
+    "chromium-browser": false,
+    "google-chrome": false,
+    "postgres": false,
+    "redis-server": false,
+    "docker": false,
+    "go": false
+  }
+}

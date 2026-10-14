@@ -70,7 +70,7 @@ const chunks = existsSync(CHUNKS_DIR) ? allJs.filter((f) => f.path.startsWith(CH
 const largest = chunks.reduce((max, f) => (f.size > max.size ? f : max), { size: 0, path: '' })
 
 const violations = []
-if (total > MAX_TOTAL) violations.push(`Total JS client ${MB(total)} > budget ${MB(MAX_TOTAL)}`)
+if (total > MAX_TOTAL) violations.push(`Total JS client ${MB(total)} (${total} octets) > budget ${MB(MAX_TOTAL)} (${MAX_TOTAL} octets), dépassement ${total - MAX_TOTAL} octets`)
 if (largest.size > MAX_CHUNK) {
   violations.push(`Plus gros chunk ${KB(largest.size)} (${relative(ROOT, largest.path)}) > budget ${KB(MAX_CHUNK)}`)
 }

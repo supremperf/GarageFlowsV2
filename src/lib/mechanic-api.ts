@@ -13,6 +13,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { resolveRouteContext } from '@/lib/route-context'
 import { cookies } from 'next/headers'
 import { validateMechanicSession, type MechanicContext } from '@/lib/license/mechanic-session'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
@@ -26,7 +27,7 @@ import { syncWindow } from '@/lib/sync/job-fields'
  * confiance.
  */
 export async function requireMechanic(): Promise<MechanicContext> {
-  const raw = cookies().get('gf_session')?.value ?? ''
+  const raw = (await cookies()).get('gf_session')?.value ?? ''
   const check = await validateMechanicSession({ rawGfSession: raw })
   if (!check.ok) {
     throw NextResponse.json({ error: check.reason, code: check.code }, { status: check.status })
@@ -49,7 +50,7 @@ export function withMechanic(
     try {
       const rl = await enforceRateLimit('api', clientIpFrom(req))
       if (!rl.ok) return rateLimitResponse(rl)
-      return noStore(await handler(req, ctx))
+      return noStore(await handler(req, await resolveRouteContext(ctx)))
     } catch (e) {
       if (e instanceof NextResponse) return noStore(e)
       logger.error('[Mechanic API Error]', e)

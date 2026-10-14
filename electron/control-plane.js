@@ -152,8 +152,16 @@ function redactSensitive(input) {
   // En-têtes sensibles : masque toute la valeur jusqu'à la fin de ligne
   // (Authorization: Bearer … contient un espace, on ne doit pas s'arrêter avant).
   s = s.replace(/\b(authorization|cookie|set-cookie)\b\s*[:=]\s*[^\r\n]+/gi, '$1: <redacted>')
+  // Guillemets/espaces/échappements et préfixes env (bornés à 64 caractères).
+  // Une valeur citée tronquée est masquée jusqu’à la fin, pas laissée en clair.
   // Paires clé=valeur sensibles (mot de passe, token, clé API, secret…).
-  s = s.replace(/\b(password|passwd|pwd|secret|token|api[_-]?key|access[_-]?token|refresh[_-]?token|client[_-]?secret|nextauth_secret)\b\s*[:=]\s*[^\s,;"']+/gi, '$1=<redacted>')
+  s = s.replace(
+    /\b((?:[a-z0-9_-]{1,64}[_-])?(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?token|refresh[_-]?token|client[_-]?secret|nextauth_secret|authorization|cookie|set-cookie|jwt|signature|private[_-]?key|gf_session))\b(["']?\s*[:=]\s*)("(?:\\.|\\$|[^"\\])*(?:"|$)|'(?:\\.|\\$|[^'\\])*(?:'|$)|[^\s,;"'}\]]+)/gi,
+    (_match, key, separator, value) => {
+      const quote = value[0] === '"' || value[0] === "'" ? value[0] : ''
+      return `${key}${separator}${quote}<redacted>${quote}`
+    },
+  )
 
   // Bearer tokens.
   s = s.replace(/\bBearer\s+[A-Za-z0-9._\-]+/gi, 'Bearer <redacted>')

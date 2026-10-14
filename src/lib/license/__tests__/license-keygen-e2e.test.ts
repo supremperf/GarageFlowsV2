@@ -10,12 +10,12 @@
  * clé embarquée — on valide la CHAÎNE cryptographique complète, pas la clé de
  * production (jamais dans le dépôt).
  *
- * Se saute proprement (pas d'échec silencieux) si Python/`cryptography` est
- * indisponible dans l'environnement.
+ * Python et `cryptography` sont obligatoires : toute absence/erreur échoue
+ * explicitement, sans renvoyer des tests verts dépourvus d’assertions.
  */
-import { describe, it, expect, beforeAll, vi } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, existsSync } from 'node:fs'
+import { mkdtempSync, readFileSync, existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 
@@ -28,30 +28,34 @@ interface Fixture { name: string; token: string; expectValid: boolean; typ?: str
 let fixtures: {
   publicPem: string; machineHwid: string; wrongHwid: string
   machineHwidV1: string; wrongHwidV1: string; licenses: Fixture[]
-} | null = null
+}
+let fixtureDirectory: string | undefined
 
 beforeAll(() => {
-  const out = join(mkdtempSync(join(tmpdir(), 'gf-lic-')), 'fixtures.json')
+  fixtureDirectory = mkdtempSync(join(tmpdir(), 'gf-lic-'))
+  const out = join(fixtureDirectory, 'fixtures.json')
   const driver = join(__dirname, '../../../../scripts/gen_test_licenses.py')
   const py = spawnSync('python3', [driver, out], { encoding: 'utf8' })
-  // Code 2 = cryptography absente → on saute (jamais d'échec silencieux).
-  if (py.status === 2 || !existsSync(out)) { fixtures = null; return }
+  if (py.error) throw new Error('Python/keygen indisponible', { cause: py.error })
   if (py.status !== 0) throw new Error(`gen_test_licenses.py a échoué: ${py.stderr}`)
+  if (!existsSync(out)) throw new Error('Keygen a terminé sans produire les fixtures attendues')
   const parsed = JSON.parse(readFileSync(out, 'utf8'))
   fixtures = parsed
   h.pubPem = parsed.publicPem
 })
 
+afterAll(() => {
+  if (fixtureDirectory) rmSync(fixtureDirectory, { recursive: true, force: true }) // test-owned only
+})
+
 describe('licence E2E — keygen_core.py officiel → verifyLicenseToken', () => {
-  it('l’environnement Python/keygen est disponible (sinon suite sautée)', () => {
+  it('l’environnement Python/keygen est disponible', () => {
     const f = fixtures
-    if (!f) { console.warn('[skip] Python/cryptography indisponible — E2E licence sautée'); return }
     expect(f.licenses.length).toBeGreaterThanOrEqual(9)
   })
 
   it('100% des licences OFFICIELLEMENT VALIDES sont acceptées', () => {
     const f = fixtures
-    if (!f) return
     const valid = f.licenses.filter((l) => l.expectValid)
     const results = valid.map((l) => ({ name: l.name, ok: verifyLicenseToken(l.token).valid }))
     const passed = results.filter((r) => r.ok).length
@@ -61,7 +65,6 @@ describe('licence E2E — keygen_core.py officiel → verifyLicenseToken', () =>
 
   it('100% des licences INVALIDES (expirée / signature / payload altérés) sont REJETÉES', () => {
     const f = fixtures
-    if (!f) return
     const invalid = f.licenses.filter((l) => !l.expectValid)
     for (const l of invalid) {
       expect(verifyLicenseToken(l.token).valid, `${l.name} aurait dû être rejetée`).toBe(false)
@@ -71,7 +74,6 @@ describe('licence E2E — keygen_core.py officiel → verifyLicenseToken', () =>
 
   it('les types premium/enterprise/trial/mécanicien sont correctement décodés', () => {
     const f = fixtures
-    if (!f) return
     const byName = (frag: string) => f.licenses.find((l) => l.name.includes(frag))!
     expect(verifyLicenseToken(byName('premium valide').token).payload?.typ).toBe('premium')
     expect(verifyLicenseToken(byName('enterprise').token).payload?.typ).toBe('enterprise')
@@ -83,7 +85,6 @@ describe('licence E2E — keygen_core.py officiel → verifyLicenseToken', () =>
 
   it('HWID de la machine (keygen get_hwid) — format valide, lié à la licence L5', () => {
     const f = fixtures
-    if (!f) return
     expect(isValidHwidFormat(f.machineHwid)).toBe(true)
     expect(verifyHwid(f.machineHwid, f.machineHwid)).toBe(true)     // même machine
     expect(verifyHwid(f.machineHwid, f.wrongHwid)).toBe(false)      // autre machine
@@ -97,7 +98,6 @@ describe('licence E2E — keygen_core.py officiel → verifyLicenseToken', () =>
   // de PRODUCTION l'accepte et la compare STRICTEMENT. Prouve la chaîne complète.
   it('HWID V1 canonique — keygen lie la valeur cliente, verify l’accepte (L7)', () => {
     const f = fixtures
-    if (!f) return
     // Format v1 accepté par le code de production.
     expect(isValidHwidFormat(f.machineHwidV1)).toBe(true)
     expect(f.machineHwidV1).toMatch(/^HWID1-[0-9a-f]{64}$/)
@@ -113,7 +113,6 @@ describe('licence E2E — keygen_core.py officiel → verifyLicenseToken', () =>
 
   it('HWID v0 et v1 ne se confondent JAMAIS (longueurs 64 vs 70)', () => {
     const f = fixtures
-    if (!f) return
     // Un HWID v0 stocké ne matche pas un HWID v1 client, et réciproquement.
     expect(verifyHwid(f.machineHwid, f.machineHwidV1)).toBe(false)
     expect(verifyHwid(f.machineHwidV1, f.machineHwid)).toBe(false)

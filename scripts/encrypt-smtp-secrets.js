@@ -62,7 +62,7 @@ function decryptWithKeys(stored, keys) {
   const env = JSON.parse(Buffer.from(stored.slice(PREFIX.length), 'base64').toString('utf8'))
   const key = keys.find((k) => kidOf(k) === env.kid)
   if (!key) throw new Error('aucune clé ne correspond (kid)')
-  const d = crypto.createDecipheriv(ALGO, key, Buffer.from(env.iv, 'base64'))
+  const d = crypto.createDecipheriv(ALGO, key, Buffer.from(env.iv, 'base64'), { authTagLength: 16 })
   d.setAuthTag(Buffer.from(env.tag, 'base64'))
   return Buffer.concat([d.update(Buffer.from(env.ct, 'base64')), d.final()]).toString('utf8')
 }

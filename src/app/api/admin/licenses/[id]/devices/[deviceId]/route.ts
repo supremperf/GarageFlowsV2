@@ -22,8 +22,9 @@ import { logger } from '@/lib/logger'
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string; deviceId: string } }
+  { params: pendingParams }: { params: Promise<{ id: string; deviceId: string }> }
 ) {
+  const params = await pendingParams
   const rl = await enforceRateLimit('admin', clientIpFrom(req))
   if (!rl.ok) return rateLimitResponse(rl)
 

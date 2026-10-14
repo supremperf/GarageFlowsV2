@@ -1,0 +1,13 @@
+{
+  "proofType": "actual committed SQLite template, actual safe copy helper and node:sqlite read-only queries; NOT Prisma runtime validation",
+  "applicationTablesChecked": 43,
+  "applicationRowsPresent": false,
+  "sourceSha256Before": "2434c43f0333a3be258a88157cd60109fcc10cc7857fb177c95e5bd8aff2c757",
+  "sourceSha256After": "2434c43f0333a3be258a88157cd60109fcc10cc7857fb177c95e5bd8aff2c757",
+  "sourceUnchanged": true,
+  "outputFiles": [
+    "garageflow-template.db",
+    "schema.prisma"
+  ],
+  "temporaryOutputCleaned": true
+}

@@ -72,7 +72,7 @@ export function decryptCredential(envelope: string, keyForVersion?: (v: number) 
   const key = keyForVersion ? keyForVersion(version) : loadKey()
   if (key.length !== KEY_BYTES) throw new EInvoiceCipherError('Clé de déchiffrement de longueur invalide.')
   try {
-    const decipher = crypto.createDecipheriv('aes-256-gcm', key, unb64u(ivS))
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, unb64u(ivS), { authTagLength: 16 })
     decipher.setAuthTag(unb64u(tagS))
     const pt = Buffer.concat([decipher.update(unb64u(ctS)), decipher.final()])
     return pt.toString('utf8')

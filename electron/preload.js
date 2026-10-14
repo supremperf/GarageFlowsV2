@@ -22,8 +22,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   submitLicenseToken: (token) => ipcRenderer.send('license-submit', token),
   quitApp:            ()      => ipcRenderer.send('license-quit'),
   onLicenseError:(cb)     => {
-    ipcRenderer.on('license-error', (_e, msg) => cb(msg))
-    return () => ipcRenderer.removeAllListeners('license-error')
+    const handler = (_e, msg) => cb(msg)
+    ipcRenderer.on('license-error', handler)
+    return () => ipcRenderer.removeListener('license-error', handler)
   },
 
   // ── Window controls ───────────────────────────────────────────────────────
@@ -33,8 +34,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     close:            () => ipcRenderer.invoke('win:close'),
     fullscreenToggle: () => ipcRenderer.invoke('win:fullscreen-toggle'),
     isMaximized:      () => ipcRenderer.invoke('win:is-maximized'),
-    onMaximizedChange:   (cb) => { ipcRenderer.on('win:maximized-change',  (_, v) => cb(v)); return () => ipcRenderer.removeAllListeners('win:maximized-change') },
-    onFullscreenChange:  (cb) => { ipcRenderer.on('win:fullscreen-change', (_, v) => cb(v)); return () => ipcRenderer.removeAllListeners('win:fullscreen-change') },
+    onMaximizedChange: (cb) => {
+      const handler = (_, v) => cb(v)
+      ipcRenderer.on('win:maximized-change', handler)
+      return () => ipcRenderer.removeListener('win:maximized-change', handler)
+    },
+    onFullscreenChange: (cb) => {
+      const handler = (_, v) => cb(v)
+      ipcRenderer.on('win:fullscreen-change', handler)
+      return () => ipcRenderer.removeListener('win:fullscreen-change', handler)
+    },
   },
 
   // ── Desktop export ────────────────────────────────────────────────────────
@@ -55,20 +64,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
    */
   openExternal: (url) => ipcRenderer.invoke('app:open-external', url),
   onDesktopExportDone:(cb) => {
-    ipcRenderer.on('app:desktop-export-done', (_e, info) => cb(info))
-    return () => ipcRenderer.removeAllListeners('app:desktop-export-done')
+    const handler = (_e, info) => cb(info)
+    ipcRenderer.on('app:desktop-export-done', handler)
+    return () => ipcRenderer.removeListener('app:desktop-export-done', handler)
   },
 
   // ── License update & revocation ───────────────────────────────────────────
   updateLicense:    (token) => ipcRenderer.invoke('app:update-license', token),
   getLocalIP:       ()      => ipcRenderer.invoke('app:local-ip'),
   onLicenseRevoked: (cb)    => {
-    ipcRenderer.on('license:revoked', (_e, info) => cb(info))
-    return () => ipcRenderer.removeAllListeners('license:revoked')
+    const handler = (_e, info) => cb(info)
+    ipcRenderer.on('license:revoked', handler)
+    return () => ipcRenderer.removeListener('license:revoked', handler)
   },
   onLicenseReactivated: (cb) => {
-    ipcRenderer.on('license:reactivated', (_e, info) => cb(info))
-    return () => ipcRenderer.removeAllListeners('license:reactivated')
+    const handler = (_e, info) => cb(info)
+    ipcRenderer.on('license:reactivated', handler)
+    return () => ipcRenderer.removeListener('license:reactivated', handler)
   },
 
   // ── Updates ───────────────────────────────────────────────────────────────
@@ -102,22 +114,25 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ── Online status ─────────────────────────────────────────────────────────
   getOnlineStatus: () => ipcRenderer.invoke('app:online-status'),
   onOnlineStatus:  (cb) => {
-    ipcRenderer.on('app:online-status', (_e, info) => cb(info))
-    return () => ipcRenderer.removeAllListeners('app:online-status')
+    const handler = (_e, info) => cb(info)
+    ipcRenderer.on('app:online-status', handler)
+    return () => ipcRenderer.removeListener('app:online-status', handler)
   },
 
   // ── Modules / droits (entitlements) ─────────────────────────────────────────
   getEntitlements: () => ipcRenderer.invoke('app:entitlements'),
   onEntitlements:  (cb) => {
-    ipcRenderer.on('entitlements:update', (_e, info) => cb(info))
-    return () => ipcRenderer.removeAllListeners('entitlements:update')
+    const handler = (_e, info) => cb(info)
+    ipcRenderer.on('entitlements:update', handler)
+    return () => ipcRenderer.removeListener('entitlements:update', handler)
   },
 
   // ── Centre de notifications ─────────────────────────────────────────────────
   getNotifications: () => ipcRenderer.invoke('app:notifications'),
   onNotifications:  (cb) => {
-    ipcRenderer.on('notifications:update', (_e, info) => cb(info))
-    return () => ipcRenderer.removeAllListeners('notifications:update')
+    const handler = (_e, info) => cb(info)
+    ipcRenderer.on('notifications:update', handler)
+    return () => ipcRenderer.removeListener('notifications:update', handler)
   },
   ackNotification: (id) => ipcRenderer.invoke('app:ack-notification', id),
 

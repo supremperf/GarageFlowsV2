@@ -1,0 +1,38 @@
+[
+  {
+    "name": "gitleaks_8.24.3_checksums.txt",
+    "assetId": 245568489,
+    "url": "https://api.github.com/repos/gitleaks/gitleaks/releases/assets/245568489",
+    "argv": [
+      "gh",
+      "api",
+      "-H",
+      "Accept: application/octet-stream",
+      "repos/gitleaks/gitleaks/releases/assets/245568489"
+    ],
+    "exitCode": 1,
+    "error": null,
+    "bytes": 0,
+    "jsonInsteadOfAsset": false,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "diagnostic": "Get \"https://release-assets.githubusercontent.com/github-production-release-asset/119190187/122affa6-6313-4005-a86f-7f7ebb43785e?<redacted-signed-query>\": EOF\n"
+  },
+  {
+    "name": "gitleaks_8.24.3_linux_x64.tar.gz",
+    "assetId": 245568496,
+    "url": "https://api.github.com/repos/gitleaks/gitleaks/releases/assets/245568496",
+    "argv": [
+      "gh",
+      "api",
+      "-H",
+      "Accept: application/octet-stream",
+      "repos/gitleaks/gitleaks/releases/assets/245568496"
+    ],
+    "exitCode": 1,
+    "error": null,
+    "bytes": 0,
+    "jsonInsteadOfAsset": false,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "diagnostic": "Get \"https://release-assets.githubusercontent.com/github-production-release-asset/119190187/4c8e404e-8519-4ab1-9f3e-94a95795a6a7?<redacted-signed-query>\": EOF\n"
+  }
+]

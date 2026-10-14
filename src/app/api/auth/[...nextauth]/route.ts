@@ -13,7 +13,7 @@ const handler = NextAuth(authOptions)
 export { handler as GET }
 
 // POST: credentials sign-in — limité par IP (défaut 10 / 15 min, RATE_LIMIT_LOGIN_*)
-export async function POST(req: NextRequest, ctx: { params: { nextauth: string[] } }) {
+export async function POST(req: NextRequest, ctx: { params: Promise<{ nextauth: string[] }> }) {
   const rl = await enforceRateLimit('login', clientIpFrom(req))
   if (!rl.ok) {
     // OBSERVABILITÉ (mission §4.3) : rendre visible la cause d'un 503 « sans

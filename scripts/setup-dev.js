@@ -130,19 +130,12 @@ try {
   console.error('⚠️  Impossible de créer prisma/ :', err.message)
 }
 
-// ── 3. Clean up a wrongly-nested prisma/prisma/dev.db from older setups ────────
+// ── 3. Preserve any legacy nested database without deleting user data ────────
 try {
-  const nested = path.join(prismaDir, 'prisma', 'dev.db')
-  // Promotion EXCLUSIVE : COPYFILE_EXCL refuse d'écraser un dev.db existant,
-  // sans test d'existence préalable. ENOENT (aucune base imbriquée) comme
-  // EEXIST (dev.db déjà en place) sont des issues normales, pas des erreurs.
-  try {
-    fs.copyFileSync(nested, devDb, fs.constants.COPYFILE_EXCL)
-    console.log('✅  Base déplacée depuis prisma/prisma/dev.db → prisma/dev.db.')
-  } catch (_) {}
-  try { fs.rmSync(path.join(prismaDir, 'prisma'), { recursive: true, force: true }) } catch (_) {}
+  const { preserveLegacyDevDb } = require('./lib/preserve-legacy-dev-db.cjs')
+  preserveLegacyDevDb(prismaDir)
 } catch (err) {
-  console.error('⚠️  Nettoyage prisma/prisma/ ignoré :', err.message)
+  console.error('⚠️  Copie de la base historique impossible (original conservé) :', err.message)
 }
 
 // ── 4. Ensure prisma/dev.db exists ────────────────────────────────────────────

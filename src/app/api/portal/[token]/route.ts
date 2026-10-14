@@ -7,7 +7,8 @@ import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
 import { billingLines, salesLinesToEuros } from '@/lib/money-db'
 import { readPhotoAsDataUrl } from '@/lib/photo-store'
 
-export async function GET(_req: Request, { params }: { params: { token: string } }) {
+export async function GET(_req: Request, { params: pendingParams }: { params: Promise<{ token: string }> }) {
+  const params = await pendingParams
   try {
     const { payload } = await jwtVerify(params.token, portalSecret())
     if (payload.typ !== 'portal' || typeof payload.jobId !== 'string') {

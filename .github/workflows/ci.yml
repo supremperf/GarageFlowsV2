@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master, develop, 'claude/**', 'integration/**']
+    branches: [main, master, develop, 'claude/**', 'integration/**', 'arena/**']
   pull_request:
     branches: [main, master, develop]
   # Déclenchement manuel du release gate complet (validation avant tag/release).
@@ -15,12 +15,32 @@ permissions:
   contents: read
 
 jobs:
+  dependency-security:
+    name: Full dependency tree — zero vulnerabilities
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Use pinned npm
+        run: npm install --global npm@11.16.0
+      # This independent audit needs no native engines or install hooks.
+      # Other jobs retain normal npm ci, Prisma generation and functional tests.
+      - run: npm ci --ignore-scripts
+      - run: npm ls --all
+      - run: npm run test:audit
+      - run: npm run test:release-safety
+      - run: npm run audit:strict
+
   secrets:
     name: Secret scan (Gitleaks)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       # Scan de l'ARBRE COURANT (fichiers suivis), PAS de l'historique git. Les
       # secrets historiques sont documentés comme rotés (docs/SECRETS_ROTATION.md).
       # Ce mode est IDENTIQUE sur push et pull_request et n'appelle aucune API
@@ -31,9 +51,13 @@ jobs:
       # s'applique.
       - name: Install gitleaks
         run: |
-          curl -sSL -o /tmp/gitleaks.tar.gz \
+          curl -fsSL -o /tmp/gitleaks_8.24.3_linux_x64.tar.gz \
             https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz
-          tar -xzf /tmp/gitleaks.tar.gz -C /usr/local/bin gitleaks
+          curl -fsSL -o /tmp/gitleaks_checksums.txt \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_checksums.txt
+          cd /tmp
+          grep '  gitleaks_8.24.3_linux_x64.tar.gz$' gitleaks_checksums.txt | sha256sum --check --strict
+          tar -xzf gitleaks_8.24.3_linux_x64.tar.gz -C /usr/local/bin gitleaks
           gitleaks version
       - name: Gitleaks — scan working tree
         run: gitleaks dir . --config .gitleaks.toml --redact --no-banner
@@ -69,14 +93,16 @@ jobs:
           --health-retries 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           # Node ≥ 22.5 OBLIGATOIRE : node:sqlite est utilisé par les tests de
           # migration (vitest) et les gardes du modèle SQLite (check:sqlite-template).
           node-version: 22
           cache: npm
+      - name: Use pinned npm
+        run: npm install --global npm@11.16.0
 
       - name: Install dependencies (reproducible)
         run: npm ci
@@ -103,7 +129,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: ESLint
-        run: npx next lint
+        run: npm run lint
 
       # Garde-fou marque : « GarageFlows » partout dans le visible (exceptions techniques précises).
       - name: Branding consistency (strict)
@@ -159,10 +185,18 @@ jobs:
       # TEST_POSTGRES_URL active les tests de concurrence seats (base neuve par
       # exécution) ; TEST_REDIS_URL active la preuve multi-instance du rate
       # limiting. La CI ÉCHOUE si le plafond d'appareils peut être dépassé.
+      - name: Python for real keygen integration (no silent fallback)
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Install hash-locked keygen test dependencies
+        run: |
+          python -m pip install --index-url https://pypi.org/simple --require-hashes --only-binary=:all: -r tests/requirements-keygen.txt
+
       - name: Tests (unit + integration)
         run: npm test
         env:
-          DATABASE_URL: file:./prisma/dev.db
+          DATABASE_URL: file:./dev.db
           NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
           NEXTAUTH_URL: http://localhost:4028
           TEST_POSTGRES_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres
@@ -171,7 +205,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          DATABASE_URL: file:./prisma/dev.db
+          DATABASE_URL: file:./dev.db
           NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
           NEXTAUTH_URL: http://localhost:4028
 
@@ -180,33 +214,24 @@ jobs:
       - name: Performance budget (client bundle)
         run: npm run check:perf-budget
 
-      # Porte bloquante : toute vulnérabilité high/critical en dépendance de
-      # PRODUCTION échoue la CI, sauf dérogations documentées/datées
-      # (scripts/audit-ci.js). Une nouvelle vuln prod casse le build.
-      - name: Dependency audit gate (production high/critical)
+      # Full tree, all severities, no allowlist and no swallowed exit status.
+      - name: Dependency security regression tests
+        run: npm run test:audit
+      - name: Dependency audit gate (all packages, LOW through CRITICAL)
         run: node scripts/audit-ci.js
-
-      # Runtime EMPAQUETÉ desktop : Electron (classé devDependency mais RÉELLEMENT
-      # distribué) est audité ici — `--omit=dev` du gate ci-dessus ne le couvre pas.
-      # Bloquant, dérogations datées uniquement (scripts/check-desktop-runtime-audit.mjs).
-      - name: Desktop packaged runtime audit gate (Electron)
-        run: node scripts/check-desktop-runtime-audit.mjs
-
-      # Audit complet (dev inclus) — informatif, non bloquant.
-      - name: Dependency audit (full, informational)
-        run: npm audit || true
-        continue-on-error: true
 
   e2e:
     name: E2E (Playwright — responsive, auto-démarrage)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
+      - name: Use pinned npm
+        run: npm install --global npm@11.16.0
       - name: Install dependencies (reproducible)
         run: npm ci
       - name: Install Playwright Chromium (+ deps)
@@ -220,16 +245,61 @@ jobs:
       - name: Run E2E (public responsive suite)
         run: npx playwright test
         env:
-          DATABASE_URL: file:./prisma/dev.db
+          DATABASE_URL: file:./dev.db
           NEXTAUTH_SECRET: ci-e2e-secret-not-for-production-0123456789
           NEXTAUTH_URL: http://localhost:3000
       - name: Upload Playwright report on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # Dedicated non-production environment only; missing approval/fixtures fail
+  # the aggregate gate instead of treating public responsive tests as auth proof.
+  e2e-authenticated:
+    name: Authenticated browser validation (approved staging only)
+    runs-on: ubuntu-latest
+    needs: [dependency-security, secrets, check, e2e]
+    environment: e2e-staging
+    timeout-minutes: 20
+    env:
+      BASE_URL: ${{ secrets.E2E_STAGING_URL }}
+      E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      E2E_LICENSE: ${{ secrets.E2E_LICENSE }}
+      E2E_NON_PRODUCTION: ${{ vars.E2E_NON_PRODUCTION }}
+    steps:
+      - name: Require explicitly approved non-production test target and fixtures
+        shell: bash
+        run: |
+          node <<'NODE'
+          for (const name of ['BASE_URL', 'E2E_EMAIL', 'E2E_PASSWORD', 'E2E_LICENSE']) {
+            if (!process.env[name]) throw new Error(`Missing required staging input: ${name}`)
+          }
+          let target
+          try { target = new URL(process.env.BASE_URL) } catch { throw new Error('Invalid staging URL') }
+          const production = new Set(['garageflows.fr', 'www.garageflows.fr', 'app.garageflows.fr', 'api.garageflows.fr'])
+          if (target.protocol !== 'https:' || target.username || target.password || production.has(target.hostname.toLowerCase().replace(/\.+$/, ''))) {
+            throw new Error('Refused staging target: HTTPS/non-production host without URL credentials required')
+          }
+          if (process.env.E2E_NON_PRODUCTION !== 'true') throw new Error('Non-production environment approval required')
+          NODE
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install --global npm@11.16.0
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # No deployment, seed/reset or real production license is permitted here.
+      # Use synthetic fixtures on the approved isolated staging environment.
+      # Traces/storageState can contain session tokens: never upload them here.
+      - run: npx playwright test
 
   # ── Release gate complet (manuel) ──────────────────────────────────────────
   # Porte de sortie V13 : une seule commande qui enchaîne tsc, lint, les 10
@@ -264,23 +334,76 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
+      - name: Use pinned npm
+        run: npm install --global npm@11.16.0
       - name: Install dependencies (reproducible)
         run: npm ci
       - name: Generate Prisma clients
         run: |
           npx prisma generate
           npx prisma generate --schema prisma/server/schema.prisma
+      - name: Python for real keygen integration (no silent fallback)
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Install hash-locked keygen test dependencies
+        run: |
+          python -m pip install --index-url https://pypi.org/simple --require-hashes --only-binary=:all: -r tests/requirements-keygen.txt
+
       - name: Run final release gate
         run: node scripts/final-release-gate.mjs
         env:
-          DATABASE_URL: file:./prisma/dev.db
+          DATABASE_URL: file:./dev.db
           NEXTAUTH_SECRET: ci-gate-secret-not-for-production-0123456789
           NEXTAUTH_URL: http://localhost:4028
           TEST_POSTGRES_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres
           TEST_REDIS_URL: 127.0.0.1:6379
+
+  windows-package:
+    name: Windows candidate packaging and inspection (not publication)
+    needs: [dependency-security, secrets, check, e2e]
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install --global npm@11.16.0
+      - run: npm ci
+      # Restores the existing public anchor only: no private key, no rotation,
+      # no independent attestation of the external publisher and no release.
+      - run: node scripts/materialize-build-public-key.cjs
+      - run: npm run check:public-key
+      - run: npm run keys:check
+      - run: node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs
+      - run: npm run dist
+      - run: npm run check:perf-budget
+      - name: Verify integrity against the actual packaged resources (required)
+        run: npx vitest run src/__tests__/integrity-diagnostics.test.ts
+        env:
+          GF_REQUIRE_ARTIFACT_TEST: '1'
+      - run: npm run release:verify-artifact
+
+  required-validation:
+    name: Required validation
+    if: ${{ always() }}
+    needs: [dependency-security, secrets, check, e2e, e2e-authenticated, windows-package]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse failed, cancelled or skipped mandatory jobs
+        shell: bash
+        run: |
+          test '${{ needs.dependency-security.result }}' = success
+          test '${{ needs.secrets.result }}' = success
+          test '${{ needs.check.result }}' = success
+          test '${{ needs.e2e.result }}' = success
+          test '${{ needs.e2e-authenticated.result }}' = success
+          test '${{ needs.windows-package.result }}' = success

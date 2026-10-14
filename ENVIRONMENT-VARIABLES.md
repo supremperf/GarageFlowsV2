@@ -200,10 +200,12 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `NODE_INSPECTOR_IPC` | CONFIGURATION | non | runtime-system | Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually. |
 | `VERCEL` | CONFIGURATION | non | runtime-system | Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually. |
 
-### Harnais de test (2)
+### Harnais de test (4)
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
+| `E2E_NON_PRODUCTION` | CONFIGURATION | non | test-only | Approbation explicite de la cible de recette non productive. Le job authentifié échoue si cette approbation vaut autre chose que true ; ne prouve pas… |
+| `E2E_STAGING_URL` | CONFIGURATION | non | test-only | URL HTTPS de recette isolée pour le job E2E authentifié ; stockée dans l’environnement GitHub e2e-staging autorisé. Jamais la production ; aucune val… |
 | `TEST_POSTGRES_URL` | CONFIGURATION | non | test-only | Optional integration-test PostgreSQL URL; never copy to production. |
 | `TEST_REDIS_URL` | CONFIGURATION | non | test-only | Optional integration-test Redis URL; never copy to production. |
 

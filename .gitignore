@@ -132,3 +132,17 @@ dist-artifact/
 
 .vercel
 .env*
+
+# Configuration complète : licences d’administration bootstrap (jetons réels)
+keys/bootstrap-*
+
+# Bases desktop personnalisées : données utilisateur, jamais dans les sources.
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+!prisma/garageflow-template.db

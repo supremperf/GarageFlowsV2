@@ -52,7 +52,9 @@ function construireModele(cible: string): void {
   execFileSync(
     process.execPath,
     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss'],
-    { cwd: ROOT, env: { ...process.env, DATABASE_URL: `file:${cible}` }, stdio: 'ignore' },
+    // Keep successful setup quiet, but retain stderr in a thrown ExecFileSyncError.
+    // Discarding it hid the actual engine/download failure behind « Command failed ».
+    { cwd: ROOT, env: { ...process.env, DATABASE_URL: `file:${cible}` }, stdio: 'pipe' },
   )
 }
 

@@ -31,7 +31,7 @@ interface LogAuditOptions {
   details?:   Record<string, unknown>
 }
 
-function getIp(req?: Request): string | undefined {
+async function getIp(req?: Request): Promise<string | undefined> {
   try {
     if (req) {
       const forwarded = req.headers.get('x-forwarded-for')
@@ -40,7 +40,7 @@ function getIp(req?: Request): string | undefined {
       if (real) return real
     }
     // Fallback: read from Next.js headers() in server context
-    const h = headers()
+    const h = await headers()
     return h.get('x-forwarded-for')?.split(',')[0].trim() ?? h.get('x-real-ip') ?? undefined
   } catch {
     return undefined
@@ -58,7 +58,7 @@ export async function logAudit(opts: LogAuditOptions): Promise<void> {
         userName:   opts.session.user.name ?? opts.session.user.email ?? 'unknown',
         garageId:   opts.session.user.garageId,
         details:    opts.details ? JSON.stringify(opts.details) : null,
-        ipAddress:  getIp(opts.req) ?? null,
+        ipAddress:  (await getIp(opts.req)) ?? null,
       },
     })
   } catch (err) {

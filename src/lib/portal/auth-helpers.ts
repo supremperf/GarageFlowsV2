@@ -1,3 +1,4 @@
+import { resolveRouteContext, type PromisedRouteContext } from '@/lib/route-context'
 /**
  * Shared helpers for the authenticated client-portal endpoints (Phase 2):
  * session cookie handling, request-context loading, garage resolution and simple
@@ -108,11 +109,14 @@ export interface PortalRouteOptions {
  * pas seulement par une redirection d'interface — masquer un écran n'empêche
  * personne d'appeler l'API directement.
  */
-export function withPortalAuth<RouteCtx = unknown>(
+export function withPortalAuth<RouteCtx = { params: Record<string, string | string[]> }>(
   handler: (req: NextRequest, portal: PortalContext, routeCtx: RouteCtx) => Promise<NextResponse>,
   options: PortalRouteOptions = {},
 ) {
-  return async (req: NextRequest, routeCtx: RouteCtx): Promise<NextResponse> => {
+  // Last overload is the public Next 15 contract; first retains direct callers.
+  function wrapped(req: NextRequest, routeCtx: RouteCtx): Promise<NextResponse>
+  function wrapped(req: NextRequest, routeCtx: PromisedRouteContext<RouteCtx>): Promise<NextResponse>
+  async function wrapped(req: NextRequest, routeCtx: RouteCtx | PromisedRouteContext<RouteCtx>): Promise<NextResponse> {
     try {
       const portal = await requirePortalContext(req)
 
@@ -126,13 +130,14 @@ export function withPortalAuth<RouteCtx = unknown>(
         )
       }
 
-      return await handler(req, portal, routeCtx)
+      return await handler(req, portal, await resolveRouteContext(routeCtx) as RouteCtx)
     } catch (e) {
       if (e instanceof NextResponse) return e
       logger.error('[portal] route error:', e)
       return NextResponse.json({ error: 'Erreur interne' }, { status: 500 })
     }
   }
+  return wrapped
 }
 
 /**

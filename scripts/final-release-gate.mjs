@@ -82,7 +82,7 @@ console.log(`\n════ GarageFlows — FINAL RELEASE GATE${FAST ? ' (--fast
 
 // 1-2. Statique
 run('TypeScript (tsc --noEmit)', 'npx tsc --noEmit')
-run('ESLint', 'npx next lint --quiet')
+run('ESLint', 'npm run lint')
 
 // 3. Gardes de cohérence (10 : marque, docs, PWA, monnaie ×3, migrations ×3, fichiers critiques)
 run('Gardes de cohérence (check:consistency)', 'npm run check:consistency')
@@ -119,11 +119,11 @@ run('Rate-limit distribué multi-instance (Redis réel)',
   'npx vitest run src/lib/__tests__/rate-limit-multi-instance.int.test.ts',
   { skip: !REDIS, skipReason: 'TEST_REDIS_URL non fourni', mandatory: !!REDIS })
 
-// 7. Audit de dépendances de production (porte bloquante, dérogations datées)
-run('Audit dépendances production (high/critical)', 'node scripts/audit-ci.js')
+// 7. Audit complet sans dérogation (LOW à CRITICAL, dev/optional inclus)
+run('Audit complet dépendances (tous niveaux)', 'node scripts/audit-ci.js')
 
 // 7bis. Audit du RUNTIME DESKTOP EMPAQUETÉ (Electron) — que `--omit=dev` ignore.
-// Porte bloquante, dérogations datées (check-desktop-runtime-audit.mjs).
+// Même porte stricte, sans dérogation (check-desktop-runtime-audit.mjs).
 run('Audit runtime desktop empaqueté (Electron)', 'node scripts/check-desktop-runtime-audit.mjs')
 
 // 7ter. Preuve de release : génère le manifeste commit-bound puis vérifie

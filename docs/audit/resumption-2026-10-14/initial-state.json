@@ -1,0 +1,13 @@
+{
+  "startedAt": "2026-10-14T13:28:34.501183+00:00",
+  "timezone": "Europe/Paris",
+  "branch": "arena/c9eaae15-garageflowsv2",
+  "head": "c4a2cca2cf446f96be580e99cca8afbca45396c5",
+  "historicalReportSha256": "34ec3d8cd7741342fdd221d1a250db7b22652272405bcf914fc77ed043e67c84",
+  "followupReportSha256": "a354d824f3d34d94fe59bb5f68c4c74e70e373deb51fa82114e2e94171c53da3",
+  "oldEvidenceHashMismatches": [],
+  "oldSourceLedgerHashMismatches": [],
+  "preservationPatch": "/home/user/audit-resumption/starting.patch",
+  "systemNode": "v22.22.3",
+  "systemNpm": "10.9.8"
+}

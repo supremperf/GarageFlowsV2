@@ -1,0 +1,15 @@
+{
+  "baselineCommit": "c4a2cca2cf446f96be580e99cca8afbca45396c5",
+  "source": "src/lib/i18n/ui.ts",
+  "originalSnapshotEqualsHEAD": true,
+  "sourceBeforeSha256": "21e1bc02d22af521a687732839f8572c0a0c835139b2039422d60916d31404dc",
+  "sourceAfterSha256": "99c0bcd89688274f8b31da7ac3fcd9b0ce5a20f7783c7ae7e35fa69b711d6bd5",
+  "sourceBytesBefore": 214124,
+  "sourceBytesAfter": 191343,
+  "sourceBytesSaved": 22781,
+  "contentBeforeAfterEqual": true,
+  "contentSha256": "297db557405e6b7a465994970bcaa18a818d6dd25ea60cb65afa8cc55ad4def3",
+  "keyCount": 562,
+  "proofType": "actual transpiled UI objects compared in VM; exact prior source retained in Git HEAD when originalSnapshotEqualsHEAD=true; real Next output measurements are separately in bundle.json",
+  "perChunkDeltaLedgerCaptured": false
+}

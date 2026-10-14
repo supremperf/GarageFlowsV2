@@ -173,14 +173,19 @@ describe('matrice A–G', () => {
   })
 
   // Hacher le vrai app.asar (~536 Mo) prend plusieurs secondes → timeout élargi.
-  it('G — build fraîchement généré (dist/win-unpacked réel) → aucun échec (sauté si absent)', { timeout: 120_000 }, () => {
-    const real = resolve(__dirname, '../../dist/win-unpacked/resources')
-    if (!existsSync(join(real, I.MANIFEST_NAME))) {
-      console.warn('[skip] dist/win-unpacked absent — lancez npm run dist pour ce test')
-      return
-    }
-    const r = I.verify(real)
-    expect(r.ok, JSON.stringify(r.details ?? [], null, 1)).toBe(true)
-    expect(r.checked).toBeGreaterThanOrEqual(1)
-  })
+  const real = resolve(__dirname, '../../dist/win-unpacked/resources')
+  const realManifest = join(real, I.MANIFEST_NAME)
+  // Missing artefacts were previously counted PASSED via an early return.
+  // Ordinary unit runs now report that absence honestly. The mandatory Windows
+  // packaging job sets GF_REQUIRE_ARTIFACT_TEST=1: absence then FAILS, not skips.
+  it.skipIf(!existsSync(realManifest) && process.env.GF_REQUIRE_ARTIFACT_TEST !== '1')(
+    'G — build fraîchement généré (dist/win-unpacked réel) → aucun échec',
+    { timeout: 120_000 },
+    () => {
+      expect(existsSync(realManifest), 'Artefact réel requis : exécuter npm run dist avant ce contrôle').toBe(true)
+      const r = I.verify(real)
+      expect(r.ok, JSON.stringify(r.details ?? [], null, 1)).toBe(true)
+      expect(r.checked).toBeGreaterThanOrEqual(1)
+    },
+  )
 })

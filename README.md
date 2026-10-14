@@ -8,7 +8,7 @@ Application de gestion et de planning d'atelier automobile — bureau Windows (E
 
 | Outil | Version minimale |
 |-------|-----------------|
-| Node.js | 18 LTS |
+| Node.js | 22.x |
 | npm | 9 |
 | Python | 3.10 |
 | `cryptography` (pip) | 41 |
@@ -23,6 +23,29 @@ npm install
 npm run db:push       # Crée la base SQLite via Prisma
 npm run db:seed       # Insère les données de démo
 ```
+
+---
+
+## Configuration assistée (desktop / Neon / Vercel)
+
+```bash
+npm run config
+```
+
+Ou double-cliquer sur `config.cmd` sous Windows. `config` lance maintenant le
+**plan complet automatique** : dépendances, accès Neon/Vercel/Upstash, secrets,
+licences/keygen, profils desktop/cloud, bases, migrations, déploiement et signature
+locale des mises à jour. Saisir `AUTORISER` pour lancer le plan ; les demandes
+suivantes concernent des accès, une cible ambiguë ou une opération risquée.
+Il conserve les clés existantes et n'affiche jamais les secrets.
+
+**Analyse et couverture des 118 variables : [CONFIG_REPOSITORY_AUDIT.md](docs/CONFIG_REPOSITORY_AUDIT.md).**
+
+**Guide et limites d'automatisation : [docs/CONFIG.md](docs/CONFIG.md).**
+Le serveur utilise `.env.server.local` (isolé du build Electron) ; le desktop
+conserve `.env`. Les accès non récupérables doivent être fournis localement. Le rapport distingue
+les étapes réussies des fonctions exigeant encore un accès ou une adaptation
+(notamment stockage durable sur Vercel et service de publication externe).
 
 ---
 

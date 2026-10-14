@@ -161,7 +161,7 @@ export const POST = withAuth(async (req) => {
   // l'installation tourne réellement : le claim `lid` du cookie `gf_session`,
   // JWT signé posé par /api/license/activate. On exige donc que le parent
   // revendiqué SOIT cette licence.
-  const activeLid = await activeGarageLicenseId(cookies().get('gf_session')?.value ?? '')
+  const activeLid = await activeGarageLicenseId((await cookies()).get('gf_session')?.value ?? '')
   if (!activeLid) {
     return NextResponse.json(
       { error: 'Aucune licence garage active sur cette installation. Activez votre licence avant d\'enregistrer une clé mécanicien.' },

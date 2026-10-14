@@ -181,7 +181,7 @@ describe('GF31-AUD-006 — PATCH /api/admin/licenses/[id]', () => {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ status: 'suspended' }),
       }) as never,
-      { params: { id: '1' } },
+      { params: Promise.resolve({ id: '1' }) },
     )
     expect(res.status).toBe(200)
 
@@ -201,7 +201,7 @@ describe('GF31-AUD-006 — PATCH /api/admin/licenses/[id]', () => {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ hwid: 'a'.repeat(64) }),
       }) as never,
-      { params: { id: '1' } },
+      { params: Promise.resolve({ id: '1' }) },
     )
 
     const ecrit = ecritureUnique()
@@ -221,7 +221,7 @@ describe('GF31-AUD-006 — PATCH /api/admin/licenses/[id]', () => {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ status: 'revoked' }),
       }) as never,
-      { params: { id: '1' } },
+      { params: Promise.resolve({ id: '1' }) },
     )
 
     const ecrit = ecritureUnique()

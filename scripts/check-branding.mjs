@@ -52,6 +52,13 @@ const IDENTIFIER_PATTERNS = [
 
 // ── Exceptions EXPLICITES {fichier, sous-chaîne, raison} (couples exacts) ──────
 const EXPLICIT_EXCLUSIONS = [
+  { file: 'scripts/lib/repository-audit-map.cjs', needle: "'GarageFlow-configuration'", reason: 'chemin physique du coffre local exclu de la lecture d’inventaire — compat config' },
+  // Existing configuration vault paths, not UI branding. Renaming these would
+  // orphan publisher/keygen configuration already created by config.
+  { file: 'scripts/config-full.cjs', needle: 'GarageFlow-configuration', reason: 'chemin physique du coffre de configuration existant — compat des plans/reprises' },
+  { file: 'scripts/config-keygen.cjs', needle: 'GarageFlow-configuration/keygen-runtime.json', reason: 'chemin physique du runtime keygen existant — compat config' },
+  { file: 'scripts/config-release.cjs', needle: 'GarageFlow-configuration/publisher.json', reason: 'chemin physique du coffre éditeur existant — compat signature' },
+  { file: 'scripts/config-services.cjs', needle: 'GarageFlow-configuration/publisher.json', reason: 'chemin physique du coffre éditeur existant — compat signature' },
   { file: 'electron/main.js', needle: "app.getPath('appData'), 'GarageFlow'", reason: "épinglage du dossier userData historique — préserve BD/licence/secret des installs existantes" },
   { file: 'electron/update-verify.js', needle: "EXPECTED_PRODUCT = 'GarageFlow'", reason: 'doit correspondre au champ « product » du flux de MàJ (identité interne, non visible)' },
   { file: 'src/lib/__tests__/update-verify.test.ts', needle: "product: 'GarageFlow'", reason: "reflète l'identité « product » du flux de MàJ (voir EXPECTED_PRODUCT)" },

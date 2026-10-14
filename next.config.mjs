@@ -16,10 +16,6 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_GF_VERSION: GF_VERSION,
   },
-  experimental: {
-    outputFileTracingRoot: undefined,
-    instrumentationHook: true,
-  },
 
   /**
    * Portail client — l'URL officielle est `https://app.garageflows.fr/clients`.

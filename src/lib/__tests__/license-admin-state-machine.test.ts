@@ -124,12 +124,12 @@ const patch = (corps: unknown) =>
       body: JSON.stringify(corps),
       headers: { 'content-type': 'application/json' },
     }) as never,
-    { params: { id: '7' } },
+    { params: Promise.resolve({ id: '7' }) },
   )
 
 const supprimer = () =>
   DELETE(new Request('http://localhost/api/admin/licenses/7', { method: 'DELETE' }) as never, {
-    params: { id: '7' },
+    params: Promise.resolve({ id: '7' }),
   })
 
 beforeEach(() => {

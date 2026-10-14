@@ -13,7 +13,8 @@ import { portalSecret } from '@/lib/portal-secret'
 import { readPhotoAsDataUrl } from '@/lib/photo-store'
 
 // GET — return quote data
-export async function GET(_req: Request, { params }: { params: { token: string } }) {
+export async function GET(_req: Request, { params: pendingParams }: { params: Promise<{ token: string }> }) {
+  const params = await pendingParams
   try {
     const { payload } = await jwtVerify(params.token, portalSecret())
     if (payload.typ !== 'quote-sign' || typeof payload.quoteId !== 'string') {
@@ -128,7 +129,8 @@ export async function GET(_req: Request, { params }: { params: { token: string }
 }
 
 // POST — sign (accept or refuse)
-export async function POST(req: Request, { params }: { params: { token: string } }) {
+export async function POST(req: Request, { params: pendingParams }: { params: Promise<{ token: string }> }) {
+  const params = await pendingParams
   try {
     const { payload } = await jwtVerify(params.token, portalSecret())
     if (payload.typ !== 'quote-sign' || typeof payload.quoteId !== 'string') {
@@ -171,8 +173,8 @@ export async function POST(req: Request, { params }: { params: { token: string }
     const meta: SignatureMeta = {
       signerName: quote.clientName || 'Client',
       signerRole: 'client',
-      ipAddress: headers().get('x-forwarded-for')?.split(',')[0].trim() ?? null,
-      userAgent: headers().get('user-agent'),
+      ipAddress: (await headers()).get('x-forwarded-for')?.split(',')[0].trim() ?? null,
+      userAgent: (await headers()).get('user-agent'),
       signedAt: new Date().toISOString(),
     }
     try {

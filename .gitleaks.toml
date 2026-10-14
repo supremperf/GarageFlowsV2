@@ -37,10 +37,10 @@ regexes = [
   '''GF2\.jeton\.mecanicien''',
   '''eyJhbGciOiJIUzI1NiJ9\.eyJ0eXAiOiJwb3J0YWwifQ\.sig''',
 ]
+# Les fichiers auth-secret, health et public-key ne sont PLUS exclus en entier :
+# seuls leurs littéraux publics/faibles connus sont couverts par les regexes.
+# Un futur vrai secret ajouté à ces sources doit rester détectable.
 paths = [
-  '''.*public-key\.ts''',
-  '''src/app/api/health/route\.ts''',
-  '''src/lib/auth-secret\.ts''',
   # Test de redaction : contient VOLONTAIREMENT des chaînes qui ressemblent à des
   # secrets (NEXTAUTH_SECRET=…, password=…, postgresql://user:pass@…) afin de
   # PROUVER qu'elles sont masquées. Aucune de ces valeurs n'est un secret réel.

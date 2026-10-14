@@ -1,5 +1,6 @@
 import { getServerSession } from 'next-auth'
 import { NextResponse } from 'next/server'
+import { resolveRouteContext } from '@/lib/route-context'
 import { authOptions } from '@/lib/auth'
 import { cookies } from 'next/headers'
 import { jwtVerify } from 'jose'
@@ -31,7 +32,7 @@ export async function requireSession() {
     throw NextResponse.json({ error: 'Non autorisé', code: 'UNAUTHENTICATED' }, { status: 401 })
   }
 
-  const rawGfSession = cookies().get('gf_session')?.value ?? ''
+  const rawGfSession = (await cookies()).get('gf_session')?.value ?? ''
   if (licenseEnforcementEnabled()) {
     const check = await validateLicensedSession({ rawGfSession, garageId: session.user.garageId })
     if (!check.ok) {
@@ -78,7 +79,7 @@ export function withAuth(
       // General API rate limit (défaut 120 req/min/IP — RATE_LIMIT_API_*)
       const rl = await enforceRateLimit('api', clientIpFrom(req))
       if (!rl.ok) return rateLimitResponse(rl)
-      return await handler(req, ctx)
+      return await handler(req, await resolveRouteContext(ctx))
     } catch (e) {
       if (e instanceof NextResponse) return e
       // Les détails techniques (message Prisma, chemins, contraintes) vont dans
@@ -137,7 +138,7 @@ export function adminLicenseAcceptable(
  * invalide OU base indisponible → refus (jamais d'ouverture d'accès admin par défaut).
  */
 export async function isAdminSession(): Promise<boolean> {
-  const raw = cookies().get('gf_session')?.value
+  const raw = (await cookies()).get('gf_session')?.value
   if (!raw) return false
   try {
     // No hard-coded fallback — a forgeable admin secret = full /api/admin/* takeover.
@@ -163,7 +164,7 @@ export async function isAdminSession(): Promise<boolean> {
  */
 export async function adminSessionActor(): Promise<string | null> {
   try {
-    const raw = cookies().get('gf_session')?.value
+    const raw = (await cookies()).get('gf_session')?.value
     if (!raw) return null
     const secret = new TextEncoder().encode(getAuthSecret())
     const { payload } = await jwtVerify(raw, secret)

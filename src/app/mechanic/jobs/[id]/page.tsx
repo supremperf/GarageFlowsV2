@@ -11,7 +11,7 @@
  */
 
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { reduirePhoto } from '@/lib/photo-client'
 import {
   Loader2, ChevronLeft, Camera, Play, Pause, Square, Send, MessageSquarePlus,
@@ -41,7 +41,8 @@ const CHK_STATUS: { value: string; label: string; style: string }[] = [
   { value: 'na', label: 'N/A', style: 'bg-slate-500/15 text-slate-400' },
 ]
 
-export default function MechanicJobPage({ params }: { params: { id: string } }) {
+export default function MechanicJobPage() {
+  const params = useParams<{ id: string }>()
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState('')

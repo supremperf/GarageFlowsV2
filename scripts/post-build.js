@@ -13,23 +13,6 @@ const { execSync }  = require('child_process')
 
 const ROOT = path.join(__dirname, '..')
 
-// Same check as electron/main.js — compare first 15 bytes as hex (avoids null-byte issues on Windows).
-// SQLite magic: "SQLite format 3" + 0x00. We check the first 15 bytes only (no null byte in comparison).
-const SQLITE_MAGIC_HEX = '53514c69746520666f726d61742033'
-
-function isValidSqliteFile(filePath) {
-  try {
-    const buf = Buffer.alloc(15)
-    const fd  = fs.openSync(filePath, 'r')
-    if (fs.fstatSync(fd).size < 512) { fs.closeSync(fd); return false }
-    fs.readSync(fd, buf, 0, 15, 0)
-    fs.closeSync(fd)
-    return buf.toString('hex') === SQLITE_MAGIC_HEX
-  } catch {
-    return false
-  }
-}
-
 function copyDir(src, dst) {
   if (!fs.existsSync(src)) {
     console.warn(`  ⚠  Source not found: ${src}`)
@@ -124,73 +107,12 @@ function main() {
     }
   }
 
-  // 5. Copy Prisma schema + DB template into standalone/prisma
+  // Only the validated, empty release template may enter the package.
+  // NEVER fall back to garageflow.db/dev.db or reset a developer database.
   {
-    const prismaSrc = path.join(ROOT, 'prisma')
-    const prismaDst = path.join(ROOT, '.next', 'standalone', 'prisma')
-    fs.mkdirSync(prismaDst, { recursive: true })
-
-    // Copy schema.prisma
-    const schemaSrc = path.join(prismaSrc, 'schema.prisma')
-    if (fs.existsSync(schemaSrc)) {
-      fs.copyFileSync(schemaSrc, path.join(prismaDst, 'schema.prisma'))
-      console.log('  ✅ schema.prisma copied   → standalone/prisma')
-    }
-
-    // Copy DB template — prefer the committed template, fall back to prisma db push
-    // garageflow-template.db is committed to git (valid SQLite, empty schema)
-    // so Windows builds never need to run prisma db push locally.
-    const candidates = [
-      'garageflow-template.db',
-      'garageflow.db',
-      'dev.db',
-    ]
-
-    let dbCopied = false
-    for (const dbName of candidates) {
-      const src = path.join(prismaSrc, dbName)
-      if (fs.existsSync(src) && isValidSqliteFile(src)) {
-        // Always copy as garageflow-template.db so main.js finds it consistently
-        const dst = path.join(prismaDst, 'garageflow-template.db')
-        fs.copyFileSync(src, dst)
-        console.log(`  ✅ DB template copied (from ${dbName}) → standalone/prisma/garageflow-template.db`)
-        dbCopied = true
-        break
-      }
-      if (fs.existsSync(src)) {
-        console.warn(`  ⚠  ${dbName} exists but is not valid SQLite — skipping`)
-      }
-    }
-
-    if (!dbCopied) {
-      // Last resort: run prisma db push to create a fresh schema DB
-      const devDbPath = path.join(prismaSrc, 'dev.db')
-      const dbPushUrl = `file:${devDbPath.replace(/\\/g, '/')}`
-      console.log('  ⏳ No valid DB template found — running npx prisma db push…')
-      try {
-        if (fs.existsSync(devDbPath)) fs.unlinkSync(devDbPath)  // remove stale empty file
-        execSync('npx prisma db push --skip-generate', {
-          cwd:   ROOT,
-          stdio: 'inherit',
-          env:   { ...process.env, DATABASE_URL: dbPushUrl },
-        })
-        if (fs.existsSync(devDbPath) && isValidSqliteFile(devDbPath)) {
-          const templateDst = path.join(prismaDst, 'garageflow-template.db')
-          fs.copyFileSync(devDbPath, templateDst)
-          // BASELINE OBLIGATOIRE : une base neuve au schéma final ne doit rejouer
-          // AUCUNE migration historique (registre _gf_migrations pré-rempli).
-          execSync(`node --experimental-strip-types scripts/baseline-template.mjs "${templateDst}"`, { cwd: ROOT, stdio: 'inherit' })
-          console.log('  ✅ dev.db created + copied + baseliné → standalone/prisma/garageflow-template.db')
-          dbCopied = true
-        } else {
-          console.error('  ❌ prisma db push ran but produced no valid DB — check prisma/schema.prisma')
-          process.exit(1)
-        }
-      } catch (err) {
-        console.error('  ❌ prisma db push failed:', err.message)
-        process.exit(1)
-      }
-    }
+    const { copyPrismaResources } = require('./lib/package-prisma-resources.cjs')
+    copyPrismaResources(ROOT, path.join(ROOT, '.next', 'standalone'))
+    console.log('  ✅ Prisma schema + empty release template copied')
   }
 
   // 6. Copy public key (if it exists) into standalone
@@ -290,10 +212,10 @@ function main() {
         fs.copyFileSync(src, dst)
         console.log('  ✅ release-manifest.json généré + inclus → standalone (artefact rattachable)')
       } else {
-        console.warn('  ⚠  release-manifest.json non généré — artefact non rattachable')
+        throw new Error('release-manifest.json non généré — artefact non rattachable')
       }
     } catch (err) {
-      console.warn('  ⚠  génération du release-manifest échouée :', err.message)
+      throw new Error('Génération du release-manifest échouée : ' + err.message)
     }
   }
 

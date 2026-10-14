@@ -1,0 +1,35 @@
+[
+  {
+    "name": "electron-install",
+    "command": [
+      "node",
+      "node_modules/electron/install.js"
+    ],
+    "exitCode": 1,
+    "error": null,
+    "seconds": 0.14
+  },
+  {
+    "name": "prisma-generate",
+    "command": [
+      "node",
+      "node_modules/prisma/build/index.js",
+      "generate"
+    ],
+    "exitCode": 1,
+    "error": null,
+    "seconds": 3.36
+  },
+  {
+    "name": "chromium-install",
+    "command": [
+      "node",
+      "node_modules/@playwright/test/cli.js",
+      "install",
+      "chromium"
+    ],
+    "exitCode": 1,
+    "error": null,
+    "seconds": 3.74
+  }
+]

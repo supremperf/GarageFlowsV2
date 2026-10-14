@@ -153,7 +153,7 @@ export function decryptSecret(stored: string | null | undefined): string | null 
         'Vérifiez GF_SMTP_CIPHER_KEY et GF_SMTP_CIPHER_KEY_OLD.',
     )
   }
-  const decipher = crypto.createDecipheriv(ALGO, key, Buffer.from(env.iv, 'base64'))
+  const decipher = crypto.createDecipheriv(ALGO, key, Buffer.from(env.iv, 'base64'), { authTagLength: 16 })
   decipher.setAuthTag(Buffer.from(env.tag, 'base64'))
   return Buffer.concat([decipher.update(Buffer.from(env.ct, 'base64')), decipher.final()]).toString('utf8')
 }

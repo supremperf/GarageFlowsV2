@@ -181,7 +181,11 @@ describe('anti-régression : le manifeste de BUILD n\'est pas un manifeste sign�
 
   it('le script de signature est exposé comme script npm', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(RACINE, 'package.json'), 'utf8'))
-    expect(pkg.scripts['release:sign']).toContain('sign-release-manifest.mjs')
+    expect(pkg.scripts['release:sign']).toBe('node scripts/config-release.cjs')
+    const wrapper = fs.readFileSync(path.join(RACINE, 'scripts/config-release.cjs'), 'utf8')
+    expect(wrapper).toContain('sign-release-manifest.mjs')
+    expect(wrapper).toContain('await import(')
+    expect(wrapper).toContain('process.argv.push(')
   })
 })
 

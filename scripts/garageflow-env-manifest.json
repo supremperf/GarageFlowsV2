@@ -1867,6 +1867,36 @@
       ],
       "notes": "Jeton d'API Vercel de l'ÉDITEUR, utilisé pour pousser les variables et déclencher un déploiement. Ne doit jamais être livré à un garage ni écrit dans un .env versionné.",
       "autoManage": false
+    },
+    {
+      "name": "E2E_NON_PRODUCTION",
+      "classification": "test-external",
+      "scope": "test-only",
+      "requiredProduction": false,
+      "format": "enum:true,false",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        ".github/workflows/ci.yml"
+      ],
+      "notes": "Approbation explicite de la cible de recette non productive. Le job authentifié échoue si cette approbation vaut autre chose que true ; ne prouve pas à elle seule l’isolation du backend."
+    },
+    {
+      "name": "E2E_STAGING_URL",
+      "classification": "test-external",
+      "scope": "test-only",
+      "requiredProduction": false,
+      "format": "url",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        ".github/workflows/ci.yml"
+      ],
+      "notes": "URL HTTPS de recette isolée pour le job E2E authentifié ; stockée dans l’environnement GitHub e2e-staging autorisé. Jamais la production ; aucune valeur automatique ni déploiement."
     }
   ],
   "auditCleanup": {

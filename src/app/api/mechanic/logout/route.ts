@@ -9,7 +9,7 @@ import { prisma } from '@/lib/db'
 // Termine la session mécanicien : expire les cookies et signale au client de
 // purger tout cache local (isolation par utilisateur). Best-effort audit.
 export async function POST() {
-  const raw = cookies().get('gf_session')?.value ?? ''
+  const raw = (await cookies()).get('gf_session')?.value ?? ''
   // Best-effort : journaliser la déconnexion si la session est (encore) valide.
   try {
     const check = await validateMechanicSession({ rawGfSession: raw })

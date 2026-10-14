@@ -77,8 +77,9 @@ function evenementAudit(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params: pendingParams }: { params: Promise<{ id: string }> }
 ) {
+  const params = await pendingParams
   if (!await isAdminSession()) {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
   }
@@ -242,8 +243,9 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params: pendingParams }: { params: Promise<{ id: string }> }
 ) {
+  const params = await pendingParams
   if (!await isAdminSession()) {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
   }
