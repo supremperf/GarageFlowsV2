@@ -1,5 +1,7 @@
 <!-- doc-numbers: journal -->
 
+> **Mise à jour postpublication :** branche publiée, CI c53d8e5 en échec Gitleaks/Required validation ; 26 IDs, dont nouveau risque Dependabot sur main. Voir [PUBLICATION-RESULT.md](PUBLICATION-RESULT.md). Le corps ci-dessous conserve les résultats prépublication, sans les faire passer pour des validations distantes. **NON PRÊT POUR LA PRODUCTION.**
+
 # Reprise d’audit du 14 octobre 2026 — état documenté avant publication GitHub
 
 ## A. Décision et périmètre
@@ -140,7 +142,7 @@ Exemples de commandes officielles : `npm run lint`, `npm run type-check`, `npm r
 
 Ces deux documents datés utilisent le mode existant `doc-numbers: journal` : ils consignent des exécutions datées et ne remplacent pas la baseline canonique. Le premier contrôle documentaire a signalé cette classification manquante (exit 1) ; aucun contrôle ni critère de livraison n’a été désactivé.
 
-Le contrôle whitespace sur l’index Git complet retourne **2** : lignes vides finales dans `docs/audit/evidence/npm-ls-all.txt` et `vendor/braces-bounded/lib/stringify.js`, préexistantes à cette reprise. Elles sont conservées pour ne pas réécrire une preuve ni les octets de provenance du fork ; ce résultat n’est pas présenté comme exit 0 et aucune règle Git n’est désactivée.
+Le contrôle whitespace du premier index, avant ajout explicite des journaux ignorés, retourne **2** : lignes vides finales dans `docs/audit/evidence/npm-ls-all.txt` et `vendor/braces-bounded/lib/stringify.js`, préexistantes à cette reprise. Elles sont conservées pour ne pas réécrire une preuve ni les octets de provenance du fork ; ce résultat n’est pas présenté comme exit 0 et aucune règle Git n’est désactivée.
 
 Le précontrôle de confidentialité avant push ne détecte que trois familles de motifs, sans valeur imprimée : **il ne remplace pas Gitleaks et ne certifie pas l’absence de secrets**. Les originaux locaux, modifications utilisateur et anciennes preuves sont préservés. Les rapports historiques ne sont pas modifiés pour faire disparaître les échecs.
 

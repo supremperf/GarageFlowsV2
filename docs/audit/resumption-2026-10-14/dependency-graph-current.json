@@ -125,7 +125,8 @@
         "effective-ci",
         "exhaustive-review",
         "sast-triage",
-        "licensing-policy"
+        "licensing-policy",
+        "default-branch-alert-triage"
       ]
     },
     {
@@ -143,7 +144,14 @@
         "independent-review"
       ],
       "acceptance": "Approved durable offline anchor and new-install/restoration compatibility; FUP-025 closed by real evidence"
+    },
+    {
+      "id": "default-branch-alert-triage",
+      "dependsOn": [
+        "independent-checks"
+      ],
+      "acceptance": "Read-only main Dependabot alerts, root-cause inventory and authorized integration validation; FUP-026 not inherited from session audit."
     }
   ],
-  "updatedAt": "2026-10-14T14:23:19.165821+00:00"
+  "updatedAt": "2026-10-14T14:41:44.206850+00:00"
 }

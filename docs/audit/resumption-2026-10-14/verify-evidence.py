@@ -14,7 +14,7 @@ for r in old_manifest:
  assert sha(p)==r['sha256'],p
 review=[json.loads(l) for l in (BASE/'review-ledger.jsonl').read_text().splitlines()]
 for r in review:assert sha(ROOT/r['path'])==r['sha256'],r['path']
-issues=json.loads((BASE/'issue-matrix.json').read_text());assert len(issues)==25 and len({r['id'] for r in issues})==25
+issues=json.loads((BASE/'issue-matrix.json').read_text());assert len(issues)==26 and len({r['id'] for r in issues})==26
 for r in issues:
  for proof in r['currentProof']:assert (BASE/proof.split('#')[0]).is_file(),proof
 commands=[json.loads(l) for l in (BASE/'commands.jsonl').read_text().splitlines()]
