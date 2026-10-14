@@ -160,7 +160,7 @@ function fullFixture(t, { existing = false, failMigration = false } = {}) {
       if (label.includes('Base utilisée')) return 'MIGRER'
       return '' // no publisher key supplied, do not silently create a new update authority
     },
-    yes: async label => { questions.push(label); return !label.includes('défauts PUBLICS') && !label.includes('première licence') },
+    yes: async label => { questions.push(label); return !label.includes('défauts PUBLICS') && !label.includes('première licence') && !label.includes('Personnaliser les variables') },
     setupVercel: async () => ({ values: env, hidden: new Set(), present: new Set(Object.keys(env)), stamps: {} }),
     importRemote: async (local, _remote, selected) => ({ ...local, ...Object.fromEntries(selected.filter(n => env[n]).map(n => [n, env[n]])) }),
     configureNeon: async () => { throw new Error('Existing database should be reused') },
@@ -389,4 +389,64 @@ test('manual original-key import proposes the exact repo path and accepts quoted
     },
   })
   assert.equal(Buffer.from(env.GF_PRIVATE_KEY, 'base64').toString(), pair.privateKey)
+})
+
+test('full wizard offers optional server and desktop variables and saves chosen values in their own profiles', async t => {
+  const f = fullFixture(t), oldYes = f.api.yes, edits = []
+  f.api.yes = async label => label.includes('Personnaliser les variables') || oldYes(label)
+  f.api.advanced = async (env, selected) => {
+    edits.push([...selected])
+    if (selected.includes('RATE_LIMIT_LOGIN_MAX')) {
+      env.RATE_LIMIT_LOGIN_MAX = '12'
+      env.GF_MIN_PWA_VERSION = '1.2.3'
+    } else {
+      env.GF_UPDATE_CHANNEL = 'beta'
+    }
+  }
+  await full(f.api)
+  assert.equal(edits.length, 2)
+  const server = core.readEnv(path.join(f.dir, '.env.server.local'))
+  const desktop = core.readEnv(path.join(f.dir, '.env'))
+  assert.equal(server.RATE_LIMIT_LOGIN_MAX, '12')
+  assert.equal(server.GF_MIN_PWA_VERSION, '1.2.3')
+  assert.equal(desktop.GF_UPDATE_CHANNEL, 'beta')
+  assert.ok(!desktop.RATE_LIMIT_LOGIN_MAX && !server.GF_UPDATE_CHANNEL)
+})
+
+test('optional database edits are inspected before missing keys are generated or migrations authorized', async t => {
+  const f = fullFixture(t), oldYes = f.api.yes
+  const direct = 'postgresql://u:pass@ep-selected.neon.tech/db'
+  f.api.yes = async label => label.includes('Personnaliser les variables facultatives du serveur') || oldYes(label)
+  f.api.advanced = async env => {
+    env.DATABASE_URL = 'postgresql://u:pass@ep-selected-pooler.neon.tech/db'
+    env.DIRECT_URL = direct
+  }
+  let inspected = false
+  f.api.services.inspectDatabase = async (_root, url) => { assert.equal(url, direct); inspected = true; return { empty: true } }
+  await full(f.api)
+  assert.equal(inspected, true)
+  assert.equal(core.readEnv(path.join(f.dir, '.env.server.local')).DIRECT_URL, direct)
+})
+
+test('validation corrections cannot silently switch databases after the data-preservation inspection', async t => {
+  const f = fullFixture(t)
+  f.env.GF_MIN_PWA_VERSION = 'invalid'
+  f.api.advanced = async env => {
+    env.GF_MIN_PWA_VERSION = '1.2.3'
+    env.DATABASE_URL = 'postgresql://u:pass@ep-other-pooler.neon.tech/db'
+    env.DIRECT_URL = 'postgresql://u:pass@ep-other.neon.tech/db'
+  }
+  await assert.rejects(() => full(f.api), /DATABASE_URL : cible modifiée après inspection/)
+  assert.ok(!f.calls.includes('sync'))
+  assert.ok(!f.calls.some(c => c.includes('migrate deploy')))
+})
+
+test('known compromised secrets remain blocked after advanced validation corrections', async t => {
+  const f = fullFixture(t), compromised = crypto.randomBytes(32).toString('base64')
+  fs.writeFileSync(path.join(f.dir, 'scripts/compromised-secrets.json'), JSON.stringify({ entries: [{ env: 'NEXTAUTH_SECRET', sha256Prefix: crypto.createHash('sha256').update(compromised).digest('hex') }] }))
+  f.env.GF_MIN_PWA_VERSION = 'invalid'
+  f.api.advanced = async env => { env.GF_MIN_PWA_VERSION = '1.2.3'; env.NEXTAUTH_SECRET = compromised }
+  await assert.rejects(() => full(f.api), /NEXTAUTH_SECRET : empreinte connue compromise/)
+  assert.ok(!f.calls.includes('sync'))
+  assert.ok(!f.calls.some(c => c.includes('migrate deploy')))
 })

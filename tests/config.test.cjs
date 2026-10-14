@@ -207,6 +207,10 @@ test('interactive confirmations pass their visible label to readline (Windows re
     await wizard.question('URL', { defaultValue: 'https://fixture-user:fixture-password@app.invalid' })
     assert.equal(prompts[2], 'URL [déjà configuré] : ')
     assert.ok(!prompts.join('\n').includes('fixture-password'))
+    answers.push('')
+    await wizard.question('URL query', { defaultValue: 'https://app.invalid?token=fixture-token' })
+    assert.equal(prompts[3], 'URL query [déjà configuré] : ')
+    assert.ok(!prompts.join('\n').includes('fixture-token'))
   } finally {
     readline.createInterface = original
     if (tty) Object.defineProperty(process.stdin, 'isTTY', tty)
@@ -334,4 +338,153 @@ test('saving missing URLs keeps existing URLs and handles UTF-8 BOM without rese
   assert.ok(fs.readFileSync(file, 'utf8').startsWith(original))
   assert.equal(c.readEnv(file).DATABASE_URL, env.DATABASE_URL)
   assert.deepEqual(c.saveDatabaseUrls(file, env), [])
+})
+
+test('Windows data directories can be configured and serialized without interpreting path escapes', () => {
+  const env = c.fillMissing({}, c.namesForProfile(names, 'desktop'), 'desktop')
+  env.GF_BACKUP_DIR = String.raw`C:\new\reports\GarageFlows`
+  env.GF_PHOTOS_DIR = String.raw`\\server\photos\GarageFlows`
+  assert.deepEqual(c.validate(env, 'desktop'), [])
+  const parsed = c.parseEnv(c.serializeEnv(env, Object.keys(env), 'desktop'))
+  assert.equal(parsed.GF_BACKUP_DIR, 'C:/new/reports/GarageFlows')
+  assert.equal(parsed.GF_PHOTOS_DIR, '//server/photos/GarageFlows')
+  assert.equal(env.GF_BACKUP_DIR, String.raw`C:\new\reports\GarageFlows`)
+})
+
+test('public HTTP endpoints reject embedded credentials and URL query secrets', () => {
+  for (const profile of ['desktop', 'pwa', 'licences']) {
+    for (const name of ['NEXTAUTH_URL', 'GF_APP_URL', 'GF_LICENSE_SERVER', 'GF_UPDATE_SERVER', 'UPSTASH_REDIS_REST_URL']) {
+      for (const value of ['https://user:password@app.test.invalid', 'https://app.test.invalid?token=fixture', 'https://app.test.invalid#private']) {
+        const errors = c.validate({ [name]: value }, profile, { vercel: true })
+        assert.ok(errors.some(e => e.startsWith(name + ' :')), `${profile}: ${name}`)
+        assert.ok(errors.every(e => !e.includes(value)), 'Errors must never include credential-bearing values')
+      }
+    }
+  }
+})
+
+test('custom local passwords and credential variables are masked by the configurator', () => {
+  for (const name of ['SMTP_PASSWORD', 'DATABASE_DSN', 'SERVICE_CREDENTIALS', 'FTP_PASS', 'AUTHORIZATION']) assert.equal(c.isSecret(name), true, name)
+})
+
+test('configuration enforces the supported Node runtime before operational actions', () => {
+  for (const v of ['20.19.0', '22.0.0', '22.11.9', '23.0.0', 'invalid']) assert.throws(() => c.assertNodeVersion(v), /22/)
+  for (const v of ['22.12.0', '22.22.3']) assert.doesNotThrow(() => c.assertNodeVersion(v))
+})
+
+test('local custom settings are editable but known runtime and publisher variables stay separated', () => {
+  const env = { CUSTOM_SETTING: 'value', SMTP_PASSWORD: 'value', ELECTRON: '1', GF_UPDATE_SIGNING_KEY_FILE: 'path', NEXTAUTH_SECRET: 'value' }
+  const policy = require('../scripts/config-policy.cjs').loadPolicy(root)
+  const editable = c.editableNames(env, ['NEXTAUTH_SECRET'], policy)
+  assert.deepEqual(editable, ['NEXTAUTH_SECRET', 'CUSTOM_SETTING', 'SMTP_PASSWORD'])
+  assert.ok(!c.namesForProfile(['GF_UPDATE_SIGNING_KEY_FILE'], 'pwa').length)
+})
+
+test('environment coverage lists every template setting with a destination without printing values', t => {
+  const dir = fixture(t)
+  fs.mkdirSync(path.join(dir, 'scripts'))
+  fs.copyFileSync(path.join(root, '.env.example'), path.join(dir, '.env.example'))
+  fs.copyFileSync(path.join(root, 'scripts/garageflow-env-manifest.json'), path.join(dir, 'scripts/garageflow-env-manifest.json'))
+  const marker = crypto.randomBytes(24).toString('hex')
+  fs.writeFileSync(path.join(dir, '.env'), `CUSTOM_SETTING=${marker}\n`)
+  const report = require('../scripts/config-env-coverage.cjs').coverage(dir)
+  assert.equal(report.templateCount, c.templateNames(template).length)
+  assert.deepEqual(report.unclassified, [])
+  assert.ok(report.entries.every(e => e.action && e.destination))
+  assert.ok(report.entries.find(e => e.name === 'CUSTOM_SETTING').localOnly)
+  assert.ok(!JSON.stringify(report).includes(marker))
+})
+
+test('dotenv codec preserves custom names, quotes, literal backslashes and dollars without silent deletion', () => {
+  const values = ['value"quote$cash#hash', String.raw`value\new\reports$cash`, 'both\'"quotes\\n$cash', 'literal\\$CASH', 'has`backtick']
+  const env = Object.fromEntries(values.map((value, i) => [`custom.setting-${i}`, value]))
+  const text = c.serializeEnv(env, Object.keys(env), 'desktop')
+  assert.deepEqual({ ...c.parseEnv(text) }, env)
+  for (const value of ['a\0b', 'a\nb', 'a\rb', 'all\'"`quotes\\']) {
+    assert.throws(() => c.serializeEnv({ CUSTOM: value }, ['CUSTOM'], 'desktop'), /CUSTOM/)
+  }
+})
+
+function cliFixture(t) {
+  const dir = fixture(t)
+  for (const file of ['config', '.env.example', 'scripts/config-core.cjs', 'scripts/config-policy.cjs', 'scripts/config-env-coverage.cjs', 'scripts/garageflow-env-manifest.json', 'src/lib/license/public-key.ts']) {
+    fs.mkdirSync(path.dirname(path.join(dir, file)), { recursive: true })
+    fs.copyFileSync(path.join(root, file), path.join(dir, file))
+  }
+  return dir
+}
+
+test('CLI --list is offline and read-only, covers existing custom names and never prints values', t => {
+  const dir = cliFixture(t), value = crypto.randomBytes(32).toString('hex')
+  const file = path.join(dir, '.env'), original = `custom.setting="${value}"\n`
+  fs.writeFileSync(file, original)
+  const run = spawnSync(process.execPath, [path.join(dir, 'config'), '--list'], { cwd: dir, encoding: 'utf8' })
+  assert.equal(run.status, 0, run.stderr)
+  assert.match(run.stdout, /custom.setting/)
+  assert.match(run.stdout, /48 variables du template/)
+  assert.ok(!`${run.stdout}${run.stderr}`.includes(value))
+  assert.equal(fs.readFileSync(file, 'utf8'), original)
+  assert.ok(!fs.existsSync(path.join(dir, 'GarageFlow-configuration')))
+  const invalid = spawnSync(process.execPath, [path.join(dir, 'config'), '--list', '--check'], { encoding: 'utf8' })
+  assert.equal(invalid.status, 1)
+})
+
+test('CLI --list fails when a new template name has no declared configuration destination', t => {
+  const dir = cliFixture(t)
+  fs.appendFileSync(path.join(dir, '.env.example'), '\n# UNCLASSIFIED_SETTING=\n')
+  const run = spawnSync(process.execPath, [path.join(dir, 'config'), '--list'], { encoding: 'utf8' })
+  assert.equal(run.status, 1)
+  assert.match(run.stdout, /UNCLASSIFIED_SETTING \| unclassified/)
+})
+
+test('CLI --check rejects publisher/runtime settings in application profiles without leaking or changing files', t => {
+  const dir = cliFixture(t)
+  const env = c.fillMissing({}, c.namesForProfile(names, 'desktop'), 'desktop')
+  const value = crypto.randomBytes(32).toString('hex')
+  const original = c.serializeEnv(env, Object.keys(env), 'desktop') + `GF_INTERNAL_EXPORT_KEY="${value}"\nGF_UPDATE_SIGNING_KEY_FILE="/outside/repo/key.pem"\n`
+  const file = path.join(dir, '.env')
+  fs.writeFileSync(file, original)
+  const run = spawnSync(process.execPath, [path.join(dir, 'config'), '--check', '--profile', 'desktop'], { encoding: 'utf8' })
+  assert.equal(run.status, 1)
+  assert.match(run.stderr, /GF_INTERNAL_EXPORT_KEY : hors profil desktop/)
+  assert.match(run.stderr, /GF_UPDATE_SIGNING_KEY_FILE : hors profil desktop/)
+  assert.ok(!`${run.stdout}${run.stderr}`.includes(value))
+  assert.equal(fs.readFileSync(file, 'utf8'), original)
+})
+
+test('Windows launcher forwards arguments from its own directory and preserves failure without pausing CLI invocations (static)', () => {
+  const script = fs.readFileSync(path.join(root, 'config.cmd'), 'utf8')
+  assert.match(script, /cd \/d "%~dp0"/)
+  assert.match(script, /node "%~dp0config" %\*/)
+  assert.match(script, /node "%~dp0config" %\*\r?\nset "GF_CONFIG_EXIT=%ERRORLEVEL%"\r?\nif "%~1"=="" pause\r?\nexit \/b %GF_CONFIG_EXIT%/)
+  assert.ok(!/^pause\s*$/m.test(script))
+})
+
+test('masked input is initialized before its prompt becomes visible (immediate-paste echo regression)', async () => {
+  const readline = require('node:readline'), wizard = require('../config')
+  const original = readline.createInterface, write = process.stdout.write
+  const tty = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY'), events = []
+  const hidden = crypto.randomBytes(24).toString('hex')
+  Object.defineProperty(process.stdin, 'isTTY', { configurable: true, value: true })
+  readline.createInterface = () => {
+    events.push('input-created')
+    return { once() {}, close() { events.push('closed') }, question(_prompt, callback) { events.push('input-ready'); callback('') } }
+  }
+  process.stdout.write = function (chunk, ...rest) {
+    if (String(chunk).startsWith('Champ masqué')) {
+      events.push('prompt-visible')
+      assert.ok(!String(chunk).includes(hidden))
+      return true
+    }
+    return write.call(this, chunk, ...rest)
+  }
+  try {
+    assert.equal(await wizard.question('Champ masqué', { secret: true, defaultValue: hidden }), hidden)
+    assert.deepEqual(events, ['input-created', 'input-ready', 'prompt-visible', 'closed'])
+  } finally {
+    process.stdout.write = write
+    readline.createInterface = original
+    if (tty) Object.defineProperty(process.stdin, 'isTTY', tty)
+    else delete process.stdin.isTTY
+  }
 })

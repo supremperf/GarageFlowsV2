@@ -32,7 +32,7 @@ async function full(api) {
   console.log('Une autorisation initiale couvre les installations npm, fichiers locaux, migrations sur une BASE VIDE et déploiement sur le projet Vercel que vous autorisez. Une base existante et un changement d’autorité exigent une confirmation supplémentaire.')
   console.log('La configuration de production n’est pas exécutée sur vos comptes tant que vous n’autorisez pas ce plan.')
   if (await api.question('Saisir AUTORISER pour exécuter le plan complet (Entrée = annuler)') !== 'AUTORISER') return
-  if (Number(process.versions.node.split('.')[0]) !== 22) throw new Error('Le dépôt exige Node.js 22.x. Installer cette version avant de continuer.')
+  core.assertNodeVersion()
   fs.mkdirSync(folder, { recursive: true, mode: 0o700 })
   try {
     try { lockFd = fs.openSync(lock, 'wx', 0o600) }
@@ -84,6 +84,11 @@ async function full(api) {
         env.GARAGEFLOW_API_KEY = existing.api_key
       }
     }
+    await step('réglages-avancés-serveur', async () => {
+      if (await api.yes('Personnaliser les variables facultatives du serveur (limites, versions, clés historiques, facturation et réglages locaux)')) {
+        await api.advanced(env, core.editableNames(env, names, policy))
+      }
+    })
     await step('PostgreSQL-Neon-ou-existant', async () => {
       if (!env.DATABASE_URL || !env.DIRECT_URL) {
         if (env.DATABASE_URL && !/\.neon\.tech/.test(env.DATABASE_URL)) await api.secretField(env, 'DIRECT_URL', 'URL directe d’origine du fournisseur PostgreSQL existant')
@@ -113,6 +118,7 @@ async function full(api) {
       console.log('Accès optionnel : OCR existant nécessite une clé Anthropic. Entrée sans clé laisse OCR/IA désactivé ; le Copilot LLM n’est pas implémenté dans ce dépôt.')
       await api.secretField(env, 'ANTHROPIC_API_KEY', 'Clé API Anthropic (facultatif, saisie masquée)')
     }
+    const inspectedResources = Object.fromEntries(['DATABASE_URL', 'DIRECT_URL', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'NEXTAUTH_URL'].map(n => [n, env[n]]))
     await step('secrets-indépendants-et-licences', async () => {
       const missing = Object.keys(core.GENERATED).filter(n => names.includes(n) && !env[n])
       if (!database.empty) {
@@ -143,8 +149,15 @@ async function full(api) {
       while (issues.length) {
         console.log(issues.join('\n'))
         if (!await api.yes('Corriger uniquement les valeurs bloquantes', true)) throw new Error('Variables invalides : rien synchronisé.')
-        await api.advanced(env, names)
+        await api.advanced(env, core.editableNames(env, names, policy))
         issues = core.validate(env, 'licences', { vercel: true, publicPem: core.embeddedLicenseKey(root) })
+      }
+      for (const [name, value] of Object.entries(inspectedResources)) {
+        if (env[name] !== value) throw new Error(`${name} : cible modifiée après inspection ; relancer config avant toute sauvegarde/migration.`)
+      }
+      // Recheck after corrections: an advanced edit must not bypass the known-compromise guard.
+      for (const entry of compromised.entries) {
+        if (env[entry.env] && crypto.createHash('sha256').update(env[entry.env]).digest('hex').startsWith(entry.sha256Prefix)) throw new Error(`${entry.env} : empreinte connue compromise ; rotation explicite nécessaire hors de ce plan.`)
       }
     })
     await step('sauvegarde-des-profils-et-keygen', async () => {
@@ -177,7 +190,11 @@ async function full(api) {
         if (!await api.yes('Retirer ces paramètres du profil desktop (les originaux sont dans le profil serveur/coffre)')) throw new Error('Profil desktop incompatible conservé.')
         for (const n of serverOnly) delete desktop[n]
       }
-      const localDatabase = await tools.inspectDesktop(root, desktop.DATABASE_URL || 'file:./dev.db')
+      if (await api.yes('Personnaliser les variables facultatives du desktop (chemins Windows, endpoints, canal, clés historiques et réglages locaux)')) {
+        await api.advanced(desktop, core.editableNames(desktop, desktopNames, policy))
+      }
+      const inspectedDesktopUrl = desktop.DATABASE_URL || 'file:./dev.db'
+      const localDatabase = await tools.inspectDesktop(root, inspectedDesktopUrl)
       if (!localDatabase.empty) {
         for (const name of Object.keys(core.GENERATED).filter(n => desktopNames.includes(n) && !desktop[n])) {
           if (name === 'GF_SIGNATURE_SECRET' && desktop.NEXTAUTH_SECRET) {
@@ -197,8 +214,14 @@ async function full(api) {
       desktop.GF_APP_URL ||= env.GF_APP_URL
       desktop.GF_LICENSE_SERVER ||= env.NEXTAUTH_URL
       desktop.GF_UPDATE_SERVER ||= env.NEXTAUTH_URL
-      const issues = core.validate(desktop, 'desktop')
-      if (issues.length) throw new Error('Desktop : configuration existante invalide ; corriger avec node config --profile desktop.')
+      let issues = core.validate(desktop, 'desktop')
+      while (issues.length) {
+        console.log(issues.join('\n'))
+        if (!await api.yes('Corriger les variables desktop avant sauvegarde', true)) throw new Error('Desktop : configuration invalide, aucune sauvegarde du profil desktop.')
+        await api.advanced(desktop, core.editableNames(desktop, desktopNames, policy))
+        issues = core.validate(desktop, 'desktop')
+      }
+      if (desktop.DATABASE_URL !== inspectedDesktopUrl) throw new Error('DATABASE_URL desktop : cible modifiée après inspection ; relancer config sans remplacer les clés de la base.')
       core.writePrivate(path.join(root, '.env'), core.serializeEnv(desktop, [...desktopNames, ...Object.keys(desktop).filter(n => !policy.manifest.variables.some(v => v.name === n))], 'desktop'))
       tools.ensureDesktopDatabase(root, desktop.DATABASE_URL)
       await api.execute([path.join(root, 'scripts/setup-dev.js')], { env: { ...process.env, VERCEL: '',

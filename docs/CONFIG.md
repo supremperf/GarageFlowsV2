@@ -8,17 +8,18 @@
 npm run config
 ```
 
-Le fichier **`config` à la racine lance désormais le mode complet par défaut**, pas une suite de réglages manuels. **Node.js 22 et npm** sont les seuls prérequis du lanceur ; si Node est absent, le lanceur Windows le signale et conserve le message à l’écran. Il ne lance pas un installateur système privilégié sans autorisation.
+Le fichier **`config` à la racine lance désormais le mode complet par défaut**, pas une suite de réglages manuels. **Node.js >=22.12.0 et <23, et npm** sont les seuls prérequis du lanceur ; si Node est absent, le lanceur Windows le signale et conserve le message à l’écran. Il ne lance pas un installateur système privilégié sans autorisation.
 
 Une fois le plan affiché, saisir **`AUTORISER`**. Ensuite, les étapes techniques s’enchaînent. Les demandes supplémentaires concernent des accès, la sélection d’une cible ambiguë, des secrets non récupérables ou une opération risquée : création de ressource, nouvelle autorité de licence, première licence admin, migration d’une base utilisée, nouveau canal de signature. Aucun compte, mot de passe fournisseur ou domaine n’est inventé.
 
 ## Analyse du dépôt et couverture
 
-**[CONFIG_REPOSITORY_AUDIT.md](CONFIG_REPOSITORY_AUDIT.md)** contient l’inventaire transversal et la décision pour **chacune des 118 variables canoniques** : applicative, plateforme, runtime Electron, keygen, publication, maintenance/manuelle ou sans consommateur.
+**[CONFIG_REPOSITORY_AUDIT.md](CONFIG_REPOSITORY_AUDIT.md)** contient l’inventaire transversal et la décision pour **variables canoniques lors de sa génération (le décompte courant est fourni par `node config --list`)** : applicative, plateforme, runtime Electron, keygen, publication, maintenance/manuelle ou sans consommateur.
 
 Le configurateur prend en charge **54 paramètres applicatifs**, y compris ceux absents du template initial : `GF_APP_URL`, `GF_TOTP_ENC_KEY`, anciennes clés TOTP, plafonds mécanicien, délai Redis et paramètres de stockage. Une variable déclarée historiquement mais sans consommateur n’est pas fabriquée : elle n’aurait aucun effet. Les variables OS/tests/debug/reset ne sont pas déployées en production.
 
 ```sh
+node config --list   # couverture courante : noms, profils et destinations, aucune valeur
 npm run config:audit  # réactualise l’inventaire ; aucun accès cloud
 ```
 
@@ -72,6 +73,7 @@ Dans un Electron **déjà installé**, les secrets session/MAC/SMTP et la clé i
 ```sh
 npm run config                         # plan complet par défaut
 node config --profile full
+node config --list                     # inventaire en lecture seule, sans valeurs
 node config --diagnose-sql              # lecture seule : comparer PostgreSQL au schéma attendu
 node config --profile desktop          # réglage ciblé local
 node config --profile pwa               # réglage ciblé serveur
@@ -87,6 +89,20 @@ npm run release:sign -- --help          # wrapper qui réutilise le coffre confi
 ```
 
 Les profils ciblés restent des assistants à confirmations étape par étape ; le mode complet a une autorisation initiale pour la chaîne technique et ne redemande pas chaque commande sûre. Les valeurs dangereuses peuvent être corrigées dans les réglages avancés ; `GENERER` demande une génération explicite d’un secret symétrique, `SUPPRIMER` le retire du profil. Aucun remplacement automatique d’un secret non vide.
+
+## Toutes les variables `.env` : accès et vérification
+
+`node config --list` (Windows : `config.cmd --list`) vérifie que chaque nom du template a une décision et affiche les profils/destinations **sans aucune valeur**. Un nom nouveau non déclaré fait sortir la commande avec le code 1. Le contrat courant comprend 48 noms du template : 46 paramètres applicatifs, `GF_INTERNAL_EXPORT_KEY` générée par le runtime Electron, et `GF_UPDATE_SIGNING_KEY` réservée au coffre de publication. Les paramètres applicatifs du manifeste absents du template sont également proposés : 54 au total, répartis entre les profils compatibles, jamais tous copiés dans le client.
+
+Le mode complet propose explicitement **« Personnaliser les variables facultatives du serveur »**, puis la même option pour le desktop, même si la configuration est déjà valide. Les réglages serveur précèdent l'inspection de la base et la génération de clés ; une correction ne peut pas changer silencieusement une cible déjà inspectée. Le mode ciblé propose ses **réglages avancés**. Saisir le nom exact, sa valeur, puis Entrée au prochain nom pour terminer. Entrée conserve une valeur existante ; `SUPPRIMER` la retire. Les clés restent masquées et leur modification requiert confirmation.
+
+Les variables personnalisées déjà présentes dans le fichier du profil sont conservées et proposées dans ces réglages ; leurs valeurs sont masquées. Elles ne sont **pas synchronisées automatiquement vers Vercel**. Les variables système, runtime, de publication, les alias obsolètes et celles d'un autre profil ne deviennent pas des secrets applicatifs. `--check --profile …` refuse les paramètres connus hors profil ; il n'efface rien. Le mode complet et les profils ciblés exigent une autorisation avant retrait de paramètres incompatibles.
+
+Les chemins Windows de sauvegardes/photos et les URL SQLite `file:` sont normalisés en `/` à l'écriture, y compris les chemins UNC. Les mots de passe personnalisés contenant des guillemets ou des antislashs utilisent un délimiteur dotenv compatible ; les caractères `$` restent littéraux. Les valeurs multilignes/NUL ou une combinaison de guillemets non représentable sans ambiguïté sont refusées, jamais tronquées. Les PEM passent par l'import de fichier/base64 prévu. Les endpoints HTTP publics refusent identifiants intégrés, query et fragment ; les identifiants des URL PostgreSQL restent autorisés.
+
+`--list` signale aussi les overrides Next.js présents (`.env.local`, `.env.production`, etc.) : **config ne les modifie pas**, et ils peuvent primer sur `.env`. Leur présence ne doit pas être confondue avec une configuration du profil géré. `.env.server.local` reste une destination explicite, pas un fichier chargé automatiquement par Next.js.
+
+Les commandes Windows avec arguments ne font plus de pause finale bloquante et conservent le code de sortie de Node ; le double-clic sans arguments garde la pause pour lire le résultat. Un contrôle `--check` réussi signifie uniquement « syntaxe/contrat du profil valide » : aucune connexion, licence réelle, migration ou disponibilité cloud n'est prouvée par ce contrôle.
 
 ## Ce qui ne peut pas être configuré honnêtement tout seul
 

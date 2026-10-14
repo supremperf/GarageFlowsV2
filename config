@@ -12,9 +12,10 @@ const ROOT = __dirname
 const args = process.argv.slice(2)
 const PROFILES = ['full', 'desktop', 'pwa', 'licences']
 const TOOLS = { vercel: 'vercel@64.0.2', neonctl: 'neonctl@8.4.4', upstash: 'upstash@1.5.0' }
-const template = fs.readFileSync(path.join(ROOT, '.env.example'), 'utf8')
-// Canonical template + timeout consumed by src/lib/env.ts, absent from the older template.
-const allNames = [...new Set([...core.templateNames(template), ...require('./scripts/config-policy.cjs').loadPolicy(ROOT).names])]
+// Only canonical application variables belong in profiles; runtime/publisher settings have dedicated handlers.
+const configPolicy = require('./scripts/config-policy.cjs').loadPolicy(ROOT)
+const allNames = configPolicy.names
+const knownSettings = new Set([...configPolicy.entries.map(e => e.name), ...configPolicy.manifest.platformProvided])
 const safeLabel = s => String(s).replace(/[\x00-\x1f\x7f]/g, '').slice(0, 160)
 
 function help() {
@@ -23,6 +24,7 @@ function help() {
   npm run config                     Plan COMPLET automatique (autorisation initiale)
   node config --profile full          Desktop + cloud + licences + keygen + publication
   node config --audit                 Inventaire/rapport du dépôt, sans accès cloud
+  node config --list                  Couverture des variables, noms/destinations sans valeurs
   node config --profile desktop      SQLite / Electron (développement local)
   node config --profile pwa           PostgreSQL / PWA
   node config --profile licences      PWA + autorité de licences
@@ -40,11 +42,10 @@ Guide détaillé : docs/CONFIG.md`)
 async function question(label, { secret = false, defaultValue = '' } = {}) {
   if (!process.stdin.isTTY) throw new Error('Un terminal interactif est requis (ou utilisez --check / --help).')
   let hideDefault = secret
-  try { const url = new URL(defaultValue); hideDefault ||= !!url.username || !!url.password } catch { /* Not a URL. */ }
+  try { const url = new URL(defaultValue); hideDefault ||= !!url.username || !!url.password || !!url.search || !!url.hash } catch { /* Not a URL. */ }
   const prompt = `${label}${defaultValue ? ` [${hideDefault ? 'déjà configuré' : safeLabel(defaultValue)}]` : ''} : `
   // Let readline own visible prompts: an empty question redraws the line and
   // erases a separately printed label, notably in Windows Command Prompt.
-  if (secret) process.stdout.write(prompt)
   // A terminal readline with a muted output enables raw input without echoing passwords.
   const output = secret ? new Writable({ write(_chunk, _encoding, done) { done() } }) : process.stdout
   const rl = readline.createInterface({ input: process.stdin, output, terminal: true })
@@ -52,6 +53,8 @@ async function question(label, { secret = false, defaultValue = '' } = {}) {
     return await new Promise((resolve, reject) => {
       rl.once('SIGINT', () => reject(new Error('Configuration annulée.')))
       rl.question(secret ? '' : prompt, value => resolve((secret ? value : value.trim()) || defaultValue))
+      // Display only after readline owns raw input, so an immediate paste cannot echo a secret.
+      if (secret) process.stdout.write(prompt)
     })
   } finally { rl.close(); if (secret) process.stdout.write('\n') }
 }
@@ -293,11 +296,12 @@ async function advanced(env, names) {
     const name = await question('Variable à configurer')
     if (!name) return
     if (!names.includes(name)) { console.log('Variable inconnue ou non applicable à ce profil.'); continue }
-    if (core.isSecret(name) && env[name]) {
+    const secret = core.isSecret(name) || !allNames.includes(name)
+    if (secret && env[name]) {
       console.log('Changer une clé peut invalider les données ou les jetons. Pour une rotation SMTP, suivre la procédure dédiée.')
       if (!await yes(`Modifier explicitement ${name}`)) continue
     }
-    const value = await question(`Valeur de ${name}`, { secret: core.isSecret(name), defaultValue: env[name] || '' })
+    const value = core.normalizeValue(name, await question(`Valeur de ${name}`, { secret, defaultValue: env[name] || '' }))
     if (value === 'SUPPRIMER') delete env[name]
     else if (value === 'GENERER' && (core.GENERATED[name] || name === 'GF_EINVOICE_CREDENTIALS_KEY')) {
       console.log('Une nouvelle clé rend les anciennes données/jetons incompatibles. Pour la facturation électronique, uniquement sur une première configuration sans identifiants chiffrés.')
@@ -311,7 +315,9 @@ async function advanced(env, names) {
 function childEnv(env, vercel) {
   const result = { ...process.env }
   // Ensure the selected profile wins over the shell and Prisma's .env loader.
-  for (const n of allNames) result[n] = env[n] || ''
+  for (const { name, action } of configPolicy.entries) {
+    if (action !== 'platform') result[name] = env[name] || ''
+  }
   result.ELECTRON = ''
   result.NODE_ENV = 'production'
   result.VERCEL = vercel ? '1' : ''
@@ -431,12 +437,21 @@ async function diagnoseSql({ env, run = execute, root = ROOT, requestAccess = ye
   }
 }
 async function main() {
-  const accepted = new Set(['--help', '--check', '--profile', '--vercel', '--audit', '--diagnose-sql'])
+  const accepted = new Set(['--help', '--check', '--profile', '--vercel', '--audit', '--diagnose-sql', '--list'])
   for (let i = 0; i < args.length; i++) {
     if (!accepted.has(args[i])) throw new Error('Option inconnue. Utilisez node config --help.')
     if (args[i] === '--profile') { if (!PROFILES.includes(args[++i])) throw new Error('Profil attendu : full | desktop | pwa | licences.') }
   }
   if (args.includes('--help')) return help()
+  core.assertNodeVersion()
+  if (args.includes('--list')) {
+    if (args.length !== 1) throw new Error('Utiliser node config --list seul (lecture seule).')
+    const coverage = require('./scripts/config-env-coverage.cjs')
+    const result = coverage.coverage(ROOT)
+    console.log(coverage.render(result))
+    if (result.unclassified.length) process.exitCode = 1
+    return
+  }
   if (args.includes('--diagnose-sql')) {
     if (args.length !== 1) throw new Error('Utiliser node config --diagnose-sql seul.')
     process.exitCode = await diagnoseSql()
@@ -461,8 +476,10 @@ async function main() {
   const envFile = path.join(ROOT, profile === 'desktop' ? '.env' : '.env.server.local')
   let env = core.readEnv(envFile)
   let vercel = args.includes('--vercel')
+  require('./scripts/config-policy.cjs').assertNoAliases(env, configPolicy)
+  const excluded = Object.keys(env).filter(n => knownSettings.has(n) && !names.includes(n) && env[n])
   if (args.includes('--check')) {
-    const errors = core.validate(env, profile, { vercel, publicPem: core.embeddedLicenseKey(ROOT) })
+    const errors = [...excluded.map(n => `${n} : hors profil ${profile} (runtime, plateforme ou outil dédié).`), ...core.validate(env, profile, { vercel, publicPem: core.embeddedLicenseKey(ROOT) })]
     for (const error of errors) console.error(error)
     if (errors.length) { process.exitCode = 1; return }
     console.log(`Profil ${profile} : configuration locale valide (aucun test de connectivité effectué).`)
@@ -470,7 +487,6 @@ async function main() {
   }
   console.log(`\nGarageFlow config — profil ${profile}. Secrets masqués ; aucune rotation automatique.`)
   console.log('Les connexions externes nécessitent un accès réseau à Neon, Vercel et npm sur votre poste.')
-  const excluded = Object.keys(env).filter(n => allNames.includes(n) && !names.includes(n) && env[n])
   if (excluded.length) {
     console.log(`Le fichier existant contient des variables incompatibles avec ce profil : ${excluded.join(', ')}.`)
     if (!await yes('Autoriser explicitement leur retrait du fichier local à la sauvegarde (faire une sauvegarde chiffrée avant)')) throw new Error('Fichier local laissé intact : profil incompatible.')
@@ -481,6 +497,8 @@ async function main() {
     vercel = vercel || await yes('Configurer et synchroniser le projet Vercel', true)
     if (vercel) {
       remote = await setupVercel()
+      require('./scripts/config-policy.cjs').assertNoAliases(remote.values, configPolicy)
+      require('./scripts/config-policy.cjs').assertSafeServerOverrides(remote)
       env = await importRemote(env, remote, names)
       console.log('Configuration production récupérée AVANT la génération des secrets manquants.')
     }
@@ -507,16 +525,16 @@ async function main() {
     console.log('Facturation électronique déjà activée mais clé absente : importer la clé d’origine si des identifiants existent ; ne PAS la régénérer.')
     await secretField(env, 'GF_EINVOICE_CREDENTIALS_KEY')
   }
-  if (await yes('Configurer des variables avancées (limites, SMTP, versions, facturation, etc.)')) await advanced(env, names)
+  if (await yes('Configurer des variables avancées (limites, SMTP, versions, facturation et réglages locaux)')) await advanced(env, core.editableNames(env, names, configPolicy))
   let errors = core.validate(env, profile, { vercel, publicPem: core.embeddedLicenseKey(ROOT) })
   while (errors.length) {
     console.log('\nConfiguration non valide :\n' + errors.join('\n'))
     if (!await yes('Corriger les variables maintenant', true)) throw new Error('Configuration non sauvegardée : validation échouée.')
-    await advanced(env, names)
+    await advanced(env, core.editableNames(env, names, configPolicy))
     errors = core.validate(env, profile, { vercel, publicPem: core.embeddedLicenseKey(ROOT) })
   }
   // Preserve unrelated local variables (integration-specific settings), rather than silently deleting them.
-  const outputNames = [...names, ...Object.keys(env).filter(n => !allNames.includes(n))]
+  const outputNames = [...names, ...Object.keys(env).filter(n => !knownSettings.has(n))]
   const contents = core.serializeEnv(env, outputNames, profile)
   if (!await yes(`Enregistrer ${path.basename(envFile)} (fichier local ignoré par Git)`, true)) return
   core.writePrivate(envFile, contents)

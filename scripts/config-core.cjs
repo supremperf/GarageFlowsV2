@@ -33,6 +33,7 @@ const GENERATED = {
   GF_BACKUP_KEY: 'base64', GF_INTERNAL_EXPORT_KEY: 'hex', GF_SMTP_CIPHER_KEY: 'base64',
   GF_TOTP_ENC_KEY: 'base64',
 }
+const PATH_VALUES = new Set(['GF_BACKUP_DIR', 'GF_PHOTOS_DIR'])
 const AES = new Set(['GF_SMTP_CIPHER_KEY', 'GF_BACKUP_KEY', 'GF_EINVOICE_CREDENTIALS_KEY'])
 const ENUMS = {
   LICENSE_ENFORCEMENT: ['on', 'off'], GF_UPDATE_CHANNEL: ['stable', 'beta'],
@@ -44,43 +45,65 @@ function templateNames(text) {
   return [...new Set([...text.matchAll(/^\s*(?:#\s*)?([A-Z][A-Z0-9_]+)=/gm)].map(m => m[1]))]
 }
 function namesForProfile(names, profile) {
-  return names.filter(n => n !== 'GF_UPDATE_SIGNING_KEY' &&
+  return names.filter(n => !['GF_UPDATE_SIGNING_KEY', 'GF_UPDATE_SIGNING_KEY_FILE'].includes(n) &&
     (profile === 'desktop' ? DESKTOP.has(n) : !DESKTOP_ONLY.has(n)))
 }
 function isSecret(name) {
-  return /SECRET|KEY|TOKEN|PEPPER|DATABASE_URL|DIRECT_URL/.test(name) &&
+  return /SECRET|KEY|TOKEN|PEPPER|PASSWORD|(?:^|_)PASS(?:_|$)|DSN|CREDENTIAL|AUTHORIZATION|DATABASE_URL|DIRECT_URL/i.test(name) &&
     name !== 'GF_EINVOICE_CREDENTIALS_KEY_VERSION'
+}
+function assertNodeVersion(version = process.versions.node) {
+  const match = /^22\.(\d+)\.(\d+)$/.exec(version)
+  if (!match || Number(match[1]) < 12) throw new Error('Node.js >=22.12.0 et <23 est requis pour config.')
+}
+function normalizeValue(name, value) {
+  // Windows accepts forward slashes, including UNC paths. Avoid dotenv's \n/\r
+  // interpretation of backslashes without rewriting arbitrary secret values.
+  if (typeof value === 'string' && (PATH_VALUES.has(name) || (name === 'DATABASE_URL' && value.startsWith('file:')))) {
+    return value.replace(/^"(.*)"$/, '$1').replace(/\\/g, '/')
+  }
+  return value
+}
+function editableNames(env, selected, policy) {
+  const reserved = new Set([...policy.manifest.variables.map(v => v.name),
+    ...policy.manifest.platformProvided, ...Object.keys(policy.manifest.forbiddenAliases)])
+  return [...new Set([...selected, ...Object.keys(env).filter(n => /^[\w.-]+$/.test(n) && !reserved.has(n))])]
 }
 function parseEnv(text) {
   const env = Object.create(null)
   for (const line of text.replace(/^\uFEFF/, '').split(/\r?\n/)) {
-    const m = line.match(/^[ \t]*(?:export[ \t]+)?([A-Z][A-Z0-9_]*)[ \t]*=[ \t]*(.*)$/)
+    const m = line.match(/^[ \t]*(?:export[ \t]+)?([\w.-]+)[ \t]*=[ \t]*(.*)$/)
     if (!m) continue
     let v = m[2].trim()
     if (v.startsWith('"')) {
       const quoted = v.match(/^"((?:\\.|[^"\\])*)"[ \t]*(?:#.*)?$/)
       if (!quoted) throw new Error(`${m[1]} : valeur env entre guillemets invalide.`)
-      v = quoted[1].replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\\$/g, '$').replace(/\\"/g, '"')
-    } else if (v.startsWith("'")) {
-      const quoted = v.match(/^'([^']*)'[ \t]*(?:#.*)?$/)
+      v = quoted[1].replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\\$/g, '$')
+    } else if (v.startsWith("'") || v.startsWith('`')) {
+      const quoted = v.startsWith("'") ? v.match(/^'([^']*)'[ \t]*(?:#.*)?$/) : v.match(/^`([^`]*)`[ \t]*(?:#.*)?$/)
       if (!quoted) throw new Error(`${m[1]} : valeur env entre guillemets invalide.`)
-      v = quoted[1]
+      v = quoted[1].replace(/\\\$/g, '$')
     } else v = v.replace(/[ \t]*#.*$/, '').trim()
     env[m[1]] = v
   }
   return env
+}
+function encodeValue(name, value) {
+  if (typeof value !== 'string' || /[\0\r\n]/.test(value) || (name === 'GF_PRIVATE_KEY' && /["\\]/.test(value))) {
+    throw new Error(`${name} : valeur monoligne requise ; fournir les PEM en base64 ou via le fichier de clé.`)
+  }
+  const quote = !/["\\]/.test(value) ? '"' : !value.includes("'") ? "'" : !value.includes('`') ? '`' : null
+  if (!quote) throw new Error(`${name} : combinaison de guillemets non représentable sans ambiguïté dans dotenv.`)
+  return quote + value.replace(/\$/g, '\\$') + quote
 }
 function serializeEnv(env, names, profile) {
   const lines = ['# Généré par config — SECRETS LOCAUX, ne jamais committer.',
     `# Profil : ${profile}. Relancer npm run config pour compléter, sans rotation.`,
     '# Les variables non applicables à ce profil ne sont pas exportées.', '']
   for (const name of names) {
-    const v = env[name]
+    const v = normalizeValue(name, env[name])
     if (!v) lines.push(`# ${name}=`)
-    else {
-      if (/["\\\r\n]/.test(v)) throw new Error(`${name} : caractères non pris en charge dans le fichier env.`)
-      lines.push(`${name}="${v.replace(/\$/g, '\\$')}"`)
-    }
+    else lines.push(`${name}=${encodeValue(name, v)}`)
   }
   return lines.join('\n') + '\n'
 }
@@ -131,8 +154,9 @@ function fillMissing(env, names, profile) {
   }
   return result
 }
-function urlValid(v, protocols) {
-  try { const u = new URL(v); return protocols.includes(u.protocol) && !!u.hostname && !/[\s"'\\]/.test(v) }
+function urlValid(v, protocols, { publicEndpoint = false } = {}) {
+  try { const u = new URL(v); return protocols.includes(u.protocol) && !!u.hostname && !/[\s"'\\]/.test(v) &&
+    (!publicEndpoint || (!u.username && !u.password && !u.search && !u.hash)) }
   catch { return false }
 }
 function aesValid(v) {
@@ -161,9 +185,10 @@ function validate(env, profile, { vercel = false, publicPem } = {}) {
   if (profile === 'licences') required.push('GF_PRIVATE_KEY', 'GARAGEFLOW_API_KEY')
   if (env.EINVOICING_ENABLED === 'true') required.push('GF_EINVOICE_CREDENTIALS_KEY')
   for (const n of required) if (!env[n]) errors.push(`${n} : requis.`)
-  for (const [n, v] of Object.entries(env)) {
+  for (const [n, raw] of Object.entries(env)) {
+    const v = normalizeValue(n, raw)
     if (!v) continue
-    if (/["\\\r\n]/.test(v)) errors.push(`${n} : caractères incompatibles avec le fichier env.`)
+    try { encodeValue(n, v) } catch { errors.push(`${n} : valeur incompatible avec le fichier env (monoligne et guillemets dotenv requis).`) }
     if (GENERATED[n] && (v.trim().length < (n === 'GARAGEFLOW_API_KEY' || n === 'GF_INTERNAL_EXPORT_KEY' ? 16 : 32) ||
       /change.?me|placeholder|example|your-secret|votre_secret|replace_with|fallback-/i.test(v))) errors.push(`${n} : secret trop court ou générique (pas de rotation automatique).`)
     if (AES.has(n) && !aesValid(v)) errors.push(`${n} : 32 octets en base64 requis.`)
@@ -177,7 +202,7 @@ function validate(env, profile, { vercel = false, publicPem } = {}) {
     if (/^GF_MIN_(ELECTRON|PWA)_VERSION$/.test(n) && !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(v)) errors.push(`${n} : version x.y.z requise.`)
     if (n === 'GF_DEVICE_AUTH_DEADLINE' && (!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(v) || !Number.isFinite(Date.parse(v)))) errors.push(`${n} : date RFC3339 requise.`)
     if (['NEXTAUTH_URL', 'GF_APP_URL', 'GF_LICENSE_SERVER', 'GF_UPDATE_SERVER', 'UPSTASH_REDIS_REST_URL'].includes(n) &&
-      !urlValid(v, profile === 'desktop' && !['UPSTASH_REDIS_REST_URL', 'GF_APP_URL'].includes(n) ? ['http:', 'https:'] : ['https:'])) errors.push(`${n} : URL ${profile === 'desktop' ? 'HTTP(S)' : 'HTTPS'} requise.`)
+      !urlValid(v, profile === 'desktop' && !['UPSTASH_REDIS_REST_URL', 'GF_APP_URL'].includes(n) ? ['http:', 'https:'] : ['https:'], { publicEndpoint: true })) errors.push(`${n} : URL ${profile === 'desktop' ? 'HTTP(S)' : 'HTTPS'} sans identifiants, query ni fragment requise.`)
     if (['DATABASE_URL', 'DIRECT_URL'].includes(n) && !(profile === 'desktop' && n === 'DATABASE_URL' ? /^file:.+/.test(v) : urlValid(v, ['postgres:', 'postgresql:']))) errors.push(`${n} : ${profile === 'desktop' ? 'SQLite file:' : 'PostgreSQL'} requis.`)
     if (n === 'DIRECT_URL' && urlValid(v, ['postgres:', 'postgresql:']) && /-pooler\./i.test(new URL(v).hostname)) errors.push(`${n} : URL directe requise (pas -pooler).`)
   }
@@ -201,6 +226,6 @@ function syncPlan(local, remote, names) {
   }
   return { additions, conflicts }
 }
-module.exports = { DEFAULTS, GENERATED, templateNames, namesForProfile, isSecret, parseEnv,
+module.exports = { DEFAULTS, GENERATED, assertNodeVersion, normalizeValue, editableNames, templateNames, namesForProfile, isSecret, parseEnv,
   serializeEnv, readEnv, writePrivate, saveDatabaseUrls, fillMissing, validate, licenseKeyMatches,
   embeddedLicenseKey, syncPlan }

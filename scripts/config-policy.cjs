@@ -11,7 +11,7 @@ const EXTRA_APP = new Set(['GF_APP_URL', 'GF_TOTP_ENC_KEY', 'GF_TOTP_ENC_KEY_OLD
 function disposition(v, platform) {
   if (v.status === 'absent-consumer') return { action: 'unused', destination: 'aucune', reason: 'Consommateur absent/non implémenté ; ne pas inventer un réglage.' }
   if (platform.has(v.name) || v.scope === 'runtime-system') return { action: 'platform', destination: 'OS / Electron / Next / Vercel / tests', reason: 'Injectée par la plateforme, jamais provisionnée comme secret applicatif.' }
-  if (v.name === 'GF_UPDATE_SIGNING_KEY' || v.name === 'GF_UPDATE_SIGNING_KEY_FILE') return { action: 'publisher', destination: 'coffre hors dépôt + .env.release.local (chemin seulement)', reason: 'Clé privée Ed25519 jamais dans le client ni le Vercel PWA.' }
+  if (v.name === 'GF_UPDATE_SIGNING_KEY' || v.name === 'GF_UPDATE_SIGNING_KEY_FILE') return { action: 'publisher', destination: 'coffre hors dépôt + GarageFlow-configuration/publisher.json (chemin/keyId seulement)', reason: 'Clé privée Ed25519 jamais dans le client ni le Vercel PWA.' }
   if (v.name === 'GF_KEYGEN_MAX_MECHANIC') return { action: 'keygen', destination: 'keys/server_config.json + lanceur keygen', reason: 'Plafond du générateur Python.' }
   if (v.name === 'GF_INTERNAL_EXPORT_KEY' || v.scope === 'desktop-runtime') return { action: 'runtime', destination: 'Electron userData / mémoire', reason: 'Secret éphémère/local généré par Electron ; ne pas le déployer en PWA.' }
   if (EXTRA_APP.has(v.name) || TEMPLATE.has(v.name) || v.name === 'UPSTASH_REDIS_TIMEOUT_MS') {
