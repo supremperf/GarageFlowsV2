@@ -59,15 +59,18 @@ beforeAll(async () => {
   ;({ PATCH: invoicePATCH, DELETE: invoiceDELETE } = (await import('@/app/api/invoices/[id]/route')) as any)
   ;({ POST: convertPOST } = (await import('@/app/api/quotes/[id]/convert/route')) as any)
 
-  garageId = (await prisma.garage.create({ data: { name: 'Authz', slug: 'authz-aud-009' } })).id
+  // Keep opaque fixture IDs deterministic: a generated CUID contained the cost
+  // marker in CI 38589332331, tripping the whole-response confidentiality check.
+  // All cost assertions below remain unchanged, including the full JSON check.
+  garageId = (await prisma.garage.create({ data: { id: 'authz-aud-garage', name: 'Authz', slug: 'authz-aud-009' } })).id
 
   invoiceId = (await prisma.invoice.create({
     data: {
-      number: 'FAC-2026-500', garageId, clientName: 'Client', status: 'draft',
+      id: 'authz-aud-invoice', number: 'FAC-2026-500', garageId, clientName: 'Client', status: 'draft',
       issueDate: '2026-05-01', taxRate: 20,
       lines: {
         create: [{
-          description: 'Plaquettes', sortOrder: 0,
+          id: 'authz-aud-invoice-line', description: 'Plaquettes', sortOrder: 0,
           quantityTenThousandths: 10000,
           unitPriceTenThousandths: PRIX_VENTE_SCALED,
           unitCostTenThousandths: COUT_ACHAT_SCALED,
@@ -78,11 +81,11 @@ beforeAll(async () => {
 
   quoteId = (await prisma.quote.create({
     data: {
-      number: 'DEV-2026-500', garageId, clientName: 'Client', status: 'draft',
+      id: 'authz-aud-quote', number: 'DEV-2026-500', garageId, clientName: 'Client', status: 'draft',
       issueDate: '2026-05-01', taxRate: 20,
       lines: {
         create: [{
-          description: 'Plaquettes', sortOrder: 0,
+          id: 'authz-aud-quote-line', description: 'Plaquettes', sortOrder: 0,
           quantityTenThousandths: 10000,
           unitPriceTenThousandths: PRIX_VENTE_SCALED,
           unitCostTenThousandths: COUT_ACHAT_SCALED,

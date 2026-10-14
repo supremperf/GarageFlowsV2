@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-14T16:51:09.699989+00:00",
+  "groups": 845,
+  "groupStatuses": {
+    "VALID\u00c9": 13,
+    "EN ATTENTE DE REVUE": 820,
+    "PARTIELLEMENT VALID\u00c9": 12
+  },
+  "rawOccurrences": 865,
+  "triagedOccurrences": 27,
+  "untriagedOccurrences": 838,
+  "limits": "Raw finding status records collection state; this register overlays authoritative per-occurrence decisions without dropping aliases or claiming vulnerability counts."
+}

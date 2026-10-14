@@ -6,6 +6,8 @@
  * logique d'orchestration DB + HWID de la route : on stube verifyLicenseToken
  * (couche crypto) mais on utilise le VRAI verifyHwid/isValidHwidFormat.
  */
+type OriginalModule1 = typeof import('../license/verify')
+
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Secret fort requis par getAuthSecret() (pas de repli en dur).
@@ -113,7 +115,7 @@ vi.mock('@/lib/license/record-mac', () => ({
 // Couche crypto stubée — garde le VRAI verifyHwid/isValidHwidFormat.
 const verifyMock = vi.hoisted(() => ({ payload: null as Record<string, unknown> | null }))
 vi.mock('@/lib/license/verify', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../license/verify')>()
+  const actual = await importOriginal<OriginalModule1>()
   return {
     ...actual,
     verifyLicenseToken: () => ({

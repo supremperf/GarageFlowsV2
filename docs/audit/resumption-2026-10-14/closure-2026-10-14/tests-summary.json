@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-14T16:41:39.607734+00:00",
+  "total": 3841,
+  "passed": 2994,
+  "failed": 3,
+  "skipped": 844,
+  "skipCategories": {
+    "DECLARED_REAL_ARTIFACT_ABSENT": 1,
+    "SETUP_FAILURE_NOT_DECLARED_SKIP": 808,
+    "DECLARED_POSTGRES_UNAVAILABLE": 21,
+    "DECLARED_EXTERNAL_PUBLIC_KEY_ABSENT": 2,
+    "DECLARED_REDIS_UNAVAILABLE": 5,
+    "DECLARED_ISSUER_PRIVATE_KEY_ABSENT": 5,
+    "DECLARED_ISSUED_TOKEN_ABSENT": 2
+  },
+  "unhandledErrors": 4,
+  "fileCount": 325,
+  "failedFiles": 78,
+  "exitCode": 1,
+  "sourceCommandId": "vitest-candidate",
+  "proof": "evidence/vitest-candidate.json",
+  "globalProof": "evidence/vitest-candidate.log",
+  "limits": "Authoritative dual-reporter full run on final uncommitted candidate. Three earlier runs preserved separately, not summed. Separate Redis 5/5 does not rewrite the five skips in this full run."
+}

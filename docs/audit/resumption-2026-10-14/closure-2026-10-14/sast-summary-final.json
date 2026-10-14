@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-14T16:40:39.933362+00:00",
+  "version": "1.180.0",
+  "rawSha256": "1a4547de01a42a41441d60fff459ba8b8881893eef63de5ff40ba7fb9c2ea298",
+  "targets": 996,
+  "selected": 996,
+  "rawSignals": 865,
+  "uniqueRuleExactRanges": 845,
+  "duplicateOccurrences": 20,
+  "retainedHistoricalIds": 865,
+  "newIds": [],
+  "missingHistoricalIds": [],
+  "severities": {
+    "ERROR": 14,
+    "WARNING": 354,
+    "INFO": 497
+  },
+  "categories": {
+    "security": 277,
+    "best-practice": 59,
+    "correctness": 99,
+    "portability": 430
+  },
+  "errors": [],
+  "limits": "No finding discarded. Exact column ranges are not merged merely because they overlap. Zero parser errors under this pinned scanner/config is not exhaustive security or all-language coverage."
+}

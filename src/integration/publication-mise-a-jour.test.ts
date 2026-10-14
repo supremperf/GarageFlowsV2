@@ -13,6 +13,8 @@
  *    suit le manifeste ; empreinte divergente → chaque poste télécharge puis
  *    refuse le fichier, et l'administrateur ne l'apprend que par ses clients.
  */
+type OriginalModule1 = typeof import('@/lib/api-helpers')
+
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import crypto from 'node:crypto'
 import fs from 'node:fs'
@@ -24,7 +26,7 @@ const RACINE_DONNEES = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-maj-'))
 process.env.GF_PHOTOS_DIR = path.join(RACINE_DONNEES, 'photos')
 
 vi.mock('@/lib/api-helpers', async (importOriginal) => {
-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
+  const reel = await importOriginal<OriginalModule1>()
   return { ...reel, isAdminSession: async () => true }
 })
 

@@ -7,6 +7,8 @@
  * Le mensonge était explicite, pas implicite. Même chose pour `loanerEnabled`,
  * dont l'entrée de menu s'affichait quoi qu'ait décidé le garage.
  */
+type OriginalModule1 = typeof import('@/lib/api-helpers')
+
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -16,7 +18,7 @@ process.env.DATABASE_URL = `file:${DB_PATH}`
 
 const h = vi.hoisted(() => ({ session: null as any }))
 vi.mock('@/lib/api-helpers', async (importOriginal) => {
-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
+  const reel = await importOriginal<OriginalModule1>()
   return { ...reel, withAuth: (fn: any) => fn, requireSession: async () => h.session }
 })
 vi.mock('@/lib/audit', () => ({ logAudit: async () => {} }))

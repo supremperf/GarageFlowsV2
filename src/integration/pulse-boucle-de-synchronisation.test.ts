@@ -22,6 +22,8 @@
  * synchronisation réussie ne faisait alors pas bouger l'empreinte, et l'écran ne
  * se rechargeait pas.
  */
+type OriginalModule1 = typeof import('@/lib/api-helpers')
+
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -36,7 +38,7 @@ const h = vi.hoisted(() => ({
 }))
 
 vi.mock('@/lib/api-helpers', async (importOriginal) => {
-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
+  const reel = await importOriginal<OriginalModule1>()
   return { ...reel, withAuth: (fn: any) => fn, requireSession: async () => h.session }
 })
 // On observe le DÉCLENCHEMENT de la voie de retour ; la remontée réseau

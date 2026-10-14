@@ -14,6 +14,8 @@
  * passage canvas. Le quatrième — celui qui prend le plus de photos — envoyait
  * le fichier brut de l'appareil.
  */
+type OriginalModule1 = typeof import('@/lib/mechanic-api')
+
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -23,7 +25,7 @@ process.env.DATABASE_URL = `file:${DB_PATH}`
 
 const h = vi.hoisted(() => ({ ctx: null as any }))
 vi.mock('@/lib/mechanic-api', async (importOriginal) => {
-  const reel = await importOriginal<typeof import('@/lib/mechanic-api')>()
+  const reel = await importOriginal<OriginalModule1>()
   return { ...reel, withMechanic: (fn: any) => fn, requireMechanic: async () => h.ctx }
 })
 

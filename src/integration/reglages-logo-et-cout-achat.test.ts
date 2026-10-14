@@ -18,6 +18,9 @@
  * posé sur une porte se contournait par celle d'à côté — exactement ce que
  * `redactLineCosts` avait été écrit pour empêcher (GF31-AUD-009).
  */
+type OriginalModule1 = typeof import('@/lib/api-helpers')
+type OriginalModule2 = typeof import('@/lib/security/rate-limit')
+
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import fs from 'node:fs'
 import os from 'node:os'
@@ -35,7 +38,7 @@ const PNG =
 
 const h = vi.hoisted(() => ({ session: null as any }))
 vi.mock('@/lib/api-helpers', async (importOriginal) => {
-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
+  const reel = await importOriginal<OriginalModule1>()
   return {
     ...reel,
     withAuth: (fn: (req: unknown, ctx: unknown) => Promise<Response>) =>
@@ -50,7 +53,7 @@ vi.mock('@/lib/api-helpers', async (importOriginal) => {
 })
 // Le limiteur de débit n'est pas le sujet ; il reste réel ailleurs.
 vi.mock('@/lib/security/rate-limit', async (importOriginal) => {
-  const reel = await importOriginal<typeof import('@/lib/security/rate-limit')>()
+  const reel = await importOriginal<OriginalModule2>()
   return { ...reel, enforceRateLimit: async () => ({ ok: true as const }) }
 })
 

@@ -115,7 +115,7 @@ const PERM_LIST: Record<Role, Permission[]> = {
  * matrice ⇒ false (deny by default), jamais d'exception.
  */
 export function can(role: string | null | undefined, permission: Permission): boolean {
-  if (!role) return false
+  if (!role || !Object.hasOwn(MATRIX, role)) return false
   const set = MATRIX[role as Role]
   if (!set) return false
   return set.has(permission)
@@ -123,7 +123,7 @@ export function can(role: string | null | undefined, permission: Permission): bo
 
 /** Liste des permissions d'un rôle (copie défensive — la matrice est immuable). */
 export function permissionsOf(role: string | null | undefined): Permission[] {
-  if (!role) return []
+  if (!role || !Object.hasOwn(PERM_LIST, role)) return []
   const list = PERM_LIST[role as Role]
   return list ? [...list] : []
 }

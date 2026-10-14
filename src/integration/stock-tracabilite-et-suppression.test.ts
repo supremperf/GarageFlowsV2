@@ -21,6 +21,9 @@
  * partait physiquement, avec son numéro de la série séquentielle. Aucun avoir,
  * aucune reprise possible : un trou dans la numérotation au contrôle FEC.
  */
+type OriginalModule1 = typeof import('@/lib/api-helpers')
+type OriginalModule2 = typeof import('@/lib/stock/invoice-stock')
+
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -30,7 +33,7 @@ process.env.DATABASE_URL = `file:${DB_PATH}`
 
 const h = vi.hoisted(() => ({ session: null as any, emettrePendantLaTransaction: false }))
 vi.mock('@/lib/api-helpers', async (importOriginal) => {
-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
+  const reel = await importOriginal<OriginalModule1>()
   return { ...reel, withAuth: (fn: any) => fn, requireSession: async () => h.session }
 })
 vi.mock('@/lib/sync/job-sync', () => ({ pollJobSync: () => {}, scheduleJobSync: () => {} }))
@@ -48,7 +51,7 @@ vi.mock('@/lib/audit', () => ({ logAudit: async () => {} }))
  * sérialise les écritures et attendrait la fin de la transaction.
  */
 vi.mock('@/lib/stock/invoice-stock', async (importOriginal) => {
-  const reel = await importOriginal<typeof import('@/lib/stock/invoice-stock')>()
+  const reel = await importOriginal<OriginalModule2>()
   return {
     ...reel,
     releaseInvoiceStock: async (tx: any, args: any) => {

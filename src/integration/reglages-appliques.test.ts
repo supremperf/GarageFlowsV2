@@ -16,6 +16,8 @@
  * rechargement de l'inspection, et le fichier restait sur le disque. Le garage
  * la « supprimait » sans effet, indéfiniment.
  */
+type OriginalModule1 = typeof import('@/lib/api-helpers')
+
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import fs from 'node:fs'
 import os from 'node:os'
@@ -32,7 +34,7 @@ const PNG =
 
 const h = vi.hoisted(() => ({ session: null as any }))
 vi.mock('@/lib/api-helpers', async (importOriginal) => {
-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
+  const reel = await importOriginal<OriginalModule1>()
   return { ...reel, withAuth: (fn: any) => fn, requireSession: async () => h.session }
 })
 

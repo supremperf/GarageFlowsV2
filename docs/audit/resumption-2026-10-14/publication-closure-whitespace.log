@@ -1,0 +1,67 @@
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/consistency-corrected.log:53: new blank line at EOF.
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/consistency-final.log:53: new blank line at EOF.
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/invoice-authz-isolated.log:40: new blank line at EOF.
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/lint-final.log:4: new blank line at EOF.
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/lint.log:4: new blank line at EOF.
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/vitest-candidate.log:885: trailing whitespace.
++[22m[39mprisma:error 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/vitest-candidate.log:890: trailing whitespace.
++  20 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/vitest-candidate.log:2454: trailing whitespace.
++[31m[1mPrismaClientInitializationError[22m: 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/vitest-candidate.log:2459: trailing whitespace.
++  20 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/vitest-candidate.log:2910: new blank line at EOF.
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/vitest-observed.log:872: trailing whitespace.
++[22m[39mprisma:error 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/vitest-observed.log:877: trailing whitespace.
++  20 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/vitest-observed.log:2453: trailing whitespace.
++[31m[1mPrismaClientInitializationError[22m: 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/vitest-observed.log:2458: trailing whitespace.
++  20 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/vitest-observed.log:2909: new blank line at EOF.
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:37: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:52: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:58: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:72: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:99: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:144: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:150: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:166: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:187: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:194: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:209: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:216: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:231: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:254: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:270: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:285: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:307: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:329: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:352: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:375: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:403: trailing whitespace.
++ 
+docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch:428: trailing whitespace.
++ 

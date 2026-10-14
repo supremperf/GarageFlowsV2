@@ -37,6 +37,8 @@
  * l'ancien lien, qui sert le même instantané. Ce qui disparaît, c'est la
  * révocation ACCIDENTELLE d'une URL déjà distribuée.
  */
+type OriginalModule1 = typeof import('@/lib/license/verify')
+
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -52,7 +54,7 @@ const LID = 'lid-garage-recette'
 // la ligne LicenseKey, elle, est vraie et tous les contrôles d'état (révoquée,
 // expirée, rattachement) s'exécutent réellement.
 vi.mock('@/lib/license/verify', async (importOriginal) => {
-  const reel = await importOriginal<typeof import('@/lib/license/verify')>()
+  const reel = await importOriginal<OriginalModule1>()
   return {
     ...reel,
     verifyLicenseToken: (token: string) =>

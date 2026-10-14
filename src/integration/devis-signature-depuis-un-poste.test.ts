@@ -37,6 +37,8 @@
  * quand la publication échoue — licence absente, cloud injoignable, refus.
  * La route de publication elle-même est éprouvée par ses propres tests.
  */
+type OriginalModule1 = typeof import('@/lib/sync/cloud-client')
+
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -84,7 +86,7 @@ vi.mock('@/lib/api-helpers', () => ({
 // enregistrement de licence complet (MAC, expiration) sans rapport avec ce qui
 // est testé ici.
 vi.mock('@/lib/sync/cloud-client', async (importOriginal) => {
-  const reel = await importOriginal<typeof import('@/lib/sync/cloud-client')>()
+  const reel = await importOriginal<OriginalModule1>()
   return {
     ...reel,
     isDesktopInstance: () => h.poste,

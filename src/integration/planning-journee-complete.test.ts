@@ -16,6 +16,8 @@
  * Une requête `?date=` n'est pas une liste qu'on feuillette : c'est le contenu
  * d'un écran. Son défaut est désormais un plafond de sécurité, pas une page.
  */
+type OriginalModule1 = typeof import('@/lib/api-helpers')
+
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -25,7 +27,7 @@ process.env.DATABASE_URL = `file:${DB_PATH}`
 
 const h = vi.hoisted(() => ({ session: null as any }))
 vi.mock('@/lib/api-helpers', async (importOriginal) => {
-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
+  const reel = await importOriginal<OriginalModule1>()
   return { ...reel, withAuth: (fn: any) => fn, requireSession: async () => h.session }
 })
 // La remontée cloud n'est pas le sujet ici (et ne doit pas partir en test).

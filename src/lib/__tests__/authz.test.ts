@@ -29,6 +29,18 @@ describe('authz — MECHANIC (périmètre strict)', () => {
 })
 
 describe('authz — deny by default', () => {
+  // Object-prototype property names are strings too, but never application roles.
+  // Both public helpers must reject them without throwing or returning permissions.
+  const inheritedNames = ['__proto__', 'constructor', 'toString', 'valueOf', 'hasOwnProperty', '__defineGetter__']
+
+  it.each(inheritedNames)('can refuse le rôle hérité %s sans exception', (role) => {
+    expect(can(role, 'job:manage')).toBe(false)
+  })
+
+  it.each(inheritedNames)('permissionsOf refuse le rôle hérité %s sans exception', (role) => {
+    expect(permissionsOf(role)).toEqual([])
+  })
+
   it('un rôle inconnu ne possède aucune permission', () => {
     expect(can('HACKER', 'job:read_assigned')).toBe(false)
     expect(can('', 'job:manage')).toBe(false)

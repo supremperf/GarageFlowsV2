@@ -1,0 +1,249 @@
+[
+  {
+    "runId": "38591143098",
+    "headSha": "4989b53d4a8f10cf8afb2f7c579d1de354f58508",
+    "jobId": 115946042090,
+    "jobName": "Secret scan (Gitleaks)",
+    "exitCode": 0,
+    "annotations": [
+      {
+        "path": ".github",
+        "start_line": 2,
+        "end_line": 2,
+        "annotation_level": "warning",
+        "safeMarkers": []
+      },
+      {
+        "path": ".github",
+        "start_line": 28,
+        "end_line": 28,
+        "annotation_level": "notice",
+        "safeMarkers": [
+          "findings=0",
+          "scannerExit=0"
+        ]
+      },
+      {
+        "path": ".github",
+        "start_line": 30,
+        "end_line": 30,
+        "annotation_level": "notice",
+        "safeMarkers": []
+      },
+      {
+        "path": ".github",
+        "start_line": 28,
+        "end_line": 28,
+        "annotation_level": "notice",
+        "safeMarkers": []
+      },
+      {
+        "path": ".github",
+        "start_line": 27,
+        "end_line": 27,
+        "annotation_level": "notice",
+        "safeMarkers": []
+      },
+      {
+        "path": ".github",
+        "start_line": 1,
+        "end_line": 1,
+        "annotation_level": "notice",
+        "safeMarkers": []
+      }
+    ]
+  },
+  {
+    "runId": "38591143098",
+    "headSha": "4989b53d4a8f10cf8afb2f7c579d1de354f58508",
+    "jobId": 115948268697,
+    "jobName": "Authenticated browser validation (approved staging only)",
+    "exitCode": 0,
+    "annotations": [
+      {
+        "path": ".github",
+        "start_line": 39,
+        "end_line": 39,
+        "annotation_level": "failure",
+        "safeMarkers": [
+          "Process completed with exit code 1"
+        ]
+      },
+      {
+        "path": ".github",
+        "start_line": 1,
+        "end_line": 1,
+        "annotation_level": "notice",
+        "safeMarkers": []
+      }
+    ]
+  },
+  {
+    "runId": "38591143098",
+    "headSha": "4989b53d4a8f10cf8afb2f7c579d1de354f58508",
+    "jobId": 115948268736,
+    "jobName": "Windows candidate packaging and inspection (not publication)",
+    "exitCode": 0,
+    "annotations": [
+      {
+        "path": ".github",
+        "start_line": 2,
+        "end_line": 2,
+        "annotation_level": "warning",
+        "safeMarkers": []
+      },
+      {
+        "path": ".github",
+        "start_line": 53,
+        "end_line": 53,
+        "annotation_level": "failure",
+        "safeMarkers": [
+          "Process completed with exit code 1"
+        ]
+      }
+    ]
+  },
+  {
+    "runId": "38591143098",
+    "headSha": "4989b53d4a8f10cf8afb2f7c579d1de354f58508",
+    "jobId": 115949473105,
+    "jobName": "Required validation",
+    "exitCode": 0,
+    "annotations": [
+      {
+        "path": ".github",
+        "start_line": 10,
+        "end_line": 10,
+        "annotation_level": "failure",
+        "safeMarkers": [
+          "Process completed with exit code 1"
+        ]
+      },
+      {
+        "path": ".github",
+        "start_line": 1,
+        "end_line": 1,
+        "annotation_level": "notice",
+        "safeMarkers": []
+      }
+    ]
+  },
+  {
+    "runId": "38589332331",
+    "headSha": "64619b6270d7923167130246c061ad5773e3f29a",
+    "jobId": 115939685204,
+    "jobName": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+    "exitCode": 0,
+    "annotations": [
+      {
+        "path": ".github",
+        "start_line": 2,
+        "end_line": 2,
+        "annotation_level": "warning",
+        "safeMarkers": []
+      },
+      {
+        "path": ".github",
+        "start_line": 2034,
+        "end_line": 2034,
+        "annotation_level": "failure",
+        "safeMarkers": [
+          "Process completed with exit code 1"
+        ]
+      },
+      {
+        "path": "src/integration/invoice-authz.test.ts",
+        "start_line": 170,
+        "end_line": 170,
+        "annotation_level": "failure",
+        "safeMarkers": []
+      },
+      {
+        "path": ".github",
+        "start_line": 1,
+        "end_line": 1,
+        "annotation_level": "notice",
+        "safeMarkers": []
+      }
+    ]
+  },
+  {
+    "runId": "38589332331",
+    "headSha": "64619b6270d7923167130246c061ad5773e3f29a",
+    "jobId": 115939685754,
+    "jobName": "Secret scan (Gitleaks)",
+    "exitCode": 0,
+    "annotations": [
+      {
+        "path": ".github",
+        "start_line": 2,
+        "end_line": 2,
+        "annotation_level": "warning",
+        "safeMarkers": []
+      },
+      {
+        "path": ".github",
+        "start_line": 28,
+        "end_line": 28,
+        "annotation_level": "notice",
+        "safeMarkers": [
+          "findings=0",
+          "scannerExit=0"
+        ]
+      },
+      {
+        "path": ".github",
+        "start_line": 30,
+        "end_line": 30,
+        "annotation_level": "notice",
+        "safeMarkers": []
+      },
+      {
+        "path": ".github",
+        "start_line": 28,
+        "end_line": 28,
+        "annotation_level": "notice",
+        "safeMarkers": []
+      },
+      {
+        "path": ".github",
+        "start_line": 27,
+        "end_line": 27,
+        "annotation_level": "notice",
+        "safeMarkers": []
+      },
+      {
+        "path": ".github",
+        "start_line": 1,
+        "end_line": 1,
+        "annotation_level": "notice",
+        "safeMarkers": []
+      }
+    ]
+  },
+  {
+    "runId": "38589332331",
+    "headSha": "64619b6270d7923167130246c061ad5773e3f29a",
+    "jobId": 115941132279,
+    "jobName": "Required validation",
+    "exitCode": 0,
+    "annotations": [
+      {
+        "path": ".github",
+        "start_line": 10,
+        "end_line": 10,
+        "annotation_level": "failure",
+        "safeMarkers": [
+          "Process completed with exit code 1"
+        ]
+      },
+      {
+        "path": ".github",
+        "start_line": 1,
+        "end_line": 1,
+        "annotation_level": "notice",
+        "safeMarkers": []
+      }
+    ]
+  }
+]
