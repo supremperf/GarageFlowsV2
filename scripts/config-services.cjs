@@ -19,6 +19,22 @@ function run(program, args, { cwd, env = process.env, input, label = 'Outil' } =
     child.once('close', code => code === 0 ? resolve(output) : reject(new Error(`${label} : échec (sortie brute masquée).`)))
   })
 }
+const DEFAULT_SERVER_URL = 'https://garageflows.fr'
+async function configureServerEndpoint(env, api) {
+  if (env.NEXTAUTH_URL) {
+    let same = false
+    try {
+      const current = new URL(env.NEXTAUTH_URL)
+      same = current.origin === DEFAULT_SERVER_URL && current.pathname === '/' && !current.search && !current.hash && !current.username && !current.password
+    } catch { /* Invalid or different existing endpoint must not be changed silently. */ }
+    if (!same) {
+      if (!await api.yes(`URL serveur existante différente : autoriser la cible ${DEFAULT_SERVER_URL} pour le serveur et le keygen (aucune rotation de clé API)`)) throw new Error('Cible serveur différente conservée, configuration interrompue. La cible attendue est https://garageflows.fr.')
+      env.NEXTAUTH_URL = DEFAULT_SERVER_URL
+    }
+  } else env.NEXTAUTH_URL = DEFAULT_SERVER_URL
+  env.GF_APP_URL ||= DEFAULT_SERVER_URL
+  console.log(`Serveur/keygen : ${DEFAULT_SERVER_URL}. La clé API serveur sera reprise automatiquement dans keys/server_config.json ; aucune clé affichée.`)
+}
 async function inspectDatabase(root, url) {
   let client
   try {
@@ -287,5 +303,5 @@ async function bootstrapAdmin(root, env) {
   } catch { throw new Error('Licence admin initiale : échec. Le candidat local est conservé pour reprise, aucune licence existante remplacée.') }
   finally { if (client) await client.$disconnect().catch(() => {}) }
 }
-module.exports = { run, inspectDatabase, inspectDesktop, ensureDesktopDatabase, configureUpstash, createFreeRedis, testRedis, publicFingerprint,
+module.exports = { DEFAULT_SERVER_URL, configureServerEndpoint, run, inspectDatabase, inspectDesktop, ensureDesktopDatabase, configureUpstash, createFreeRedis, testRedis, publicFingerprint,
   configureKeygen, patchClientDefaults, assertExternalFile, installPublisherKey, buildAdminLicense, bootstrapAdmin }

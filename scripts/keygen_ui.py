@@ -1309,11 +1309,11 @@ class TabServer(tk.Frame):
         card.pack(fill="x", padx=20, pady=(0, 12))
 
         _lbl(card, "URL du serveur GarageFlows admin", fg=MUTED, font=FONTS).pack(anchor="w")
-        _lbl(card, "ex: http://192.168.1.10:4028", fg=MUTED, font=("Segoe UI", 8)).pack(anchor="w")
+        _lbl(card, "Production : https://garageflows.fr — renseigné automatiquement par node config", fg=MUTED, font=("Segoe UI", 8)).pack(anchor="w")
         _entry(card, textvariable=self.v_url).pack(fill="x", ipady=4, pady=(2, 10))
 
         _lbl(card, "Clé API (GARAGEFLOW_API_KEY du serveur)", fg=MUTED, font=FONTS).pack(anchor="w")
-        _lbl(card, "Trouvez cette valeur dans le fichier .env du serveur (variable GARAGEFLOW_API_KEY).",
+        _lbl(card, "node config renseigne cette clé automatiquement (même GARAGEFLOW_API_KEY dans .env.server.local et Vercel).",
              fg=MUTED, font=("Segoe UI", 8)).pack(anchor="w")
         _entry(card, textvariable=self.v_key, show="•").pack(fill="x", ipady=4, pady=(2, 10))
 
@@ -1331,8 +1331,8 @@ class TabServer(tk.Frame):
         info.pack(fill="x", padx=20, pady=(0, 12))
         _lbl(info, "Comment ça fonctionne :", font=FONTB).pack(anchor="w")
         _lbl(info,
-             "1. L'admin installe GarageFlows et le lance comme serveur (LAN ou VPN).\n"
-             "2. Entrez l'URL et la clé API (GARAGEFLOW_API_KEY) ci-dessus.\n"
+             "1. node config prépare le serveur https://garageflows.fr et les paramètres de cet outil.\n"
+             "2. L'URL et la clé API sont chargées automatiquement depuis keys/server_config.json.\n"
              "3. Quand vous révoquez/suspendez une licence dans cet outil,\n"
              "   le serveur GarageFlows est mis à jour immédiatement.\n"
              "4. Les clients GarageFlows vérifient le serveur toutes les 2 minutes\n"

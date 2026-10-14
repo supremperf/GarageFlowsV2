@@ -102,20 +102,7 @@ async function full(api) {
     })
     const database = await step('inspection-SQL-lecture-seule', () => tools.inspectDatabase(root, env.DIRECT_URL))
     console.log(database.empty ? 'Base sans données métier : initialisation possible.' : 'Base contient des données : préservation des clés et sauvegarde indispensables.')
-    await step('URLs-publiques', async () => {
-      if (!env.NEXTAUTH_URL) {
-        const linked = JSON.parse(fs.readFileSync(path.join(root, '.vercel/project.json'), 'utf8'))
-        let candidate = ''
-        try {
-          const project = JSON.parse(await api.tool('vercel', ['api', `/v9/projects/${encodeURIComponent(linked.projectId)}?teamId=${encodeURIComponent(linked.orgId)}`]))
-          const aliases = project.targets?.production?.alias || []
-          const domain = aliases.find(a => typeof a === 'string' && /^[a-z0-9.-]+$/.test(a))
-          if (domain) candidate = `https://${domain}`
-        } catch { /* No verified public alias yet: ask the user, do not fabricate a DNS record. */ }
-        env.NEXTAUTH_URL = await api.question('URL publique HTTPS cible (DNS/domaine doit vous appartenir)', { defaultValue: candidate })
-      }
-      env.GF_APP_URL ||= env.NEXTAUTH_URL
-    })
+    await step('URLs-publiques', () => tools.configureServerEndpoint(env, api))
     await step('Redis-Upstash-et-test-REST', async () => {
       await tools.configureUpstash(env, api)
       await tools.testRedis(env, api.fetch || fetch)
@@ -176,6 +163,7 @@ async function full(api) {
       }
       tools.configureKeygen(root, env, { privatePassphrase: encrypted ? await api.licensePassphrase(localPrivate) : undefined, authorizeApiReplacement })
       console.log('Serveur → .env.server.local ; émetteur → keys/private.pem + public.pem + server_config.json. Secrets non affichés.')
+      console.log('keygen_ui : URL serveur et GARAGEFLOW_API_KEY préremplies automatiquement à la prochaine ouverture, avec la même clé que le profil serveur destiné à Vercel.')
     })
     await step('desktop-SQLite-et-endpoints-compilés', async () => {
       const desktopNames = core.namesForProfile(policy.names, 'desktop')

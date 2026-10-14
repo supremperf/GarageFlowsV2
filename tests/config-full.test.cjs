@@ -150,7 +150,7 @@ function fullFixture(t, { existing = false, failMigration = false } = {}) {
   fs.writeFileSync(path.join(dir, 'node_modules/prisma/build/index.js'), '// simulated CLI')
   fs.writeFileSync(path.join(dir, 'node_modules/next/package.json'), '{}')
   const p = policy.loadPolicy(dir)
-  const env = core.fillMissing({ DATABASE_URL: 'postgresql://u:pass@ep-test-pooler.neon.tech/db', DIRECT_URL: 'postgresql://u:pass@ep-test.neon.tech/db', NEXTAUTH_URL: 'https://app.test.invalid', GF_APP_URL: 'https://app.test.invalid', UPSTASH_REDIS_REST_URL: 'https://redis.test.invalid', UPSTASH_REDIS_REST_TOKEN: 'test-only-redis-token', GF_PRIVATE_KEY: Buffer.from(pair.privateKey).toString('base64') }, p.names, 'licences')
+  const env = core.fillMissing({ DATABASE_URL: 'postgresql://u:pass@ep-test-pooler.neon.tech/db', DIRECT_URL: 'postgresql://u:pass@ep-test.neon.tech/db', NEXTAUTH_URL: services.DEFAULT_SERVER_URL, GF_APP_URL: services.DEFAULT_SERVER_URL, UPSTASH_REDIS_REST_URL: 'https://redis.test.invalid', UPSTASH_REDIS_REST_TOKEN: 'test-only-redis-token', GF_PRIVATE_KEY: Buffer.from(pair.privateKey).toString('base64') }, p.names, 'licences')
   const calls = [], questions = []
   const api = {
     root: dir, publisherFile: path.join(path.dirname(dir), `${path.basename(dir)}-nonexistent-key.pem`), npmCli: () => 'npm-cli.js',
@@ -192,6 +192,10 @@ test('full plan runs SQL before deployment, saves correct destinations, reports 
   const server = core.readEnv(path.join(f.dir, '.env.server.local'))
   const desktop = core.readEnv(path.join(f.dir, '.env'))
   assert.equal(server.NEXTAUTH_SECRET, f.env.NEXTAUTH_SECRET)
+  const ui = JSON.parse(fs.readFileSync(path.join(f.dir, 'keys/server_config.json'), 'utf8'))
+  assert.equal(ui.url, 'https://garageflows.fr')
+  assert.equal(ui.api_key, f.env.GARAGEFLOW_API_KEY)
+  assert.equal(server.GARAGEFLOW_API_KEY, ui.api_key)
   assert.notEqual(desktop.NEXTAUTH_SECRET, f.env.NEXTAUTH_SECRET)
   assert.ok(!desktop.GF_PRIVATE_KEY)
   assert.equal(desktop.GF_LICENSE_SERVER, f.env.NEXTAUTH_URL)
@@ -290,4 +294,45 @@ test('SQL drift and technical comparison failures both stop before cloud mutatio
     assert.ok(!f.calls.includes('sync'))
     assert.ok(!f.calls.some(call => call.startsWith('deploy')))
   }
+})
+
+test('full config selects garageflows.fr automatically and rejects an unapproved endpoint change', async () => {
+  const env = {}
+  await services.configureServerEndpoint(env, { yes: () => { throw new Error('fresh setup should not ask for the URL') } })
+  assert.equal(env.NEXTAUTH_URL, 'https://garageflows.fr')
+  assert.equal(env.GF_APP_URL, 'https://garageflows.fr')
+  const original = { NEXTAUTH_URL: 'https://other-server.invalid', GARAGEFLOW_API_KEY: 'existing-key-do-not-rotate' }
+  await assert.rejects(() => services.configureServerEndpoint(original, { yes: async () => false }), /Cible serveur différente/)
+  assert.equal(original.NEXTAUTH_URL, 'https://other-server.invalid')
+  await services.configureServerEndpoint(original, { yes: async () => true })
+  assert.equal(original.NEXTAUTH_URL, 'https://garageflows.fr')
+  assert.equal(original.GARAGEFLOW_API_KEY, 'existing-key-do-not-rotate')
+})
+
+test('node config writes one server API key and garageflows.fr to the Python UI config, Vercel plan and server profile without rerun rotation', async t => {
+  const f = fullFixture(t)
+  delete f.env.GARAGEFLOW_API_KEY
+  delete f.env.NEXTAUTH_URL
+  delete f.env.GF_APP_URL
+  const sync = f.api.syncVercel
+  const keys = []
+  f.api.syncVercel = async (env, ...args) => {
+    const ui = JSON.parse(fs.readFileSync(path.join(f.dir, 'keys/server_config.json'), 'utf8'))
+    assert.equal(ui.url, 'https://garageflows.fr')
+    assert.equal(ui.api_key, env.GARAGEFLOW_API_KEY)
+    assert.equal(core.readEnv(path.join(f.dir, '.env.server.local')).GARAGEFLOW_API_KEY, ui.api_key)
+    assert.equal(env.NEXTAUTH_URL, 'https://garageflows.fr')
+    assert.ok(ui.api_key.length >= 32)
+    keys.push(ui.api_key)
+    return sync(env, ...args)
+  }
+  await full(f.api)
+  await full(f.api)
+  assert.equal(keys.length, 2)
+  assert.equal(keys[0], keys[1], 'rerun must preserve the existing server API key')
+  const python = fs.readFileSync(path.join(root, 'scripts/keygen_db.py'), 'utf8')
+  assert.ok(python.includes('ROOT_DIR / "keys" / "server_config.json"'))
+  const ui = fs.readFileSync(path.join(root, 'scripts/keygen_ui.py'), 'utf8')
+  assert.ok(ui.includes('value=cfg.get("url", "")'))
+  assert.ok(ui.includes('value=cfg.get("api_key", "")'))
 })
