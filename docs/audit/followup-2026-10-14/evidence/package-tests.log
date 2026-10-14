@@ -1,0 +1,42 @@
+TAP version 13
+# (node:1943) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: copies only schema and empty template; leaves local user DB unchanged
+ok 1 - copies only schema and empty template; leaves local user DB unchanged
+  ---
+  duration_ms: 38.933237
+  type: 'test'
+  ...
+# Subtest: missing template never falls back to local DB
+ok 2 - missing template never falls back to local DB
+  ---
+  duration_ms: 5.023783
+  type: 'test'
+  ...
+# Subtest: nonempty template is refused without changing it
+ok 3 - nonempty template is refused without changing it
+  ---
+  duration_ms: 12.317328
+  type: 'test'
+  ...
+# Subtest: stale databases in output fail closed rather than being packaged or deleted
+ok 4 - stale databases in output fail closed rather than being packaged or deleted
+  ---
+  duration_ms: 6.475875
+  type: 'test'
+  ...
+# Subtest: packaging filter cannot wildcard local databases
+ok 5 - packaging filter cannot wildcard local databases
+  ---
+  duration_ms: 0.918133
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 119.867238

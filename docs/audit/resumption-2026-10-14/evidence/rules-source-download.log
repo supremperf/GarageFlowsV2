@@ -1,0 +1,16 @@
+{
+  "repository": "semgrep/semgrep-rules",
+  "resolvedCommit": "9bbf021d0acffa3095fcffd17b2bc7787eb4796d",
+  "url": "https://codeload.github.com/semgrep/semgrep-rules/tar.gz/9bbf021d0acffa3095fcffd17b2bc7787eb4796d",
+  "archiveSha256": "b6cb72d07e060fe03e890bb88d40e5c1f2a177780dbb5be1c3b01e5509fd9cec",
+  "bytes": 1214575,
+  "sourceDirectory": "/home/user/audit-resumption/.cache/upstreams/rules/semgrep-rules-9bbf021d0acffa3095fcffd17b2bc7787eb4796d",
+  "commitVerification": {
+    "payload": "tree 3c0697248d71859d693a5c89b0023ff8f2db004d\nparent a84ff9cc2453ca91d581380de4b8b3f272f6f4be\nparent 430e442ae65f17d6e18078b36c141d62387f261d\nauthor 4tulrawat <atul@semgrep.com> 1791494106 -0400\ncommitter GitHub <noreply@github.com> 1791494106 -0400\n\nMerge pull request #4081 from semgrep/atul/php-exec-use-case-insensitive\n\nMake PHP exec-use sink matching case-insensitive.",
+    "reason": "valid",
+    "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJqyAfaCRC1aQ7uu5UhlAAAQkQQAD1SLWNkoz3fIDr8p8d9xtT7\nv0DRJb0arV3ynS2mFx6F1cpMNqvAEmdG54R3lDk5kQevt9xi7YJ901Q1u3xdz3h9\nufm234cwlJUTC936A9+9I9/t3h0544QuZCRyCto7KxYmMnRzEK1FSBGS5hPfX6WY\nvEr9oKSqpwNGPrTWSEzCAO2bgtqU05upBthVtRvhVs8ZJuGR0PQZhLYc2NZs4w5j\nR4oW8jconNsW26sexNySLpSBodaeZkR0rLJNVHZNZS39uckhe+OU/BV4M1pvX+lb\nBZsBXQrdjXJozEBx7bDpwcPSUXKcRK4GKPJmjGdYBcDXB7/CqMk26UXyjv50us9O\n7RYLjjYUBrJCtFn+aZdE47QfOTadBRA/7Ir0bz4sPvRd8cOuPAl8VqwDavBF06wD\nS9KeRy3bQnPUHMplXIOY1CXrYBL183RTRoSD/hvvo+elClkeGy44ZpOeoiPWtuhb\nDUHtECy0DGMtfYZkU6sdevrcDD13yfG6W4y1ilXNIbphvXP9wKowEJ+NUDSH224w\nmqTMhr84W6B9J38mtJ8fAoE8pQVrzcjFXVsqFdaqMkMWeCiB5B2Wi3zSTEKhnfLP\ny0DC61f1ENOcNjdvrMj8VdPp5hB4+E0gugnGtg/hZvwnI4bl3dDiWWbFXFXzS+8o\nmTOgq1a5FCixZ/OumhaH\n=u25F\n-----END PGP SIGNATURE-----\n",
+    "verified": true,
+    "verified_at": "2026-10-08T21:15:06Z"
+  },
+  "limitation": "Official HTTPS + API-resolved commit provenance; archive SHA256 recorded locally, not represented as an upstream published signature."
+}

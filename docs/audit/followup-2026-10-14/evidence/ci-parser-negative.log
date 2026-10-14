@@ -1,0 +1,426 @@
+
+> garageflow@1.1.0 test:release-safety
+> node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/ci-required-gate.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs
+
+TAP version 13
+# Subtest: restores same public key idempotently, never creates private key
+ok 1 - restores same public key idempotently, never creates private key
+  ---
+  duration_ms: 6.727101
+  type: 'test'
+  ...
+# Subtest: preserves existing mismatched resource and refuses overwrite
+ok 2 - preserves existing mismatched resource and refuses overwrite
+  ---
+  duration_ms: 1.989362
+  type: 'test'
+  ...
+# Subtest: rejects disagreement between anchors before writing any resource
+ok 3 - rejects disagreement between anchors before writing any resource
+  ---
+  duration_ms: 1.5558
+  type: 'test'
+  ...
+# /home/user/GarageFlowsV2/node_modules/js-yaml/lib/loader.js:201
+#   throw generateError(state, message)
+#   ^
+# YAMLException: bad indentation of a mapping entry (193:107)
+#  190 |  ... 
+#  191 |  ... 
+#  192 |  ... 
+#  193 |  ... uire-hashes --only-binary=:all: -r tests/requirements-keygen.txt
+# ------------------------------------------^
+#  194 |  ... 
+#  195 |  ... 
+#     at generateError (/home/user/GarageFlowsV2/node_modules/js-yaml/lib/loader.js:197:10)
+#     at throwError (/home/user/GarageFlowsV2/node_modules/js-yaml/lib/loader.js:201:9)
+#     at readBlockMapping (/home/user/GarageFlowsV2/node_modules/js-yaml/lib/loader.js:1232:7)
+#     at composeNode (/home/user/GarageFlowsV2/node_modules/js-yaml/lib/loader.js:1520:53)
+#     at readBlockSequence (/home/user/GarageFlowsV2/node_modules/js-yaml/lib/loader.js:1068:5)
+#     at composeNode (/home/user/GarageFlowsV2/node_modules/js-yaml/lib/loader.js:1520:12)
+#     at readBlockMapping (/home/user/GarageFlowsV2/node_modules/js-yaml/lib/loader.js:1214:11)
+#     at composeNode (/home/user/GarageFlowsV2/node_modules/js-yaml/lib/loader.js:1520:53)
+#     at readBlockMapping (/home/user/GarageFlowsV2/node_modules/js-yaml/lib/loader.js:1214:11)
+#     at composeNode (/home/user/GarageFlowsV2/node_modules/js-yaml/lib/loader.js:1520:53) {
+#   reason: 'bad indentation of a mapping entry',
+#   mark: {
+#     name: null,
+#     buffer: 'name: CI\\n' +
+#       '\\n' +
+#       'on:\\n' +
+#       '  push:\\n' +
+#       "    branches: [main, master, develop, 'claude/**', 'integration/**', 'arena/**']\\n" +
+#       '  pull_request:\\n' +
+#       '    branches: [main, master, develop]\\n' +
+#       '  \# Déclenchement manuel du release gate complet (validation avant tag/release).\\n' +
+#       '  workflow_dispatch:\\n' +
+#       '\\n' +
+#       "\# Moindre privilège : aucun job ne pousse, ne commente ni n'appelle l'API GitHub\\n" +
+#       "\# (Gitleaks scanne l'arbre local). Le GITHUB_TOKEN n'a donc besoin que de la\\n" +
+#       "\# lecture du contenu — on retire tout droit d'écriture par défaut.\\n" +
+#       'permissions:\\n' +
+#       '  contents: read\\n' +
+#       '\\n' +
+#       'jobs:\\n' +
+#       '  dependency-security:\\n' +
+#       '    name: Full dependency tree — zero vulnerabilities\\n' +
+#       '    runs-on: ubuntu-latest\\n' +
+#       '    timeout-minutes: 10\\n' +
+#       '    steps:\\n' +
+#       '      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 \# v4\\n' +
+#       '      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 \# v4\\n' +
+#       '        with:\\n' +
+#       '          node-version: 22\\n' +
+#       '          cache: npm\\n' +
+#       '      - name: Use pinned npm\\n' +
+#       '        run: npm install --global npm@11.16.0\\n' +
+#       '      \# This independent audit needs no native engines or install hooks.\\n' +
+#       '      \# Other jobs retain normal npm ci, Prisma generation and functional tests.\\n' +
+#       '      - run: npm ci --ignore-scripts\\n' +
+#       '      - run: npm ls --all\\n' +
+#       '      - run: npm run test:audit\\n' +
+#       '      - run: npm run test:release-safety\\n' +
+#       '      - run: npm run audit:strict\\n' +
+#       '\\n' +
+#       '  secrets:\\n' +
+#       '    name: Secret scan (Gitleaks)\\n' +
+#       '    runs-on: ubuntu-latest\\n' +
+#       '    timeout-minutes: 10\\n' +
+#       '    steps:\\n' +
+#       '      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 \# v4\\n' +
+#       "      \# Scan de l'ARBRE COURANT (fichiers suivis), PAS de l'historique git. Les\\n" +
+#       '      \# secrets historiques sont documentés comme rotés (docs/SECRETS_ROTATION.md).\\n' +
+#       "      \# Ce mode est IDENTIQUE sur push et pull_request et n'appelle aucune API\\n" +
+#       '      \# GitHub — contrairement à gitleaks-action sur les PR, qui exige la\\n' +
+#       '      \# permission pull-requests:read et rescanne toute la plage de commits\\n' +
+#       "      \# (rouvrant de faux positifs historiques). L'allowlist ciblé de\\n" +
+#       '      \# .gitleaks.toml (clés PUBLIQUES, listes de détection, test de redaction)\\n' +
+#       "      \# s'applique.\\n" +
+#       '      - name: Install gitleaks\\n' +
+#       '        run: |\\n' +
+#       '          curl -fsSL -o /tmp/gitleaks_8.24.3_linux_x64.tar.gz \\\\\\n' +
+#       '            https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz\\n' +
+#       '          curl -fsSL -o /tmp/gitleaks_checksums.txt \\\\\\n' +
+#       '            https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_checksums.txt\\n' +
+#       '          cd /tmp\\n' +
+#       "          grep '  gitleaks_8.24.3_linux_x64.tar.gz$' gitleaks_checksums.txt | sha256sum --check --strict\\n" +
+#       '          tar -xzf gitleaks_8.24.3_linux_x64.tar.gz -C /usr/local/bin gitleaks\\n' +
+#       '          gitleaks version\\n' +
+#       '      - name: Gitleaks — scan working tree\\n' +
+#       '        run: gitleaks dir . --config .gitleaks.toml --redact --no-banner\\n' +
+#       '\\n' +
+#       '  check:\\n' +
+#       '    name: Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)\\n' +
+#       '    runs-on: ubuntu-latest\\n' +
+#       '    timeout-minutes: 20\\n' +
+#       '\\n' +
+#       "    \# ── Services réels pour les tests d'intégration ──────────────────────────\\n" +
+#       '    \# postgres : migrations serveur sur base VIDE + tests de concurrence seats.\\n' +
+#       '    \# redis    : preuve du rate limiting distribué partagé entre instances.\\n' +
+#       '    services:\\n' +
+#       '      postgres:\\n' +
+#       '        image: postgres:16\\n' +
+#       '        env:\\n' +
+#       '          POSTGRES_USER: garageflow\\n' +
+#       '          POSTGRES_PASSWORD: garageflow_ci\\n' +
+#       '          POSTGRES_DB: postgres\\n' +
+#       "        ports: ['5432:5432']\\n" +
+#       '        options: >-\\n' +
+#       '          --health-cmd "pg_isready -U garageflow"\\n' +
+#       '          --health-interval 5s\\n' +
+#       '          --health-timeout 5s\\n' +
+#       '          --health-retries 10\\n' +
+#       '      redis:\\n' +
+#       '        image: redis:7\\n' +
+#       "        ports: ['6379:6379']\\n" +
+#       '        options: >-\\n' +
+#       '          --health-cmd "redis-cli ping"\\n' +
+#       '          --health-interval 5s\\n' +
+#       '          --health-timeout 5s\\n' +
+#       '          --health-retries 10\\n' +
+#       '\\n' +
+#       '    steps:\\n' +
+#       '      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 \# v4\\n' +
+#       '\\n' +
+#       '      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 \# v4\\n' +
+#       '        with:\\n' +
+#       '          \# Node ≥ 22.5 OBLIGATOIRE : node:sqlite est utilisé par les tests de\\n' +
+#       '          \# migration (vitest) et les gardes du modèle SQLite (check:sqlite-template).\\n' +
+#       '          node-version: 22\\n' +
+#       '          cache: npm\\n' +
+#       '      - name: Use pinned npm\\n' +
+#       '        run: npm install --global npm@11.16.0\\n' +
+#       '\\n' +
+#       '      - name: Install dependencies (reproducible)\\n' +
+#       '        run: npm ci\\n' +
+#       '\\n' +
+#       '      - name: Version consistency (SemVer)\\n' +
+#       '        run: node scripts/check-version.js\\n' +
+#       '\\n' +
+#       '      - name: Validate Prisma schemas (desktop + serveur)\\n' +
+#       '        \# Chaque schéma est validé avec une URL de SON provider (sqlite / postgres).\\n' +
+#       '        run: |\\n' +
+#       '          DATABASE_URL="file:./dev.db" npx prisma validate\\n' +
+#       '          DATABASE_URL="postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres" \\\\\\n' +
+#       '            DIRECT_URL="postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres" \\\\\\n' +
+#       '            npx prisma validate --schema prisma/server/schema.prisma\\n' +
+#       '\\n' +
+#       '      - name: Generate Prisma clients (desktop + serveur)\\n' +
+#       '        run: |\\n' +
+#       '          DATABASE_URL="file:./dev.db" npx prisma generate\\n' +
+#       '          DATABASE_URL="postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres" \\\\\\n' +
+#       '            DIRECT_URL="postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres" \\\\\\n' +
+#       '            npx prisma generate --schema prisma/server/schema.prisma\\n' +
+#       '\\n' +
+#       '      - name: TypeScript\\n' +
+#       '        run: npx tsc --noEmit\\n' +
+#       '\\n' +
+#       '      - name: ESLint\\n' +
+#       '        run: npm run lint\\n' +
+#       '\\n' +
+#       '      \# Garde-fou marque : « GarageFlows » partout dans le visible (exceptions techniques précises).\\n' +
+#       '      - name: Branding consistency (strict)\\n' +
+#       '        run: node scripts/check-branding.mjs\\n' +
+#       '\\n' +
+#       '      \# Garde-fou PWA : manifestes cohérents + icônes aux dimensions RÉELLES déclarées.\\n' +
+#       '      - name: PWA manifests & icon dimensions\\n' +
+#       '        run: node scripts/check-pwa.mjs\\n' +
+#       '\\n' +
+#       '      \# Garde-fou monnaie STRICT : ZÉRO champ monétaire Float dans les schémas.\\n' +
+#       '      - name: Money fields (ZERO monetary Float)\\n' +
+#       '        run: node scripts/check-money-fields.mjs\\n' +
+#       '\\n' +
+#       '      \# Garde-fou calculs : aucun calcul financier direct hors couche centrale.\\n' +
+#       '      - name: Money calculations (no direct float math)\\n' +
+#       '        run: node scripts/check-money-calculations.mjs\\n' +
+#       '\\n' +
+#       '      \# Garde-fou JSON monétaires : toute écriture de worksJson/partsJson/linesJson\\n' +
+#       '      \# passe par les sérialiseurs v2 (entiers exacts) — zéro flottant persisté.\\n' +
+#       '      - name: Money JSON (v2 writers only)\\n' +
+#       '        run: node scripts/check-money-json.mjs\\n' +
+#       '\\n' +
+#       '      \# Garde-fou sûreté migrations : runner atomique fail-closed, DROP prouvé,\\n' +
+#       '      \# ordre Electron sauvegarde → serveur → migration → fenêtre.\\n' +
+#       '      - name: Migration safety invariants\\n' +
+#       '        run: node scripts/check-migration-safety.mjs\\n' +
+#       '\\n' +
+#       '      \# Garde-fou modèle SQLite : intégrité réelle + baseline complète + checksums\\n' +
+#       '      \# + schéma final (exécute node:sqlite sur prisma/garageflow-template.db).\\n' +
+#       '      - name: SQLite template (integrity + baseline + checksums)\\n' +
+#       '        run: node scripts/check-sqlite-template.mjs\\n' +
+#       '\\n' +
+#       '      \# Garde-fou migrations PostgreSQL : chaque DROP COLUMN a sa vérification\\n' +
+#       '      \# bloquante (bijection stricte, bloc de contrôle avant tout DROP).\\n' +
+#       '      - name: PostgreSQL migrations (per-column verification)\\n' +
+#       '        run: node scripts/check-postgres-migration-verification.mjs\\n' +
+#       '\\n' +
+#       '      \# Garde-fou docs : aucune affirmation de statut contradictoire dans un doc actif.\\n' +
+#       '      - name: Docs consistency\\n' +
+#       '        run: node scripts/check-docs-consistency.mjs\\n' +
+#       '\\n' +
+#       '      - name: Critical security/licence files present & coherent\\n' +
+#       '        run: node scripts/check-critical-files.js\\n' +
+#       '\\n' +
+#       '      \# ── Migrations PostgreSQL sur base VIDE (échec CI si une migration casse) ──\\n' +
+#       '      - name: PostgreSQL migrations on empty database + smoke test\\n' +
+#       '        run: node scripts/validate-server-db.js\\n' +
+#       '        env:\\n' +
+#       '          DATABASE_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/garageflow_ci_validate\\n' +
+#       '          DIRECT_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/garageflow_ci_validate\\n' +
+#       '\\n' +
+#       '      \# ── Tests : unitaires (SQLite desktop) + intégration PostgreSQL/Redis ──\\n' +
+#       '      \# TEST_POSTGRES_URL active les tests de concurrence seats (base neuve par\\n' +
+#       '      \# exécution) ; TEST_REDIS_URL active la preuve multi-instance du rate\\n' +
+#       "      \# limiting. La CI ÉCHOUE si le plafond d'appareils peut être dépassé.\\n" +
+#       '      - name: Python for real keygen integration (no silent fallback)\\n' +
+#       '        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 \# v5\\n' +
+#       '        with:\\n' +
+#       "          python-version: '3.12'\\n" +
+#       '      - name: Install hash-locked keygen test dependencies\\n' +
+#       '        run: python -m pip install --index-url https://pypi.org/simple --require-hashes --only-binary=:all: -r tests/requirements-keygen.txt\\n' +
+#       '\\n' +
+#       '      - name: Tests (unit + integration)\\n' +
+#       '        run: npm test\\n' +
+#       '        env:\\n' +
+#       '          DATABASE_URL: file:./dev.db\\n' +
+#       '          NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789\\n' +
+#       '          NEXTAUTH_URL: http://localhost:4028\\n' +
+#       '          TEST_POSTGRES_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres\\n' +
+#       '          TEST_REDIS_URL: 127.0.0.1:6379\\n' +
+#       '\\n' +
+#       '      - name: Build\\n' +
+#       '        run: npm run build\\n' +
+#       '        env:\\n' +
+#       '          DATABASE_URL: file:./dev.db\\n' +
+#       '          NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789\\n' +
+#       '          NEXTAUTH_URL: http://localhost:4028\\n' +
+#       '\\n' +
+#       '      \# Budget de performance du bundle client (fail-closed : exige le build\\n' +
+#       '      \# ci-dessus). Échoue si le JS client régresse au-delà de perf-budget.json.\\n' +
+#       '      - name: Performance budget (client bundle)\\n' +
+#       '        run: npm run check:perf-budget\\n' +
+#       '\\n' +
+#       '      \# Full tree, all severities, no allowlist and no swallowed exit status.\\n' +
+#       '      - name: Dependency security regression tests\\n' +
+#       '        run: npm run test:audit\\n' +
+#       '      - name: Dependency audit gate (all packages, LOW through CRITICAL)\\n' +
+#       '        run: node scripts/audit-ci.js\\n' +
+#       '\\n' +
+#       '  e2e:\\n' +
+#       '    name: E2E (Playwright — responsive, auto-démarrage)\\n' +
+#       '    runs-on: ubuntu-latest\\n' +
+#       '    steps:\\n' +
+#       '      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 \# v4\\n' +
+#       '      - name: Setup Node\\n' +
+#       '        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 \# v4\\n' +
+#       '        with:\\n' +
+#       '          node-version: 22\\n' +
+#       '          cache: npm\\n' +
+#       '      - name: Use pinned npm\\n' +
+#       '        run: npm install --glo'... 5453 more characters,
+#     position: 8459,
+#     line: 192,
+#     column: 106,
+#     snippet: ' 190 |  ... \\n' +
+#       ' 191 |  ... \\n' +
+#       ' 192 |  ... \\n' +
+#       ' 193 |  ... uire-hashes --only-binary=:all: -r tests/requirements-keygen.txt\\n' +
+#       '------------------------------------------^\\n' +
+#       ' 194 |  ... \\n' +
+#       ' 195 |  ... '
+#   }
+# }
+# Node.js v22.22.3
+# Subtest: tests/ci-required-gate.test.cjs
+not ok 2 - tests/ci-required-gate.test.cjs
+  ---
+  duration_ms: 64.539171
+  type: 'test'
+  location: '/home/user/GarageFlowsV2/tests/ci-required-gate.test.cjs:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# (node:11133) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: copies only schema and empty template; leaves local user DB unchanged
+ok 5 - copies only schema and empty template; leaves local user DB unchanged
+  ---
+  duration_ms: 8.531597
+  type: 'test'
+  ...
+# Subtest: missing template never falls back to local DB
+ok 6 - missing template never falls back to local DB
+  ---
+  duration_ms: 6.293113
+  type: 'test'
+  ...
+# Subtest: nonempty template is refused without changing it
+ok 7 - nonempty template is refused without changing it
+  ---
+  duration_ms: 6.04637
+  type: 'test'
+  ...
+# Subtest: stale databases in output fail closed rather than being packaged or deleted
+ok 8 - stale databases in output fail closed rather than being packaged or deleted
+  ---
+  duration_ms: 7.616837
+  type: 'test'
+  ...
+# Subtest: packaging filter cannot wildcard local databases
+ok 9 - packaging filter cannot wildcard local databases
+  ---
+  duration_ms: 0.566435
+  type: 'test'
+  ...
+# Subtest: cleanup onLicenseError preserves other subscribers
+ok 10 - cleanup onLicenseError preserves other subscribers
+  ---
+  duration_ms: 2.616133
+  type: 'test'
+  ...
+# Subtest: cleanup windowAPI.onMaximizedChange preserves other subscribers
+ok 11 - cleanup windowAPI.onMaximizedChange preserves other subscribers
+  ---
+  duration_ms: 0.683615
+  type: 'test'
+  ...
+# Subtest: cleanup windowAPI.onFullscreenChange preserves other subscribers
+ok 12 - cleanup windowAPI.onFullscreenChange preserves other subscribers
+  ---
+  duration_ms: 1.547165
+  type: 'test'
+  ...
+# Subtest: cleanup onDesktopExportDone preserves other subscribers
+ok 13 - cleanup onDesktopExportDone preserves other subscribers
+  ---
+  duration_ms: 0.688698
+  type: 'test'
+  ...
+# Subtest: cleanup onLicenseRevoked preserves other subscribers
+ok 14 - cleanup onLicenseRevoked preserves other subscribers
+  ---
+  duration_ms: 0.704926
+  type: 'test'
+  ...
+# Subtest: cleanup onLicenseReactivated preserves other subscribers
+ok 15 - cleanup onLicenseReactivated preserves other subscribers
+  ---
+  duration_ms: 0.717845
+  type: 'test'
+  ...
+# Subtest: cleanup onOnlineStatus preserves other subscribers
+ok 16 - cleanup onOnlineStatus preserves other subscribers
+  ---
+  duration_ms: 0.667709
+  type: 'test'
+  ...
+# Subtest: cleanup onEntitlements preserves other subscribers
+ok 17 - cleanup onEntitlements preserves other subscribers
+  ---
+  duration_ms: 0.592323
+  type: 'test'
+  ...
+# Subtest: cleanup onNotifications preserves other subscribers
+ok 18 - cleanup onNotifications preserves other subscribers
+  ---
+  duration_ms: 0.930559
+  type: 'test'
+  ...
+# (node:11147) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: copies a real legacy SQLite database exclusively and keeps its original
+ok 19 - copies a real legacy SQLite database exclusively and keeps its original
+  ---
+  duration_ms: 6.582183
+  type: 'test'
+  ...
+# Subtest: never deletes either distinct database or other nested files when canonical exists
+ok 20 - never deletes either distinct database or other nested files when canonical exists
+  ---
+  duration_ms: 7.743725
+  type: 'test'
+  ...
+# Subtest: absent legacy database does not overwrite a canonical SQLite database
+ok 21 - absent legacy database does not overwrite a canonical SQLite database
+  ---
+  duration_ms: 4.937566
+  type: 'test'
+  ...
+# Subtest: actual setup-dev bootstrap preserves both databases and unrelated nested files
+ok 22 - actual setup-dev bootstrap preserves both databases and unrelated nested files
+  ---
+  duration_ms: 34.014623
+  type: 'test'
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 21
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 324.181353

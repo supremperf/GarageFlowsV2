@@ -1,0 +1,8 @@
+
+❌ Cohérence docs : 1 incohérence(s) dans les documents actifs :
+   [test-count] docs/audit/resumption-2026-10-14/ISSUE-MATRIX.md:8  compte de tests courant 3829 != baseline (3699/3671)
+      | FUP-20261014-002 | B2 — Suite Vitest entière sans échec ni non-exécution critique | ÉCHOUÉ | ÉCHOUÉ | Final official s
+
+   → Corrigez le document, marquez-le HISTORIQUE (« doc-status: historique »),
+     ou pointez vers la baseline canonique docs/audit/FINAL_VERIFICATION_BASELINE.md.
+

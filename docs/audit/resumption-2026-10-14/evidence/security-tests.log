@@ -1,0 +1,68 @@
+
+> garageflow@1.1.0 test:audit
+> node --max-old-space-size=256 --test --test-timeout=15000 tests/audit-security.test.cjs
+
+TAP version 13
+# Subtest: audit rejects every severity and missing/error/inconsistent service responses
+ok 1 - audit rejects every severity and missing/error/inconsistent service responses
+  ---
+  duration_ms: 0.968043
+  type: 'test'
+  ...
+# Subtest: bounded braces retains compile, parse, stringify, ranges and ordinary glob behavior
+ok 2 - bounded braces retains compile, parse, stringify, ranges and ordinary glob behavior
+  ---
+  duration_ms: 3.328836
+  type: 'test'
+  ...
+# Subtest: bounded braces rejects nesting, caller-crafted cyclic ASTs and oversized expansions before process exhaustion
+ok 3 - bounded braces rejects nesting, caller-crafted cyclic ASTs and oversized expansions before process exhaustion
+  ---
+  duration_ms: 54.939124
+  type: 'test'
+  ...
+# Subtest: Electron builder can consume the upgraded downloader in CommonJS on the supported Node runtime
+ok 4 - Electron builder can consume the upgraded downloader in CommonJS on the supported Node runtime
+  ---
+  duration_ms: 341.306614
+  type: 'test'
+  ...
+# Subtest: differential compatibility: 4653 outputs from pristine MIT upstream 3.0.3
+ok 5 - differential compatibility: 4653 outputs from pristine MIT upstream 3.0.3
+  ---
+  duration_ms: 206.480197
+  type: 'test'
+  ...
+# Subtest: descending, Unicode, unsafe-number and stepped compile ranges cannot evade limits
+ok 6 - descending, Unicode, unsafe-number and stepped compile ranges cannot evade limits
+  ---
+  duration_ms: 22.025253
+  type: 'test'
+  ...
+# Subtest: Nodemailer retains Promise/MIME transport API without contacting an SMTP service
+ok 7 - Nodemailer retains Promise/MIME transport API without contacting an SMTP service
+  ---
+  duration_ms: 85.43861
+  type: 'test'
+  ...
+# Subtest: Sharp loads its actual platform binary and encodes/decodes PNG assets
+ok 8 - Sharp loads its actual platform binary and encodes/decodes PNG assets
+  ---
+  duration_ms: 28.889355
+  type: 'test'
+  ...
+# Subtest: arrays of patterns cannot evade the aggregate output budget
+ok 9 - arrays of patterns cannot evade the aggregate output budget
+  ---
+  duration_ms: 30.892989
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 968.039465
