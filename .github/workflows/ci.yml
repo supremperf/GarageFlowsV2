@@ -51,14 +51,29 @@ jobs:
       # s'applique.
       - name: Install gitleaks
         run: |
-          curl -fsSL -o /tmp/gitleaks_8.24.3_linux_x64.tar.gz \
+          # No root-owned installation directory or secret-bearing redirect URL.
+          tool_dir="$RUNNER_TEMP/garageflows-gitleaks"
+          mkdir -p "$tool_dir"
+          download() {
+            label="$1"; target="$2"; url="$3"
+            if http=$(curl -fsSL --write-out '%{http_code}' -o "$target" "$url" 2>/dev/null); then
+              echo "::notice title=Gitleaks installer::$label downloaded; HTTP $http"
+            else
+              code=$?
+              echo "::error title=Gitleaks installer::$label download failed; curl exit $code; HTTP $http. Redirect URLs and response bodies withheld."
+              exit "$code"
+            fi
+          }
+          download archive "$tool_dir/gitleaks_8.24.3_linux_x64.tar.gz" \
             https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz
-          curl -fsSL -o /tmp/gitleaks_checksums.txt \
+          download checksums "$tool_dir/checksums.txt" \
             https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_checksums.txt
-          cd /tmp
-          grep '  gitleaks_8.24.3_linux_x64.tar.gz$' gitleaks_checksums.txt | sha256sum --check --strict
-          tar -xzf gitleaks_8.24.3_linux_x64.tar.gz -C /usr/local/bin gitleaks
-          gitleaks version
+          cd "$tool_dir"
+          grep '  gitleaks_8.24.3_linux_x64.tar.gz$' checksums.txt | sha256sum --check --strict
+          echo "::notice title=Gitleaks installer::Official archive checksum verified"
+          tar -xzf gitleaks_8.24.3_linux_x64.tar.gz gitleaks
+          echo "$tool_dir" >> "$GITHUB_PATH"
+          "$tool_dir/gitleaks" version
       - name: Gitleaks — scan working tree
         # Same official scope/exit, plus location-only annotations readable through
         # GitHub API when the signed log-download endpoint is unavailable.

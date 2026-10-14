@@ -59,6 +59,7 @@ function run({ spawn = cp.spawnSync, cwd = process.cwd(), commit = process.env.G
     for (const row of rows) {
       emit(`::notice file=${escapeProperty(row.path)},line=${row.startLine},endLine=${row.endLine},title=${escapeProperty('Gitleaks ' + row.rule)}::EN ATTENTE DE REVUE; scope=working-tree; commit=${escapeData(row.commit)}`)
     }
+    emit(`::notice title=Gitleaks inventory::Gitleaks inventory: findings=${rows.length}; scannerExit=${exit}; commit=${escapeData(commit)}`)
     emit(`Gitleaks location metadata: ${rows.length} findings; scanner exit ${exit}. No secret values published.`)
     return exit
   } catch {

@@ -33,6 +33,7 @@ test('finding metadata preserves exit one and never prints secret/match/child ou
   assert.ok(!result.text.includes(sensitive))
   assert.match(result.text, /file=test\/sample.ts,line=4,endLine=5,title=Gitleaks unit-rule/)
   assert.match(result.text, /1 findings; scanner exit 1/)
+  assert.match(result.text, /Gitleaks inventory: findings=1; scannerExit=1/)
 })
 test('workflow command characters are escaped in file/rule/commit metadata', () => {
   const row = { ...finding, File: 'a,b:c%\r\n::error::injected', RuleID: 'a,b\r\n::error::injected' }

@@ -1,0 +1,24 @@
+{
+  "run": 38587226456,
+  "commit": "387073637e4c86ceec1db7b595b7846ecc19acab",
+  "jobs": [
+    {
+      "name": "Secret scan (Gitleaks)",
+      "apiExit": 1,
+      "annotations": 0,
+      "gitleaksLocations": 0
+    },
+    {
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "apiExit": 1,
+      "annotations": 0,
+      "gitleaksLocations": 0
+    },
+    {
+      "name": "Required validation",
+      "apiExit": 1,
+      "annotations": 0,
+      "gitleaksLocations": 0
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "mainCommit": "e3ac5f5a55284906531dcc5d4a620cb0ff072313",
+  "changedLockEntries": 390,
+  "changedDirectDeclarations": 14,
+  "snapshot": "/home/user/audit-resumption/main-manifest-snapshot-e3ac5f5a5528",
+  "limitations": "Lockfile resolution only, not actual installed main versions and not authenticated Dependabot alerts; no main checkout/merge/installation."
+}
