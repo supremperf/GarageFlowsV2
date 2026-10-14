@@ -2,9 +2,9 @@
 
 > Généré par `npm run config:audit`. Inventaire statique de tous les fichiers suivis et lecture des fichiers texte ; analyse des points de configuration et des composants structurants. Ce n’est ni une preuve d’absence de bogue dans chaque fonction ni un test des comptes externes.
 
-- 1207 fichiers inventoriés, 1196 textes lus, 11 binaires identifiés (non interprétés).
+- 1208 fichiers inventoriés, 1197 textes lus, 11 binaires identifiés (non interprétés).
 - 980 fichiers de code/configuration balayés pour les lectures littérales d’environnement.
-- 164 routes API, 47 modèles PostgreSQL, 21 migrations serveur.
+- 164 routes API, 47 modèles PostgreSQL, 22 migrations serveur.
 - 118 variables canoniques : 54 application, 11 platform, 9 manual, 39 unused, 2 runtime, 1 keygen, 2 publisher.
 
 ## Architecture et conséquences pour config
@@ -34,7 +34,7 @@
 | docs | 144 |
 | scripts | 90 |
 | (racine) | 44 |
-| prisma | 29 |
+| prisma | 30 |
 | electron | 23 |
 | public | 10 |
 | e2e | 6 |

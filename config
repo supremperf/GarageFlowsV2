@@ -247,32 +247,40 @@ async function readLicensePem(file) {
     return key.export({ type: 'pkcs8', format: 'pem' }).toString()
   } catch { throw new Error('Clé de licence illisible, passphrase incorrecte ou courbe non P-256. Aucun contenu affiché.') }
 }
-async function licenseKey(env) {
+async function licenseKey(env, { root = ROOT, choose = select, prompt = question, readPem = readLicensePem, run = execute } = {}) {
   if (env.GF_PRIVATE_KEY) return
-  const privateFile = path.join(ROOT, 'keys/private.pem')
+  const privateFile = path.join(root, 'keys/private.pem')
+  const importFile = async file => {
+    let stat
+    try { stat = fs.statSync(file) } catch { throw new Error('Clé privée introuvable/illisible au chemin indiqué. Chemin proposé : keys/private.pem. Aucun remplacement de clé automatique.') }
+    if (!stat.isFile()) throw new Error('Clé privée : fichier PEM requis, pas un dossier.')
+    const value = Buffer.from(await readPem(file)).toString('base64')
+    if (!core.licenseKeyMatches(value, core.embeddedLicenseKey(root))) throw new Error('Clé privée différente de la clé publique embarquée : aucun import ni changement d’autorité automatique.')
+    env.GF_PRIVATE_KEY = value
+  }
   if (fs.existsSync(privateFile)) {
-    env.GF_PRIVATE_KEY = Buffer.from(await readLicensePem(privateFile)).toString('base64')
-    console.log('Clé privée existante importée depuis keys/private.pem ; cohérence vérifiée avant sauvegarde.')
+    await importFile(privateFile)
+    console.log(`Clé privée détectée et importée automatiquement : ${privateFile}. Identité publique vérifiée ; fichier original conservé.`)
     return
   }
   console.log('\nLicences : la clé privée doit correspondre à la clé publique embarquée.')
-  const mode = await select('Source de la clé', [
-    { name: 'Importer la clé privée existante (PEM, recommandé)' },
+  const mode = await choose('Source de la clé', [
+    { name: `Importer la clé privée existante (${privateFile}, recommandé)` },
     { name: 'Créer une NOUVELLE autorité (invalide la compatibilité des anciennes licences)' },
   ])
   if (mode.name.startsWith('Importer')) {
-    const file = await question('Chemin local du fichier PEM (pas son contenu)')
-    try { env.GF_PRIVATE_KEY = Buffer.from(await readLicensePem(path.resolve(ROOT, file))).toString('base64') }
-    catch { throw new Error('Fichier de clé privée illisible.') }
+    const file = await prompt('Chemin local du fichier PEM (Entrée = chemin keys/private.pem proposé)', { defaultValue: privateFile })
+    const resolved = path.resolve(root, file.replace(/^"(.*)"$/, '$1'))
+    await importFile(resolved)
   } else {
     console.log('Cette opération modifie les ancrages PUBLICS du code. Les clients déjà installés et garagesite3 ne sont PAS mis à jour par cet outil.')
-    if (await question('Pour confirmer une nouvelle autorité, saisir NOUVELLE-AUTORITE') !== 'NOUVELLE-AUTORITE') throw new Error('Création de clé annulée.')
-    if (fs.existsSync(privateFile) || fs.existsSync(path.join(ROOT, 'keys/public.pem'))) throw new Error('Des clés existent déjà : aucune rotation automatique autorisée.')
+    if (await prompt('Pour confirmer une nouvelle autorité, saisir NOUVELLE-AUTORITE') !== 'NOUVELLE-AUTORITE') throw new Error('Création de clé annulée.')
+    if (fs.existsSync(privateFile) || fs.existsSync(path.join(root, 'keys/public.pem'))) throw new Error('Des clés existent déjà : aucune rotation automatique autorisée.')
     const pair = crypto.generateKeyPairSync('ec', { namedCurve: 'prime256v1',
       privateKeyEncoding: { type: 'pkcs8', format: 'pem' }, publicKeyEncoding: { type: 'spki', format: 'pem' } })
     core.writePrivate(privateFile, pair.privateKey)
-    core.writePrivate(path.join(ROOT, 'keys/public.pem'), pair.publicKey)
-    await execute([path.join(ROOT, 'scripts/sync-public-key.mjs')], { label: 'Synchronisation des ancrages publics' })
+    core.writePrivate(path.join(root, 'keys/public.pem'), pair.publicKey)
+    await run([path.join(root, 'scripts/sync-public-key.mjs')], { label: 'Synchronisation des ancrages publics' })
     env.GF_PRIVATE_KEY = Buffer.from(pair.privateKey).toString('base64')
     console.log('Nouvelle paire créée et ancrages publics synchronisés. Vérifiez le diff et mettez garagesite3 à jour avant publication.')
   }

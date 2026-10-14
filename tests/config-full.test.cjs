@@ -339,3 +339,54 @@ test('node config writes one server API key and garageflows.fr to the Python UI 
   assert.ok(ui.includes('value=cfg.get("url", "")'))
   assert.ok(ui.includes('value=cfg.get("api_key", "")'))
 })
+
+test('JobPart snapshots stay mandatory and the corrective migration drops only their historical defaults', () => {
+  for (const schema of ['prisma/schema.prisma', 'prisma/server/schema.prisma']) {
+    const model = fs.readFileSync(path.join(root, schema), 'utf8').match(/model JobPart\s*\{([\s\S]*?)\n\}/)[1]
+    for (const column of ['unitPriceTenThousandths', 'unitCostTenThousandths']) {
+      const line = model.split('\n').find(line => line.includes(column))
+      assert.match(line, /\sInt\s/)
+      assert.ok(!line.includes('@default'), 'snapshots must be explicitly supplied by callers')
+    }
+  }
+  const sql = fs.readFileSync(path.join(root, 'prisma/server/migrations/20261014000000_jobpart_snapshot_defaults/migration.sql'), 'utf8')
+  for (const column of ['unitPriceTenThousandths', 'unitCostTenThousandths']) {
+    assert.match(sql, new RegExp(`ALTER COLUMN "${column}" DROP DEFAULT`))
+  }
+  const statements = sql.replace(/--[^\n]*/g, '').trim()
+  assert.ok(!/DROP\s+(TABLE|COLUMN)|UPDATE|DELETE|TRUNCATE|TYPE|DROP NOT NULL/i.test(statements))
+})
+
+test('license import automatically uses the repo keys/private.pem path and verifies identity before assignment', async t => {
+  const dir = tmp(t), pair = ecPair()
+  installPublic(dir, pair.publicKey)
+  fs.mkdirSync(path.join(dir, 'keys'), { recursive: true })
+  const file = path.join(dir, 'keys/private.pem')
+  fs.writeFileSync(file, pair.privateKey)
+  const env = {}, wizard = require('../config')
+  const noPrompt = async () => { throw new Error('automatic key discovery must not ask for source/path') }
+  await wizard.licenseKey(env, { root: dir, choose: noPrompt, prompt: noPrompt })
+  assert.equal(Buffer.from(env.GF_PRIVATE_KEY, 'base64').toString(), pair.privateKey)
+  assert.equal(fs.readFileSync(file, 'utf8'), pair.privateKey)
+  assert.ok(core.licenseKeyMatches(env.GF_PRIVATE_KEY, pair.publicKey))
+  fs.writeFileSync(file, ecPair().privateKey)
+  const wrong = {}
+  await assert.rejects(() => wizard.licenseKey(wrong, { root: dir, choose: noPrompt, prompt: noPrompt }), /Clé privée différente/)
+  assert.ok(!wrong.GF_PRIVATE_KEY)
+})
+
+test('manual original-key import proposes the exact repo path and accepts quoted Windows-style pasted paths', async t => {
+  const dir = tmp(t), pair = ecPair(), wizard = require('../config'), env = {}
+  installPublic(dir, pair.publicKey)
+  const file = path.join(dir, 'keys/private.pem')
+  await wizard.licenseKey(env, { root: dir,
+    choose: async (_label, items) => items[0],
+    prompt: async (_label, options) => {
+      assert.equal(options.defaultValue, file)
+      fs.mkdirSync(path.dirname(file), { recursive: true })
+      fs.writeFileSync(file, pair.privateKey)
+      return `"${file}"`
+    },
+  })
+  assert.equal(Buffer.from(env.GF_PRIVATE_KEY, 'base64').toString(), pair.privateKey)
+})
