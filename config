@@ -41,19 +41,26 @@ async function question(label, { secret = false, defaultValue = '' } = {}) {
   let hideDefault = secret
   try { const url = new URL(defaultValue); hideDefault ||= !!url.username || !!url.password } catch { /* Not a URL. */ }
   const prompt = `${label}${defaultValue ? ` [${hideDefault ? 'déjà configuré' : safeLabel(defaultValue)}]` : ''} : `
-  process.stdout.write(prompt)
+  // Let readline own visible prompts: an empty question redraws the line and
+  // erases a separately printed label, notably in Windows Command Prompt.
+  if (secret) process.stdout.write(prompt)
   // A terminal readline with a muted output enables raw input without echoing passwords.
   const output = secret ? new Writable({ write(_chunk, _encoding, done) { done() } }) : process.stdout
   const rl = readline.createInterface({ input: process.stdin, output, terminal: true })
   try {
     return await new Promise((resolve, reject) => {
       rl.once('SIGINT', () => reject(new Error('Configuration annulée.')))
-      rl.question('', value => resolve((secret ? value : value.trim()) || defaultValue))
+      rl.question(secret ? '' : prompt, value => resolve((secret ? value : value.trim()) || defaultValue))
     })
   } finally { rl.close(); if (secret) process.stdout.write('\n') }
 }
 async function yes(label, defaultYes = false) {
-  return /^(o|oui|y|yes)$/i.test(await question(`${label} (oui/non)`, { defaultValue: defaultYes ? 'oui' : 'non' }))
+  while (true) {
+    const answer = await question(`${label} (oui/non)`, { defaultValue: defaultYes ? 'oui' : 'non' })
+    if (/^(o|oui|y|yes)$/i.test(answer)) return true
+    if (/^(n|non|no)$/i.test(answer)) return false
+    console.log('Réponse attendue : oui ou non. Aucun autre texte ne vaut autorisation.')
+  }
 }
 async function select(label, items) {
   if (!items.length) throw new Error(`${label} : aucun résultat. Créez la ressource dans le tableau de bord du fournisseur, puis relancez config.`)

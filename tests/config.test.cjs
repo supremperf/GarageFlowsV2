@@ -187,3 +187,29 @@ test('all secret output paths are ignored by Git and Vercel', () => {
   assert.match(vercelignore, /GarageFlow-configuration\//)
   assert.match(vercelignore, /\.env\.\*/)
 })
+
+test('interactive confirmations pass their visible label to readline (Windows redraw regression)', async () => {
+  const readline = require('node:readline')
+  const wizard = require('../config')
+  const original = readline.createInterface
+  const tty = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY')
+  const prompts = []
+  const answers = ['instruction non pertinente', 'oui', 'oui']
+  Object.defineProperty(process.stdin, 'isTTY', { configurable: true, value: true })
+  readline.createInterface = () => ({
+    once() {}, close() {},
+    question(prompt, callback) { prompts.push(prompt); callback(answers.shift()) },
+  })
+  try {
+    assert.equal(await wizard.yes('Autoriser la création du projet PostgreSQL GarageFlows'), true)
+    assert.equal(prompts[0], 'Autoriser la création du projet PostgreSQL GarageFlows (oui/non) [non] : ')
+    assert.equal(prompts[1], prompts[0], 'invalid text asks again rather than silently cancelling')
+    await wizard.question('URL', { defaultValue: 'https://fixture-user:fixture-password@app.invalid' })
+    assert.equal(prompts[2], 'URL [déjà configuré] : ')
+    assert.ok(!prompts.join('\n').includes('fixture-password'))
+  } finally {
+    readline.createInterface = original
+    if (tty) Object.defineProperty(process.stdin, 'isTTY', tty)
+    else delete process.stdin.isTTY
+  }
+})
