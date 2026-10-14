@@ -76,7 +76,7 @@
     "release:gate": "node scripts/final-release-gate.mjs",
     "release:publish": "node scripts/check-version.js && npm run release:gate && npm run dist && npm run release:sign",
     "release:manifest": "node scripts/generate-release-manifest.mjs",
-    "release:sign": "node scripts/sign-release-manifest.mjs",
+    "release:sign": "node scripts/config-release.cjs",
     "release:sign:gen-key": "node scripts/sign-release-manifest.mjs --gen-key",
     "release:verify-artifact": "node scripts/verify-artifact.mjs",
     "release:artifact": "node scripts/package-artifact.mjs --verify",
@@ -96,7 +96,9 @@
     "check:artifact-fuses": "node scripts/check-artifact-fuses.mjs",
     "config": "node config",
     "config:check": "node config --check",
-    "test:config": "node --test tests/config.test.cjs"
+    "test:config": "node --test tests/config.test.cjs tests/config-full.test.cjs",
+    "config:audit": "node scripts/config-audit.cjs",
+    "keygen": "node scripts/config-keygen.cjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.79.0",

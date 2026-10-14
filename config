@@ -10,17 +10,19 @@ const crypto = require('node:crypto')
 const core = require('./scripts/config-core.cjs')
 const ROOT = __dirname
 const args = process.argv.slice(2)
-const PROFILES = ['desktop', 'pwa', 'licences']
-const TOOLS = { vercel: 'vercel@64.0.2', neonctl: 'neonctl@8.4.4' }
+const PROFILES = ['full', 'desktop', 'pwa', 'licences']
+const TOOLS = { vercel: 'vercel@64.0.2', neonctl: 'neonctl@8.4.4', upstash: 'upstash@1.5.0' }
 const template = fs.readFileSync(path.join(ROOT, '.env.example'), 'utf8')
 // Canonical template + timeout consumed by src/lib/env.ts, absent from the older template.
-const allNames = [...new Set([...core.templateNames(template), 'UPSTASH_REDIS_TIMEOUT_MS'])]
+const allNames = [...new Set([...core.templateNames(template), ...require('./scripts/config-policy.cjs').loadPolicy(ROOT).names])]
 const safeLabel = s => String(s).replace(/[\x00-\x1f\x7f]/g, '').slice(0, 160)
 
 function help() {
   console.log(`GarageFlow — assistant config (Node 22)
 
-  npm run config                     Assistant interactif
+  npm run config                     Plan COMPLET automatique (autorisation initiale)
+  node config --profile full          Desktop + cloud + licences + keygen + publication
+  node config --audit                 Inventaire/rapport du dépôt, sans accès cloud
   node config --profile desktop      SQLite / Electron (développement local)
   node config --profile pwa           PostgreSQL / PWA
   node config --profile licences      PWA + autorité de licences
@@ -36,7 +38,9 @@ Guide détaillé : docs/CONFIG.md`)
 }
 async function question(label, { secret = false, defaultValue = '' } = {}) {
   if (!process.stdin.isTTY) throw new Error('Un terminal interactif est requis (ou utilisez --check / --help).')
-  const prompt = `${label}${defaultValue ? ` [${secret ? 'déjà configuré' : safeLabel(defaultValue)}]` : ''} : `
+  let hideDefault = secret
+  try { const url = new URL(defaultValue); hideDefault ||= !!url.username || !!url.password } catch { /* Not a URL. */ }
+  const prompt = `${label}${defaultValue ? ` [${hideDefault ? 'déjà configuré' : safeLabel(defaultValue)}]` : ''} : `
   process.stdout.write(prompt)
   // A terminal readline with a muted output enables raw input without echoing passwords.
   const output = secret ? new Writable({ write(_chunk, _encoding, done) { done() } }) : process.stdout
@@ -44,7 +48,7 @@ async function question(label, { secret = false, defaultValue = '' } = {}) {
   try {
     return await new Promise((resolve, reject) => {
       rl.once('SIGINT', () => reject(new Error('Configuration annulée.')))
-      rl.question('', value => resolve(value.trim() || defaultValue))
+      rl.question('', value => resolve((secret ? value : value.trim()) || defaultValue))
     })
   } finally { rl.close(); if (secret) process.stdout.write('\n') }
 }
@@ -99,21 +103,43 @@ async function neonList(commandArgs, key) {
     return list
   } catch { throw new Error('Neon : format JSON inattendu, aucune valeur importée.') }
 }
-async function configureNeon(env) {
+async function configureNeon(env, { auto = false } = {}) {
   console.log('\nConnexion Neon via le CLI officiel. Aucun jeton Neon stocké par config.')
-  await tool('neonctl', ['auth'], { interactive: true })
-  const orgs = await neonList(['orgs', 'list'], 'organizations')
-  const org = orgs.length ? await select('Organisation Neon', orgs) : null
-  const project = await select('Projet Neon', await neonList(['projects', 'list', ...(org ? ['--org-id', org.id] : [])], 'projects'))
-  const branch = await select('Branche Neon (choisir la base cible)', await neonList(['branches', 'list', '--project-id', project.id], 'branches'))
+  let orgs
+  try { orgs = await neonList(['orgs', 'list'], 'organizations') }
+  catch {
+    await tool('neonctl', ['auth'], { interactive: true })
+    orgs = await neonList(['orgs', 'list'], 'organizations')
+  }
+  const choose = async (label, list) => auto && list.length === 1 ? list[0] : select(label, list)
+  const org = orgs.length ? await choose('Organisation Neon', orgs) : null
+  const orgArgs = org ? ['--org-id', org.id] : []
+  let projects = await neonList(['projects', 'list', ...orgArgs], 'projects')
+  if (!projects.length && auto) {
+    console.log('Aucun projet Neon : création possible dans le compte autorisé (région Europe). Vérifier quotas et conditions fournisseur.')
+    if (!await yes('Autoriser la création du projet PostgreSQL GarageFlows')) throw new Error('Projet Neon absent et création non autorisée.')
+    await tool('neonctl', ['projects', 'create', '--name', 'garageflows', '--region-id', 'aws-eu-central-1', '--database', 'garageflow', '--role', 'garageflow_owner', ...orgArgs])
+    projects = await neonList(['projects', 'list', ...orgArgs], 'projects')
+  }
+  const project = await choose('Projet Neon', projects)
+  const branches = await neonList(['branches', 'list', '--project-id', project.id], 'branches')
+  const branch = await choose('Branche Neon (choisir la base cible)', branches)
   const scope = ['--project-id', project.id, '--branch', branch.id]
-  const database = await select('Base Neon', await neonList(['databases', 'list', ...scope], 'databases'))
-  const role = await select('Rôle PostgreSQL', await neonList(['roles', 'list', ...scope], 'roles'))
+  const database = await choose('Base Neon', await neonList(['databases', 'list', ...scope], 'databases'))
+  const role = await choose('Rôle PostgreSQL', await neonList(['roles', 'list', ...scope], 'roles'))
   const connectionArgs = ['connection-string', branch.id, '--project-id', project.id,
     '--database-name', database.name, '--role-name', role.name]
   // Neon returns the actual endpoints; no guessing by removing '-pooler'.
-  env.DATABASE_URL = (await tool('neonctl', [...connectionArgs, '--pooled'])).trim()
-  env.DIRECT_URL = (await tool('neonctl', connectionArgs)).trim()
+  const pooled = (await tool('neonctl', [...connectionArgs, '--pooled'])).trim()
+  const direct = (await tool('neonctl', connectionArgs)).trim()
+  if (env.DATABASE_URL) {
+    try {
+      const old = new URL(env.DATABASE_URL), candidate = new URL(pooled)
+      if (old.hostname !== candidate.hostname || old.pathname !== candidate.pathname || old.username !== candidate.username) throw new Error()
+    } catch { throw new Error('Neon : sélection différente de DATABASE_URL existante. Aucune URL remplacée ; vérifier projet/branche/base/rôle.') }
+  }
+  env.DATABASE_URL = pooled
+  env.DIRECT_URL = direct
   console.log('DATABASE_URL poolée et DIRECT_URL directe récupérées (valeurs masquées).')
 }
 async function pullVercel() {
@@ -148,8 +174,13 @@ async function pullVercel() {
 }
 async function setupVercel() {
   console.log('\nVercel : connexion puis sélection EXPLICITE du projet cible (production uniquement).')
-  await tool('vercel', ['login'], { interactive: true })
-  await tool('vercel', ['link'], { interactive: true })
+  try { await tool('vercel', ['whoami']) }
+  catch { await tool('vercel', ['login'], { interactive: true }) }
+  const linkFile = path.join(ROOT, '.vercel/project.json')
+  if (fs.existsSync(linkFile)) {
+    const linked = JSON.parse(fs.readFileSync(linkFile, 'utf8'))
+    if (!await yes(`Confirmer le projet Vercel déjà lié ${safeLabel(linked.projectName || linked.projectId)} (équipe ${safeLabel(linked.orgId)})`)) throw new Error('Cible Vercel non confirmée. Relier explicitement le projet correct avant de poursuivre.')
+  } else await tool('vercel', ['link'], { interactive: true })
   const project = JSON.parse(fs.readFileSync(path.join(ROOT, '.vercel/project.json'), 'utf8'))
   console.log(`Cible Vercel : ${safeLabel(project.projectName || project.projectId)} (équipe ${safeLabel(project.orgId)}).`)
   fs.mkdirSync(path.join(ROOT, 'GarageFlow-configuration'), { recursive: true, mode: 0o700 })
@@ -182,11 +213,28 @@ async function secretField(env, name, label = name) {
   env[name] = await question(`${label} (saisie masquée${env[name] ? ', Entrée = conserver' : ''})`,
     { secret: true, defaultValue: env[name] || '' })
 }
+const privateKeyPassphrases = new Map()
+async function licensePassphrase(file) {
+  if (!privateKeyPassphrases.has(file)) {
+    privateKeyPassphrases.set(file, await question('Passphrase de la clé P-256 chiffrée (en mémoire uniquement)', { secret: true }))
+  }
+  return privateKeyPassphrases.get(file)
+}
+async function readLicensePem(file) {
+  let pem
+  try { pem = fs.readFileSync(file, 'utf8') } catch { throw new Error('Fichier de clé privée illisible.') }
+  const encrypted = /ENCRYPTED PRIVATE KEY|Proc-Type:\s*4,ENCRYPTED/.test(pem)
+  try {
+    const key = crypto.createPrivateKey(encrypted ? { key: pem, passphrase: await licensePassphrase(file) } : pem)
+    if (key.asymmetricKeyType !== 'ec' || key.asymmetricKeyDetails.namedCurve !== 'prime256v1') throw new Error()
+    return key.export({ type: 'pkcs8', format: 'pem' }).toString()
+  } catch { throw new Error('Clé de licence illisible, passphrase incorrecte ou courbe non P-256. Aucun contenu affiché.') }
+}
 async function licenseKey(env) {
   if (env.GF_PRIVATE_KEY) return
   const privateFile = path.join(ROOT, 'keys/private.pem')
   if (fs.existsSync(privateFile)) {
-    env.GF_PRIVATE_KEY = fs.readFileSync(privateFile).toString('base64')
+    env.GF_PRIVATE_KEY = Buffer.from(await readLicensePem(privateFile)).toString('base64')
     console.log('Clé privée existante importée depuis keys/private.pem ; cohérence vérifiée avant sauvegarde.')
     return
   }
@@ -197,7 +245,7 @@ async function licenseKey(env) {
   ])
   if (mode.name.startsWith('Importer')) {
     const file = await question('Chemin local du fichier PEM (pas son contenu)')
-    try { env.GF_PRIVATE_KEY = fs.readFileSync(path.resolve(ROOT, file)).toString('base64') }
+    try { env.GF_PRIVATE_KEY = Buffer.from(await readLicensePem(path.resolve(ROOT, file))).toString('base64') }
     catch { throw new Error('Fichier de clé privée illisible.') }
   } else {
     console.log('Cette opération modifie les ancrages PUBLICS du code. Les clients déjà installés et garagesite3 ne sont PAS mis à jour par cet outil.')
@@ -244,7 +292,7 @@ function childEnv(env, vercel) {
   result.VERCEL = vercel ? '1' : ''
   return result
 }
-async function syncVercel(env, names, expectedRemote) {
+async function syncVercel(env, names, expectedRemote, { authorized = false } = {}) {
   // Re-read immediately before applying. Refuse concurrent changes; do not overwrite/rotate anything.
   const remote = await pullVercel()
   for (const n of names.filter(n => expectedRemote.hidden.has(n))) {
@@ -261,7 +309,7 @@ async function syncVercel(env, names, expectedRemote) {
   const additions = plan.additions.filter(n => !remote.present.has(n))
   if (!additions.length) { console.log('Vercel : variables déjà présentes (valeurs sensibles non comparables).'); return true }
   console.log(`Vercel production — ajouts uniquement : ${additions.join(', ')}.`)
-  if (!await yes('Ajouter ces variables au projet Vercel sélectionné')) return false
+  if (!authorized && !await yes('Ajouter ces variables au projet Vercel sélectionné')) return false
   // No --force / remove: even a concurrent creation is a failure, not an overwrite.
   for (const name of additions) {
     await tool('vercel', ['env', 'add', name, 'production', core.isSecret(name) ? '--sensitive' : '--no-sensitive', '--yes'],
@@ -278,19 +326,27 @@ async function syncVercel(env, names, expectedRemote) {
   return true
 }
 async function main() {
-  const accepted = new Set(['--help', '--check', '--profile', '--vercel'])
+  const accepted = new Set(['--help', '--check', '--profile', '--vercel', '--audit'])
   for (let i = 0; i < args.length; i++) {
     if (!accepted.has(args[i])) throw new Error('Option inconnue. Utilisez node config --help.')
-    if (args[i] === '--profile') { if (!PROFILES.includes(args[++i])) throw new Error('Profil attendu : desktop | pwa | licences.') }
+    if (args[i] === '--profile') { if (!PROFILES.includes(args[++i])) throw new Error('Profil attendu : full | desktop | pwa | licences.') }
   }
   if (args.includes('--help')) return help()
+  if (args.includes('--audit') && args.includes('--check')) throw new Error('--audit écrit un rapport ; ne pas le combiner avec le contrôle lecture seule --check.')
+  if (args.includes('--audit')) {
+    const inventory = require('./scripts/config-audit.cjs')
+    const result = inventory.audit(ROOT)
+    fs.writeFileSync(path.join(ROOT, 'docs/CONFIG_REPOSITORY_AUDIT.md'), inventory.render(result))
+    console.log(`Rapport : docs/CONFIG_REPOSITORY_AUDIT.md (${result.files} fichiers, ${result.policy.entries.length} variables).`)
+    return
+  }
   let profile = args.includes('--profile') ? args[args.indexOf('--profile') + 1] : null
   if (!profile && args.includes('--check')) throw new Error('--check nécessite --profile.')
-  if (!profile) profile = (await select('Usage à configurer', [
-    { id: 'desktop', name: 'Electron / développement SQLite local' },
-    { id: 'pwa', name: 'PWA / PostgreSQL (Neon ou autre)' },
-    { id: 'licences', name: 'PWA + serveur de licences / control-plane' },
-  ])).id
+  profile ||= 'full'
+  if (profile === 'full') {
+    if (args.includes('--check')) throw new Error('Pour une validation locale, choisir --profile desktop, pwa ou licences.')
+    return require('./scripts/config-full.cjs').full(module.exports)
+  }
   const names = core.namesForProfile(allNames, profile)
   const envFile = path.join(ROOT, profile === 'desktop' ? '.env' : '.env.server.local')
   let env = core.readEnv(envFile)
@@ -379,9 +435,13 @@ async function main() {
   console.log('\nConfiguration terminée. Aucun secret n’a été committé ni affiché.')
   console.log('GF_UPDATE_SIGNING_KEY reste EXCLUSIVEMENT dans le coffre du serveur de publication garagesite3 ; config ne la génère ni ne l’exporte ici.')
 }
-main().catch(error => {
-  // All errors reaching here are sanitized; never print raw external stdout/stderr or stacks.
-  if (error instanceof Error && error.code) console.error('Configuration interrompue : opération locale impossible. Vérifiez les permissions et les fichiers.')
+module.exports = { root: ROOT, question, yes, select, tool, execute, npmCli,
+  setupVercel, pullVercel, importRemote, configureNeon, secretField, licenseKey,
+  advanced, childEnv, syncVercel, licensePassphrase }
+if (require.main === module) main().catch(error => {
+  // Never expose raw provider payloads, JSON snippets, stacks or file error contents.
+  if (error instanceof SyntaxError) console.error('Configuration interrompue : réponse/fichier JSON invalide ; contenu masqué.')
+  else if (error instanceof Error && error.code) console.error('Configuration interrompue : opération locale impossible. Vérifiez les permissions et les fichiers.')
   else console.error(error.message || 'Configuration interrompue.')
   process.exitCode = 1
 })

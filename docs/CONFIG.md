@@ -1,87 +1,108 @@
-# Config — assistant de configuration GarageFlow
+# Config — configuration complète GarageFlow
 
-## Démarrage
+## Ouvrir et lancer
 
-Depuis la racine du dépôt, avec **Node.js 22 et npm** :
+**Windows : double-cliquer sur `config.cmd`** (souvent affiché « config » lorsque les extensions sont masquées). Linux/macOS : `./config` ou `node config`. Depuis le dépôt :
 
 ```sh
 npm run config
 ```
 
-Ou `node config` / `./config` sous Linux/macOS. Sous Windows, double-cliquer sur **`config.cmd`**. Le fichier demandé **`config`** est à la racine et ne contient aucun secret.
+Le fichier **`config` à la racine lance désormais le mode complet par défaut**, pas une suite de réglages manuels. **Node.js 22 et npm** sont les seuls prérequis du lanceur ; si Node est absent, le lanceur Windows le signale et conserve le message à l’écran. Il ne lance pas un installateur système privilégié sans autorisation.
 
-L'assistant est en français. Il fonctionne avant `npm ci` pour configurer les variables ; Prisma et l'application doivent être installés pour initialiser/migrer les bases. Neon et Vercel sont exécutés à la demande via des versions fixées de leurs CLI officiels (`neonctl@8.4.4`, `vercel@64.0.2`). Une connexion Internet aux fournisseurs et à npm est nécessaire sur le poste qui exécute l'assistant.
+Une fois le plan affiché, saisir **`AUTORISER`**. Ensuite, les étapes techniques s’enchaînent. Les demandes supplémentaires concernent des accès, la sélection d’une cible ambiguë, des secrets non récupérables ou une opération risquée : création de ressource, nouvelle autorité de licence, première licence admin, migration d’une base utilisée, nouveau canal de signature. Aucun compte, mot de passe fournisseur ou domaine n’est inventé.
 
-## Profils et destination des valeurs
+## Analyse du dépôt et couverture
 
-| Profil | Destination locale | Usage |
-|---|---|---|
-| `desktop` | `.env` | Electron/dev, SQLite `file:./dev.db`, secrets locaux et paramètres du client |
-| `pwa` | `.env.server.local` | PWA PostgreSQL/Redis ; synchronisation Vercel production si choisie |
-| `licences` | `.env.server.local` | PWA + control-plane, clé privée de licences et clé d'administration |
+**[CONFIG_REPOSITORY_AUDIT.md](CONFIG_REPOSITORY_AUDIT.md)** contient l’inventaire transversal et la décision pour **chacune des 118 variables canoniques** : applicative, plateforme, runtime Electron, keygen, publication, maintenance/manuelle ou sans consommateur.
 
-`.env.server.local` est **volontairement non chargé automatiquement par Next.js**. Cela empêche le profil serveur de supplanter `.env` pendant un build Electron. `config` injecte explicitement ce profil dans Prisma ; les variables du déploiement web sont installées **dans le projet Vercel**, pas dans un fichier déployé. Pour un autre hébergeur, importer ce fichier dans son gestionnaire de secrets/environnement, sans le publier avec les sources.
-
-Tous ces fichiers sont déjà ignorés par `.gitignore` et `.vercelignore`. Les valeurs de `.env.example` ne sont jamais modifiées. Ne jamais transmettre les fichiers locaux par chat ni les ajouter de force à Git. Permissions des fichiers : `0600` sous POSIX ; sous Windows, restreindre les ACL du dossier au compte utilisateur. Faire une sauvegarde chiffrée des secrets dans un coffre : perdre une clé de chiffrement peut rendre des données définitivement illisibles.
-
-## Ce que l'assistant automatise
-
-1. **Sélection du profil.** Les paramètres serveur ne sont pas exportés dans le profil desktop. Les variables documentées sont lues depuis `.env.example` ; le délai Upstash, déjà consommé par le code, est également pris en charge.
-2. **Vercel :** `login`, `link`, sélection interactive du projet/équipe, lecture des métadonnées et récupération de la configuration de **production avant toute génération**. Les valeurs existantes sont conservées, ou réimportées après confirmation en cas de conflit local. Pas de modification des environnements Preview/Development.
-3. **Neon :** authentification officielle dans le navigateur, choix organisation/projet/branche/base/rôle, récupération des **deux vraies URLs** (poolée et directe) via le CLI. Pas de reconstruction approximative du hostname. Les ressources existantes sont utilisées ; l'assistant ne crée pas de projet payant à votre insu. Si le compte est vide, créer un projet dans Neon puis relancer.
-4. **Secrets manquants :** génération indépendante par `crypto.randomBytes(32)` pour session, pepper d'appareil, API admin, MAC licences, portail, signatures, SMTP, sauvegardes et exports internes, selon le profil. Une valeur non vide, même invalide, n'est **jamais remplacée automatiquement** : la validation demande une correction explicite.
-5. **Paramètres facultatifs :** limites de débit et valeurs sûres par défaut. Facturation électronique désactivée par défaut. Réglages avancés par nom exact : versions minimales, délai de migration des jetons, proxy, endpoints Electron, anciennes clés SMTP, etc.
-6. **Validation avant sauvegarde :** PostgreSQL pour le serveur / SQLite pour le desktop, URL directe non poolée, HTTPS, Redis et pepper requis, formats des clés AES, versions, dates et limites, clé privée de licence correspondant aux ancrages publics du dépôt.
-7. **Synchronisation Vercel :** une seconde lecture détecte les changements pendant l'assistant. Seules les variables **absentes** sont ajoutées, avec les secrets transmis sur **stdin**, pas dans les arguments de commande. Aucune suppression et aucun `--force`. Les secrets sont marqués Sensitive ; leur présence est vérifiée après ajout, pas leur contenu lorsqu'il n'est pas relisible.
-8. **SQLite :** proposition d'exécuter `scripts/setup-dev.js` existant.
-9. **PostgreSQL :** `prisma migrate deploy --schema prisma/server/schema.prisma` uniquement après saisie de `MIGRER`. `DATABASE_URL` et `DIRECT_URL` du profil sont injectées explicitement. Pas de `db push`, reset ni seed destructif.
-10. **Déploiement :** `vercel deploy --prod --yes` uniquement après une synchronisation aboutie et saisie de `DEPLOYER`. Un redéploiement est nécessaire pour rendre de nouvelles variables effectives dans les fonctions.
-
-## Ce qui demande votre autorisation ou une valeur externe
-
-Une connexion dans le navigateur est une autorisation de compte, pas une source universelle de tous les secrets.
-
-- **Neon / Vercel :** vous devez autoriser leurs CLI officiels et sélectionner les bonnes ressources. `config` ne stocke pas vos jetons de fournisseur ; les CLI gèrent leurs propres sessions.
-- **Upstash Redis :** si les variables REST sont déjà présentes dans Vercel, elles sont réutilisées. Sinon, connecter Redis depuis Vercel Marketplace ou créer une base dans `console.upstash.com`, puis saisir l'URL **REST HTTPS** et le token dans le terminal. La création de compte/base, les conditions et une éventuelle facturation ne sont pas automatisées. Pas de repli mémoire en PWA production.
-- **Anthropic :** clé API facultative, demandée uniquement si vous voulez l'OCR/IA. Ce n'est pas le mot de passe du compte. Saisie locale sans écho.
-- **Variables Vercel Sensitive :** Vercel ne restitue pas leurs valeurs. L'assistant détecte leur existence, interdit de les remplacer par de nouvelles clés et exige soit la confirmation de la valeur locale, soit une saisie de la **valeur originale depuis votre coffre**. Sans original, il s'arrête. Les métadonnées sont comparées avant synchronisation ; il n'affirme jamais avoir comparé le contenu d'une valeur non relisible.
-- **Domaine :** l'URL publique HTTPS est demandée. DNS, possession du domaine et certificats ne sont pas configurés automatiquement ; les vérifier dans Vercel/chez votre registrar.
-- **SMTP :** `GF_SMTP_CIPHER_KEY` peut être générée, mais le serveur SMTP/login/mot de passe restent des réglages du garage dans l'application. Pour une base existante, importer la clé d'origine avant sauvegarde. Pour une rotation, utiliser `GF_SMTP_CIPHER_KEY_OLD` et la procédure `scripts/encrypt-smtp-secrets.js --yes --rotate` : l'assistant ne rechiffre pas les données.
-- **Facturation électronique :** aucun drapeau n'est activé automatiquement et `GF_EINVOICE_CREDENTIALS_KEY` n'est pas générée automatiquement. Pour une nouvelle configuration, fournir une clé de 32 octets en base64 via les réglages avancés (ou saisir `GENERER` comme valeur puis confirmer explicitement sa génération) ; pour une installation existante, importer impérativement l'original. Les comptes/identifiants des plateformes sont configurés dans l'application. Une activation explicite sans clé valide est refusée.
-- **Publication des mises à jour :** `GF_UPDATE_SIGNING_KEY` appartient au coffre du serveur **garagesite3**, dans un autre dépôt. Elle est exclue de tous les profils de ce dépôt et jamais envoyée à ce Vercel. La configuration des endpoints/canal Electron est accessible en profil desktop. Voir `docs/SECURITY-HARDENING.md` et `scripts/sign-release-manifest.mjs` pour la chaîne de publication.
-
-**Base déjà utilisée :** avant d'accepter des secrets générés parce qu'ils sont absents du poste, retrouver ceux réellement utilisés en production. Une absence de variable sur un poste ne prouve pas qu'une clé n'a jamais existé. L'assistant ne peut pas récupérer une clé perdue à partir de données chiffrées.
-
-## Clé privée du serveur de licences
-
-Le profil `licences` importe automatiquement `keys/private.pem` s'il existe, sinon demande le chemin d'un PEM local. `GF_PRIVATE_KEY` contient le PEM encodé en base64, comme l'attend `/api/admin/licenses/generate`. La clé doit être une **ECDSA P-256** et correspondre à `src/lib/license/public-key.ts`.
-
-Pour une **nouvelle autorité seulement**, une option explicite permet de créer une paire et synchroniser les ancrages publics avec le script existant `sync-public-key.mjs`. Elle exige de saisir `NOUVELLE-AUTORITE` et refuse d'écraser des fichiers de clés existants. Cette opération modifie des fichiers publics du dépôt : examiner le diff avant livraison. Elle ne met **ni les clients déjà installés ni garagesite3** à jour. Une nouvelle paire ne répare pas un parc utilisant une ancienne clé.
-
-Ne pas utiliser cette option pour contourner la perte d'une clé de production. `config` ne fait aucune rotation automatique.
-
-## Commandes utiles
+Le configurateur prend en charge **54 paramètres applicatifs**, y compris ceux absents du template initial : `GF_APP_URL`, `GF_TOTP_ENC_KEY`, anciennes clés TOTP, plafonds mécanicien, délai Redis et paramètres de stockage. Une variable déclarée historiquement mais sans consommateur n’est pas fabriquée : elle n’aurait aucun effet. Les variables OS/tests/debug/reset ne sont pas déployées en production.
 
 ```sh
-node config --profile desktop
-node config --profile pwa
-node config --profile licences
-
-# Lecture seule, hors ligne (aucun secret affiché)
-node config --check --profile desktop
-node config --check --profile pwa --vercel
-node config --check --profile licences --vercel
-
-# Cible auto-hébergée, doit déclarer un proxy réellement fiable
-node config --check --profile pwa
-
-npm run test:config
+npm run config:audit  # réactualise l’inventaire ; aucun accès cloud
 ```
 
-Le contrôle local vérifie les valeurs et formats, **pas** les droits réels du compte, la connectivité, le DNS ni le bon fonctionnement des fonctionnalités. L'assistant n'annonce les migrations ou le déploiement terminés que si la commande concernée réussit.
+L’inventaire lit les fichiers texte de l’ensemble des sources suivies/non ignorées et les références littérales d’environnement. Ce n’est pas une certification de chaque comportement métier ni un test des services externes. Les binaires sont identifiés, pas désassemblés. Les rapports ne contiennent pas de valeurs secrètes.
 
-## Reprise après interruption
+## Plan complet exécuté
 
-Les valeurs locales sont enregistrées avant synchronisation. En cas d'échec pendant les ajouts Vercel, certains ajouts peuvent déjà avoir réussi : **relancer `config`**, qui relit la configuration et complète les absences sans remplacer les valeurs existantes. Les variables locales inconnues de l’assistant sont conservées à la sauvegarde ; les variables incompatibles avec le profil choisi ne sont retirées qu’après autorisation explicite. Les commentaires locaux sont remplacés par l’en-tête généré. Côté Vercel, les variables non gérées et les intégrations tierces sont laissées intactes.
+1. **Inventaire du dépôt** : rapport local sans secrets et classification de tout le contrat d’environnement.
+2. **Dépendances** : si nécessaires, `npm ci` depuis le lockfile ; génération des deux clients Prisma. Le setup desktop est neutralisé pendant l’installation des dépendances cloud, puis exécuté avec son propre profil.
+3. **Vercel** : session existante réutilisée ou connexion officielle ; sélection/confirmation explicite du projet et de l’équipe ; récupération de production **avant génération des secrets**. Pas de modification de Preview/Development. Un override Electron, un NODE_ENV non production ou un nom de secret exposé publiquement bloque le plan avant déploiement.
+4. **Neon/PostgreSQL** : session existante ou authentification officielle ; choix automatique lorsqu’une seule ressource existe, sinon sélection guidée ; création possible d’un projet/base/rôle en Europe si le compte est vide, uniquement après autorisation. Les deux véritables URLs sont récupérées. Une sélection différente d’une `DATABASE_URL` existante est refusée. Pour un PostgreSQL non-Neon existant, l’URL directe manquante est demandée sans deviner son hostname.
+5. **Inspection SQL en lecture seule** : connectivité, tables et présence de données. Sur une base utilisée, une clé absente ne doit pas être régénérée à l’aveugle : importer l’original depuis le coffre, ou déclarer explicitement un domaine **jamais configuré**.
+6. **URLs publiques** : valeurs existantes conservées ; tentative de récupération de l’alias Vercel via son API officielle. Sans alias vérifiable, demander l’URL HTTPS. `GF_APP_URL` est alignée lorsqu’elle est absente.
+7. **Upstash** : session officielle réutilisée ou accès demandé (email + clé Developer API, pas le mot de passe du compte), récupération automatique de l’endpoint REST et du token. S’il n’existe pas de Redis, création possible sur autorisation avec **plan gratuit explicite**, TLS, région Europe et eviction désactivée. Si le fournisseur refuse/renvoie un format inexploitable, demander les deux valeurs REST manuellement. Aucun passage automatique au pay-as-you-go. Un **PING REST réel** doit réussir ; aucun repli mémoire PWA.
+8. **Secrets** : génération indépendante de 32 octets pour les domaines applicatifs absents sur une nouvelle configuration : session, appareil, API admin, MAC licences, portail, signatures, SMTP, TOTP et sauvegardes. Pour une **base sans données**, préparation possible de la clé de chiffrement de facturation ; tous les drapeaux de facturation restent **OFF**. Les valeurs existantes restent inchangées. Sur une base utilisée, les replis historiques portail/signature sur le secret de session original sont préservés plutôt que remplacés par une nouvelle clé invalidant les liens/preuves. Les empreintes connues compromises bloquent le plan et nécessitent une rotation explicite.
+9. **Licences** : import de la paire P-256 existante ou demande du fichier original. Une nouvelle autorité exige une confirmation explicite et synchronise les ancrages publics existants du dépôt. La clé doit correspondre aux ancrages Next/Electron. Un PEM P-256 chiffré peut être importé avec sa passphrase (saisie masquée, mémoire uniquement) ; le PEM local du keygen conserve son chiffrement, tandis que le serveur reçoit la représentation attendue en variable Sensitive. Les clés commerciales des clients ne sont jamais créées automatiquement.
+10. **Fichiers** : profil serveur, profil desktop séparé et configuration du keygen écrits aux emplacements réellement lus par le code. SQLite existante inspectée avant génération de clés manquantes ; une base absente est créée au chemin réellement configuré depuis le template, sans écraser une base existante. Si un ancien `.env` contient PostgreSQL, demander sa migration et conserver une copie privée avant de créer le profil desktop.
+11. **Clients packagés** : sur autorisation, aligner les défauts publics compilés de licence, mise à jour et liens publics sur les endpoints desktop validés (les endpoints existants distincts sont conservés) ; ajouter uniquement son hostname aux listes de téléchargement autorisées du client et du signer. Aucun secret dans ces modifications. Un `.env` seul ne configure pas les binaires déjà installés : **rebuild et distribution restent nécessaires**.
+12. **SQL** : `migrate deploy`, `migrate status`, puis comparaison du schéma réel avec le schéma Prisma (`migrate diff --exit-code`). Base utilisée : confirmation `MIGRER` après vérification de sauvegarde/PITR. Drift/échec : arrêt ; jamais de `db push`, reset, seed démo destructif ou modification arbitraire de l’historique.
+13. **Premier accès admin** : proposition explicite de créer une licence admin signée uniquement pour la première installation. Le jeton est dans un fichier local privé, pas dans le terminal. Aucune licence existante remplacée.
+14. **Vercel production** : seconde lecture avant mutation, refus de conflit/changement concurrent, ajouts des seules variables absentes. Valeurs transmises par stdin, pas par arguments de commande. Jamais de suppression ni `--force`. Déploiement après succès SQL/synchronisation, puis contrôle `/api/health` du nouveau deployment via `vercel curl`. La sonde du domaine public est également contrôlée ; DNS/protection indisponibles apparaissent dans le rapport.
+15. **Publication locale** : import d’un PEM Ed25519 original situé **hors du dépôt**, ou création explicitement autorisée d’un nouveau canal. Ajout de sa clé publique sans retirer les clés historiques ; mémorisation seulement du chemin/keyId. La commande `release:sign` utilise automatiquement cette configuration. La clé privée n’est jamais envoyée au Vercel PWA.
+16. **Keygen Python** : recherche d’un Python >=3.10, vérification de `cryptography`, installation utilisateur proposée par le plan si manquante ; impossibilité d’installation indiquée, pas de faux succès.
 
-Un conflit Vercel, un format inattendu ou une erreur fournisseur arrête l'opération. Les sorties brutes des commandes sont masquées pour éviter la fuite de credentials dans un message d'erreur. Vérifier le compte/projet et ses droits dans le tableau de bord, sans publier de capture contenant des secrets.
+Les CLI téléchargés à la demande sont fixés : `vercel@64.0.2`, `neonctl@8.4.4`, `upstash@1.5.0`. Le poste doit pouvoir accéder à npm et aux comptes fournisseurs. Le configurateur n’enregistre pas leurs jetons dans le projet ; les CLI officiels gèrent leurs sessions. La création Redis gratuite utilise la Developer API authentifiée, sans inscrire les accès dans les sources.
+
+## Où vont les valeurs ?
+
+| Destination | Contenu / lecteur |
+|---|---|
+| `.env` | Desktop/développement SQLite uniquement. Clés locales distinctes du serveur. |
+| `.env.server.local` | Serveur PostgreSQL, secrets et paramètres canoniques. Injectés explicitement à Prisma et synchronisés dans Vercel production. |
+| `.env.legacy-server.local` | Copie privée d’un ancien profil serveur trouvé dans `.env`, uniquement si sa migration a été autorisée. |
+| `keys/private.pem`, `keys/public.pem` | Paire P-256 de l’émetteur lue par le keygen et son packaging public. |
+| `keys/server_config.json` | Champs `url`, `api_key`, `max_mechanic` ; révocation distante et plafond du lanceur Python. |
+| `keys/bootstrap-admin-license.json` | Première licence admin signée, uniquement sur création explicitement autorisée. Jeton sensible. |
+| `GarageFlow-configuration/keygen-runtime.json` | Lanceur Python détecté, sans credential. |
+| Coffre **hors dépôt** | PEM privé Ed25519 de publication ; défaut `~/.garageflows-publisher/update-signing.pem`. Les symlinks vers l’intérieur du dépôt sont refusés. |
+| `GarageFlow-configuration/publisher.json` | Chemin du coffre, keyId et clé **publique**, pas de PEM privé. |
+| `GarageFlow-configuration/report.json` | Étapes réussies/échouées et actions externes restantes, **sans secrets**. |
+| `GarageFlow-configuration/repository-audit.md` | Analyse/inventaire local sans valeurs. |
+
+`.env.server.local` n’est **pas chargé automatiquement par Next.js** : cela empêche les secrets serveur de supplanter le profil d’un build Electron. Les valeurs web réelles sont dans Vercel. Pour un autre hébergeur, importer le profil serveur dans son gestionnaire d’environnement sans le publier avec les sources.
+
+Les destinations locales sensibles sont ignorées par Git et Vercel ; permissions POSIX `0600` (dossiers privés `0700`). Sous Windows, sécuriser aussi les ACL du compte. Ne jamais ajouter de force ces fichiers à Git. Les inconnues locales non canoniques sont conservées ; les paramètres connus incompatibles avec un profil ne sont retirés qu’après autorisation. Les commentaires `.env` sont remplacés par l’en-tête généré.
+
+Dans un Electron **déjà installé**, les secrets session/MAC/SMTP et la clé interne sont gérés par le code sous userData ou en mémoire. Le configurateur ne les remplace pas par des clés partagées de production et ne prétend pas modifier à distance les postes.
+
+## Commandes disponibles
+
+```sh
+npm run config                         # plan complet par défaut
+node config --profile full
+node config --profile desktop          # réglage ciblé local
+node config --profile pwa               # réglage ciblé serveur
+node config --profile licences         # réglage ciblé émetteur
+node config --check --profile desktop   # lecture seule, hors ligne
+node config --check --profile pwa --vercel
+node config --check --profile licences --vercel
+npm run config:audit
+npm run test:config
+npm run keygen                         # interface Python, configuration locale appliquée
+npm run keygen -- --hwid                # CLI Python avec les mêmes paramètres
+npm run release:sign -- --help          # wrapper qui réutilise le coffre configuré
+```
+
+Les profils ciblés restent des assistants à confirmations étape par étape ; le mode complet a une autorisation initiale pour la chaîne technique et ne redemande pas chaque commande sûre. Les valeurs dangereuses peuvent être corrigées dans les réglages avancés ; `GENERER` demande une génération explicite d’un secret symétrique, `SUPPRIMER` le retire du profil. Aucun remplacement automatique d’un secret non vide.
+
+## Ce qui ne peut pas être configuré honnêtement tout seul
+
+- **Secret Vercel Sensitive non relisible** : l’assistant détecte qu’il existe, ne confond pas son placeholder avec une absence et exige la valeur originale depuis le coffre ou confirmation de l’original local. Il vérifie sa présence/métadonnées, pas son contenu inaccessible. Une modification locale ultérieure est refusée pour éviter une rotation implicite.
+- **Clé privée perdue** : impossible de la retrouver depuis une clé publique ou des données chiffrées. Nouvelle autorité/nouveau canal sur confirmation seulement ; les anciens clients/licences peuvent rester incompatibles.
+- **Stockage durable Vercel** : les services actuels de sauvegarde et publication/upload des installateurs écrivent sur disque. Un stockage objet et une adaptation applicative sont nécessaires. Mettre `/tmp/backups` ne suffit pas ; un chemin local de stockage durable est refusé pour le profil Vercel. Les photos ont une voie legacy base64 lorsque le stockage fichier est désactivé, pas une intégration objet automatique.
+- **garagesite3** : le serveur de publication/control-plane externe n’est pas dans ce checkout. Le signer local et les ancrages clients peuvent être préparés, pas déployer du code absent. Le rapport demande l’accès et la propagation publique/keyId nécessaires.
+- **SMTP, identité légale, plateformes de facturation** : données et accès réels du garage, à fournir dans l’application. La préparation de clés ne crée pas ces comptes et n’active pas la facturation. Les clés historiques de SMTP/TOTP/facturation doivent être préservées pour relire les enregistrements existants.
+- **Copilot LLM** : son provider réseau n’est pas implémenté. La clé Anthropic configure l’OCR existant ; le reste nécessite du code, pas une variable fictive.
+- **Node/Python/Tkinter/permissions système, signature de code Windows, DNS, limites ou conditions fournisseurs** : intervention possible sur le poste/compte. Aucun mot de passe utilisateur ou paiement fourni à votre place.
+
+Le résultat peut donc être **configuré avec actions externes restantes**, jamais « tout opérationnel » malgré une étape échouée ou non réalisable.
+
+## Reprise et précautions
+
+Les fichiers locaux sont écrits avant synchronisation ; une interruption peut avoir laissé des migrations ou quelques ajouts Vercel déjà appliqués. **Relancer `config`**, qui relit les configurations et conserve les clés. Aucun rollback destructif automatique. La licence admin candidate est enregistrée avant insertion pour permettre la reprise sans afficher le jeton.
+
+Un verrou local empêche deux plans complets simultanés. Après un arrêt brutal, vérifier qu’aucun processus config ne tourne puis retirer uniquement `GarageFlow-configuration/config.lock` avant de reprendre. Ne jamais supprimer un verrou pendant une configuration active.
+
+Conserver une sauvegarde chiffrée des secrets dans un coffre indépendant. Avant migration d’une base utilisée, vérifier PITR/sauvegarde chez le fournisseur. Les contrôles unitaires et les fournisseurs simulés ne constituent pas un déploiement réel sur vos comptes : la connexion et les sondes réelles sont effectuées lors de l’exécution autorisée sur votre poste.

@@ -9,7 +9,7 @@ const { spawnSync } = require('node:child_process')
 const c = require('../scripts/config-core.cjs')
 const root = path.resolve(__dirname, '..')
 const template = fs.readFileSync(path.join(root, '.env.example'), 'utf8')
-const names = [...c.templateNames(template), 'UPSTASH_REDIS_TIMEOUT_MS']
+const names = [...new Set([...c.templateNames(template), ...require('../scripts/config-policy.cjs').loadPolicy(root).names])]
 function server() {
   return c.fillMissing({ DATABASE_URL: 'postgresql://user:pass@ep-test-pooler.neon.tech/garage?sslmode=require',
     DIRECT_URL: 'postgresql://user:pass@ep-test.neon.tech/garage?sslmode=require',
@@ -149,7 +149,7 @@ test('CLI --check is offline/read-only and reports names, never secret values', 
   const dir = fixture(t)
   fs.mkdirSync(path.join(dir, 'scripts'), { recursive: true })
   fs.mkdirSync(path.join(dir, 'src/lib/license'), { recursive: true })
-  for (const file of ['config', '.env.example', 'scripts/config-core.cjs', 'src/lib/license/public-key.ts']) {
+  for (const file of ['config', '.env.example', 'scripts/config-core.cjs', 'scripts/config-policy.cjs', 'scripts/garageflow-env-manifest.json', 'src/lib/license/public-key.ts']) {
     fs.copyFileSync(path.join(root, file), path.join(dir, file))
   }
   const secret = 'do-not-print-this-actual-secret-value'

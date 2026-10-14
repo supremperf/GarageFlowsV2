@@ -32,14 +32,20 @@ npm run db:seed       # Insère les données de démo
 npm run config
 ```
 
-Ou double-cliquer sur `config.cmd` sous Windows. L'assistant `config` choisit le
-profil, génère les secrets manquants, connecte les CLI officiels Neon/Vercel et
-propose la synchronisation, les migrations et le déploiement sur confirmation.
+Ou double-cliquer sur `config.cmd` sous Windows. `config` lance maintenant le
+**plan complet automatique** : dépendances, accès Neon/Vercel/Upstash, secrets,
+licences/keygen, profils desktop/cloud, bases, migrations, déploiement et signature
+locale des mises à jour. Saisir `AUTORISER` pour lancer le plan ; les demandes
+suivantes concernent des accès, une cible ambiguë ou une opération risquée.
 Il conserve les clés existantes et n'affiche jamais les secrets.
+
+**Analyse et couverture des 118 variables : [CONFIG_REPOSITORY_AUDIT.md](docs/CONFIG_REPOSITORY_AUDIT.md).**
 
 **Guide et limites d'automatisation : [docs/CONFIG.md](docs/CONFIG.md).**
 Le serveur utilise `.env.server.local` (isolé du build Electron) ; le desktop
-conserve `.env`. Les accès Upstash/Anthropic absents doivent être fournis localement.
+conserve `.env`. Les accès non récupérables doivent être fournis localement. Le rapport distingue
+les étapes réussies des fonctions exigeant encore un accès ou une adaptation
+(notamment stockage durable sur Vercel et service de publication externe).
 
 ---
 
