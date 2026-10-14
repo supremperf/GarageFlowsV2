@@ -1926,6 +1926,7 @@
     }
   },
   "platformProvided": [
+    "GITHUB_SHA",
     "ALLOW_PROD",
     "APPDATA",
     "BASE_URL",

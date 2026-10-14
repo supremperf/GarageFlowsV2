@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: same-second backups preserve distinct real SQLite snapshots
+ok 1 - same-second backups preserve distinct real SQLite snapshots
+  ---
+  duration_ms: 174.707439
+  type: 'test'
+  ...
+# Subtest: same-second copies never inherit another snapshot rollback journal
+ok 2 - same-second copies never inherit another snapshot rollback journal
+  ---
+  duration_ms: 64.494948
+  type: 'test'
+  ...
+# Subtest: retention removes all owned annexes including journal
+ok 3 - retention removes all owned annexes including journal
+  ---
+  duration_ms: 135.894333
+  type: 'test'
+  ...
+# Subtest: retention does not delete unrelated files with the application prefix
+ok 4 - retention does not delete unrelated files with the application prefix
+  ---
+  duration_ms: 52.686756
+  type: 'test'
+  ...
+# Subtest: same-second retention keeps the actual latest five snapshots
+ok 5 - same-second retention keeps the actual latest five snapshots
+  ---
+  duration_ms: 616.49157
+  type: 'test'
+  ...
+# Subtest: copy permission failure blocks migration without attempting retention
+ok 6 - copy permission failure blocks migration without attempting retention
+  ---
+  duration_ms: 45.362829
+  type: 'test'
+  ...
+# Subtest: rotation failure is an explicit warning, not a lost valid backup
+ok 7 - rotation failure is an explicit warning, not a lost valid backup
+  ---
+  duration_ms: 63.461402
+  type: 'test'
+  ...
+# Subtest: collision retries are bounded and always use exclusive copy
+ok 8 - collision retries are bounded and always use exclusive copy
+  ---
+  duration_ms: 78.44281
+  type: 'test'
+  ...
+# Subtest: source permission error is not treated as a first-install skip
+ok 9 - source permission error is not treated as a first-install skip
+  ---
+  duration_ms: 3.109097
+  type: 'test'
+  ...
+# Subtest: orphan journal names are reserved without overwriting or reusing them
+ok 10 - orphan journal names are reserved without overwriting or reusing them
+  ---
+  duration_ms: 22.23131
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1415.807306

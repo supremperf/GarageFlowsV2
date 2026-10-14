@@ -101,7 +101,7 @@
     "keygen": "node scripts/config-keygen.cjs",
     "audit:strict": "node scripts/audit-ci.js",
     "test:audit": "node --max-old-space-size=256 --test --test-timeout=15000 tests/audit-security.test.cjs",
-    "test:release-safety": "node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/ci-required-gate.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs tests/secret-scan-policy.test.cjs tests/pre-migration-backup-safety.test.cjs"
+    "test:release-safety": "node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/ci-required-gate.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs tests/secret-scan-policy.test.cjs tests/pre-migration-backup-safety.test.cjs tests/gitleaks-ci.test.cjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.91.1",
