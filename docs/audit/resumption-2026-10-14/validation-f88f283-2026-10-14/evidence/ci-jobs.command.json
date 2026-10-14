@@ -1,0 +1,28 @@
+{
+  "id": "ci-jobs",
+  "startedAt": "2026-10-14T17:01:29.595466+00:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "argv": [
+    "gh",
+    "api",
+    "repos/supremperf/GarageFlowsV2/actions/runs/38602614687/jobs?per_page=100"
+  ],
+  "timeoutSeconds": 600,
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "a0e345f32006494a938ec2339fda7ddd6e4b745b7f4d15d7052b607ad29ce034",
+  "trackedNonAuditFiles": 1220,
+  "environmentOverrides": {
+    "PATH": "pinned npm 11.16.0 first",
+    "NODE_USE_SYSTEM_CA": "1"
+  },
+  "proof": "evidence/ci-jobs.log",
+  "exitCode": 0,
+  "finishedAt": "2026-10-14T17:01:30.093359+00:00",
+  "afterIdentity": {
+    "head": "f88f2832eb256310852ed86040057c062d44433e",
+    "sourceFingerprint": "a0e345f32006494a938ec2339fda7ddd6e4b745b7f4d15d7052b607ad29ce034",
+    "trackedNonAuditFiles": 1220
+  },
+  "logSha256": "4870a7ef2fffe945dc48d39929fee1af9e42f03765801634dbfc14ff9d8002d4"
+}

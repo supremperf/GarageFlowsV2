@@ -1,0 +1,28 @@
+{
+  "id": "audit-policy",
+  "startedAt": "2026-10-14T17:09:40.592280+00:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "argv": [
+    "npm",
+    "run",
+    "test:audit"
+  ],
+  "timeoutSeconds": 600,
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+  "trackedNonAuditFiles": 1220,
+  "environmentOverrides": {
+    "PATH": "pinned npm 11.16.0 first",
+    "NODE_USE_SYSTEM_CA": "1"
+  },
+  "proof": "evidence/audit-policy.log",
+  "exitCode": 0,
+  "finishedAt": "2026-10-14T17:09:41.194630+00:00",
+  "afterIdentity": {
+    "head": "f88f2832eb256310852ed86040057c062d44433e",
+    "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+    "trackedNonAuditFiles": 1220
+  },
+  "logSha256": "5efa1855a8241b90cce939e77fff7a4af8b53f765e9736e7e65ca4df1157f470"
+}

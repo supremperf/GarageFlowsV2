@@ -1,0 +1,38 @@
+[
+  {
+    "index": 1,
+    "status": "BLOQU\u00c9",
+    "processStatus": "\u00c9CHOU\u00c9",
+    "originatingContext": "src/integration/publication-mise-a-jour.test.ts",
+    "nativeEngineMissing": true,
+    "proof": "evidence/full-suite.log#Unhandled-Rejection-1",
+    "limits": "Vitest originating file is context, not proof exact throwing location; native loader stack reproduced in isolated run."
+  },
+  {
+    "index": 2,
+    "status": "BLOQU\u00c9",
+    "processStatus": "\u00c9CHOU\u00c9",
+    "originatingContext": "src/lib/__tests__/license-devices-unit.test.ts",
+    "nativeEngineMissing": true,
+    "proof": "evidence/full-suite.log#Unhandled-Rejection-2",
+    "limits": "Vitest originating file is context, not proof exact throwing location; native loader stack reproduced in isolated run."
+  },
+  {
+    "index": 3,
+    "status": "BLOQU\u00c9",
+    "processStatus": "\u00c9CHOU\u00c9",
+    "originatingContext": "src/lib/__tests__/mechanic-admin.test.ts",
+    "nativeEngineMissing": true,
+    "proof": "evidence/full-suite.log#Unhandled-Rejection-3",
+    "limits": "Vitest originating file is context, not proof exact throwing location; native loader stack reproduced in isolated run."
+  },
+  {
+    "index": 4,
+    "status": "BLOQU\u00c9",
+    "processStatus": "\u00c9CHOU\u00c9",
+    "originatingContext": "src/lib/__tests__/audit-v21-fixes.test.ts",
+    "nativeEngineMissing": true,
+    "proof": "evidence/full-suite.log#Unhandled-Rejection-4",
+    "limits": "Vitest originating file is context, not proof exact throwing location; native loader stack reproduced in isolated run."
+  }
+]

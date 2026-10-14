@@ -1,0 +1,31 @@
+{
+  "id": "redaction-exact",
+  "startedAt": "2026-10-14T17:06:19.290254+00:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "argv": [
+    "node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "src/lib/__tests__/quoted-secret-redaction.test.ts",
+    "--reporter=json",
+    "--outputFile=docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/evidence/redaction-exact.json"
+  ],
+  "timeoutSeconds": 120,
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+  "trackedNonAuditFiles": 1220,
+  "environmentOverrides": {
+    "PATH": "pinned npm 11.16.0 first",
+    "NODE_USE_SYSTEM_CA": "1"
+  },
+  "proof": "evidence/redaction-exact.log",
+  "exitCode": 0,
+  "finishedAt": "2026-10-14T17:06:21.214835+00:00",
+  "afterIdentity": {
+    "head": "f88f2832eb256310852ed86040057c062d44433e",
+    "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+    "trackedNonAuditFiles": 1220
+  },
+  "logSha256": "85f36d55c7bed5cf8dfd49f65f5a9659614ea0755dc69652da3ffda4b45fbf02"
+}

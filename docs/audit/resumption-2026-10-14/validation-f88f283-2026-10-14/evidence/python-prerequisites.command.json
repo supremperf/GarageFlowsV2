@@ -1,0 +1,28 @@
+{
+  "id": "python-prerequisites",
+  "startedAt": "2026-10-14T17:07:22.473287+00:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "argv": [
+    "python3",
+    "-c",
+    "import sys,cryptography; print(sys.executable); print(sys.version); print(cryptography.__version__)"
+  ],
+  "timeoutSeconds": 60,
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+  "trackedNonAuditFiles": 1220,
+  "environmentOverrides": {
+    "PATH": "/home/user/audit-followup/tools/node_modules/.bin:/home/user/audit-resumption/.venv/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games",
+    "NODE_USE_SYSTEM_CA": "1"
+  },
+  "proof": "evidence/python-prerequisites.log",
+  "exitCode": 0,
+  "finishedAt": "2026-10-14T17:07:22.534719+00:00",
+  "afterIdentity": {
+    "head": "f88f2832eb256310852ed86040057c062d44433e",
+    "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+    "trackedNonAuditFiles": 1220
+  },
+  "logSha256": "0f6f52f30e2a837d2bbde31d6819722fb070a79202d4a102e4d3c0c2ac162288"
+}

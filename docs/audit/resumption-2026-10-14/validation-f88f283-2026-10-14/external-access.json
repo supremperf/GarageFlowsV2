@@ -1,0 +1,70 @@
+[
+  {
+    "id": "dependabot",
+    "argv": [
+      "gh",
+      "api",
+      "repos/supremperf/GarageFlowsV2/dependabot/alerts?state=open&per_page=100",
+      "--paginate"
+    ],
+    "startedAt": "2026-10-14T17:01:36.410988+00:00",
+    "finishedAt": "2026-10-14T17:01:36.898843+00:00",
+    "exitCode": 1,
+    "httpCodes": [
+      "403"
+    ],
+    "resourceNotAccessibleByIntegration": true,
+    "status": "BLOQU\u00c9",
+    "alertsUnknown": true
+  },
+  {
+    "id": "branch-protection",
+    "argv": [
+      "gh",
+      "api",
+      "repos/supremperf/GarageFlowsV2/branches/arena%2Fc9eaae15-garageflowsv2/protection",
+      "--paginate"
+    ],
+    "startedAt": "2026-10-14T17:01:36.899051+00:00",
+    "finishedAt": "2026-10-14T17:01:37.194850+00:00",
+    "exitCode": 1,
+    "httpCodes": [
+      "403"
+    ],
+    "resourceNotAccessibleByIntegration": true,
+    "status": "BLOQU\u00c9",
+    "alertsUnknown": false
+  },
+  {
+    "id": "main-protection",
+    "argv": [
+      "gh",
+      "api",
+      "repos/supremperf/GarageFlowsV2/branches/main/protection",
+      "--paginate"
+    ],
+    "startedAt": "2026-10-14T17:01:37.194892+00:00",
+    "finishedAt": "2026-10-14T17:01:37.450701+00:00",
+    "exitCode": 1,
+    "httpCodes": [
+      "403"
+    ],
+    "resourceNotAccessibleByIntegration": true,
+    "status": "BLOQU\u00c9",
+    "alertsUnknown": false
+  },
+  {
+    "id": "branch-effective-rules",
+    "argv": [
+      "gh",
+      "api",
+      "repos/supremperf/GarageFlowsV2/rules/branches/arena%2Fc9eaae15-garageflowsv2",
+      "--paginate"
+    ],
+    "startedAt": "2026-10-14T17:01:37.450746+00:00",
+    "finishedAt": "2026-10-14T17:01:37.704914+00:00",
+    "exitCode": 0,
+    "rules": [],
+    "status": "PARTIELLEMENT VALID\u00c9"
+  }
+]

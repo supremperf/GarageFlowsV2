@@ -1,0 +1,59 @@
+{
+  "historical": "../closure-2026-10-14/tests-summary.json",
+  "runs": [
+    {
+      "commandId": "full-suite",
+      "startedAt": "2026-10-14T17:03:38.443531+00:00",
+      "finishedAt": "2026-10-14T17:06:45.286964+00:00",
+      "head": "f88f2832eb256310852ed86040057c062d44433e",
+      "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+      "total": 3841,
+      "passed": 2987,
+      "failed": 3,
+      "skipped": 851,
+      "globalErrors": 4,
+      "files": 325,
+      "failedFiles": 79,
+      "skipCategories": {
+        "DECLARED_REAL_ARTIFACT_ABSENT": 1,
+        "SETUP_FAILURE_NOT_DECLARED_SKIP": 808,
+        "DECLARED_POSTGRES_UNAVAILABLE": 21,
+        "DECLARED_EXTERNAL_PUBLIC_KEY_ABSENT": 2,
+        "DECLARED_REDIS_UNAVAILABLE": 5,
+        "DECLARED_ISSUER_PRIVATE_KEY_ABSENT": 5,
+        "SETUP_FAILURE_PYTHON_CRYPTOGRAPHY_ABSENT": 7,
+        "DECLARED_ISSUED_TOKEN_ABSENT": 2
+      },
+      "exitCode": 1,
+      "status": "\u00c9CHOU\u00c9",
+      "limits": "Independent execution, not summed with target reruns or other full suites. Redis absent in full run; separate real Redis success does not change its skips. JSON success=true in an isolated suite does not override process exit1/unhandled errors."
+    },
+    {
+      "commandId": "full-suite-provisioned",
+      "startedAt": "2026-10-14T17:07:23.641756+00:00",
+      "finishedAt": "2026-10-14T17:10:07.831034+00:00",
+      "head": "f88f2832eb256310852ed86040057c062d44433e",
+      "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+      "total": 3841,
+      "passed": 2994,
+      "failed": 3,
+      "skipped": 844,
+      "globalErrors": 4,
+      "files": 325,
+      "failedFiles": 78,
+      "skipCategories": {
+        "DECLARED_REAL_ARTIFACT_ABSENT": 1,
+        "SETUP_FAILURE_NOT_DECLARED_SKIP": 808,
+        "DECLARED_POSTGRES_UNAVAILABLE": 21,
+        "DECLARED_EXTERNAL_PUBLIC_KEY_ABSENT": 2,
+        "DECLARED_REDIS_UNAVAILABLE": 5,
+        "DECLARED_ISSUER_PRIVATE_KEY_ABSENT": 5,
+        "DECLARED_ISSUED_TOKEN_ABSENT": 2
+      },
+      "exitCode": 1,
+      "status": "\u00c9CHOU\u00c9",
+      "limits": "Independent execution, not summed with target reruns or other full suites. Redis absent in full run; separate real Redis success does not change its skips. JSON success=true in an isolated suite does not override process exit1/unhandled errors."
+    }
+  ],
+  "environmentCorrection": "Explicit PATH includes pre-existing /home/user/audit-resumption/.venv/bin Python with cryptography 50.0.2. No tests/expectations changed; first run seven blocked keygen cases preserved. Real ephemeral-key signing, not official production issuer validation."
+}

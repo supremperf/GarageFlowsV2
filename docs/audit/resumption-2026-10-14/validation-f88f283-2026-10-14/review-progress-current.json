@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-14T17:06:10.613400+00:00",
+  "files": 1250,
+  "statuses": {
+    "EN ATTENTE DE REVUE": 1132,
+    "VALID\u00c9": 72,
+    "PARTIELLEMENT VALID\u00c9": 46
+  },
+  "fullFileRead": 87,
+  "changedHashes": [
+    ".gitleaksignore",
+    "tests/secret-scan-policy.test.cjs"
+  ],
+  "newTriages": 32,
+  "triageStatuses": {
+    "PARTIELLEMENT VALID\u00c9": 45,
+    "VALID\u00c9": 14
+  },
+  "limits": "Full/bounded semantic read does not mean functional validation. Audit evidence scripts inventoried separately, not silently certified/excluded."
+}

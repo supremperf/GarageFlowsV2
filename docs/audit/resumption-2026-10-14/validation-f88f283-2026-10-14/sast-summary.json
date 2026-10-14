@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-14T17:08:08.263689+00:00",
+  "version": "1.180.0",
+  "rawSha256": "3256b70af190e979241560d0991723931c370c44c0c6c27c4d9436b25807f8df",
+  "targets": 996,
+  "selected": 996,
+  "signals": 865,
+  "groups": 845,
+  "duplicates": 20,
+  "errors": [],
+  "retainedHistoricalIds": 865,
+  "decisions": 59,
+  "decisionStatuses": {
+    "PARTIELLEMENT VALID\u00c9": 45,
+    "VALID\u00c9": 14
+  },
+  "reviewedGroups": 45,
+  "groupStatuses": {
+    "VALID\u00c9": 14,
+    "EN ATTENTE DE REVUE": 800,
+    "PARTIELLEMENT VALID\u00c9": 31
+  },
+  "pendingOccurrences": 806,
+  "limits": "First scan and first typecheck crossed a policy-source edit; settled scan/typecheck supersede them. Same rules/exclusions; raw capture preserved, no signals removed, overlaps not merged. Each alias has its own decision. Not vulnerability-free."
+}

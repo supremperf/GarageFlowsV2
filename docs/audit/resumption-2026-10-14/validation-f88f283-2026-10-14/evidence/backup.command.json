@@ -1,0 +1,28 @@
+{
+  "id": "backup",
+  "startedAt": "2026-10-14T17:03:11.208555+00:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "argv": [
+    "node",
+    "--test",
+    "tests/pre-migration-backup-safety.test.cjs"
+  ],
+  "timeoutSeconds": 600,
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+  "trackedNonAuditFiles": 1220,
+  "environmentOverrides": {
+    "PATH": "pinned npm 11.16.0 first",
+    "NODE_USE_SYSTEM_CA": "1"
+  },
+  "proof": "evidence/backup.log",
+  "exitCode": 0,
+  "finishedAt": "2026-10-14T17:03:11.913917+00:00",
+  "afterIdentity": {
+    "head": "f88f2832eb256310852ed86040057c062d44433e",
+    "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+    "trackedNonAuditFiles": 1220
+  },
+  "logSha256": "08773240e5a4df53546c8c0deb460386d13db4a4694eb5c4a5c50fc3962d0b49"
+}

@@ -1,3 +1,15 @@
+> **Publication autorisée du suivi local :** voir le [reçu et les limites de conservation](publication-validation-2026-10-14/README.md). Le dossier gelé conserve son rapport/manifeste historiques ; 143 de ses 201 preuves sont disponibles, 58 journaux ne sont plus présents dans l’environnement restauré. Les mentions de non-publication y décrivent l’état antérieur à cette nouvelle autorisation. Le nouveau commit exige sa propre CI. **NON PRÊT POUR LA PRODUCTION.**
+
+# Validation locale après publication f88f283 — 14 octobre 2026
+
+**VALIDATION PARTIELLE — NON PRÊT POUR LA PRODUCTION.**
+
+Nouvelle demande : aucune publication/commit/push autorisé. HEAD et distant vérifiés commitf88f283 ; nouveau delta local de politique Gitleaks non publié. Voir le [rapport courant](validation-f88f283-2026-10-14/REPORT.md), la [matrice des26IDs](validation-f88f283-2026-10-14/ISSUE-MATRIX.md), le [candidat](validation-f88f283-2026-10-14/candidate.json) et les [prérequis minimaux](validation-f88f283-2026-10-14/ACCESS-REQUEST.md).
+
+CI38602614687 du commitf88f283 terminée en échec (Gitleaks/Required) ; authentifié et Windows skipped, pas validés. Aucun résultat distant ne valide le nouveau delta local. Tous les index précédents sont conservés ci-dessous.
+
+---
+
 # Publication de la reprise finale — 14 octobre 2026
 
 **VALIDATION PARTIELLE — NON PRÊT POUR LA PRODUCTION.**

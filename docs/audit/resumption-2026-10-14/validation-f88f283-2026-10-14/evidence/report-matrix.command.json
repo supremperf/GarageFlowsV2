@@ -1,0 +1,27 @@
+{
+  "id": "report-matrix",
+  "startedAt": "2026-10-14T17:12:11.643108+00:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "argv": [
+    "python3",
+    "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/build-report.py"
+  ],
+  "timeoutSeconds": 600,
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+  "trackedNonAuditFiles": 1220,
+  "environmentOverrides": {
+    "PATH": "pinned npm 11.16.0 first",
+    "NODE_USE_SYSTEM_CA": "1"
+  },
+  "proof": "evidence/report-matrix.log",
+  "exitCode": 0,
+  "finishedAt": "2026-10-14T17:12:12.047159+00:00",
+  "afterIdentity": {
+    "head": "f88f2832eb256310852ed86040057c062d44433e",
+    "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+    "trackedNonAuditFiles": 1220
+  },
+  "logSha256": "0846cdc45034d9a9c6efdb14838718376412f70efa0d7ae2c83eb454a4a60aed"
+}

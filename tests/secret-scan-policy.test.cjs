@@ -11,12 +11,25 @@ test('secret scanner retains default rules and never exempts whole critical auth
   }
 })
 
-test('only three hash-locked public OAuth header fingerprints are excepted', () => {
+test('three public OAuth headers and one frozen prose fingerprint are individually hash-locked', () => {
   const crypto = require('node:crypto')
   const rows = fs.readFileSync('docs/audit/resumption-2026-10-14/investigation-2026-10-14/gitleaks-triage.jsonl', 'utf8')
     .trim().split('\n').map(x => JSON.parse(x)).filter(r => r.classification === 'PUBLIC_OAUTH_CLIENT_IDENTIFIER')
   assert.equal(rows.length, 3)
-  const expected = rows.map(r => `${r.path}:${r.rule}:${r.startLine}`).sort()
+  const prose = JSON.parse(fs.readFileSync('docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/gitleaks-triage.jsonl', 'utf8').trim())
+  assert.equal(prose.classification, 'DOCUMENTATION_PROSE')
+  assert.equal(prose.path, 'docs/audit/resumption-2026-10-14/closure-2026-10-14/REPORT.md')
+  assert.equal(prose.rule, 'generic-api-key')
+  assert.equal(prose.startLine, 96)
+  assert.equal(prose.endLine, 96)
+  const proseBytes = fs.readFileSync(prose.path)
+  assert.equal(crypto.createHash('sha256').update(proseBytes).digest('hex'), prose.sourceSha256,
+    'Frozen prose changed; exception requires re-triage')
+  const line = proseBytes.toString().split('\n')[prose.startLine - 1]
+  assert.ok(line.startsWith('Revue complète de authz.ts : can/permissionsOf'))
+  assert.ok(line.includes('Object.hasOwn'))
+  assert.ok(line.endsWith('[lint](evidence/lint-final.log).'))
+  const expected = [...rows, prose].map(r => `${r.path}:${r.rule}:${r.startLine}`).sort()
   const actual = fs.readFileSync('.gitleaksignore', 'utf8').split('\n').map(x => x.trim()).filter(x => x && !x.startsWith('#')).sort()
   assert.deepEqual(actual, expected)
   for (const r of rows) {

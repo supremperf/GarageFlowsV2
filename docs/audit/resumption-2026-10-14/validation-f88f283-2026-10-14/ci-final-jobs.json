@@ -1,0 +1,719 @@
+[
+  {
+    "argv": [
+      "gh",
+      "api",
+      "repos/supremperf/GarageFlowsV2/actions/jobs/115985376589"
+    ],
+    "exitCode": 0,
+    "observedAt": "2026-10-14T17:06:46.594072+00:00",
+    "id": 115985376589,
+    "run_id": 38602614687,
+    "head_sha": "f88f2832eb256310852ed86040057c062d44433e",
+    "name": "Full dependency tree \u2014 zero vulnerabilities",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-14T16:58:19Z",
+    "completed_at": "2026-10-14T16:58:51Z",
+    "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38602614687/job/115985376589",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "steps": [
+      {
+        "name": "Set up job",
+        "number": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:20Z",
+        "completed_at": "2026-10-14T16:58:20Z"
+      },
+      {
+        "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "number": 2,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:20Z",
+        "completed_at": "2026-10-14T16:58:23Z"
+      },
+      {
+        "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+        "number": 3,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:23Z",
+        "completed_at": "2026-10-14T16:58:26Z"
+      },
+      {
+        "name": "Use pinned npm",
+        "number": 4,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:26Z",
+        "completed_at": "2026-10-14T16:58:29Z"
+      },
+      {
+        "name": "Run npm ci --ignore-scripts",
+        "number": 5,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:29Z",
+        "completed_at": "2026-10-14T16:58:44Z"
+      },
+      {
+        "name": "Run npm ls --all",
+        "number": 6,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:44Z",
+        "completed_at": "2026-10-14T16:58:45Z"
+      },
+      {
+        "name": "Run npm run test:audit",
+        "number": 7,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:45Z",
+        "completed_at": "2026-10-14T16:58:45Z"
+      },
+      {
+        "name": "Run npm run test:release-safety",
+        "number": 8,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:45Z",
+        "completed_at": "2026-10-14T16:58:47Z"
+      },
+      {
+        "name": "Run npm run audit:strict",
+        "number": 9,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:47Z",
+        "completed_at": "2026-10-14T16:58:48Z"
+      },
+      {
+        "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+        "number": 17,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:48Z",
+        "completed_at": "2026-10-14T16:58:48Z"
+      },
+      {
+        "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "number": 18,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:48Z",
+        "completed_at": "2026-10-14T16:58:48Z"
+      },
+      {
+        "name": "Complete job",
+        "number": 19,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:48Z",
+        "completed_at": "2026-10-14T16:58:48Z"
+      }
+    ]
+  },
+  {
+    "argv": [
+      "gh",
+      "api",
+      "repos/supremperf/GarageFlowsV2/actions/jobs/115985376739"
+    ],
+    "exitCode": 0,
+    "observedAt": "2026-10-14T17:06:47.130039+00:00",
+    "id": 115985376739,
+    "run_id": 38602614687,
+    "head_sha": "f88f2832eb256310852ed86040057c062d44433e",
+    "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-14T16:58:18Z",
+    "completed_at": "2026-10-14T17:00:32Z",
+    "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38602614687/job/115985376739",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "steps": [
+      {
+        "name": "Set up job",
+        "number": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:19Z",
+        "completed_at": "2026-10-14T16:58:20Z"
+      },
+      {
+        "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "number": 2,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:20Z",
+        "completed_at": "2026-10-14T16:58:22Z"
+      },
+      {
+        "name": "Setup Node",
+        "number": 3,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:22Z",
+        "completed_at": "2026-10-14T16:58:24Z"
+      },
+      {
+        "name": "Use pinned npm",
+        "number": 4,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:24Z",
+        "completed_at": "2026-10-14T16:58:27Z"
+      },
+      {
+        "name": "Install dependencies (reproducible)",
+        "number": 5,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:27Z",
+        "completed_at": "2026-10-14T16:58:46Z"
+      },
+      {
+        "name": "Install Playwright Chromium (+ deps)",
+        "number": 6,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:46Z",
+        "completed_at": "2026-10-14T16:59:07Z"
+      },
+      {
+        "name": "Prepare local SQLite database",
+        "number": 7,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:07Z",
+        "completed_at": "2026-10-14T16:59:07Z"
+      },
+      {
+        "name": "Run E2E (public responsive suite)",
+        "number": 8,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:07Z",
+        "completed_at": "2026-10-14T17:00:29Z"
+      },
+      {
+        "name": "Upload Playwright report on failure",
+        "number": 9,
+        "status": "completed",
+        "conclusion": "skipped",
+        "started_at": "2026-10-14T17:00:29Z",
+        "completed_at": "2026-10-14T17:00:29Z"
+      },
+      {
+        "name": "Post Setup Node",
+        "number": 17,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T17:00:29Z",
+        "completed_at": "2026-10-14T17:00:29Z"
+      },
+      {
+        "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "number": 18,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T17:00:29Z",
+        "completed_at": "2026-10-14T17:00:29Z"
+      },
+      {
+        "name": "Complete job",
+        "number": 19,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T17:00:29Z",
+        "completed_at": "2026-10-14T17:00:29Z"
+      }
+    ]
+  },
+  {
+    "argv": [
+      "gh",
+      "api",
+      "repos/supremperf/GarageFlowsV2/actions/jobs/115985376849"
+    ],
+    "exitCode": 0,
+    "observedAt": "2026-10-14T17:06:47.654707+00:00",
+    "id": 115985376849,
+    "run_id": 38602614687,
+    "head_sha": "f88f2832eb256310852ed86040057c062d44433e",
+    "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+    "status": "completed",
+    "conclusion": "success",
+    "started_at": "2026-10-14T16:58:18Z",
+    "completed_at": "2026-10-14T17:02:42Z",
+    "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38602614687/job/115985376849",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "steps": [
+      {
+        "name": "Set up job",
+        "number": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:19Z",
+        "completed_at": "2026-10-14T16:58:19Z"
+      },
+      {
+        "name": "Initialize containers",
+        "number": 2,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:19Z",
+        "completed_at": "2026-10-14T16:58:34Z"
+      },
+      {
+        "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "number": 3,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:34Z",
+        "completed_at": "2026-10-14T16:58:36Z"
+      },
+      {
+        "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+        "number": 4,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:36Z",
+        "completed_at": "2026-10-14T16:58:38Z"
+      },
+      {
+        "name": "Use pinned npm",
+        "number": 5,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:38Z",
+        "completed_at": "2026-10-14T16:58:41Z"
+      },
+      {
+        "name": "Install dependencies (reproducible)",
+        "number": 6,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:41Z",
+        "completed_at": "2026-10-14T16:59:02Z"
+      },
+      {
+        "name": "Version consistency (SemVer)",
+        "number": 7,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:02Z",
+        "completed_at": "2026-10-14T16:59:02Z"
+      },
+      {
+        "name": "Validate Prisma schemas (desktop + serveur)",
+        "number": 8,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:02Z",
+        "completed_at": "2026-10-14T16:59:04Z"
+      },
+      {
+        "name": "Generate Prisma clients (desktop + serveur)",
+        "number": 9,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:04Z",
+        "completed_at": "2026-10-14T16:59:08Z"
+      },
+      {
+        "name": "TypeScript",
+        "number": 10,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:08Z",
+        "completed_at": "2026-10-14T16:59:30Z"
+      },
+      {
+        "name": "ESLint",
+        "number": 11,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:30Z",
+        "completed_at": "2026-10-14T16:59:40Z"
+      },
+      {
+        "name": "Branding consistency (strict)",
+        "number": 12,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:40Z",
+        "completed_at": "2026-10-14T16:59:40Z"
+      },
+      {
+        "name": "PWA manifests & icon dimensions",
+        "number": 13,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:40Z",
+        "completed_at": "2026-10-14T16:59:40Z"
+      },
+      {
+        "name": "Money fields (ZERO monetary Float)",
+        "number": 14,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:40Z",
+        "completed_at": "2026-10-14T16:59:40Z"
+      },
+      {
+        "name": "Money calculations (no direct float math)",
+        "number": 15,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:40Z",
+        "completed_at": "2026-10-14T16:59:41Z"
+      },
+      {
+        "name": "Money JSON (v2 writers only)",
+        "number": 16,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:41Z",
+        "completed_at": "2026-10-14T16:59:41Z"
+      },
+      {
+        "name": "Migration safety invariants",
+        "number": 17,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:41Z",
+        "completed_at": "2026-10-14T16:59:41Z"
+      },
+      {
+        "name": "SQLite template (integrity + baseline + checksums)",
+        "number": 18,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:41Z",
+        "completed_at": "2026-10-14T16:59:41Z"
+      },
+      {
+        "name": "PostgreSQL migrations (per-column verification)",
+        "number": 19,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:41Z",
+        "completed_at": "2026-10-14T16:59:41Z"
+      },
+      {
+        "name": "Docs consistency",
+        "number": 20,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:41Z",
+        "completed_at": "2026-10-14T16:59:41Z"
+      },
+      {
+        "name": "Critical security/licence files present & coherent",
+        "number": 21,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:41Z",
+        "completed_at": "2026-10-14T16:59:41Z"
+      },
+      {
+        "name": "PostgreSQL migrations on empty database + smoke test",
+        "number": 22,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:41Z",
+        "completed_at": "2026-10-14T16:59:46Z"
+      },
+      {
+        "name": "Python for real keygen integration (no silent fallback)",
+        "number": 23,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:46Z",
+        "completed_at": "2026-10-14T16:59:46Z"
+      },
+      {
+        "name": "Install hash-locked keygen test dependencies",
+        "number": 24,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:46Z",
+        "completed_at": "2026-10-14T16:59:48Z"
+      },
+      {
+        "name": "Tests (unit + integration)",
+        "number": 25,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:59:48Z",
+        "completed_at": "2026-10-14T17:00:55Z"
+      },
+      {
+        "name": "Build",
+        "number": 26,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T17:00:55Z",
+        "completed_at": "2026-10-14T17:02:37Z"
+      },
+      {
+        "name": "Performance budget (client bundle)",
+        "number": 27,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T17:02:37Z",
+        "completed_at": "2026-10-14T17:02:37Z"
+      },
+      {
+        "name": "Dependency security regression tests",
+        "number": 28,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T17:02:37Z",
+        "completed_at": "2026-10-14T17:02:38Z"
+      },
+      {
+        "name": "Dependency audit gate (all packages, LOW through CRITICAL)",
+        "number": 29,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T17:02:38Z",
+        "completed_at": "2026-10-14T17:02:38Z"
+      },
+      {
+        "name": "Post Python for real keygen integration (no silent fallback)",
+        "number": 55,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T17:02:38Z",
+        "completed_at": "2026-10-14T17:02:39Z"
+      },
+      {
+        "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+        "number": 56,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T17:02:39Z",
+        "completed_at": "2026-10-14T17:02:39Z"
+      },
+      {
+        "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "number": 57,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T17:02:39Z",
+        "completed_at": "2026-10-14T17:02:39Z"
+      },
+      {
+        "name": "Stop containers",
+        "number": 58,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T17:02:39Z",
+        "completed_at": "2026-10-14T17:02:39Z"
+      },
+      {
+        "name": "Complete job",
+        "number": 59,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T17:02:39Z",
+        "completed_at": "2026-10-14T17:02:39Z"
+      }
+    ]
+  },
+  {
+    "argv": [
+      "gh",
+      "api",
+      "repos/supremperf/GarageFlowsV2/actions/jobs/115985377234"
+    ],
+    "exitCode": 0,
+    "observedAt": "2026-10-14T17:06:48.121292+00:00",
+    "id": 115985377234,
+    "run_id": 38602614687,
+    "head_sha": "f88f2832eb256310852ed86040057c062d44433e",
+    "name": "Secret scan (Gitleaks)",
+    "status": "completed",
+    "conclusion": "failure",
+    "started_at": "2026-10-14T16:58:19Z",
+    "completed_at": "2026-10-14T16:58:28Z",
+    "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38602614687/job/115985377234",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "steps": [
+      {
+        "name": "Set up job",
+        "number": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:20Z",
+        "completed_at": "2026-10-14T16:58:20Z"
+      },
+      {
+        "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "number": 2,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:20Z",
+        "completed_at": "2026-10-14T16:58:23Z"
+      },
+      {
+        "name": "Install gitleaks",
+        "number": 3,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:23Z",
+        "completed_at": "2026-10-14T16:58:24Z"
+      },
+      {
+        "name": "Gitleaks \u2014 scan working tree",
+        "number": 4,
+        "status": "completed",
+        "conclusion": "failure",
+        "started_at": "2026-10-14T16:58:24Z",
+        "completed_at": "2026-10-14T16:58:26Z"
+      },
+      {
+        "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "number": 8,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:26Z",
+        "completed_at": "2026-10-14T16:58:26Z"
+      },
+      {
+        "name": "Complete job",
+        "number": 9,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T16:58:26Z",
+        "completed_at": "2026-10-14T16:58:26Z"
+      }
+    ]
+  },
+  {
+    "argv": [
+      "gh",
+      "api",
+      "repos/supremperf/GarageFlowsV2/actions/jobs/115985379873"
+    ],
+    "exitCode": 0,
+    "observedAt": "2026-10-14T17:06:48.626335+00:00",
+    "id": 115985379873,
+    "run_id": 38602614687,
+    "head_sha": "f88f2832eb256310852ed86040057c062d44433e",
+    "name": "Final release gate (full)",
+    "status": "completed",
+    "conclusion": "skipped",
+    "started_at": "2026-10-14T16:58:16Z",
+    "completed_at": "2026-10-14T16:58:15Z",
+    "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38602614687/job/115985379873",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "steps": []
+  },
+  {
+    "argv": [
+      "gh",
+      "api",
+      "repos/supremperf/GarageFlowsV2/actions/jobs/115987562880"
+    ],
+    "exitCode": 0,
+    "observedAt": "2026-10-14T17:06:49.131916+00:00",
+    "id": 115987562880,
+    "run_id": 38602614687,
+    "head_sha": "f88f2832eb256310852ed86040057c062d44433e",
+    "name": "Required validation",
+    "status": "completed",
+    "conclusion": "failure",
+    "started_at": "2026-10-14T17:02:45Z",
+    "completed_at": "2026-10-14T17:02:47Z",
+    "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38602614687/job/115987562880",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "steps": [
+      {
+        "name": "Set up job",
+        "number": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T17:02:45Z",
+        "completed_at": "2026-10-14T17:02:45Z"
+      },
+      {
+        "name": "Refuse failed, cancelled or skipped mandatory jobs",
+        "number": 2,
+        "status": "completed",
+        "conclusion": "failure",
+        "started_at": "2026-10-14T17:02:45Z",
+        "completed_at": "2026-10-14T17:02:46Z"
+      },
+      {
+        "name": "Complete job",
+        "number": 3,
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-10-14T17:02:46Z",
+        "completed_at": "2026-10-14T17:02:46Z"
+      }
+    ]
+  },
+  {
+    "argv": [
+      "gh",
+      "api",
+      "repos/supremperf/GarageFlowsV2/actions/jobs/115987563361"
+    ],
+    "exitCode": 0,
+    "observedAt": "2026-10-14T17:06:49.645713+00:00",
+    "id": 115987563361,
+    "run_id": 38602614687,
+    "head_sha": "f88f2832eb256310852ed86040057c062d44433e",
+    "name": "Authenticated browser validation (approved staging only)",
+    "status": "completed",
+    "conclusion": "skipped",
+    "started_at": "2026-10-14T17:02:42Z",
+    "completed_at": "2026-10-14T17:02:42Z",
+    "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38602614687/job/115987563361",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "steps": []
+  },
+  {
+    "argv": [
+      "gh",
+      "api",
+      "repos/supremperf/GarageFlowsV2/actions/jobs/115987564679"
+    ],
+    "exitCode": 0,
+    "observedAt": "2026-10-14T17:06:50.065607+00:00",
+    "id": 115987564679,
+    "run_id": 38602614687,
+    "head_sha": "f88f2832eb256310852ed86040057c062d44433e",
+    "name": "Windows candidate packaging and inspection (not publication)",
+    "status": "completed",
+    "conclusion": "skipped",
+    "started_at": "2026-10-14T17:02:42Z",
+    "completed_at": "2026-10-14T17:02:42Z",
+    "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38602614687/job/115987564679",
+    "labels": [
+      "windows-latest"
+    ],
+    "steps": []
+  }
+]

@@ -1,0 +1,57 @@
+{
+  "version": "8.24.3",
+  "downloads": [
+    {
+      "argv": [
+        "curl",
+        "--fail",
+        "--silent",
+        "--show-error",
+        "--location",
+        "--connect-timeout",
+        "10",
+        "--max-time",
+        "45",
+        "--write-out",
+        "%{http_code}",
+        "--output",
+        "/home/user/audit-resumption/.cache/gitleaks-validation-f88f283/gitleaks_8.24.3_checksums.txt",
+        "https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_checksums.txt"
+      ],
+      "startedAt": "2026-10-14T17:02:09.618240+00:00",
+      "finishedAt": "2026-10-14T17:02:10.168875+00:00",
+      "exitCode": 35,
+      "httpCode": "302",
+      "bytes": 0,
+      "diagnosticWithheld": true
+    },
+    {
+      "argv": [
+        "curl",
+        "--fail",
+        "--silent",
+        "--show-error",
+        "--location",
+        "--connect-timeout",
+        "10",
+        "--max-time",
+        "45",
+        "--write-out",
+        "%{http_code}",
+        "--output",
+        "/home/user/audit-resumption/.cache/gitleaks-validation-f88f283/gitleaks_8.24.3_linux_x64.tar.gz",
+        "https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz"
+      ],
+      "startedAt": "2026-10-14T17:02:10.168980+00:00",
+      "finishedAt": "2026-10-14T17:02:10.403238+00:00",
+      "exitCode": 35,
+      "httpCode": "302",
+      "bytes": 0,
+      "diagnosticWithheld": true
+    }
+  ],
+  "checksumVerified": false,
+  "binaryExecuted": false,
+  "scopeRequested": "current working tree via project scripts/gitleaks-ci.cjs; not git commit/history",
+  "status": "BLOQU\u00c9"
+}
