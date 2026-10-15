@@ -1,0 +1,384 @@
+{
+  "at": "2026-10-15T12:27:54.446Z",
+  "corpus": "24 new development formulations, not independent/human validation",
+  "mode": "DETERMINISTIC_RAW_ROUTER_NOT_AUTHENTICATED_API",
+  "modelAttemptsUpperBound": 0,
+  "structuredPlansAcceptedByTransport": 0,
+  "categories": {
+    "naturalLanguage": {
+      "evaluated": 24,
+      "passed": 11,
+      "limits": "Expected response mode only, no human relevance/semantic explanation rating."
+    },
+    "planning": {
+      "evaluated": 24,
+      "passed": 8,
+      "toolSelectionErrors": 10,
+      "invalidPlans": 0,
+      "unneededClarifications": 0,
+      "correctDenials": 1,
+      "denialCases": 1
+    },
+    "businessAccuracy": {
+      "status": "BLOCKED_NATIVE_DATABASE",
+      "evaluated": 0,
+      "factualErrorRate": null,
+      "prematureFactPayloads": 0,
+      "limits": "No database results in this runner; payload counter is structural, NOT semantic factual accuracy."
+    },
+    "toolExecution": {
+      "status": "NOT_EXECUTED",
+      "nativeReads": 0,
+      "writes": 0,
+      "errorRate": null,
+      "limits": "Selection/schema/RBAC checked only. Scripted reader tests are separate simulations, not native tool evidence."
+    }
+  },
+  "latency": {
+    "selectionOnly": {
+      "samples": 24,
+      "medianMs": 0.1286450000000059,
+      "p95Ms": 3.3734719999999925
+    },
+    "modelPlanAttempts": {
+      "samples": 0,
+      "medianMs": null,
+      "p95Ms": null
+    },
+    "coldApplication": null
+  },
+  "rows": [
+    {
+      "id": "N01",
+      "category": "language",
+      "expectedType": "answer",
+      "actualType": "answer",
+      "expectedTools": [
+        "pending_quotes"
+      ],
+      "actualTools": [
+        "pending_quotes"
+      ],
+      "languageContractPass": true,
+      "planningPass": true,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N02",
+      "category": "language",
+      "expectedType": "answer",
+      "actualType": "answer",
+      "expectedTools": [
+        "low_stock"
+      ],
+      "actualTools": [
+        "low_stock"
+      ],
+      "languageContractPass": true,
+      "planningPass": true,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N03",
+      "category": "language",
+      "expectedType": "answer",
+      "actualType": "unknown",
+      "expectedTools": [
+        "available_mechanics"
+      ],
+      "actualTools": [],
+      "languageContractPass": false,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N04",
+      "category": "language",
+      "expectedType": "answer",
+      "actualType": "unknown",
+      "expectedTools": [
+        "today_revenue"
+      ],
+      "actualTools": [],
+      "languageContractPass": false,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N05",
+      "category": "explanation",
+      "expectedType": "help",
+      "actualType": "unknown",
+      "expectedTools": [],
+      "actualTools": [],
+      "languageContractPass": false,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N06",
+      "category": "diagnosis",
+      "expectedType": "answer",
+      "actualType": "answer",
+      "expectedTools": [
+        "diagnostic"
+      ],
+      "actualTools": [
+        "diagnostic"
+      ],
+      "languageContractPass": true,
+      "planningPass": true,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N07",
+      "category": "search",
+      "expectedType": "answer",
+      "actualType": "answer",
+      "expectedTools": [
+        "vin_decode"
+      ],
+      "actualTools": [
+        "vin_decode"
+      ],
+      "languageContractPass": true,
+      "planningPass": true,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N08",
+      "category": "planning",
+      "expectedType": "answer",
+      "actualType": "answer",
+      "expectedTools": [
+        "today_revenue",
+        "low_stock",
+        "available_mechanics"
+      ],
+      "actualTools": [
+        "today_revenue"
+      ],
+      "languageContractPass": true,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N09",
+      "category": "comparison",
+      "expectedType": "answer",
+      "actualType": "answer",
+      "expectedTools": [
+        "low_stock",
+        "pending_quotes"
+      ],
+      "actualTools": [
+        "pending_quotes"
+      ],
+      "languageContractPass": true,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N10",
+      "category": "action",
+      "expectedType": "action_proposal",
+      "actualType": "unknown",
+      "expectedTools": [],
+      "actualTools": [],
+      "languageContractPass": false,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N11",
+      "category": "permissions",
+      "expectedType": "denied",
+      "actualType": "denied",
+      "expectedTools": [],
+      "actualTools": [],
+      "languageContractPass": true,
+      "planningPass": true,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N12",
+      "category": "permissions",
+      "expectedType": "clarify",
+      "actualType": "action_proposal",
+      "expectedTools": [],
+      "actualTools": [],
+      "languageContractPass": false,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": true
+    },
+    {
+      "id": "N13",
+      "category": "out_of_scope",
+      "expectedType": "unknown",
+      "actualType": "unknown",
+      "expectedTools": [],
+      "actualTools": [],
+      "languageContractPass": true,
+      "planningPass": true,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N14",
+      "category": "missing",
+      "expectedType": "clarify",
+      "actualType": "unknown",
+      "expectedTools": [],
+      "actualTools": [],
+      "languageContractPass": false,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N15",
+      "category": "multi_turn",
+      "expectedType": "answer",
+      "actualType": "unknown",
+      "expectedTools": [
+        "job_search"
+      ],
+      "actualTools": [],
+      "languageContractPass": false,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N16",
+      "category": "contradiction",
+      "expectedType": "clarify",
+      "actualType": "unknown",
+      "expectedTools": [],
+      "actualTools": [],
+      "languageContractPass": false,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N17",
+      "category": "period",
+      "expectedType": "clarify",
+      "actualType": "answer",
+      "expectedTools": [],
+      "actualTools": [
+        "margin"
+      ],
+      "languageContractPass": false,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N18",
+      "category": "injection",
+      "expectedType": "unknown",
+      "actualType": "unknown",
+      "expectedTools": [],
+      "actualTools": [],
+      "languageContractPass": true,
+      "planningPass": true,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N19",
+      "category": "injection",
+      "expectedType": "unknown",
+      "actualType": "unknown",
+      "expectedTools": [],
+      "actualTools": [],
+      "languageContractPass": true,
+      "planningPass": true,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N20",
+      "category": "multi_turn",
+      "expectedType": "clarify",
+      "actualType": "answer",
+      "expectedTools": [],
+      "actualTools": [
+        "margin"
+      ],
+      "languageContractPass": false,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N21",
+      "category": "long_context",
+      "expectedType": "clarify",
+      "actualType": "unknown",
+      "expectedTools": [],
+      "actualTools": [],
+      "languageContractPass": false,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N22",
+      "category": "privacy",
+      "expectedType": "clarify",
+      "actualType": "unknown",
+      "expectedTools": [],
+      "actualTools": [],
+      "languageContractPass": false,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N23",
+      "category": "negation",
+      "expectedType": "clarify",
+      "actualType": "unknown",
+      "expectedTools": [],
+      "actualTools": [],
+      "languageContractPass": false,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    },
+    {
+      "id": "N24",
+      "category": "planning",
+      "expectedType": "answer",
+      "actualType": "answer",
+      "expectedTools": [
+        "today_revenue",
+        "low_stock",
+        "available_mechanics"
+      ],
+      "actualTools": [
+        "today_revenue"
+      ],
+      "languageContractPass": true,
+      "planningPass": false,
+      "fallback": false,
+      "actionConfirmation": null
+    }
+  ],
+  "limits": "No SQL, authenticated HTTP, live issuer, browser or factual synthesis evaluated. No scripted model response in this corpus. Live mode requires external authorization; null transport may be auth/network/timeout/invalid JSON/circuit, not proof of successful model understanding. Cap bounds planner attempts, including circuit-short-circuited attempts. No response/query/key text logged."
+}

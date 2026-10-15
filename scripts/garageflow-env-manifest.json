@@ -276,7 +276,7 @@
       "consumers": [
         "src/lib/copilot-llm/provider.ts"
       ],
-      "notes": "Explicit opt-in: off (default) or anthropic. Classification only, query sent externally; never business results/history. No automatic activation."
+      "notes": "Explicit opt-in: off (default) or anthropic. Constrained read planning/help/handoff selection, current query and nonpersonal topic metadata only; never business results or historical text. No automatic activation."
     },
     {
       "name": "GARAGEFLOW_LLM_MODEL",

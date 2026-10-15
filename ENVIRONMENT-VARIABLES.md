@@ -46,7 +46,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `EINVOICING_PAYMENT_REPORTING_ENABLED` | CONFIGURATION | non | server | Autorise le e-reporting de paiement. OFF par defaut. |
 | `EINVOICING_PROVIDER_CATALOG_ENABLED` | CONFIGURATION | non | server | Affiche le catalogue des plateformes (lecture seule, aucun secret). Defaut true. |
 | `EINVOICING_SANDBOX_ONLY` | CONFIGURATION | non | server | Verrouille l environnement sur sandbox (defaut true) : aucune transmission reelle par megarde. |
-| `GARAGEFLOW_LLM` | CONFIGURATION | non | server | Explicit opt-in: off (default) or anthropic. Classification only, query sent externally; never business results/history. No automatic activation. |
+| `GARAGEFLOW_LLM` | CONFIGURATION | non | server | Explicit opt-in: off (default) or anthropic. Constrained read planning/help/handoff selection, current query and nonpersonal topic metadata only; nev… |
 | `GARAGEFLOW_LLM_MODEL` | CONFIGURATION | non | server | Optional Anthropic model ID, default claude-haiku-4-5-20251001. Availability and quality require live validation. No arbitrary endpoint. |
 | `GF_ALLOW_DEBUG` | CONFIGURATION | non | desktop | Development override; must not be enabled in production builds. |
 | `GF_ANTIDEBUG` | CONFIGURATION | non | desktop | Enables anti-debug enforcement only with integrity enforcement. |

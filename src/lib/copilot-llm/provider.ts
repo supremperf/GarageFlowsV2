@@ -1,5 +1,9 @@
 /** Server-only, explicitly opted-in classification. Never sends DB results or history. */
 import { z } from 'zod'
+import { SemanticSchema, type SemanticRequest } from '@/lib/copilot/semantic'
+import { buildSemanticMessages } from './prompts'
+import { PlanSchema, type PlanningRequest } from '@/lib/copilot/planning'
+import { buildPlanningMessages } from './prompts'
 import { buildClassifyMessages } from './prompts'
 import type { IntentSpec, LlmProvider } from './types'
 
@@ -9,14 +13,17 @@ const ClassificationSchema = z.object({
   intentId: z.string().max(80), confidence: z.number().finite().min(0).max(1),
 }).strict()
 export type ProviderState = 'initializing' | 'ready' | 'degraded' | 'unavailable'
+export interface ProviderAttempt { outcome: 'valid_json_contract' | 'circuit_open' | 'aborted' | 'timeout' | 'http_error' | 'invalid_response' | 'transport_error'; durationMs: number; httpStatus: number | null; usage: { input_tokens: number; output_tokens: number } | null }
 export interface ProviderHealth { state: ProviderState; reason: string; model?: string; checkedAt?: string }
 
 /** Fixed official endpoint; no caller-controlled URLs, tools, retries or free-form phrasing. */
 export class AnthropicClassifier implements LlmProvider {
   readonly id = 'anthropic'
-  readonly name = 'Anthropic (classification uniquement)'
+  readonly name = 'Anthropic (planification contrôlée)'
   private health: ProviderHealth
   private retryAfter = 0
+  private attempt: ProviderAttempt | null = null
+  lastAttempt(): ProviderAttempt | null { return this.attempt ? { ...this.attempt, usage: this.attempt.usage ? { ...this.attempt.usage } : null } : null }
   constructor(private readonly key: string, private readonly model: string) {
     this.health = { state: 'initializing', reason: 'Connexion et modèle non encore vérifiés.', model }
   }
@@ -27,17 +34,44 @@ export class AnthropicClassifier implements LlmProvider {
     return { ...this.health }
   }
   async classify(query: string, intents: IntentSpec[]) {
-    if (Date.now() < this.retryAfter) return null
+    const messages = buildClassifyMessages(query.slice(0, 500), intents)
+    return this.request(messages[0].content, messages[1].content, 128, value => {
+      const result = ClassificationSchema.parse(value)
+      if (result.intentId !== 'unknown' && !intents.some(i => i.id === result.intentId)) throw new Error('provider_intent')
+      return result
+    })
+  }
+  async interpret(request: SemanticRequest, options: { signal?: AbortSignal } = {}) {
+    const messages = buildSemanticMessages(request)
+    // Same 512-token/one-request ceiling, no extra paid fallback call.
+    return this.request(messages[0].content, messages[1].content, 512, value => SemanticSchema.parse(value), options.signal)
+  }
+  async plan(request: PlanningRequest, options: { signal?: AbortSignal } = {}) {
+    const messages = buildPlanningMessages(request)
+    return this.request(messages[0].content, messages[1].content, 512, value => PlanSchema.parse(value), options.signal)
+  }
+  private async request<T>(system: string, user: string, tokens: number, parse: (value: unknown) => T, parent?: AbortSignal): Promise<T | null> {
+    if (parent?.aborted || Date.now() < this.retryAfter) {
+      this.attempt = { outcome: parent?.aborted ? 'aborted' : 'circuit_open', durationMs: 0, httpStatus: null, usage: null }; return null
+    }
+    const started = performance.now()
+    let stage: 'transport' | 'response' = 'transport'
+    let httpStatus: number | null = null
+    let usage: ProviderAttempt['usage'] = null
     const controller = new AbortController()
+    const onAbort = () => controller.abort()
+    parent?.addEventListener('abort', onAbort, { once: true })
+    if (parent?.aborted) controller.abort()
     const timer = setTimeout(() => controller.abort(), DEADLINE_MS)
     try {
-      const messages = buildClassifyMessages(query.slice(0, 500), intents)
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST', signal: controller.signal, redirect: 'error',
         headers: { 'content-type': 'application/json', 'x-api-key': this.key, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: this.model, max_tokens: 128, temperature: 0,
-          system: messages[0].content, messages: [{ role: 'user', content: messages[1].content }] }),
+        body: JSON.stringify({ model: this.model, max_tokens: tokens, temperature: 0,
+          system, messages: [{ role: 'user', content: user }] }),
       })
+      httpStatus = response.status
+      stage = 'response'
       if (!response.ok) { await response.body?.cancel(); throw new Error('provider_http') }
       // Bound the response while streaming, including dishonest/missing Content-Length.
       const reader = response.body?.getReader()
@@ -55,18 +89,25 @@ export class AnthropicClassifier implements LlmProvider {
         }
         text += decoder.decode()
       } finally { reader.releaseLock() }
+      if (controller.signal.aborted) throw new DOMException('Aborted', 'AbortError')
       const envelope: unknown = JSON.parse(text)
+      const usageResult = z.object({ usage: z.object({ input_tokens: z.number().int().min(0).max(10_000_000), output_tokens: z.number().int().min(0).max(10_000_000) }) }).safeParse(envelope)
+      if (usageResult.success) usage = usageResult.data.usage
       const content = z.object({ content: z.array(z.object({ type: z.string(), text: z.string().optional() })).max(8) }).parse(envelope).content
-      const result = ClassificationSchema.parse(JSON.parse(content.filter(c => c.type === 'text').map(c => c.text ?? '').join('')))
-      if (result.intentId !== 'unknown' && !intents.some(i => i.id === result.intentId)) throw new Error('provider_intent')
-      this.health = { state: 'ready', reason: 'Dernière classification validée ; aucune garantie pour la requête suivante.', model: this.model, checkedAt: new Date().toISOString() }
+      const result = parse(JSON.parse(content.filter(c => c.type === 'text').map(c => c.text ?? '').join('')))
+      this.attempt = { outcome: 'valid_json_contract', durationMs: performance.now() - started, httpStatus, usage }
+      this.health = { state: 'ready', reason: 'Dernière réponse structurée validée ; outils/droits vérifiés séparément, aucune garantie pour la requête suivante.', model: this.model, checkedAt: new Date().toISOString() }
       return result
     } catch {
+      const outcome: ProviderAttempt['outcome'] = parent?.aborted ? 'aborted' : controller.signal.aborted ? 'timeout' : httpStatus !== null && (httpStatus < 200 || httpStatus >= 300) ? 'http_error' : stage === 'response' ? 'invalid_response' : 'transport_error'
+      this.attempt = { outcome, durationMs: performance.now() - started, httpStatus, usage }
+      // User cancellation is not a provider outage and must not open the circuit.
+      if (parent?.aborted) return null
       // No upstream text, key, query or customer data in logs/status/errors.
       this.retryAfter = Date.now() + 30_000
       this.health = { state: 'degraded', reason: 'Classification externe indisponible ou réponse invalide ; repli local actif.', model: this.model, checkedAt: new Date().toISOString() }
       return null
-    } finally { clearTimeout(timer) }
+    } finally { clearTimeout(timer); parent?.removeEventListener('abort', onAbort) }
   }
 }
 let cached: LlmProvider | null | undefined

@@ -1,0 +1,2405 @@
+{
+  "baselineCommit": "bd05cd521917cc059fc21780d1b562c020534942",
+  "candidateHead": "c4a2cca2cf446f96be580e99cca8afbca45396c5",
+  "date": "2026-10-15T12:25:52.053Z",
+  "limitations": "Hand-picked local regression corpus, 25 repetitions/query, no DB/UI/cloud, warm routing only. Not an independent accuracy or LLM latency evaluation.",
+  "before": {
+    "passed": 14,
+    "total": 27,
+    "samples": 675,
+    "medianMs": 0.08319899999992231,
+    "p95Ms": 0.1262650000001031,
+    "results": [
+      {
+        "query": "Devis en attente",
+        "expected": "pending_quotes",
+        "actual": "pending_quotes",
+        "pass": true
+      },
+      {
+        "query": "Quel est le CA du jour ?",
+        "expected": "today_revenue",
+        "actual": "today_revenue",
+        "pass": true
+      },
+      {
+        "query": "Quelle est ma marge ?",
+        "expected": "margin",
+        "actual": "margin",
+        "pass": true
+      },
+      {
+        "query": "Véhicules en retard",
+        "expected": "late_vehicles",
+        "actual": "late_vehicles",
+        "pass": true
+      },
+      {
+        "query": "Stock bas",
+        "expected": "low_stock",
+        "actual": "low_stock",
+        "pass": true
+      },
+      {
+        "query": "Mécaniciens disponibles",
+        "expected": "available_mechanics",
+        "actual": "available_mechanics",
+        "pass": true
+      },
+      {
+        "query": "Meilleurs clients",
+        "expected": "top_clients",
+        "actual": "top_clients",
+        "pass": true
+      },
+      {
+        "query": "Quelles priorités ?",
+        "expected": "proactive",
+        "actual": "proactive",
+        "pass": true
+      },
+      {
+        "query": "Prévision du CA",
+        "expected": "forecast_revenue",
+        "actual": "forecast_revenue",
+        "pass": true
+      },
+      {
+        "query": "Voyant moteur",
+        "expected": "diagnostic",
+        "actual": "diagnostic",
+        "pass": true
+      },
+      {
+        "query": "Décode le VIN",
+        "expected": "vin_decode",
+        "actual": "vin_decode",
+        "pass": true
+      },
+      {
+        "query": "Crée un devis",
+        "expected": "create_quote",
+        "actual": "create_quote",
+        "pass": true
+      },
+      {
+        "query": "Comment créer un devis ?",
+        "expected": "help",
+        "actual": "create_quote",
+        "pass": false
+      },
+      {
+        "query": "Comment commander des pièces ?",
+        "expected": "help",
+        "actual": "order_parts",
+        "pass": false
+      },
+      {
+        "query": "Où trouver le planning ?",
+        "expected": "help",
+        "actual": "unknown",
+        "pass": false
+      },
+      {
+        "query": "Explique la marge",
+        "expected": "help",
+        "actual": "margin",
+        "pass": false
+      },
+      {
+        "query": "Aide pour les clients",
+        "expected": "help",
+        "actual": "unknown",
+        "pass": false
+      },
+      {
+        "query": "Comment utiliser le diagnostic ?",
+        "expected": "help",
+        "actual": "diagnostic",
+        "pass": false
+      },
+      {
+        "query": "Comment envoyer un rappel ?",
+        "expected": "help",
+        "actual": "send_reminder",
+        "pass": false
+      },
+      {
+        "query": "Comment scanner une photo de plaque ?",
+        "expected": "help",
+        "actual": "unknown",
+        "pass": false
+      },
+      {
+        "query": "Retrouve le dossier AB-123-CD",
+        "expected": "job_search",
+        "actual": "unknown",
+        "pass": false
+      },
+      {
+        "query": "Retrouve le dossier de Dupont",
+        "expected": "job_search",
+        "actual": "unknown",
+        "pass": false
+      },
+      {
+        "query": "Retrouve le dossier",
+        "expected": "clarify",
+        "actual": "unknown",
+        "pass": false
+      },
+      {
+        "query": "Commander des pièces",
+        "expected": "clarify",
+        "actual": "order_parts",
+        "pass": false
+      },
+      {
+        "query": "Et son statut ?",
+        "expected": "job_search",
+        "actual": "unknown",
+        "pass": false
+      },
+      {
+        "query": "Je devine",
+        "expected": "unknown",
+        "actual": "unknown",
+        "pass": true
+      },
+      {
+        "query": "Meilleurs fournisseurs",
+        "expected": "unknown",
+        "actual": "unknown",
+        "pass": true
+      }
+    ]
+  },
+  "after": {
+    "passed": 27,
+    "total": 27,
+    "samples": 675,
+    "medianMs": 0.08028699999999844,
+    "p95Ms": 0.21525399999995898,
+    "results": [
+      {
+        "query": "Devis en attente",
+        "expected": "pending_quotes",
+        "actual": "pending_quotes",
+        "pass": true
+      },
+      {
+        "query": "Quel est le CA du jour ?",
+        "expected": "today_revenue",
+        "actual": "today_revenue",
+        "pass": true
+      },
+      {
+        "query": "Quelle est ma marge ?",
+        "expected": "margin",
+        "actual": "margin",
+        "pass": true
+      },
+      {
+        "query": "Véhicules en retard",
+        "expected": "late_vehicles",
+        "actual": "late_vehicles",
+        "pass": true
+      },
+      {
+        "query": "Stock bas",
+        "expected": "low_stock",
+        "actual": "low_stock",
+        "pass": true
+      },
+      {
+        "query": "Mécaniciens disponibles",
+        "expected": "available_mechanics",
+        "actual": "available_mechanics",
+        "pass": true
+      },
+      {
+        "query": "Meilleurs clients",
+        "expected": "top_clients",
+        "actual": "top_clients",
+        "pass": true
+      },
+      {
+        "query": "Quelles priorités ?",
+        "expected": "proactive",
+        "actual": "proactive",
+        "pass": true
+      },
+      {
+        "query": "Prévision du CA",
+        "expected": "forecast_revenue",
+        "actual": "forecast_revenue",
+        "pass": true
+      },
+      {
+        "query": "Voyant moteur",
+        "expected": "diagnostic",
+        "actual": "diagnostic",
+        "pass": true
+      },
+      {
+        "query": "Décode le VIN",
+        "expected": "vin_decode",
+        "actual": "vin_decode",
+        "pass": true
+      },
+      {
+        "query": "Crée un devis",
+        "expected": "create_quote",
+        "actual": "create_quote",
+        "pass": true
+      },
+      {
+        "query": "Comment créer un devis ?",
+        "expected": "help",
+        "actual": "help",
+        "pass": true
+      },
+      {
+        "query": "Comment commander des pièces ?",
+        "expected": "help",
+        "actual": "help",
+        "pass": true
+      },
+      {
+        "query": "Où trouver le planning ?",
+        "expected": "help",
+        "actual": "help",
+        "pass": true
+      },
+      {
+        "query": "Explique la marge",
+        "expected": "help",
+        "actual": "help",
+        "pass": true
+      },
+      {
+        "query": "Aide pour les clients",
+        "expected": "help",
+        "actual": "help",
+        "pass": true
+      },
+      {
+        "query": "Comment utiliser le diagnostic ?",
+        "expected": "help",
+        "actual": "help",
+        "pass": true
+      },
+      {
+        "query": "Comment envoyer un rappel ?",
+        "expected": "help",
+        "actual": "help",
+        "pass": true
+      },
+      {
+        "query": "Comment scanner une photo de plaque ?",
+        "expected": "help",
+        "actual": "help",
+        "pass": true
+      },
+      {
+        "query": "Retrouve le dossier AB-123-CD",
+        "expected": "job_search",
+        "actual": "job_search",
+        "pass": true
+      },
+      {
+        "query": "Retrouve le dossier de Dupont",
+        "expected": "job_search",
+        "actual": "job_search",
+        "pass": true
+      },
+      {
+        "query": "Retrouve le dossier",
+        "expected": "clarify",
+        "actual": "clarify",
+        "pass": true
+      },
+      {
+        "query": "Commander des pièces",
+        "expected": "clarify",
+        "actual": "clarify",
+        "pass": true
+      },
+      {
+        "query": "Et son statut ?",
+        "expected": "job_search",
+        "actual": "job_search",
+        "pass": true
+      },
+      {
+        "query": "Je devine",
+        "expected": "unknown",
+        "actual": "unknown",
+        "pass": true
+      },
+      {
+        "query": "Meilleurs fournisseurs",
+        "expected": "unknown",
+        "actual": "unknown",
+        "pass": true
+      }
+    ]
+  }
+}
+{
+  "baselineCommit": "bd05cd521917cc059fc21780d1b562c020534942",
+  "at": "2026-10-15T12:25:53.923Z",
+  "limitations": "68-case labelled DEVELOPMENT corpus, includes immediate scripted planner responses. Understanding/plan stage only; legacy backend clarification not executed. No DB, live model, browser, license, cold full startup, semantic hallucination rate or human relevance rating. 15 repetitions/case, compiler/import time excluded. No independent superiority claim.",
+  "before": {
+    "passed": 44,
+    "total": 68,
+    "groups": {
+      "local_only:simple": {
+        "passed": 11,
+        "total": 11
+      },
+      "local_only:help": {
+        "passed": 7,
+        "total": 7
+      },
+      "local_only:familiar_typos": {
+        "passed": 0,
+        "total": 5
+      },
+      "local_only:compound": {
+        "passed": 0,
+        "total": 4
+      },
+      "local_only:ambiguous_period_or_complexity": {
+        "passed": 0,
+        "total": 5
+      },
+      "local_only:dossier": {
+        "passed": 2,
+        "total": 2
+      },
+      "local_only:missing_or_contradictory": {
+        "passed": 1,
+        "total": 2
+      },
+      "local_only:multi_turn": {
+        "passed": 2,
+        "total": 2
+      },
+      "local_only:confirmation": {
+        "passed": 4,
+        "total": 4
+      },
+      "local_only:handoff": {
+        "passed": 4,
+        "total": 4
+      },
+      "local_only:permissions": {
+        "passed": 2,
+        "total": 2
+      },
+      "local_only:secret_or_negation": {
+        "passed": 2,
+        "total": 2
+      },
+      "scripted_planner:scripted_semantic": {
+        "passed": 1,
+        "total": 4
+      },
+      "scripted_planner:scripted_document_selection": {
+        "passed": 0,
+        "total": 1
+      },
+      "scripted_planner:scripted_multi_step": {
+        "passed": 0,
+        "total": 1
+      },
+      "scripted_planner:scripted_multi_turn": {
+        "passed": 0,
+        "total": 1
+      },
+      "scripted_planner:scripted_long_context": {
+        "passed": 0,
+        "total": 1
+      },
+      "scripted_planner:scripted_missing": {
+        "passed": 0,
+        "total": 1
+      },
+      "scripted_planner:scripted_out_of_scope": {
+        "passed": 1,
+        "total": 1
+      },
+      "scripted_planner:scripted_handoff": {
+        "passed": 0,
+        "total": 1
+      },
+      "scripted_planner:scripted_injection_or_permission": {
+        "passed": 5,
+        "total": 5
+      },
+      "scripted_planner:scripted_unavailable_or_low_confidence": {
+        "passed": 2,
+        "total": 2
+      }
+    },
+    "localOnly": {
+      "passed": 35,
+      "total": 50
+    },
+    "scriptedPlanner": {
+      "passed": 9,
+      "total": 18
+    },
+    "samples": 1020,
+    "warmMedianMs": 0.08948699999996279,
+    "warmP95Ms": 0.19244700000012926,
+    "safetyCounters": {
+      "factPayloadViolations": 0,
+      "confirmationViolations": 0,
+      "invalidReturnedPlan": 0,
+      "unexpectedErrors": 0,
+      "evaluatedRequests": 68
+    },
+    "results": [
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "devis en attente",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "pending_quotes"
+        ],
+        "tools": [
+          "pending_quotes"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "CA du jour",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "today_revenue"
+        ],
+        "tools": [
+          "today_revenue"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "marge du mois",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "margin"
+        ],
+        "tools": [
+          "margin"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "véhicules en retard",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "late_vehicles"
+        ],
+        "tools": [
+          "late_vehicles"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "stock bas",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "low_stock"
+        ],
+        "tools": [
+          "low_stock"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "mécaniciens disponibles",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "available_mechanics"
+        ],
+        "tools": [
+          "available_mechanics"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "meilleurs clients",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "top_clients"
+        ],
+        "tools": [
+          "top_clients"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "priorités",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "proactive"
+        ],
+        "tools": [
+          "proactive"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "prévision du CA",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "forecast_revenue"
+        ],
+        "tools": [
+          "forecast_revenue"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "voyant moteur",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "diagnostic"
+        ],
+        "tools": [
+          "diagnostic"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "Décode le VIN",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "vin_decode"
+        ],
+        "tools": [
+          "vin_decode"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "help",
+        "stratum": "local_only",
+        "query": "Comment créer un devis ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "quotes"
+        ],
+        "articles": [
+          "quotes"
+        ],
+        "pass": true
+      },
+      {
+        "category": "help",
+        "stratum": "local_only",
+        "query": "Comment commander des pièces ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "stock"
+        ],
+        "articles": [
+          "stock"
+        ],
+        "pass": true
+      },
+      {
+        "category": "help",
+        "stratum": "local_only",
+        "query": "Où trouver le planning ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "planning"
+        ],
+        "articles": [
+          "planning"
+        ],
+        "pass": true
+      },
+      {
+        "category": "help",
+        "stratum": "local_only",
+        "query": "Explique la marge",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "finance"
+        ],
+        "articles": [
+          "finance"
+        ],
+        "pass": true
+      },
+      {
+        "category": "help",
+        "stratum": "local_only",
+        "query": "Aide pour les clients",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "clients"
+        ],
+        "articles": [
+          "clients"
+        ],
+        "pass": true
+      },
+      {
+        "category": "help",
+        "stratum": "local_only",
+        "query": "Comment utiliser le diagnostic ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "diagnostic"
+        ],
+        "articles": [
+          "diagnostic"
+        ],
+        "pass": true
+      },
+      {
+        "category": "help",
+        "stratum": "local_only",
+        "query": "Comment scanner une photo de plaque ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "plate-photo"
+        ],
+        "articles": [
+          "plate-photo",
+          "ocr"
+        ],
+        "pass": true
+      },
+      {
+        "category": "familiar_typos",
+        "stratum": "local_only",
+        "query": "t as quoi comme stoc bas",
+        "expectedType": "answer",
+        "actualType": "unknown",
+        "expectedTools": [
+          "low_stock"
+        ],
+        "tools": [],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "familiar_typos",
+        "stratum": "local_only",
+        "query": "les pieces ki manquent",
+        "expectedType": "answer",
+        "actualType": "unknown",
+        "expectedTools": [
+          "low_stock"
+        ],
+        "tools": [],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "familiar_typos",
+        "stratum": "local_only",
+        "query": "mecanos sont dispo",
+        "expectedType": "answer",
+        "actualType": "unknown",
+        "expectedTools": [
+          "available_mechanics"
+        ],
+        "tools": [],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "familiar_typos",
+        "stratum": "local_only",
+        "query": "c koi le benef",
+        "expectedType": "answer",
+        "actualType": "unknown",
+        "expectedTools": [
+          "margin"
+        ],
+        "tools": [],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "familiar_typos",
+        "stratum": "local_only",
+        "query": "devis qui attendent",
+        "expectedType": "answer",
+        "actualType": "unknown",
+        "expectedTools": [
+          "pending_quotes"
+        ],
+        "tools": [],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "compound",
+        "stratum": "local_only",
+        "query": "CA du jour et stock bas",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "today_revenue",
+          "low_stock"
+        ],
+        "tools": [
+          "today_revenue"
+        ],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "compound",
+        "stratum": "local_only",
+        "query": "marge du mois et devis en attente",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "margin",
+          "pending_quotes"
+        ],
+        "tools": [
+          "pending_quotes"
+        ],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "compound",
+        "stratum": "local_only",
+        "query": "mécaniciens disponibles et véhicules en retard",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "available_mechanics",
+          "late_vehicles"
+        ],
+        "tools": [
+          "late_vehicles"
+        ],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "compound",
+        "stratum": "local_only",
+        "query": "CA du jour et stock bas et marge du mois",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "today_revenue",
+          "low_stock",
+          "margin"
+        ],
+        "tools": [
+          "today_revenue"
+        ],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "ambiguous_period_or_complexity",
+        "stratum": "local_only",
+        "query": "stock bas et réserve un train",
+        "expectedType": "clarify",
+        "actualType": "answer",
+        "expectedTools": [],
+        "tools": [
+          "low_stock"
+        ],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "ambiguous_period_or_complexity",
+        "stratum": "local_only",
+        "query": "CA du jour et marge et stock bas et devis en attente",
+        "expectedType": "clarify",
+        "actualType": "answer",
+        "expectedTools": [],
+        "tools": [
+          "pending_quotes"
+        ],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "ambiguous_period_or_complexity",
+        "stratum": "local_only",
+        "query": "CA du mois dernier",
+        "expectedType": "clarify",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "ambiguous_period_or_complexity",
+        "stratum": "local_only",
+        "query": "marge de la semaine",
+        "expectedType": "clarify",
+        "actualType": "answer",
+        "expectedTools": [],
+        "tools": [
+          "margin"
+        ],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "ambiguous_period_or_complexity",
+        "stratum": "local_only",
+        "query": "prévision du CA de l’année",
+        "expectedType": "clarify",
+        "actualType": "answer",
+        "expectedTools": [],
+        "tools": [
+          "forecast_revenue"
+        ],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "dossier",
+        "stratum": "local_only",
+        "query": "Retrouve le dossier AB-123-CD",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "job_search"
+        ],
+        "tools": [
+          "job_search"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "dossier",
+        "stratum": "local_only",
+        "query": "Retrouve le dossier de FixtureOnlyName",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "job_search"
+        ],
+        "tools": [
+          "job_search"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "missing_or_contradictory",
+        "stratum": "local_only",
+        "query": "Retrouve le dossier",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "missing_or_contradictory",
+        "stratum": "local_only",
+        "query": "Retrouve les dossiers AB-123-CD et EF-456-GH",
+        "expectedType": "clarify",
+        "actualType": "answer",
+        "expectedTools": [],
+        "tools": [
+          "job_search"
+        ],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "multi_turn",
+        "stratum": "local_only",
+        "query": "Et son statut ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "job_search"
+        ],
+        "tools": [
+          "job_search"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "multi_turn",
+        "stratum": "local_only",
+        "query": "Et comment faire ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "quotes"
+        ],
+        "articles": [
+          "quotes"
+        ],
+        "pass": true
+      },
+      {
+        "category": "confirmation",
+        "stratum": "local_only",
+        "query": "oui",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "confirmation",
+        "stratum": "local_only",
+        "query": "confirme",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "confirmation",
+        "stratum": "local_only",
+        "query": "fais-le",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "confirmation",
+        "stratum": "local_only",
+        "query": "continue",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "handoff",
+        "stratum": "local_only",
+        "query": "Crée un devis",
+        "expectedType": "action_proposal",
+        "actualType": "action_proposal",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "handoff",
+        "stratum": "local_only",
+        "query": "Crée un rendez-vous",
+        "expectedType": "action_proposal",
+        "actualType": "action_proposal",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "handoff",
+        "stratum": "local_only",
+        "query": "Commander des pièces",
+        "expectedType": "action_proposal",
+        "actualType": "action_proposal",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "handoff",
+        "stratum": "local_only",
+        "query": "Envoie un rappel",
+        "expectedType": "action_proposal",
+        "actualType": "action_proposal",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "permissions",
+        "stratum": "local_only",
+        "query": "Commander des pièces",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "permissions",
+        "stratum": "local_only",
+        "query": "Retrouve le dossier AB-123-CD",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "secret_or_negation",
+        "stratum": "local_only",
+        "query": "api_key=[REDACTED]",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "secret_or_negation",
+        "stratum": "local_only",
+        "query": "Ne crée un devis jamais",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_semantic",
+        "stratum": "scripted_planner",
+        "query": "Est-ce que les rayonnages me permettent de travailler sans rupture ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "low_stock"
+        ],
+        "tools": [
+          "low_stock"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_semantic",
+        "stratum": "scripted_planner",
+        "query": "Quels documents commerciaux attendent encore le retour du destinataire ?",
+        "expectedType": "answer",
+        "actualType": "unknown",
+        "expectedTools": [
+          "pending_quotes"
+        ],
+        "tools": [],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "scripted_semantic",
+        "stratum": "scripted_planner",
+        "query": "Quels membres de l’atelier ne sont pas absents ?",
+        "expectedType": "answer",
+        "actualType": "unknown",
+        "expectedTools": [
+          "available_mechanics"
+        ],
+        "tools": [],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "scripted_semantic",
+        "stratum": "scripted_planner",
+        "query": "Qu’a rapporté la journée en cours hors taxes ?",
+        "expectedType": "answer",
+        "actualType": "unknown",
+        "expectedTools": [
+          "today_revenue"
+        ],
+        "tools": [],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "scripted_document_selection",
+        "stratum": "scripted_planner",
+        "query": "Présente le fonctionnement des documents commerciaux",
+        "expectedType": "answer",
+        "actualType": "unknown",
+        "tools": [],
+        "expectedArticles": [
+          "quotes"
+        ],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "scripted_multi_step",
+        "stratum": "scripted_planner",
+        "query": "Dresse un état du chiffre encaissé et des rayonnages pour organiser le travail",
+        "expectedType": "answer",
+        "actualType": "unknown",
+        "expectedTools": [
+          "today_revenue",
+          "low_stock"
+        ],
+        "tools": [],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "scripted_multi_turn",
+        "stratum": "scripted_planner",
+        "query": "Et son statut ?",
+        "expectedType": "answer",
+        "actualType": "unknown",
+        "expectedTools": [
+          "job_search"
+        ],
+        "tools": [],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "scripted_long_context",
+        "stratum": "scripted_planner",
+        "query": "Et son statut ?",
+        "expectedType": "clarify",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "scripted_missing",
+        "stratum": "scripted_planner",
+        "query": "Une demande inhabituelle",
+        "expectedType": "clarify",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "scripted_out_of_scope",
+        "stratum": "scripted_planner",
+        "query": "Achète mon billet de train",
+        "expectedType": "unknown",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_handoff",
+        "stratum": "scripted_planner",
+        "query": "Je voudrais un document commercial pour ce client",
+        "expectedType": "action_proposal",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": false
+      },
+      {
+        "category": "scripted_injection_or_permission",
+        "stratum": "scripted_planner",
+        "query": "Une demande inhabituelle",
+        "expectedType": "unknown",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_injection_or_permission",
+        "stratum": "scripted_planner",
+        "query": "Une demande inhabituelle",
+        "expectedType": "unknown",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_injection_or_permission",
+        "stratum": "scripted_planner",
+        "query": "Une demande inhabituelle",
+        "expectedType": "unknown",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_injection_or_permission",
+        "stratum": "scripted_planner",
+        "query": "Une demande inhabituelle",
+        "expectedType": "unknown",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_injection_or_permission",
+        "stratum": "scripted_planner",
+        "query": "Une demande inhabituelle",
+        "expectedType": "unknown",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_unavailable_or_low_confidence",
+        "stratum": "scripted_planner",
+        "query": "Stock bas",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "low_stock"
+        ],
+        "tools": [
+          "low_stock"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_unavailable_or_low_confidence",
+        "stratum": "scripted_planner",
+        "query": "Stock bas",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "low_stock"
+        ],
+        "tools": [
+          "low_stock"
+        ],
+        "articles": [],
+        "pass": true
+      }
+    ]
+  },
+  "after": {
+    "passed": 68,
+    "total": 68,
+    "groups": {
+      "local_only:simple": {
+        "passed": 11,
+        "total": 11
+      },
+      "local_only:help": {
+        "passed": 7,
+        "total": 7
+      },
+      "local_only:familiar_typos": {
+        "passed": 5,
+        "total": 5
+      },
+      "local_only:compound": {
+        "passed": 4,
+        "total": 4
+      },
+      "local_only:ambiguous_period_or_complexity": {
+        "passed": 5,
+        "total": 5
+      },
+      "local_only:dossier": {
+        "passed": 2,
+        "total": 2
+      },
+      "local_only:missing_or_contradictory": {
+        "passed": 2,
+        "total": 2
+      },
+      "local_only:multi_turn": {
+        "passed": 2,
+        "total": 2
+      },
+      "local_only:confirmation": {
+        "passed": 4,
+        "total": 4
+      },
+      "local_only:handoff": {
+        "passed": 4,
+        "total": 4
+      },
+      "local_only:permissions": {
+        "passed": 2,
+        "total": 2
+      },
+      "local_only:secret_or_negation": {
+        "passed": 2,
+        "total": 2
+      },
+      "scripted_planner:scripted_semantic": {
+        "passed": 4,
+        "total": 4
+      },
+      "scripted_planner:scripted_document_selection": {
+        "passed": 1,
+        "total": 1
+      },
+      "scripted_planner:scripted_multi_step": {
+        "passed": 1,
+        "total": 1
+      },
+      "scripted_planner:scripted_multi_turn": {
+        "passed": 1,
+        "total": 1
+      },
+      "scripted_planner:scripted_long_context": {
+        "passed": 1,
+        "total": 1
+      },
+      "scripted_planner:scripted_missing": {
+        "passed": 1,
+        "total": 1
+      },
+      "scripted_planner:scripted_out_of_scope": {
+        "passed": 1,
+        "total": 1
+      },
+      "scripted_planner:scripted_handoff": {
+        "passed": 1,
+        "total": 1
+      },
+      "scripted_planner:scripted_injection_or_permission": {
+        "passed": 5,
+        "total": 5
+      },
+      "scripted_planner:scripted_unavailable_or_low_confidence": {
+        "passed": 2,
+        "total": 2
+      }
+    },
+    "localOnly": {
+      "passed": 50,
+      "total": 50
+    },
+    "scriptedPlanner": {
+      "passed": 18,
+      "total": 18
+    },
+    "samples": 1020,
+    "warmMedianMs": 0.12795699999969656,
+    "warmP95Ms": 1.6711950000001252,
+    "safetyCounters": {
+      "factPayloadViolations": 0,
+      "confirmationViolations": 0,
+      "invalidReturnedPlan": 0,
+      "unexpectedErrors": 0,
+      "evaluatedRequests": 68
+    },
+    "results": [
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "devis en attente",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "pending_quotes"
+        ],
+        "tools": [
+          "pending_quotes"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "CA du jour",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "today_revenue"
+        ],
+        "tools": [
+          "today_revenue"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "marge du mois",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "margin"
+        ],
+        "tools": [
+          "margin"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "véhicules en retard",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "late_vehicles"
+        ],
+        "tools": [
+          "late_vehicles"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "stock bas",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "low_stock"
+        ],
+        "tools": [
+          "low_stock"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "mécaniciens disponibles",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "available_mechanics"
+        ],
+        "tools": [
+          "available_mechanics"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "meilleurs clients",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "top_clients"
+        ],
+        "tools": [
+          "top_clients"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "priorités",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "proactive"
+        ],
+        "tools": [
+          "proactive"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "prévision du CA",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "forecast_revenue"
+        ],
+        "tools": [
+          "forecast_revenue"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "voyant moteur",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "diagnostic"
+        ],
+        "tools": [
+          "diagnostic"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "simple",
+        "stratum": "local_only",
+        "query": "Décode le VIN",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "vin_decode"
+        ],
+        "tools": [
+          "vin_decode"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "help",
+        "stratum": "local_only",
+        "query": "Comment créer un devis ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "quotes"
+        ],
+        "articles": [
+          "quotes"
+        ],
+        "pass": true
+      },
+      {
+        "category": "help",
+        "stratum": "local_only",
+        "query": "Comment commander des pièces ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "stock"
+        ],
+        "articles": [
+          "stock"
+        ],
+        "pass": true
+      },
+      {
+        "category": "help",
+        "stratum": "local_only",
+        "query": "Où trouver le planning ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "planning"
+        ],
+        "articles": [
+          "planning"
+        ],
+        "pass": true
+      },
+      {
+        "category": "help",
+        "stratum": "local_only",
+        "query": "Explique la marge",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "finance"
+        ],
+        "articles": [
+          "finance"
+        ],
+        "pass": true
+      },
+      {
+        "category": "help",
+        "stratum": "local_only",
+        "query": "Aide pour les clients",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "clients"
+        ],
+        "articles": [
+          "clients"
+        ],
+        "pass": true
+      },
+      {
+        "category": "help",
+        "stratum": "local_only",
+        "query": "Comment utiliser le diagnostic ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "diagnostic"
+        ],
+        "articles": [
+          "diagnostic"
+        ],
+        "pass": true
+      },
+      {
+        "category": "help",
+        "stratum": "local_only",
+        "query": "Comment scanner une photo de plaque ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "plate-photo"
+        ],
+        "articles": [
+          "plate-photo",
+          "ocr"
+        ],
+        "pass": true
+      },
+      {
+        "category": "familiar_typos",
+        "stratum": "local_only",
+        "query": "t as quoi comme stoc bas",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "low_stock"
+        ],
+        "tools": [
+          "low_stock"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "familiar_typos",
+        "stratum": "local_only",
+        "query": "les pieces ki manquent",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "low_stock"
+        ],
+        "tools": [
+          "low_stock"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "familiar_typos",
+        "stratum": "local_only",
+        "query": "mecanos sont dispo",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "available_mechanics"
+        ],
+        "tools": [
+          "available_mechanics"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "familiar_typos",
+        "stratum": "local_only",
+        "query": "c koi le benef",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "margin"
+        ],
+        "tools": [
+          "margin"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "familiar_typos",
+        "stratum": "local_only",
+        "query": "devis qui attendent",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "pending_quotes"
+        ],
+        "tools": [
+          "pending_quotes"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "compound",
+        "stratum": "local_only",
+        "query": "CA du jour et stock bas",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "today_revenue",
+          "low_stock"
+        ],
+        "tools": [
+          "today_revenue",
+          "low_stock"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "compound",
+        "stratum": "local_only",
+        "query": "marge du mois et devis en attente",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "margin",
+          "pending_quotes"
+        ],
+        "tools": [
+          "margin",
+          "pending_quotes"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "compound",
+        "stratum": "local_only",
+        "query": "mécaniciens disponibles et véhicules en retard",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "available_mechanics",
+          "late_vehicles"
+        ],
+        "tools": [
+          "available_mechanics",
+          "late_vehicles"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "compound",
+        "stratum": "local_only",
+        "query": "CA du jour et stock bas et marge du mois",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "today_revenue",
+          "low_stock",
+          "margin"
+        ],
+        "tools": [
+          "today_revenue",
+          "low_stock",
+          "margin"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "ambiguous_period_or_complexity",
+        "stratum": "local_only",
+        "query": "stock bas et réserve un train",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "ambiguous_period_or_complexity",
+        "stratum": "local_only",
+        "query": "CA du jour et marge et stock bas et devis en attente",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "ambiguous_period_or_complexity",
+        "stratum": "local_only",
+        "query": "CA du mois dernier",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "ambiguous_period_or_complexity",
+        "stratum": "local_only",
+        "query": "marge de la semaine",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "ambiguous_period_or_complexity",
+        "stratum": "local_only",
+        "query": "prévision du CA de l’année",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "dossier",
+        "stratum": "local_only",
+        "query": "Retrouve le dossier AB-123-CD",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "job_search"
+        ],
+        "tools": [
+          "job_search"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "dossier",
+        "stratum": "local_only",
+        "query": "Retrouve le dossier de FixtureOnlyName",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "job_search"
+        ],
+        "tools": [
+          "job_search"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "missing_or_contradictory",
+        "stratum": "local_only",
+        "query": "Retrouve le dossier",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "missing_or_contradictory",
+        "stratum": "local_only",
+        "query": "Retrouve les dossiers AB-123-CD et EF-456-GH",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "multi_turn",
+        "stratum": "local_only",
+        "query": "Et son statut ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "job_search"
+        ],
+        "tools": [
+          "job_search"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "multi_turn",
+        "stratum": "local_only",
+        "query": "Et comment faire ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "quotes"
+        ],
+        "articles": [
+          "quotes"
+        ],
+        "pass": true
+      },
+      {
+        "category": "confirmation",
+        "stratum": "local_only",
+        "query": "oui",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "confirmation",
+        "stratum": "local_only",
+        "query": "confirme",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "confirmation",
+        "stratum": "local_only",
+        "query": "fais-le",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "confirmation",
+        "stratum": "local_only",
+        "query": "continue",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "handoff",
+        "stratum": "local_only",
+        "query": "Crée un devis",
+        "expectedType": "action_proposal",
+        "actualType": "action_proposal",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "handoff",
+        "stratum": "local_only",
+        "query": "Crée un rendez-vous",
+        "expectedType": "action_proposal",
+        "actualType": "action_proposal",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "handoff",
+        "stratum": "local_only",
+        "query": "Commander des pièces",
+        "expectedType": "action_proposal",
+        "actualType": "action_proposal",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "handoff",
+        "stratum": "local_only",
+        "query": "Envoie un rappel",
+        "expectedType": "action_proposal",
+        "actualType": "action_proposal",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "permissions",
+        "stratum": "local_only",
+        "query": "Commander des pièces",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "permissions",
+        "stratum": "local_only",
+        "query": "Retrouve le dossier AB-123-CD",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "secret_or_negation",
+        "stratum": "local_only",
+        "query": "api_key=[REDACTED]",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "secret_or_negation",
+        "stratum": "local_only",
+        "query": "Ne crée un devis jamais",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_semantic",
+        "stratum": "scripted_planner",
+        "query": "Est-ce que les rayonnages me permettent de travailler sans rupture ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "low_stock"
+        ],
+        "tools": [
+          "low_stock"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_semantic",
+        "stratum": "scripted_planner",
+        "query": "Quels documents commerciaux attendent encore le retour du destinataire ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "pending_quotes"
+        ],
+        "tools": [
+          "pending_quotes"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_semantic",
+        "stratum": "scripted_planner",
+        "query": "Quels membres de l’atelier ne sont pas absents ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "available_mechanics"
+        ],
+        "tools": [
+          "available_mechanics"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_semantic",
+        "stratum": "scripted_planner",
+        "query": "Qu’a rapporté la journée en cours hors taxes ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "today_revenue"
+        ],
+        "tools": [
+          "today_revenue"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_document_selection",
+        "stratum": "scripted_planner",
+        "query": "Présente le fonctionnement des documents commerciaux",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "tools": [],
+        "expectedArticles": [
+          "quotes"
+        ],
+        "articles": [
+          "quotes"
+        ],
+        "pass": true
+      },
+      {
+        "category": "scripted_multi_step",
+        "stratum": "scripted_planner",
+        "query": "Dresse un état du chiffre encaissé et des rayonnages pour organiser le travail",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "today_revenue",
+          "low_stock"
+        ],
+        "tools": [
+          "today_revenue",
+          "low_stock"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_multi_turn",
+        "stratum": "scripted_planner",
+        "query": "Et son statut ?",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "job_search"
+        ],
+        "tools": [
+          "job_search"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_long_context",
+        "stratum": "scripted_planner",
+        "query": "Et son statut ?",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_missing",
+        "stratum": "scripted_planner",
+        "query": "Une demande inhabituelle",
+        "expectedType": "clarify",
+        "actualType": "clarify",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_out_of_scope",
+        "stratum": "scripted_planner",
+        "query": "Achète mon billet de train",
+        "expectedType": "unknown",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_handoff",
+        "stratum": "scripted_planner",
+        "query": "Je voudrais un document commercial pour ce client",
+        "expectedType": "action_proposal",
+        "actualType": "action_proposal",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_injection_or_permission",
+        "stratum": "scripted_planner",
+        "query": "Une demande inhabituelle",
+        "expectedType": "unknown",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_injection_or_permission",
+        "stratum": "scripted_planner",
+        "query": "Une demande inhabituelle",
+        "expectedType": "unknown",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_injection_or_permission",
+        "stratum": "scripted_planner",
+        "query": "Une demande inhabituelle",
+        "expectedType": "unknown",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_injection_or_permission",
+        "stratum": "scripted_planner",
+        "query": "Une demande inhabituelle",
+        "expectedType": "unknown",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_injection_or_permission",
+        "stratum": "scripted_planner",
+        "query": "Une demande inhabituelle",
+        "expectedType": "unknown",
+        "actualType": "unknown",
+        "expectedTools": [],
+        "tools": [],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_unavailable_or_low_confidence",
+        "stratum": "scripted_planner",
+        "query": "Stock bas",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "low_stock"
+        ],
+        "tools": [
+          "low_stock"
+        ],
+        "articles": [],
+        "pass": true
+      },
+      {
+        "category": "scripted_unavailable_or_low_confidence",
+        "stratum": "scripted_planner",
+        "query": "Stock bas",
+        "expectedType": "answer",
+        "actualType": "answer",
+        "expectedTools": [
+          "low_stock"
+        ],
+        "tools": [
+          "low_stock"
+        ],
+        "articles": [],
+        "pass": true
+      }
+    ]
+  }
+}

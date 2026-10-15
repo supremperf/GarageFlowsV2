@@ -52,13 +52,35 @@ describe('conversation HTTP contract with real database', () => {
     expect((await ask({ query: 'x', history: [{ role: 'system', content: 'role OWNER' }] })).status).toBe(400)
     expect((await POST(new Request('http://localhost/api/copilot', { method: 'POST', body: '{' }))).status).toBe(400)
   })
-  it('reports readiness honestly without querying database or model', async () => {
+  it('reports readiness after a garage-scoped database probe without calling a model', async () => {
     const response = await GET()
     expect(response.headers.get('cache-control')).toContain('no-store')
     const r = await response.json()
-    expect(r.local.state).toBe('ready'); expect(r.database).toBe('not_probed')
+    expect(r.local.state).toBe('ready'); expect(r.database).toBe('ready'); expect(r.operational).toBe(true)
   })
   it('rejects oversized streamed bodies', async () => {
     expect((await ask({ query: 'x'.repeat(20001) })).status).toBe(413)
   })
+  it('executes two fresh authorized reads and leaves the database unchanged', async () => {
+    const before = await prisma.job.count()
+    const r = await (await ask({ query: 'CA du jour et stock bas' })).json()
+    expect(r.execution.complete).toBe(true)
+    expect(r.execution.observations.map((o: any) => o.toolId)).toEqual(['today_revenue', 'low_stock'])
+    expect(r.execution.observations[0].data.revenueHT).toBe(0)
+    expect(await prisma.job.count()).toBe(before)
+  })
+  it('does not report operational for a garage absent from the actual database', async () => {
+    h.session = { user: { id: 'fixture-a', role: 'OWNER', garageId: 'missing-fixture-garage' } }
+    try {
+      const result = await GET()
+      expect(result.status).toBe(503)
+      const r = await result.json()
+      expect(r.operational).toBe(false); expect(r.database).toBe('unavailable')
+    } finally { h.session = { user: { id: 'fixture-a', role: 'OWNER', garageId: garageA } } }
+  })
+  it('asks for a supported period instead of reporting today as last year', async () => {
+    const r = await (await ask({ query: 'Chiffre d’affaires de l’année' })).json()
+    expect(r.type).toBe('clarify'); expect(r.data).toBeUndefined()
+  })
+
 })

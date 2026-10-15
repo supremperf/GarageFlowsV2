@@ -9,6 +9,9 @@
  * (deterministic classification + verbatim facts).
  */
 
+import type { SemanticUnderstanding, SemanticRequest } from '@/lib/copilot/semantic'
+import type { ModelPlan, PlanningRequest } from '@/lib/copilot/planning'
+
 export type LlmRole = 'system' | 'user' | 'assistant'
 export interface LlmMessage {
   role: LlmRole
@@ -79,6 +82,8 @@ export interface PhraseResult {
 export interface LlmProvider {
   readonly id: string
   readonly name: string
+  interpret?(request: SemanticRequest, options?: { signal?: AbortSignal }): Promise<SemanticUnderstanding | null>
+  plan?(request: PlanningRequest, options?: { signal?: AbortSignal }): Promise<ModelPlan | null>
   classify?(query: string, intents: IntentSpec[]): Promise<LlmClassification | null>
   phrase?(input: PhraseInput): Promise<string | null>
   complete?(messages: LlmMessage[], opts?: LlmCompletionOptions): Promise<LlmCompletion>

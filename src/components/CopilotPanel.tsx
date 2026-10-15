@@ -22,6 +22,9 @@ interface CopilotResponse {
    * pas : la déduire ici de la présence d'un champ était précisément le défaut.
    */
   ancrage?: { verifie?: boolean; source?: 'llm' | 'fallback' | 'fallback_ungrounded' }
+  planning?: { source?: 'local' | 'model'; fallback?: string }
+  execution?: { complete?: boolean; observations?: { toolId: string; title: string; status: string; verified: boolean; evidence: string }[] }
+  model?: { state?: string }
   sources?: { id: string; title: string; path: string; version: string }[]
   data?: unknown
   action?: { id?: string; confirmationRequired?: boolean; endpoint?: string; method?: string }
@@ -51,9 +54,9 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
     const timer = setTimeout(() => controller.abort(), 5000)
     fetch('/api/copilot', { signal: controller.signal, cache: 'no-store' })
       .then(async r => {
-        if (!r.ok) throw new Error('readiness')
         const status = await r.json()
-        if (!controller.signal.aborted) setReadiness(`Aide locale : ${status.local?.state === 'ready' ? 'prête' : 'indisponible'} · Modèle externe : ${status.model?.state ?? 'non vérifié'} (état à l’ouverture)`)
+        if (!r.ok && status.operational !== false) throw new Error('readiness')
+        if (!controller.signal.aborted) setReadiness(`${status.operational ? 'Opérationnel' : 'Indisponible'} · Base : ${status.database ?? 'non vérifiée'} · Modèle externe : ${status.model?.state ?? 'non vérifié'} (instantané à l’ouverture)`)
       }).catch(() => { if (!disposed) setReadiness('Disponibilité non vérifiée : contrôle impossible ou délai dépassé.') })
       .finally(() => clearTimeout(timer))
     return () => { disposed = true; clearTimeout(timer); controller.abort(); activeRequest.current?.abort(); activeRequest.current = null }
@@ -174,6 +177,8 @@ function Bubble({ m, onConfirm, onDecline }: { m: Msg; onConfirm: () => void; on
       <div style={{ ...avatar, background: 'linear-gradient(135deg,#3b82f6,#6366f1)', border: 'none' }}><Sparkles size={15} color="#fff" /></div>
       <div style={{ ...bubble, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderBottomLeftRadius: 5 }}>
         <div style={{ color: '#e8edf4' }}>{m.text}</div>
+        {m.res?.planning?.fallback && <p style={{ fontSize: 11, color: '#fbbf24', marginTop: 6 }}>Plan du modèle indisponible ou invalide : réponse du repli local.</p>}
+        {m.res?.execution?.observations?.map(step => <div key={step.toolId} style={{ fontSize: 11, color: step.verified ? '#94a3b8' : '#fbbf24', marginTop: 6 }}>{step.title} · {step.verified ? 'lecture effectuée' : 'lecture non confirmée'} · {step.evidence === 'estimate' ? 'estimation' : step.evidence === 'hypothesis' ? 'piste de diagnostic' : step.evidence === 'decode' ? 'décodage' : 'observation métier'} · {step.verified ? 'résultat du moteur contrôlé' : 'résultat non confirmé'}</div>)}
         {m.res?.sources?.map(source => <div key={source.id} style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>Source : {source.title} · {source.path} · v{source.version}</div>)}
         {grounded && !action && (
           <span style={verified}><ShieldCheck size={13} /> {t.cpVerified}</span>

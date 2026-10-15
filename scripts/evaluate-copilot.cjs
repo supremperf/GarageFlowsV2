@@ -10,20 +10,21 @@ const { createRequire } = require('node:module')
 const ts = require('typescript')
 const { performance } = require('node:perf_hooks')
 const root = path.resolve(__dirname, '..')
-const baseline = process.argv[2] || '4f19f77891debc6009a1c241d2689f2a42bca0e8'
+const baseline = (require.main === module ? process.argv[2] : undefined) || '4f19f77891debc6009a1c241d2689f2a42bca0e8'
 if (!/^[a-f0-9]{40}$/.test(baseline)) throw new Error('Expected full baseline commit SHA')
-function loader(old) {
+function loader(old, baselineCommit = baseline) {
+  if (!/^[a-f0-9]{40}$/.test(baselineCommit)) throw new Error('Expected full baseline SHA')
   const cache = new Map()
   return function load(relative) {
     const file = path.resolve(root, relative)
     if (!file.startsWith(root + path.sep)) throw new Error('Source outside repository')
     if (cache.has(file)) return cache.get(file).exports
     const rel = path.relative(root, file).split(path.sep).join('/')
-    const source = old ? execFileSync('git', ['show', `${baseline}:${rel}`], { cwd: root, encoding: 'utf8' }) : fs.readFileSync(file, 'utf8')
+    const source = old ? execFileSync('git', ['show', `${baselineCommit}:${rel}`], { cwd: root, encoding: 'utf8' }) : fs.readFileSync(file, 'utf8')
     const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true } }).outputText
     const localRequire = createRequire(file)
-    const module = { exports: {} }
-    cache.set(file, module)
+    const sourceModule = { exports: {} }
+    cache.set(file, sourceModule)
     const requireSource = id => {
       if (id.startsWith('@/') || id.startsWith('.')) {
         const target = id.startsWith('@/') ? path.join(root, 'src', id.slice(2)) : path.resolve(path.dirname(file), id)
@@ -32,12 +33,12 @@ function loader(old) {
       return localRequire(id)
     }
     // Only trusted local/committed source; never accepts text, URLs, tools or model outputs.
-    new Function('require', 'module', 'exports', compiled)(requireSource, module, module.exports)
-    return module.exports
+    new Function('require', 'module', 'exports', compiled)(requireSource, sourceModule, sourceModule.exports)
+    return sourceModule.exports
   }
 }
-const before = loader(true)('src/lib/copilot/engine.ts').handleQuery
-const after = loader(false)('src/lib/copilot/conversation.ts').understand
+const before = require.main === module ? loader(true)('src/lib/copilot/engine.ts').handleQuery : null
+const after = require.main === module ? loader(false)('src/lib/copilot/conversation.ts').understand : null
 const cases = [
   ['Devis en attente', 'pending_quotes'], ['Quel est le CA du jour ?', 'today_revenue'], ['Quelle est ma marge ?', 'margin'],
   ['Véhicules en retard', 'late_vehicles'], ['Stock bas', 'low_stock'], ['Mécaniciens disponibles', 'available_mechanics'],
@@ -68,7 +69,8 @@ async function run(fn) {
   return { passed: results.filter(r => r.pass).length, total: results.length, samples: times.length,
     medianMs: times[Math.floor(times.length * 0.5)], p95Ms: times[Math.floor(times.length * 0.95)], results }
 }
-;(async () => {
+module.exports = { loader }
+if (require.main === module) (async () => {
   const report = { baselineCommit: baseline, candidateHead: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
     date: new Date().toISOString(), limitations: 'Hand-picked local regression corpus, 25 repetitions/query, no DB/UI/cloud, warm routing only. Not an independent accuracy or LLM latency evaluation.',
     before: await run(query => before(query)), after: await run((query, role, history) => after({ query, history: history.map(content => ({ role: 'user', content })) }, role, null)) }
