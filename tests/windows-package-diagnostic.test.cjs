@@ -2,7 +2,14 @@
 const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const { inflateSync } = require('node:zlib')
-const { redact, exitCode, diagnostic } = require('../scripts/windows-package-diagnostic.cjs')
+const { redact, exitCode, diagnostic, validateCommand } = require('../scripts/windows-package-diagnostic.cjs')
+test('custom shell executes exactly the official workflow command and rejects extra commands', () => {
+  assert.equal(validateCommand('\ufeffnpm run dist\r\n'), 'npm run dist')
+  for (const text of ['', 'npm run build', 'npm run dist; exit 0', 'npm run dist\nnode additional-check.cjs', 'npm run dist || true']) assert.throws(() => validateCommand(text))
+  const workflow = require('js-yaml').load(require('node:fs').readFileSync('.github/workflows/ci.yml', 'utf8'))
+  const step = workflow.jobs['windows-package'].steps.find(s => s.run === 'npm run dist')
+  assert.equal(step.shell, 'node scripts/windows-package-diagnostic.cjs {0}')
+})
 test('literal environment secrets, private PEM, credentials and signed URLs are withheld', () => {
   const value = 'SYNTHETIC_NOT_A_REAL_SECRET'
   const input = `npm failure ${value}\nhttps://fixture.invalid/a?signature=SYNTHETIC_SIGNED_QUERY\npostgres://user:SYNTHETIC_PASSWORD@fixture/db\n-----BEGIN RSA PRIVATE KEY-----\nSYNTHETIC_KEY_BODY\n-----END RSA PRIVATE KEY-----\napiKey=SYNTHETIC_LABELED_VALUE`

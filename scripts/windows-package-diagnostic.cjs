@@ -42,15 +42,29 @@ function diagnostic(result, environment = process.env) {
   }))
   return { safe, pages, metadata }
 }
+function validateCommand(script) {
+  if (String(script).replace(/^\uFEFF/, '').trim() !== 'npm run dist') throw new Error('Unsupported packaging command')
+  return 'npm run dist'
+}
 function main() {
   if (process.platform !== 'win32') {
     console.error('Official Windows packaging requires Windows; not executed')
     process.exitCode = 1
     return
   }
-  // Fixed command/arguments: no external command, shell fragments or overrides.
-  const result = spawnSync('npm', ['run', 'dist'], {
-    shell: process.platform === 'win32', encoding: 'utf8', maxBuffer: 16 * 1024 * 1024,
+  // GitHub custom shell receives its generated one-command script. Reject any
+  // other script; never silently ignore added checks or execute external input.
+  let command
+  try {
+    if (process.argv.length !== 3) throw new Error('Missing workflow script')
+    command = validateCommand(require('node:fs').readFileSync(process.argv[2], 'utf8'))
+  } catch {
+    console.error('::error::Packaging command rejected; expected official one-command workflow script')
+    process.exitCode = 1
+    return
+  }
+  const result = spawnSync(command, {
+    shell: true, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024,
   })
   try {
     const { safe, pages } = diagnostic(result)
@@ -67,5 +81,5 @@ function main() {
   }
   process.exitCode = exitCode(result)
 }
-module.exports = { redact, exitCode, diagnostic }
+module.exports = { redact, exitCode, diagnostic, validateCommand }
 if (require.main === module) main()

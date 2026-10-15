@@ -461,7 +461,8 @@ jobs:
       - name: Validate redacted packaging diagnostic
         run: node --test tests/windows-package-diagnostic.test.cjs
       - name: Official npm run dist (redacted diagnostic, original exit code)
-        run: node scripts/windows-package-diagnostic.cjs
+        shell: node scripts/windows-package-diagnostic.cjs {0}
+        run: npm run dist
       - run: npm run check:perf-budget
       - name: Verify integrity against the actual packaged resources (required)
         run: npx vitest run src/__tests__/integrity-diagnostics.test.ts
