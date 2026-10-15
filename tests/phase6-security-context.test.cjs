@@ -36,3 +36,18 @@ test('actual extracted Electron logger: redacts network URLs/secrets and emits a
  a.ok(!writes[0].includes('SYNTHETIC_PRIVATE_SIGNATURE'));a.ok(!writes[0].includes('SYNTHETIC_PRIVATE_PASSWORD'))
  a.equal(writes[0].split('\n').length,2);a.ok(!writes[0].includes('\r'));a.ok(!writes[0].includes('\u001b'))
 })
+test('historical closure writer uses real OS exclusive create: a pre-existing symlink cannot replace previous evidence',t=>{
+ const path=require('node:path'),os=require('node:os'),dir=fs.mkdtempSync(path.join(os.tmpdir(),'gf-phase6-exclusive-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}))
+ const target=path.join(dir,'previous-proof.log'),dest=path.join(dir,'next-proof.log');fs.writeFileSync(target,'ORIGINAL_PROOF');fs.symlinkSync(target,dest)
+ const source=fs.readFileSync('docs/audit/resumption-2026-10-14/closure-2026-10-14/run-command.cjs','utf8'),ast=ts.createSourceFile('run-command.cjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS)
+ const write=ast.statements.find(n=>ts.isExpressionStatement(n)&&ts.isCallExpression(n.expression)&&n.expression.expression.getText(ast)==='fs.writeFileSync');a.ok(write)
+ a.throws(()=>vm.runInNewContext(write.getText(ast),{fs,dest,r:{stdout:'NEW_PROOF',stderr:''}}),{code:'EEXIST'})
+ a.equal(fs.readFileSync(target,'utf8'),'ORIGINAL_PROOF')
+})
+test('actual extracted Electron flush function: continued consent preserves successful send and retains failed item (simulated transport)',async()=>{
+ const source=fs.readFileSync('electron/main.js','utf8'),ast=ts.createSourceFile('main.js',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS)
+ const fn=ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='flushCrashQueue');a.ok(fn)
+ const queue=[{message:'synthetic-A'},{message:'synthetic-B'}],sent=[],remaining=[]
+ const flush=vm.runInNewContext('('+fn.getText(ast)+')',{crashConsent:()=>true,cp:require('../electron/control-plane'),process:{env:{}},app:{isPackaged:true},readCrashQueue:()=>queue,httpPost:async(_url,item)=>{sent.push(item);return{ok:item===queue[0]}},writeCrashQueue:items=>remaining.push(...items),log:()=>{}})
+ await flush();a.deepEqual(sent,queue);a.deepEqual(remaining,[queue[1]])
+})
