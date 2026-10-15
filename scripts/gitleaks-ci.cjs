@@ -30,18 +30,31 @@ function locations(report, commit) {
 // the API can retrieve the whole metadata inventory rather than just ten rows.
 // Nothing from Secret/Match/child output enters these pages.
 function inventoryPages(rows, commit) {
-  const groups = []; let group = []; let bytes = 0
+  // GitHub truncates annotation messages around 4 KiB. Group repeated file/rule
+  // locations without dropping any occurrence, then page below that limit.
+  const grouped = new Map()
   for (const row of rows) {
-    const size = Buffer.byteLength(JSON.stringify(row), 'utf8') + 1
-    if (size > 39000) throw new Error('Oversized metadata row')
-    if (bytes + size > 39000 && group.length) { groups.push(group); group = []; bytes = 0 }
-    group.push(row); bytes += size
+    const key = JSON.stringify([row.path, row.rule])
+    if (!grouped.has(key)) grouped.set(key, { path: row.path, rule: row.rule, locations: [] })
+    grouped.get(key).locations.push(row.startLine === row.endLine ? row.startLine : [row.startLine, row.endLine])
+  }
+  const units = []
+  for (const group of grouped.values()) {
+    for (let i = 0; i < group.locations.length; i += 100) units.push({ ...group, locations: group.locations.slice(i, i + 100) })
+  }
+  const groups = []; let group = []; let bytes = 0
+  for (const unit of units) {
+    const size = Buffer.byteLength(JSON.stringify(unit), 'utf8') + 1
+    if (size > 2400) throw new Error('Oversized metadata group')
+    if (bytes + size > 2400 && group.length) { groups.push(group); group = []; bytes = 0 }
+    group.push(unit); bytes += size
   }
   if (group.length || !groups.length) groups.push(group)
-  return groups.slice(0, 8).map((items, index) => ({ schemaVersion: 1, commit,
+  return groups.slice(0, 8).map((items, index) => ({ schemaVersion: 2, commit,
     total: rows.length, page: index + 1, pages: groups.length,
-    coverageComplete: groups.length <= 8, rows: items }))
+    coverageComplete: groups.length <= 8, groups: items }))
 }
+
 function run({ spawn = cp.spawnSync, cwd = process.cwd(), commit = process.env.GITHUB_SHA || '',
   emit = line => console.log(line) } = {}) {
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'garageflows-gitleaks-'))

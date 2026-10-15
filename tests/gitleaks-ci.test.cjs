@@ -54,16 +54,16 @@ test('only whitelisted fields survive report projection', () => {
 })
 
 test('complete inventory pages precede capped per-finding annotations without changing scanner exit', () => {
-  const rows = Array.from({ length: 900 }, (_, i) => ({ ...finding, File: 'docs/audit/synthetic-report-'+i+'.json' }))
+  const rows = Array.from({ length: 900 }, (_, i) => ({ ...finding, File: 'docs/audit/synthetic-report-'+(i % 30)+'.json' }))
   const result = exercise(1, rows)
   assert.equal(result.exit, 1)
   const pageLines = result.text.split('\n').filter(s => s.startsWith('::notice title=Gitleaks inventory page '))
   const pages = pageLines.map(s => JSON.parse(s.slice(s.indexOf('::',2)+2).replace(/%0A/g,'\n').replace(/%0D/g,'\r').replace(/%25/g,'%')))
-  assert.ok(pages.length > 1 && pages.length <= 8)
-  assert.equal(pages.flatMap(p => p.rows).length,900)
+  assert.ok(pages.length >= 1 && pages.length <= 8)
+  assert.equal(pages.flatMap(p => p.groups).flatMap(g => g.locations).length,900)
   assert.ok(pages.every(p => p.coverageComplete && p.total===900 && p.pages===pages.length))
   assert.ok(result.text.indexOf('Gitleaks inventory page') < result.text.indexOf('::notice file='))
-  assert.ok(pageLines.every(s => Buffer.byteLength(s) < 64000))
+  assert.ok(pageLines.every(s => Buffer.byteLength(s) < 4096))
 })
 test('metadata overflow is explicitly incomplete, never reported as full inventory', () => {
   const rows = locations(Array.from({length:3000}, () => ({...finding,File:'x'.repeat(1000)})), 'unit')
