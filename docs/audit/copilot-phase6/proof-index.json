@@ -1,0 +1,566 @@
+{
+  "at": "2026-10-15T14:50:57.576012+00:00",
+  "proofs": [
+    {
+      "id": "P01",
+      "command": "node --test tests/codeql-inventory.test.cjs && npx eslint scripts/report-codeql-locations.cjs tests/codeql-inventory.test.cjs",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:20:36.840676+02:00",
+      "end": "2026-10-15T16:20:41.883913+02:00",
+      "head": "0d64899ed81ab32ab99fa32fbd6cde0c55d5ec63",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "00fd9913eee1e70e3d51dc9036a5517fff7dfe7d184746e4cd9668519de83dae",
+      "rawSha256": "00fd9913eee1e70e3d51dc9036a5517fff7dfe7d184746e4cd9668519de83dae",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P01.json",
+      "log": "P01.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P02",
+      "command": "node --test tests/build-public-key.test.cjs tests/secret-scan-policy.test.cjs && npx eslint scripts/materialize-build-public-key.cjs scripts/lib/copilot-receipt-triage.cjs tests/build-public-key.test.cjs src/integration/copilot-cout-achat.test.ts",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:21:14.246876+02:00",
+      "end": "2026-10-15T16:21:16.314376+02:00",
+      "head": "0d64899ed81ab32ab99fa32fbd6cde0c55d5ec63",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "0b08a74ca8a4701582743e8b5f84f5249f49f53c288f0805777a26f741fb226c",
+      "rawSha256": "0b08a74ca8a4701582743e8b5f84f5249f49f53c288f0805777a26f741fb226c",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P02.json",
+      "log": "P02.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P03",
+      "command": "node --test tests/build-public-key.test.cjs tests/secret-scan-policy.test.cjs tests/codeql-inventory.test.cjs tests/ci-required-gate.test.cjs && npx eslint scripts/capture-phase6-native-baseline.cjs && git diff --check",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:21:46.241033+02:00",
+      "end": "2026-10-15T16:21:48.864740+02:00",
+      "head": "0d64899ed81ab32ab99fa32fbd6cde0c55d5ec63",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "faa7eb72bc46071ddf681b65f6fb1baf231036efc45d9e5bcbd94388d71a38cb",
+      "rawSha256": "faa7eb72bc46071ddf681b65f6fb1baf231036efc45d9e5bcbd94388d71a38cb",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P03.json",
+      "log": "P03.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P04",
+      "command": "npx vitest run src/lib/copilot-llm/__tests__/paid-block.test.ts src/lib/copilot-llm/__tests__/provider.test.ts src/lib/copilot-llm/__tests__/planning-provider.test.ts src/lib/copilot/__tests__/phase3-security.test.ts src/lib/copilot/__tests__/semantic.test.ts && node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs && npx eslint src/lib/copilot-llm/provider.ts src/lib/copilot-llm/__tests__/paid-block.test.ts scripts/evaluate-copilot-phase4.cjs",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:22:55.328659+02:00",
+      "end": "2026-10-15T16:22:59.229088+02:00",
+      "head": "8270e3afc55c79d2622a563aee5056b99cedf2f5",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "385d4e1f28e3ab4e3478a0e2adc86f160c1ee9d946897b3e83d04581cfc6cd8a",
+      "rawSha256": "7e32226a752f4e5d89127a5087ae4017af51f289aba3dc6bbdf3076d35516083",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P04.json",
+      "log": "P04.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P05",
+      "command": "node --test tests/codeql-inventory.test.cjs tests/config-dotenv-context.test.cjs && npx eslint scripts/report-codeql-locations.cjs tests/codeql-inventory.test.cjs tests/config-dotenv-context.test.cjs src/lib/copilot-llm/__tests__/paid-block.test.ts && git diff --check",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:25:43.550528+02:00",
+      "end": "2026-10-15T16:25:45.155719+02:00",
+      "head": "8270e3afc55c79d2622a563aee5056b99cedf2f5",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "4162485660b57eeaf598737fe54579bae463d8945dc761dfd7858942e0ae0574",
+      "rawSha256": "4162485660b57eeaf598737fe54579bae463d8945dc761dfd7858942e0ae0574",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P05.json",
+      "log": "P05.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P06",
+      "command": "npx vitest run src/lib/copilot/__tests__ src/lib/copilot-llm/__tests__ && npx vitest run src/lib/__tests__/authz.test.ts src/lib/__tests__/authz-full-matrix.test.ts src/lib/__tests__/authz-mechanic-matrix.test.ts",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:26:34.567414+02:00",
+      "end": "2026-10-15T16:26:40.562085+02:00",
+      "head": "3eb7c5fd40e4e381e960d53249ef59e004fa498a",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "11e9bbbe320daae5b44c5b70d9ece66ad423dd01e79f2ab78a3571d6daa6be4a",
+      "rawSha256": "5830fd1090664d36aef179e9ab4608abcd04b26e35a90d7d620fef026fc81a12",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P06.json",
+      "log": "P06.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P07",
+      "command": "npm run test:config && npm run test:release-safety",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:26:34.525759+02:00",
+      "end": "2026-10-15T16:26:39.852198+02:00",
+      "head": "3eb7c5fd40e4e381e960d53249ef59e004fa498a",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "8166ea3ac64a0127850cd5d77ba997afdc44d2b3443ae6efe645e4ab9d159909",
+      "rawSha256": "8166ea3ac64a0127850cd5d77ba997afdc44d2b3443ae6efe645e4ab9d159909",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P07.json",
+      "log": "P07.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P08",
+      "command": "npm run test:audit && npm ls --all && npm run audit:strict",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:26:34.560543+02:00",
+      "end": "2026-10-15T16:26:38.065507+02:00",
+      "head": "3eb7c5fd40e4e381e960d53249ef59e004fa498a",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "1a6e3524a3492ff91b0c7fc7d8b0029e2fb51c9b24f1b1ca871f81dd5c560a79",
+      "rawSha256": "1a6e3524a3492ff91b0c7fc7d8b0029e2fb51c9b24f1b1ca871f81dd5c560a79",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P08.json",
+      "log": "P08.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P09",
+      "command": "node scripts/evaluate-copilot-phase4.cjs",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:26:45.863732+02:00",
+      "end": "2026-10-15T16:26:46.614364+02:00",
+      "head": "3eb7c5fd40e4e381e960d53249ef59e004fa498a",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 1,
+      "logSha256": "88de500de08ae3d774676e16a449abe3705588c36ef5f77ff2f706bb713d0ebe",
+      "rawSha256": "88de500de08ae3d774676e16a449abe3705588c36ef5f77ff2f706bb713d0ebe",
+      "interpretation": "FAIL_FROZEN48_17_PASS_31_FAIL",
+      "receipt": "P09.json",
+      "log": "P09.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P10",
+      "command": "npx vitest run src/lib/copilot/__tests__ src/lib/copilot-llm/__tests__ src/__tests__/middleware.test.ts && npx eslint src/lib/copilot-llm/provider.ts src/lib/copilot-llm/__tests__/paid-block.test.ts src/middleware.ts src/__tests__/middleware.test.ts && git diff --check",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:28:39.151170+02:00",
+      "end": "2026-10-15T16:28:43.387068+02:00",
+      "head": "3eb7c5fd40e4e381e960d53249ef59e004fa498a",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 1,
+      "logSha256": "4bda6da7678fe37b7d357b199f5fa9699c6258de369fc5779e69639621ac7d6e",
+      "rawSha256": "d1208ced0c4b493ab220929fecf04d975f11f873a51fc8306d495b44ce769206",
+      "interpretation": "FAIL_NEW_TEST_PARSE_ERROR_FIXED_IN_P11",
+      "receipt": "P10.json",
+      "log": "P10.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P11",
+      "command": "npx vitest run src/lib/copilot/__tests__ src/lib/copilot-llm/__tests__ src/__tests__/middleware.test.ts && npx eslint src/lib/copilot-llm/provider.ts src/lib/copilot-llm/__tests__/paid-block.test.ts src/middleware.ts src/__tests__/middleware.test.ts && git diff --check",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:28:58.284128+02:00",
+      "end": "2026-10-15T16:29:03.296925+02:00",
+      "head": "3eb7c5fd40e4e381e960d53249ef59e004fa498a",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "4ac9198d8364000558b3e56b0ccc1a7314b74ec91971b77e700e6589cd9d8903",
+      "rawSha256": "4906d5594843ed304d297926ddb16a9cc678f59e1b1641345cbcdebf918a1cab",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P11.json",
+      "log": "P11.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P12",
+      "command": "node --test tests/phase6-security-context.test.cjs tests/codeql-inventory.test.cjs tests/config-dotenv-context.test.cjs && npx vitest run src/lib/sync/__tests__/redirect-security.test.ts src/lib/portal/__tests__/auth-core.test.ts src/lib/portal/__tests__/backup-codes-store.test.ts src/lib/__tests__/photo-store-traversal.test.ts src/lib/einvoicing/__tests__/formats.test.ts && npx eslint scripts/capture-phase6-native-baseline.cjs tests/phase6-security-context.test.cjs src/lib/sync/cloud-client.ts src/lib/sync/__tests__/redirect-security.test.ts",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:31:25.591884+02:00",
+      "end": "2026-10-15T16:31:29.498610+02:00",
+      "head": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "0f3dd8a069980e385de12e031fba5acb409b3ed55fc33bdd57d2906285c1d6a9",
+      "rawSha256": "c00b2e52bce06cfc66410a9acddf790ae9f4c49f056d3e02e5e3e1ce3652ab18",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P12.json",
+      "log": "P12.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P13",
+      "command": "node --check electron/main.js && node --test tests/ci-required-gate.test.cjs tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs tests/copilot-blind-intake.test.cjs tests/phase6-security-context.test.cjs tests/codeql-inventory.test.cjs tests/config-dotenv-context.test.cjs && git diff --check",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:31:48.860792+02:00",
+      "end": "2026-10-15T16:31:51.034375+02:00",
+      "head": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "b10f5985ff69e6b06907d89a5a688f848c81c2e7097ec37ef20ff5dc073f4f26",
+      "rawSha256": "b10f5985ff69e6b06907d89a5a688f848c81c2e7097ec37ef20ff5dc073f4f26",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P13.json",
+      "log": "P13.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P14",
+      "command": "node --test tests/phase6-security-context.test.cjs tests/codeql-inventory.test.cjs tests/config-dotenv-context.test.cjs tests/ci-required-gate.test.cjs && npx eslint scripts/report-codeql-locations.cjs && git diff --check",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:32:33.275334+02:00",
+      "end": "2026-10-15T16:32:35.642171+02:00",
+      "head": "b7e155ee275956a19b985c02d341d6c0e435672e",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "c8becbd2755b4b6a3e428a6b53a2d1ab9762f8e896de4407f609c4c72b5ef6e3",
+      "rawSha256": "c8becbd2755b4b6a3e428a6b53a2d1ab9762f8e896de4407f609c4c72b5ef6e3",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P14.json",
+      "log": "P14.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P15",
+      "command": "node --test tests/phase6-security-context.test.cjs",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:33:25.380665+02:00",
+      "end": "2026-10-15T16:33:26.044156+02:00",
+      "head": "da5e292a823fbdc9c62cdd88ec19328589b6e901",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 1,
+      "logSha256": "dcabeb2f6e557ede3f5cdeaa5dd4f622c7cff13d77bc55a54870e2658c6677e2",
+      "rawSha256": "c6a4123318fd9f1db4fb129016cf88948734510d25b17bb1ae08b131b78e8d94",
+      "interpretation": "EXPECTED_NEGATIVE_REPRODUCTION_BEFORE_FIX",
+      "receipt": "P15.json",
+      "log": "P15.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P16",
+      "command": "node --check electron/main.js && node --test tests/phase6-security-context.test.cjs && npx vitest run src/lib/__tests__/control-plane.test.ts src/lib/__tests__/electron-startup-gate.test.ts src/lib/__tests__/electron-signed-state.test.ts src/lib/__tests__/electron-activation-report.test.ts && npx eslint tests/phase6-security-context.test.cjs && git diff --check",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:33:33.881132+02:00",
+      "end": "2026-10-15T16:33:37.306044+02:00",
+      "head": "da5e292a823fbdc9c62cdd88ec19328589b6e901",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "8f277aa06a72c052ba627e1003407093aa7d347c21b7218eeaed3f1ab0a1e821",
+      "rawSha256": "ac86b0beca1a4f99da48e063318a42accb0730b2bf7b5ef6c8697c0a303ca364",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P16.json",
+      "log": "P16.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P17",
+      "command": "node --test tests/phase6-security-context.test.cjs && npx eslint tests/phase6-security-context.test.cjs && git diff --check",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:35:38.151085+02:00",
+      "end": "2026-10-15T16:35:40.223681+02:00",
+      "head": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "2dcb9e65be283ce764d5d90ea8279f481deafc2c96019b4aeb31a4a0286a2a93",
+      "rawSha256": "2dcb9e65be283ce764d5d90ea8279f481deafc2c96019b4aeb31a4a0286a2a93",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P17.json",
+      "log": "P17.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P18",
+      "command": "npx vitest run src/lib/copilot/__tests__ src/lib/copilot-llm/__tests__ src/lib/__tests__/env.test.ts src/lib/__tests__/env-contract.test.ts && npx eslint src/lib/copilot-llm/provider.ts src/lib/copilot-llm/__tests__/paid-block.test.ts && git diff --check",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:37:05.591959+02:00",
+      "end": "2026-10-15T16:37:10.695892+02:00",
+      "head": "b340c06755b36864fcc38ef7bd8aa7b03c97a123",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "278782bf65f8e5325f874ec8b3fbb2090601456ce3438bced79f2e0e75c7471b",
+      "rawSha256": "3dafb1aeab206503caf613a61e89e365e820dfabf349c6e950e23f039880d529",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P18.json",
+      "log": "P18.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P19",
+      "command": "node --test tests/codeql-inventory.test.cjs tests/phase6-security-context.test.cjs tests/config-dotenv-context.test.cjs && npx eslint scripts/report-codeql-locations.cjs tests/codeql-inventory.test.cjs && npm run test:config && npm run test:release-safety",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:38:17.426168+02:00",
+      "end": "2026-10-15T16:38:23.726061+02:00",
+      "head": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "e2a6745a20aba6a7ec195dc785d60e140ef25f75b2d6a185b8fcd4c67c6bd74b",
+      "rawSha256": "e2a6745a20aba6a7ec195dc785d60e140ef25f75b2d6a185b8fcd4c67c6bd74b",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P19.json",
+      "log": "P19.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P20",
+      "command": "git diff --quiet 0d64899 -- docs/audit/copilot-phase4 docs/audit/copilot-phase5 src/lib/copilot/evaluation-phase4-validation.json .gitleaks.toml perf-budget.json && node <<'JS'\nconst fs=require('node:fs'),crypto=require('node:crypto'),cp=require('node:child_process'),a=require('node:assert/strict'),{verifyFinding}=require('./scripts/lib/copilot-receipt-triage.cjs')\nconst file='src/lib/copilot/evaluation-phase4-validation.json',sha=crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');a.equal(sha,'7b23aa75f2f08b6b23e9bf65a64d1051c95aef0bac33168257f562feb1227092')\nconst registry=JSON.parse(fs.readFileSync('docs/audit/copilot-phase5/gitleaks-triage.json'));a.equal(registry.length,959);for(const row of registry)verifyFinding(row)\nconst frozen=JSON.parse(fs.readFileSync('docs/audit/copilot-phase5/frozen48-failure-taxonomy.json')),run=JSON.parse(fs.readFileSync('docs/audit/copilot-phase6/P09.txt'));a.equal(run.metrics.selectedContracts.passed,17);a.equal(frozen.rows.length,31);a.deepEqual(run.rows.filter(r=>!r.pass).map(r=>r.id).sort(),frozen.rows.map(r=>r.id).sort())\na.equal(JSON.parse(fs.readFileSync('perf-budget.json')).totalClientJsBytes,3625984)\nconsole.log(JSON.stringify({frozenSha256:sha,original48Unmodified:true,original31ClassificationsUnmodified:true,phase4And5EvidenceUnmodified:true,exactTriagesVerified:registry.length,publicSourceHashesAndPrior20Unmodified:true,gitleaksPolicyUnmodified:true,clientJsLimit:3625984,localSelectionPassed:17,localSelectionFailed:31,paidCalls:0},null,2))\nJS",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:39:30.501901+02:00",
+      "end": "2026-10-15T16:39:30.948894+02:00",
+      "head": "5b7fe4f306d09d67ec5d17ceaa12c6ccb4e8d586",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "f79b7c999ba547456cb06cd748978ff829c7bc20597eea6d535b4cec8391ed9d",
+      "rawSha256": "f79b7c999ba547456cb06cd748978ff829c7bc20597eea6d535b4cec8391ed9d",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P20.json",
+      "log": "P20.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P21",
+      "command": "npx vitest run src/lib/copilot/__tests__ src/lib/copilot-llm/__tests__ src/lib/__tests__/authz.test.ts src/lib/__tests__/authz-full-matrix.test.ts src/lib/__tests__/authz-mechanic-matrix.test.ts src/__tests__/middleware.test.ts src/lib/__tests__/env.test.ts src/lib/__tests__/env-contract.test.ts src/lib/sync/__tests__/redirect-security.test.ts src/lib/portal/__tests__/auth-core.test.ts src/lib/portal/__tests__/backup-codes-store.test.ts src/lib/__tests__/photo-store-traversal.test.ts src/lib/einvoicing/__tests__/formats.test.ts src/lib/__tests__/control-plane.test.ts src/lib/__tests__/electron-startup-gate.test.ts src/lib/__tests__/electron-signed-state.test.ts src/lib/__tests__/electron-activation-report.test.ts",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:39:31.032075+02:00",
+      "end": "2026-10-15T16:39:37.245961+02:00",
+      "head": "5b7fe4f306d09d67ec5d17ceaa12c6ccb4e8d586",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "41511adb8484b7d270b23d8f389e75c2e7ba7edba92fd291539357f2eec89ff3",
+      "rawSha256": "33be418d38b47a0df39e574f281f54d590e3024502717f58e16bb2463c7da876",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P21.json",
+      "log": "P21.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P22",
+      "command": "node <<'JS'\nconst cp=require('node:child_process'),crypto=require('node:crypto')\nfor(const endpoint of ['repos/supremperf/GarageFlowsV2/code-scanning/alerts?state=open&per_page=100','repos/supremperf/GarageFlowsV2/dependabot/alerts?state=open&per_page=100']){\n const result=cp.spawnSync('gh',['api',endpoint],{encoding:'utf8',timeout:30000}),combined=(result.stdout??'')+(result.stderr??'')\n console.log(JSON.stringify({command:['gh','api',endpoint],exitCode:result.status,http403:/HTTP 403/.test(combined),inventoryStatus:result.status===0?'RETRIEVED_NOT_YET_CLASSIFIED':'UNAVAILABLE_NOT_RESOLVED',count:null,officialResponseSha256:crypto.createHash('sha256').update(combined).digest('hex'),limits:'403 is neither zero findings nor a severity inventory. No credentials or response bodies emitted.'}))\n if(result.status===0)throw new Error('Access changed: stop and obtain/classify full authorized inventory instead of this denial-only receipt')\n}\nJS",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:40:35.930247+02:00",
+      "end": "2026-10-15T16:40:36.730855+02:00",
+      "head": "5b7fe4f306d09d67ec5d17ceaa12c6ccb4e8d586",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "997e64a9499ddd950d12aab2bd543fe01338ab05b767e31867d51dfd675091a2",
+      "rawSha256": "997e64a9499ddd950d12aab2bd543fe01338ab05b767e31867d51dfd675091a2",
+      "interpretation": "BLOCKED_HTTP403_CHILD_EXIT1_COLLECTOR_EXIT0",
+      "receipt": "P22.json",
+      "log": "P22.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P23",
+      "command": "node --test tests/codeql-inventory.test.cjs tests/phase6-security-context.test.cjs tests/config-dotenv-context.test.cjs && npx eslint scripts/report-codeql-locations.cjs tests/codeql-inventory.test.cjs && git diff --check",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:41:24.981674+02:00",
+      "end": "2026-10-15T16:41:27.222823+02:00",
+      "head": "5b7fe4f306d09d67ec5d17ceaa12c6ccb4e8d586",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "275d0a15c890cd97d5b4a4313486f28f71e5aa7e5e78f21f415da7569f384f5f",
+      "rawSha256": "275d0a15c890cd97d5b4a4313486f28f71e5aa7e5e78f21f415da7569f384f5f",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P23.json",
+      "log": "P23.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P24",
+      "command": "npx vitest run src/lib/copilot/__tests__ src/lib/copilot-llm/__tests__ src/lib/__tests__/authz.test.ts src/lib/__tests__/authz-full-matrix.test.ts src/lib/__tests__/authz-mechanic-matrix.test.ts src/__tests__/middleware.test.ts src/lib/__tests__/env.test.ts src/lib/__tests__/env-contract.test.ts src/lib/sync/__tests__/redirect-security.test.ts src/lib/portal/__tests__/auth-core.test.ts src/lib/portal/__tests__/backup-codes-store.test.ts src/lib/__tests__/photo-store-traversal.test.ts src/lib/einvoicing/__tests__/formats.test.ts src/lib/__tests__/control-plane.test.ts src/lib/__tests__/electron-startup-gate.test.ts src/lib/__tests__/electron-signed-state.test.ts src/lib/__tests__/electron-activation-report.test.ts",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:42:49.655841+02:00",
+      "end": "2026-10-15T16:42:55.828970+02:00",
+      "head": "382fb0b0b56fe860abd0b533fd765bf350c8b69a",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "abb61d2a964188f5ea98ac53cf070fe60087af93128d9f008df03828070ec783",
+      "rawSha256": "d63be850a28d0e45e04a985dcf36ae4121812cdb0522ace8f166936b4e5a181b",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P24.json",
+      "log": "P24.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P25",
+      "command": "node --test tests/config-dotenv-context.test.cjs",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:46:06.152927+02:00",
+      "end": "2026-10-15T16:46:06.716407+02:00",
+      "head": "382fb0b0b56fe860abd0b533fd765bf350c8b69a",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 1,
+      "logSha256": "f45a937399d09c621d3e7305743b181c5e7f15d8d64b88f6cae04bad3c53867a",
+      "rawSha256": "8bb507468efe86d9fabd1a13ceda50139d5a2879f90fd14f14c650e5dd0f57f4",
+      "interpretation": "EXPECTED_NEGATIVE_REPRODUCTION_BEFORE_FIX",
+      "receipt": "P25.json",
+      "log": "P25.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P26",
+      "command": "node --check electron/main.js && node --test tests/config-dotenv-context.test.cjs tests/phase6-security-context.test.cjs tests/codeql-inventory.test.cjs && npm run test:config && npm run test:release-safety && npx eslint electron/dotenv-value.js tests/config-dotenv-context.test.cjs && git diff --check",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:46:14.213449+02:00",
+      "end": "2026-10-15T16:46:20.798137+02:00",
+      "head": "382fb0b0b56fe860abd0b533fd765bf350c8b69a",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "a77ca3ea8e14b4ce9415cbf193beb65b70499e92316349ba4a8fbc1bee1b9099",
+      "rawSha256": "a77ca3ea8e14b4ce9415cbf193beb65b70499e92316349ba4a8fbc1bee1b9099",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P26.json",
+      "log": "P26.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P27",
+      "command": "npx vitest run src/lib/copilot/__tests__ src/lib/copilot-llm/__tests__ src/lib/__tests__/authz.test.ts src/lib/__tests__/authz-full-matrix.test.ts src/lib/__tests__/authz-mechanic-matrix.test.ts src/__tests__/middleware.test.ts src/lib/__tests__/env.test.ts src/lib/__tests__/env-contract.test.ts src/lib/sync/__tests__/redirect-security.test.ts src/lib/portal/__tests__/auth-core.test.ts src/lib/portal/__tests__/backup-codes-store.test.ts src/lib/__tests__/photo-store-traversal.test.ts src/lib/einvoicing/__tests__/formats.test.ts src/lib/__tests__/control-plane.test.ts src/lib/__tests__/electron-startup-gate.test.ts src/lib/__tests__/electron-signed-state.test.ts src/lib/__tests__/electron-activation-report.test.ts && node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs tests/copilot-blind-intake.test.cjs tests/phase6-security-context.test.cjs tests/codeql-inventory.test.cjs tests/config-dotenv-context.test.cjs && npm run test:config && npm run test:release-safety && npm run test:audit && npm ls --all && npm run audit:strict && git diff --check",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:47:00.032513+02:00",
+      "end": "2026-10-15T16:47:15.310636+02:00",
+      "head": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "5f1ece006c6eb82aa6bae57a4ab220c9a2df0a25756b5ef4289ba8f148f1adec",
+      "rawSha256": "8edac4121f0aaa4d5e407095c5ec43d6bf3480053e8a29a533dc7c540b96fce1",
+      "interpretation": "PASS_COMMAND_SCOPE_ONLY",
+      "receipt": "P27.json",
+      "log": "P27.txt",
+      "sourceInventoryIsFunctionalProof": false
+    },
+    {
+      "id": "P28",
+      "command": "git diff --quiet 0d64899 -- docs/audit/copilot-phase4 docs/audit/copilot-phase5 src/lib/copilot/evaluation-phase4-validation.json .gitleaks.toml perf-budget.json package.json package-lock.json && node <<'JS'\nconst fs=require('node:fs'),crypto=require('node:crypto'),a=require('node:assert/strict'),out='docs/audit/copilot-phase6/'\nconst receipts=fs.readdirSync(out).filter(n=>/^P\\d\\d\\.json$/.test(n));for(const file of receipts){const r=JSON.parse(fs.readFileSync(out+file));a.equal(crypto.createHash('sha256').update(fs.readFileSync(out+r.id+'.txt')).digest('hex'),r.logSha256)}\nconst review=JSON.parse(fs.readFileSync(out+'source-review.json'));for(const r of review.rows)a.equal(crypto.createHash('sha256').update(fs.readFileSync(r.path)).digest('hex'),r.sourceSha256)\nconst alerts=JSON.parse(fs.readFileSync(out+'codeql-alert-review.json'));a.equal(alerts.rows.length,17);a.equal(alerts.rows.filter(r=>r.baseline.annotation_level==='failure').length,7);a.ok(alerts.rows.every(r=>!r.dismissed&&!r.riskAcceptedByUser&&r.githubAlertNumber===null))\nconst preserved=JSON.parse(fs.readFileSync('docs/audit/copilot-phase5/gitleaks-triage.json'));for(const r of preserved)require('./scripts/lib/copilot-receipt-triage.cjs').verifyFinding(r)\nconsole.log(JSON.stringify({scope:'PROOF_METADATA_AND_PRESERVATION_NOT_FUNCTIONAL_VALIDATION',receiptLogsVerified:receipts.length,changedSourceHashesVerified:review.rows.length,originalCodeqlRows:17,originalHighRows:7,alertNumbersNotFabricated:true,risksAccepted:0,alertsDismissed:0,individualTriagesVerified:preserved.length,historicalEvidenceAndFrozen48Unmodified:true,packageLockAndGitleaksAndJsBudgetUnmodified:true}))\nJS",
+      "cwd": "/home/user/GarageFlowsV2",
+      "timezone": "Europe/Paris",
+      "start": "2026-10-15T16:51:55.456595+02:00",
+      "end": "2026-10-15T16:51:56.016599+02:00",
+      "head": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de",
+      "tools": {
+        "node": "v22.22.3",
+        "npm": "10.9.8"
+      },
+      "exitCode": 0,
+      "logSha256": "8b975c5482873eab746a42156614ef4aba0ce3f28e5a0ae1a01b9c1b5b3d6eff",
+      "rawSha256": "8b975c5482873eab746a42156614ef4aba0ce3f28e5a0ae1a01b9c1b5b3d6eff",
+      "interpretation": "PASS_METADATA_HASHES_ONLY_NOT_FUNCTIONAL_PROOF",
+      "receipt": "P28.json",
+      "log": "P28.txt",
+      "sourceInventoryIsFunctionalProof": false
+    }
+  ],
+  "limits": "Each exit applies only to its exact command and source inventory. Failure receipts immutable. Local/CI, simulated/live, historical diagnostic/candidate, scanner inventory/alert acceptance remain separate."
+}

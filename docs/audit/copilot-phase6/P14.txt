@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: mandatory gate rejects any failed, cancelled or skipped upstream job
+ok 1 - mandatory gate rejects any failed, cancelled or skipped upstream job
+  ---
+  duration_ms: 46.552397
+  type: 'test'
+  ...
+# Subtest: workflow graph pins actions, retains strict security and packages Windows before gate
+ok 2 - workflow graph pins actions, retains strict security and packages Windows before gate
+  ---
+  duration_ms: 1.721396
+  type: 'test'
+  ...
+# Subtest: authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+ok 3 - authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+  ---
+  duration_ms: 360.581472
+  type: 'test'
+  ...
+# Subtest: SARIF projection retains rules and all source/sink locations, never code snippets/messages
+ok 4 - SARIF projection retains rules and all source/sink locations, never code snippets/messages
+  ---
+  duration_ms: 1.050789
+  type: 'test'
+  ...
+# Subtest: bounded pages preserve all results and reject overflow rather than fake completeness
+ok 5 - bounded pages preserve all results and reject overflow rather than fake completeness
+  ---
+  duration_ms: 8.577649
+  type: 'test'
+  ...
+# Subtest: artifact indexes resolve to physical source paths without leaking artifact bodies
+ok 6 - artifact indexes resolve to physical source paths without leaking artifact bodies
+  ---
+  duration_ms: 0.224784
+  type: 'test'
+  ...
+# Subtest: real Next dotenv consumer preserves dollar/backslash/quote attack strings and cannot create extra keys
+ok 7 - real Next dotenv consumer preserves dollar/backslash/quote attack strings and cannot create extra keys
+  ---
+  duration_ms: 3.10401
+  type: 'test'
+  ...
+# Subtest: historical trace transport roundtrips full ANSI, unicode, percent signs and failure stacks
+ok 8 - historical trace transport roundtrips full ANSI, unicode, percent signs and failure stacks
+  ---
+  duration_ms: 8.448589
+  type: 'test'
+  ...
+# Subtest: backup-code modulo has exactly eight preimages per symbol, not biased: real source alphabet has 32 unique symbols
+ok 9 - backup-code modulo has exactly eight preimages per symbol, not biased: real source alphabet has 32 unique symbols
+  ---
+  duration_ms: 14.297003
+  type: 'test'
+  ...
+# Subtest: actual extracted Electron flush function: revoked consent performs no queue read and no send (unit, not packaged Electron)
+ok 10 - actual extracted Electron flush function: revoked consent performs no queue read and no send (unit, not packaged Electron)
+  ---
+  duration_ms: 129.461066
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 926.961234
