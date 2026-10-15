@@ -23,3 +23,10 @@ test('CodeQL query pack extension metadata supplies rule severity without messag
  a.deepEqual(rows[0].ruleMetadata,{securitySeverity:'7.5',level:'warning'});a.ok(!JSON.stringify(rows).includes('PRIVATE_SYNTHETIC_VALUE'))
  a.throws(()=>project({}));a.throws(()=>project({runs:[{results:[{locations:[{}]}]}]}))
 })
+
+test('all validated fingerprints survive; unsupported fingerprints or absolute/traversing paths fail closed',()=>{
+ const row={ruleId:'js/fixture',partialFingerprints:{primaryLocationLineHash:'ab:1',anotherFingerprint:'cd:2'},locations:[]}
+ a.deepEqual(project({runs:[{results:[row]}]})[0].fingerprints,row.partialFingerprints)
+ a.throws(()=>project({runs:[{results:[{...row,partialFingerprints:{unexpected:'NOT_A_FINGERPRINT'}}]}]}))
+ for(const uri of ['/private/location','C:\\private\\location','../private/location'])a.throws(()=>project({runs:[{results:[{locations:[{physicalLocation:{artifactLocation:{uri}}}]}]}]}))
+})
