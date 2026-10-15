@@ -31,7 +31,8 @@ test('three public OAuth headers and one frozen prose fingerprint are individual
   assert.ok(line.endsWith('[lint](evidence/lint-final.log).'))
   const expected = [...rows, prose].map(r => `${r.path}:${r.rule}:${r.startLine}`).sort()
   const actual = fs.readFileSync('.gitleaksignore', 'utf8').split('\n').map(x => x.trim()).filter(x => x && !x.startsWith('#')).sort()
-  assert.deepEqual(actual, expected)
+  const phase5 = JSON.parse(fs.readFileSync('docs/audit/copilot-phase5/gitleaks-triage.json', 'utf8')).map(r => r.fingerprint)
+  assert.deepEqual(actual, [...expected, ...phase5].sort())
   for (const r of rows) {
     assert.equal(r.rule, 'generic-api-key')
     assert.match(r.path, /^docs\/audit\/resumption-2026-10-14\/evidence\/gh-(code-scanning|protection|rulesets)\.log$/)
@@ -42,30 +43,35 @@ test('three public OAuth headers and one frozen prose fingerprint are individual
   }
 })
 
-test('phase4 digest exception requires exact receipt path AND exact hash-locked source line; no secret-shaped substitution', () => {
-  const crypto = require('node:crypto')
-  const triage = JSON.parse(fs.readFileSync('docs/audit/copilot-phase4/gitleaks-code-digest-triage.json', 'utf8'))
-  const config = fs.readFileSync('.gitleaks.toml', 'utf8')
-  const block = config.slice(config.indexOf('# Phase4: ten verified'))
-  assert.match(block, /\[\[rules\]\]\s+id = "generic-api-key"/)
-  assert.match(block, /condition = "AND"/)
-  assert.match(block, /regexTarget = "line"/)
-  const pathText = block.match(/paths = \[\s*'''([^']+)'''\s*\]/)[1]
-  assert.equal(pathText, triage.receiptScope)
-  const allowedPath = new RegExp(pathText)
-  for (const p of ['docs/audit/copilot-phase4/F01.json','docs/audit/copilot-phase4/F32.json']) assert.ok(allowedPath.test(p))
-  for (const p of ['src/lib/auth-secret.ts','docs/audit/copilot-phase4/F33.json','docs/other.json','docs/audit/copilot-phase4/nested/F16.json']) assert.ok(!allowedPath.test(p))
-  const regexBlock = block.slice(block.indexOf('  regexes = ['))
-  const patterns = [...regexBlock.matchAll(/'''([^']+)'''/g)].map(m => new RegExp(m[1]))
-  assert.equal(patterns.length, 10); assert.equal(triage.sourcePairs.length, 10)
-  for (const row of triage.sourcePairs) {
-    assert.equal(row.classification,'VERIFIED_SOURCE_SHA256_NOT_CREDENTIAL')
-    assert.equal(crypto.createHash('sha256').update(fs.readFileSync(row.sourcePath)).digest('hex'), row.sourceSha256,
-      'Source digest changed: exception requires re-triage, not a broader pattern')
-    const line = '    '+JSON.stringify(row.sourcePath)+': '+JSON.stringify(row.sourceSha256)+','
-    assert.equal(patterns.filter(p => p.test(line)).length,1)
-    assert.ok(!patterns.some(p => p.test(line.replace(row.sourceSha256,'0'.repeat(64)))))
-    assert.ok(!patterns.some(p => p.test(line.replace(row.sourceSha256,'synthetic_credential_must_still_be_detected'))))
-    assert.ok(!patterns.some(p => p.test(line.replace(row.sourcePath,'src/lib/auth-secret.ts'))))
+test('every phase5 suppression is an exact hash-locked location; prior twenty individually retained', () => {
+  const { verifyFinding } = require('../scripts/lib/copilot-receipt-triage.cjs')
+  const rows = JSON.parse(fs.readFileSync('docs/audit/copilot-phase5/gitleaks-triage.json','utf8'))
+  const summary = JSON.parse(fs.readFileSync('docs/audit/copilot-phase5/gitleaks-triage-summary.json','utf8'))
+  assert.equal(rows.length,summary.triagedTotal)
+  assert.equal(new Set(rows.map(r => r.fingerprint)).size,rows.length)
+  assert.equal(summary.officialFindings,669)
+  assert.equal(summary.previousExactSuppressionLocations,290)
+  assert.equal(rows.filter(r => r.classification==='VERIFIED_PUBLIC_FILE_SHA256').length,957)
+  assert.equal(rows.filter(r => r.classification==='DOCUMENTATION_ASSERTION_LITERAL').length,2)
+  for (const row of rows) assert.equal(verifyFinding(row),true)
+  for (const [file,lines] of [['F16',[328,259,258,220,155,147,144,143,134,130]],['F22',[491,490,438,420,369,368,350,349,344,336]]]) {
+    for (const line of lines) assert.ok(rows.some(r => r.path===`docs/audit/copilot-phase4/${file}.json` && r.startLine===line && verifyFinding(r)))
   }
+  // Remove the provisional phase4 regex extension; no whole-file/all-SHA exemption.
+  const config=fs.readFileSync('.gitleaks.toml','utf8')
+  assert.ok(!config.includes('[[rules]]'))
+  assert.ok(!config.includes('Ten cryptographically'))
+})
+
+test('changed receipt/source/line/prose or unknown classification invalidates suppression', () => {
+  const { verifyFinding } = require('../scripts/lib/copilot-receipt-triage.cjs')
+  const rows=JSON.parse(fs.readFileSync('docs/audit/copilot-phase5/gitleaks-triage.json','utf8'))
+  for (const row of [rows.find(r=>r.classification==='VERIFIED_PUBLIC_FILE_SHA256'),rows.find(r=>r.classification==='DOCUMENTATION_ASSERTION_LITERAL')]) {
+    assert.throws(()=>verifyFinding(row,process.cwd(),Buffer.from('synthetic changed bytes')))
+    assert.throws(()=>verifyFinding({...row,startLine:row.startLine+1}))
+    assert.throws(()=>verifyFinding({...row,classification:'UNREVIEWED'}))
+    assert.throws(()=>verifyFinding({...row,path:'../../outside'}))
+  }
+  const digest=rows.find(r=>r.classification==='VERIFIED_PUBLIC_FILE_SHA256')
+  assert.throws(()=>verifyFinding({...digest,sourceSha256:'0'.repeat(64)}))
 })
