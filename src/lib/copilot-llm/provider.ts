@@ -24,14 +24,17 @@ export class AnthropicClassifier implements LlmProvider {
   private retryAfter = 0
   private attempt: ProviderAttempt | null = null
   lastAttempt(): ProviderAttempt | null { return this.attempt ? { ...this.attempt, usage: this.attempt.usage ? { ...this.attempt.usage } : null } : null }
+  private readonly simulatedTransport?: typeof fetch
   constructor(private readonly key: string, private readonly model: string,
-    // Explicit simulated transport for protocol tests only. The application factory
-    // NEVER supplies one. No global fetch fallback / env flag enables paid IO.
-    private readonly simulatedTransport?: typeof fetch) {
-    this.health = simulatedTransport
+    // Explicit protocol simulation is additionally forbidden outside test runtime.
+    // The application factory NEVER supplies one; there is no global fetch fallback.
+    simulatedTransport?: typeof fetch) {
+    this.simulatedTransport = process.env.NODE_ENV === 'test' ? simulatedTransport : undefined
+    this.health = this.simulatedTransport
       ? { state: 'initializing', reason: 'Transport de simulation ; aucune validation fournisseur réel.', model }
       : { state: 'unavailable', reason: 'Mode payant bloqué : plafond monétaire effectif non vérifié.', model }
   }
+
   status(): ProviderHealth {
     if (this.health.state === 'ready' && this.health.checkedAt && Date.now() - Date.parse(this.health.checkedAt) > 300_000) {
       return { ...this.health, state: 'initializing', reason: 'Dernière classification trop ancienne ; disponibilité à vérifier lors de la prochaine demande au modèle.' }

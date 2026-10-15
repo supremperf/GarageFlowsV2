@@ -73,26 +73,20 @@ function getJwtSecret(): Uint8Array {
   return new TextEncoder().encode(getAuthSecret())
 }
 
-/** Valeur sûre à journaliser : jamais de saut de ligne (injection de journal). */
-function journalSure(v: string): string {
-  return v.replace(/[\r\n\u2028\u2029]+/g, ' ').slice(0, 200)
-}
-
 /**
  * Vérifie cryptographiquement le cookie gf_session (HS256) et renvoie {typ, lid}
- * ou null en cas d'échec. Journalise UNIQUEMENT le chemin et le type d'erreur —
+ * ou null en cas d'échec. Journalise UNIQUEMENT des événements fixes —
  * jamais le contenu du cookie ni le secret.
  */
 async function verifySessionJwt(
   req: NextRequest,
-  pathname: string,
 ): Promise<{ typ: string; lid: string } | null> {
   const raw = req.cookies.get('gf_session')?.value
   if (!raw) return null
   try {
     const { payload } = await jwtVerify(raw, getJwtSecret())
     if (typeof payload.typ !== 'string' || typeof payload.lid !== 'string') {
-      console.warn(`[middleware] gf_session rejeté (charge utile invalide) chemin=${journalSure(pathname)}`)
+      console.warn('[middleware] gf_session rejeté (charge utile invalide)')
       return null
     }
     return { typ: payload.typ, lid: payload.lid }
@@ -108,8 +102,8 @@ async function verifySessionJwt(
     // secret mal configuré → getAuthSecret lève). Sécurité inchangée : fail-closed,
     // on renvoie null dans tous les cas. Jamais de cookie ni de secret journalisé.
     const code =
-      typeof (err as { code?: unknown }).code === 'string'
-        ? (err as { code: string }).code
+      typeof err === 'object' && err !== null && 'code' in err && typeof err.code === 'string'
+        ? err.code
         : err instanceof Error
           ? err.name
           : 'ErreurInconnue'
@@ -121,7 +115,7 @@ async function verifySessionJwt(
       'ERR_JWT_CLAIM_VALIDATION_FAILED',
     ])
     if (!EXPECTED_SESSION_FAILURES.has(code)) {
-      console.warn(`[middleware] échec vérification gf_session INATTENDU chemin=${journalSure(pathname)} code=${journalSure(code)}`)
+      console.warn('[middleware] échec vérification gf_session INATTENDU')
     }
     return null
   }
@@ -199,9 +193,9 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   try {
     token = await getToken({ req, secret, secureCookie: isSecureReq })
     if (!token) token = await getToken({ req, secret, secureCookie: !isSecureReq })
-  } catch (err) {
-    const kind = err instanceof Error ? err.name : 'ErreurInconnue'
-    console.error(`[middleware] getToken a échoué chemin=${journalSure(pathname)} erreur=${journalSure(kind)}`)
+  } catch {
+    // No attacker-controlled path, error name/code, cookie or token in logs.
+    console.error('[middleware] getToken a échoué')
     token = null
   }
   const isLoggedIn = Boolean(token?.sub || token?.id)
@@ -212,7 +206,7 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   // /mechanic AVANT l'exigence d'auth NextAuth §5 (sinon il serait renvoyé vers
   // /login alors qu'il n'a — et ne doit avoir — aucun compte staff). Le flux
   // garage/admin ci-dessous reste strictement NextAuth-d'abord.
-  const gfSession = await verifySessionJwt(req, pathname)
+  const gfSession = await verifySessionJwt(req)
   if (gfSession?.typ === 'mechanic') {
     return confineMechanic(pathname, req)
   }

@@ -32,4 +32,14 @@ describe('zero-spend production gate, not a verified positive monetary cap',()=>
   for(const setting of ['off','invalid','anthropic']){vi.stubEnv('GARAGEFLOW_LLM',setting);vi.stubEnv('ANTHROPIC_API_KEY','');expect(resolveLlmProvider()).toBeNull()}
   expect(fetcher).not.toHaveBeenCalled()
  })
+ it('rejects an explicitly supplied transport outside the test runtime',async()=>{
+  vi.stubEnv('NODE_ENV','production')
+  const fetcher=vi.fn();vi.stubGlobal('fetch',fetcher)
+  const p=new AnthropicClassifier('synthetic-placeholder',DEFAULT_MODEL,fetcher)
+  expect(await p.classify('synthetic',[])).toBeNull()
+  expect(await p.plan({query:'synthetic',context:{topics:[],hasReference:false,referenceAmbiguous:false,hasVin:false,hasSymptom:false},tools:[],articles:[]})).toBeNull()
+  expect(await p.interpret({query:'synthetic',context:{topics:[],hasReference:false,referenceAmbiguous:false,hasVin:false,hasSymptom:false},tools:[],articles:[],recentTurns:[]})).toBeNull()
+  expect(p.status().state).toBe('unavailable');expect(fetcher).not.toHaveBeenCalled()
+ })
+
 })

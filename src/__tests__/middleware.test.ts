@@ -376,3 +376,30 @@ describe('mécanicien à session expirée : renvoyé vers sa page de réactivati
     expect(res.headers.get('location') ?? '').toMatch(/\/login/)
   })
 })
+
+describe('phase6 — diagnostics fixes sans chemin, jeton ni contrôle terminal',()=>{
+ it('refuses invalid signed claims without logging the sensitive request path',async()=>{
+  loggedIn();const warn=vi.spyOn(console,'warn').mockImplementation(()=>{})
+  try{
+   const gf=await gfSession({typ:42,lid:'synthetic'})
+   expect(redirectPath(await middleware(reqFor('/private/SYNTHETIC_SENSITIVE_PATH',{gf})))).toBe('/license')
+   expect(warn.mock.calls).toEqual([['[middleware] gf_session rejeté (charge utile invalide)']])
+  }finally{warn.mockRestore()}
+ })
+ it('fails closed on token errors without logging attacker-controlled error names or paths',async()=>{
+  const error=new Error('SYNTHETIC_SENSITIVE_VALUE');error.name='\u001b[2J\r\nSYNTHETIC_SENSITIVE_NAME'
+  getTokenMock.mockRejectedValue(error);const log=vi.spyOn(console,'error').mockImplementation(()=>{})
+  try{
+   const res=await middleware(reqFor('/private/SYNTHETIC_SENSITIVE_PATH'))
+   expect(new URL(res.headers.get('location') ?? 'http://unexpected.invalid').pathname).toBe('/login')
+   expect(log.mock.calls).toEqual([['[middleware] getToken a échoué']])
+  }finally{log.mockRestore()}
+ })
+ it('preserves unexpected JWT verification diagnostics without logging the path or configuration',async()=>{
+  loggedIn();delete process.env.NEXTAUTH_SECRET;const warn=vi.spyOn(console,'warn').mockImplementation(()=>{})
+  try{
+   expect(redirectPath(await middleware(reqFor('/private/SYNTHETIC_SENSITIVE_PATH',{gf:'synthetic-invalid-cookie'})))).toBe('/license')
+   expect(warn.mock.calls).toEqual([['[middleware] échec vérification gf_session INATTENDU']])
+  }finally{warn.mockRestore()}
+ })
+})
