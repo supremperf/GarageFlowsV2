@@ -474,6 +474,7 @@ jobs:
         run: |
           test '${{ needs.dependency-security.result }}' = success
           test '${{ needs.secrets.result }}' = success
+          test '${{ needs.base-verification.result }}' = success
           test '${{ needs.check.result }}' = success
           test '${{ needs.e2e.result }}' = success
           test '${{ needs.e2e-authenticated.result }}' = success

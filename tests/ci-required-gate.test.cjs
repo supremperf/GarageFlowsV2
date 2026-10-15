@@ -3,7 +3,7 @@ const { test } = require('node:test'), assert = require('node:assert/strict')
 const fs = require('node:fs'), { spawnSync } = require('node:child_process'), yaml = require('js-yaml')
 const workflow = yaml.load(fs.readFileSync('.github/workflows/ci.yml', 'utf8'))
 const gate = workflow.jobs['required-validation']
-const required = ['dependency-security', 'secrets', 'check', 'e2e', 'e2e-authenticated', 'windows-package']
+const required = ['dependency-security', 'secrets', 'base-verification', 'check', 'e2e', 'e2e-authenticated', 'windows-package']
 test('mandatory gate rejects any failed, cancelled or skipped upstream job', () => {
   function run(failing, status) {
     const script = gate.steps[0].run.replace(/\$\{\{ needs\.([\w-]+)\.result \}\}/g, (_, name) => name === failing ? status : 'success')
@@ -16,6 +16,11 @@ test('workflow graph pins actions, retains strict security and packages Windows 
   assert.equal(gate.if, '${{ always() }}')
   assert.deepEqual(gate.needs, required)
   assert.equal(workflow.permissions.contents, 'read')
+  const base=workflow.jobs['base-verification']
+  assert.ok(base.steps.some(s=>s.run==='npx tsc --noEmit'))
+  assert.ok(base.steps.some(s=>s.run==='npm run build'))
+  assert.ok(base.steps.some(s=>s.run?.includes('npm run check:perf-budget')))
+  assert.ok(base.steps.some(s=>s.run?.includes('totalClientJsBytes !== 3625984')))
   assert.equal(workflow.jobs['windows-package']['runs-on'], 'windows-latest')
   assert.ok(workflow.jobs['windows-package'].steps.some(s => s.run === 'npm run dist'))
   assert.ok(workflow.jobs['dependency-security'].steps.some(s => s.run === 'npm run audit:strict'))
