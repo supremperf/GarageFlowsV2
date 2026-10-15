@@ -7,7 +7,14 @@ const { performance } = require('node:perf_hooks')
 const { z } = require('zod')
 const root = path.resolve(__dirname, '..')
 const MAX_OUTPUT_TOKENS = 512
+// Reservation estimates are NOT independently enforced provider billing caps.
+// Fail closed until a separately reviewed enforcement mechanism exists.
+const LIVE_COST_ENFORCEMENT_VERIFIED = false
+const { verifyGrant, claimAuthorization } = require('./lib/copilot-evaluation-approval.cjs')
 const Approval = z.object({
+  version: z.literal(2), scope: z.literal('COPILOT_SELECTION_FROZEN48'),
+  corpusSha256: z.string().regex(/^[a-f0-9]{64}$/), runnerSha256: z.string().regex(/^[a-f0-9]{64}$/),
+  expiresAt: z.string().datetime({ offset: true }),
   authorizationId: z.string().regex(/^[a-zA-Z0-9_-]{3,100}$/), model: z.string().regex(/^[a-zA-Z0-9._-]{1,100}$/),
   maxCalls: z.number().int().min(1).max(48), maxSpendEur: z.number().positive().finite(),
   maxInputTokensPerCall: z.number().int().min(1).max(200000), maxOutputTokens: z.literal(MAX_OUTPUT_TOKENS),
@@ -43,9 +50,10 @@ async function main(args) {
   const { manifest, cases } = verifyFreeze()
   const configuration = { explicitAnthropic: process.env.GARAGEFLOW_LLM === 'anthropic', keyPresent: !!process.env.ANTHROPIC_API_KEY?.trim(), modelPresent: !!process.env.GARAGEFLOW_LLM_MODEL }
   if (args.includes('--verify-freeze') || args.includes('--preflight')) {
-    console.log(JSON.stringify({ freeze: { count: cases.length, sha256: manifest.sha256 }, configuration, networkAttempted: false, paidApproval: 'NOT_GRANTED_BY_PREFLIGHT_OR_FLAG', nativeFacts: 'NOT_EXECUTED' },null,2)); return
+    console.log(JSON.stringify({ freeze: { count: cases.length, sha256: manifest.sha256 }, configuration, networkAttempted: false, paidApproval: 'NOT_GRANTED_BY_PREFLIGHT_OR_FLAG', liveCostEnforcement: 'UNVALIDATED_LIVE_BLOCKED', nativeFacts: 'NOT_EXECUTED' },null,2)); return
   }
   const live = args.includes('--live'); const cap = Number(args.find(a => a.startsWith('--max-calls='))?.split('=')[1])
+  if (live && !LIVE_COST_ENFORCEMENT_VERIFIED) throw new Error('Live blocked: independently enforced monetary ceiling not verified')
   const approvalPath = args.find(a => a.startsWith('--approval='))?.slice('--approval='.length)
   if (live && (!args.includes('--approve-paid') || !configuration.explicitAnthropic || !configuration.keyPresent || !Number.isInteger(cap) || cap < 1 || cap > 48 || !approvalPath)) throw new Error('Live blocked: explicit external approval + one-use budget manifest + cap 1..48 + server config required; no call made')
   const { loader } = require('./evaluate-copilot.cjs'); const load = loader(false)
@@ -57,20 +65,22 @@ async function main(args) {
   if (live) {
     if (!provider?.interpret) throw new Error('No explicitly configured semantic provider')
     const absolute = path.resolve(approvalPath)
-    approval = Approval.parse(JSON.parse(fs.readFileSync(absolute)))
+    const envelope = JSON.parse(fs.readFileSync(absolute))
     const actualModel = provider.status().model
+    const publicKey = fs.readFileSync(path.join(require('node:os').userInfo().homedir,'.config/garageflows/evaluation-approval-public.pem'))
+    approval = Approval.parse(verifyGrant(envelope,publicKey,{corpusSha256:manifest.sha256,runnerSha256:crypto.createHash('sha256').update(fs.readFileSync(__filename)).digest('hex'),model:actualModel}))
     if (approval.model !== actualModel || cap > approval.maxCalls) throw new Error('Approval model/cap mismatch; no call made')
     approval.maxCalls = cap
     // Never silently replenish a run budget; even a failed run consumes this grant.
-    const fd = fs.openSync(absolute + '.consumed', 'wx', 0o600)
-    try { fs.writeFileSync(fd, JSON.stringify({ authorizationId: approval.authorizationId, at: new Date().toISOString(), model: actualModel, maxCalls: cap, maxSpendEur: approval.maxSpendEur })) } finally { fs.closeSync(fd) }
+    claimAuthorization(approval)
     const { buildSemanticMessages } = load('src/lib/copilot-llm/prompts.ts')
     controlled = { id: provider.id, name: provider.name, interpret: async (request, options) => {
       const reservation = reserveCost(approval, buildSemanticMessages(request), ledger)
       if (!reservation.allowed) { last = { disposition: reservation.reason }; throw new Error('Approved evaluation budget exhausted') }
-      const result = await provider.interpret(request, options)
-      last = { disposition: 'attempted', ...reservation, technical: provider.lastAttempt() }
-      return result
+      const attempt = { disposition: 'attempted', ...reservation }
+      last = attempt
+      try { return await provider.interpret(request, options) }
+      finally { attempt.technical = provider.lastAttempt() }
     } }
   }
   const rows = []; const times = []
@@ -95,19 +105,29 @@ async function main(args) {
     const modePass = test.expected.modes.includes(mode)
     const articlesPass = test.expected.articles.every(id => result.sources?.some(a => a.id === id))
     const intentPass = result.processing ? result.processing.intent === test.expected.intent : null
-    rows.push({ id: test.id, mode, intent: result.processing?.intent ?? null, intentPass, modePass, toolsPass, parametersPass, planValid, permissionsPass, confirmationPass, articlesPass,
+    const modelEvidence = last ?? { disposition: live ? 'not_invoked_due_to_guard' : 'disabled' }
+    const stratum = classifyStratum(live,result,modelEvidence)
+    rows.push({ stratum, id: test.id, mode, intent: result.processing?.intent ?? null, intentPass, modePass, toolsPass, parametersPass, planValid, permissionsPass, confirmationPass, articlesPass,
       pass: modePass && toolsPass && parametersPass && planValid && permissionsPass && confirmationPass && articlesPass && intentPass !== false && result.data == null,
       actualTools: calls.map(c => c.toolId), prematureFacts: result.data != null,
       periodStatusValidation: result.processing?.planning === 'validated' ? 'BACKEND_FIXED_CONSTRAINTS_CHECKED; requested-semantic correctness NOT independently rated' : 'NOT_SEPARATELY_EVALUATED',
-      finalResponse: 'NOT_EVALUATED_NATIVE_OR_HUMAN', latencyMs: ms, model: last ?? { disposition: live ? 'not_invoked_due_to_guard' : 'disabled' },
+      finalResponse: 'NOT_EVALUATED_NATIVE_OR_HUMAN', latencyMs: ms, model: modelEvidence,
       estimatedUsageCostEur: last?.technical?.usage && approval ? (last.technical.usage.input_tokens * approval.inputEurPerMillion + last.technical.usage.output_tokens * approval.outputEurPerMillion) / 1e6 : null })
   }
   const report = { at: new Date().toISOString(), mode: live ? 'REAL_PROVIDER_SELECTION_ONLY' : 'LOCAL_SELECTION_ONLY', corpusSha256: manifest.sha256, frozenCount: cases.length,
-    independence: manifest.independenceLimit, metrics: { selectedContracts: { passed: rows.filter(r=>r.pass).length,total: rows.length }, semanticIntent: { evaluated: rows.filter(r=>r.intentPass!==null).length,passed: rows.filter(r=>r.intentPass===true).length,unmeasured: rows.filter(r=>r.intentPass===null).length }, toolChoice: { passed: rows.filter(r=>r.toolsPass).length,total:rows.length }, parameters: { passed: rows.filter(r=>r.parametersPass).length,nonVacuousCases: cases.filter(c=>Object.keys(c.expected.parameters).length).length,total: rows.length }, permissions: { returnedCallViolations: rows.filter(r=>!r.permissionsPass).length, limits: 'No authenticated/native tenant isolation claim' }, facts: { status:'NOT_EXECUTED',evaluated:0,errorRate:null }, finalResponse: { status:'NOT_EVALUATED_NATIVE_OR_HUMAN',passed:null }, latency: { selectionOnly: stats(times),coldStartup:null }, technicalErrors: rows.filter(r=>r.model.technical && r.model.technical.outcome!=='valid_json_contract').map(r=>({id:r.id,outcome:r.model.technical.outcome,httpStatus:r.model.technical.httpStatus})) },
+    independence: manifest.independenceLimit, strata: partitionMetrics(rows), metrics: { selectedContracts: { passed: rows.filter(r=>r.pass).length,total: rows.length }, semanticIntent: { evaluated: rows.filter(r=>r.intentPass!==null).length,passed: rows.filter(r=>r.intentPass===true).length,unmeasured: rows.filter(r=>r.intentPass===null).length }, toolChoice: { passed: rows.filter(r=>r.toolsPass).length,total:rows.length }, parameters: { passed: rows.filter(r=>r.parametersPass).length,nonVacuousCases: cases.filter(c=>Object.keys(c.expected.parameters).length).length,total: rows.length }, permissions: { returnedCallViolations: rows.filter(r=>!r.permissionsPass).length, limits: 'No authenticated/native tenant isolation claim' }, facts: { status:'NOT_EXECUTED',evaluated:0,errorRate:null }, finalResponse: { status:'NOT_EVALUATED_NATIVE_OR_HUMAN',passed:null }, latency: { selectionOnly: stats(times),coldStartup:null }, technicalErrors: rows.filter(r=>r.model.technical && r.model.technical.outcome!=='valid_json_contract').map(r=>({id:r.id,outcome:r.model.technical.outcome,httpStatus:r.model.technical.httpStatus})) },
     budget: { ...ledger, estimatedUsageCostEur: ledger.attempts && rows.filter(r=>r.model.disposition==='attempted').every(r=>r.estimatedUsageCostEur!==null) ? rows.reduce((s,r)=>s+(r.estimatedUsageCostEur??0),0) : live ? null : 0, invoiceReconciled:false },rows,
     limits:'No SQL, write, authenticated HTTP, real issuer, browser or native final factual synthesis. No repeated calls/retries or generated gold IR. Valid JSON is not semantic success. Fallback/local results in live mode must not be counted as real-model comprehension. Pricing metadata is operator-approved, not current-price verification/invoice. Token upper estimate uses text bytes + 4096 protocol allowance.' }
   console.log(JSON.stringify(report,null,2))
   if (rows.some(r=>!r.pass)) process.exitCode = 1
 }
-module.exports = { verifyFreeze, reserveCost, Approval, stats }
+function classifyStratum(live,result,model) {
+  if (!live) return 'LOCAL_ONLY'
+  if (model.disposition !== 'attempted') return 'NO_CALL_GUARD'
+  return result.planning?.source==='model' && result.processing?.interpretation==='validated_contract' && model.technical?.outcome==='valid_json_contract' ? 'REAL_MODEL_ACCEPTED' : 'LOCAL_FALLBACK_AFTER_ATTEMPT'
+}
+function partitionMetrics(rows) {
+  return Object.fromEntries(['LOCAL_ONLY','NO_CALL_GUARD','REAL_MODEL_ACCEPTED','LOCAL_FALLBACK_AFTER_ATTEMPT'].map(s=>[s,{count:rows.filter(r=>r.stratum===s).length,selectedContractsPassed:rows.filter(r=>r.stratum===s&&r.pass).length,factsEvaluated:0,finalResponsesEvaluated:0}]))
+}
+module.exports = { verifyFreeze, reserveCost, Approval, stats, classifyStratum, partitionMetrics, main }
 if (require.main === module) main(process.argv.slice(2)).catch(() => { console.error('Evaluation blocked/failed; confidential exception details omitted. No automatic retry or budget replenishment.'); process.exitCode=2 })

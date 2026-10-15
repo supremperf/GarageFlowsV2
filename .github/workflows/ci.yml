@@ -81,6 +81,38 @@ jobs:
           node --test tests/secret-scan-policy.test.cjs
           node scripts/gitleaks-ci.cjs
 
+  # Independent mandatory evidence: native integration failures must not hide
+  # whether the unchanged standard compiler/build/fixed client budget pass.
+  # The original check job and all its gates remain mandatory and unchanged.
+  base-verification:
+    name: Native base (TypeScript, standard build, fixed JS budget)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Use pinned npm
+        run: npm install --global npm@11.16.0
+      - name: Install dependencies and generate official Prisma clients
+        run: npm ci
+      - name: Copilot evaluation safety (offline only)
+        run: |
+          node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs
+          node scripts/evaluate-copilot-phase4.cjs --preflight
+      - name: Standard TypeScript (no diagnostic declarations)
+        run: npx tsc --noEmit
+      - name: Standard production build (no alternate flags)
+        run: npm run build
+        env:
+          DATABASE_URL: file:./dev.db
+          NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
+          NEXTAUTH_URL: http://localhost:4028
+      - name: Immutable client JS budget (3625984 bytes)
+        run: npm run check:perf-budget
+
   check:
     name: Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)
     runs-on: ubuntu-latest
@@ -217,7 +249,7 @@ jobs:
 
       - name: Copilot budget guards and frozen validation integrity (offline)
         run: |
-          node --test tests/copilot-phase4-evaluation.test.cjs
+          node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs
           node scripts/evaluate-copilot-phase4.cjs --verify-freeze
 
       - name: Tests (unit + integration)
@@ -288,7 +320,7 @@ jobs:
   e2e-authenticated:
     name: Authenticated browser validation (approved staging only)
     runs-on: ubuntu-latest
-    needs: [dependency-security, secrets, check, e2e]
+    needs: [dependency-security, secrets, base-verification, check, e2e]
     environment: e2e-staging
     timeout-minutes: 20
     env:
@@ -394,7 +426,7 @@ jobs:
 
   windows-package:
     name: Windows candidate packaging and inspection (not publication)
-    needs: [dependency-security, secrets, check, e2e]
+    needs: [dependency-security, secrets, base-verification, check, e2e]
     runs-on: windows-latest
     timeout-minutes: 40
     steps:
@@ -422,7 +454,7 @@ jobs:
   required-validation:
     name: Required validation
     if: ${{ always() }}
-    needs: [dependency-security, secrets, check, e2e, e2e-authenticated, windows-package]
+    needs: [dependency-security, secrets, base-verification, check, e2e, e2e-authenticated, windows-package]
     runs-on: ubuntu-latest
     steps:
       - name: Refuse failed, cancelled or skipped mandatory jobs
