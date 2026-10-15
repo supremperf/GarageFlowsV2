@@ -37,3 +37,18 @@ test('model JSON, local fallback, no-call guards and accepted interpretation rem
  assert.equal(m.REAL_MODEL_ACCEPTED.selectedContractsPassed,0)
  assert.equal(m.LOCAL_FALLBACK_AFTER_ATTEMPT.selectedContractsPassed,1)
 })
+
+test('corrupt/missing accounting, absent/invalid/exceeded cap never grants a reservation',()=>{
+ for(const ledger of [{attempts:NaN,reservedMaxEur:0},{attempts:-1,reservedMaxEur:0},{attempts:0,reservedMaxEur:NaN},{attempts:0,reservedMaxEur:-1},{}])assert.equal(reserveCost(approval,[{content:'unit'}],ledger).allowed,false)
+ for(const a of [{...approval,maxSpendEur:undefined},{...approval,maxSpendEur:NaN},{...approval,maxSpendEur:-1},{...approval,maxSpendEur:.0000001}])assert.equal(reserveCost(a,[{content:'unit'}],{attempts:0,reservedMaxEur:0}).allowed,false)
+ const broken={attempts:0,get reservedMaxEur(){throw new Error('synthetic accounting outage')}}
+ assert.equal(reserveCost(approval,[{content:'unit'}],broken).allowed,false)
+})
+test('concurrent reservations and uncertain failure/timeouts do not replenish allowance',async()=>{
+ const ledger={attempts:0,reservedMaxEur:0}
+ const reservations=await Promise.all(Array.from({length:50},async()=>reserveCost(approval,[{content:'unit'}],ledger)))
+ assert.equal(reservations.filter(r=>r.allowed).length,2)
+ // Timeout / unknown upstream billing is consumed, no automatic refund or retry.
+ assert.equal(reserveCost(approval,[{content:'unit'}],ledger).allowed,false)
+ assert.equal(ledger.attempts,2)
+})

@@ -68,7 +68,7 @@ describe('phase3 security, simulated transport/readers, no real model or SQL', (
   it('pre-cancelled provider never starts an external request', async () => {
     const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher)
     const c = new AbortController(); c.abort()
-    const provider = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL)
+    const provider = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL, globalThis.fetch)
     expect(await provider.plan(request, { signal: c.signal })).toBeNull(); expect(fetcher).not.toHaveBeenCalled()
     expect(provider.status().state).toBe('initializing')
   })
@@ -78,7 +78,7 @@ describe('phase3 security, simulated transport/readers, no real model or SQL', (
       signal = options.signal as AbortSignal
       signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true })
     })))
-    const provider = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL)
+    const provider = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL, globalThis.fetch)
     const c = new AbortController(); const pending = provider.plan(request, { signal: c.signal }); c.abort()
     expect(await pending).toBeNull(); expect(signal?.aborted).toBe(true); expect(provider.status().state).toBe('initializing')
   })

@@ -149,7 +149,7 @@ describe('semantic IR contract and backend binding — simulations, not comprehe
     const req: SemanticRequest = { query: input().query, context: { topics: [], hasReference: false, referenceAmbiguous: false, hasVin: false, hasSymptom: false }, recentTurns: [], tools: [], articles: [] }
     const captured: RequestInit[] = []
     const mock = vi.fn(async (_url: RequestInfo | URL, options?: RequestInit) => { if (options) captured.push(options); return new Response(JSON.stringify({ usage: { input_tokens: 123, output_tokens: 45 }, content: [{ type: 'text', text: JSON.stringify(ir()) }] })) })
-    vi.stubGlobal('fetch',mock); const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL)
+    vi.stubGlobal('fetch',mock); const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL, globalThis.fetch)
     expect(await p.interpret(req)).toEqual(ir()); expect(mock).toHaveBeenCalledTimes(1)
     const body = JSON.parse(String(captured[0].body))
     expect(body.max_tokens).toBe(512); expect(body.tools).toBeUndefined(); expect(p.lastAttempt()).toMatchObject({ outcome: 'valid_json_contract', httpStatus: 200, usage: { input_tokens: 123, output_tokens: 45 } })

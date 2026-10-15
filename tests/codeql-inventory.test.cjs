@@ -7,6 +7,13 @@ test('SARIF projection retains rules and all source/sink locations, never code s
  a.throws(()=>project({runs:[{results:[{locations:[{physicalLocation:{artifactLocation:{uri:'https://example.test/private'}}}]}]}]}))
 })
 test('bounded pages preserve all results and reject overflow rather than fake completeness',()=>{
- const rows=Array.from({length:17},(_,index)=>({index,ruleId:'js/fixture',locations:[]}));a.deepEqual(pages(rows).flatMap(p=>p.rows),rows)
- a.throws(()=>pages([{blob:'x'.repeat(2300)}]));a.throws(()=>pages(Array.from({length:20},()=>({blob:'x'.repeat(1800)}))))
+ const rows=Array.from({length:17},(_,index)=>({index,ruleId:'js/fixture',locations:[],flows:[{metadata:'x'.repeat(4000)}]}))
+ const encoded=pages(rows);const decoded=JSON.parse(require('node:zlib').inflateSync(Buffer.from(encoded.map(p=>p.payload).join(''),'base64')))
+ a.deepEqual(decoded,rows);a.ok(encoded.every(p=>JSON.stringify(p).length<3000))
+ a.throws(()=>pages([{metadata:require('node:crypto').randomBytes(50000).toString('hex')}]))
+})
+
+test('artifact indexes resolve to physical source paths without leaking artifact bodies',()=>{
+ const rows=project({runs:[{artifacts:[{location:{uri:'src/fixture.ts'},contents:{text:'PRIVATE_SYNTHETIC_VALUE'}}],results:[{ruleId:'js/fixture',locations:[{physicalLocation:{artifactLocation:{index:0},region:{startLine:3}}}]}]}]})
+ a.equal(rows[0].locations[0].path,'src/fixture.ts');a.ok(!JSON.stringify(rows).includes('PRIVATE_SYNTHETIC_VALUE'))
 })

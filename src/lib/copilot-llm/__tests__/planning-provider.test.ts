@@ -9,7 +9,7 @@ describe('planner transport simulation, no live Anthropic', () => {
   it('produces a constrained plan and never sends DB facts/history', async () => {
     const fetcher = vi.fn(async () => new Response(JSON.stringify({ content: [{ type: 'text', text: JSON.stringify(plan) }] })))
     vi.stubGlobal('fetch', fetcher)
-    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL)
+    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL, globalThis.fetch)
     expect(await p.plan(request)).toEqual(plan)
     const [, options] = fetcher.mock.calls[0] as unknown as [string, RequestInit]
     const body = JSON.parse(options.body as string)
@@ -22,7 +22,7 @@ describe('planner transport simulation, no live Anthropic', () => {
     { ...plan, confidence: 2 }, { ...plan, calls: Array(4).fill(plan.calls[0]) },
   ])('rejects schema-breaking upstream planner output: %j', async value => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ content: [{ type: 'text', text: JSON.stringify(value) }] }))))
-    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL)
+    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL, globalThis.fetch)
     expect(await p.plan(request)).toBeNull(); expect(p.status().state).toBe('degraded')
   })
   it('contains policy instructions, not user-supplied instruction authority', () => {

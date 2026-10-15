@@ -15,7 +15,7 @@ describe('explicit optional provider (simulated transport, not live validation)'
   })
   it('does not claim ready before an actual validated classification', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => envelope({ intentId: 'low_stock', confidence: 0.9 })))
-    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL)
+    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL, globalThis.fetch)
     expect(p.status().state).toBe('initializing')
     expect(await p.classify('stock', specs)).toEqual({ intentId: 'low_stock', confidence: 0.9 })
     expect(p.status().state).toBe('ready')
@@ -24,14 +24,14 @@ describe('explicit optional provider (simulated transport, not live validation)'
   it('expires a successful readiness snapshot instead of claiming eternal availability', async () => {
     vi.useFakeTimers()
     vi.stubGlobal('fetch', vi.fn(async () => envelope({ intentId: 'low_stock', confidence: 1 })))
-    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL)
+    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL, globalThis.fetch)
     await p.classify('stock', specs)
     await vi.advanceTimersByTimeAsync(300001)
     expect(p.status().state).toBe('initializing')
   })
   it('sends only the current query/catalogue, no facts or conversation history', async () => {
     const fetcher = vi.fn(async () => envelope({ intentId: 'low_stock', confidence: 1 })); vi.stubGlobal('fetch', fetcher)
-    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL)
+    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL, globalThis.fetch)
     await p.classify('stock', specs)
     const [url, opts] = fetcher.mock.calls[0] as unknown as [string, RequestInit]
     expect(url).toBe('https://api.anthropic.com/v1/messages'); expect(opts.signal).toBeInstanceOf(AbortSignal)
@@ -45,12 +45,12 @@ describe('explicit optional provider (simulated transport, not live validation)'
     { intentId: 'low_stock', confidence: '1' }, { intentId: 'low_stock', confidence: 1, endpoint: '/api/delete' },
   ])('degrades safely on invalid model output: %j', async result => {
     vi.stubGlobal('fetch', vi.fn(async () => envelope(result)))
-    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL)
+    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL, globalThis.fetch)
     expect(await p.classify('stock', specs)).toBeNull(); expect(p.status().state).toBe('degraded')
   })
   it('opens a cooldown circuit on HTTP error without leaking upstream response', async () => {
     const fetcher = vi.fn(async () => new Response('private upstream details', { status: 429 })); vi.stubGlobal('fetch', fetcher)
-    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL)
+    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL, globalThis.fetch)
     await p.classify('stock', specs); await p.classify('stock', specs)
     expect(fetcher).toHaveBeenCalledTimes(1); expect(JSON.stringify(p.status())).not.toContain('private upstream')
   })
@@ -61,14 +61,14 @@ describe('explicit optional provider (simulated transport, not live validation)'
       signal = opts.signal as AbortSignal
       signal.addEventListener('abort', () => reject(new Error('abort')))
     })))
-    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL)
+    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL, globalThis.fetch)
     const pending = p.classify('stock', specs)
     await vi.advanceTimersByTimeAsync(2501)
     expect(await pending).toBeNull(); expect((signal as unknown as AbortSignal).aborted).toBe(true)
   })
   it('rejects oversized streamed output', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('x'.repeat(16385))))
-    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL)
+    const p = new AnthropicClassifier('test-only-placeholder', DEFAULT_MODEL, globalThis.fetch)
     expect(await p.classify('stock', specs)).toBeNull()
   })
   it.each([NaN, Infinity, -0.1, 1.1])('rejects invalid provider confidence %s at the generic boundary', async confidence => {

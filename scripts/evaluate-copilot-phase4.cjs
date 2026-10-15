@@ -32,14 +32,21 @@ function verifyFreeze() {
   return { manifest, cases }
 }
 function reserveCost(approval, messages, ledger) {
-  // No token-count API call: conservative UTF-8 text upper estimate + protocol allowance.
-  const inputUpper = messages.reduce((sum, m) => sum + Buffer.byteLength(m.content, 'utf8'), 4096)
-  const maxEur = (inputUpper * approval.inputEurPerMillion + MAX_OUTPUT_TOKENS * approval.outputEurPerMillion) / 1e6
-  if (ledger.attempts >= approval.maxCalls) return { allowed: false, reason: 'cap_blocked' }
-  if (inputUpper > approval.maxInputTokensPerCall) return { allowed: false, reason: 'input_limit_blocked' }
-  if (ledger.reservedMaxEur + maxEur > approval.maxSpendEur) return { allowed: false, reason: 'budget_blocked' }
-  ledger.attempts++; ledger.reservedMaxEur += maxEur
-  return { allowed: true, inputUpper, reservedMaxEur: maxEur }
+  // Synchronous reservation before dispatch, with fail-closed accounting state.
+  // This is a conservative estimate, NOT verified external billing enforcement.
+  try {
+    if (!Approval.safeParse(approval).success || !Number.isSafeInteger(ledger.attempts) || ledger.attempts < 0 || !Number.isFinite(ledger.reservedMaxEur) || ledger.reservedMaxEur < 0) return { allowed: false, reason: 'accounting_unavailable' }
+    const inputUpper = messages.reduce((sum, m) => sum + Buffer.byteLength(m.content, 'utf8'), 4096)
+    const raw = (inputUpper * approval.inputEurPerMillion + MAX_OUTPUT_TOKENS * approval.outputEurPerMillion) / 1e6
+    const maxEur = Math.ceil(raw * 1e6) / 1e6
+    if (!Number.isFinite(maxEur) || maxEur <= 0) return { allowed: false, reason: 'accounting_unavailable' }
+    if (ledger.attempts >= approval.maxCalls) return { allowed: false, reason: 'cap_blocked' }
+    if (inputUpper > approval.maxInputTokensPerCall) return { allowed: false, reason: 'input_limit_blocked' }
+    if (ledger.reservedMaxEur + maxEur > approval.maxSpendEur) return { allowed: false, reason: 'budget_blocked' }
+    ledger.attempts++; ledger.reservedMaxEur += maxEur
+    return { allowed: true, inputUpper, reservedMaxEur: maxEur }
+  } catch { return { allowed: false, reason: 'accounting_unavailable' } }
+
 }
 function stats(values) {
   const sorted = [...values].sort((a,b) => a-b)

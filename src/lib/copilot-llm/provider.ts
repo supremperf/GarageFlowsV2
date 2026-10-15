@@ -13,7 +13,7 @@ const ClassificationSchema = z.object({
   intentId: z.string().max(80), confidence: z.number().finite().min(0).max(1),
 }).strict()
 export type ProviderState = 'initializing' | 'ready' | 'degraded' | 'unavailable'
-export interface ProviderAttempt { outcome: 'valid_json_contract' | 'circuit_open' | 'aborted' | 'timeout' | 'http_error' | 'invalid_response' | 'transport_error'; durationMs: number; httpStatus: number | null; usage: { input_tokens: number; output_tokens: number } | null }
+export interface ProviderAttempt { outcome: 'budget_blocked' | 'valid_json_contract' | 'circuit_open' | 'aborted' | 'timeout' | 'http_error' | 'invalid_response' | 'transport_error'; durationMs: number; httpStatus: number | null; usage: { input_tokens: number; output_tokens: number } | null }
 export interface ProviderHealth { state: ProviderState; reason: string; model?: string; checkedAt?: string }
 
 /** Fixed official endpoint; no caller-controlled URLs, tools, retries or free-form phrasing. */
@@ -24,8 +24,13 @@ export class AnthropicClassifier implements LlmProvider {
   private retryAfter = 0
   private attempt: ProviderAttempt | null = null
   lastAttempt(): ProviderAttempt | null { return this.attempt ? { ...this.attempt, usage: this.attempt.usage ? { ...this.attempt.usage } : null } : null }
-  constructor(private readonly key: string, private readonly model: string) {
-    this.health = { state: 'initializing', reason: 'Connexion et modèle non encore vérifiés.', model }
+  constructor(private readonly key: string, private readonly model: string,
+    // Explicit simulated transport for protocol tests only. The application factory
+    // NEVER supplies one. No global fetch fallback / env flag enables paid IO.
+    private readonly simulatedTransport?: typeof fetch) {
+    this.health = simulatedTransport
+      ? { state: 'initializing', reason: 'Transport de simulation ; aucune validation fournisseur réel.', model }
+      : { state: 'unavailable', reason: 'Mode payant bloqué : plafond monétaire effectif non vérifié.', model }
   }
   status(): ProviderHealth {
     if (this.health.state === 'ready' && this.health.checkedAt && Date.now() - Date.parse(this.health.checkedAt) > 300_000) {
@@ -51,6 +56,13 @@ export class AnthropicClassifier implements LlmProvider {
     return this.request(messages[0].content, messages[1].content, 512, value => PlanSchema.parse(value), options.signal)
   }
   private async request<T>(system: string, user: string, tokens: number, parse: (value: unknown) => T, parent?: AbortSignal): Promise<T | null> {
+    // Common choke point for classify, plan and interpret, including direct callers.
+    // There is currently NO independently verified monetary enforcement service.
+    // Keep all production IO closed, even with valid server key/model/opt-in.
+    if (!this.simulatedTransport) {
+      this.attempt = { outcome: 'budget_blocked', durationMs: 0, httpStatus: null, usage: null }
+      return null
+    }
     if (parent?.aborted || Date.now() < this.retryAfter) {
       this.attempt = { outcome: parent?.aborted ? 'aborted' : 'circuit_open', durationMs: 0, httpStatus: null, usage: null }; return null
     }
@@ -64,7 +76,7 @@ export class AnthropicClassifier implements LlmProvider {
     if (parent?.aborted) controller.abort()
     const timer = setTimeout(() => controller.abort(), DEADLINE_MS)
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await this.simulatedTransport('https://api.anthropic.com/v1/messages', {
         method: 'POST', signal: controller.signal, redirect: 'error',
         headers: { 'content-type': 'application/json', 'x-api-key': this.key, 'anthropic-version': '2023-06-01' },
         body: JSON.stringify({ model: this.model, max_tokens: tokens, temperature: 0,

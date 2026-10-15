@@ -1,16 +1,21 @@
 'use strict'
 // Read-only SARIF projection. No snippets, messages, secret values or SARIF mutation.
-const fs=require('node:fs'),path=require('node:path')
-function location(l) {
+const fs=require('node:fs'),path=require('node:path'),zlib=require('node:zlib')
+function location(l, artifacts=[]) {
  const p=l?.physicalLocation;if(!p)return null
- const uri=p.artifactLocation?.uri
+ const ref=p.artifactLocation; const uri=ref?.uri??artifacts[ref?.index]?.location?.uri
  if(typeof uri!=='string'||uri.includes('://')||uri.includes('?'))throw new Error('Non-relative SARIF location')
  return {path:uri,startLine:p.region?.startLine??null,endLine:p.region?.endLine??p.region?.startLine??null}
 }
 function project(sarif) {
- return (sarif.runs??[]).flatMap(run=>(run.results??[]).map((r,index)=>({index,ruleId:r.ruleId,locations:(r.locations??[]).map(location).filter(Boolean),fingerprints:r.partialFingerprints??{},flows:(r.codeFlows??[]).flatMap(f=>(f.threadFlows??[]).map(t=>t.locations.map(l=>location(l.location)).filter(Boolean))),related:(r.relatedLocations??[]).map(location).filter(Boolean)})))
+ return (sarif.runs??[]).flatMap(run=>(run.results??[]).map((r,index)=>({index,ruleId:r.ruleId,locations:(r.locations??[]).map(l=>location(l,run.artifacts)).filter(Boolean),fingerprints:Object.fromEntries(Object.entries(r.partialFingerprints??{}).filter(([k,v])=>k==='primaryLocationLineHash'&&typeof v==='string'&&/^[a-f0-9:]{1,128}$/.test(v))),flows:(r.codeFlows??[]).flatMap(f=>(f.threadFlows??[]).map(t=>t.locations.map(l=>location(l.location,run.artifacts)).filter(Boolean))),related:(r.relatedLocations??[]).map(l=>location(l,run.artifacts)).filter(Boolean)})))
 }
-function pages(rows){const chunks=[];let chunk=[];for(const r of rows){if(Buffer.byteLength(JSON.stringify(r))>2200)throw new Error('Single result exceeds transport; full flow inventory unavailable');if(Buffer.byteLength(JSON.stringify([...chunk,r]))>2400&&chunk.length){chunks.push(chunk);chunk=[]}chunk.push(r)}if(chunk.length||!chunks.length)chunks.push(chunk);if(chunks.length>8)throw new Error('Metadata overflow, not complete');return chunks.map((rows,i)=>({page:i+1,pages:chunks.length,rows}))}
+function pages(rows){
+ // Compression is transport only, AFTER strict projection; no raw SARIF input.
+ const payload=zlib.deflateSync(Buffer.from(JSON.stringify(rows))).toString('base64'),size=2000,count=Math.max(1,Math.ceil(payload.length/size))
+ if(count>8)throw new Error('Metadata overflow, not complete')
+ return Array.from({length:count},(_,i)=>({page:i+1,pages:count,total:rows.length,encoding:'deflate-base64',payload:payload.slice(i*size,(i+1)*size),coverageComplete:true}))
+}
 function main(directory){const files=fs.readdirSync(directory).filter(n=>n.endsWith('.sarif'));if(!files.length)throw new Error('SARIF missing');const rows=files.flatMap(n=>project(JSON.parse(fs.readFileSync(path.join(directory,n),'utf8'))));const chunks=pages(rows);for(const p of chunks)console.log('::notice title=CodeQL flow inventory '+p.page+'/'+p.pages+'::'+JSON.stringify({...p,total:rows.length,coverageComplete:true}).replace(/%/g,'%25').replace(/\r/g,'%0D').replace(/\n/g,'%0A'))}
 module.exports={project,pages}
-if(require.main===module){try{main(process.argv[2])}catch{console.error('::error::CodeQL metadata inventory incomplete; no raw SARIF published');process.exitCode=1}}
+if(require.main===module){try{main(process.argv[2])}catch(e){const reason=['Non-relative SARIF location','Metadata overflow, not complete','SARIF missing'].includes(e.message)?e.message:'unreadable SARIF structure';console.error('::error::CodeQL metadata inventory incomplete ('+reason+'); no raw SARIF published');process.exitCode=1}}
