@@ -1,0 +1,1 @@
+{"initialIndividuallyMapped": 17, "initialHigh": 7, "currentProjectedCount": 14, "currentNumericHigh": 7, "officialInventoryAccessible": false, "acceptedRisks": [], "suppressedResults": []}
