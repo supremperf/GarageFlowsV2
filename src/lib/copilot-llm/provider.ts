@@ -129,7 +129,7 @@ let cached: LlmProvider | null | undefined
 let configFingerprint = ''
 let testOverride = false
 export function resolveLlmProvider(): LlmProvider | null {
-  if (testOverride) return cached ?? null
+  if (testOverride && process.env.NODE_ENV === 'test') return cached ?? null
   const setting = process.env.GARAGEFLOW_LLM ?? 'off'
   const key = process.env.ANTHROPIC_API_KEY ?? ''
   const model = process.env.GARAGEFLOW_LLM_MODEL || DEFAULT_MODEL
@@ -149,6 +149,7 @@ export function providerHealth(): ProviderHealth {
 }
 /** Test-only injection. Undefined clears the override and config cache. */
 export function __setLlmProvider(p: LlmProvider | null | undefined): void {
+  if (process.env.NODE_ENV !== 'test' && p !== undefined) throw new Error('Test provider injection forbidden outside test runtime')
   cached = p
   testOverride = p !== undefined
   configFingerprint = ''

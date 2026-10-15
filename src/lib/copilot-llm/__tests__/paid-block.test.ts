@@ -41,5 +41,15 @@ describe('zero-spend production gate, not a verified positive monetary cap',()=>
   expect(await p.interpret({query:'synthetic',context:{topics:[],hasReference:false,referenceAmbiguous:false,hasVin:false,hasSymptom:false},tools:[],articles:[],recentTurns:[]})).toBeNull()
   expect(p.status().state).toBe('unavailable');expect(fetcher).not.toHaveBeenCalled()
  })
+ it('cannot install or reuse a test override in the production factory',async()=>{
+  const fetcher=vi.fn();vi.stubGlobal('fetch',fetcher)
+  const fake={id:'simulation',name:'simulation',phrase:async()=>{fetcher();return 'simulation'}}
+  __setLlmProvider(fake)
+  vi.stubEnv('NODE_ENV','production');vi.stubEnv('GARAGEFLOW_LLM','anthropic');vi.stubEnv('ANTHROPIC_API_KEY','synthetic-placeholder')
+  expect(()=>__setLlmProvider(fake)).toThrow('Test provider injection forbidden outside test runtime')
+  const p=resolveLlmProvider();expect(p).not.toBe(fake)
+  if(!(p instanceof AnthropicClassifier)) throw new Error('Expected closed production provider')
+  expect(await p.classify('synthetic',[])).toBeNull();expect(fetcher).not.toHaveBeenCalled()
+ })
 
 })
