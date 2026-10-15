@@ -631,7 +631,12 @@ function faireTournerJournal() {
 }
 
 function log(...args) {
-  const line = `[${new Date().toISOString()}] ${args.join(' ')}\n`
+  // Upstream errors/redirects are untrusted. Never persist signed URLs or raw
+  // credentials, and never let a remote value create a forged log/terminal line.
+  const message = args.map(value => cp.redactSensitive(value)).join(' ')
+    .replace(/\bhttps?:\/\/[^\s"'<>]+/gi, '[URL_REDACTED]')
+    .replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, ' ')
+  const line = `[${new Date().toISOString()}] ${message}\n`
   try { process.stdout.write(line) } catch (_) {}   // EPIPE-safe: no terminal in packaged app
   try {
     octetsDepuisControle += Buffer.byteLength(line)

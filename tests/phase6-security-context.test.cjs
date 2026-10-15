@@ -26,3 +26,13 @@ test('actual extracted Electron flush function: revoked consent performs no queu
  const flush=vm.runInNewContext('('+fn.getText(ast)+')',{crashConsent:()=>false,readCrashQueue:()=>{reads++;return[{consent:true}]},httpPost:async()=>{sends++;return{ok:true}}})
  await flush();a.equal(reads,0);a.equal(sends,0)
 })
+test('actual extracted Electron logger: redacts network URLs/secrets and emits a single controlled line (unit)',()=>{
+ const source=fs.readFileSync('electron/main.js','utf8'),ast=ts.createSourceFile('main.js',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS)
+ const fn=ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='log');a.ok(fn)
+ const writes=[],disk=[]
+ const log=vm.runInNewContext('('+fn.getText(ast)+')',{cp:require('../electron/control-plane'),process:{stdout:{write:s=>writes.push(s)}},fs:{appendFileSync:(_p,s)=>disk.push(s)},LOG_PATH:'synthetic.log',octetsDepuisControle:0,LOG_PAS_CONTROLE:999999,faireTournerJournal:()=>{},Buffer})
+ log('network https://updates.invalid/download?sig=SYNTHETIC_PRIVATE_SIGNATURE','password=SYNTHETIC_PRIVATE_PASSWORD','\u001b[2J\r\nFORGED_EVENT')
+ a.equal(writes.length,1);a.deepEqual(disk,writes)
+ a.ok(!writes[0].includes('SYNTHETIC_PRIVATE_SIGNATURE'));a.ok(!writes[0].includes('SYNTHETIC_PRIVATE_PASSWORD'))
+ a.equal(writes[0].split('\n').length,2);a.ok(!writes[0].includes('\r'));a.ok(!writes[0].includes('\u001b'))
+})
