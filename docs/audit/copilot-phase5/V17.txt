@@ -1,0 +1,97 @@
+TAP version 13
+# Subtest: operator signature binds scope, model, corpus, runner and bounded time; not a billing enforcement proof
+ok 1 - operator signature binds scope, model, corpus, runner and bounded time; not a billing enforcement proof
+  ---
+  duration_ms: 10.671061
+  type: 'test'
+  ...
+# Subtest: copying or renaming a grant cannot reset its exclusive authorization-ID claim
+ok 2 - copying or renaming a grant cannot reset its exclusive authorization-ID claim
+  ---
+  duration_ms: 2.747442
+  type: 'test'
+  ...
+# Subtest: unsafe state permissions and traversal IDs fail closed
+ok 3 - unsafe state permissions and traversal IDs fail closed
+  ---
+  duration_ms: 0.417417
+  type: 'test'
+  ...
+# Subtest: native summary accepts only six actual suites and all 54 passed assertions
+ok 4 - native summary accepts only six actual suites and all 54 passed assertions
+  ---
+  duration_ms: 1.239133
+  type: 'test'
+  ...
+# Subtest: setup failure skips, missing/duplicate suites, killed Vitest or fewer assertions never pass
+ok 5 - setup failure skips, missing/duplicate suites, killed Vitest or fewer assertions never pass
+  ---
+  duration_ms: 3.049745
+  type: 'test'
+  ...
+# Subtest: summary never projects failure messages or raw fields
+ok 6 - summary never projects failure messages or raw fields
+  ---
+  duration_ms: 0.325595
+  type: 'test'
+  ...
+# Subtest: budget manifest refuses unbounded/missing/extra/increased output fields
+ok 7 - budget manifest refuses unbounded/missing/extra/increased output fields
+  ---
+  duration_ms: 3.359685
+  type: 'test'
+  ...
+# Subtest: reserves the worst cost before dispatch, no automatic replenishment
+ok 8 - reserves the worst cost before dispatch, no automatic replenishment
+  ---
+  duration_ms: 0.27749
+  type: 'test'
+  ...
+# Subtest: cost or input limit blocks before consuming any call
+ok 9 - cost or input limit blocks before consuming any call
+  ---
+  duration_ms: 0.117278
+  type: 'test'
+  ...
+# Subtest: empty latency samples stay null, not synthetic zeros
+ok 10 - empty latency samples stay null, not synthetic zeros
+  ---
+  duration_ms: 0.60987
+  type: 'test'
+  ...
+# Subtest: live gate refuses before any provider/network setup even with CLI approval flag
+ok 11 - live gate refuses before any provider/network setup even with CLI approval flag
+  ---
+  duration_ms: 3.480524
+  type: 'test'
+  ...
+# Subtest: model JSON, local fallback, no-call guards and accepted interpretation remain separate
+ok 12 - model JSON, local fallback, no-call guards and accepted interpretation remain separate
+  ---
+  duration_ms: 0.310188
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 200.110466
+{
+  "freeze": {
+    "count": 48,
+    "sha256": "7b23aa75f2f08b6b23e9bf65a64d1051c95aef0bac33168257f562feb1227092"
+  },
+  "configuration": {
+    "explicitAnthropic": false,
+    "keyPresent": false,
+    "modelPresent": false
+  },
+  "networkAttempted": false,
+  "paidApproval": "NOT_GRANTED_BY_PREFLIGHT_OR_FLAG",
+  "liveCostEnforcement": "UNVALIDATED_LIVE_BLOCKED",
+  "nativeFacts": "NOT_EXECUTED"
+}

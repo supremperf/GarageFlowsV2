@@ -1,0 +1,362 @@
+{
+  "head": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
+  "jobs": [
+    {
+      "checkId": 116428741502,
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "conclusion": "failure",
+      "accessError": null,
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Initialize containers",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Use pinned npm",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Install dependencies (reproducible)",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Version consistency (SemVer)",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Validate Prisma schemas (desktop + serveur)",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Generate Prisma clients (desktop + serveur)",
+          "conclusion": "success"
+        },
+        {
+          "number": 10,
+          "name": "TypeScript",
+          "conclusion": "success"
+        },
+        {
+          "number": 11,
+          "name": "ESLint",
+          "conclusion": "success"
+        },
+        {
+          "number": 12,
+          "name": "Branding consistency (strict)",
+          "conclusion": "failure"
+        },
+        {
+          "number": 13,
+          "name": "PWA manifests & icon dimensions",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 14,
+          "name": "Money fields (ZERO monetary Float)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 15,
+          "name": "Money calculations (no direct float math)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 16,
+          "name": "Money JSON (v2 writers only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 17,
+          "name": "Migration safety invariants",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 18,
+          "name": "SQLite template (integrity + baseline + checksums)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 19,
+          "name": "PostgreSQL migrations (per-column verification)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 20,
+          "name": "Docs consistency",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 21,
+          "name": "Critical security/licence files present & coherent",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 22,
+          "name": "PostgreSQL migrations on empty database + smoke test",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 23,
+          "name": "Python for real keygen integration (no silent fallback)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 24,
+          "name": "Install hash-locked keygen test dependencies",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 25,
+          "name": "Copilot budget guards and frozen validation integrity (offline)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 26,
+          "name": "Tests (unit + integration)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 27,
+          "name": "Build",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 28,
+          "name": "Performance budget (client bundle)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 29,
+          "name": "Dependency security regression tests",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 30,
+          "name": "Dependency audit gate (all packages, LOW through CRITICAL)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 58,
+          "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 59,
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "conclusion": "success"
+        },
+        {
+          "number": 60,
+          "name": "Stop containers",
+          "conclusion": "success"
+        },
+        {
+          "number": 61,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "checkId": 116428726427,
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "conclusion": "failure",
+      "accessError": null,
+      "steps": [
+        {
+          "number": 1,
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "number": 2,
+          "name": "Initialize containers",
+          "conclusion": "success"
+        },
+        {
+          "number": 3,
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "conclusion": "success"
+        },
+        {
+          "number": 4,
+          "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "conclusion": "success"
+        },
+        {
+          "number": 5,
+          "name": "Use pinned npm",
+          "conclusion": "success"
+        },
+        {
+          "number": 6,
+          "name": "Install dependencies (reproducible)",
+          "conclusion": "success"
+        },
+        {
+          "number": 7,
+          "name": "Version consistency (SemVer)",
+          "conclusion": "success"
+        },
+        {
+          "number": 8,
+          "name": "Validate Prisma schemas (desktop + serveur)",
+          "conclusion": "success"
+        },
+        {
+          "number": 9,
+          "name": "Generate Prisma clients (desktop + serveur)",
+          "conclusion": "success"
+        },
+        {
+          "number": 10,
+          "name": "TypeScript",
+          "conclusion": "success"
+        },
+        {
+          "number": 11,
+          "name": "ESLint",
+          "conclusion": "success"
+        },
+        {
+          "number": 12,
+          "name": "Branding consistency (strict)",
+          "conclusion": "failure"
+        },
+        {
+          "number": 13,
+          "name": "PWA manifests & icon dimensions",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 14,
+          "name": "Money fields (ZERO monetary Float)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 15,
+          "name": "Money calculations (no direct float math)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 16,
+          "name": "Money JSON (v2 writers only)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 17,
+          "name": "Migration safety invariants",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 18,
+          "name": "SQLite template (integrity + baseline + checksums)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 19,
+          "name": "PostgreSQL migrations (per-column verification)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 20,
+          "name": "Docs consistency",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 21,
+          "name": "Critical security/licence files present & coherent",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 22,
+          "name": "PostgreSQL migrations on empty database + smoke test",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 23,
+          "name": "Python for real keygen integration (no silent fallback)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 24,
+          "name": "Install hash-locked keygen test dependencies",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 25,
+          "name": "Copilot budget guards and frozen validation integrity (offline)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 26,
+          "name": "Tests (unit + integration)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 27,
+          "name": "Build",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 28,
+          "name": "Performance budget (client bundle)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 29,
+          "name": "Dependency security regression tests",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 30,
+          "name": "Dependency audit gate (all packages, LOW through CRITICAL)",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 58,
+          "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "conclusion": "skipped"
+        },
+        {
+          "number": 59,
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "conclusion": "success"
+        },
+        {
+          "number": 60,
+          "name": "Stop containers",
+          "conclusion": "success"
+        },
+        {
+          "number": 61,
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "limits": "Step names/status only, not logs/root cause proof"
+}

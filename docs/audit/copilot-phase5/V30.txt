@@ -1,0 +1,244 @@
+TAP version 13
+# Subtest: mandatory gate rejects any failed, cancelled or skipped upstream job
+ok 1 - mandatory gate rejects any failed, cancelled or skipped upstream job
+  ---
+  duration_ms: 49.008524
+  type: 'test'
+  ...
+# Subtest: workflow graph pins actions, retains strict security and packages Windows before gate
+ok 2 - workflow graph pins actions, retains strict security and packages Windows before gate
+  ---
+  duration_ms: 1.170676
+  type: 'test'
+  ...
+# Subtest: authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+ok 3 - authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+  ---
+  duration_ms: 412.335759
+  type: 'test'
+  ...
+# Subtest: validates structural intake without pretending unit fixtures are independent
+ok 4 - validates structural intake without pretending unit fixtures are independent
+  ---
+  duration_ms: 252.280516
+  type: 'test'
+  ...
+# Subtest: rejects overlap, duplicate IDs, incomplete strata, false independence and extra fields
+ok 5 - rejects overlap, duplicate IDs, incomplete strata, false independence and extra fields
+  ---
+  duration_ms: 144.221028
+  type: 'test'
+  ...
+# Subtest: rejects fabricated tool/parameters, unauthorized gold calls and missing fact oracle
+ok 6 - rejects fabricated tool/parameters, unauthorized gold calls and missing fact oracle
+  ---
+  duration_ms: 124.933392
+  type: 'test'
+  ...
+# Subtest: freeze is exclusive, hash-bearing, offline and never overwrites an existing gold
+ok 7 - freeze is exclusive, hash-bearing, offline and never overwrites an existing gold
+  ---
+  duration_ms: 64.213058
+  type: 'test'
+  ...
+# Subtest: operator signature binds scope, model, corpus, runner and bounded time; not a billing enforcement proof
+ok 8 - operator signature binds scope, model, corpus, runner and bounded time; not a billing enforcement proof
+  ---
+  duration_ms: 10.661045
+  type: 'test'
+  ...
+# Subtest: copying or renaming a grant cannot reset its exclusive authorization-ID claim
+ok 9 - copying or renaming a grant cannot reset its exclusive authorization-ID claim
+  ---
+  duration_ms: 3.092213
+  type: 'test'
+  ...
+# Subtest: unsafe state permissions and traversal IDs fail closed
+ok 10 - unsafe state permissions and traversal IDs fail closed
+  ---
+  duration_ms: 0.428449
+  type: 'test'
+  ...
+# Subtest: native summary accepts only six actual suites and all 54 passed assertions
+ok 11 - native summary accepts only six actual suites and all 54 passed assertions
+  ---
+  duration_ms: 1.247192
+  type: 'test'
+  ...
+# Subtest: setup failure skips, missing/duplicate suites, killed Vitest or fewer assertions never pass
+ok 12 - setup failure skips, missing/duplicate suites, killed Vitest or fewer assertions never pass
+  ---
+  duration_ms: 3.205821
+  type: 'test'
+  ...
+# Subtest: summary never projects failure messages or raw fields
+ok 13 - summary never projects failure messages or raw fields
+  ---
+  duration_ms: 0.416545
+  type: 'test'
+  ...
+# Subtest: budget manifest refuses unbounded/missing/extra/increased output fields
+ok 14 - budget manifest refuses unbounded/missing/extra/increased output fields
+  ---
+  duration_ms: 5.760499
+  type: 'test'
+  ...
+# Subtest: reserves the worst cost before dispatch, no automatic replenishment
+ok 15 - reserves the worst cost before dispatch, no automatic replenishment
+  ---
+  duration_ms: 0.620811
+  type: 'test'
+  ...
+# Subtest: cost or input limit blocks before consuming any call
+ok 16 - cost or input limit blocks before consuming any call
+  ---
+  duration_ms: 0.255093
+  type: 'test'
+  ...
+# Subtest: empty latency samples stay null, not synthetic zeros
+ok 17 - empty latency samples stay null, not synthetic zeros
+  ---
+  duration_ms: 0.865098
+  type: 'test'
+  ...
+# Subtest: live gate refuses before any provider/network setup even with CLI approval flag
+ok 18 - live gate refuses before any provider/network setup even with CLI approval flag
+  ---
+  duration_ms: 4.606849
+  type: 'test'
+  ...
+# Subtest: model JSON, local fallback, no-call guards and accepted interpretation remain separate
+ok 19 - model JSON, local fallback, no-call guards and accepted interpretation remain separate
+  ---
+  duration_ms: 0.27986
+  type: 'test'
+  ...
+# Subtest: empty successful report preserves scanner exit zero
+ok 20 - empty successful report preserves scanner exit zero
+  ---
+  duration_ms: 2.251544
+  type: 'test'
+  ...
+# Subtest: official nil-slice JSON null is empty, but exit one remains inconsistent
+ok 21 - official nil-slice JSON null is empty, but exit one remains inconsistent
+  ---
+  duration_ms: 0.887384
+  type: 'test'
+  ...
+# Subtest: finding metadata preserves exit one and never prints secret/match/child output
+ok 22 - finding metadata preserves exit one and never prints secret/match/child output
+  ---
+  duration_ms: 0.893604
+  type: 'test'
+  ...
+# Subtest: workflow command characters are escaped in file/rule/commit metadata
+ok 23 - workflow command characters are escaped in file/rule/commit metadata
+  ---
+  duration_ms: 0.513211
+  type: 'test'
+  ...
+# Subtest: scanner failure is fail-closed
+ok 24 - scanner failure is fail-closed
+  ---
+  duration_ms: 0.365594
+  type: 'test'
+  ...
+# Subtest: spawn failure is fail-closed
+ok 25 - spawn failure is fail-closed
+  ---
+  duration_ms: 0.304057
+  type: 'test'
+  ...
+# Subtest: killed scanner is fail-closed
+ok 26 - killed scanner is fail-closed
+  ---
+  duration_ms: 0.344851
+  type: 'test'
+  ...
+# Subtest: missing report is fail-closed
+ok 27 - missing report is fail-closed
+  ---
+  duration_ms: 0.377209
+  type: 'test'
+  ...
+# Subtest: bad JSON is fail-closed
+ok 28 - bad JSON is fail-closed
+  ---
+  duration_ms: 0.604406
+  type: 'test'
+  ...
+# Subtest: non-array report is fail-closed
+ok 29 - non-array report is fail-closed
+  ---
+  duration_ms: 0.558718
+  type: 'test'
+  ...
+# Subtest: success with finding is fail-closed
+ok 30 - success with finding is fail-closed
+  ---
+  duration_ms: 1.203357
+  type: 'test'
+  ...
+# Subtest: failure without finding is fail-closed
+ok 31 - failure without finding is fail-closed
+  ---
+  duration_ms: 0.399081
+  type: 'test'
+  ...
+# Subtest: invalid location is fail-closed
+ok 32 - invalid location is fail-closed
+  ---
+  duration_ms: 0.291942
+  type: 'test'
+  ...
+# Subtest: only whitelisted fields survive report projection
+ok 33 - only whitelisted fields survive report projection
+  ---
+  duration_ms: 0.115295
+  type: 'test'
+  ...
+# Subtest: complete inventory pages precede capped per-finding annotations without changing scanner exit
+ok 34 - complete inventory pages precede capped per-finding annotations without changing scanner exit
+  ---
+  duration_ms: 4.024651
+  type: 'test'
+  ...
+# Subtest: metadata overflow is explicitly incomplete, never reported as full inventory
+ok 35 - metadata overflow is explicitly incomplete, never reported as full inventory
+  ---
+  duration_ms: 21.72412
+  type: 'test'
+  ...
+# Subtest: secret scanner retains default rules and never exempts whole critical auth/public-key sources
+ok 36 - secret scanner retains default rules and never exempts whole critical auth/public-key sources
+  ---
+  duration_ms: 1.200164
+  type: 'test'
+  ...
+# Subtest: three public OAuth headers and one frozen prose fingerprint are individually hash-locked
+ok 37 - three public OAuth headers and one frozen prose fingerprint are individually hash-locked
+  ---
+  duration_ms: 10.554204
+  type: 'test'
+  ...
+# Subtest: every phase5 suppression is an exact hash-locked location; prior twenty individually retained
+ok 38 - every phase5 suppression is an exact hash-locked location; prior twenty individually retained
+  ---
+  duration_ms: 330.537083
+  type: 'test'
+  ...
+# Subtest: changed receipt/source/line/prose or unknown classification invalidates suppression
+ok 39 - changed receipt/source/line/prose or unknown classification invalidates suppression
+  ---
+  duration_ms: 4.499697
+  type: 'test'
+  ...
+1..39
+# tests 39
+# suites 0
+# pass 39
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1919.012062

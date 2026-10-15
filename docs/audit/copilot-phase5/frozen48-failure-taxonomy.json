@@ -1,0 +1,1403 @@
+{
+  "scope": "FROZEN48_LOCAL_REGRESSION_NOT_MODEL_INTELLIGENCE",
+  "corpusSha256": "7b23aa75f2f08b6b23e9bf65a64d1051c95aef0bac33168257f562feb1227092",
+  "count": 48,
+  "passed": 17,
+  "failed": 31,
+  "taxonomy": [
+    "INTENTION_INCORRECTE",
+    "ENTITE_MAL_EXTRAITE",
+    "CONTRAINTE_PERDUE",
+    "INFORMATION_MANQUANTE_NON_DETECTEE",
+    "MAUVAIS_OUTIL",
+    "PARAMETRE_INVALIDE",
+    "CLARIFICATION_NECESSAIRE",
+    "LIMITE_FALLBACK_LOCAL",
+    "ATTENDU_INSUFFISAMMENT_SPECIFIE"
+  ],
+  "primaryCounts": {
+    "LIMITE_FALLBACK_LOCAL": 20,
+    "ENTITE_MAL_EXTRAITE": 1,
+    "CONTRAINTE_PERDUE": 3,
+    "INFORMATION_MANQUANTE_NON_DETECTEE": 1,
+    "INTENTION_INCORRECTE": 1,
+    "CLARIFICATION_NECESSAIRE": 4,
+    "MAUVAIS_OUTIL": 1
+  },
+  "runtimeTuned": false,
+  "goldModified": false,
+  "noInvalidParameterActuallyDispatched": "All calls are selection objects only; no backend dispatch in this runner. Parameters 43/48 includes 42 vacuous cases; only 1/6 non-vacuous cases passes.",
+  "intent": "0 measured; do not infer model comprehension from tool choices",
+  "rows": [
+    {
+      "id": "V01",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_ROUTER",
+      "analysis": "Paraphrase, référence contextuelle ou composition non reconnue par le routage local borné; aucun plan attendu complet retourné. Ce résultat ne mesure pas le modèle, désactivé.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "lookup",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "available_mechanics"
+        ],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V02",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL",
+        "ATTENDU_INSUFFISAMMENT_SPECIFIE"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_WITH_ORACLE_AMBIGUITY",
+      "analysis": "Demande financière non reconnue localement; aucune lecture lancée.",
+      "benchmarkAmbiguity": "Le mot encaissements doit être défini par un oracle métier: date de règlement et date de facture payée ne sont pas interchangeables; cet oracle manque au benchmark de sélection.",
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "lookup",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "today_revenue"
+        ],
+        "periods": {
+          "today_revenue": "today"
+        },
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V03",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_ROUTER",
+      "analysis": "Paraphrase, référence contextuelle ou composition non reconnue par le routage local borné; aucun plan attendu complet retourné. Ce résultat ne mesure pas le modèle, désactivé.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "lookup",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "pending_quotes"
+        ],
+        "periods": {},
+        "status": "sent_unanswered",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V04",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_ROUTER",
+      "analysis": "Paraphrase, référence contextuelle ou composition non reconnue par le routage local borné; aucun plan attendu complet retourné. Ce résultat ne mesure pas le modèle, désactivé.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "lookup",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "low_stock"
+        ],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V05",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_ROUTER",
+      "analysis": "Paraphrase, référence contextuelle ou composition non reconnue par le routage local borné; aucun plan attendu complet retourné. Ce résultat ne mesure pas le modèle, désactivé.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "lookup",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "late_vehicles"
+        ],
+        "periods": {
+          "late_vehicles": "today"
+        },
+        "status": "late_today",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V06",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_ROUTER",
+      "analysis": "Paraphrase, référence contextuelle ou composition non reconnue par le routage local borné; aucun plan attendu complet retourné. Ce résultat ne mesure pas le modèle, désactivé.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "lookup",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "top_clients"
+        ],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V09",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_COMPOSITION",
+      "analysis": "Clarification retournée au lieu de la sélection attendue: la segmentation locale ne reconstruit pas correctement la demande ou son périmètre. Aucune lecture exécutée par cette évaluation.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "lookup",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "proactive"
+        ],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "clarify",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V10",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_COMPOSITION",
+      "analysis": "Clarification retournée au lieu de la sélection attendue: la segmentation locale ne reconstruit pas correctement la demande ou son périmètre. Aucune lecture exécutée par cette évaluation.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "diagnose",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "diagnostic"
+        ],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {
+          "diagnostic": {
+            "obdCode": "P0420"
+          }
+        },
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "clarify",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": false,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V11",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_COMPOSITION",
+      "analysis": "Clarification retournée au lieu de la sélection attendue: la segmentation locale ne reconstruit pas correctement la demande ou son périmètre. Aucune lecture exécutée par cette évaluation.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "diagnose",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "diagnostic"
+        ],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "clarify",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V13",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_ROUTER",
+      "analysis": "Paraphrase, référence contextuelle ou composition non reconnue par le routage local borné; aucun plan attendu complet retourné. Ce résultat ne mesure pas le modèle, désactivé.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "lookup",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "job_search"
+        ],
+        "periods": {},
+        "status": "as_recorded",
+        "parameters": {
+          "job_search": {
+            "reference": "LM-246-NP"
+          }
+        },
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": false,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V14",
+      "primary": "ENTITE_MAL_EXTRAITE",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "LIMITE_FALLBACK_LOCAL"
+      ],
+      "rootCauseClass": "UNRESOLVED_REFERENCE_OR_INTENT",
+      "analysis": "Référence nominale attendue absente du plan, qui reste unknown; le test établit une référence non résolue, pas une valeur erronée envoyée. Le défaut précis entre sélection et extraction nécessite une trace dédiée.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "lookup",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "job_search"
+        ],
+        "periods": {},
+        "status": "as_recorded",
+        "parameters": {
+          "job_search": {
+            "reference": "Élodie Martin"
+          }
+        },
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": false,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V15",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "ENTITE_MAL_EXTRAITE",
+        "ATTENDU_INSUFFISAMMENT_SPECIFIE"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_CONTEXT_REFERENCE",
+      "analysis": "Nouvelle référence courante non reliée à une opération de dossier; unknown.",
+      "benchmarkAmbiguity": "Le verbe de la demande courante est elliptique: le contexte suggère une consultation mais la règle de clarification acceptable devra être revue en aveugle, sans modifier ce gold figé.",
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "lookup",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "job_search"
+        ],
+        "periods": {},
+        "status": "as_recorded",
+        "parameters": {
+          "job_search": {
+            "reference": "QR-357-ST"
+          }
+        },
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": false,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V16",
+      "primary": "CONTRAINTE_PERDUE",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "DESIGN_CONTEXT_SCOPE",
+      "analysis": "Une ancienne demande d’aide contamine le suivi portant sur un dossier: help au lieu de job_search. Prioriser l’objectif courant et borner la portée de l’héritage contextuel.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "lookup",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "job_search"
+        ],
+        "periods": {},
+        "status": "as_recorded",
+        "parameters": {
+          "job_search": {
+            "reference": "LM-246-NP"
+          }
+        },
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "help",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": false,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V17",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_ROUTER",
+      "analysis": "Paraphrase, référence contextuelle ou composition non reconnue par le routage local borné; aucun plan attendu complet retourné. Ce résultat ne mesure pas le modèle, désactivé.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "lookup",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "available_mechanics"
+        ],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V20",
+      "primary": "INFORMATION_MANQUANTE_NON_DETECTEE",
+      "secondary": [
+        "CLARIFICATION_NECESSAIRE",
+        "LIMITE_FALLBACK_LOCAL"
+      ],
+      "rootCauseClass": "SAFE_ABSTENTION_WRONG_CONTRACT",
+      "analysis": "La référence manquante ne déclenche pas la clarification attendue; unknown n’a pas lancé de lecture, mais ne satisfait pas le contrat de demande d’information.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "clarify",
+        "modes": [
+          "clarify"
+        ],
+        "tools": [],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [
+          "reference"
+        ],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": true,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V21",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_ROUTER",
+      "analysis": "Paraphrase, référence contextuelle ou composition non reconnue par le routage local borné; aucun plan attendu complet retourné. Ce résultat ne mesure pas le modèle, désactivé.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "explain",
+        "modes": [
+          "help"
+        ],
+        "tools": [],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": [
+          "quotes"
+        ]
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": true,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": false
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V22",
+      "primary": "INTENTION_INCORRECTE",
+      "secondary": [
+        "MAUVAIS_OUTIL",
+        "LIMITE_FALLBACK_LOCAL"
+      ],
+      "rootCauseClass": "DESIGN_HELP_VS_READ",
+      "analysis": "Une demande de mode d’emploi devient une clarification de dossier plutôt qu’une aide; aucun outil effectivement exécuté. Distinguer candidats documentation et lecture avant le planning.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "explain",
+        "modes": [
+          "help"
+        ],
+        "tools": [],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": [
+          "planning"
+        ]
+      },
+      "observed": {
+        "mode": "clarify",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": true,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": false
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V23",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_ROUTER",
+      "analysis": "Paraphrase, référence contextuelle ou composition non reconnue par le routage local borné; aucun plan attendu complet retourné. Ce résultat ne mesure pas le modèle, désactivé.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "explain",
+        "modes": [
+          "help"
+        ],
+        "tools": [],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": [
+          "planning"
+        ]
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": true,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": false
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V24",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "ATTENDU_INSUFFISAMMENT_SPECIFIE"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_ACTION_HANDOFF",
+      "analysis": "Préparation d’une proposition non reconnue; aucun handoff de formulaire ni écriture.",
+      "benchmarkAmbiguity": "La formulation interrogative peut demander une possibilité plutôt qu’une action; le gold propose_action reste inchangé et ce doute doit être arbitré par un tiers.",
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "propose_action",
+        "modes": [
+          "action_proposal"
+        ],
+        "tools": [],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": "create_quote",
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": true,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": false,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V25",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_ROUTER",
+      "analysis": "Paraphrase, référence contextuelle ou composition non reconnue par le routage local borné; aucun plan attendu complet retourné. Ce résultat ne mesure pas le modèle, désactivé.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "propose_action",
+        "modes": [
+          "action_proposal"
+        ],
+        "tools": [],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": "create_appointment",
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": true,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": false,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V27",
+      "primary": "CLARIFICATION_NECESSAIRE",
+      "secondary": [
+        "LIMITE_FALLBACK_LOCAL"
+      ],
+      "rootCauseClass": "SAFE_ABSTENTION_WRONG_CONTRACT",
+      "analysis": "Assentiment sans contexte: unknown au lieu de clarifier la cible. Le garde-fou essentiel est respecté: aucune écriture ni confirmation fabriquée.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "clarify",
+        "modes": [
+          "clarify"
+        ],
+        "tools": [],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [
+          "objective"
+        ],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": true,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V28",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_ROUTER",
+      "analysis": "Paraphrase, référence contextuelle ou composition non reconnue par le routage local borné; aucun plan attendu complet retourné. Ce résultat ne mesure pas le modèle, désactivé.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "compare",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "low_stock",
+          "pending_quotes"
+        ],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "clarify",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V29",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_ROUTER",
+      "analysis": "Paraphrase, référence contextuelle ou composition non reconnue par le routage local borné; aucun plan attendu complet retourné. Ce résultat ne mesure pas le modèle, désactivé.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "compare",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "today_revenue",
+          "available_mechanics"
+        ],
+        "periods": {
+          "today_revenue": "today"
+        },
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V30",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_ROUTER",
+      "analysis": "Paraphrase, référence contextuelle ou composition non reconnue par le routage local borné; aucun plan attendu complet retourné. Ce résultat ne mesure pas le modèle, désactivé.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "lookup",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "late_vehicles",
+          "low_stock",
+          "pending_quotes"
+        ],
+        "periods": {
+          "late_vehicles": "today"
+        },
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "clarify",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V31",
+      "primary": "CONTRAINTE_PERDUE",
+      "secondary": [
+        "CLARIFICATION_NECESSAIRE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "DESIGN_REQUEST_COVERAGE_AND_CARDINALITY",
+      "analysis": "Quatre opérations demandées: seulement today_revenue/top_clients sélectionnées, answer au lieu de clarifier. Le plafond structurel de trois n’est pas dépassé, mais la couverture sémantique complète n’est pas vérifiée: deux demandes sont perdues.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "clarify",
+        "modes": [
+          "clarify"
+        ],
+        "tools": [],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [
+          "objective"
+        ],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "answer",
+        "actualTools": [
+          "today_revenue",
+          "top_clients"
+        ],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V33",
+      "primary": "MAUVAIS_OUTIL",
+      "secondary": [
+        "CLARIFICATION_NECESSAIRE",
+        "LIMITE_FALLBACK_LOCAL"
+      ],
+      "rootCauseClass": "DESIGN_UNSUPPORTED_CAUSAL_ANSWER",
+      "analysis": "late_vehicles est choisi alors qu’une cause certaine d’un véhicule exige une preuve/capacité absente. Sélection inadéquate; aucune réponse causale factuelle n’a été testée ou fabriquée par ce runner.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "clarify",
+        "modes": [
+          "clarify"
+        ],
+        "tools": [],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [
+          "objective"
+        ],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "answer",
+        "actualTools": [
+          "late_vehicles"
+        ],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V34",
+      "primary": "CLARIFICATION_NECESSAIRE",
+      "secondary": [
+        "CONTRAINTE_PERDUE",
+        "LIMITE_FALLBACK_LOCAL"
+      ],
+      "rootCauseClass": "SAFE_ABSTENTION_UNSUPPORTED_PERIOD",
+      "analysis": "Période veille non prise en charge: unknown au lieu de clarification. Aucune période incorrecte envoyée au backend dans ce test.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "clarify",
+        "modes": [
+          "clarify"
+        ],
+        "tools": [],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [
+          "period"
+        ],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": true,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V36",
+      "primary": "CONTRAINTE_PERDUE",
+      "secondary": [
+        "CLARIFICATION_NECESSAIRE"
+      ],
+      "rootCauseClass": "DESIGN_REQUESTED_PERIOD_BINDING",
+      "analysis": "forecast_revenue est sélectionné avec sa portée native next_month pour une demande de deux mois; les mots portant la durée ne sont pas confrontés à la capacité. Contrat de sélection échoué, pas une preuve d’erreur de calcul financier exécuté.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "clarify",
+        "modes": [
+          "clarify"
+        ],
+        "tools": [],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [
+          "period"
+        ],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "answer",
+        "actualTools": [
+          "forecast_revenue"
+        ],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V37",
+      "primary": "CLARIFICATION_NECESSAIRE",
+      "secondary": [
+        "CONTRAINTE_PERDUE",
+        "ATTENDU_INSUFFISAMMENT_SPECIFIE"
+      ],
+      "rootCauseClass": "SAFE_ABSTENTION_CONTEXT_PERIOD",
+      "analysis": "Suivi temporel non pris en charge: unknown au lieu de clarification, sans lecture.",
+      "benchmarkAmbiguity": "L’ellipse ne précise pas de nouvelle métrique; le contexte et la période doivent être arbitrés par un annotateur indépendant.",
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "clarify",
+        "modes": [
+          "clarify"
+        ],
+        "tools": [],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [
+          "period"
+        ],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": true,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V38",
+      "primary": "CLARIFICATION_NECESSAIRE",
+      "secondary": [
+        "CONTRAINTE_PERDUE",
+        "LIMITE_FALLBACK_LOCAL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_STATUS_FILTER",
+      "analysis": "Filtre de statut des interventions absent du catalogue: unknown au lieu de demander une précision ou expliciter la limite. Pas de filtre inventé ni de paramètre invalide exécuté.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "clarify",
+        "modes": [
+          "clarify"
+        ],
+        "tools": [],
+        "periods": {},
+        "status": "unsupported_filter",
+        "parameters": {},
+        "missing": [
+          "objective"
+        ],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": true,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    },
+    {
+      "id": "V41",
+      "primary": "LIMITE_FALLBACK_LOCAL",
+      "secondary": [
+        "INTENTION_INCORRECTE",
+        "MAUVAIS_OUTIL"
+      ],
+      "rootCauseClass": "SYSTEM_LIMIT_LOCAL_ROUTER",
+      "analysis": "Paraphrase, référence contextuelle ou composition non reconnue par le routage local borné; aucun plan attendu complet retourné. Ce résultat ne mesure pas le modèle, désactivé.",
+      "benchmarkAmbiguity": null,
+      "certainty": "Observed output is proven by V07 and V16; code-level causal explanation is static review, not an instrumented execution trace.",
+      "expected": {
+        "intent": "lookup",
+        "modes": [
+          "answer"
+        ],
+        "tools": [
+          "low_stock"
+        ],
+        "periods": {},
+        "status": "unspecified",
+        "parameters": {},
+        "missing": [],
+        "action": null,
+        "articles": []
+      },
+      "observed": {
+        "mode": "unknown",
+        "actualTools": [],
+        "intentPass": null,
+        "modePass": false,
+        "toolsPass": false,
+        "parametersPass": true,
+        "planValid": true,
+        "permissionsPass": true,
+        "confirmationPass": true,
+        "articlesPass": true
+      },
+      "proofs": [
+        "docs/audit/copilot-phase5/V07.txt",
+        "docs/audit/copilot-phase5/V16.txt"
+      ]
+    }
+  ],
+  "requiredCrossCuttingWork": [
+    "Semantic intent/entities/constraints/missing-information/candidate-operations representation before reads; not isolated synonym patches",
+    "Complete requested-operation coverage and requested-vs-supported time/status constraints",
+    "Documentation/action separation and current-context precedence",
+    "Externally authored/reviewed blind gold, native fact oracle and final response grading"
+  ]
+}

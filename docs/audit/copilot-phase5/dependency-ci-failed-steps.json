@@ -1,0 +1,23 @@
+[
+  {
+    "checkId": 116461366411,
+    "headSha": "70450d3f0cec67b8189351594aa4096842cb88c2",
+    "failedSteps": [
+      "Run npm run test:release-safety"
+    ]
+  },
+  {
+    "checkId": 116461362349,
+    "headSha": "70450d3f0cec67b8189351594aa4096842cb88c2",
+    "failedSteps": [
+      "Run npm run test:release-safety"
+    ]
+  },
+  {
+    "checkId": 116461334247,
+    "headSha": "70450d3f0cec67b8189351594aa4096842cb88c2",
+    "failedSteps": [
+      "Run npm run test:release-safety"
+    ]
+  }
+]

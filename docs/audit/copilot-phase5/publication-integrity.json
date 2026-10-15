@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-15T16:04:59.350216+02:00",
+  "timezone": "Europe/Paris",
+  "head": "4a335c1e3429f02dc34f2ef3d682f3d5f82a1a32",
+  "sourceReview": "docs/audit/copilot-phase5/source-review.json",
+  "sourceReviewSha256": "621e565b8269e47c17966b2af008c4b0152668e424e7d5cca69e160dd366a32d",
+  "sourceFilesStillMatch": true,
+  "documentaryRevision": {
+    "path": "docs/COPILOT_PHASE5_VALIDATION.md",
+    "sha256": "00fa2eac9542c46734d74bb674c155f267d355f1a923d943c7252d5da0be0df7",
+    "review": "Added explicit publication whitespace warning and removed Markdown hard-break spaces; outcome/factual table unchanged"
+  },
+  "publicationWhitespaceCheck": {
+    "receipt": "V31",
+    "exitCode": 2,
+    "locations": [
+      {
+        "path": "docs/audit/copilot-phase5/V28.txt",
+        "lines": [
+          40,
+          50
+        ]
+      }
+    ],
+    "classification": "Intentional immutable Node failure-diff stdout formatting, not source code",
+    "handling": "Original normalized log and pinned hashes retained. No whitespace/Git/Gitleaks exemption, no test weakened, no claim check passed."
+  },
+  "limits": "Publication records format failure rather than rewriting a frozen execution proof. Does not authorize release or suppress any functional/security gate."
+}

@@ -1,0 +1,6 @@
+{
+  "status": "ACCESS_BLOCKED",
+  "httpStatus": "unknown",
+  "alertsEnumerated": false,
+  "limits": "No alert count/exploitability inferred; token/scope change not attempted"
+}

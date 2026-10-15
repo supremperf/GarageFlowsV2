@@ -1,0 +1,43 @@
+
+> garageflow@1.1.0 check:branding
+> node scripts/check-branding.mjs
+
+Marque — exceptions techniques ACTIVES (précises, documentées) :
+   • electron/main.js — User-Agent HTTP « GarageFlow/<version> »  (2)
+   • electron/main.js — sel de MAC base — NE PAS changer  (1)
+   • electron/main.js — sel de chiffrement (KDF) — NE PAS changer  (1)
+   • electron/main.js — serviceName Electron (keytar/identité OS)  (1)
+   • electron/secure-key.js — sel KDF secure-key — NE PAS changer  (1)
+   • electron/update-verify.js — doit correspondre au champ « product » du flux de MàJ (identité interne, non visible)  (1)
+   • electron/user-data-path.js — nom du dossier de données HISTORIQUE — compat installations existantes  (1)
+   • scripts/config-full.cjs — chemin physique du coffre de configuration existant — compat des plans/reprises  (3)
+   • scripts/config-keygen.cjs — chemin physique du runtime keygen existant — compat config  (1)
+   • scripts/config-release.cjs — chemin physique du coffre éditeur existant — compat signature  (1)
+   • scripts/config-services.cjs — chemin physique du coffre éditeur existant — compat signature  (1)
+   • scripts/keygen_ui.py — User-Agent keygen (compat control-plane)  (2)
+   • scripts/lib/repository-audit-map.cjs — chemin physique du coffre local exclu de la lecture d’inventaire — compat config  (1)
+   • scripts/restore.js — chemin du dossier de données historique (restore.js / userData pin)  (3)
+   • scripts/sign-release-manifest.mjs — le manifeste signé DOIT porter la même identité « product » que EXPECTED_PRODUCT, sinon chaque poste rejette la mise à jour (identité interne, non visible)  (1)
+   • src/app/admin/licenses/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/license/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/login/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/register/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (4)
+   • src/components/GarageFlowLogo.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/Header.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/LicenseChangeModal.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/UpdateModal.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/integration/publication-mise-a-jour.test.ts — manifeste de test de PUBLICATION : le champ « product » doit valoir EXPECTED_PRODUCT, sinon le poste rejette la mise à jour — écrire « GarageFlows » ici ferait affirmer au test un contrat que la production refuse  (1)
+   • src/lib/__tests__/release-signing-chain.test.ts — chemin du dossier de données historique (restore.js / userData pin)  (1)
+   • src/lib/__tests__/update-verify.test.ts — reflète l'identité « product » du flux de MàJ (voir EXPECTED_PRODUCT)  (1)
+   • src/lib/__tests__/user-data-path.test.ts — assertion de compat : le dossier historique ne doit JAMAIS être renommé  (1)
+   • src/lib/__tests__/user-data-path.test.ts — intitulé du test de compat du dossier historique  (1)
+   • src/lib/signature/__tests__/signature.test.ts — User-Agent HTTP « GarageFlow/<version> »  (1)
+
+❌ 2 occurrence(s) VISIBLE(s) « GarageFlow » hors exception :
+   scripts/config-keys.cjs:8  const stateFile = root => path.join(root, 'GarageFlow-configuration/generated-keys.json')
+   scripts/config-policy.cjs:14  if (v.name === 'GF_UPDATE_SIGNING_KEY' || v.name === 'GF_UPDATE_SIGNING_KEY_FILE') return { action: 'publisher', destina
+
+   → Corrigez en « GarageFlows », ou ajoutez une exception PRÉCISE (fichier+clé+raison).
+
+Échec du contrôle de marque.
