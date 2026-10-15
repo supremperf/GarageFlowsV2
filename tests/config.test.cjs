@@ -488,3 +488,11 @@ test('masked input is initialized before its prompt becomes visible (immediate-p
     else delete process.stdin.isTTY
   }
 })
+
+test('exclusive first-key writes never replace an existing file or concurrent creation', t => {
+  const dir = fixture(t), file = path.join(dir, 'private/key.pem')
+  c.writePrivate(file, 'original-fixture', { exclusive: true })
+  assert.throws(() => c.writePrivate(file, 'replacement-fixture', { exclusive: true }), { code: 'EEXIST' })
+  assert.equal(fs.readFileSync(file, 'utf8'), 'original-fixture')
+  if (process.platform !== 'win32') assert.equal(fs.statSync(file).mode & 0o777, 0o600)
+})

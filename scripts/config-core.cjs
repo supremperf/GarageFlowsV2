@@ -111,11 +111,17 @@ function readEnv(file) {
   try { return parseEnv(fs.readFileSync(file, 'utf8')) }
   catch (e) { if (e.code === 'ENOENT') return Object.create(null); throw new Error('Fichier env illisible.') }
 }
-function writePrivate(file, text) {
+function writePrivate(file, text, { exclusive = false } = {}) {
   fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 })
   // Refuse symlinks, exclusive temporary file, atomic replacement; never leave a backup of secrets.
   try { if (fs.lstatSync(file).isSymbolicLink()) throw new Error('Lien symbolique refusé pour un fichier secret.') }
   catch (e) { if (e.code !== 'ENOENT') throw e }
+  if (exclusive) {
+    // O_EXCL refuses existing files/symlinks, including concurrent first-install writers.
+    fs.writeFileSync(file, text, { mode: 0o600, flag: 'wx' })
+    fs.chmodSync(file, 0o600)
+    return
+  }
   const tmp = `${file}.${crypto.randomBytes(8).toString('hex')}.tmp`
   try {
     fs.writeFileSync(tmp, text, { mode: 0o600, flag: 'wx' })

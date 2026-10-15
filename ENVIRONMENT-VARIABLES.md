@@ -126,7 +126,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
-| `GF_PRIVATE_KEY` | SECRET | non | server-publisher | Base64-encoded PKCS#8 EC P-256 private PEM. Must match the public key embedded in Electron and src/lib/license/public-key.ts. Never rotate or generat… |
+| `GF_PRIVATE_KEY` | SECRET | non | server-publisher | P-256 : node config genere et sauvegarde la PREMIERE paire uniquement sur base vide sans autorite locale existante, apres AUTORISER ; ancrages public… |
 | `GF_UPDATE_SIGNING_KEY` | SECRET | non | publisher-only | Clé PRIVÉE Ed25519 (PEM PKCS#8) signant les manifestes de mise à jour. Cette entrée portait « documented but not consumed by this repository » : c'ét… |
 | `VERCEL_TOKEN` | SECRET | non | publisher-only | Jeton d'API Vercel de l'ÉDITEUR, utilisé pour pousser les variables et déclencher un déploiement. Ne doit jamais être livré à un garage ni écrit dans… |
 

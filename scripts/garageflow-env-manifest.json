@@ -1135,7 +1135,7 @@
       "consumers": [
         "src/app/api/admin/licenses/generate/route.ts"
       ],
-      "notes": "Base64-encoded PKCS#8 EC P-256 private PEM. Must match the public key embedded in Electron and src/lib/license/public-key.ts. Never rotate or generate automatically."
+      "notes": "P-256 : node config genere et sauvegarde la PREMIERE paire uniquement sur base vide sans autorite locale existante, apres AUTORISER ; ancrages publics synchronises. Original reutilise, jamais de rotation automatique ni de regeneration apres perte. Base64 PKCS#8, doit correspondre aux ancrages Next/Electron. autoGenerate/autoManage=false restent les protections des outils generiques/reset ; seule l'initialisation controlee de config cree une nouvelle autorite."
     },
     {
       "name": "GF_PROBE_NAMES",

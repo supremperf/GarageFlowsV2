@@ -160,8 +160,9 @@ function configureKeygen(root, env, { privatePassphrase, authorizeApiReplacement
   if (!core.licenseKeyMatches(env.GF_PRIVATE_KEY, core.embeddedLicenseKey(root))) throw new Error('Keygen : clé privée différente des ancrages publics.')
   const pub = crypto.createPublicKey(pem).export({ type: 'spki', format: 'pem' }).toString()
   const privateFile = path.join(root, 'keys/private.pem')
+  const hasPrivateFile = fs.existsSync(privateFile)
   let preserveEncrypted = false
-  if (fs.existsSync(privateFile)) {
+  if (hasPrivateFile) {
     const existing = fs.readFileSync(privateFile, 'utf8')
     preserveEncrypted = /ENCRYPTED PRIVATE KEY|Proc-Type:\s*4,ENCRYPTED/.test(existing)
     let key
@@ -171,7 +172,8 @@ function configureKeygen(root, env, { privatePassphrase, authorizeApiReplacement
   }
   const publicFile = path.join(root, 'keys/public.pem')
   if (fs.existsSync(publicFile) && publicFingerprint(fs.readFileSync(publicFile)) !== publicFingerprint(pub)) throw new Error('Keygen : clé publique locale divergente.')
-  if (!preserveEncrypted) core.writePrivate(privateFile, pem)
+  // Preserve original bytes/encoding too (SEC1/PKCS#8/encrypted), not just the key identity.
+  if (!hasPrivateFile) core.writePrivate(privateFile, pem, { exclusive: true })
   core.writePrivate(publicFile, pub)
   const file = path.join(root, 'keys/server_config.json')
   let old = {}
@@ -246,7 +248,7 @@ function installPublisherKey(root, file, pem) {
   if (fs.existsSync(external)) {
     const old = fs.readFileSync(external)
     if (publicFingerprint(old) !== publicFingerprint(pub)) throw new Error('Publication : coffre existant différent, refus de remplacement.')
-  } else core.writePrivate(external, pem)
+  } else core.writePrivate(external, pem, { exclusive: true })
   const sourceFile = path.join(root, 'electron/update-verify.js')
   delete require.cache[require.resolve(sourceFile)]
   const known = require(sourceFile).PUBLIC_KEYS
