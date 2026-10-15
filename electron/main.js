@@ -31,6 +31,7 @@ const crypto  = require('crypto')
 const os      = require('os')
 const { resolveMainSecret, resolveSmtpCipherKey, loadOrCreateInstallSecret } = require('./secret')
 const { sign: signState, verify: verifyState } = require('./signed-state')
+const { decodeDotenvValue } = require('./dotenv-value')
 const { activationReport } = require('./activation-report')
 const {
   shouldAttemptActivation, afterRefusal, cleared, humanDelay,
@@ -71,11 +72,8 @@ try { process.stderr.on('error', () => {}) } catch (_) {}
       const eq = line.indexOf('=')
       if (eq === -1) continue
       const key = line.slice(0, eq).trim()
-      let val = line.slice(eq + 1).trim()
-      if ((val.startsWith('"') && val.endsWith('"')) ||
-          (val.startsWith("'") && val.endsWith("'"))) {
-        val = val.slice(1, -1)
-      }
+      // Same literal quoting contract as config/Next; never eval or expand env.
+      const val = decodeDotenvValue(line.slice(eq + 1).trim())
       if (!(key in process.env)) process.env[key] = val
     }
   } catch (_) {}
