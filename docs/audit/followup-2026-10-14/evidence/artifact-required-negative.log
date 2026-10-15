@@ -1,0 +1,51 @@
+
+> garageflow@1.1.0 test
+> vitest run src/__tests__/integrity-diagnostics.test.ts
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/home/user/GarageFlowsV2[39m
+
+ [31m❯[39m src/__tests__/integrity-diagnostics.test.ts [2m([22m[2m12 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 42[2mms[22m[39m
+     [32m✓[39m resolveRawFs préfère original-fs quand le module existe (Electron)[32m 6[2mms[22m[39m
+     [32m✓[39m resolveRawFs retombe sur fs sous Node pur (module absent)[32m 2[2mms[22m[39m
+     [32m✓[39m reproduction du symptôme AVANT correctif : un lecteur façon fs-patché (EISDIR sur app.asar) → unreadable → blocage[32m 3[2mms[22m[39m
+     [32m✓[39m A — installation intacte → démarrage autorisé (ok, 0 violation)[32m 3[2mms[22m[39m
+     [32m✓[39m B — app.asar modifié → refusé avec diagnostic complet (HASH_MISMATCH, hashes + tailles)[32m 3[2mms[22m[39m
+     [32m✓[39m B bis — taille différente → SIZE_MISMATCH (tailles attendue/réelle rapportées)[32m 4[2mms[22m[39m
+     [32m✓[39m C — fichier protégé supprimé → refusé (MISSING)[32m 2[2mms[22m[39m
+     [32m✓[39m D — fichiers MUTABLES modifiés (db template, app-update.yml, ISR, log) → démarrage AUTORISÉ[32m 3[2mms[22m[39m
+     [32m✓[39m D bis — le CODE applicatif de standalone/ est couvert, et le modifier est REFUSÉ[32m 3[2mms[22m[39m
+     [32m✓[39m E — manifeste MODIFIÉ (hash falsifié pour couvrir une altération) → refusé (MANIFEST_MAC_INVALID)[32m 3[2mms[22m[39m
+     [32m✓[39m F — manifeste INVALIDE (JSON corrompu) → refusé (MANIFEST_INVALID)[32m 2[2mms[22m[39m
+[31m     [31m×[31m G — build fraîchement généré (dist/win-unpacked réel) → aucun échec[39m[32m 7[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/__tests__/integrity-diagnostics.test.ts[2m > [22mmatrice A–G[2m > [22mG — build fraîchement généré (dist/win-unpacked réel) → aucun échec
+[31m[1mAssertionError[22m: Artefact réel requis : exécuter npm run dist avant ce contrôle: expected false to be true // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+[36m [2m❯[22m src/__tests__/integrity-diagnostics.test.ts:[2m183:104[22m[39m
+    [90m181|[39m   it.skipIf(!existsSync(realManifest) && process.env.GF_REQUIRE_ARTIFA…
+    [90m182|[39m     'G — build fraîchement généré (dist/win-unpacked réel) → aucun éch…
+    [90m183|[39m     expect(existsSync(realManifest), 'Artefact réel requis : exécuter …
+    [90m   |[39m                                                                                                        [31m^[39m
+    [90m184|[39m     [35mconst[39m r [33m=[39m [33mI[39m[33m.[39m[34mverify[39m(real)
+    [90m185|[39m     [34mexpect[39m(r[33m.[39mok[33m,[39m [33mJSON[39m[33m.[39m[34mstringify[39m(r[33m.[39mdetails [33m??[39m [][33m,[39m [35mnull[39m[33m,[39m [34m1[39m))[33m.[39m[34mtoBe[39m([35mtrue[39m)
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m11 passed[39m[22m[90m (12)[39m
+[2m   Start at [22m 12:36:36
+[2m   Duration [22m 394ms[2m (transform 46ms, setup 0ms, import 62ms, tests 42ms, environment 0ms)[22m
+

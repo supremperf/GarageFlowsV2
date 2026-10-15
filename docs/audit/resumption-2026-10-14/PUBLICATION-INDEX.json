@@ -1,0 +1,7 @@
+{
+  "sourceCommit": "edbcffa0dcef0b95d251ffed3bd756fa6165f98b",
+  "scope": "Add verbatim historical/current audit logs explicitly ignored by generic *.log, after limited confidentiality review; no private config or generated binaries.",
+  "forcedAddedLogCount": 100,
+  "missingPublishedManifestPaths": [],
+  "limitation": "Confidentiality preflight is not official Gitleaks. Existing raw whitespace/ANSI/newlines retained, not normalized."
+}

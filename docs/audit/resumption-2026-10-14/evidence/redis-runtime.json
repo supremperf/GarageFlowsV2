@@ -1,0 +1,19 @@
+{
+  "sourceCommit": "498ecd0d6d007db11ddb3aea9428552598a78622",
+  "sourceTag": "8.10.2",
+  "binarySha256": "3c6b31cbeafc02d603ba631c8efe32dddf3bebc9a915bd46db0f93abab1c3000",
+  "launchCommand": "/home/user/audit-resumption/.cache/upstreams/redis/redis-498ecd0d6d007db11ddb3aea9428552598a78622/src/redis-server --bind 127.0.0.1 --port 16379 --protected-mode yes --save '' --appendonly no --dir /home/user/audit-resumption/.cache/redis-runtime",
+  "tool": "start_process / stop_process",
+  "processId": "redis-de-test-isol-f819a525",
+  "startedAtServerLogUTC": "2026-10-14T14:02:25.323Z",
+  "stoppedAtServerLogUTC": "2026-10-14T14:03:26.517Z",
+  "timezone": "Europe/Paris",
+  "status": "stopped",
+  "isolation": "Loopback only; no persistence; owned temporary directory; no production connection; no kernel/sysctl modification.",
+  "limitations": [
+    "Redis 8.10.2, not CI Redis 7 or managed Upstash.",
+    "Source commit unsigned; official HTTPS/API provenance and archive/local compiled binary hashes recorded, not an upstream binary signature.",
+    "Runtime displays commit=00000000/modified=1 because source archive has no .git metadata, not because a product patch was applied.",
+    "Memory-overcommit warning not remediated by changing system settings; this is not production Redis operations validation."
+  ]
+}

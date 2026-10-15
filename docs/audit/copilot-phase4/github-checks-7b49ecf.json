@@ -1,0 +1,372 @@
+{
+  "at": "2026-10-15T14:43:07.424797+02:00",
+  "head": "7b49ecf0f93dc29faeab118ad7ca2b20607756d0",
+  "checks": [
+    {
+      "id": 116427697485,
+      "name": "Final release gate (full)",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 116427695791,
+      "name": "Secret scan (Gitleaks)",
+      "status": "completed",
+      "conclusion": "failure",
+      "annotations": [
+        {
+          "path": ".github",
+          "start_line": 2,
+          "annotation_level": "warning",
+          "title": ""
+        },
+        {
+          "path": ".github",
+          "start_line": 705,
+          "annotation_level": "failure",
+          "title": ""
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F22.json",
+          "start_line": 491,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F22.json",
+          "start_line": 490,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F22.json",
+          "start_line": 438,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F22.json",
+          "start_line": 420,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F22.json",
+          "start_line": 369,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F22.json",
+          "start_line": 368,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F22.json",
+          "start_line": 350,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F22.json",
+          "start_line": 349,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F22.json",
+          "start_line": 344,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F22.json",
+          "start_line": 336,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": ".github",
+          "start_line": 30,
+          "annotation_level": "notice",
+          "title": "Gitleaks installer"
+        },
+        {
+          "path": ".github",
+          "start_line": 28,
+          "annotation_level": "notice",
+          "title": "Gitleaks installer"
+        },
+        {
+          "path": ".github",
+          "start_line": 27,
+          "annotation_level": "notice",
+          "title": "Gitleaks installer"
+        },
+        {
+          "path": ".github",
+          "start_line": 1,
+          "annotation_level": "notice",
+          "title": ""
+        }
+      ]
+    },
+    {
+      "id": 116427695689,
+      "name": "Full dependency tree \u2014 zero vulnerabilities",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 116427695658,
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 116427695239,
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 116427694119,
+      "name": "Analyze (javascript-typescript)",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 116427665401,
+      "name": "Final release gate (full)",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 116427663548,
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 116427663475,
+      "name": "Full dependency tree \u2014 zero vulnerabilities",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 116427663361,
+      "name": "Secret scan (Gitleaks)",
+      "status": "completed",
+      "conclusion": "failure",
+      "annotations": [
+        {
+          "path": ".github",
+          "start_line": 2,
+          "annotation_level": "warning",
+          "title": ""
+        },
+        {
+          "path": ".github",
+          "start_line": 705,
+          "annotation_level": "failure",
+          "title": ""
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F05.json",
+          "start_line": 490,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F05.json",
+          "start_line": 489,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F05.json",
+          "start_line": 437,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F05.json",
+          "start_line": 419,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F05.json",
+          "start_line": 368,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F05.json",
+          "start_line": 367,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F05.json",
+          "start_line": 349,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F05.json",
+          "start_line": 348,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F05.json",
+          "start_line": 343,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": "docs/audit/copilot-phase4/F05.json",
+          "start_line": 335,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key"
+        },
+        {
+          "path": ".github",
+          "start_line": 30,
+          "annotation_level": "notice",
+          "title": "Gitleaks installer"
+        },
+        {
+          "path": ".github",
+          "start_line": 28,
+          "annotation_level": "notice",
+          "title": "Gitleaks installer"
+        },
+        {
+          "path": ".github",
+          "start_line": 27,
+          "annotation_level": "notice",
+          "title": "Gitleaks installer"
+        },
+        {
+          "path": ".github",
+          "start_line": 1,
+          "annotation_level": "notice",
+          "title": ""
+        }
+      ]
+    },
+    {
+      "id": 116427663094,
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "status": "in_progress",
+      "conclusion": null
+    }
+  ],
+  "limits": "Metadata only; no scanner Secret/Match/body/log retrieval; pending/skipped not pass, not full CI or production certification.",
+  "additionalTriage": [
+    {
+      "path": "docs/audit/copilot-phase4/F22.json",
+      "line": 491,
+      "rule": "generic-api-key",
+      "sourcePath": "scripts/config-keys.cjs",
+      "verifiedAgainstGitBlob": "ce5d2815ce185030aebccfc56c1d3eefd955aaa7",
+      "digestConcordant": true,
+      "classification": "VERIFIED_PUBLIC_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exceptionAdded": false
+    },
+    {
+      "path": "docs/audit/copilot-phase4/F22.json",
+      "line": 490,
+      "rule": "generic-api-key",
+      "sourcePath": "scripts/config-keygen.cjs",
+      "verifiedAgainstGitBlob": "ce5d2815ce185030aebccfc56c1d3eefd955aaa7",
+      "digestConcordant": true,
+      "classification": "VERIFIED_PUBLIC_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exceptionAdded": false
+    },
+    {
+      "path": "docs/audit/copilot-phase4/F22.json",
+      "line": 438,
+      "rule": "generic-api-key",
+      "sourcePath": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/historical-log-access.json",
+      "verifiedAgainstGitBlob": "ce5d2815ce185030aebccfc56c1d3eefd955aaa7",
+      "digestConcordant": true,
+      "classification": "VERIFIED_PUBLIC_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exceptionAdded": false
+    },
+    {
+      "path": "docs/audit/copilot-phase4/F22.json",
+      "line": 420,
+      "rule": "generic-api-key",
+      "sourcePath": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/external-access.json",
+      "verifiedAgainstGitBlob": "ce5d2815ce185030aebccfc56c1d3eefd955aaa7",
+      "digestConcordant": true,
+      "classification": "VERIFIED_PUBLIC_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exceptionAdded": false
+    },
+    {
+      "path": "docs/audit/copilot-phase4/F22.json",
+      "line": 369,
+      "rule": "generic-api-key",
+      "sourcePath": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/evidence/electron-secrets.json",
+      "verifiedAgainstGitBlob": "ce5d2815ce185030aebccfc56c1d3eefd955aaa7",
+      "digestConcordant": true,
+      "classification": "VERIFIED_PUBLIC_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exceptionAdded": false
+    },
+    {
+      "path": "docs/audit/copilot-phase4/F22.json",
+      "line": 368,
+      "rule": "generic-api-key",
+      "sourcePath": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/evidence/electron-secrets.command.json",
+      "verifiedAgainstGitBlob": "ce5d2815ce185030aebccfc56c1d3eefd955aaa7",
+      "digestConcordant": true,
+      "classification": "VERIFIED_PUBLIC_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exceptionAdded": false
+    },
+    {
+      "path": "docs/audit/copilot-phase4/F22.json",
+      "line": 350,
+      "rule": "generic-api-key",
+      "sourcePath": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/evidence/authz.json",
+      "verifiedAgainstGitBlob": "ce5d2815ce185030aebccfc56c1d3eefd955aaa7",
+      "digestConcordant": true,
+      "classification": "VERIFIED_PUBLIC_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exceptionAdded": false
+    },
+    {
+      "path": "docs/audit/copilot-phase4/F22.json",
+      "line": 349,
+      "rule": "generic-api-key",
+      "sourcePath": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/evidence/authz.command.json",
+      "verifiedAgainstGitBlob": "ce5d2815ce185030aebccfc56c1d3eefd955aaa7",
+      "digestConcordant": true,
+      "classification": "VERIFIED_PUBLIC_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exceptionAdded": false
+    },
+    {
+      "path": "docs/audit/copilot-phase4/F22.json",
+      "line": 344,
+      "rule": "generic-api-key",
+      "sourcePath": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/evidence/access.command.json",
+      "verifiedAgainstGitBlob": "ce5d2815ce185030aebccfc56c1d3eefd955aaa7",
+      "digestConcordant": true,
+      "classification": "VERIFIED_PUBLIC_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exceptionAdded": false
+    },
+    {
+      "path": "docs/audit/copilot-phase4/F22.json",
+      "line": 336,
+      "rule": "generic-api-key",
+      "sourcePath": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/check-access.py",
+      "verifiedAgainstGitBlob": "ce5d2815ce185030aebccfc56c1d3eefd955aaa7",
+      "digestConcordant": true,
+      "classification": "VERIFIED_PUBLIC_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exceptionAdded": false
+    }
+  ],
+  "verdict": "GITLEAKS_STILL_FAILED; twenty source-digest pairs inspected across runs, NOT a complete finding inventory; no broader exception or scan bypass added"
+}

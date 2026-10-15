@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { X, Car, Plus, Calendar, RefreshCw, Check, AlertCircle, Euro } from 'lucide-react'
+import { X, Car, Plus, Calendar, RefreshCw, Check, AlertCircle, Euro, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format, parseISO, addDays, startOfWeek, eachDayOfInterval, isWithinInterval, differenceInDays } from 'date-fns'
 import type { Locale } from 'date-fns'
@@ -9,6 +9,17 @@ import { CAR_DATABASE } from '@/lib/car-database'
 import { DateField } from '@/components/DateField'
 import { useTranslation } from '@/lib/i18n'
 import { dateLocale } from '@/lib/i18n/date-locale'
+import { formatEuros, fromCents, lineTotalCentsFromScaled, toScaled } from '@/lib/money'
+
+/**
+ * Durée facturée d'un prêt, en jours entiers, plancher à 1 : un prêt rendu le
+ * jour même reste facturé une journée. Extrait pour que l'estimation affichée et
+ * son libellé s'appuient sur la MÊME valeur — ils étaient recalculés deux fois.
+ */
+function joursEstimes(debut: string, fin: string): number {
+  const d = differenceInDays(parseISO(fin), parseISO(debut))
+  return Number.isFinite(d) ? Math.max(1, d) : 1
+}
 
 // ── Types (match actual API field names) ─────────────────────────────────────
 interface LoanerVehicle {
@@ -95,6 +106,10 @@ export default function LoanerPanel({ onClose }: { onClose: () => void }) {
   const [savingRes, setSavingRes]       = useState(false)
   const [weekStart, setWeekStart]       = useState(startOfWeek(new Date(), { weekStartsOn: 1 }))
   const [error, setError]               = useState<string | null>(null)
+  /** Véhicule dont une action est en cours — évite le double clic. */
+  const [vehiculeOccupe, setVehiculeOccupe] = useState<string | null>(null)
+  /** Véhicule pour lequel le serveur a refusé la suppression et conseillé la désactivation. */
+  const [desactivationProposee, setDesactivationProposee] = useState<string | null>(null)
 
   // Make/model autocomplete state
   const [makeSuggestions, setMakeSuggestions] = useState<string[]>([])
@@ -116,15 +131,23 @@ export default function LoanerPanel({ onClose }: { onClose: () => void }) {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [vRes, rRes] = await Promise.all([
-      fetch('/api/loaner-vehicles'),
-      fetch(`/api/loaner-reservations?startDate=${format(weekStart, 'yyyy-MM-dd')}&endDate=${format(addDays(weekStart, 6), 'yyyy-MM-dd')}`),
-    ])
-    const vData = await vRes.json()
-    const rData = await rRes.json()
-    setVehicles(Array.isArray(vData) ? vData : [])
-    setReservations(Array.isArray(rData) ? rData : [])
-    setLoading(false)
+    setError(null)
+    try {
+      const [vRes, rRes] = await Promise.all([
+        fetch('/api/loaner-vehicles'),
+        fetch(`/api/loaner-reservations?startDate=${format(weekStart, 'yyyy-MM-dd')}&endDate=${format(addDays(weekStart, 6), 'yyyy-MM-dd')}`),
+      ])
+      const vData = await vRes.json()
+      const rData = await rRes.json()
+      setVehicles(Array.isArray(vData) ? vData : [])
+      setReservations(Array.isArray(rData) ? rData : [])
+    } catch {
+      // Réseau coupé / JSON invalide : on affiche une erreur au lieu de laisser
+      // le spinner bloqué indéfiniment (setLoading(false) était inatteignable).
+      setError('Impossible de charger les véhicules de prêt. Réessayez.')
+    } finally {
+      setLoading(false)
+    }
   }, [weekStart])
 
   useEffect(() => { load() }, [load])
@@ -167,6 +190,63 @@ export default function LoanerPanel({ onClose }: { onClose: () => void }) {
     } catch (e: any) {
       setError(e.message ?? t.uiNetworkError)
     } finally { setSavingVehicle(false) }
+  }
+
+  /**
+   * Retire un véhicule de la flotte — ou explique pourquoi c'est refusé
+   * (GF-DUR-029).
+   *
+   * `PATCH` et `DELETE /api/loaner-vehicles/[id]` existaient, avec un garde
+   * soigneux côté serveur, et AUCUN écran ne les appelait : un garage qui
+   * saisissait une plaque de travers gardait la ligne fautive pour toujours, et
+   * une voiture vendue restait proposée à la réservation.
+   *
+   * Le serveur refuse la suppression dès qu'il existe un prêt à l'historique —
+   * l'effacer emporterait les kilométrages, états des lieux et cautions, c'est-à-
+   * dire les pièces qui tranchent un litige. Son message dit « désactivez-le ».
+   * L'écran doit donc PROPOSER cette désactivation dans la foulée : renvoyer un
+   * conseil sans le bouton correspondant serait une impasse polie.
+   */
+  async function supprimerVehicule(v: LoanerVehicle) {
+    if (!window.confirm(`Supprimer définitivement « ${v.name} » (${v.licensePlate}) ?`)) return
+    setError(null)
+    setVehiculeOccupe(v.id)
+    try {
+      const res = await fetch(`/api/loaner-vehicles/${v.id}`, { method: 'DELETE' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(data.error ?? 'Suppression refusée.')
+        // Le serveur distingue « réservations vives » (attendre) de « historique »
+        // (désactiver). Seul le second se règle par la désactivation.
+        if (data.code === 'VEHICLE_HAS_HISTORY') setDesactivationProposee(v.id)
+        return
+      }
+      await load()
+    } catch {
+      setError(t.uiNetworkError)
+    } finally { setVehiculeOccupe(null) }
+  }
+
+  /** Sort le véhicule des listes SANS toucher à son historique de prêts. */
+  async function basculerActivite(v: LoanerVehicle) {
+    setError(null)
+    setVehiculeOccupe(v.id)
+    try {
+      const res = await fetch(`/api/loaner-vehicles/${v.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !v.isActive }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error ?? 'Modification refusée.')
+        return
+      }
+      setDesactivationProposee(null)
+      await load()
+    } catch {
+      setError(t.uiNetworkError)
+    } finally { setVehiculeOccupe(null) }
   }
 
   async function saveReservation() {
@@ -371,6 +451,14 @@ export default function LoanerPanel({ onClose }: { onClose: () => void }) {
                       <span className="font-mono text-blue-400 text-sm font-semibold">{v.licensePlate}</span>
                       <span className="text-white text-sm">{v.name}</span>
                       {v.color && <span className="text-xs text-slate-500">{v.color}</span>}
+                      {/* `isActive` était porté par le composant et n'apparaissait
+                          nulle part : un véhicule retiré de la flotte semblait
+                          disponible. */}
+                      {!v.isActive && (
+                        <span className="rounded-full bg-slate-700/60 px-2 py-0.5 text-[10px] font-bold text-slate-400">
+                          hors flotte
+                        </span>
+                      )}
                     </div>
                     {v.make && <p className="text-xs text-slate-500 mb-1">{v.make}{v.model ? ` ${v.model}` : ''}</p>}
                     {current ? (
@@ -386,15 +474,57 @@ export default function LoanerPanel({ onClose }: { onClose: () => void }) {
                       </div>
                     )}
                   </div>
-                  {current && (
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {current && (
+                      <button
+                        onClick={() => returnVehicle(current.id)}
+                        className="px-2 py-1 text-xs rounded-lg border border-white/10 text-slate-400 hover:border-emerald-500/40 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                      >
+                        {t.lnReturn}
+                      </button>
+                    )}
+                    {/* Retirer un véhicule de la flotte sans effacer ses prêts.
+                        Le serveur l'offrait ; aucun bouton ne l'appelait. */}
                     <button
-                      onClick={() => returnVehicle(current.id)}
-                      className="px-2 py-1 text-xs rounded-lg border border-white/10 text-slate-400 hover:border-emerald-500/40 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                      onClick={() => basculerActivite(v)}
+                      disabled={vehiculeOccupe === v.id}
+                      title={v.isActive
+                        ? 'Retirer de la flotte — les prêts passés sont conservés'
+                        : 'Remettre dans la flotte'}
+                      className="px-2 py-1 text-xs rounded-lg border border-white/10 text-slate-400 hover:border-amber-500/40 hover:text-amber-400 hover:bg-amber-500/10 transition-colors disabled:opacity-40"
                     >
-                      {t.lnReturn}
+                      {v.isActive ? 'Retirer' : 'Remettre'}
                     </button>
-                  )}
+                    <button
+                      onClick={() => supprimerVehicule(v)}
+                      disabled={vehiculeOccupe === v.id}
+                      title="Supprimer définitivement"
+                      className="p-1 rounded-lg border border-white/10 text-slate-500 hover:border-red-500/40 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
+
+                {/* Le serveur a refusé la suppression et conseillé la
+                    désactivation : on met le bouton correspondant SOUS le
+                    conseil. Renvoyer l'un sans l'autre serait une impasse. */}
+                {desactivationProposee === v.id && v.isActive && (
+                  <div className="mt-2 flex items-center gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                    <span className="flex-1 text-xs text-amber-300">
+                      Son historique de prêts doit être conservé. Vous pouvez le retirer de la flotte :
+                      il ne sera plus proposé, mais ses prêts passés resteront consultables.
+                    </span>
+                    <button
+                      onClick={() => basculerActivite(v)}
+                      disabled={vehiculeOccupe === v.id}
+                      className="shrink-0 rounded-lg bg-amber-600/80 px-2.5 py-1 text-xs font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
+                    >
+                      Retirer de la flotte
+                    </button>
+                  </div>
+                )}
               </div>
             )
           })}
@@ -568,7 +698,11 @@ export default function LoanerPanel({ onClose }: { onClose: () => void }) {
                     </div>
                     {resForm.dailyRate && resForm.startDate && resForm.endDate && (
                       <div className="col-span-2 text-xs text-emerald-400 bg-emerald-500/10 rounded-lg px-3 py-2">
-                        {t.lnEstTotal} {Math.max(1, differenceInDays(parseISO(resForm.endDate), parseISO(resForm.startDate)))} {t.lnDayShort} × {resForm.dailyRate}€ = <strong>{Math.max(1, differenceInDays(parseISO(resForm.endDate), parseISO(resForm.startDate))) * Number(resForm.dailyRate)}€</strong>
+                        {/* Le total était un produit flottant BRUT : 3 × 19,90 s'affichait
+                            « 59.699999999999996€ » au comptoir, au moment même où l'on
+                            annonce le prix au client. Passage par la couche monétaire
+                            entière (dix-millièmes) puis rendu au centime. */}
+                        {t.lnEstTotal} {joursEstimes(resForm.startDate, resForm.endDate)} {t.lnDayShort} × {resForm.dailyRate}€ = <strong>{formatEuros(fromCents(lineTotalCentsFromScaled(toScaled(Number(resForm.dailyRate) || 0), toScaled(joursEstimes(resForm.startDate, resForm.endDate)))))}</strong>
                         {resForm.depositAmount ? ` + ${t.lnPlusDeposit} ${resForm.depositAmount}€` : ''}
                       </div>
                     )}

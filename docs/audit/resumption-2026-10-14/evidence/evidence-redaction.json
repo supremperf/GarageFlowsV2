@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-14T14:10:11.242908+00:00",
+  "timezone": "Europe/Paris",
+  "rows": [
+    {
+      "proof": "gitleaks-api-assets.json",
+      "originalSha256": "1337701df19a0ce7bcbc34b6b832fa1932d78f522d27302283e3920aa28186c8",
+      "sanitizedSha256": "fa8aa9c2073d5a89f795f871c46168a4043380c62f075a1d370b7fb01114298d",
+      "originalPreservedInRestrictedIgnoredCache": true,
+      "reason": "Ephemeral official download URLs contained signed bearer queries; remove from tracked proof without publishing them."
+    },
+    {
+      "proof": "gitleaks-api-download.log",
+      "originalSha256": "b623cffcc88048235d442a31d14649640486e36e0d6dc89648bc227a7fcc3fcf",
+      "sanitizedSha256": "af43f791952b181ca37278421ab018302093a6cb1e61cf589b7f0de71859cf59",
+      "originalPreservedInRestrictedIgnoredCache": true,
+      "reason": "Ephemeral official download URLs contained signed bearer queries; remove from tracked proof without publishing them."
+    }
+  ],
+  "oldFollowupEvidenceUntouched": true
+}

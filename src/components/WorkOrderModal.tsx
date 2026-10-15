@@ -1,12 +1,31 @@
 'use client'
+import { computeTotals, lineCents, fromCents } from '@/lib/money'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Plus, Trash2, Printer, PenLine, Check, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { messageErreur } from '@/lib/erreur-affichable'
 import { useTranslation } from '@/lib/i18n'
+import toast from 'react-hot-toast'
+import { printHtmlDocument, escapeHtml as e, safeImageSrc } from '@/lib/pdf/print-html'
+import { AddressAutocomplete } from '@/components/AddressAutocomplete'
+import { PartAutocomplete } from '@/components/invoice/PartAutocomplete'
 
 interface WorkLine { description: string; durationMin: number; unitPrice: number }
-interface PartLine  { name: string; reference: string; qty: number; unitPrice: number }
+interface PartLine  {
+  name: string
+  reference: string
+  qty: number
+  unitPrice: number
+  /**
+   * Pièce du catalogue à laquelle la ligne est rattachée, si l'utilisateur en a
+   * choisi une. `partsJson` étant un blob libre, aucune migration n'est requise.
+   * Ce lien ne consomme AUCUN stock : un ordre de réparation est prévisionnel,
+   * comme un devis — seules la validation d'une facture et la pose d'une pièce
+   * sur une intervention décrémentent l'inventaire.
+   */
+  partId?: string | null
+}
 
 interface LaborOp { id: string; name: string; category: string | null; durationMin: number; unitPrice: number }
 
@@ -169,10 +188,17 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
   const [works, setWorks] = useState<WorkLine[]>([{ description: '', durationMin: 30, unitPrice: 0 }])
   const [parts, setParts] = useState<PartLine[]>([])
 
-  const totalWorksHT = works.reduce((s, w) => s + (w.unitPrice || 0), 0)
-  const totalPartsHT = parts.reduce((s, p) => s + (p.qty || 0) * (p.unitPrice || 0), 0)
-  const totalHT  = Math.round((totalWorksHT + totalPartsHT) * 100) / 100
-  const totalTTC = Math.round(totalHT * (1 + taxRate / 100) * 100) / 100
+  // Totaux calculés par la couche financière centrale (centimes exacts,
+  // même règle que le serveur) — plus aucune arithmétique flottante locale.
+  const woTotals = computeTotals(
+    [
+      ...works.map(w => ({ quantity: 1, unitPrice: w.unitPrice || 0 })),
+      ...parts.map(p => ({ quantity: p.qty || 0, unitPrice: p.unitPrice || 0 })),
+    ],
+    taxRate,
+  )
+  const totalHT  = woTotals.totalHT
+  const totalTTC = woTotals.totalTTC
 
   // Load existing if editing
   useEffect(() => {
@@ -183,8 +209,10 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
       setVehicleMake(wo.vehicleMake ?? ''); setVehicleModel(wo.vehicleModel ?? '')
       setLicensePlate(wo.licensePlate ?? ''); setMileage(wo.mileage?.toString() ?? '')
       setVin(wo.vin ?? ''); setNotes(wo.notes ?? ''); setTaxRate(wo.taxRate ?? 20)
-      setWorks(JSON.parse(wo.worksJson || '[]'))
-      setParts(JSON.parse(wo.partsJson || '[]'))
+      // L'API expose works/parts en VUE EUROS dérivée des entiers exacts (v2) —
+      // jamais de JSON.parse du blob persistant côté client.
+      setWorks(Array.isArray(wo.works) ? wo.works : [])
+      setParts(Array.isArray(wo.parts) ? wo.parts : [])
       setSavedNumber(wo.number); setExistingSig(wo.signatureData ?? null)
     }).catch(() => {})
   }, [initialId])
@@ -213,6 +241,17 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
       setSavedId(wo.id); setSavedNumber(wo.number)
       onSaved?.({ id: wo.id, number: wo.number })
       return wo.id
+    } catch (e: unknown) {
+      // ── `finally` sans `catch` : le rejet partait dans le vide (§82) ────────
+      // Le serveur refusait l'enregistrement, la promesse était rejetée, et
+      // RIEN n'était dit. Dans la PWA, l'utilisateur reclique, croit à une
+      // lenteur, ferme la modale — la saisie est perdue. Dans l'application
+      // packagée, c'est l'inverse : le gestionnaire `unhandledrejection` injecté
+      // par Electron (electron/main.js) pose un bandeau de diagnostic plein
+      // écran, sans bouton de fermeture, affichant le texte brut de la réponse
+      // serveur jusqu'au redémarrage. Les deux cas disparaissent avec ce `catch`.
+      toast.error(messageErreur(e, 'Enregistrement refusé par le serveur'))
+      return null
     } finally { setSaving(false) }
   }
 
@@ -226,6 +265,10 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
       const res = await fetch(`/api/work-orders/${id}/sign`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ signatureData: sig }) })
       if (!res.ok) throw new Error(await res.text())
       setExistingSig(sig)
+    } catch (e: unknown) {
+      // Même défaut sur la signature : le client signait, rien ne se passait —
+      // et l'OR restait non signé sans que personne le sache.
+      toast.error(messageErreur(e, 'Signature non enregistrée'))
     } finally { setSigning(false) }
   }
 
@@ -248,16 +291,21 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
         .footer{margin-top:20px;font-size:8pt;color:#666;border-top:1px solid #eee;padding-top:10px}
         @media print{body{padding:10mm}}
       </style>`
-    const worksRows = works.map(w => `<tr><td>${w.description}</td><td>${fmtDuration(w.durationMin)}</td><td>${fmt(w.unitPrice)}</td></tr>`).join('')
-    const partsRows = parts.map(p => `<tr><td>${p.name}</td><td>${p.reference}</td><td>${p.qty}</td><td>${fmt(p.unitPrice)}</td><td>${fmt(p.qty * p.unitPrice)}</td></tr>`).join('')
-    const sigHtml = existingSig ? `<img src="${existingSig}" style="max-height:80px" />` : '<div style="height:60px"></div>'
+    // Toute donnée SAISIE est échappée : le document est écrit dans une iframe
+    // de même origine (GF31-AUD-011).
+    const worksRows = works.map(w => `<tr><td>${e(w.description)}</td><td>${fmtDuration(w.durationMin)}</td><td>${fmt(w.unitPrice)}</td></tr>`).join('')
+    const partsRows = parts.map(p => `<tr><td>${e(p.name)}</td><td>${e(p.reference)}</td><td>${e(p.qty)}</td><td>${fmt(p.unitPrice)}</td><td>${fmt(fromCents(lineCents(p.unitPrice, p.qty)))}</td></tr>`).join('')
+    // La signature n'est admise que sous forme d'image inline produite par
+    // l'application ; tout autre schéma d'URL est rejeté.
+    const sigSrc = safeImageSrc(existingSig)
+    const sigHtml = sigSrc ? `<img src="${sigSrc}" style="max-height:80px" />` : '<div style="height:60px"></div>'
 
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${t.woTitle} ${savedNumber}</title>${style}</head><body>
-      <h1>${t.woPrintTitle} — ${savedNumber || t.woDraft}</h1>
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${t.woTitle} ${e(savedNumber)}</title>${style}</head><body>
+      <h1>${t.woPrintTitle} — ${e(savedNumber) || t.woDraft}</h1>
       <p style="color:#666;font-size:9pt">${t.woIssuedOn} ${new Date().toLocaleDateString('fr-FR')}</p>
       <div class="row" style="margin-top:12px">
-        <div class="box"><div class="label">${t.vmClient}</div><div class="val">${clientName}<br>${clientPhone || ''}<br>${clientAddress || ''}</div></div>
-        <div class="box"><div class="label">${t.jmVehicle}</div><div class="val">${vehicleMake} ${vehicleModel}<br>${t.woPlateShort} ${licensePlate || '—'}<br>${t.woMileageLabel} ${mileage ? Number(mileage).toLocaleString() + ' km' : '—'}</div></div>
+        <div class="box"><div class="label">${t.vmClient}</div><div class="val">${e(clientName)}<br>${e(clientPhone)}<br>${e(clientAddress)}</div></div>
+        <div class="box"><div class="label">${t.jmVehicle}</div><div class="val">${e(vehicleMake)} ${e(vehicleModel)}<br>${t.woPlateShort} ${e(licensePlate) || '—'}<br>${t.woMileageLabel} ${mileage ? Number(mileage).toLocaleString() + ' km' : '—'}</div></div>
       </div>
       <h2>${t.woWorksPlanned}</h2>
       <table><thead><tr><th>${t.woColDesc}</th><th>${t.woDuration}</th><th>${t.woColUnitHT}</th></tr></thead><tbody>${worksRows}</tbody></table>
@@ -267,15 +315,14 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
         <tr><td>${t.woVAT} ${taxRate}%</td><td style="text-align:right">${fmt(totalTTC - totalHT)}</td></tr>
         <tr class="total-row"><td>${t.woTotalTTC}</td><td style="text-align:right">${fmt(totalTTC)}</td></tr>
       </table>
-      ${notes ? `<h2>${t.uiNotes}</h2><p>${notes}</p>` : ''}
+      ${notes ? `<h2>${t.uiNotes}</h2><p>${e(notes)}</p>` : ''}
       <h2>${t.woClientSignature}</h2>
       <p style="font-size:9pt">${t.woReadApproved}</p>
       <div class="sig-box">${sigHtml}</div>
       <div class="footer">${t.woAgreementFooter}</div>
     </body></html>`
 
-    const w = window.open('', '_blank')
-    if (w) { w.document.write(html); w.document.close(); w.print() }
+    printHtmlDocument(html, t.woPrintFailed, (m) => toast.error(m))
   }
 
   const tabs = [
@@ -321,13 +368,25 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-3">
                 <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t.vmClient}</h3>
-                {([[`${t.woName} *`, clientName, setClientName], [t.uiPhone, clientPhone, setClientPhone], [t.uiEmail, clientEmail, setClientEmail], [t.woAddress, clientAddress, setClientAddress]] as const).map(([lbl, val, set]) => (
+                {([[`${t.woName} *`, clientName, setClientName], [t.uiPhone, clientPhone, setClientPhone], [t.uiEmail, clientEmail, setClientEmail]] as const).map(([lbl, val, set]) => (
                   <div key={lbl}>
                     <label className="text-xs text-slate-500 mb-1 block">{lbl}</label>
                     <input value={val} onChange={e => (set as (v: string) => void)(e.target.value)}
                       className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                 ))}
+                {/* Adresse avec propositions (GF-022) — elle est IMPRIMÉE sur
+                    l'ordre de réparation : une coquille ne se voyait qu'au
+                    retour du courrier. */}
+                <div>
+                  <label className="text-xs text-slate-500 mb-1 block" htmlFor="gf-adresse-or">{t.woAddress}</label>
+                  <AddressAutocomplete
+                    id="gf-adresse-or"
+                    value={clientAddress}
+                    onChange={setClientAddress}
+                    className="w-full bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
               <div className="space-y-3">
                 <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t.jmVehicle}</h3>
@@ -405,9 +464,30 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
               </div>
               {parts.map((p, i) => (
                 <div key={i} className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-3 space-y-2">
+                  {/* ── La pièce se choisit dans le STOCK (GF-040) ─────────────
+                      Le nom et la référence étaient deux champs libres : aucun
+                      rattachement au catalogue, aucun prix repris, aucune
+                      disponibilité affichée. Le magasinier recopiait une
+                      référence à la main pendant que la même pièce existait à
+                      deux mètres. La saisie libre reste possible — un ordre de
+                      réparation est un document PRÉVISIONNEL et ne consomme
+                      délibérément aucun stock. */}
                   <div className="flex gap-2">
-                    <input value={p.name} onChange={e => setParts(ps => ps.map((x, j) => j === i ? { ...x, name: e.target.value } : x))}
-                      placeholder={t.woPartName} className="flex-1 bg-white/[0.05] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <PartAutocomplete
+                      value={p.name}
+                      onChange={v => setParts(ps => ps.map((x, j) => j === i ? { ...x, name: v } : x))}
+                      onSelectPart={piece => setParts(ps => ps.map((x, j) => j === i ? {
+                        ...x,
+                        partId: piece.id,
+                        name: piece.name,
+                        reference: piece.reference ?? '',
+                        unitPrice: piece.unitPrice,
+                      } : x))}
+                      onClearPart={() => setParts(ps => ps.map((x, j) => j === i ? { ...x, partId: null } : x))}
+                      linkedPartId={p.partId}
+                      placeholder={t.woPartName}
+                      className="flex-1 bg-white/[0.05] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
                     <input value={p.reference} onChange={e => setParts(ps => ps.map((x, j) => j === i ? { ...x, reference: e.target.value } : x))}
                       placeholder={t.stkReference} className="w-32 bg-white/[0.05] border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     <button onClick={() => setParts(ps => ps.filter((_, j) => j !== i))} className="text-slate-600 hover:text-red-400 p-1"><Trash2 className="w-4 h-4" /></button>
@@ -425,7 +505,7 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
                     </div>
                     <div className="flex flex-col justify-end">
                       <span className="text-xs text-slate-500">{t.woTotal}</span>
-                      <span className="text-sm text-white font-medium">{fmt(p.qty * p.unitPrice)}</span>
+                      <span className="text-sm text-white font-medium">{fmt(fromCents(lineCents(p.unitPrice, p.qty)))}</span>
                     </div>
                   </div>
                 </div>

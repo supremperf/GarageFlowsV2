@@ -1,3 +1,8 @@
+<!-- doc-status: historique -->
+> **⚠️ DOCUMENT HISTORIQUE — instantané daté, ne fait plus foi.**
+> Ne pas utiliser comme source de vérité pour un déploiement actuel.
+> Source de vérité : **[./PRODUCTION-READINESS.md](./PRODUCTION-READINESS.md)**.
+
 # GarageFlow — Audit Enterprise 360° & Validation de Production
 
 _Date : 2026-07-29 · Périmètre : `GarageFlowsV2` (app desktop Electron + Next.js) et `garagesite3` (control-plane SaaS / site + API)._

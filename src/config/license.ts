@@ -15,8 +15,11 @@ export const LICENSE_CONFIG = {
   /** First revocation check delay after startup */
   firstCheckDelayMs: 60 * 1_000,            // 1 minute
 
-  /** HWID tolerance: minimum matching hex chars out of 64 (75%) */
-  hwidMinMatch: 48,
+  // Note : aucune « tolérance HWID » n'est appliquée. Le lien matériel se fait
+  // par comparaison STRICTE à temps constant (src/lib/license/verify.ts,
+  // electron/main.js). L'ancienne clé `hwidMinMatch` (48/64 = 75 %) était morte
+  // et contredisait ce comportement — retirée pour éviter tout recâblage par
+  // erreur qui affaiblirait le lien d'appareil.
 
   /** Cookie names */
   cookies: {

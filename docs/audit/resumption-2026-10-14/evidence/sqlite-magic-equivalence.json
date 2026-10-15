@@ -1,0 +1,7 @@
+{
+  "beforeSha256": "620affb42d8b82fe11a432d217ab1d1ff71952392da3eed112e3b730a0efad64",
+  "afterSha256": "5da826b4fb566cbd2f5b712d9da1c8b3c0ca305824e2191846fee801f94beb2d",
+  "sameRuntimeMagic": true,
+  "runtimeMagicHex": "53514c69746520666f726d6174203300",
+  "reason": "Literal NUL → escaped JS representation only; removes Semgrep partial parse at line18 without changing SQLite signature."
+}

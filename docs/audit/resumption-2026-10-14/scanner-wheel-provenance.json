@@ -1,0 +1,662 @@
+[
+  {
+    "name": "annotated-types",
+    "version": "0.8.0",
+    "file": "annotated_types-0.8.0-py3-none-any.whl",
+    "sha256": "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0",
+    "upstreamMetadata": "https://pypi.org/pypi/annotated-types/0.8.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "anyio",
+    "version": "4.15.1",
+    "file": "anyio-4.15.1-py3-none-any.whl",
+    "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101",
+    "upstreamMetadata": "https://pypi.org/pypi/anyio/4.15.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/12/b8/4bd346e22b28902df4d651910f5242c28d84e4a5c2435ca5c3f797ed7e2e/anyio-4.15.1-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "attrs",
+    "version": "26.1.0",
+    "file": "attrs-26.1.0-py3-none-any.whl",
+    "sha256": "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309",
+    "upstreamMetadata": "https://pypi.org/pypi/attrs/26.1.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/64/b4/17d4b0b2a2dc85a6df63d1157e028ed19f90d4cd97c36717afef2bc2f395/attrs-26.1.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "boltons",
+    "version": "21.0.0",
+    "file": "boltons-21.0.0-py2.py3-none-any.whl",
+    "sha256": "b9bb7b58b2b420bbe11a6025fdef6d3e5edc9f76a42fb467afe7ca212ef9948b",
+    "upstreamMetadata": "https://pypi.org/pypi/boltons/21.0.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/f7/a7/1a31561d10a089fcb46fe286766dd4e053a12f6e23b4fd1c26478aff2475/boltons-21.0.0-py2.py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "bracex",
+    "version": "3.1",
+    "file": "bracex-3.1-py3-none-any.whl",
+    "sha256": "52002b8455658c21f3b6e5eb0f662b57ec9085f42709e58bc86eeab5bc4c37d7",
+    "upstreamMetadata": "https://pypi.org/pypi/bracex/3.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/05/79/c1ba46e1acd235affd36ce1d3346320ddcda663c9482a9e5f34727db1d11/bracex-3.1-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "certifi",
+    "version": "2026.7.22",
+    "file": "certifi-2026.7.22-py3-none-any.whl",
+    "sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775",
+    "upstreamMetadata": "https://pypi.org/pypi/certifi/2026.7.22/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "cffi",
+    "version": "2.1.1",
+    "file": "cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+    "sha256": "34e261f78cb6ceaaa36f42f2613f4380d94d9c759a9c73c769ee6e0247364632",
+    "upstreamMetadata": "https://pypi.org/pypi/cffi/2.1.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/f7/a4/4399daaf8f7dfee9d7c3327fdb0426ee041cc63edc358b93911ceb2bfc7a/cffi-2.1.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "charset-normalizer",
+    "version": "3.5.2",
+    "file": "charset_normalizer-3.5.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+    "sha256": "211d5a3eb6af8f513b8d4ca19a8c1b7accab1b5f0d3175f9826b03c1a920dc1f",
+    "upstreamMetadata": "https://pypi.org/pypi/charset-normalizer/3.5.2/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/e4/ed/cf505d3011ffceb12c2067a7a5d3cfe92b875d4d44bb0ff0d69375e2c184/charset_normalizer-3.5.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "click",
+    "version": "8.4.2",
+    "file": "click-8.4.2-py3-none-any.whl",
+    "sha256": "e6f9f66136c816745b9d65817da91d61d957fb16e02e4dcd0552553c5a197b76",
+    "upstreamMetadata": "https://pypi.org/pypi/click/8.4.2/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/fb/e2/79c688af8b210d232694e31e59da9f6ec747bae31c3f5946e4e9b98860d5/click-8.4.2-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "click-option-group",
+    "version": "0.5.9",
+    "file": "click_option_group-0.5.9-py3-none-any.whl",
+    "sha256": "ad2599248bd373e2e19bec5407967c3eec1d0d4fc4a5e77b08a0481e75991080",
+    "upstreamMetadata": "https://pypi.org/pypi/click-option-group/0.5.9/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/75/45/54bb2d8d4138964a94bef6e9afe48b0be4705ba66ac442ae7d8a8dc4ffef/click_option_group-0.5.9-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "colorama",
+    "version": "0.4.6",
+    "file": "colorama-0.4.6-py2.py3-none-any.whl",
+    "sha256": "4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6",
+    "upstreamMetadata": "https://pypi.org/pypi/colorama/0.4.6/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "cryptography",
+    "version": "50.0.2",
+    "file": "cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl",
+    "sha256": "9dab55f57c74c3cad24c323bacbbd04be4705ba6eb0d92e920b1fc4837ed5079",
+    "upstreamMetadata": "https://pypi.org/pypi/cryptography/50.0.2/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/d3/69/2c833a049475e0a3444e94c7d0aca0aa51d166374a449b09e92ac98138de/cryptography-50.0.2-cp311-abi3-manylinux_2_34_x86_64.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "exceptiongroup",
+    "version": "1.2.2",
+    "file": "exceptiongroup-1.2.2-py3-none-any.whl",
+    "sha256": "3111b9d131c238bec2f8f516e123e14ba243563fb135d3fe885990585aa7795b",
+    "upstreamMetadata": "https://pypi.org/pypi/exceptiongroup/1.2.2/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/02/cc/b7e31358aac6ed1ef2bb790a9746ac2c69bcb3c8588b41616914eb106eaf/exceptiongroup-1.2.2-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "face",
+    "version": "26.0.1",
+    "file": "face-26.0.1-py3-none-any.whl",
+    "sha256": "ab0a83c37c9789dce658a67a9a80eafaa113c9ec37c5a9d950ff5480542a062d",
+    "upstreamMetadata": "https://pypi.org/pypi/face/26.0.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/0a/24/0159c48d19c8b05e6969ee809bbbecc5a5c863f7e38c9327e2c63cb06f0f/face-26.0.1-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "glom",
+    "version": "25.12.0",
+    "file": "glom-25.12.0-py3-none-any.whl",
+    "sha256": "b9f21e77f71a6576a43864e85066b8cc3f0f778d0d50961563f8981377a6dcb1",
+    "upstreamMetadata": "https://pypi.org/pypi/glom/25.12.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/a7/e6/4129d9a3baa72d747533bb33376543ccadd9a7f9944e5a6e3ae2e245f5d6/glom-25.12.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "googleapis-common-protos",
+    "version": "1.75.5",
+    "file": "googleapis_common_protos-1.75.5-py3-none-any.whl",
+    "sha256": "d7285525c23039db98f2463e6d5a4f9b958b94d497f03a844ece3259c4e72d5d",
+    "upstreamMetadata": "https://pypi.org/pypi/googleapis-common-protos/1.75.5/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/65/b9/6b29500a1c581ff4d77fd83c6568d068bee06f1b139fb6eb0a4f2d4bce8a/googleapis_common_protos-1.75.5-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "h11",
+    "version": "0.16.0",
+    "file": "h11-0.16.0-py3-none-any.whl",
+    "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+    "upstreamMetadata": "https://pypi.org/pypi/h11/0.16.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "httpcore",
+    "version": "1.0.9",
+    "file": "httpcore-1.0.9-py3-none-any.whl",
+    "sha256": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55",
+    "upstreamMetadata": "https://pypi.org/pypi/httpcore/1.0.9/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/7e/f5/f66802a942d491edb555dd61e3a9961140fd64c90bce1eafd741609d334d/httpcore-1.0.9-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "httpx",
+    "version": "0.28.1",
+    "file": "httpx-0.28.1-py3-none-any.whl",
+    "sha256": "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad",
+    "upstreamMetadata": "https://pypi.org/pypi/httpx/0.28.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "httpx-sse",
+    "version": "0.4.3",
+    "file": "httpx_sse-0.4.3-py3-none-any.whl",
+    "sha256": "0ac1c9fe3c0afad2e0ebb25a934a59f4c7823b60792691f779fad2c5568830fc",
+    "upstreamMetadata": "https://pypi.org/pypi/httpx-sse/0.4.3/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/d2/fd/6668e5aec43ab844de6fc74927e155a3b37bf40d7c3790e49fc0406b6578/httpx_sse-0.4.3-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "idna",
+    "version": "3.20",
+    "file": "idna-3.20-py3-none-any.whl",
+    "sha256": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+    "upstreamMetadata": "https://pypi.org/pypi/idna/3.20/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "importlib-metadata",
+    "version": "8.7.1",
+    "file": "importlib_metadata-8.7.1-py3-none-any.whl",
+    "sha256": "5a1f80bf1daa489495071efbb095d75a634cf28a8bc299581244063b53176151",
+    "upstreamMetadata": "https://pypi.org/pypi/importlib-metadata/8.7.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/fa/5e/f8e9a1d23b9c20a551a8a02ea3637b4642e22c2626e3a13a9a29cdea99eb/importlib_metadata-8.7.1-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "jsonschema",
+    "version": "4.25.1",
+    "file": "jsonschema-4.25.1-py3-none-any.whl",
+    "sha256": "3fba0169e345c7175110351d456342c364814cfcf3b964ba4587f22915230a63",
+    "upstreamMetadata": "https://pypi.org/pypi/jsonschema/4.25.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/bf/9c/8c95d856233c1f82500c2450b8c68576b4cf1c871db3afac5c34ff84e6fd/jsonschema-4.25.1-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "jsonschema-specifications",
+    "version": "2025.9.1",
+    "file": "jsonschema_specifications-2025.9.1-py3-none-any.whl",
+    "sha256": "98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe",
+    "upstreamMetadata": "https://pypi.org/pypi/jsonschema-specifications/2025.9.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/41/45/1a4ed80516f02155c51f51e8cedb3c1902296743db0bbc66608a0db2814f/jsonschema_specifications-2025.9.1-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "markdown-it-py",
+    "version": "4.2.0",
+    "file": "markdown_it_py-4.2.0-py3-none-any.whl",
+    "sha256": "9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a",
+    "upstreamMetadata": "https://pypi.org/pypi/markdown-it-py/4.2.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "mcp",
+    "version": "1.29.0",
+    "file": "mcp-1.29.0-py3-none-any.whl",
+    "sha256": "f5a075bb611f23d6f4d080c6a1699fa62772eebc562ba9e66b306ddde1c755f7",
+    "upstreamMetadata": "https://pypi.org/pypi/mcp/1.29.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/01/c8/248b201f6d753d69fd5d6506011abbb35a946d9142b2ae311a948fd0be3d/mcp-1.29.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "mdurl",
+    "version": "0.1.2",
+    "file": "mdurl-0.1.2-py3-none-any.whl",
+    "sha256": "84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+    "upstreamMetadata": "https://pypi.org/pypi/mdurl/0.1.2/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "opentelemetry-api",
+    "version": "1.37.0",
+    "file": "opentelemetry_api-1.37.0-py3-none-any.whl",
+    "sha256": "accf2024d3e89faec14302213bc39550ec0f4095d1cf5ca688e1bfb1c8612f47",
+    "upstreamMetadata": "https://pypi.org/pypi/opentelemetry-api/1.37.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/91/48/28ed9e55dcf2f453128df738210a980e09f4e468a456fa3c763dbc8be70a/opentelemetry_api-1.37.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "opentelemetry-exporter-otlp-proto-common",
+    "version": "1.37.0",
+    "file": "opentelemetry_exporter_otlp_proto_common-1.37.0-py3-none-any.whl",
+    "sha256": "53038428449c559b0c564b8d718df3314da387109c4d36bd1b94c9a641b0292e",
+    "upstreamMetadata": "https://pypi.org/pypi/opentelemetry-exporter-otlp-proto-common/1.37.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/08/13/b4ef09837409a777f3c0af2a5b4ba9b7af34872bc43609dda0c209e4060d/opentelemetry_exporter_otlp_proto_common-1.37.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "opentelemetry-exporter-otlp-proto-http",
+    "version": "1.37.0",
+    "file": "opentelemetry_exporter_otlp_proto_http-1.37.0-py3-none-any.whl",
+    "sha256": "54c42b39945a6cc9d9a2a33decb876eabb9547e0dcb49df090122773447f1aef",
+    "upstreamMetadata": "https://pypi.org/pypi/opentelemetry-exporter-otlp-proto-http/1.37.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/e9/e9/70d74a664d83976556cec395d6bfedd9b85ec1498b778367d5f93e373397/opentelemetry_exporter_otlp_proto_http-1.37.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "opentelemetry-instrumentation",
+    "version": "0.58b0",
+    "file": "opentelemetry_instrumentation-0.58b0-py3-none-any.whl",
+    "sha256": "50f97ac03100676c9f7fc28197f8240c7290ca1baa12da8bfbb9a1de4f34cc45",
+    "upstreamMetadata": "https://pypi.org/pypi/opentelemetry-instrumentation/0.58b0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/d4/db/5ff1cd6c5ca1d12ecf1b73be16fbb2a8af2114ee46d4b0e6d4b23f4f4db7/opentelemetry_instrumentation-0.58b0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "opentelemetry-instrumentation-requests",
+    "version": "0.58b0",
+    "file": "opentelemetry_instrumentation_requests-0.58b0-py3-none-any.whl",
+    "sha256": "672a0be0bb5b52bea0c11820b35e27edcf4cd22d34abe4afc59a92a80519f8a8",
+    "upstreamMetadata": "https://pypi.org/pypi/opentelemetry-instrumentation-requests/0.58b0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/90/4d/f3476b28ea167d1762134352d01ae9693940a42c78994d9f1b32a4477816/opentelemetry_instrumentation_requests-0.58b0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "opentelemetry-instrumentation-threading",
+    "version": "0.58b0",
+    "file": "opentelemetry_instrumentation_threading-0.58b0-py3-none-any.whl",
+    "sha256": "eacc072881006aceb5b9b6831bcdce718c67ef6f31ac0b32bd6a23a94d979b4a",
+    "upstreamMetadata": "https://pypi.org/pypi/opentelemetry-instrumentation-threading/0.58b0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/a5/54/add1076cb37980e617723a96e29c84006983e8ad6fc589dde7f69ddc57d4/opentelemetry_instrumentation_threading-0.58b0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "opentelemetry-proto",
+    "version": "1.37.0",
+    "file": "opentelemetry_proto-1.37.0-py3-none-any.whl",
+    "sha256": "8ed8c066ae8828bbf0c39229979bdf583a126981142378a9cbe9d6fd5701c6e2",
+    "upstreamMetadata": "https://pypi.org/pypi/opentelemetry-proto/1.37.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/c4/25/f89ea66c59bd7687e218361826c969443c4fa15dfe89733f3bf1e2a9e971/opentelemetry_proto-1.37.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "opentelemetry-sdk",
+    "version": "1.37.0",
+    "file": "opentelemetry_sdk-1.37.0-py3-none-any.whl",
+    "sha256": "8f3c3c22063e52475c5dbced7209495c2c16723d016d39287dfc215d1771257c",
+    "upstreamMetadata": "https://pypi.org/pypi/opentelemetry-sdk/1.37.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/9f/62/9f4ad6a54126fb00f7ed4bb5034964c6e4f00fcd5a905e115bd22707e20d/opentelemetry_sdk-1.37.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "opentelemetry-semantic-conventions",
+    "version": "0.58b0",
+    "file": "opentelemetry_semantic_conventions-0.58b0-py3-none-any.whl",
+    "sha256": "5564905ab1458b96684db1340232729fce3b5375a06e140e8904c78e4f815b28",
+    "upstreamMetadata": "https://pypi.org/pypi/opentelemetry-semantic-conventions/0.58b0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/07/90/68152b7465f50285d3ce2481b3aec2f82822e3f52e5152eeeaf516bab841/opentelemetry_semantic_conventions-0.58b0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "opentelemetry-util-http",
+    "version": "0.58b0",
+    "file": "opentelemetry_util_http-0.58b0-py3-none-any.whl",
+    "sha256": "6c6b86762ed43025fbd593dc5f700ba0aa3e09711aedc36fd48a13b23d8cb1e7",
+    "upstreamMetadata": "https://pypi.org/pypi/opentelemetry-util-http/0.58b0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/a5/a3/0a1430c42c6d34d8372a16c104e7408028f0c30270d8f3eb6cccf2e82934/opentelemetry_util_http-0.58b0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "packaging",
+    "version": "26.3",
+    "file": "packaging-26.3-py3-none-any.whl",
+    "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+    "upstreamMetadata": "https://pypi.org/pypi/packaging/26.3/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "peewee",
+    "version": "3.19.0",
+    "file": "peewee-3.19.0-py3-none-any.whl",
+    "sha256": "de220b94766e6008c466e00ce4ba5299b9a832117d9eb36d45d0062f3cfd7417",
+    "upstreamMetadata": "https://pypi.org/pypi/peewee/3.19.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/1a/41/19c65578ef9a54b3083253c68a607f099642747168fe00f3a2bceb7c3a34/peewee-3.19.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "protobuf",
+    "version": "6.33.6",
+    "file": "protobuf-6.33.6-cp39-abi3-manylinux2014_x86_64.whl",
+    "sha256": "e9db7e292e0ab79dd108d7f1a94fe31601ce1ee3f7b79e0692043423020b0593",
+    "upstreamMetadata": "https://pypi.org/pypi/protobuf/6.33.6/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/16/92/d1e32e3e0d894fe00b15ce28ad4944ab692713f2e7f0a99787405e43533a/protobuf-6.33.6-cp39-abi3-manylinux2014_x86_64.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "pycparser",
+    "version": "3.11",
+    "file": "pycparser-3.11-py3-none-any.whl",
+    "sha256": "51d5a8ba2be0bbe440b99d2112604c95bbbc3c2748a64260186c541e1729cd80",
+    "upstreamMetadata": "https://pypi.org/pypi/pycparser/3.11/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/90/11/0e6f11117525ff0eec40ebac3d313376f102df93ca44ad9e893ee85e4f89/pycparser-3.11-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "pydantic",
+    "version": "2.14.1",
+    "file": "pydantic-2.14.1-py3-none-any.whl",
+    "sha256": "9195d967ec791692a04438115466764fb8b9a27b31f14a760437694f40d6b454",
+    "upstreamMetadata": "https://pypi.org/pypi/pydantic/2.14.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/35/ea/a56b9fe5066f3537b7882f77e9c5dfb26d8c2eefdaed9b5fc73d57b4dc22/pydantic-2.14.1-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "pydantic-core",
+    "version": "2.50.1",
+    "file": "pydantic_core-2.50.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+    "sha256": "8812592c85d0edf423f10eadcef42716d71e8219085ad9e85b775057b7306133",
+    "upstreamMetadata": "https://pypi.org/pypi/pydantic-core/2.50.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/ed/60/7f2ae89c37e69a3dc0da9ff57b0388c285542c688d05f36767770429de85/pydantic_core-2.50.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "pydantic-settings",
+    "version": "2.16.0",
+    "file": "pydantic_settings-2.16.0-py3-none-any.whl",
+    "sha256": "7e73acf7f61936a15e5a3b6eedaea29f133357faf7272f2607ba479b049dd7f2",
+    "upstreamMetadata": "https://pypi.org/pypi/pydantic-settings/2.16.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/53/f4/b987bf8c51e5b19a95fa66d1ee596074141e085d9c2ddf97920803c7029b/pydantic_settings-2.16.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "pygments",
+    "version": "2.21.0",
+    "file": "pygments-2.21.0-py3-none-any.whl",
+    "sha256": "2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9",
+    "upstreamMetadata": "https://pypi.org/pypi/pygments/2.21.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/71/46/17f022dd3e953bf20a04a028a21ec746d942f8d2af30fa0f124fa0e6a684/pygments-2.21.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "pyjwt",
+    "version": "2.15.1",
+    "file": "pyjwt-2.15.1-py3-none-any.whl",
+    "sha256": "42d59d631f7768a1028a64c7ff581a9bf7519804daf91fc5b6c56e30eec5e193",
+    "upstreamMetadata": "https://pypi.org/pypi/pyjwt/2.15.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/50/ca/44de4e75f8aadc457f0634be3b542815078ded46dca30efb960edeecad6e/pyjwt-2.15.1-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "python-dotenv",
+    "version": "1.2.4",
+    "file": "python_dotenv-1.2.4-py3-none-any.whl",
+    "sha256": "42269a8a5b3fd54ffa6f3d84b18abed50064717576b4ecf03dc4a55d8aa04fdc",
+    "upstreamMetadata": "https://pypi.org/pypi/python-dotenv/1.2.4/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/60/d1/38f3a3405989a89ac18390803e70c6ad7c7760da4f9b83cbeca0c44a0c72/python_dotenv-1.2.4-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "python-multipart",
+    "version": "0.0.32",
+    "file": "python_multipart-0.0.32-py3-none-any.whl",
+    "sha256": "ff6d3f776f16878c894e52e107296ffc890e913c611b1a4ec6c44e2821fe2e23",
+    "upstreamMetadata": "https://pypi.org/pypi/python-multipart/0.0.32/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/e1/04/e8135ebd1ad02c56ec633277529b2602ff99ff634be76cdba5744cf554fd/python_multipart-0.0.32-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "referencing",
+    "version": "0.37.0",
+    "file": "referencing-0.37.0-py3-none-any.whl",
+    "sha256": "381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231",
+    "upstreamMetadata": "https://pypi.org/pypi/referencing/0.37.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/2c/58/ca301544e1fa93ed4f80d724bf5b194f6e4b945841c5bfd555878eea9fcb/referencing-0.37.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "requests",
+    "version": "2.34.2",
+    "file": "requests-2.34.2-py3-none-any.whl",
+    "sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0",
+    "upstreamMetadata": "https://pypi.org/pypi/requests/2.34.2/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "rich",
+    "version": "15.0.0",
+    "file": "rich-15.0.0-py3-none-any.whl",
+    "sha256": "33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb",
+    "upstreamMetadata": "https://pypi.org/pypi/rich/15.0.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "rpds-py",
+    "version": "2026.9.1",
+    "file": "rpds_py-2026.9.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+    "sha256": "136a1c3fe4402b7008bc81cb62ee538481795b61a7e83df88dff3b3f02b726ff",
+    "upstreamMetadata": "https://pypi.org/pypi/rpds-py/2026.9.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/2d/5c/aac3b960fd55d37b49f77c0eebbe043eaf36762ebd48e7b46951e59c1c05/rpds_py-2026.9.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "ruamel-yaml",
+    "version": "0.19.1",
+    "file": "ruamel_yaml-0.19.1-py3-none-any.whl",
+    "sha256": "27592957fedf6e0b62f281e96effd28043345e0e66001f97683aa9a40c667c93",
+    "upstreamMetadata": "https://pypi.org/pypi/ruamel-yaml/0.19.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/b8/0c/51f6841f1d84f404f92463fc2b1ba0da357ca1e3db6b7fbda26956c3b82a/ruamel_yaml-0.19.1-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "ruamel-yaml-clib",
+    "version": "0.2.15",
+    "file": "ruamel_yaml_clib-0.2.15-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+    "sha256": "617d35dc765715fa86f8c3ccdae1e4229055832c452d4ec20856136acc75053f",
+    "upstreamMetadata": "https://pypi.org/pypi/ruamel-yaml-clib/0.2.15/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/aa/ed/3fb20a1a96b8dc645d88c4072df481fe06e0289e4d528ebbdcc044ebc8b3/ruamel_yaml_clib-0.2.15-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "semantic-version",
+    "version": "2.10.0",
+    "file": "semantic_version-2.10.0-py2.py3-none-any.whl",
+    "sha256": "de78a3b8e0feda74cabc54aab2da702113e33ac9d9eb9d2389bcf1f58b7d9177",
+    "upstreamMetadata": "https://pypi.org/pypi/semantic-version/2.10.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/6a/23/8146aad7d88f4fcb3a6218f41a60f6c2d4e3a72de72da1825dc7c8f7877c/semantic_version-2.10.0-py2.py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "semgrep",
+    "version": "1.180.0",
+    "file": "semgrep-1.180.0-cp310.cp311.cp312.cp313.cp314.py310.py311.py312.py313.py314-none-manylinux_2_34_x86_64.whl",
+    "sha256": "16db2e2706ab814a975eeec25debfad49abba846b7c513d88e041447152f8447",
+    "upstreamMetadata": "https://pypi.org/pypi/semgrep/1.180.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/7c/1f/f4af9cc92651f04ab973eac214a62ed23260da9e0696c105b4b9734da453/semgrep-1.180.0-cp310.cp311.cp312.cp313.cp314.py310.py311.py312.py313.py314-none-manylinux_2_34_x86_64.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "sse-starlette",
+    "version": "3.5.0",
+    "file": "sse_starlette-3.5.0-py3-none-any.whl",
+    "sha256": "3e6e1070df3f0f5d9cea81496de92dbb72f6721871d99748ece67441dd8b7997",
+    "upstreamMetadata": "https://pypi.org/pypi/sse-starlette/3.5.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/be/e4/cdda14023c316d71493bc54fdffc3dd006631b88866145c9d3cc33e0f1df/sse_starlette-3.5.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "starlette",
+    "version": "1.8.0",
+    "file": "starlette-1.8.0-py3-none-any.whl",
+    "sha256": "dfdd6b29c26483288088d990eee59631dedadd66ce20d203402a7ca8e3c4656f",
+    "upstreamMetadata": "https://pypi.org/pypi/starlette/1.8.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/c1/b0/5742e4ac7af5eb58ec3470a537a49d7aa507e5539413e504b3a65ef50ba8/starlette-1.8.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "tomli",
+    "version": "2.4.1",
+    "file": "tomli-2.4.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+    "sha256": "5a881ab208c0baf688221f8cecc5401bd291d67e38a1ac884d6736cbcd8247e9",
+    "upstreamMetadata": "https://pypi.org/pypi/tomli/2.4.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/48/c1/f41d9cb618acccca7df82aaf682f9b49013c9397212cb9f53219e3abac37/tomli-2.4.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "typing-extensions",
+    "version": "4.16.0",
+    "file": "typing_extensions-4.16.0-py3-none-any.whl",
+    "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+    "upstreamMetadata": "https://pypi.org/pypi/typing-extensions/4.16.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "typing-inspection",
+    "version": "0.4.4",
+    "file": "typing_inspection-0.4.4-py3-none-any.whl",
+    "sha256": "65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147",
+    "upstreamMetadata": "https://pypi.org/pypi/typing-inspection/0.4.4/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/67/81/4add07e5172b7ac40d8ed5ff580409a7801a4fe26d529bdd915401dabfbe/typing_inspection-0.4.4-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "urllib3",
+    "version": "2.8.0",
+    "file": "urllib3-2.8.0-py3-none-any.whl",
+    "sha256": "0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3",
+    "upstreamMetadata": "https://pypi.org/pypi/urllib3/2.8.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/92/9d/c4e665119135114480843e7ab388fa94d8480650450e6f8e26b70d323a4c/urllib3-2.8.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "uvicorn",
+    "version": "0.54.0",
+    "file": "uvicorn-0.54.0-py3-none-any.whl",
+    "sha256": "505bdb0f318731d45f1f712071fc781a8981f6847a31c902c9f5e652d4f67faf",
+    "upstreamMetadata": "https://pypi.org/pypi/uvicorn/0.54.0/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/38/0c/b54a4fdd7f90a3af8b02ebc9ce6712c2c208b7926a2f7bad95c33ebbe943/uvicorn-0.54.0-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "wcmatch",
+    "version": "8.5.2",
+    "file": "wcmatch-8.5.2-py3-none-any.whl",
+    "sha256": "17d3ad3758f9d0b5b4dedc770b65420d4dac62e680229c287bf24c9db856a478",
+    "upstreamMetadata": "https://pypi.org/pypi/wcmatch/8.5.2/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/09/78/533ef890536e5ba0fd4f7df37482b5800ecaaceae9afc30978a1a7f88ff1/wcmatch-8.5.2-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "wrapt",
+    "version": "1.17.3",
+    "file": "wrapt-1.17.3-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl",
+    "sha256": "b32888aad8b6e68f83a8fdccbf3165f5469702a7544472bdf41f582970ed3311",
+    "upstreamMetadata": "https://pypi.org/pypi/wrapt/1.17.3/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/5d/8f/a32a99fc03e4b37e31b57cb9cefc65050ea08147a8ce12f288616b05ef54/wrapt-1.17.3-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  },
+  {
+    "name": "zipp",
+    "version": "4.1.1",
+    "file": "zipp-4.1.1-py3-none-any.whl",
+    "sha256": "8979f52d874162f485ff2981e3891f3a3317b7a3dd43ff1e1775b9304f307a9c",
+    "upstreamMetadata": "https://pypi.org/pypi/zipp/4.1.1/json",
+    "upstreamDistribution": "https://files.pythonhosted.org/packages/b5/98/df615823cd9419131ce19fba00de53a663794369e198aade064a244b385d/zipp-4.1.1-py3-none-any.whl",
+    "upstreamHashMatches": true,
+    "metadataVulnerabilities": []
+  }
+]

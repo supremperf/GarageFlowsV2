@@ -1,0 +1,147 @@
+{
+  "at": "2026-10-15T17:33:01.209354+02:00",
+  "sourceCommit": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+  "rows": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "7d4ffae6afcd8b658e64c79539b61e5167c62448959610dad616b09e23df4829",
+      "lineCount": 488,
+      "depth": "TARGETED_DIFF_AND_MANDATORY_GRAPH_REVIEW",
+      "ranges": [
+        [
+          453,
+          470
+        ]
+      ],
+      "riskAndBehavior": "Diagnostic formatter tested in its own failing step; literal npm run dist retained through validated custom shell. All post-build artifact gates remain mandatory. No changed permission, action pin, needs, timeout or continue-on-error.",
+      "validation": "C06 failed graph before workflow correction; C07/C10/C14 original gate assertions pass; df66 Windows CI actually dispatches official dist.",
+      "wholeProgramCertification": false
+    },
+    {
+      "path": "src/lib/einvoicing/adapters/generic-pa.ts",
+      "sha256": "a7925c45c4d0140427567c96ae53d5ee875bc63ce9cc8fdbfede4abba16eb927",
+      "lineCount": 416,
+      "depth": "TARGETED_FUNCTION_CALLEE_AND_CALLSITE_REVIEW",
+      "ranges": [
+        [
+          137,
+          174
+        ],
+        [
+          218,
+          245
+        ],
+        [
+          336,
+          406
+        ]
+      ],
+      "riskAndBehavior": "Existing 20s deadline now starts before real destination guard; shared race settles DNS/fetch and prevents late dispatch. Guard, credentials and redirect:error remain. No node:dns cancellation or response-body deadline certification.",
+      "validation": "C01 three deterministic pre-fix failures; C02/C05/C14 success; df66 full CI success. Node lookup can continue in background; JSON body read remains outside this deadline.",
+      "wholeProgramCertification": false
+    },
+    {
+      "path": "src/lib/einvoicing/__tests__/submit-chain.test.ts",
+      "sha256": "ac6d1e16f16d63f634564906fd864006f1728be5bcaf9986befc54d8a85987b4",
+      "lineCount": 360,
+      "depth": "TARGETED_TRANSPORT_FIXTURE_DIFF_REVIEW",
+      "ranges": [
+        [
+          13,
+          20
+        ],
+        [
+          118,
+          135
+        ]
+      ],
+      "riskAndBehavior": "Real DNS was used despite simulated fetch. Only known fixture host gets public DNS; unexpected hosts resolve loopback and hit real SSRF refusal. No original assertion/test deadline removed.",
+      "validation": "17 original assertions pass C02/C05/C14; real guard negative and late DNS tests separately C14.",
+      "wholeProgramCertification": false
+    },
+    {
+      "path": "src/lib/einvoicing/__tests__/submit-replay.test.ts",
+      "sha256": "49afa78da45b757bb667c97997975d17162da002c28f3589f6e108a0f6b72101",
+      "lineCount": 347,
+      "depth": "TARGETED_TRANSPORT_FIXTURE_DIFF_REVIEW",
+      "ranges": [
+        [
+          36,
+          42
+        ],
+        [
+          173,
+          190
+        ]
+      ],
+      "riskAndBehavior": "Same general simulated-network defect, corrected at transport boundary for fixture hostname only; idempotency/concurrency code and assertions unchanged.",
+      "validation": "12 original assertions pass in C04/C14 and full CI.",
+      "wholeProgramCertification": false
+    },
+    {
+      "path": "src/lib/einvoicing/__tests__/generic-pa-adapter.test.ts",
+      "sha256": "bb4c7f74da5b3efe9825b75976f4538a98d0825b905697d69b673b42cbfcf556",
+      "lineCount": 283,
+      "depth": "TARGETED_TRANSPORT_FIXTURE_DIFF_REVIEW",
+      "ranges": [
+        [
+          15,
+          22
+        ],
+        [
+          62,
+          74
+        ]
+      ],
+      "riskAndBehavior": "API and OAuth fixture DNS simulated, real guard and transport assertions retained; no live authentication claim.",
+      "validation": "36 original assertions pass C04/C14 and full CI.",
+      "wholeProgramCertification": false
+    },
+    {
+      "path": "src/lib/einvoicing/__tests__/dns-deadline.test.ts",
+      "sha256": "d6551fdfe76d76c122fb692cef52bef7f0290c6900d63823049210e8fe3e37c8",
+      "lineCount": 50,
+      "depth": "NEW_FILE_FULL_MANUAL_REVIEW",
+      "ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "riskAndBehavior": "Four fake-clock/network regression cases: hanging DNS, shared remaining budget, no late dispatch, mixed private DNS refusal. No billing/network and no timeout increase.",
+      "validation": "C01 old implementation red 3/4; C02/C05/C14 post-fix pass 4/4. First case strengthened with a pre-deadline pending assertion after initial red run.",
+      "wholeProgramCertification": false
+    },
+    {
+      "path": "scripts/windows-package-diagnostic.cjs",
+      "sha256": "4b1b95959b48da02e259be68e6b8c941a30b9a37b9654050ff8e614def6a49c3",
+      "lineCount": 85,
+      "depth": "NEW_FILE_FULL_MANUAL_REVIEW",
+      "ranges": [
+        [
+          1,
+          85
+        ]
+      ],
+      "riskAndBehavior": "Windows-only validated custom shell, constant returned command, exact original exit status or fail-closed on spawn/report failure, redacted bounded annotations, random workflow-command stop marker; no raw upload. Reads only runner-provided script for exact-command validation.",
+      "validation": "C10/C14 six formatter/command/exit/confidentiality unit tests; both df66 Windows jobs record actual npm run dist exit1. Redaction tests are bounded, not global proof of absence of every possible secret.",
+      "wholeProgramCertification": false
+    },
+    {
+      "path": "tests/windows-package-diagnostic.test.cjs",
+      "sha256": "572705cd0cc215ce2bcc83e1d5fa5297e58cf00a630cc267a8b345f991601849",
+      "lineCount": 45,
+      "depth": "NEW_FILE_FULL_MANUAL_REVIEW",
+      "ranges": [
+        [
+          1,
+          45
+        ]
+      ],
+      "riskAndBehavior": "Six nonbilling tests for strict command shell, redaction, preserved failures, metadata roundtrip, bounded/truncated output and unfinished PEM. Original ci-required-gate test remains unchanged.",
+      "validation": "6/6 C10/C14 and real Windows job formatter step; no packaging success simulated.",
+      "wholeProgramCertification": false
+    }
+  ],
+  "limits": "Manual targeted semantic review, not inferred from hash/AST/inventory. All eight changed runtime/test/CI files identified. Old source reviews stay historical and are not silently reissued for changed files."
+}

@@ -1,5 +1,18 @@
 # Module Premium — Gamification
 
+> **MOTEUR NON EXPOSÉ EN HTTP.** La route `/api/gamification` a été **supprimée
+> le 14/08/2026** (GF-DUR-043). Le moteur reste en place :
+> `src/lib/gamification/`, `buildLeaderboard()` et `buildProfile()`,
+> déterministes et couverts par leurs tests.
+>
+> Motif : l'historique complet du dépôt (`git log --all -S`) montre qu'**aucune
+> interface n'a jamais appelé cette route**, à aucun moment. Ce n'était pas « on
+> ne trouve pas d'appelant » mais « il n'y en a jamais eu » — une route
+> authentifiée sans consommateur n'est que de la surface exposée.
+>
+> Le contrat HTTP décrit plus bas est donc **historique**. Le rétablir demande un
+> seul fichier de route ; ce document reste la référence de ce qu'il servirait.
+
 Transforme les performances des mécaniciens en **scores**, **XP/niveaux**,
 **badges/trophées** et **classement**. Conçu pour **motiver sans compétition
 toxique** : la progression individuelle (niveau, scores, badges) est au premier

@@ -69,10 +69,11 @@ function looksValid(raw) {
  * @returns {string} le secret (jamais journalisé par l'appelant)
  * @throws si le secret ne peut être ni lu ni généré de façon sûre
  */
-function loadOrCreateInstallSecret(userDataDir) {
+function loadOrCreateInstallSecret(userDataDir, fileName = SECRET_FILE) {
   if (!userDataDir || typeof userDataDir !== 'string') {
     throw new Error('userDataDir requis pour charger le secret local')
   }
+  const SECRET_FILE = fileName
   const file = path.join(userDataDir, SECRET_FILE)
 
   // 1. Réutiliser un secret existant valide.
@@ -145,11 +146,51 @@ function resolveMainSecret(userDataDir, envSecret) {
   return { secret, source: 'install' }
 }
 
+/** Fichier de la clé de chiffrement AU REPOS des secrets SMTP. */
+const SMTP_CIPHER_KEY_FILE = 'gf_smtp_cipher.key'
+
+/**
+ * Clé de chiffrement AU REPOS des identifiants SMTP, propre à l'installation.
+ *
+ * L'application packagée n'embarque aucun `.env` : la variable
+ * `GF_SMTP_CIPHER_KEY` n'était donc **jamais** fournie au serveur Next.js
+ * interne. Or `/api/email` refuse — à juste titre — d'enregistrer un mot de
+ * passe SMTP sans elle (503 « Chiffrement SMTP indisponible »). Résultat :
+ * configurer un envoi d'e-mails était **impossible sur le poste**, quelle que
+ * soit la manipulation (GF31-AUD-012).
+ *
+ * La clé est donc générée une fois et conservée dans `userData`, exactement
+ * comme le secret de session : mêmes garanties (256 bits, écriture atomique,
+ * permissions 0600, jamais journalisée) et surtout même **stabilité** — une clé
+ * régénérée à chaque démarrage rendrait les mots de passe déjà enregistrés
+ * définitivement indéchiffrables (§105).
+ *
+ * Une valeur d'environnement FORTE reste prioritaire : elle permet à un
+ * déploiement serveur, ou à un poste dont l'exploitant gère lui-même ses
+ * secrets, de conserver la main.
+ *
+ * @param {string} userDataDir
+ * @param {string|undefined} envKey  process.env.GF_SMTP_CIPHER_KEY
+ * @returns {{ key: string, source: 'env'|'install' }}
+ */
+function resolveSmtpCipherKey(userDataDir, envKey) {
+  if (envKey && !isWeakSecret(envKey)) {
+    return { key: envKey, source: 'env' }
+  }
+  const key = loadOrCreateInstallSecret(userDataDir, SMTP_CIPHER_KEY_FILE)
+  if (isWeakSecret(key)) {
+    throw new Error('Clé de chiffrement SMTP invalide après génération')
+  }
+  return { key, source: 'install' }
+}
+
 module.exports = {
   SECRET_FILE,
+  SMTP_CIPHER_KEY_FILE,
   isWeakSecret,
   generateSecret,
   looksValid,
   loadOrCreateInstallSecret,
   resolveMainSecret,
+  resolveSmtpCipherKey,
 }

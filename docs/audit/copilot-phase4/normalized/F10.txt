@@ -1,0 +1,1 @@
+Evaluation blocked/failed; confidential exception details omitted. No automatic retry or budget replenishment.

@@ -47,11 +47,11 @@ export interface Classification {
   slots: Slots
 }
 
-/** A prepared, NOT-yet-executed action. The UI must confirm, then call `endpoint`. */
+/** Prepared handoff, NOT an executed action. UI confirmation opens the existing form. */
 export interface PreparedAction {
   id: IntentId
   summary: string
-  /** The real endpoint the client should call after confirmation. */
+  /** Existing business endpoint for reference; never POST incomplete params from chat. */
   endpoint: string
   method: 'POST'
   params: Record<string, unknown>

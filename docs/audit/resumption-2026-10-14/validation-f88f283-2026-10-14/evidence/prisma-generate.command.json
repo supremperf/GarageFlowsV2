@@ -1,0 +1,28 @@
+{
+  "id": "prisma-generate",
+  "startedAt": "2026-10-14T17:07:37.685145+00:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "argv": [
+    "node",
+    "node_modules/prisma/build/index.js",
+    "generate"
+  ],
+  "timeoutSeconds": 120,
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+  "trackedNonAuditFiles": 1220,
+  "environmentOverrides": {
+    "PATH": "pinned npm 11.16.0 first",
+    "NODE_USE_SYSTEM_CA": "1"
+  },
+  "proof": "evidence/prisma-generate.log",
+  "exitCode": 1,
+  "finishedAt": "2026-10-14T17:07:41.096075+00:00",
+  "afterIdentity": {
+    "head": "f88f2832eb256310852ed86040057c062d44433e",
+    "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+    "trackedNonAuditFiles": 1220
+  },
+  "logSha256": "df79f99a0eed23ff313420ccce3b8ce55844a2857082da6334a421f379457832"
+}

@@ -1,0 +1,6 @@
+{
+  "command": "gh api repos/supremperf/GarageFlowsV2/code-scanning/alerts?state=open&per_page=100",
+  "exitCode": 1,
+  "http403": true,
+  "count": null
+}

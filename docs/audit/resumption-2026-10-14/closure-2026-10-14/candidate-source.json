@@ -1,0 +1,84 @@
+{
+  "at": "2026-10-14T16:53:10.893525+00:00",
+  "baseHead": "4989b53d4a8f10cf8afb2f7c579d1de354f58508",
+  "remoteRef": "4989b53d4a8f10cf8afb2f7c579d1de354f58508\trefs/heads/arena/c9eaae15-garageflowsv2",
+  "branch": "arena/c9eaae15-garageflowsv2",
+  "sourceDeltaSha256": "075562ac7cc0ebbd36a04f0d883157dc40a5ebcc4bc8e4e0839dd4810b55e80e",
+  "sourceChanges": [
+    {
+      "path": "src/integration/devis-signature-depuis-un-poste.test.ts",
+      "sha256": "104ff1699a71e83e7aba8212ffc5d90a17a5c737a6d270c0a5607b4b7ed53712"
+    },
+    {
+      "path": "src/integration/intervention-rattache-client-vehicule.test.ts",
+      "sha256": "3138bec05c69ce0133e23452bb4686a480f7d9b619bfc8362868ae1308158e74"
+    },
+    {
+      "path": "src/integration/invoice-authz.test.ts",
+      "sha256": "823bbe33b432a1a7a8fe4cd764924600f1d900881dcc6e42df7ee640866fd94c"
+    },
+    {
+      "path": "src/integration/planning-journee-complete.test.ts",
+      "sha256": "44755ddaadd6304a7b0b5c0d732a1f48aa133fb089714d2776261e53ba208687"
+    },
+    {
+      "path": "src/integration/portail-lien-revoque-a-la-republication.test.ts",
+      "sha256": "8cb72e9cc76585526c6e6d98300f55a95ea230c9040cb1d509973827b02e8ac9"
+    },
+    {
+      "path": "src/integration/publication-mise-a-jour.test.ts",
+      "sha256": "1717c0432d3e8e4c53ef109a4238701b7401bcddd67842e4e9d24a78c21de94c"
+    },
+    {
+      "path": "src/integration/pulse-boucle-de-synchronisation.test.ts",
+      "sha256": "64711107041ebe577abbcccc02af86323b681487b221b8e382352283e8b4a12b"
+    },
+    {
+      "path": "src/integration/pwa-fenetre-et-photos.test.ts",
+      "sha256": "0bb1dd1ab3d896f37888feaf2bc5efa539893cd0a50326c94b337e98c4036be3"
+    },
+    {
+      "path": "src/integration/reglages-appliques.test.ts",
+      "sha256": "eade55fed31112243adeb00b1157d75550862bc62e4bf366f9c57355d334eb43"
+    },
+    {
+      "path": "src/integration/reglages-enfin-lus.test.ts",
+      "sha256": "618fdee274dab910633dc075c58b0ecb3d79c4722f96e1034d2a324553abfd6b"
+    },
+    {
+      "path": "src/integration/reglages-logo-et-cout-achat.test.ts",
+      "sha256": "56ac845015813a775c4e051c95ec31dd32b929e4e3a5e7b53a090e70d27fefb4"
+    },
+    {
+      "path": "src/integration/scenario-maitre.test.ts",
+      "sha256": "04fcf0eee3ef374346f64c73edb78baef2b02662b1c154932ced6dfd560e9769"
+    },
+    {
+      "path": "src/integration/statistiques-au-centime.test.ts",
+      "sha256": "a022e9181ed60760157e24ea05a43f579306b6af3d62665baf51e4d54411fb10"
+    },
+    {
+      "path": "src/integration/stock-suppression-et-entrees.test.ts",
+      "sha256": "02b5614091b268bf707d1496641456c7540f7a6a0853436f7fd8530248e054c3"
+    },
+    {
+      "path": "src/integration/stock-tracabilite-et-suppression.test.ts",
+      "sha256": "4220fb844f77baf900f2f5a63334a680833c37890e16f49289edb2cd005b0eb7"
+    },
+    {
+      "path": "src/lib/__tests__/authz.test.ts",
+      "sha256": "7e4f04df459bb9e46a673b73f6623824abc54a43a6a4ace6d9052bfdcb63a7c0"
+    },
+    {
+      "path": "src/lib/__tests__/license-activate.test.ts",
+      "sha256": "6a86d817e4af44b0ff9b059d92ce80341f216ed922bdedf8a359953015ff584b"
+    },
+    {
+      "path": "src/lib/authz.ts",
+      "sha256": "0d2775dd6b51e4d22a3d59e291628ceccb17482005b115eed46096efabb6718c"
+    }
+  ],
+  "committed": false,
+  "published": false,
+  "limits": "The remote CI for base 4989b53 does not validate this uncommitted source patch. New publication needs explicit authorization."
+}

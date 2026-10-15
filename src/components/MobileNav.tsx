@@ -1,12 +1,12 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { signOut } from 'next-auth/react'
 import {
   CalendarDays, ClipboardList, Plus, Sparkles, Menu,
   BarChart3, Package, ShieldCheck, Car, Bell, BookOpen,
-  FileText, BarChart2, ScanLine, Truck, Boxes, Settings,
-  Sun, Moon, LogOut,
+  FileText, BarChart2, ScanLine, Truck, Users, Boxes, Settings,
+  Sun, Moon, LogOut, MessageSquare, CalendarClock,
 } from 'lucide-react'
 import { useScheduleStore } from '@/store/schedule-store'
 import { useTranslation } from '@/lib/i18n'
@@ -24,10 +24,14 @@ export interface MobileNavActions {
   onOpenFinance: () => void
   onOpenLaborCatalog: () => void
   onOpenWarranties: () => void
-  onOpenLoaner: () => void
+  /** Absent quand le garage a désactivé les véhicules de prêt (GF-039). */
+  onOpenLoaner?: () => void
   onOpenCopilot: () => void
   onOpenOcr: () => void
   onOpenSuppliers: () => void
+  onOpenClients: () => void
+  onOpenTickets: () => void
+  onOpenAppointments: () => void
   onOpenCatalog: () => void
   onOpenSettings: () => void
   warrantyAlerts?: number
@@ -187,7 +191,9 @@ export default function MobileNav(props: MobileNavActions) {
         <div className="grid grid-cols-2 gap-2">
           <MoreItem icon={Package} label={t.navStock} onClick={() => run(toggleStockPanel)} />
           <MoreItem icon={ShieldCheck} label={t.navWarranties} onClick={() => run(props.onOpenWarranties)} badge={props.warrantyAlerts} />
-          <MoreItem icon={Car} label={t.navLoaner} onClick={() => run(props.onOpenLoaner)} />
+          {props.onOpenLoaner && (
+            <MoreItem icon={Car} label={t.navLoaner} onClick={() => run(props.onOpenLoaner!)} />
+          )}
           <MoreItem icon={Bell} label={t.navReminders} onClick={() => run(props.onOpenReminders)} />
           <MoreItem icon={BookOpen} label={t.navLaborCatalog} onClick={() => run(props.onOpenLaborCatalog)} />
         </div>
@@ -199,6 +205,9 @@ export default function MobileNav(props: MobileNavActions) {
           <MoreItem icon={Sparkles} label={t.navCopilot} onClick={() => run(props.onOpenCopilot)} tone="finance" />
           <MoreItem icon={ScanLine} label={t.navOcr} onClick={() => run(props.onOpenOcr)} tone="finance" />
           <MoreItem icon={Truck} label={t.navSuppliers} onClick={() => run(props.onOpenSuppliers)} tone="finance" />
+          <MoreItem icon={Users} label={t.navClients} onClick={() => run(props.onOpenClients)} tone="finance" />
+          <MoreItem icon={MessageSquare} label="Messages" onClick={() => run(props.onOpenTickets)} tone="finance" />
+          <MoreItem icon={CalendarClock} label="Rendez-vous" onClick={() => run(props.onOpenAppointments)} tone="finance" />
           <MoreItem icon={Boxes} label={t.navCatalog} onClick={() => run(props.onOpenCatalog)} tone="finance" />
         </div>
 

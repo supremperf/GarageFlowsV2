@@ -1,0 +1,22 @@
+{
+  "algorithm": "sha256(JSON.stringify(UI))",
+  "before": "297db557405e6b7a465994970bcaa18a818d6dd25ea60cb65afa8cc55ad4def3",
+  "keys": 562,
+  "languages": [
+    "fr",
+    "en",
+    "es",
+    "de",
+    "it",
+    "pt",
+    "nl",
+    "pl",
+    "ru",
+    "ar",
+    "zh",
+    "ja",
+    "tr",
+    "ko"
+  ],
+  "source": "UI before lossless row compaction on 2026-10-14"
+}

@@ -33,12 +33,24 @@ export const POST = withPortalAuth(async (req, { user }) => {
   const message = String(body.message ?? '').trim()
   if (!subject || !message) return NextResponse.json({ error: 'Sujet et message requis' }, { status: 400 })
 
+  // Isolation : un vehicleId fourni doit être un véhicule DE CE client (même
+  // garage). Sinon on refuse (rattachement à un véhicule arbitraire).
+  let vehicleId: string | null = null
+  if (typeof body.vehicleId === 'string' && body.vehicleId && user.clientId) {
+    const owned = await prisma.vehicle.findFirst({
+      where: { id: body.vehicleId, garageId: user.garageId, clientId: user.clientId },
+      select: { id: true },
+    })
+    if (!owned) return NextResponse.json({ error: 'Véhicule introuvable' }, { status: 400 })
+    vehicleId = owned.id
+  }
+
   const ticket = await prisma.portalTicket.create({
     data: {
       garageId: user.garageId,
       portalUserId: user.id,
       clientId: user.clientId,
-      vehicleId: typeof body.vehicleId === 'string' ? body.vehicleId : null,
+      vehicleId,
       subject,
       category: isTicketCategory(body.category) ? body.category : 'general',
       priority: isTicketPriority(body.priority) ? body.priority : 'normal',

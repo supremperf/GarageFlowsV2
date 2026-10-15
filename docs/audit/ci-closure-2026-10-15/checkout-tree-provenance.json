@@ -1,0 +1,128 @@
+{
+  "at": "2026-10-15T17:32:27.888478+02:00",
+  "rows": [
+    {
+      "candidateLabel": "fcc",
+      "ciRunId": 38756112852,
+      "branchHead": {
+        "sha": "fccac810be4ce6589831dfc2dadb9bd3f0f51128",
+        "tree": "e309cac37d991e64fddb5adff12d87fb5447be4a",
+        "parents": [
+          "bc6d6c2c18b4edc1fe3f88674217be264c213b73"
+        ]
+      },
+      "observedGitleaksCheckout": {
+        "sha": "12763537152191eda056afd0af27f69633fc2de1",
+        "tree": "e309cac37d991e64fddb5adff12d87fb5447be4a",
+        "parents": [
+          "e3ac5f5a55284906531dcc5d4a620cb0ff072313",
+          "fccac810be4ce6589831dfc2dadb9bd3f0f51128"
+        ]
+      },
+      "completeTreeEqualToBranch": true,
+      "limits": "Only the Gitleaks producer explicitly records its checkout SHA. Shared CI run default checkout provides contextual mapping, not independent per-job git rev-parse attestation. No test success transferred across candidates."
+    },
+    {
+      "candidateLabel": "fcc",
+      "ciRunId": 38756099926,
+      "branchHead": {
+        "sha": "fccac810be4ce6589831dfc2dadb9bd3f0f51128",
+        "tree": "e309cac37d991e64fddb5adff12d87fb5447be4a",
+        "parents": [
+          "bc6d6c2c18b4edc1fe3f88674217be264c213b73"
+        ]
+      },
+      "observedGitleaksCheckout": {
+        "sha": "fccac810be4ce6589831dfc2dadb9bd3f0f51128",
+        "tree": "e309cac37d991e64fddb5adff12d87fb5447be4a",
+        "parents": [
+          "bc6d6c2c18b4edc1fe3f88674217be264c213b73"
+        ]
+      },
+      "completeTreeEqualToBranch": true,
+      "limits": "Only the Gitleaks producer explicitly records its checkout SHA. Shared CI run default checkout provides contextual mapping, not independent per-job git rev-parse attestation. No test success transferred across candidates."
+    },
+    {
+      "candidateLabel": "befc",
+      "ciRunId": 38758713173,
+      "branchHead": {
+        "sha": "befc31e5551b6e0e61b8d1acb383e01e5a9fb39b",
+        "tree": "077024ee249666951cc7c6d2d11fbcefdd02ac77",
+        "parents": [
+          "fccac810be4ce6589831dfc2dadb9bd3f0f51128"
+        ]
+      },
+      "observedGitleaksCheckout": {
+        "sha": "c2fab79925175909b79f8d2ff2c9f83f8767ed39",
+        "tree": "077024ee249666951cc7c6d2d11fbcefdd02ac77",
+        "parents": [
+          "e3ac5f5a55284906531dcc5d4a620cb0ff072313",
+          "befc31e5551b6e0e61b8d1acb383e01e5a9fb39b"
+        ]
+      },
+      "completeTreeEqualToBranch": true,
+      "limits": "Only the Gitleaks producer explicitly records its checkout SHA. Shared CI run default checkout provides contextual mapping, not independent per-job git rev-parse attestation. No test success transferred across candidates."
+    },
+    {
+      "candidateLabel": "befc",
+      "ciRunId": 38758703077,
+      "branchHead": {
+        "sha": "befc31e5551b6e0e61b8d1acb383e01e5a9fb39b",
+        "tree": "077024ee249666951cc7c6d2d11fbcefdd02ac77",
+        "parents": [
+          "fccac810be4ce6589831dfc2dadb9bd3f0f51128"
+        ]
+      },
+      "observedGitleaksCheckout": {
+        "sha": "befc31e5551b6e0e61b8d1acb383e01e5a9fb39b",
+        "tree": "077024ee249666951cc7c6d2d11fbcefdd02ac77",
+        "parents": [
+          "fccac810be4ce6589831dfc2dadb9bd3f0f51128"
+        ]
+      },
+      "completeTreeEqualToBranch": true,
+      "limits": "Only the Gitleaks producer explicitly records its checkout SHA. Shared CI run default checkout provides contextual mapping, not independent per-job git rev-parse attestation. No test success transferred across candidates."
+    },
+    {
+      "candidateLabel": "df66",
+      "ciRunId": 38759135140,
+      "branchHead": {
+        "sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "tree": "e60d50ab686399e8c957afb7c31de2fd91ac8331",
+        "parents": [
+          "befc31e5551b6e0e61b8d1acb383e01e5a9fb39b"
+        ]
+      },
+      "observedGitleaksCheckout": {
+        "sha": "e1ce72a94845d1f60eba101b44aac2d39064903e",
+        "tree": "e60d50ab686399e8c957afb7c31de2fd91ac8331",
+        "parents": [
+          "e3ac5f5a55284906531dcc5d4a620cb0ff072313",
+          "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+        ]
+      },
+      "completeTreeEqualToBranch": true,
+      "limits": "Only the Gitleaks producer explicitly records its checkout SHA. Shared CI run default checkout provides contextual mapping, not independent per-job git rev-parse attestation. No test success transferred across candidates."
+    },
+    {
+      "candidateLabel": "df66",
+      "ciRunId": 38759124969,
+      "branchHead": {
+        "sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "tree": "e60d50ab686399e8c957afb7c31de2fd91ac8331",
+        "parents": [
+          "befc31e5551b6e0e61b8d1acb383e01e5a9fb39b"
+        ]
+      },
+      "observedGitleaksCheckout": {
+        "sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "tree": "e60d50ab686399e8c957afb7c31de2fd91ac8331",
+        "parents": [
+          "befc31e5551b6e0e61b8d1acb383e01e5a9fb39b"
+        ]
+      },
+      "completeTreeEqualToBranch": true,
+      "limits": "Only the Gitleaks producer explicitly records its checkout SHA. Shared CI run default checkout provides contextual mapping, not independent per-job git rev-parse attestation. No test success transferred across candidates."
+    }
+  ]
+}

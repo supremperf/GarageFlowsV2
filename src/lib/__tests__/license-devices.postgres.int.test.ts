@@ -64,10 +64,14 @@ describe.skipIf(!ADMIN_URL)('appareils par licence — PostgreSQL réel (migrati
 
     // ── Base VIDE + VRAIES migrations (prisma migrate deploy crée la base) ────
     const root = path.resolve(__dirname, '../../..')
-    const prismaBin = path.join(root, 'node_modules', '.bin', 'prisma')
+    // Entrée JS de la CLI lancée par le Node courant, jamais le lanceur de
+    // node_modules/.bin : sous Windows c'est un script sans extension que
+    // `execFileSync` ne sait pas exécuter (ENOENT), et sa variante `.cmd`
+    // imposerait `shell: true`. Portable, sans shell.
+    const prismaCli = require.resolve('prisma/build/index.js')
     const out = execFileSync(
-      prismaBin,
-      ['migrate', 'deploy', '--schema', 'prisma/server/schema.prisma'],
+      process.execPath,
+      [prismaCli, 'migrate', 'deploy', '--schema', 'prisma/server/schema.prisma'],
       { cwd: root, env: { ...process.env, DATABASE_URL: TEST_URL, DIRECT_URL: TEST_URL } },
     ).toString()
     expect(out).toMatch(/migrations? (have|has) been successfully applied|No pending migrations/i)

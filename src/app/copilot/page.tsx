@@ -18,6 +18,7 @@ import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 import type { CopilotReport, Insight, InsightSeverity } from '@/lib/analytics/insights'
 import { reportToCSV } from '@/lib/analytics/report-export'
+import { HistoriqueRapports } from '@/components/copilot/HistoriqueRapports'
 
 interface ReportResponse {
   period: number
@@ -46,6 +47,8 @@ export default function CopilotPage() {
   const [period, setPeriod] = useState<number>(30)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  /** Incrémenté à chaque historisation — force la liste à se recharger. */
+  const [versionHistorique, setVersionHistorique] = useState(0)
   const [data, setData] = useState<ReportResponse | null>(null)
 
   async function analyze() {
@@ -82,7 +85,7 @@ export default function CopilotPage() {
         y += size + 6
       }
     }
-    line('GarageFlow — Rapport « Analyser mon garage »', 16, true)
+    line('GarageFlows — Rapport « Analyser mon garage »', 16, true)
     line(`Généré le ${new Date(r.generatedAt).toLocaleString('fr-FR')} · Période ${r.periodDays} j`, 9)
     y += 6
     line(`Score de santé : ${r.healthScore}/100 (${r.healthGrade})`, 13, true)
@@ -112,6 +115,10 @@ export default function CopilotPage() {
       })
       if (!res.ok) throw new Error()
       toast.success('Rapport historisé')
+      // Fait remonter la liste : sans cela le rapport que l'on vient
+      // d'enregistrer n'apparaîtrait qu'au prochain chargement de la page, et
+      // l'exploitant douterait de l'avoir enregistré.
+      setVersionHistorique(v => v + 1)
     } catch {
       toast.error('Échec de l’enregistrement')
     } finally {
@@ -128,7 +135,7 @@ export default function CopilotPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-black text-white">
-              <Sparkles className="h-6 w-6 text-blue-400" /> Copilote GarageFlow
+              <Sparkles className="h-6 w-6 text-blue-400" /> Copilote GarageFlows
             </h1>
             <p className="mt-1 text-sm text-slate-500">Analyse intelligente de votre garage, justifiée par vos données réelles.</p>
           </div>
@@ -241,6 +248,13 @@ export default function CopilotPage() {
             )}
           </div>
         )}
+
+        {/* Historique. « Historiser » écrivait dans un tiroir sans poignée : ni
+            la liste ni l'export n'avaient d'appelant, et l'exploitant accumulait
+            des instantanés qu'il ne reverrait jamais (GF-DUR-032). */}
+        <div className="mt-6">
+          <HistoriqueRapports version={versionHistorique} />
+        </div>
       </div>
     </div>
   )

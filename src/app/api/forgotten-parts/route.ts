@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
+import { fromScaled } from '@/lib/money'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
@@ -52,13 +53,13 @@ export const POST = withAuth(async (req) => {
   // Catalog (name/reference → unit price) + garage habits (parts added often).
   const parts = await prisma.part.findMany({
     where: { garageId },
-    select: { id: true, name: true, reference: true, unitPrice: true },
+    select: { id: true, name: true, reference: true, unitPriceTenThousandths: true },
   })
   const catalog = new Map<string, number>()
   const idToName = new Map<string, string>()
   for (const p of parts) {
-    if (p.name) catalog.set(p.name, p.unitPrice)
-    if (p.reference) catalog.set(p.reference, p.unitPrice)
+    if (p.name) catalog.set(p.name, fromScaled(p.unitPriceTenThousandths))
+    if (p.reference) catalog.set(p.reference, fromScaled(p.unitPriceTenThousandths))
     idToName.set(p.id, p.name)
   }
 

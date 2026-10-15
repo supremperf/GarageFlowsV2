@@ -1,0 +1,13 @@
+{
+  "issues": 26,
+  "candidateDeltaSha256": "075562ac7cc0ebbd36a04f0d883157dc40a5ebcc4bc8e4e0839dd4810b55e80e",
+  "sourceChanges": 18,
+  "statuses": {
+    "PARTIELLEMENT VALID\u00c9": 9,
+    "\u00c9CHOU\u00c9": 3,
+    "R\u00c9SOLU": 8,
+    "BLOQU\u00c9": 4,
+    "VALID\u00c9": 1,
+    "EN ATTENTE DE REVUE": 1
+  }
+}

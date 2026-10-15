@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { toCents, fromCents, computeTotals, applyDiscountCents, balanceCents } from '@/lib/money'
+import { toCents, fromCents, computeTotals, multiplyCents, applyDiscountCents, balanceCents } from '@/lib/money'
 import { calcTotalHT, calcTotalTTC, calcTaxAmount, withTotals } from '@/lib/billing'
 
 describe('money — arithmétique exacte en centimes', () => {
@@ -72,6 +72,39 @@ describe('money — arithmétique exacte en centimes', () => {
     const t = computeTotals([{ quantity: 1000000, unitPrice: 1234.56 }], 20)
     expect(t.totalHTCents).toBe(123456000000)
     expect(t.totalTTCCents).toBe(t.totalHTCents + t.taxCents)
+  })
+})
+
+describe('money — correctifs arrondi (anomalies A24/A25/A26)', () => {
+  it('A24 : toCents arrondit correctement AU-DELÀ de 2 € sur entrées à 3 décimales', () => {
+    // L'ancien Number.EPSILON fixe échouait ici (9,995 → 999 au lieu de 1000).
+    expect(toCents(9.995)).toBe(1000)
+    expect(toCents(39.995)).toBe(4000)
+    expect(toCents(8.665)).toBe(867)
+    expect(toCents(2.135)).toBe(214)
+    expect(toCents(2.675)).toBe(268)
+    // Non-régression : plage [1,2) déjà correcte + valeurs propres à 2 décimales.
+    expect(toCents(1.005)).toBe(101)
+    expect(toCents(19.99)).toBe(1999)
+    expect(toCents(1234.56)).toBe(123456)
+  })
+
+  it('A24 : symétrie des montants négatifs (avoirs) dans toCents', () => {
+    expect(toCents(-9.995)).toBe(-1000)
+    expect(toCents(-1.005)).toBe(-101)
+  })
+
+  it('A26 : multiplyCents symétrique — vente et avoir s’annulent (0 résidu)', () => {
+    expect(multiplyCents(333, 1.5)).toBe(500)
+    expect(multiplyCents(-333, 1.5)).toBe(-500)
+    expect(multiplyCents(333, 1.5) + multiplyCents(-333, 1.5)).toBe(0)
+  })
+
+  it('A25 : une facture et son avoir exact s’annulent (TVA et TTC net = 0)', () => {
+    const facture = computeTotals([{ quantity: 1, unitPrice: 0.05 }], 10)
+    const avoir = computeTotals([{ quantity: 1, unitPrice: -0.05 }], 10)
+    expect(facture.taxCents + avoir.taxCents).toBe(0)
+    expect(facture.totalTTCCents + avoir.totalTTCCents).toBe(0)
   })
 })
 

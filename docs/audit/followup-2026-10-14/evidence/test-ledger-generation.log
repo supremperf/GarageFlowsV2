@@ -1,0 +1,41 @@
+{
+  "source": "vitest-latest.json",
+  "sourceSha256": "6567db08063dae6677b7bc842f667b908121a028337948e667565bec7cf616ab",
+  "total": 3742,
+  "passed": 2895,
+  "failed": 3,
+  "skipped": 844,
+  "categories": {
+    "DECLARED_REAL_ARTIFACT_ABSENT": 1,
+    "SETUP_FAILURE_NOT_DECLARED_SKIP": 808,
+    "DECLARED_POSTGRES_UNAVAILABLE": 21,
+    "DECLARED_EXTERNAL_PUBLIC_KEY_ABSENT": 2,
+    "DECLARED_REDIS_UNAVAILABLE": 5,
+    "DECLARED_ISSUER_PRIVATE_KEY_ABSENT": 5,
+    "DECLARED_ISSUED_TOKEN_ABSENT": 2
+  },
+  "files": {
+    "total": 323,
+    "failed": 78,
+    "explicitlySkipped": 5,
+    "allBodiesSkippedAfterSetupFailure": 77
+  },
+  "unhandledErrors": 4,
+  "e2e": {
+    "total": 144,
+    "stats": {
+      "startTime": "2026-10-14T12:42:25.197Z",
+      "duration": 37457.358,
+      "expected": 0,
+      "skipped": 90,
+      "unexpected": 54,
+      "flaky": 0
+    }
+  },
+  "limitations": [
+    "Categories attach observed runner status to source skip conditions and shared hook errors; they do not certify every test implementation.",
+    "Criticality is conservative/provisional, not a completed per-scenario business-risk review.",
+    "Initial nominal 2896 passes included seven empty Python checks and one empty artifact check. Seven now execute the official Python keygen with an ephemeral test key; the artifact check is explicit locally and mandatory/fail-closed in the Windows workflow.",
+    "Python cross-language proof injects an ephemeral PUBLIC test key into the Node verifier; it does NOT validate the production issuer or a native Electron/browser runtime."
+  ]
+}

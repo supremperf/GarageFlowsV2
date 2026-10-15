@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: mandatory gate rejects any failed, cancelled or skipped upstream job
+ok 1 - mandatory gate rejects any failed, cancelled or skipped upstream job
+  ---
+  duration_ms: 64.859985
+  type: 'test'
+  ...
+# Subtest: workflow graph pins actions, retains strict security and packages Windows before gate
+ok 2 - workflow graph pins actions, retains strict security and packages Windows before gate
+  ---
+  duration_ms: 1.51973
+  type: 'test'
+  ...
+# Subtest: authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+ok 3 - authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+  ---
+  duration_ms: 466.058865
+  type: 'test'
+  ...
+# Subtest: custom shell executes exactly the official workflow command and rejects extra commands
+ok 4 - custom shell executes exactly the official workflow command and rejects extra commands
+  ---
+  duration_ms: 26.419089
+  type: 'test'
+  ...
+# Subtest: literal environment secrets, private PEM, credentials and signed URLs are withheld
+ok 5 - literal environment secrets, private PEM, credentials and signed URLs are withheld
+  ---
+  duration_ms: 1.193731
+  type: 'test'
+  ...
+# Subtest: exit codes cannot turn a failed, signalled or unspawned packaging command green
+ok 6 - exit codes cannot turn a failed, signalled or unspawned packaging command green
+  ---
+  duration_ms: 0.237464
+  type: 'test'
+  ...
+# Subtest: annotations retain readable build diagnostics and lossless projected metadata
+ok 7 - annotations retain readable build diagnostics and lossless projected metadata
+  ---
+  duration_ms: 3.554238
+  type: 'test'
+  ...
+# Subtest: large logs are explicitly incomplete, with bounded tails and a full-input digest
+ok 8 - large logs are explicitly incomplete, with bounded tails and a full-input digest
+  ---
+  duration_ms: 0.788356
+  type: 'test'
+  ...
+# Subtest: secrets are removed before truncation, including incomplete private key blocks
+ok 9 - secrets are removed before truncation, including incomplete private key blocks
+  ---
+  duration_ms: 0.463315
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 695.406382

@@ -7,11 +7,12 @@
  * answers (== message with no provider) and absent on the action pass-through.
  */
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest'
-import { execSync } from 'node:child_process'
+import { toScaled } from '@/lib/money'
 import { format, subDays } from 'date-fns'
 import path from 'node:path'
 import fs from 'node:fs'
 import { __setLlmProvider } from '@/lib/copilot-llm/provider'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-itest-copilot.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -29,15 +30,17 @@ async function ask(query: string): Promise<{ status: number; json: any }> {
   const res = await POST(new Request('http://localhost/api/copilot', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }) }))
   return { status: res.status, json: await res.json() }
 }
-const asA = () => { h.session = { user: { id: 'ua', name: 'A', garageId: garageA } } }
+// Rôle OWNER : ces tests exercent la LOGIQUE des résolveurs (scoping garage,
+// grounding) ; l'accès aux résolveurs financiers exige financial:read (cf. le
+// test d'autorisation dédié copilot-financial-authz-v15).
+const asA = () => { h.session = { user: { id: 'ua', name: 'A', role: 'OWNER', garageId: garageA } } }
 
 async function paidInvoice(garageId: string, number: string, issueDate: string, status: string, ht: number) {
-  await prisma.invoice.create({ data: { number, garageId, clientName: 'C', status, issueDate, taxRate: 20, lines: { create: [{ description: 'x', quantity: 1, unitPrice: ht, unitCost: 0, isLabor: false, sortOrder: 0 }] } } })
+  await prisma.invoice.create({ data: { number, garageId, clientName: 'C', status, issueDate, taxRate: 20, lines: { create: [{ description: 'x', quantityTenThousandths: 10000, unitPriceTenThousandths: toScaled(ht), unitCostTenThousandths: 0, isLabor: false, sortOrder: 0 }] } } })
 }
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', { cwd: path.resolve(__dirname, '../..'), env: { ...process.env, DATABASE_URL: `file:${DB_PATH}` }, stdio: 'ignore' })
+  prepareTestDb(DB_PATH)
   ;({ prisma } = await import('@/lib/db'))
   ;({ POST } = await import('@/app/api/copilot/route') as any)
 
@@ -52,9 +55,9 @@ beforeAll(async () => {
 
   // low_stock: one below-min part, one well-stocked, one in garage B. NO JobParts
   // (zero consumption keeps the reorder figures deterministic).
-  await prisma.part.create({ data: { name: 'Plaquettes', reference: 'BRK-1', quantity: 2, minQuantity: 5, unitCost: 10, garageId: garageA } })
-  await prisma.part.create({ data: { name: 'Ampoule', quantity: 100, minQuantity: 5, unitCost: 1, garageId: garageA } })
-  await prisma.part.create({ data: { name: 'CrossTenant', quantity: 0, minQuantity: 5, unitCost: 50, garageId: garageB } })
+  await prisma.part.create({ data: { name: 'Plaquettes', reference: 'BRK-1', quantity: 2, minQuantity: 5, unitCostTenThousandths: 100000, garageId: garageA } })
+  await prisma.part.create({ data: { name: 'Ampoule', quantity: 100, minQuantity: 5, unitCostTenThousandths: 10000, garageId: garageA } })
+  await prisma.part.create({ data: { name: 'CrossTenant', quantity: 0, minQuantity: 5, unitCostTenThousandths: 500000, garageId: garageB } })
 
   asA()
 })
@@ -72,7 +75,7 @@ describe('POST /api/copilot', () => {
   })
 
   it('scopes revenue strictly to the session garage', async () => {
-    h.session = { user: { id: 'ub', name: 'B', garageId: garageB } }
+    h.session = { user: { id: 'ub', name: 'B', role: 'OWNER', garageId: garageB } }
     const { json } = await ask('Quel est le CA du jour ?')
     expect(json.data.revenueHT).toBe(777) // B sees only its own row
     asA()

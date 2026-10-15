@@ -1,0 +1,751 @@
+{
+  "at": "2026-10-15T12:56:24.577992+02:00",
+  "timezone": "Europe/Paris",
+  "head": "bd05cd521917cc059fc21780d1b562c020534942",
+  "branch": "arena/c9eaae15-garageflowsv2",
+  "decision": "PARTIELLEMENT VALIDÉ — NON PRÊT POUR LA PRODUCTION",
+  "scope": "Fichiers phase2 uniquement ; empreinte/range/inventaire != validation fonctionnelle. Source modifiée invalide sa revue. Pas audit exhaustif de toute application.",
+  "selfHash": "Exclu de ce document pour éviter autoréférence ; hash de ce fichier dans le reçu externe de clôture.",
+  "files": [
+    {
+      "path": ".env.example",
+      "sha256": "7b39d287030790cc01e9b5d2a6affbed3af0f78647d7e414ecaeb98a9cebdbfd",
+      "lineCount": 311,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 211,
+            "count": 1
+          },
+          {
+            "start": 218,
+            "count": 2
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "configuration",
+      "semanticReview": "Commentaires opt-in/privacy actualisés, aucune valeur activée.",
+      "risksAndLimits": "Détection de secrets non exhaustive ; question courante peut contenir des données privées.",
+      "proofs": "P33,P35,P39",
+      "depth": "S1: diff/structure/cohérence/mesures référencées",
+      "status": "VALIDÉ sur le contrôle limité décrit"
+    },
+    {
+      "path": "ENVIRONMENT-VARIABLES.md",
+      "sha256": "204275726026c124d51ec048d40e843086f0ba1b781f7238d59366516b37c496",
+      "lineCount": 231,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 49,
+            "count": 1
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "documentation générée",
+      "semanticReview": "Notes du contrat de planification régénérées.",
+      "risksAndLimits": "Pas preuve de configuration hébergeur réelle.",
+      "proofs": "P35,P39",
+      "depth": "S1: diff/structure/cohérence/mesures référencées",
+      "status": "VALIDÉ sur le contrôle limité décrit"
+    },
+    {
+      "path": "docs/COPILOT.md",
+      "sha256": "6cc89efe2a3eed4105fbfbe99be3ba043fc9b2ddd6305dec105792d48ce9de07",
+      "lineCount": 61,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 4,
+            "count": 1
+          },
+          {
+            "start": 10,
+            "count": 5
+          },
+          {
+            "start": 24,
+            "count": 1
+          },
+          {
+            "start": 39,
+            "count": 1
+          },
+          {
+            "start": 41,
+            "count": 1
+          },
+          {
+            "start": 57,
+            "count": 5
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "documentation",
+      "semanticReview": "Capacités réelles, relecture, catalogue et limites relues contre code.",
+      "risksAndLimits": "Pas validation des exemples en navigateur.",
+      "proofs": "P39",
+      "depth": "S1: diff/structure/cohérence/mesures référencées",
+      "status": "VALIDÉ sur le contrôle limité décrit"
+    },
+    {
+      "path": "docs/COPILOT_LLM.md",
+      "sha256": "27743a7b8777a6b70c5091a7ce059c6862bc66d9a0013ae0758bae1f33595291",
+      "lineCount": 46,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 6,
+            "count": 1
+          },
+          {
+            "start": 8,
+            "count": 1
+          },
+          {
+            "start": 10,
+            "count": 1
+          },
+          {
+            "start": 23,
+            "count": 1
+          },
+          {
+            "start": 29,
+            "count": 1
+          },
+          {
+            "start": 33,
+            "count": 4
+          },
+          {
+            "start": 38,
+            "count": 1
+          },
+          {
+            "start": 46,
+            "count": 1
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "documentation",
+      "semanticReview": "Flux sortant, absence de génération libre et bornes confrontés au fournisseur.",
+      "risksAndLimits": "Disponibilité/coût réel Anthropic non validés.",
+      "proofs": "P39",
+      "depth": "S1: diff/structure/cohérence/mesures référencées",
+      "status": "VALIDÉ sur le contrôle limité décrit"
+    },
+    {
+      "path": "docs/COPILOT_PHASE2_AUDIT.md",
+      "sha256": "7e45ed0bfbbb91de6d0f917da535226b83b3469e600427367859ceb931b438f3",
+      "lineCount": 61,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 1,
+            "count": 61
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "audit",
+      "semanticReview": "Baseline distinguée du code actuel ; diagnostic et critères ouverts réconciliés.",
+      "risksAndLimits": "Audit de sources ne prouve pas fonctionnement natif.",
+      "proofs": "P01-P07,P26,P36-P38",
+      "depth": "S1: diff/structure/cohérence/mesures référencées",
+      "status": "VALIDÉ sur le contrôle limité décrit"
+    },
+    {
+      "path": "docs/COPILOT_PHASE2_EVIDENCE.json",
+      "sha256": "d0fc7df196a5a029a701c87c996ef08c360cc4525ecfb8686260539f4cc71546",
+      "lineCount": 1499,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 1,
+            "count": 1499
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "preuve dérivée",
+      "semanticReview": "Reçus copiés et hashes de logs contrôlés ; interprétations explicites.",
+      "risksAndLimits": "Logs hors Git ; versions finales ne sont pas captures historiques par reçu.",
+      "proofs": "P01-P40",
+      "depth": "S1: diff/structure/cohérence/mesures référencées",
+      "status": "VALIDÉ sur le contrôle limité décrit"
+    },
+    {
+      "path": "docs/COPILOT_PHASE2_VALIDATION.md",
+      "sha256": "fbe64330386cc0fc4cfab43f290f18f19076cfd6b3f55bfe88831bf55ef0cd6f",
+      "lineCount": 163,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 1,
+            "count": 163
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "rapport",
+      "semanticReview": "Chiffres/commandes/limites rapprochés des reçus ; distinction simulations/native et CI.",
+      "risksAndLimits": "Synthèse, pas nouvelle exécution ; gates obligatoires ouverts.",
+      "proofs": "P01-P40",
+      "depth": "S1: diff/structure/cohérence/mesures référencées",
+      "status": "EN ATTENTE DE REVUE"
+    },
+    {
+      "path": "scripts/diagnose-prisma-runtime.cjs",
+      "sha256": "38f757bbbbd2e2b3478d88e3c6cd9d6ab58dedfcc95e29f7a113eb8d3315dc8d",
+      "lineCount": 32,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 1,
+            "count": 32
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "diagnostic",
+      "semanticReview": "HEAD publics/DNS/versions/préTLS, codes nonzero, aucune valeur de secret ou bypass.",
+      "risksAndLimits": "Prisma bloqué ; pas correction réseau/TLS ni installation moteur.",
+      "proofs": "P26",
+      "depth": "S1: diff/structure/cohérence/mesures référencées",
+      "status": "VALIDÉ sur le contrôle limité décrit"
+    },
+    {
+      "path": "scripts/evaluate-copilot-phase2.cjs",
+      "sha256": "55a40ceb7734ef4573a56e50dd9b996b533013634280f5a994b4eae419bc953c",
+      "lineCount": 68,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 1,
+            "count": 68
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "évaluation",
+      "semanticReview": "Dénominateurs/strates/fail-closed et limitations confrontés aux sorties P30.",
+      "risksAndLimits": "Scripted planner fourni par construction ; pas jugement indépendant.",
+      "proofs": "P30",
+      "depth": "S1: diff/structure/cohérence/mesures référencées",
+      "status": "VALIDÉ sur le contrôle limité décrit"
+    },
+    {
+      "path": "scripts/evaluate-copilot.cjs",
+      "sha256": "d259166298f686d4771103f607c8e248159debcf7f1c7f55efcea923672af8a0",
+      "lineCount": 79,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 15,
+            "count": 2
+          },
+          {
+            "start": 23,
+            "count": 1
+          },
+          {
+            "start": 72,
+            "count": 2
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "évaluation",
+      "semanticReview": "Loader SHA entier/path scope/cache, require.main et corpus 27 préservés.",
+      "risksAndLimits": "transpileModule ignore le contrôle de types ; métrique warm seulement.",
+      "proofs": "P29",
+      "depth": "S1: diff/structure/cohérence/mesures référencées",
+      "status": "VALIDÉ sur le contrôle limité décrit"
+    },
+    {
+      "path": "scripts/garageflow-env-manifest.json",
+      "sha256": "d4a35982974facca1aaaf30571820a0320dec9389da4489d9b1ad8a7a10e59ca",
+      "lineCount": 2033,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 279,
+            "count": 1
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "configuration",
+      "semanticReview": "Diff notes LLM uniquement ; structure/variable counts conservés.",
+      "risksAndLimits": "Revue du diff/contextes, pas annotation de toutes les entrées.",
+      "proofs": "P33,P35,P39",
+      "depth": "S1: diff/structure/cohérence/mesures référencées",
+      "status": "VALIDÉ sur le contrôle limité décrit"
+    },
+    {
+      "path": "src/app/api/copilot/route.ts",
+      "sha256": "9acd41a3d63b8969b3121c258c9ae081f31b60bb8d329a95aad82077da8a9b01",
+      "lineCount": 84,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 2,
+            "count": 0
+          },
+          {
+            "start": 3,
+            "count": 0
+          },
+          {
+            "start": 4,
+            "count": 0
+          },
+          {
+            "start": 6,
+            "count": 1
+          },
+          {
+            "start": 8,
+            "count": 5
+          },
+          {
+            "start": 15,
+            "count": 3
+          },
+          {
+            "start": 69,
+            "count": 1
+          },
+          {
+            "start": 71,
+            "count": 9
+          },
+          {
+            "start": 81,
+            "count": 2
+          },
+          {
+            "start": 83,
+            "count": 0
+          },
+          {
+            "start": 84,
+            "count": 0
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "frontière API",
+      "semanticReview": "Session/tenant/corps/rate/finance conservés, GET sondé, plan complet exécuté et rendu déterministe.",
+      "risksAndLimits": "Auth/licence/SQL/navigateur natifs non validés ; pas SLA global.",
+      "proofs": "P36,P37,P38 ; P14 bloqué",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/components/CopilotPanel.tsx",
+      "sha256": "76c8a4496d35803b5c74d3ff7ecc3f03943277c46105ad4131e50c41d0a2ba9c",
+      "lineCount": 234,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 25,
+            "count": 3
+          },
+          {
+            "start": 56,
+            "count": 0
+          },
+          {
+            "start": 58,
+            "count": 2
+          },
+          {
+            "start": 180,
+            "count": 2
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "UI",
+      "semanticReview": "Traitement 503, fallback/observations, boutons confirmation/reset/abort conservés.",
+      "risksAndLimits": "Revue diff/contrôle, pas navigateur ; snapshot ouverture uniquement.",
+      "proofs": "P37,P38",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/integration/copilot-conversation.test.ts",
+      "sha256": "643b3462c80ef9214157332f67c79a9e85c5f69e98b217e041c4a8b5bf6aa9fc",
+      "lineCount": 86,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 55,
+            "count": 1
+          },
+          {
+            "start": 59,
+            "count": 1
+          },
+          {
+            "start": 64,
+            "count": 22
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "tests natifs",
+      "semanticReview": "Assertions readiness, deux lectures, garage absent, période ; fixtures isolées existantes.",
+      "risksAndLimits": "54 skipped dans six suites ; auth/licence seams mockés dans ces integrations, pas issuer réel.",
+      "proofs": "P14 setup bloqué,P37",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/lib/copilot-llm/__tests__/planning-provider.test.ts",
+      "sha256": "09707d4eaa5c4d8806a6f4a8bd44ad610ece069150ace1a8c6280ac7be9d6e6c",
+      "lineCount": 34,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 1,
+            "count": 34
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "tests simulés",
+      "semanticReview": "Contrat/payload/privacy, SQL/input extras/score/max3 et séparation instructions/données.",
+      "risksAndLimits": "Fetch mocké ; pas coût/qualité/connexion réelle.",
+      "proofs": "P36",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/lib/copilot-llm/prompts.ts",
+      "sha256": "afe188595ac7e61fb9f59e9b434fbbfc18fb9e92c694a5a589dd11dd0febd442",
+      "lineCount": 67,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 6,
+            "count": 1
+          },
+          {
+            "start": 48,
+            "count": 20
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "instructions",
+      "semanticReview": "Modes/catalogue autorisé, paramètres backend, texte utilisateur non fiable ; builders historiques préservés.",
+      "risksAndLimits": "Prompt seul ne garantit pas conformité/pertinence du vrai modèle.",
+      "proofs": "P36,P37",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/lib/copilot-llm/provider.ts",
+      "sha256": "f09510ecc4947c8527fe97e095b3bf330e0bcde5a8ebb738174f59cec8fa30e3",
+      "lineCount": 111,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 3,
+            "count": 2
+          },
+          {
+            "start": 19,
+            "count": 1
+          },
+          {
+            "start": 32,
+            "count": 12
+          },
+          {
+            "start": 47,
+            "count": 0
+          },
+          {
+            "start": 51,
+            "count": 2
+          },
+          {
+            "start": 73,
+            "count": 2
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "transport serveur",
+      "semanticReview": "Opt-in/cache/circuit/délais/body cap/strict JSON, endpoint fixe et absence de phrase/complete.",
+      "risksAndLimits": "Ready = JSON valide récent, pas qualité sémantique ni disponibilité suivante ; classification legacy wording résiduel.",
+      "proofs": "P36,P37,P38",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/lib/copilot-llm/types.ts",
+      "sha256": "31398ae1d9b4c69aab88fdea63db6c30868a24963ca58e7b17c432575def9b5a",
+      "lineCount": 88,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 12,
+            "count": 2
+          },
+          {
+            "start": 84,
+            "count": 1
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "contrat",
+      "semanticReview": "plan facultatif, imports type-only, compatibilité seams historiques.",
+      "risksAndLimits": "Typecheck global nonzero ; type import cyclique effacé au runtime.",
+      "proofs": "P36,P37,P38",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/lib/copilot/__tests__/planning-execution.test.ts",
+      "sha256": "786e456615ac51f3d18b96ab2e369324c8b69dd683ac08914eb3a37b05ddb020",
+      "lineCount": 186,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 1,
+            "count": 186
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "tests simulés",
+      "semanticReview": "44 cas sécurité/context/period/confirmation/exécution/abort/readiness, observedAt assert conservée.",
+      "risksAndLimits": "Readers/probes simulés et timers virtuels, pas SQL cancel réel.",
+      "proofs": "P36",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/lib/copilot/conversation.ts",
+      "sha256": "93a77913f5e87b47a8a0323e199cf1ae2d014cdb28d25c4841f8c05a89b23f2d",
+      "lineCount": 175,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 8,
+            "count": 5
+          },
+          {
+            "start": 14,
+            "count": 2
+          },
+          {
+            "start": 25,
+            "count": 2
+          },
+          {
+            "start": 39,
+            "count": 1
+          },
+          {
+            "start": 43,
+            "count": 1
+          },
+          {
+            "start": 94,
+            "count": 82
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "orchestration",
+      "semanticReview": "Fallback original conservé, plans/docs/RBAC, références locales et périodes, hard guards.",
+      "risksAndLimits": "Heuristiques locales/modes exclusifs, pas plan dépendant des résultats ni couverture sémantique complète.",
+      "proofs": "P36,P29,P30,P37,P38",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/lib/copilot/evaluation-cases.json",
+      "sha256": "541a85624874d68a622a16920667b2cd348a4318b400cd702f679c26c1b14c3e",
+      "lineCount": 817,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 1,
+            "count": 817
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "corpus développement",
+      "semanticReview": "Structure/catégories/strates contrôlées et tous 68 cas exécutés.",
+      "risksAndLimits": "Revue structure/catégories, pas annotation sémantique indépendante de chaque attendu.",
+      "proofs": "P30",
+      "depth": "S1: diff/structure/cohérence/mesures référencées",
+      "status": "VALIDÉ sur le contrôle limité décrit"
+    },
+    {
+      "path": "src/lib/copilot/execution.ts",
+      "sha256": "894d25c7f9954bb4dd48df13a8bfe7cb3beb6592d61a0d900bc987997092f27f",
+      "lineCount": 69,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 1,
+            "count": 69
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "sécurité exécution",
+      "semanticReview": "Whole-plan + predispatch validation, timeout/cancel stop suivants, verification/evidence/timestamps.",
+      "risksAndLimits": "3500 ms par lecture, signal ne garantit pas annulation Prisma ; pas vérification sémantique indépendante des payloads.",
+      "proofs": "P36,P37,P38",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/lib/copilot/knowledge.ts",
+      "sha256": "af1cca61523f1015259873434f8fac9c1c302a2a70746b54b7183935e989e1c3",
+      "lineCount": 65,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 12,
+            "count": 1
+          },
+          {
+            "start": 22,
+            "count": 1
+          },
+          {
+            "start": 31,
+            "count": 1
+          },
+          {
+            "start": 43,
+            "count": 1
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "documentation applicative",
+      "semanticReview": "13 articles conservés, ancres déplacées/version ; filtration par permissions.",
+      "risksAndLimits": "Corpus restreint ; pas RAG exhaustif ni validation runtime de tous écrans.",
+      "proofs": "P36,P37",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/lib/copilot/planning.ts",
+      "sha256": "d681d514edfc02cb5eb94b4dc7ade01b6a9d84bc1e8e7186c1a5101902d331c9",
+      "lineCount": 111,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 1,
+            "count": 111
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "sécurité paramètres",
+      "semanticReview": "Union stricte/score/context présence-only, binding user/RBAC/doublons/périodes, ambiguïtés.",
+      "risksAndLimits": "Périodes/conjonctions lexicales conservatrices ; symptômes par longueur non validation sémantique ; coût non mesuré.",
+      "proofs": "P36,P30,P37,P38",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/lib/copilot/readiness.ts",
+      "sha256": "abe9b92fc61451fc035acbbd3c183dca025cf8209ae152d0b19a0b0eadf94d3f",
+      "lineCount": 18,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 1,
+            "count": 18
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "startup",
+      "semanticReview": "Validation singleton KB/outils et timeout probe essentiel, état model séparé.",
+      "risksAndLimits": "Sonde simulée en unités ; timeout ne cancelle pas SQL ; GET état instantané.",
+      "proofs": "P36,P37,P38",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/lib/copilot/references.ts",
+      "sha256": "d3a394db246434497e2739cb9e3aedb73db57072e1185c0513d7192733618064",
+      "lineCount": 10,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 1,
+            "count": 10
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "extraction locale",
+      "semanticReview": "Parseur dossier original déplacé/réexporté, référence utilisateur jamais autorité.",
+      "risksAndLimits": "Plaques SIV/nom seulement, pas tous identifiants monde.",
+      "proofs": "P36,P29,P30,P37",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/lib/copilot/server-readers.ts",
+      "sha256": "5f5df58795267901fbf10adfa1d03155d3b7478ba82f61ccbe3af13522ae6ff9",
+      "lineCount": 268,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 1,
+            "count": 268
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "frontière données",
+      "semanticReview": "Diff extraction lecteurs/helpers, garage where/select et redaction, permission centrale ; sondes du rôle ; mois glissant libellé corrigé.",
+      "risksAndLimits": "Neuf TS7006 ; clients natifs absents ; seuls deux helpers égalité exacte ; sondes/SQL nouveaux non exécutés.",
+      "proofs": "P37,P38 ; helper receipt ; P14 bloqué",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    },
+    {
+      "path": "src/lib/copilot/tools.ts",
+      "sha256": "56ee3be2702189a928fc18e956fd92c36c2337194bbe6b9816143f57757d2d20",
+      "lineCount": 73,
+      "reviewScope": {
+        "affectedRanges": [
+          {
+            "start": 1,
+            "count": 73
+          }
+        ],
+        "method": "Revue sémantique des chemins pertinents/diff et assertions ou sorties référencées ; non exhaustive ligne-par-ligne."
+      },
+      "category": "catalogue sécurité",
+      "semanticReview": "17 définitions réelles, schémas/RBAC/read vs handoff, descriptions de données/erreurs/confirmation/verification.",
+      "risksAndLimits": "Rôles généraux resserrés OWNER/MANAGER/RECEPTIONIST ; API/native et capacité formulaire effective non testées ici.",
+      "proofs": "P36,P30,P37,P38",
+      "depth": "S2: statique orienté flux/contrat + preuves référencées",
+      "status": "PARTIELLEMENT VALIDÉ"
+    }
+  ]
+}

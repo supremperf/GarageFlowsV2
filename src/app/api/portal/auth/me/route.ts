@@ -24,6 +24,13 @@ export const GET = withPortalAuth(async (_req, { user, device }) => {
       emailVerified: user.emailVerified,
       twoFactorEnabled: user.twoFactorEnabled,
       clientId: user.clientId,
+      // Changement d'adresse EN ATTENTE de confirmation (GF-DUR-028). Sans
+      // cette information, un client qui a demandé un changement puis rechargé
+      // sa page ne voit plus aucune trace de sa demande : il conclut qu'elle
+      // n'a pas abouti, recommence, et ne comprend pas pourquoi son ancienne
+      // adresse reste la seule qui le connecte. C'est SA demande et SA future
+      // adresse : la lui rendre ne divulgue rien.
+      pendingEmail: user.pendingEmail,
     },
     session: { deviceId: device.id, since: device.createdAt },
     backupCodesRemaining,

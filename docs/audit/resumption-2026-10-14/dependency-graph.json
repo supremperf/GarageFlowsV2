@@ -1,0 +1,130 @@
+{
+  "createdAt": "2026-10-14T13:32:26.091558+00:00",
+  "timezone": "Europe/Paris",
+  "note": "Prepared before closure tests. Issue-level packaging/integrity references are split into source/build/runtime stages here to avoid cyclic scheduling. Independent work never depends on external downloads.",
+  "nodes": [
+    {
+      "id": "inventory",
+      "acceptance": "Reconcile 21 IDs and hashes",
+      "dependsOn": []
+    },
+    {
+      "id": "independent-review",
+      "acceptance": "Semantic source review, root-cause regressions",
+      "dependsOn": [
+        "inventory"
+      ]
+    },
+    {
+      "id": "independent-checks",
+      "acceptance": "Lint/type/config/safety/strict npm audit",
+      "dependsOn": [
+        "inventory"
+      ]
+    },
+    {
+      "id": "official-downloads",
+      "acceptance": "Approved Electron/Prisma/Chromium/Gitleaks URLs, TLS and integrity",
+      "dependsOn": []
+    },
+    {
+      "id": "normal-ci",
+      "acceptance": "Clean normal npm ci and both native Prisma clients",
+      "dependsOn": [
+        "official-downloads"
+      ]
+    },
+    {
+      "id": "isolated-services",
+      "acceptance": "Attested disposable PostgreSQL/Redis, no production connection",
+      "dependsOn": []
+    },
+    {
+      "id": "issuer",
+      "acceptance": "Approved public authority anchor and valid scoped test tokens",
+      "dependsOn": []
+    },
+    {
+      "id": "vitest",
+      "acceptance": "Full individual test/setup/unhandled reconciliation",
+      "dependsOn": [
+        "normal-ci",
+        "isolated-services",
+        "issuer",
+        "independent-review"
+      ]
+    },
+    {
+      "id": "build",
+      "acceptance": "Standard npm run build, fixed JS budget",
+      "dependsOn": [
+        "normal-ci",
+        "issuer",
+        "independent-checks"
+      ]
+    },
+    {
+      "id": "windows-package",
+      "acceptance": "Standard dist on Windows and immutable artifact hashes",
+      "dependsOn": [
+        "build"
+      ]
+    },
+    {
+      "id": "artifact-runtime",
+      "acceptance": "Actual packaged Electron/fuses/Prisma launch",
+      "dependsOn": [
+        "windows-package"
+      ]
+    },
+    {
+      "id": "approved-staging",
+      "acceptance": "Attested authenticated isolated backend fixtures and approval",
+      "dependsOn": []
+    },
+    {
+      "id": "e2e",
+      "acceptance": "All 144 cases with official Chromium and real auth",
+      "dependsOn": [
+        "build",
+        "official-downloads",
+        "approved-staging",
+        "isolated-services",
+        "issuer"
+      ]
+    },
+    {
+      "id": "security",
+      "acceptance": "Full verified Gitleaks, CodeQL/SAST and fork followup",
+      "dependsOn": [
+        "official-downloads",
+        "independent-checks"
+      ]
+    },
+    {
+      "id": "effective-ci",
+      "acceptance": "Six actual mandatory jobs, protection/API attestation",
+      "dependsOn": [
+        "vitest",
+        "e2e",
+        "artifact-runtime",
+        "security"
+      ]
+    },
+    {
+      "id": "exhaustive-review",
+      "acceptance": "All applicable source files semantically reviewed",
+      "dependsOn": [
+        "independent-review"
+      ]
+    },
+    {
+      "id": "production-decision",
+      "acceptance": "No mandatory criterion open",
+      "dependsOn": [
+        "effective-ci",
+        "exhaustive-review"
+      ]
+    }
+  ]
+}

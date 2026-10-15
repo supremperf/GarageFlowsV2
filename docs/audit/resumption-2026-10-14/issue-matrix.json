@@ -1,0 +1,1071 @@
+[
+  {
+    "id": "FUP-20261014-001",
+    "requirement": "B1 \u2014 Installation normale et natifs reproductibles",
+    "status": "BLOQU\u00c9",
+    "priority": "P0",
+    "rootCause": "Sur snapshot propre sans d\u00e9pendances/caches/env locaux : npm ci normal termine 1 dans electron@41.10.6/install.js (fetch failed). G\u00e9n\u00e9ration Prisma \u00e9choue sur r\u00e9cup\u00e9ration officielle du checksum, avant chargement du moteur.",
+    "correction": "Installation JS diagnostique conserv\u00e9e distincte ; vraie installation normale tent\u00e9e dans copie isol\u00e9e, sans d\u00e9sactivation TLS ni faux moteur.",
+    "validatingTest": "npm ci --foreground-scripts --no-fund avec npm 11.16.0 : 1 ; clients normaux non valid\u00e9s.",
+    "evidence": [
+      "evidence/normal-ci.log",
+      "evidence/normal-ci.exit",
+      "evidence/clean-install-source.json",
+      "evidence/native-results.json",
+      "evidence/prisma-generate.log"
+    ],
+    "remaining": "Autoriser cha\u00eene de t\u00e9l\u00e9chargement officielle compl\u00e8te et int\u00e9grit\u00e9 ; refaire npm ci normal puis les deux prisma generate. Les changements post\u00e9rieurs test/docs/CI ne constituent pas une seconde installation normale valid\u00e9e.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/normal-ci.log",
+    "supportingEvidence": [
+      "evidence/normal-ci.log",
+      "evidence/normal-ci.exit",
+      "evidence/clean-install-source.json",
+      "evidence/native-results.json",
+      "evidence/prisma-generate.log"
+    ],
+    "contraryOrLimitingEvidence": "Autoriser cha\u00eene de t\u00e9l\u00e9chargement officielle compl\u00e8te et int\u00e9grit\u00e9 ; refaire npm ci normal puis les deux prisma generate. Les changements post\u00e9rieurs test/docs/CI ne constituent pas une seconde installation normale valid\u00e9e.",
+    "historicalStatus": "BLOQU\u00c9",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/normal-ci.log",
+      "../followup-2026-10-14/evidence/normal-ci.exit",
+      "../followup-2026-10-14/evidence/clean-install-source.json",
+      "../followup-2026-10-14/evidence/native-results.json",
+      "../followup-2026-10-14/evidence/prisma-generate.log"
+    ],
+    "missingProof": "Autoriser cha\u00eene de t\u00e9l\u00e9chargement officielle compl\u00e8te et int\u00e9grit\u00e9 ; refaire npm ci normal puis les deux prisma generate. Les changements post\u00e9rieurs test/docs/CI ne constituent pas une seconde installation normale valid\u00e9e.",
+    "dependencies": [],
+    "nextAction": "Autoriser cha\u00eene de t\u00e9l\u00e9chargement officielle compl\u00e8te et int\u00e9grit\u00e9 ; refaire npm ci normal puis les deux prisma generate. Les changements post\u00e9rieurs test/docs/CI ne constituent pas une seconde installation normale valid\u00e9e.",
+    "acceptance": "B1 \u2014 Installation normale et natifs reproductibles \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Native prerequisites remain absent; no identical normal-install retry. Remote CI c53d8e5 job metadata shows relevant test/E2E job success; detailed counts/artifacts inaccessible. Local failures/status retained, no inherited full closure.",
+    "currentProof": [
+      "evidence/native-current-state.json",
+      "evidence/github-ci-published.json"
+    ],
+    "requiredProof": "Autoriser cha\u00eene de t\u00e9l\u00e9chargement officielle compl\u00e8te et int\u00e9grit\u00e9 ; refaire npm ci normal puis les deux prisma generate. Les changements post\u00e9rieurs test/docs/CI ne constituent pas une seconde installation normale valid\u00e9e.",
+    "residualRisk": "Autoriser cha\u00eene de t\u00e9l\u00e9chargement officielle compl\u00e8te et int\u00e9grit\u00e9 ; refaire npm ci normal puis les deux prisma generate. Les changements post\u00e9rieurs test/docs/CI ne constituent pas une seconde installation normale valid\u00e9e.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-002",
+    "requirement": "B2 \u2014 Suite Vitest enti\u00e8re sans \u00e9chec ni non-ex\u00e9cution critique",
+    "status": "\u00c9CHOU\u00c9",
+    "priority": "P0",
+    "rootCause": "3 assertions de prepare-test-db \u00e9chouent sur db push ; 76 fichiers ont le m\u00eame \u00e9chec de pr\u00e9paration r\u00e9seau, 1 autre \u00e9choue au chargement Query Engine. 808 corps non ex\u00e9cut\u00e9s apr\u00e8s hook ; 4 rejets Prisma non g\u00e9r\u00e9s.",
+    "correction": "stderr du CLI conserv\u00e9 (pipe au lieu de ignore) ; reproduction compl\u00e8te et inventaire individuel, aucune assertion remplac\u00e9e par skip ni faux ORM.",
+    "validatingTest": "Confirmation : 2895 passed / 3 failed / 844 skipped, 78 fichiers \u00e9chou\u00e9s et 4 erreurs, exit1. 36 skips d\u00e9clar\u00e9s sont s\u00e9par\u00e9s des 808 emp\u00each\u00e9s par setup.",
+    "evidence": [
+      "evidence/vitest-latest.json",
+      "evidence/vitest-latest.log",
+      "tests-failed.jsonl",
+      "tests-skipped.jsonl",
+      "tests-setup-errors.jsonl",
+      "tests-unhandled-errors.jsonl"
+    ],
+    "remaining": "Rejouer les 3 cas et les 77 fichiers apr\u00e8s installation des vrais moteurs ; diagnostiquer les \u00e9checs m\u00e9tier \u00e9ventuellement r\u00e9v\u00e9l\u00e9s, sans supposer que le r\u00e9seau explique tout comportement futur.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/vitest.json",
+    "supportingEvidence": [
+      "evidence/vitest-latest.json",
+      "evidence/vitest-latest.log",
+      "tests-failed.jsonl",
+      "tests-skipped.jsonl",
+      "tests-setup-errors.jsonl",
+      "tests-unhandled-errors.jsonl"
+    ],
+    "contraryOrLimitingEvidence": "Rejouer les 3 cas et les 77 fichiers apr\u00e8s installation des vrais moteurs ; diagnostiquer les \u00e9checs m\u00e9tier \u00e9ventuellement r\u00e9v\u00e9l\u00e9s, sans supposer que le r\u00e9seau explique tout comportement futur.",
+    "historicalStatus": "\u00c9CHOU\u00c9",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/vitest-latest.json",
+      "../followup-2026-10-14/evidence/vitest-latest.log",
+      "../followup-2026-10-14/tests-failed.jsonl",
+      "../followup-2026-10-14/tests-skipped.jsonl",
+      "../followup-2026-10-14/tests-setup-errors.jsonl",
+      "../followup-2026-10-14/tests-unhandled-errors.jsonl"
+    ],
+    "missingProof": "Rejouer les 3 cas et les 77 fichiers apr\u00e8s installation des vrais moteurs ; diagnostiquer les \u00e9checs m\u00e9tier \u00e9ventuellement r\u00e9v\u00e9l\u00e9s, sans supposer que le r\u00e9seau explique tout comportement futur.",
+    "dependencies": [
+      "FUP-20261014-001",
+      "FUP-20261014-007",
+      "FUP-20261014-013",
+      "FUP-20261014-017"
+    ],
+    "nextAction": "Rejouer les 3 cas et les 77 fichiers apr\u00e8s installation des vrais moteurs ; diagnostiquer les \u00e9checs m\u00e9tier \u00e9ventuellement r\u00e9v\u00e9l\u00e9s, sans supposer que le r\u00e9seau explique tout comportement futur.",
+    "acceptance": "B2 \u2014 Suite Vitest enti\u00e8re sans \u00e9chec ni non-ex\u00e9cution critique \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Final official suite: 3829 tests, 2982 passed, 3 failed, 844 skipped, 4 unhandled errors; 5 skipped Redis cases separately passed. Remote CI c53d8e5 job metadata shows relevant test/E2E job success; detailed counts/artifacts inaccessible. Local failures/status retained, no inherited full closure.",
+    "currentProof": [
+      "tests-summary.json",
+      "evidence/github-ci-published.json"
+    ],
+    "requiredProof": "Rejouer les 3 cas et les 77 fichiers apr\u00e8s installation des vrais moteurs ; diagnostiquer les \u00e9checs m\u00e9tier \u00e9ventuellement r\u00e9v\u00e9l\u00e9s, sans supposer que le r\u00e9seau explique tout comportement futur.",
+    "residualRisk": "Rejouer les 3 cas et les 77 fichiers apr\u00e8s installation des vrais moteurs ; diagnostiquer les \u00e9checs m\u00e9tier \u00e9ventuellement r\u00e9v\u00e9l\u00e9s, sans supposer que le r\u00e9seau explique tout comportement futur.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-003",
+    "requirement": "B3 \u2014 Chromium officiel et E2E r\u00e9els",
+    "status": "BLOQU\u00c9",
+    "priority": "P0",
+    "rootCause": "Installer officiel \u00e9choue TLS/ECONNRESET ; ex\u00e9cutable chromium_headless_shell-1234 absent.",
+    "correction": "Vrai serveur Next de test lanc\u00e9 sans bootstrap secret local ; vraie commande Playwright sur copie SQLite de test, six projets, sans mock ajout\u00e9 au harness.",
+    "validatingTest": "144 cas : 0 pass\u00e9, 54 failed avant browser launch, 90 skipped faute fixtures authentifi\u00e9es ; exit1. Serveur arr\u00eat\u00e9 par le runner.",
+    "evidence": [
+      "evidence/chromium-system-ca.log",
+      "evidence/e2e.json",
+      "evidence/e2e.log",
+      "tests-e2e.jsonl",
+      "playwright-attempt.config.ts"
+    ],
+    "remaining": "Installer Chromium et d\u00e9pendances depuis sources officielles v\u00e9rifi\u00e9es, rejouer le harness puis les parcours authentifi\u00e9s isol\u00e9s. Aucun rendu fonctionnel n\u2019est valid\u00e9.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/chromium-install.log",
+    "supportingEvidence": [
+      "evidence/chromium-system-ca.log",
+      "evidence/e2e.json",
+      "evidence/e2e.log",
+      "tests-e2e.jsonl",
+      "playwright-attempt.config.ts"
+    ],
+    "contraryOrLimitingEvidence": "Installer Chromium et d\u00e9pendances depuis sources officielles v\u00e9rifi\u00e9es, rejouer le harness puis les parcours authentifi\u00e9s isol\u00e9s. Aucun rendu fonctionnel n\u2019est valid\u00e9.",
+    "historicalStatus": "BLOQU\u00c9",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/chromium-system-ca.log",
+      "../followup-2026-10-14/evidence/e2e.json",
+      "../followup-2026-10-14/evidence/e2e.log",
+      "../followup-2026-10-14/tests-e2e.jsonl",
+      "../followup-2026-10-14/playwright-attempt.config.ts"
+    ],
+    "missingProof": "Installer Chromium et d\u00e9pendances depuis sources officielles v\u00e9rifi\u00e9es, rejouer le harness puis les parcours authentifi\u00e9s isol\u00e9s. Aucun rendu fonctionnel n\u2019est valid\u00e9.",
+    "dependencies": [],
+    "nextAction": "Installer Chromium et d\u00e9pendances depuis sources officielles v\u00e9rifi\u00e9es, rejouer le harness puis les parcours authentifi\u00e9s isol\u00e9s. Aucun rendu fonctionnel n\u2019est valid\u00e9.",
+    "acceptance": "B3 \u2014 Chromium officiel et E2E r\u00e9els \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "144 cases discovered anew, Chromium executable absent; prior actual attempt 54 launch failures/90 auth skips retained. Remote CI c53d8e5 job metadata shows relevant test/E2E job success; detailed counts/artifacts inaccessible. Local failures/status retained, no inherited full closure.",
+    "currentProof": [
+      "evidence/e2e-discovery.log",
+      "evidence/github-ci-published.json"
+    ],
+    "requiredProof": "Installer Chromium et d\u00e9pendances depuis sources officielles v\u00e9rifi\u00e9es, rejouer le harness puis les parcours authentifi\u00e9s isol\u00e9s. Aucun rendu fonctionnel n\u2019est valid\u00e9.",
+    "residualRisk": "Installer Chromium et d\u00e9pendances depuis sources officielles v\u00e9rifi\u00e9es, rejouer le harness puis les parcours authentifi\u00e9s isol\u00e9s. Aucun rendu fonctionnel n\u2019est valid\u00e9.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-004",
+    "requirement": "B4 \u2014 Budget JS inchang\u00e9",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "priority": "P0",
+    "rootCause": "JS \u00e9mis initial 3632537 octets, plafond 3625984 : d\u00e9passement de 6553 ; duplication syntaxique des noms de 14 langues dans 562 objets UI.",
+    "correction": "Repr\u00e9sentation row \u00e0 14 param\u00e8tres typ\u00e9s et uniform pour deux valeurs identiques ; aucune cha\u00eene/cl\u00e9/langue supprim\u00e9e.",
+    "validatingTest": "JS r\u00e9el \u00e9mis 3609457, gain23080, marge16527 ; budget apr\u00e8s exit0. Empreinte JSON avant/apr\u00e8s strictement identique et deux r\u00e9gressions Vitest passent.",
+    "evidence": [
+      "evidence/budget-before.log",
+      "evidence/budget-after.log",
+      "evidence/bundle.json",
+      "evidence/next-before.log",
+      "evidence/next-after.log",
+      "../../../tests/fixtures/ui-content-sha256.json"
+    ],
+    "remaining": "R\u00e9solution born\u00e9e \u00e0 la mesure comparative r\u00e9elle. Les deux builds Next directs contiennent une erreur Prisma malgr\u00e9 exit0 ; standard build/dist toujours non valid\u00e9s. Le serveur dev E2E a ensuite r\u00e9utilis\u00e9 .next : refaire une mesure sur build standard neuf avant livraison.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/budget-before.log",
+    "supportingEvidence": [
+      "evidence/budget-before.log",
+      "evidence/budget-after.log",
+      "evidence/bundle.json",
+      "evidence/next-before.log",
+      "evidence/next-after.log",
+      "../../../tests/fixtures/ui-content-sha256.json"
+    ],
+    "contraryOrLimitingEvidence": "R\u00e9solution born\u00e9e \u00e0 la mesure comparative r\u00e9elle. Les deux builds Next directs contiennent une erreur Prisma malgr\u00e9 exit0 ; standard build/dist toujours non valid\u00e9s. Le serveur dev E2E a ensuite r\u00e9utilis\u00e9 .next : refaire une mesure sur build standard neuf avant livraison.",
+    "historicalStatus": "R\u00c9SOLU",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/budget-before.log",
+      "../followup-2026-10-14/evidence/budget-after.log",
+      "../followup-2026-10-14/evidence/bundle.json",
+      "../followup-2026-10-14/evidence/next-before.log",
+      "../followup-2026-10-14/evidence/next-after.log",
+      "../followup-2026-10-14/../../../tests/fixtures/ui-content-sha256.json"
+    ],
+    "missingProof": "R\u00e9solution born\u00e9e \u00e0 la mesure comparative r\u00e9elle. Les deux builds Next directs contiennent une erreur Prisma malgr\u00e9 exit0 ; standard build/dist toujours non valid\u00e9s. Le serveur dev E2E a ensuite r\u00e9utilis\u00e9 .next : refaire une mesure sur build standard neuf avant livraison.",
+    "dependencies": [
+      "FUP-20261014-018"
+    ],
+    "nextAction": "R\u00e9solution born\u00e9e \u00e0 la mesure comparative r\u00e9elle. Les deux builds Next directs contiennent une erreur Prisma malgr\u00e9 exit0 ; standard build/dist toujours non valid\u00e9s. Le serveur dev E2E a ensuite r\u00e9utilis\u00e9 .next : refaire une mesure sur build standard neuf avant livraison.",
+    "acceptance": "B4 \u2014 Budget JS inchang\u00e9 \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "UI lossless optimization retained and tested; fixed budget 3625984 unchanged. Previous diagnostic 3609457 is NOT a current standard production build, especially after source edits.",
+    "currentProof": [
+      "../followup-2026-10-14/evidence/ui-compaction.json"
+    ],
+    "requiredProof": "R\u00e9solution born\u00e9e \u00e0 la mesure comparative r\u00e9elle. Les deux builds Next directs contiennent une erreur Prisma malgr\u00e9 exit0 ; standard build/dist toujours non valid\u00e9s. Le serveur dev E2E a ensuite r\u00e9utilis\u00e9 .next : refaire une mesure sur build standard neuf avant livraison.",
+    "residualRisk": "R\u00e9solution born\u00e9e \u00e0 la mesure comparative r\u00e9elle. Les deux builds Next directs contiennent une erreur Prisma malgr\u00e9 exit0 ; standard build/dist toujours non valid\u00e9s. Le serveur dev E2E a ensuite r\u00e9utilis\u00e9 .next : refaire une mesure sur build standard neuf avant livraison.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-005",
+    "requirement": "B5 \u2014 Revue s\u00e9mantique exhaustive et durable par fichier",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "priority": "P0",
+    "rootCause": "L\u2019inventaire/AST pr\u00e9c\u00e9dent ne certifiait aucune revue humaine compl\u00e8te ; taille du d\u00e9p\u00f4t et d\u00e9pendances de s\u00e9curit\u00e9 non toutes examin\u00e9es.",
+    "correction": "Registre d\u00e9terministe avec SHA, priorit\u00e9, plages effectivement lues, notes manuelles et prochain lot ; aucun statut manuel inf\u00e9r\u00e9 automatiquement.",
+    "validatingTest": "1243 fichiers : 32 revus int\u00e9gralement comme sources, 11 partiellement, 1200 en attente. Les sch\u00e9mas 43/47 mod\u00e8les et la matrice des 164 routes restent incomplets.",
+    "evidence": [
+      "review-ledger.jsonl",
+      "review-progress.json",
+      "build-review-ledger.cjs"
+    ],
+    "remaining": "Continuer P0 puis P1/P2, contr\u00f4ler le SHA avant reprise et relire si changement. Full source reading ne vaut pas validation fonctionnelle ou absence de d\u00e9fauts.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "../scope.json",
+    "supportingEvidence": [
+      "review-ledger.jsonl",
+      "review-progress.json",
+      "build-review-ledger.cjs"
+    ],
+    "contraryOrLimitingEvidence": "Continuer P0 puis P1/P2, contr\u00f4ler le SHA avant reprise et relire si changement. Full source reading ne vaut pas validation fonctionnelle ou absence de d\u00e9fauts.",
+    "historicalStatus": "PARTIELLEMENT VALID\u00c9",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/review-ledger.jsonl",
+      "../followup-2026-10-14/review-progress.json",
+      "../followup-2026-10-14/build-review-ledger.cjs"
+    ],
+    "missingProof": "Continuer P0 puis P1/P2, contr\u00f4ler le SHA avant reprise et relire si changement. Full source reading ne vaut pas validation fonctionnelle ou absence de d\u00e9fauts.",
+    "dependencies": [],
+    "nextAction": "Continuer P0 puis P1/P2, contr\u00f4ler le SHA avant reprise et relire si changement. Full source reading ne vaut pas validation fonctionnelle ou absence de d\u00e9fauts.",
+    "acceptance": "B5 \u2014 Revue s\u00e9mantique exhaustive et durable par fichier \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Updated cumulative per-file semantic ledger; exhaustive review not complete.",
+    "currentProof": [
+      "review-progress.json"
+    ],
+    "requiredProof": "Continuer P0 puis P1/P2, contr\u00f4ler le SHA avant reprise et relire si changement. Full source reading ne vaut pas validation fonctionnelle ou absence de d\u00e9fauts.",
+    "residualRisk": "Continuer P0 puis P1/P2, contr\u00f4ler le SHA avant reprise et relire si changement. Full source reading ne vaut pas validation fonctionnelle ou absence de d\u00e9fauts.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-006",
+    "requirement": "Paquet Prisma sans DB locale/client ni reset destructeur",
+    "status": "R\u00c9SOLU",
+    "priority": "P0",
+    "rootCause": "Ancien fallback du post-build pouvait utiliser une DB locale ; extraResources Prisma trop large et erreurs de manifeste masqu\u00e9es.",
+    "correction": "Sch\u00e9ma + seul mod\u00e8le exact, lecture SQLite read-only et refus des lignes applicatives, DB de sortie inattendue et erreur de manifeste propag\u00e9e. Aucun reset ni suppression de source.",
+    "validatingTest": "7 tests packaging passent ; copie du mod\u00e8le r\u00e9ellement commit\u00e9 v\u00e9rifi\u00e9e, 43 tables applicatives vides et SHA source inchang\u00e9.",
+    "evidence": [
+      "evidence/package-tests.log",
+      "evidence/release-safety.log",
+      "evidence/real-template-copy.json"
+    ],
+    "remaining": "Ne certifie pas le paquet Windows complet ou les autres copies g\u00e9n\u00e9riques ; voir 013/018/019.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/packaging-before-source.txt",
+    "supportingEvidence": [
+      "evidence/package-tests.log",
+      "evidence/release-safety.log",
+      "evidence/real-template-copy.json"
+    ],
+    "contraryOrLimitingEvidence": "Ne certifie pas le paquet Windows complet ou les autres copies g\u00e9n\u00e9riques ; voir 013/018/019.",
+    "historicalStatus": "R\u00c9SOLU",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/package-tests.log",
+      "../followup-2026-10-14/evidence/release-safety.log",
+      "../followup-2026-10-14/evidence/real-template-copy.json"
+    ],
+    "missingProof": "Ne certifie pas le paquet Windows complet ou les autres copies g\u00e9n\u00e9riques ; voir 013/018/019.",
+    "dependencies": [],
+    "nextAction": "Ne certifie pas le paquet Windows complet ou les autres copies g\u00e9n\u00e9riques ; voir 013/018/019.",
+    "acceptance": "Paquet Prisma sans DB locale/client ni reset destructeur \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Bounded package/template/no-reset regressions retained and passed. Native packaged artifact still open separately.",
+    "currentProof": [
+      "evidence/release-safety-final.log"
+    ],
+    "requiredProof": "Ne certifie pas le paquet Windows complet ou les autres copies g\u00e9n\u00e9riques ; voir 013/018/019.",
+    "residualRisk": "Ne certifie pas le paquet Windows complet ou les autres copies g\u00e9n\u00e9riques ; voir 013/018/019.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-007",
+    "requirement": "Authenticit\u00e9 ind\u00e9pendante de l\u2019autorit\u00e9 de licence",
+    "status": "BLOQU\u00c9",
+    "priority": "P0",
+    "rootCause": "2 comparaisons publiques, 5 cas n\u00e9cessitant la cl\u00e9 \u00e9mettrice et 2 cas n\u00e9cessitant un jeton \u00e9mis sont d\u00e9clar\u00e9s skipped ; keys/public.pem reste absent.",
+    "correction": "Outil de restauration publique seule depuis trois ancres d\u00e9j\u00e0 \u00e9pingl\u00e9es : wx, refus overwrite/mismatch/liens, aucune cr\u00e9ation de cl\u00e9 priv\u00e9e. Non ex\u00e9cut\u00e9 dans les vrais keys/.",
+    "validatingTest": "3 tests de fixtures passent ; coh\u00e9rence interne existante passe. Ce n\u2019est PAS une authentification ind\u00e9pendante de l\u2019\u00e9metteur.",
+    "evidence": [
+      "evidence/public-key-tests.log",
+      "evidence/consistency.log",
+      "tests-skipped.jsonl",
+      "evidence/release-safety.log"
+    ],
+    "remaining": "Sur poste autoris\u00e9, attester empreinte/cl\u00e9 publique externe et ex\u00e9cuter cas n\u00e9cessitant signature/jeton sans copier la cl\u00e9 priv\u00e9e dans CI/chat/d\u00e9p\u00f4t. Aucune rotation effectu\u00e9e.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/vitest.json",
+    "supportingEvidence": [
+      "evidence/public-key-tests.log",
+      "evidence/consistency.log",
+      "tests-skipped.jsonl",
+      "evidence/release-safety.log"
+    ],
+    "contraryOrLimitingEvidence": "Sur poste autoris\u00e9, attester empreinte/cl\u00e9 publique externe et ex\u00e9cuter cas n\u00e9cessitant signature/jeton sans copier la cl\u00e9 priv\u00e9e dans CI/chat/d\u00e9p\u00f4t. Aucune rotation effectu\u00e9e.",
+    "historicalStatus": "BLOQU\u00c9",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/public-key-tests.log",
+      "../followup-2026-10-14/evidence/consistency.log",
+      "../followup-2026-10-14/tests-skipped.jsonl",
+      "../followup-2026-10-14/evidence/release-safety.log"
+    ],
+    "missingProof": "Sur poste autoris\u00e9, attester empreinte/cl\u00e9 publique externe et ex\u00e9cuter cas n\u00e9cessitant signature/jeton sans copier la cl\u00e9 priv\u00e9e dans CI/chat/d\u00e9p\u00f4t. Aucune rotation effectu\u00e9e.",
+    "dependencies": [],
+    "nextAction": "Sur poste autoris\u00e9, attester empreinte/cl\u00e9 publique externe et ex\u00e9cuter cas n\u00e9cessitant signature/jeton sans copier la cl\u00e9 priv\u00e9e dans CI/chat/d\u00e9p\u00f4t. Aucune rotation effectu\u00e9e.",
+    "acceptance": "Authenticit\u00e9 ind\u00e9pendante de l\u2019autorit\u00e9 de licence \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Previous scoped finding remains open; source/evidence integrity retained, no independent official issuer proof.",
+    "currentProof": [
+      "../followup-2026-10-14/ISSUE-MATRIX.md"
+    ],
+    "requiredProof": "Sur poste autoris\u00e9, attester empreinte/cl\u00e9 publique externe et ex\u00e9cuter cas n\u00e9cessitant signature/jeton sans copier la cl\u00e9 priv\u00e9e dans CI/chat/d\u00e9p\u00f4t. Aucune rotation effectu\u00e9e.",
+    "residualRisk": "Sur poste autoris\u00e9, attester empreinte/cl\u00e9 publique externe et ex\u00e9cuter cas n\u00e9cessitant signature/jeton sans copier la cl\u00e9 priv\u00e9e dans CI/chat/d\u00e9p\u00f4t. Aucune rotation effectu\u00e9e.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-008",
+    "requirement": "CI effectivement obligatoire",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "priority": "P0",
+    "rootCause": "Absence de preuve d\u2019ex\u00e9cution des nouveaux workflows ou de leur caract\u00e8re requis ; lecture protection main renvoie403, rulesets [].",
+    "correction": "Actions SHA, permissions read, checksum Gitleaks, SQLite URL corrig\u00e9e, Python hash-lock, paquet Windows, E2E authentifi\u00e9 staging et agr\u00e9gat always strict \u00e0 six pr\u00e9requis.",
+    "validatingTest": "Bash r\u00e9el accepte 1 succ\u00e8s et refuse 18 combinaisons failure/cancelled/skipped ; graphe/YAML et validateur staging test\u00e9s. Ce sont des tests locaux de configuration.",
+    "evidence": [
+      "evidence/release-safety.log",
+      "evidence/action-refs.json",
+      "evidence/branch-protection.json",
+      "evidence/branch-protection.err",
+      "evidence/rulesets.json"
+    ],
+    "remaining": "Apr\u00e8s autorisation de publication de la branche : ex\u00e9cuter la CI, configurer/attester la protection exigeant Required validation et examiner les logs. Aucun r\u00e9glage distant modifi\u00e9.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/branch-protection.json",
+    "supportingEvidence": [
+      "evidence/release-safety.log",
+      "evidence/action-refs.json",
+      "evidence/branch-protection.json",
+      "evidence/branch-protection.err",
+      "evidence/rulesets.json"
+    ],
+    "contraryOrLimitingEvidence": "Apr\u00e8s autorisation de publication de la branche : ex\u00e9cuter la CI, configurer/attester la protection exigeant Required validation et examiner les logs. Aucun r\u00e9glage distant modifi\u00e9.",
+    "historicalStatus": "PARTIELLEMENT VALID\u00c9",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/release-safety.log",
+      "../followup-2026-10-14/evidence/action-refs.json",
+      "../followup-2026-10-14/evidence/branch-protection.json",
+      "../followup-2026-10-14/evidence/branch-protection.err",
+      "../followup-2026-10-14/evidence/rulesets.json"
+    ],
+    "missingProof": "Apr\u00e8s autorisation de publication de la branche : ex\u00e9cuter la CI, configurer/attester la protection exigeant Required validation et examiner les logs. Aucun r\u00e9glage distant modifi\u00e9.",
+    "dependencies": [
+      "FUP-20261014-001",
+      "FUP-20261014-002",
+      "FUP-20261014-003",
+      "FUP-20261014-009",
+      "FUP-20261014-013",
+      "FUP-20261014-014",
+      "FUP-20261014-015",
+      "FUP-20261014-016",
+      "FUP-20261014-017",
+      "FUP-20261014-018"
+    ],
+    "nextAction": "Apr\u00e8s autorisation de publication de la branche : ex\u00e9cuter la CI, configurer/attester la protection exigeant Required validation et examiner les logs. Aucun r\u00e9glage distant modifi\u00e9.",
+    "acceptance": "CI effectivement obligatoire \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Published c53d8e5 actual Required validation fails after Gitleaks failure; mandatory remote protections remain unverified. Authenticated browser/Windows/full release jobs skipped.",
+    "currentProof": [
+      "evidence/gh-protection.log",
+      "evidence/github-ci-published.json"
+    ],
+    "requiredProof": "Apr\u00e8s autorisation de publication de la branche : ex\u00e9cuter la CI, configurer/attester la protection exigeant Required validation et examiner les logs. Aucun r\u00e9glage distant modifi\u00e9.",
+    "residualRisk": "Apr\u00e8s autorisation de publication de la branche : ex\u00e9cuter la CI, configurer/attester la protection exigeant Required validation et examiner les logs. Aucun r\u00e9glage distant modifi\u00e9.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-009",
+    "requirement": "Scan de secrets officiel complet",
+    "status": "\u00c9CHOU\u00c9",
+    "priority": "P0",
+    "rootCause": "T\u00e9l\u00e9chargement des checksums Gitleaks officiel redirig\u00e9 sur release-assets.githubusercontent.com et \u00e9choue curl35 ; scanner absent.",
+    "correction": "CI v\u00e9rifie checksum officiel strict avant extraction ; aucune ex\u00e9cution de binaire non v\u00e9rifi\u00e9. Exemptions de sources critiques resserr\u00e9es en020.",
+    "validatingTest": "T\u00e9l\u00e9chargement exit35 ; aucun r\u00e9sultat de scan local. Tests de politique seulement.",
+    "evidence": [
+      "evidence/gitleaks-download.log",
+      "evidence/available-tools.json",
+      "evidence/release-safety.log"
+    ],
+    "remaining": "R\u00e9cup\u00e9rer binaire et checksum officiels avec TLS/int\u00e9grit\u00e9, ex\u00e9cuter gitleaks dir avec redaction et traiter chaque r\u00e9sultat. Ne pas d\u00e9duire z\u00e9ro secret du seul YAML.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/gitleaks-download.log",
+    "supportingEvidence": [
+      "evidence/gitleaks-download.log",
+      "evidence/available-tools.json",
+      "evidence/release-safety.log"
+    ],
+    "contraryOrLimitingEvidence": "R\u00e9cup\u00e9rer binaire et checksum officiels avec TLS/int\u00e9grit\u00e9, ex\u00e9cuter gitleaks dir avec redaction et traiter chaque r\u00e9sultat. Ne pas d\u00e9duire z\u00e9ro secret du seul YAML.",
+    "historicalStatus": "BLOQU\u00c9",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/gitleaks-download.log",
+      "../followup-2026-10-14/evidence/available-tools.json",
+      "../followup-2026-10-14/evidence/release-safety.log"
+    ],
+    "missingProof": "R\u00e9cup\u00e9rer binaire et checksum officiels avec TLS/int\u00e9grit\u00e9, ex\u00e9cuter gitleaks dir avec redaction et traiter chaque r\u00e9sultat. Ne pas d\u00e9duire z\u00e9ro secret du seul YAML.",
+    "dependencies": [],
+    "nextAction": "Obtain redacted finding details from official CI logs; triage/fix and rerun verified scanner without broad exclusions.",
+    "acceptance": "Scan de secrets officiel complet \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Local download still blocked. Published c53d8e5 CI installs/verifies scanner, then actual scan exits 1. Findings/log retrieval blocked; no false-positive or clean assertion.",
+    "currentProof": [
+      "evidence/gitleaks-api-assets.json",
+      "evidence/github-ci-published.json",
+      "evidence/gh-gitleaks-annotations.log"
+    ],
+    "requiredProof": "R\u00e9cup\u00e9rer binaire et checksum officiels avec TLS/int\u00e9grit\u00e9, ex\u00e9cuter gitleaks dir avec redaction et traiter chaque r\u00e9sultat. Ne pas d\u00e9duire z\u00e9ro secret du seul YAML.",
+    "residualRisk": "R\u00e9cup\u00e9rer binaire et checksum officiels avec TLS/int\u00e9grit\u00e9, ex\u00e9cuter gitleaks dir avec redaction et traiter chaque r\u00e9sultat. Ne pas d\u00e9duire z\u00e9ro secret du seul YAML.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-010",
+    "requirement": "Bootstrap ne supprimant jamais une DB historique distincte",
+    "status": "R\u00c9SOLU",
+    "priority": "P0",
+    "rootCause": "setup-dev copiait exclusivement, avalait EEXIST puis supprimait r\u00e9cursivement prisma/prisma, d\u00e9truisant DB historique et fichiers tiers m\u00eame avec DB canonique existante.",
+    "correction": "Copie exclusive non destructive ; source et r\u00e9pertoire toujours conserv\u00e9s ; aucune suppression ni \u00e9crasement de l\u2019existant.",
+    "validatingTest": "Reproduction originale exit0 d\u00e9truit les deux fichiers historiques. Quatre tests passent, dont vrai setup-dev en fixture avec deux vraies DB SQLite diff\u00e9rentes et contr\u00f4le octet par octet.",
+    "evidence": [
+      "evidence/legacy-bootstrap-before.json",
+      "evidence/release-safety.log"
+    ],
+    "remaining": "R\u00e9conciliation de doublons laiss\u00e9e \u00e0 une inspection autoris\u00e9e, jamais effectu\u00e9e automatiquement.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/legacy-bootstrap-before.json",
+    "supportingEvidence": [
+      "evidence/legacy-bootstrap-before.json",
+      "evidence/release-safety.log"
+    ],
+    "contraryOrLimitingEvidence": "R\u00e9conciliation de doublons laiss\u00e9e \u00e0 une inspection autoris\u00e9e, jamais effectu\u00e9e automatiquement.",
+    "historicalStatus": "R\u00c9SOLU",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/legacy-bootstrap-before.json",
+      "../followup-2026-10-14/evidence/release-safety.log"
+    ],
+    "missingProof": "R\u00e9conciliation de doublons laiss\u00e9e \u00e0 une inspection autoris\u00e9e, jamais effectu\u00e9e automatiquement.",
+    "dependencies": [],
+    "nextAction": "R\u00e9conciliation de doublons laiss\u00e9e \u00e0 une inspection autoris\u00e9e, jamais effectu\u00e9e automatiquement.",
+    "acceptance": "Bootstrap ne supprimant jamais une DB historique distincte \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Legacy preservation regression retained and passed, owned real fixtures only.",
+    "currentProof": [
+      "evidence/release-safety-final.log"
+    ],
+    "requiredProof": "R\u00e9conciliation de doublons laiss\u00e9e \u00e0 une inspection autoris\u00e9e, jamais effectu\u00e9e automatiquement.",
+    "residualRisk": "R\u00e9conciliation de doublons laiss\u00e9e \u00e0 une inspection autoris\u00e9e, jamais effectu\u00e9e automatiquement.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-011",
+    "requirement": "D\u00e9sabonnement IPC isol\u00e9 par composant",
+    "status": "R\u00c9SOLU",
+    "priority": "P1",
+    "rootCause": "Neuf callbacks de cleanup appelaient removeAllListeners(channel), retirant aussi les abonnements des autres composants.",
+    "correction": "Chaque closure conserve son handler et appelle removeListener(channel,handler). API publique inchang\u00e9e.",
+    "validatingTest": "Neuf tests \u00e9chouent avant ; neuf passent apr\u00e8s, avec double d\u00e9sabonnement et conservation du second abonn\u00e9.",
+    "evidence": [
+      "evidence/preload-before.log",
+      "evidence/release-safety.log"
+    ],
+    "remaining": "Preuve unitaire du bridge en VM/EventEmitter ; fum\u00e9e Electron native encore requise en018.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/preload-before.log",
+    "supportingEvidence": [
+      "evidence/preload-before.log",
+      "evidence/release-safety.log"
+    ],
+    "contraryOrLimitingEvidence": "Preuve unitaire du bridge en VM/EventEmitter ; fum\u00e9e Electron native encore requise en018.",
+    "historicalStatus": "R\u00c9SOLU",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/preload-before.log",
+      "../followup-2026-10-14/evidence/release-safety.log"
+    ],
+    "missingProof": "Preuve unitaire du bridge en VM/EventEmitter ; fum\u00e9e Electron native encore requise en018.",
+    "dependencies": [],
+    "nextAction": "Preuve unitaire du bridge en VM/EventEmitter ; fum\u00e9e Electron native encore requise en018.",
+    "acceptance": "D\u00e9sabonnement IPC isol\u00e9 par composant \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "All nine unsubscribe regressions retained and passed; real Electron runtime remains open.",
+    "currentProof": [
+      "evidence/release-safety-final.log"
+    ],
+    "requiredProof": "Preuve unitaire du bridge en VM/EventEmitter ; fum\u00e9e Electron native encore requise en018.",
+    "residualRisk": "Preuve unitaire du bridge en VM/EventEmitter ; fum\u00e9e Electron native encore requise en018.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-012",
+    "requirement": "Sept tests keygen ne doivent pas r\u00e9ussir sans assertions",
+    "status": "R\u00c9SOLU",
+    "priority": "P0",
+    "rootCause": "Cryptography absent : beforeAll renvoyait fixtures=null puis sept corps revenaient sans assertion et \u00e9taient compt\u00e9s passed.",
+    "correction": "Absence/erreur Python ou fixture fait \u00e9chouer le hook ; retours vides supprim\u00e9s ; d\u00e9pendances officielles verrouill\u00e9es avec161 SHA PyPI, installation isol\u00e9e v\u00e9rifi\u00e9e.",
+    "validatingTest": "Absence Python/cryptography : exit1 ; environnement isol\u00e9 r\u00e9el : sept cas passent avec keygen_core.py officiel + v\u00e9rificateur Node, sans cl\u00e9 de production.",
+    "evidence": [
+      "evidence/keygen-missing-negative.log",
+      "evidence/python-install.log",
+      "evidence/python-dependencies.json",
+      "evidence/keygen-integrity.log",
+      "evidence/vitest-latest.json"
+    ],
+    "remaining": "Cl\u00e9 publique \u00e9ph\u00e9m\u00e8re inject\u00e9e dans le v\u00e9rificateur pour cette preuve cross-language ; l\u2019autorit\u00e9 r\u00e9elle demeure007. Provisionnement Python3.12 en CI configur\u00e9, pas ex\u00e9cut\u00e9.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/vitest-final.log",
+    "supportingEvidence": [
+      "evidence/keygen-missing-negative.log",
+      "evidence/python-install.log",
+      "evidence/python-dependencies.json",
+      "evidence/keygen-integrity.log",
+      "evidence/vitest-latest.json"
+    ],
+    "contraryOrLimitingEvidence": "Cl\u00e9 publique \u00e9ph\u00e9m\u00e8re inject\u00e9e dans le v\u00e9rificateur pour cette preuve cross-language ; l\u2019autorit\u00e9 r\u00e9elle demeure007. Provisionnement Python3.12 en CI configur\u00e9, pas ex\u00e9cut\u00e9.",
+    "historicalStatus": "R\u00c9SOLU",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/keygen-missing-negative.log",
+      "../followup-2026-10-14/evidence/python-install.log",
+      "../followup-2026-10-14/evidence/python-dependencies.json",
+      "../followup-2026-10-14/evidence/keygen-integrity.log",
+      "../followup-2026-10-14/evidence/vitest-latest.json"
+    ],
+    "missingProof": "Cl\u00e9 publique \u00e9ph\u00e9m\u00e8re inject\u00e9e dans le v\u00e9rificateur pour cette preuve cross-language ; l\u2019autorit\u00e9 r\u00e9elle demeure007. Provisionnement Python3.12 en CI configur\u00e9, pas ex\u00e9cut\u00e9.",
+    "dependencies": [],
+    "nextAction": "Cl\u00e9 publique \u00e9ph\u00e9m\u00e8re inject\u00e9e dans le v\u00e9rificateur pour cette preuve cross-language ; l\u2019autorit\u00e9 r\u00e9elle demeure007. Provisionnement Python3.12 en CI configur\u00e9, pas ex\u00e9cut\u00e9.",
+    "acceptance": "Sept tests keygen ne doivent pas r\u00e9ussir sans assertions \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Actual isolated Python keygen cases execute in final suite; no assertion-free pass reintroduced. Not official issuer attestation.",
+    "currentProof": [
+      "evidence/vitest-final.json"
+    ],
+    "requiredProof": "Cl\u00e9 publique \u00e9ph\u00e9m\u00e8re inject\u00e9e dans le v\u00e9rificateur pour cette preuve cross-language ; l\u2019autorit\u00e9 r\u00e9elle demeure007. Provisionnement Python3.12 en CI configur\u00e9, pas ex\u00e9cut\u00e9.",
+    "residualRisk": "Cl\u00e9 publique \u00e9ph\u00e9m\u00e8re inject\u00e9e dans le v\u00e9rificateur pour cette preuve cross-language ; l\u2019autorit\u00e9 r\u00e9elle demeure007. Provisionnement Python3.12 en CI configur\u00e9, pas ex\u00e9cut\u00e9.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-013",
+    "requirement": "Test d\u2019int\u00e9grit\u00e9 r\u00e9el non vert sans paquet",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "priority": "P0",
+    "rootCause": "Le cas G retournait silencieusement et passait sans dist/win-unpacked/resources.",
+    "correction": "Absence explicitement compt\u00e9e skipped en local ; job Windows obligatoire impose GF_REQUIRE_ARTIFACT_TEST=1 et ex\u00e9cute la v\u00e9rification apr\u00e8s dist, sans skip possible sur absence.",
+    "validatingTest": "Contr\u00f4le obligatoire sans artefact : exit1 (11 autres cas passent). Contr\u00f4le local : 11 passent et1skip ; aucun \u00e9chec rendu skip pour masquer un d\u00e9faut.",
+    "evidence": [
+      "evidence/artifact-required-negative.log",
+      "evidence/keygen-integrity.log",
+      "evidence/release-safety.log"
+    ],
+    "remaining": "Preuve positive sur resources r\u00e9els et inspection binaire non ex\u00e9cut\u00e9es puisque dist est bloqu\u00e9. Le skip suppl\u00e9mentaire explique 844 contre843 ant\u00e9rieurs.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/vitest-final.log",
+    "supportingEvidence": [
+      "evidence/artifact-required-negative.log",
+      "evidence/keygen-integrity.log",
+      "evidence/release-safety.log"
+    ],
+    "contraryOrLimitingEvidence": "Preuve positive sur resources r\u00e9els et inspection binaire non ex\u00e9cut\u00e9es puisque dist est bloqu\u00e9. Le skip suppl\u00e9mentaire explique 844 contre843 ant\u00e9rieurs.",
+    "historicalStatus": "PARTIELLEMENT VALID\u00c9",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/artifact-required-negative.log",
+      "../followup-2026-10-14/evidence/keygen-integrity.log",
+      "../followup-2026-10-14/evidence/release-safety.log"
+    ],
+    "missingProof": "Preuve positive sur resources r\u00e9els et inspection binaire non ex\u00e9cut\u00e9es puisque dist est bloqu\u00e9. Le skip suppl\u00e9mentaire explique 844 contre843 ant\u00e9rieurs.",
+    "dependencies": [
+      "FUP-20261014-018"
+    ],
+    "nextAction": "Preuve positive sur resources r\u00e9els et inspection binaire non ex\u00e9cut\u00e9es puisque dist est bloqu\u00e9. Le skip suppl\u00e9mentaire explique 844 contre843 ant\u00e9rieurs.",
+    "acceptance": "Test d\u2019int\u00e9grit\u00e9 r\u00e9el non vert sans paquet \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Real artifact case remains intentionally unvalidated locally; required-mode absence is still fail-closed in prior negative proof.",
+    "currentProof": [
+      "tests-skipped.jsonl"
+    ],
+    "requiredProof": "Preuve positive sur resources r\u00e9els et inspection binaire non ex\u00e9cut\u00e9es puisque dist est bloqu\u00e9. Le skip suppl\u00e9mentaire explique 844 contre843 ant\u00e9rieurs.",
+    "residualRisk": "Preuve positive sur resources r\u00e9els et inspection binaire non ex\u00e9cut\u00e9es puisque dist est bloqu\u00e9. Le skip suppl\u00e9mentaire explique 844 contre843 ant\u00e9rieurs.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-014",
+    "requirement": "Z\u00e9ro vuln\u00e9rabilit\u00e9 npm \u00e0 tous niveaux",
+    "status": "VALID\u00c9",
+    "priority": "P0",
+    "rootCause": "D\u00e9pendances initialement vuln\u00e9rables et politiques partielles corrig\u00e9es dans la campagne ant\u00e9rieure ; registre r\u00e9ellement joignable pour les mesures pr\u00e9sentes.",
+    "correction": "D\u00e9pendances/fork born\u00e9 et politique compl\u00e8te conserv\u00e9s ; nouvelle mesure pinned npm11.16.0, ls complet et audit strict.",
+    "validatingTest": "npm audit JSON : info/low/moderate/high/critical/total tous0, exit0 ; npm ls exit0 ; neuf tests s\u00e9curit\u00e9 passent.",
+    "evidence": [
+      "evidence/npm-audit.json",
+      "evidence/npm-ls.log",
+      "evidence/audit-strict.log",
+      "evidence/security.log"
+    ],
+    "remaining": "R\u00e9sultat scanner dat\u00e9, pas garantie universelle. Fork braces n\u00e9cessite suivi explicite de l\u2019advisory upstream ; natifs et compatibilit\u00e9 SMTP ne sont pas valid\u00e9s par npm audit.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "../evidence/npm-before.json",
+    "supportingEvidence": [
+      "evidence/npm-audit.json",
+      "evidence/npm-ls.log",
+      "evidence/audit-strict.log",
+      "evidence/security.log"
+    ],
+    "contraryOrLimitingEvidence": "R\u00e9sultat scanner dat\u00e9, pas garantie universelle. Fork braces n\u00e9cessite suivi explicite de l\u2019advisory upstream ; natifs et compatibilit\u00e9 SMTP ne sont pas valid\u00e9s par npm audit.",
+    "historicalStatus": "VALID\u00c9",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/npm-audit.json",
+      "../followup-2026-10-14/evidence/npm-ls.log",
+      "../followup-2026-10-14/evidence/audit-strict.log",
+      "../followup-2026-10-14/evidence/security.log"
+    ],
+    "missingProof": "R\u00e9sultat scanner dat\u00e9, pas garantie universelle. Fork braces n\u00e9cessite suivi explicite de l\u2019advisory upstream ; natifs et compatibilit\u00e9 SMTP ne sont pas valid\u00e9s par npm audit.",
+    "dependencies": [],
+    "nextAction": "R\u00e9sultat scanner dat\u00e9, pas garantie universelle. Fork braces n\u00e9cessite suivi explicite de l\u2019advisory upstream ; natifs et compatibilit\u00e9 SMTP ne sont pas valid\u00e9s par npm audit.",
+    "acceptance": "Z\u00e9ro vuln\u00e9rabilit\u00e9 npm \u00e0 tous niveaux \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Fresh pinned npm full audit and strict audit both exit 0, all severity counts 0; npm ls --all 0; upstream braces advisory remains tracked separately.",
+    "currentProof": [
+      "evidence/audit-full.log"
+    ],
+    "requiredProof": "R\u00e9sultat scanner dat\u00e9, pas garantie universelle. Fork braces n\u00e9cessite suivi explicite de l\u2019advisory upstream ; natifs et compatibilit\u00e9 SMTP ne sont pas valid\u00e9s par npm audit.",
+    "residualRisk": "R\u00e9sultat scanner dat\u00e9, pas garantie universelle. Fork braces n\u00e9cessite suivi explicite de l\u2019advisory upstream ; natifs et compatibilit\u00e9 SMTP ne sont pas valid\u00e9s par npm audit.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-015",
+    "requirement": "SAST/CodeQL et blocage r\u00e9el des alertes",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "priority": "P0",
+    "rootCause": "API code-scanning/alerts renvoie403 Resource not accessible by integration ; analyse configur\u00e9e ne prouve ni absence d\u2019alertes ni refus de fusion.",
+    "correction": "Actions CodeQL \u00e9pingl\u00e9es, permissions minimales conserv\u00e9es, commentaire de pr\u00e9tendue cl\u00f4ture corrig\u00e9.",
+    "validatingTest": "Lecture seule403 ; aucun r\u00e9sultat SAST ni seuil distant bloquant attest\u00e9.",
+    "evidence": [
+      "evidence/codeql-alerts.json",
+      "evidence/codeql-alerts.err",
+      "evidence/action-refs.json"
+    ],
+    "remaining": "Obtenir permissions de lecture n\u00e9cessaires, ex\u00e9cuter CodeQL, traiter alertes et v\u00e9rifier politique bloquant les niveaux requis. Ne pas confondre succ\u00e8s de publication SARIF et z\u00e9ro alerte.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/codeql-alerts.json",
+    "supportingEvidence": [
+      "evidence/codeql-alerts.json",
+      "evidence/codeql-alerts.err",
+      "evidence/action-refs.json"
+    ],
+    "contraryOrLimitingEvidence": "Obtenir permissions de lecture n\u00e9cessaires, ex\u00e9cuter CodeQL, traiter alertes et v\u00e9rifier politique bloquant les niveaux requis. Ne pas confondre succ\u00e8s de publication SARIF et z\u00e9ro alerte.",
+    "historicalStatus": "BLOQU\u00c9",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/codeql-alerts.json",
+      "../followup-2026-10-14/evidence/codeql-alerts.err",
+      "../followup-2026-10-14/evidence/action-refs.json"
+    ],
+    "missingProof": "Obtenir permissions de lecture n\u00e9cessaires, ex\u00e9cuter CodeQL, traiter alertes et v\u00e9rifier politique bloquant les niveaux requis. Ne pas confondre succ\u00e8s de publication SARIF et z\u00e9ro alerte.",
+    "dependencies": [],
+    "nextAction": "Obtenir permissions de lecture n\u00e9cessaires, ex\u00e9cuter CodeQL, traiter alertes et v\u00e9rifier politique bloquant les niveaux requis. Ne pas confondre succ\u00e8s de publication SARIF et z\u00e9ro alerte.",
+    "acceptance": "SAST/CodeQL et blocage r\u00e9el des alertes \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Actual Semgrep 1.180.0 official hash-verified wheels, pinned upstream rules; 994/994 explicit targets selected, 864 untriaged signals and 15 parser errors. Remote CodeQL API 403. Not a clean security verdict.",
+    "currentProof": [
+      "evidence/semgrep-explicit-sanitized.json"
+    ],
+    "requiredProof": "Obtenir permissions de lecture n\u00e9cessaires, ex\u00e9cuter CodeQL, traiter alertes et v\u00e9rifier politique bloquant les niveaux requis. Ne pas confondre succ\u00e8s de publication SARIF et z\u00e9ro alerte.",
+    "residualRisk": "Obtenir permissions de lecture n\u00e9cessaires, ex\u00e9cuter CodeQL, traiter alertes et v\u00e9rifier politique bloquant les niveaux requis. Ne pas confondre succ\u00e8s de publication SARIF et z\u00e9ro alerte.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-016",
+    "requirement": "Parcours navigateur authentifi\u00e9s sans test de production",
+    "status": "BLOQU\u00c9",
+    "priority": "P0",
+    "rootCause": "90 cas E2E ignor\u00e9s faute E2E_EMAIL/PASSWORD/LICENSE ; ancienne CI publique seule n\u2019apportait aucune preuve authentifi\u00e9e.",
+    "correction": "Job obligatoire e2e-authenticated : environnement e2e-staging, entr\u00e9es requises, HTTPS, refus URL credentials et quatre h\u00f4tes de production connus (y compris trailing dot), attestation non-production explicite ; pas upload des tokens/traces.",
+    "validatingTest": "Validateur Bash/Node local positif synth\u00e9tique et13 refus passent ; aucune requ\u00eate distante dans ces tests. Aucun parcours authentifi\u00e9 r\u00e9el n\u2019est valid\u00e9.",
+    "evidence": [
+      "tests-e2e.jsonl",
+      "evidence/e2e.json",
+      "evidence/release-safety.log",
+      "../../../scripts/garageflow-env-manifest.json"
+    ],
+    "remaining": "Configurer apr\u00e8s autorisation environnement prot\u00e9g\u00e9 et fixtures synth\u00e9tiques sur backend r\u00e9ellement isol\u00e9. Le bool\u00e9en E2E_NON_PRODUCTION ne prouve pas l\u2019isolation du backend. Certaines specs simulent des API : ne pas y voir preuve transactionnelle int\u00e9grale.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/e2e.json",
+    "supportingEvidence": [
+      "tests-e2e.jsonl",
+      "evidence/e2e.json",
+      "evidence/release-safety.log",
+      "../../../scripts/garageflow-env-manifest.json"
+    ],
+    "contraryOrLimitingEvidence": "Configurer apr\u00e8s autorisation environnement prot\u00e9g\u00e9 et fixtures synth\u00e9tiques sur backend r\u00e9ellement isol\u00e9. Le bool\u00e9en E2E_NON_PRODUCTION ne prouve pas l\u2019isolation du backend. Certaines specs simulent des API : ne pas y voir preuve transactionnelle int\u00e9grale.",
+    "historicalStatus": "BLOQU\u00c9",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/tests-e2e.jsonl",
+      "../followup-2026-10-14/evidence/e2e.json",
+      "../followup-2026-10-14/evidence/release-safety.log",
+      "../followup-2026-10-14/../../../scripts/garageflow-env-manifest.json"
+    ],
+    "missingProof": "Configurer apr\u00e8s autorisation environnement prot\u00e9g\u00e9 et fixtures synth\u00e9tiques sur backend r\u00e9ellement isol\u00e9. Le bool\u00e9en E2E_NON_PRODUCTION ne prouve pas l\u2019isolation du backend. Certaines specs simulent des API : ne pas y voir preuve transactionnelle int\u00e9grale.",
+    "dependencies": [
+      "FUP-20261014-003",
+      "FUP-20261014-007",
+      "FUP-20261014-017"
+    ],
+    "nextAction": "Configurer apr\u00e8s autorisation environnement prot\u00e9g\u00e9 et fixtures synth\u00e9tiques sur backend r\u00e9ellement isol\u00e9. Le bool\u00e9en E2E_NON_PRODUCTION ne prouve pas l\u2019isolation du backend. Certaines specs simulent des API : ne pas y voir preuve transactionnelle int\u00e9grale.",
+    "acceptance": "Parcours navigateur authentifi\u00e9s sans test de production \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "No approved authenticated isolated staging fixtures. No contact with production. Discovery alone is not auth E2E execution.",
+    "currentProof": [
+      "tests-e2e.jsonl"
+    ],
+    "requiredProof": "Configurer apr\u00e8s autorisation environnement prot\u00e9g\u00e9 et fixtures synth\u00e9tiques sur backend r\u00e9ellement isol\u00e9. Le bool\u00e9en E2E_NON_PRODUCTION ne prouve pas l\u2019isolation du backend. Certaines specs simulent des API : ne pas y voir preuve transactionnelle int\u00e9grale.",
+    "residualRisk": "Configurer apr\u00e8s autorisation environnement prot\u00e9g\u00e9 et fixtures synth\u00e9tiques sur backend r\u00e9ellement isol\u00e9. Le bool\u00e9en E2E_NON_PRODUCTION ne prouve pas l\u2019isolation du backend. Certaines specs simulent des API : ne pas y voir preuve transactionnelle int\u00e9grale.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-017",
+    "requirement": "PostgreSQL/Redis r\u00e9els isol\u00e9s",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "priority": "P0",
+    "rootCause": "Pas de PostgreSQL/Redis/Docker ex\u00e9cutables disponibles ; variables de test absentes : 21 cas PG et5 Redis d\u00e9clar\u00e9s skipped.",
+    "correction": "Aucun remplacement par mocks ni connexion \u00e0 une DB productive ; services CI conserv\u00e9s et conditions inventori\u00e9es individuellement.",
+    "validatingTest": "D\u00e9couverte des ex\u00e9cutables et JSON Vitest ; aucune migration/concurrence PG/Redis r\u00e9ellement ex\u00e9cut\u00e9e localement.",
+    "evidence": [
+      "evidence/available-tools.json",
+      "tests-skipped.jsonl"
+    ],
+    "remaining": "Provisionner services jetables avec droits minimaux n\u00e9cessaires aux tests ; lancer migrations vides puis tests multi-instance, conserver r\u00e9sultats r\u00e9els.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/vitest.json",
+    "supportingEvidence": [
+      "evidence/available-tools.json",
+      "tests-skipped.jsonl"
+    ],
+    "contraryOrLimitingEvidence": "Provisionner services jetables avec droits minimaux n\u00e9cessaires aux tests ; lancer migrations vides puis tests multi-instance, conserver r\u00e9sultats r\u00e9els.",
+    "historicalStatus": "BLOQU\u00c9",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/available-tools.json",
+      "../followup-2026-10-14/tests-skipped.jsonl"
+    ],
+    "missingProof": "Provisionner services jetables avec droits minimaux n\u00e9cessaires aux tests ; lancer migrations vides puis tests multi-instance, conserver r\u00e9sultats r\u00e9els.",
+    "dependencies": [],
+    "nextAction": "Provisionner services jetables avec droits minimaux n\u00e9cessaires aux tests ; lancer migrations vides puis tests multi-instance, conserver r\u00e9sultats r\u00e9els.",
+    "acceptance": "PostgreSQL/Redis r\u00e9els isol\u00e9s \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Redis 8.10.2 compiled from official source, isolated loopback instance, 5/5 real cases passed and service stopped. PostgreSQL absent; CI Redis 7 and managed Upstash not attested. Remote CI c53d8e5 job metadata shows relevant test/E2E job success; detailed counts/artifacts inaccessible. Local failures/status retained, no inherited full closure.",
+    "currentProof": [
+      "evidence/redis-real-tests.json",
+      "evidence/github-ci-published.json"
+    ],
+    "requiredProof": "Provisionner services jetables avec droits minimaux n\u00e9cessaires aux tests ; lancer migrations vides puis tests multi-instance, conserver r\u00e9sultats r\u00e9els.",
+    "residualRisk": "Provisionner services jetables avec droits minimaux n\u00e9cessaires aux tests ; lancer migrations vides puis tests multi-instance, conserver r\u00e9sultats r\u00e9els.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-018",
+    "requirement": "Build/dist/compatibilit\u00e9 native et services externes",
+    "status": "BLOQU\u00c9",
+    "priority": "P0",
+    "rootCause": "Build et dist normaux s\u2019arr\u00eatent sur prisma generate avant Next/post-build/builder. Aucun paquet r\u00e9el ; Electron41/fuses/Windows/SMTP et flux externes non \u00e9prouv\u00e9s.",
+    "correction": "Commandes build et dist existantes r\u00e9ellement tent\u00e9es, contr\u00f4les d\u2019artefact obligatoires maintenus, candidat Windows ajout\u00e9 sans publication/signature priv\u00e9e.",
+    "validatingTest": "npm run build exit1 et npm run dist exit1. Les deux Next directs exit0 avec erreur native ne sont pas une preuve lifecycle normale.",
+    "evidence": [
+      "evidence/normal-build.log",
+      "evidence/normal-build.exit",
+      "evidence/normal-dist.log",
+      "evidence/normal-dist.exit",
+      "evidence/next-after.log"
+    ],
+    "remaining": "Apr\u00e8s001 : build/dist Windows, inspecter secrets/fuses/int\u00e9grit\u00e9/manifeste/DB puis lancement/sauvegarde/migrations/proxy/MAJ. Recettes SMTP/IA/licences/configuration fournisseurs seulement avec acc\u00e8s autoris\u00e9 non productif.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/normal-build.log",
+    "supportingEvidence": [
+      "evidence/normal-build.log",
+      "evidence/normal-build.exit",
+      "evidence/normal-dist.log",
+      "evidence/normal-dist.exit",
+      "evidence/next-after.log"
+    ],
+    "contraryOrLimitingEvidence": "Apr\u00e8s001 : build/dist Windows, inspecter secrets/fuses/int\u00e9grit\u00e9/manifeste/DB puis lancement/sauvegarde/migrations/proxy/MAJ. Recettes SMTP/IA/licences/configuration fournisseurs seulement avec acc\u00e8s autoris\u00e9 non productif.",
+    "historicalStatus": "BLOQU\u00c9",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/normal-build.log",
+      "../followup-2026-10-14/evidence/normal-build.exit",
+      "../followup-2026-10-14/evidence/normal-dist.log",
+      "../followup-2026-10-14/evidence/normal-dist.exit",
+      "../followup-2026-10-14/evidence/next-after.log"
+    ],
+    "missingProof": "Apr\u00e8s001 : build/dist Windows, inspecter secrets/fuses/int\u00e9grit\u00e9/manifeste/DB puis lancement/sauvegarde/migrations/proxy/MAJ. Recettes SMTP/IA/licences/configuration fournisseurs seulement avec acc\u00e8s autoris\u00e9 non productif.",
+    "dependencies": [
+      "FUP-20261014-001",
+      "FUP-20261014-006",
+      "FUP-20261014-007",
+      "FUP-20261014-013",
+      "FUP-20261014-014"
+    ],
+    "nextAction": "Apr\u00e8s001 : build/dist Windows, inspecter secrets/fuses/int\u00e9grit\u00e9/manifeste/DB puis lancement/sauvegarde/migrations/proxy/MAJ. Recettes SMTP/IA/licences/configuration fournisseurs seulement avec acc\u00e8s autoris\u00e9 non productif.",
+    "acceptance": "Build/dist/compatibilit\u00e9 native et services externes \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Standard build/dist still depend on unavailable official Prisma/Electron binaries. No production budget, Windows package/runtime or external provider validation.",
+    "currentProof": [
+      "evidence/native-current-state.json"
+    ],
+    "requiredProof": "Apr\u00e8s001 : build/dist Windows, inspecter secrets/fuses/int\u00e9grit\u00e9/manifeste/DB puis lancement/sauvegarde/migrations/proxy/MAJ. Recettes SMTP/IA/licences/configuration fournisseurs seulement avec acc\u00e8s autoris\u00e9 non productif.",
+    "residualRisk": "Apr\u00e8s001 : build/dist Windows, inspecter secrets/fuses/int\u00e9grit\u00e9/manifeste/DB puis lancement/sauvegarde/migrations/proxy/MAJ. Recettes SMTP/IA/licences/configuration fournisseurs seulement avec acc\u00e8s autoris\u00e9 non productif.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-019",
+    "requirement": "Copie Prisma ne suivant pas les jonctions de sortie/source",
+    "status": "R\u00c9SOLU",
+    "priority": "P0",
+    "rootCause": "lstat sur les seuls fichiers sources ne refusait pas un parent/jonction de source ou destination ; copyFileSync pouvait \u00e9craser un fichier tiers via une jonction de sortie.",
+    "correction": "Inspection de chaque composant existant de chaque chemin source/destination ; refus des liens/jonctions avant lecture/copie.",
+    "validatingTest": "Deux r\u00e9gressions r\u00e9elles junction \u00e9chouent avant ; sept tests packaging passent apr\u00e8s. Fichier tiers cible et bytes DB restent intacts.",
+    "evidence": [
+      "evidence/packaging-links-before.log",
+      "evidence/release-safety.log",
+      "evidence/real-template-copy.json"
+    ],
+    "remaining": "Pas de garantie atomique contre un utilisateur hostile modifiant le filesystem simultan\u00e9ment ; le workspace de build doit rester contr\u00f4l\u00e9.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/packaging-links-before.log",
+    "supportingEvidence": [
+      "evidence/packaging-links-before.log",
+      "evidence/release-safety.log",
+      "evidence/real-template-copy.json"
+    ],
+    "contraryOrLimitingEvidence": "Pas de garantie atomique contre un utilisateur hostile modifiant le filesystem simultan\u00e9ment ; le workspace de build doit rester contr\u00f4l\u00e9.",
+    "historicalStatus": "R\u00c9SOLU",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/packaging-links-before.log",
+      "../followup-2026-10-14/evidence/release-safety.log",
+      "../followup-2026-10-14/evidence/real-template-copy.json"
+    ],
+    "missingProof": "Pas de garantie atomique contre un utilisateur hostile modifiant le filesystem simultan\u00e9ment ; le workspace de build doit rester contr\u00f4l\u00e9.",
+    "dependencies": [],
+    "nextAction": "Pas de garantie atomique contre un utilisateur hostile modifiant le filesystem simultan\u00e9ment ; le workspace de build doit rester contr\u00f4l\u00e9.",
+    "acceptance": "Copie Prisma ne suivant pas les jonctions de sortie/source \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Scoped link/junction packaging guards retained with 7 passing filesystem tests. Concurrent hostile directory mutation remains separate limitation.",
+    "currentProof": [
+      "evidence/release-safety-final.log"
+    ],
+    "requiredProof": "Pas de garantie atomique contre un utilisateur hostile modifiant le filesystem simultan\u00e9ment ; le workspace de build doit rester contr\u00f4l\u00e9.",
+    "residualRisk": "Pas de garantie atomique contre un utilisateur hostile modifiant le filesystem simultan\u00e9ment ; le workspace de build doit rester contr\u00f4l\u00e9.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-020",
+    "requirement": "\u00c9viter les exclusions int\u00e9grales des sources de s\u00e9curit\u00e9",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "priority": "P1",
+    "rootCause": "Allowlist Gitleaks excluait en entier auth-secret.ts, health/route.ts et .*public-key.ts alors que seuls quelques litt\u00e9raux publics/faibles \u00e9taient justifi\u00e9s.",
+    "correction": "Trois exemptions de chemin retir\u00e9es ; regexes de litt\u00e9raux connues et r\u00e8gles par d\u00e9faut conserv\u00e9es.",
+    "validatingTest": "Test de politique passe dans les27 Node tests ; scanner officiel non ex\u00e9cut\u00e9 (009), faux positifs \u00e9ventuels \u00e0 traiter pr\u00e9cis\u00e9ment.",
+    "evidence": [
+      "evidence/release-safety.log"
+    ],
+    "remaining": "Ex\u00e9cuter scanner r\u00e9el et traiter chaque alerte sans r\u00e9introduire d\u2019exclusion globale. Exemptions r\u00e9siduelles fixtures/doc restent explicites, pas certification z\u00e9ro secret.",
+    "confidence": "\u00c9LEV\u00c9E sur la cause imm\u00e9diate observ\u00e9e ; pas sur les chemins non ex\u00e9cut\u00e9s",
+    "initialProof": "evidence/gitleaks-policy-before.toml",
+    "supportingEvidence": [
+      "evidence/release-safety.log"
+    ],
+    "contraryOrLimitingEvidence": "Ex\u00e9cuter scanner r\u00e9el et traiter chaque alerte sans r\u00e9introduire d\u2019exclusion globale. Exemptions r\u00e9siduelles fixtures/doc restent explicites, pas certification z\u00e9ro secret.",
+    "historicalStatus": "PARTIELLEMENT VALID\u00c9",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/evidence/release-safety.log"
+    ],
+    "missingProof": "Ex\u00e9cuter scanner r\u00e9el et traiter chaque alerte sans r\u00e9introduire d\u2019exclusion globale. Exemptions r\u00e9siduelles fixtures/doc restent explicites, pas certification z\u00e9ro secret.",
+    "dependencies": [
+      "FUP-20261014-009"
+    ],
+    "nextAction": "Ex\u00e9cuter scanner r\u00e9el et traiter chaque alerte sans r\u00e9introduire d\u2019exclusion globale. Exemptions r\u00e9siduelles fixtures/doc restent explicites, pas certification z\u00e9ro secret.",
+    "acceptance": "\u00c9viter les exclusions int\u00e9grales des sources de s\u00e9curit\u00e9 \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "No whole-security-source Gitleaks exemptions restored. Policy test passes, actual scan blocked. Semgrep defaults overridden without source/test exclusions.",
+    "currentProof": [
+      "evidence/release-safety-final.log"
+    ],
+    "requiredProof": "Ex\u00e9cuter scanner r\u00e9el et traiter chaque alerte sans r\u00e9introduire d\u2019exclusion globale. Exemptions r\u00e9siduelles fixtures/doc restent explicites, pas certification z\u00e9ro secret.",
+    "residualRisk": "Ex\u00e9cuter scanner r\u00e9el et traiter chaque alerte sans r\u00e9introduire d\u2019exclusion globale. Exemptions r\u00e9siduelles fixtures/doc restent explicites, pas certification z\u00e9ro secret.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-021",
+    "requirement": "Politique d\u2019autorisation des appelants IPC Electron",
+    "status": "EN ATTENTE DE REVUE",
+    "priority": "P1",
+    "rootCause": "Dans les portions IPC lues, pas de validation explicite senderFrame observ\u00e9e. Confinement de navigation principal pr\u00e9sent ; exploitabilit\u00e9 non d\u00e9montr\u00e9e.",
+    "correction": "Observation enregistr\u00e9e sans transformer une hypoth\u00e8se de durcissement en vuln\u00e9rabilit\u00e9 d\u00e9montr\u00e9e ; aucun changement global risqu\u00e9 des canaux sans revue du reste du main.",
+    "validatingTest": "Revue partielle des lignes2910\u20133100 et3190\u20133485 ; aucune preuve native d\u2019appel cross-frame/origine.",
+    "evidence": [
+      "review-ledger.jsonl"
+    ],
+    "remaining": "Revoir tous producteurs/consommateurs, fen\u00eatres licence/repli et frames ; d\u00e9finir politique de confiance, ajouter tests refus/acceptation puis valider sous Electron r\u00e9el.",
+    "confidence": "\u00c9LEV\u00c9E sur l\u2019absence de contr\u00f4le explicite dans les portions lues ; FAIBLE sur l\u2019exploitabilit\u00e9 tant que la revue compl\u00e8te manque",
+    "initialProof": "../../../electron/main.js",
+    "supportingEvidence": [
+      "review-ledger.jsonl"
+    ],
+    "contraryOrLimitingEvidence": "Revoir tous producteurs/consommateurs, fen\u00eatres licence/repli et frames ; d\u00e9finir politique de confiance, ajouter tests refus/acceptation puis valider sous Electron r\u00e9el.",
+    "historicalStatus": "EN ATTENTE DE REVUE",
+    "proofReconciliation": "Empreintes de toutes les preuves et sources ant\u00e9rieures v\u00e9rifi\u00e9es sans divergence au d\u00e9marrage. R\u00e9sultat dat\u00e9, non pr\u00e9sent\u00e9 comme nouvelle ex\u00e9cution.",
+    "existingProof": [
+      "../followup-2026-10-14/review-ledger.jsonl"
+    ],
+    "missingProof": "Revoir tous producteurs/consommateurs, fen\u00eatres licence/repli et frames ; d\u00e9finir politique de confiance, ajouter tests refus/acceptation puis valider sous Electron r\u00e9el.",
+    "dependencies": [
+      "FUP-20261014-005",
+      "FUP-20261014-001"
+    ],
+    "nextAction": "Revoir tous producteurs/consommateurs, fen\u00eatres licence/repli et frames ; d\u00e9finir politique de confiance, ajouter tests refus/acceptation puis valider sous Electron r\u00e9el.",
+    "acceptance": "Politique d\u2019autorisation des appelants IPC Electron \u2014 preuve r\u00e9elle obligatoire dans le p\u00e9rim\u00e8tre, sans masquage des erreurs.",
+    "historicalProofPreserved": true,
+    "currentAssessment": "Main IPC boundary remains partial. Additional lifecycle/license callers reviewed, no full senderFrame/role policy closure.",
+    "currentProof": [
+      "review-ledger.jsonl"
+    ],
+    "requiredProof": "Revoir tous producteurs/consommateurs, fen\u00eatres licence/repli et frames ; d\u00e9finir politique de confiance, ajouter tests refus/acceptation puis valider sous Electron r\u00e9el.",
+    "residualRisk": "Revoir tous producteurs/consommateurs, fen\u00eatres licence/repli et frames ; d\u00e9finir politique de confiance, ajouter tests refus/acceptation puis valider sous Electron r\u00e9el.",
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-022",
+    "requirement": "Backup collision, stale annexes and overbroad retention",
+    "historicalStatus": "NON EX\u00c9CUT\u00c9",
+    "status": "R\u00c9SOLU",
+    "priority": "P0",
+    "rootCause": "Second-resolution name reused non-exclusive copy, journal missing from retention and arbitrary prefixed DB names eligible for deletion.",
+    "correction": "Bounded exclusive sequence allocation including orphan annexes; exact generated-name filter; chronological numeric ordering; all three annexes retained/rotated. Literal NUL escaped with runtime-value equivalence proof.",
+    "currentAssessment": "Bounded exclusive sequence allocation including orphan annexes; exact generated-name filter; chronological numeric ordering; all three annexes retained/rotated. Literal NUL escaped with runtime-value equivalence proof.",
+    "currentProof": [
+      "evidence/backup-before.log",
+      "evidence/backup-confirmation.log",
+      "evidence/release-safety-final.log",
+      "evidence/sqlite-magic-equivalence.json"
+    ],
+    "requiredProof": "Targeted root-cause and regression proof, then native/functional closure in approved environment.",
+    "residualRisk": "10 owned real SQLite/FS cases pass; not Windows native startup or hot/concurrent DB integrity proof.",
+    "remaining": "10 owned real SQLite/FS cases pass; not Windows native startup or hot/concurrent DB integrity proof.",
+    "nextAction": "Retain regressions; complete independent native/security/release criteria.",
+    "dependencies": [],
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-023",
+    "requirement": "Quoted and environment-prefixed secrets leaked in logging/crash sinks",
+    "historicalStatus": "NON EX\u00c9CUT\u00c9",
+    "status": "R\u00c9SOLU",
+    "priority": "P1",
+    "rootCause": "Regex rejected quoted key/value forms; structured env-prefixed API keys/passwords were not masked.",
+    "correction": "Both text sinks preserve separators/quotes and redact quoted/escaped/truncated values; recursive server key detection extended. No business payload modified.",
+    "currentAssessment": "Both text sinks preserve separators/quotes and redact quoted/escaped/truncated values; recursive server key detection extended. No business payload modified.",
+    "currentProof": [
+      "evidence/redaction-before.json",
+      "evidence/targeted-final.json",
+      "evidence/vitest-final.json"
+    ],
+    "requiredProof": "Targeted root-cause and regression proof, then native/functional closure in approved environment.",
+    "residualRisk": "28/29 failed before; final 33 new quote cases and old regressions pass. Not a universal encoded-secret detector or actual full Gitleaks scan.",
+    "remaining": "28/29 failed before; final 33 new quote cases and old regressions pass. Not a universal encoded-secret detector or actual full Gitleaks scan.",
+    "nextAction": "Retain regressions; complete independent native/security/release criteria.",
+    "dependencies": [],
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-024",
+    "requirement": "Four GCM decryptors accepted shortened authentication tags",
+    "historicalStatus": "NON EX\u00c9CUT\u00c9",
+    "status": "R\u00c9SOLU",
+    "priority": "P1",
+    "rootCause": "No authTagLength option allowed Node/OpenSSL 4/8/12/13/14/15-byte tags in four 16-byte writer formats.",
+    "correction": "Force authTagLength:16 only in backup, SMTP, e-invoice and SMTP migration decryptors. Genuine 16-byte data and legacy/rotation behavior retained; no migration or key rotation run.",
+    "currentAssessment": "Force authTagLength:16 only in backup, SMTP, e-invoice and SMTP migration decryptors. Genuine 16-byte data and legacy/rotation behavior retained; no migration or key rotation run.",
+    "currentProof": [
+      "evidence/gcm-before.json",
+      "evidence/gcm-after.json",
+      "evidence/vitest-final.json"
+    ],
+    "requiredProof": "Targeted root-cause and regression proof, then native/functional closure in approved environment.",
+    "residualRisk": "24 failures before, 54 new cases pass; 94 focused tests pass. Migration helper tested in VM with real crypto, not Prisma migration main. Other guarded GCM signals are not automatically vulnerabilities.",
+    "remaining": "24 failures before, 54 new cases pass; 94 focused tests pass. Migration helper tested in VM with real crypto, not Prisma migration main. Other guarded GCM signals are not automatically vulnerabilities.",
+    "nextAction": "Retain regressions; complete independent native/security/release criteria.",
+    "dependencies": [],
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-025",
+    "requirement": "Offline grace anchored to recreatable database birthtime",
+    "historicalStatus": "NON EX\u00c9CUT\u00c9",
+    "status": "BLOQU\u00c9",
+    "priority": "P0",
+    "rootCause": "Missing signed last-online state selects filesystem creation time; lossless SQLite copying can refresh that metadata. Comment claiming recreation necessarily loses data is not a safe invariant.",
+    "correction": "No silent licensing behavior change. Recorded failing counterexample: simulated 200h-old origin locks, actual fresh copied DB origin permits, equal bytes/SQL marker. Requires approved durable anchor/new-install/restore policy.",
+    "currentAssessment": "No silent licensing behavior change. Recorded failing counterexample: simulated 200h-old origin locks, actual fresh copied DB origin permits, equal bytes/SQL marker. Requires approved durable anchor/new-install/restore policy.",
+    "currentProof": [
+      "evidence/grace-anchor-counterexample.json",
+      "evidence/grace-counterexample.log"
+    ],
+    "requiredProof": "Targeted root-cause and regression proof, then native/functional closure in approved environment.",
+    "residualRisk": "Age of OLD origin is simulated, actual SQLite copy real; no 200h or packaged Electron/official-issuer exploit run. Product policy decision and end-to-end security test required.",
+    "remaining": "Age of OLD origin is simulated, actual SQLite copy real; no 200h or packaged Electron/official-issuer exploit run. Product policy decision and end-to-end security test required.",
+    "nextAction": "Approved licensing design and isolated end-to-end validation.",
+    "dependencies": [
+      "FUP-20261014-007"
+    ],
+    "releaseClosed": false
+  },
+  {
+    "id": "FUP-20261014-026",
+    "requirement": "Default branch Dependabot vulnerabilities distinct from session npm audit",
+    "historicalStatus": "NON EX\u00c9CUT\u00c9",
+    "status": "BLOQU\u00c9",
+    "priority": "P0",
+    "rootCause": "GitHub reports 151 vulnerabilities on main at push; component/root causes unknown because alert API returns 403.",
+    "currentAssessment": "Observed server warning: 2 critical/63 high/71 moderate/15 low, not individually triaged; current branch npm zero cannot close main alerts.",
+    "correction": "No main merge or alert suppression. Record scope and request read-only alert inventory.",
+    "currentProof": [
+      "evidence/github-push-observation.json",
+      "evidence/gh-dependabot-access.log"
+    ],
+    "requiredProof": "Authorized read-only main alert inventory, component/root-cause comparison, regression and full audit after separately authorized integration.",
+    "remaining": "Main alert details/impact and comparison unavailable; no claim that 151 alerts are fixed.",
+    "residualRisk": "Untriaged default-branch critical/high warning; not demonstrated exploitable product defects.",
+    "nextAction": "Read-only Dependabot alerts permission or redacted administrator export; never provide tokens/keys in chat.",
+    "dependencies": [
+      "FUP-20261014-014",
+      "FUP-20261014-008"
+    ],
+    "releaseClosed": false
+  }
+]

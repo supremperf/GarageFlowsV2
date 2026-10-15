@@ -1,0 +1,5 @@
+
+> garageflow@1.1.0 check:perf-budget
+> node scripts/check-perf-budget.mjs
+
+❌ .next/static absent — lancez « npm run build » avant ce contrôle (fail-closed).

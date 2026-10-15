@@ -36,32 +36,19 @@ export function jobsOverlap(a: Job, b: Job): boolean {
   return aStart < bEnd && bStart < aEnd
 }
 
-export function estimateRepairDuration(
-  repairType: RepairType,
-  vehicleModel: string,
-  historicalData: Job[]
-): number {
-  const config = REPAIR_TYPES[repairType]
-  const base = config.defaultDuration
+/**
+ * Bornes de l'atelier en MINUTES depuis minuit (§14-15).
+ *
+ * Ces quatre fonctions prenaient deux entiers d'HEURES : un atelier ouvrant à
+ * 8 h 30 ne pouvait pas s'exprimer, et l'arrondi tombait toujours sur l'heure
+ * pleine. Les minutes sont la seule unité qui couvre la demi-heure exigée.
+ */
+export interface BornesAtelier { debut: number; fin: number }
 
-  // Find historical jobs of same type
-  const similar = historicalData.filter(
-    j => j.repairType === repairType && j.status === 'completed' && j.actualDuration
-  )
-
-  if (similar.length === 0) return base
-
-  // Weight by vehicle similarity
-  const vehicleBrand = vehicleModel.toLowerCase().split(' ')[0]
-  const sameBrand = similar.filter(j =>
-    j.vehicleModel.toLowerCase().startsWith(vehicleBrand)
-  )
-
-  const sample = sameBrand.length >= 3 ? sameBrand : similar
-  const avg = sample.reduce((sum, j) => sum + (j.actualDuration || base), 0) / sample.length
-
-  // Blend: 70% historical, 30% default
-  return Math.round(avg * 0.7 + base * 0.3)
+/** Repli identique aux constantes historiques (8 h → 18 h). */
+export const BORNES_PAR_DEFAUT: BornesAtelier = {
+  debut: WORKSHOP_START_HOUR * 60,
+  fin:   WORKSHOP_END_HOUR * 60,
 }
 
 export function findAvailableSlots(
@@ -69,11 +56,10 @@ export function findAvailableSlots(
   jobs: Job[],
   date: string,
   duration: number,
-  workshopStartHour = WORKSHOP_START_HOUR,
-  workshopEndHour   = WORKSHOP_END_HOUR,
+  bornes: BornesAtelier = BORNES_PAR_DEFAUT,
 ): string[] {
-  const workshopStart = workshopStartHour * 60
-  const workshopEnd = workshopEndHour * 60
+  const workshopStart = bornes.debut
+  const workshopEnd = bornes.fin
 
   const mechanicJobs = jobs
     .filter(j => j.mechanicId === mechanicId && j.date === date && j.status !== 'cancelled')
@@ -104,14 +90,13 @@ export function findBestSlot(
   mechanics: Mechanic[],
   date: string,
   duration: number,
-  workshopStartHour = WORKSHOP_START_HOUR,
-  workshopEndHour   = WORKSHOP_END_HOUR,
+  bornes: BornesAtelier = BORNES_PAR_DEFAUT,
 ): { mechanicId: string; startTime: string } | null {
   const activeMechanics = mechanics.filter(m => !m.isAbsent)
   let bestSlot: { mechanicId: string; startTime: string; startMinutes: number } | null = null
 
   for (const mechanic of activeMechanics) {
-    const slots = findAvailableSlots(mechanic.id, jobs, date, duration, workshopStartHour, workshopEndHour)
+    const slots = findAvailableSlots(mechanic.id, jobs, date, duration, bornes)
     for (const slot of slots) {
       const slotMinutes = timeToMinutes(slot)
       if (!bestSlot || slotMinutes < bestSlot.startMinutes) {
@@ -127,11 +112,10 @@ export function detectEmptySlots(
   jobs: Job[],
   mechanics: Mechanic[],
   date: string,
-  workshopStartHour = WORKSHOP_START_HOUR,
-  workshopEndHour   = WORKSHOP_END_HOUR,
+  bornes: BornesAtelier = BORNES_PAR_DEFAUT,
 ): { mechanicId: string; startTime: string; duration: number }[] {
-  const workshopStart = workshopStartHour * 60
-  const workshopEnd = workshopEndHour * 60
+  const workshopStart = bornes.debut
+  const workshopEnd = bornes.fin
   const gaps: { mechanicId: string; startTime: string; duration: number }[] = []
 
   for (const mechanic of mechanics.filter(m => !m.isAbsent)) {
@@ -163,13 +147,15 @@ export function calculateUtilizationRate(
   jobs: Job[],
   mechanics: Mechanic[],
   date: string,
-  workshopStartHour = WORKSHOP_START_HOUR,
-  workshopEndHour   = WORKSHOP_END_HOUR,
+  bornes: BornesAtelier = BORNES_PAR_DEFAUT,
 ): number {
   const activeMechanics = mechanics.filter(m => !m.isAbsent)
   if (activeMechanics.length === 0) return 0
 
-  const workshopDuration = (workshopEndHour - workshopStartHour) * 60
+  const workshopDuration = bornes.fin - bornes.debut
+  // Garde : heures d'atelier égales/inversées → capacité 0 → division par zéro
+  // (taux affiché à 100 % ou NaN sur une config invalide).
+  if (workshopDuration <= 0) return 0
   const totalCapacity = workshopDuration * activeMechanics.length
 
   const filledMinutes = jobs
@@ -183,6 +169,7 @@ export function getStatusColor(status: Job['status']): string {
   const colors: Record<Job['status'], string> = {
     scheduled: '#3b82f6',
     in_progress: '#10b981',
+    awaiting_validation: '#a855f7',
     completed: '#6b7280',
     delayed: '#f59e0b',
     cancelled: '#ef4444',
@@ -194,6 +181,7 @@ export function getStatusLabel(status: Job['status']): string {
   const labels: Record<Job['status'], string> = {
     scheduled: 'Planifié',
     in_progress: 'En cours',
+    awaiting_validation: 'En attente de validation',
     completed: 'Terminé',
     delayed: 'En retard',
     cancelled: 'Annulé',

@@ -1,0 +1,225 @@
+   ▲ Next.js 15.5.27
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 23.8s
+   Linting and checking validity of types ...
+   Collecting page data ...
+[2026-10-14T12:18:46.877Z] [INFO] AUTH {"step":"AUTH_STEP_0_ROUTE_LOADED","result":"ok"}
+[Error [PrismaClientInitializationError]: Prisma Client could not locate the Query Engine for runtime "debian-openssl-3.0.x".
+
+This is likely caused by tooling that has not copied "libquery_engine-debian-openssl-3.0.x.so.node" to the deployment folder.
+Ensure that you ran `prisma generate` and that "libquery_engine-debian-openssl-3.0.x.so.node" has been copied to "node_modules/.prisma/client".
+
+We would appreciate if you could take the time to share some information with us.
+Please help us by answering a few questions: https://pris.ly/engine-not-found-tooling-investigation
+
+The following locations have been searched:
+  /home/user/GarageFlowsV2/node_modules/.prisma/client
+  /home/user/GarageFlowsV2/node_modules/@prisma/client
+  /tmp/prisma-engines
+  /home/user/GarageFlowsV2] {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+   Generating static pages (0/18) ...
+   Generating static pages (4/18) 
+   Generating static pages (8/18) 
+   Generating static pages (13/18) 
+ ✓ Generating static pages (18/18)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                         Size  First Load JS
+┌ ○ /                                             118 kB         332 kB
+├ ○ /_not-found                                     1 kB         104 kB
+├ ○ /admin/licenses                              12.7 kB         128 kB
+├ ƒ /api/admin/backups                             508 B         103 kB
+├ ƒ /api/admin/backups/[id]/download               508 B         103 kB
+├ ƒ /api/admin/backups/[id]/restore                508 B         103 kB
+├ ƒ /api/admin/backups/[id]/verify                 508 B         103 kB
+├ ƒ /api/admin/diagnostics                         508 B         103 kB
+├ ƒ /api/admin/licenses                            508 B         103 kB
+├ ƒ /api/admin/licenses/[id]                       508 B         103 kB
+├ ƒ /api/admin/licenses/[id]/devices               508 B         103 kB
+├ ƒ /api/admin/licenses/[id]/devices/[deviceId]    508 B         103 kB
+├ ƒ /api/admin/licenses/create                     508 B         103 kB
+├ ƒ /api/admin/licenses/generate                   508 B         103 kB
+├ ƒ /api/admin/licenses/revoke-by-key              508 B         103 kB
+├ ƒ /api/admin/monitoring                          508 B         103 kB
+├ ƒ /api/admin/updates                             508 B         103 kB
+├ ƒ /api/admin/updates/file/[name]                 508 B         103 kB
+├ ƒ /api/adresse/recherche                         508 B         103 kB
+├ ƒ /api/analytics/health                          508 B         103 kB
+├ ƒ /api/appointments                              508 B         103 kB
+├ ƒ /api/appointments/[id]                         508 B         103 kB
+├ ƒ /api/auth/[...nextauth]                        508 B         103 kB
+├ ƒ /api/catalog                                   508 B         103 kB
+├ ƒ /api/clients                                   508 B         103 kB
+├ ƒ /api/clients/[id]                              508 B         103 kB
+├ ƒ /api/clients/[id]/portal-access                508 B         103 kB
+├ ƒ /api/copilot                                   508 B         103 kB
+├ ƒ /api/copilot/report                            508 B         103 kB
+├ ƒ /api/copilot/reports                           508 B         103 kB
+├ ƒ /api/copilot/reports/[id]/export               508 B         103 kB
+├ ƒ /api/dashboard                                 508 B         103 kB
+├ ƒ /api/diagnostic                                508 B         103 kB
+├ ƒ /api/einvoicing/connection                     508 B         103 kB
+├ ƒ /api/einvoicing/connection/test                508 B         103 kB
+├ ƒ /api/einvoicing/invoices/[id]/submit           508 B         103 kB
+├ ƒ /api/einvoicing/status                         508 B         103 kB
+├ ƒ /api/email                                     508 B         103 kB
+├ ƒ /api/estimate                                  508 B         103 kB
+├ ƒ /api/export/fec                                508 B         103 kB
+├ ƒ /api/finance                                   508 B         103 kB
+├ ƒ /api/forecast                                  508 B         103 kB
+├ ƒ /api/forgotten-parts                           508 B         103 kB
+├ ƒ /api/garages                                   508 B         103 kB
+├ ƒ /api/health                                    508 B         103 kB
+├ ƒ /api/inspections                               508 B         103 kB
+├ ƒ /api/inspections/[id]                          508 B         103 kB
+├ ƒ /api/inspections/prefill                       508 B         103 kB
+├ ƒ /api/internal/backup                           508 B         103 kB
+├ ƒ /api/internal/export                           508 B         103 kB
+├ ƒ /api/internal/license-status                   508 B         103 kB
+├ ƒ /api/internal/migrate                          508 B         103 kB
+├ ƒ /api/invoices                                  508 B         103 kB
+├ ƒ /api/invoices/[id]                             508 B         103 kB
+├ ƒ /api/jobs                                      508 B         103 kB
+├ ƒ /api/jobs/[id]                                 508 B         103 kB
+├ ƒ /api/jobs/[id]/parts                           508 B         103 kB
+├ ƒ /api/jobs/[id]/photos                          508 B         103 kB
+├ ƒ /api/jobs/[id]/timer                           508 B         103 kB
+├ ƒ /api/jobs/pulse                                508 B         103 kB
+├ ƒ /api/labor-operations                          508 B         103 kB
+├ ƒ /api/labor-operations/[id]                     508 B         103 kB
+├ ƒ /api/labor-operations/bulk-import              508 B         103 kB
+├ ƒ /api/license/activate                          508 B         103 kB
+├ ƒ /api/license/check                             508 B         103 kB
+├ ƒ /api/license/deactivate                        508 B         103 kB
+├ ƒ /api/license/devices                           508 B         103 kB
+├ ƒ /api/license/status                            508 B         103 kB
+├ ƒ /api/license/type                              508 B         103 kB
+├ ƒ /api/loaner-reservations                       508 B         103 kB
+├ ƒ /api/loaner-reservations/[id]                  508 B         103 kB
+├ ƒ /api/loaner-vehicles                           508 B         103 kB
+├ ƒ /api/loaner-vehicles/[id]                      508 B         103 kB
+├ ƒ /api/mechanic-licenses                         508 B         103 kB
+├ ƒ /api/mechanic-licenses/[lid]/assign            508 B         103 kB
+├ ƒ /api/mechanic-licenses/[lid]/disconnect        508 B         103 kB
+├ ƒ /api/mechanic-licenses/[lid]/status            508 B         103 kB
+├ ƒ /api/mechanic-licenses/[lid]/token             508 B         103 kB
+├ ƒ /api/mechanic/jobs/[id]                        508 B         103 kB
+├ ƒ /api/mechanic/jobs/[id]/checklist/[itemId]     508 B         103 kB
+├ ƒ /api/mechanic/jobs/[id]/notes                  508 B         103 kB
+├ ƒ /api/mechanic/jobs/[id]/photos                 508 B         103 kB
+├ ƒ /api/mechanic/jobs/[id]/timer                  508 B         103 kB
+├ ƒ /api/mechanic/logout                           508 B         103 kB
+├ ƒ /api/mechanic/me                               508 B         103 kB
+├ ƒ /api/mechanic/photos/[...path]                 508 B         103 kB
+├ ƒ /api/mechanic/schedule                         508 B         103 kB
+├ ƒ /api/mechanics                                 508 B         103 kB
+├ ƒ /api/mechanics/[id]                            508 B         103 kB
+├ ƒ /api/mechanics/[id]/avatar                     508 B         103 kB
+├ ƒ /api/notifications/dispatch                    508 B         103 kB
+├ ƒ /api/ocr                                       508 B         103 kB
+├ ƒ /api/parts                                     508 B         103 kB
+├ ƒ /api/parts/[id]                                508 B         103 kB
+├ ƒ /api/parts/low-stock                           508 B         103 kB
+├ ƒ /api/parts/search                              508 B         103 kB
+├ ƒ /api/photos/[...path]                          508 B         103 kB
+├ ƒ /api/ping                                      508 B         103 kB
+├ ƒ /api/plate-lookup                              508 B         103 kB
+├ ƒ /api/plate-ocr                                 508 B         103 kB
+├ ƒ /api/portal/[token]                            508 B         103 kB
+├ ƒ /api/portal/appointments                       508 B         103 kB
+├ ƒ /api/portal/appointments/[id]                  508 B         103 kB
+├ ƒ /api/portal/auth/2fa/disable                   508 B         103 kB
+├ ƒ /api/portal/auth/2fa/enable                    508 B         103 kB
+├ ƒ /api/portal/auth/2fa/setup                     508 B         103 kB
+├ ƒ /api/portal/auth/2fa/verify                    508 B         103 kB
+├ ƒ /api/portal/auth/devices                       508 B         103 kB
+├ ƒ /api/portal/auth/email                         508 B         103 kB
+├ ƒ /api/portal/auth/login                         508 B         103 kB
+├ ƒ /api/portal/auth/logout                        508 B         103 kB
+├ ƒ /api/portal/auth/me                            508 B         103 kB
+├ ƒ /api/portal/auth/password                      508 B         103 kB
+├ ƒ /api/portal/auth/register                      508 B         103 kB
+├ ƒ /api/portal/auth/verify-email                  508 B         103 kB
+├ ƒ /api/portal/generate                           508 B         103 kB
+├ ƒ /api/portal/me/dashboard                       508 B         103 kB
+├ ƒ /api/portal/quote/[token]                      508 B         103 kB
+├ ƒ /api/portal/tickets                            508 B         103 kB
+├ ƒ /api/portal/tickets/[id]                       508 B         103 kB
+├ ƒ /api/portal/tickets/[id]/close                 508 B         103 kB
+├ ƒ /api/profitability                             508 B         103 kB
+├ ƒ /api/purchase-orders                           508 B         103 kB
+├ ƒ /api/purchase-orders/[id]                      508 B         103 kB
+├ ƒ /api/purchase-orders/[id]/receive              508 B         103 kB
+├ ƒ /api/quotes                                    508 B         103 kB
+├ ƒ /api/quotes/[id]                               508 B         103 kB
+├ ƒ /api/quotes/[id]/convert                       508 B         103 kB
+├ ƒ /api/quotes/[id]/signature-token               508 B         103 kB
+├ ƒ /api/quotes/generate                           508 B         103 kB
+├ ƒ /api/reminders                                 508 B         103 kB
+├ ƒ /api/reminders/send                            508 B         103 kB
+├ ƒ /api/reminders/suggestions                     508 B         103 kB
+├ ƒ /api/reports                                   508 B         103 kB
+├ ƒ /api/signatures                                508 B         103 kB
+├ ƒ /api/stats                                     508 B         103 kB
+├ ƒ /api/stock-forecast                            508 B         103 kB
+├ ƒ /api/suggestions                               508 B         103 kB
+├ ƒ /api/suppliers                                 508 B         103 kB
+├ ƒ /api/sync/appointments                         508 B         103 kB
+├ ƒ /api/sync/einvoicing                           508 B         103 kB
+├ ƒ /api/sync/invoice                              508 B         103 kB
+├ ƒ /api/sync/job-photo                            508 B         103 kB
+├ ƒ /api/sync/jobs                                 508 B         103 kB
+├ ƒ /api/sync/mechanic-assignment                  508 B         103 kB
+├ ƒ /api/sync/mechanic-avatar                      508 B         103 kB
+├ ƒ /api/sync/mechanic-status                      508 B         103 kB
+├ ƒ /api/sync/portal                               508 B         103 kB
+├ ƒ /api/sync/portal-account                       508 B         103 kB
+├ ƒ /api/sync/quote                                508 B         103 kB
+├ ƒ /api/sync/quote-return                         508 B         103 kB
+├ ƒ /api/sync/tickets                              508 B         103 kB
+├ ƒ /api/tickets                                   508 B         103 kB
+├ ƒ /api/tickets/[id]                              508 B         103 kB
+├ ƒ /api/users                                     508 B         103 kB
+├ ƒ /api/vehicles                                  508 B         103 kB
+├ ƒ /api/vehicles/[id]                             508 B         103 kB
+├ ƒ /api/vehicles/[id]/timeline                    508 B         103 kB
+├ ƒ /api/vehicles/ct-alerts                        508 B         103 kB
+├ ƒ /api/version                                   508 B         103 kB
+├ ƒ /api/vin                                       508 B         103 kB
+├ ƒ /api/warranties                                508 B         103 kB
+├ ƒ /api/warranties/[id]                           508 B         103 kB
+├ ƒ /api/warranties/alerts                         508 B         103 kB
+├ ƒ /api/work-orders                               508 B         103 kB
+├ ƒ /api/work-orders/[id]                          508 B         103 kB
+├ ƒ /api/work-orders/[id]/sign                     508 B         103 kB
+├ ƒ /clients/[token]                             4.04 kB         108 kB
+├ ○ /clients/account                             10.8 kB         125 kB
+├ ○ /clients/appointments                        6.16 kB         120 kB
+├ ○ /clients/login                               5.17 kB         119 kB
+├ ○ /clients/messages                            6.32 kB         120 kB
+├ ○ /clients/password                            2.94 kB         106 kB
+├ ƒ /clients/quote/[token]                        3.9 kB         108 kB
+├ ○ /clients/register                            4.46 kB         118 kB
+├ ○ /copilot                                     7.39 kB         123 kB
+├ ○ /license                                     5.93 kB         116 kB
+├ ○ /login                                        5.9 kB         129 kB
+├ ƒ /mechanic                                    5.64 kB         118 kB
+├ ƒ /mechanic/jobs/[id]                          4.72 kB         110 kB
+├ ○ /monitoring                                  4.38 kB         115 kB
+└ ○ /register                                    5.98 kB         129 kB
++ First Load JS shared by all                     103 kB
+  ├ chunks/1255-8dc91b756d944555.js              46.2 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js          54.2 kB
+  └ other shared chunks (total)                  2.56 kB
+
+
+ƒ Middleware                                     59.6 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

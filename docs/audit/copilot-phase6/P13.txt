@@ -1,0 +1,178 @@
+TAP version 13
+# Subtest: mandatory gate rejects any failed, cancelled or skipped upstream job
+ok 1 - mandatory gate rejects any failed, cancelled or skipped upstream job
+  ---
+  duration_ms: 47.244301
+  type: 'test'
+  ...
+# Subtest: workflow graph pins actions, retains strict security and packages Windows before gate
+ok 2 - workflow graph pins actions, retains strict security and packages Windows before gate
+  ---
+  duration_ms: 1.945995
+  type: 'test'
+  ...
+# Subtest: authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+ok 3 - authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+  ---
+  duration_ms: 404.453639
+  type: 'test'
+  ...
+# Subtest: SARIF projection retains rules and all source/sink locations, never code snippets/messages
+ok 4 - SARIF projection retains rules and all source/sink locations, never code snippets/messages
+  ---
+  duration_ms: 1.110926
+  type: 'test'
+  ...
+# Subtest: bounded pages preserve all results and reject overflow rather than fake completeness
+ok 5 - bounded pages preserve all results and reject overflow rather than fake completeness
+  ---
+  duration_ms: 9.166548
+  type: 'test'
+  ...
+# Subtest: artifact indexes resolve to physical source paths without leaking artifact bodies
+ok 6 - artifact indexes resolve to physical source paths without leaking artifact bodies
+  ---
+  duration_ms: 0.207822
+  type: 'test'
+  ...
+# Subtest: real Next dotenv consumer preserves dollar/backslash/quote attack strings and cannot create extra keys
+ok 7 - real Next dotenv consumer preserves dollar/backslash/quote attack strings and cannot create extra keys
+  ---
+  duration_ms: 3.586911
+  type: 'test'
+  ...
+# Subtest: validates structural intake without pretending unit fixtures are independent
+ok 8 - validates structural intake without pretending unit fixtures are independent
+  ---
+  duration_ms: 294.062271
+  type: 'test'
+  ...
+# Subtest: rejects overlap, duplicate IDs, incomplete strata, false independence and extra fields
+ok 9 - rejects overlap, duplicate IDs, incomplete strata, false independence and extra fields
+  ---
+  duration_ms: 165.42163
+  type: 'test'
+  ...
+# Subtest: rejects fabricated tool/parameters, unauthorized gold calls and missing fact oracle
+ok 10 - rejects fabricated tool/parameters, unauthorized gold calls and missing fact oracle
+  ---
+  duration_ms: 117.18182
+  type: 'test'
+  ...
+# Subtest: freeze is exclusive, hash-bearing, offline and never overwrites an existing gold
+ok 11 - freeze is exclusive, hash-bearing, offline and never overwrites an existing gold
+  ---
+  duration_ms: 58.289915
+  type: 'test'
+  ...
+# Subtest: operator signature binds scope, model, corpus, runner and bounded time; not a billing enforcement proof
+ok 12 - operator signature binds scope, model, corpus, runner and bounded time; not a billing enforcement proof
+  ---
+  duration_ms: 11.024265
+  type: 'test'
+  ...
+# Subtest: copying or renaming a grant cannot reset its exclusive authorization-ID claim
+ok 13 - copying or renaming a grant cannot reset its exclusive authorization-ID claim
+  ---
+  duration_ms: 3.226727
+  type: 'test'
+  ...
+# Subtest: unsafe state permissions and traversal IDs fail closed
+ok 14 - unsafe state permissions and traversal IDs fail closed
+  ---
+  duration_ms: 0.377824
+  type: 'test'
+  ...
+# Subtest: native summary accepts only six actual suites and all 54 passed assertions
+ok 15 - native summary accepts only six actual suites and all 54 passed assertions
+  ---
+  duration_ms: 1.425883
+  type: 'test'
+  ...
+# Subtest: setup failure skips, missing/duplicate suites, killed Vitest or fewer assertions never pass
+ok 16 - setup failure skips, missing/duplicate suites, killed Vitest or fewer assertions never pass
+  ---
+  duration_ms: 3.58689
+  type: 'test'
+  ...
+# Subtest: summary never projects failure messages or raw fields
+ok 17 - summary never projects failure messages or raw fields
+  ---
+  duration_ms: 0.424259
+  type: 'test'
+  ...
+# Subtest: budget manifest refuses unbounded/missing/extra/increased output fields
+ok 18 - budget manifest refuses unbounded/missing/extra/increased output fields
+  ---
+  duration_ms: 4.338435
+  type: 'test'
+  ...
+# Subtest: reserves the worst cost before dispatch, no automatic replenishment
+ok 19 - reserves the worst cost before dispatch, no automatic replenishment
+  ---
+  duration_ms: 0.700076
+  type: 'test'
+  ...
+# Subtest: cost or input limit blocks before consuming any call
+ok 20 - cost or input limit blocks before consuming any call
+  ---
+  duration_ms: 0.331124
+  type: 'test'
+  ...
+# Subtest: empty latency samples stay null, not synthetic zeros
+ok 21 - empty latency samples stay null, not synthetic zeros
+  ---
+  duration_ms: 0.686962
+  type: 'test'
+  ...
+# Subtest: live gate refuses before any provider/network setup even with CLI approval flag
+ok 22 - live gate refuses before any provider/network setup even with CLI approval flag
+  ---
+  duration_ms: 3.424354
+  type: 'test'
+  ...
+# Subtest: model JSON, local fallback, no-call guards and accepted interpretation remain separate
+ok 23 - model JSON, local fallback, no-call guards and accepted interpretation remain separate
+  ---
+  duration_ms: 0.285893
+  type: 'test'
+  ...
+# Subtest: corrupt/missing accounting, absent/invalid/exceeded cap never grants a reservation
+ok 24 - corrupt/missing accounting, absent/invalid/exceeded cap never grants a reservation
+  ---
+  duration_ms: 0.628277
+  type: 'test'
+  ...
+# Subtest: concurrent reservations and uncertain failure/timeouts do not replenish allowance
+ok 25 - concurrent reservations and uncertain failure/timeouts do not replenish allowance
+  ---
+  duration_ms: 1.928172
+  type: 'test'
+  ...
+# Subtest: historical trace transport roundtrips full ANSI, unicode, percent signs and failure stacks
+ok 26 - historical trace transport roundtrips full ANSI, unicode, percent signs and failure stacks
+  ---
+  duration_ms: 8.650428
+  type: 'test'
+  ...
+# Subtest: backup-code modulo has exactly eight preimages per symbol, not biased: real source alphabet has 32 unique symbols
+ok 27 - backup-code modulo has exactly eight preimages per symbol, not biased: real source alphabet has 32 unique symbols
+  ---
+  duration_ms: 15.585859
+  type: 'test'
+  ...
+# Subtest: actual extracted Electron flush function: revoked consent performs no queue read and no send (unit, not packaged Electron)
+ok 28 - actual extracted Electron flush function: revoked consent performs no queue read and no send (unit, not packaged Electron)
+  ---
+  duration_ms: 147.640449
+  type: 'test'
+  ...
+1..28
+# tests 28
+# suites 0
+# pass 28
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1993.072751

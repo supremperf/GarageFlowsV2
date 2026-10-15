@@ -14,6 +14,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { prisma } from '@/lib/db'
 import { computeRecordMac } from '@/lib/license/record-mac'
+import { canTransitionLicense } from '@/lib/license/state-machine'
+import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 const VALID_STATUSES = ['active', 'revoked', 'suspended'] as const
 type Status = typeof VALID_STATUSES[number]
@@ -27,6 +29,19 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
+  // Défense en profondeur (§5) : limite le débit AVANT toute comparaison — réduit
+  // la surface de brute-force sur la clé API réseau-accessible.
+  //
+  // MAIS cette route est appelée par l'outillage de CONFIANCE (keygen, script de
+  // reset) authentifié par une clé API forte à comparaison à temps constant. Un
+  // repli fail-closed (503) sur indisponibilité d'Upstash bloquerait le reset —
+  // qui rote justement Upstash — au moment où il teste cette route (chicken-and-egg
+  // observé en production). On rejette donc UNIQUEMENT une vraie limite atteinte
+  // (429) ; l'indisponibilité du backend (fail_closed) est laissée passer, la clé
+  // API restant le contrôle d'accès fort.
+  const rl = await enforceRateLimit('admin', clientIpFrom(req))
+  if (!rl.ok && rl.degraded !== 'fail_closed') return rateLimitResponse(rl)
+
   // Auth : compare x-gf-key à GARAGEFLOW_API_KEY (temps constant).
   const apiKey = req.headers.get('x-gf-key')?.trim() ?? ''
   const serverApiKey = process.env.GARAGEFLOW_API_KEY?.trim() ?? ''
@@ -49,12 +64,17 @@ export async function POST(req: NextRequest) {
 
   let licenseId: string
   let status: Status
+  let confirmReactivation: unknown
+  let reason: unknown
 
   try {
     const body = await req.json()
 
     licenseId = String(body.licenseId ?? '').trim()
     status = body.status as Status
+    // Sortir de `revoked` exige un geste DÉDIÉ et un motif (GF-DUR-048).
+    confirmReactivation = body.confirmReactivation
+    reason = body.reason
     // SÉCURITÉ : ne jamais journaliser DATABASE_URL ni de secret. Trace minimale.
   } catch {
     return NextResponse.json(
@@ -130,12 +150,49 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    /**
+     * MÊME MACHINE À ÉTATS QUE `PATCH /api/admin/licenses/[id]` (GF-DUR-048).
+     *
+     * Cette route écrivait `status` DIRECTEMENT, sans consulter l'état courant.
+     * `revoked → active` y était donc une écriture de champ ordinaire — et elle
+     * effaçait même `revokedAt`. Or `revoked` est TERMINAL depuis le LOT 1 : il
+     * n'en sort que par une action d'administration explicite, avec drapeau de
+     * confirmation ET motif obligatoire.
+     *
+     * La protection existait, mais sur UNE seule des deux routes qui changent
+     * l'état d'une licence. Une garde qu'un second chemin contourne ne garde
+     * rien : l'outil keygen pouvait réactiver ce que l'interface d'admin
+     * refusait.
+     *
+     * On passe donc par le même verdict, avec les mêmes exigences. Le corps
+     * accepte `confirmReactivation` et `reason` pour le cas légitime.
+     */
+    const verdict = canTransitionLicense({
+      from: record.status,
+      to: status,
+      confirmReactivation: confirmReactivation === true,
+      reason,
+    })
+    if (!verdict.ok) {
+      return NextResponse.json(
+        { error: verdict.message, code: verdict.code },
+        { status: verdict.code === 'REVOKED_IS_FINAL' ? 409 : 400 },
+      )
+    }
+
+    // Même exigence que PATCH /api/admin/licenses/[id] : les champs MÉCANICIEN
+    // entrent dans le message signé dès qu'ils sont non nuls. Les omettre
+    // produisait un MAC incohérent avec celui que `verifyRecordMac` recalcule
+    // depuis la ligne, si bien que révoquer puis réactiver une clé mécanicien
+    // attribuée la laissait vue comme « altérée » (GF31-AUD-006).
     const newMac = computeRecordMac({
       licenseId: record.licenseId,
       token: record.token,
       status,
       expiryAt: record.expiryAt,
       hwid: record.hwid ?? null,
+      parentLicenseId: record.parentLicenseId ?? null,
+      mechanicId: record.mechanicId ?? null,
     })
 
     const updated = await prisma.licenseKey.update({
@@ -152,6 +209,26 @@ export async function POST(req: NextRequest) {
             : undefined,
         recordMac: newMac,
       },
+    })
+
+    // Trace de la transition (GF-DUR-047) — même journal que `[id]`, jamais de
+    // jeton ni de clé. Best-effort : une table d'audit indisponible ne doit pas
+    // annuler une révocation déjà engagée, mais l'écart est signalé.
+    await prisma.licenseDeviceEvent.create({
+      data: {
+        licenseId: updated.licenseId,
+        deviceId:  null,
+        action:    status === 'revoked' ? 'revoked' : status === 'suspended' ? 'suspended' : 'reactivated',
+        detail: JSON.stringify({
+          from:   record.status,
+          to:     status,
+          actor:  'keygen (x-gf-key)',
+          reason: typeof reason === 'string' ? reason.slice(0, 500) : null,
+          at:     new Date().toISOString(),
+        }),
+      },
+    }).catch((e) => {
+      console.error('[admin/licenses/revoke-by-key] trace non écrite', e)
     })
 
     return NextResponse.json({

@@ -1,0 +1,95 @@
+{
+  "at": "2026-10-14T14:23:19.123Z",
+  "timezone": "Europe/Paris",
+  "total": 1247,
+  "manualReview": {
+    "VALIDÉ": 60,
+    "PARTIELLEMENT VALIDÉ": 12,
+    "EN ATTENTE DE REVUE": 1175
+  },
+  "prior": {
+    "total": 1243,
+    "full": 32,
+    "partial": 11,
+    "pending": 1200
+  },
+  "nextBatch": [
+    {
+      "path": "electron/main.js",
+      "sha256": "2813b1473c3a4396f27924d7d5dbf5c11a4c75119c65fb707004825a30e1217b",
+      "priority": "P0"
+    },
+    {
+      "path": "electron/sauvegarde-en-souffrance.js",
+      "sha256": "b44f6d444344e172ebb409971659777485edd535bdceea2be998c3f7e410f7bb",
+      "priority": "P0"
+    },
+    {
+      "path": "electron/secret.js",
+      "sha256": "af678507e92601fa6b67197a132ac8044307c39d1d7c048840223b4e5b413dbb",
+      "priority": "P0"
+    },
+    {
+      "path": "electron/secure-key.js",
+      "sha256": "46166da673e8356d9ea599f9c3edf7e6536d18dff21364053b3772647fff309a",
+      "priority": "P0"
+    },
+    {
+      "path": "electron/semver.js",
+      "sha256": "241683eaeb837b6465a24eb0f22c813b1204ccb83d66c8d65c1000e565edbe3c",
+      "priority": "P0"
+    },
+    {
+      "path": "electron/splash.html",
+      "sha256": "58698c68b51f01ee4ff8c205013b417e69b530b00750e98270b6a281c9a6a7dc",
+      "priority": "P0"
+    },
+    {
+      "path": "electron/startup-gate.js",
+      "sha256": "9854f9e11599a041c35a62d825018f132dc676116ae7e4815cae515f0f4ed1c2",
+      "priority": "P0"
+    },
+    {
+      "path": "electron/update-verify.js",
+      "sha256": "c2eab6aff6e959e2832a747111656368d0f054b9ddd734dd58fc1debdf881983",
+      "priority": "P0"
+    },
+    {
+      "path": "electron/user-data-path.js",
+      "sha256": "c5d163d0273033b6152d6ad71fa47a3c59057cdc1fa6835cf501bf7eff42b86c",
+      "priority": "P0"
+    },
+    {
+      "path": "prisma/demo-tenant.ts",
+      "sha256": "6d205e0881b7a830edd3de8f078722d00513f83a32dd9164401f592c34f1eff2",
+      "priority": "P0"
+    },
+    {
+      "path": "prisma/garageflow-template.db",
+      "sha256": "2434c43f0333a3be258a88157cd60109fcc10cc7857fb177c95e5bd8aff2c757",
+      "priority": "P0"
+    },
+    {
+      "path": "prisma/migrations/20260424000000_add_record_mac/migration.sql",
+      "sha256": "efc69c7355fe15a68456617c9d85e49ecfe4558b4367faf32345755b697e0214",
+      "priority": "P0"
+    }
+  ],
+  "exclusions": {
+    "automaticEvidence": [
+      "docs/audit/followup-2026-10-14/",
+      "docs/audit/resumption-2026-10-14/"
+    ],
+    "automaticInventories": [
+      "docs/audit/inventory.jsonl",
+      "docs/audit/inventory-current.jsonl",
+      "docs/audit/module-map.jsonl",
+      "docs/audit/scope.json"
+    ],
+    "ignored": "git ls-files --exclude-standard: Git metadata, installed dependencies, private config, generated/runtime/binary build outputs. This is not a product-source exemption."
+  },
+  "limitations": [
+    "No implicit scope exclusion; partial files remain partial even if all test bodies pass.",
+    "Review still incomplete. Independent manual review work remains possible; external blockers do not make it complete."
+  ]
+}

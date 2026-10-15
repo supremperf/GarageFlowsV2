@@ -1,5 +1,20 @@
 # Module Premium — Assistant proactif (capstone)
 
+> **MOTEUR NON EXPOSÉ EN HTTP.** La route `/api/proactive` a été **supprimée le
+> 14/08/2026** (GF-DUR-043). Le moteur reste en place : `src/lib/proactive/`,
+> `buildAlerts()`, déterministe et couvert par ses tests.
+>
+> Motif : l'historique complet du dépôt (`git log --all -S`) montre qu'**aucune
+> interface n'a jamais appelé cette route**, à aucun moment.
+>
+> Attention à ne pas surinterpréter la suppression : `planReorders()`
+> (`src/lib/stock-forecast/`), que ce module composait, reste bien atteint par
+> `/api/dashboard`. Seule la composition en alertes priorisées n'est plus servie
+> en HTTP.
+>
+> Le contrat HTTP décrit plus bas est donc **historique**. Le rétablir demande un
+> seul fichier de route ; ce document reste la référence de ce qu'il servirait.
+
 Le copilote ne se contente pas de répondre : il **anticipe**. Ce module **compose
 les autres moteurs** en une liste d'**alertes priorisées et actionnables**,
 affichées sans qu'on ait à les demander.

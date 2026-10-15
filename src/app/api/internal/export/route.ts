@@ -9,6 +9,8 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { internalRequestAuthorized } from '@/lib/internal-auth'
+import { computeTotals } from '@/lib/money'
+import { linesToEuros, partToEuros, jobPartToEuros } from '@/lib/money-db'
 
 export async function GET(req: NextRequest) {
   if (!internalRequestAuthorized(req)) {
@@ -43,7 +45,23 @@ export async function GET(req: NextRequest) {
         prisma.reminder.findMany({ orderBy: { scheduledDate: 'asc' } }),
       ])
 
-    return NextResponse.json({ clients, vehicles, jobs, invoices, quotes, parts, mechanics, reminders })
+    // Vue euros + TOTAUX calculés ICI par la couche financière exacte (centimes) :
+    // l'export Electron ne fait plus AUCUN recalcul flottant — il formate.
+    const withDocTotals = <T extends { taxRate: number; lines: Parameters<typeof linesToEuros>[0] }>(doc: T) => {
+      const lines = linesToEuros(doc.lines)
+      const t = computeTotals(lines, doc.taxRate)
+      return { ...doc, lines, totalHT: t.totalHT, totalTTC: t.totalTTC }
+    }
+    return NextResponse.json({
+      clients,
+      vehicles,
+      jobs: jobs.map(j => ({ ...j, jobParts: j.jobParts.map(jobPartToEuros) })),
+      invoices: invoices.map(withDocTotals),
+      quotes: quotes.map(withDocTotals),
+      parts: parts.map(partToEuros),
+      mechanics,
+      reminders,
+    })
   } catch (err) {
     // Ne jamais renvoyer le détail interne au client (fuite d'infos).
     console.error('[internal/export] error:', (err as { code?: string })?.code ?? 'unknown')

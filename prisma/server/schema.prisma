@@ -32,9 +32,14 @@ model Garage {
   name              String
   slug              String @unique
   plan              String @default("FREE")
-  hourlyRate        Float  @default(60)
+  hourlyRateTenThousandths Int @default(600000) // taux horaire en DIX-MILLIÈMES d'€/h (600000 = 60 €/h) — exact, 4 décimales
   workshopStartHour Int    @default(8) // opening hour (e.g. 8 → 08:00)
   workshopEndHour   Int    @default(18) // closing hour (e.g. 18 → 18:00)
+  /// Minutes de l'heure d'ouverture — 0 ou 30. Un atelier qui ouvre à 8 h 30 ne
+  /// pouvait pas le déclarer : les bornes n'étaient que des heures pleines.
+  workshopStartMinute Int  @default(0)
+  /// Minutes de l'heure de fermeture — 0 ou 30.
+  workshopEndMinute   Int  @default(0)
 
   // ── Company identity ──────────────────────────────────────────
   address    String?
@@ -89,7 +94,7 @@ model Garage {
   smtpHost   String?
   smtpPort   Int?
   smtpUser   String?
-  smtpPass   String? // stored encrypted via GF_SMTP_CIPHER_KEY env
+  smtpPass   String? // AES-256-GCM at rest (GF_SMTP_CIPHER_KEY) — see src/lib/security/secret-cipher.ts
   smtpFrom   String?
   smtpSecure Boolean @default(true)
 
@@ -100,6 +105,7 @@ model Garage {
   clients            Client[]
   vehicles           Vehicle[]
   parts              Part[]
+  repairTypeParts    RepairTypePart[]
   reminders          Reminder[]
   quotes             Quote[]
   invoices           Invoice[]
@@ -111,6 +117,9 @@ model Garage {
   loanerReservations LoanerReservation[]
   purchaseOrders     PurchaseOrder[]
   licenses           LicenseKey[]
+  mechanicLicenseAssignments MechanicLicenseAssignment[]
+  jobMechanicNotes           JobMechanicNote[]
+  mechanicActionAudits       MechanicActionAudit[]
   // ── Modules Premium (intégration f8rhzz) ───────────────────────────────────
   vinSearches        VinSearch[]
   signatures         Signature[]
@@ -121,6 +130,7 @@ model Garage {
   appointments       Appointment[]
   backupRecords      BackupRecord[]
   reportSnapshots    ReportSnapshot[]
+  stockMovements     StockMovement[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -134,6 +144,9 @@ model User {
   role      String   @default("RECEPTIONIST")
   garageId  String
   garage    Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  assignedLicenses           LicenseKey[]                @relation("LicenseKeyAssignedBy")
+  mechanicLicenseAssignments MechanicLicenseAssignment[] @relation("MlaAssignedBy")
+  mechanicActionAudits       MechanicActionAudit[]       @relation("MaaActor")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -143,6 +156,19 @@ model Mechanic {
   id         String      @id @default(cuid())
   name       String
   avatar     String
+  // ── Photo de profil (GF-PLAN-004) ──────────────────────────────────────────
+  // `avatar` ci-dessus reste les INITIALES de repli ; ces colonnes portent la
+  // vraie photo. `avatarPath` est une clé de stockage générée par le serveur —
+  // jamais un nom de fichier fourni par le client. `avatarHash` sert de jeton
+  // d'invalidation de cache : l'URL change quand la photo change.
+  avatarPath      String?
+  avatarMime      String?
+  avatarHash      String?
+  avatarUpdatedAt DateTime?
+  // ── Archivage (GF-PLAN-005) ────────────────────────────────────────────────
+  // NULL = actif. Un mécanicien archivé sort du planning et ne peut plus
+  // recevoir d'intervention, mais son historique reste intact et lisible.
+  archivedAt      DateTime?
   color      String
   isAbsent   Boolean     @default(false)
   specialty  String      @default("[]")
@@ -151,11 +177,21 @@ model Mechanic {
   garage     Garage      @relation(fields: [garageId], references: [id], onDelete: Cascade)
   jobs       Job[]
   workOrders WorkOrder[]
+  assignedLicenses       LicenseKey[]                @relation("LicenseKeyMechanic")
+  licenseAssignments     MechanicLicenseAssignment[] @relation("MlaMechanic")
+  prevLicenseAssignments MechanicLicenseAssignment[] @relation("MlaPrevMechanic")
+  jobNotes               JobMechanicNote[]           @relation("JmnMechanic")
+  actionAudits           MechanicActionAudit[]       @relation("MaaTargetMechanic")
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+
+  // Le planning ne lit que les mécaniciens ACTIFS d'un garage : c'est la
+  // requête la plus fréquente du module.
+  @@index([garageId, archivedAt])
 }
 
 // ─── Client ───────────────────────────────────────────────────────────────────
+
 model Client {
   id        String     @id @default(cuid())
   name      String
@@ -215,8 +251,8 @@ model Part {
   description  String?
   quantity     Int              @default(0)
   minQuantity  Int              @default(5) // low-stock threshold
-  unitCost     Float            @default(0) // purchase price €
-  unitPrice    Float            @default(0) // selling price €
+  unitCostTenThousandths  Int    @default(0) // coût d'achat en DIX-MILLIÈMES d'€ (exact, 4 décimales)
+  unitPriceTenThousandths Int    @default(0) // prix de vente en DIX-MILLIÈMES d'€ (exact, 4 décimales)
   location     String? // shelf / bin reference
   supplierName String?
   supplierRef  String? // supplier's own reference/SKU
@@ -224,8 +260,18 @@ model Part {
   garage       Garage           @relation(fields: [garageId], references: [id], onDelete: Cascade)
   jobParts     JobPart[]
   defaultFor   RepairTypePart[]
+  // Lignes de documents rattachées à CETTE pièce (lien interne fiable : une
+  // ligne ne stocke pas qu'un libellé, sinon toute synchronisation ultérieure
+  // du stock serait devinée à partir de texte libre).
+  invoiceLines InvoiceLine[]
+  quoteLines   QuoteLine[]
+  movements    StockMovement[]
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
+
+  @@index([garageId])
+  // Recherche « tape F → propose Filtre… » : index sur le couple garage+nom.
+  @@index([garageId, name])
 }
 
 // ─── Parts per job (bill of materials) ───────────────────────────────────────
@@ -236,8 +282,11 @@ model JobPart {
   partId    String
   part      Part   @relation(fields: [partId], references: [id])
   quantity  Int
-  unitPrice Float // selling price snapshot
-  unitCost  Float // cost snapshot
+  unitPriceTenThousandths Int // prix de vente (snapshot) en DIX-MILLIÈMES d'€
+  unitCostTenThousandths  Int // coût (snapshot) en DIX-MILLIÈMES d'€
+
+  @@index([jobId])
+  @@index([partId])
 }
 
 // ─── Default parts per repair type ───────────────────────────────────────────
@@ -248,6 +297,9 @@ model RepairTypePart {
   part       Part   @relation(fields: [partId], references: [id], onDelete: Cascade)
   defaultQty Int    @default(1)
   garageId   String
+  garage     Garage @relation(fields: [garageId], references: [id], onDelete: Cascade)
+
+  @@index([garageId, repairType])
 }
 
 // ─── Job (intervention) ──────────────────────────────────────────────────────
@@ -266,7 +318,8 @@ model Job {
   isUrgent           Boolean             @default(false)
   delayMinutes       Int?
   mileageAtVisit     Int?
-  timerStartedAt     DateTime? // for real-time stopwatch
+  timerStartedAt     DateTime? // début du segment de chrono EN COURS (null si en pause/arrêté)
+  timerAccumulatedSec Int               @default(0) // secondes accumulées sur les segments terminés (pause/reprise sans perte)
   // Relations
   mechanicId         String
   mechanic           Mechanic            @relation(fields: [mechanicId], references: [id])
@@ -282,6 +335,8 @@ model Job {
   workOrder          WorkOrder?
   warranties         Warranty[]
   loanerReservations LoanerReservation[]
+  mechanicNotes        JobMechanicNote[]
+  mechanicActionAudits MechanicActionAudit[] @relation("MaaJob")
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
@@ -333,11 +388,19 @@ model QuoteLine {
   quoteId     String
   quote       Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
   description String
-  quantity    Float   @default(1)
-  unitPrice   Float   @default(0)
-  unitCost    Float   @default(0)
+  quantityTenThousandths  Int @default(10000) // quantité en DIX-MILLIÈMES d'unité (10000 = 1 ; 15000 = 1,5)
+  unitPriceTenThousandths Int @default(0) // prix unitaire en DIX-MILLIÈMES d'€ (exact, 4 décimales)
+  unitCostTenThousandths  Int @default(0) // coût unitaire en DIX-MILLIÈMES d'€ (exact, 4 décimales)
   isLabor     Boolean @default(false)
   sortOrder   Int     @default(0)
+  // Pièce du stock choisie via l'autocomplétion. NULL = main-d'œuvre, prestation
+  // ou ligne libre : aucun impact inventaire. Un DEVIS n'engage JAMAIS le stock
+  // (aucun mouvement) ; le lien sert uniquement à reporter la pièce sur la
+  // facture issue de la conversion.
+  partId      String?
+  part        Part?   @relation(fields: [partId], references: [id], onDelete: SetNull)
+  @@index([quoteId])
+  @@index([partId])
 }
 
 // ─── Invoice (Facture) ────────────────────────────────────────────────────────
@@ -361,12 +424,19 @@ model Invoice {
   vehicleModel  String?
   licensePlate  String?
   // Status
-  status        String        @default("draft") // draft, sent, paid, overdue
+  status        String        @default("draft") // draft, sent, paid, overdue, cancelled
   issueDate     String
   dueDate       String?
   notes         String?
   taxRate       Float         @default(20)
   lines         InvoiceLine[]
+  // ── Engagement du stock ─────────────────────────────────────────────────────
+  // Horodatage de l'UNIQUE décrément définitif du stock pour cette facture.
+  // Sert de VERROU D'IDEMPOTENCE : la revendication se fait par un updateMany
+  // conditionnel (`stockCommittedAt: null`), donc un double-clic ou deux
+  // requêtes concurrentes ne peuvent pas décrémenter deux fois.
+  stockCommittedAt DateTime?
+  stockMovements   StockMovement[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -382,24 +452,78 @@ model InvoiceLine {
   invoiceId   String
   invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   description String
-  quantity    Float   @default(1)
-  unitPrice   Float   @default(0)
-  unitCost    Float   @default(0)
+  quantityTenThousandths  Int @default(10000) // quantité en DIX-MILLIÈMES d'unité (10000 = 1 ; 15000 = 1,5)
+  unitPriceTenThousandths Int @default(0) // prix unitaire en DIX-MILLIÈMES d'€ (exact, 4 décimales)
+  unitCostTenThousandths  Int @default(0) // coût unitaire en DIX-MILLIÈMES d'€ (exact, 4 décimales)
   isLabor     Boolean @default(false)
   sortOrder   Int     @default(0)
+  // Pièce du stock choisie via l'autocomplétion.
+  //   NULL  → main-d'œuvre, prestation, pièce commandée spécialement, ligne
+  //           libre : AUCUN impact inventaire.
+  //   défini → la validation de la facture décrémente le stock de cette pièce.
+  // Le lien est un identifiant, jamais le libellé : c'est lui qui rend la
+  // synchronisation ultérieure (modification, annulation) fiable.
+  partId      String?
+  part        Part?   @relation(fields: [partId], references: [id], onDelete: SetNull)
+  @@index([invoiceId])
+  @@index([partId])
+}
+
+// ─── Mouvements de stock (journal d'inventaire) ──────────────────────────────
+// Trace INTÉGRALE et immuable de tout changement automatique de stock déclenché
+// par un document. Une facture validée produit N lignes SALE (delta négatif) ;
+// son annulation produit les lignes CANCEL symétriques. Le stock d'une pièce
+// est toujours reconstituable : quantité initiale + somme des quantityDelta.
+/// Trace de SUPPRESSION d'une intervention (GF31-AUD-044).
+///
+/// Écrite par le POSTE, dans la même transaction que la suppression, puis
+/// transmise à `/api/sync/jobs` indépendamment de la fenêtre de dates. Le cloud
+/// ne la produit jamais lui-même : le modèle existe ici pour que les deux
+/// schémas déclarent les mêmes modèles — `src/lib/db.ts` fait passer les deux
+/// clients Prisma pour un seul type, et cette parité est vérifiée par un test.
+model JobTombstone {
+  jobId     String   @id
+  garageId  String
+  deletedAt DateTime @default(now())
+
+  @@index([garageId, deletedAt])
+}
+
+model StockMovement {
+  id            String   @id @default(cuid())
+  garageId      String
+  garage        Garage   @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  partId        String
+  part          Part     @relation(fields: [partId], references: [id], onDelete: Cascade)
+  // SALE (vente sur facture) | CANCEL (annulation de facture) | ADJUST (correction)
+  type          String
+  // Signé : négatif = sortie de stock, positif = entrée. Jamais zéro.
+  quantityDelta Int
+  invoiceId     String?
+  invoice       Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  invoiceLineId String?
+  reason        String?
+  createdAt     DateTime @default(now())
+
+  @@index([garageId, createdAt])
+  @@index([partId])
+  @@index([invoiceId])
 }
 
 // ─── Job Photos ───────────────────────────────────────────────────────────────
 model JobPhoto {
-  id        String   @id @default(cuid())
-  jobId     String
-  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  garageId  String
-  phase     String   @default("before") // before, during, after
-  caption   String?
-  base64    String // legacy: data URL as base64 ('' when photoPath is used)
-  photoPath String? // preferred: relative path under GF_PHOTOS_DIR/jobs/
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  jobId      String
+  job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  garageId   String
+  phase      String   @default("before") // before, during, after
+  caption    String?
+  base64     String // legacy: data URL as base64 ('' when photoPath is used)
+  photoPath  String? // preferred: relative path under GF_PHOTOS_DIR/jobs/
+  mechanicId String? // renseigné quand la photo vient d'un mécanicien (espace mécanicien)
+  createdAt  DateTime @default(now())
+  @@index([jobId])
+  @@index([garageId])
 }
 
 // ─── Vehicle Digital Inspection ───────────────────────────────────────────────
@@ -433,6 +557,7 @@ model InspectionItem {
   photoBase64  String? // legacy: base64 data URL
   photoPath    String? // preferred: relative path under GF_PHOTOS_DIR/inspections/
   sortOrder    Int        @default(0)
+  @@index([inspectionId])
 }
 
 // ─── License keys v2 — ECC / ECDSA-SHA256 ────────────────────────────────────
@@ -463,9 +588,110 @@ model LicenseKey {
   garageId String?
   garage   Garage? @relation(fields: [garageId], references: [id], onDelete: SetNull)
 
-  devices LicenseDevice[]
+  // ── Licences MECHANIC (subordonnées à une licence Garage) ────────────────────
+  // parentLicenseId = lid de la licence Garage parente (payload plid, signé).
+  // mechanicId : mécanicien attribué — null tant que le propriétaire n'a pas
+  // associé la clé ; l'attribution/réattribution est couverte par le recordMac.
+  parentLicenseId String?
+  parentLicense   LicenseKey?  @relation("MechanicLicenseHierarchy", fields: [parentLicenseId], references: [licenseId], onDelete: SetNull)
+  childLicenses   LicenseKey[] @relation("MechanicLicenseHierarchy")
+  mechanicId      String?
+  mechanic        Mechanic?    @relation("LicenseKeyMechanic", fields: [mechanicId], references: [id], onDelete: SetNull)
+  mechanicHint    String? // nom suggéré par le Keygen (payload mn) — affichage seul
+  assignedAt      DateTime?
+  assignedBy      String? // userId du propriétaire ayant attribué la clé
+  assignedByUser  User?        @relation("LicenseKeyAssignedBy", fields: [assignedBy], references: [id], onDelete: SetNull)
+  suspendedAt     DateTime?
+
+  // ── Synchronisation POSTE → CLOUD (attribution mécanicien) ───────────────────
+  // Horodatage du dernier accusé de réception du serveur officiel pour CETTE
+  // attribution. NULL = jamais confirmé : l'interface affiche « synchronisation
+  // cloud en attente » et la remontée est retentée. Champ purement local au
+  // suivi (il n'entre PAS dans le recordMac : il ne décrit aucun droit).
+  cloudSyncedAt   DateTime?
+
+  devices                    LicenseDevice[]
+  mechanicLicenseAssignments MechanicLicenseAssignment[] @relation("MlaLicense")
+  jobMechanicNotes           JobMechanicNote[]           @relation("JmnLicense")
+  actionAudits               MechanicActionAudit[]       @relation("MaaLicense")
 
   @@index([garageId])
+  @@index([parentLicenseId])
+  @@index([garageId, licenseType])
+  @@index([mechanicId])
+  @@index([assignedBy])
+}
+
+// ─── Historique d'attribution des clés mécanicien (append-only) ──────────────
+model MechanicLicenseAssignment {
+  id                 String      @id @default(cuid())
+  licenseId          String? // LicenseKey.licenseId (lid)
+  license            LicenseKey? @relation("MlaLicense", fields: [licenseId], references: [licenseId], onDelete: SetNull)
+  mechanicId         String?
+  mechanic           Mechanic?   @relation("MlaMechanic", fields: [mechanicId], references: [id], onDelete: SetNull)
+  garageId           String
+  garage             Garage      @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  assignedAt         DateTime    @default(now())
+  assignedBy         String? // userId du propriétaire
+  assignedByUser     User?       @relation("MlaAssignedBy", fields: [assignedBy], references: [id], onDelete: SetNull)
+  unassignedAt       DateTime?
+  previousMechanicId String?
+  previousMechanic   Mechanic?   @relation("MlaPrevMechanic", fields: [previousMechanicId], references: [id], onDelete: SetNull)
+
+  @@index([licenseId, assignedAt])
+  @@index([garageId])
+  @@index([mechanicId])
+  @@index([assignedBy])
+  @@index([previousMechanicId])
+}
+
+// ─── Contributions du mécanicien sur une intervention (append-only) ──────────
+model JobMechanicNote {
+  id         String      @id @default(cuid())
+  jobId      String
+  job        Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  garageId   String
+  garage     Garage      @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  mechanicId String?
+  mechanic   Mechanic?   @relation("JmnMechanic", fields: [mechanicId], references: [id], onDelete: SetNull)
+  licenseId  String?
+  license    LicenseKey? @relation("JmnLicense", fields: [licenseId], references: [licenseId], onDelete: SetNull)
+  type       String // comment | note | observation | issue
+  body       String
+  createdAt  DateTime    @default(now())
+
+  @@index([jobId, createdAt])
+  @@index([garageId, mechanicId])
+  @@index([licenseId])
+}
+
+// ─── Journal d'audit des actions mécanicien ──────────────────────────────────
+// Schéma CORRIGÉ (§6) — identique au schéma desktop : acteur (actorUserId/
+// actorRole) et cible (targetMechanicId) séparés, tous nullables ; jamais ''.
+model MechanicActionAudit {
+  id               String      @id @default(cuid())
+  garageId         String
+  garage           Garage      @relation(fields: [garageId], references: [id], onDelete: Cascade)
+  actorUserId      String? // staff (OWNER/MANAGER) ayant effectué l'action ; null si action mécanicien
+  actorUser        User?       @relation("MaaActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  actorRole        String? // rôle du staff acteur ; null si action mécanicien
+  targetMechanicId String? // mécanicien concerné par l'action ; null si non applicable
+  targetMechanic   Mechanic?   @relation("MaaTargetMechanic", fields: [targetMechanicId], references: [id], onDelete: SetNull)
+  licenseId        String?
+  license          LicenseKey? @relation("MaaLicense", fields: [licenseId], references: [licenseId], onDelete: SetNull)
+  jobId            String?
+  job              Job?        @relation("MaaJob", fields: [jobId], references: [id], onDelete: SetNull)
+  action           String // photo_added | comment_added | issue_reported | checklist_updated | timer_started | timer_stopped | login | logout | assign | reassign | suspend | revoke | reactivate | disconnect | token_copied
+  targetType       String? // JobPhoto | JobMechanicNote | InspectionItem | Job | LicenseKey
+  targetId         String?
+  metadata         String? // JSON non sensible (jamais de token ni de secret)
+  createdAt        DateTime    @default(now())
+
+  @@index([garageId, createdAt])
+  @@index([targetMechanicId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([jobId])
+  @@index([licenseId])
 }
 
 // ─── Appareils activés par licence ───────────────────────────────────────────
@@ -560,12 +786,15 @@ model WorkOrder {
   mileage       Int?
   vin           String?
   // Work content (stored as JSON strings for SQLite)
-  worksJson     String    @default("[]") // [{description, durationMin, unitPrice, laborOpId?}]
-  partsJson     String    @default("[]") // [{name, reference, qty, unitPrice}]
+  worksJson     String    @default("[]") // v2 {schemaVersion:2, works:[{description, durationMin, unitPriceTenThousandths, lineTotalCents, laborOpId?}]} — v1 flottant lu uniquement pour les ordres SIGNÉS (JSON gelé, voir src/lib/money-json.ts)
+  partsJson     String    @default("[]") // v2 {schemaVersion:2, parts:[{name, reference, qtyTenThousandths, unitPriceTenThousandths, lineTotalCents}]} — v1 flottant lu uniquement pour les ordres SIGNÉS
   // Pricing
   taxRate       Float     @default(20)
-  totalHT       Float     @default(0)
-  totalTTC      Float     @default(0)
+  // Totaux en CENTIMES entiers — UNIQUE source de vérité (les anciennes
+  // colonnes Float totalHT/totalTTC ont été migrées puis supprimées ;
+  // voir docs/MIGRATION-MONEY.md).
+  totalHtCents  Int       @default(0)
+  totalTtcCents Int       @default(0)
   // Status & signature
   status        String    @default("draft") // draft, signed, in_progress, closed
   signatureData String? // base64 PNG of client signature
@@ -587,7 +816,7 @@ model LaborOperation {
   name        String
   category    String? // Moteur, Freinage, Pneumatiques, Électricité, Carrosserie, Autre
   durationMin Int      @default(30) // barème time in minutes
-  unitPrice   Float    @default(0) // price per operation (not per hour)
+  unitPriceTenThousandths Int @default(0) // prix par opération (forfait) en DIX-MILLIÈMES d'€
   description String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -669,8 +898,10 @@ model LoanerReservation {
   status        String        @default("reserved") // reserved, active, returned, cancelled
   notes         String?
   isPaid        Boolean       @default(false)
-  dailyRate     Float?
-  depositAmount Float?
+  // Tarif journalier en DIX-MILLIÈMES d'€/jour ; caution en CENTIMES —
+  // uniques sources de vérité (anciens Float dailyRate/depositAmount supprimés).
+  dailyRateTenThousandths Int?
+  depositAmountCents      Int?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -687,8 +918,9 @@ model PurchaseOrder {
   garage        Garage    @relation(fields: [garageId], references: [id], onDelete: Cascade)
   supplierName  String?
   supplierEmail String?
-  linesJson     String    @default("[]") // [{partId?, partName, reference?, qty, unitCost}]
-  totalHT       Float     @default(0)
+  linesJson     String    @default("[]") // v2 {schemaVersion:2, lines:[{partId?, partName, reference?, qtyTenThousandths, unitCostTenThousandths, lineTotalCents}]} — plus aucun flottant persistant (src/lib/money-json.ts)
+  // Total HT en CENTIMES entiers — unique source de vérité (ancien Float supprimé).
+  totalHtCents  Int       @default(0)
   status        String    @default("draft") // draft, sent, received, cancelled
   notes         String?
   sentAt        DateTime?
@@ -803,10 +1035,26 @@ model PortalUser {
   name             String?
   emailVerified    Boolean        @default(false)
   emailVerifyToken String?
+  // ── Changement d'adresse en attente (GF-PORT-006) ──────────────────────────
+  // L'adresse est l'IDENTIFIANT de connexion. La remplacer sans vérification
+  // enfermerait le client dehors sur une simple faute de frappe, et permettrait
+  // de revendiquer l'adresse d'un tiers. La nouvelle adresse attend donc ici
+  // jusqu'à confirmation par le lien envoyé sur ELLE.
+  pendingEmail     String?
   twoFactorEnabled Boolean        @default(false)
   twoFactorSecret  String?
   twoFactorPending String?
   backupCodes      String         @default("[]")
+  // ── Cycle de vie de l'ACCÈS (GF-PORT-001) ──────────────────────────────────
+  // `disabledAt` NULL = accès actif. Le garage doit pouvoir couper l'accès
+  // portail d'un client SANS supprimer le client métier ni son historique.
+  disabledAt       DateTime?
+  // Mot de passe TEMPORAIRE remis par le garage : tant que ce drapeau est levé,
+  // la seule action permise est le changement de mot de passe. Il est posé à la
+  // création de l'accès et à chaque réinitialisation.
+  mustChangePassword Boolean      @default(false)
+  // Sert à l'audit et à distinguer un compte jamais utilisé d'un compte actif.
+  passwordChangedAt DateTime?
   failedLoginCount Int            @default(0)
   lockedUntil      DateTime?
   lastLoginAt      DateTime?
@@ -926,4 +1174,107 @@ model ReportSnapshot {
 
   @@index([garageId])
   @@index([garageId, createdAt])
+}
+
+// ─── Facturation électronique (Phase 2 — modèles, serveur uniquement) ─────────
+// Références scalaires + index (pas de @relation) pour rester additif et découplé
+// des modèles Garage/Invoice/User. Les secrets (credentials) sont TOUJOURS chiffrés
+// (enveloppe gfeic1… via src/lib/einvoicing/credentials-cipher.ts, clé serveur) et
+// ne sont jamais stockés côté SQLite desktop. Voir docs/EINVOICING_ARCHITECTURE.md.
+
+model GarageEInvoiceConnection {
+  id                    String    @id @default(cuid())
+  garageId              String
+  providerId            String
+  environment           String    @default("sandbox") // sandbox | production
+  status                String    @default("disconnected") // disconnected | pending | connected | error | expired | revoked
+  authMethod            String? // oauth2 | api_key | client_credentials | certificate | username_password | manual_activation
+  externalAccountId     String?
+  legalEntityId         String?
+  siren                 String?
+  capabilities          String? // JSON non sensible
+  credentials           String? // enveloppe CHIFFRÉE (gfeic1…) — jamais en clair
+  credentialsKeyVersion Int       @default(1)
+  lastTestedAt          DateTime?
+  lastTestOk            Boolean   @default(false)
+  expiresAt             DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([garageId, providerId, environment])
+  @@index([garageId])
+  @@index([status])
+}
+
+model EInvoiceTransmission {
+  id             String   @id @default(cuid())
+  garageId       String
+  invoiceId      String
+  providerId     String
+  connectionId   String?
+  environment    String   @default("sandbox")
+  status         String   @default("draft") // draft | submission_pending | submitted | received_by_platform | rejected | delivered | accepted | refused | paid | error | unknown
+  documentFormat String? // facturx | ubl | cii
+  documentSha256 String?
+  externalId     String?
+  idempotencyKey String   @unique
+  errorMessage   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([garageId, createdAt])
+  @@index([invoiceId])
+  @@index([status])
+}
+
+model EInvoiceEvent {
+  id             String   @id @default(cuid())
+  transmissionId String
+  garageId       String
+  type           String // submitted | status_update | webhook | error
+  status         String?
+  message        String?
+  payload        String? // JSON non sensible
+  createdAt      DateTime @default(now())
+
+  @@index([transmissionId, createdAt])
+  @@index([garageId, createdAt])
+}
+
+model EInvoiceAuditEvent {
+  id          String   @id @default(cuid())
+  garageId    String
+  actorUserId String?
+  action      String // connect | disconnect | test | submit | resubmit | rotate_key | change_platform
+  targetType  String?
+  targetId    String?
+  metadata    String? // JSON non sensible (jamais de secret)
+  createdAt   DateTime @default(now())
+
+  @@index([garageId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+/// Instantané PORTAIL CLIENT publié par un POSTE (Electron) vers le cloud.
+///
+/// Le portail client est une page PUBLIQUE servie par app.garageflows.fr, alors
+/// que l'intervention d'un garage installé en local n'existe que dans le SQLite
+/// du poste : la page s'ouvrait donc sur « Token invalide ». On ne réplique pas
+/// la base — on stocke UNIQUEMENT le contenu que la page portail affiche, déjà
+/// filtré côté poste (aucun coût d'achat, aucune marge). L'instantané expire en
+/// même temps que le jeton et peut être purgé sans perte.
+model PortalSnapshot {
+  /// `jti` du jeton portail — jamais le jeton complet.
+  id        String   @id
+  garageId  String
+  jobId     String
+  /// JSON du contenu portail (schéma identique à la réponse de /api/portal/[token]).
+  payload   String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([garageId])
+  @@index([jobId])
+  @@index([expiresAt])
 }

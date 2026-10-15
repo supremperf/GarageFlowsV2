@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { withAuth, requireSession } from '@/lib/api-helpers'
+import { withAuth, requireSession, MAX_PHOTO_BASE64_LENGTH, ALLOWED_IMAGE_MIME } from '@/lib/api-helpers'
 import { savePhoto, deletePhoto } from '@/lib/photo-store'
 
 // GET /api/jobs/[id]/photos
@@ -19,6 +19,23 @@ export const POST = withAuth(async (req, { params }) => {
   const session = await requireSession()
   const body = await req.json()
 
+  // ── Garde-fous d'upload (DoS disque/BD + type de contenu) ──────────────────
+  const b64 = typeof body.base64 === 'string' ? body.base64 : ''
+  if (b64.length > MAX_PHOTO_BASE64_LENGTH) {
+    return NextResponse.json(
+      { error: 'Image trop volumineuse.', code: 'PAYLOAD_TOO_LARGE' },
+      { status: 413 },
+    )
+  }
+  // Si une donnée data-URL est fournie, elle DOIT être une image d'un type autorisé.
+  const mime = b64.match(/^data:([^;,]+)[;,]/)?.[1]
+  if (mime && !ALLOWED_IMAGE_MIME.test(mime)) {
+    return NextResponse.json(
+      { error: 'Type de fichier non autorisé (image attendue).', code: 'UNSUPPORTED_MEDIA_TYPE' },
+      { status: 415 },
+    )
+  }
+
   const job = await prisma.job.findFirst({
     where: { id: params.id, garageId: session.user.garageId },
   })
@@ -26,8 +43,8 @@ export const POST = withAuth(async (req, { params }) => {
 
   // Try to write to disk; fall back to base64 in DB if disk write fails
   let photoPath: string | null = null
-  if (body.base64) {
-    try { photoPath = savePhoto(body.base64, `jobs/${params.id}`) } catch (_) { photoPath = null }
+  if (b64) {
+    try { photoPath = savePhoto(b64, `jobs/${params.id}`) } catch (_) { photoPath = null }
   }
 
   const photo = await prisma.jobPhoto.create({
@@ -36,7 +53,7 @@ export const POST = withAuth(async (req, { params }) => {
       garageId:  session.user.garageId,
       phase:     body.phase ?? 'before',
       caption:   body.caption ?? null,
-      base64:    photoPath ? '' : (body.base64 ?? ''),  // empty when file is stored
+      base64:    photoPath ? '' : b64,  // empty when file is stored
       photoPath,
     },
   })

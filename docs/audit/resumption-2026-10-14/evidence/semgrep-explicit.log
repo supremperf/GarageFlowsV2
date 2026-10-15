@@ -1,0 +1,29 @@
+
+{"explicitTargets":994,"exitCode":1,"signal":null,"error":null}
+               
+               
+┌─────────────┐
+│ Scan Status │
+└─────────────┘
+  Scanning 994 files with 592 Code rules:
+                                                                                                                        
+  Language      Rules   Files          Origin   Rules                                                                   
+ ─────────────────────────────        ────────────────                                                                  
+  <multilang>       4     994          Custom     592                                                                   
+  ts              202     866                                                                                           
+  js              192     120                                                                                           
+  python          369       8                                                                                           
+                                                                                                                        
+                
+                
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 864 (864 blocking)
+ • Rules run: 575
+ • Targets scanned: 994
+ • Parsed lines: ~100.0%
+ • No ignore information available
+Ran 575 rules on 994 files: 864 findings.
+

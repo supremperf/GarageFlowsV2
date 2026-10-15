@@ -22,6 +22,7 @@ const LICENSE_TYPE_LABELS: Record<string, string> = {
   enterprise: 'Enterprise',
   premium:    'Premium',
   trial:      'Essai',
+  mechanic:   'Mécanicien',
 }
 
 export default function LicensePage() {
@@ -42,6 +43,7 @@ export default function LicensePage() {
       })
     )
     if (c['gf_license_type'] === 'admin') { router.replace('/admin/licenses'); return }
+    if (c['gf_license_type'] === 'mechanic') { router.replace('/mechanic'); return }
     if (c['gf_license_validated'] === '1') { router.replace('/login') }
   }, [router])
 
@@ -81,6 +83,10 @@ export default function LicensePage() {
       if (typ === 'admin') {
         setMessage('Clé administrateur — accès au panneau de gestion')
         setTimeout(() => router.push('/admin/licenses'), 1600)
+      } else if (typ === 'mechanic') {
+        // Une clé mécanicien ouvre directement l'espace mécanicien (pas de login staff).
+        setMessage('Accès mécanicien activé · Redirection vers votre planning')
+        setTimeout(() => router.push('/mechanic'), 1400)
       } else {
         setMessage(`Licence ${LICENSE_TYPE_LABELS[typ] ?? typ} activée · Valide jusqu'en ${expYear}`)
         setTimeout(() => router.push('/login'), 1600)
@@ -113,7 +119,7 @@ export default function LicensePage() {
             </div>
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight">
-            Garage<span className="text-blue-400">Flow</span>
+            Garage<span className="text-blue-400">Flows</span>
           </h1>
           <p className="text-slate-500 text-xs mt-1.5 tracking-[0.2em] uppercase font-medium">
             Le planning intelligent pour garages
@@ -135,7 +141,7 @@ export default function LicensePage() {
             <div>
               <h2 className="text-base font-bold text-white">Activation du logiciel</h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Collez votre clé de licence pour accéder à GarageFlow
+                Collez votre clé de licence pour accéder à GarageFlows
               </p>
             </div>
           </div>
@@ -195,8 +201,7 @@ export default function LicensePage() {
                   <Info className="w-3 h-3 text-slate-700 mt-0.5 flex-shrink-0" />
                   <p className="text-[10px] text-slate-700">
                     Format: <span className="font-mono text-slate-600">GF2.&lt;header&gt;.&lt;payload&gt;.&lt;signature&gt;</span>
-                    {' '}— fourni par votre revendeur ou généré par{' '}
-                    <span className="text-slate-500">python scripts/keygen.py</span>
+                    {' '}— cette clé vous est fournie par votre revendeur GarageFlows.
                   </p>
                 </div>
               </div>
@@ -216,14 +221,14 @@ export default function LicensePage() {
                 className={cn(
                   'w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2',
                   !tokenReady || status === 'checking'
-                    ? 'bg-blue-600/20 text-blue-400/40 cursor-not-allowed'
+                    ? 'gf-btn-inactif'
                     : 'bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-600/25 active:scale-[0.98]'
                 )}
               >
                 {status === 'checking' ? (
                   <><Loader2 className="w-4 h-4 animate-spin" />Vérification en cours…</>
                 ) : (
-                  <><ShieldCheck className="w-4 h-4" />Activer GarageFlow<ArrowRight className="w-4 h-4" /></>
+                  <><ShieldCheck className="w-4 h-4" />Activer GarageFlows<ArrowRight className="w-4 h-4" /></>
                 )}
               </button>
             </form>
@@ -233,7 +238,7 @@ export default function LicensePage() {
           <div className="mt-5 pt-4 border-t border-white/[0.06] text-center">
             <p className="text-xs text-slate-600">
               Pas encore de licence ?{' '}
-              <a href="mailto:contact@garageflow.fr"
+              <a href="mailto:contact@garageflows.fr"
                 className="text-blue-500 hover:text-blue-400 font-medium transition-colors">
                 Contactez-nous
               </a>
@@ -242,7 +247,7 @@ export default function LicensePage() {
         </div>
 
         <p className="mt-4 text-center text-[10px] text-slate-800">
-          © {new Date().getFullYear()} GarageFlow · Tous droits réservés
+          © {new Date().getFullYear()} GarageFlows · Tous droits réservés
         </p>
       </div>
     </div>

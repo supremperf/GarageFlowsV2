@@ -1,0 +1,32 @@
+{
+  "id": "prepare-db-isolated",
+  "startedAt": "2026-10-14T17:03:18.112593+00:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "argv": [
+    "node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "src/test-utils/__tests__/prepare-test-db.test.ts",
+    "--reporter=default",
+    "--reporter=json",
+    "--outputFile.json=docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/evidence/prepare-db-isolated.json"
+  ],
+  "timeoutSeconds": 240,
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+  "trackedNonAuditFiles": 1220,
+  "environmentOverrides": {
+    "PATH": "pinned npm 11.16.0 first",
+    "NODE_USE_SYSTEM_CA": "1"
+  },
+  "proof": "evidence/prepare-db-isolated.log",
+  "exitCode": 1,
+  "finishedAt": "2026-10-14T17:03:29.150660+00:00",
+  "afterIdentity": {
+    "head": "f88f2832eb256310852ed86040057c062d44433e",
+    "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+    "trackedNonAuditFiles": 1220
+  },
+  "logSha256": "ed41bfc7f6d7e7697ffdad6a74b32d2af64f040c4749698258d3d93fd0af2fdd"
+}

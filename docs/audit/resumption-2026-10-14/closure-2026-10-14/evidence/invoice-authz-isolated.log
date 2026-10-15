@@ -1,0 +1,40 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/home/user/GarageFlowsV2[39m
+
+ [31m❯[39m src/integration/invoice-authz.test.ts [2m([22m[2m7 tests[22m[2m | [22m[33m7 skipped[39m[2m)[22m[33m 3347[2mms[22m[39m
+     [2m[90m↓[39m[22m un RECEPTIONIST ne peut pas créer de facture
+     [2m[90m↓[39m[22m un RECEPTIONIST ne peut ni modifier ni supprimer une facture
+     [2m[90m↓[39m[22m un RECEPTIONIST ne peut pas contourner en convertissant un devis
+     [2m[90m↓[39m[22m un MANAGER conserve tous ses droits de facturation
+     [2m[90m↓[39m[22m un RECEPTIONIST lit la facture mais SANS le coût d’achat
+     [2m[90m↓[39m[22m un MANAGER (financial:read) voit bien le coût d’achat
+     [2m[90m↓[39m[22m un OWNER voit également le coût d’achat
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [33m7 skipped[39m[90m (7)[39m
+[2m   Start at [22m 16:40:40
+[2m   Duration [22m 3.69s[2m (transform 75ms, setup 0ms, import 91ms, tests 3.35s, environment 0ms)[22m
+
+JSON report written to /home/user/GarageFlowsV2/docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/invoice-authz-isolated.json
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/integration/invoice-authz.test.ts[2m [ src/integration/invoice-authz.test.ts ][22m
+[31m[1mError[22m: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/schema-engine.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+[39m
+[36m [2m❯[22m construireModele src/test-utils/prepare-test-db.ts:[2m52:3[22m[39m
+    [90m 50|[39m
+    [90m 51|[39m [35mfunction[39m [34mconstruireModele[39m(cible[33m:[39m string)[33m:[39m [35mvoid[39m {
+    [90m 52|[39m   [34mexecFileSync[39m(
+    [90m   |[39m   [31m^[39m
+    [90m 53|[39m     process[33m.[39mexecPath[33m,[39m
+    [90m 54|[39m     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+[90m [2m❯[22m Module.prepareTestDb src/test-utils/prepare-test-db.ts:[2m72:7[22m[39m
+[90m [2m❯[22m src/integration/invoice-authz.test.ts:[2m56:3[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+

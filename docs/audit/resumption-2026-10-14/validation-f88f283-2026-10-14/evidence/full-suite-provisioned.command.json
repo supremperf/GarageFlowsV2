@@ -1,0 +1,32 @@
+{
+  "id": "full-suite-provisioned",
+  "startedAt": "2026-10-14T17:07:23.641756+00:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "argv": [
+    "npm",
+    "test",
+    "--",
+    "--maxWorkers=2",
+    "--reporter=default",
+    "--reporter=json",
+    "--outputFile.json=docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/evidence/full-suite-provisioned.json"
+  ],
+  "timeoutSeconds": 900,
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+  "trackedNonAuditFiles": 1220,
+  "environmentOverrides": {
+    "PATH": "/home/user/audit-followup/tools/node_modules/.bin:/home/user/audit-resumption/.venv/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games",
+    "NODE_USE_SYSTEM_CA": "1"
+  },
+  "proof": "evidence/full-suite-provisioned.log",
+  "exitCode": 1,
+  "finishedAt": "2026-10-14T17:10:07.831034+00:00",
+  "afterIdentity": {
+    "head": "f88f2832eb256310852ed86040057c062d44433e",
+    "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+    "trackedNonAuditFiles": 1220
+  },
+  "logSha256": "741949be00c2762de5b144cc007752855b887d04113469e6f942f863adf2b826"
+}

@@ -1,0 +1,170 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /home/user/GarageFlowsV2
+
+ ❯ src/integration/copilot-portee-et-porte-financiere.test.ts (18 tests | 18 skipped) 3403ms
+     ↓ « revenue_today » est refusé à un RECEPTIONIST
+     ↓ « margin » est refusé à un RECEPTIONIST
+     ↓ « top_clients » est refusé à un RECEPTIONIST
+     ↓ « forecast » est refusé à un RECEPTIONIST
+     ↓ « revenue_today » est refusé à un MECHANIC
+     ↓ « margin » est refusé à un MECHANIC
+     ↓ « top_clients » est refusé à un MECHANIC
+     ↓ « forecast » est refusé à un MECHANIC
+     ↓ « revenue_today » répond VRAIMENT à un OWNER
+     ↓ « margin » répond VRAIMENT à un OWNER
+     ↓ « top_clients » répond VRAIMENT à un OWNER
+     ↓ « forecast » répond VRAIMENT à un OWNER
+     ↓ les devis en attente sont ceux du garage de la session
+     ↓ les meilleurs clients n’agrègent pas ceux d’un autre garage
+     ↓ la marge ne mélange pas deux garages
+     ↓ les mécaniciens disponibles sont ceux du garage
+     ↓ les véhicules en retard sont ceux du garage
+     ↓ vu depuis le garage B, ce sont les données de B — et elles seules
+ ❯ src/integration/copilot-ecusson-verifie.test.ts (9 tests | 9 skipped) 3321ms
+     ↓ une réponse chiffrée tirée de la base est marquée vérifiée
+     ↓ la provenance du texte cesse d’être indevinable
+     ↓ une panne de lecture n’est pas une réponse vérifiée
+     ↓ une demande de VIN n’est pas une réponse vérifiée
+     ↓ une demande de précision de diagnostic n’est pas une réponse vérifiée
+     ↓ une reformulation inventée est rejetée, et la réponse reste vérifiée
+     ↓ une reformulation ancrée est acceptée et signalée comme telle
+     ↓ l’écusson ne se déduit plus de la simple présence de `phrasing`
+     ↓ l’écusson vient du verdict serveur `ancrage.verifie`
+ ❯ src/integration/copilot.test.ts (7 tests | 7 skipped) 3444ms
+     ↓ answers revenue_today from garage-scoped, date/status-filtered data
+     ↓ scopes revenue strictly to the session garage
+     ↓ answers low_stock with the reorder plan (deterministic, zero consumption)
+     ↓ gates an action intent behind confirmation and writes NOTHING
+     ↓ returns unknown for an unrecognised query (no phrasing, no write)
+     ↓ rejects a fabricated figure from a provider and keeps the deterministic message
+     ↓ passes a grounded provider rephrase through unchanged
+ ❯ src/integration/copilot-conversation.test.ts (9 tests | 9 skipped) 3324ms
+     ↓ scopes a fresh dossier lookup and returns no financial/private notes
+     ↓ rereads changed data instead of trusting conversation contents
+     ↓ does not turn sourced help into a verified financial answer or a write
+     ↓ rejects forged tenant/history and malformed JSON
+     ↓ reports readiness after a garage-scoped database probe without calling a model
+     ↓ rejects oversized streamed bodies
+     ↓ executes two fresh authorized reads and leaves the database unchanged
+     ↓ does not report operational for a garage absent from the actual database
+     ↓ asks for a supported period instead of reporting today as last year
+ ❯ src/integration/copilot-cout-achat.test.ts (5 tests | 5 skipped) 3337ms
+     ↓ un MECHANIC obtient la liste, jamais le coût
+     ↓ le mécanicien garde ce dont il a besoin : quoi commander, et combien
+     ↓ un OWNER, lui, voit le coût — la donnée n’est pas supprimée, elle est réservée
+     ↓ un MECHANIC n’obtient ni coût par pièce ni total
+     ↓ un MANAGER conserve l’accès complet
+ ❯ src/integration/copilot-financial-authz-v15.test.ts (6 tests | 6 skipped) 3354ms
+     ↓ RECEPTIONIST → 403 (pas de financial:read)
+     ↓ MECHANIC → 403
+     ↓ OWNER → 200 (accès financier légitime)
+     ↓ intention FINANCIÈRE (marge) par RECEPTIONIST → 403
+     ↓ intention OPÉRATIONNELLE (mécaniciens disponibles) par RECEPTIONIST → autorisée
+     ↓ intention FINANCIÈRE (marge) par OWNER → autorisée
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/copilot-conversation.test.ts [ src/integration/copilot-conversation.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/copilot-conversation.test.ts:18:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/integration/copilot-cout-achat.test.ts [ src/integration/copilot-cout-achat.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/copilot-cout-achat.test.ts:51:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/integration/copilot-ecusson-verifie.test.ts [ src/integration/copilot-ecusson-verifie.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/copilot-ecusson-verifie.test.ts:47:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/integration/copilot-financial-authz-v15.test.ts [ src/integration/copilot-financial-authz-v15.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/copilot-financial-authz-v15.test.ts:34:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/integration/copilot-portee-et-porte-financiere.test.ts [ src/integration/copilot-portee-et-porte-financiere.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/copilot-portee-et-porte-financiere.test.ts:57:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/integration/copilot.test.ts [ src/integration/copilot.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ Module.prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/integration/copilot.test.ts:43:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  6 failed (6)
+      Tests  54 skipped (54)
+   Start at  13:38:13
+   Duration  21.81s (transform 313ms, setup 0ms, import 682ms, tests 20.18s, environment 1ms)

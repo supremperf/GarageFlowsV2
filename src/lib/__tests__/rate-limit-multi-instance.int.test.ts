@@ -149,11 +149,18 @@ describe.skipIf(!REDIS)('rate limiting distribué — partage réel entre instan
     shim = await startShim(REDIS as string)
     process.env.UPSTASH_REDIS_REST_URL = shim.url
     process.env.UPSTASH_REDIS_REST_TOKEN = SHIM_TOKEN
+    // GF-041 : sous vitest, `resolveBackend` ignore la configuration Upstash
+    // sauf si le test déclare explicitement qu'il éprouve le backend DISTANT
+    // (avec SES valeurs — ici le shim local, jamais la production). Sans ce
+    // drapeau, chaque instance retombait sur sa propre Map mémoire : le
+    // compteur n'était pas partagé et le test ne prouvait plus rien.
+    process.env.GF_TEST_ALLOW_UPSTASH = '1'
   })
 
   afterAll(async () => {
     delete process.env.UPSTASH_REDIS_REST_URL
     delete process.env.UPSTASH_REDIS_REST_TOKEN
+    delete process.env.GF_TEST_ALLOW_UPSTASH
     await shim?.close()
   })
 

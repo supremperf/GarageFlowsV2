@@ -13,12 +13,28 @@ import { withPortalAuth } from '@/lib/portal/auth-helpers'
 import { validateSlot } from '@/lib/portal/appointments'
 
 export const GET = withPortalAuth(async (_req, { user }) => {
-  const appointments = await prisma.appointment.findMany({
-    where: { portalUserId: user.id },
-    orderBy: [{ date: 'desc' }, { startTime: 'desc' }],
-    take: 100,
+  const [appointments, garage] = await Promise.all([
+    prisma.appointment.findMany({
+      where: { portalUserId: user.id },
+      orderBy: [{ date: 'desc' }, { startTime: 'desc' }],
+      take: 100,
+    }),
+    prisma.garage.findUnique({
+      where: { id: user.garageId },
+      select: { workshopStartHour: true, workshopEndHour: true },
+    }),
+  ])
+  // Les HORAIRES accompagnent la liste : `validateSlot` refuse tout créneau hors
+  // ouverture, et sans les connaître le client ne peut que deviner puis se voir
+  // refuser. Ce ne sont pas des données sensibles — un garage affiche ses heures
+  // sur sa devanture.
+  return NextResponse.json({
+    appointments,
+    horaires: {
+      ouverture: garage?.workshopStartHour ?? 8,
+      fermeture: garage?.workshopEndHour ?? 18,
+    },
   })
-  return NextResponse.json({ appointments })
 })
 
 export const POST = withPortalAuth(async (req, { user }) => {
@@ -40,12 +56,24 @@ export const POST = withPortalAuth(async (req, { user }) => {
   })
   if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: 400 })
 
+  // Isolation : un vehicleId fourni doit être un véhicule DE CE client (même
+  // garage). Sinon on refuse le rattachement.
+  let vehicleId: string | null = null
+  if (typeof body.vehicleId === 'string' && body.vehicleId && user.clientId) {
+    const owned = await prisma.vehicle.findFirst({
+      where: { id: body.vehicleId, garageId: user.garageId, clientId: user.clientId },
+      select: { id: true },
+    })
+    if (!owned) return NextResponse.json({ error: 'Véhicule introuvable' }, { status: 400 })
+    vehicleId = owned.id
+  }
+
   const appointment = await prisma.appointment.create({
     data: {
       garageId: user.garageId,
       portalUserId: user.id,
       clientId: user.clientId,
-      vehicleId: typeof body.vehicleId === 'string' ? body.vehicleId : null,
+      vehicleId,
       clientName: user.name ?? user.email,
       vehicleModel: typeof body.vehicleModel === 'string' ? body.vehicleModel : null,
       licensePlate: typeof body.licensePlate === 'string' ? body.licensePlate : null,

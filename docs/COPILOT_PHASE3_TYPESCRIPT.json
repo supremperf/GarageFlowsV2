@@ -1,0 +1,4831 @@
+{
+  "at": "2026-10-15T13:16:18.826678+02:00",
+  "proofs": [
+    "R02",
+    "R03",
+    "R09",
+    "R10",
+    "R11",
+    "R21",
+    "R30"
+  ],
+  "nativeStandardTypecheck": "ÉCHOUÉ",
+  "sourceComparison": "same CURRENT dependencies; git source overlay only, not historic CI or historic dependency replay",
+  "ordinaryReports": [
+    {
+      "version": "working",
+      "total": 225,
+      "codes": {
+        "TS2305": 12,
+        "TS2307": 3,
+        "TS7006": 191,
+        "TS2339": 6,
+        "TS2347": 1,
+        "TS2345": 11,
+        "TS7031": 1
+      },
+      "causes": {
+        "generated_client_missing_direct": 15,
+        "requires_generated_types_to_disambiguate": 210
+      },
+      "diagnostics": [
+        {
+          "file": "prisma/demo-tenant.ts",
+          "line": 29,
+          "character": 10,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "prisma/seed.ts",
+          "line": 1,
+          "character": 10,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "scripts/migrate-money-json.ts",
+          "line": 35,
+          "character": 30,
+          "code": "TS2307",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "scripts/migrate-money-json.ts",
+          "line": 67,
+          "character": 14,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/admin/licenses/[id]/route.ts",
+          "line": 137,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/admin/licenses/generate/route.ts",
+          "line": 237,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/admin/licenses/revoke-by-key/route.ts",
+          "line": 230,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 45,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 46,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 71,
+          "character": 75,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 96,
+          "character": 29,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 97,
+          "character": 29,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 113,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/einvoicing/invoices/[id]/submit/route.ts",
+          "line": 146,
+          "character": 22,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/einvoicing/invoices/[id]/submit/route.ts",
+          "line": 194,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/estimate/route.ts",
+          "line": 138,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/export/fec/route.ts",
+          "line": 35,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/export/fec/route.ts",
+          "line": 35,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 36,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 36,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 54,
+          "character": 41,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 57,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 59,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 59,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 60,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 60,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 71,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 71,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 73,
+          "character": 17,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 74,
+          "character": 18,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 74,
+          "character": 22,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 76,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 77,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 105,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/forgotten-parts/route.ts",
+          "line": 74,
+          "character": 16,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/forgotten-parts/route.ts",
+          "line": 75,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/forgotten-parts/route.ts",
+          "line": 76,
+          "character": 16,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/garages/route.ts",
+          "line": 223,
+          "character": 61,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/export/route.ts",
+          "line": 58,
+          "character": 22,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/license-status/route.ts",
+          "line": 53,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 70,
+          "character": 21,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 141,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 174,
+          "character": 47,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 209,
+          "character": 44,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 229,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 237,
+          "character": 36,
+          "code": "TS2347",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/[id]/route.ts",
+          "line": 27,
+          "character": 53,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/[id]/route.ts",
+          "line": 101,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/[id]/route.ts",
+          "line": 208,
+          "character": 76,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/[id]/route.ts",
+          "line": 237,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/route.ts",
+          "line": 44,
+          "character": 29,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/route.ts",
+          "line": 46,
+          "character": 56,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/route.ts",
+          "line": 94,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/route.ts",
+          "line": 151,
+          "character": 76,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/jobs/[id]/parts/route.ts",
+          "line": 59,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/jobs/[id]/parts/route.ts",
+          "line": 101,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/jobs/[id]/parts/route.ts",
+          "line": 194,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/jobs/[id]/route.ts",
+          "line": 149,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/loaner-reservations/[id]/route.ts",
+          "line": 75,
+          "character": 52,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/loaner-reservations/route.ts",
+          "line": 86,
+          "character": 56,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/[lid]/assign/route.ts",
+          "line": 54,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 48,
+          "character": 12,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 81,
+          "character": 43,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 86,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 89,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 91,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 254,
+          "character": 56,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 305,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic/jobs/[id]/checklist/[itemId]/route.ts",
+          "line": 35,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic/jobs/[id]/notes/route.ts",
+          "line": 40,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanics/route.ts",
+          "line": 35,
+          "character": 43,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanics/route.ts",
+          "line": 86,
+          "character": 22,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/[id]/route.ts",
+          "line": 82,
+          "character": 55,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/[id]/route.ts",
+          "line": 195,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/low-stock/route.ts",
+          "line": 14,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/route.ts",
+          "line": 48,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/search/route.ts",
+          "line": 71,
+          "character": 31,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/search/route.ts",
+          "line": 72,
+          "character": 30,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/search/route.ts",
+          "line": 73,
+          "character": 19,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/search/route.ts",
+          "line": 73,
+          "character": 33,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/auth/devices/route.ts",
+          "line": 20,
+          "character": 26,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/me/dashboard/route.ts",
+          "line": 64,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/me/dashboard/route.ts",
+          "line": 65,
+          "character": 10,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/me/dashboard/route.ts",
+          "line": 81,
+          "character": 24,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/me/dashboard/route.ts",
+          "line": 82,
+          "character": 28,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/quote/[token]/route.ts",
+          "line": 194,
+          "character": 55,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/tickets/route.ts",
+          "line": 22,
+          "character": 26,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/profitability/route.ts",
+          "line": 43,
+          "character": 56,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/profitability/route.ts",
+          "line": 56,
+          "character": 56,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/profitability/route.ts",
+          "line": 65,
+          "character": 43,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/purchase-orders/[id]/receive/route.ts",
+          "line": 84,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/purchase-orders/route.ts",
+          "line": 16,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/purchase-orders/route.ts",
+          "line": 42,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/convert/route.ts",
+          "line": 25,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/convert/route.ts",
+          "line": 59,
+          "character": 37,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/convert/route.ts",
+          "line": 104,
+          "character": 78,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/route.ts",
+          "line": 23,
+          "character": 51,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/route.ts",
+          "line": 66,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/route.ts",
+          "line": 152,
+          "character": 74,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/generate/route.ts",
+          "line": 171,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/route.ts",
+          "line": 43,
+          "character": 27,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/route.ts",
+          "line": 45,
+          "character": 54,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/route.ts",
+          "line": 80,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/route.ts",
+          "line": 132,
+          "character": 74,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reminders/suggestions/route.ts",
+          "line": 41,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reminders/suggestions/route.ts",
+          "line": 47,
+          "character": 10,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reminders/suggestions/route.ts",
+          "line": 66,
+          "character": 12,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reminders/suggestions/route.ts",
+          "line": 66,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reports/route.ts",
+          "line": 29,
+          "character": 26,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reports/route.ts",
+          "line": 36,
+          "character": 23,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reports/route.ts",
+          "line": 43,
+          "character": 25,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reports/route.ts",
+          "line": 54,
+          "character": 20,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 68,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 68,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 69,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 69,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 83,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 84,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 94,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 94,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 98,
+          "character": 47,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 98,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 99,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 99,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 100,
+          "character": 47,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 100,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 101,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 101,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 106,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 108,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 108,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 126,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 127,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 128,
+          "character": 37,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 129,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 129,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 135,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 135,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 136,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 136,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 143,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 144,
+          "character": 16,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 144,
+          "character": 19,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 174,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 199,
+          "character": 44,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 216,
+          "character": 41,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 216,
+          "character": 44,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 245,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stock-forecast/route.ts",
+          "line": 45,
+          "character": 28,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suggestions/route.ts",
+          "line": 37,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suggestions/route.ts",
+          "line": 57,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suppliers/route.ts",
+          "line": 82,
+          "character": 22,
+          "code": "TS7031",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suppliers/route.ts",
+          "line": 186,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suppliers/route.ts",
+          "line": 244,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/einvoicing/route.ts",
+          "line": 243,
+          "character": 28,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/einvoicing/route.ts",
+          "line": 279,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/invoice/route.ts",
+          "line": 159,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 166,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 172,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 192,
+          "character": 44,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 230,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 230,
+          "character": 70,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 256,
+          "character": 55,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/mechanic-assignment/route.ts",
+          "line": 106,
+          "character": 53,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/mechanic-status/route.ts",
+          "line": 68,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/portal-account/route.ts",
+          "line": 112,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/portal/route.ts",
+          "line": 99,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/portal/route.ts",
+          "line": 134,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/quote-return/route.ts",
+          "line": 88,
+          "character": 70,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/quote-return/route.ts",
+          "line": 92,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/quote-return/route.ts",
+          "line": 101,
+          "character": 32,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/quote/route.ts",
+          "line": 179,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/tickets/route.ts",
+          "line": 30,
+          "character": 26,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/[id]/route.ts",
+          "line": 31,
+          "character": 65,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 32,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 33,
+          "character": 14,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 54,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 58,
+          "character": 28,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 59,
+          "character": 28,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/work-orders/route.ts",
+          "line": 128,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/__tests__/license-devices.postgres.int.test.ts",
+          "line": 242,
+          "character": 43,
+          "code": "TS2307",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/analytics/collect.ts",
+          "line": 135,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/analytics/collect.ts",
+          "line": 136,
+          "character": 32,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/analytics/collect.ts",
+          "line": 137,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/analytics/collect.ts",
+          "line": 138,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/backup/service.ts",
+          "line": 13,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/backup/service.ts",
+          "line": 62,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/backup/service.ts",
+          "line": 157,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/backup/snapshot.ts",
+          "line": 12,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/backup/snapshot.ts",
+          "line": 12,
+          "character": 23,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/clients/rattachement.ts",
+          "line": 34,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/clients/rattachement.ts",
+          "line": 92,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/clients/rattachement.ts",
+          "line": 133,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/copilot/server-readers.ts",
+          "line": 55,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/copilot/server-readers.ts",
+          "line": 65,
+          "character": 32,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/copilot/server-readers.ts",
+          "line": 71,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/copilot/server-readers.ts",
+          "line": 71,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/copilot/server-readers.ts",
+          "line": 83,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/copilot/server-readers.ts",
+          "line": 84,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/copilot/server-readers.ts",
+          "line": 131,
+          "character": 31,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/copilot/server-readers.ts",
+          "line": 132,
+          "character": 83,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/copilot/server-readers.ts",
+          "line": 246,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/db.ts",
+          "line": 17,
+          "character": 10,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/db.ts",
+          "line": 18,
+          "character": 52,
+          "code": "TS2307",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/inspection/context.ts",
+          "line": 85,
+          "character": 27,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/license/devices.ts",
+          "line": 233,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/loaner/availability.ts",
+          "line": 16,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/loaner/availability.ts",
+          "line": 91,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/portal/auth-helpers.ts",
+          "line": 10,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/portal/auth-helpers.ts",
+          "line": 10,
+          "character": 27,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/stock/invoice-stock.ts",
+          "line": 30,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/stock/invoice-stock.ts",
+          "line": 299,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/invoice-sync.ts",
+          "line": 95,
+          "character": 31,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/invoice-sync.ts",
+          "line": 112,
+          "character": 16,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/invoice-sync.ts",
+          "line": 113,
+          "character": 29,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/invoice-sync.ts",
+          "line": 113,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 168,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 182,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 189,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 189,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 344,
+          "character": 37,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 349,
+          "character": 36,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/quote-return.ts",
+          "line": 127,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/return-path.ts",
+          "line": 26,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/sync/ticket-sync.ts",
+          "line": 76,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        }
+      ]
+    },
+    {
+      "version": "bd05cd521917cc059fc21780d1b562c020534942",
+      "total": 225,
+      "codes": {
+        "TS2305": 12,
+        "TS2307": 3,
+        "TS7006": 191,
+        "TS2339": 6,
+        "TS2347": 1,
+        "TS2345": 11,
+        "TS7031": 1
+      },
+      "causes": {
+        "generated_client_missing_direct": 15,
+        "requires_generated_types_to_disambiguate": 210
+      },
+      "diagnostics": [
+        {
+          "file": "prisma/demo-tenant.ts",
+          "line": 29,
+          "character": 10,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "prisma/seed.ts",
+          "line": 1,
+          "character": 10,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "scripts/migrate-money-json.ts",
+          "line": 35,
+          "character": 30,
+          "code": "TS2307",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "scripts/migrate-money-json.ts",
+          "line": 67,
+          "character": 14,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/admin/licenses/[id]/route.ts",
+          "line": 137,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/admin/licenses/generate/route.ts",
+          "line": 237,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/admin/licenses/revoke-by-key/route.ts",
+          "line": 230,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 110,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 120,
+          "character": 32,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 126,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 126,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 138,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 139,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 186,
+          "character": 31,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 187,
+          "character": 83,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 301,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 45,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 46,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 71,
+          "character": 75,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 96,
+          "character": 29,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 97,
+          "character": 29,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 113,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/einvoicing/invoices/[id]/submit/route.ts",
+          "line": 146,
+          "character": 22,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/einvoicing/invoices/[id]/submit/route.ts",
+          "line": 194,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/estimate/route.ts",
+          "line": 138,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/export/fec/route.ts",
+          "line": 35,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/export/fec/route.ts",
+          "line": 35,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 36,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 36,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 54,
+          "character": 41,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 57,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 59,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 59,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 60,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 60,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 71,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 71,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 73,
+          "character": 17,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 74,
+          "character": 18,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 74,
+          "character": 22,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 76,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 77,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 105,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/forgotten-parts/route.ts",
+          "line": 74,
+          "character": 16,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/forgotten-parts/route.ts",
+          "line": 75,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/forgotten-parts/route.ts",
+          "line": 76,
+          "character": 16,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/garages/route.ts",
+          "line": 223,
+          "character": 61,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/export/route.ts",
+          "line": 58,
+          "character": 22,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/license-status/route.ts",
+          "line": 53,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 70,
+          "character": 21,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 141,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 174,
+          "character": 47,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 209,
+          "character": 44,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 229,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 237,
+          "character": 36,
+          "code": "TS2347",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/[id]/route.ts",
+          "line": 27,
+          "character": 53,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/[id]/route.ts",
+          "line": 101,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/[id]/route.ts",
+          "line": 208,
+          "character": 76,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/[id]/route.ts",
+          "line": 237,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/route.ts",
+          "line": 44,
+          "character": 29,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/route.ts",
+          "line": 46,
+          "character": 56,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/route.ts",
+          "line": 94,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/route.ts",
+          "line": 151,
+          "character": 76,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/jobs/[id]/parts/route.ts",
+          "line": 59,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/jobs/[id]/parts/route.ts",
+          "line": 101,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/jobs/[id]/parts/route.ts",
+          "line": 194,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/jobs/[id]/route.ts",
+          "line": 149,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/loaner-reservations/[id]/route.ts",
+          "line": 75,
+          "character": 52,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/loaner-reservations/route.ts",
+          "line": 86,
+          "character": 56,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/[lid]/assign/route.ts",
+          "line": 54,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 48,
+          "character": 12,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 81,
+          "character": 43,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 86,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 89,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 91,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 254,
+          "character": 56,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 305,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic/jobs/[id]/checklist/[itemId]/route.ts",
+          "line": 35,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic/jobs/[id]/notes/route.ts",
+          "line": 40,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanics/route.ts",
+          "line": 35,
+          "character": 43,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanics/route.ts",
+          "line": 86,
+          "character": 22,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/[id]/route.ts",
+          "line": 82,
+          "character": 55,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/[id]/route.ts",
+          "line": 195,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/low-stock/route.ts",
+          "line": 14,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/route.ts",
+          "line": 48,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/search/route.ts",
+          "line": 71,
+          "character": 31,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/search/route.ts",
+          "line": 72,
+          "character": 30,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/search/route.ts",
+          "line": 73,
+          "character": 19,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/search/route.ts",
+          "line": 73,
+          "character": 33,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/auth/devices/route.ts",
+          "line": 20,
+          "character": 26,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/me/dashboard/route.ts",
+          "line": 64,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/me/dashboard/route.ts",
+          "line": 65,
+          "character": 10,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/me/dashboard/route.ts",
+          "line": 81,
+          "character": 24,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/me/dashboard/route.ts",
+          "line": 82,
+          "character": 28,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/quote/[token]/route.ts",
+          "line": 194,
+          "character": 55,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/tickets/route.ts",
+          "line": 22,
+          "character": 26,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/profitability/route.ts",
+          "line": 43,
+          "character": 56,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/profitability/route.ts",
+          "line": 56,
+          "character": 56,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/profitability/route.ts",
+          "line": 65,
+          "character": 43,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/purchase-orders/[id]/receive/route.ts",
+          "line": 84,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/purchase-orders/route.ts",
+          "line": 16,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/purchase-orders/route.ts",
+          "line": 42,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/convert/route.ts",
+          "line": 25,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/convert/route.ts",
+          "line": 59,
+          "character": 37,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/convert/route.ts",
+          "line": 104,
+          "character": 78,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/route.ts",
+          "line": 23,
+          "character": 51,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/route.ts",
+          "line": 66,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/route.ts",
+          "line": 152,
+          "character": 74,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/generate/route.ts",
+          "line": 171,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/route.ts",
+          "line": 43,
+          "character": 27,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/route.ts",
+          "line": 45,
+          "character": 54,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/route.ts",
+          "line": 80,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/route.ts",
+          "line": 132,
+          "character": 74,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reminders/suggestions/route.ts",
+          "line": 41,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reminders/suggestions/route.ts",
+          "line": 47,
+          "character": 10,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reminders/suggestions/route.ts",
+          "line": 66,
+          "character": 12,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reminders/suggestions/route.ts",
+          "line": 66,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reports/route.ts",
+          "line": 29,
+          "character": 26,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reports/route.ts",
+          "line": 36,
+          "character": 23,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reports/route.ts",
+          "line": 43,
+          "character": 25,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reports/route.ts",
+          "line": 54,
+          "character": 20,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 68,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 68,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 69,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 69,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 83,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 84,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 94,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 94,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 98,
+          "character": 47,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 98,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 99,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 99,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 100,
+          "character": 47,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 100,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 101,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 101,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 106,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 108,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 108,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 126,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 127,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 128,
+          "character": 37,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 129,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 129,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 135,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 135,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 136,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 136,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 143,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 144,
+          "character": 16,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 144,
+          "character": 19,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 174,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 199,
+          "character": 44,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 216,
+          "character": 41,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 216,
+          "character": 44,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 245,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stock-forecast/route.ts",
+          "line": 45,
+          "character": 28,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suggestions/route.ts",
+          "line": 37,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suggestions/route.ts",
+          "line": 57,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suppliers/route.ts",
+          "line": 82,
+          "character": 22,
+          "code": "TS7031",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suppliers/route.ts",
+          "line": 186,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suppliers/route.ts",
+          "line": 244,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/einvoicing/route.ts",
+          "line": 243,
+          "character": 28,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/einvoicing/route.ts",
+          "line": 279,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/invoice/route.ts",
+          "line": 159,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 166,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 172,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 192,
+          "character": 44,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 230,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 230,
+          "character": 70,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 256,
+          "character": 55,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/mechanic-assignment/route.ts",
+          "line": 106,
+          "character": 53,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/mechanic-status/route.ts",
+          "line": 68,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/portal-account/route.ts",
+          "line": 112,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/portal/route.ts",
+          "line": 99,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/portal/route.ts",
+          "line": 134,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/quote-return/route.ts",
+          "line": 88,
+          "character": 70,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/quote-return/route.ts",
+          "line": 92,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/quote-return/route.ts",
+          "line": 101,
+          "character": 32,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/quote/route.ts",
+          "line": 179,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/tickets/route.ts",
+          "line": 30,
+          "character": 26,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/[id]/route.ts",
+          "line": 31,
+          "character": 65,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 32,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 33,
+          "character": 14,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 54,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 58,
+          "character": 28,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 59,
+          "character": 28,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/work-orders/route.ts",
+          "line": 128,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/__tests__/license-devices.postgres.int.test.ts",
+          "line": 242,
+          "character": 43,
+          "code": "TS2307",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/analytics/collect.ts",
+          "line": 135,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/analytics/collect.ts",
+          "line": 136,
+          "character": 32,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/analytics/collect.ts",
+          "line": 137,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/analytics/collect.ts",
+          "line": 138,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/backup/service.ts",
+          "line": 13,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/backup/service.ts",
+          "line": 62,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/backup/service.ts",
+          "line": 157,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/backup/snapshot.ts",
+          "line": 12,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/backup/snapshot.ts",
+          "line": 12,
+          "character": 23,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/clients/rattachement.ts",
+          "line": 34,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/clients/rattachement.ts",
+          "line": 92,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/clients/rattachement.ts",
+          "line": 133,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/db.ts",
+          "line": 17,
+          "character": 10,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/db.ts",
+          "line": 18,
+          "character": 52,
+          "code": "TS2307",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/inspection/context.ts",
+          "line": 85,
+          "character": 27,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/license/devices.ts",
+          "line": 233,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/loaner/availability.ts",
+          "line": 16,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/loaner/availability.ts",
+          "line": 91,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/portal/auth-helpers.ts",
+          "line": 10,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/portal/auth-helpers.ts",
+          "line": 10,
+          "character": 27,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/stock/invoice-stock.ts",
+          "line": 30,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/stock/invoice-stock.ts",
+          "line": 299,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/invoice-sync.ts",
+          "line": 95,
+          "character": 31,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/invoice-sync.ts",
+          "line": 112,
+          "character": 16,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/invoice-sync.ts",
+          "line": 113,
+          "character": 29,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/invoice-sync.ts",
+          "line": 113,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 168,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 182,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 189,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 189,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 344,
+          "character": 37,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 349,
+          "character": 36,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/quote-return.ts",
+          "line": 127,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/return-path.ts",
+          "line": 26,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/sync/ticket-sync.ts",
+          "line": 76,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        }
+      ]
+    },
+    {
+      "version": "4f19f77891debc6009a1c241d2689f2a42bca0e8",
+      "total": 224,
+      "codes": {
+        "TS2305": 12,
+        "TS2307": 3,
+        "TS7006": 190,
+        "TS2339": 6,
+        "TS2347": 1,
+        "TS2345": 11,
+        "TS7031": 1
+      },
+      "causes": {
+        "generated_client_missing_direct": 15,
+        "requires_generated_types_to_disambiguate": 209
+      },
+      "diagnostics": [
+        {
+          "file": "prisma/demo-tenant.ts",
+          "line": 29,
+          "character": 10,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "prisma/seed.ts",
+          "line": 1,
+          "character": 10,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "scripts/migrate-money-json.ts",
+          "line": 35,
+          "character": 30,
+          "code": "TS2307",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "scripts/migrate-money-json.ts",
+          "line": 67,
+          "character": 14,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/admin/licenses/[id]/route.ts",
+          "line": 137,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/admin/licenses/generate/route.ts",
+          "line": 237,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/admin/licenses/revoke-by-key/route.ts",
+          "line": 230,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 69,
+          "character": 32,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 75,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 75,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 87,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 88,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 135,
+          "character": 31,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 136,
+          "character": 83,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/copilot/route.ts",
+          "line": 248,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 45,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 46,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 71,
+          "character": 75,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 96,
+          "character": 29,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 97,
+          "character": 29,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/dashboard/route.ts",
+          "line": 113,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/einvoicing/invoices/[id]/submit/route.ts",
+          "line": 146,
+          "character": 22,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/einvoicing/invoices/[id]/submit/route.ts",
+          "line": 194,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/estimate/route.ts",
+          "line": 138,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/export/fec/route.ts",
+          "line": 35,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/export/fec/route.ts",
+          "line": 35,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 36,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 36,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 54,
+          "character": 41,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 57,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 59,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 59,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 60,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 60,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 71,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 71,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 73,
+          "character": 17,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 74,
+          "character": 18,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 74,
+          "character": 22,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 76,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 77,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/finance/route.ts",
+          "line": 105,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/forgotten-parts/route.ts",
+          "line": 74,
+          "character": 16,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/forgotten-parts/route.ts",
+          "line": 75,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/forgotten-parts/route.ts",
+          "line": 76,
+          "character": 16,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/garages/route.ts",
+          "line": 223,
+          "character": 61,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/export/route.ts",
+          "line": 58,
+          "character": 22,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/license-status/route.ts",
+          "line": 53,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 70,
+          "character": 21,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 141,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 174,
+          "character": 47,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 209,
+          "character": 44,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 229,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/internal/migrate/route.ts",
+          "line": 237,
+          "character": 36,
+          "code": "TS2347",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/[id]/route.ts",
+          "line": 27,
+          "character": 53,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/[id]/route.ts",
+          "line": 101,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/[id]/route.ts",
+          "line": 208,
+          "character": 76,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/[id]/route.ts",
+          "line": 237,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/route.ts",
+          "line": 44,
+          "character": 29,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/route.ts",
+          "line": 46,
+          "character": 56,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/route.ts",
+          "line": 94,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/invoices/route.ts",
+          "line": 151,
+          "character": 76,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/jobs/[id]/parts/route.ts",
+          "line": 59,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/jobs/[id]/parts/route.ts",
+          "line": 101,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/jobs/[id]/parts/route.ts",
+          "line": 194,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/jobs/[id]/route.ts",
+          "line": 149,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/loaner-reservations/[id]/route.ts",
+          "line": 75,
+          "character": 52,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/loaner-reservations/route.ts",
+          "line": 86,
+          "character": 56,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/[lid]/assign/route.ts",
+          "line": 54,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 48,
+          "character": 12,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 81,
+          "character": 43,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 86,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 89,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 91,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 254,
+          "character": 56,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic-licenses/route.ts",
+          "line": 305,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic/jobs/[id]/checklist/[itemId]/route.ts",
+          "line": 35,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanic/jobs/[id]/notes/route.ts",
+          "line": 40,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanics/route.ts",
+          "line": 35,
+          "character": 43,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/mechanics/route.ts",
+          "line": 86,
+          "character": 22,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/[id]/route.ts",
+          "line": 82,
+          "character": 55,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/[id]/route.ts",
+          "line": 195,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/low-stock/route.ts",
+          "line": 14,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/route.ts",
+          "line": 48,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/search/route.ts",
+          "line": 71,
+          "character": 31,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/search/route.ts",
+          "line": 72,
+          "character": 30,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/search/route.ts",
+          "line": 73,
+          "character": 19,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/parts/search/route.ts",
+          "line": 73,
+          "character": 33,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/auth/devices/route.ts",
+          "line": 20,
+          "character": 26,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/me/dashboard/route.ts",
+          "line": 64,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/me/dashboard/route.ts",
+          "line": 65,
+          "character": 10,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/me/dashboard/route.ts",
+          "line": 81,
+          "character": 24,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/me/dashboard/route.ts",
+          "line": 82,
+          "character": 28,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/quote/[token]/route.ts",
+          "line": 194,
+          "character": 55,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/portal/tickets/route.ts",
+          "line": 22,
+          "character": 26,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/profitability/route.ts",
+          "line": 43,
+          "character": 56,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/profitability/route.ts",
+          "line": 56,
+          "character": 56,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/profitability/route.ts",
+          "line": 65,
+          "character": 43,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/purchase-orders/[id]/receive/route.ts",
+          "line": 84,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/purchase-orders/route.ts",
+          "line": 16,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/purchase-orders/route.ts",
+          "line": 42,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/convert/route.ts",
+          "line": 25,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/convert/route.ts",
+          "line": 59,
+          "character": 37,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/convert/route.ts",
+          "line": 104,
+          "character": 78,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/route.ts",
+          "line": 23,
+          "character": 51,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/route.ts",
+          "line": 66,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/[id]/route.ts",
+          "line": 152,
+          "character": 74,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/generate/route.ts",
+          "line": 171,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/route.ts",
+          "line": 43,
+          "character": 27,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/route.ts",
+          "line": 45,
+          "character": 54,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/route.ts",
+          "line": 80,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/quotes/route.ts",
+          "line": 132,
+          "character": 74,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reminders/suggestions/route.ts",
+          "line": 41,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reminders/suggestions/route.ts",
+          "line": 47,
+          "character": 10,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reminders/suggestions/route.ts",
+          "line": 66,
+          "character": 12,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reminders/suggestions/route.ts",
+          "line": 66,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reports/route.ts",
+          "line": 29,
+          "character": 26,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reports/route.ts",
+          "line": 36,
+          "character": 23,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reports/route.ts",
+          "line": 43,
+          "character": 25,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/reports/route.ts",
+          "line": 54,
+          "character": 20,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 68,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 68,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 69,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 69,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 83,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 84,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 94,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 94,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 98,
+          "character": 47,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 98,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 99,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 99,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 100,
+          "character": 47,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 100,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 101,
+          "character": 30,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 101,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 106,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 108,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 108,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 126,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 127,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 128,
+          "character": 37,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 129,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 129,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 135,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 135,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 136,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 136,
+          "character": 48,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 143,
+          "character": 15,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 144,
+          "character": 16,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 144,
+          "character": 19,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 174,
+          "character": 35,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 199,
+          "character": 44,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 216,
+          "character": 41,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 216,
+          "character": 44,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stats/route.ts",
+          "line": 245,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/stock-forecast/route.ts",
+          "line": 45,
+          "character": 28,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suggestions/route.ts",
+          "line": 37,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suggestions/route.ts",
+          "line": 57,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suppliers/route.ts",
+          "line": 82,
+          "character": 22,
+          "code": "TS7031",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suppliers/route.ts",
+          "line": 186,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/suppliers/route.ts",
+          "line": 244,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/einvoicing/route.ts",
+          "line": 243,
+          "character": 28,
+          "code": "TS2339",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/einvoicing/route.ts",
+          "line": 279,
+          "character": 45,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/invoice/route.ts",
+          "line": 159,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 166,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 172,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 192,
+          "character": 44,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 230,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 230,
+          "character": 70,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/jobs/route.ts",
+          "line": 256,
+          "character": 55,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/mechanic-assignment/route.ts",
+          "line": 106,
+          "character": 53,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/mechanic-status/route.ts",
+          "line": 68,
+          "character": 54,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/portal-account/route.ts",
+          "line": 112,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/portal/route.ts",
+          "line": 99,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/portal/route.ts",
+          "line": 134,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/quote-return/route.ts",
+          "line": 88,
+          "character": 70,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/quote-return/route.ts",
+          "line": 92,
+          "character": 49,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/quote-return/route.ts",
+          "line": 101,
+          "character": 32,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/sync/quote/route.ts",
+          "line": 179,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/tickets/route.ts",
+          "line": 30,
+          "character": 26,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/[id]/route.ts",
+          "line": 31,
+          "character": 65,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 32,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 33,
+          "character": 14,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 54,
+          "character": 13,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 58,
+          "character": 28,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/vehicles/ct-alerts/route.ts",
+          "line": 59,
+          "character": 28,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/app/api/work-orders/route.ts",
+          "line": 128,
+          "character": 50,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/__tests__/license-devices.postgres.int.test.ts",
+          "line": 242,
+          "character": 43,
+          "code": "TS2307",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/analytics/collect.ts",
+          "line": 135,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/analytics/collect.ts",
+          "line": 136,
+          "character": 32,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/analytics/collect.ts",
+          "line": 137,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/analytics/collect.ts",
+          "line": 138,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/backup/service.ts",
+          "line": 13,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/backup/service.ts",
+          "line": 62,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/backup/service.ts",
+          "line": 157,
+          "character": 46,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/backup/snapshot.ts",
+          "line": 12,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/backup/snapshot.ts",
+          "line": 12,
+          "character": 23,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/clients/rattachement.ts",
+          "line": 34,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/clients/rattachement.ts",
+          "line": 92,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/clients/rattachement.ts",
+          "line": 133,
+          "character": 38,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/db.ts",
+          "line": 17,
+          "character": 10,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/db.ts",
+          "line": 18,
+          "character": 52,
+          "code": "TS2307",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/inspection/context.ts",
+          "line": 85,
+          "character": 27,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/license/devices.ts",
+          "line": 233,
+          "character": 51,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/loaner/availability.ts",
+          "line": 16,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/loaner/availability.ts",
+          "line": 91,
+          "character": 36,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/portal/auth-helpers.ts",
+          "line": 10,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/portal/auth-helpers.ts",
+          "line": 10,
+          "character": 27,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/stock/invoice-stock.ts",
+          "line": 30,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/stock/invoice-stock.ts",
+          "line": 299,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/invoice-sync.ts",
+          "line": 95,
+          "character": 31,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/invoice-sync.ts",
+          "line": 112,
+          "character": 16,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/invoice-sync.ts",
+          "line": 113,
+          "character": 29,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/invoice-sync.ts",
+          "line": 113,
+          "character": 34,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 168,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 182,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 189,
+          "character": 39,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 189,
+          "character": 42,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 344,
+          "character": 37,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/job-sync.ts",
+          "line": 349,
+          "character": 36,
+          "code": "TS2345",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/quote-return.ts",
+          "line": 127,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        },
+        {
+          "file": "src/lib/sync/return-path.ts",
+          "line": 26,
+          "character": 15,
+          "code": "TS2305",
+          "rootCause": "generated_client_missing_direct"
+        },
+        {
+          "file": "src/lib/sync/ticket-sync.ts",
+          "line": 76,
+          "character": 40,
+          "code": "TS7006",
+          "rootCause": "requires_generated_types_to_disambiguate"
+        }
+      ]
+    }
+  ],
+  "officialDeclarationMapping": {
+    "source": "locked official Prisma/client/generator-helper/internals 5.22.0; official schema WASM; noEngine mode; output outside repository",
+    "diagnosticsWorking": 0,
+    "diagnosticsPhase1": 0,
+    "diagnosticsBeforePhase1": 0,
+    "runtimeValidated": false,
+    "realErrorsIndependentlyRemainingUnderMapping": 0,
+    "limit": "0 with diagnostic module mapping is not standard npx tsc success. All observed 225 disappear under real generated declarations; future native generation remains necessary."
+  },
+  "attribution": {
+    "prePhase1": 224,
+    "phase1Increment": 1,
+    "phase2Increment": 0,
+    "phase2MigratedReaderDiagnostics": 9,
+    "directMissingGeneratedImports": 15,
+    "downstreamDisappearingDiagnostics": 210,
+    "configurationSuppressionsAdded": 0
+  },
+  "generationReceipt": {
+    "kind": "DIAGNOSTIC TYPES ONLY, NOT NATIVE RUNTIME",
+    "prisma": "5.22.0",
+    "noEngine": true,
+    "skipDownload": true,
+    "sourceSchemasUnmodified": true,
+    "outputsOutsideRepository": true,
+    "results": [
+      {
+        "profile": "desktop",
+        "schemaSha256": "dde9715787f2e299e6781cac0b2d6641be449d097559ad90aa8f204c6ea7f620",
+        "output": "/home/user/copilot-phase3-2026-10-15/types-only/desktop",
+        "indexSha256": "4c879129b683484dc62fe0d5c1d7f822af9f1f3df113aefa06fdd21069f822df"
+      },
+      {
+        "profile": "server",
+        "schemaSha256": "011a45fa3980477fefb43c52adb460fae57a9d298603e52ab0ef92343cee60ee",
+        "output": "/home/user/copilot-phase3-2026-10-15/types-only/server",
+        "indexSha256": "a071353fa4eddedcc3c8a4283253cea80d22972a9bd8cf2266e59a00ffa39a51"
+      }
+    ]
+  }
+}

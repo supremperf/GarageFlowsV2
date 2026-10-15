@@ -1,0 +1,817 @@
+[
+  {
+    "category": "simple",
+    "query": "devis en attente",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "pending_quotes"
+    ]
+  },
+  {
+    "category": "simple",
+    "query": "CA du jour",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "today_revenue"
+    ]
+  },
+  {
+    "category": "simple",
+    "query": "marge du mois",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "margin"
+    ]
+  },
+  {
+    "category": "simple",
+    "query": "véhicules en retard",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "late_vehicles"
+    ]
+  },
+  {
+    "category": "simple",
+    "query": "stock bas",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "low_stock"
+    ]
+  },
+  {
+    "category": "simple",
+    "query": "mécaniciens disponibles",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "available_mechanics"
+    ]
+  },
+  {
+    "category": "simple",
+    "query": "meilleurs clients",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "top_clients"
+    ]
+  },
+  {
+    "category": "simple",
+    "query": "priorités",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "proactive"
+    ]
+  },
+  {
+    "category": "simple",
+    "query": "prévision du CA",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "forecast_revenue"
+    ]
+  },
+  {
+    "category": "simple",
+    "query": "voyant moteur",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "diagnostic"
+    ]
+  },
+  {
+    "category": "simple",
+    "query": "Décode le VIN",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "vin_decode"
+    ]
+  },
+  {
+    "category": "help",
+    "query": "Comment créer un devis ?",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedArticles": [
+      "quotes"
+    ]
+  },
+  {
+    "category": "help",
+    "query": "Comment commander des pièces ?",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedArticles": [
+      "stock"
+    ]
+  },
+  {
+    "category": "help",
+    "query": "Où trouver le planning ?",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedArticles": [
+      "planning"
+    ]
+  },
+  {
+    "category": "help",
+    "query": "Explique la marge",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedArticles": [
+      "finance"
+    ]
+  },
+  {
+    "category": "help",
+    "query": "Aide pour les clients",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedArticles": [
+      "clients"
+    ]
+  },
+  {
+    "category": "help",
+    "query": "Comment utiliser le diagnostic ?",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedArticles": [
+      "diagnostic"
+    ]
+  },
+  {
+    "category": "help",
+    "query": "Comment scanner une photo de plaque ?",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedArticles": [
+      "plate-photo"
+    ]
+  },
+  {
+    "category": "familiar_typos",
+    "query": "t as quoi comme stoc bas",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "low_stock"
+    ]
+  },
+  {
+    "category": "familiar_typos",
+    "query": "les pieces ki manquent",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "low_stock"
+    ]
+  },
+  {
+    "category": "familiar_typos",
+    "query": "mecanos sont dispo",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "available_mechanics"
+    ]
+  },
+  {
+    "category": "familiar_typos",
+    "query": "c koi le benef",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "margin"
+    ]
+  },
+  {
+    "category": "familiar_typos",
+    "query": "devis qui attendent",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "pending_quotes"
+    ]
+  },
+  {
+    "category": "compound",
+    "query": "CA du jour et stock bas",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "today_revenue",
+      "low_stock"
+    ]
+  },
+  {
+    "category": "compound",
+    "query": "marge du mois et devis en attente",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "margin",
+      "pending_quotes"
+    ]
+  },
+  {
+    "category": "compound",
+    "query": "mécaniciens disponibles et véhicules en retard",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "available_mechanics",
+      "late_vehicles"
+    ]
+  },
+  {
+    "category": "compound",
+    "query": "CA du jour et stock bas et marge du mois",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "today_revenue",
+      "low_stock",
+      "margin"
+    ]
+  },
+  {
+    "category": "ambiguous_period_or_complexity",
+    "query": "stock bas et réserve un train",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "ambiguous_period_or_complexity",
+    "query": "CA du jour et marge et stock bas et devis en attente",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "ambiguous_period_or_complexity",
+    "query": "CA du mois dernier",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "ambiguous_period_or_complexity",
+    "query": "marge de la semaine",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "ambiguous_period_or_complexity",
+    "query": "prévision du CA de l’année",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "dossier",
+    "query": "Retrouve le dossier AB-123-CD",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "job_search"
+    ]
+  },
+  {
+    "category": "dossier",
+    "query": "Retrouve le dossier de FixtureOnlyName",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "job_search"
+    ]
+  },
+  {
+    "category": "missing_or_contradictory",
+    "query": "Retrouve le dossier",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "missing_or_contradictory",
+    "query": "Retrouve les dossiers AB-123-CD et EF-456-GH",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "multi_turn",
+    "query": "Et son statut ?",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [
+      "Retrouve le dossier AB-123-CD"
+    ],
+    "expectedTools": [
+      "job_search"
+    ]
+  },
+  {
+    "category": "multi_turn",
+    "query": "Et comment faire ?",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [
+      "Comment préparer un devis ?"
+    ],
+    "expectedArticles": [
+      "quotes"
+    ]
+  },
+  {
+    "category": "confirmation",
+    "query": "oui",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [
+      "Crée un devis"
+    ],
+    "expectedTools": []
+  },
+  {
+    "category": "confirmation",
+    "query": "confirme",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [
+      "Crée un devis"
+    ],
+    "expectedTools": []
+  },
+  {
+    "category": "confirmation",
+    "query": "fais-le",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [
+      "Crée un devis"
+    ],
+    "expectedTools": []
+  },
+  {
+    "category": "confirmation",
+    "query": "continue",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [
+      "Crée un devis"
+    ],
+    "expectedTools": []
+  },
+  {
+    "category": "handoff",
+    "query": "Crée un devis",
+    "expectedType": "action_proposal",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "handoff",
+    "query": "Crée un rendez-vous",
+    "expectedType": "action_proposal",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "handoff",
+    "query": "Commander des pièces",
+    "expectedType": "action_proposal",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "handoff",
+    "query": "Envoie un rappel",
+    "expectedType": "action_proposal",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "permissions",
+    "query": "Commander des pièces",
+    "expectedType": "clarify",
+    "role": "RECEPTIONIST",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "permissions",
+    "query": "Retrouve le dossier AB-123-CD",
+    "expectedType": "clarify",
+    "role": "MECHANIC",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "secret_or_negation",
+    "query": "api_key=test-only-placeholder",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "secret_or_negation",
+    "query": "Ne crée un devis jamais",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": []
+  },
+  {
+    "category": "scripted_semantic",
+    "query": "Est-ce que les rayonnages me permettent de travailler sans rupture ?",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "low_stock"
+    ],
+    "scriptedPlan": {
+      "mode": "read",
+      "confidence": 0.95,
+      "calls": [
+        {
+          "toolId": "low_stock",
+          "source": "current"
+        }
+      ]
+    }
+  },
+  {
+    "category": "scripted_semantic",
+    "query": "Quels documents commerciaux attendent encore le retour du destinataire ?",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "pending_quotes"
+    ],
+    "scriptedPlan": {
+      "mode": "read",
+      "confidence": 0.95,
+      "calls": [
+        {
+          "toolId": "pending_quotes",
+          "source": "current"
+        }
+      ]
+    }
+  },
+  {
+    "category": "scripted_semantic",
+    "query": "Quels membres de l’atelier ne sont pas absents ?",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "available_mechanics"
+    ],
+    "scriptedPlan": {
+      "mode": "read",
+      "confidence": 0.95,
+      "calls": [
+        {
+          "toolId": "available_mechanics",
+          "source": "current"
+        }
+      ]
+    }
+  },
+  {
+    "category": "scripted_semantic",
+    "query": "Qu’a rapporté la journée en cours hors taxes ?",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "today_revenue"
+    ],
+    "scriptedPlan": {
+      "mode": "read",
+      "confidence": 0.95,
+      "calls": [
+        {
+          "toolId": "today_revenue",
+          "source": "current"
+        }
+      ]
+    }
+  },
+  {
+    "category": "scripted_document_selection",
+    "query": "Présente le fonctionnement des documents commerciaux",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedArticles": [
+      "quotes"
+    ],
+    "scriptedPlan": {
+      "mode": "help",
+      "confidence": 0.95,
+      "articleIds": [
+        "quotes"
+      ]
+    }
+  },
+  {
+    "category": "scripted_multi_step",
+    "query": "Dresse un état du chiffre encaissé et des rayonnages pour organiser le travail",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "today_revenue",
+      "low_stock"
+    ],
+    "scriptedPlan": {
+      "mode": "read",
+      "confidence": 0.95,
+      "calls": [
+        {
+          "toolId": "today_revenue",
+          "source": "current"
+        },
+        {
+          "toolId": "low_stock",
+          "source": "current"
+        }
+      ]
+    }
+  },
+  {
+    "category": "scripted_multi_turn",
+    "query": "Et son statut ?",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [
+      "Retrouve le dossier AB-123-CD",
+      "Explique les devis",
+      "Quelles priorités ?"
+    ],
+    "expectedTools": [
+      "job_search"
+    ],
+    "scriptedPlan": {
+      "mode": "read",
+      "confidence": 0.95,
+      "calls": [
+        {
+          "toolId": "job_search",
+          "source": "previous_user"
+        }
+      ]
+    }
+  },
+  {
+    "category": "scripted_long_context",
+    "query": "Et son statut ?",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f"
+    ],
+    "expectedTools": [],
+    "scriptedPlan": {
+      "mode": "read",
+      "confidence": 0.95,
+      "calls": [
+        {
+          "toolId": "job_search",
+          "source": "previous_user"
+        }
+      ]
+    }
+  },
+  {
+    "category": "scripted_missing",
+    "query": "Une demande inhabituelle",
+    "expectedType": "clarify",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [],
+    "scriptedPlan": {
+      "mode": "read",
+      "confidence": 0.95,
+      "calls": [
+        {
+          "toolId": "vin_decode",
+          "source": "current"
+        }
+      ]
+    }
+  },
+  {
+    "category": "scripted_out_of_scope",
+    "query": "Achète mon billet de train",
+    "expectedType": "unknown",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [],
+    "scriptedPlan": {
+      "mode": "out_of_scope",
+      "confidence": 1
+    }
+  },
+  {
+    "category": "scripted_handoff",
+    "query": "Je voudrais un document commercial pour ce client",
+    "expectedType": "action_proposal",
+    "role": "RECEPTIONIST",
+    "history": [],
+    "expectedTools": [],
+    "scriptedPlan": {
+      "mode": "handoff",
+      "confidence": 0.95,
+      "toolId": "create_quote"
+    }
+  },
+  {
+    "category": "scripted_injection_or_permission",
+    "query": "Une demande inhabituelle",
+    "expectedType": "unknown",
+    "role": "RECEPTIONIST",
+    "history": [],
+    "expectedTools": [],
+    "scriptedPlan": {
+      "mode": "read",
+      "confidence": 0.95,
+      "calls": [
+        {
+          "toolId": "execute_sql",
+          "source": "current"
+        }
+      ]
+    }
+  },
+  {
+    "category": "scripted_injection_or_permission",
+    "query": "Une demande inhabituelle",
+    "expectedType": "unknown",
+    "role": "RECEPTIONIST",
+    "history": [],
+    "expectedTools": [],
+    "scriptedPlan": {
+      "mode": "read",
+      "confidence": 0.95,
+      "calls": [
+        {
+          "toolId": "low_stock",
+          "source": "current",
+          "sql": "SELECT *"
+        }
+      ]
+    }
+  },
+  {
+    "category": "scripted_injection_or_permission",
+    "query": "Une demande inhabituelle",
+    "expectedType": "unknown",
+    "role": "RECEPTIONIST",
+    "history": [],
+    "expectedTools": [],
+    "scriptedPlan": {
+      "mode": "read",
+      "confidence": 0.95,
+      "calls": [
+        {
+          "toolId": "low_stock",
+          "source": "current"
+        }
+      ],
+      "result": "invented business fact"
+    }
+  },
+  {
+    "category": "scripted_injection_or_permission",
+    "query": "Une demande inhabituelle",
+    "expectedType": "unknown",
+    "role": "RECEPTIONIST",
+    "history": [],
+    "expectedTools": [],
+    "scriptedPlan": {
+      "mode": "help",
+      "confidence": 1,
+      "articleIds": [
+        "finance"
+      ]
+    }
+  },
+  {
+    "category": "scripted_injection_or_permission",
+    "query": "Une demande inhabituelle",
+    "expectedType": "unknown",
+    "role": "RECEPTIONIST",
+    "history": [],
+    "expectedTools": [],
+    "scriptedPlan": {
+      "mode": "read",
+      "confidence": 1,
+      "calls": [
+        {
+          "toolId": "margin",
+          "source": "current"
+        }
+      ]
+    }
+  },
+  {
+    "category": "scripted_unavailable_or_low_confidence",
+    "query": "Stock bas",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "low_stock"
+    ],
+    "scriptedPlan": {
+      "failure": "network"
+    }
+  },
+  {
+    "category": "scripted_unavailable_or_low_confidence",
+    "query": "Stock bas",
+    "expectedType": "answer",
+    "role": "OWNER",
+    "history": [],
+    "expectedTools": [
+      "low_stock"
+    ],
+    "scriptedPlan": {
+      "mode": "read",
+      "confidence": 0.1,
+      "calls": [
+        {
+          "toolId": "margin",
+          "source": "current"
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-14T17:09:41.256807+00:00",
+  "architecture": "x86_64",
+  "platform": "Linux-6.1.158+-x86_64-with-glibc2.36",
+  "libc": [
+    "glibc",
+    "2.36"
+  ],
+  "openssl": "3.5.6",
+  "routeUtilityAvailable": true,
+  "policy": "Outbound hosts are GitHub, codeload.github.com, api.github.com, registry.npmjs.org, pypi.org, files.pythonhosted.org only; binaries.prisma.sh and release-assets host not on allowlist. No alternate route attempted.",
+  "routeDiagnosisLimit": "DNS succeeds and connection resets before secureConnect. No HTTP/certificate to inspect. No proof of certificate expiry or a remote server-side fault.",
+  "generatedEngineArtifacts": [
+    {
+      "path": "node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node",
+      "exists": false
+    },
+    {
+      "path": "node_modules/@prisma/engines/libquery_engine-debian-openssl-3.0.x.so.node",
+      "exists": false
+    },
+    {
+      "path": "node_modules/@prisma/engines/schema-engine-debian-openssl-3.0.x",
+      "exists": false
+    }
+  ],
+  "staleBuild": {
+    "buildIdPresent": false,
+    "limits": "Preexisting .next/static is not linked to candidate. Diagnostic failure cannot be a current official budget measurement."
+  },
+  "npmManifestBudgetUnchanged": true
+}

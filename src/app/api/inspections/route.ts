@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { assertRelations } from '@/lib/tenant'
+import { resolveInspectionContext } from '@/lib/inspection/context'
 
 // GET /api/inspections?jobId=xxx
 export const GET = withAuth(async (req) => {
@@ -36,15 +37,28 @@ export const POST = withAuth(async (req) => {
   ])
   if (relErr) return relErr
 
+  // RATTACHEMENT AUTORITAIRE. Le véhicule n'est pas ce que le client déclare :
+  // il est résolu depuis l'intervention (Job.vehicleId, sinon immatriculation)
+  // DANS LE GARAGE DE LA SESSION. Sans cela toutes les inspections restaient
+  // `vehicleId = NULL` — plus d'historique véhicule ni de relance kilométrique.
+  const context = await resolveInspectionContext(session.user.garageId, body.jobId, body.vehicleId)
+
+  // Le kilométrage saisi dans la modale prime (relevé du jour) ; à défaut on
+  // reprend le dernier kilométrage connu du véhicule.
+  const typedMileage = body.mileage !== undefined && body.mileage !== null && body.mileage !== ''
+    ? parseInt(String(body.mileage), 10)
+    : null
+  const mileage = Number.isFinite(typedMileage as number) ? typedMileage : context?.mileage ?? null
+
   const inspection = await prisma.inspection.create({
     data: {
       garageId: session.user.garageId,
       jobId: body.jobId ?? null,
-      vehicleId: body.vehicleId ?? null,
-      clientName: body.clientName ?? '',
-      vehicleModel: body.vehicleModel ?? null,
-      licensePlate: body.licensePlate ?? null,
-      mileage: body.mileage ? parseInt(body.mileage) : null,
+      vehicleId: context?.vehicleId ?? body.vehicleId ?? null,
+      clientName: body.clientName ?? context?.clientName ?? '',
+      vehicleModel: body.vehicleModel ?? context?.vehicleModel ?? null,
+      licensePlate: body.licensePlate ?? context?.licensePlate ?? null,
+      mileage,
       status: 'draft',
       notes: body.notes ?? null,
       items: {

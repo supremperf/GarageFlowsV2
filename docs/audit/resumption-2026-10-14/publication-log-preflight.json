@@ -1,0 +1,6 @@
+{
+  "at": "2026-10-14T14:32:30.554982+00:00",
+  "logsInspected": 100,
+  "candidates": [],
+  "limitation": "Three high-confidence families only, not Gitleaks or comprehensive secret certification."
+}

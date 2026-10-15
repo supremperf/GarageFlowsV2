@@ -1,0 +1,509 @@
+[
+  {
+    "id": "FUP-20261014-001",
+    "requirement": "B1 — Installation normale et natifs reproductibles",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALIDÉ",
+    "previousStatus": "PARTIELLEMENT VALIDÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-001",
+    "previousAssessment": "CLI/client/engines package 5.22.0 and generated engine commit agree; official local requests reset before TLS, no native artifact/checksum loaded. Remote 4989 normal install/generation succeeds, scoped to that SHA.",
+    "currentAssessment": "Installation normale distante et générations natives réussies sur commitf88f283 dans le job Linux ; localement, deux générations officielles échouent avant TLS. Aucun natif local vérifié/chargé.",
+    "currentProof": [
+      "evidence/prisma-generate.log",
+      "evidence/prisma-server-generate.log",
+      "ci-final-jobs.json"
+    ],
+    "requiredProof": "Autoriser chaîne de téléchargement officielle complète et intégrité ; refaire npm ci normal puis les deux prisma generate. Les changements postérieurs test/docs/CI ne constituent pas une seconde installation normale validée.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-002",
+    "requirement": "B2 — Suite Vitest entière sans échec ni non-exécution critique",
+    "priority": "P0",
+    "status": "ÉCHOUÉ",
+    "previousStatus": "ÉCHOUÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-002",
+    "previousAssessment": "Final local dual-reporter run: 3841 cases, 2994 pass/3 fail/844 skips/4 global errors. Remote job on commit4989b53 succeeds, but earlier 646 failure is traced to cost substring in generated garageId; deterministic fixture correction retains all assertions and is not yet validated with native Prisma.",
+    "currentAssessment": "Nouvelle suite provisionnée : 3841/2994 réussis/3 échecs/844 non exécutés/4 erreurs globales. Trois échecs et quatre rejets reproduits séparément, pas de correction native possible dans ce réseau.",
+    "currentProof": [
+      "full-suite-provisioned-summary.json",
+      "full-suite-provisioned-failed.jsonl",
+      "full-suite-provisioned-global-errors.json"
+    ],
+    "requiredProof": "Rejouer les 3 cas et les 77 fichiers après installation des vrais moteurs ; diagnostiquer les échecs métier éventuellement révélés, sans supposer que le réseau explique tout comportement futur.",
+    "dependencies": [
+      "FUP-20261014-001",
+      "FUP-20261014-007",
+      "FUP-20261014-013",
+      "FUP-20261014-017"
+    ],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-003",
+    "requirement": "B3 — Chromium officiel et E2E réels",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALIDÉ",
+    "previousStatus": "PARTIELLEMENT VALIDÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-003",
+    "previousAssessment": "Remote 4989 responsive E2E succeeds; authenticated guard fails before browser test; no authenticated or packaged browser validation on changed candidate.",
+    "currentAssessment": "Job E2E public responsive réussi sur commitf88f283. Pas de nouvelle recette authentifiée ni certification de tous les cas internes au job.",
+    "currentProof": [
+      "ci-final-jobs.json"
+    ],
+    "requiredProof": "Installer Chromium et dépendances depuis sources officielles vérifiées, rejouer le harness puis les parcours authentifiés isolés. Aucun rendu fonctionnel n’est validé.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-004",
+    "requirement": "B4 — Budget JS inchangé",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALIDÉ",
+    "previousStatus": "PARTIELLEMENT VALIDÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-004",
+    "previousAssessment": "Budget remains 3625984 total / 524288 chunk. Remote 4989 build and official budget step succeed. Local standard build cannot reach Next. Pre-existing 12:42 output without BUILD_ID fails a diagnostic budget measurement and is not bound to current candidate.",
+    "currentAssessment": "Budget distant step success sur commitf88f283 ; plafond 3625984/524288 inchangé. Build local bloqué avant Next ; mesure négative sur ancien .next non lié au candidat.",
+    "currentProof": [
+      "ci-final-jobs.json",
+      "evidence/budget-diagnostic.log",
+      "environment-observations.json"
+    ],
+    "requiredProof": "Résolution bornée à la mesure comparative réelle. Les deux builds Next directs contiennent une erreur Prisma malgré exit0 ; standard build/dist toujours non validés. Le serveur dev E2E a ensuite réutilisé .next : refaire une mesure sur build standard neuf avant livraison.",
+    "dependencies": [
+      "FUP-20261014-018"
+    ],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-005",
+    "requirement": "B5 — Revue sémantique exhaustive et durable par fichier",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALIDÉ",
+    "previousStatus": "PARTIELLEMENT VALIDÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-005",
+    "previousAssessment": "1250 files: 72 bounded completed semantic reviews, 43 partial, 1135 pending. 85 full-text reads include 13 partial assessments. Found/fixed inherited role-name exceptions; other backup/auth boundaries remain open.",
+    "currentAssessment": "1250 fichiers : 72 revues complètes bornées,46 partielles,1132 en attente ;87 lus entièrement. Deux sources de politique changées réévaluées. Ce n’est pas une validation fonctionnelle exhaustive.",
+    "currentProof": [
+      "review-ledger-current.jsonl",
+      "review-progress-current.json",
+      "manual-review-notes.json"
+    ],
+    "requiredProof": "Continuer P0 puis P1/P2, contrôler le SHA avant reprise et relire si changement. Full source reading ne vaut pas validation fonctionnelle ou absence de défauts.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-006",
+    "requirement": "Paquet Prisma sans DB locale/client ni reset destructeur",
+    "priority": "P0",
+    "status": "RÉSOLU",
+    "previousStatus": "RÉSOLU",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-006",
+    "previousAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Bounded package/template/no-reset regressions retained and passed. Native packaged artifact still open separately.",
+    "currentAssessment": "Évaluation historique bornée conservée pour source inchangée, sans clôture de release : Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Bounded package/template/no-reset regressions retained and passed. Native packaged artifact still open separately.",
+    "currentProof": [
+      "../closure-2026-10-14/issue-matrix.json#FUP-20261014-006"
+    ],
+    "requiredProof": "Ne certifie pas le paquet Windows complet ou les autres copies génériques ; voir 013/018/019.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-007",
+    "requirement": "Authenticité indépendante de l’autorité de licence",
+    "priority": "P0",
+    "status": "BLOQUÉ",
+    "previousStatus": "BLOQUÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-007",
+    "previousAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Previous scoped finding remains open; source/evidence integrity retained, no independent official issuer proof.",
+    "currentAssessment": "Évaluation historique bornée conservée pour source inchangée, sans clôture de release : Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Previous scoped finding remains open; source/evidence integrity retained, no independent official issuer proof.",
+    "currentProof": [
+      "../closure-2026-10-14/issue-matrix.json#FUP-20261014-007"
+    ],
+    "requiredProof": "Sur poste autorisé, attester empreinte/clé publique externe et exécuter cas nécessitant signature/jeton sans copier la clé privée dans CI/chat/dépôt. Aucune rotation effectuée.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-008",
+    "requirement": "CI effectivement obligatoire",
+    "priority": "P0",
+    "status": "ÉCHOUÉ",
+    "previousStatus": "ÉCHOUÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-008",
+    "previousAssessment": "Required validation fails on 4989 because authenticated and Windows jobs fail. Guard preserves mandatory requirements. Effective rules endpoint returns [] but classic branch/main protection returns 403; actual server-enforced required checks unverified. No remote CI exists for unpublished local patch.",
+    "currentAssessment": "CI exacte commitf88f283 completed/failure, Required failure. Protections toujours403 ; YAML et liste de règles vide ne prouvent pas obligation effective.",
+    "currentProof": [
+      "ci-final-jobs.json",
+      "external-access.json"
+    ],
+    "requiredProof": "Après autorisation de publication de la branche : exécuter la CI, configurer/attester la protection exigeant Required validation et examiner les logs. Aucun réglage distant modifié.",
+    "dependencies": [
+      "FUP-20261014-001",
+      "FUP-20261014-002",
+      "FUP-20261014-003",
+      "FUP-20261014-009",
+      "FUP-20261014-013",
+      "FUP-20261014-014",
+      "FUP-20261014-015",
+      "FUP-20261014-016",
+      "FUP-20261014-017",
+      "FUP-20261014-018"
+    ],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-009",
+    "requirement": "Scan de secrets officiel complet",
+    "priority": "P0",
+    "status": "ÉCHOUÉ",
+    "previousStatus": "PARTIELLEMENT VALIDÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-009",
+    "previousAssessment": "Remote 4989 current-tree scan has actual findings=0/scannerExit=0; no Git-history assertion. Local official cached files are empty, so no verified scanner execution exists on changed working tree. Historical 4989 criterion remains VALIDÉ only for its SHA.",
+    "currentAssessment": "Scan Gitleaks officiel distant commitf88f283 :1 finding,exit1. Faux positif de prose trié sans valeur exportée ; fingerprint exact/hash guard local testé. Nouveau scan local BLOQUÉ : téléchargement officiel curl35 après302, aucun binaire reçu/vérifié. Ni scan du commit corrigé ni historique.",
+    "currentProof": [
+      "gitleaks-triage.jsonl",
+      "gitleaks-prerequisite.json",
+      "evidence/secret-policy-after.log",
+      "policy-negative-results.json"
+    ],
+    "requiredProof": "Récupérer binaire et checksum officiels avec TLS/intégrité, exécuter gitleaks dir avec redaction et traiter chaque résultat. Ne pas déduire zéro secret du seul YAML.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-010",
+    "requirement": "Bootstrap ne supprimant jamais une DB historique distincte",
+    "priority": "P0",
+    "status": "RÉSOLU",
+    "previousStatus": "RÉSOLU",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-010",
+    "previousAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Legacy preservation regression retained and passed, owned real fixtures only.",
+    "currentAssessment": "Évaluation historique bornée conservée pour source inchangée, sans clôture de release : Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Legacy preservation regression retained and passed, owned real fixtures only.",
+    "currentProof": [
+      "../closure-2026-10-14/issue-matrix.json#FUP-20261014-010"
+    ],
+    "requiredProof": "Réconciliation de doublons laissée à une inspection autorisée, jamais effectuée automatiquement.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-011",
+    "requirement": "Désabonnement IPC isolé par composant",
+    "priority": "P1",
+    "status": "RÉSOLU",
+    "previousStatus": "RÉSOLU",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-011",
+    "previousAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. All nine unsubscribe regressions retained and passed; real Electron runtime remains open.",
+    "currentAssessment": "Évaluation historique bornée conservée pour source inchangée, sans clôture de release : Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. All nine unsubscribe regressions retained and passed; real Electron runtime remains open.",
+    "currentProof": [
+      "../closure-2026-10-14/issue-matrix.json#FUP-20261014-011"
+    ],
+    "requiredProof": "Preuve unitaire du bridge en VM/EventEmitter ; fumée Electron native encore requise en018.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-012",
+    "requirement": "Sept tests keygen ne doivent pas réussir sans assertions",
+    "priority": "P0",
+    "status": "RÉSOLU",
+    "previousStatus": "RÉSOLU",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-012",
+    "previousAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Actual isolated Python keygen cases execute in final suite; no assertion-free pass reintroduced. Not official issuer attestation.",
+    "currentAssessment": "Correction bornée conservée : dépendance Python absente lors de la première relance,7 cas empêchés, jamais verts sans assertions. Python isolé déjà installé explicitement fourni :7/7 isolés puis7 exécutés dans la suite complète. Pas validation de l’autorité de production.",
+    "currentProof": [
+      "tests-comparison.json",
+      "evidence/keygen-isolated-provisioned.json"
+    ],
+    "requiredProof": "Clé publique éphémère injectée dans le vérificateur pour cette preuve cross-language ; l’autorité réelle demeure007. Provisionnement Python3.12 en CI configuré, pas exécuté.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-013",
+    "requirement": "Test d’intégrité réel non vert sans paquet",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALIDÉ",
+    "previousStatus": "PARTIELLEMENT VALIDÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-013",
+    "previousAssessment": "Windows package failed at npm run dist; integrity/artifact checks skipped. No actual packaged resources or runtime certified. Existing fail-closed artifact test unchanged.",
+    "currentAssessment": "Évaluation historique bornée conservée pour source inchangée, sans clôture de release : Windows package failed at npm run dist; integrity/artifact checks skipped. No actual packaged resources or runtime certified. Existing fail-closed artifact test unchanged.",
+    "currentProof": [
+      "../closure-2026-10-14/issue-matrix.json#FUP-20261014-013"
+    ],
+    "requiredProof": "Preuve positive sur resources réels et inspection binaire non exécutées puisque dist est bloqué. Le skip supplémentaire explique 844 contre843 antérieurs.",
+    "dependencies": [
+      "FUP-20261014-018"
+    ],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-014",
+    "requirement": "Zéro vulnérabilité npm à tous niveaux",
+    "priority": "P0",
+    "status": "VALIDÉ",
+    "previousStatus": "VALIDÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-014",
+    "previousAssessment": "Fresh strict npm audit returns LOW=0 MODERATE=0 HIGH=0 CRITICAL=0 TOTAL=0; manifests/lockfile unchanged. Branch dependency-audit criterion only, not main alerts or universal supply-chain/native assurance.",
+    "currentAssessment": "Audit npm strict fraîchement exécuté :0 toutes sévérités/dev/transitives/optionnelles ; politique audit testée. Aucun manifeste/lock changé. Ne clôt ni Dependabot/main ni natifs.",
+    "currentProof": [
+      "evidence/audit-strict.log",
+      "evidence/audit-policy.log"
+    ],
+    "requiredProof": "Résultat scanner daté, pas garantie universelle. Fork braces nécessite suivi explicite de l’advisory upstream ; natifs et compatibilité SMTP ne sont pas validés par npm audit.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-015",
+    "requirement": "SAST/CodeQL et blocage réel des alertes",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALIDÉ",
+    "previousStatus": "PARTIELLEMENT VALIDÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-015",
+    "previousAssessment": "Final strict Semgrep 1.180.0: 996 selected, 865 raw/845 exact groups/20 aliases, all historical IDs retained, 0 parser errors after equivalent type aliases. 27 per-occurrence triages (13 VALIDÉ,14 partial),838 pending. Scan exit 1, no global security pass.",
+    "currentAssessment": "Scan stabilisé996/996,865 signaux/845 groupes/0 erreur.59 décisions sur45 groupes (32 nouvelles),806 occurrences encore en attente ; aucun alias perdu ni règle désactivée.",
+    "currentProof": [
+      "sast-summary.json",
+      "sast-review-register.jsonl",
+      "sast-triage-current.jsonl"
+    ],
+    "requiredProof": "Obtenir permissions de lecture nécessaires, exécuter CodeQL, traiter alertes et vérifier politique bloquant les niveaux requis. Ne pas confondre succès de publication SARIF et zéro alerte.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-016",
+    "requirement": "Parcours navigateur authentifiés sans test de production",
+    "priority": "P0",
+    "status": "BLOQUÉ",
+    "previousStatus": "BLOQUÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-016",
+    "previousAssessment": "4989 authenticated job fails prerequisite guard; Playwright step skipped. Exact missing input/approval not inferable from generic annotation and inaccessible logs. Approved HTTPS non-production target, test identity/license and approval still required; never production.",
+    "currentAssessment": "Parcours authentifiés non exécutés : job skipped sur commitf88f283 ; garde en échec sur commit4989b53. Staging approuvé et fixtures/secrets sécurisés non fournis ; logs historiques EOF.",
+    "currentProof": [
+      "ci-final-jobs.json",
+      "historical-log-access.json",
+      "ACCESS-REQUEST.md"
+    ],
+    "requiredProof": "Configurer après autorisation environnement protégé et fixtures synthétiques sur backend réellement isolé. Le booléen E2E_NON_PRODUCTION ne prouve pas l’isolation du backend. Certaines specs simulent des API : ne pas y voir preuve transactionnelle intégrale.",
+    "dependencies": [
+      "FUP-20261014-003",
+      "FUP-20261014-007",
+      "FUP-20261014-017"
+    ],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-017",
+    "requirement": "PostgreSQL/Redis réels isolés",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALIDÉ",
+    "previousStatus": "PARTIELLEMENT VALIDÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-017",
+    "previousAssessment": "Five real isolated Redis8.10.2 tests pass again; binary hash matches prior official-source build, server stopped. Not managed Upstash/CI Redis7 or local PostgreSQL validation; final full suite still records five Redis skips.",
+    "currentAssessment": "Redis réel isolé8.10.2 rejoué5/5 et arrêté. Pas de PostgreSQL local réel ni attestation Upstash/Redis7 ; succès du job PostgreSQL distant commitf88f283 de portée distincte.",
+    "currentProof": [
+      "evidence/redis-real.json",
+      "redis-runtime.json",
+      "ci-final-jobs.json"
+    ],
+    "requiredProof": "Provisionner services jetables avec droits minimaux nécessaires aux tests ; lancer migrations vides puis tests multi-instance, conserver résultats réels.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-018",
+    "requirement": "Build/dist/compatibilité native et services externes",
+    "priority": "P0",
+    "status": "ÉCHOUÉ",
+    "previousStatus": "ÉCHOUÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-018",
+    "previousAssessment": "4989 Linux build succeeds but Windows npm run dist fails. Its budget/artifact inspections skipped; detailed logs download fails EOF. New local official build still exits1 before Next at Prisma checksum request. No Windows candidate runtime certified.",
+    "currentAssessment": "Build standard local exécuté exit1 au premier Prisma generate ; Next non atteint. Job Linux commitf88f283 success, Windows skipped ; ancien npm run dist Windows en échec et logs EOF. Aucun artefact Windows courant inspecté/exécuté.",
+    "currentProof": [
+      "evidence/standard-build.log",
+      "ci-final-jobs.json",
+      "historical-log-access.json"
+    ],
+    "requiredProof": "Après001 : build/dist Windows, inspecter secrets/fuses/intégrité/manifeste/DB puis lancement/sauvegarde/migrations/proxy/MAJ. Recettes SMTP/IA/licences/configuration fournisseurs seulement avec accès autorisé non productif.",
+    "dependencies": [
+      "FUP-20261014-001",
+      "FUP-20261014-006",
+      "FUP-20261014-007",
+      "FUP-20261014-013",
+      "FUP-20261014-014"
+    ],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-019",
+    "requirement": "Copie Prisma ne suivant pas les jonctions de sortie/source",
+    "priority": "P0",
+    "status": "RÉSOLU",
+    "previousStatus": "RÉSOLU",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-019",
+    "previousAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Scoped link/junction packaging guards retained with 7 passing filesystem tests. Concurrent hostile directory mutation remains separate limitation.",
+    "currentAssessment": "Évaluation historique bornée conservée pour source inchangée, sans clôture de release : Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Scoped link/junction packaging guards retained with 7 passing filesystem tests. Concurrent hostile directory mutation remains separate limitation.",
+    "currentProof": [
+      "../closure-2026-10-14/issue-matrix.json#FUP-20261014-019"
+    ],
+    "requiredProof": "Pas de garantie atomique contre un utilisateur hostile modifiant le filesystem simultanément ; le workspace de build doit rester contrôlé.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-020",
+    "requirement": "Éviter les exclusions intégrales des sources de sécurité",
+    "priority": "P1",
+    "status": "PARTIELLEMENT VALIDÉ",
+    "previousStatus": "PARTIELLEMENT VALIDÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-020",
+    "previousAssessment": "No rules/exclusions disabled. Fifteen parser errors resolved with type-preserving aliases; explicit JS/TS/Python scope still excludes unsupported languages, which require other analysis/manual review.",
+    "currentAssessment": "Aucune exemption générale ajoutée. Un fingerprint supplémentaire de prose immuable, path/rule/line exact, protégé par hash et trois tests négatifs ; scanner reste non validé après modification.",
+    "currentProof": [
+      "gitleaks-triage.jsonl",
+      "policy-negative-results.json",
+      "evidence/secret-policy-after.log"
+    ],
+    "requiredProof": "Exécuter scanner réel et traiter chaque alerte sans réintroduire d’exclusion globale. Exemptions résiduelles fixtures/doc restent explicites, pas certification zéro secret.",
+    "dependencies": [
+      "FUP-20261014-009"
+    ],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-021",
+    "requirement": "Politique d’autorisation des appelants IPC Electron",
+    "priority": "P1",
+    "status": "EN ATTENTE DE REVUE",
+    "previousStatus": "EN ATTENTE DE REVUE",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-021",
+    "previousAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Main IPC boundary remains partial. Additional lifecycle/license callers reviewed, no full senderFrame/role policy closure.",
+    "currentAssessment": "Évaluation historique bornée conservée pour source inchangée, sans clôture de release : Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Main IPC boundary remains partial. Additional lifecycle/license callers reviewed, no full senderFrame/role policy closure.",
+    "currentProof": [
+      "../closure-2026-10-14/issue-matrix.json#FUP-20261014-021"
+    ],
+    "requiredProof": "Revoir tous producteurs/consommateurs, fenêtres licence/repli et frames ; définir politique de confiance, ajouter tests refus/acceptation puis valider sous Electron réel.",
+    "dependencies": [
+      "FUP-20261014-005",
+      "FUP-20261014-001"
+    ],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-022",
+    "requirement": "Backup collision, stale annexes and overbroad retention",
+    "priority": "P0",
+    "status": "RÉSOLU",
+    "previousStatus": "RÉSOLU",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-022",
+    "previousAssessment": "Previous bounded pre-migration backup correction unchanged; ten real SQLite/FS regression tests pass again. Does not close distinct internal-backup route ownership/race risks.",
+    "currentAssessment": "Correctif borné inchangé ;10/10 sauvegardes SQLite/FS rejouées. Ne valide pas restauration native de production ni autre route de backup.",
+    "currentProof": [
+      "evidence/backup.log"
+    ],
+    "requiredProof": "Targeted root-cause and regression proof, then native/functional closure in approved environment.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-023",
+    "requirement": "Quoted and environment-prefixed secrets leaked in logging/crash sinks",
+    "priority": "P1",
+    "status": "RÉSOLU",
+    "previousStatus": "RÉSOLU",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-023",
+    "previousAssessment": "Quoted/prefixed masking correction unchanged;33 dedicated cases plus existing crash/redaction cases pass again within122-case preserved suite.",
+    "currentAssessment": "Correctif borné inchangé ;33/33 cas de masquage cités/préfixés rejoués isolément. Pas garantie d’absence de secret dans tous les sinks/historique.",
+    "currentProof": [
+      "evidence/redaction-exact.json"
+    ],
+    "requiredProof": "Targeted root-cause and regression proof, then native/functional closure in approved environment.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-024",
+    "requirement": "Four GCM decryptors accepted shortened authentication tags",
+    "priority": "P1",
+    "status": "RÉSOLU",
+    "previousStatus": "RÉSOLU",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-024",
+    "previousAssessment": "Four corrected GCM decryptors unchanged;54 dedicated tag cases pass inside122 composite regressions. The exact five-file historical composite GCM/backup/TOTP/cipher suite was rerun:94/94. Not94 dedicated new GCM tag cases.",
+    "currentAssessment": "Correctifs bornés inchangés ;suite composite exacte94/94 fraîchement rejouée, dont54 tags GCM dédiés. Les suites ciblées se recouvrent ; pas additionnées.",
+    "currentProof": [
+      "evidence/gcm-composite.json"
+    ],
+    "requiredProof": "Targeted root-cause and regression proof, then native/functional closure in approved environment.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-025",
+    "requirement": "Offline grace anchored to recreatable database birthtime",
+    "priority": "P0",
+    "status": "BLOQUÉ",
+    "previousStatus": "BLOQUÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-025",
+    "previousAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. No silent licensing behavior change. Recorded failing counterexample: simulated 200h-old origin locks, actual fresh copied DB origin permits, equal bytes/SQL marker. Requires approved durable anchor/new-install/restore policy.",
+    "currentAssessment": "Évaluation historique bornée conservée pour source inchangée, sans clôture de release : Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. No silent licensing behavior change. Recorded failing counterexample: simulated 200h-old origin locks, actual fresh copied DB origin permits, equal bytes/SQL marker. Requires approved durable anchor/new-install/restore policy.",
+    "currentProof": [
+      "../closure-2026-10-14/issue-matrix.json#FUP-20261014-025"
+    ],
+    "requiredProof": "Targeted root-cause and regression proof, then native/functional closure in approved environment.",
+    "dependencies": [
+      "FUP-20261014-007"
+    ],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  },
+  {
+    "id": "FUP-20261014-026",
+    "requirement": "Default branch Dependabot vulnerabilities distinct from session npm audit",
+    "priority": "P0",
+    "status": "BLOQUÉ",
+    "previousStatus": "BLOQUÉ",
+    "historicalRecord": "../closure-2026-10-14/issue-matrix.json#FUP-20261014-026",
+    "previousAssessment": "Dependabot REST still403 Resource not accessible by integration. Historical151 notifications/two critical not currently individually exportable; no package, affected/fixed version or present total inferred. Branch npm0 does not resolve main.",
+    "currentAssessment": "Dependabot403 réessayé ; alertes historiques151 dont2 critiques non inventoriées actuellement, aucune clôture prétendue. Audit branche0 et snapshot main historique ne sont pas un export des alertes.",
+    "currentProof": [
+      "external-access.json",
+      "ACCESS-REQUEST.md"
+    ],
+    "requiredProof": "Authorized read-only main alert inventory, component/root-cause comparison, regression and full audit after separately authorized integration.",
+    "dependencies": [
+      "FUP-20261014-014",
+      "FUP-20261014-008"
+    ],
+    "releaseClosed": false,
+    "scope": "HEADf88f283 + delta local candidate.json ; preuves distantes explicitement limitées au SHA du run."
+  }
+]

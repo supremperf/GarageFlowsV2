@@ -1,0 +1,1640 @@
+[
+  {
+    "index": 0,
+    "ruleId": "js/identity-replacement",
+    "locations": [
+      {
+        "path": "src/lib/einvoicing/__tests__/formats.test.ts",
+        "startLine": 28,
+        "endLine": 28
+      }
+    ],
+    "fingerprints": {
+      "primaryLocationLineHash": "2f6646453e878b02:1"
+    },
+    "flows": [],
+    "related": []
+  },
+  {
+    "index": 1,
+    "ruleId": "js/incomplete-sanitization",
+    "locations": [
+      {
+        "path": "scripts/config-core.cjs",
+        "startLine": 97,
+        "endLine": 97
+      }
+    ],
+    "fingerprints": {
+      "primaryLocationLineHash": "c61e95d0586a01af:1"
+    },
+    "flows": [],
+    "related": []
+  },
+  {
+    "index": 2,
+    "ruleId": "js/biased-cryptographic-random",
+    "locations": [
+      {
+        "path": "src/lib/portal/backup-codes.ts",
+        "startLine": 29,
+        "endLine": 29
+      }
+    ],
+    "fingerprints": {
+      "primaryLocationLineHash": "c0cdc7f8bae5016e:1"
+    },
+    "flows": [],
+    "related": [
+      {
+        "path": "src/lib/portal/backup-codes.ts",
+        "startLine": 28,
+        "endLine": 28
+      }
+    ]
+  },
+  {
+    "index": 3,
+    "ruleId": "js/file-system-race",
+    "locations": [
+      {
+        "path": "docs/audit/followup-2026-10-14/build-review-ledger.cjs",
+        "startLine": 61,
+        "endLine": 61
+      }
+    ],
+    "fingerprints": {
+      "primaryLocationLineHash": "73b4bb96fd01b36a:1"
+    },
+    "flows": [],
+    "related": [
+      {
+        "path": "docs/audit/followup-2026-10-14/build-review-ledger.cjs",
+        "startLine": 59,
+        "endLine": 59
+      }
+    ]
+  },
+  {
+    "index": 4,
+    "ruleId": "js/file-system-race",
+    "locations": [
+      {
+        "path": "docs/audit/resumption-2026-10-14/closure-2026-10-14/run-command.cjs",
+        "startLine": 11,
+        "endLine": 11
+      }
+    ],
+    "fingerprints": {
+      "primaryLocationLineHash": "8ff2db6c128a9689:1"
+    },
+    "flows": [],
+    "related": [
+      {
+        "path": "docs/audit/resumption-2026-10-14/closure-2026-10-14/run-command.cjs",
+        "startLine": 6,
+        "endLine": 6
+      }
+    ]
+  },
+  {
+    "index": 5,
+    "ruleId": "js/file-system-race",
+    "locations": [
+      {
+        "path": "docs/audit/resumption-2026-10-14/investigation-2026-10-14/run-command.cjs",
+        "startLine": 11,
+        "endLine": 11
+      }
+    ],
+    "fingerprints": {
+      "primaryLocationLineHash": "847d294a07ed7aeb:1"
+    },
+    "flows": [],
+    "related": [
+      {
+        "path": "docs/audit/resumption-2026-10-14/investigation-2026-10-14/run-command.cjs",
+        "startLine": 6,
+        "endLine": 6
+      }
+    ]
+  },
+  {
+    "index": 6,
+    "ruleId": "js/file-system-race",
+    "locations": [
+      {
+        "path": "docs/audit/resumption-2026-10-14/publication-preflight.cjs",
+        "startLine": 8,
+        "endLine": 8
+      }
+    ],
+    "fingerprints": {
+      "primaryLocationLineHash": "ebac621ae4e223f6:1"
+    },
+    "flows": [],
+    "related": [
+      {
+        "path": "docs/audit/resumption-2026-10-14/publication-preflight.cjs",
+        "startLine": 8,
+        "endLine": 8
+      }
+    ]
+  },
+  {
+    "index": 7,
+    "ruleId": "js/file-system-race",
+    "locations": [
+      {
+        "path": "docs/audit/resumption-2026-10-14/run-command.cjs",
+        "startLine": 11,
+        "endLine": 11
+      }
+    ],
+    "fingerprints": {
+      "primaryLocationLineHash": "847d294a07ed7aeb:1"
+    },
+    "flows": [],
+    "related": [
+      {
+        "path": "docs/audit/resumption-2026-10-14/run-command.cjs",
+        "startLine": 6,
+        "endLine": 6
+      }
+    ]
+  },
+  {
+    "index": 8,
+    "ruleId": "js/file-access-to-http",
+    "locations": [
+      {
+        "path": "electron/main.js",
+        "startLine": 1565,
+        "endLine": 1565
+      }
+    ],
+    "fingerprints": {
+      "primaryLocationLineHash": "1b6ce0815a6e16e2:1"
+    },
+    "flows": [
+      [
+        {
+          "path": "electron/main.js",
+          "startLine": 1218,
+          "endLine": 1218
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1218,
+          "endLine": 1218
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1218,
+          "endLine": 1218
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1218,
+          "endLine": 1218
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1218,
+          "endLine": 1218
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1270,
+          "endLine": 1270
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1270,
+          "endLine": 1270
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1273,
+          "endLine": 1273
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1273,
+          "endLine": 1273
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1274,
+          "endLine": 1274
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1542,
+          "endLine": 1542
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1545,
+          "endLine": 1545
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1545,
+          "endLine": 1545
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1545,
+          "endLine": 1545
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1565,
+          "endLine": 1565
+        }
+      ]
+    ],
+    "related": [
+      {
+        "path": "electron/main.js",
+        "startLine": 1218,
+        "endLine": 1218
+      },
+      {
+        "path": "electron/main.js",
+        "startLine": 1218,
+        "endLine": 1218
+      }
+    ]
+  },
+  {
+    "index": 9,
+    "ruleId": "js/file-access-to-http",
+    "locations": [
+      {
+        "path": "scripts/config-services.cjs",
+        "startLine": 136,
+        "endLine": 136
+      }
+    ],
+    "fingerprints": {
+      "primaryLocationLineHash": "64539b5f16c782ff:1"
+    },
+    "flows": [
+      [
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 107,
+          "endLine": 107
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 107,
+          "endLine": 107
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 107,
+          "endLine": 107
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 108,
+          "endLine": 108
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 108,
+          "endLine": 108
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 108,
+          "endLine": 108
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 108,
+          "endLine": 108
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 114,
+          "endLine": 114
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 131,
+          "endLine": 131
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        }
+      ],
+      [
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 107,
+          "endLine": 107
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 107,
+          "endLine": 107
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 107,
+          "endLine": 107
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 108,
+          "endLine": 108
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 108,
+          "endLine": 108
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 108,
+          "endLine": 108
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 108,
+          "endLine": 108
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 114,
+          "endLine": 114
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 131,
+          "endLine": 131
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        }
+      ],
+      [
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 107,
+          "endLine": 107
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 107,
+          "endLine": 107
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 107,
+          "endLine": 107
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 108,
+          "endLine": 108
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 108,
+          "endLine": 108
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 108,
+          "endLine": 108
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 108,
+          "endLine": 108
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 114,
+          "endLine": 114
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 131,
+          "endLine": 131
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "startLine": 136,
+          "endLine": 136
+        }
+      ]
+    ],
+    "related": [
+      {
+        "path": "scripts/config-services.cjs",
+        "startLine": 107,
+        "endLine": 107
+      },
+      {
+        "path": "scripts/config-services.cjs",
+        "startLine": 107,
+        "endLine": 107
+      }
+    ]
+  },
+  {
+    "index": 10,
+    "ruleId": "js/file-access-to-http",
+    "locations": [
+      {
+        "path": "src/lib/sync/cloud-client.ts",
+        "startLine": 76,
+        "endLine": 76
+      }
+    ],
+    "fingerprints": {
+      "primaryLocationLineHash": "f07b4c436deabb6:1"
+    },
+    "flows": [
+      [
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 131,
+          "endLine": 131
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 131,
+          "endLine": 131
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 131,
+          "endLine": 131
+        },
+        {
+          "path": "src/lib/sync/mechanic-avatar-sync.ts",
+          "startLine": 71,
+          "endLine": 71
+        },
+        {
+          "path": "src/lib/sync/mechanic-avatar-sync.ts",
+          "startLine": 71,
+          "endLine": 71
+        },
+        {
+          "path": "src/lib/sync/mechanic-avatar-sync.ts",
+          "startLine": 79,
+          "endLine": 79
+        },
+        {
+          "path": "src/lib/sync/mechanic-avatar-sync.ts",
+          "startLine": 75,
+          "endLine": 85
+        },
+        {
+          "path": "src/lib/sync/cloud-client.ts",
+          "startLine": 67,
+          "endLine": 67
+        },
+        {
+          "path": "src/lib/sync/cloud-client.ts",
+          "startLine": 76,
+          "endLine": 76
+        },
+        {
+          "path": "src/lib/sync/cloud-client.ts",
+          "startLine": 76,
+          "endLine": 76
+        }
+      ]
+    ],
+    "related": [
+      {
+        "path": "src/lib/photo-store.ts",
+        "startLine": 131,
+        "endLine": 131
+      },
+      {
+        "path": "src/lib/photo-store.ts",
+        "startLine": 131,
+        "endLine": 131
+      }
+    ]
+  },
+  {
+    "index": 11,
+    "ruleId": "js/http-to-file-access",
+    "locations": [
+      {
+        "path": "electron/main.js",
+        "startLine": 642,
+        "endLine": 642
+      }
+    ],
+    "fingerprints": {
+      "primaryLocationLineHash": "58a7bafa79191156:1"
+    },
+    "flows": [
+      [
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1543,
+          "endLine": 1543
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1543,
+          "endLine": 1568
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1719,
+          "endLine": 1719
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1719,
+          "endLine": 1719
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1719,
+          "endLine": 1719
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1731,
+          "endLine": 1731
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1731,
+          "endLine": 1731
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 633,
+          "endLine": 633
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 634,
+          "endLine": 634
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 634,
+          "endLine": 634
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 634,
+          "endLine": 634
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 642,
+          "endLine": 642
+        }
+      ],
+      [
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1543,
+          "endLine": 1543
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1543,
+          "endLine": 1568
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1887,
+          "endLine": 1887
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1887,
+          "endLine": 1887
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1887,
+          "endLine": 1887
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1892,
+          "endLine": 1892
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1892,
+          "endLine": 1892
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 633,
+          "endLine": 633
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 634,
+          "endLine": 634
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 634,
+          "endLine": 634
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 634,
+          "endLine": 634
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 642,
+          "endLine": 642
+        }
+      ],
+      [
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1543,
+          "endLine": 1543
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1543,
+          "endLine": 1568
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1903,
+          "endLine": 1903
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1903,
+          "endLine": 1903
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1903,
+          "endLine": 1903
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1906,
+          "endLine": 1906
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1906,
+          "endLine": 1906
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 633,
+          "endLine": 633
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 634,
+          "endLine": 634
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 634,
+          "endLine": 634
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 634,
+          "endLine": 634
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 642,
+          "endLine": 642
+        }
+      ],
+      [
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1543,
+          "endLine": 1543
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1543,
+          "endLine": 1568
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1839,
+          "endLine": 1839
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1839,
+          "endLine": 1839
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1839,
+          "endLine": 1839
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1839,
+          "endLine": 1839
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1850,
+          "endLine": 1850
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1850,
+          "endLine": 1850
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 633,
+          "endLine": 633
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 634,
+          "endLine": 634
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 634,
+          "endLine": 634
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 634,
+          "endLine": 634
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 642,
+          "endLine": 642
+        }
+      ]
+    ],
+    "related": [
+      {
+        "path": "electron/main.js",
+        "startLine": 1559,
+        "endLine": 1559
+      },
+      {
+        "path": "electron/main.js",
+        "startLine": 1559,
+        "endLine": 1559
+      }
+    ]
+  },
+  {
+    "index": 12,
+    "ruleId": "js/http-to-file-access",
+    "locations": [
+      {
+        "path": "electron/main.js",
+        "startLine": 2106,
+        "endLine": 2106
+      }
+    ],
+    "fingerprints": {
+      "primaryLocationLineHash": "25dc3758a5ea9f8a:1"
+    },
+    "flows": [
+      [
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1543,
+          "endLine": 1543
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1543,
+          "endLine": 1568
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1887,
+          "endLine": 1887
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1887,
+          "endLine": 1887
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1887,
+          "endLine": 1887
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1989,
+          "endLine": 1989
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1989,
+          "endLine": 1989
+        },
+        {
+          "path": "electron/heartbeat-policy.js",
+          "startLine": 41,
+          "endLine": 41
+        },
+        {
+          "path": "electron/heartbeat-policy.js",
+          "startLine": 41,
+          "endLine": 41
+        },
+        {
+          "path": "electron/heartbeat-policy.js",
+          "startLine": 41,
+          "endLine": 41
+        },
+        {
+          "path": "electron/heartbeat-policy.js",
+          "startLine": 49,
+          "endLine": 49
+        },
+        {
+          "path": "electron/heartbeat-policy.js",
+          "startLine": 49,
+          "endLine": 49
+        },
+        {
+          "path": "electron/heartbeat-policy.js",
+          "startLine": 47,
+          "endLine": 51
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1989,
+          "endLine": 1989
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1989,
+          "endLine": 1989
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 2000,
+          "endLine": 2000
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 2000,
+          "endLine": 2000
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 2100,
+          "endLine": 2100
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 2106,
+          "endLine": 2106
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 2106,
+          "endLine": 2106
+        },
+        {
+          "path": "electron/signed-state.js",
+          "startLine": 37,
+          "endLine": 37
+        },
+        {
+          "path": "electron/signed-state.js",
+          "startLine": 39,
+          "endLine": 39
+        },
+        {
+          "path": "electron/signed-state.js",
+          "startLine": 39,
+          "endLine": 39
+        },
+        {
+          "path": "electron/signed-state.js",
+          "startLine": 39,
+          "endLine": 39
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 2106,
+          "endLine": 2106
+        }
+      ],
+      [
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1559,
+          "endLine": 1559
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1543,
+          "endLine": 1543
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1543,
+          "endLine": 1568
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1903,
+          "endLine": 1903
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1903,
+          "endLine": 1903
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1903,
+          "endLine": 1903
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1989,
+          "endLine": 1989
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1989,
+          "endLine": 1989
+        },
+        {
+          "path": "electron/heartbeat-policy.js",
+          "startLine": 41,
+          "endLine": 41
+        },
+        {
+          "path": "electron/heartbeat-policy.js",
+          "startLine": 41,
+          "endLine": 41
+        },
+        {
+          "path": "electron/heartbeat-policy.js",
+          "startLine": 41,
+          "endLine": 41
+        },
+        {
+          "path": "electron/heartbeat-policy.js",
+          "startLine": 50,
+          "endLine": 50
+        },
+        {
+          "path": "electron/heartbeat-policy.js",
+          "startLine": 50,
+          "endLine": 50
+        },
+        {
+          "path": "electron/heartbeat-policy.js",
+          "startLine": 47,
+          "endLine": 51
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1989,
+          "endLine": 1989
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 1989,
+          "endLine": 1989
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 2000,
+          "endLine": 2000
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 2000,
+          "endLine": 2000
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 2100,
+          "endLine": 2100
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 2106,
+          "endLine": 2106
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 2106,
+          "endLine": 2106
+        },
+        {
+          "path": "electron/signed-state.js",
+          "startLine": 37,
+          "endLine": 37
+        },
+        {
+          "path": "electron/signed-state.js",
+          "startLine": 39,
+          "endLine": 39
+        },
+        {
+          "path": "electron/signed-state.js",
+          "startLine": 39,
+          "endLine": 39
+        },
+        {
+          "path": "electron/signed-state.js",
+          "startLine": 39,
+          "endLine": 39
+        },
+        {
+          "path": "electron/main.js",
+          "startLine": 2106,
+          "endLine": 2106
+        }
+      ]
+    ],
+    "related": [
+      {
+        "path": "electron/main.js",
+        "startLine": 1559,
+        "endLine": 1559
+      },
+      {
+        "path": "electron/main.js",
+        "startLine": 1559,
+        "endLine": 1559
+      }
+    ]
+  },
+  {
+    "index": 13,
+    "ruleId": "js/http-to-file-access",
+    "locations": [
+      {
+        "path": "src/lib/photo-store.ts",
+        "startLine": 89,
+        "endLine": 89
+      }
+    ],
+    "fingerprints": {
+      "primaryLocationLineHash": "682240e07b23855d:1"
+    },
+    "flows": [
+      [
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 61,
+          "endLine": 61
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 61,
+          "endLine": 61
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 61,
+          "endLine": 61
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 115,
+          "endLine": 115
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 115,
+          "endLine": 115
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 146,
+          "endLine": 146
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 190,
+          "endLine": 190
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 194,
+          "endLine": 194
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 194,
+          "endLine": 194
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 194,
+          "endLine": 194
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 204,
+          "endLine": 204
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 204,
+          "endLine": 204
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 204,
+          "endLine": 204
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 228,
+          "endLine": 228
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 228,
+          "endLine": 228
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 233,
+          "endLine": 233
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 230,
+          "endLine": 237
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 146,
+          "endLine": 146
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 146,
+          "endLine": 146
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 152,
+          "endLine": 152
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 152,
+          "endLine": 152
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 152,
+          "endLine": 152
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 152,
+          "endLine": 152
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 153,
+          "endLine": 153
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 58,
+          "endLine": 58
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 65,
+          "endLine": 65
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 65,
+          "endLine": 65
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 65,
+          "endLine": 65
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 67,
+          "endLine": 67
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 67,
+          "endLine": 67
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 67,
+          "endLine": 67
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 89,
+          "endLine": 89
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 89,
+          "endLine": 89
+        }
+      ],
+      [
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 61,
+          "endLine": 61
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 61,
+          "endLine": 61
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 61,
+          "endLine": 61
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 115,
+          "endLine": 115
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 115,
+          "endLine": 115
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 146,
+          "endLine": 146
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 190,
+          "endLine": 190
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 194,
+          "endLine": 194
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 194,
+          "endLine": 194
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 194,
+          "endLine": 194
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 204,
+          "endLine": 204
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 204,
+          "endLine": 204
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 204,
+          "endLine": 204
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 228,
+          "endLine": 228
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 159,
+          "endLine": 159
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 160,
+          "endLine": 160
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 228,
+          "endLine": 228
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 228,
+          "endLine": 228
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 233,
+          "endLine": 233
+        },
+        {
+          "path": "src/lib/mechanics/avatar-image.ts",
+          "startLine": 230,
+          "endLine": 237
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 146,
+          "endLine": 146
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 146,
+          "endLine": 146
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 152,
+          "endLine": 152
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 152,
+          "endLine": 152
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 152,
+          "endLine": 152
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 152,
+          "endLine": 152
+        },
+        {
+          "path": "src/app/api/sync/mechanic-avatar/route.ts",
+          "startLine": 153,
+          "endLine": 153
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 58,
+          "endLine": 58
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 65,
+          "endLine": 65
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 65,
+          "endLine": 65
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 65,
+          "endLine": 65
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 67,
+          "endLine": 67
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 67,
+          "endLine": 67
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 67,
+          "endLine": 67
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 89,
+          "endLine": 89
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "startLine": 89,
+          "endLine": 89
+        }
+      ]
+    ],
+    "related": [
+      {
+        "path": "src/app/api/sync/mechanic-avatar/route.ts",
+        "startLine": 61,
+        "endLine": 61
+      },
+      {
+        "path": "src/app/api/sync/mechanic-avatar/route.ts",
+        "startLine": 61,
+        "endLine": 61
+      }
+    ]
+  }
+]

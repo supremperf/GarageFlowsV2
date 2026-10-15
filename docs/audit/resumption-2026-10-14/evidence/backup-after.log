@@ -1,0 +1,114 @@
+TAP version 13
+# Traceback (most recent call last):
+#   File "<string>", line 2, in <module>
+# sqlite3.OperationalError: attempt to write a readonly database
+# Subtest: same-second backups preserve distinct real SQLite snapshots
+ok 1 - same-second backups preserve distinct real SQLite snapshots
+  ---
+  duration_ms: 69.432835
+  type: 'test'
+  ...
+# Subtest: same-second copies never inherit another snapshot rollback journal
+ok 2 - same-second copies never inherit another snapshot rollback journal
+  ---
+  duration_ms: 40.403178
+  type: 'test'
+  ...
+# Subtest: retention removes all owned annexes including journal
+not ok 3 - retention removes all owned annexes including journal
+  ---
+  duration_ms: 46.735042
+  type: 'test'
+  location: '/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:11:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Command failed: python3 -c import sqlite3,sys
+    c=sqlite3.connect("file:"+sys.argv[1]+"?mode=ro",uri=True);assert c.execute("PRAGMA integrity_check").fetchone()[0]=="ok";print(c.execute("SELECT value FROM marker").fetchone()[0]);c.close() /tmp/gf-backup-safety-MniQT9/backups/garageflows-pre-migration-20261014-120007.db
+    Traceback (most recent call last):
+      File "<string>", line 2, in <module>
+    sqlite3.OperationalError: attempt to write a readonly database
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    genericNodeError (node:internal/errors:983:15)
+    wrappedFn (node:internal/errors:537:14)
+    checkExecSyncError (node:child_process:916:11)
+    Object.execFileSync (node:child_process:952:15)
+    read (/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:7:29)
+    TestContext.<anonymous> (/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:11:523)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+  ...
+# Subtest: retention does not delete unrelated files with the application prefix
+ok 4 - retention does not delete unrelated files with the application prefix
+  ---
+  duration_ms: 26.389399
+  type: 'test'
+  ...
+# Subtest: same-second retention keeps the actual latest five snapshots
+ok 5 - same-second retention keeps the actual latest five snapshots
+  ---
+  duration_ms: 171.963142
+  type: 'test'
+  ...
+# Subtest: copy permission failure blocks migration without attempting retention
+not ok 6 - copy permission failure blocks migration without attempting retention
+  ---
+  duration_ms: 21.649767
+  type: 'test'
+  location: '/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:14:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:14:388)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: rotation failure is an explicit warning, not a lost valid backup
+ok 7 - rotation failure is an explicit warning, not a lost valid backup
+  ---
+  duration_ms: 33.99664
+  type: 'test'
+  ...
+# Subtest: collision retries are bounded and always use exclusive copy
+ok 8 - collision retries are bounded and always use exclusive copy
+  ---
+  duration_ms: 67.758828
+  type: 'test'
+  ...
+# Subtest: source permission error is not treated as a first-install skip
+ok 9 - source permission error is not treated as a first-install skip
+  ---
+  duration_ms: 0.885472
+  type: 'test'
+  ...
+# Subtest: orphan journal names are reserved without overwriting or reusing them
+ok 10 - orphan journal names are reserved without overwriting or reusing them
+  ---
+  duration_ms: 20.384959
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 8
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 549.085297

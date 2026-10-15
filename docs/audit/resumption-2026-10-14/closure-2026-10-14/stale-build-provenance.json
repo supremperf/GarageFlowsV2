@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-14T16:34:30.718404+00:00",
+  "files": [
+    {
+      "path": ".next/BUILD_ID",
+      "exists": false
+    },
+    {
+      "path": ".next/build-manifest.json",
+      "exists": true,
+      "bytes": 388,
+      "mtime": "2026-10-14T12:42:38.021449+00:00",
+      "sha256": "7a00253d808c2a7b95ae4216d9edcb862cf363373b17c6ec256131a5f9b400eb"
+    },
+    {
+      "path": ".next/package.json",
+      "exists": true,
+      "bytes": 20,
+      "mtime": "2026-10-14T12:42:26.657392+00:00",
+      "sha256": "091a04fa67c7907b98e106fcff8b964e13129754fce72d24f3025b97c4887fa3"
+    },
+    {
+      "path": ".next/static/chunks/main-app.js",
+      "exists": true,
+      "bytes": 7611850,
+      "mtime": "2026-10-14T12:42:37.177445+00:00",
+      "sha256": "7257090f3c1081f38a947c98a69e0773c1b0a8ec15f47b8e1e8ad5a51268511b"
+    }
+  ],
+  "budgetCommandExit": 1,
+  "measuredBytes": 10440593,
+  "largestChunkApproxKiB": 7433.4,
+  "candidateAssociation": "UNKNOWN: standard current build failed before Next; these pre-existing files cannot be bound to current sources or an official production build. No stale files removed or altered for this measurement.",
+  "limitation": "Failed diagnostic measurement of pre-existing output, not current production bundle result; no threshold changed."
+}

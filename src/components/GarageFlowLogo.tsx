@@ -29,7 +29,7 @@ export default function GarageFlowLogo({ size = 40, showText = false, className 
           <span style={{
             background: 'linear-gradient(135deg,#60a5fa,#2563eb)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          }}>FLOW</span>
+          }}>FLOWS</span>
         </div>
       )}
     </div>
@@ -42,24 +42,12 @@ export function GarageFlowIcon({ size = 32, className = '' }: { size?: number; c
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={logoMark.src}
-      alt="GarageFlow"
+      alt="GarageFlows"
       width={size}
       height={size}
       draggable={false}
       className={`flex-shrink-0 select-none object-contain ${className}`}
       style={{ width: size, height: size }}
     />
-  )
-}
-
-/** Lockup en-tête : icône + nom. */
-export function GarageFlowLockup({ iconSize = 28 }: { iconSize?: number }) {
-  return (
-    <div className="flex items-center gap-2">
-      <GarageFlowIcon size={iconSize} />
-      <span className="font-black tracking-tight leading-none" style={{ fontSize: Math.max(12, iconSize * 0.5) }}>
-        <span className="text-slate-100">Garage</span><span className="text-blue-400">Flow</span>
-      </span>
-    </div>
   )
 }

@@ -1,0 +1,40 @@
+
+> garageflow@1.1.0 test
+> vitest run src/lib/license/__tests__/license-keygen-e2e.test.ts
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/home/user/GarageFlowsV2[39m
+
+ [31m❯[39m src/lib/license/__tests__/license-keygen-e2e.test.ts [2m([22m[2m7 tests[22m[2m | [22m[33m7 skipped[39m[2m)[22m[32m 43[2mms[22m[39m
+     [2m[90m↓[39m[22m l’environnement Python/keygen est disponible
+     [2m[90m↓[39m[22m 100% des licences OFFICIELLEMENT VALIDES sont acceptées
+     [2m[90m↓[39m[22m 100% des licences INVALIDES (expirée / signature / payload altérés) sont REJETÉES
+     [2m[90m↓[39m[22m les types premium/enterprise/trial/mécanicien sont correctement décodés
+     [2m[90m↓[39m[22m HWID de la machine (keygen get_hwid) — format valide, lié à la licence L5
+     [2m[90m↓[39m[22m HWID V1 canonique — keygen lie la valeur cliente, verify l’accepte (L7)
+     [2m[90m↓[39m[22m HWID v0 et v1 ne se confondent JAMAIS (longueurs 64 vs 70)
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/lib/license/__tests__/license-keygen-e2e.test.ts[2m [ src/lib/license/__tests__/license-keygen-e2e.test.ts ][22m
+[31m[1mError[22m: gen_test_licenses.py a échoué: SKIP: module cryptography indisponible
+[39m
+[36m [2m❯[22m src/lib/license/__tests__/license-keygen-e2e.test.ts:[2m40:30[22m[39m
+    [90m 38|[39m   [35mconst[39m py [33m=[39m [34mspawnSync[39m([32m'python3'[39m[33m,[39m [driver[33m,[39m out][33m,[39m { encoding[33m:[39m [32m'utf8'[39m })
+    [90m 39|[39m   if (py.error) throw new Error('Python/keygen indisponible', { cause:…
+    [90m 40|[39m   if (py.status !== 0) throw new Error(`gen_test_licenses.py a échoué:…
+    [90m   |[39m                              [31m^[39m
+    [90m 41|[39m   if (!existsSync(out)) throw new Error('Keygen a terminé sans produir…
+    [90m 42|[39m   [35mconst[39m parsed [33m=[39m [33mJSON[39m[33m.[39m[34mparse[39m([34mreadFileSync[39m(out[33m,[39m [32m'utf8'[39m))
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [33m7 skipped[39m[90m (7)[39m
+[2m   Start at [22m 12:38:20
+[2m   Duration [22m 408ms[2m (transform 76ms, setup 0ms, import 93ms, tests 43ms, environment 0ms)[22m
+

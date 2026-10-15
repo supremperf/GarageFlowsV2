@@ -1,4 +1,4 @@
-# GarageFlow
+# GarageFlows
 
 Application de gestion et de planning d'atelier automobile — bureau Windows (Electron + Next.js).
 
@@ -8,7 +8,7 @@ Application de gestion et de planning d'atelier automobile — bureau Windows (E
 
 | Outil | Version minimale |
 |-------|-----------------|
-| Node.js | 18 LTS |
+| Node.js | 22.x |
 | npm | 9 |
 | Python | 3.10 |
 | `cryptography` (pip) | 41 |
@@ -26,11 +26,36 @@ npm run db:seed       # Insère les données de démo
 
 ---
 
+## Configuration assistée (desktop / Neon / Vercel)
+
+```bash
+npm run config
+```
+
+Ou double-cliquer sur `config.cmd` sous Windows. `config` lance maintenant le
+**plan complet automatique** : dépendances, accès Neon/Vercel/Upstash, secrets,
+licences/keygen, profils desktop/cloud, bases, migrations, déploiement et signature
+locale des mises à jour. Saisir `AUTORISER` pour lancer le plan ; les demandes
+suivantes concernent des accès, une cible ambiguë ou une opération risquée.
+Il conserve les clés existantes et n'affiche jamais les secrets.
+
+**Analyse et couverture des 118 variables : [CONFIG_REPOSITORY_AUDIT.md](docs/CONFIG_REPOSITORY_AUDIT.md).**
+
+**Guide et limites d'automatisation : [docs/CONFIG.md](docs/CONFIG.md).**
+Le serveur utilise `.env.server.local` (isolé du build Electron) ; le desktop
+conserve `.env`. Les accès non récupérables doivent être fournis localement. Le rapport distingue
+les étapes réussies des fonctions exigeant encore un accès ou une adaptation
+(notamment stockage durable sur Vercel et service de publication externe).
+
+---
+
 ## Développement
 
 ```bash
-npm run dev           # Serveur Next.js (port 3000)
-npm run electron:dev  # Lance Electron en mode dev (pointe vers :3000)
+npm run dev           # Serveur Next.js seul (port 3000)
+# Desktop en développement — deux terminaux :
+npm run dev:electron  # Terminal 1 : Next.js sur le port 4028 (celui d'Electron)
+npm run electron:dev  # Terminal 2 : Electron en mode dev (pointe vers :4028)
 ```
 
 ---
@@ -38,7 +63,7 @@ npm run electron:dev  # Lance Electron en mode dev (pointe vers :3000)
 ## Architecture
 
 ```
-GarageFlow/
+GarageFlows/ (racine du depot)
 ├── electron/
 │   ├── main.js        # Processus principal Electron (IPC, backup, export)
 │   └── preload.js     # Pont sécurisé contextBridge ↔ renderer
@@ -117,7 +142,7 @@ Sélection dans **Paramètres → Thèmes**.
 Chaque soir à **20 h**, l'application crée un dossier horodaté sur le Bureau :
 
 ```
-Bureau/GarageFlow_Export_AAAA-MM-JJ/
+Bureau/GarageFlows_Export_AAAA-MM-JJ/
 ├── clients.csv
 ├── vehicules.csv
 ├── interventions.csv

@@ -7,7 +7,7 @@
  * "vérifié"); action intents render a confirmation-gated card — nothing is
  * written without the user's explicit confirmation.
  */
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X, Sparkles, Send, ShieldCheck, User } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n'
 
@@ -16,6 +16,16 @@ interface CopilotResponse {
   intent?: string
   message?: string
   phrasing?: string
+  /**
+   * Provenance de la réponse, décidée par le serveur — seul à savoir si un
+   * résolveur a réellement lu les données du garage. Le panneau ne la recalcule
+   * pas : la déduire ici de la présence d'un champ était précisément le défaut.
+   */
+  ancrage?: { verifie?: boolean; source?: 'llm' | 'fallback' | 'fallback_ungrounded' }
+  planning?: { source?: 'local' | 'model'; fallback?: string }
+  execution?: { complete?: boolean; observations?: { toolId: string; title: string; status: string; verified: boolean; evidence: string }[] }
+  model?: { state?: string }
+  sources?: { id: string; title: string; path: string; version: string }[]
   data?: unknown
   action?: { id?: string; confirmationRequired?: boolean; endpoint?: string; method?: string }
 }
@@ -29,21 +39,53 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
     { label: t.cpSug1, query: 'Quel est le CA du jour ?' },
     { label: t.cpSug2, query: 'Quelles pièces sont en rupture de stock ?' },
     { label: t.cpSug3, query: 'Crée un devis pour ce client' },
+    { label: 'Comment préparer un devis ?', query: 'Comment préparer un devis ?' },
   ]
   const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const activeRequest = useRef<AbortController | null>(null)
+  const history = useRef<{ role: 'user'; content: string }[]>([])
+  const [readiness, setReadiness] = useState('Vérification de la disponibilité…')
+  useEffect(() => {
+    const controller = new AbortController()
+    let disposed = false
+    const timer = setTimeout(() => controller.abort(), 5000)
+    fetch('/api/copilot', { signal: controller.signal, cache: 'no-store' })
+      .then(async r => {
+        const status = await r.json()
+        if (!r.ok && status.operational !== false) throw new Error('readiness')
+        if (!controller.signal.aborted) setReadiness(`${status.operational ? 'Opérationnel' : 'Indisponible'} · Base : ${status.database ?? 'non vérifiée'} · Modèle externe : ${status.model?.state ?? 'non vérifié'} (instantané à l’ouverture)`)
+      }).catch(() => { if (!disposed) setReadiness('Disponibilité non vérifiée : contrôle impossible ou délai dépassé.') })
+      .finally(() => clearTimeout(timer))
+    return () => { disposed = true; clearTimeout(timer); controller.abort(); activeRequest.current?.abort(); activeRequest.current = null }
+  }, [])
+
+  function resetConversation() {
+    activeRequest.current?.abort()
+    activeRequest.current = null
+    history.current = []
+    setMessages([])
+    setInput('')
+    setBusy(false)
+  }
 
   async function ask(q: string, display?: string) {
     const query = q.trim()
-    if (!query || busy) return
+    if (!query || busy || activeRequest.current) return
+    const controller = new AbortController()
+    activeRequest.current = controller
+    const timer = setTimeout(() => controller.abort(), 15000)
+    const context = history.current.slice(-6)
+    history.current = [...context, { role: 'user' as const, content: query }].slice(-6)
     setInput('')
-    setMessages((m) => [...m, { role: 'user', text: display ?? query }])
+    setMessages((m) => [...m.slice(-39), { role: 'user', text: display ?? query }])
     setBusy(true)
     try {
-      const r = await fetch('/api/copilot', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }) })
+      const r = await fetch('/api/copilot', { method: 'POST', headers: { 'content-type': 'application/json' }, signal: controller.signal, body: JSON.stringify({ query, history: context }) })
       const res: CopilotResponse & { error?: string } = await r.json().catch(() => ({ type: 'error' }))
+      if (activeRequest.current !== controller) return
       if (!r.ok) {
         setMessages((m) => [...m, { role: 'ai', text: res?.error ?? t.cpGenericError }])
         return
@@ -51,9 +93,10 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
       const text = res.phrasing || res.message || '—'
       setMessages((m) => [...m, { role: 'ai', text, res }])
     } catch {
-      setMessages((m) => [...m, { role: 'ai', text: t.cpCommError }])
+      if (activeRequest.current === controller) setMessages((m) => [...m, { role: 'ai', text: controller.signal.aborted ? 'Demande interrompue. Aucun résultat confirmé ; vous pouvez réessayer.' : t.cpCommError }])
     } finally {
-      setBusy(false)
+      clearTimeout(timer)
+      if (activeRequest.current === controller) { activeRequest.current = null; setBusy(false) }
       requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: 1e9, behavior: 'smooth' }))
     }
   }
@@ -63,6 +106,7 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
   const onConfirmAction = (idx: number) => {
     const res = messages[idx]?.res
     const intent = res?.intent ?? res?.action?.id
+    if (!onAction || !intent || messages[idx]?.confirmed || messages[idx]?.declined) return
     setMessages((m) => m.map((msg, i) => (i === idx ? { ...msg, confirmed: true } : msg)))
     if (onAction && intent) onAction(intent)
   }
@@ -78,9 +122,11 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
           <div style={logo}><Sparkles size={16} color="#fff" /></div>
           <div><p style={{ color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>{t.cpTitle}</p><p style={{ color: '#475569', fontSize: 11 }}>{t.cpSubtitle}</p></div>
         </div>
+        <button type="button" onClick={resetConversation} style={btnSec}>Nouvelle conversation</button>
         <button onClick={onClose} style={closeBtn} aria-label={t.uiClose}><X size={16} /></button>
       </div>
 
+      <p role="status" style={{ color: '#94a3b8', fontSize: 11, padding: '8px 24px', position: 'relative', zIndex: 1 }}>{readiness}. Sans apprentissage ni mémoire persistante.</p>
       <div ref={scrollRef} style={{ flex: 1, overflow: 'auto', padding: '22px 0', position: 'relative', zIndex: 1 }}>
         <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 20px' }}>
           {messages.length === 0 && (
@@ -102,7 +148,7 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
 
       <div style={{ position: 'relative', zIndex: 1, borderTop: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)', padding: 14, paddingBottom: 'calc(14px + env(safe-area-inset-bottom))' }}>
         <form onSubmit={(e) => { e.preventDefault(); ask(input) }} style={{ maxWidth: 760, margin: '0 auto', display: 'flex', gap: 10 }}>
-          <input value={input} onChange={(e) => setInput(e.target.value)} placeholder={t.cpInputPh} style={inputBox} />
+          <input maxLength={500} aria-label={t.cpInputPh} value={input} onChange={(e) => setInput(e.target.value)} placeholder={t.cpInputPh} style={inputBox} />
           <button type="submit" disabled={busy || !input.trim()} style={{ ...sendBtn, opacity: busy || !input.trim() ? 0.5 : 1 }}><Send size={16} /></button>
         </form>
       </div>
@@ -120,13 +166,20 @@ function Bubble({ m, onConfirm, onDecline }: { m: Msg; onConfirm: () => void; on
       </div>
     )
   }
-  const grounded = !!m.res?.phrasing
+  // `!!m.res?.phrasing` affichait l'écusson sur TOUTE réponse — y compris sur un
+  // message d'erreur de base ou une demande de précision, qui ne portent aucun
+  // chiffre. Un écusson qui ne distingue rien ne vaut rien : c'est le serveur
+  // qui tranche, et l'absence d'information vaut « non vérifié ».
+  const grounded = m.res?.ancrage?.verifie === true
   const action = m.res?.action?.confirmationRequired
   return (
     <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
       <div style={{ ...avatar, background: 'linear-gradient(135deg,#3b82f6,#6366f1)', border: 'none' }}><Sparkles size={15} color="#fff" /></div>
       <div style={{ ...bubble, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderBottomLeftRadius: 5 }}>
         <div style={{ color: '#e8edf4' }}>{m.text}</div>
+        {m.res?.planning?.fallback && <p style={{ fontSize: 11, color: '#fbbf24', marginTop: 6 }}>Plan du modèle indisponible ou invalide : réponse du repli local.</p>}
+        {m.res?.execution?.observations?.map(step => <div key={step.toolId} style={{ fontSize: 11, color: step.verified ? '#94a3b8' : '#fbbf24', marginTop: 6 }}>{step.title} · {step.verified ? 'lecture effectuée' : 'lecture non confirmée'} · {step.evidence === 'estimate' ? 'estimation' : step.evidence === 'hypothesis' ? 'piste de diagnostic' : step.evidence === 'decode' ? 'décodage' : 'observation métier'} · {step.verified ? 'résultat du moteur contrôlé' : 'résultat non confirmé'}</div>)}
+        {m.res?.sources?.map(source => <div key={source.id} style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>Source : {source.title} · {source.path} · v{source.version}</div>)}
         {grounded && !action && (
           <span style={verified}><ShieldCheck size={13} /> {t.cpVerified}</span>
         )}
@@ -135,6 +188,7 @@ function Bubble({ m, onConfirm, onDecline }: { m: Msg; onConfirm: () => void; on
             <div style={{ fontSize: 12.5, fontWeight: 700, color: m.confirmed ? '#4ade80' : m.declined ? '#94a3b8' : '#fbbf24', display: 'flex', alignItems: 'center', gap: 7 }}>
               {m.confirmed ? `✓ ${t.cpActionConfirmed}` : m.declined ? t.cpActionDeclined : `⚠ ${t.cpActionNeedsConfirm}`}
             </div>
+            {m.confirmed && <p style={{ fontSize: 11.5, color: '#94a3b8', marginTop: 6 }}>Ouverture de l’outil demandée. L’enregistrement ou l’envoi doit être validé et vérifié dans son formulaire ; le chat n’a effectué aucune écriture.</p>}
             {!m.confirmed && !m.declined && (
               <>
                 <p style={{ fontSize: 11.5, color: '#64748b', margin: '6px 0 9px' }}>{t.cpActionHint}</p>

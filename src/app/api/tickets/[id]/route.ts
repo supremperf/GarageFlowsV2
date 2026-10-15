@@ -8,11 +8,23 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { pushTicketAnswer } from '@/lib/sync/ticket-sync'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { canReply, nextTicketStatus, type TicketStatus, type TicketAction } from '@/lib/portal/tickets'
+
+/**
+ * Répondre à un client, c'est parler AU NOM DU GARAGE — et le message est signé
+ * du nom de l'auteur. Cette route n'exigeait rien : un mécanicien pouvait
+ * répondre à un litige de facturation, puis clore la conversation.
+ */
+const PERMISSION = 'customer:manage' as const
 
 export const GET = withAuth(async (_req, { params }: { params: { id: string } }) => {
   const session = await requireSession()
+  if (!can(session.user.role, PERMISSION)) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const ticket = await prisma.portalTicket.findFirst({
     where: { id: params.id, garageId: session.user.garageId },
     include: { messages: { orderBy: { createdAt: 'asc' } } },
@@ -23,6 +35,9 @@ export const GET = withAuth(async (_req, { params }: { params: { id: string } })
 
 export const POST = withAuth(async (req, { params }: { params: { id: string } }) => {
   const session = await requireSession()
+  if (!can(session.user.role, PERMISSION)) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
 
   const ticket = await prisma.portalTicket.findFirst({ where: { id: params.id, garageId: session.user.garageId } })
@@ -43,7 +58,14 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
         data: { status: nextTicketStatus(ticket.status as TicketStatus, 'staff_reply'), lastMessageAt: new Date() },
       }),
     ])
-    return NextResponse.json({ ok: true, status: 'answered' })
+    // La conversation se déroule dans l'espace client, servi par le service en
+    // ligne : sans cette remontée, le garage répondrait dans le vide et le
+    // client continuerait d'attendre. L'issue est RENDUE — l'écran ne doit pas
+    // laisser croire que le client a reçu la réponse.
+    const remontee = await pushTicketAnswer(session.user.garageId, ticket.id, 'staff_reply', {
+      message, authorName: session.user.name ?? session.user.email,
+    })
+    return NextResponse.json({ ok: true, status: 'answered', clientPrevenu: remontee.remonte })
   }
 
   const status = nextTicketStatus(ticket.status as TicketStatus, action)
@@ -51,5 +73,6 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
     where: { id: ticket.id },
     data: { status, closedAt: action === 'close' ? new Date() : null },
   })
-  return NextResponse.json({ ok: true, status })
+  const remontee = await pushTicketAnswer(session.user.garageId, ticket.id, action)
+  return NextResponse.json({ ok: true, status, clientPrevenu: remontee.remonte })
 })

@@ -1,0 +1,7 @@
+{
+  "at": "2026-10-14T16:53:10.893525+00:00",
+  "sourceSha": "64619b6270d7923167130246c061ad5773e3f29a",
+  "publicationSha": "4989b53d4a8f10cf8afb2f7c579d1de354f58508",
+  "productDifferences": [],
+  "limits": "No product source difference in these paths; different CI outcomes are retained. Expurgated annotation identifies one fixture-marker false assertion on646, not a local-TLS attribution."
+}

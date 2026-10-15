@@ -1,0 +1,206 @@
+[
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/build-report.py",
+    "sha256": "d5c2627d3d86ff6bf9b2375a5e009be2926552143325e18d260c0351c7331e79",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [
+      "report-matrix"
+    ],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/build-test-ledgers.py",
+    "sha256": "9b7513304de4b5df0d03ac27fb3f4bd2ea73b8e2d1a897f875b6d595eabeedff",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [
+      "test-ledgers"
+    ],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/check-access.py",
+    "sha256": "77aca9ae2aba02443c53ace61fa7ecf189f8aa22befcb1c8347dc2b13a2a884d",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [
+      "access"
+    ],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/check-policy-negatives.py",
+    "sha256": "5c58df34813a4779dc32d79e741336208b61a489d52787bf72cb801ec78361d7",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [
+      "policy-negative-regressions"
+    ],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/collect-ci-final.py",
+    "sha256": "8f9e2f8f8e25a7e5f3a4266177292d777699f028c4173d7f83233b472a22032e",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [
+      "ci-final-details"
+    ],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/diagnose-network.cjs",
+    "sha256": "7c6d176b80caeeb0df6305961d771cbb1c645a22fa8456d03f0c8911c199db5f",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [
+      "prisma-network"
+    ],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/extend-reviews.py",
+    "sha256": "cde06eccd9fd3f28ce1b035a3578a43f2fc815fff6ec8fb62c65567f039acbcd",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [
+      "extend-reviews"
+    ],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/external-checks.py",
+    "sha256": "2f0a6e822fc4e57965f08fa977e8e68bc2bfa59ca5119bba7d5d459b3e636121",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/freeze.py",
+    "sha256": "a2aa740a02fc7533dc74f1075ba85ada520bb691752ab45fdb4b23cf02aa598c",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/github-readonly.py",
+    "sha256": "b67e94380c55e195d0b13550a09b518bedc198db309fb5415edf23bd9a16e896",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/gitleaks-install.py",
+    "sha256": "2ad53b7f44ec3544099723dac6b5d08da01a9acd429963845e1cb9cf50abb163",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/local-checks.py",
+    "sha256": "5c9e7f34dac8b1ef0cee96401ad25ddb6b26b9a17deb00d67b9069142c5f3dfc",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/parser-probe.cjs",
+    "sha256": "9394ca1170325ca84d78f658d6e94f2881de65b4a66c70aca32c90d9a17deabd",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [
+      "parser-probe"
+    ],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/python-provisioned-checks.py",
+    "sha256": "19c0104827deef3852dd2d93314fe505b6dfd39949ce19be9b8119e20890fb0e",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/reconcile-sast.py",
+    "sha256": "fe83b37653419169679694a977e49e976164ad5a3a00b928e2b7fef71f67247e",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [
+      "sast-reconciliation"
+    ],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/run-semgrep-settled.cjs",
+    "sha256": "70cecaad099623c3aeeb70a16bbb9ea550e40ca9779abcc6d9574a18697b096a",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [
+      "semgrep-settled"
+    ],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/run-semgrep.cjs",
+    "sha256": "6398412033435319ceb089551fb8f2d688363bbf9dbd78ff8c6580763c25655c",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [
+      "semgrep"
+    ],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/run.py",
+    "sha256": "6307381fa3dd9a2a984a928d7c3eddbc9c3a5b4403b1046afc04327cf909afab",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/settled-checks.py",
+    "sha256": "ae44a406178bbd2027e20d84a53a4072c2499be03819d9646a5ef1e9a3cb3e14",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/verify-current.py",
+    "sha256": "1ecbe53e557a995db26f524a53017192b674b4a6c8f1b50550a3e45658e2914f",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [
+      "coherence-final"
+    ],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/verify-patch-v2.cjs",
+    "sha256": "9371468696c8d4222b55b039ea7196c925fff6878608ab23646fbac0acdbda96",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [
+      "patch-verification-v2"
+    ],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/verify-patch.cjs",
+    "sha256": "709f890dd026481c1edcadf07fb51ff9b87fe52f02fa3625f084343a7786c647",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "fullIndependentSemanticReview": false,
+    "commands": [
+      "patch-verification"
+    ],
+    "scope": "Audit evidence tooling only; generated/authored recipes are not automatically product runtime validations. Executed assertions/results appear in command receipts; nonexecuted recipe branches remain unvalidated."
+  }
+]

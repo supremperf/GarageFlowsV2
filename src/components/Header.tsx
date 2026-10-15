@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Session } from 'next-auth'
 import { signOut } from 'next-auth/react'
@@ -32,9 +32,13 @@ import {
   Sparkles,
   ScanLine,
   Truck,
+  Users,
   Boxes,
+  MessageSquare,
+  CalendarClock,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { can } from '@/lib/authz'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import LanguageSelector from '@/components/LanguageSelector'
 import { GarageFlowIcon } from '@/components/GarageFlowLogo'
@@ -130,6 +134,9 @@ interface HeaderProps {
   onOpenCopilot?:       () => void
   onOpenOcr?:           () => void
   onOpenSuppliers?:     () => void
+  onOpenClients?:       () => void
+  onOpenTickets?:       () => void
+  onOpenAppointments?:  () => void
   onOpenCatalog?:       () => void
   warrantyAlerts?:      number
 }
@@ -147,6 +154,9 @@ export default function Header({
   onOpenCopilot,
   onOpenOcr,
   onOpenSuppliers,
+  onOpenClients,
+  onOpenTickets,
+  onOpenAppointments,
   onOpenCatalog,
   warrantyAlerts = 0,
 }: HeaderProps) {
@@ -171,6 +181,11 @@ export default function Header({
   const menuRef = useRef<HTMLDivElement>(null)
   const [stockAlertCount, setStockAlertCount] = useState(0)
   const [garageLogo, setGarageLogo] = useState<string | null>(null)
+  // Le logo du garage peut échouer (fichier supprimé du disque, base restaurée
+  // sur un autre poste…). On bascule alors sur l'icône GarageFlows : la zone de
+  // marque ne doit JAMAIS afficher une image cassée. La cause racine du 404
+  // (logoPath non autorisé par /api/photos) est corrigée côté serveur.
+  const [logoFailed, setLogoFailed] = useState(false)
 
   // Fetch stock alerts once
   useEffect(() => {
@@ -186,7 +201,7 @@ export default function Header({
       .then(g => {
         if (!g) return
         const logo = g.logoBase64 || (g.logoPath ? `/api/photos/${g.logoPath}` : null)
-        if (logo) setGarageLogo(logo)
+        if (logo) { setLogoFailed(false); setGarageLogo(logo) }
       })
       .catch(() => {})
   }, [])
@@ -220,7 +235,17 @@ export default function Header({
 
   return (
     <header
-      className="gf-app-header bg-[#111827] border-b border-white/[0.07] z-20 relative shadow-lg shadow-black/20 select-none flex-shrink-0 pt-safe pl-safe pr-safe"
+      /**
+       * z-40 (et non z-20) : `relative z-20` créait un CONTEXTE D'EMPILEMENT
+       * dont l'en-tête ne sortait jamais. Le `z-50` du menu profil est LOCAL à
+       * ce contexte : il ne pouvait donc pas passer devant la barre des
+       * mécaniciens du planning (`sticky top-0 z-30`, ScheduleBoard.tsx:435),
+       * qui appartient au contexte racine. Résultat observé : le menu
+       * « Changer de licence / Déconnexion » se faisait recouvrir par la bande
+       * « Mécanicien 1…4 ». L'en-tête passe au-dessus du plateau (z-30) tout en
+       * restant SOUS les modales (z-50 et plus).
+       */
+      className="gf-app-header bg-[#111827] border-b border-white/[0.07] z-40 relative shadow-lg shadow-black/20 select-none flex-shrink-0 pt-safe pl-safe pr-safe"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
 
@@ -232,9 +257,14 @@ export default function Header({
           className="flex items-center gap-2 mr-0 sm:mr-1 min-w-0 flex-shrink-0"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
-          {garageLogo ? (
+          {garageLogo && !logoFailed ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={garageLogo} alt="logo" className="w-[26px] h-[26px] object-contain rounded flex-shrink-0" />
+            <img
+              src={garageLogo}
+              alt="logo"
+              className="w-[26px] h-[26px] object-contain rounded flex-shrink-0"
+              onError={() => setLogoFailed(true)}
+            />
           ) : (
             <GarageFlowIcon size={26} />
           )}
@@ -242,7 +272,7 @@ export default function Header({
           <div className="hidden xs:block min-w-0">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="font-black text-white text-xs leading-none flex-shrink-0">
-                Garage<span className="text-blue-400">Flow</span>
+                Garage<span className="text-blue-400">Flows</span>
               </span>
               {user?.garageName && (
                 <span className="hidden sm:flex items-center gap-1.5 min-w-0">
@@ -550,6 +580,38 @@ export default function Header({
               icon={Truck}
               label={t.navSuppliers}
               title={t.ttSuppliers}
+              variant="finance"
+            />
+          )}
+          {onOpenClients && (
+            <ToolBtn
+              onClick={onOpenClients}
+              icon={Users}
+              label={t.navClients}
+              title={t.ttClients}
+              variant="finance"
+            />
+          )}
+          {/* Consulter le planning des rendez-vous concerne tout l'atelier ;
+              seul l'ENGAGEMENT auprès du client est réservé (`job:manage`), et
+              c'est le serveur qui le refuse. Le bouton reste donc ouvert. */}
+          {onOpenAppointments && (
+            <ToolBtn
+              onClick={onOpenAppointments}
+              icon={CalendarClock}
+              label="Rendez-vous"
+              title="Demandes de rendez-vous de vos clients"
+              variant="finance"
+            />
+          )}
+          {/* La correspondance client relève de `customer:manage`, comme la fiche
+              elle-même. Un bouton qui mène à un 403 est pire que pas de bouton. */}
+          {onOpenTickets && can(role, 'customer:manage') && (
+            <ToolBtn
+              onClick={onOpenTickets}
+              icon={MessageSquare}
+              label="Messages"
+              title="Messages reçus de vos clients depuis leur espace en ligne"
               variant="finance"
             />
           )}

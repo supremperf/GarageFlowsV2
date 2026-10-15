@@ -1,0 +1,76 @@
+[
+  {
+    "name": "original",
+    "inputText": "async function f(importOriginal: <T>() => Promise<T>) { const reel = await importOriginal<typeof import('./fixture')>(); return {...reel} }\n",
+    "inputSha256": "471a40b7a4f6cf2dbc03c6f0d7dfcbfec9add59410e2dfd460aca72da13c240a",
+    "argv": [
+      "scan",
+      "--disable-version-check",
+      "--metrics=off",
+      "--strict",
+      "--lang",
+      "typescript",
+      "--pattern",
+      "importOriginal<$T>()",
+      "--json",
+      "--output",
+      "/home/user/audit-resumption/.cache/closure-parser-probe/original.json",
+      "/home/user/audit-resumption/.cache/closure-parser-probe/original.ts"
+    ],
+    "exitCode": 3,
+    "results": 0,
+    "errors": [
+      {
+        "code": 3,
+        "type": "PartialParsing"
+      }
+    ],
+    "limits": "Diagnostic grammar probe only; no claim of product scan coverage or runtime validation."
+  },
+  {
+    "name": "namespace",
+    "inputText": "import type * as OriginalModule from './fixture'\nasync function f(importOriginal: <T>() => Promise<T>) { const reel = await importOriginal<typeof OriginalModule>(); return {...reel} }\n",
+    "inputSha256": "1652077d906a1897edf3232d64e47eb98448cb7ff6f3027e5280af50579e3f49",
+    "argv": [
+      "scan",
+      "--disable-version-check",
+      "--metrics=off",
+      "--strict",
+      "--lang",
+      "typescript",
+      "--pattern",
+      "importOriginal<$T>()",
+      "--json",
+      "--output",
+      "/home/user/audit-resumption/.cache/closure-parser-probe/namespace.json",
+      "/home/user/audit-resumption/.cache/closure-parser-probe/namespace.ts"
+    ],
+    "exitCode": 0,
+    "results": 0,
+    "errors": [],
+    "limits": "Diagnostic grammar probe only; no claim of product scan coverage or runtime validation."
+  },
+  {
+    "name": "alias",
+    "inputText": "type OriginalModule = typeof import('./fixture')\nasync function f(importOriginal: <T>() => Promise<T>) { const reel = await importOriginal<OriginalModule>(); return {...reel} }\n",
+    "inputSha256": "52118e1573cf300f2221d8100d17bf3e2e69458dbf0ea3bf9ae0b88ffecf3228",
+    "argv": [
+      "scan",
+      "--disable-version-check",
+      "--metrics=off",
+      "--strict",
+      "--lang",
+      "typescript",
+      "--pattern",
+      "importOriginal<$T>()",
+      "--json",
+      "--output",
+      "/home/user/audit-resumption/.cache/closure-parser-probe/alias.json",
+      "/home/user/audit-resumption/.cache/closure-parser-probe/alias.ts"
+    ],
+    "exitCode": 0,
+    "results": 0,
+    "errors": [],
+    "limits": "Diagnostic grammar probe only; no claim of product scan coverage or runtime validation."
+  }
+]

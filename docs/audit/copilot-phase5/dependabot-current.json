@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-15T15:30:01.174325+02:00",
+  "endpointScope": "default branch open Dependabot alerts",
+  "status": "ACCESS_BLOCKED",
+  "accessError": {
+    "status": "ACCESS_BLOCKED",
+    "httpStatus": 403,
+    "localCliUnsupported": false,
+    "limits": "No access token/body/error text retained; failure is not zero findings"
+  },
+  "count": null,
+  "alerts": []
+}

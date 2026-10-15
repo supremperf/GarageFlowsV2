@@ -1,0 +1,52 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /home/user/GarageFlowsV2
+
+ ✓ src/lib/copilot/__tests__/semantic.test.ts (40 tests) 111ms
+ ✓ src/lib/copilot/__tests__/planning-execution.test.ts (44 tests) 92ms
+ ✓ src/lib/copilot-llm/__tests__/provider.test.ts (15 tests) 60ms
+ ✓ src/lib/copilot/__tests__/phase3-security.test.ts (18 tests) 49ms
+ ✓ src/lib/copilot-llm/__tests__/planning-provider.test.ts (6 tests) 47ms
+ ✓ src/lib/sync/__tests__/redirect-security.test.ts (1 test) 43ms
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > token NextAuth invalide (getToken lève) → traité comme non connecté, pas de 500
+[middleware] getToken a échoué
+
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > absence de NEXTAUTH_SECRET → getToken lève → fail-closed vers /login, pas de 500
+[middleware] getToken a échoué
+
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > absence de NEXTAUTH_SECRET → vérification gf_session échoue (getAuthSecret lève) → /license
+[middleware] échec vérification gf_session INATTENDU
+
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > charge utile gf_session sans typ/lid → rejetée → /license
+[middleware] gf_session rejeté (charge utile invalide)
+
+ ✓ src/__tests__/middleware.test.ts (47 tests) 39ms
+ ✓ src/lib/__tests__/photo-store-traversal.test.ts (20 tests) 30ms
+ ✓ src/lib/copilot/__tests__/conversation.test.ts (26 tests) 31ms
+ ✓ src/lib/copilot-llm/__tests__/copilot-llm.test.ts (25 tests) 21ms
+ ✓ src/lib/copilot/__tests__/copilot-chaine-complete.test.ts (16 tests) 13ms
+ ✓ src/lib/copilot-llm/__tests__/paid-block.test.ts (5 tests) 17ms
+ ✓ src/lib/__tests__/authz-full-matrix.test.ts (139 tests) 18ms
+ ✓ src/lib/einvoicing/__tests__/formats.test.ts (29 tests) 14ms
+ ✓ src/lib/portal/__tests__/backup-codes-store.test.ts (5 tests) 14ms
+stderr | src/lib/__tests__/env.test.ts > env — validation & fail-fast > assertEnv NE lève PAS en développement (avertit seulement)
+[env] Configuration incomplète (dev) : DATABASE_URL (absente ou vide), NEXTAUTH_SECRET (absente, trop courte ou générique)
+
+ ✓ src/lib/__tests__/env.test.ts (24 tests) 14ms
+ ✓ src/lib/portal/__tests__/auth-core.test.ts (20 tests) 14ms
+ ✓ src/lib/copilot/__tests__/copilot.test.ts (12 tests) 17ms
+ ✓ src/lib/__tests__/control-plane.test.ts (16 tests) 12ms
+ ✓ src/lib/__tests__/authz.test.ts (43 tests) 10ms
+ ✓ src/lib/__tests__/electron-startup-gate.test.ts (17 tests) 10ms
+ ✓ src/lib/__tests__/env-contract.test.ts (10 tests) 9ms
+ ✓ src/lib/__tests__/electron-activation-report.test.ts (11 tests) 6ms
+ ✓ src/lib/__tests__/authz-mechanic-matrix.test.ts (17 tests) 7ms
+ ✓ src/lib/__tests__/electron-signed-state.test.ts (7 tests) 5ms
+
+ Test Files  25 passed (25)
+      Tests  613 passed (613)
+   Start at  14:39:31
+   Duration  5.35s (transform 507ms, setup 0ms, import 1.48s, tests 705ms, environment 2ms)
+

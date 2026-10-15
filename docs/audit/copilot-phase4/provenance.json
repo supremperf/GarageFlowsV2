@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-10-15T14:30:06.922520+02:00",
+  "localCheckoutHead": "c4a2cca2cf446f96be580e99cca8afbca45396c5",
+  "branch": "arena/c9eaae15-garageflowsv2",
+  "remoteRepo": "supremperf/GarageFlowsV2",
+  "publishedAnchor": "bd05cd521917cc059fc21780d1b562c020534942",
+  "pr": 9,
+  "prState": "OPEN_DRAFT",
+  "initialPhase3SourceHashesChecked": 36,
+  "initialSourceHashDrift": [],
+  "initialComparedOutsidePhase3Review": true,
+  "unexplainedInitialDifferencesOutside37ReviewedPaths": [],
+  "externalPhase3RawLogsRestored": false,
+  "limits": "Read-only physical byte comparison against fetched remote tree plus phase3 review digests, not a functional proof. git diff against the remote before index reconciliation misleadingly marks untracked-but-present remote files deleted; NONE may be removed.",
+  "publicationStrategy": "Preserve every remote tree entry in index (git read-tree without -u); stage only reviewed phase2/3/4 changes; commit-tree with publishedAnchor parent; compare-and-swap fixed session branch ref; ordinary fast-forward push, never force/reset/clean/checkout/merge/deploy."
+}

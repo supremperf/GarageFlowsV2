@@ -29,6 +29,7 @@ interface Props {
 const STATUS_CONFIG = {
   scheduled:  { label: 'En attente',   color: '#3b82f6', bg: '#eff6ff', icon: Clock },
   in_progress:{ label: 'En cours',     color: '#f59e0b', bg: '#fffbeb', icon: Timer },
+  awaiting_validation: { label: 'À valider', color: '#a855f7', bg: '#faf5ff', icon: Timer },
   completed:  { label: 'Terminés',     color: '#10b981', bg: '#ecfdf5', icon: CheckCircle2 },
   delayed:    { label: 'En retard',    color: '#ef4444', bg: '#fef2f2', icon: AlertTriangle },
   cancelled:  { label: 'Annulés',      color: '#6b7280', bg: '#f9fafb', icon: X },
@@ -158,7 +159,10 @@ export default function ReceptionBoard({ onClose }: Props) {
   }
 
   const grouped = {
-    in_progress: jobs.filter(j => j.status === 'in_progress'),
+    // Les interventions « à valider » (mécanicien a terminé, chrono arrêté) restent
+    // dans la colonne En cours pour rester visibles du responsable ; leur carte
+    // porte son propre libellé (« À valider »). Jamais masquées.
+    in_progress: jobs.filter(j => j.status === 'in_progress' || j.status === 'awaiting_validation'),
     delayed: jobs.filter(j => j.status === 'delayed'),
     scheduled: jobs.filter(j => j.status === 'scheduled'),
     completed: jobs.filter(j => j.status === 'completed'),

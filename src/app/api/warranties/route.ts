@@ -45,7 +45,17 @@ export const POST = withAuth(async (req) => {
   ])
   if (relErr) return relErr
 
-  const durationMonths = Number(body.durationMonths ?? 12)
+  // ── Le réglage du garage est enfin LU (GF-039) ────────────────────────────
+  // `warrantyMonthsDefault` était validé, persisté, et n'avait aucun lecteur :
+  // toute garantie partait à 12 mois quoi qu'ait réglé le garage. L'aide de
+  // l'écran affirme pourtant « Appliquée automatiquement à chaque nouvelle
+  // garantie » — le mensonge était explicite. Le `?? 12` reste le filet pour un
+  // garage sans réglage.
+  const garage = await prisma.garage.findUnique({
+    where: { id: session.user.garageId },
+    select: { warrantyMonthsDefault: true },
+  })
+  const durationMonths = Number(body.durationMonths ?? garage?.warrantyMonthsDefault ?? 12)
   const installedAt = body.installedAt ? new Date(body.installedAt) : new Date()
   const expiresAt = addMonths(installedAt, durationMonths)
 

@@ -16,7 +16,7 @@ const RFC_SECRET = base32Encode(Buffer.from('12345678901234567890'))
 
 describe('base32', () => {
   it('round-trips arbitrary bytes', () => {
-    const buf = Buffer.from('Hello, GarageFlow 2FA!')
+    const buf = Buffer.from('Hello, GarageFlows 2FA!')
     expect(base32Decode(base32Encode(buf)).equals(buf)).toBe(true)
   })
   it('is tolerant of lower-case and spacing on decode', () => {
@@ -66,10 +66,10 @@ describe('verifyTotp', () => {
     expect(verifyTotp(token, secret)).toBe(true)
   })
   it('otpauthURL contains the secret, issuer and algorithm', () => {
-    const url = otpauthURL({ secret: RFC_SECRET, label: 'client@example.com', issuer: 'GarageFlow' })
+    const url = otpauthURL({ secret: RFC_SECRET, label: 'client@example.com', issuer: 'GarageFlows' })
     expect(url).toContain('otpauth://totp/')
     expect(url).toContain(`secret=${RFC_SECRET}`)
-    expect(url).toContain('issuer=GarageFlow')
+    expect(url).toContain('issuer=GarageFlows')
     expect(url).toContain('algorithm=SHA1')
   })
 })

@@ -1,0 +1,17 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/home/user/GarageFlowsV2[39m
+
+ [32m✓[39m src/__tests__/release-gate-idempotent.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/lib/pdf/__tests__/poids-pdf.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/pdf/__tests__/pdf-print-quality.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 153[2mms[22m[39m
+ [32m✓[39m src/lib/__tests__/i18n-rtl.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/lib/__tests__/ui-lossless-compaction.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 163[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[32m35 passed[39m[22m[90m (35)[39m
+[2m   Start at [22m 12:17:14
+[2m   Duration [22m 993ms[2m (transform 332ms, setup 0ms, import 458ms, tests 341ms, environment 0ms)[22m
+

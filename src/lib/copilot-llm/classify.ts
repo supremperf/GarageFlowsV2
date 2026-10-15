@@ -39,7 +39,10 @@ export async function classifyIntent(query: string, intents: IntentSpec[], provi
   if (provider?.classify) {
     try {
       const r = await withTimeout(Promise.resolve(provider.classify(query, intents)), opts.timeoutMs ?? DEFAULT_LLM_TIMEOUT_MS)
-      if (r && intents.some((i) => i.id === r.intentId)) {
+      if (r && Number.isFinite(r.confidence) && r.confidence >= 0 && r.confidence <= 1
+        && (!r.slots || (typeof r.slots === 'object' && !Array.isArray(r.slots)
+          && Object.keys(r.slots).length <= 8 && Object.values(r.slots).every(v => typeof v === 'string' && v.length <= 500)))
+        && intents.some((i) => i.id === r.intentId)) {
         return { intentId: r.intentId, confidence: r.confidence, slots: r.slots ?? {}, source: 'llm' }
       }
     } catch {

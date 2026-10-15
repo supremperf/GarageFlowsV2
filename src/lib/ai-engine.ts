@@ -5,8 +5,7 @@ import {
   Suggestion,
   SuggestionType,
   REPAIR_TYPES,
-  WORKSHOP_START_HOUR,
-  WORKSHOP_END_HOUR,
+  repairConfig,
 } from './types'
 import {
   detectEmptySlots,
@@ -17,6 +16,8 @@ import {
   generateId,
   getTodayString,
   formatDurationLong,
+  BORNES_PAR_DEFAUT,
+  type BornesAtelier,
 } from './utils'
 
 interface AIEngineContext {
@@ -24,8 +25,11 @@ interface AIEngineContext {
   mechanics: Mechanic[]
   date: string
   lowStockParts?: Part[]
-  workshopStartHour?: number
-  workshopEndHour?: number
+  /**
+   * Bornes de l'atelier en MINUTES (§14-15). Les deux entiers d'heures
+   * précédents ne savaient pas dire « ouvre à 8 h 30 ».
+   */
+  bornes?: BornesAtelier
 }
 
 export function runAIEngine(ctx: AIEngineContext): Suggestion[] {
@@ -90,7 +94,7 @@ function detectDelays(
           type: 'delay_warning',
           priority: overBy > 60 ? 'high' : 'medium',
           title: `Retard détecté — ${job.customerName}`,
-          description: `La ${REPAIR_TYPES[job.repairType].label} (${job.vehicleModel}) dépasse le temps prévu de ${formatDurationLong(overBy)}. Retard estimé : ~${formatDurationLong(estimatedExtra)}.`,
+          description: `La ${repairConfig(job.repairType).label} (${job.vehicleModel}) dépasse le temps prévu de ${formatDurationLong(overBy)}. Retard estimé : ~${formatDurationLong(estimatedExtra)}.`,
           affectedJobIds: [job.id],
           action: {
             label: 'Signaler le retard',
@@ -104,8 +108,8 @@ function detectDelays(
 }
 
 function detectAndSuggestSlotFills(ctx: AIEngineContext, suggestions: Suggestion[]) {
-  const { jobs, mechanics, date, workshopStartHour, workshopEndHour } = ctx
-  const emptySlots = detectEmptySlots(jobs, mechanics, date, workshopStartHour, workshopEndHour)
+  const { jobs, mechanics, date, bornes = BORNES_PAR_DEFAUT } = ctx
+  const emptySlots = detectEmptySlots(jobs, mechanics, date, bornes)
 
   const quickRepairTypes = Object.entries(REPAIR_TYPES)
     .filter(([, config]) => config.isQuick)
@@ -145,9 +149,7 @@ function detectAndSuggestSlotFills(ctx: AIEngineContext, suggestions: Suggestion
 }
 
 function detectOverload(ctx: AIEngineContext, suggestions: Suggestion[]) {
-  const { jobs, mechanics, date, workshopStartHour, workshopEndHour } = ctx
-  const startH = workshopStartHour ?? WORKSHOP_START_HOUR
-  const endH   = workshopEndHour   ?? WORKSHOP_END_HOUR
+  const { jobs, mechanics, date, bornes = BORNES_PAR_DEFAUT } = ctx
 
   mechanics.filter(m => !m.isAbsent).forEach(mechanic => {
     const mechanicJobs = jobs.filter(
@@ -155,7 +157,7 @@ function detectOverload(ctx: AIEngineContext, suggestions: Suggestion[]) {
     )
 
     const totalMinutes = mechanicJobs.reduce((sum, j) => sum + j.estimatedDuration, 0)
-    const workshopMinutes = (endH - startH) * 60
+    const workshopMinutes = bornes.fin - bornes.debut
 
     if (totalMinutes > workshopMinutes * 0.95) {
       suggestions.push({
@@ -208,7 +210,7 @@ function detectAbsenceImpact(ctx: AIEngineContext, suggestions: Suggestion[]) {
 }
 
 function suggestOptimizations(ctx: AIEngineContext, suggestions: Suggestion[]) {
-  const { jobs, mechanics, date, workshopStartHour, workshopEndHour } = ctx
+  const { jobs, mechanics, date, bornes = BORNES_PAR_DEFAUT } = ctx
 
   // Check for mechanics with no jobs while others are overloaded
   const loads = mechanics
@@ -245,8 +247,7 @@ function suggestOptimizations(ctx: AIEngineContext, suggestions: Suggestion[]) {
             jobs,
             date,
             job.estimatedDuration,
-            workshopStartHour,
-            workshopEndHour,
+            bornes,
           )
           return slots.length > 0
         })
@@ -346,8 +347,7 @@ export function redistributeAfterAbsence(
   jobs: Job[],
   mechanics: Mechanic[],
   date: string,
-  workshopStartHour = WORKSHOP_START_HOUR,
-  workshopEndHour   = WORKSHOP_END_HOUR,
+  bornes: BornesAtelier = BORNES_PAR_DEFAUT,
 ): Job[] {
   const orphanJobs = jobs
     .filter(
@@ -369,8 +369,7 @@ export function redistributeAfterAbsence(
         updatedJobs.filter(j => j.status !== 'cancelled'),
         date,
         job.estimatedDuration,
-        workshopStartHour,
-        workshopEndHour,
+        bornes,
       )
       if (slots.length > 0) {
         const startMinutes = timeToMinutes(slots[0])

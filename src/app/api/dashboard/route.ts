@@ -1,9 +1,11 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
+import { fromScaled } from '@/lib/money'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { format, startOfDay, subDays, subMonths } from 'date-fns'
 import { calcTotalHT, roundCents } from '@/lib/billing'
+import { billingLines, linesToEuros } from '@/lib/money-db'
 import { analyze } from '@/lib/profitability'
 import { planReorders, type StockItemInput } from '@/lib/stock-forecast'
 import { buildDashboard, type DashboardInsight, type KpiInput } from '@/lib/dashboard'
@@ -22,7 +24,7 @@ export const GET = withAuth(async () => {
   const [invoices2mo, prof, stock, pendingQuotes, overdueCount] = await Promise.all([
     prisma.invoice.findMany({
       where: { garageId, status: 'paid', issueDate: { gte: `${monthKeys[0]}-01` } },
-      select: { issueDate: true, lines: { select: { quantity: true, unitPrice: true } } },
+      select: { issueDate: true, lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true } } },
     }),
     profitability(garageId, since30),
     stockReport(garageId, today),
@@ -35,7 +37,7 @@ export const GET = withAuth(async () => {
   const revByMonth = new Map<string, number>(monthKeys.map((k) => [k, 0]))
   for (const inv of invoices2mo) {
     const k = inv.issueDate.slice(0, 7)
-    if (revByMonth.has(k)) revByMonth.set(k, revByMonth.get(k)! + calcTotalHT(inv.lines))
+    if (revByMonth.has(k)) revByMonth.set(k, revByMonth.get(k)! + calcTotalHT(billingLines(inv.lines)))
   }
   const revenueThis = roundCents(revByMonth.get(monthKeys[1]) ?? 0)
   const revenuePrev = roundCents(revByMonth.get(monthKeys[0]) ?? 0)
@@ -87,12 +89,12 @@ export const GET = withAuth(async () => {
 // ── Data gathering (garage-scoped) ─────────────────────────────────────────────
 async function profitability(garageId: string, since: string) {
   const [invoices, jobParts] = await Promise.all([
-    prisma.invoice.findMany({ where: { garageId, status: 'paid', issueDate: { gte: since } }, select: { id: true, number: true, status: true, lines: { select: { description: true, quantity: true, unitPrice: true, unitCost: true } } } }),
-    prisma.jobPart.findMany({ where: { job: { garageId, date: { gte: since } } }, select: { partId: true, quantity: true, unitPrice: true, unitCost: true, part: { select: { name: true } } } }),
+    prisma.invoice.findMany({ where: { garageId, status: 'paid', issueDate: { gte: since } }, select: { id: true, number: true, status: true, lines: { select: { description: true, quantityTenThousandths: true, unitPriceTenThousandths: true, unitCostTenThousandths: true } } } }),
+    prisma.jobPart.findMany({ where: { job: { garageId, date: { gte: since } } }, select: { partId: true, quantity: true, unitPriceTenThousandths: true, unitCostTenThousandths: true, part: { select: { name: true } } } }),
   ])
   const report = analyze({
-    invoices: invoices.map((i) => ({ id: i.id, number: i.number, status: i.status, lines: i.lines })),
-    jobParts: jobParts.map((jp) => ({ partId: jp.partId, partName: jp.part?.name ?? '—', quantity: jp.quantity, unitPrice: jp.unitPrice, unitCost: jp.unitCost })),
+    invoices: invoices.map((i) => ({ id: i.id, number: i.number, status: i.status, lines: linesToEuros(i.lines) })),
+    jobParts: jobParts.map((jp) => ({ partId: jp.partId, partName: jp.part?.name ?? '—', quantity: jp.quantity, unitPrice: fromScaled(jp.unitPriceTenThousandths), unitCost: fromScaled(jp.unitCostTenThousandths) })),
   })
   return { marginPct: report.totals.marginPct, anomalies: report.anomalies }
 }
@@ -102,11 +104,11 @@ async function stockReport(garageId: string, today: Date) {
   const keys = Array.from({ length: months }, (_, i) => format(subMonths(today, months - 1 - i), 'yyyy-MM'))
   const idx = new Map(keys.map((k, i) => [k, i]))
   const [parts, jobParts] = await Promise.all([
-    prisma.part.findMany({ where: { garageId }, select: { id: true, name: true, reference: true, quantity: true, unitCost: true, minQuantity: true }, take: 5000 }),
+    prisma.part.findMany({ where: { garageId }, select: { id: true, name: true, reference: true, quantity: true, unitCostTenThousandths: true, minQuantity: true }, take: 5000 }),
     prisma.jobPart.findMany({ where: { job: { garageId, date: { gte: `${keys[0]}-01` } } }, select: { partId: true, quantity: true, job: { select: { date: true } } } }),
   ])
   const consumption = new Map<string, number[]>()
   for (const p of parts) consumption.set(p.id, new Array(months).fill(0))
   for (const jp of jobParts) { const arr = consumption.get(jp.partId); if (arr && jp.job) { const i = idx.get(jp.job.date.slice(0, 7)); if (i !== undefined) arr[i] += jp.quantity } }
-  return planReorders(parts.map((p): { item: StockItemInput; consumption: number[] } => ({ item: { id: p.id, name: p.name, reference: p.reference, currentStock: p.quantity, unitCost: p.unitCost, minStock: p.minQuantity, leadTimeDays: 7, periodDays: 30 }, consumption: consumption.get(p.id) ?? [] })))
+  return planReorders(parts.map((p): { item: StockItemInput; consumption: number[] } => ({ item: { id: p.id, name: p.name, reference: p.reference, currentStock: p.quantity, unitCost: fromScaled(p.unitCostTenThousandths), minStock: p.minQuantity, leadTimeDays: 7, periodDays: 30 }, consumption: consumption.get(p.id) ?? [] })))
 }

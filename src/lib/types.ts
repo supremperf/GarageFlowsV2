@@ -20,6 +20,7 @@ export type RepairType =
 export type JobStatus =
   | 'scheduled'
   | 'in_progress'
+  | 'awaiting_validation' // mécanicien a terminé (chrono arrêté) — en attente de validation du responsable
   | 'completed'
   | 'delayed'
   | 'cancelled'
@@ -37,9 +38,26 @@ export type SuggestionType =
 export interface Mechanic {
   id: string
   name: string
+  /** Initiales de REPLI, affichées tant qu'aucune photo n'existe. */
   avatar: string
+  /**
+   * URL servie de la photo de profil, CALCULÉE par `GET /api/mechanics` depuis
+   * `avatarPath` (jamais stockée en base). Absente du type, elle arrivait bien
+   * dans les données du planning mais aucun écran ne pouvait la lire sans
+   * cast — c'est le pendant typé de GF-004.
+   */
+  avatarUrl?: string | null
   color: string
   isAbsent: boolean
+  /**
+   * Mécanicien ARCHIVÉ : retiré du planning, historique conservé.
+   *
+   * À distinguer de `isAbsent`, qui est une absence du JOUR. L'archivage est la
+   * sortie de secours que `DELETE /api/mechanics/:id` propose quand la
+   * suppression est refusée — le champ existait en base et dans l'API mais
+   * n'était typé nulle part côté produit, donc illisible sans cast (GF-040).
+   */
+  archivedAt?: string | null
   specialty: RepairType[]
   order: number
   garageId: string
@@ -106,6 +124,17 @@ export interface Part {
   unitCost: number
   unitPrice: number
   location?: string
+  /**
+   * Fournisseur de la pièce et référence chez ce fournisseur.
+   *
+   * Ces colonnes existent en base (migrations 048/049) et sont lues par le
+   * réapprovisionnement groupé, la recherche de stock et l'autocomplétion des
+   * devis — mais elles manquaient à ce type, au schéma de validation et aux
+   * routes d'écriture : le fournisseur d'une pièce n'était donc renseignable
+   * par aucun écran, et le module « Fournisseurs » restait vide.
+   */
+  supplierName?: string | null
+  supplierRef?: string | null
   garageId: string
 }
 
@@ -202,6 +231,28 @@ export const REPAIR_TYPES: Record<RepairType, RepairTypeConfig> = {
   inspection: { label: 'Contrôle technique', defaultDuration: 45, color: '#7c3aed', icon: '✅', isQuick: false },
   bodywork: { label: 'Carrosserie', defaultDuration: 180, color: '#db2777', icon: '🎨', isQuick: false },
   custom: { label: 'Autre intervention', defaultDuration: 60, color: '#6b7280', icon: '🔧', isQuick: false },
+}
+
+/**
+ * Configuration d'un type d'intervention, TOUJOURS définie.
+ *
+ * `REPAIR_TYPES[job.repairType]` était lu directement dans les composants du
+ * planning. Or l'API accepte n'importe quelle chaîne (`repairType: z.string()`,
+ * schemas/index.ts) : une valeur hors des 17 clés connues — import de données,
+ * intégration tierce, ancien enregistrement — rendait la configuration
+ * `undefined` et `repairConfig.color` levait
+ * « Cannot read properties of undefined (reading 'color') ».
+ * Ce n'est pas une carte qui ne s'affiche pas : c'est TOUT le planning qui tombe
+ * sur l'écran « Une erreur est survenue » (reproduit le 2026-08-10 avec
+ * repairType = "Vidange", le LIBELLÉ au lieu de la clé `oil_change`).
+ *
+ * On retombe sur « Autre intervention », en conservant le libellé d'origine
+ * pour ne rien masquer à l'utilisateur.
+ */
+export function repairConfig(type: string | null | undefined): RepairTypeConfig {
+  const known = REPAIR_TYPES[type as RepairType]
+  if (known) return known
+  return { ...REPAIR_TYPES.custom, label: (type && String(type).trim()) || REPAIR_TYPES.custom.label }
 }
 
 export const WORKSHOP_START_HOUR = 8

@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-14T16:57:53.156Z",
+  "timezone": "Europe/Paris",
+  "textFiles": 1734,
+  "candidates": [],
+  "limitations": [
+    "Three high-confidence pattern families only; binary files not inspected. Not a replacement for official full Gitleaks or artifact inspection.",
+    "Fixture hits require explicit per-case review, no blanket source exclusion."
+  ]
+}

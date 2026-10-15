@@ -44,13 +44,3 @@ export const BP = {
 export function useIsMobile(): boolean {
   return useMediaQuery(`(max-width: ${BP.md - 1}px)`)
 }
-
-/** < lg (1024px) : l'assistant IA n'est plus une colonne permanente. */
-export function useIsBelowLg(): boolean {
-  return useMediaQuery(`(max-width: ${BP.lg - 1}px)`)
-}
-
-/** Paysage court (téléphone à l'horizontale) : chrome densifié. */
-export function useIsShortLandscape(): boolean {
-  return useMediaQuery('(orientation: landscape) and (max-height: 500px)')
-}

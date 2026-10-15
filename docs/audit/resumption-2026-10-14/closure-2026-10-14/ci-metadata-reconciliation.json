@@ -1,0 +1,49 @@
+{
+  "at": "2026-10-14T16:42:00.024994+00:00",
+  "differences": [
+    {
+      "jobId": 115946041548,
+      "field": "completedAt",
+      "runView": "2026-10-14T15:45:39Z",
+      "jobRestApi": "2026-10-14T15:39:39Z"
+    },
+    {
+      "jobId": 115946041871,
+      "field": "completedAt",
+      "runView": "2026-10-14T15:45:39Z",
+      "jobRestApi": "2026-10-14T15:41:09Z"
+    },
+    {
+      "jobId": 115946042090,
+      "field": "completedAt",
+      "runView": "2026-10-14T15:45:39Z",
+      "jobRestApi": "2026-10-14T15:39:00Z"
+    },
+    {
+      "jobId": 115946042324,
+      "field": "completedAt",
+      "runView": "2026-10-14T15:45:39Z",
+      "jobRestApi": "2026-10-14T15:43:15Z"
+    },
+    {
+      "jobId": 115946044296,
+      "field": "completedAt",
+      "runView": "2026-10-14T15:45:39Z",
+      "jobRestApi": "2026-10-14T15:38:49Z"
+    },
+    {
+      "jobId": 115948268697,
+      "field": "completedAt",
+      "runView": "2026-10-14T15:45:39Z",
+      "jobRestApi": "2026-10-14T15:43:21Z"
+    },
+    {
+      "jobId": 115948268736,
+      "field": "completedAt",
+      "runView": "2026-10-14T15:45:39Z",
+      "jobRestApi": "2026-10-14T15:45:33Z"
+    }
+  ],
+  "authoritativeTiming": "ci-job-details.json: dedicated REST job API timestamps used for durations, run-view snapshot retained without rewriting.",
+  "limits": "A metadata timestamp correction is not a rerun or new success; no failed/skipped job relabelled."
+}

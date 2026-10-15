@@ -1,0 +1,30 @@
+{
+  "argv": [
+    "python3",
+    "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/freeze.py"
+  ],
+  "cwd": "/home/user/GarageFlowsV2",
+  "startedAt": "2026-10-14T17:13:49.137978+00:00",
+  "finishedAt": "2026-10-14T17:13:50.412226+00:00",
+  "timezone": "Europe/Paris",
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+  "trackedNonAuditFiles": 1220,
+  "python": "3.11.2",
+  "commands": 58,
+  "verificationExitCode": 0,
+  "verificationSummary": {
+    "status": "VALID\u00c9",
+    "scope": "Evidence/source/Git identity/coherence only, not production",
+    "historicalProofs": 146,
+    "historicalSourceHashes": 18,
+    "semanticSourceHashes": 1250,
+    "sastSignals": 865,
+    "matrixIds": 26,
+    "remoteUnchanged": true,
+    "indexEmpty": true,
+    "redisStopped": true
+  },
+  "status": "VALID\u00c9",
+  "limits": "Evidence coherence/freeze only; negative scanner/test/build results retained. Manifest excludes itself and regenerable __pycache__, not applicable product source. No Git staging/commit/push or remote write."
+}

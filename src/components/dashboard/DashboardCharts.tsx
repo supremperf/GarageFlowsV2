@@ -290,9 +290,15 @@ export function RecentJobs() {
 
   const recent = useMemo(() => {
     return [...jobs]
+      // Comparateur DÉFENSIF : un tri d'affichage ne doit jamais faire tomber
+      // le tableau de bord. Une seule intervention dont `date` ou `startTime`
+      // manque suffisait à lever « Cannot read properties of undefined (reading
+      // 'localeCompare') » — et, ce tri s'exécutant dans un useMemo pendant le
+      // rendu, l'error boundary emportait TOUTE la page (observé en production).
       .sort((a, b) => {
-        if (a.date !== b.date) return b.date.localeCompare(a.date)
-        return b.startTime.localeCompare(a.startTime)
+        const da = a.date ?? '', db = b.date ?? ''
+        if (da !== db) return db.localeCompare(da)
+        return (b.startTime ?? '').localeCompare(a.startTime ?? '')
       })
       .slice(0, 6)
   }, [jobs])

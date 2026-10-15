@@ -1,0 +1,103 @@
+{
+  "runs": [
+    {
+      "runId": "38591143098",
+      "headSha": "4989b53d4a8f10cf8afb2f7c579d1de354f58508",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "runId": "38589332331",
+      "headSha": "64619b6270d7923167130246c061ad5773e3f29a",
+      "status": "completed",
+      "conclusion": "failure"
+    }
+  ],
+  "logAccess": [
+    {
+      "runId": "38591143098",
+      "jobId": "115948268697",
+      "argv": [
+        "gh",
+        "run",
+        "view",
+        "38591143098",
+        "--job",
+        "115948268697",
+        "--log-failed"
+      ],
+      "exitCode": 1,
+      "rawBytes": 259,
+      "rawSha256": "77585b2efee8ef3e501bca250b3c9d597b1ece39c75ff49dc64bad0b2e3e8307",
+      "rawPublished": false,
+      "safeDiagnosticMarkers": [
+        "EOF"
+      ],
+      "limitation": "Only allowlisted value-free diagnostic markers exported; no arbitrary log context or signed URLs. Empty markers do not establish absence of test failures."
+    },
+    {
+      "runId": "38591143098",
+      "jobId": "115948268736",
+      "argv": [
+        "gh",
+        "run",
+        "view",
+        "38591143098",
+        "--job",
+        "115948268736",
+        "--log-failed"
+      ],
+      "exitCode": 1,
+      "rawBytes": 259,
+      "rawSha256": "73a55a3ce2bc8f299d9c8344b043f4cf37d66f01a50d24456331d65cda287949",
+      "rawPublished": false,
+      "safeDiagnosticMarkers": [
+        "EOF"
+      ],
+      "limitation": "Only allowlisted value-free diagnostic markers exported; no arbitrary log context or signed URLs. Empty markers do not establish absence of test failures."
+    },
+    {
+      "runId": "38589332331",
+      "jobId": "115939685204",
+      "argv": [
+        "gh",
+        "run",
+        "view",
+        "38589332331",
+        "--job",
+        "115939685204",
+        "--log-failed"
+      ],
+      "exitCode": 1,
+      "rawBytes": 259,
+      "rawSha256": "733295aca0c08f4fd065165667bf77aa73e745862db7c336b79dc1f595fd5ce8",
+      "rawPublished": false,
+      "safeDiagnosticMarkers": [
+        "EOF"
+      ],
+      "limitation": "Only allowlisted value-free diagnostic markers exported; no arbitrary log context or signed URLs. Empty markers do not establish absence of test failures."
+    },
+    {
+      "runId": "38591143098",
+      "jobId": "115946042324",
+      "argv": [
+        "gh",
+        "run",
+        "view",
+        "38591143098",
+        "--job",
+        "115946042324",
+        "--log"
+      ],
+      "exitCode": 1,
+      "rawBytes": 259,
+      "rawSha256": "72ffc4a6c84983c4072d4b0e99b72c70410324933b1db745315761adab4b3137",
+      "rawPublished": false,
+      "safeDiagnosticMarkers": [
+        "EOF"
+      ],
+      "limitation": "Only allowlisted value-free diagnostic markers exported; no arbitrary log context or signed URLs. Empty markers do not establish absence of test failures."
+    }
+  ],
+  "annotationRequests": 7
+}

@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "at": "2026-10-15T17:19:53.851559+02:00",
+  "path": "docs/audit/ci-closure-2026-10-15/second-corpus-draft.json",
+  "sha256": "ff82625bbe7349c34afb979dcc3c04d930a2403c599415c75d2d5c86f97cd242",
+  "draftCount": 32,
+  "categoryCounts": {
+    "novel_intent": 4,
+    "compound": 4,
+    "conversation": 4,
+    "time_status": 4,
+    "missing_information": 4,
+    "out_of_scope": 4,
+    "tools_parameters": 4,
+    "permissions_business_facts": 4
+  },
+  "normalizedExactOverlapWithExistingCorpora": 0,
+  "semanticIndependence": "NOT_DEMONSTRATED; exact overlap absence is not semantic/editorial independence",
+  "externalAcceptance": "BLOCKED; no independent external reviewer and no native fact oracle",
+  "frozenLegacySha256": "7b23aa75f2f08b6b23e9bf65a64d1051c95aef0bac33168257f562feb1227092",
+  "frozenLegacyScore": {
+    "passCount": 17,
+    "total": 48,
+    "classifiedFailures": 31,
+    "rerun": false
+  },
+  "copilotSourceFingerprints": [
+    {
+      "path": "src/lib/copilot/actions.ts",
+      "sha256": "c59f86c7824b1525ce0db520af84e2450276547efb9ce488fd08f50100bb2d5d"
+    },
+    {
+      "path": "src/lib/copilot/conversation.ts",
+      "sha256": "dbc8641d3067cc009bc7204fd69ad9cbcfd35f0eaa7e4e196e0e42feda3ef3a7"
+    },
+    {
+      "path": "src/lib/copilot/engine.ts",
+      "sha256": "0ef44291d381f2d072d216193b01eb2adcd960542c782b8df7c425a454c828ab"
+    },
+    {
+      "path": "src/lib/copilot/execution.ts",
+      "sha256": "3b10736f5095fc6abe405eb93dc45581e71d7f949f28cb0caa57b0142e8ce5aa"
+    },
+    {
+      "path": "src/lib/copilot/index.ts",
+      "sha256": "54a170de0ae756a1078584d9f2c3c979310b3cb17caba325a4f25bca4108388b"
+    },
+    {
+      "path": "src/lib/copilot/intents.ts",
+      "sha256": "7c7dabf3efc1f1813ef8c3e201dcb501f3a343a55ec8c5c9274a9fb0bd1c178b"
+    },
+    {
+      "path": "src/lib/copilot/knowledge.ts",
+      "sha256": "af1cca61523f1015259873434f8fac9c1c302a2a70746b54b7183935e989e1c3"
+    },
+    {
+      "path": "src/lib/copilot/planning.ts",
+      "sha256": "6e5cc5a7623c4602acd22a8c871ae3bc05c11d9cbfd4c195f5a169392e78b23d"
+    },
+    {
+      "path": "src/lib/copilot/readiness.ts",
+      "sha256": "abe9b92fc61451fc035acbbd3c183dca025cf8209ae152d0b19a0b0eadf94d3f"
+    },
+    {
+      "path": "src/lib/copilot/references.ts",
+      "sha256": "d3a394db246434497e2739cb9e3aedb73db57072e1185c0513d7192733618064"
+    },
+    {
+      "path": "src/lib/copilot/router.ts",
+      "sha256": "e037c2da3a781bb03718c0ff798bcff5113ebd7503911c9ee8c05371ed50232f"
+    },
+    {
+      "path": "src/lib/copilot/semantic.ts",
+      "sha256": "021a7bebecd3df1c47908fd0b52e9e4a7cea774021ff4e94cd0dd3f2b8aa6c19"
+    },
+    {
+      "path": "src/lib/copilot/server-readers.ts",
+      "sha256": "5f5df58795267901fbf10adfa1d03155d3b7478ba82f61ccbe3af13522ae6ff9"
+    },
+    {
+      "path": "src/lib/copilot/tools.ts",
+      "sha256": "56ee3be2702189a928fc18e956fd92c36c2337194bbe6b9816143f57757d2d20"
+    },
+    {
+      "path": "src/lib/copilot/types.ts",
+      "sha256": "5a7e8a71db2f0c687d11107e54b6a65b56954d0b417f8d2e5bc610869b94e211"
+    },
+    {
+      "path": "src/lib/copilot-llm/classify.ts",
+      "sha256": "56b3f7803c3056bcacfe5e4bec8d2e75dfd480698f0fb5468d7bb04edddd77c4"
+    },
+    {
+      "path": "src/lib/copilot-llm/ground.ts",
+      "sha256": "bc63eba881dc1920b03de43dd84afa259db88e2a9a572d1a0789a22400136563"
+    },
+    {
+      "path": "src/lib/copilot-llm/index.ts",
+      "sha256": "73b30f8daceda82f48af80fd61db5f9e139969b89f7823bf2d50c93889cc9405"
+    },
+    {
+      "path": "src/lib/copilot-llm/phrase.ts",
+      "sha256": "ccbef931e0ac8db28f7dc0ccfbaca913bd19d36823d04a9ace6c9e27720c112c"
+    },
+    {
+      "path": "src/lib/copilot-llm/prompts.ts",
+      "sha256": "518b12952034c1f5d166fc5e55259ddb5640a2c847ccff01bfd59bd5533bd36f"
+    },
+    {
+      "path": "src/lib/copilot-llm/provider.ts",
+      "sha256": "a772b23383f89e14097d4f97de14fcab499950dafe3be031c89b2cf0955edf80"
+    },
+    {
+      "path": "src/lib/copilot-llm/timeout.ts",
+      "sha256": "0d9bdd14d10cfed4066f29cb9d708371ea7c563b542cc45b9e1465101842fffd"
+    },
+    {
+      "path": "src/lib/copilot-llm/types.ts",
+      "sha256": "2637e187788c25349f68844ff8cd3f37f48fcfb84b4e0250e7667b94230045ce"
+    }
+  ],
+  "rulesChangedForDraft": false,
+  "paidCalls": 0
+}

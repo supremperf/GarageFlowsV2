@@ -1,0 +1,599 @@
+#!/usr/bin/env node
+'use strict'
+/** GarageFlow configuration wizard. Run with Node 22, no application dependencies needed. */
+const fs = require('node:fs')
+const path = require('node:path')
+const readline = require('node:readline')
+const { Writable } = require('node:stream')
+const { spawn } = require('node:child_process')
+const crypto = require('node:crypto')
+const core = require('./scripts/config-core.cjs')
+const ROOT = __dirname
+const args = process.argv.slice(2)
+const PROFILES = ['full', 'desktop', 'pwa', 'licences']
+const TOOLS = { vercel: 'vercel@64.0.2', neonctl: 'neonctl@8.4.4', upstash: 'upstash@1.5.0' }
+// Only canonical application variables belong in profiles; runtime/publisher settings have dedicated handlers.
+const configPolicy = require('./scripts/config-policy.cjs').loadPolicy(ROOT)
+const allNames = configPolicy.names
+const knownSettings = new Set([...configPolicy.entries.map(e => e.name), ...configPolicy.manifest.platformProvided])
+const safeLabel = s => String(s).replace(/[\x00-\x1f\x7f]/g, '').slice(0, 160)
+
+function help() {
+  console.log(`GarageFlow — assistant config (Node 22)
+
+  npm run config                     Plan COMPLET automatique (autorisation initiale)
+  node config --profile full          Desktop + cloud + licences + keygen + publication
+  node config --audit                 Inventaire/rapport du dépôt, sans accès cloud
+  node config --list                  Couverture des variables, noms/destinations sans valeurs
+  node config --profile desktop      SQLite / Electron (développement local)
+  node config --profile pwa           PostgreSQL / PWA
+  node config --profile licences      PWA + autorité de licences
+  node config --check --profile pwa   Validation locale, sans écriture ni réseau
+  node config --check --profile pwa --vercel  Validation pour une cible Vercel
+  node config --diagnose-sql          Diagnostic PostgreSQL en lecture seule
+  node config --help
+
+Fichiers : desktop → .env ; serveur → .env.server.local (isolé des builds Electron).
+Aucun secret affiché, aucun remplacement automatique d'une valeur existante.
+Neon/Vercel : authentification officielle dans votre navigateur, sur votre poste.
+Migrations et déploiement uniquement sur confirmation explicite.
+Guide détaillé : docs/CONFIG.md`)
+}
+async function question(label, { secret = false, defaultValue = '' } = {}) {
+  if (!process.stdin.isTTY) throw new Error('Un terminal interactif est requis (ou utilisez --check / --help).')
+  let hideDefault = secret
+  try { const url = new URL(defaultValue); hideDefault ||= !!url.username || !!url.password || !!url.search || !!url.hash } catch { /* Not a URL. */ }
+  const prompt = `${label}${defaultValue ? ` [${hideDefault ? 'déjà configuré' : safeLabel(defaultValue)}]` : ''} : `
+  // Let readline own visible prompts: an empty question redraws the line and
+  // erases a separately printed label, notably in Windows Command Prompt.
+  // A terminal readline with a muted output enables raw input without echoing passwords.
+  const output = secret ? new Writable({ write(_chunk, _encoding, done) { done() } }) : process.stdout
+  const rl = readline.createInterface({ input: process.stdin, output, terminal: true })
+  try {
+    return await new Promise((resolve, reject) => {
+      rl.once('SIGINT', () => reject(new Error('Configuration annulée.')))
+      rl.question(secret ? '' : prompt, value => resolve((secret ? value : value.trim()) || defaultValue))
+      // Display only after readline owns raw input, so an immediate paste cannot echo a secret.
+      if (secret) process.stdout.write(prompt)
+    })
+  } finally { rl.close(); if (secret) process.stdout.write('\n') }
+}
+async function yes(label, defaultYes = false) {
+  while (true) {
+    const answer = await question(`${label} (oui/non)`, { defaultValue: defaultYes ? 'oui' : 'non' })
+    if (/^(o|oui|y|yes)$/i.test(answer)) return true
+    if (/^(n|non|no)$/i.test(answer)) return false
+    console.log('Réponse attendue : oui ou non. Aucun autre texte ne vaut autorisation.')
+  }
+}
+async function select(label, items) {
+  if (!items.length) throw new Error(`${label} : aucun résultat. Créez la ressource dans le tableau de bord du fournisseur, puis relancez config.`)
+  items.forEach((item, i) => console.log(`  ${i + 1}. ${safeLabel(item.name || item.id)}`))
+  for (;;) {
+    const i = Number(await question(label, { defaultValue: items.length === 1 ? '1' : '' })) - 1
+    if (Number.isInteger(i) && items[i]) return items[i]
+    console.log('Choisissez un numéro dans la liste.')
+  }
+}
+function npmCli() {
+  const candidates = [process.env.npm_execpath,
+    path.join(path.dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js'),
+    path.join(path.dirname(process.execPath), '../lib/node_modules/npm/bin/npm-cli.js'),
+    '/usr/share/nodejs/npm/bin/npm-cli.js']
+  const found = candidates.find(p => p && /npm-cli\.js$/.test(p) && fs.existsSync(p))
+  if (!found) throw new Error('npm introuvable. Lancez avec npm run config (Node 22 + npm requis).')
+  return found
+}
+function execute(commandArgs, { interactive = false, input, env = process.env, label = 'Commande' } = {}) {
+  return new Promise((resolve, reject) => {
+    // No shell: project IDs, file paths and secrets can never become shell commands.
+    const child = spawn(process.execPath, commandArgs, { cwd: ROOT, env,
+      stdio: interactive ? 'inherit' : ['pipe', 'pipe', 'pipe'] })
+    let stdout = ''
+    if (!interactive) {
+      child.stdout.setEncoding('utf8')
+      child.stdout.on('data', chunk => { stdout += chunk })
+      child.stderr.resume() // Never forward stderr: external tools may include credentials in errors.
+      child.stdin.on('error', () => {})
+      child.stdin.end(input === undefined ? undefined : input)
+    }
+    child.once('error', () => reject(new Error(`${label} : lancement impossible.`)))
+    child.once('close', code => {
+      if (code === 0) return resolve(stdout)
+      const error = new Error(`${label} : échec. Aucune validation revendiquée ; vérifiez votre connexion et vos droits, puis relancez.`)
+      error.exitCode = code // Preserve status without exposing provider output or credentials.
+      if (code === 2 && commandArgs.includes('migrate') && commandArgs.includes('diff')) error.sqlDiffSummary = summarizeSqlDiff(stdout)
+      reject(error)
+    })
+  })
+}
+function tool(name, commandArgs, options = {}) {
+  return execute([npmCli(), 'exec', '--yes', `--package=${TOOLS[name]}`, '--', name, ...commandArgs],
+    { ...options, label: options.label || name })
+}
+async function neonList(commandArgs, key, runTool = tool) {
+  const output = await runTool('neonctl', [...commandArgs, '--output', 'json'])
+  try {
+    const data = JSON.parse(output)
+    const list = Array.isArray(data) ? data : data[key]
+    if (!Array.isArray(list)) throw new Error()
+    return list
+  } catch { throw new Error('Neon : format JSON inattendu, aucune valeur importée.') }
+}
+async function configureNeon(env, { auto = false, allowCreate = auto, api = { tool, select, yes } } = {}) {
+  const list = (args, key) => neonList(args, key, api.tool)
+  console.log('\nConnexion Neon via le CLI officiel. Aucun jeton Neon stocké par config.')
+  let orgs
+  try { orgs = await list(['orgs', 'list'], 'organizations') }
+  catch {
+    await api.tool('neonctl', ['auth'], { interactive: true })
+    orgs = await list(['orgs', 'list'], 'organizations')
+  }
+  const choose = async (label, list) => auto && list.length === 1 ? list[0] : api.select(label, list)
+  const org = orgs.length ? await choose('Organisation Neon', orgs) : null
+  const orgArgs = org ? ['--org-id', org.id] : []
+  let projects = await list(['projects', 'list', ...orgArgs], 'projects')
+  if (!projects.length && allowCreate) {
+    console.log('Aucun projet Neon : création possible dans le compte autorisé (région Europe). Vérifier quotas et conditions fournisseur.')
+    if (!await api.yes('Autoriser la création du projet PostgreSQL GarageFlows')) throw new Error('Projet Neon absent et création non autorisée.')
+    await api.tool('neonctl', ['projects', 'create', '--name', 'garageflows', '--region-id', 'aws-eu-central-1', '--database', 'garageflow', '--role', 'garageflow_owner', ...orgArgs])
+    projects = await list(['projects', 'list', ...orgArgs], 'projects')
+  }
+  if (!projects.length) throw new Error('Aucun projet Neon accessible dans cette organisation. Vérifiez le compte/la cible : récupération sans création de base.')
+  const project = await choose('Projet Neon', projects)
+  const branches = await list(['branches', 'list', '--project-id', project.id], 'branches')
+  const branch = await choose('Branche Neon (choisir la base cible)', branches)
+  const scope = ['--project-id', project.id, '--branch', branch.id]
+  const database = await choose('Base Neon', await list(['databases', 'list', ...scope], 'databases'))
+  const role = await choose('Rôle PostgreSQL', await list(['roles', 'list', ...scope], 'roles'))
+  const connectionArgs = ['connection-string', branch.id, '--project-id', project.id,
+    '--database-name', database.name, '--role-name', role.name]
+  // Neon returns the actual endpoints; no guessing by removing '-pooler'.
+  const pooled = (await api.tool('neonctl', [...connectionArgs, '--pooled'])).trim()
+  const direct = (await api.tool('neonctl', connectionArgs)).trim()
+  for (const [name, candidateUrl] of [['DATABASE_URL', pooled], ['DIRECT_URL', direct]]) {
+    if (!env[name]) continue
+    try {
+      const old = new URL(env[name]), candidate = new URL(candidateUrl)
+      if (old.hostname !== candidate.hostname || old.pathname !== candidate.pathname || old.username !== candidate.username) throw new Error()
+    } catch { throw new Error(`Neon : sélection différente de ${name} existante. Aucune URL remplacée ; vérifier projet/branche/base/rôle.`) }
+  }
+  env.DATABASE_URL ||= pooled
+  env.DIRECT_URL ||= direct
+  console.log('DATABASE_URL poolée et DIRECT_URL directe récupérées (valeurs masquées).')
+}
+async function pullVercel() {
+  fs.mkdirSync(path.join(ROOT, 'GarageFlow-configuration'), { recursive: true, mode: 0o700 })
+  const dir = fs.mkdtempSync(path.join(ROOT, 'GarageFlow-configuration/pull-'))
+  fs.chmodSync(dir, 0o700)
+  const file = path.join(dir, '.env.production.local')
+  try {
+    const raw = await tool('vercel', ['env', 'ls', 'production', '--format=json'])
+    let records
+    try {
+      records = JSON.parse(raw).envs
+      if (!Array.isArray(records)) throw new Error()
+    } catch { throw new Error('Vercel : métadonnées JSON invalides, synchronisation refusée.') }
+    await tool('vercel', ['env', 'pull', file, '--environment=production', '--yes'])
+    fs.chmodSync(file, 0o600)
+    const values = core.readEnv(file)
+    const hidden = new Set()
+    const present = new Set()
+    const stamps = {}
+    for (const r of records) {
+      present.add(r.key)
+      stamps[r.key] = JSON.stringify([r.updatedAt, r.createdAt, r.type, r.visibility, r.configurationId])
+      // Sensitive values cannot be retrieved: never mistake a placeholder for an absent secret.
+      if (r.type === 'sensitive' || r.visibility === 'secret' || !values[r.key]) {
+        hidden.add(r.key)
+        delete values[r.key]
+      }
+    }
+    return { values, hidden, present, stamps }
+  } finally { fs.rmSync(dir, { recursive: true, force: true }) }
+}
+async function setupVercel() {
+  console.log('\nVercel : connexion puis sélection EXPLICITE du projet cible (production uniquement).')
+  try { await tool('vercel', ['whoami']) }
+  catch { await tool('vercel', ['login'], { interactive: true }) }
+  const linkFile = path.join(ROOT, '.vercel/project.json')
+  if (fs.existsSync(linkFile)) {
+    const linked = JSON.parse(fs.readFileSync(linkFile, 'utf8'))
+    if (!await yes(`Confirmer le projet Vercel déjà lié ${safeLabel(linked.projectName || linked.projectId)} (équipe ${safeLabel(linked.orgId)})`)) throw new Error('Cible Vercel non confirmée. Relier explicitement le projet correct avant de poursuivre.')
+  } else await tool('vercel', ['link'], { interactive: true })
+  const project = JSON.parse(fs.readFileSync(path.join(ROOT, '.vercel/project.json'), 'utf8'))
+  console.log(`Cible Vercel : ${safeLabel(project.projectName || project.projectId)} (équipe ${safeLabel(project.orgId)}).`)
+  fs.mkdirSync(path.join(ROOT, 'GarageFlow-configuration'), { recursive: true, mode: 0o700 })
+  return pullVercel()
+}
+async function importRemote(local, remote, names) {
+  const conflicts = core.syncPlan(local, remote.values, names).conflicts
+  if (conflicts.length) {
+    console.log(`Valeurs locales différentes de Vercel : ${conflicts.join(', ')}.`)
+    console.log('Conserver les clés de production évite de casser sessions, données chiffrées et licences.')
+    if (!await yes('Utiliser les valeurs Vercel pour ce profil serveur (sans modifier Vercel)', true)) {
+      throw new Error('Conflit non résolu. Rien synchronisé. Sauvegardez votre configuration avant de relancer.')
+    }
+  }
+  const result = { ...local }
+  for (const n of names) if (remote.values[n]) result[n] = remote.values[n]
+  for (const n of names.filter(n => remote.hidden.has(n))) {
+    console.log(`${n} existe chez Vercel mais sa valeur n'est pas relisible. Aucune génération ni rotation autorisée.`)
+    if (result[n]) {
+      if (!await yes(`Confirmer que la valeur locale de ${n} est bien celle de ce projet Vercel`)) {
+        await secretField(result, n, `${n} : valeur ORIGINALE depuis votre coffre`)
+      }
+    } else await secretField(result, n, `${n} : valeur ORIGINALE depuis votre coffre`)
+    if (!result[n]) throw new Error(`${n} : valeur de production nécessaire pour poursuivre, aucune clé générée en remplacement.`)
+  }
+  remote.confirmedLocal = Object.fromEntries(names.filter(n => remote.hidden.has(n)).map(n => [n, result[n]]))
+  return result
+}
+async function secretField(env, name, label = name) {
+  env[name] = await question(`${label} (saisie masquée${env[name] ? ', Entrée = conserver' : ''})`,
+    { secret: true, defaultValue: env[name] || '' })
+}
+const privateKeyPassphrases = new Map()
+async function licensePassphrase(file) {
+  if (!privateKeyPassphrases.has(file)) {
+    privateKeyPassphrases.set(file, await question('Passphrase de la clé P-256 chiffrée (en mémoire uniquement)', { secret: true }))
+  }
+  return privateKeyPassphrases.get(file)
+}
+async function readLicensePem(file) {
+  let pem
+  try { pem = fs.readFileSync(file, 'utf8') } catch { throw new Error('Fichier de clé privée illisible.') }
+  const encrypted = /ENCRYPTED PRIVATE KEY|Proc-Type:\s*4,ENCRYPTED/.test(pem)
+  try {
+    const key = crypto.createPrivateKey(encrypted ? { key: pem, passphrase: await licensePassphrase(file) } : pem)
+    if (key.asymmetricKeyType !== 'ec' || key.asymmetricKeyDetails.namedCurve !== 'prime256v1') throw new Error()
+    return key.export({ type: 'pkcs8', format: 'pem' }).toString()
+  } catch { throw new Error('Clé de licence illisible, passphrase incorrecte ou courbe non P-256. Aucun contenu affiché.') }
+}
+async function licenseKey(env, { root = ROOT, choose = select, prompt = question, readPem = readLicensePem, run = execute, autoCreate = false } = {}) {
+  if (env.GF_PRIVATE_KEY) return
+  const keys = require('./scripts/config-keys.cjs')
+  const services = require('./scripts/config-services.cjs')
+  const privateFile = path.join(root, 'keys/private.pem')
+  const publicFile = path.join(root, 'keys/public.pem')
+  const sync = async () => run([path.join(root, 'scripts/sync-public-key.mjs')], { label: 'Synchronisation des ancrages publics' })
+  const importFile = async file => {
+    let stat
+    try { stat = fs.statSync(file) } catch { throw new Error('Clé privée introuvable/illisible au chemin indiqué. Chemin proposé : keys/private.pem. Aucun remplacement de clé automatique.') }
+    if (!stat.isFile()) throw new Error('Clé privée : fichier PEM requis, pas un dossier.')
+    const pem = await readPem(file)
+    const state = keys.readState(root)
+    // Resume a first-install sync only for the exact key previously generated here.
+    // An unrelated/missing original never gets replaced to satisfy the embedded anchor.
+    if (autoCreate && state?.autoGenerated) {
+      if (!keys.matchesIssuer(state, pem)) throw new Error('Clé privée différente du reçu de création ; aucune rotation automatique.')
+      if (fs.existsSync(publicFile) && services.publicFingerprint(fs.readFileSync(publicFile)) !== state.licensePublicFingerprint) throw new Error('Clé publique locale divergente, aucun remplacement automatique.')
+      if (!fs.existsSync(publicFile)) core.writePrivate(publicFile, crypto.createPublicKey(pem).export({ type: 'spki', format: 'pem' }).toString(), { exclusive: true })
+      // Re-run the idempotent sync for ALL anchors, even if the Next anchor was
+      // already written before a previous interruption (Electron/test anchors may lag).
+      await sync()
+    }
+    const value = Buffer.from(pem).toString('base64')
+    if (!core.licenseKeyMatches(value, core.embeddedLicenseKey(root))) throw new Error('Clé privée différente de la clé publique embarquée : aucun import ni changement d’autorité automatique.')
+    env.GF_PRIVATE_KEY = value
+  }
+  if (fs.existsSync(privateFile)) {
+    await importFile(privateFile)
+    console.log('Clé privée détectée et importée automatiquement depuis keys/private.pem. Identité publique vérifiée ; fichier original conservé.')
+    return
+  }
+  const create = async automatic => {
+    if (fs.existsSync(privateFile) || fs.existsSync(publicFile) || keys.readState(root) ||
+        (automatic && fs.existsSync(path.join(root, 'keys/server_config.json')))) {
+      throw new Error('Autorité locale existante ou création interrompue : clé privée ORIGINALE nécessaire, aucune rotation automatique autorisée.')
+    }
+    const pair = crypto.generateKeyPairSync('ec', { namedCurve: 'prime256v1',
+      privateKeyEncoding: { type: 'pkcs8', format: 'pem' }, publicKeyEncoding: { type: 'spki', format: 'pem' } })
+    core.writePrivate(privateFile, pair.privateKey, { exclusive: true })
+    core.writePrivate(publicFile, pair.publicKey, { exclusive: true })
+    keys.recordCreation(root, pair.publicKey, automatic)
+    await sync()
+    if (!core.licenseKeyMatches(Buffer.from(pair.privateKey).toString('base64'), core.embeddedLicenseKey(root))) throw new Error('Nouvelle autorité sauvegardée mais ancrages non synchronisés ; relancer config, sans régénérer les clés.')
+    env.GF_PRIVATE_KEY = Buffer.from(pair.privateKey).toString('base64')
+    console.log('Première paire P-256 générée et enregistrée automatiquement ; ancrages publics synchronisés. Aucune clé affichée. Les anciens clients et garagesite3 ne sont pas modifiés : reconstruire/distribuer les nouveaux ancrages avant utilisation.')
+  }
+  if (autoCreate) return create(true)
+  console.log('\nLicences : la clé privée doit correspondre à la clé publique embarquée.')
+  const mode = await choose('Source de la clé', [
+    { name: `Importer la clé privée existante (${privateFile}, recommandé)` },
+    { name: 'Créer une NOUVELLE autorité (invalide la compatibilité des anciennes licences)' },
+  ])
+  if (mode.name.startsWith('Importer')) {
+    const file = await prompt('Chemin local du fichier PEM (Entrée = chemin keys/private.pem proposé)', { defaultValue: privateFile })
+    await importFile(path.resolve(root, file.replace(/^"(.*)"$/, '$1')))
+  } else {
+    console.log('Cette opération modifie les ancrages PUBLICS du code. Les clients déjà installés et garagesite3 ne sont PAS mis à jour par cet outil.')
+    if (await prompt('Pour confirmer une nouvelle autorité, saisir NOUVELLE-AUTORITE') !== 'NOUVELLE-AUTORITE') throw new Error('Création de clé annulée.')
+    await create(false)
+  }
+}
+async function advanced(env, names) {
+  console.log('\nRéglages avancés : nom exact de variable, Entrée pour terminer. Valeur existante conservée sur Entrée ; « SUPPRIMER » pour la retirer.')
+  console.log('Saisir GENERER comme valeur d’un secret symétrique pour une génération explicite sur confirmation. Jamais pour récupérer une clé perdue.')
+  console.log('Variables de ce profil :\n' + names.join(', '))
+  for (;;) {
+    const name = await question('Variable à configurer')
+    if (!name) return
+    if (!names.includes(name)) { console.log('Variable inconnue ou non applicable à ce profil.'); continue }
+    const secret = core.isSecret(name) || !allNames.includes(name)
+    if (secret && env[name]) {
+      console.log('Changer une clé peut invalider les données ou les jetons. Pour une rotation SMTP, suivre la procédure dédiée.')
+      if (!await yes(`Modifier explicitement ${name}`)) continue
+    }
+    const value = core.normalizeValue(name, await question(`Valeur de ${name}`, { secret, defaultValue: env[name] || '' }))
+    if (value === 'SUPPRIMER') delete env[name]
+    else if (value === 'GENERER' && (core.GENERATED[name] || name === 'GF_EINVOICE_CREDENTIALS_KEY')) {
+      console.log('Une nouvelle clé rend les anciennes données/jetons incompatibles. Pour la facturation électronique, uniquement sur une première configuration sans identifiants chiffrés.')
+      if (await yes(`Générer explicitement une nouvelle valeur pour ${name}`)) {
+        env[name] = crypto.randomBytes(32).toString(core.GENERATED[name] || 'base64')
+        console.log(`${name} : générée, valeur masquée.`)
+      }
+    } else env[name] = value
+  }
+}
+function childEnv(env, vercel) {
+  const result = { ...process.env }
+  // Ensure the selected profile wins over the shell and Prisma's .env loader.
+  for (const { name, action } of configPolicy.entries) {
+    if (action !== 'platform') result[name] = env[name] || ''
+  }
+  result.ELECTRON = ''
+  result.NODE_ENV = 'production'
+  result.VERCEL = vercel ? '1' : ''
+  return result
+}
+async function syncVercel(env, names, expectedRemote, { authorized = false } = {}) {
+  // Re-read immediately before applying. Refuse concurrent changes; do not overwrite/rotate anything.
+  const remote = await pullVercel()
+  for (const n of names.filter(n => expectedRemote.hidden.has(n))) {
+    if (env[n] !== expectedRemote.confirmedLocal[n]) throw new Error(`Vercel : ${n} est non relisible et a été modifiée localement. Aucune synchronisation ni rotation implicite autorisée.`)
+  }
+  for (const n of names) {
+    if (remote.stamps[n] !== expectedRemote.stamps[n] ||
+      (remote.values[n] || '') !== (expectedRemote.values[n] || '')) {
+      throw new Error(`Vercel : ${n} a changé depuis la lecture initiale. Synchronisation arrêtée, relancez config.`)
+    }
+  }
+  const plan = core.syncPlan(env, remote.values, names.filter(n => !remote.hidden.has(n)))
+  if (plan.conflicts.length) throw new Error(`Vercel : conflit sur ${plan.conflicts.join(', ')}. Aucune valeur existante écrasée ; modification manuelle nécessaire.`)
+  const additions = plan.additions.filter(n => !remote.present.has(n))
+  if (!additions.length) { console.log('Vercel : variables déjà présentes (valeurs sensibles non comparables).'); return true }
+  console.log(`Vercel production — ajouts uniquement : ${additions.join(', ')}.`)
+  if (!authorized && !await yes('Ajouter ces variables au projet Vercel sélectionné')) return false
+  // No --force / remove: even a concurrent creation is a failure, not an overwrite.
+  for (const name of additions) {
+    await tool('vercel', ['env', 'add', name, 'production', core.isSecret(name) ? '--sensitive' : '--no-sensitive', '--yes'],
+      { input: env[name], label: `Vercel env add ${name}` })
+    console.log(`  ${name} : ajoutée (masquée).`)
+  }
+  const actual = await pullVercel()
+  for (const name of additions) {
+    if (!actual.present.has(name) || (!actual.hidden.has(name) && actual.values[name] !== env[name])) {
+      throw new Error(`Vercel : vérification de ${name} échouée.`)
+    }
+  }
+  console.log('Présence des ajouts vérifiée. Les valeurs Sensitive ne sont pas relisibles : leur contenu ne peut pas être vérifié.')
+  return true
+}
+function summarizeSqlDiff(output, schema) {
+  // Only emit identifiers from the checked-in Prisma contract, never defaults,
+  // connection strings, arbitrary database names or raw engine output.
+  try { schema ||= fs.readFileSync(path.join(ROOT, 'prisma/server/schema.prisma'), 'utf8') }
+  catch { return ['Différences détectées ; contrat local indisponible pour un résumé sûr.'] }
+  const models = new Set([...schema.matchAll(/^model\s+(\w+)\s*\{/gm)].map(m => m[1]))
+  const fields = new Set([...schema.matchAll(/^\s+(\w+)\s+[A-Z]\w*[?\[\]]*(?:\s|$)/gm)].map(m => m[1]))
+  const result = []; let table = '', group = ''
+  const clean = String(output).replace(/\x1b\[[0-9;]*m/g, '')
+  for (const line of clean.split(/\r?\n/)) {
+    const header = line.match(/^\[([+*-])\] (.+)$/)
+    if (header) {
+      group = header[2]; table = ''
+      const changed = group.match(/^Changed the `(\w+)` table/)
+      if (changed) {
+        table = models.has(changed[1]) ? changed[1] : '(table hors contrat)'
+        result.push(`Table ${table} : structure différente.`)
+      }
+      continue
+    }
+    const listed = line.match(/^\s+- (\w+)\s*$/)
+    if (listed && /^(Added|Removed) tables$/.test(group)) {
+      const name = models.has(listed[1]) ? listed[1] : '(table hors contrat)'
+      result.push(`Table ${name} : ${group === 'Added tables' ? 'absente de la base, attendue par Prisma' : 'présente dans la base, absente du contrat Prisma'}.`)
+      continue
+    }
+    if (!table) continue
+    const column = line.match(/^\s+\[([+*-])\] (?:Added|Removed|Altered) column `(\w+)`/)
+    if (column) {
+      const name = fields.has(column[2]) ? column[2] : '(colonne hors contrat)'
+      result.push(`  ${table} : colonne ${name} ${column[1] === '+' ? 'à ajouter' : column[1] === '-' ? 'à retirer selon Prisma' : 'différente (type, défaut ou nullabilité)'}.`)
+      continue
+    }
+    const constraint = line.match(/^\s+\[([+*-])\] (?:Added|Removed|Changed|Renamed) (unique index|index|foreign key|primary key)/)
+    if (constraint) result.push(`  ${table} : ${constraint[2]} ${constraint[1] === '+' ? 'à ajouter' : constraint[1] === '-' ? 'à retirer selon Prisma' : 'différent'}.`)
+  }
+  if (!result.length) return ['Différences détectées ; format non reconnu pour un résumé sûr. Aucune sortie brute affichée.']
+  return result.length > 80 ? [...result.slice(0, 80), 'Résumé limité à 80 lignes.'] : result
+}
+async function diagnoseSql({ env, run = execute, root = ROOT, requestAccess = yes, connect = configureNeon } = {}) {
+  const file = path.join(root, '.env.server.local')
+  env ||= core.readEnv(file)
+  if (!env.DATABASE_URL || !env.DIRECT_URL) {
+    console.log('URLs PostgreSQL manquantes : récupération depuis votre compte Neon, sans création de projet/base ni génération de secrets.')
+    for (const name of ['DATABASE_URL', 'DIRECT_URL']) {
+      if (!env[name]) continue
+      try { if (!new URL(env[name]).hostname.endsWith('.neon.tech')) throw new Error() }
+      catch { throw new Error('Connexion existante non-Neon ou invalide : utiliser le fournisseur d’origine, aucune sélection Neon automatique.') }
+    }
+    if (!await requestAccess('Se connecter à Neon, sélectionner la base EXISTANTE et enregistrer uniquement les URLs manquantes dans .env.server.local', true)) throw new Error('Récupération annulée : aucun fichier ni base modifié.')
+    const candidate = { ...env }
+    await connect(candidate, { auto: false, allowCreate: false })
+    const connectionIssues = core.validate({ DATABASE_URL: candidate.DATABASE_URL, DIRECT_URL: candidate.DIRECT_URL }, 'pwa', { vercel: true })
+      .filter(message => message.startsWith('DATABASE_URL') || message.startsWith('DIRECT_URL'))
+    if (connectionIssues.length) throw new Error(connectionIssues.join(' '))
+    core.saveDatabaseUrls(file, candidate)
+    env = candidate
+    console.log('DATABASE_URL et DIRECT_URL récupérées et sauvegardées localement (valeurs masquées). Les autres paramètres/secrets restent inchangés.')
+  }
+  const issues = core.validate({ DATABASE_URL: env.DATABASE_URL, DIRECT_URL: env.DIRECT_URL }, 'pwa', { vercel: true })
+    .filter(message => message.startsWith('DATABASE_URL') || message.startsWith('DIRECT_URL'))
+  if (issues.length) throw new Error(issues.join(' '))
+  console.log('Diagnostic SQL en lecture seule : profil .env.server.local, sans migration, reset, synchronisation ni déploiement.')
+  const cli = path.join(root, 'node_modules/prisma/build/index.js')
+  try {
+    await run([cli, 'migrate', 'diff', '--from-schema-datasource', 'prisma/server/schema.prisma',
+      '--to-schema-datamodel', 'prisma/server/schema.prisma', '--exit-code'],
+      { env: childEnv(env, true), label: 'Diagnostic SQL' })
+    console.log('Code Prisma 0 : schéma conforme, aucune différence détectée.')
+    return 0
+  } catch (error) {
+    if (error.exitCode === 2) {
+      console.log('Code Prisma 2 : différence de schéma (drift) détectée. Les migrations appliquées et/ou la base diffèrent du schéma Prisma attendu. Aucun correctif appliqué.')
+      for (const line of error.sqlDiffSummary || ['Résumé indisponible dans cette exécution.']) console.log(line)
+      return 2
+    }
+    console.log(`Code Prisma ${Number.isInteger(error.exitCode) ? error.exitCode : 'indisponible'} : comparaison impossible (erreur technique, pas une preuve de drift). Vérifier accès réseau, URLs, droits et installation Prisma. Sorties brutes masquées.`)
+    return 1
+  }
+}
+async function main() {
+  const accepted = new Set(['--help', '--check', '--profile', '--vercel', '--audit', '--diagnose-sql', '--list'])
+  for (let i = 0; i < args.length; i++) {
+    if (!accepted.has(args[i])) throw new Error('Option inconnue. Utilisez node config --help.')
+    if (args[i] === '--profile') { if (!PROFILES.includes(args[++i])) throw new Error('Profil attendu : full | desktop | pwa | licences.') }
+  }
+  if (args.includes('--help')) return help()
+  core.assertNodeVersion()
+  if (args.includes('--list')) {
+    if (args.length !== 1) throw new Error('Utiliser node config --list seul (lecture seule).')
+    const coverage = require('./scripts/config-env-coverage.cjs')
+    const result = coverage.coverage(ROOT)
+    console.log(coverage.render(result))
+    if (result.unclassified.length) process.exitCode = 1
+    return
+  }
+  if (args.includes('--diagnose-sql')) {
+    if (args.length !== 1) throw new Error('Utiliser node config --diagnose-sql seul.')
+    process.exitCode = await diagnoseSql()
+    return
+  }
+  if (args.includes('--audit') && args.includes('--check')) throw new Error('--audit écrit un rapport ; ne pas le combiner avec le contrôle lecture seule --check.')
+  if (args.includes('--audit')) {
+    const inventory = require('./scripts/config-audit.cjs')
+    const result = inventory.audit(ROOT)
+    fs.writeFileSync(path.join(ROOT, 'docs/CONFIG_REPOSITORY_AUDIT.md'), inventory.render(result))
+    console.log(`Rapport : docs/CONFIG_REPOSITORY_AUDIT.md (${result.files} fichiers, ${result.policy.entries.length} variables).`)
+    return
+  }
+  let profile = args.includes('--profile') ? args[args.indexOf('--profile') + 1] : null
+  if (!profile && args.includes('--check')) throw new Error('--check nécessite --profile.')
+  profile ||= 'full'
+  if (profile === 'full') {
+    if (args.includes('--check')) throw new Error('Pour une validation locale, choisir --profile desktop, pwa ou licences.')
+    return require('./scripts/config-full.cjs').full(module.exports)
+  }
+  const names = core.namesForProfile(allNames, profile)
+  const envFile = path.join(ROOT, profile === 'desktop' ? '.env' : '.env.server.local')
+  let env = core.readEnv(envFile)
+  let vercel = args.includes('--vercel')
+  require('./scripts/config-policy.cjs').assertNoAliases(env, configPolicy)
+  const excluded = Object.keys(env).filter(n => knownSettings.has(n) && !names.includes(n) && env[n])
+  if (args.includes('--check')) {
+    const errors = [...excluded.map(n => `${n} : hors profil ${profile} (runtime, plateforme ou outil dédié).`), ...core.validate(env, profile, { vercel, publicPem: core.embeddedLicenseKey(ROOT) })]
+    for (const error of errors) console.error(error)
+    if (errors.length) { process.exitCode = 1; return }
+    console.log(`Profil ${profile} : configuration locale valide (aucun test de connectivité effectué).`)
+    return
+  }
+  console.log(`\nGarageFlow config — profil ${profile}. Secrets masqués ; aucune rotation automatique.`)
+  console.log('Les connexions externes nécessitent un accès réseau à Neon, Vercel et npm sur votre poste.')
+  if (excluded.length) {
+    console.log(`Le fichier existant contient des variables incompatibles avec ce profil : ${excluded.join(', ')}.`)
+    if (!await yes('Autoriser explicitement leur retrait du fichier local à la sauvegarde (faire une sauvegarde chiffrée avant)')) throw new Error('Fichier local laissé intact : profil incompatible.')
+    for (const n of excluded) delete env[n]
+  }
+  let remote = null
+  if (profile !== 'desktop') {
+    vercel = vercel || await yes('Configurer et synchroniser le projet Vercel', true)
+    if (vercel) {
+      remote = await setupVercel()
+      require('./scripts/config-policy.cjs').assertNoAliases(remote.values, configPolicy)
+      require('./scripts/config-policy.cjs').assertSafeServerOverrides(remote)
+      env = await importRemote(env, remote, names)
+      console.log('Configuration production récupérée AVANT la génération des secrets manquants.')
+    }
+    if (!env.DATABASE_URL || !env.DIRECT_URL) {
+      if (await yes('Récupérer automatiquement les URLs depuis votre compte Neon', true)) await configureNeon(env)
+      else { await secretField(env, 'DATABASE_URL', 'URL PostgreSQL poolée'); await secretField(env, 'DIRECT_URL', 'URL PostgreSQL directe') }
+    } else console.log('Connexion PostgreSQL existante conservée.')
+    env.NEXTAUTH_URL = await question('URL publique HTTPS de la PWA', { defaultValue: env.NEXTAUTH_URL || '' })
+    if (!env.UPSTASH_REDIS_REST_URL || !env.UPSTASH_REDIS_REST_TOKEN) {
+      console.log('\nUpstash requis en PWA : créez/connectez Redis via Vercel Marketplace ou console.upstash.com, puis copiez les deux valeurs REST (pas rediss://).')
+      console.log('Les identifiants seront saisis uniquement dans ce terminal, pas dans le chat.')
+      env.UPSTASH_REDIS_REST_URL = await question('UPSTASH_REDIS_REST_URL (https://)', { defaultValue: env.UPSTASH_REDIS_REST_URL || '' })
+      await secretField(env, 'UPSTASH_REDIS_REST_TOKEN')
+    }
+    if (!vercel && !env.TRUST_PROXY_HEADERS) {
+      if (await yes('Le serveur est-il derrière un proxy fiable qui nettoie les en-têtes IP')) env.TRUST_PROXY_HEADERS = '1'
+    }
+    if (profile === 'licences') await licenseKey(env)
+    if (!env.ANTHROPIC_API_KEY && await yes('Configurer une clé Anthropic pour OCR/IA (facultatif)')) await secretField(env, 'ANTHROPIC_API_KEY')
+  }
+  console.log('Les secrets ABSENTS seront générés individuellement. Si cette base contient déjà des données chiffrées ou des licences, importez les clés d’origine via les réglages avancés avant de sauvegarder.')
+  env = core.fillMissing(env, names, profile)
+  if (profile !== 'desktop' && env.EINVOICING_ENABLED === 'true' && !env.GF_EINVOICE_CREDENTIALS_KEY) {
+    console.log('Facturation électronique déjà activée mais clé absente : importer la clé d’origine si des identifiants existent ; ne PAS la régénérer.')
+    await secretField(env, 'GF_EINVOICE_CREDENTIALS_KEY')
+  }
+  if (await yes('Configurer des variables avancées (limites, SMTP, versions, facturation et réglages locaux)')) await advanced(env, core.editableNames(env, names, configPolicy))
+  let errors = core.validate(env, profile, { vercel, publicPem: core.embeddedLicenseKey(ROOT) })
+  while (errors.length) {
+    console.log('\nConfiguration non valide :\n' + errors.join('\n'))
+    if (!await yes('Corriger les variables maintenant', true)) throw new Error('Configuration non sauvegardée : validation échouée.')
+    await advanced(env, core.editableNames(env, names, configPolicy))
+    errors = core.validate(env, profile, { vercel, publicPem: core.embeddedLicenseKey(ROOT) })
+  }
+  // Preserve unrelated local variables (integration-specific settings), rather than silently deleting them.
+  const outputNames = [...names, ...Object.keys(env).filter(n => !knownSettings.has(n))]
+  const contents = core.serializeEnv(env, outputNames, profile)
+  if (!await yes(`Enregistrer ${path.basename(envFile)} (fichier local ignoré par Git)`, true)) return
+  core.writePrivate(envFile, contents)
+  console.log(`${path.basename(envFile)} enregistré, permissions privées (0600 sur POSIX). Sous Windows, sécurisez les ACL du dossier utilisateur.`)
+  if (profile === 'desktop') {
+    if (await yes('Initialiser la base SQLite avec le setup existant', true)) {
+      await execute([path.join(ROOT, 'scripts/setup-dev.js')],
+        { env: { ...process.env, VERCEL: '', DATABASE_URL: env.DATABASE_URL, NEXTAUTH_SECRET: env.NEXTAUTH_SECRET }, label: 'Initialisation desktop' })
+      console.log('Setup SQLite terminé.')
+    }
+  } else {
+    const synced = vercel ? await syncVercel(env, names, remote) : false
+    console.log('\nMigrations : modifient la base cible. Sauvegardez une base existante avant de poursuivre.')
+    if (await question('Pour appliquer prisma migrate deploy, saisir MIGRER (Entrée = ignorer)') === 'MIGRER') {
+      const prisma = path.join(ROOT, 'node_modules/prisma/build/index.js')
+      if (!fs.existsSync(prisma)) throw new Error('Prisma absent. Exécutez npm ci puis relancez config ; les valeurs locales ont été conservées.')
+      await execute([prisma, 'migrate', 'deploy', '--schema', 'prisma/server/schema.prisma'],
+        { env: childEnv(env, vercel), label: 'Migrations PostgreSQL' })
+      console.log('Migrations PostgreSQL appliquées avec DIRECT_URL explicite.')
+    }
+    if (vercel && synced && await question('Pour déployer en production, saisir DEPLOYER (Entrée = ignorer)') === 'DEPLOYER') {
+      await tool('vercel', ['deploy', '--prod', '--yes'], { label: 'Déploiement production' })
+      console.log('Déploiement accepté par Vercel. Vérifiez ensuite le domaine, les logs et les parcours métier.')
+    }
+  }
+  console.log('\nConfiguration terminée. Aucun secret n’a été committé ni affiché.')
+  console.log('GF_UPDATE_SIGNING_KEY reste EXCLUSIVEMENT dans le coffre du serveur de publication garagesite3 ; config ne la génère ni ne l’exporte ici.')
+}
+module.exports = { root: ROOT, question, yes, select, tool, execute, npmCli,
+  setupVercel, pullVercel, importRemote, configureNeon, secretField, licenseKey,
+  advanced, childEnv, syncVercel, licensePassphrase, diagnoseSql, summarizeSqlDiff }
+if (require.main === module) main().catch(error => {
+  // Never expose raw provider payloads, JSON snippets, stacks or file error contents.
+  if (error instanceof SyntaxError) console.error('Configuration interrompue : réponse/fichier JSON invalide ; contenu masqué.')
+  else if (error instanceof Error && error.code) console.error('Configuration interrompue : opération locale impossible. Vérifiez les permissions et les fichiers.')
+  else console.error(error.message || 'Configuration interrompue.')
+  process.exitCode = 1
+})

@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { verifyHwid, isValidHwidFormat, normalizeHwid } from '../license/verify'
+import { verifyHwid, isValidHwidFormat, normalizeHwid, hwidVersionOf, hwidBindingSatisfied } from '../license/verify'
 
 const A = 'a'.repeat(64)                       // HWID bien formé
 const B = 'b'.repeat(64)                       // HWID différent
 const A_UPPER = 'A'.repeat(64)                 // même valeur, casse différente
+const V1  = 'HWID1-' + 'a'.repeat(64)          // HWID V1 canonique bien formé
+const V1B = 'HWID1-' + 'b'.repeat(64)          // HWID V1 d'une autre machine
 // A avec 16 caractères différents (25 %) — devait passer avec l'ancienne
 // tolérance à 75 %, doit désormais ÉCHOUER (comparaison stricte).
 const A_25PCT_DIFF = 'b'.repeat(16) + 'a'.repeat(48)
@@ -64,5 +66,57 @@ describe('isValidHwidFormat / normalizeHwid', () => {
   it('normalise en minuscules sans espaces de bord', () => {
     expect(normalizeHwid(`  ${A_UPPER}\t`)).toBe(A)
     expect(normalizeHwid(null)).toBe('')
+  })
+})
+
+// ── AUD-036 : le vérificateur accepte le format V1 canonique « HWID1-<64hex> » ──
+describe('HWID V1 — accepté par verify (v0 et v1 coexistent, sans confusion)', () => {
+  it('isValidHwidFormat accepte v0 (64 hex) ET v1 (HWID1-<64hex>)', () => {
+    expect(isValidHwidFormat(A)).toBe(true)               // v0
+    expect(isValidHwidFormat(V1)).toBe(true)              // v1
+    expect(isValidHwidFormat(`  ${V1}  `)).toBe(true)     // v1 + espaces de bord
+    expect(isValidHwidFormat(V1.toLowerCase())).toBe(true) // préfixe insensible à la casse
+  })
+
+  it('rejette les faux v1 (mauvaise longueur, non-hex, préfixe partiel)', () => {
+    expect(isValidHwidFormat('HWID1-' + 'a'.repeat(63))).toBe(false) // 63 hex
+    expect(isValidHwidFormat('HWID1-' + 'z'.repeat(64))).toBe(false) // non-hex
+    expect(isValidHwidFormat('HWID2-' + 'a'.repeat(64))).toBe(false) // préfixe inconnu
+    expect(isValidHwidFormat('HWID1-')).toBe(false)                  // vide
+  })
+
+  it('verifyHwid v1↔v1 : exact → true, autre machine → false', () => {
+    expect(verifyHwid(V1, V1)).toBe(true)
+    expect(verifyHwid(V1, V1.toUpperCase())).toBe(true) // casse normalisée
+    expect(verifyHwid(V1, V1B)).toBe(false)
+    expect(verifyHwid(V1, 'HWID1-' + 'a'.repeat(63) + 'b')).toBe(false) // 1 caractère diffère
+  })
+
+  it('AUCUNE confusion v0↔v1 : longueurs 64 vs 70 → toujours false', () => {
+    expect(verifyHwid(A, V1)).toBe(false)
+    expect(verifyHwid(V1, A)).toBe(false)
+  })
+
+  it('hwidVersionOf distingue v0 (0), v1 (1) et invalide (null)', () => {
+    expect(hwidVersionOf(A)).toBe(0)
+    expect(hwidVersionOf(V1)).toBe(1)
+    expect(hwidVersionOf(V1.toLowerCase())).toBe(1)
+    expect(hwidVersionOf('pas-un-hwid')).toBe(null)
+    expect(hwidVersionOf('')).toBe(null)
+    expect(hwidVersionOf(null)).toBe(null)
+  })
+})
+
+describe('hwidBindingSatisfied — règle de liaison centralisée', () => {
+  it('aucune liaison enregistrée → satisfaite, même sans HWID client', () => {
+    expect(hwidBindingSatisfied(null, undefined)).toBe(true)
+    expect(hwidBindingSatisfied(undefined, A)).toBe(true)
+  })
+
+  it('liaison enregistrée → HWID client exact exigé', () => {
+    expect(hwidBindingSatisfied(A, A)).toBe(true)
+    expect(hwidBindingSatisfied(A, B)).toBe(false)
+    expect(hwidBindingSatisfied(A, undefined)).toBe(false)
+    expect(hwidBindingSatisfied(A, 'pas-un-hwid')).toBe(false)
   })
 })

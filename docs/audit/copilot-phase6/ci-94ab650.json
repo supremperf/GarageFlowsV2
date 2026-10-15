@@ -1,0 +1,542 @@
+{
+  "retrievedAt": "2026-10-15T14:43:16.181501+00:00",
+  "source": "OFFICIAL_GITHUB_CHECKS_API",
+  "requestedCommit": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+  "checks": [
+    {
+      "id": 116486579706,
+      "name": "Windows candidate packaging and inspection (not publication)",
+      "status": "in_progress",
+      "conclusion": null,
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:42:13Z",
+      "completed_at": null,
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753032401/job/116486579706",
+      "notices": []
+    },
+    {
+      "id": 116486579562,
+      "name": "Authenticated browser validation (approved staging only)",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:42:14Z",
+      "completed_at": "2026-10-15T14:42:18Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753032401/job/116486579562",
+      "notices": []
+    },
+    {
+      "id": 116486226873,
+      "name": "Windows candidate packaging and inspection (not publication)",
+      "status": "in_progress",
+      "conclusion": null,
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:41:32Z",
+      "completed_at": null,
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753019458/job/116486226873",
+      "notices": []
+    },
+    {
+      "id": 116486226708,
+      "name": "Authenticated browser validation (approved staging only)",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:41:33Z",
+      "completed_at": "2026-10-15T14:41:38Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753019458/job/116486226708",
+      "notices": []
+    },
+    {
+      "id": 116484956725,
+      "name": "CodeQL",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:39:01Z",
+      "completed_at": "2026-10-15T14:39:05Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/runs/116484956725",
+      "notices": []
+    },
+    {
+      "id": 116484095603,
+      "name": "Final release gate (full)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:37:20Z",
+      "completed_at": "2026-10-15T14:37:20Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753032401/job/116484095603",
+      "notices": []
+    },
+    {
+      "id": 116484094478,
+      "name": "Secret scan (Gitleaks)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:37:31Z",
+      "completed_at": "2026-10-15T14:37:42Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753032401/job/116484094478",
+      "notices": [
+        {
+          "title": "Gitleaks inventory",
+          "metadata": {
+            "scannerSummary": "Gitleaks inventory: findings=0; scannerExit=0; commit=e77963c0c6328e7a60acb98a81aa0b96b535060e"
+          }
+        },
+        {
+          "title": "Gitleaks inventory page 1/1",
+          "metadata": {
+            "schemaVersion": 2,
+            "commit": "e77963c0c6328e7a60acb98a81aa0b96b535060e",
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "coverageComplete": true,
+            "groups": []
+          }
+        }
+      ]
+    },
+    {
+      "id": 116484094401,
+      "name": "Native base (TypeScript, standard build, fixed JS budget)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:37:44Z",
+      "completed_at": "2026-10-15T14:40:05Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753032401/job/116484094401",
+      "notices": [
+        {
+          "title": "Copilot build budget",
+          "metadata": {
+            "totalBytes": 3612476,
+            "maxBytes": 3625984,
+            "files": 237,
+            "scope": "STANDARD_NEXT_BUILD_CLIENT_JS_ONLY"
+          }
+        }
+      ]
+    },
+    {
+      "id": 116484094311,
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:37:40Z",
+      "completed_at": "2026-10-15T14:42:10Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753032401/job/116484094311",
+      "notices": [
+        {
+          "title": "Copilot native summary",
+          "metadata": {
+            "schema": 1,
+            "scope": "SIX_NATIVE_PRISMA_SUITES_54_ASSERTIONS",
+            "exitCode": 0,
+            "passed": true,
+            "executed": 54,
+            "expected": 54,
+            "files": [
+              {
+                "path": "src/integration/copilot-conversation.test.ts",
+                "passed": 9,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-cout-achat.test.ts",
+                "passed": 5,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-ecusson-verifie.test.ts",
+                "passed": 9,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-financial-authz-v15.test.ts",
+                "passed": 6,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-portee-et-porte-financiere.test.ts",
+                "passed": 18,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot.test.ts",
+                "passed": 7,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              }
+            ],
+            "paidCalls": 0,
+            "limits": "Native fixture tests only; not production issuer/tenant/auth HTTP/model campaign. Setup-blocked/skipped assertions are NOT passes."
+          }
+        },
+        {
+          "title": "Phase6 native baseline page 1/1",
+          "metadata": {
+            "page": 1,
+            "pages": 1,
+            "complete": true,
+            "encoding": "deflate-base64",
+            "payload": "eJzFVU1vGzcQ/SvTvUQGJK0+KjtatEUFWZHXiKXAUh0EkSHNkrMSbS65IWdtCUGA/o3eeu29tx79T/pLCkpOGgRFgQJGc1qSmOF7895w9n3khS0pSqKzdDafXqbDwcvlZDQezNOr0fI0HYwn09k8HS4n0/lyOJicpqeD+Wj5ajCbRfUoQ09amZDeksffPu/3ST5vY9btYNbv59jt5Jk8FpJaoteTPRLH3ageiY3ScrRVPLSSoqRdjwR6mjFy5clHydsoR6VJRvW/FyV6/4+L60NQ5faZ7yODRaCjCYQtlbZMYAi0unMEJXrQBKVTW5B//vwLig0yPPwKlQH38LsmMNZArgwaociF44vR8GwwSYdgM1ZkGDSCVp6pDjdYoNpfKOzDHxzYVlrPHQoKNcx3JY2csy6BJtsLZLGpHQFtSxLsgS04EqTuCBA8O2XWdcgqhrVlqIykXBmSCwMAgAyvnN3umt+hsWZX2Mr/ALVcaUriON7YgmJXGUMuvrfuNh6jwzW90PbeX3W+2BkraVlYWWny8Y93islzfOAUS+U5VkbStnnjk3an303araOvSaHdO07avS8pFMQbK187LEtyT0FCbFB9hnrSPUk6n6H+t5u9E7EyTGuHrKyJyw16Om5slGfrlEDdELbixr71mqH2JvvkpJX0+p8A0e+MgKcT9zF5L67YVOa2gY5VjoL39fZb3aTTiq4/1J/29WiC4uE3gUYJRQbW6CSBIJDWMCgNCBl5qwwk8K6yCoQtCjSSXB2Iwy5TZP7lVX16JaA8GMugmBxmmqAm0IQDRyihdLYkxzuY7YrM6trh09wHs3VH/6/R/aTT+upGX9cjz9JWHCXR+Ww6AUeldQz3TjGTCcMp5qKM13njsaqPg76Rt87epOexI19p9s0bb80imORZknNREi2qVqudve12i9o3R/DGVg6uFId+MrlaQ5jwkBNyGNjAoYPQEVTGV2XgQBKyHawO0S8tSnIJPDPI6o6erepwv1FiEwwvNZrgPVvISNiCgDcEknKsNIMygJBXAQUKvLEO7sh5ZQ3YfM8nCSY0YDS7AL8zjNvHFKUJdICVgB6GtiisOZ9B7aBw88ArONlO2kdN+MmH+b1qFjd+BbRlMgcQB54YVouIdyUtogQW0cGsRbQKSIGr0NaTZyhR3OKaHrWchbyrdD5aDqeTF+l4OTn8itPxZHo5Wr4eXE7Syfh7dhWtQvFBN0c+aKk83KMzyqybH13oFwsTffgLxNbD4w=="
+          }
+        }
+      ]
+    },
+    {
+      "id": 116484093937,
+      "name": "Full dependency tree \u2014 zero vulnerabilities",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:37:23Z",
+      "completed_at": "2026-10-15T14:37:51Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753032401/job/116484093937",
+      "notices": []
+    },
+    {
+      "id": 116484093318,
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:37:23Z",
+      "completed_at": "2026-10-15T14:39:28Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753032401/job/116484093318",
+      "notices": []
+    },
+    {
+      "id": 116484088828,
+      "name": "Analyze (javascript-typescript)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:37:22Z",
+      "completed_at": "2026-10-15T14:39:12Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753032447/job/116484088828",
+      "notices": [
+        {
+          "title": "CodeQL flow inventory 2/2",
+          "metadata": {
+            "page": 2,
+            "pages": 2,
+            "total": 14,
+            "encoding": "deflate-base64",
+            "payload": "vrFAPuZYlNS0eDrxvSM0xTiJIGI5jlNCikMHFfG2XfJWjh6Es+yard5t2/BNHYuPT4iQNeOHhsf/OEJ5YGXp3enemdTyx2FHcsPXI1SZXahE51BZKt4S8R+CCkeJldQ+HpX9oiE8dujUHaispXxsLeVPpoosquHJXFcYi45QDs6Rx57yDEprYYmM+eOhlG8teZKxgXEITc1sQseOp3MW/dND8VxFD4u089DWKb+O1D3uE/rKzIkayE0qR8spJyszROzX4IyFs2OpqOWi9AwX9aWnG3WiLz3dpvSlpy89zyg995//7EKNt/Nq4LfHfwGTD2Zm",
+            "coverageComplete": true
+          }
+        },
+        {
+          "title": "CodeQL flow inventory 1/2",
+          "metadata": {
+            "page": 1,
+            "pages": 2,
+            "total": 14,
+            "encoding": "deflate-base64",
+            "payload": "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",
+            "coverageComplete": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 116484047526,
+      "name": "Final release gate (full)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:37:15Z",
+      "completed_at": "2026-10-15T14:37:14Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753019458/job/116484047526",
+      "notices": []
+    },
+    {
+      "id": 116484044784,
+      "name": "Native base (TypeScript, standard build, fixed JS budget)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:37:17Z",
+      "completed_at": "2026-10-15T14:39:48Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753019458/job/116484044784",
+      "notices": [
+        {
+          "title": "Copilot build budget",
+          "metadata": {
+            "totalBytes": 3612476,
+            "maxBytes": 3625984,
+            "files": 237,
+            "scope": "STANDARD_NEXT_BUILD_CLIENT_JS_ONLY"
+          }
+        }
+      ]
+    },
+    {
+      "id": 116484044773,
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:37:17Z",
+      "completed_at": "2026-10-15T14:39:51Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753019458/job/116484044773",
+      "notices": []
+    },
+    {
+      "id": 116484044737,
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:37:17Z",
+      "completed_at": "2026-10-15T14:41:29Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753019458/job/116484044737",
+      "notices": [
+        {
+          "title": "Copilot native summary",
+          "metadata": {
+            "schema": 1,
+            "scope": "SIX_NATIVE_PRISMA_SUITES_54_ASSERTIONS",
+            "exitCode": 0,
+            "passed": true,
+            "executed": 54,
+            "expected": 54,
+            "files": [
+              {
+                "path": "src/integration/copilot-conversation.test.ts",
+                "passed": 9,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-cout-achat.test.ts",
+                "passed": 5,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-ecusson-verifie.test.ts",
+                "passed": 9,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-financial-authz-v15.test.ts",
+                "passed": 6,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-portee-et-porte-financiere.test.ts",
+                "passed": 18,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot.test.ts",
+                "passed": 7,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              }
+            ],
+            "paidCalls": 0,
+            "limits": "Native fixture tests only; not production issuer/tenant/auth HTTP/model campaign. Setup-blocked/skipped assertions are NOT passes."
+          }
+        },
+        {
+          "title": "Phase6 native baseline page 1/1",
+          "metadata": {
+            "page": 1,
+            "pages": 1,
+            "complete": true,
+            "encoding": "deflate-base64",
+            "payload": "eJzFVU1vGzcQ/StTXiIDklYflR0t2qKCrDgKYimwVBtFZEiz5KxEm0tuyVlbQhCgf6O3XnvvrUf/k/6SgpKTBkFRoIDRnJYkZvjevDecfSeCdCWJVLwcz+bTi/Fw8Ho5GZ0N5uPL0fJ0PDibTGfz8XA5mc6Xw8HkdHw6mI+WbwazmaiLDAMZbWN6Sx1//bzfJ/W8jVm3g1m/n2O3k2fqWCpqyV5P9Uged0VdyI02arTVPHSKRNquC4mBZoxcBQoifSty1IaUqP+9KDGEf1xcH4Iqv898JywWkY4hkK7UxjGBJTD6zhOUGMAQlF5vQf358y8oN8jw8CtUFvzD74bAOgu5tmilJh+Pz0fDl4PJeAguY02WwSAYHZjqcIMF6v2F0j38wZFtZczco6RYw3xX0sh751NosjtHlpvaEdC2JMkB2IEnSfqOACGw13Zdh6xiWDuGyirKtSW1sAAAyPDGu+2u+Q1aZ3eFq8J3UMu1oTRJko0rKPGVteSTe+dvkzP0uKYXxt2Hy85nO+sULQunKkMh+f5OMwVODpwSpQMn2iraNm9C2u70u2m7dfQlKbR7x2m79zmFgnjj1JXHsiT/FCTkBvUnqCfdk7TzCep/uzl4mWjLtPbI2tmk3GCg48ZGB3ZeSzQN6Spu7FuvGWtvckhPWmmv/xEQw85KeDpxH5P34spNZW8b6FnnKHlfb7/VTTstcf2+/rSvxxAUD79JtFpqsrBGrwgkgXKWQRtAyCg4bSGFnyqnQbqiQKvI14E47jJN9l9e1cdXAjqAdQyayWNmCGoSbTzwhApK70ryvIPZrsicqR0+zX0wO3/0/xrdTzutL270dV0EVq5ikYpXs+kEPJXOM9x7zUw2DqeEizJZ543Hqj4M+saAeHp5lXgKleHQvAnOLqJJgRV5L1KxqFqtdva22y1qXx3Bj67ycKk59pPN9RrihIeckOPABo4dhJ6gsqEqIwdSkO1gdYh+7VCRT+GZRdZ39GxVh/uNlptoeGnQRu/ZQUbSFQS8IVCUY2UYtAWEvIooUOCN83BHPmhnweV7Pmk0oQGj2TmEnWXcPqZoQ2AirAIMMHRF4eyrGdQOCjcPvKKT7bR91IQfQpzfq2ZxE1ZAWyZ7APEQiGG1ELwraSFSWIiDWQuxikiRqzQuUGAoUd7imh61nMW8y/F8tBxOJy/GZ8vJ4Vc8PptML0bLq8HFZDw5+5Z9RatYfNTNU4ha6gD36K226+YHF/rFwor3fwFFvcQv"
+          }
+        }
+      ]
+    },
+    {
+      "id": 116484044691,
+      "name": "Full dependency tree \u2014 zero vulnerabilities",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:37:18Z",
+      "completed_at": "2026-10-15T14:37:43Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753019458/job/116484044691",
+      "notices": []
+    },
+    {
+      "id": 116484044275,
+      "name": "Secret scan (Gitleaks)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+      "started_at": "2026-10-15T14:37:17Z",
+      "completed_at": "2026-10-15T14:37:28Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38753019458/job/116484044275",
+      "notices": [
+        {
+          "title": "Gitleaks inventory",
+          "metadata": {
+            "scannerSummary": "Gitleaks inventory: findings=0; scannerExit=0; commit=94ab650f087459b21c2a2b5b79028eeb53b7d05e"
+          }
+        },
+        {
+          "title": "Gitleaks inventory page 1/1",
+          "metadata": {
+            "schemaVersion": 2,
+            "commit": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "coverageComplete": true,
+            "groups": []
+          }
+        }
+      ]
+    }
+  ]
+}

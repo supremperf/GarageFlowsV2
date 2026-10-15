@@ -1,0 +1,560 @@
+{
+  "retrievedAt": "2026-10-15T14:35:44.015238+00:00",
+  "source": "OFFICIAL_GITHUB_CHECKS_API",
+  "requestedCommit": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+  "checks": [
+    {
+      "id": 116482922452,
+      "name": "Required validation",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:35:08Z",
+      "completed_at": "2026-10-15T14:35:10Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751880502/job/116482922452",
+      "notices": []
+    },
+    {
+      "id": 116482606819,
+      "name": "Windows candidate packaging and inspection (not publication)",
+      "status": "in_progress",
+      "conclusion": null,
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:34:31Z",
+      "completed_at": null,
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751896217/job/116482606819",
+      "notices": []
+    },
+    {
+      "id": 116482606400,
+      "name": "Authenticated browser validation (approved staging only)",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:34:32Z",
+      "completed_at": "2026-10-15T14:34:35Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751896217/job/116482606400",
+      "notices": []
+    },
+    {
+      "id": 116481815271,
+      "name": "Windows candidate packaging and inspection (not publication)",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:32:59Z",
+      "completed_at": "2026-10-15T14:35:04Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751880502/job/116481815271",
+      "notices": []
+    },
+    {
+      "id": 116481815162,
+      "name": "Authenticated browser validation (approved staging only)",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:33:00Z",
+      "completed_at": "2026-10-15T14:33:03Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751880502/job/116481815162",
+      "notices": []
+    },
+    {
+      "id": 116481387562,
+      "name": "CodeQL",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:32:06Z",
+      "completed_at": "2026-10-15T14:32:12Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/runs/116481387562",
+      "notices": []
+    },
+    {
+      "id": 116480160775,
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:29:49Z",
+      "completed_at": "2026-10-15T14:31:56Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751896217/job/116480160775",
+      "notices": []
+    },
+    {
+      "id": 116480160657,
+      "name": "Final release gate (full)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:29:45Z",
+      "completed_at": "2026-10-15T14:29:45Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751896217/job/116480160657",
+      "notices": []
+    },
+    {
+      "id": 116480160538,
+      "name": "Native base (TypeScript, standard build, fixed JS budget)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:29:49Z",
+      "completed_at": "2026-10-15T14:32:29Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751896217/job/116480160538",
+      "notices": [
+        {
+          "title": "Copilot build budget",
+          "metadata": {
+            "totalBytes": 3612476,
+            "maxBytes": 3625984,
+            "files": 237,
+            "scope": "STANDARD_NEXT_BUILD_CLIENT_JS_ONLY"
+          }
+        }
+      ]
+    },
+    {
+      "id": 116480160435,
+      "name": "Secret scan (Gitleaks)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:29:49Z",
+      "completed_at": "2026-10-15T14:30:00Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751896217/job/116480160435",
+      "notices": [
+        {
+          "title": "Gitleaks inventory",
+          "metadata": {
+            "scannerSummary": "Gitleaks inventory: findings=0; scannerExit=0; commit=0729b9305570cc0b43d61bc133640cc4921268f6"
+          }
+        },
+        {
+          "title": "Gitleaks inventory page 1/1",
+          "metadata": {
+            "schemaVersion": 2,
+            "commit": "0729b9305570cc0b43d61bc133640cc4921268f6",
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "coverageComplete": true,
+            "groups": []
+          }
+        }
+      ]
+    },
+    {
+      "id": 116480160348,
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:29:49Z",
+      "completed_at": "2026-10-15T14:34:27Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751896217/job/116480160348",
+      "notices": [
+        {
+          "title": "Copilot native summary",
+          "metadata": {
+            "schema": 1,
+            "scope": "SIX_NATIVE_PRISMA_SUITES_54_ASSERTIONS",
+            "exitCode": 0,
+            "passed": true,
+            "executed": 54,
+            "expected": 54,
+            "files": [
+              {
+                "path": "src/integration/copilot-conversation.test.ts",
+                "passed": 9,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-cout-achat.test.ts",
+                "passed": 5,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-ecusson-verifie.test.ts",
+                "passed": 9,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-financial-authz-v15.test.ts",
+                "passed": 6,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-portee-et-porte-financiere.test.ts",
+                "passed": 18,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot.test.ts",
+                "passed": 7,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              }
+            ],
+            "paidCalls": 0,
+            "limits": "Native fixture tests only; not production issuer/tenant/auth HTTP/model campaign. Setup-blocked/skipped assertions are NOT passes."
+          }
+        },
+        {
+          "title": "Phase6 native baseline page 2/2",
+          "metadata": {
+            "page": 2,
+            "pages": 2,
+            "complete": true,
+            "payload": "e loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `\\\"type\\\": \\\"module\\\"` in the closest package.json\\nSet `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.\\^[[39m\\n\"}"
+          }
+        },
+        {
+          "title": "Phase6 native baseline page 1/2",
+          "metadata": {
+            "page": 1,
+            "pages": 2,
+            "complete": true,
+            "payload": "{\"scope\":\"HISTORICAL_NEGATIVE_DIAGNOSTIC_NOT_CANDIDATE_PASS\",\"baseline\":\"0d64899ed81ab32ab99fa32fbd6cde0c55d5ec63\",\"childExitCode\":1,\"caseStatuses\":[\"failed\",\"failed\",\"passed\",\"passed\",\"passed\"],\"failures\":[{\"name\":\"le copilote ne livre pas le prix d\u2019achat \u00e0 un r\u00f4le non financier un MECHANIC obtient la liste, jamais le co\u00fbt\",\"fullTrace\":[\"TypeError: .toMatch() expects to receive a string, but got undefined\\n    at Proxy.<anonymous> (file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/@vitest/expect/dist/index.js:1293:10)\\n    at Proxy.<anonymous> (file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/@vitest/expect/dist/index.js:1156:15)\\n    at Proxy.methodWrapper (file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/chai/index.js:1737:25)\\n    at /home/runner/work/GarageFlowsV2/GarageFlowsV2/src/integration/phase6-historical-cout-achat.test.ts:70:59\\n    at async file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20\"]},{\"name\":\"le copilote ne livre pas le prix d\u2019achat \u00e0 un r\u00f4le non financier le m\u00e9canicien garde ce dont il a besoin : quoi commander, et combien\",\"fullTrace\":[\"TypeError: undefined is not iterable (cannot read property Symbol(Symbol.iterator))\\n    at /home/runner/work/GarageFlowsV2/GarageFlowsV2/src/integration/phase6-historical-cout-achat.test.ts:79:20\\n    at async file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20\"]}],\"stdout\":\"JSON report written to /tmp/gf-phase6-baseline-Pwc9m8/results.json\\n\",\"stderr\":\"\\^[[33m(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:\\n  - ESM syntax in a fil"
+          }
+        }
+      ],
+      "historicalDecodeStatus": "INCOMPLETE_GITHUB_CONTROL_ESCAPE_TRANSFORMATION; no complete output claimed"
+    },
+    {
+      "id": 116480160308,
+      "name": "Full dependency tree \u2014 zero vulnerabilities",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:29:49Z",
+      "completed_at": "2026-10-15T14:30:20Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751896217/job/116480160308",
+      "notices": []
+    },
+    {
+      "id": 116480151347,
+      "name": "Analyze (javascript-typescript)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:29:47Z",
+      "completed_at": "2026-10-15T14:32:16Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751896322/job/116480151347",
+      "notices": [
+        {
+          "title": "CodeQL flow inventory 1/1",
+          "metadata": {
+            "page": 1,
+            "pages": 1,
+            "total": 14,
+            "encoding": "deflate-base64",
+            "payload": "eJztXNuSmzgQ/ReezYBAN/wFu1X5g9TUlBCNrSwGSpInO5uaf98im2xJGHuMrzjhkRmf49ZRd6tbEv78LVB1AX8Hy3gR6G0FfxbBMvhiIlVAbZV9CzW0lZCwgdoGi6BqpLCqqU2w/PwtaIVdB8vAaBlVKo9A1a+NkqpeRS8vFow1Ly9R2eiNsOape36yJlgExgptP6kagmXCFwHUxc+H9+dFUKp6BbrVqrYmWH4LWq02Qr99+vHF3Uf/EKb72qSkFFNMUuCM53GyRMH7Iiir5mtn3fMi0FAJC0X38L74f6CoN9BaNpu2AguhEbWy6p/v37N3rFKr1ppINnWpVqFsNDzJL71hZcwZVsbGDUtSBBkpYsKpiJEojxxW4g8rV8JAEUr91tpmpUW7VjLUoi6azUfT2DbaiirKhfxr24ayKcDsTlzmTlw2coSxLCQreS6AxIjCgRGeZlzfqxyZUl+mUlUQmjdjYRNqIWGfNkUjTSS2hbJR2VRV83Xbhkmc0BDFIcJRvlVVEWp4VfA1rKBYgd71CoocsygapxlLc5znGS2LGOUpFcdodgmjiTvRJPO0xGdrqcFsN233CdcwWTVmq8H9k97WoWw2G1EXuzYiV1g0UlhelkmRU4kSLjLKs5HCXmYE1PUMT2NyJY1V/QrGqpXo/+OKSmNWJBkWMYOCCcgvovRp49ivN72S3u02r9R/wLDVUFZqtba7hrmZa+RyCLmQNEECMCRJWtKLyHua2Y6e7Ep6PpibnuiNfEA9ISUYE9omXFvb7hMQKpBWN3W0Eap+2hGIUOJKRCgZJxLKqYSYIyIoIAq92utoMxLkek732A1+xg5iWexhWXwrbOpj01thsY/Fx2MJTjz3xskYrB8amDwAdiCchzPVbZ3bzWXZybms13MZ0K9KghnI+6mbSlFKxyW1rpfMclIiKhlPynJfUjventhtBFHMHDEfksSb4JjPJEuEvCyF8EkkqVewpOg0kr7zzyRXInlezMlgQiE4HZI5Gfx+JHMymFQITodkTga/H8meruveIe2df8WnN2I/DmHMWy27Pe5tEcpKQb17sMdcYdjIPqyMWY4lTmkBIs/p3jbs55HQurFNaGx3FNe342D8TAT/Xc0NyLWolQzFq7BCh90fd1V1ydiEuNxDIpadx+XuZHCyj+ug91HX/yk7iaPvwZfg2Jcd7uKIXk7oHYp3SaBLBk5uOG2jmXobcRQn4zIB4YLlohQsQxlCZG8q+Gh7zDvF7B5HbK3dC4u9rVOCR2yd9rF0xC4eQ57NDI2w+W5Y37mZFx3Xw9LUlZmmx88QTbGHPH5r+y7IgSCeY+8Ksce5V7hxzh4Am3lHLTwbcdRyBnaOvSnHzwPGXhZ72Cwe8b33w1IfS2+CnWNvyvHzgLHHU89mno6w+SGxxLuOwcmI6xhnYH/juD3pMsSFw9BruJMrNdwJ8vJ69zjyVj0pZMoIFwREVnIxt9xz2T9UPnBP54yP0Pk47BqEtjkIG7ZNpeTbDg92G3c82LY/DoerCD5Rj0twuB5BRmyjXN8fhtNdHLvLYfd4GyzysWgcdidFXxhr1KqGIjRWWNjhSN05Tgdj/jDena3hsufe+BFL47yizc30vKJdnsNrU4ablJtwzCvavKJNYEW63Yo2uVY3PbnVPeZg24s0PvJNZMqTBMcQszxJOSHFoasmom0j0arBqwyRbrZ217b+G7+LX58QIe9NFNS/wDERSuxtfuOh6x0/mUz047qK2ojVAFUW+yXHOVTejcEM/2pUSYy95enXo/J/eiDh06Dy9n0Tb993NJVXJKT9u1VXiMWJUBL/jcJkpjyD0u8sh/zx0JJP3MggQ4FxCO29KkmHLhhOFv3htcapovtF2nlo742LidQ90yecK7NJ1EDTpJpoOTXJygz1+t2hdHYsFfVclJ7honPpOY06cS49p005l55z6XlG6bn/DZ4p1Hg7PzH4/vwve4TNFA==",
+            "coverageComplete": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 116480097208,
+      "name": "Final release gate (full)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:29:38Z",
+      "completed_at": "2026-10-15T14:29:37Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751880502/job/116480097208",
+      "notices": []
+    },
+    {
+      "id": 116480095736,
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:29:41Z",
+      "completed_at": "2026-10-15T14:32:55Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751880502/job/116480095736",
+      "notices": [
+        {
+          "title": "Copilot native summary",
+          "metadata": {
+            "schema": 1,
+            "scope": "SIX_NATIVE_PRISMA_SUITES_54_ASSERTIONS",
+            "exitCode": 0,
+            "passed": true,
+            "executed": 54,
+            "expected": 54,
+            "files": [
+              {
+                "path": "src/integration/copilot-conversation.test.ts",
+                "passed": 9,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-cout-achat.test.ts",
+                "passed": 5,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-ecusson-verifie.test.ts",
+                "passed": 9,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-financial-authz-v15.test.ts",
+                "passed": 6,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-portee-et-porte-financiere.test.ts",
+                "passed": 18,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot.test.ts",
+                "passed": 7,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              }
+            ],
+            "paidCalls": 0,
+            "limits": "Native fixture tests only; not production issuer/tenant/auth HTTP/model campaign. Setup-blocked/skipped assertions are NOT passes."
+          }
+        },
+        {
+          "title": "Phase6 native baseline page 2/2",
+          "metadata": {
+            "page": 2,
+            "pages": 2,
+            "complete": true,
+            "payload": "e loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `\\\"type\\\": \\\"module\\\"` in the closest package.json\\nSet `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.\\^[[39m\\n\"}"
+          }
+        },
+        {
+          "title": "Phase6 native baseline page 1/2",
+          "metadata": {
+            "page": 1,
+            "pages": 2,
+            "complete": true,
+            "payload": "{\"scope\":\"HISTORICAL_NEGATIVE_DIAGNOSTIC_NOT_CANDIDATE_PASS\",\"baseline\":\"0d64899ed81ab32ab99fa32fbd6cde0c55d5ec63\",\"childExitCode\":1,\"caseStatuses\":[\"failed\",\"failed\",\"passed\",\"passed\",\"passed\"],\"failures\":[{\"name\":\"le copilote ne livre pas le prix d\u2019achat \u00e0 un r\u00f4le non financier un MECHANIC obtient la liste, jamais le co\u00fbt\",\"fullTrace\":[\"TypeError: .toMatch() expects to receive a string, but got undefined\\n    at Proxy.<anonymous> (file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/@vitest/expect/dist/index.js:1293:10)\\n    at Proxy.<anonymous> (file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/@vitest/expect/dist/index.js:1156:15)\\n    at Proxy.methodWrapper (file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/chai/index.js:1737:25)\\n    at /home/runner/work/GarageFlowsV2/GarageFlowsV2/src/integration/phase6-historical-cout-achat.test.ts:70:59\\n    at async file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20\"]},{\"name\":\"le copilote ne livre pas le prix d\u2019achat \u00e0 un r\u00f4le non financier le m\u00e9canicien garde ce dont il a besoin : quoi commander, et combien\",\"fullTrace\":[\"TypeError: undefined is not iterable (cannot read property Symbol(Symbol.iterator))\\n    at /home/runner/work/GarageFlowsV2/GarageFlowsV2/src/integration/phase6-historical-cout-achat.test.ts:79:20\\n    at async file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20\"]}],\"stdout\":\"JSON report written to /tmp/gf-phase6-baseline-mPDmWt/results.json\\n\",\"stderr\":\"\\^[[33m(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:\\n  - ESM syntax in a fil"
+          }
+        }
+      ],
+      "historicalDecodeStatus": "INCOMPLETE_GITHUB_CONTROL_ESCAPE_TRANSFORMATION; no complete output claimed"
+    },
+    {
+      "id": 116480095624,
+      "name": "Secret scan (Gitleaks)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:29:42Z",
+      "completed_at": "2026-10-15T14:29:56Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751880502/job/116480095624",
+      "notices": [
+        {
+          "title": "Gitleaks inventory",
+          "metadata": {
+            "scannerSummary": "Gitleaks inventory: findings=0; scannerExit=0; commit=b4894c7c4b198f7a4ec17bedffa2708144b3b00a"
+          }
+        },
+        {
+          "title": "Gitleaks inventory page 1/1",
+          "metadata": {
+            "schemaVersion": 2,
+            "commit": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "coverageComplete": true,
+            "groups": []
+          }
+        }
+      ]
+    },
+    {
+      "id": 116480095589,
+      "name": "Full dependency tree \u2014 zero vulnerabilities",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:29:41Z",
+      "completed_at": "2026-10-15T14:30:10Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751880502/job/116480095589",
+      "notices": []
+    },
+    {
+      "id": 116480095561,
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:29:41Z",
+      "completed_at": "2026-10-15T14:31:28Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751880502/job/116480095561",
+      "notices": []
+    },
+    {
+      "id": 116480095063,
+      "name": "Native base (TypeScript, standard build, fixed JS budget)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "b4894c7c4b198f7a4ec17bedffa2708144b3b00a",
+      "started_at": "2026-10-15T14:29:41Z",
+      "completed_at": "2026-10-15T14:32:14Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38751880502/job/116480095063",
+      "notices": [
+        {
+          "title": "Copilot build budget",
+          "metadata": {
+            "totalBytes": 3612476,
+            "maxBytes": 3625984,
+            "files": 237,
+            "scope": "STANDARD_NEXT_BUILD_CLIENT_JS_ONLY"
+          }
+        }
+      ]
+    }
+  ]
+}

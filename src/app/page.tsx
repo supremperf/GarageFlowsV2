@@ -1,33 +1,37 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState, memo, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { format, addDays, subDays, parseISO } from 'date-fns'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useScheduleStore } from '@/store/schedule-store'
 import Header from '@/components/Header'
 import ScheduleBoard from '@/components/ScheduleBoard'
-import WeekView from '@/components/WeekView'
+const WeekView = dynamic(() => import('@/components/WeekView'), { ssr: false })
 import SuggestionPanel from '@/components/SuggestionPanel'
 import JobModal from '@/components/JobModal'
-import Dashboard from '@/components/Dashboard'
-import StockPanel from '@/components/StockPanel'
-import CompanySetup from '@/components/CompanySetup'
-import SettingsModal from '@/components/SettingsModal'
-import LanguageSelector from '@/components/LanguageSelector'
-import ReceptionBoard from '@/components/ReceptionBoard'
-import ReminderPanel from '@/components/ReminderPanel'
-import BillingPanel from '@/components/BillingPanel'
-import FinancialDashboard from '@/components/FinancialDashboard'
-import LaborCatalogPanel from '@/components/LaborCatalogPanel'
-import WarrantyPanel from '@/components/WarrantyPanel'
-import LoanerPanel from '@/components/LoanerPanel'
-import CopilotPanel from '@/components/CopilotPanel'
-import OcrPanel from '@/components/OcrPanel'
-import SuppliersPanel from '@/components/SuppliersPanel'
-import CatalogPanel from '@/components/CatalogPanel'
+const Dashboard = dynamic(() => import('@/components/Dashboard'), { ssr: false })
+const StockPanel = dynamic(() => import('@/components/StockPanel'), { ssr: false })
+const CompanySetup = dynamic(() => import('@/components/CompanySetup'), { ssr: false })
+const SettingsModal = dynamic(() => import('@/components/SettingsModal'), { ssr: false })
+const LanguageSelector = dynamic(() => import('@/components/LanguageSelector'), { ssr: false })
+const ReceptionBoard = dynamic(() => import('@/components/ReceptionBoard'), { ssr: false })
+const ReminderPanel = dynamic(() => import('@/components/ReminderPanel'), { ssr: false })
+const BillingPanel = dynamic(() => import('@/components/BillingPanel'), { ssr: false })
+const FinancialDashboard = dynamic(() => import('@/components/FinancialDashboard'), { ssr: false })
+const LaborCatalogPanel = dynamic(() => import('@/components/LaborCatalogPanel'), { ssr: false })
+const WarrantyPanel = dynamic(() => import('@/components/WarrantyPanel'), { ssr: false })
+const LoanerPanel = dynamic(() => import('@/components/LoanerPanel'), { ssr: false })
+const CopilotPanel = dynamic(() => import('@/components/CopilotPanel'), { ssr: false })
+const OcrPanel = dynamic(() => import('@/components/OcrPanel'), { ssr: false })
+const SuppliersPanel = dynamic(() => import('@/components/SuppliersPanel'), { ssr: false })
+const ClientsPanel = dynamic(() => import('@/components/ClientsPanel'), { ssr: false })
+const TicketsPanel = dynamic(() => import('@/components/TicketsPanel'), { ssr: false })
+const AppointmentsPanel = dynamic(() => import('@/components/AppointmentsPanel'), { ssr: false })
+const CatalogPanel = dynamic(() => import('@/components/CatalogPanel'), { ssr: false })
 import LicenseRevokedOverlay from '@/components/LicenseRevokedOverlay'
-import UpdateModal from '@/components/UpdateModal'
+const UpdateModal = dynamic(() => import('@/components/UpdateModal'), { ssr: false })
 import MobileNav from '@/components/MobileNav'
 import GfDrawer from '@/components/GfDrawer'
 import { Loader2, Sparkles, RefreshCw } from 'lucide-react'
@@ -47,7 +51,7 @@ const AppLoader = memo(function AppLoader() {
           <div className="absolute inset-0 rounded-2xl ring-2 ring-blue-500/30 animate-ping" />
         </div>
         <div className="text-center">
-          <p className="text-slate-300 text-sm font-semibold">GarageFlow</p>
+          <p className="text-slate-300 text-sm font-semibold">GarageFlows</p>
           <p className="text-slate-600 text-xs mt-0.5">Chargement du planning…</p>
         </div>
         <Loader2 className="w-4 h-4 animate-spin text-blue-500/60" />
@@ -63,6 +67,11 @@ export default function Home() {
   const {
     fetchData,
     fetchMechanics,
+    fetchHoraires,
+    // Le réglage `loanerEnabled` commande l'entrée de menu (GF-039). Le panneau
+    // lui-même n'est PAS démonté : une réservation ouverte resterait sinon
+    // inaccessible du jour où le garage décoche la case.
+    loanerActif,
     runAI,
     isDashboardOpen,
     isStockPanelOpen,
@@ -92,6 +101,9 @@ export default function Home() {
   const [isCopilotOpen,        setIsCopilotOpen]        = useState(false)
   const [isOcrOpen,            setIsOcrOpen]            = useState(false)
   const [isSuppliersOpen,      setIsSuppliersOpen]      = useState(false)
+  const [isClientsOpen,        setIsClientsOpen]        = useState(false)
+  const [isTicketsOpen,        setIsTicketsOpen]        = useState(false)
+  const [isApptsOpen,          setIsApptsOpen]          = useState(false)
   const [isCatalogOpen,        setIsCatalogOpen]        = useState(false)
   const [isAssistantOpen,      setIsAssistantOpen]      = useState(false)
   const [warrantyAlerts,       setWarrantyAlerts]       = useState(0)
@@ -166,6 +178,82 @@ export default function Home() {
     return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [status, fetchData, fetchMechanics])
 
+  /**
+   * SENS MÉCANICIEN → POSTE (GF-DUR-041).
+   *
+   * Mesuré avant correction : un mécanicien démarre son intervention depuis la
+   * PWA, la base enregistre `status=in_progress`, et l'écran du poste reste
+   * inchangé — indéfiniment. Le rafraîchissement au retour de focus ne sert à
+   * rien sur un écran d'atelier qui ne perd jamais le focus.
+   *
+   * On sonde une EMPREINTE (`/api/jobs/pulse`, deux agrégats, aucune donnée
+   * métier) toutes les 10 s, et on ne recharge le planning que si elle change.
+   * Coût en régime stable : 6 req/min, contre ~40 pour un sondage classique des
+   * deux listes — ce qui, avec la limite de 120 req/min PAR IP partagée par tout
+   * le garage, faisait la différence entre tenir et fabriquer des 429.
+   *
+   * En arrière-plan, aucune requête : `document.hidden` suspend la boucle, et
+   * le retour au premier plan relance immédiatement.
+   */
+  const [syncCloud, setSyncCloud] = useState<'attente' | null>(null)
+
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    let vu: string | null = null
+    let actif = true
+    let minuteur: ReturnType<typeof setTimeout> | null = null
+
+    const battre = async () => {
+      if (!actif) return
+      if (!document.hidden) {
+        try {
+          const r = await fetch(`/api/jobs/pulse?date=${encodeURIComponent(selectedDate)}`, { cache: 'no-store' })
+          if (r.ok) {
+            const { v, cloud } = await r.json()
+            // Premier passage : on mémorise sans recharger (les données
+            // viennent d'être chargées par le bootstrap).
+            if (vu !== null && v !== vu) { fetchData(); fetchMechanics() }
+            vu = v
+            // ── L'état de la remontée cloud devient VISIBLE (GF-039) ────────
+            // Une remontée non confirmée n'était que journalisée : rien ne
+            // distinguait « le mécanicien a reçu l'affectation » de « le cloud
+            // ne répond plus ». Le rattrapage a lieu au passage suivant, mais
+            // tant qu'il n'a pas abouti, le comptoir doit le savoir.
+            setSyncCloud(cloud === 'attente' ? 'attente' : null)
+          }
+        } catch { /* hors ligne : on retentera au prochain battement */ }
+      }
+      if (actif) minuteur = setTimeout(battre, 10_000)
+    }
+
+    minuteur = setTimeout(battre, 10_000)
+
+    /**
+     * Retour au premier plan : on REMPLACE la chaîne en cours, on n'en ajoute
+     * pas une seconde.
+     *
+     * `battre()` se replanifie lui-même. Sans annuler le minuteur déjà en vol,
+     * chaque bascule arrière-plan → premier plan engendrait une chaîne
+     * indépendante et durable : vingt bascules dans la journée = vingt et une
+     * chaînes, soit 126 requêtes/min au lieu de 6. Le poste finissait par
+     * atteindre son propre quota (120 req/min, sujet partagé sous Electron) et
+     * le garage recevait « Trop de requêtes » en enregistrant une intervention,
+     * sans qu'aucune action humaine ne l'explique.
+     */
+    const auRetour = () => {
+      if (document.hidden) return
+      if (minuteur) { clearTimeout(minuteur); minuteur = null }
+      battre()
+    }
+    document.addEventListener('visibilitychange', auRetour)
+
+    return () => {
+      actif = false
+      if (minuteur) clearTimeout(minuteur)
+      document.removeEventListener('visibilitychange', auRetour)
+    }
+  }, [status, selectedDate, fetchData, fetchMechanics])
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login')
@@ -209,9 +297,20 @@ export default function Home() {
       .then(data => { if (data?.totalAlerts) setWarrantyAlerts(data.totalAlerts) })
       .catch(() => {})
 
-    // Load mechanics first (faster perceived startup), then jobs + AI
+    // Load mechanics first (faster perceived startup), then jobs + AI.
+    // `alive` évite de créer l'intervalle APRÈS un démontage survenu pendant les
+    // deux fetch de bootstrap (sinon runAI tournait indéfiniment sur un composant
+    // démonté, jamais nettoyé).
+    // Les horaires d'atelier bornent la grille du planning : sans ce chargement,
+    // elle repart des constantes 8 h – 18 h et le réglage du garage reste sans
+    // effet (GF-021). Non bloquant : la grille s'affiche avec le repli en
+    // attendant la réponse.
+    void fetchHoraires()
+
+    let alive = true
     fetchMechanics().then(() => {
       fetchData().then(() => {
+        if (!alive) return
         runAI()
         // Refresh AI analysis every 3 minutes (reduced frequency = less CPU)
         aiIntervalRef.current = setInterval(runAI, 3 * 60 * 1000)
@@ -219,9 +318,10 @@ export default function Home() {
     })
 
     return () => {
+      alive = false
       if (aiIntervalRef.current) clearInterval(aiIntervalRef.current)
     }
-  }, [status, fetchData, fetchMechanics, runAI])
+  }, [status, fetchData, fetchMechanics, fetchHoraires, runAI])
 
   // Backend setup error — show clear instructions instead of blue screen
   if (setupError) {
@@ -275,10 +375,13 @@ export default function Home() {
         onOpenFinance={() => setIsFinanceOpen(true)}
         onOpenLaborCatalog={() => setIsLaborCatalogOpen(true)}
         onOpenWarranties={() => setIsWarrantyPanelOpen(true)}
-        onOpenLoaner={() => setIsLoanerPanelOpen(true)}
+        onOpenLoaner={loanerActif ? () => setIsLoanerPanelOpen(true) : undefined}
         onOpenCopilot={() => setIsCopilotOpen(true)}
         onOpenOcr={() => setIsOcrOpen(true)}
         onOpenSuppliers={() => setIsSuppliersOpen(true)}
+        onOpenClients={() => setIsClientsOpen(true)}
+        onOpenTickets={() => setIsTicketsOpen(true)}
+        onOpenAppointments={() => setIsApptsOpen(true)}
         onOpenCatalog={() => setIsCatalogOpen(true)}
         warrantyAlerts={warrantyAlerts}
       />
@@ -286,6 +389,17 @@ export default function Home() {
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden min-h-0">
         <main className="gf-app-main flex-1 min-w-0 p-3 overflow-hidden flex flex-col">
+          {/* ── Remontée cloud en attente : le comptoir doit le savoir (GF-039)
+              Le planning reste pleinement utilisable — l'écriture locale est
+              déjà faite. Ce qui est en attente, c'est sa propagation vers la
+              PWA du mécanicien, rejouée au passage suivant. */}
+          {syncCloud === 'attente' && (
+            <div className="mb-2 flex-shrink-0 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-1.5 text-[11px] text-amber-300">
+              Synchronisation cloud en attente — les affectations n’ont pas encore
+              atteint l’espace mécanicien. Nouvel essai automatique.
+            </div>
+          )}
+
           {/* ── View toggle ─────────────────────────────────────────────────── */}
           {!isDashboardOpen && (
             <div className="flex items-center gap-1 mb-2 flex-shrink-0">
@@ -329,10 +443,13 @@ export default function Home() {
         onOpenFinance={() => setIsFinanceOpen(true)}
         onOpenLaborCatalog={() => setIsLaborCatalogOpen(true)}
         onOpenWarranties={() => setIsWarrantyPanelOpen(true)}
-        onOpenLoaner={() => setIsLoanerPanelOpen(true)}
+        onOpenLoaner={loanerActif ? () => setIsLoanerPanelOpen(true) : undefined}
         onOpenCopilot={() => setIsCopilotOpen(true)}
         onOpenOcr={() => setIsOcrOpen(true)}
         onOpenSuppliers={() => setIsSuppliersOpen(true)}
+        onOpenClients={() => setIsClientsOpen(true)}
+        onOpenTickets={() => setIsTicketsOpen(true)}
+        onOpenAppointments={() => setIsApptsOpen(true)}
         onOpenCatalog={() => setIsCatalogOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         warrantyAlerts={warrantyAlerts}
@@ -376,6 +493,9 @@ export default function Home() {
       {isCopilotOpen          && <CopilotPanel          onClose={() => setIsCopilotOpen(false)} onAction={handleCopilotAction} />}
       {isOcrOpen              && <OcrPanel              onClose={() => setIsOcrOpen(false)} onUseVehicle={handleOcrVehicle} />}
       {isSuppliersOpen        && <SuppliersPanel        onClose={() => setIsSuppliersOpen(false)} />}
+      {isClientsOpen          && <ClientsPanel          onClose={() => setIsClientsOpen(false)} />}
+      {isTicketsOpen          && <TicketsPanel          onClose={() => setIsTicketsOpen(false)} />}
+      {isApptsOpen            && <AppointmentsPanel     onClose={() => setIsApptsOpen(false)} />}
       {isCatalogOpen          && <CatalogPanel          onClose={() => setIsCatalogOpen(false)} />}
       {isSettingsOpen         && <SettingsModal        onClose={() => setIsSettingsOpen(false)} />}
 

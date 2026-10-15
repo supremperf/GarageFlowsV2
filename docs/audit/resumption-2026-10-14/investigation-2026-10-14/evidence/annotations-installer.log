@@ -1,0 +1,12 @@
+{
+  "run": 38588275520,
+  "commit": "258eff34343e1919c0bad91d2680bf788e98b1ce",
+  "jobs": [
+    {
+      "name": "Secret scan (Gitleaks)",
+      "apiExit": 1,
+      "annotations": 0,
+      "gitleaksLocations": 0
+    }
+  ]
+}

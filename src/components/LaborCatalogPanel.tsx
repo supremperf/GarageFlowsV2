@@ -68,20 +68,39 @@ export default function LaborCatalogPanel({ onClose }: { onClose: () => void }) 
     if (!form.name.trim()) return
     setSaving(true)
     try {
-      if (editId) {
-        await fetch(`/api/labor-operations/${editId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
-      } else {
-        await fetch('/api/labor-operations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      // ── La fermeture du formulaire n'est plus le signal de succès (GF-024) ──
+      // Ni `res.ok` ni le corps n'étaient consultés : un refus du serveur — une
+      // durée à zéro renvoie 400 — refermait le formulaire, effaçait la saisie,
+      // et le barème gardait l'ancien tarif que le garage croyait corrigé. Toute
+      // facturation ultérieure partait sur ce tarif-là.
+      const res = editId
+        ? await fetch(`/api/labor-operations/${editId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+        : await fetch('/api/labor-operations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({} as { error?: string }))
+        toast.error(d?.error ?? 'Enregistrement refusé par le serveur.')
+        return
       }
       await load()
       setShowAdd(false); setEditId(null); setForm(emptyForm)
+    } catch {
+      toast.error('Serveur injoignable — l’opération n’a pas été enregistrée.')
     } finally { setSaving(false) }
   }
 
   async function del(id: string) {
     if (!confirm(t.lcConfirmDelete)) return
-    await fetch(`/api/labor-operations/${id}`, { method: 'DELETE' })
-    setOps(o => o.filter(x => x.id !== id))
+    try {
+      const res = await fetch(`/api/labor-operations/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({} as { error?: string }))
+        toast.error(d?.error ?? 'Suppression refusée par le serveur.')
+        return
+      }
+      setOps(o => o.filter(x => x.id !== id))
+    } catch {
+      toast.error('Serveur injoignable — l’opération n’a pas été supprimée.')
+    }
   }
 
   async function importDefaults() {

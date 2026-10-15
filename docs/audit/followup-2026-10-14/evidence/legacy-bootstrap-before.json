@@ -1,0 +1,8 @@
+{
+  "source": "git show HEAD:scripts/setup-dev.js",
+  "fixture": "test-owned non-empty distinguishable files, not a runtime Prisma test",
+  "exitCode": 0,
+  "canonicalPreserved": true,
+  "legacyStillExists": false,
+  "unrelatedFileStillExists": false
+}
