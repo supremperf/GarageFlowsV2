@@ -56,3 +56,30 @@ paths = [
   # des regexes ciblées et cette unique exemption de fichier.
 ]
 stopwords = ["BEGIN PUBLIC KEY"]
+
+# Phase4: ten verified FILE SHA-256 digests confused with generic-api-key because
+# their JSON map keys contain access/authz/api. NOT a whole-file exemption.
+# Official v8.24.3 rule extension inherits the original detection rule unchanged.
+# AND: existing F01..F32 receipt path + exact source-path/digest line must BOTH match.
+# See docs/audit/copilot-phase4/gitleaks-code-digest-triage.json and negative tests.
+[[rules]]
+id = "generic-api-key"
+  [[rules.allowlists]]
+  description = "Ten cryptographically verified immutable receipt code digests only"
+  condition = "AND"
+  regexTarget = "line"
+  paths = [
+    '''^docs/audit/copilot-phase4/F(?:0[1-9]|[12][0-9]|3[0-2])\.json$'''
+  ]
+  regexes = [
+    '''^\s*"docs/audit/resumption\-2026\-10\-14/validation\-f88f283\-2026\-10\-14/ACCESS\-REQUEST\.md":\s*"6bfdea8b78f6ee4889952b6e27fd86eacfe15a188e331b9bec7cd33ea74b6b0c",?\s*$''',
+    '''^\s*"docs/audit/resumption\-2026\-10\-14/investigation\-2026\-10\-14/external\-access\.py":\s*"3337e356c63363c3f80d5f84911ab29a637d05df2f7ae5143caac96ce912a6c6",?\s*$''',
+    '''^\s*"docs/audit/resumption\-2026\-10\-14/investigation\-2026\-10\-14/external\-access\.json":\s*"e438db86a987389f35b091e64b8fc36bed5b627722b1728d5ff2824c38968cf4",?\s*$''',
+    '''^\s*"docs/audit/resumption\-2026\-10\-14/evidence/gitleaks\-api\-assets\.json":\s*"fa8aa9c2073d5a89f795f871c46168a4043380c62f075a1d370b7fb01114298d",?\s*$''',
+    '''^\s*"docs/audit/resumption\-2026\-10\-14/closure\-2026\-10\-14/external\-access\.json":\s*"8a1bc24f28dff1053f5353e4d1cd8e0677beffd70cae51f3f7096c58954ac67f",?\s*$''',
+    '''^\s*"docs/audit/resumption\-2026\-10\-14/closure\-2026\-10\-14/evidence/invoice\-authz\-isolated\.json":\s*"7654bb6a9efdc6de8d9fb976859ce4a610a64078cb492309e6df7f7639e60800",?\s*$''',
+    '''^\s*"docs/audit/resumption\-2026\-10\-14/closure\-2026\-10\-14/evidence/authz\-before\.json":\s*"57379f0c08f4d41b3550495464a38eeaa62c5b9258da612aaa5b367f9600128d",?\s*$''',
+    '''^\s*"docs/audit/resumption\-2026\-10\-14/closure\-2026\-10\-14/evidence/authz\-after\.json":\s*"e7183b5283995d76badd123c6d8cdf8bcf89362f5e8f170e47c77a5cb5392f8e",?\s*$''',
+    '''^\s*"docs/audit/resumption\-2026\-10\-14/closure\-2026\-10\-14/ci\-log\-access\.json":\s*"9294d387a7f3610de91be03ab8abd4516276f2785edd7608845904e65270afdd",?\s*$''',
+    '''^\s*"docs/audit/resumption\-2026\-10\-14/closure\-2026\-10\-14/check\-access\.py":\s*"77aca9ae2aba02443c53ace61fa7ecf189f8aa22befcb1c8347dc2b13a2a884d",?\s*$''',
+  ]

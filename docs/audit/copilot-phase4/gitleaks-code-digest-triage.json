@@ -1,0 +1,87 @@
+{
+  "recordedAt": "2026-10-15T14:40:29.378487+02:00",
+  "publishedHeadInspected": "ce5d2815ce185030aebccfc56c1d3eefd955aaa7",
+  "checkIds": [
+    116425335796,
+    116425310428
+  ],
+  "rule": "generic-api-key",
+  "method": "Location metadata only from annotations; independently parsed receipt sourceHashes and recomputed SHA256 of each corresponding local public source artifact; all ten matched exactly. No scanner Secret/Match retrieved or published.",
+  "receiptScope": "^docs/audit/copilot-phase4/F(?:0[1-9]|[12][0-9]|3[0-2])\\.json$",
+  "exceptionCondition": "AND exact receipt path + exact source-path/digest JSON line; inherited default rule unchanged, all other values and files scanned",
+  "oldIgnoreFingerprintsUnchanged": true,
+  "realCredentialFound": false,
+  "scopeLimit": "Only the ten inspected digests are classified; not a claim of no other repository/history/default-branch secrets. No key rotation/revocation/history rewrite.",
+  "sourcePairs": [
+    {
+      "sourcePath": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/ACCESS-REQUEST.md",
+      "sourceSha256": "6bfdea8b78f6ee4889952b6e27fd86eacfe15a188e331b9bec7cd33ea74b6b0c",
+      "classification": "VERIFIED_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exampleReceipt": "docs/audit/copilot-phase4/F16.json",
+      "exampleLine": 328
+    },
+    {
+      "sourcePath": "docs/audit/resumption-2026-10-14/investigation-2026-10-14/external-access.py",
+      "sourceSha256": "3337e356c63363c3f80d5f84911ab29a637d05df2f7ae5143caac96ce912a6c6",
+      "classification": "VERIFIED_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exampleReceipt": "docs/audit/copilot-phase4/F16.json",
+      "exampleLine": 259
+    },
+    {
+      "sourcePath": "docs/audit/resumption-2026-10-14/investigation-2026-10-14/external-access.json",
+      "sourceSha256": "e438db86a987389f35b091e64b8fc36bed5b627722b1728d5ff2824c38968cf4",
+      "classification": "VERIFIED_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exampleReceipt": "docs/audit/copilot-phase4/F16.json",
+      "exampleLine": 258
+    },
+    {
+      "sourcePath": "docs/audit/resumption-2026-10-14/evidence/gitleaks-api-assets.json",
+      "sourceSha256": "fa8aa9c2073d5a89f795f871c46168a4043380c62f075a1d370b7fb01114298d",
+      "classification": "VERIFIED_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exampleReceipt": "docs/audit/copilot-phase4/F16.json",
+      "exampleLine": 220
+    },
+    {
+      "sourcePath": "docs/audit/resumption-2026-10-14/closure-2026-10-14/external-access.json",
+      "sourceSha256": "8a1bc24f28dff1053f5353e4d1cd8e0677beffd70cae51f3f7096c58954ac67f",
+      "classification": "VERIFIED_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exampleReceipt": "docs/audit/copilot-phase4/F16.json",
+      "exampleLine": 155
+    },
+    {
+      "sourcePath": "docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/invoice-authz-isolated.json",
+      "sourceSha256": "7654bb6a9efdc6de8d9fb976859ce4a610a64078cb492309e6df7f7639e60800",
+      "classification": "VERIFIED_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exampleReceipt": "docs/audit/copilot-phase4/F16.json",
+      "exampleLine": 147
+    },
+    {
+      "sourcePath": "docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/authz-before.json",
+      "sourceSha256": "57379f0c08f4d41b3550495464a38eeaa62c5b9258da612aaa5b367f9600128d",
+      "classification": "VERIFIED_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exampleReceipt": "docs/audit/copilot-phase4/F16.json",
+      "exampleLine": 144
+    },
+    {
+      "sourcePath": "docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/authz-after.json",
+      "sourceSha256": "e7183b5283995d76badd123c6d8cdf8bcf89362f5e8f170e47c77a5cb5392f8e",
+      "classification": "VERIFIED_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exampleReceipt": "docs/audit/copilot-phase4/F16.json",
+      "exampleLine": 143
+    },
+    {
+      "sourcePath": "docs/audit/resumption-2026-10-14/closure-2026-10-14/ci-log-access.json",
+      "sourceSha256": "9294d387a7f3610de91be03ab8abd4516276f2785edd7608845904e65270afdd",
+      "classification": "VERIFIED_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exampleReceipt": "docs/audit/copilot-phase4/F16.json",
+      "exampleLine": 134
+    },
+    {
+      "sourcePath": "docs/audit/resumption-2026-10-14/closure-2026-10-14/check-access.py",
+      "sourceSha256": "77aca9ae2aba02443c53ace61fa7ecf189f8aa22befcb1c8347dc2b13a2a884d",
+      "classification": "VERIFIED_SOURCE_SHA256_NOT_CREDENTIAL",
+      "exampleReceipt": "docs/audit/copilot-phase4/F16.json",
+      "exampleLine": 130
+    }
+  ]
+}

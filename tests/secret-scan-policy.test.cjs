@@ -41,3 +41,31 @@ test('three public OAuth headers and one frozen prose fingerprint are individual
     assert.match(bytes.toString().split('\n')[r.startLine - 1], /^X-Oauth-Client-Id: [A-Za-z0-9]{20}\r?$/)
   }
 })
+
+test('phase4 digest exception requires exact receipt path AND exact hash-locked source line; no secret-shaped substitution', () => {
+  const crypto = require('node:crypto')
+  const triage = JSON.parse(fs.readFileSync('docs/audit/copilot-phase4/gitleaks-code-digest-triage.json', 'utf8'))
+  const config = fs.readFileSync('.gitleaks.toml', 'utf8')
+  const block = config.slice(config.indexOf('# Phase4: ten verified'))
+  assert.match(block, /\[\[rules\]\]\s+id = "generic-api-key"/)
+  assert.match(block, /condition = "AND"/)
+  assert.match(block, /regexTarget = "line"/)
+  const pathText = block.match(/paths = \[\s*'''([^']+)'''\s*\]/)[1]
+  assert.equal(pathText, triage.receiptScope)
+  const allowedPath = new RegExp(pathText)
+  for (const p of ['docs/audit/copilot-phase4/F01.json','docs/audit/copilot-phase4/F32.json']) assert.ok(allowedPath.test(p))
+  for (const p of ['src/lib/auth-secret.ts','docs/audit/copilot-phase4/F33.json','docs/other.json','docs/audit/copilot-phase4/nested/F16.json']) assert.ok(!allowedPath.test(p))
+  const regexBlock = block.slice(block.indexOf('  regexes = ['))
+  const patterns = [...regexBlock.matchAll(/'''([^']+)'''/g)].map(m => new RegExp(m[1]))
+  assert.equal(patterns.length, 10); assert.equal(triage.sourcePairs.length, 10)
+  for (const row of triage.sourcePairs) {
+    assert.equal(row.classification,'VERIFIED_SOURCE_SHA256_NOT_CREDENTIAL')
+    assert.equal(crypto.createHash('sha256').update(fs.readFileSync(row.sourcePath)).digest('hex'), row.sourceSha256,
+      'Source digest changed: exception requires re-triage, not a broader pattern')
+    const line = '    '+JSON.stringify(row.sourcePath)+': '+JSON.stringify(row.sourceSha256)+','
+    assert.equal(patterns.filter(p => p.test(line)).length,1)
+    assert.ok(!patterns.some(p => p.test(line.replace(row.sourceSha256,'0'.repeat(64)))))
+    assert.ok(!patterns.some(p => p.test(line.replace(row.sourceSha256,'synthetic_credential_must_still_be_detected'))))
+    assert.ok(!patterns.some(p => p.test(line.replace(row.sourcePath,'src/lib/auth-secret.ts'))))
+  }
+})
