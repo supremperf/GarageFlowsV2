@@ -144,6 +144,9 @@ jobs:
             DIRECT_URL="postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres" \
             npx prisma generate --schema prisma/server/schema.prisma
 
+      - name: Copilot native regressions (six suites, 54 assertions)
+        run: node scripts/validate-copilot-native.cjs
+
       - name: TypeScript
         run: npx tsc --noEmit
 
