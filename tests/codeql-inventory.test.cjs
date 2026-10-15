@@ -17,3 +17,9 @@ test('artifact indexes resolve to physical source paths without leaking artifact
  const rows=project({runs:[{artifacts:[{location:{uri:'src/fixture.ts'},contents:{text:'PRIVATE_SYNTHETIC_VALUE'}}],results:[{ruleId:'js/fixture',locations:[{physicalLocation:{artifactLocation:{index:0},region:{startLine:3}}}]}]}]})
  a.equal(rows[0].locations[0].path,'src/fixture.ts');a.ok(!JSON.stringify(rows).includes('PRIVATE_SYNTHETIC_VALUE'))
 })
+
+test('CodeQL query pack extension metadata supplies rule severity without messages',()=>{
+ const rows=project({runs:[{tool:{driver:{rules:[]},extensions:[{rules:[{id:'js/fixture',properties:{'security-severity':'7.5'},defaultConfiguration:{level:'warning'},fullDescription:{text:'PRIVATE_SYNTHETIC_VALUE'}}]}]},results:[{ruleId:'js/fixture',locations:[]}]}]})
+ a.deepEqual(rows[0].ruleMetadata,{securitySeverity:'7.5',level:'warning'});a.ok(!JSON.stringify(rows).includes('PRIVATE_SYNTHETIC_VALUE'))
+ a.throws(()=>project({}));a.throws(()=>project({runs:[{results:[{locations:[{}]}]}]}))
+})
