@@ -26,6 +26,22 @@ function locations(report, commit) {
       endLine: finding.EndLine, commit, scope: 'working-tree', status: 'EN ATTENTE DE REVUE' }
   })
 }
+// GitHub caps per-step annotations. Publish bounded complete pages FIRST, so
+// the API can retrieve the whole metadata inventory rather than just ten rows.
+// Nothing from Secret/Match/child output enters these pages.
+function inventoryPages(rows, commit) {
+  const groups = []; let group = []; let bytes = 0
+  for (const row of rows) {
+    const size = Buffer.byteLength(JSON.stringify(row), 'utf8') + 1
+    if (size > 39000) throw new Error('Oversized metadata row')
+    if (bytes + size > 39000 && group.length) { groups.push(group); group = []; bytes = 0 }
+    group.push(row); bytes += size
+  }
+  if (group.length || !groups.length) groups.push(group)
+  return groups.slice(0, 8).map((items, index) => ({ schemaVersion: 1, commit,
+    total: rows.length, page: index + 1, pages: groups.length,
+    coverageComplete: groups.length <= 8, rows: items }))
+}
 function run({ spawn = cp.spawnSync, cwd = process.cwd(), commit = process.env.GITHUB_SHA || '',
   emit = line => console.log(line) } = {}) {
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'garageflows-gitleaks-'))
@@ -53,6 +69,9 @@ function run({ spawn = cp.spawnSync, cwd = process.cwd(), commit = process.env.G
       emit('::error::Gitleaks exit/report inconsistency; refusing success.')
       return 2
     }
+    for (const page of inventoryPages(rows, commit)) {
+      emit(`::notice title=Gitleaks inventory page ${page.page}/${page.pages}::${escapeData(JSON.stringify(page))}`)
+    }
     // Notices carry untriaged metadata, not a severity judgement. The original
     // exit 1 still fails the job and Required validation. Avoid per-step limits
     // on error annotations; consumers must reconcile annotation count vs total.
@@ -70,5 +89,5 @@ function run({ spawn = cp.spawnSync, cwd = process.cwd(), commit = process.env.G
     fs.rmSync(temporary, { recursive: true, force: true })
   }
 }
-module.exports = { run, locations, escapeData, escapeProperty }
+module.exports = { run, locations, inventoryPages, escapeData, escapeProperty }
 if (require.main === module) process.exitCode = run()
