@@ -100,7 +100,7 @@ jobs:
         run: npm ci
       - name: Copilot evaluation safety (offline only)
         run: |
-          node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs tests/copilot-blind-intake.test.cjs
+          node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs tests/copilot-blind-intake.test.cjs tests/phase6-security-context.test.cjs tests/codeql-inventory.test.cjs tests/config-dotenv-context.test.cjs
           node scripts/evaluate-copilot-phase4.cjs --preflight
       - name: Standard TypeScript (no diagnostic declarations)
         run: npx tsc --noEmit
@@ -264,7 +264,7 @@ jobs:
 
       - name: Copilot budget guards and frozen validation integrity (offline)
         run: |
-          node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs tests/copilot-blind-intake.test.cjs
+          node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs tests/copilot-blind-intake.test.cjs tests/phase6-security-context.test.cjs tests/codeql-inventory.test.cjs tests/config-dotenv-context.test.cjs
           node scripts/evaluate-copilot-phase4.cjs --verify-freeze
 
       - name: Tests (unit + integration)
