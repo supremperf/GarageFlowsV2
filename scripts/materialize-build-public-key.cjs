@@ -24,14 +24,18 @@ function materializePublicKey(root) {
     throw new Error('Public anchors disagree; no key file written')
   }
   const directory = path.join(root, 'keys'), target = path.join(directory, 'public.pem')
-  if (!fs.existsSync(directory)) fs.mkdirSync(directory)
+  fs.mkdirSync(directory, { recursive: true })
   if (!fs.lstatSync(directory).isDirectory()) throw new Error('Refusing non-directory key path')
   try { fs.writeFileSync(target, electron, { flag: 'wx', mode: 0o644 }); return 'created' }
   catch (error) {
     if (error.code !== 'EEXIST') throw error
-    if (!fs.lstatSync(target).isFile() || fingerprint(fs.readFileSync(target, 'utf8')) !== expected) {
-      throw new Error('Existing public key differs; preserved without modification')
-    }
+    // Read/check the SAME opened object. Never lstat-then-read the path.
+    const fd = fs.openSync(target, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0))
+    try {
+      if (!fs.fstatSync(fd).isFile() || fingerprint(fs.readFileSync(fd, 'utf8')) !== expected) {
+        throw new Error('Existing public key differs; preserved without modification')
+      }
+    } finally { fs.closeSync(fd) }
     return 'unchanged'
   }
 }

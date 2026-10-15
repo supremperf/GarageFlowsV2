@@ -53,3 +53,10 @@ jobs:
         uses: github/codeql-action/analyze@cf12ceefebab2c867b9c35d7f907e059681d37ab # v3
         with:
           category: '/language:${{ matrix.language }}'
+          output: '${{ runner.temp }}/garageflows-codeql-results'
+
+      - name: Safe complete CodeQL rule and data-flow inventory (no snippets)
+        if: always()
+        run: |
+          node --test tests/codeql-inventory.test.cjs
+          node scripts/report-codeql-locations.cjs "$RUNNER_TEMP/garageflows-codeql-results"

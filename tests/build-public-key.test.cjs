@@ -32,3 +32,16 @@ test('rejects disagreement between anchors before writing any resource', () => f
   assert.throws(() => materializePublicKey(root), /disagree/)
   assert.equal(fs.existsSync(path.join(root, 'keys/public.pem')), false)
 }))
+
+test('refuses a symlink directory without writing outside the fixture', () => fixture(root => {
+  const external=fs.mkdtempSync(path.join(os.tmpdir(),'gf-public-external-'))
+  try { fs.symlinkSync(external,path.join(root,'keys'),'junction'); assert.throws(()=>materializePublicKey(root)); assert.deepEqual(fs.readdirSync(external),[]) }
+  finally { fs.rmSync(external,{recursive:true,force:true}) }
+}))
+test('a replaced pathname cannot change the descriptor already being checked', () => fixture((root,pem) => {
+  materializePublicKey(root)
+  const original=fs.readFileSync;let descriptorRead=false
+  fs.readFileSync=function(file,...args){if(typeof file==='number'){descriptorRead=true;fs.renameSync(path.join(root,'keys/public.pem'),path.join(root,'keys/original.pem'));fs.writeFileSync(path.join(root,'keys/public.pem'),'replacement-preserved')}return original.call(fs,file,...args)}
+  try { assert.equal(materializePublicKey(root),'unchanged');assert.equal(descriptorRead,true);assert.equal(original(path.join(root,'keys/public.pem'),'utf8'),'replacement-preserved');assert.equal(original(path.join(root,'keys/original.pem'),'utf8'),pem) }
+  finally {fs.readFileSync=original}
+}))

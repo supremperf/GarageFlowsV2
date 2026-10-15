@@ -15,8 +15,9 @@
  * `estimatedCost / recommendedOrderQty` rend le prix d'achat unitaire : c'est
  * bien la marge qui fuyait, pas une donnée d'atelier.
  *
- * Ce qui reste dû à un mécanicien est vérifié aussi : savoir QUELLES pièces
- * manquent et EN QUELLE QUANTITÉ. On retire le prix, pas la réponse.
+ * Phase6 : le copilote exige le périmètre staff/job:manage. Le mécanicien
+ * est refusé ; le réceptionniste autorisé conserve quantités mais jamais coûts.
+ * La route stock-forecast conserve son propre contrat historique testé ci-dessous.
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import path from 'node:path'
@@ -36,12 +37,12 @@ let garageA: string
 
 const commeRole = (role: string) => { h.session = { user: { id: 'u1', name: 'U', role, garageId: garageA } } }
 
-const demander = async (query: string) => {
-  const r = await copilotPOST(new Request('http://localhost/api/copilot', {
+const demanderResponse = async (query: string) => {
+  return copilotPOST(new Request('http://localhost/api/copilot', {
     method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }),
   }))
-  return r.json()
 }
+const demander = async (query: string) => (await demanderResponse(query)).json()
 const prevoir = async () => {
   const r = await previsionGET(new Request('http://localhost/api/stock-forecast'))
   return r.json()
@@ -63,23 +64,34 @@ beforeAll(async () => {
 afterAll(async () => { await prisma?.$disconnect(); if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH) })
 
 describe('le copilote ne livre pas le prix d’achat à un rôle non financier', () => {
-  it('un MECHANIC obtient la liste, jamais le coût', async () => {
-    commeRole('MECHANIC')
-    const json = await demander('Quelles pièces sont en rupture de stock ?')
-
-    expect(json.message, 'le besoin d’atelier est servi').toMatch(/à réapprovisionner/)
-    expect(json.message, 'le coût estimé est une donnée financière').not.toMatch(/coût estimé/)
-    expect(JSON.stringify(json.data ?? []), 'estimatedCost révèle le prix d’achat unitaire')
-      .not.toMatch(/estimatedCost/)
+  // Phase6: the catalogue is staff-only and requires job:manage. A
+  // cost-redacted response is NOT authority to grant global mechanic stock access.
+  it('MECHANIC et rôle inconnu : refus 403 avant toute lecture de stock', async () => {
+    const reads = vi.spyOn(prisma.part, 'findMany')
+    try {
+      for (const role of ['MECHANIC', 'UNKNOWN']) {
+        commeRole(role)
+        const response = await demanderResponse('Quelles pièces sont en rupture de stock ?')
+        expect(response.status).toBe(403)
+        const json = await response.json()
+        expect(json.error).toBe('Accès refusé')
+        expect(json.data).toBeUndefined()
+        expect(json.message).toBeUndefined()
+        expect(JSON.stringify(json)).not.toMatch(/estimatedCost|Plaquettes|BRK-9/)
+      }
+      expect(reads).not.toHaveBeenCalled()
+    } finally { reads.mockRestore() }
   })
 
-  it('le mécanicien garde ce dont il a besoin : quoi commander, et combien', async () => {
-    commeRole('MECHANIC')
+  it('RECEPTIONIST autorisé : quoi commander et combien, jamais le coût', async () => {
+    commeRole('RECEPTIONIST')
     const json = await demander('Quelles pièces sont en rupture de stock ?')
+    expect(json.message).toMatch(/à réapprovisionner/)
+    expect(json.message).not.toMatch(/coût estimé/)
+    expect(JSON.stringify(json.data)).not.toMatch(/estimatedCost/)
     const [plan] = json.data
     expect(plan.name).toBe('Plaquettes')
-    expect(plan.recommendedOrderQty, 'retirer le prix ne doit pas retirer la quantité')
-      .toBeGreaterThan(0)
+    expect(plan.recommendedOrderQty).toBeGreaterThan(0)
   })
 
   it('un OWNER, lui, voit le coût — la donnée n’est pas supprimée, elle est réservée', async () => {
