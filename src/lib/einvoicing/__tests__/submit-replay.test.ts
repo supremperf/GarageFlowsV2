@@ -35,6 +35,10 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// Simulated transport includes DNS, while the real SSRF guard stays enabled.
+const dns = vi.hoisted(() => ({ lookup: vi.fn() }))
+vi.mock('node:dns/promises', () => ({ lookup: dns.lookup }))
+
 process.env.GF_EINVOICE_CREDENTIALS_KEY = Buffer.alloc(32, 7).toString('base64')
 
 type Ligne = Record<string, unknown>
@@ -167,6 +171,9 @@ function transmissionExistante(
 }
 
 beforeEach(() => {
+  dns.lookup.mockReset().mockImplementation(async (hostname: string) => [{
+    address: hostname === 'api.plateforme-test.fr' ? '93.184.216.34' : '127.0.0.1', family: 4,
+  }])
   base.transmissions = []
   base.evenements = []
   base.audits = []

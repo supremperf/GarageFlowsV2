@@ -135,16 +135,31 @@ function cleCache(ctx: ProviderConnectionContext): string {
  *    agréée n'a aucune raison de rediriger un appel d'API : le refus est franc.
  */
 async function fetchAvecDelai(url: string, init: RequestInit): Promise<Response> {
-  const verdict = await verifierDestination(url)
-  if (!verdict.ok) {
-    throw new Error(verdict.message ?? 'Destination refusée.')
-  }
+  // The existing deadline covers DNS AND dispatch/response headers. A lookup
+  // cannot be cancelled by node:dns, but it must not hold the caller forever,
+  // reset the budget, or dispatch a request after the deadline has expired.
   const ctrl = new AbortController()
-  const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const expired = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      const error = new Error('Request aborted: platform deadline exceeded')
+      error.name = 'AbortError'
+      ctrl.abort(error)
+      reject(error)
+    }, TIMEOUT_MS)
+  })
   try {
-    return await fetch(url, { ...init, signal: ctrl.signal, redirect: 'error' })
+    return await Promise.race([
+      (async () => {
+        const verdict = await verifierDestination(url)
+        if (ctrl.signal.aborted) throw ctrl.signal.reason
+        if (!verdict.ok) throw new Error(verdict.message ?? 'Destination refusée.')
+        return fetch(url, { ...init, signal: ctrl.signal, redirect: 'error' })
+      })(),
+      expired,
+    ])
   } finally {
-    clearTimeout(t)
+    clearTimeout(timer)
   }
 }
 

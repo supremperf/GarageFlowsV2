@@ -13,6 +13,10 @@
  *  - aucun secret ne transite dans une URL.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+// Simulated transport includes DNS, while the real SSRF guard stays enabled.
+const dns = vi.hoisted(() => ({ lookup: vi.fn() }))
+vi.mock('node:dns/promises', () => ({ lookup: dns.lookup }))
 import {
   genericPaAdapter, mapStatut, messageHttp, messageReseau, oublierJetons,
   type GenericPaCredentials,
@@ -56,6 +60,9 @@ function reponse(body: unknown, status = 200): Response {
 }
 
 beforeEach(() => {
+  dns.lookup.mockReset().mockImplementation(async (hostname: string) => [{
+    address: ['api.plateforme-test.fr', 'auth.plateforme-test.fr'].includes(hostname) ? '93.184.216.34' : '127.0.0.1', family: 4,
+  }])
   appels = []
   oublierJetons()
 })

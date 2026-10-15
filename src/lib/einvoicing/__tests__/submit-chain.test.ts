@@ -12,6 +12,12 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// This suite simulates the transport, including DNS; the production SSRF guard
+// still runs against these answers. Do not depend on a public test hostname's
+// resolver latency while fetch itself is simulated.
+const dns = vi.hoisted(() => ({ lookup: vi.fn() }))
+vi.mock('node:dns/promises', () => ({ lookup: dns.lookup }))
+
 process.env.GF_EINVOICE_CREDENTIALS_KEY = Buffer.alloc(32, 7).toString('base64')
 
 const base = vi.hoisted(() => ({
@@ -110,6 +116,9 @@ function reponse(body: unknown, status = 200): Response {
 }
 
 beforeEach(() => {
+  dns.lookup.mockReset().mockImplementation(async (hostname: string) => {
+    return [{ address: hostname === 'api.plateforme-test.fr' ? '93.184.216.34' : '127.0.0.1', family: 4 }]
+  })
   base.transmissions = []
   base.evenements = []
   base.audits = []

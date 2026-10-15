@@ -458,7 +458,10 @@ jobs:
       - run: npm run check:public-key
       - run: npm run keys:check
       - run: node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs
-      - run: npm run dist
+      - name: Validate redacted packaging diagnostic
+        run: node --test tests/windows-package-diagnostic.test.cjs
+      - name: Official npm run dist (redacted diagnostic, original exit code)
+        run: node scripts/windows-package-diagnostic.cjs
       - run: npm run check:perf-budget
       - name: Verify integrity against the actual packaged resources (required)
         run: npx vitest run src/__tests__/integrity-diagnostics.test.ts
