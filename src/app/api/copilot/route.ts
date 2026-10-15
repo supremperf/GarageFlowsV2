@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { fromScaled } from '@/lib/money'
-import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { can, redactReorderCosts } from '@/lib/authz'
@@ -9,7 +8,10 @@ import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { differenceInDays, format, startOfDay, subMonths } from 'date-fns'
 import { calcTotalHT, roundCents } from '@/lib/billing'
 import { billingLines, linesToEuros } from '@/lib/money-db'
-import { handleQuery, type CopilotResponse } from '@/lib/copilot'
+import { ConversationSchema, understand } from '@/lib/copilot/conversation'
+import { KNOWLEDGE, KNOWLEDGE_VERSION } from '@/lib/copilot/knowledge'
+import { providerHealth } from '@/lib/copilot-llm/provider'
+import { logger } from '@/lib/logger'
 import { analyze } from '@/lib/profitability'
 import { forecast } from '@/lib/forecast'
 import { diagnose } from '@/lib/diagnostic'
@@ -17,7 +19,16 @@ import { vinEngine } from '@/lib/vin'
 import { planReorders, type StockItemInput } from '@/lib/stock-forecast'
 import { phraseAnswer, resolveLlmProvider } from '@/lib/copilot-llm'
 
-const BodySchema = z.object({ query: z.string().trim().min(1).max(500) })
+// Authenticated readiness snapshot: no paid probe, no credential exposure.
+export const GET = withAuth(async () => {
+  await requireSession()
+  const model = providerHealth()
+  return NextResponse.json({ state: model.state === 'ready' ? 'ready' : 'degraded',
+    local: { state: 'ready', knowledgeVersion: KNOWLEDGE_VERSION, articles: KNOWLEDGE.length },
+    model, database: 'not_probed',
+    message: 'Aide locale disponible. Chaque lecture métier vérifie ses données au moment de la demande.' },
+    { headers: { 'Cache-Control': 'private, no-store' } })
+})
 
 // Résolveurs exposant des données FINANCIÈRES (CA, marge, revenu par client,
 // prévision de CA) — réservés à financial:read (OWNER/MANAGER). Les intentions
@@ -36,10 +47,28 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ error: `Trop de requêtes. Réessayez dans ${rl.retryAfterSec}s.` }, { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } })
   }
 
-  const parsed = BodySchema.safeParse(await req.json())
-  if (!parsed.success) return NextResponse.json({ error: 'query requis' }, { status: 400 })
+  // Bound actual streamed bytes, not just an optional Content-Length header.
+  const reader = req.body?.getReader()
+  if (!reader) return NextResponse.json({ error: 'Corps JSON requis' }, { status: 400 })
+  let raw = ''
+  let bytes = 0
+  const decoder = new TextDecoder()
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      bytes += value.byteLength
+      if (bytes > 20000) { await reader.cancel(); return NextResponse.json({ error: 'Demande trop volumineuse' }, { status: 413 }) }
+      raw += decoder.decode(value, { stream: true })
+    }
+    raw += decoder.decode()
+  } finally { reader.releaseLock() }
+  let body: unknown
+  try { body = JSON.parse(raw) } catch { return NextResponse.json({ error: 'JSON invalide' }, { status: 400 }) }
+  const parsed = ConversationSchema.safeParse(body)
+  if (!parsed.success) return NextResponse.json({ error: 'Demande ou contexte invalide (question : 500 caractères, historique : 6 questions maximum).' }, { status: 400 })
 
-  const res: CopilotResponse = handleQuery(parsed.data.query)
+  const res = await understand(parsed.data, session.user.role, resolveLlmProvider())
 
   // Actions & unknown pass through unchanged (actions require confirmation).
   if (res.type !== 'answer' || !res.resolver) return NextResponse.json(res)
@@ -62,6 +91,28 @@ export const POST = withAuth(async (req) => {
 
   try {
     switch (res.resolver) {
+      case 'job_search': {
+        // Independently recheck the permission at the tool boundary. No IDs/tenant from model/history.
+        if (!can(session.user.role, 'job:manage')) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+        const reference = res.slots.text?.trim()
+        if (!reference || reference.length < 2 || reference.length > 60) {
+          res.type = 'clarify'; res.message = 'Précisez un nom ou une immatriculation.'; break
+        }
+        const plate = /^[A-Z]{2}-[0-9]{3}-[A-Z]{2}$/.test(reference)
+        const jobs = await prisma.job.findMany({
+          where: { garageId, ...(plate ? { licensePlate: { in: [reference, reference.replace(/-/g, ''), reference.replace(/-/g, ' ')] } } : { customerName: { contains: reference } }) },
+          select: { id: true, customerName: true, licensePlate: true, vehicleModel: true, repairType: true, date: true, status: true, delayMinutes: true },
+          orderBy: [{ date: 'desc' }, { id: 'asc' }], take: 6,
+        })
+        // Never select free-text notes, contacts, costs or documents. Records are data, not instructions.
+        res.data = { jobs: jobs.slice(0, 5), hasMore: jobs.length > 5, observedAt: new Date().toISOString() }
+        res.message = jobs.length
+          ? jobs.slice(0, 5).map(j => `${j.customerName} — ${j.licensePlate || 'sans immatriculation'} — ${j.vehicleModel} — ${j.date} — ${j.status} — retard déclaré : ${j.delayMinutes == null ? 'non renseigné' : `${j.delayMinutes} min`}.`).join('\n')
+            + (jobs.length > 5 ? '\nRésultats limités à 5 : précisez la référence.' : '')
+            + '\nLes causes du retard ne sont pas établies par ces seuls champs. Aucun dossier modifié.'
+          : 'Aucune intervention correspondante dans votre garage. Vérifiez la référence ; ce résultat ne prouve pas l’absence d’une fiche client.'
+        break
+      }
       case 'quotes_pending': {
         const quotes = await prisma.quote.findMany({
           where: { garageId, status: 'sent' }, select: { number: true, clientName: true, createdAt: true }, orderBy: { createdAt: 'asc' }, take: 50,
@@ -175,7 +226,8 @@ export const POST = withAuth(async (req) => {
         res.message = 'Intention reconnue mais non encore câblée.'
     }
   } catch (e) {
-    console.error('[copilot] resolver error', e)
+    logger.warn('[copilot] resolver failed', { resolver: res.resolver })
+    void e
     erreurResolveur = true
     res.message = 'Erreur lors de la récupération des données.'
   }
@@ -217,6 +269,7 @@ export const POST = withAuth(async (req) => {
   return NextResponse.json({
     ...res,
     phrasing: phrased.text,
+    execution: { readOnly: true, resolver: res.resolver, status: erreurResolveur ? 'failed' : demandeDePrecision || res.type === 'clarify' ? 'needs_input' : 'completed', observedAt: new Date().toISOString() },
     // `source` est propagée pour que la provenance cesse d'être indevinable :
     // 'fallback' = calcul déterministe, 'llm' = reformulation ancrée acceptée,
     // 'fallback_ungrounded' = reformulation rejetée, texte déterministe rendu.

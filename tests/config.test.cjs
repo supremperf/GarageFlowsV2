@@ -421,7 +421,7 @@ test('CLI --list is offline and read-only, covers existing custom names and neve
   const run = spawnSync(process.execPath, [path.join(dir, 'config'), '--list'], { cwd: dir, encoding: 'utf8' })
   assert.equal(run.status, 0, run.stderr)
   assert.match(run.stdout, /custom.setting/)
-  assert.match(run.stdout, /48 variables du template/)
+  assert.match(run.stdout, /50 variables du template/)
   assert.ok(!`${run.stdout}${run.stderr}`.includes(value))
   assert.equal(fs.readFileSync(file, 'utf8'), original)
   assert.ok(!fs.existsSync(path.join(dir, 'GarageFlow-configuration')))
@@ -495,4 +495,18 @@ test('exclusive first-key writes never replace an existing file or concurrent cr
   assert.throws(() => c.writePrivate(file, 'replacement-fixture', { exclusive: true }), { code: 'EEXIST' })
   assert.equal(fs.readFileSync(file, 'utf8'), 'original-fixture')
   if (process.platform !== 'win32') assert.equal(fs.statSync(file).mode & 0o777, 0o600)
+})
+
+// Two optional Copilot settings extend the template without activating external calls.
+test('Copilot settings are preserved for desktop and server, never activated by default', () => {
+  for (const profile of ['desktop', 'pwa']) {
+    const selected = c.namesForProfile(names, profile)
+    assert.ok(selected.includes('GARAGEFLOW_LLM'))
+    assert.ok(selected.includes('GARAGEFLOW_LLM_MODEL'))
+    const fresh = c.fillMissing({}, selected, profile)
+    assert.equal(fresh.GARAGEFLOW_LLM, 'off')
+    const existing = c.fillMissing({ GARAGEFLOW_LLM: 'anthropic', GARAGEFLOW_LLM_MODEL: 'chosen-model' }, selected, profile)
+    assert.equal(existing.GARAGEFLOW_LLM, 'anthropic')
+    assert.equal(existing.GARAGEFLOW_LLM_MODEL, 'chosen-model')
+  }
 })

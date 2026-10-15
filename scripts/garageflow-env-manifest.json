@@ -13,7 +13,8 @@
       "autoGenerate": false,
       "rotationRisk": "low",
       "consumers": [
-        "src/app/api/plate-ocr/route.ts"
+        "src/app/api/plate-ocr/route.ts",
+        "src/lib/copilot-llm/provider.ts"
       ],
       "notes": "plate-lookup ne consomme plus cette clé : son « repli IA » demandait au modèle de déduire marque/modèle/année d'une plaque SIV, qui n'encode rien de tel depuis 2009. Les données inventées partaient dans l'intervention, le devis et la facture (GF-FINAL-020).",
       "autoManage": true
@@ -275,7 +276,22 @@
       "consumers": [
         "src/lib/copilot-llm/provider.ts"
       ],
-      "notes": "Only documented in the provider stub; no network provider is actually implemented in this repository."
+      "notes": "Explicit opt-in: off (default) or anthropic. Classification only, query sent externally; never business results/history. No automatic activation."
+    },
+    {
+      "name": "GARAGEFLOW_LLM_MODEL",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/copilot-llm/provider.ts"
+      ],
+      "notes": "Optional Anthropic model ID, default claude-haiku-4-5-20251001. Availability and quality require live validation. No arbitrary endpoint."
     },
     {
       "name": "GF_ALLOW_DEBUG",

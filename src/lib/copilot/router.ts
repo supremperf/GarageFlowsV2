@@ -39,7 +39,8 @@ export function classify(text: string): Classification {
     let score = 0
     for (const kw of intent.keywords) {
       const nk = normalize(kw)
-      if (n.includes(nk)) score += nk.split(/\s+/).length // multi-word = more specific
+      const escaped = nk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      if (new RegExp(`(^|[^a-z0-9])${escaped}($|[^a-z0-9])`).test(n)) score += nk.split(/\s+/).length
     }
     // A VIN/OBD in the text corroborates the matching read intent.
     if (intent.id === 'vin_decode' && slots.vin) score += 2
