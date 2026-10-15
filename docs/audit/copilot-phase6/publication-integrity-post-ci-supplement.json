@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-15T14:57:50.684000+00:00",
+  "supplements": [
+    "publication-integrity-c1f6a5c.json",
+    "publication-integrity-c1f6a5c-supplement.json"
+  ],
+  "doesNotReplacePreviousSnapshots": true,
+  "files": [
+    {
+      "sha256": "e467ff84016f26edaa9c15b9350e852500e97be74ff5465912c49bdba7b6744c",
+      "bytes": 193293,
+      "path": "docs/audit/copilot-phase6/P30.json"
+    },
+    {
+      "sha256": "e2fa775755bda830ad8568ba7e0871010cf1a8029d6d19d154fc2d871e2d7f3e",
+      "bytes": 752,
+      "path": "docs/audit/copilot-phase6/P30.txt"
+    },
+    {
+      "sha256": "89dc9a7120c23a5f3e5f00dbd5ecd35c590ac9965abb6129d61049565b07c535",
+      "bytes": 2923,
+      "path": "docs/audit/copilot-phase6/CI-POST-PUBLICATION.md"
+    },
+    {
+      "sha256": "371c3702ed0fa43b1b65b5cf1d1285a61f091b47c8d7b578aaba65817cc90e06",
+      "bytes": 22925,
+      "path": "docs/audit/copilot-phase6/ci-post-publication-observation.json"
+    }
+  ],
+  "limits": "Append-only CI observation and isolated reproduction, not a global pipeline pass. Original logs, including their whitespace, remain unchanged."
+}
