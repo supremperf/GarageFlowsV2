@@ -100,7 +100,7 @@ jobs:
         run: npm ci
       - name: Copilot evaluation safety (offline only)
         run: |
-          node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs
+          node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs tests/copilot-blind-intake.test.cjs
           node scripts/evaluate-copilot-phase4.cjs --preflight
       - name: Standard TypeScript (no diagnostic declarations)
         run: npx tsc --noEmit
@@ -111,7 +111,19 @@ jobs:
           NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
           NEXTAUTH_URL: http://localhost:4028
       - name: Immutable client JS budget (3625984 bytes)
-        run: npm run check:perf-budget
+        run: |
+          npm run check:perf-budget
+          node <<'NODE'
+          const fs = require('node:fs'), path = require('node:path')
+          const budget = JSON.parse(fs.readFileSync('perf-budget.json','utf8'))
+          if (budget.totalClientJsBytes !== 3625984) throw new Error('Immutable budget changed')
+          function files(dir) { return fs.readdirSync(dir).flatMap(n => {
+            const p=path.join(dir,n);return fs.statSync(p).isDirectory()?files(p):p.endsWith('.js')?[p]:[]
+          }) }
+          const js=files('.next/static'), totalBytes=js.reduce((s,p)=>s+fs.statSync(p).size,0)
+          if (!js.length || totalBytes>3625984) throw new Error('Incomplete/over-budget build')
+          console.log('::notice title=Copilot build budget::'+JSON.stringify({totalBytes,maxBytes:3625984,files:js.length,scope:'STANDARD_NEXT_BUILD_CLIENT_JS_ONLY'}))
+          NODE
 
   check:
     name: Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)
@@ -249,7 +261,7 @@ jobs:
 
       - name: Copilot budget guards and frozen validation integrity (offline)
         run: |
-          node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs
+          node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs tests/copilot-blind-intake.test.cjs
           node scripts/evaluate-copilot-phase4.cjs --verify-freeze
 
       - name: Tests (unit + integration)

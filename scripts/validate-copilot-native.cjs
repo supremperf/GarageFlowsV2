@@ -3,7 +3,7 @@
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),cp=require('node:child_process')
 const suites=['copilot-conversation','copilot','copilot-ecusson-verifie','copilot-financial-authz-v15','copilot-cout-achat','copilot-portee-et-porte-financiere'].map(n=>`src/integration/${n}.test.ts`)
 function summarize(report,exitCode) {
- const files=(report.testResults??[]).map(r=>({path:path.relative(process.cwd(),r.name).split(path.sep).join('/'),passed:(r.assertionResults??[]).filter(t=>t.status==='passed').length,failed:(r.assertionResults??[]).filter(t=>t.status==='failed').length,unexecuted:(r.assertionResults??[]).filter(t=>t.status!=='passed'&&t.status!=='failed').length}))
+ const files=(report.testResults??[]).map(r=>({path:path.relative(process.cwd(),r.name).split(path.sep).join('/'),passed:(r.assertionResults??[]).filter(t=>t.status==='passed').length,failed:(r.assertionResults??[]).filter(t=>t.status==='failed').length,caseStatuses:(r.assertionResults??[]).map(t=>['passed','failed','pending','skipped','todo','disabled'].includes(t.status)?t.status:'unknown'),unexecuted:(r.assertionResults??[]).filter(t=>t.status!=='passed'&&t.status!=='failed').length}))
  const executed=files.reduce((s,f)=>s+f.passed+f.failed,0)
  const complete=files.length===6&&new Set(files.map(f=>f.path)).size===6&&files.every(f=>suites.includes(f.path))
  const passed=exitCode===0&&report.success===true&&complete&&executed===54&&files.every(f=>f.failed===0&&f.unexecuted===0)&&report.numTotalTests===54
