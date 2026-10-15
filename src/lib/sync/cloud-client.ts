@@ -72,6 +72,8 @@ export async function cloudPost(
   try {
     const res = await fetch(`${cloudBaseUrl()}${path}`, {
       method: 'POST',
+      // Never forward license tokens, avatars or business bodies across a redirect.
+      redirect: 'error',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
       signal: controller.signal,

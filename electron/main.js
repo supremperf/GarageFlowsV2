@@ -1258,6 +1258,8 @@ async function reportCrash({ message, stack, fatal = true, kind = 'crash' }) {
 
 /** Vide la file de crash vers le serveur (best-effort ; garde ce qui échoue). */
 async function flushCrashQueue() {
+  // Consent may have been revoked AFTER a report was queued offline.
+  if (!crashConsent()) return
   // `isPackaged` est indispensable : sans lui, une installation packagée — qui
   // n'embarque aucun .env — ne résolvait aucune base et sortait EN SILENCE
   // (GF31-AUD-043).
