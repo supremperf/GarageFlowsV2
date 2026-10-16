@@ -558,9 +558,33 @@ jobs:
       - run: node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs
       - name: Validate redacted packaging diagnostic
         run: node --test tests/windows-package-diagnostic.test.cjs
+      # ── Pourquoi ce dossier vide devient le « dossier personnel » du build ──
+      # Next.js trace ses dépendances avec @vercel/nft. nft DÉPLIE `os.homedir()`
+      # en chemin littéral, puis, ne pouvant résoudre ce qu'on lui donne, élargit
+      # la recherche à « <dossier personnel>/**/* » et la confie à `glob`.
+      #
+      # Sur un exécuteur Windows, le profil de l'utilisateur contient deux
+      # jonctions héritées — `Application Data` et `Cookies` — que le système
+      # REFUSE d'énumérer : la recherche échoue en EPERM et la compilation
+      # s'arrête (« glob error … Failed to compile »), alors que le produit n'a
+      # jamais lu ce dossier. C'était déjà le cas AVANT la réparation de la
+      # chaîne de livraison (voir le diagnostic du run 38870935220) : ce n'est ni
+      # une régression, ni un défaut applicatif, mais un artefact de l'exécuteur.
+      #
+      # On pointe donc `os.homedir()` vers un dossier vide et accessible, pour
+      # cette SEULE étape. Aucun contrôle n'est désactivé : la trace reste
+      # complète côté projet, et si elle était réellement incomplète,
+      # `verify:standalone` puis `verify:installer` échoueraient bruyamment.
+      - name: Prepare a clean home directory for the tracing step
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path D:\gf-build-home | Out-Null
       - name: Official npm run dist (redacted diagnostic, original exit code)
         shell: node scripts/windows-package-diagnostic.cjs {0}
         run: npm run dist
+        env:
+          USERPROFILE: D:\gf-build-home
+          HOMEDRIVE: D:\
+          HOMEPATH: \gf-build-home
       - run: npm run check:perf-budget
       - name: Verify integrity against the actual packaged resources (required)
         run: npx vitest run src/__tests__/integrity-diagnostics.test.ts
