@@ -278,6 +278,46 @@ Le garde-fou d'immutabilité est mis à jour sciemment en trois endroits
 un relèvement silencieux reste impossible, le plafond ne peut pas bouger sans que
 ces trois points soient modifiés et relus.
 
+## 11 ter. Un second blocage, ANTÉRIEUR à cette mission : l'exécuteur Windows
+
+En exécutant la chaîne réparée sur un exécuteur `windows-latest`, un échec est
+apparu **avant** `electron-builder`, dans `next build` lui-même :
+
+```
+glob error [Error: EPERM: operation not permitted, scandir 'C:\Users\runneradmin\Cookies']
+Failed to compile.
+Error: EPERM: operation not permitted, scandir 'C:\Users\runneradmin\Cookies'
+```
+
+**Ce n'est pas une régression de cette mission.** Le diagnostic du run
+`38870935220` (commit `b118b14`, chaîne d'origine, avant réparation) porte la
+**même erreur, au même endroit** : la compilation échouait déjà, ce qui explique
+qu'aucun installeur n'ait jamais pu être produit par cette CI.
+
+Mécanisme, établi par lecture du code et non par déduction : Next.js trace ses
+dépendances avec `@vercel/nft`, qui **déplie `os.homedir()` en chemin littéral**,
+puis — ne pouvant résoudre ce qu'on lui donne — élargit la recherche à
+`<dossier personnel>/**/*` et la confie à `glob`. Le profil d'un exécuteur
+Windows contient deux jonctions héritées (`Application Data`, `Cookies`) que le
+système **refuse d'énumérer** : la recherche échoue en EPERM. Le produit, lui, ne
+lit jamais ce dossier ; c'est un artefact de l'environnement d'exécution. C'est
+aussi un défaut amont connu et documenté (vercel/next.js, discussion 62281).
+
+Correctif retenu : l'étape de construction reçoit un dossier personnel **vide et
+accessible** (`D:\gf-build-home`, créé juste avant, pour cette étape seulement).
+Les caches (npm, Electron, electron-builder) ne bougent pas — `APPDATA` et
+`LOCALAPPDATA` restent ceux de l'exécuteur.
+
+**Ce que cela ne masque pas** : aucun contrôle n'est désactivé, aucun `try/catch`
+n'enveloppe quoi que ce soit, et si la trace était réellement incomplète,
+`verify:standalone` puis `verify:installer` échoueraient bruyamment, exactement
+comme avant. La raison est écrite dans le workflow, à l'endroit du changement.
+
+Sur un poste Windows ordinaire, cette précaution est inutile : le dossier
+personnel y est accessible, et la compilation s'y déroule normalement — c'est
+d'ailleurs ce que montre l'échec d'origine signalé par l'utilisateur
+(« server.js NOT found »), qui suppose une compilation Next.js **réussie**.
+
 ## 12. Ce qui n'a PAS pu être exécuté ici, et pourquoi
 
 L'environnement de développement de cette session n'a accès qu'à une liste
