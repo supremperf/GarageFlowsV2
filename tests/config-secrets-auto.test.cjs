@@ -98,9 +98,10 @@ test('un identifiant de service non générable demande une valeur, il ne la fab
   assert.deepEqual(r.generees, [])
 })
 
-test('« installation neuve » se prouve par l’absence de témoins de production', () => {
+test('un checkout vierge ne prouve pas que la production est neuve', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-frais-'))
-  assert.equal(auto.premiereInstallation(dir), true)
+  assert.equal(auto.premiereInstallation(dir), false)
+  assert.equal(auto.premiereInstallation(dir, { serveurNeuf: true }), true)
 
   fs.writeFileSync(path.join(dir, '.env.server.local'), 'NEXTAUTH_SECRET=x\n')
   assert.equal(auto.premiereInstallation(dir), false)
@@ -184,7 +185,7 @@ test('écriture Vercel : ajout simple, ou retrait + recréation pour un remplace
  *   DATABASE_URL / DEVICE_TOKEN_PEPPER « existe chez Vercel mais sa valeur n'est
  *   pas relisible » → arrêt du plan.
  */
-function bacASable(t) {
+function bacASable(t, options = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-import-remonte-'))
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }))
   fs.mkdirSync(path.join(dir, 'scripts', 'lib'), { recursive: true })
@@ -202,7 +203,7 @@ function bacASable(t) {
     const remote = { values: {}, hidden: new Set(['DEVICE_TOKEN_PEPPER', 'GF_PORTAL_SECRET']),
       present: new Set(['DEVICE_TOKEN_PEPPER', 'GF_PORTAL_SECRET', 'NEXTAUTH_SECRET']), stamps: {}, confirmedLocal: {} }
     ;(async () => {
-      const env = await wizard.importRemote({}, remote, noms)
+      const env = await wizard.importRemote({}, remote, noms, ${JSON.stringify(options)})
       console.log('PEPPER_OCTETS=' + Buffer.from(env.DEVICE_TOKEN_PEPPER || '', 'base64').length)
       console.log('PORTAIL_OCTETS=' + Buffer.from(env.GF_PORTAL_SECRET || '', 'base64').length)
       console.log('REMPLACEMENTS=' + [...(remote.replacements || [])].sort().join(','))
@@ -217,11 +218,11 @@ function executerScenario(dir) {
   return { ...resultat, sortie: `${resultat.stdout || ''}${resultat.stderr || ''}` }
 }
 
-test('installation neuve : les variables non relisibles sont GÉNÉRÉES et remplacées chez Vercel', t => {
-  const dir = bacASable(t)
+test('rotation autorisée après inspection SQL : génération 256 bits et remplacement planifié', t => {
+  const dir = bacASable(t, { rotationAutorisee: true })
   const r = executerScenario(dir)
   assert.equal(r.status, 0, r.sortie)
-  assert.match(r.sortie, /absent partout — généré automatiquement/)
+  assert.match(r.sortie, /générées automatiquement/)
   assert.match(r.sortie, /PEPPER_OCTETS=32/)
   assert.match(r.sortie, /PORTAIL_OCTETS=32/)
   assert.match(r.sortie, /REMPLACEMENTS=DEVICE_TOKEN_PEPPER,GF_PORTAL_SECRET/)
@@ -234,7 +235,7 @@ test('installation établie : pas de rotation silencieuse (le plan s’arrête, 
   fs.writeFileSync(path.join(dir, '.env.server.local'), 'NEXTAUTH_SECRET=deja-en-service\n')
   const r = executerScenario(dir)
   assert.notEqual(r.status, 0)
-  assert.match(r.sortie, /ne peuvent pas être générées/)
+  assert.match(r.sortie, /Secrets déjà présents sur Vercel/)
   assert.match(r.sortie, /DEVICE_TOKEN_PEPPER, GF_PORTAL_SECRET/)
   assert.ok(!/PEPPER_OCTETS=32/.test(r.sortie), 'aucune valeur ne doit être produite sans autorisation')
 })
@@ -250,7 +251,102 @@ test('le wizard ne bloque plus et n’invente jamais une valeur', () => {
     'plus de refus global : la décision se prend variable par variable')
   assert.ok(source.includes("require('./scripts/lib/config-secrets-auto.cjs')"),
     'la politique vit dans une lib testable, pas dans le wizard')
-  assert.ok(source.includes('premiereInstallationServeur()'),
-    'la génération automatique s’appuie sur une preuve de fraîcheur')
+  assert.ok(!source.includes('const neuve = premiereInstallationServeur()'),
+    'une absence de fichiers locaux ne doit jamais autoriser une rotation distante')
   assert.ok(source.includes('enregistrerRecus('), 'un reçu d’envoi est écrit après synchronisation')
 })
+
+
+test('nouveau PC sans autorisation : aucun remplacement automatique des secrets distants', t => {
+  const r = executerScenario(bacASable(t))
+  assert.notEqual(r.status, 0, r.sortie)
+  assert.match(r.sortie, /Un nouveau PC ne prouve pas que la production est vide/)
+  assert.doesNotMatch(r.sortie, /PEPPER_OCTETS=32/)
+})
+
+test('plan complet : diffère les secrets illisibles jusqu’au contrôle SQL', t => {
+  const r = executerScenario(bacASable(t, { deferGenerated: true }))
+  assert.equal(r.status, 0, r.sortie)
+  assert.match(r.sortie, /PEPPER_OCTETS=0/)
+  assert.match(r.sortie, /PORTAIL_OCTETS=0/)
+  assert.match(r.sortie, /REMPLACEMENTS=\n/)
+  const source = fs.readFileSync(path.join(root, 'scripts/config-full.cjs'), 'utf8')
+  assert.match(source, /importRemote\(env, remote, names, \{ deferGenerated: true \}\)/)
+  assert.ok(source.indexOf('tools.inspectDatabase(') < source.indexOf('rotationAutorisee: database.empty'))
+})
+
+test('reçu : projet ET version distante doivent correspondre avant toute adoption', () => {
+  const valeurs = { DEVICE_TOKEN_PEPPER: 'valeur-locale' }
+  const recus = { DEVICE_TOKEN_PEPPER: { sha256: auto.empreinte(valeurs.DEVICE_TOKEN_PEPPER), projet: 'team/project', stamp: 'version1' } }
+  assert.deepEqual(auto.verifierRecus(recus, valeurs, 'team/project', { DEVICE_TOKEN_PEPPER: 'version1' }).coherents, ['DEVICE_TOKEN_PEPPER'])
+  for (const [projet, stamps] of [
+    ['autre/project', { DEVICE_TOKEN_PEPPER: 'version1' }],
+    ['team/project', { DEVICE_TOKEN_PEPPER: 'version2' }],
+    ['team/project', {}], ['', { DEVICE_TOKEN_PEPPER: 'version1' }],
+  ]) assert.deepEqual(auto.verifierRecus(recus, valeurs, projet, stamps).inconnus, ['DEVICE_TOKEN_PEPPER'])
+})
+
+test('ancien reçu sans identité ni version : confirmation obligatoire', () => {
+  const valeurs = { DEVICE_TOKEN_PEPPER: 'locale' }
+  assert.deepEqual(auto.verifierRecus({ DEVICE_TOKEN_PEPPER: { sha256: auto.empreinte('locale') } }, valeurs,
+    'team/project', { DEVICE_TOKEN_PEPPER: 'version' }).inconnus, ['DEVICE_TOKEN_PEPPER'])
+})
+
+test('la génération après SQL utilise exactement l’encodage contractuel', () => {
+  const r = auto.resoudreValeursCachees({ noms: Object.keys(core.GENERATED), generables: Object.keys(core.GENERATED), rotationAutorisee: true,
+    generer: nom => require('node:crypto').randomBytes(32).toString(core.GENERATED[nom]) })
+  for (const nom of r.generees) assert.equal(Buffer.from(r.valeurs[nom], core.GENERATED[nom]).length, 32, nom)
+})
+
+for (const mode of ['ajout', 'remplacement', 'échec']) {
+  test(`synchronisation simulée — ${mode} : reçus liés à la version distante, reprise sans rotation`, t => {
+    const dir = bacASable(t)
+    fs.writeFileSync(path.join(dir, 'scenario.js'), `
+      const assert = require('node:assert/strict')
+      const fs = require('node:fs')
+      const wizard = require('./config')
+      const auto = require('./scripts/lib/config-secrets-auto.cjs')
+      const name = 'GF_PORTAL_SECRET'
+      const value = 'secret-de-test-jamais-dans-les-logs'
+      const replacing = ${JSON.stringify(mode !== 'ajout')}
+      const failing = ${JSON.stringify(mode === 'échec')}
+      const initial = { values: {}, hidden: new Set(replacing ? [name] : []),
+        present: new Set(replacing ? [name] : []), stamps: replacing ? { [name]: 'ancienne-version' } : {},
+        confirmedLocal: replacing ? { [name]: value } : {}, replacements: new Set(replacing ? [name] : []) }
+      const actual = { values: {}, hidden: new Set([name]), present: new Set([name]), stamps: { [name]: 'nouvelle-version' } }
+      let reads = 0
+      const commands = []
+      ;(async () => {
+        const run = () => wizard.syncVercel({ [name]: value }, [name], initial, {
+          authorized: true,
+          readRemote: async () => reads++ === 0 ? initial : actual,
+          runTool: async (tool, args, options) => {
+            assert.equal(tool, 'vercel')
+            commands.push(args[1])
+            assert.equal(options.input, args[1] === 'add' ? value : undefined)
+            if (failing && args[1] === 'add') throw new Error('échec simulé')
+          },
+        })
+        if (failing) {
+          await assert.rejects(run, /échec simulé/)
+          assert.equal(fs.existsSync(auto.cheminRecus(__dirname)), false, 'aucune preuve de succès après un échec')
+        } else {
+          await run()
+          const receipt = auto.lireRecus(__dirname)[name]
+          assert.equal(receipt.sha256, auto.empreinte(value))
+          assert.equal(receipt.stamp, 'nouvelle-version')
+          assert.equal(receipt.projet, 'team_test/prj_test')
+          const result = await wizard.importRemote({ [name]: value }, actual, [name])
+          assert.equal(result[name], value)
+          assert.equal(actual.replacements.size, 0, 'relance idempotente')
+        }
+        assert.deepEqual(commands, replacing ? ['rm', 'add'] : ['add'])
+        console.log('SCENARIO_OK')
+      })().catch(e => { console.error(e); process.exitCode = 1 })
+    `)
+    const r = executerScenario(dir)
+    assert.equal(r.status, 0, r.sortie)
+    assert.match(r.sortie, /SCENARIO_OK/)
+    assert.doesNotMatch(r.sortie, /secret-de-test-jamais-dans-les-logs/)
+  })
+}

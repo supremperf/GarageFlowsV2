@@ -39,8 +39,9 @@ première installation (base vide, aucune donnée métier) puis écrite dans .en
 .env.server.local, keys/ (P-256, keygen) et synchronisée dans Vercel production.
 Variable existant chez Vercel SANS être relisible (Sensitive) : elle est RÉSOLUE —
 valeur locale conservée ; URL de base récupérée réellement auprès de Neon (jamais
-fabriquée) ; clé symétrique absente partout générée puis REMPLACÉE chez Vercel.
-Sur une installation établie, le remplacement reste une décision explicite.
+fabriquée, cible originale à confirmer) ; clé symétrique manquante générée puis
+REMPLACÉE après contrôle SQL vide dans le plan complet, ou autorisation explicite.
+L’absence de fichiers locaux ne prouve jamais que la production est neuve.
 Fichiers : desktop → .env ; serveur → .env.server.local (isolé des builds Electron).
 Aucun secret affiché ; « GarageFlow-configuration/secrets-receipt.json » ne stocke
 que des empreintes SHA-256, pour reconnaître une valeur déjà poussée et signaler
@@ -216,135 +217,77 @@ async function setupVercel() {
   fs.mkdirSync(path.join(ROOT, 'GarageFlow-configuration'), { recursive: true, mode: 0o700 })
   return pullVercel()
 }
-/**
- * Rapproche le profil local des variables de production.
- *
- * ─── Pourquoi cette fonction a été réécrite ──────────────────────────────────
- *
- * Les secrets sont écrits chez Vercel en `--sensitive` : Vercel ne les relit
- * JAMAIS. L'ancienne version en concluait qu'il fallait la « valeur ORIGINALE
- * depuis votre coffre » et s'arrêtait net sinon — impossible, donc, de
- * configurer une installation neuve dont les variables existaient déjà côté
- * Vercel :
- *
- *   DATABASE_URL existe chez Vercel mais sa valeur n'est pas relisible.
- *   DEVICE_TOKEN_PEPPER : valeur de production nécessaire pour poursuivre.
- *
- * Désormais, chaque variable non relisible est RÉSOLUE :
- *
- *   • le profil local la contient → conservée (et l'écart éventuel avec le reçu
- *     du dernier envoi est signalé, car l'écrire chez Vercel remplacera la
- *     valeur de production) ;
- *   • c'est DATABASE_URL/DIRECT_URL → la vraie chaîne de connexion est
- *     récupérée depuis le compte Neon (on n'invente jamais une URL de base) ;
- *   • c'est une clé symétrique absente partout → une valeur 256 bits est
- *     générée et REMPLACERA celle de Vercel, si la génération est autorisée
- *     (installation neuve démontrée, ou accord explicite) ;
- *   • sinon → une SEULE question groupée (mot de passe SMTP, clé tierce…).
- *
- * Aucune valeur n'est affichée, et le fichier de reçus ne contient que des
- * empreintes SHA-256.
- */
-async function importRemote(local, remote, names, { rotationAutorisee = null, projet = '' } = {}) {
+/** Résout les valeurs de production sans confondre « illisible » et « absente ». */
+async function importRemote(local, remote, names, { rotationAutorisee = false, deferGenerated = false } = {}) {
   const conflicts = core.syncPlan(local, remote.values, names).conflicts
   if (conflicts.length) {
     console.log(`Valeurs locales différentes de Vercel : ${conflicts.join(', ')}.`)
-    console.log('Conserver les clés de production évite de casser sessions, données chiffrées et licences.')
     if (!await yes('Utiliser les valeurs Vercel pour ce profil serveur (sans modifier Vercel)', true)) {
       throw new Error('Conflit non résolu. Rien synchronisé. Sauvegardez votre configuration avant de relancer.')
     }
   }
   const result = { ...local }
   for (const n of names) if (remote.values[n]) result[n] = remote.values[n]
-
   const cachees = names.filter(n => remote.hidden.has(n))
-  if (!cachees.length) {
-    remote.confirmedLocal = {}
-    return result
-  }
+  const generables = Object.keys(core.GENERATED)
+  const differees = deferGenerated ? cachees.filter(n => !result[n] && generables.includes(n)) : []
+  const aResoudre = cachees.filter(n => !differees.includes(n))
+  remote.deferredGenerated = new Set(differees)
+  const recus = auto.lireRecus(ROOT)
 
-  // Preuve de fraîcheur : aucun témoin de production locale (profil serveur,
-  // autorité de licence, reçu d'un envoi précédent) ⇒ installation neuve.
-  const neuve = premiereInstallationServeur()
-  const autorise = rotationAutorisee === null ? neuve : rotationAutorisee
-  const recus = auto.lireRecus(ROOT, { fichier: auto.cheminRecus(ROOT) })
-  const generables = Object.keys(core.GENERATED).filter(n => cachees.includes(n))
-  const horodatage = Date.now()
-
-  // Les URLs de base ont un FOURNISSEUR : Neon. On les récupère réellement au
-  // lieu de les fabriquer, et seulement si elles manquent partout.
+  // Une URL vient du fournisseur réel, jamais du générateur de secrets.
   const fournisseurs = {}
-  const manquantes = cachees.filter(n => !result[n])
-  if (manquantes.some(n => n === 'DATABASE_URL' || n === 'DIRECT_URL')) {
+  if (aResoudre.some(n => ['DATABASE_URL', 'DIRECT_URL'].includes(n) && !result[n])) {
     try {
-      const avant = { ...result }
-      await configureNeon(result, { auto: true, allowCreate: false })
-      for (const n of manquantes) if (!avant[n] && result[n]) fournisseurs[n] = result[n]
-      if (Object.keys(fournisseurs).length) console.log(`Neon : ${Object.keys(fournisseurs).join(', ')} récupérées depuis votre compte (valeurs masquées).`)
-    } catch (error) {
-      // Neon injoignable ou non authentifié : on continue, ces noms resteront à
-      // fournir — jamais remplacés par une URL inventée.
-      console.log(`Neon : récupération automatique impossible (${error.message}) — ces URLs resteront à fournir.`)
+      const fourni = { ...result }
+      await configureNeon(fourni, { auto: true, allowCreate: false })
+      for (const n of ['DATABASE_URL', 'DIRECT_URL']) if (!result[n] && fourni[n]) fournisseurs[n] = fourni[n]
+    } catch {
+      console.log('Neon : récupération automatique indisponible ; fournissez les URLs réelles du projet existant. Aucun détail sensible affiché.')
     }
   }
-
+  const aGenerer = aResoudre.filter(n => !result[n] && generables.includes(n))
+  let autorise = rotationAutorisee === true
+  if (aGenerer.length && !autorise) {
+    console.log(`Secrets déjà présents sur Vercel mais introuvables localement : ${aGenerer.join(', ')}.`)
+    console.log('Les remplacer invalide les sessions, jetons ou données qui dépendent des anciennes clés. Un nouveau PC ne prouve pas que la production est vide.')
+    autorise = await yes('Générer ces secrets et les REMPLACER sur le projet Vercel sélectionné', false)
+  }
   const resolution = auto.resoudreValeursCachees({
-    noms: cachees, local: result, recus, generables, fournisseurs,
+    noms: aResoudre, local: result, recus, generables, fournisseurs,
     rotationAutorisee: autorise,
-    generer: (nom) => crypto.randomBytes(32).toString(core.GENERATED[nom] || 'base64'),
+    generer: nom => crypto.randomBytes(32).toString(core.GENERATED[nom] || 'base64'),
   })
   Object.assign(result, resolution.valeurs)
-
-  if (resolution.locales.length) {
-    console.log(`Non relisibles mais présentes localement — conservées : ${resolution.locales.join(', ')}.`)
-  }
-  if (resolution.divergences.length) {
-    // Le fichier local a changé depuis le dernier envoi. Sans décision, la
-    // synchronisation laisserait la production sur l'ancienne valeur et le
-    // poste sur la nouvelle : un écart invisible, exactement ce qu'il faut
-    // éviter. On demande UNE fois, pour l'ensemble.
-    console.log(`⚠️  ${resolution.divergences.join(', ')} : la valeur locale diffère du reçu du dernier envoi.`)
-    console.log('   L’écrire chez Vercel REMPLACERA la valeur de production : les sessions, appareils ou jetons liés cesseront de fonctionner.')
-    if (!autorise && await yes('Remplacer ces valeurs chez Vercel', false)) {
-      remote.replacementsAutorises = new Set(resolution.divergences)
+  const connues = [...resolution.locales, ...resolution.fournies]
+  const verdict = auto.verifierRecus(recus, Object.fromEntries(connues.map(n => [n, result[n]])), projectSlug(), remote.stamps)
+  const remplacements = new Set(resolution.remplacements)
+  if (verdict.divergents.length) {
+    console.log(`Valeurs locales différentes du dernier envoi : ${verdict.divergents.join(', ')}.`)
+    if (!await yes('Autoriser explicitement leur REMPLACEMENT chez Vercel (anciennes données/jetons potentiellement incompatibles)', false)) {
+      throw new Error('Écart non tranché : aucune synchronisation autorisée.')
     }
-    if (!autorise && !(remote.replacementsAutorises && resolution.divergences.every(n => remote.replacementsAutorises.has(n)))) {
-      throw new Error('Écart entre le profil local et Vercel non tranché : rien synchronisé. '
-        + 'Relancez en conservant les valeurs de production, ou autorisez explicitement leur remplacement.')
+    for (const n of verdict.divergents) remplacements.add(n)
+  }
+  if (verdict.inconnus.length) {
+    console.log(`Valeurs non vérifiables automatiquement pour ce projet : ${verdict.inconnus.join(', ')}.`)
+    if (!await yes('Confirmer que ces valeurs sont les ORIGINALES de ce projet Vercel (aucun remplacement)', false)) {
+      throw new Error('Valeurs de production non confirmées : aucun reçu de synchronisation créé.')
     }
   }
-  if (resolution.generees.length) {
-    console.log(`${resolution.generees.join(', ')} : absent partout — généré automatiquement (256 bits, masqué).`)
-    console.log(neuve
-      ? '   Installation neuve (aucun profil serveur, aucune autorité locale, aucun reçu) : le remplacement chez Vercel est sans risque.'
-      : '   Remplacement autorisé explicitement : la valeur de production sera remplacée à la synchronisation.')
-  }
+  if (resolution.generees.length) console.log(`${resolution.generees.join(', ')} : générées automatiquement (256 bits, masquées) ; remplacement autorisé.`)
   if (resolution.aFournir.length) {
-    console.log(`\n${resolution.aFournir.length} variable(s) ne peuvent pas être générées (elles doivent correspondre à un service existant) : ${resolution.aFournir.join(', ')}.`)
-    console.log('Renseignez-les une fois : elles seront écrites dans le profil ET poussées chez Vercel.')
-    for (const n of resolution.aFournir) await secretField(result, n, `${n} : valeur du fournisseur`)
-    const toujoursAbsentes = resolution.aFournir.filter(n => !result[n])
-    if (toujoursAbsentes.length) {
-      throw new Error(`Valeurs nécessaires introuvables : ${toujoursAbsentes.join(', ')}. `
-        + 'Aucune clé n’est générée à la place d’un identifiant de service. Fournissez-les, puis relancez config.')
-    }
+    console.log(`Valeurs originales encore nécessaires : ${resolution.aFournir.join(', ')}. Les identifiants de services ne peuvent pas être inventés.`)
+    for (const n of resolution.aFournir) await secretField(result, n, `${n} : valeur ORIGINALE du projet`)
+    if (resolution.aFournir.some(n => !result[n])) throw new Error('Valeurs originales manquantes : rien synchronisé.')
   }
-
-  remote.generatedHere = new Set(resolution.generees)
-  remote.replacements = new Set([...resolution.remplacements, ...(remote.replacementsAutorises || [])])
-  remote.fourniesIci = new Set(resolution.fournies)
-  remote.confirmedLocal = Object.fromEntries(cachees.map(n => [n, result[n]]))
+  remote.generatedHere = new Set([...(remote.generatedHere || []), ...resolution.generees])
+  remote.replacements = new Set([...(remote.replacements || []), ...remplacements])
+  remote.fourniesIci = new Set([...(remote.fourniesIci || []), ...resolution.fournies])
+  remote.confirmedLocal = { ...remote.confirmedLocal, ...Object.fromEntries(aResoudre.map(n => [n, result[n]])) }
   return result
 }
 
-/**
- * « Installation neuve » se PROUVE, elle ne se suppose pas : un profil serveur,
- * une autorité de licence locale ou un reçu d'envoi précédent suffisent à
- * interdire une rotation automatique (des données peuvent en dépendre).
- */
-function premiereInstallationServeur() {
-  return auto.premiereInstallation(ROOT, { receipts: auto.cheminRecus(ROOT) })
-}
 async function secretField(env, name, label = name) {
   env[name] = await question(`${label} (saisie masquée${env[name] ? ', Entrée = conserver' : ''})`,
     { secret: true, defaultValue: env[name] || '' })
@@ -486,9 +429,9 @@ function childEnv(env, vercel) {
   result.VERCEL = vercel ? '1' : ''
   return result
 }
-async function syncVercel(env, names, expectedRemote, { authorized = false } = {}) {
-  // Re-read immediately before applying. Refuse concurrent changes; do not overwrite/rotate anything.
-  const remote = await pullVercel()
+async function syncVercel(env, names, expectedRemote, { authorized = false, readRemote = pullVercel, runTool = tool } = {}) {
+  // Re-read immediately before applying. Refuse concurrent changes; only rotate explicitly planned names.
+  const remote = await readRemote()
   for (const n of names.filter(n => expectedRemote.hidden.has(n))) {
     if (env[n] !== expectedRemote.confirmedLocal[n]) throw new Error(`Vercel : ${n} est non relisible et a été modifiée localement. Aucune synchronisation ni rotation implicite autorisée.`)
   }
@@ -512,7 +455,7 @@ async function syncVercel(env, names, expectedRemote, { authorized = false } = {
   const additions = plan.additions.filter(n => !remote.present.has(n) && !remplacements.includes(n))
   if (!additions.length && !remplacements.length) {
     console.log('Vercel : toutes les variables sont déjà présentes, aucune valeur relisible modifiée.')
-    enregistrerRecus(env, names.filter(n => remote.hidden.has(n)), expectedRemote)
+    enregistrerRecus(env, names.filter(n => remote.hidden.has(n)), expectedRemote, remote)
     return true
   }
   if (additions.length) console.log(`Vercel production — ajouts : ${additions.join(', ')}.`)
@@ -524,11 +467,11 @@ async function syncVercel(env, names, expectedRemote, { authorized = false } = {
   for (const name of [...additions, ...remplacements]) {
     const remplacer = remplacements.includes(name)
     for (const commandArgs of auto.planEcritureVercel(name, { sensible: core.isSecret(name), present: remplacer, remplacer })) {
-      await tool('vercel', commandArgs, { input: remplacer ? env[name] : env[name], label: `Vercel env ${commandArgs[1]} ${name}` })
+      await runTool('vercel', commandArgs, { input: commandArgs[1] === 'add' ? env[name] : undefined, label: `Vercel env ${commandArgs[1]} ${name}` })
     }
     console.log(`  ${name} : ${remplacer ? 'remplacée' : 'ajoutée'} (masquée).`)
   }
-  const actual = await pullVercel()
+  const actual = await readRemote()
   for (const name of additions) {
     if (!actual.present.has(name) || (!actual.hidden.has(name) && actual.values[name] !== env[name])) {
       throw new Error(`Vercel : vérification de ${name} échouée.`)
@@ -542,7 +485,7 @@ async function syncVercel(env, names, expectedRemote, { authorized = false } = {
     }
   }
   console.log('Présence et horodatages vérifiés après écriture. Les valeurs Sensitive ne sont pas relisibles : leur contenu n’est jamais affiché.')
-  enregistrerRecus(env, names.filter(n => remote.hidden.has(n)), expectedRemote)
+  enregistrerRecus(env, names.filter(n => actual.hidden.has(n)), expectedRemote, actual)
   return true
 }
 
@@ -551,7 +494,7 @@ async function syncVercel(env, names, expectedRemote, { authorized = false } = {
  * valeur locale comme étant bien celle poussée — donc de ne plus rien demander —
  * et de signaler une dérive au lieu de remplacer en silence.
  */
-function enregistrerRecus(env, nomsCachees, expectedRemote = {}) {
+function enregistrerRecus(env, nomsCachees, expectedRemote = {}, actual = {}) {
   try {
     const aEnregistrer = {}
     const origines = {}
@@ -564,7 +507,7 @@ function enregistrerRecus(env, nomsCachees, expectedRemote = {}) {
     }
     if (!Object.keys(aEnregistrer).length) return
     const projet = projectSlug()
-    auto.ecrireRecus(ROOT, { projet, valeurs: aEnregistrer, origines })
+    auto.ecrireRecus(ROOT, { projet, valeurs: aEnregistrer, origines, stamps: actual.stamps || {} })
     console.log(`${Object.keys(aEnregistrer).length} empreinte(s) SHA-256 enregistrée(s) dans GarageFlow-configuration/secrets-receipt.json (aucune valeur en clair).`)
   } catch (error) {
     console.log(`Reçu d’envoi non écrit (${error.message}) — sans conséquence sur la configuration, le prochain run redemandera confirmation.`)
@@ -573,7 +516,10 @@ function enregistrerRecus(env, nomsCachees, expectedRemote = {}) {
 
 /** Identifiant du projet Vercel lié, quand il est connu. */
 function projectSlug() {
-  try { return JSON.parse(fs.readFileSync(path.join(ROOT, '.vercel/project.json'), 'utf8')).projectName || '' } catch { return '' }
+  try {
+    const project = JSON.parse(fs.readFileSync(path.join(ROOT, '.vercel/project.json'), 'utf8'))
+    return project.orgId && project.projectId ? `${project.orgId}/${project.projectId}` : ''
+  } catch { return '' }
 }
 function summarizeSqlDiff(output, schema) {
   // Only emit identifiers from the checked-in Prisma contract, never defaults,

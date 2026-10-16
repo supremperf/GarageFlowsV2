@@ -109,30 +109,34 @@ Seules les tables **métier** comptent. Les registres de migrations `_gf_migrati
 
 ### Variable existant chez Vercel sans être relisible (`Sensitive`)
 
-Vercel n'affiche **jamais** la valeur d'une variable `Sensitive` — réglage correct,
-mais qui rend ces variables invisibles au run suivant (`vercel env pull` ne renvoie
-rien pour ces noms). `config` ne s'arrête plus pour autant : chaque variable non
-relisible est **résolue**, dans cet ordre.
+Une variable `Sensitive` illisible **existe déjà**. La remplacer constitue une
+rotation ; télécharger à nouveau le dépôt ne prouve pas que la production est neuve.
 
 | Situation | Ce que fait `config` |
 |---|---|
-| La valeur est déjà dans le profil local | conservée telle quelle ; elle sera écrite chez Vercel. Si elle **diffère du reçu** du dernier envoi (le fichier local a changé), l'écart est annoncé et une **seule** question demande l'autorisation de remplacer la valeur de production. |
-| `DATABASE_URL` / `DIRECT_URL` | récupérées **réellement** auprès du compte Neon (`neonctl`, projet/branche/base/rôle existants). Une URL de base n'est **jamais inventée** : sans accès Neon, elle reste à fournir. |
-| Clé symétrique (sessions, pepper, portail, sauvegardes, TOTP, facturation, API interne) absente partout | générée (256 bits) puis **remplacée** chez Vercel — automatiquement sur une **installation neuve démontrée** : aucun `.env.server.local`, aucune autorité de licence locale, aucun reçu d'envoi. |
-| Clé symétrique absente partout sur une installation **établie** | pas de rotation silencieuse : le remplacement n'a lieu qu'après autorisation explicite, parce qu'une nouvelle valeur rend illisibles sessions, appareils enregistrés, jetons et cryptogrammes produits avec l'ancienne. |
-| Mot de passe SMTP, jeton d'un service tiers, clé d'API externe | jamais fabriqué : ces valeurs doivent correspondre au fournisseur. Une **seule** question groupée les demande, puis elles sont écrites dans le profil et poussées chez Vercel. |
+| Valeur locale avec reçu du même projet et de la même version distante | Réutilisée, sans question ni rotation. |
+| Valeur locale sans reçu fiable, ou URL récupérée de Neon | Confirmation groupée que ce sont les **originales de ce projet**, sans remplacement. Choisir une autre base Neon ne récupère pas la connexion de production. |
+| Empreinte locale différente du reçu de ce projet/version | Une autorisation explicite de remplacement est exigée. |
+| Secret symétrique illisible absent localement, plan complet | Résolution différée jusqu’à l’inspection SQL réelle de la cible confirmée. Base sans données métier : génération 256 bits et remplacement automatiques. Base utilisée : accord groupé explicite, sinon valeurs originales nécessaires. |
+| Même secret dans un profil expert sans inspection SQL | Accord groupé explicite avant génération et remplacement. Aucun accord implicite déduit des fichiers du PC. |
+| Secret réellement absent du profil et de Vercel | Génération par le plan habituel après contrôle de la base, puis sauvegarde locale et ajout à Vercel. |
+| `DATABASE_URL` / `DIRECT_URL` | Récupération des vraies connexions via Neon (projet/branche/base/rôle existants), ou saisie des originales si cet accès est indisponible. Aucune URL inventée, aucun nouveau projet créé dans cette récupération. |
+| Mot de passe SMTP, clé d’API externe, clé privée perdue | Non générable comme identifiant de service ou comme récupération d’autorité : fournir l’original ou suivre une procédure de rotation explicite. |
 
-Un remplacement s'écrit en deux gestes (`vercel env rm`, puis `vercel env add
---sensitive`) — un `env add` seul ne peut pas modifier une variable existante — et
-l'horodatage est relu après écriture pour **prouver** l'application du changement
-(le contenu d'une variable `Sensitive` n'étant pas relisible).
+Le remplacement Vercel utilise `env rm`, puis `env add --sensitive`.
+**Ces deux opérations ne sont pas atomiques** : un échec après suppression peut
+laisser la variable absente. Le profil local sauvegardé avant la synchronisation
+conserve la nouvelle valeur pour une relance. Aucun reçu de succès n’est écrit
+si la vérification finale échoue. Présence et métadonnées sont relues ; cela
+atteste l’écriture, pas une relecture du contenu Sensitive.
 
-Le fichier **`GarageFlow-configuration/secrets-receipt.json`** enregistre, après
-chaque synchronisation, l'empreinte **SHA-256** de ce qui a été poussé (jamais la
-valeur, en permissions `0600`). Il sert à deux choses : reconnaître au run suivant
-qu'une valeur locale est bien celle déjà poussée, et **signaler une dérive** au lieu
-de la remplacer en silence. Un reçu absent, illisible ou provenant d'un autre projet
-Vercel ne vaut rien : il n'autorise aucune adoption.
+Le fichier **`GarageFlow-configuration/secrets-receipt.json`** (`0600`, ignoré par
+Git) ne contient aucune valeur secrète : empreintes SHA-256, identifiants
+équipe/projet et version distante. Un reçu absent, illisible, ancien sans ces
+métadonnées, d’un autre projet ou correspondant à une variable modifiée ne
+permet pas l’adoption automatique. Pour une valeur déjà illisible et jamais
+envoyée par cet outil, la première concordance repose sur la confirmation de
+l’opérateur, pas sur une comparaison que Vercel ne permet pas.
 
 ### Où chaque clé générée est écrite
 
@@ -173,7 +177,7 @@ Les commandes Windows avec arguments ne font plus de pause finale bloquante et c
 
 ## Ce qui ne peut pas être configuré honnêtement tout seul
 
-- **Secret Vercel Sensitive non relisible** : l’assistant détecte qu’il existe et ne confond jamais son placeholder avec une absence. Il le RÉSOUT (valeur locale conservée, URL de base récupérée auprès de Neon, clé symétrique absente partout générée puis remplacée sur installation neuve démontrée ou sur autorisation explicite) — voir la section dédiée ci-dessus. Ce qu’il ne peut pas faire : retrouver une valeur que personne n’a conservée **et** qui doit correspondre à un service externe ; celle-là reste à fournir, et aucune valeur inventée ne la remplace.
+- **Secret Vercel Sensitive non relisible** : l’assistant détecte qu’il existe et ne confond jamais son placeholder avec une absence. Il le RÉSOUT (valeur locale conservée, URL de base récupérée auprès de Neon, clé symétrique manquante générée puis remplacée après inspection SQL vide dans le plan complet, ou après autorisation explicite) — voir la section dédiée ci-dessus. Ce qu’il ne peut pas faire : retrouver une valeur que personne n’a conservée **et** qui doit correspondre à un service externe ; celle-là reste à fournir, et aucune valeur inventée ne la remplace.
 - **Clé privée perdue** : impossible de la retrouver depuis une clé publique ou des données chiffrées. Nouvelle autorité/nouveau canal sur confirmation seulement ; les anciens clients/licences peuvent rester incompatibles.
 - **Stockage durable Vercel** : les services actuels de sauvegarde et publication/upload des installateurs écrivent sur disque. Un stockage objet et une adaptation applicative sont nécessaires. Mettre `/tmp/backups` ne suffit pas ; un chemin local de stockage durable est refusé pour le profil Vercel. Les photos ont une voie legacy base64 lorsque le stockage fichier est désactivé, pas une intégration objet automatique.
 - **garagesite3** : le serveur de publication/control-plane externe n’est pas dans ce checkout. Le signer local et les ancrages clients peuvent être préparés, pas déployer du code absent. Le rapport demande l’accès et la propagation publique/keyId nécessaires.

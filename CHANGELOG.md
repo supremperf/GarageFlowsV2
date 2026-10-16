@@ -15,26 +15,25 @@ DEVICE_TOKEN_PEPPER : valeur de production nécessaire pour poursuivre.
 
 Impossible de configurer une installation neuve dont les variables existaient
 déjà côté Vercel, sans chasser des valeurs que personne n'avait copiées.
-Désormais chaque variable non relisible est **résolue** :
+Désormais les secrets symétriques illisibles et manquants localement sont
+résolus après le contrôle SQL du plan complet : génération 256 bits et remplacement
+sur base vide, accord groupé explicite sur base utilisée. Un checkout neuf ne
+constitue **jamais** une preuve que la production est vide. Les vraies URLs
+proviennent de Neon ou du fournisseur ; elles ne sont pas inventées et leur
+correspondance avec la cible doit être confirmée.
 
-- valeur présente localement → conservée (et un écart avec le reçu du dernier
-  envoi est annoncé, puis tranché par UNE question) ;
-- `DATABASE_URL` / `DIRECT_URL` → récupérées ** réellement** auprès du compte
-  Neon ; jamais fabriquées ;
-- clé symétrique absente partout → générée (256 bits) puis **remplacée** chez
-  Vercel (rm + add, horodatage relu comme preuve) — automatiquement sur une
-  **installation neuve démontrée** (aucun `.env.server.local`, aucune autorité
-  locale, aucun reçu), sinon sur autorisation explicite ;
-- mot de passe SMTP / jeton tiers → une **seule** question groupée, jamais une
-  boucle de saisies masquées.
+Les reçus privés contiennent des empreintes, l’identité équipe/projet et la
+version distante : ils évitent les confirmations répétées sans masquer un
+changement de projet ou une modification externe. Les nouvelles variables
+Sensitive ajoutées reçoivent elles aussi un reçu. Un échec d’envoi ne produit
+aucun reçu de succès ; la suppression Vercel ne reçoit jamais le secret sur stdin.
+Les clés générées pendant la reprise figurent au récapitulatif des destinations.
 
-`scripts/lib/config-secrets-auto.cjs` (nouveau) porte la politique, testable ;
-`GarageFlow-configuration/secrets-receipt.json` (0600) n'enregistre que des
-empreintes SHA-256, pour reconnaître une valeur déjà poussée et signaler une
-dérive au lieu de remplacer en silence. `tests/config-secrets-auto.test.cjs` :
-15/15, dont deux scénarios exécutés dans un bac à sable (génération sur
-installation neuve, refus sur installation établie). `docs/CONFIG.md` et le
-rapport d'audit sont alignés ; l'étape CI les exécute hors ligne.
+Correction du contrôle de marque : exception précise pour le nom physique
+historique du coffre dans `scripts/lib/config-secrets-auto.cjs`, sans désactiver
+le contrôle ni renommer le dossier existant. Documentation et tests hors ligne
+complétés (ajout, remplacement, reprise, absence de preuve locale, refus sans
+accord et reçus liés aux métadonnées).
 
 ### P0 — `npm run dist` s'arrêtait sur « server.js NOT found »
 - Cause réelle : la sortie autonome EXISTAIT, un niveau plus bas

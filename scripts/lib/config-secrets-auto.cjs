@@ -1,44 +1,11 @@
 'use strict'
 /**
- * Résolution AUTOMATIQUE des variables « non relisibles » chez Vercel.
- *
- * ─── Le problème réel ────────────────────────────────────────────────────────
- *
- * Les secrets sont poussés chez Vercel en `--sensitive` : c'est le bon réglage
- * (Vercel ne les réaffiche jamais), mais il ferme la porte au run suivant —
- * `vercel env pull` ne renvoie rien pour ces noms. L'ancien comportement
- * demandait alors la « valeur ORIGINALE depuis votre coffre » et **s'arrêtait
- * net** si elle n'était pas fournie :
- *
- *   DATABASE_URL existe chez Vercel mais sa valeur n'est pas relisible.
- *   DEVICE_TOKEN_PEPPER : valeur de production nécessaire pour poursuivre.
- *
- * Résultat : impossible de configurer une installation neuve sans chasser des
- * valeurs que personne n'a copiées.
- *
- * ─── Ce que fait ce module ───────────────────────────────────────────────────
- *
- * Il décide, POUR CHAQUE variable non relisible, d'où vient sa valeur, dans cet
- * ordre — et il ne génère jamais à l'aveugle :
- *
- *   1. `locale`      : le fichier de profil la contient déjà → adoptée telle
- *                      quelle, elle sera écrite chez Vercel.
- *   2. `fournie:<source>` : un fournisseur automatique sait produire la VRAIE
- *                      valeur (Neon pour DATABASE_URL/DIRECT_URL). On ne
- *                      FABRIQUE jamais une URL de base de données.
- *   3. `generee`    : la variable est générable (clé symétrique de
- *                      `config-core.GENERATED`) ET la génération est autorisée
- *                      (première installation, ou accord explicite) → une
- *                      nouvelle valeur 256 bits est générée et REMPLACE celle de
- *                      Vercel.
- *   4. `a-fournir`  : aucune règle ne s'applique (mot de passe SMTP, clé d'un
- *                      service tiers…) → une seule question groupée, jamais une
- *                      boucle de saisies masquées.
- *
- * Le fichier de reçus (`GarageFlow-configuration/secrets-receipt.json`) ne
- * contient QUE des empreintes SHA-256 : il sert à prouver qu'une valeur locale
- * est bien celle qui a été poussée, et à SIGNALER une dérive (fichier local
- * modifié depuis) au lieu de laisser un remplacement silencieux chez Vercel.
+ * Politique de résolution des secrets Vercel Sensitive (non relisibles).
+ * Une valeur illisible EXISTE : son remplacement est une rotation, pas un ajout.
+ * Les fournisseurs produisent les vrais identifiants ; seuls les noms de
+ * config-core.GENERATED autorisent un générateur de clés symétriques.
+ * Les empreintes locales ne prouvent rien sur un autre projet ou une version
+ * distante différente : le wizard contrôle aussi l’identité et les métadonnées.
  */
 
 const crypto = require('node:crypto')
@@ -115,16 +82,8 @@ function resoudreValeursCachees({
 }
 
 /**
- * Preuve de fraîcheur : « installation neuve » se prouve par des FAITS locaux,
- * jamais par une supposition. Si l'un de ces témoins existe, des données ou des
- * jetons ont pu être produits avec des clés déjà en service — et une rotation
- * automatique deviendrait destructrice.
- *
- * @param {string} root
- * @param {object} [options]
- * @param {string} [options.receipts] chemin du fichier de reçus
- * @param {(chemin: string) => boolean} [options.existe] injectable (tests)
- * @param {boolean} [options.serveurNeuf] verdict du contrôle de base serveur, quand il a pu être fait
+ * Absence de témoins LOCAUX et contrôle serveur explicitement vide.
+ * L’absence de fichiers sur ce PC ne prouve jamais que Vercel est neuf.
  */
 function premiereInstallation(root, { receipts, existe = fs.existsSync, serveurNeuf = null } = {}) {
   const temoins = [
@@ -133,10 +92,9 @@ function premiereInstallation(root, { receipts, existe = fs.existsSync, serveurN
     receipts || cheminRecus(root),
   ]
   const aucunTemoin = temoins.every((chemin) => !existe(chemin))
-  // Un témoin trouvé est dirimant ; aucun témoin ET une base serveur qui n'est
-  // pas manifestement vide (quand on a pu le vérifier) ne suffisent pas.
+  // Une inspection absente/indéterminée ne constitue jamais une autorisation.
   if (!aucunTemoin) return false
-  return serveurNeuf === null ? true : serveurNeuf
+  return serveurNeuf === true
 }
 
 /** Chemin canonique du fichier de reçus (dossier privé, mode 0700). */
@@ -167,12 +125,12 @@ function lireRecus(root, { fichier, lire = (p) => fs.readFileSync(p, 'utf8') } =
  * fois : c'est la seule façon de comparer un secret que Vercel ne relit pas.
  * @returns {{ coherents: string[], divergents: string[], inconnus: string[] }}
  */
-function verifierRecus(recus, valeurs, projet = '') {
+function verifierRecus(recus, valeurs, projet = '', stamps = null) {
   const coherents = [], divergents = [], inconnus = []
   for (const [nom, valeur] of Object.entries(valeurs)) {
     if (!utilisable(valeur)) continue
     const recu = recus[nom]
-    if (!recu || !utilisable(recu.sha256) || (projet && recu.projet && recu.projet !== projet)) { inconnus.push(nom); continue }
+    if (!recu || !utilisable(recu.sha256) || (projet && recu.projet !== projet) || (stamps && (!projet || !stamps[nom] || recu.stamp !== stamps[nom]))) { inconnus.push(nom); continue }
     if (recu.sha256 === empreinte(valeur)) coherents.push(nom)
     else divergents.push(nom)
   }
@@ -184,13 +142,14 @@ function verifierRecus(recus, valeurs, projet = '') {
  * aucune valeur, permissions privées.
  * @returns {object} le contenu écrit
  */
-function ecrireRecus(root, { projet = '', origines = {}, valeurs = {}, horodatage = new Date().toISOString() } = {},
+function ecrireRecus(root, { projet = '', origines = {}, valeurs = {}, stamps = {}, horodatage = new Date().toISOString() } = {},
   { fichier, ecrire = null } = {}) {
   const chemin = fichier || cheminRecus(root)
-  const noms = {}
+  const noms = Object.fromEntries(Object.entries(lireRecus(root, { fichier: chemin }))
+    .filter(([, recu]) => recu && recu.projet === projet))
   for (const [nom, valeur] of Object.entries(valeurs)) {
     if (!utilisable(valeur)) continue
-    noms[nom] = { sha256: empreinte(valeur), origine: origines[nom] || 'synchronisée', projet, horodatage }
+    noms[nom] = { sha256: empreinte(valeur), origine: origines[nom] || 'synchronisée', projet, horodatage, stamp: stamps[nom] || '' }
   }
   const contenu = {
     schema: 1,

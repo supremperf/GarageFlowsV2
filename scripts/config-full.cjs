@@ -72,10 +72,11 @@ async function full(api) {
   }
   console.log(`\nCONFIG COMPLET — ${policy.entries.length} variables classées, ${policy.names.length} paramètres applicatifs.`)
   console.log('Plan : inventaire → dépendances → accès Vercel/Neon/Redis → secrets/licences → fichiers/keygen/signature locale/client → SQL → Vercel → santé.')
-  console.log('Les comptes externes, ressources choisies et éventuels frais restent sous votre contrôle. Aucun reset, aucune rotation automatique, aucune création de comptes fictifs.')
+  console.log('Les comptes externes, ressources choisies et éventuels frais restent sous votre contrôle. Aucun reset, aucun remplacement aveugle de clés, aucune création de comptes fictifs.')
   console.log('Une autorisation initiale couvre les installations npm, fichiers locaux, migrations sur une BASE VIDE et déploiement sur le projet Vercel que vous autorisez. Une base existante et un changement d’autorité exigent une confirmation supplémentaire.')
   console.log('Première installation sur base vide : génération automatique des secrets 256 bits et de la première paire de licence P-256, sauvegarde et synchronisation des ancrages publics. Première clé Ed25519 dans un coffre hors dépôt, sans copier-coller. Une autorité locale existante ou une base utilisée ne permet jamais de remplacer des clés perdues automatiquement.')
   console.log('Aucune valeur de clé n’est demandée sur une première installation : les secrets absents sont générés, écrits dans .env, .env.server.local, keys/ (P-256 + keygen) puis synchronisés dans Vercel production. Une base contenant des DONNÉES MÉTIER reste protégée : les registres de migrations (_gf_migrations/_prisma_migrations) ne comptent pas comme données.')
+  console.log('Secrets Sensitive illisibles : après confirmation de la base cible et inspection SQL vide, les secrets symétriques introuvables sont générés et remplacés automatiquement sur Vercel. Sur une base utilisée, accord explicite supplémentaire requis. Les URLs de base ne sont jamais inventées.')
   console.log('La configuration de production n’est pas exécutée sur vos comptes tant que vous n’autorisez pas ce plan.')
   if (await api.question('Saisir AUTORISER pour exécuter le plan complet (Entrée = annuler)') !== 'AUTORISER') return
   core.assertNodeVersion()
@@ -119,7 +120,7 @@ async function full(api) {
     // Reject obsolete names even if they came from an integration; don't quietly paper over them.
     assertNoAliases(remote.values, policy)
     assertSafeServerOverrides(remote)
-    env = await api.importRemote(env, remote, names)
+    env = await api.importRemote(env, remote, names, { deferGenerated: true })
     // Recovery from local issuer configuration is safe only after matching the Vercel target.
     const keygenFile = path.join(root, 'keys/server_config.json')
     if (!env.GARAGEFLOW_API_KEY && fs.existsSync(keygenFile)) {
@@ -155,6 +156,12 @@ async function full(api) {
     })
     const database = await step('inspection-SQL-lecture-seule', () => tools.inspectDatabase(root, env.DIRECT_URL))
     console.log(database.empty ? 'Base sans données métier : initialisation possible.' : 'Base contient des données : préservation des clés et sauvegarde indispensables.')
+    // Seul le contrôle SQL réel, après confirmation de la cible, permet cette
+    // génération automatique. Un checkout vierge ne prouve rien sur Vercel.
+    if (remote.deferredGenerated && remote.deferredGenerated.size) {
+      env = await api.importRemote(env, remote, [...remote.deferredGenerated], { rotationAutorisee: database.empty })
+      for (const name of remote.generatedHere || []) noteGenerated('serveur', name)
+    }
     await step('URLs-publiques', () => tools.configureServerEndpoint(env, api))
     await step('Redis-Upstash-et-test-REST', async () => {
       await tools.configureUpstash(env, api)

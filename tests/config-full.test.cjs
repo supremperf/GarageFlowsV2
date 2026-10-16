@@ -745,3 +745,50 @@ test('refuser la confirmation GENERER arrête le plan sans écrire de clé de re
   assert.ok(!f.calls.includes('sync'))
   assert.ok(!fs.existsSync(path.join(f.dir, '.env')))
 })
+
+for (const existing of [false, true]) {
+  test(`secret Vercel illisible différé : inspection SQL avant résolution (base ${existing ? 'utilisée' : 'vide'})`, async t => {
+    const f = fullFixture(t, { existing })
+    const name = 'GF_PORTAL_SECRET'
+    const baseImport = f.api.importRemote
+    const baseSetup = f.api.setupVercel
+    const events = []
+    f.api.setupVercel = async () => {
+      const remote = await baseSetup()
+      remote.values = { ...remote.values }
+      delete remote.values[name]
+      remote.hidden.add(name)
+      return remote
+    }
+    f.api.services.inspectDatabase = async () => {
+      events.push('SQL')
+      return { empty: !existing, tableCount: 0 }
+    }
+    f.api.importRemote = async (local, remote, names, options) => {
+      if (options.deferGenerated) {
+        events.push('différé')
+        remote.deferredGenerated = new Set([name])
+        const result = await baseImport(local, remote, names)
+        delete result[name]
+        return result
+      }
+      events.push('résolution')
+      assert.deepEqual(events, ['différé', 'SQL', 'résolution'])
+      assert.deepEqual(names, [name])
+      assert.equal(options.rotationAutorisee, !existing)
+      if (existing) throw new Error('Accord explicite requis pour la base utilisée')
+      remote.generatedHere = new Set([name])
+      return { ...local, [name]: f.env[name] }
+    }
+    if (existing) {
+      await assert.rejects(() => full(f.api), /Accord explicite requis/)
+      assert.ok(!f.calls.includes('sync'))
+    } else {
+      await full(f.api)
+      const report = JSON.parse(fs.readFileSync(path.join(f.dir, 'GarageFlow-configuration/report.json'), 'utf8'))
+      assert.ok(report.keys.some(k => k.name === name), 'la clé générée doit figurer au récapitulatif')
+      assert.equal(core.readEnv(path.join(f.dir, '.env.server.local'))[name], f.env[name])
+      assert.ok(f.calls.includes('sync'))
+    }
+  })
+}
