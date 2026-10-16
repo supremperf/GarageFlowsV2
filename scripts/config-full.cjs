@@ -9,6 +9,39 @@ const services = require('./config-services.cjs')
 const keys = require('./config-keys.cjs')
 const { audit, render } = require('./config-audit.cjs')
 
+// Clé symétrique absente, non retrouvée localement ni chez Vercel.
+//  - base sans données métier  → génération automatique (aucune saisie) ;
+//  - base contenant des données → original du coffre, déclaration NONUTILISE
+//    (génère alors une nouvelle clé) ou GENERER (confirmation explicite).
+// Retourne 'generated' | 'imported' | 'declared-unused' | 'missing'.
+async function resolveMissingKey(api, env, name, { used, scope = 'serveur' } = {}) {
+  if (!name) return 'missing'
+  if (!used) {
+    core.generateMissing(env, [name])
+    console.log(`${name} : générée automatiquement (masquée) → ${core.keyDestinations(name, scope === 'desktop' ? 'desktop' : 'server').join(' · ') || 'profil courant'}.`)
+    return 'generated'
+  }
+  console.log(`${name} absent du poste et non récupéré depuis Vercel : base ${scope} contenant des données, aucune génération à l’aveugle.`)
+  await api.secretField(env, name, `${name} : clé ORIGINALE du coffre, ou NONUTILISE si domaine jamais configuré, ou GENERER`)
+  if (core.isKeyPromptCommand(env[name], 'declaredUnused')) {
+    if (!await api.yes(`Confirmer explicitement que ${name} n’a JAMAIS protégé de données/jetons existants`)) throw new Error('Original nécessaire, aucune génération de remplacement.')
+    delete env[name]
+    return 'declared-unused'
+  }
+  if (core.isKeyPromptCommand(env[name], 'generate')) {
+    console.log('GENERER : une nouvelle clé rend illisibles les données/jetons signés ou chiffrés avec l’ancienne.')
+    if (!await api.yes(`Confirmer la génération d’une NOUVELLE valeur pour ${name} (à n’utiliser que si aucune donnée n’en dépend)`)) {
+      delete env[name]
+      throw new Error(`${name} : original nécessaire pour la base existante.`)
+    }
+    env[name] = crypto.randomBytes(32).toString(core.GENERATED[name] || 'base64')
+    console.log(`${name} : nouvelle clé générée (masquée).`)
+    return 'generated'
+  }
+  if (!env[name]) throw new Error(`${name} : original nécessaire pour la base existante.`)
+  console.log(`${name} : original importé depuis le coffre (masqué).`)
+  return 'imported'
+}
 async function full(api) {
   const root = api.root
   const tools = api.services || services
@@ -27,11 +60,22 @@ async function full(api) {
     catch (error) { record.status = 'failed'; report.status = 'interrupted'; saveReport(); throw error }
   }
   function pending(id, reason) { report.pending.push({ id, reason }); saveReport(); console.log(`  À fournir/vérifier : ${reason}`) }
+  // Suivi des clés CRÉÉES pendant cette exécution (noms + destinations seulement,
+  // jamais de valeur) pour produire un récapitulatif honnête en fin de plan.
+  const generated = { serveur: new Set(), desktop: new Set() }
+  report.keys = []
+  function noteGenerated(scope, name) {
+    if (!generated[scope] || !name || generated[scope].has(name)) return
+    generated[scope].add(name)
+    report.keys.push({ name, scope, destinations: core.keyDestinations(name, scope === 'desktop' ? 'desktop' : 'server') })
+    saveReport()
+  }
   console.log(`\nCONFIG COMPLET — ${policy.entries.length} variables classées, ${policy.names.length} paramètres applicatifs.`)
   console.log('Plan : inventaire → dépendances → accès Vercel/Neon/Redis → secrets/licences → fichiers/keygen/signature locale/client → SQL → Vercel → santé.')
   console.log('Les comptes externes, ressources choisies et éventuels frais restent sous votre contrôle. Aucun reset, aucune rotation automatique, aucune création de comptes fictifs.')
   console.log('Une autorisation initiale couvre les installations npm, fichiers locaux, migrations sur une BASE VIDE et déploiement sur le projet Vercel que vous autorisez. Une base existante et un changement d’autorité exigent une confirmation supplémentaire.')
   console.log('Première installation sur base vide : génération automatique des secrets 256 bits et de la première paire de licence P-256, sauvegarde et synchronisation des ancrages publics. Première clé Ed25519 dans un coffre hors dépôt, sans copier-coller. Une autorité locale existante ou une base utilisée ne permet jamais de remplacer des clés perdues automatiquement.')
+  console.log('Aucune valeur de clé n’est demandée sur une première installation : les secrets absents sont générés, écrits dans .env, .env.server.local, keys/ (P-256 + keygen) puis synchronisés dans Vercel production. Une base contenant des DONNÉES MÉTIER reste protégée : les registres de migrations (_gf_migrations/_prisma_migrations) ne comptent pas comme données.')
   console.log('La configuration de production n’est pas exécutée sur vos comptes tant que vous n’autorisez pas ce plan.')
   if (await api.question('Saisir AUTORISER pour exécuter le plan complet (Entrée = annuler)') !== 'AUTORISER') return
   core.assertNodeVersion()
@@ -130,17 +174,21 @@ async function full(api) {
             console.log(`${name} : repli historique sur NEXTAUTH_SECRET préservé, pas de rotation des signatures/liens existants.`)
             continue
           }
-          console.log(`${name} absent du poste et non récupéré depuis Vercel. Une base utilisée ne prouve pas qu’un secret n’a jamais existé.`)
-          await api.secretField(env, name, `${name} : clé ORIGINALE du coffre, ou NONUTILISE si domaine jamais configuré`)
-          if (env[name] === 'NONUTILISE') {
-            if (!await api.yes(`Confirmer explicitement que ${name} n’a JAMAIS protégé de données/jetons existants`)) throw new Error('Original nécessaire, aucune génération de remplacement.')
-            delete env[name]
-          } else if (!env[name]) throw new Error(`${name} : original nécessaire pour la base existante.`)
+          await resolveMissingKey(api, env, name, { used: true, scope: 'serveur' })
         }
+      } else if (missing.length) {
+        console.log(`Base sans données métier (registres de migrations ${database.ignored ? `« ${database.ignored} table(s) ignorée(s) » ` : ''}non comptés) : génération automatique des ${missing.length} clé(s) absente(s), valeurs masquées.`)
       }
+      const beforeFill = new Set(Object.keys(core.GENERATED).filter(n => names.includes(n) && env[n]))
       env = core.fillMissing(env, names, 'licences')
+      for (const name of Object.keys(core.GENERATED).filter(n => names.includes(n) && env[n] && !beforeFill.has(n))) noteGenerated('serveur', name)
+      if (generated.serveur.size) console.log(`Clés serveur générées (masquées) : ${[...generated.serveur].join(', ')}. Écriture → .env.server.local, keys/ (selon la clé), Vercel production.`)
       // Provision the optional credential cipher only on a fresh, empty DB. Feature stays OFF.
-      if (database.empty && !env.GF_EINVOICE_CREDENTIALS_KEY) env.GF_EINVOICE_CREDENTIALS_KEY = crypto.randomBytes(32).toString('base64')
+      if (database.empty && !env.GF_EINVOICE_CREDENTIALS_KEY) {
+        env.GF_EINVOICE_CREDENTIALS_KEY = crypto.randomBytes(32).toString('base64')
+        noteGenerated('serveur', 'GF_EINVOICE_CREDENTIALS_KEY')
+        console.log('Clé de chiffrement de facturation électronique préparée (masquée). Les drapeaux de facturation restent OFF.')
+      }
       if (!env.GF_PRIVATE_KEY) await api.licenseKey(env, { autoCreate: database.empty })
       if (keys.readState(root)?.autoGenerated) pending('issuer-distribution', 'Nouvelle autorité locale : reconstruire/distribuer les nouveaux clients et propager la clé publique à garagesite3. Les installations et licences existantes ne sont pas modifiées automatiquement.')
       console.log('La clé de licence doit correspondre aux ancrages publics. Aucune licence client commerciale n’est créée automatiquement.')
@@ -203,7 +251,7 @@ async function full(api) {
         if (supplied) keyFile = tools.assertExternalFile(root, path.resolve(supplied))
         else {
           console.log('Une nouvelle clé ne répare pas le parc existant : les anciens clients ne la connaissent pas. Les anciennes clés publiques seront conservées.')
-          if (await api.question('Saisir NOUVEAU-CANAL pour générer une nouvelle clé (Entrée = laisser à configurer)') !== 'NOUVEAU-CANAL') {
+          if (!/^(NOUVEAU-CANAL|GENERER)$/i.test((await api.question('Saisir NOUVEAU-CANAL ou GENERER pour créer une nouvelle clé (Entrée = laisser à configurer)')).trim())) {
             pending('publisher-key', 'Clé Ed25519 originale et accès au serveur de publication garagesite3 requis.'); return
           }
           const pair = crypto.generateKeyPairSync('ed25519', { privateKeyEncoding: { type: 'pkcs8', format: 'pem' }, publicKeyEncoding: { type: 'spki', format: 'pem' } })
@@ -228,26 +276,27 @@ async function full(api) {
         for (const n of serverOnly) delete desktop[n]
       }
       if (await api.yes('Personnaliser les variables facultatives du desktop (chemins Windows, endpoints, canal, clés historiques et réglages locaux)')) {
-        await api.advanced(desktop, core.editableNames(desktop, desktopNames, policy))
+        await api.advanced(desktop, core.editableNames(desktop, desktopNames, policy), { profile: 'desktop' })
       }
       const inspectedDesktopUrl = desktop.DATABASE_URL || 'file:./dev.db'
       const localDatabase = await tools.inspectDesktop(root, inspectedDesktopUrl)
-      if (!localDatabase.empty) {
-        for (const name of Object.keys(core.GENERATED).filter(n => desktopNames.includes(n) && !desktop[n])) {
+      const missingDesktop = Object.keys(core.GENERATED).filter(n => desktopNames.includes(n) && !desktop[n])
+      if (localDatabase.empty) {
+        if (missingDesktop.length) console.log(`SQLite sans données métier (${localDatabase.ignored ? `${localDatabase.ignored} entrée(s) technique(s) ignorée(s) : registres de migrations` : 'aucune ligne métier'}) : ${missingDesktop.length} clé(s) desktop générée(s) automatiquement, valeurs masquées.`)
+      } else {
+        for (const name of missingDesktop) {
           if (name === 'GF_SIGNATURE_SECRET' && desktop.NEXTAUTH_SECRET) {
             desktop[name] = desktop.NEXTAUTH_SECRET
             console.log('Signature desktop : repli historique préservé, aucune rotation des preuves existantes.')
             continue
           }
-          console.log(`${name} manque pour une SQLite contenant des données. Importer l’original ou déclarer explicitement un domaine jamais configuré.`)
-          await api.secretField(desktop, name, `${name} desktop : clé ORIGINALE ou NONUTILISE`)
-          if (desktop[name] === 'NONUTILISE') {
-            if (!await api.yes(`Confirmer que ${name} n’a jamais été utilisée pour cette base desktop`)) throw new Error('Clé desktop d’origine requise.')
-            delete desktop[name]
-          } else if (!desktop[name]) throw new Error(`${name} desktop : original nécessaire.`)
+          await resolveMissingKey(api, desktop, name, { used: true, scope: 'desktop' })
         }
       }
+      const beforeDeskFill = new Set(Object.keys(core.GENERATED).filter(n => desktopNames.includes(n) && desktop[n]))
       desktop = core.fillMissing(desktop, desktopNames, 'desktop')
+      for (const name of Object.keys(core.GENERATED).filter(n => desktopNames.includes(n) && desktop[n] && !beforeDeskFill.has(n))) noteGenerated('desktop', name)
+      if (generated.desktop.size) console.log(`Clés desktop écrites dans .env (valeurs masquées) : ${[...generated.desktop].join(', ')}.`)
       desktop.GF_APP_URL ||= env.GF_APP_URL
       desktop.GF_LICENSE_SERVER ||= env.NEXTAUTH_URL
       desktop.GF_UPDATE_SERVER ||= env.NEXTAUTH_URL
@@ -308,6 +357,20 @@ async function full(api) {
         if (!response.ok || (await response.json()).status !== 'ok') throw new Error()
       } catch { pending('public-domain', 'Le domaine public ne répond pas à la sonde : vérifier DNS/alias/protection Vercel dans le compte autorisé.') }
     })
+    await step('récapitulatif-des-clés-et-destinations', async () => {
+      // Noms et destinations uniquement : jamais de valeur dans le rapport.
+      const created = report.keys
+      if (!created.length) {
+        console.log('Aucune nouvelle clé créée dans cette exécution : les valeurs existantes (poste, coffre, Vercel) ont été conservées telles quelles.')
+      } else {
+        console.log(`${created.length} clé(s) créée(s) pendant cette exécution (valeurs jamais affichées) :`)
+        for (const { name, destinations } of created) console.log(`  ${name} → ${(destinations || []).join(' · ')}`)
+      }
+      if (fs.existsSync(keygenFile)) console.log('keys/server_config.json : URL + GARAGEFLOW_API_KEY lus par keygen (aucune valeur affichée).')
+      if (fs.existsSync(path.join(folder, 'publisher.json'))) console.log('Publication : chemin/keyId de la clé Ed25519 dans GarageFlow-configuration/publisher.json ; clé privée uniquement dans le coffre hors dépôt.')
+      console.log('Vercel production : seules les variables absentes y sont ajoutées en Sensitive par l’étape précédente ; les valeurs Sensitive ne sont plus relisibles, conservez une copie chiffrée.')
+      saveReport()
+    })
     await step('prérequis-keygen-Python', async () => {
       let python
       for (const command of ['python3', 'python', 'py']) {
@@ -335,4 +398,4 @@ async function full(api) {
     throw error
   } finally { if (lockFd) fs.rmSync(lock, { force: true }) }
 }
-module.exports = { full }
+module.exports = { full, resolveMissingKey }

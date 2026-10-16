@@ -33,6 +33,10 @@ function help() {
   node config --diagnose-sql          Diagnostic PostgreSQL en lecture seule
   node config --help
 
+Clés : toute clé symétrique ABSENTE est générée automatiquement (256 bits) sur une
+première installation (base vide, aucune donnée métier) puis écrite dans .env,
+.env.server.local, keys/ (P-256, keygen) et synchronisée dans Vercel production.
+Une base déjà utilisée exige l'original ; GENERER y reste une décision explicite.
 Fichiers : desktop → .env ; serveur → .env.server.local (isolé des builds Electron).
 Aucun secret affiché, aucun remplacement automatique d'une valeur existante.
 Neon/Vercel : authentification officielle dans votre navigateur, sur votre poste.
@@ -312,13 +316,36 @@ async function licenseKey(env, { root = ROOT, choose = select, prompt = question
     await create(false)
   }
 }
-async function advanced(env, names) {
+// Génère tous les secrets symétriques ABSENTS du profil (valeurs masquées) et
+// rappelle où chaque clé est écrite/lue. Une clé déjà présente n'est jamais
+// remplacée : c'est l'appelant (ou l'opérateur, via yes) qui autorise la création.
+async function generateSecrets(env, names, { authorize = false, profile = 'server', title = 'clés absentes' } = {}) {
+  const targets = core.missingGenerated(env, names)
+  if (names.includes('GF_EINVOICE_CREDENTIALS_KEY') && !env.GF_EINVOICE_CREDENTIALS_KEY) targets.push('GF_EINVOICE_CREDENTIALS_KEY')
+  if (!targets.length) { console.log('Aucune clé symétrique absente : rien à générer (les valeurs existantes ne sont jamais remplacées).'); return [] }
+  console.log(`${targets.length} ${title} à générer (256 bits, valeurs jamais affichées) :`)
+  for (const name of targets) console.log(`  ${name} → ${core.keyDestinations(name, profile).join(' · ') || 'profil courant'}`)
+  console.log('Générer une nouvelle clé rend illisibles les données/jetons chiffrés ou signés avec une ancienne clé. À réserver aux clés qui n’ont jamais existé (première installation).')
+  if (!authorize && !await yes('Générer maintenant ces clés absentes')) return []
+  const created = []
+  for (const name of targets) {
+    env[name] = crypto.randomBytes(32).toString(core.GENERATED[name] || 'base64')
+    created.push(name)
+  }
+  console.log(`${created.length} clé(s) générée(s) et masquée(s) : ${created.join(', ')}.`);
+  console.log('Facturation électronique : les drapeaux restent OFF même si la clé de chiffrement vient d’être préparée.')
+  return created
+}
+async function advanced(env, names, { profile = 'server' } = {}) {
   console.log('\nRéglages avancés : nom exact de variable, Entrée pour terminer. Valeur existante conservée sur Entrée ; « SUPPRIMER » pour la retirer.')
-  console.log('Saisir GENERER comme valeur d’un secret symétrique pour une génération explicite sur confirmation. Jamais pour récupérer une clé perdue.')
+  console.log('Commandes : GENERER = générer maintenant toutes les clés symétriques absentes de ce profil ; LISTE = réafficher les variables ; Entrée = terminer.')
+  console.log('GENERER est aussi accepté comme VALEUR d’un secret symétrique. Jamais pour récupérer une clé perdue : une clé perdue ne se recrée pas.')
   console.log('Variables de ce profil :\n' + names.join(', '))
   for (;;) {
-    const name = await question('Variable à configurer')
+    const name = (await question('Variable à configurer')).trim()
     if (!name) return
+    if (/^GENERER(-TOUT)?$/i.test(name)) { await generateSecrets(env, names, { profile }); continue }
+    if (/^LISTE$/i.test(name)) { console.log('Variables de ce profil :\n' + names.join(', ')); continue }
     if (!names.includes(name)) { console.log('Variable inconnue ou non applicable à ce profil.'); continue }
     const secret = core.isSecret(name) || !allNames.includes(name)
     if (secret && env[name]) {
@@ -326,12 +353,12 @@ async function advanced(env, names) {
       if (!await yes(`Modifier explicitement ${name}`)) continue
     }
     const value = core.normalizeValue(name, await question(`Valeur de ${name}`, { secret, defaultValue: env[name] || '' }))
-    if (value === 'SUPPRIMER') delete env[name]
-    else if (value === 'GENERER' && (core.GENERATED[name] || name === 'GF_EINVOICE_CREDENTIALS_KEY')) {
+    if (value.toUpperCase() === 'SUPPRIMER') delete env[name]
+    else if (value.toUpperCase() === core.KEY_PROMPT_COMMANDS.generate && (core.GENERATED[name] || name === 'GF_EINVOICE_CREDENTIALS_KEY')) {
       console.log('Une nouvelle clé rend les anciennes données/jetons incompatibles. Pour la facturation électronique, uniquement sur une première configuration sans identifiants chiffrés.')
       if (await yes(`Générer explicitement une nouvelle valeur pour ${name}`)) {
         env[name] = crypto.randomBytes(32).toString(core.GENERATED[name] || 'base64')
-        console.log(`${name} : générée, valeur masquée.`)
+        console.log(`${name} : générée, valeur masquée → ${core.keyDestinations(name, profile).join(' · ') || 'profil courant'}.`)
       }
     } else env[name] = value
   }
@@ -543,18 +570,20 @@ async function main() {
     if (profile === 'licences') await licenseKey(env)
     if (!env.ANTHROPIC_API_KEY && await yes('Configurer une clé Anthropic pour OCR/IA (facultatif)')) await secretField(env, 'ANTHROPIC_API_KEY')
   }
-  console.log('Les secrets ABSENTS seront générés individuellement. Si cette base contient déjà des données chiffrées ou des licences, importez les clés d’origine via les réglages avancés avant de sauvegarder.')
+  console.log('Toutes les clés symétriques ABSENTES de ce profil seront générées automatiquement (256 bits) et écrites dans les fichiers cibles. Si cette base contient déjà des données chiffrées ou des licences, importez les clés d’origine via les réglages avancés avant de sauvegarder.')
+  const absentBefore = new Set(core.missingGenerated(env, names))
   env = core.fillMissing(env, names, profile)
+  for (const name of absentBefore) console.log(`  ${name} → générée (masquée) → ${core.keyDestinations(name, profile === 'desktop' ? 'desktop' : 'server').join(' · ') || 'profil courant'}`)
   if (profile !== 'desktop' && env.EINVOICING_ENABLED === 'true' && !env.GF_EINVOICE_CREDENTIALS_KEY) {
     console.log('Facturation électronique déjà activée mais clé absente : importer la clé d’origine si des identifiants existent ; ne PAS la régénérer.')
     await secretField(env, 'GF_EINVOICE_CREDENTIALS_KEY')
   }
-  if (await yes('Configurer des variables avancées (limites, SMTP, versions, facturation et réglages locaux)')) await advanced(env, core.editableNames(env, names, configPolicy))
+  if (await yes('Configurer des variables avancées (limites, SMTP, versions, facturation et réglages locaux)')) await advanced(env, core.editableNames(env, names, configPolicy), { profile })
   let errors = core.validate(env, profile, { vercel, publicPem: core.embeddedLicenseKey(ROOT) })
   while (errors.length) {
     console.log('\nConfiguration non valide :\n' + errors.join('\n'))
     if (!await yes('Corriger les variables maintenant', true)) throw new Error('Configuration non sauvegardée : validation échouée.')
-    await advanced(env, core.editableNames(env, names, configPolicy))
+    await advanced(env, core.editableNames(env, names, configPolicy), { profile })
     errors = core.validate(env, profile, { vercel, publicPem: core.embeddedLicenseKey(ROOT) })
   }
   // Preserve unrelated local variables (integration-specific settings), rather than silently deleting them.
@@ -587,7 +616,7 @@ async function main() {
   console.log('\nConfiguration terminée. Aucun secret n’a été committé ni affiché.')
   console.log('GF_UPDATE_SIGNING_KEY reste EXCLUSIVEMENT dans le coffre du serveur de publication garagesite3 ; config ne la génère ni ne l’exporte ici.')
 }
-module.exports = { root: ROOT, question, yes, select, tool, execute, npmCli,
+module.exports = { root: ROOT, question, yes, select, tool, execute, npmCli, generateSecrets,
   setupVercel, pullVercel, importRemote, configureNeon, secretField, licenseKey,
   advanced, childEnv, syncVercel, licensePassphrase, diagnoseSql, summarizeSqlDiff }
 if (require.main === module) main().catch(error => {

@@ -147,6 +147,48 @@ function saveDatabaseUrls(file, env) {
   writePrivate(file, original + (original && !original.endsWith('\n') ? '\n' : '') + addition)
   return missing
 }
+// Secrets symétriques absents pour un profil : candidats à la génération automatique.
+// Un secret DÉJÀ présent (même faible) n'est jamais remplacé ici.
+function missingGenerated(env, names) {
+  return names.filter(n => GENERATED[n] && !env[n])
+}
+// Génère les secrets absents des seules variables SYMÉTRIQUES (GENERATED).
+// Retourne les noms générés, jamais les valeurs.
+function generateMissing(env, names) {
+  const created = []
+  for (const name of missingGenerated(env, names)) {
+    env[name] = crypto.randomBytes(32).toString(GENERATED[name])
+    created.push(name)
+  }
+  return created
+}
+// Une clé demandée par un prompt peut être déclarée jamais utilisée ou générée
+// explicitement : ces deux réponses ne sont jamais une valeur de secret.
+const KEY_PROMPT_COMMANDS = { declaredUnused: 'NONUTILISE', generate: 'GENERER' }
+function isKeyPromptCommand(value, command) {
+  return String(value ?? '').trim().toUpperCase() === KEY_PROMPT_COMMANDS[command]
+}
+// Destination réelle de chaque secret généré, par profil. Sert au récapitulatif
+// affiché à l'opérateur : aucune valeur, uniquement où la clé est écrite/lue.
+const KEY_DESTINATIONS = {
+  NEXTAUTH_SECRET: { desktop: ['.env (desktop)'], server: ['.env.server.local', 'Vercel production (Sensitive)'] },
+  DEVICE_TOKEN_PEPPER: { server: ['.env.server.local', 'Vercel production (Sensitive)'] },
+  GARAGEFLOW_API_KEY: { server: ['.env.server.local', 'keys/server_config.json (keygen)', 'Vercel production (Sensitive)'] },
+  GF_DB_MAC_SECRET: { desktop: ['.env (desktop)'], server: ['.env.server.local', 'Vercel production (Sensitive)'] },
+  GF_PORTAL_SECRET: { server: ['.env.server.local', 'Vercel production (Sensitive)'] },
+  GF_SIGNATURE_SECRET: { desktop: ['.env (desktop)'], server: ['.env.server.local', 'Vercel production (Sensitive)'] },
+  GF_BACKUP_KEY: { desktop: ['.env (desktop)'], server: ['.env.server.local', 'Vercel production (Sensitive)', 'sauvegardes chiffrées locales/cloud'] },
+  GF_SMTP_CIPHER_KEY: { desktop: ['.env (desktop)'], server: ['.env.server.local', 'Vercel production (Sensitive)'] },
+  GF_TOTP_ENC_KEY: { desktop: ['.env (desktop)'], server: ['.env.server.local', 'Vercel production (Sensitive)'] },
+  GF_EINVOICE_CREDENTIALS_KEY: { server: ['.env.server.local', 'Vercel production (Sensitive)'] },
+  GF_PRIVATE_KEY: { server: ['.env.server.local (base64)', 'keys/private.pem + keys/public.pem', 'ancrages publics (Next + Electron)'] },
+}
+function keyDestinations(name, profile = 'server') {
+  const entry = KEY_DESTINATIONS[name]
+  if (!entry) return []
+  const destinations = profile === 'desktop' ? entry.desktop : entry.server
+  return destinations ? [...destinations] : []
+}
 function fillMissing(env, names, profile) {
   const result = { ...env }
   for (const n of names) {
@@ -233,5 +275,6 @@ function syncPlan(local, remote, names) {
   return { additions, conflicts }
 }
 module.exports = { DEFAULTS, GENERATED, assertNodeVersion, normalizeValue, editableNames, templateNames, namesForProfile, isSecret, parseEnv,
-  serializeEnv, readEnv, writePrivate, saveDatabaseUrls, fillMissing, validate, licenseKeyMatches,
+  serializeEnv, readEnv, writePrivate, saveDatabaseUrls, fillMissing, missingGenerated, generateMissing,
+  KEY_PROMPT_COMMANDS, isKeyPromptCommand, KEY_DESTINATIONS, keyDestinations, validate, licenseKeyMatches,
   embeddedLicenseKey, syncPlan }

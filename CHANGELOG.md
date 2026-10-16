@@ -1,6 +1,43 @@
 <!-- doc-numbers: journal — comptes datés point-dans-le-temps, exempts du contrôle de compte courant (V13.1) -->
 # Changelog
 
+## [Non publié] — 2026-10-16 — `node config` génère toutes les clés manquantes et les écrit partout où elles sont lues
+
+### Cause du blocage corrigée : une base neuve était vue comme « utilisée »
+- `prisma/garageflow-template.db` (modèle livré) contient `_gf_migrations`
+  peuplé (214 lignes de baseline) et **zéro ligne métier**. `inspectDesktop`
+  excluait `_prisma_migrations` mais pas `_gf_migrations` : toute SQLite neuve
+  créée par `scripts/setup-dev.js` était donc déclarée « contenant des données »,
+  et le plan complet réclamait des clés d'origine (`NEXTAUTH_SECRET`,
+  `GF_DB_MAC_SECRET`, `GF_BACKUP_KEY`, `GF_TOTP_ENC_KEY`) qui n'avaient jamais
+  existé, puis s'arrêtait sur `GF_BACKUP_KEY desktop : original nécessaire`.
+- `scripts/config-services.cjs` : registres `_gf_migrations` / `_prisma_migrations`
+  (et `sqlite_%`) exclus de la détection de données métier
+  (`isBookkeepingTable`, `businessTableNames`) ; `inspectDatabase`/`inspectDesktop`
+  renvoient `{ empty, tableCount, ignored }`. `inspectDesktop` accepte un
+  `loadClient` injectable pour les tests.
+
+### Génération automatique sur installation neuve
+- `scripts/config-core.cjs` : `missingGenerated`, `generateMissing`,
+  `KEY_PROMPT_COMMANDS` (`NONUTILISE` / `GENERER`), `isKeyPromptCommand`,
+  `KEY_DESTINATIONS` + `keyDestinations(name, profil)`.
+- `config` : `generateSecrets()` (256 bits, liste les destinations réelles, ne
+  remplace jamais une valeur présente) ; `advanced()` accepte les commandes
+  `GENERER` / `GENERER-TOUT` et `LISTE` ; `GENERER` reste accepté comme valeur
+  d'un secret symétrique.
+- `scripts/config-full.cjs` : `resolveMissingKey()` — base sans donnée métier →
+  génération silencieuse ; base réellement utilisée → original du coffre,
+  `NONUTILISE` (déclaration confirmée) ou `GENERER` (confirmation explicite,
+  refus = arrêt sans écriture). Nouvelle étape finale
+  `récapitulatif-des-clés-et-destinations` (`report.keys[]`, noms uniquement).
+  Le prompt de publication accepte aussi `GENERER` en plus de `NOUVEAU-CANAL`.
+- Tests : `tests/config.test.cjs` (classification, modèle livré réellement vide
+  via `node:sqlite`, destinations, commandes, `generateSecrets`) et
+  `tests/config-full.test.cjs` (SQLite neuve = 6/6 clés desktop sans saisie,
+  base utilisée + `GENERER`, confirmation refusée = arrêt). 90 tests CJS verts.
+- Documentation : `README.md`, `docs/CONFIG.md` (section « Ce qui est considéré
+  comme « base vide » » et tableau des destinations).
+
 ## [Non publié] — 2026-08-06 (4) — Sécurisation des migrations & JSON monétaires v2
 
 ### JSON persistants (worksJson / partsJson / linesJson)
