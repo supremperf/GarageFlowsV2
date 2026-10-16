@@ -107,6 +107,33 @@ Pour une **première installation**, lancer simplement `node config` (ou double-
 
 Seules les tables **métier** comptent. Les registres de migrations `_gf_migrations` (SQLite desktop, baseline du modèle livré) et `_prisma_migrations` (PostgreSQL) sont ignorés, exactement comme `sqlite_%`. Sans cette distinction, une base **neuve** créée depuis `prisma/garageflow-template.db` paraissait déjà « contenir des données » à cause de ses 214 lignes de registre, et le plan réclamait des clés originales (`NEXTAUTH_SECRET`, `GF_DB_MAC_SECRET`, `GF_BACKUP_KEY`, `GF_TOTP_ENC_KEY`…) qui n'avaient jamais existé. Le comportement correct est désormais : base neuve ou sans ligne métier → génération automatique complète ; base contenant réellement des données métier → original du coffre, `NONUTILISE` (déclaration explicite, génération d'une nouvelle clé) ou `GENERER` (confirmation explicite). Une confirmation refusée arrête le plan sans écrire de remplacement.
 
+### Variable existant chez Vercel sans être relisible (`Sensitive`)
+
+Vercel n'affiche **jamais** la valeur d'une variable `Sensitive` — réglage correct,
+mais qui rend ces variables invisibles au run suivant (`vercel env pull` ne renvoie
+rien pour ces noms). `config` ne s'arrête plus pour autant : chaque variable non
+relisible est **résolue**, dans cet ordre.
+
+| Situation | Ce que fait `config` |
+|---|---|
+| La valeur est déjà dans le profil local | conservée telle quelle ; elle sera écrite chez Vercel. Si elle **diffère du reçu** du dernier envoi (le fichier local a changé), l'écart est annoncé et une **seule** question demande l'autorisation de remplacer la valeur de production. |
+| `DATABASE_URL` / `DIRECT_URL` | récupérées **réellement** auprès du compte Neon (`neonctl`, projet/branche/base/rôle existants). Une URL de base n'est **jamais inventée** : sans accès Neon, elle reste à fournir. |
+| Clé symétrique (sessions, pepper, portail, sauvegardes, TOTP, facturation, API interne) absente partout | générée (256 bits) puis **remplacée** chez Vercel — automatiquement sur une **installation neuve démontrée** : aucun `.env.server.local`, aucune autorité de licence locale, aucun reçu d'envoi. |
+| Clé symétrique absente partout sur une installation **établie** | pas de rotation silencieuse : le remplacement n'a lieu qu'après autorisation explicite, parce qu'une nouvelle valeur rend illisibles sessions, appareils enregistrés, jetons et cryptogrammes produits avec l'ancienne. |
+| Mot de passe SMTP, jeton d'un service tiers, clé d'API externe | jamais fabriqué : ces valeurs doivent correspondre au fournisseur. Une **seule** question groupée les demande, puis elles sont écrites dans le profil et poussées chez Vercel. |
+
+Un remplacement s'écrit en deux gestes (`vercel env rm`, puis `vercel env add
+--sensitive`) — un `env add` seul ne peut pas modifier une variable existante — et
+l'horodatage est relu après écriture pour **prouver** l'application du changement
+(le contenu d'une variable `Sensitive` n'étant pas relisible).
+
+Le fichier **`GarageFlow-configuration/secrets-receipt.json`** enregistre, après
+chaque synchronisation, l'empreinte **SHA-256** de ce qui a été poussé (jamais la
+valeur, en permissions `0600`). Il sert à deux choses : reconnaître au run suivant
+qu'une valeur locale est bien celle déjà poussée, et **signaler une dérive** au lieu
+de la remplacer en silence. Un reçu absent, illisible ou provenant d'un autre projet
+Vercel ne vaut rien : il n'autorise aucune adoption.
+
 ### Où chaque clé générée est écrite
 
 Le plan complet termine par l'étape **`récapitulatif-des-clés-et-destinations`** qui affiche, pour chaque clé créée durant l'exécution, ses destinations réelles (noms uniquement, jamais de valeur) et les enregistre dans `GarageFlow-configuration/report.json` (`keys[]`).
@@ -120,7 +147,7 @@ Le plan complet termine par l'étape **`récapitulatif-des-clés-et-destinations
 | `GF_PRIVATE_KEY` (P-256, non symétrique) | `.env.server.local` (base64) + `keys/private.pem` + `keys/public.pem` + ancrages publics Next/Electron |
 | Clé Ed25519 de publication | coffre **hors dépôt** uniquement ; clé publique + keyId dans `GarageFlow-configuration/publisher.json` et `electron/update-verify.js` |
 
-Vercel ne reçoit que les variables **absentes** de l'environnement production (jamais de remplacement ni de suppression), transmises en Sensitive. Les clés desktop restent distinctes de celles du serveur et ne sont jamais envoyées à Vercel.
+Vercel reçoit les variables **absentes** de l'environnement production (ajout simple) et, lorsque c'est décidé nommément (valeur générée pour une clé introuvable, ou écart local autorisé), le **remplacement** d'une variable non relisible — jamais une suppression « au cas où ». Tout est transmis en Sensitive. Les clés desktop restent distinctes de celles du serveur et ne sont jamais envoyées à Vercel.
 
 **SHA-256 est un algorithme de hash/HMAC, pas une clé à taper.** Config génère le secret aléatoire utilisé par l'algorithme ; les empreintes publiques sont calculées automatiquement. Les fichiers sensibles sont ignorés par Git/Vercel et protégés en `0600` sous POSIX ; les premières écritures de clés refusent un fichier déjà existant, même en cas de création concurrente. Sous Windows, les ACL restent à sécuriser sur le poste.
 
@@ -146,7 +173,7 @@ Les commandes Windows avec arguments ne font plus de pause finale bloquante et c
 
 ## Ce qui ne peut pas être configuré honnêtement tout seul
 
-- **Secret Vercel Sensitive non relisible** : l’assistant détecte qu’il existe, ne confond pas son placeholder avec une absence et exige la valeur originale depuis le coffre ou confirmation de l’original local. Il vérifie sa présence/métadonnées, pas son contenu inaccessible. Une modification locale ultérieure est refusée pour éviter une rotation implicite.
+- **Secret Vercel Sensitive non relisible** : l’assistant détecte qu’il existe et ne confond jamais son placeholder avec une absence. Il le RÉSOUT (valeur locale conservée, URL de base récupérée auprès de Neon, clé symétrique absente partout générée puis remplacée sur installation neuve démontrée ou sur autorisation explicite) — voir la section dédiée ci-dessus. Ce qu’il ne peut pas faire : retrouver une valeur que personne n’a conservée **et** qui doit correspondre à un service externe ; celle-là reste à fournir, et aucune valeur inventée ne la remplace.
 - **Clé privée perdue** : impossible de la retrouver depuis une clé publique ou des données chiffrées. Nouvelle autorité/nouveau canal sur confirmation seulement ; les anciens clients/licences peuvent rester incompatibles.
 - **Stockage durable Vercel** : les services actuels de sauvegarde et publication/upload des installateurs écrivent sur disque. Un stockage objet et une adaptation applicative sont nécessaires. Mettre `/tmp/backups` ne suffit pas ; un chemin local de stockage durable est refusé pour le profil Vercel. Les photos ont une voie legacy base64 lorsque le stockage fichier est désactivé, pas une intégration objet automatique.
 - **garagesite3** : le serveur de publication/control-plane externe n’est pas dans ce checkout. Le signer local et les ancrages clients peuvent être préparés, pas déployer du code absent. Le rapport demande l’accès et la propagation publique/keyId nécessaires.

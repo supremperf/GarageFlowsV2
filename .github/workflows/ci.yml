@@ -300,6 +300,13 @@ jobs:
       - name: Docs consistency
         run: node scripts/check-docs-consistency.mjs
 
+      # `node config` face aux variables Vercel « Sensitive » (jamais relisibles) :
+      # la résolution doit générer puis remplacer sur une installation neuve, et
+      # REFUSER de tourner en silence sur une installation établie. Aucun réseau,
+      # aucune écriture hors bac à sable.
+      - name: Configuration — résolution automatique des secrets (offline)
+        run: node --test tests/config-secrets-auto.test.cjs tests/config.test.cjs tests/config-full.test.cjs
+
       - name: Critical security/licence files present & coherent
         run: node scripts/check-critical-files.js
 

@@ -2,10 +2,10 @@
 
 > Généré par `npm run config:audit`. Inventaire statique de tous les fichiers suivis et lecture des fichiers texte ; analyse des points de configuration et des composants structurants. Ce n’est ni une preuve d’absence de bogue dans chaque fonction ni un test des comptes externes.
 
-- 1208 fichiers inventoriés, 1197 textes lus, 11 binaires identifiés (non interprétés).
-- 980 fichiers de code/configuration balayés pour les lectures littérales d’environnement.
+- 2289 fichiers inventoriés, 2279 textes lus, 10 binaires identifiés (non interprétés).
+- 1134 fichiers de code/configuration balayés pour les lectures littérales d’environnement.
 - 164 routes API, 47 modèles PostgreSQL, 22 migrations serveur.
-- 118 variables canoniques : 54 application, 11 platform, 9 manual, 39 unused, 2 runtime, 1 keygen, 2 publisher.
+- 122 variables canoniques : 56 application, 11 platform, 11 manual, 39 unused, 2 runtime, 1 keygen, 2 publisher.
 
 ## Architecture et conséquences pour config
 
@@ -15,7 +15,8 @@
 - Licence : P-256 privé côté émetteur/keygen ; clé publique embarquée en Electron et Next. Record-MAC HMAC et pepper distincts. Le keygen attend `keys/private.pem`, `keys/public.pem` et `keys/server_config.json`.
 - Portail : secrets de sessions/liens, signatures et TOTP séparés. SMTP, TOTP, sauvegardes et identifiants de facturation ont leurs propres clés ; une rotation involontaire détruit l’accès aux cryptogrammes.
 - Publication : Ed25519 privé hors dépôt, clés publiques historiques conservées dans le client. Le service de publication garagesite3 est un autre dépôt et ne peut pas être déployé à partir de ces seules sources.
-- Outillage : scripts PowerShell de configuration/reset/rotation déjà présents. Le mode complet portable ne lance pas les resets destructifs, ne supprime pas les variables distantes et ne réaligne pas un historique SQL au hasard.
+- Outillage : scripts PowerShell de configuration/reset/rotation déjà présents. Le mode complet portable ne lance pas les resets destructifs et ne réaligne pas un historique SQL au hasard.
+- Secrets non relisibles : une variable Sensitive déjà présente n’est retirée/recréée chez Vercel que lorsque sa valeur locale est générée (installation neuve prouvée : aucun profil serveur, aucune autorité locale, aucun reçu) ou lorsque le remplacement est autorisé explicitement. Les URLs de base viennent de Neon, jamais d’une valeur inventée ; les reçus ne contiennent que des empreintes SHA-256.
 - Dépendances : Node 22/npm pour l’application ; Python/cryptography pour le keygen. Builds Windows, signature de code, identité légale et fournisseur de facturation exigent des ressources externes.
 
 ## Blocages que des variables ne résolvent pas
@@ -30,16 +31,17 @@
 
 | Répertoire | Fichiers |
 |---|---:|
-| src | 855 |
-| docs | 144 |
-| scripts | 90 |
-| (racine) | 44 |
+| docs | 1128 |
+| src | 888 |
+| scripts | 116 |
+| (racine) | 46 |
 | prisma | 30 |
-| electron | 23 |
+| tests | 25 |
+| electron | 24 |
+| vendor | 12 |
 | public | 10 |
 | e2e | 6 |
-| tests | 3 |
-| .github | 2 |
+| .github | 3 |
 | artifacts | 1 |
 
 ## Couverture du contrat complet
@@ -48,9 +50,9 @@ Chaque ligne a une décision explicite. « manual » signifie choix/outil spéci
 
 | Variable canonique | Décision | Destination | Références littérales observées |
 |---|---|---|---:|
-| `ANTHROPIC_API_KEY` | application | .env.server.local / Vercel (selon profil) | 2 |
+| `ANTHROPIC_API_KEY` | application | .env.server.local / Vercel (selon profil) | 5 |
 | `APPDATA` | platform | OS / Electron / Next / Vercel / tests | 1 |
-| `DATABASE_URL` | application | .env.server.local / Vercel (selon profil) | 95 |
+| `DATABASE_URL` | application | .env.server.local / Vercel (selon profil) | 96 |
 | `DEMO_RESET_FORCE` | manual | outil/opération concernée seulement | 1 |
 | `DEVICE_TOKEN_PEPPER` | application | .env.server.local / Vercel (selon profil) | 6 |
 | `DIRECT_URL` | application | .env.server.local / Vercel (selon profil) | 8 |
@@ -65,7 +67,8 @@ Chaque ligne a une décision explicite. « manual » signifie choix/outil spéci
 | `ELECTRON` | platform | OS / Electron / Next / Vercel / tests | 22 |
 | `ELECTRON_DEV` | platform | OS / Electron / Next / Vercel / tests | 2 |
 | `GARAGEFLOW_API_KEY` | application | .env.server.local / Vercel (selon profil) | 9 |
-| `GARAGEFLOW_LLM` | manual | outil/opération concernée seulement | 1 |
+| `GARAGEFLOW_LLM` | application | .env.server.local / Vercel (selon profil) | 3 |
+| `GARAGEFLOW_LLM_MODEL` | application | .env.server.local / Vercel (selon profil) | 3 |
 | `GF_ALLOW_DEBUG` | manual | outil/opération concernée seulement | 1 |
 | `GF_ALLOW_INSECURE_SYNC` | manual | outil/opération concernée seulement | 1 |
 | `GF_ANTIDEBUG` | application | .env / défaut compilé Electron | 1 |
@@ -116,6 +119,7 @@ Chaque ligne a une décision explicite. « manual » signifie choix/outil spéci
 | `GF_MECHANIC_TIMER_AUTOCOMPLETE` | application | .env.server.local / Vercel (selon profil) | 3 |
 | `GF_MIN_ELECTRON_VERSION` | application | .env.server.local / Vercel (selon profil) | 4 |
 | `GF_MIN_PWA_VERSION` | application | .env.server.local / Vercel (selon profil) | 4 |
+| `GF_PACKAGE_DESKTOP` | manual | outil/opération concernée seulement | 1 |
 | `GF_PHOTOS_DIR` | application | .env.server.local / Vercel (selon profil) | 15 |
 | `GF_PORTAL_SECRET` | application | .env.server.local / Vercel (selon profil) | 20 |
 | `GF_PRIVATE_KEY` | application | .env.server.local / Vercel (selon profil) | 4 |
@@ -127,8 +131,8 @@ Chaque ligne a une décision explicite. « manual » signifie choix/outil spéci
 | `GF_TOTP_ENC_KEY_OLD` | application | .env.server.local / Vercel (selon profil) | 2 |
 | `GF_UPDATE_CHANNEL` | application | .env / défaut compilé Electron | 1 |
 | `GF_UPDATE_SERVER` | application | .env / défaut compilé Electron | 1 |
-| `GF_UPDATE_SIGNING_KEY` | publisher | coffre hors dépôt + .env.release.local (chemin seulement) | 2 |
-| `GF_UPDATE_SIGNING_KEY_FILE` | publisher | coffre hors dépôt + .env.release.local (chemin seulement) | 2 |
+| `GF_UPDATE_SIGNING_KEY` | publisher | coffre hors dépôt + GarageFlow-configuration/publisher.json (chemin/keyId seulement) | 2 |
+| `GF_UPDATE_SIGNING_KEY_FILE` | publisher | coffre hors dépôt + GarageFlow-configuration/publisher.json (chemin/keyId seulement) | 2 |
 | `HOSTNAME` | platform | OS / Electron / Next / Vercel / tests | 1 |
 | `LICENSE_ENFORCEMENT` | application | .env.server.local / Vercel (selon profil) | 2 |
 | `NEXT_PUBLIC_GF_BRAND_ACCENT_COLOR` | unused | aucune | 0 |
@@ -145,7 +149,7 @@ Chaque ligne a une décision explicite. « manual » signifie choix/outil spéci
 | `NEXT_RUNTIME` | platform | OS / Electron / Next / Vercel / tests | 1 |
 | `NEXTAUTH_SECRET` | application | .env.server.local / Vercel (selon profil) | 35 |
 | `NEXTAUTH_URL` | application | .env.server.local / Vercel (selon profil) | 5 |
-| `NODE_ENV` | platform | OS / Electron / Next / Vercel / tests | 12 |
+| `NODE_ENV` | platform | OS / Electron / Next / Vercel / tests | 13 |
 | `NODE_INSPECTOR_IPC` | platform | OS / Electron / Next / Vercel / tests | 1 |
 | `RATE_LIMIT_ADMIN_MAX` | application | .env.server.local / Vercel (selon profil) | 0 |
 | `RATE_LIMIT_ADMIN_WINDOW_SECONDS` | application | .env.server.local / Vercel (selon profil) | 0 |
@@ -164,7 +168,9 @@ Chaque ligne a une décision explicite. « manual » signifie choix/outil spéci
 | `UPSTASH_REDIS_REST_TOKEN` | application | .env.server.local / Vercel (selon profil) | 9 |
 | `UPSTASH_REDIS_REST_URL` | application | .env.server.local / Vercel (selon profil) | 9 |
 | `UPSTASH_REDIS_TIMEOUT_MS` | application | .env.server.local / Vercel (selon profil) | 2 |
-| `VERCEL` | platform | OS / Electron / Next / Vercel / tests | 6 |
+| `VERCEL` | platform | OS / Electron / Next / Vercel / tests | 7 |
 | `VERCEL_TOKEN` | manual | outil/opération concernée seulement | 0 |
+| `E2E_NON_PRODUCTION` | manual | outil/opération concernée seulement | 1 |
+| `E2E_STAGING_URL` | manual | outil/opération concernée seulement | 0 |
 
 Les recherches littérales ne prouvent pas l’absence d’un consommateur dynamique et peuvent relever des commentaires/tests. Le manifeste conserve les consommateurs déclarés ; cette matrice complète la garde `check:env-consistency`, elle ne la remplace pas.

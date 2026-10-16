@@ -3,6 +3,39 @@
 
 ## [Non publié] — 2026-10-16 — chaîne build → installeur Windows réparée à la cause, page unique, vue globale des rendez-vous
 
+### `node config` — les variables déjà présentes chez Vercel ne bloquent plus
+
+Constat d'usage : les secrets sont poussés chez Vercel en `--sensitive`, donc
+jamais relisibles. `node config` s'arrêtait alors sur :
+
+```
+DATABASE_URL existe chez Vercel mais sa valeur n'est pas relisible.
+DEVICE_TOKEN_PEPPER : valeur de production nécessaire pour poursuivre.
+```
+
+Impossible de configurer une installation neuve dont les variables existaient
+déjà côté Vercel, sans chasser des valeurs que personne n'avait copiées.
+Désormais chaque variable non relisible est **résolue** :
+
+- valeur présente localement → conservée (et un écart avec le reçu du dernier
+  envoi est annoncé, puis tranché par UNE question) ;
+- `DATABASE_URL` / `DIRECT_URL` → récupérées ** réellement** auprès du compte
+  Neon ; jamais fabriquées ;
+- clé symétrique absente partout → générée (256 bits) puis **remplacée** chez
+  Vercel (rm + add, horodatage relu comme preuve) — automatiquement sur une
+  **installation neuve démontrée** (aucun `.env.server.local`, aucune autorité
+  locale, aucun reçu), sinon sur autorisation explicite ;
+- mot de passe SMTP / jeton tiers → une **seule** question groupée, jamais une
+  boucle de saisies masquées.
+
+`scripts/lib/config-secrets-auto.cjs` (nouveau) porte la politique, testable ;
+`GarageFlow-configuration/secrets-receipt.json` (0600) n'enregistre que des
+empreintes SHA-256, pour reconnaître une valeur déjà poussée et signaler une
+dérive au lieu de remplacer en silence. `tests/config-secrets-auto.test.cjs` :
+15/15, dont deux scénarios exécutés dans un bac à sable (génération sur
+installation neuve, refus sur installation établie). `docs/CONFIG.md` et le
+rapport d'audit sont alignés ; l'étape CI les exécute hors ligne.
+
 ### P0 — `npm run dist` s'arrêtait sur « server.js NOT found »
 - Cause réelle : la sortie autonome EXISTAIT, un niveau plus bas
   (`.next/standalone/<chemin-relatif>/server.js`), parce que Next.js déduit la
