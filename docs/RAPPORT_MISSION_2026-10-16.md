@@ -318,6 +318,17 @@ personnel y est accessible, et la compilation s'y déroule normalement — c'est
 d'ailleurs ce que montre l'échec d'origine signalé par l'utilisateur
 (« server.js NOT found »), qui suppose une compilation Next.js **réussie**.
 
+### Note de mesure : `tsc --noEmit` et les substituts Prisma locaux
+
+`npx tsc --noEmit` donne **249 erreurs** avec l'arbre tel qu'il est livré —
+exactement le même ensemble que sur le commit de base : aucune régression n'est
+imputable à cette branche. Avec les substituts Prisma locaux utilisés pour la
+sonde de compilation (§11 quinquies), le même appel en signale **283** : les 34
+de plus sont toutes des `Property '…' does not exist on type 'PrismaClient'`
+(le substitut ne déclare pas les modèles) et les `unknown` de
+`scripts/migrate-money-json.ts`. Aucune ne concerne un fichier modifié ici, et
+aucune n'existe sur une machine où `npx prisma generate` a réellement tourné.
+
 ## 11 quater. Le dernier verrou de la CI Windows : un faux rouge dans MA vérification
 
 Une fois la compilation réparée (§11 ter), l'exécuteur Windows est allé
