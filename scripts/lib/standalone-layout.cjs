@@ -146,6 +146,31 @@ function inspectStandaloneLayout(root) {
  * statiques, de `public/` et des clés publiques. En sortie saine c'est
  * `.next/standalone` ; si une imbrication apparaît, on écrit au bon endroit.
  */
+/**
+ * Modules que le serveur autonome importe RÉELLEMENT au démarrage, exprimés en
+ * chemins relatifs au dossier d'application (`appDir`). Source unique, partagée
+ * par `verify-standalone-build.cjs`, pour éviter les chemins composés deux fois
+ * (« node_modules/node_modules/… ») qui déclaraient un manque inexistant et
+ * bloquaient un installeur pourtant valide.
+ */
+const MODULES_EXECUTION = [
+  'node_modules/next/package.json',
+  'node_modules/react/package.json',
+  'node_modules/react-dom/package.json',
+  'node_modules/next-auth/package.json',
+  'node_modules/@prisma/client/package.json',
+  'node_modules/.prisma/client/index.js',
+]
+
+/**
+ * Modules d'exécution absents de la sortie autonome.
+ * @param {string} appDir dossier contenant `server.js`
+ * @returns {string[]} chemins relatifs manquants (vide si la sortie est complète)
+ */
+function modulesExecutionManquants(appDir) {
+  return MODULES_EXECUTION.filter((relatif) => !fs.existsSync(path.join(appDir, relatif)))
+}
+
 function standaloneAppDir(standaloneDir) {
   const found = findServerJs(standaloneDir)
   return found.serverJs ? path.dirname(found.serverJs) : standaloneDir
@@ -182,4 +207,4 @@ function staleAppDirs(standaloneDir, appDir) {
   return [...trouvees]
 }
 
-module.exports = { MAX_DEPTH, IGNORED_DIRS, findServerJs, inspectStandaloneLayout, standaloneAppDir, staleAppDirs }
+module.exports = { MAX_DEPTH, IGNORED_DIRS, MODULES_EXECUTION, modulesExecutionManquants, findServerJs, inspectStandaloneLayout, standaloneAppDir, staleAppDirs }

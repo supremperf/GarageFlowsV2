@@ -318,6 +318,56 @@ personnel y est accessible, et la compilation s'y déroule normalement — c'est
 d'ailleurs ce que montre l'échec d'origine signalé par l'utilisateur
 (« server.js NOT found »), qui suppose une compilation Next.js **réussie**.
 
+## 11 quater. Le dernier verrou de la CI Windows : un faux rouge dans MA vérification
+
+Une fois la compilation réparée (§11 ter), l'exécuteur Windows est allé
+**au bout de `next build`** — puis a échoué quelques secondes plus tard sur une
+sortie que le post-build venait de déclarer complète :
+
+```
+  ✅ server.js found        (6.5 KB) → .next/standalone/server.js
+  ✅ static assets copied   (242 files) → .next/standalone/.next/static
+  ✅ public dir copied       (10 files) → .next/standalone/public
+  ✅ Prisma client copied   (14 files) → standalone node_modules/.prisma
+… puis :
+❌ Sortie autonome Next.js inutilisable pour l’empaquetage.
+   Dossier .next/standalone absent : la compilation Next.js n'a pas produit de sortie autonome
+```
+
+Deux affirmations **contradictoires** dans la même exécution : le post-build
+copie dans `.next/standalone/server.js`, le vérificateur dit que
+`.next/standalone` n'existe pas. C'est donc le vérificateur qui mentait, et non
+la compilation. Deux défauts réels, de la même famille (un chemin composé deux
+fois) :
+
+1. `scripts/verify-standalone-build.cjs` appelait
+   `inspectStandaloneLayout(STANDALONE)` alors que cette fonction de
+   `scripts/lib/standalone-layout.cjs` **ajoute elle-même** `.next/standalone` à
+   la racine qu'on lui donne : elle analysait donc
+   `.next/standalone/.next/standalone`, toujours absente. Le contrôle échouait
+   **systématiquement**, y compris sur une sortie parfaitement saine — un faux
+   rouge qui refusait un installeur valide. (Il n'apparaissait pas ici : sans
+   `next build` local, `.next` n'existe pas, et le message « dossier absent » est
+   alors le bon.)
+2. La liste des modules d'exécution contenait `node_modules/.prisma/client/index.js`
+   tandis que la boucle préfixait elle aussi `node_modules/` : elle cherchait
+   `node_modules/node_modules/.prisma/client/index.js` et signalait un manque
+   inexistant. La liste vit désormais dans la lib (`MODULES_EXECUTION`) et
+   `modulesExecutionManquants(appDir)` compose les chemins **une seule fois**.
+
+Non-régression, exécutée réellement : `tests/build-dist-chain.test.cjs` construit
+trois arborescences autonomes synthétiques et **exécute le vrai script** sur
+chacune — sortie saine (exit 0, « Sortie autonome complète »), sortie absente
+(exit 1, « .next/standalone absent »), sortie amputée de `static`, `public`,
+`prisma/schema.prisma` et du moteur Prisma (exit 1, les quatre manques nommés
+un par un). 13 tests passent dans ce fichier. Le script reste invoqué sans
+argument par `npm run verify:standalone` ; l'argument de racine n'existe que pour
+cette vérification.
+
+Leçon retenue, et inscrite dans le code : un garde-fou qui échoue **toujours**
+n'est pas un garde-fou, c'est un blocage. On l'a rendu exécutable sur des
+arborescences de test pour qu'il prouve qu'il sait **accepter** une sortie saine.
+
 ## 12. Ce qui n'a PAS pu être exécuté ici, et pourquoi
 
 L'environnement de développement de cette session n'a accès qu'à une liste

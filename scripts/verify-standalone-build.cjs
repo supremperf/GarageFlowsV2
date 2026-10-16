@@ -27,9 +27,19 @@
 
 const fs = require('node:fs')
 const path = require('node:path')
-const { inspectStandaloneLayout } = require('./lib/standalone-layout.cjs')
+const { inspectStandaloneLayout, modulesExecutionManquants } = require('./lib/standalone-layout.cjs')
 
-const RACINE = path.resolve(__dirname, '..')
+/**
+ * Racine analysée : le dépôt par défaut (usage `npm run verify:standalone`), ou
+ * le dossier passé en argument. L'argument n'existe que pour rendre ce garde-fou
+ * VÉRIFIABLE par les tests sur des arborescences synthétiques (sortie saine,
+ * sortie absente, sortie incomplète) : la CI, elle, ne passe aucun argument.
+ */
+const RACINE = (() => {
+  const argument = process.argv[2]
+  if (!argument || argument.startsWith('--')) return path.resolve(__dirname, '..')
+  return path.resolve(argument)
+})()
 const STANDALONE = path.join(RACINE, '.next', 'standalone')
 
 /** Fichiers/dossiers indispensables, relatifs au dossier de l'application. */
@@ -38,12 +48,6 @@ const REQUIS = [
   ['.next/static',                                'ressources statiques (JS/CSS) construites'],
   ['public',                                      'fichiers publics (icônes, images, manifeste)'],
   ['package.json',                                'manifeste du projet copié dans la sortie'],
-]
-
-/** Modules que le serveur autonome importe à l’exécution. */
-const MODULES = [
-  'next', 'react', 'react-dom', 'next-auth', '@prisma/client',
-  'node_modules/.prisma/client/index.js',
 ]
 
 const PROBLEMES = []
@@ -70,7 +74,14 @@ function verifierFichier(chemin, description) {
 }
 
 function main() {
-  const layout = inspectStandaloneLayout(STANDALONE)
+  // ⚠️ `inspectStandaloneLayout` attend la RACINE DU PROJET et ajoute lui-même
+  // `.next/standalone`. Lui passer `STANDALONE` construisait
+  // `.next/standalone/.next/standalone` : le contrôle échouait TOUJOURS, y compris
+  // sur une sortie parfaitement saine, avec le message « dossier absent » —
+  // exactement ce qui est arrivé sur l'exécuteur Windows (run 38953330502), APRÈS
+  // que le post-build ait copié `server.js`, les ressources statiques et `public`
+  // au bon endroit. Un faux rouge qui bloque un installeur valide.
+  const layout = inspectStandaloneLayout(RACINE)
 
   if (!layout.ok) {
     console.error('')
@@ -115,14 +126,11 @@ function main() {
     PROBLEMES.push('aucun fichier dans .next/static/chunks : le client ne recevra aucun script')
   }
 
-  for (const moduleRel of MODULES) {
-    const cible = path.join(appDir, 'node_modules', moduleRel, 'package.json')
-    const fichier = moduleRel.endsWith('.js')
-      ? path.join(appDir, 'node_modules', moduleRel)
-      : cible
-    if (!fs.existsSync(fichier)) {
-      PROBLEMES.push(`module d’exécution absent de la sortie : node_modules/${moduleRel}`)
-    }
+  // Chemins relatifs au dossier d'application, fournis par la lib : composés ici
+  // une seule fois (l'ancien code préfixait `node_modules/` à une entrée qui le
+  // contenait déjà et signalait un manque inexistant).
+  for (const moduleRel of modulesExecutionManquants(appDir)) {
+    PROBLEMES.push(`module d’exécution absent de la sortie : ${moduleRel}`)
   }
 
   // Clé publique de vérification des mises à jour : sans elle, la copie n’est
@@ -155,4 +163,4 @@ function main() {
 
 main()
 
-module.exports = { REQUIS, MODULES }
+module.exports = { REQUIS }

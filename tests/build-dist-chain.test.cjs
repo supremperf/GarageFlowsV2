@@ -108,6 +108,92 @@ test('le post-build dirige les copies vers le dossier d’application (pas un ch
   assert.ok(!/const serverJs = path\.join\(ROOT, '\.next', 'standalone', 'server\.js'\)/.test(source), 'vérification par chemin fixe remplacée par la résolution réelle')
 })
 
+test('le vérificateur standalone analyse la RACINE du projet, pas le dossier standalone', () => {
+  // Régression : `inspectStandaloneLayout` ajoute lui-même `.next/standalone`.
+  // Lui passer ce dossier construisait `.next/standalone/.next/standalone` et
+  // déclarait « dossier absent » sur une sortie SAINE — l’échec exact observé sur
+  // l’exécuteur Windows (run 38953330502) après un post-build réussi.
+  const source = fs.readFileSync(path.join(root, 'scripts', 'verify-standalone-build.cjs'), 'utf8')
+  assert.match(source, /inspectStandaloneLayout\(RACINE\)/)
+  assert.ok(!/inspectStandaloneLayout\(STANDALONE\)/.test(source), 'le dossier standalone ne doit plus être passé comme racine')
+})
+
+test('la liste des modules d’exécution se résout sans double préfixe node_modules', () => {
+  const layout = require(path.join(root, 'scripts', 'lib', 'standalone-layout.cjs'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-modules-'))
+  for (const relatif of layout.MODULES_EXECUTION) {
+    fs.mkdirSync(path.dirname(path.join(dir, relatif)), { recursive: true })
+    fs.writeFileSync(path.join(dir, relatif), relatif.endsWith('.js') ? '// client généré' : '{"name":"fixture"}')
+  }
+  assert.deepEqual(layout.modulesExecutionManquants(dir), [], 'sortie complète : aucun manque')
+  assert.ok(layout.MODULES_EXECUTION.every(relatif => !relatif.startsWith('node_modules/node_modules/')), 'aucun chemin composé deux fois')
+  assert.ok(layout.MODULES_EXECUTION.includes('node_modules/.prisma/client/index.js'))
+  fs.rmSync(path.join(dir, 'node_modules', 'next'), { recursive: true, force: true })
+  assert.deepEqual(layout.modulesExecutionManquants(dir), ['node_modules/next/package.json'], 'un module retiré est signalé, et lui seul')
+  fs.rmSync(dir, { recursive: true, force: true })
+})
+
+/**
+ * Arborescence autonome synthétique COMPLÈTE (tous les éléments exigés par
+ * `verify-standalone-build.cjs`), pour éprouver le garde-fou lui-même — sain,
+ * absent, incomplet — sans dépendre d'une compilation Next.js de plusieurs
+ * minutes ni d'un exécuteur Windows.
+ */
+function arbreStandaloneSain(racine) {
+  const app = path.join(racine, '.next', 'standalone')
+  fs.mkdirSync(path.join(app, '.next', 'static', 'chunks'), { recursive: true })
+  fs.mkdirSync(path.join(app, 'public'), { recursive: true })
+  fs.mkdirSync(path.join(app, 'prisma'), { recursive: true })
+  fs.mkdirSync(path.join(app, 'keys'), { recursive: true })
+  fs.writeFileSync(path.join(app, 'server.js'), `const next = require('next')\n${'// serveur autonome\n'.repeat(80)}`)
+  fs.writeFileSync(path.join(app, 'package.json'), '{"name":"garageflow"}')
+  fs.writeFileSync(path.join(app, '.next', 'static', 'chunks', 'main.js'), '// chunk')
+  fs.writeFileSync(path.join(app, 'public', 'icon.ico'), 'ico')
+  fs.writeFileSync(path.join(app, 'prisma', 'schema.prisma'), '// schema')
+  fs.writeFileSync(path.join(app, 'keys', 'public.pem'), 'cle publique')
+  for (const relatif of require(path.join(root, 'scripts', 'lib', 'standalone-layout.cjs')).MODULES_EXECUTION) {
+    const cible = path.join(app, relatif)
+    fs.mkdirSync(path.dirname(cible), { recursive: true })
+    fs.writeFileSync(cible, relatif.endsWith('.js') ? '// client genere' : '{"name":"x"}')
+  }
+  return racine
+}
+
+function executerVerificateur(racine) {
+  return require('node:child_process').spawnSync(process.execPath, [path.join(root, 'scripts', 'verify-standalone-build.cjs'), racine], { encoding: 'utf8' })
+}
+
+test('verify:standalone ACCEPTE une sortie saine (le garde-fou ne bloque pas un installeur valide)', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-standalone-ok-'))
+  arbreStandaloneSain(dir)
+  const resultat = executerVerificateur(dir)
+  assert.equal(resultat.status, 0, `attendu 0, obtenu ${resultat.status}\n${resultat.stderr}`)
+  assert.match(resultat.stdout, /Sortie autonome complète/)
+  assert.ok(!/absent/.test(resultat.stderr), 'aucun faux « absent » sur une sortie saine')
+  fs.rmSync(dir, { recursive: true, force: true })
+})
+
+test('verify:standalone REFUSE une sortie absente, incomplète ou sans moteur Prisma', () => {
+  const vide = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-standalone-vide-'))
+  const absent = executerVerificateur(vide)
+  assert.equal(absent.status, 1)
+  assert.match(absent.stderr, /\.next\/standalone absent/)
+  fs.rmSync(vide, { recursive: true, force: true })
+
+  const casse = arbreStandaloneSain(fs.mkdtempSync(path.join(os.tmpdir(), 'gf-standalone-casse-')))
+  const app = path.join(casse, '.next', 'standalone')
+  fs.rmSync(path.join(app, '.next', 'static'), { recursive: true, force: true })
+  fs.rmSync(path.join(app, 'public'), { recursive: true, force: true })
+  fs.rmSync(path.join(app, 'prisma'), { recursive: true, force: true })
+  fs.rmSync(path.join(app, 'node_modules', '.prisma'), { recursive: true, force: true })
+  const resultat = executerVerificateur(casse)
+  assert.equal(resultat.status, 1)
+  for (const attendu of [/ressources statiques .* manquant/, /fichiers publics .* manquant/, /schema\.prisma absent/, /moteur Prisma absent/]) {
+    assert.match(resultat.stderr, attendu)
+  }
+  fs.rmSync(casse, { recursive: true, force: true })
+})
+
 test('le post-build ne casse pas les builds cloud (Vercel) et distingue l’empaquetage desktop', () => {
   const source = fs.readFileSync(path.join(root, 'scripts', 'post-build.js'), 'utf8')
   assert.match(source, /process\.env\.VERCEL/, 'un build Vercel ne doit pas exiger les ressources desktop')

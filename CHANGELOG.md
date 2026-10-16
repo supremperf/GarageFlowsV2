@@ -27,7 +27,19 @@
   `tests/build-dist-chain.test.cjs` entre dans `test:release-safety`.
 - `scripts/garageflow-env-manifest.json` : `GF_PACKAGE_DESKTOP` déclaré (toute
   variable lue par un script doit l'être — garde-fou `env-manifest-drift`).
-- `tests/build-dist-chain.test.cjs` (nouveau) : 9/9.
+- `tests/build-dist-chain.test.cjs` (nouveau) : 9/9, puis 13/13 après les deux
+  correctifs ci-dessous.
+- `scripts/verify-standalone-build.cjs` : il passait le dossier `.next/standalone`
+  à `inspectStandaloneLayout`, qui **ajoute lui-même** ce chemin à la racine reçue
+  — le contrôle cherchait donc `.next/standalone/.next/standalone` et échouait
+  **toujours**, même sur une sortie saine (le faux rouge observé sur l'exécuteur
+  Windows). La racine du projet est maintenant passée, et le garde-fou sait
+  ACCEPTER une sortie valide : trois arborescences synthétiques (saine, absente,
+  amputée) sont réellement exécutées par les tests.
+- Liste des modules d'exécution déplacée dans `scripts/lib/standalone-layout.cjs`
+  (`MODULES_EXECUTION` + `modulesExecutionManquants`) : l'ancienne boucle
+  préfixait `node_modules/` à une entrée qui le contenait déjà et signalait un
+  manque inexistant (`node_modules/node_modules/.prisma/...`).
 
 ### Barre d'outils — plus de déplacement vertical
 - `.gf-hscroll` (`globals.css`) verrouille l'axe vertical
