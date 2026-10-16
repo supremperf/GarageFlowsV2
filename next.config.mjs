@@ -10,9 +10,41 @@ const { version: GF_VERSION } = JSON.parse(
   readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'package.json'), 'utf8'),
 )
 
-/** @type {import('next').NextConfig} */
+const PROJECT_ROOT = dirname(fileURLToPath(import.meta.url))
+
+/**
+ * RACINE DE TRACING — à ne jamais retirer (cause racine du « server.js NOT found »).
+ *
+ * `output: 'standalone'` fait écrire par Next.js `.next/standalone/server.js` ET
+ * reproduit, SOUS ce dossier, l'arborescence relative à la « racine de workspace »
+ * qu'il a inférée. Cette racine n'est pas le dossier du projet : Next.js la
+ * déduit en remontant les `package-lock.json`/`yarn.lock`/`pnpm-lock.yaml`.
+ *
+ * Sur un poste Windows réel, il suffit d'un `package-lock.json` parasite dans le
+ * dossier utilisateur (`C:\Users\<nom>\package-lock.json`, créé par un `npm
+ * install` lancé hors projet) pour que Next.js élise `C:\Users\<nom>` comme
+ * racine de workspace. La sortie standalone devenait alors :
+ *
+ *   .next/standalone/Desktop/GarageFlowsV2-<branche>/server.js
+ *
+ * …donc INTROUVABLE à `.next/standalone/server.js`. `scripts/post-build.js`
+ * s'arrêtait sur « ❌ server.js NOT found — make sure you ran: npm run build »
+ * alors que la compilation Next.js avait bien réussi, et
+ * `build.extraResources` (.next/standalone) embarquait un dossier IMBRIQUÉ dans
+ * l'installateur : application inlançable.
+ *
+ * En fixant explicitement la racine sur le dossier du projet :
+ *   • la sortie redevient TOUJOURS `.next/standalone/server.js` ;
+ *   • l'avertissement « We detected multiple lockfiles… inferred your workspace
+ *     root, but it may not be correct » disparaît (plus d'inférence) ;
+ *   • le contenu tracé ne dépend plus de fichiers situés HORS du dépôt.
+ *
+ * Le test `tests/next-config-standalone-root.test.cjs` verrouille ce réglage :
+ * le retirer casse l'installateur, pas seulement un message.
+ */
 const nextConfig = {
   output: 'standalone',
+  outputFileTracingRoot: PROJECT_ROOT,
   env: {
     NEXT_PUBLIC_GF_VERSION: GF_VERSION,
   },

@@ -40,7 +40,7 @@
     "db:reset": "prisma db push --force-reset && npm run db:seed",
     "icons": "node scripts/generate-icons.js",
     "electron:dev": "cross-env ELECTRON_DEV=1 electron .",
-    "dist": "npm run build && node scripts/post-build.js && electron-builder --win --x64 && npm run check:artifact-secrets && npm run check:artifact-fuses",
+    "dist": "npm run preflight:release && cross-env GF_PACKAGE_DESKTOP=1 npm run build && npm run verify:standalone && electron-builder --win --x64 && npm run check:artifact-secrets && npm run check:artifact-fuses && npm run verify:installer",
     "dist:win": "npm run dist",
     "license:gen": "python scripts\\keygen.py --gen",
     "env:configure": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/configurer-api-garageflow.ps1",
@@ -101,7 +101,11 @@
     "keygen": "node scripts/config-keygen.cjs",
     "audit:strict": "node scripts/audit-ci.js",
     "test:audit": "node --max-old-space-size=256 --test --test-timeout=15000 tests/audit-security.test.cjs",
-    "test:release-safety": "node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/ci-required-gate.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs tests/secret-scan-policy.test.cjs tests/pre-migration-backup-safety.test.cjs tests/gitleaks-ci.test.cjs"
+    "test:release-safety": "node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/ci-required-gate.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs tests/secret-scan-policy.test.cjs tests/pre-migration-backup-safety.test.cjs tests/gitleaks-ci.test.cjs tests/build-dist-chain.test.cjs",
+    "postbuild": "node scripts/post-build.js",
+    "verify:standalone": "node scripts/verify-standalone-build.cjs",
+    "preflight:release": "node scripts/preflight-release.cjs",
+    "verify:installer": "node scripts/verify-installer.cjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.91.1",
