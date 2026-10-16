@@ -87,6 +87,22 @@ async function recoverStorage(base, remote, project) {
     { normalize: normalizeStorage, required: REQUIRED, aliases: STORAGE_ALIASES })
 }
 
+// A targeted investigation must not run the rebuild, export .env files, or
+// retry logins. Only the credential-free report is persisted.
+async function diagnoseStorage(base) {
+  const project = identity(base.root)
+  const label = value => String(value).replace(/[\x00-\x1f\x7f]/g, '').slice(0, 160)
+  console.log(`Diagnostic Storage : projet ${label(project.projectId)}, équipe ${label(project.orgId)}, production uniquement.`)
+  if (!await base.yes('Confirmer cette cible pour une lecture seule, sans export de secrets ni modification distante')) throw new Error('Diagnostic Storage annulé ; aucune requête effectuée.')
+  const remote = require('./lib/config-vercel-env.cjs').fromPull([], {})
+  const result = await recoverStorage({ ...base, refreshVercelAuth: undefined }, remote, project)
+  if (!sameProject(project, identity(base.root))) throw new Error('Cible Vercel modifiée pendant le diagnostic ; aucun rapport remplacé.')
+  const reportPath = path.join('GarageFlow-configuration', 'storage-discovery.json')
+  core.writePrivate(path.join(base.root, reportPath), JSON.stringify(result.discovery, null, 2) + '\n')
+  console.log(`Diagnostic écrit : ${reportPath} (sans valeurs ni erreurs brutes). Aucun profil .env modifié, aucune reconstruction lancée.`)
+  return result.discovery
+}
+
 function automaticApi(base, { platform = [], excluded = [] } = {}) {
   const root = base.root
   const folder = path.join(root, 'GarageFlow-configuration')
@@ -151,7 +167,7 @@ function automaticApi(base, { platform = [], excluded = [] } = {}) {
     const source = { ...normalizeStorage(savedSources), ...normalizeStorage(privateStorage), ...normalizeStorage(local), ...normalizeStorage(remote.values) }
     if (pending) Object.assign(source, pending.env)
     const missing = REQUIRED.filter(n => !source[n])
-    if (missing.length) throw new Error(`Accès Storage introuvables : ${missing.join(', ')}. Consultez le diagnostic de découverte (storage-discovery.json, sans valeurs). Si des lectures sont refusées, reconnectez le compte propriétaire Vercel et vérifiez ses droits sur cette équipe/ce projet ; les ressources peuvent être liées mais leurs valeurs rester masquées. Aucune variable distante supprimée.`)
+    if (missing.length) throw new Error(`Accès Storage introuvables : ${missing.join(', ')}. Consultez le diagnostic de découverte (storage-discovery.json, sans valeurs). Le rapport distingue challenge d’authentification, refus HTTP, valeurs masquées/non déchiffrées et réponses inattendues. Une ressource liée ne garantit pas que ses secrets sont exportables ; une reconnexion ne résout pas nécessairement ce blocage. Aucune variable distante supprimée.`)
     const connectionIssues = core.validate(source, 'pwa', { vercel: true })
       .filter(m => REQUIRED.some(n => m.startsWith(`${n} :`)))
     if (connectionIssues.length) throw new Error('Connexions Storage invalides ; aucune suppression. Vérifiez les connexions PostgreSQL poolée/directe et Redis REST du projet.')
@@ -252,4 +268,4 @@ function automaticApi(base, { platform = [], excluded = [] } = {}) {
   }
   return api
 }
-module.exports = { STORAGE_ALIASES, normalizeStorage, identity, planRebuild, recoverStorage, automaticApi }
+module.exports = { STORAGE_ALIASES, normalizeStorage, identity, planRebuild, recoverStorage, diagnoseStorage, automaticApi }

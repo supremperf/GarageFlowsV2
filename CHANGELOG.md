@@ -3,9 +3,24 @@
 
 ## [Non publié] — 2026-10-16 — chaîne build → installeur Windows réparée à la cause, page unique, vue globale des rendez-vous
 
+### `node config` — rendre le blocage Storage vérifiable sans reconstruire
+
+- Le retour réel après le correctif précédent détecte les ressources liées mais
+  ne récupère toujours aucun des quatre accès requis. Les compteurs de schéma 1
+  ne permettent pas de conclure à un refus de permission : `denied` mélangeait
+  masquage, erreur API et réponse inexploitable. Pas de résolution live revendiquée.
+- Diagnostic schéma 2 : causes distinctes, statut HTTP disponible, codes filtrés,
+  tentative avant/après login et indicateurs de forme/protection sans valeurs.
+  Le type Sensitive seul ne déclenche plus de login spéculatif ; HTTP 403 sans
+  code discriminant ne prouve ni RBAC ni MFA. Les erreurs CLI brutes restent privées.
+- `node config --diagnostic-storage` produit seulement ce rapport après
+  confirmation du projet déjà lié, sans reconstruction, export de secrets,
+  login interactif, migration ou mutation distante. Tests de non-divulgation,
+  statuts réels du CLI, causes distinctes et lecture seule ajoutés.
+
 ### `node config` — retrouver les connexions Storage au lieu de rejeter les secrets lus
 
-- Correction du blocage Windows sur les quatre paramètres PostgreSQL/Redis :
+- Correction d’une cause du blocage Windows sur les paramètres PostgreSQL/Redis :
   `pullVercel` supprimait systématiquement les valeurs marquées Sensitive ou
   `visibility: secret`, même lorsqu’elles avaient été réellement renvoyées.
   La lecture distingue désormais protection, valeur exploitable et placeholder.

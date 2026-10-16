@@ -115,9 +115,11 @@ Recherche, toujours limitée à l’équipe/projet sélectionné et à **product
   production, puis lecture `/v1/projects/{projectId}/env/{envId}` pour les
   variables fournisseur encore manquantes. Le ciphertext de la liste n’est
   jamais interprété comme un mot de passe ;
-- une seule reconnexion officielle Vercel si des lectures Sensitive sont
-  refusées et qu’une session récente peut être requise. Il peut être nécessaire
-  de confirmer la connexion dans le navigateur, **sans saisir les variables** ;
+- une seule reconnexion officielle Vercel si une authentification requise ou
+  un compteur de variables cachées est signalé. Le type Sensitive seul et une
+  valeur masquée ne déclenchent plus ce réessai. Confirmer un login dans le
+  navigateur ne garantit pas la satisfaction d’un challenge renforcé ni
+  l’autorisation d’exporter les secrets ;
 - inventaire Storage, détails de ressource et connexions du projet lorsque la
   liste ne fournit pas les métadonnées. Postgres/Redis natifs et intégrations
   sont reconnus. Les `contentHint` et préfixes (`NEON_`, `CACHE_`…) sont utilisés
@@ -126,9 +128,48 @@ Recherche, toujours limitée à l’équipe/projet sélectionné et à **product
 
 Le diagnostic **`GarageFlow-configuration/storage-discovery.json`** contient
 uniquement les identifiants de cible, étapes et compteurs d’accès, et les
-**noms** des paramètres trouvés/manquants, jamais leurs valeurs. Il peut être
-partagé pour investiguer un refus. **Ne pas partager les autres fichiers du
+**noms** des paramètres trouvés/manquants, jamais leurs valeurs. Le **schéma 2**
+ajoute les causes filtrées par lecture, la tentative (`initial` / `after_login`),
+le statut HTTP lorsqu’il est disponible, des codes d’erreur sur liste fermée,
+des indicateurs de forme de réponse et de protection des connexions. Il peut
+être partagé pour investiguer le blocage. **Ne pas partager les autres fichiers du
 coffre**, les sauvegardes ou les `.env` : ils contiennent les secrets.
+
+Pour obtenir ce seul rapport, **sans relancer la reconstruction** :
+
+```sh
+node config --diagnostic-storage
+```
+
+La cible doit être déjà liée dans `.vercel/project.json` et est affichée pour
+confirmation. La commande utilise seulement des lectures API authentifiées :
+aucun login interactif/rattachement, export de secrets, changement des profils
+`.env`, génération, migration ou suppression. Seul le rapport filtré est écrit.
+Un code de sortie 1 signifie que des paramètres restent manquants, même si le
+rapport a bien été écrit.
+
+Interprétation :
+
+- `stages.pull/list: "lu"` indique une réponse structurellement lisible, **pas**
+  la présence de credentials. Les compteurs du pull précisent ce qu’il contient.
+- `stages.denied` est conservé pour compatibilité : il totalise les lectures
+  ciblées **non exploitables**, pas les seuls refus HTTP.
+- `masked_value`, `not_decrypted`, `missing_value` décrivent une valeur masquée,
+  un déchiffrement explicitement absent ou une valeur absente ; ils ne prouvent
+  pas qu’un login permettra la lecture.
+- `http_forbidden` signifie HTTP 403 sans code discriminant : cela ne distingue
+  pas les permissions d’un éventuel challenge renforcé. `permission_denied`
+  exige un code de refus reconnu ; `auth_challenge` un code de challenge reconnu.
+- `wrong_key`, `wrong_target`, `unexpected_response`, `invalid_json` et
+  `incomplete_response` ne sont pas présentés comme des refus de permission.
+- `command_failed` reste volontairement indéterminé lorsqu’aucune information
+  structurée ne permet de conclure. Les messages bruts, headers et challenges
+  d’authentification ne sont jamais inclus dans le rapport ou la console.
+
+Le CLI 64 peut lever une erreur avant d’imprimer les headers de `api --include`.
+Ses lignes de statut debug sont donc capturées **en mémoire uniquement**, puis
+réduites au statut numérique sur échec. Ne pas activer/partager des logs bruts
+manuellement pour ce diagnostic.
 
 Si les droits Vercel refusent encore la lecture après reconnexion, le script
 ne contourne ni MFA ni permissions : il s’arrête avant toute suppression et

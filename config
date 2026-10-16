@@ -27,6 +27,7 @@ function help() {
   node config --conserver-secrets     Plan conservateur : garder les secrets existants
   node config --audit                 Inventaire/rapport du dépôt, sans accès cloud
   node config --list                  Couverture des variables, noms/destinations sans valeurs
+  node config --diagnostic-storage    Diagnostic Vercel/Storage seul, sans reconstruction
   node config --profile desktop      SQLite / Electron (développement local)
   node config --profile pwa           PostgreSQL / PWA
   node config --profile licences      PWA + autorité de licences
@@ -101,16 +102,21 @@ function npmCli() {
   if (!found) throw new Error('npm introuvable. Lancez avec npm run config (Node 22 + npm requis).')
   return found
 }
-function execute(commandArgs, { interactive = false, input, env = process.env, label = 'Commande' } = {}) {
+function execute(commandArgs, { interactive = false, input, env = process.env, label = 'Commande', captureVercelApiFailure = false } = {}) {
   return new Promise((resolve, reject) => {
     // No shell: project IDs, file paths and secrets can never become shell commands.
     const child = spawn(process.execPath, commandArgs, { cwd: ROOT, env,
       stdio: interactive ? 'inherit' : ['pipe', 'pipe', 'pipe'] })
-    let stdout = ''
+    let stdout = '', stderr = ''
     if (!interactive) {
       child.stdout.setEncoding('utf8')
       child.stdout.on('data', chunk => { stdout += chunk })
-      child.stderr.resume() // Never forward stderr: external tools may include credentials in errors.
+      // Never forward provider output. For Storage reads only, extract fixed
+      // diagnostic labels on failure; raw stderr is bounded and discarded.
+      if (captureVercelApiFailure) {
+        child.stderr.setEncoding('utf8')
+        child.stderr.on('data', chunk => { stderr = (stderr + chunk).slice(-65536) })
+      } else child.stderr.resume()
       child.stdin.on('error', () => {})
       child.stdin.end(input === undefined ? undefined : input)
     }
@@ -119,6 +125,7 @@ function execute(commandArgs, { interactive = false, input, env = process.env, l
       if (code === 0) return resolve(stdout)
       const error = new Error(`${label} : échec. Aucune validation revendiquée ; vérifiez votre connexion et vos droits, puis relancez.`)
       error.exitCode = code // Preserve status without exposing provider output or credentials.
+      if (captureVercelApiFailure) error.vercelApi = require('./scripts/lib/config-vercel-api.cjs').commandFailure(stdout, stderr, code)
       if (code === 2 && commandArgs.includes('migrate') && commandArgs.includes('diff')) error.sqlDiffSummary = summarizeSqlDiff(stdout)
       reject(error)
     })
@@ -602,7 +609,7 @@ async function diagnoseSql({ env, run = execute, root = ROOT, requestAccess = ye
   }
 }
 async function main() {
-  const accepted = new Set(['--help', '--check', '--profile', '--vercel', '--audit', '--diagnose-sql', '--list'])
+  const accepted = new Set(['--help', '--check', '--profile', '--vercel', '--audit', '--diagnose-sql', '--list', '--diagnostic-storage'])
   for (let i = 0; i < args.length; i++) {
     if (!accepted.has(args[i])) throw new Error('Option inconnue. Utilisez node config --help.')
     if (args[i] === '--profile') { if (!PROFILES.includes(args[++i])) throw new Error('Profil attendu : full | desktop | pwa | licences.') }
@@ -615,6 +622,12 @@ async function main() {
     const result = coverage.coverage(ROOT)
     console.log(coverage.render(result))
     if (result.unclassified.length) process.exitCode = 1
+    return
+  }
+  if (args.includes('--diagnostic-storage')) {
+    if (args.length !== 1) throw new Error('Utiliser node config --diagnostic-storage seul (sans reconstruction).')
+    const report = await require('./scripts/config-rebuild.cjs').diagnoseStorage(module.exports)
+    if (report.missing.length) process.exitCode = 1
     return
   }
   if (args.includes('--diagnose-sql')) {

@@ -22,9 +22,11 @@ function inventory(keys = Object.keys(credentials)) {
 function remote(records = inventory(), values = {}) { return decoder.fromPull(records, values) }
 function baseWith(handler) {
   const calls = []
-  return { calls, tool: async (tool, args) => {
+  return { calls, tool: async (tool, args, options) => {
     assert.equal(tool, 'vercel')
     assert.equal(args[0], 'api', 'discovery must not mutate Vercel')
+    for (const flag of ['--include', '--raw', '--debug']) assert.ok(args.includes(flag))
+    assert.equal(options.captureVercelApiFailure, true, 'debug output must be privately filtered, never forwarded')
     const url = new URL('https://api.vercel.com' + args[1])
     assert.equal(url.searchParams.get('teamId'), project.orgId)
     calls.push(url)
@@ -218,4 +220,215 @@ test('discovery diagnostics never print a credential or a raw provider error', a
     assert.doesNotMatch(output, /fake-password-that-must-remain-hidden/)
     for (const value of Object.values(credentials)) assert.ok(!output.includes(value))
   } finally { console.log = original }
+})
+
+test('HTTP envelopes retain only numeric status, never response/auth headers', () => {
+  const api = require('../scripts/lib/config-vercel-api.cjs')
+  for (const newline of ['\n', '\r\n']) {
+    const body = api.decode(['HTTP 200 OK', 'www-authenticate: Bearer private-challenge-value', 'x-private: fake-secret', '', '{"env":{}}'].join(newline))
+    assert.deepEqual(body, { env: {} })
+    assert.equal(api.status(body), 200)
+    assert.equal(JSON.stringify(body), '{"env":{}}')
+    assert.deepEqual(api.decode(['HTTP 200 OK', '', '{"env":{}}'].join(newline)), { env: {} })
+  }
+  assert.throws(() => api.decode('HTTP 403 Forbidden\n\n{"error":{"code":"forbidden","message":"fake-secret"}}'), error => {
+    assert.equal(error.vercelApi.reason, 'permission_denied')
+    assert.equal(error.vercelApi.httpStatus, 403)
+    assert.equal(error.vercelApi.errorCode, 'forbidden')
+    assert.ok(!JSON.stringify(error).includes('fake-secret'))
+    return true
+  })
+})
+
+test('same schema-1 totals as the real report can mean 18 masked HTTP-200 values, not 18 HTTP refusals', async () => {
+  const records = inventory([...Object.keys(credentials), 'PGHOST', 'PGUSER', 'PGDATABASE', 'PGPASSWORD', 'BLOB_READ_WRITE_TOKEN'])
+  let logins = 0
+  const base = baseWith(url => {
+    if (url.pathname.includes('/v3/env/pull/')) return { env: Object.fromEntries(records.map(r => [r.key, '[SENSITIVE]'])) }
+    if (url.pathname.includes('/v10/projects/')) return { envs: records, hiddenProductionEnvCount: 9 }
+    const r = records.find(r => url.pathname.endsWith(`/env/${r.id}`))
+    if (r) return { ...r, value: '[SENSITIVE]' }
+    if (url.pathname === '/v1/storage/stores') return { stores: Array.from({ length: 8 }, (_, i) => ({ id: `store_${i}`, type: 'integration',
+      projectsMetadata: i < 3 ? [{ projectId: project.projectId, environments: ['production'], makeEnvVarsSensitive: true }] : [] })) }
+    return { connections: [] }
+  })
+  const runTool = base.tool
+  base.tool = async (...args) => 'HTTP 200 OK\ncontent-type: application/json\n\n' + await runTool(...args)
+  base.refreshVercelAuth = async () => { logins++ }
+  const result = await rebuild.recoverStorage(base, remote(records), project)
+  const report = result.discovery
+  assert.equal(report.schema, 2)
+  assert.deepEqual(report.stages, { pull: 'lu', list: 'lu', reads: 0, denied: 18, stores: 8, linked: 3, details: 0, connections: 5, incomplete: 0 })
+  assert.deepEqual(report.reasons, { masked_value: 18 })
+  assert.equal(report.events.filter(e => e.stage === 'read' && e.attempt === 'initial').length, 9)
+  assert.equal(report.events.filter(e => e.stage === 'read' && e.attempt === 'after_login').length, 9)
+  assert.ok(report.events.filter(e => e.stage === 'read').every(e => e.httpStatus === 200))
+  assert.equal(report.events.find(e => e.stage === 'pull').maskedValues, 9)
+  assert.equal(report.resources.length, 3)
+  assert.ok(report.resources.every(r => r.makeEnvVarsSensitive === true))
+  assert.deepEqual(report.authentication, { attempted: true, outcome: 'login_completed' })
+  assert.equal(logins, 1)
+  assert.deepEqual(report.found, [])
+  assert.deepEqual(report.missing, Object.keys(credentials))
+})
+
+test('masked values alone no longer cause a speculative login merely because metadata says Sensitive', async () => {
+  const records = inventory()
+  let logins = 0
+  const base = baseWith(url => {
+    const r = records.find(r => url.pathname.endsWith(`/env/${r.id}`))
+    return r ? { ...r, value: '[SENSITIVE]' } : unavailable(url)
+  })
+  base.refreshVercelAuth = async () => { logins++ }
+  const { discovery } = await rebuild.recoverStorage(base, remote(records), project)
+  assert.equal(logins, 0)
+  assert.deepEqual(discovery.reasons, { masked_value: 4 })
+  assert.deepEqual(discovery.authentication, { attempted: false, outcome: 'not_needed' })
+})
+
+test('a structured permission refusal is distinct from a mask and not automatically repaired by login', async () => {
+  const records = inventory()
+  let logins = 0
+  const base = baseWith(url => records.some(r => url.pathname.endsWith(`/env/${r.id}`))
+    ? { error: { code: 'forbidden', message: credentials.DATABASE_URL } } : unavailable(url))
+  base.refreshVercelAuth = async () => { logins++ }
+  const { discovery } = await rebuild.recoverStorage(base, remote(records), project)
+  assert.equal(logins, 0)
+  assert.deepEqual(discovery.reasons, { permission_denied: 4 })
+  assert.ok(discovery.events.filter(e => e.stage === 'read').every(e => e.errorCode === 'forbidden'))
+  assert.ok(!JSON.stringify(discovery).includes(credentials.DATABASE_URL))
+})
+
+test('nonzero CLI exit retains a filtered API failure, not captured stdout/stderr or auth headers', async () => {
+  const sentinel = 'private-provider-output-do-not-export'
+  for (const stdout of [
+    `HTTP 403 Forbidden\nwww-authenticate: Bearer ${sentinel}\n\n${JSON.stringify({ error: { code: 'forbidden', message: sentinel } })}`,
+    '',
+  ]) {
+    const script = `process.stdout.write(${JSON.stringify(stdout)}); process.stderr.write(${JSON.stringify(JSON.stringify({ code: 'forbidden', statusCode: 403, message: sentinel }))}); process.exit(1)`
+    await assert.rejects(() => wizard.execute(['-e', script], { captureVercelApiFailure: true }), error => {
+      assert.deepEqual(error.vercelApi, { reason: 'permission_denied', httpStatus: 403, errorCode: 'forbidden', cliExitCode: 1 })
+      assert.ok(!JSON.stringify(error).includes(sentinel))
+      assert.ok(!error.message.includes(sentinel))
+      return true
+    })
+  }
+})
+
+test('an unknown CLI failure stays unknown, not permission denied; arbitrary error codes cannot leak', () => {
+  const api = require('../scripts/lib/config-vercel-api.cjs')
+  const sentinel = 'private_provider_output_do_not_export'
+  assert.deepEqual(api.commandFailure('', sentinel, 1), { reason: 'command_failed', httpStatus: null, errorCode: null, cliExitCode: 1 })
+  assert.throws(() => api.decode(JSON.stringify({ error: { code: sentinel, message: sentinel } })), error => {
+    assert.equal(error.vercelApi.reason, 'api_error')
+    assert.equal(error.vercelApi.errorCode, null)
+    assert.ok(!JSON.stringify(error).includes(sentinel))
+    return true
+  })
+  assert.equal(api.commandFailure('', '{"code":"challenge_required"}', 1).reason, 'auth_challenge')
+})
+
+test('each rejected variable response has a reason, without echoing unexpected keys or values', async () => {
+  const records = inventory(), sentinel = 'private-provider-output-do-not-export'
+  const responses = [
+    { ...records[0], key: sentinel, value: sentinel },
+    { ...records[1], target: ['development'], value: sentinel },
+    { ...records[2], decrypted: false, value: sentinel },
+    { env: { ...records[3], value: sentinel } },
+  ]
+  const base = baseWith(url => {
+    const i = records.findIndex(r => url.pathname.endsWith(`/env/${r.id}`))
+    return i >= 0 ? responses[i] : unavailable(url)
+  })
+  const { discovery } = await rebuild.recoverStorage(base, remote(records), project)
+  assert.deepEqual(discovery.reasons, { wrong_key: 1, wrong_target: 1, not_decrypted: 1, unexpected_response: 1 })
+  assert.ok(!JSON.stringify(discovery).includes(sentinel))
+})
+
+test('invalid JSON, missing values, and truncated inventory are not reported as permission refusals', async () => {
+  const records = inventory()
+  const base = baseWith(url => {
+    if (url.pathname.includes('/v10/projects/')) return { envs: records, pagination: { next: 123 } }
+    const r = records.find(r => url.pathname.endsWith(`/env/${r.id}`))
+    return r ? { ...r, value: null } : unavailable(url)
+  })
+  const originalTool = base.tool
+  base.tool = async (...args) => args[1][1].startsWith('/v3/env/pull/') ? 'HTTP 200 OK\n\nnot-json' : originalTool(...args)
+  const { discovery } = await rebuild.recoverStorage(base, remote(records), project)
+  assert.deepEqual(discovery.reasons, { invalid_json: 1, incomplete_response: 1, missing_value: 4 })
+  assert.equal(discovery.events[0].httpStatus, 200)
+})
+
+test('standalone diagnostic writes only its safe report, without rebuilding, login, env export or cloud mutations', async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-storage-diagnostic-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.mkdirSync(path.join(root, '.vercel'))
+  fs.writeFileSync(path.join(root, '.vercel/project.json'), JSON.stringify(project))
+  fs.writeFileSync(path.join(root, '.env'), 'LOCAL_FILE_MUST_STAY_UNCHANGED=1\n')
+  let logins = 0, confirmations = 0
+  const base = baseWith(url => url.pathname.includes('/v3/env/pull/') ? { env: credentials } : unavailable(url))
+  Object.assign(base, { root, yes: async () => { confirmations++; return true }, refreshVercelAuth: async () => { logins++ } })
+  const report = await rebuild.diagnoseStorage(base)
+  assert.equal(confirmations, 1)
+  assert.equal(logins, 0)
+  assert.equal(report.schema, 2)
+  assert.deepEqual(report.found, Object.keys(credentials))
+  assert.deepEqual(fs.readdirSync(path.join(root, 'GarageFlow-configuration')), ['storage-discovery.json'])
+  assert.equal(fs.readFileSync(path.join(root, '.env'), 'utf8'), 'LOCAL_FILE_MUST_STAY_UNCHANGED=1\n')
+  assert.ok(!fs.existsSync(path.join(root, '.env.local')))
+  assert.ok(!fs.existsSync(path.join(root, '.env.storage.local')))
+  const file = path.join(root, 'GarageFlow-configuration/storage-discovery.json')
+  const persisted = fs.readFileSync(file, 'utf8')
+  assert.deepEqual(JSON.parse(persisted), report)
+  for (const value of Object.values(credentials)) assert.ok(!persisted.includes(value))
+  if (process.platform !== 'win32') assert.equal(fs.statSync(file).mode & 0o777, 0o600)
+})
+
+test('standalone diagnostic cannot run without a linked/confirmed target or publish after a target change', async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-storage-diagnostic-target-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  let requests = 0
+  const base = { root, yes: async () => false, tool: async () => { requests++; return '{}' } }
+  await assert.rejects(() => rebuild.diagnoseStorage(base), /projet Vercel non lié/)
+  fs.mkdirSync(path.join(root, '.vercel'))
+  const link = path.join(root, '.vercel/project.json')
+  fs.writeFileSync(link, JSON.stringify(project))
+  await assert.rejects(() => rebuild.diagnoseStorage(base), /annulé/)
+  assert.equal(requests, 0)
+  base.yes = async () => true
+  const reader = baseWith(url => {
+    fs.writeFileSync(link, JSON.stringify({ ...project, projectId: 'prj_other' }))
+    return url.pathname.includes('/v3/env/pull/') ? { env: credentials } : unavailable(url)
+  })
+  base.tool = reader.tool
+  await assert.rejects(() => rebuild.diagnoseStorage(base), /Cible Vercel modifiée/)
+  assert.ok(!fs.existsSync(path.join(root, 'GarageFlow-configuration/storage-discovery.json')))
+})
+
+test('standalone diagnostic records a challenge without attempting another generic login', async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-storage-diagnostic-challenge-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.mkdirSync(path.join(root, '.vercel'))
+  fs.writeFileSync(path.join(root, '.vercel/project.json'), JSON.stringify(project))
+  let logins = 0
+  const base = baseWith(url => url.pathname.includes('/v3/env/pull/')
+    ? { error: { code: 'challenge_required', message: 'private provider challenge' } } : unavailable(url))
+  Object.assign(base, { root, yes: async () => true, refreshVercelAuth: async () => { logins++ } })
+  const report = await rebuild.diagnoseStorage(base)
+  assert.equal(logins, 0)
+  assert.equal(report.reasons.auth_challenge, 1)
+  assert.deepEqual(report.authentication, { attempted: false, outcome: 'unavailable' })
+  assert.ok(!JSON.stringify(report).includes('private provider challenge'))
+})
+
+test('actual CLI-64 debug status survives its non-2xx throw, but 403 alone is not claimed to prove RBAC', async () => {
+  const stderr = '> [debug] [2026-10-16T10:00:00Z] #1 ← 401 Unauthorized: private-request-id [1ms]\n' +
+    '> [debug] [2026-10-16T10:00:01Z] #2 ← 403 Forbidden: another-private-id [1ms]\n' +
+    'Error: private provider message\n'
+  const script = `process.stderr.write(${JSON.stringify(stderr)}); process.exit(1)`
+  await assert.rejects(() => wizard.execute(['-e', script], { captureVercelApiFailure: true }), error => {
+    assert.deepEqual(error.vercelApi, { reason: 'http_forbidden', httpStatus: 403, errorCode: null, cliExitCode: 1 })
+    assert.ok(!JSON.stringify(error).includes('private'))
+    return true
+  })
 })
