@@ -53,15 +53,34 @@ const REQUIS = [
 const PROBLEMES = []
 const OK = []
 
+/**
+ * Un dossier contient-il au moins un fichier (à n'importe quelle profondeur) ?
+ *
+ * On ne peut PAS se fier à `statSync(dir).size` : sur Windows, la taille d'un
+ * dossier vaut **toujours 0** — `.next/static` et `public/`, copiés avec
+ * respectivement 242 et 10 fichiers, étaient déclarés « vide » sur l'exécuteur
+ * Windows (run 38954955756) et bloquaient l'empaquetage d'une sortie saine.
+ */
+function dossierNonVide(dir, profondeur = 0) {
+  if (profondeur > 8) return true
+  let entrees
+  try { entrees = fs.readdirSync(dir, { withFileTypes: true }) } catch { return false }
+  for (const entree of entrees) {
+    if (entree.isFile()) return true
+    if (entree.isDirectory() && dossierNonVide(path.join(dir, entree.name), profondeur + 1)) return true
+  }
+  return false
+}
+
 function verifierFichier(chemin, description) {
-  const existe = fs.existsSync(chemin)
-  if (!existe) {
+  if (!fs.existsSync(chemin)) {
     PROBLEMES.push(`${description} manquant : ${path.relative(RACINE, chemin)}`)
     return false
   }
   try {
-    const taille = fs.statSync(chemin).size
-    if (taille === 0) {
+    const stat = fs.statSync(chemin)
+    const vide = stat.isDirectory() ? !dossierNonVide(chemin) : stat.size === 0
+    if (vide) {
       PROBLEMES.push(`${description} vide : ${path.relative(RACINE, chemin)}`)
       return false
     }
@@ -130,7 +149,9 @@ function main() {
   // une seule fois (l'ancien code préfixait `node_modules/` à une entrée qui le
   // contenait déjà et signalait un manque inexistant).
   for (const moduleRel of modulesExecutionManquants(appDir)) {
-    PROBLEMES.push(`module d’exécution absent de la sortie : ${moduleRel}`)
+    PROBLEMES.push(moduleRel.startsWith('(ni copié, ni embarqué)')
+      ? `module d’exécution absent de la sortie — ${moduleRel}`
+      : `module d’exécution absent de la sortie : ${moduleRel}`)
   }
 
   // Clé publique de vérification des mises à jour : sans elle, la copie n’est

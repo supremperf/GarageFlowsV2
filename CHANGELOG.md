@@ -40,6 +40,23 @@
   (`MODULES_EXECUTION` + `modulesExecutionManquants`) : l'ancienne boucle
   préfixait `node_modules/` à une entrée qui le contenait déjà et signalait un
   manque inexistant (`node_modules/node_modules/.prisma/...`).
+- **Deux faux positifs du vérificateur, visibles seulement sur Windows**, tous
+  deux corrigés : (a) la taille d'un DOSSIER vaut 0 sur Windows, si bien que
+  `.next/static` (242 fichiers) et `public/` (10 fichiers) étaient déclarés
+  « vide » — le contrôle compte désormais le contenu réel ; (b) `next-auth`
+  n'est **pas copié** dans la sortie autonome (webpack l'embarque) — le contrôle
+  exige « copié **ou** embarqué » et cherche le marqueur
+  `next-auth.session-token` dans les morceaux compilés, avec un échec explicite
+  si les deux manquent.
+- **Premier vert de la chaîne sur une sortie autonome réelle** : `next build`
+  complet obtenu dans cet environnement (substituts Prisma locaux + type-check
+  neutralisé le temps du build, **rien de tout cela commité**), puis
+  `post-build.js` et `verify:standalone` → `✅ Sortie autonome complète`, exit 0.
+  Le serveur empaqueté, lançé avec l'environnement d'`electron/main.js`, répond
+  `200` sur `/login`, `/clients/login`, `/api/auth/providers` et `/api/version`.
+- Le fond du volet Stock ferme désormais le panneau au clic (surface qui
+  n'obéissait à aucun clic) ; membre mort `'appointments'` retiré de l'union
+  `Surface` de `src/app/page.tsx`.
 
 ### Barre d'outils — plus de déplacement vertical
 - `.gf-hscroll` (`globals.css`) verrouille l'axe vertical
@@ -74,8 +91,10 @@
 - `src/lib/ui/brouillon.ts` (nouveau) : les saisies en cours survivent au
   changement de page ; fermer la page est un abandon et efface les brouillons de
   CETTE page.
-- Volet Stock : fond `pointer-events-none` corrigé (les clics n'atteignaient
-  rien).
+- Volet Stock : le fond était resté `pointer-events-none` — la surface libre
+  autour du panneau n'obéissait à aucun clic, alors que le panneau se déclare
+  `aria-modal="true"`. Il ferme maintenant au clic, comme `BillingPanel`,
+  `FinancialDashboard` et `GfDrawer`.
 
 ### Réglage « Lancer GarageFlows au démarrage de Windows »
 - `electron/main.js` : `etatDemarrageAuto()` / `definirDemarrageAuto()`

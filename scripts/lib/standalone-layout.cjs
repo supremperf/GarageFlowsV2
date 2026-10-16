@@ -157,18 +157,74 @@ const MODULES_EXECUTION = [
   'node_modules/next/package.json',
   'node_modules/react/package.json',
   'node_modules/react-dom/package.json',
-  'node_modules/next-auth/package.json',
   'node_modules/@prisma/client/package.json',
   'node_modules/.prisma/client/index.js',
 ]
 
+/*
+ * `next-auth` n'est PAS dans cette liste, et ce n'est pas un oubli.
+ *
+ * Mesure : une vraie compilation `next build` (sortie autonome réelle) place
+ * `next`, `react`, `react-dom`, `@prisma/client` dans `.next/standalone/node_modules`
+ * — ce sont des dépendances externées — mais **`node_modules/next-auth` n'existe
+ * pas** : `next-auth` est importé par les routes serveur (`getServerSession`,
+ * `NextAuth`) et, n'étant pas déclaré dans `serverExternalPackages`, il est
+ * EMBARQUÉ dans les morceaux compilés par webpack. L'exiger comme fichier
+ * présent faisait échouer la vérification sur une sortie parfaitement saine
+ * (observé sur l'exécuteur Windows, run 38954955756).
+ */
+
 /**
- * Modules d'exécution absents de la sortie autonome.
+ * Modules que la compilation EMBARQUE dans ses propres morceaux au lieu de les
+ * copier : ils n'apparaissent jamais dans `node_modules/` de la sortie, mais leur
+ * code doit bel et bien être présent. On les reconnaît à une chaîne d'exécution
+ * que la minification ne peut pas retirer (un nom de cookie, un message d'erreur).
+ *
+ * Mesure à l'appui : une vraie sortie autonome ne contient pas
+ * `node_modules/next-auth`, et `.next/server/chunks/8858.js` contient
+ * `next-auth.session-token`. Exiger le module physique faisait échouer la
+ * vérification sur une sortie saine (exécuteur Windows, run 38954955756).
+ */
+const MODULES_EMBARQUES = [
+  { nom: 'next-auth', marqueur: 'next-auth.session-token' },
+]
+
+/** Le marqueur apparaît-il dans les morceaux serveur compilés ? */
+function marqueurEmbarque(appDir, marqueur, profondeur = 0) {
+  const racine = path.join(appDir, '.next', 'server')
+  if (!fs.existsSync(racine)) return false
+  const parcourir = (dir, niveau) => {
+    if (niveau > 5) return false
+    let entrees
+    try { entrees = fs.readdirSync(dir, { withFileTypes: true }) } catch { return false }
+    for (const entree of entrees) {
+      const chemin = path.join(dir, entree.name)
+      if (entree.isDirectory()) {
+        if (parcourir(chemin, niveau + 1)) return true
+      } else if (entree.name.endsWith('.js')) {
+        try {
+          if (fs.statSync(chemin).size > 20 * 1024 * 1024) continue
+          if (fs.readFileSync(chemin, 'utf8').includes(marqueur)) return true
+        } catch { /* fichier illisible : on continue, la décision se prend plus loin */ }
+      }
+    }
+    return false
+  }
+  return parcourir(racine, 0)
+}
+
+/**
+ * Modules d'exécution absents de la sortie autonome — ni copiés, ni embarqués.
  * @param {string} appDir dossier contenant `server.js`
  * @returns {string[]} chemins relatifs manquants (vide si la sortie est complète)
  */
 function modulesExecutionManquants(appDir) {
-  return MODULES_EXECUTION.filter((relatif) => !fs.existsSync(path.join(appDir, relatif)))
+  const manquants = MODULES_EXECUTION.filter((relatif) => !fs.existsSync(path.join(appDir, relatif)))
+  for (const { nom, marqueur } of MODULES_EMBARQUES) {
+    const physique = fs.existsSync(path.join(appDir, 'node_modules', nom, 'package.json'))
+    if (!physique && !marqueurEmbarque(appDir, marqueur)) manquants.push(`(ni copié, ni embarqué) ${nom}`)
+  }
+  return manquants
 }
 
 function standaloneAppDir(standaloneDir) {
@@ -207,4 +263,4 @@ function staleAppDirs(standaloneDir, appDir) {
   return [...trouvees]
 }
 
-module.exports = { MAX_DEPTH, IGNORED_DIRS, MODULES_EXECUTION, modulesExecutionManquants, findServerJs, inspectStandaloneLayout, standaloneAppDir, staleAppDirs }
+module.exports = { MAX_DEPTH, IGNORED_DIRS, MODULES_EXECUTION, MODULES_EMBARQUES, marqueurEmbarque, modulesExecutionManquants, findServerJs, inspectStandaloneLayout, standaloneAppDir, staleAppDirs }

@@ -368,6 +368,85 @@ Leçon retenue, et inscrite dans le code : un garde-fou qui échoue **toujours**
 n'est pas un garde-fou, c'est un blocage. On l'a rendu exécutable sur des
 arborescences de test pour qu'il prouve qu'il sait **accepter** une sortie saine.
 
+## 11 quinquies. Premier vert de la chaîne sur une sortie autonome RÉELLE, et les deux faux positifs qu'il a révélés
+
+Tant que `.next/standalone` n'existait pas ici, le post-build et le vérificateur
+n'avaient jamais été confrontés à une vraie sortie : ils étaient exercés sur des
+arbres de test, jamais sur le produit de Next.js. Une compilation Next.js
+complète a donc été obtenue dans cet environnement — méthode exacte :
+
+1. `src/generated/server-client` (client Prisma serveur, ignoré par git) obtient
+   un substitut local exposant `PrismaClient` ;
+2. `node_modules/.prisma/client/default.js` — le vrai moteur exige
+   `binaries.prisma.sh`, injoignable — reçoit un substitut local ;
+3. **temporairement**, `typescript.ignoreBuildErrors` est activé le temps du
+   build (le type-check de Next s'arrête sinon sur `scripts/migrate-money-json.ts`,
+   défaut antérieur sans rapport) ;
+4. `npx next build`, puis `node scripts/post-build.js`, puis
+   `node scripts/verify-standalone-build.cjs`.
+
+Le dépôt a été remis à l'identique juste après (substituts restaurés depuis
+`/tmp`, `next.config.mjs` recopié à l'octet) : **rien de cette méthode n'est
+commité** et aucun de ces substituts n'entre dans un artefact livrable.
+
+Résultat sans précédent dans l'histoire de ce dépôt :
+
+```
+> garageflow@1.1.0 postbuild
+  ✅ server.js found        (6.5 KB) → .next/standalone/server.js
+  ✅ static assets copied   (239 files) → .next/standalone/.next/static
+  ✅ public dir copied       (10 files) → .next/standalone/public
+  ✅ Prisma client copied   (10 files) → standalone node_modules/.prisma
+> garageflow@1.1.0 verify:standalone
+🔎 Sortie autonome : .next/standalone
+✅ Sortie autonome complète (4 éléments vérifiés) — prête à être empaquetée.
+```
+
+Deux **faux positifs** du vérificateur sont apparus au passage, tous deux
+visibles uniquement sur l'exécuteur Windows :
+
+1. **La taille d'un dossier vaut 0 sur Windows.** `.next/static` (242 fichiers)
+   et `public/` (10 fichiers) étaient déclarés « vide » et bloquaient
+   l'empaquetage. Le contrôle compte maintenant le contenu réel d'un dossier
+   (`dossierNonVide`), au lieu de lire `statSync(dir).size`.
+2. **`next-auth` n'est pas copié : il est EMBARQUÉ.** Sur une vraie sortie
+   autonome, `node_modules/next-auth` n'existe pas — `next, react, react-dom,
+   @prisma/client` sont externalisés, `next-auth` ne l'est pas et part dans les
+   morceaux compilés par webpack. Le vérificateur exige désormais
+   **« copié OU embarqué »** : il cherche la chaîne d'exécution
+   `next-auth.session-token` dans `.next/server/**/*.js`, marqueur que la
+   minification ne peut pas retirer. Preuve dans les deux sens, exécutée :
+
+   | Situation | Résultat du vérificateur |
+   |---|---|
+   | morceaux compilés présents (cas réel) | `✅ Sortie autonome complète` (exit 0) |
+   | `node_modules/next-auth` seul | accepté (cas prévu si la stratégie change) |
+   | ni l'un ni l'autre | `❌ module d’exécution absent de la sortie — (ni copié, ni embarqué) next-auth` (exit 1) |
+
+Le garde-fou ne se contente donc plus d'échouer ou de passer : il a été **vu
+accepter** une sortie saine et **vu refuser** une sortie amputée.
+
+### Le serveur empaqueté DÉMARRE et sert l'application
+
+Preuve complémentaire, faite sur cette sortie réelle, en lançant
+`.next/standalone/server.js` avec l'environnement que `electron/main.js` fournit
+sur un poste (`ELECTRON=1`, `NODE_ENV=production`, `DATABASE_URL`, `NEXTAUTH_URL`,
+`NEXTAUTH_SECRET` unique par installation) :
+
+| Requête | Réponse |
+|---|---|
+| `GET /login` | `200` — page HTML française |
+| `GET /clients/login` | `200` — portail client |
+| `GET /api/auth/providers` | `200` — `{"credentials":{…}}` (donc `next-auth` fonctionne **sans** `node_modules/next-auth`) |
+| `GET /api/version` | `200` — `{"serverVersion":"1.1.0","apiVersion":2,…}` |
+
+Au passage, cette vérification a confirmé un mécanisme de sécurité du démarrage :
+sans `ELECTRON=1`, le serveur **refuse** de démarrer en exigeant les variables
+d'une PWA multi-instance (`DATABASE_URL` PostgreSQL, `DEVICE_TOKEN_PEPPER`,
+Upstash, `TRUST_PROXY_HEADERS`). C'est voulu (`estPwaDeProduction()`), et c'est
+précisément l'environnement que `electron/main.js` renseigne — l'application
+de bureau ne démarre pas « par accident » avec une configuration de serveur web.
+
 ## 12. Ce qui n'a PAS pu être exécuté ici, et pourquoi
 
 L'environnement de développement de cette session n'a accès qu'à une liste
@@ -379,7 +458,7 @@ l'empaquetage sont injoignables :
 | `npm run build` | non exécutable | `binaries.prisma.sh` (moteurs Prisma) injoignable |
 | `npx prisma validate` | non exécutable | même cause — message exact : `request to https://binaries.prisma.sh/.../libquery_engine.so.node.gz.sha256 failed` |
 | `npm run dist` | non exécutable | idem + `objects.githubusercontent.com` (binaire Electron) |
-| `electron-builder --win --x64` | non exécutable | idem (Wine/NSIS également absents) |
+| `electron-builder --win --x64` | **tenté** : s'arrête pendant `packaging platform=win32` | les binaires Electron/NSIS/winCodeSign sont des actifs de release GitHub servis par `objects.githubusercontent.com`, injoignable depuis cet environnement (`curl` → code `000`) |
 | Essai d'installation de l'installeur | impossible | aucun poste Windows dans cet environnement |
 | Suite vitest complète | 84 fichiers sur 336 ne peuvent pas s'exécuter | ils montent une base SQLite via `prepareTestDb` → `prisma db push` → moteur Prisma à télécharger (0,3 % des tests échouent, 22 % sont ignorés, 78 % s'exécutent) |
 

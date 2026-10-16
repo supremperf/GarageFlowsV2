@@ -82,6 +82,40 @@ describe('boutons de fermeture : zone cliquable RÉELLE et nommée', () => {
   })
 })
 
+describe('fonds de panneaux : un clic à l’extérieur FERME le panneau', () => {
+  it('le volet Stock ne laisse plus une surface morte autour de lui', () => {
+    const stock = lire('src/components/StockPanel.tsx')
+    const couche = stock.slice(stock.indexOf('<div className="fixed inset-0 z-40'))
+    // Le panneau se déclare `aria-modal="true"` : laisser l'application cliquable
+    // derrière est un mensonge pour l'utilisateur comme pour les lecteurs d'écran.
+    expect(stock).toMatch(/aria-modal="true"/)
+    expect(stock).not.toMatch(/className="fixed inset-0[^"]*pointer-events-none/)
+    expect(couche).toMatch(/<button[\s\S]{0,400}?onClick=\{onClose\}/)
+    // Le panneau reste AU-DESSUS du fond (sinon le fond intercepterait ses clics).
+    expect(couche).toMatch(/relative z-\[1\][^"]*max-w-md/)
+  })
+
+  it('tout fond plein écran est cliquable et appelle la fermeture', () => {
+    // Inventaire volontairement explicite : ces surfaces recouvrent l'application
+    // et promettent la fermeture au clic extérieur.
+    for (const fichier of ['StockPanel.tsx', 'BillingPanel.tsx', 'FinancialDashboard.tsx', 'GfDrawer.tsx']) {
+      const src = lire(`src/components/${fichier}`)
+      // Le gestionnaire peut précéder ou suivre la classe selon l'ordre des
+      // attributs : on regarde des deux côtés du repère.
+      const repere = src.indexOf('absolute inset-0 bg-black/60')
+      expect(repere, `${fichier} : fond plein écran absent`).toBeGreaterThan(-1)
+      const autour = src.slice(Math.max(0, repere - 320), repere + 320)
+      expect(autour, `${fichier} : le fond ne ferme pas au clic`).toMatch(/onClick=\{onClose\}/)
+    }
+  })
+
+  it('Échap referme aussi le volet Stock (voie clavier, sans souris)', () => {
+    const page = lire('src/app/page.tsx')
+    const raccourcis = page.slice(page.indexOf('onClose:'))
+    expect(raccourcis.slice(0, 300)).toMatch(/if \(isStockPanelOpen\) toggleStockPanel\(\)/)
+  })
+})
+
 describe('une SEULE page à l’écran (plus d’empilement)', () => {
   const page = lire('src/app/page.tsx')
 

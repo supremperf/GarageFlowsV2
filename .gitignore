@@ -23,6 +23,9 @@ node_modules/
 *.tsbuildinfo
 next-env.d.ts
 
+# Répertoires de sonde jetables (reproduction locale d'un défaut, jamais livrés)
+.tmp-*/
+
 # Clients Prisma générés (desktop → node_modules, serveur → src/generated)
 src/generated/
 

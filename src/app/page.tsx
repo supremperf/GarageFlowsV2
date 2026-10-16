@@ -141,7 +141,7 @@ export default function Home() {
   type Surface =
     | 'dashboard' | 'reception' | 'reminders' | 'billing' | 'finance'
     | 'labor' | 'warranty' | 'loaner' | 'copilot' | 'ocr'
-    | 'suppliers' | 'clients' | 'tickets' | 'appointments' | 'catalog'
+    | 'suppliers' | 'clients' | 'tickets' | 'catalog'
     | 'settings'
 
   const [surface, setSurface] = useState<Surface | null>(null)

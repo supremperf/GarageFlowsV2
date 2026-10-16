@@ -125,6 +125,9 @@ test('la liste des modules d’exécution se résout sans double préfixe node_m
     fs.mkdirSync(path.dirname(path.join(dir, relatif)), { recursive: true })
     fs.writeFileSync(path.join(dir, relatif), relatif.endsWith('.js') ? '// client généré' : '{"name":"fixture"}')
   }
+  // `next-auth` n'est pas un fichier de la sortie : la compilation l'embarque.
+  fs.mkdirSync(path.join(dir, '.next', 'server', 'chunks'), { recursive: true })
+  fs.writeFileSync(path.join(dir, '.next', 'server', 'chunks', '8858.js'), 'const c="next-auth.session-token";')
   assert.deepEqual(layout.modulesExecutionManquants(dir), [], 'sortie complète : aucun manque')
   assert.ok(layout.MODULES_EXECUTION.every(relatif => !relatif.startsWith('node_modules/node_modules/')), 'aucun chemin composé deux fois')
   assert.ok(layout.MODULES_EXECUTION.includes('node_modules/.prisma/client/index.js'))
@@ -156,6 +159,10 @@ function arbreStandaloneSain(racine) {
     fs.mkdirSync(path.dirname(cible), { recursive: true })
     fs.writeFileSync(cible, relatif.endsWith('.js') ? '// client genere' : '{"name":"x"}')
   }
+  // `next-auth` n'est pas copié : la compilation l'embarque (constaté sur une
+  // vraie sortie autonome). On reproduit le morceau qui le contient.
+  fs.mkdirSync(path.join(app, '.next', 'server', 'chunks'), { recursive: true })
+  fs.writeFileSync(path.join(app, '.next', 'server', 'chunks', '8858.js'), 'const c="next-auth.session-token";')
   return racine
 }
 
@@ -192,6 +199,35 @@ test('verify:standalone REFUSE une sortie absente, incomplète ou sans moteur Pr
     assert.match(resultat.stderr, attendu)
   }
   fs.rmSync(casse, { recursive: true, force: true })
+})
+
+test('next-auth est accepté COPIÉ ou EMBARQUÉ, et signalé s’il a disparu des deux côtés', () => {
+  const layout = require(path.join(root, 'scripts', 'lib', 'standalone-layout.cjs'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-embarque-'))
+  const app = path.join(dir, '.next', 'standalone')
+  for (const relatif of layout.MODULES_EXECUTION) {
+    const cible = path.join(app, relatif)
+    fs.mkdirSync(path.dirname(cible), { recursive: true })
+    fs.writeFileSync(cible, relatif.endsWith('.js') ? '// client genere' : '{"name":"x"}')
+  }
+
+  // Cas A — la compilation a embarqué next-auth dans un morceau (cas réel).
+  fs.mkdirSync(path.join(app, '.next', 'server', 'chunks'), { recursive: true })
+  fs.writeFileSync(path.join(app, '.next', 'server', 'chunks', '8858.js'), 'const c="next-auth.session-token";')
+  assert.deepEqual(layout.modulesExecutionManquants(app), [], 'embarqué : rien à signaler')
+
+  // Cas B — le module est physiquement copié (autre stratégie de compilation).
+  fs.rmSync(path.join(app, '.next', 'server'), { recursive: true, force: true })
+  fs.mkdirSync(path.join(app, 'node_modules', 'next-auth'), { recursive: true })
+  fs.writeFileSync(path.join(app, 'node_modules', 'next-auth', 'package.json'), '{"name":"next-auth"}')
+  assert.deepEqual(layout.modulesExecutionManquants(app), [], 'copié : rien à signaler')
+
+  // Cas C — ni l'un ni l'autre : la vérification DOIT refuser la sortie.
+  fs.rmSync(path.join(app, 'node_modules', 'next-auth'), { recursive: true, force: true })
+  assert.deepEqual(layout.modulesExecutionManquants(app), ['(ni copié, ni embarqué) next-auth'])
+
+  fs.rmSync(dir, { recursive: true, force: true })
+  assert.deepEqual(layout.MODULES_EMBARQUES.map(m => m.nom), ['next-auth'], 'liste des modules embarqués explicite')
 })
 
 test('le post-build ne casse pas les builds cloud (Vercel) et distingue l’empaquetage desktop', () => {
