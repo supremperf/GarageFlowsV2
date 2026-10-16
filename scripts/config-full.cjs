@@ -42,7 +42,13 @@ async function resolveMissingKey(api, env, name, { used, scope = 'serveur' } = {
   console.log(`${name} : original importé depuis le coffre (masqué).`)
   return 'imported'
 }
-async function full(api) {
+async function full(api, { automatic = false } = {}) {
+  if (automatic) {
+    const policy = loadPolicy(api.root)
+    const selected = core.namesForProfile(policy.names, 'licences')
+    const excluded = [...policy.entries.filter(e => !selected.includes(e.name)).map(e => e.name), ...Object.keys(policy.manifest.forbiddenAliases)]
+    api = require('./config-rebuild.cjs').automaticApi(api, { platform: policy.manifest.platformProvided, excluded })
+  }
   const root = api.root
   const tools = api.services || services
   const policy = loadPolicy(root)
@@ -73,10 +79,17 @@ async function full(api) {
   console.log(`\nCONFIG COMPLET — ${policy.entries.length} variables classées, ${policy.names.length} paramètres applicatifs.`)
   console.log('Plan : inventaire → dépendances → accès Vercel/Neon/Redis → secrets/licences → fichiers/keygen/signature locale/client → SQL → Vercel → santé.')
   console.log('Les comptes externes, ressources choisies et éventuels frais restent sous votre contrôle. Aucun reset, aucun remplacement aveugle de clés, aucune création de comptes fictifs.')
-  console.log('Une autorisation initiale couvre les installations npm, fichiers locaux, migrations sur une BASE VIDE et déploiement sur le projet Vercel que vous autorisez. Une base existante et un changement d’autorité exigent une confirmation supplémentaire.')
-  console.log('Première installation sur base vide : génération automatique des secrets 256 bits et de la première paire de licence P-256, sauvegarde et synchronisation des ancrages publics. Première clé Ed25519 dans un coffre hors dépôt, sans copier-coller. Une autorité locale existante ou une base utilisée ne permet jamais de remplacer des clés perdues automatiquement.')
-  console.log('Aucune valeur de clé n’est demandée sur une première installation : les secrets absents sont générés, écrits dans .env, .env.server.local, keys/ (P-256 + keygen) puis synchronisés dans Vercel production. Une base contenant des DONNÉES MÉTIER reste protégée : les registres de migrations (_gf_migrations/_prisma_migrations) ne comptent pas comme données.')
-  console.log('Secrets Sensitive illisibles : après confirmation de la base cible et inspection SQL vide, les secrets symétriques introuvables sont générés et remplacés automatiquement sur Vercel. Sur une base utilisée, accord explicite supplémentaire requis. Les URLs de base ne sont jamais inventées.')
+  if (!automatic) {
+    console.log('Une autorisation initiale couvre les installations npm, fichiers locaux, migrations sur une BASE VIDE et déploiement sur le projet Vercel que vous autorisez. Une base existante et un changement d’autorité exigent une confirmation supplémentaire.')
+    console.log('Première installation sur base vide : génération automatique des secrets 256 bits et de la première paire de licence P-256, sauvegarde et synchronisation des ancrages publics. Première clé Ed25519 dans un coffre hors dépôt, sans copier-coller. Une autorité locale existante ou une base utilisée ne permet jamais de remplacer des clés perdues automatiquement.')
+    console.log('Aucune valeur de clé n’est demandée sur une première installation : les secrets absents sont générés, écrits dans .env, .env.server.local, keys/ (P-256 + keygen) puis synchronisés dans Vercel production. Une base contenant des DONNÉES MÉTIER reste protégée : les registres de migrations (_gf_migrations/_prisma_migrations) ne comptent pas comme données.')
+    console.log('Secrets Sensitive illisibles : après confirmation de la base cible et inspection SQL vide, les secrets symétriques introuvables sont générés et remplacés automatiquement sur Vercel. Sur une base utilisée, accord explicite supplémentaire requis. Les URLs de base ne sont jamais inventées.')
+  }
+  if (automatic) console.log('MODE RECONSTRUCTION : AUTORISER couvre la sauvegarde privée, la génération de nouvelles clés symétriques serveur, la suppression/recréation des variables production modifiables et le déploiement. Sessions et jetons existants seront invalidés. Base avec données métier : arrêt avant rotation. Les connexions Storage/intégration et preview/development sont préservés ; aucune clé fournisseur n’est inventée.')
+  if (automatic && fs.existsSync(path.join(root, '.vercel/project.json'))) {
+    const linked = JSON.parse(fs.readFileSync(path.join(root, '.vercel/project.json'), 'utf8'))
+    console.log(`Cible de reconstruction : ${String(linked.projectName || linked.projectId).replace(/[\x00-\x1f\x7f]/g, '')} (équipe ${String(linked.orgId).replace(/[\x00-\x1f\x7f]/g, '')}), production uniquement.`)
+  }
   console.log('La configuration de production n’est pas exécutée sur vos comptes tant que vous n’autorisez pas ce plan.')
   if (await api.question('Saisir AUTORISER pour exécuter le plan complet (Entrée = annuler)') !== 'AUTORISER') return
   core.assertNodeVersion()
@@ -118,9 +131,10 @@ async function full(api) {
     }
     const remote = await step('accès-et-configuration-Vercel', () => api.setupVercel())
     // Reject obsolete names even if they came from an integration; don't quietly paper over them.
-    assertNoAliases(remote.values, policy)
+    assertNoAliases(automatic ? Object.fromEntries(Object.entries(remote.values).filter(([n]) => !['DATABASE_URL_UNPOOLED'].includes(n))) : remote.values, policy)
     assertSafeServerOverrides(remote)
     env = await api.importRemote(env, remote, names, { deferGenerated: true })
+    if (automatic) for (const name of remote.generatedHere || []) noteGenerated('serveur', name)
     // Recovery from local issuer configuration is safe only after matching the Vercel target.
     const keygenFile = path.join(root, 'keys/server_config.json')
     if (!env.GARAGEFLOW_API_KEY && fs.existsSync(keygenFile)) {
@@ -287,6 +301,12 @@ async function full(api) {
       }
       const inspectedDesktopUrl = desktop.DATABASE_URL || 'file:./dev.db'
       const localDatabase = await tools.inspectDesktop(root, inspectedDesktopUrl)
+      if (automatic && localDatabase.empty) {
+        for (const name of desktopNames.filter(n => core.GENERATED[n])) {
+          desktop[name] = crypto.randomBytes(32).toString(core.GENERATED[name])
+          noteGenerated('desktop', name)
+        }
+      }
       const missingDesktop = Object.keys(core.GENERATED).filter(n => desktopNames.includes(n) && !desktop[n])
       if (localDatabase.empty) {
         if (missingDesktop.length) console.log(`SQLite sans données métier (${localDatabase.ignored ? `${localDatabase.ignored} entrée(s) technique(s) ignorée(s) : registres de migrations` : 'aucune ligne métier'}) : ${missingDesktop.length} clé(s) desktop générée(s) automatiquement, valeurs masquées.`)
@@ -341,7 +361,7 @@ async function full(api) {
       }
       console.log('Migrations et schéma vérifiés.')
     })
-    if (database.empty) await step('première-licence-admin', async () => {
+    if (database.empty && !automatic) await step('première-licence-admin', async () => {
       if (!await api.yes('Créer la première licence ADMIN pour accéder au control-plane (privilèges complets)')) {
         pending('admin-access', 'Licence admin à émettre avec le keygen ; aucun privilège attribué automatiquement.'); return
       }
@@ -350,6 +370,10 @@ async function full(api) {
     })
     await step('variables-Vercel-production', async () => {
       if (!await api.syncVercel(env, names, remote, { authorized: true })) throw new Error('Synchronisation non autorisée, pas de déploiement.')
+    })
+    if (database.empty && automatic) await step('première-licence-admin', async () => {
+      console.log(await tools.bootstrapAdmin(root, env))
+      console.log('Première licence admin enregistrée uniquement dans keys/bootstrap-admin-license.json, après reconstruction des variables.')
     })
     await step('déploiement-et-santé', async () => {
       const output = await api.tool('vercel', ['deploy', '--prod', '--yes'], { label: 'Déploiement production' })
@@ -375,7 +399,7 @@ async function full(api) {
       }
       if (fs.existsSync(keygenFile)) console.log('keys/server_config.json : URL + GARAGEFLOW_API_KEY lus par keygen (aucune valeur affichée).')
       if (fs.existsSync(path.join(folder, 'publisher.json'))) console.log('Publication : chemin/keyId de la clé Ed25519 dans GarageFlow-configuration/publisher.json ; clé privée uniquement dans le coffre hors dépôt.')
-      console.log('Vercel production : seules les variables absentes y sont ajoutées en Sensitive par l’étape précédente ; les valeurs Sensitive ne sont plus relisibles, conservez une copie chiffrée.')
+      console.log(automatic ? 'Vercel production : variables modifiables reconstruites et vérifiées ; variables Storage/intégration préservées. Conservez les sauvegardes privées.' : 'Vercel production : ajouts/remplacements autorisés vérifiés ; les valeurs Sensitive ne sont plus relisibles, conservez une copie chiffrée.')
       saveReport()
     })
     await step('prérequis-keygen-Python', async () => {

@@ -3,6 +3,24 @@
 
 ## [Non publié] — 2026-10-16 — chaîne build → installeur Windows réparée à la cause, page unique, vue globale des rendez-vous
 
+### `node config` — reconstruction automatique production après AUTORISER
+
+- Nouveau mode par défaut : sauvegardes privées, récupération des connexions
+  Vercel Storage, normalisation des noms Neon/Postgres/KV, inspection SQL,
+  nouvelles clés symétriques, profils locaux puis suppression/réécriture des
+  variables production modifiables. Pas de saisie de credentials applicatifs.
+- Storage/intégrations et variables plateforme protégés ; preview/development
+  inchangés. Les credentials externes ne sont ni inventés ni intégrés au code.
+- Refus avant suppression si la base contient des données métier, si les accès
+  ne sont pas récupérables ou si la cible/inventaire change. Contrôle SQL repris
+  juste avant l’effacement ; aucune nouvelle autorité privée de remplacement.
+- Journal privé de reprise lié au projet : conserve exactement les nouvelles
+  valeurs, y compris les paramètres tiers, après un échec partiel. Relecture
+  finale, reçus et restauration des paramètres non générables à la relance.
+- `node config --conserver-secrets` conserve le plan interactif précédent.
+  Fichiers générés et aide renvoient explicitement à ce mode pour compléter
+  sans rotation. Tests de reconstruction ajoutés aux commandes locales et CI.
+
 ### `node config` — les variables déjà présentes chez Vercel ne bloquent plus
 
 Constat d'usage : les secrets sont poussés chez Vercel en `--sensitive`, donc

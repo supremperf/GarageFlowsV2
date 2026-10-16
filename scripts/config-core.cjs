@@ -98,7 +98,7 @@ function encodeValue(name, value) {
 }
 function serializeEnv(env, names, profile) {
   const lines = ['# Généré par config — SECRETS LOCAUX, ne jamais committer.',
-    `# Profil : ${profile}. Relancer npm run config pour compléter, sans rotation.`,
+    `# Profil : ${profile}. Relancer node config --conserver-secrets pour compléter sans rotation.`,
     '# Les variables non applicables à ce profil ne sont pas exportées.', '']
   for (const name of names) {
     const v = normalizeValue(name, env[name])

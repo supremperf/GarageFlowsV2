@@ -23,7 +23,8 @@ function help() {
   console.log(`GarageFlow — assistant config (Node 22)
 
   npm run config                     Plan COMPLET automatique (autorisation initiale)
-  node config --profile full          Desktop + cloud + licences + keygen + publication
+  node config --profile full          Reconstruction automatique (production)
+  node config --conserver-secrets     Plan conservateur : garder les secrets existants
   node config --audit                 Inventaire/rapport du dépôt, sans accès cloud
   node config --list                  Couverture des variables, noms/destinations sans valeurs
   node config --profile desktop      SQLite / Electron (développement local)
@@ -34,7 +35,12 @@ function help() {
   node config --diagnose-sql          Diagnostic PostgreSQL en lecture seule
   node config --help
 
-Clés : toute clé symétrique ABSENTE est générée automatiquement (256 bits) sur une
+Par défaut : AUTORISER lance la reconstruction des variables production sur une
+base sans données métier. Sauvegarde AVANT suppression ; Storage et variables
+plateforme protégés. Authentification officielle requise, aucun secret à saisir.
+Une base utilisée ou un credential inaccessible bloque AVANT suppression.
+
+Mode --conserver-secrets : toute clé symétrique ABSENTE est générée automatiquement (256 bits) sur une
 première installation (base vide, aucune donnée métier) puis écrite dans .env,
 .env.server.local, keys/ (P-256, keygen) et synchronisée dans Vercel production.
 Variable existant chez Vercel SANS être relisible (Sensitive) : elle est RÉSOLUE —
@@ -182,7 +188,9 @@ async function pullVercel() {
     const raw = await tool('vercel', ['env', 'ls', 'production', '--format=json'])
     let records
     try {
-      records = JSON.parse(raw).envs
+      const inventory = JSON.parse(raw)
+      if (inventory.pagination?.next) throw new Error()
+      records = inventory.envs
       if (!Array.isArray(records)) throw new Error()
     } catch { throw new Error('Vercel : métadonnées JSON invalides, synchronisation refusée.') }
     await tool('vercel', ['env', 'pull', file, '--environment=production', '--yes'])
@@ -200,17 +208,17 @@ async function pullVercel() {
         delete values[r.key]
       }
     }
-    return { values, hidden, present, stamps }
+    return { values, hidden, present, stamps, records }
   } finally { fs.rmSync(dir, { recursive: true, force: true }) }
 }
-async function setupVercel() {
+async function setupVercel({ authorized = false } = {}) {
   console.log('\nVercel : connexion puis sélection EXPLICITE du projet cible (production uniquement).')
   try { await tool('vercel', ['whoami']) }
   catch { await tool('vercel', ['login'], { interactive: true }) }
   const linkFile = path.join(ROOT, '.vercel/project.json')
   if (fs.existsSync(linkFile)) {
     const linked = JSON.parse(fs.readFileSync(linkFile, 'utf8'))
-    if (!await yes(`Confirmer le projet Vercel déjà lié ${safeLabel(linked.projectName || linked.projectId)} (équipe ${safeLabel(linked.orgId)})`)) throw new Error('Cible Vercel non confirmée. Relier explicitement le projet correct avant de poursuivre.')
+    if (!authorized && !await yes(`Confirmer le projet Vercel déjà lié ${safeLabel(linked.projectName || linked.projectId)} (équipe ${safeLabel(linked.orgId)})`)) throw new Error('Cible Vercel non confirmée. Relier explicitement le projet correct avant de poursuivre.')
   } else await tool('vercel', ['link'], { interactive: true })
   const project = JSON.parse(fs.readFileSync(path.join(ROOT, '.vercel/project.json'), 'utf8'))
   console.log(`Cible Vercel : ${safeLabel(project.projectName || project.projectId)} (équipe ${safeLabel(project.orgId)}).`)
@@ -635,7 +643,7 @@ async function main() {
   profile ||= 'full'
   if (profile === 'full') {
     if (args.includes('--check')) throw new Error('Pour une validation locale, choisir --profile desktop, pwa ou licences.')
-    return require('./scripts/config-full.cjs').full(module.exports)
+    return require('./scripts/config-full.cjs').full(module.exports, { automatic: !args.includes('--conserver-secrets') })
   }
   const names = core.namesForProfile(allNames, profile)
   const envFile = path.join(ROOT, profile === 'desktop' ? '.env' : '.env.server.local')

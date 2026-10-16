@@ -10,7 +10,90 @@ npm run config
 
 Le fichier **`config` à la racine lance désormais le mode complet par défaut**, pas une suite de réglages manuels. **Node.js >=22.12.0 et <23, et npm** sont les seuls prérequis du lanceur ; si Node est absent, le lanceur Windows le signale et conserve le message à l’écran. Il ne lance pas un installateur système privilégié sans autorisation.
 
-Une fois le plan affiché, saisir **`AUTORISER`**. Ensuite, les étapes techniques s’enchaînent. Les demandes supplémentaires concernent des accès, la sélection d’une cible ambiguë, des secrets non récupérables ou une opération risquée : création de ressource, remplacement explicite d’autorité, première licence admin, migration d’une base utilisée, nouveau canal pour un parc existant. La première génération de clés sur une installation neuve/base vide est couverte par `AUTORISER`, sans saisie de valeurs de clés. Aucun compte, mot de passe fournisseur ou domaine n’est inventé.
+Une fois le plan affiché, saisir **`AUTORISER`**. Par défaut, cette autorisation
+couvre désormais une **reconstruction** des variables production modifiables
+sur une base sans données métier. Le projet déjà lié est affiché avant
+l’autorisation. Une première connexion officielle et la sélection du projet
+restent nécessaires si aucune session/cible n’existe ; aucun mot de passe
+applicatif n’est demandé par le configurateur.
+
+## Reconstruction automatique (par défaut)
+
+```sh
+node config                       # reconstruction autorisée par AUTORISER
+node config --conserver-secrets   # ancien plan conservateur, sans rotation globale
+```
+
+Le mode automatique :
+
+1. Réutilise la session Vercel et récupère **production** avant toute suppression.
+   Si des connexions manquent, consulte le Storage et tente de rafraîchir les
+   intégrations **déjà attachées à ce projet**. Il ne choisit pas une autre base
+   dans un compte et ne crée ni compte, ni ressource payante.
+2. Reconnaît `DATABASE_URL_UNPOOLED` / `POSTGRES_URL_NON_POOLING` comme
+   `DIRECT_URL`, `POSTGRES_URL` / `POSTGRES_PRISMA_URL` comme `DATABASE_URL`, et
+   `KV_REST_API_URL` / `KV_REST_API_TOKEN` comme les paramètres REST Upstash.
+   Un token Redis **read-only** ne remplace jamais le token d’écriture. Les
+   connexions poolée/directe doivent réellement être disponibles : aucun
+   hostname n’est deviné. Les paramètres réels `PGHOST`/`PGHOST_UNPOOLED`,
+   `PGUSER`, `PGPASSWORD` et `PGDATABASE` peuvent aussi servir à construire les
+   connexions (credentials encodés, TLS requis). Les liens Markdown et `&amp;`
+   peuvent être nettoyés.
+3. Sauvegarde les profils existants, la configuration keygen et les variables
+   distantes relisibles dans un dossier privé
+   `GarageFlow-configuration/rebuild-*/`. Les secrets Sensitive illisibles ne
+   deviennent pas récupérables par cette sauvegarde.
+4. Inspecte PostgreSQL en lecture seule **avant** de générer des secrets. Une
+   base avec données métier bloque le mode reconstruction ; utiliser le mode
+   conservateur. Sur base vide, de nouvelles clés symétriques serveur de
+   256 bits sont générées, même si les précédentes étaient présentes. Les
+   autorités P-256/Ed25519 et les vraies clés historiques ne sont pas remplacées
+   au hasard. Un coffre chiffré non déverrouillé bloque plutôt que demander son
+   secret. Les clés desktop sont indépendantes : renouvelées seulement si la
+   SQLite locale est vide, conservées si elle contient des données.
+5. Écrit `.env.server.local`, `.env` (SQLite desktop), le keygen et les sources
+   Storage dans `.env.storage.local`. Les dernières connexions sont aussi
+   sauvegardées dans un coffre lié aux identifiants équipe/projet. Ces fichiers
+   sont privés/ignorés par Git et **ne sont jamais embarqués dans le code**.
+6. Conserve le domaine HTTPS existant ; s’il manque, récupère un alias production
+   réel via Vercel (préférence à un domaine personnalisé). Ne crée pas de DNS.
+   Valide Redis par PING et les profils, puis exécute les migrations/contrôles SQL
+   existants, sans reset ni `db push` destructif.
+7. Recontrôle projet, inventaire distant et absence de nouvelles données métier.
+   Prépare un journal privé et les valeurs de réécriture **avant** de retirer
+   les variables production modifiables ; les réécrit ensuite. Les noms connus
+   hors profil/obsolètes sont retirés sans réexporter de secrets desktop. Les
+   paramètres tiers non générables sont préservés lorsqu’ils sont disponibles.
+8. Relit présence/métadonnées et valeurs relisibles, enregistre les reçus, puis
+   crée le premier accès admin sur base vide et déploie. La licence admin est
+   uniquement dans `keys/bootstrap-admin-license.json`, jamais dans le terminal.
+
+**Pas de suppression des variables gérées par les intégrations Storage ou la
+plateforme**, ni des environnements **preview/development**. Effacer ces accès
+avant leur récupération ne serait pas une automatisation sûre. Une variable
+requise non récupérable, un secret tiers illisible non sauvegardé, un défaut
+SQL/Redis ou un choix de ressource ambigu provoquent un arrêt explicite, **sans
+boucle de saisie manuelle et avant l’effacement distant**.
+
+L’opération de suppression/réécriture **n’est pas atomique**. En cas d’échec,
+`GarageFlow-configuration/rebuild-pending.json` conserve en privé les nouvelles
+valeurs et le plan. Une relance sur la même cible les réutilise au lieu de
+régénérer les clés ; une autre cible est refusée. Ne pas supprimer ce journal
+pour masquer un incident. Les fichiers privés contiennent des secrets en clair :
+les protéger par ACL/chiffrement sur Windows, ne jamais les publier. POSIX :
+fichiers `0600`, dossiers `0700`.
+
+**Limites externes :** une variable « Sensitive » est non relisible. Storage et
+ses intégrations ne peuvent être récupérés sans session et droits suffisants.
+Le configurateur ne peut ni inventer une clé API fournisseur ni retrouver un
+mot de passe perdu. Les identifiants publiés dans un chat doivent être révoqués
+chez leur fournisseur, puis récupérés depuis l’intégration actualisée. Aucun
+credential du chat n’est codé en dur. Conserver un token Blob ne suffit pas à
+implémenter les sauvegardes Blob : les limites applicatives de stockage durable,
+SMTP/identité légale et service de publication externe restent signalées.
+
+Les sections suivantes décrivent aussi le **mode conservateur** et ses choix
+interactifs ; les différences du mode reconstruction sont précisées ci-dessus.
 
 ## Analyse du dépôt et couverture
 
@@ -25,7 +108,7 @@ npm run config:audit  # réactualise l’inventaire ; aucun accès cloud
 
 L’inventaire lit les fichiers texte de l’ensemble des sources suivies/non ignorées et les références littérales d’environnement. Ce n’est pas une certification de chaque comportement métier ni un test des services externes. Les binaires sont identifiés, pas désassemblés. Les rapports ne contiennent pas de valeurs secrètes.
 
-## Plan complet exécuté
+## Plan complet conservateur (`--conserver-secrets`)
 
 1. **Inventaire du dépôt** : rapport local sans secrets et classification de tout le contrat d’environnement.
 2. **Dépendances** : si nécessaires, `npm ci` depuis le lockfile ; génération des deux clients Prisma. Le setup desktop est neutralisé pendant l’installation des dépendances cloud, puis exécuté avec son propre profil.
@@ -40,7 +123,7 @@ L’inventaire lit les fichiers texte de l’ensemble des sources suivies/non ig
 11. **Clients packagés** : sur autorisation, aligner les défauts publics compilés de licence, mise à jour et liens publics sur les endpoints desktop validés (les endpoints existants distincts sont conservés) ; ajouter uniquement son hostname aux listes de téléchargement autorisées du client et du signer. Aucun secret dans ces modifications. Un `.env` seul ne configure pas les binaires déjà installés : **rebuild et distribution restent nécessaires**.
 12. **SQL** : `migrate deploy`, `migrate status`, puis comparaison du schéma réel avec le schéma Prisma (`migrate diff --exit-code`). Base utilisée : confirmation `MIGRER` après vérification de sauvegarde/PITR. Drift/échec : arrêt ; jamais de `db push`, reset, seed démo destructif ou modification arbitraire de l’historique.
 13. **Premier accès admin** : proposition explicite de créer une licence admin signée uniquement pour la première installation. Le jeton est dans un fichier local privé, pas dans le terminal. Aucune licence existante remplacée.
-14. **Vercel production** : seconde lecture avant mutation, refus de conflit/changement concurrent, ajouts des seules variables absentes. Valeurs transmises par stdin, pas par arguments de commande. Jamais de suppression ni `--force`. Déploiement après succès SQL/synchronisation, puis contrôle `/api/health` du nouveau deployment via `vercel curl`. La sonde du domaine public est également contrôlée ; DNS/protection indisponibles apparaissent dans le rapport.
+14. **Vercel production** : seconde lecture avant mutation, refus de conflit/changement concurrent, ajouts des variables absentes et remplacements explicitement autorisés. Valeurs transmises par stdin, pas par arguments de commande. Les remplacements de secrets illisibles sont nommément autorisés ; aucune suppression globale dans ce mode conservateur. Déploiement après succès SQL/synchronisation, puis contrôle `/api/health` du nouveau deployment via `vercel curl`. La sonde du domaine public est également contrôlée ; DNS/protection indisponibles apparaissent dans le rapport.
 15. **Publication locale (avant migrations/déploiement)** : sur une installation dont la première autorité vient d’être générée automatiquement, création/enregistrement de la première clé Ed25519 **hors du dépôt**, sans copier-coller. Sinon, réutilisation/import de l’original ou création explicitement autorisée d’un nouveau canal. Ajout de sa clé publique sans retirer les clés historiques ; mémorisation seulement du chemin/keyId. La commande `release:sign` utilise automatiquement cette configuration. La clé privée n’est jamais envoyée au Vercel PWA.
 16. **Keygen Python** : recherche d’un Python >=3.10, vérification de `cryptography`, installation utilisateur proposée par le plan si manquante ; impossibilité d’installation indiquée, pas de faux succès.
 

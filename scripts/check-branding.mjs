@@ -52,6 +52,7 @@ const IDENTIFIER_PATTERNS = [
 
 // ── Exceptions EXPLICITES {fichier, sous-chaîne, raison} (couples exacts) ──────
 const EXPLICIT_EXCLUSIONS = [
+  { file: 'scripts/config-rebuild.cjs', needle: "'GarageFlow-configuration'", reason: 'chemin physique du coffre de configuration existant — sauvegardes et journal de reconstruction' },
   { file: 'scripts/lib/config-secrets-auto.cjs', needle: "'GarageFlow-configuration'", reason: 'chemin physique du coffre local existant — compatibilité des reçus de configuration' },
   { file: 'scripts/config-keys.cjs', needle: 'GarageFlow-configuration/generated-keys.json', reason: 'chemin physique du registre de clés existant — ne pas orpheliner les originaux' },
   { file: 'scripts/config-policy.cjs', needle: 'GarageFlow-configuration/publisher.json', reason: 'destination physique du coffre éditeur existant — compat des plans config' },

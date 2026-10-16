@@ -792,3 +792,47 @@ for (const existing of [false, true]) {
     }
   })
 }
+
+test('automatic full plan: one AUTORISER, no manual credential prompts, backups before production rewrite', async t => {
+  const f = fullFixture(t)
+  copy(f.dir, ['electron/license-endpoint.js', 'electron/main.js', 'electron/update-verify.js', 'src/lib/public-url.ts', 'scripts/sign-release-manifest.mjs'])
+  f.api.services.bootstrapAdmin = async () => 'simulated-admin-license-created'
+  fs.mkdirSync(path.join(f.dir, '.vercel'))
+  fs.writeFileSync(path.join(f.dir, '.vercel/project.json'), JSON.stringify({ orgId: 'team_test', projectId: 'prj_test' }))
+  const initial = await f.api.setupVercel()
+  let current = { ...initial, values: { ...initial.values }, stamps: Object.fromEntries([...initial.present].map(n => [n, `old-${n}`])), records: [...initial.present].map(key => ({ key })) }
+  f.api.setupVercel = async options => { assert.equal(options.authorized, true); return structuredClone(current) }
+  f.api.pullVercel = async () => structuredClone(current)
+  const oldTool = f.api.tool
+  const mutations = []
+  f.api.tool = async (tool, args, options = {}) => {
+    if (tool === 'vercel' && args[0] === 'env') {
+      const [_, command, name, environment] = args
+      assert.equal(environment, 'production')
+      mutations.push(command)
+      const folder = path.join(f.dir, 'GarageFlow-configuration')
+      assert.ok(fs.existsSync(path.join(folder, 'rebuild-pending.json')), 'journal before mutation')
+      if (command === 'rm') {
+        assert.equal(options.input, undefined)
+        current.present.delete(name); current.hidden.delete(name); delete current.values[name]; delete current.stamps[name]
+        current.records = current.records.filter(r => r.key !== name)
+      } else {
+        current.present.add(name); current.stamps[name] = `new-${name}`; current.records.push({ key: name })
+        if (args.includes('--sensitive')) current.hidden.add(name)
+        else current.values[name] = options.input
+      }
+      return ''
+    }
+    return oldTool(tool, args, options)
+  }
+  await full(f.api, { automatic: true })
+  assert.equal(f.questions.length, 1)
+  assert.match(f.questions[0], /AUTORISER/)
+  assert.ok(mutations.includes('rm') && mutations.includes('add'))
+  const server = core.readEnv(path.join(f.dir, '.env.server.local'))
+  assert.notEqual(server.NEXTAUTH_SECRET, f.env.NEXTAUTH_SECRET)
+  assert.equal(server.DATABASE_URL, f.env.DATABASE_URL)
+  assert.ok(!current.present.has('GF_INTERNAL_EXPORT_KEY'))
+  assert.ok(!current.present.has('GF_UPDATE_CHANNEL'))
+  assert.ok(!fs.existsSync(path.join(f.dir, 'GarageFlow-configuration/rebuild-pending.json')))
+})

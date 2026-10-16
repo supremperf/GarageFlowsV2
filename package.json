@@ -96,7 +96,7 @@
     "check:artifact-fuses": "node scripts/check-artifact-fuses.mjs",
     "config": "node config",
     "config:check": "node config --check",
-    "test:config": "node --test tests/config.test.cjs tests/config-full.test.cjs tests/config-secrets-auto.test.cjs",
+    "test:config": "node --test tests/config.test.cjs tests/config-full.test.cjs tests/config-secrets-auto.test.cjs tests/config-rebuild.test.cjs",
     "config:audit": "node scripts/config-audit.cjs",
     "keygen": "node scripts/config-keygen.cjs",
     "audit:strict": "node scripts/audit-ci.js",

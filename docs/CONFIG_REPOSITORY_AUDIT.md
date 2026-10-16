@@ -15,7 +15,7 @@
 - Licence : P-256 privé côté émetteur/keygen ; clé publique embarquée en Electron et Next. Record-MAC HMAC et pepper distincts. Le keygen attend `keys/private.pem`, `keys/public.pem` et `keys/server_config.json`.
 - Portail : secrets de sessions/liens, signatures et TOTP séparés. SMTP, TOTP, sauvegardes et identifiants de facturation ont leurs propres clés ; une rotation involontaire détruit l’accès aux cryptogrammes.
 - Publication : Ed25519 privé hors dépôt, clés publiques historiques conservées dans le client. Le service de publication garagesite3 est un autre dépôt et ne peut pas être déployé à partir de ces seules sources.
-- Outillage : scripts PowerShell de configuration/reset/rotation déjà présents. Le mode complet portable ne lance pas les resets destructifs et ne réaligne pas un historique SQL au hasard.
+- Outillage : scripts PowerShell de configuration/reset/rotation déjà présents. Le mode complet par défaut reconstruit les variables production modifiables sur base vide après AUTORISER (sauvegardes/journal, Storage protégé). --conserver-secrets garde le plan conservateur. Aucun reset SQL ni réalignement arbitraire de migrations.
 - Secrets non relisibles : une variable Sensitive déjà présente n’est retirée/recréée chez Vercel que lorsque sa valeur locale est générée (base cible confirmée puis inspectée sans données métier dans le plan complet) ou lorsque le remplacement est autorisé explicitement. Les URLs de base viennent de Neon, jamais d’une valeur inventée ; les reçus ne contiennent que des empreintes SHA-256.
 - Dépendances : Node 22/npm pour l’application ; Python/cryptography pour le keygen. Builds Windows, signature de code, identité légale et fournisseur de facturation exigent des ressources externes.
 
