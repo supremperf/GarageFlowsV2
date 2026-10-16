@@ -1,6 +1,92 @@
 <!-- doc-numbers: journal — comptes datés point-dans-le-temps, exempts du contrôle de compte courant (V13.1) -->
 # Changelog
 
+## [Non publié] — 2026-10-16 — chaîne build → installeur Windows réparée à la cause, page unique, vue globale des rendez-vous
+
+### P0 — `npm run dist` s'arrêtait sur « server.js NOT found »
+- Cause réelle : la sortie autonome EXISTAIT, un niveau plus bas
+  (`.next/standalone/<chemin-relatif>/server.js`), parce que Next.js déduit la
+  racine du workspace et qu'un `package-lock.json` hors du dépôt suffit à la
+  décaler. Masquer le message aurait livré un installeur sans serveur.
+- `next.config.mjs` : `outputFileTracingRoot` épinglé sur la racine du projet.
+- `scripts/lib/standalone-layout.cjs` (nouveau) : la disposition autonome est
+  TROUVÉE, jamais présumée ; partagée par le post-build et les vérifications.
+- `scripts/post-build.js` : n'annonce plus un succès sans avoir lu la sortie ;
+  échec explicite avec la disposition observée ; purge de `.env` et des clés
+  privées, copie du manifeste de release.
+- `scripts/preflight-release.cjs` (nouveau) : pré-requis AVANT compilation
+  (clé publique de mise à jour, version cohérente, espace disque, cible).
+- `scripts/verify-standalone-build.cjs` (nouveau) : étape bloquante entre
+  `build` et `electron-builder` (serveur, pages statiques, `public/`, fichiers
+  requis).
+- `scripts/verify-installer.cjs` (nouveau) : contrôle de l'artefact réel
+  (nom `GarageFlows Setup <version>.exe`, taille, moteur NSIS, désinstalleur).
+- `package.json` : `dist` = `preflight:release` → `build` → `verify:standalone` →
+  `electron-builder --win --x64` → `check:artifact-secrets` →
+  `check:artifact-fuses` → `verify:installer` ; chaque étape échoue bruyamment.
+  `tests/build-dist-chain.test.cjs` entre dans `test:release-safety`.
+- `scripts/garageflow-env-manifest.json` : `GF_PACKAGE_DESKTOP` déclaré (toute
+  variable lue par un script doit l'être — garde-fou `env-manifest-drift`).
+- `tests/build-dist-chain.test.cjs` (nouveau) : 9/9.
+
+### Barre d'outils — plus de déplacement vertical
+- `.gf-hscroll` (`globals.css`) verrouille l'axe vertical
+  (`overflow-y: hidden`, `flex-wrap: nowrap`, `overscroll-behavior`) : un axe
+  `visible` devient `auto` dès que l'autre ne l'est plus — c'est cette règle CSS
+  qui faisait glisser les libellés hors du bandeau. Appliquée au `Header` et à la
+  bande des mécaniciens du `ScheduleBoard`.
+
+### Tableau de bord — vue globale des rendez-vous
+- `src/components/dashboard/AppointmentsSection.tsx` (nouveau) : toutes les
+  dates, ordre chronologique, jour de la semaine + date complète, client,
+  véhicule (marque/modèle/immatriculation), prestation, heure, statut ;
+  recherche et filtres (client, véhicule, immatriculation, date, période,
+  statut, ordre) ; ligne dépliable ; fiche client, fiche véhicule ; édition en
+  ligne ; confirmation, achèvement, annulation selon `can(role,'job:manage')`.
+- `GET /api/appointments` réécrit (filtres + pagination, portée garage),
+  `PATCH /api/appointments/[id]` (Zod `UpdateAppointmentSchema`, `validateSlot`),
+  `AuditEntityType` étendu. Aucune donnée ni table parallèle.
+
+### Clients & messages
+- `src/components/ClientPicker.tsx` (nouveau) : liste déroulante de clients
+  réelle (recherche, nombre de véhicules, ouverture de fiche, rafraîchissement
+  après ajout ou modification). Seule l'ENTRÉE « Rendez-vous » a été retirée de
+  cet espace.
+
+### Boutons de fermeture, une seule page, brouillons
+- `.gf-close` : boîte de 40 px (44 px au doigt) et pseudo-élément élargi passé en
+  `pointer-events: none` — il recouvrait les boutons voisins et leur volait le
+  clic. 17 boutons de fermeture réduits à une icône portent un nom accessible.
+- `src/app/page.tsx` : seize booléens de page remplacés par une variable unique
+  `surface` — ouvrir une page referme la précédente par construction.
+- `src/lib/ui/brouillon.ts` (nouveau) : les saisies en cours survivent au
+  changement de page ; fermer la page est un abandon et efface les brouillons de
+  CETTE page.
+- Volet Stock : fond `pointer-events-none` corrigé (les clics n'atteignaient
+  rien).
+
+### Réglage « Lancer GarageFlows au démarrage de Windows »
+- `electron/main.js` : `etatDemarrageAuto()` / `definirDemarrageAuto()`
+  (`getLoginItemSettings` / `setLoginItemSettings`, `process.execPath` +
+  `--autostart`), IPC `app:autostart-get` / `-set` ; lancement `--autostart`
+  sans vol de focus. `electron/preload.js` : `getAutostart` / `setAutostart`.
+- `src/components/settings/SystemeTab.tsx` (nouveau) + onglet « Système » :
+  l'état est RELU depuis Windows après chaque écriture — aucun miroir dans
+  `gf_settings.json`, le registre est la seule source.
+- Installeur inchangé côté privilèges : `asInvoker`, `perMachine: false`,
+  `allowElevation: false`.
+
+### Tests et mesure
+- `src/lib/__tests__/ui-navigation-et-demarrage.test.ts` (nouveau) : 12 garde-fous
+  de non-régression sur les mécanismes ci-dessus.
+- 104/104 `portal-access-reachable`, 2/2 `ui-lossless-compaction`, 8/8
+  `env-manifest-drift`, 42/42 copilote, 203/203 tests CJS, `eslint` 0 problème.
+- `npx tsc --noEmit` : 249 erreurs, ensemble identique à la référence (aucune
+  apparue, aucune disparue — contrôle de non-régression, pas une porte verte).
+- Suite vitest complète : 3 échecs, tous dans `prepare-test-db` (moteur Prisma à
+  télécharger depuis `binaries.prisma.sh`, injoignable dans cet environnement).
+- Rapport détaillé : `docs/RAPPORT_MISSION_2026-10-16.md`.
+
 ## [Non publié] — 2026-10-16 — `node config` génère toutes les clés manquantes et les écrit partout où elles sont lues
 
 ### Cause du blocage corrigée : une base neuve était vue comme « utilisée »
