@@ -86,7 +86,7 @@ export default function FinancialDashboard({ onClose }: Props) {
                 <option key={m} value={m} className="bg-[#111827]">{m} mois</option>
               ))}
             </select>
-            <button onClick={onClose} className="gf-close p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
+            <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>

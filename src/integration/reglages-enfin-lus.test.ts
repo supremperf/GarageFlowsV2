@@ -110,7 +110,11 @@ describe('GF-039 — les écrans lisent bien ces réglages', () => {
     expect(store).toContain('g.loanerEnabled !== false')
 
     const page = lire('app/page.tsx')
-    expect(page).toContain('loanerActif ? () => setIsLoanerPanelOpen(true) : undefined')
+    // Le mécanisme a changé de forme le 16/10/2026 (une SEULE page à l'écran :
+    // plus de booléen `isLoanerPanelOpen`, mais une `surface` unique). L'INTENTION
+    // est identique et reste vérifiée : l'entrée n'est câblée QUE si le garage a
+    // activé les véhicules de prêt — `onOpenLoaner` vaut une fonction ou rien.
+    expect(page).toContain("loanerActif ? () => ouvrirPage('loaner') : undefined")
   })
 
   it('le panneau lui-même n’est PAS démonté', () => {

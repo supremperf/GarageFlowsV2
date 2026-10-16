@@ -1,8 +1,11 @@
 export const dynamic = 'force-dynamic'
 
 /**
- * POST /api/appointments/[id] — staff action on an appointment (garage-scoped).
- * Body: { action: 'confirm' | 'cancel' | 'complete' }
+ * POST /api/appointments/[id]   — décision du garage sur un rendez-vous.
+ *   Body: { action: 'confirm' | 'cancel' | 'complete' }
+ * PATCH /api/appointments/[id]  — MODIFIER le rendez-vous (GF-DUR-054).
+ *   Body: champs de `UpdateAppointmentSchema` (date, heure, durée, motif, notes,
+ *         nom du client, véhicule, rattachement aux fiches).
  */
 
 import { NextResponse } from 'next/server'
@@ -10,7 +13,9 @@ import { prisma } from '@/lib/db'
 import { pushAppointmentDecision } from '@/lib/sync/appointment-sync'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { can } from '@/lib/authz'
-import { nextAppointmentStatus, type AppointmentStatus, type AppointmentAction } from '@/lib/portal/appointments'
+import { logAudit } from '@/lib/audit'
+import { UpdateAppointmentSchema } from '@/lib/schemas'
+import { nextAppointmentStatus, validateSlot, type AppointmentStatus, type AppointmentAction } from '@/lib/portal/appointments'
 
 const ACTIONS: readonly AppointmentAction[] = ['confirm', 'cancel', 'complete']
 
@@ -88,4 +93,132 @@ export const POST = withAuth(async (req, { params }: { params: { id: string } })
   const remontee = await pushAppointmentDecision(session.user.garageId, appointment.id, action)
 
   return NextResponse.json({ ok: true, status, clientPrevenu: remontee.remonte })
+})
+
+/**
+ * PATCH — modifier un rendez-vous.
+ *
+ * ─── Ce que le garage peut changer, et ce qu'il ne peut pas ──────────────────
+ *
+ * Tous les champs descriptifs : date, heure, durée, motif, notes, nom du client,
+ * véhicule — et le rattachement à une FICHE client/véhicule. Le STATUT reste
+ * hors de portée : il n'évolue que par les transitions de `POST`, qui portent
+ * seules les règles (créneau futur, atelier non saturé, remontée au client).
+ *
+ * ─── Un créneau reste un créneau ─────────────────────────────────────────────
+ *
+ * Déplacer un rendez-vous hors des horaires d'ouverture, ou vers une heure
+ * passée, produirait un rendez-vous que le client ne pourrait pas honorer. Les
+ * mêmes règles que la prise de rendez-vous de l'espace client sont donc
+ * appliquées (`validateSlot`) dès que la date, l'heure ou la durée changent.
+ *
+ * ─── Vie privée de la fiche liée ─────────────────────────────────────────────
+ *
+ * Un `clientId`/`vehicleId` fourni doit appartenir AU GARAGE. Sans ce contrôle,
+ * un identifiant deviné suffirait à faire pointer un rendez-vous vers la fiche
+ * d'un autre garage — et le tableau de bord afficherait le nom de ce client.
+ *
+ * ─── Le client est-il prévenu ? ──────────────────────────────────────────────
+ *
+ * Le protocole de synchronisation vers l'espace client ne transporte que des
+ * DÉCISIONS (`confirm`, `cancel`, `complete`) : il n'existe pas de message
+ * « créneau déplacé ». La réponse le dit donc franchement (`clientPrevenu`),
+ * et l'écran affiche un avertissement au comptoir. Annoncer une modification
+ * comme notifiée alors qu'elle ne l'est pas serait pire que de ne pas la faire.
+ */
+export const PATCH = withAuth(async (req, { params }: { params: { id: string } }) => {
+  const session = await requireSession()
+  if (!can(session.user.role, 'job:manage')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
+
+  const parsed = UpdateAppointmentSchema.safeParse(await req.json().catch(() => null))
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Données invalides', code: 'VALIDATION_ERROR', details: parsed.error.flatten() },
+      { status: 400 },
+    )
+  }
+  const corps = parsed.data
+
+  const existant = await prisma.appointment.findFirst({
+    where: { id: params.id, garageId: session.user.garageId },
+  })
+  if (!existant) return NextResponse.json({ error: 'Rendez-vous introuvable' }, { status: 404 })
+
+  // ── Rattachements : la fiche doit être CELLE DE CE GARAGE ──────────────────
+  if (corps.clientId) {
+    const fiche = await prisma.client.findFirst({
+      where: { id: corps.clientId, garageId: session.user.garageId },
+      select: { id: true },
+    })
+    if (!fiche) return NextResponse.json({ error: 'Client introuvable' }, { status: 400 })
+  }
+  if (corps.vehicleId) {
+    const fiche = await prisma.vehicle.findFirst({
+      where: { id: corps.vehicleId, garageId: session.user.garageId },
+      select: { id: true },
+    })
+    if (!fiche) return NextResponse.json({ error: 'Véhicule introuvable' }, { status: 400 })
+  }
+
+  // ── Créneau : mêmes règles que la prise de rendez-vous ─────────────────────
+  const date      = corps.date      ?? existant.date
+  const startTime = corps.startTime ?? existant.startTime
+  const durationMin = corps.durationMin ?? existant.durationMin
+  const creneauTouche =
+    corps.date !== undefined || corps.startTime !== undefined || corps.durationMin !== undefined
+
+  if (creneauTouche) {
+    const garage = await prisma.garage.findUnique({
+      where: { id: session.user.garageId },
+      select: { workshopStartHour: true, workshopEndHour: true },
+    })
+    const validation = validateSlot({
+      date, startTime, durationMin,
+      workshopStartHour: garage?.workshopStartHour ?? 8,
+      workshopEndHour: garage?.workshopEndHour ?? 18,
+      // Un rendez-vous DÉJÀ passé reste modifiable (notes, motif) : la règle
+      // « dans le futur » ne s'applique qu'au créneau qu'on déplace réellement.
+      ...(date === existant.date && startTime === existant.startTime
+        ? { now: new Date(0) }
+        : {}),
+    })
+    if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: 400 })
+  }
+
+  const maj = await prisma.appointment.update({
+    where: { id: existant.id },
+    data: {
+      ...(corps.clientName   !== undefined ? { clientName: corps.clientName } : {}),
+      ...(corps.vehicleModel !== undefined ? { vehicleModel: corps.vehicleModel } : {}),
+      ...(corps.licensePlate !== undefined ? { licensePlate: corps.licensePlate } : {}),
+      ...(corps.reason       !== undefined ? { reason: corps.reason } : {}),
+      ...(corps.date         !== undefined ? { date } : {}),
+      ...(corps.startTime    !== undefined ? { startTime } : {}),
+      ...(corps.durationMin  !== undefined ? { durationMin } : {}),
+      ...(corps.notes        !== undefined ? { notes: corps.notes } : {}),
+      ...(corps.clientId     !== undefined ? { clientId: corps.clientId } : {}),
+      ...(corps.vehicleId    !== undefined ? { vehicleId: corps.vehicleId } : {}),
+    },
+  })
+
+  await logAudit({ action: 'update', entityType: 'Appointment', entityId: maj.id, session, req })
+
+  // Le rendez-vous vient de l'espace client : le créneau déplacé n'y sera PAS
+  // répercuté automatiquement. On le dit, avec le motif, pour que le comptoir
+  // prévienne le client autrement.
+  const venuDuPortail = !!existant.portalUserId
+  return NextResponse.json({
+    ok: true,
+    appointment: maj,
+    clientPrevenu: !venuDuPortail,
+    ...(venuDuPortail
+      ? {
+          avertissement: creneauTouche
+            ? "Ce rendez-vous vient de l’espace client : son nouveau créneau n’y est pas répercuté automatiquement. Prévenez le client."
+            : "Ce rendez-vous vient de l’espace client : cette modification ne lui est pas transmise automatiquement.",
+        }
+      : {}),
+  })
 })

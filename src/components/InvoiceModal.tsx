@@ -181,7 +181,7 @@ export default function InvoiceModal({ job, mode, onClose }: Props) {
                 <Printer className="w-4 h-4" />
                 {t.print}
               </button>
-              <button onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-gray-100 text-gray-400">
+              <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-gray-100 text-gray-400">
                 <X className="w-5 h-5" />
               </button>
             </div>

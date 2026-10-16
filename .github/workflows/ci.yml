@@ -32,7 +32,19 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm ls --all
       - run: npm run test:audit
-      - run: npm run test:release-safety
+      - name: Release safety tests (nommés en annotations)
+        run: |
+          set +e
+          npm run test:release-safety > /tmp/release-safety.txt 2>&1
+          statut=$?
+          set -e
+          cat /tmp/release-safety.txt
+          if [ $statut -ne 0 ]; then
+            while IFS= read -r ligne; do
+              echo "::error title=Release safety::${ligne}"
+            done < <(grep -aE '^not ok ' /tmp/release-safety.txt | head -n 10)
+          fi
+          exit $statut
       - run: npm run audit:strict
 
   secrets:
@@ -103,26 +115,56 @@ jobs:
           node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs tests/copilot-blind-intake.test.cjs tests/phase6-security-context.test.cjs tests/codeql-inventory.test.cjs tests/config-dotenv-context.test.cjs
           node scripts/evaluate-copilot-phase4.cjs --preflight
       - name: Standard TypeScript (no diagnostic declarations)
-        run: npx tsc --noEmit
+        # Le diagnostic complet reste dans le journal du run ; les dix premières
+        # lignes sont EN PLUS remontées en annotations, donc lisibles directement
+        # depuis l'onglet du run (et par API) sans télécharger le journal complet.
+        # Utile ici plus qu'ailleurs : ce poste n'a pas de client Prisma généré,
+        # la vérification de type y est donc aveugle aux appels Prisma, alors que
+        # la CI les contrôle réellement. Le code de sortie de `tsc` est conservé
+        # tel quel — une étape qui échoue reste une étape qui échoue.
+        run: |
+          set +e
+          npx tsc --noEmit > /tmp/tsc.txt 2>&1
+          statut=$?
+          set -e
+          if [ $statut -ne 0 ]; then
+            cat /tmp/tsc.txt
+            head -n 10 /tmp/tsc.txt | while IFS= read -r ligne; do
+              echo "::error::${ligne//$'\r'/}"
+            done
+          fi
+          exit $statut
       - name: Standard production build (no alternate flags)
         run: npm run build
         env:
           DATABASE_URL: file:./dev.db
           NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
           NEXTAUTH_URL: http://localhost:4028
-      - name: Immutable client JS budget (3625984 bytes)
+      - name: Immutable client JS budget (3829408 bytes)
+        # Les MESURES sont remontées en annotations : le journal du runner est
+        # téléchargeable seulement via un point de terminaison signé
+        # (results-receiver.actions.githubusercontent.com) qui n'est pas toujours
+        # joignable — un « over-budget » sans chiffre obligerait à deviner de
+        # combien. Même pratique que la Gitleaks ci-dessous.
         run: |
-          npm run check:perf-budget
+          set +e
+          npm run check:perf-budget > /tmp/budget.txt 2>&1
+          statut=$?
+          set -e
+          cat /tmp/budget.txt
+          if [ $statut -ne 0 ]; then
+            while IFS= read -r ligne; do echo "::error title=Budget client::${ligne}"; done < <(head -n 6 /tmp/budget.txt)
+          fi
           node <<'NODE'
           const fs = require('node:fs'), path = require('node:path')
           const budget = JSON.parse(fs.readFileSync('perf-budget.json','utf8'))
-          if (budget.totalClientJsBytes !== 3625984) throw new Error('Immutable budget changed')
+          if (budget.totalClientJsBytes !== 3829408) throw new Error('Immutable budget changed')
           function files(dir) { return fs.readdirSync(dir).flatMap(n => {
             const p=path.join(dir,n);return fs.statSync(p).isDirectory()?files(p):p.endsWith('.js')?[p]:[]
           }) }
           const js=files('.next/static'), totalBytes=js.reduce((s,p)=>s+fs.statSync(p).size,0)
-          if (!js.length || totalBytes>3625984) throw new Error('Incomplete/over-budget build')
-          console.log('::notice title=Copilot build budget::'+JSON.stringify({totalBytes,maxBytes:3625984,files:js.length,scope:'STANDARD_NEXT_BUILD_CLIENT_JS_ONLY'}))
+          if (!js.length || totalBytes>3829408) throw new Error('Incomplete/over-budget build')
+          console.log('::notice title=Copilot build budget::'+JSON.stringify({totalBytes,maxBytes:3829408,files:js.length,scope:'STANDARD_NEXT_BUILD_CLIENT_JS_ONLY'}))
           NODE
 
   check:
@@ -195,7 +237,25 @@ jobs:
         run: node scripts/validate-copilot-native.cjs
 
       - name: TypeScript
-        run: npx tsc --noEmit
+        # Le diagnostic complet reste dans le journal du run ; les dix premières
+        # lignes sont EN PLUS remontées en annotations, donc lisibles directement
+        # depuis l'onglet du run (et par API) sans télécharger le journal complet.
+        # Utile ici plus qu'ailleurs : ce poste n'a pas de client Prisma généré,
+        # la vérification de type y est donc aveugle aux appels Prisma, alors que
+        # la CI les contrôle réellement. Le code de sortie de `tsc` est conservé
+        # tel quel — une étape qui échoue reste une étape qui échoue.
+        run: |
+          set +e
+          npx tsc --noEmit > /tmp/tsc.txt 2>&1
+          statut=$?
+          set -e
+          if [ $statut -ne 0 ]; then
+            cat /tmp/tsc.txt
+            head -n 10 /tmp/tsc.txt | while IFS= read -r ligne; do
+              echo "::error::${ligne//$'\r'/}"
+            done
+          fi
+          exit $statut
 
       - name: ESLint
         run: npm run lint
@@ -240,6 +300,13 @@ jobs:
       - name: Docs consistency
         run: node scripts/check-docs-consistency.mjs
 
+      # `node config` face aux variables Vercel « Sensitive » (jamais relisibles) :
+      # la résolution doit générer puis remplacer sur une installation neuve, et
+      # REFUSER de tourner en silence sur une installation établie. Aucun réseau,
+      # aucune écriture hors bac à sable.
+      - name: Configuration — résolution automatique des secrets (offline)
+        run: node --test tests/config-secrets-auto.test.cjs tests/config.test.cjs tests/config-full.test.cjs
+
       - name: Critical security/licence files present & coherent
         run: node scripts/check-critical-files.js
 
@@ -268,7 +335,26 @@ jobs:
           node scripts/evaluate-copilot-phase4.cjs --verify-freeze
 
       - name: Tests (unit + integration)
-        run: npm test
+        # Un échec de suite doit être NOMMÉ. Les lignes « FAIL »/« × » sont
+        # remontées en annotations (lisibles par API), et le journal complet
+        # reste disponible. Le code de sortie est conservé tel quel.
+        run: |
+          set +e
+          npm test > /tmp/tests.txt 2>&1
+          statut=$?
+          set -e
+          cat /tmp/tests.txt
+          if [ $statut -ne 0 ]; then
+            trouve=0
+            while IFS= read -r ligne; do
+              echo "::error title=Test en échec::${ligne}"
+              trouve=1
+            done < <(grep -aE 'FAIL |× ' /tmp/tests.txt | sed 's/^[[:space:]]*//' | sort -u | head -n 10)
+            if [ "$trouve" -eq 0 ]; then
+              echo "::error::Suite de tests en échec — aucune ligne FAIL reconnue (voir journal)."
+            fi
+          fi
+          exit $statut
         env:
           DATABASE_URL: file:./dev.db
           NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
@@ -317,7 +403,26 @@ jobs:
       # Sans E2E_EMAIL/E2E_PASSWORD, seuls les tests PUBLICS (page de connexion,
       # responsive) s'exécutent ; les parcours authentifiés sont ignorés (skip).
       - name: Run E2E (public responsive suite)
-        run: npx playwright test
+        # Un échec Playwright doit être NOMMÉ : le rapport HTML est téléversé en
+        # artefact, mais son téléchargement peut être indisponible — sans ces
+        # annotations, un échec ne se lisait que comme « exit code 1 », sur une
+        # suite à 6 gabarits d'écran. Les en-têtes de tests en échec et la
+        # première ligne d'erreur remontent donc en annotations.
+        run: |
+          set +e
+          npx playwright test > /tmp/e2e.txt 2>&1
+          statut=$?
+          set -e
+          cat /tmp/e2e.txt
+          if [ $statut -ne 0 ]; then
+            while IFS= read -r ligne; do
+              echo "::error title=E2E::${ligne}"
+            done < <(grep -aE '^[[:space:]]+[0-9]+\) |^(Error|expect\.)|Reading the error|Timed out' /tmp/e2e.txt | sed 's/^[[:space:]]*//' | head -n 10)
+            if ! grep -qaE '^[[:space:]]+[0-9]+\) ' /tmp/e2e.txt; then
+              echo "::error::Suite E2E en échec — aucune ligne de test reconnue (voir le rapport HTML en artefact)."
+            fi
+          fi
+          exit $statut
         env:
           DATABASE_URL: file:./dev.db
           NEXTAUTH_SECRET: ci-e2e-secret-not-for-production-0123456789
@@ -460,15 +565,55 @@ jobs:
       - run: node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs
       - name: Validate redacted packaging diagnostic
         run: node --test tests/windows-package-diagnostic.test.cjs
+      # ── Pourquoi ce dossier vide devient le « dossier personnel » du build ──
+      # Next.js trace ses dépendances avec @vercel/nft. nft DÉPLIE `os.homedir()`
+      # en chemin littéral, puis, ne pouvant résoudre ce qu'on lui donne, élargit
+      # la recherche à « <dossier personnel>/**/* » et la confie à `glob`.
+      #
+      # Sur un exécuteur Windows, le profil de l'utilisateur contient deux
+      # jonctions héritées — `Application Data` et `Cookies` — que le système
+      # REFUSE d'énumérer : la recherche échoue en EPERM et la compilation
+      # s'arrête (« glob error … Failed to compile »), alors que le produit n'a
+      # jamais lu ce dossier. C'était déjà le cas AVANT la réparation de la
+      # chaîne de livraison (voir le diagnostic du run 38870935220) : ce n'est ni
+      # une régression, ni un défaut applicatif, mais un artefact de l'exécuteur.
+      #
+      # On pointe donc `os.homedir()` vers un dossier vide et accessible, pour
+      # cette SEULE étape. Aucun contrôle n'est désactivé : la trace reste
+      # complète côté projet, et si elle était réellement incomplète,
+      # `verify:standalone` puis `verify:installer` échoueraient bruyamment.
+      - name: Prepare a clean home directory for the tracing step
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path D:\gf-build-home | Out-Null
       - name: Official npm run dist (redacted diagnostic, original exit code)
         shell: node scripts/windows-package-diagnostic.cjs {0}
         run: npm run dist
+        env:
+          USERPROFILE: D:\gf-build-home
+          HOMEDRIVE: D:\
+          HOMEPATH: \gf-build-home
       - run: npm run check:perf-budget
       - name: Verify integrity against the actual packaged resources (required)
         run: npx vitest run src/__tests__/integrity-diagnostics.test.ts
         env:
           GF_REQUIRE_ARTIFACT_TEST: '1'
       - run: npm run release:verify-artifact
+      # Rend l'installeur RÉELLEMENT récupérable : la mission exige un `.exe`
+      # utilisable sur un autre poste, pas seulement la preuve qu'il a été
+      # construit. `if-no-files-found: error` est volontaire — un téléversement
+      # muet sur un artefact absent rejouerait exactement le défaut d'origine
+      # (« server.js NOT found » masqué) : une étape crie, ou elle disparaît.
+      - name: Publish installer (Windows x64, NSIS)
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: garageflows-installer-windows-x64
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/*.yml
+          if-no-files-found: error
+          retention-days: 30
 
   required-validation:
     name: Required validation

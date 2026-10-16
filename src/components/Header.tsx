@@ -35,7 +35,6 @@ import {
   Users,
   Boxes,
   MessageSquare,
-  CalendarClock,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { can } from '@/lib/authz'
@@ -44,6 +43,7 @@ import LanguageSelector from '@/components/LanguageSelector'
 import { GarageFlowIcon } from '@/components/GarageFlowLogo'
 import { useTranslation } from '@/lib/i18n'
 import WindowControls from '@/components/WindowControls'
+import ClientPicker from '@/components/ClientPicker'
 import LicenseChangeModal from '@/components/LicenseChangeModal'
 
 const ROLE_COLORS: Record<string, string> = {
@@ -123,6 +123,13 @@ function SectionGroup({
 
 interface HeaderProps {
   session: Session | null
+  /**
+   * Page actuellement affichée. La barre d'outils s'en sert pour montrer OÙ l'on
+   * est : sans ce repère, un bouton de barre d'outils ressemblait à un bouton
+   * d'action sans effet, la page ouverte n'étant pas forcément celle qu'on
+   * venait d'ouvrir (GF-DUR-053).
+   */
+  surfaceActive?: string | null
   onOpenSettings?:      () => void
   onOpenReception?:     () => void
   onOpenReminders?:     () => void
@@ -135,14 +142,18 @@ interface HeaderProps {
   onOpenOcr?:           () => void
   onOpenSuppliers?:     () => void
   onOpenClients?:       () => void
+  /** Ouvre DIRECTEMENT la fiche d'un client choisi dans le menu déroulant. */
+  onOpenClient?:        (clientId: string) => void
   onOpenTickets?:       () => void
-  onOpenAppointments?:  () => void
   onOpenCatalog?:       () => void
+  /** Incrémenté à chaque écriture dans les clients : le menu relit sa liste. */
+  clientsVersion?:      number
   warrantyAlerts?:      number
 }
 
 export default function Header({
   session,
+  surfaceActive = null,
   onOpenSettings,
   onOpenReception,
   onOpenReminders,
@@ -155,9 +166,10 @@ export default function Header({
   onOpenOcr,
   onOpenSuppliers,
   onOpenClients,
+  onOpenClient,
   onOpenTickets,
-  onOpenAppointments,
   onOpenCatalog,
+  clientsVersion = 0,
   warrantyAlerts = 0,
 }: HeaderProps) {
   const {
@@ -440,9 +452,17 @@ export default function Header({
       {/* py-1.5 (auto height) instead of a fixed h-9 so each section's tiny
           label sits cleanly ABOVE its buttons without overflowing into row 1.
           Masquée sous md : sur téléphone, ces actions passent dans la barre de
-          navigation inférieure + le menu « Plus » (aucune fonction perdue). */}
+          navigation inférieure + le menu « Plus » (aucune fonction perdue).
+
+          `gf-hscroll` et non `overflow-x-auto` : cette dernière laisse l'axe
+          VERTICAL défilant (la spécification CSS force `visible` → `auto` dès
+          qu'un axe est réglé), d'où les libellés qui glissaient hors du bandeau
+          à la molette et le bouton « Tableau de bord » tronqué. `gf-hscroll`
+          verrouille l'axe vertical et n'autorise que l'horizontal. Les enfants
+          ne se compriment pas (règle CSS) : les libellés restent entiers et la
+          barre défile latéralement quand la fenêtre est étroite. */}
       <div
-        className="hidden md:flex items-center px-4 py-1.5 gap-0 overflow-x-auto scrollbar-hide"
+        className="hidden md:flex gf-hscroll items-center px-4 py-1.5 gap-0"
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
 
@@ -476,6 +496,7 @@ export default function Header({
               icon={ClipboardList}
               label={t.navReception}
               title={t.ttReception}
+              active={surfaceActive === 'reception'}
             />
           )}
           <ToolBtn
@@ -545,6 +566,7 @@ export default function Header({
               label={t.navBilling}
               title={t.ttBilling}
               variant="finance"
+              active={surfaceActive === 'billing'}
             />
           )}
           {onOpenFinance && (
@@ -554,6 +576,7 @@ export default function Header({
               label={t.navFinance}
               title={t.ttFinance}
               variant="finance"
+              active={surfaceActive === 'finance'}
             />
           )}
           {onOpenCopilot && (
@@ -579,6 +602,7 @@ export default function Header({
               onClick={onOpenSuppliers}
               icon={Truck}
               label={t.navSuppliers}
+              active={surfaceActive === 'suppliers'}
               title={t.ttSuppliers}
               variant="finance"
             />
@@ -588,22 +612,35 @@ export default function Header({
               onClick={onOpenClients}
               icon={Users}
               label={t.navClients}
+              active={surfaceActive === 'clients'}
               title={t.ttClients}
               variant="finance"
             />
           )}
-          {/* Consulter le planning des rendez-vous concerne tout l'atelier ;
-              seul l'ENGAGEMENT auprès du client est réservé (`job:manage`), et
-              c'est le serveur qui le refuse. Le bouton reste donc ouvert. */}
-          {onOpenAppointments && (
-            <ToolBtn
-              onClick={onOpenAppointments}
-              icon={CalendarClock}
-              label="Rendez-vous"
-              title="Demandes de rendez-vous de vos clients"
-              variant="finance"
+          {/* Menu déroulant : chercher un client et ouvrir SA fiche, sans
+              entrer dans l'annuaire puis l'y rechercher une seconde fois. */}
+          {onOpenClient && can(role, 'customer:manage') && (
+            <ClientPicker
+              onOpenClient={onOpenClient}
+              refreshKey={clientsVersion}
+              idPrefix="gf-header-clients"
             />
           )}
+          {/*
+            ── L'entrée « Rendez-vous » a été RETIRÉE de cet espace (16/10/2026) ──
+            Elle menait à un tiroir montrant le planning d'un seul jour, à côté du
+            planning lui-même : on ne savait pas si l'on devait consulter l'un OU
+            l'autre, et les rendez-vous au-delà du jour affiché restaient
+            introuvables.
+
+            RIEN n'a été supprimé du produit : la table, les routes
+            (`/api/appointments`, `/api/appointments/[id]`), la machine à états,
+            la remontée vers l'espace client et le tiroir de décision existent
+            toujours. Ils sont désormais atteints depuis le TABLEAU DE BORD, dont
+            la section « Rendez-vous » liste toutes les dates avec recherche et
+            filtres, et dont le bouton « Gérer les demandes » ouvre ce même
+            tiroir. La fonction a déménagé, elle n'a pas disparu.
+          */}
           {/* La correspondance client relève de `customer:manage`, comme la fiche
               elle-même. Un bouton qui mène à un 403 est pire que pas de bouton. */}
           {onOpenTickets && can(role, 'customer:manage') && (
@@ -620,6 +657,7 @@ export default function Header({
               onClick={onOpenCatalog}
               icon={Boxes}
               label={t.navCatalog}
+              active={surfaceActive === 'catalog'}
               title={t.ttCatalog}
               variant="finance"
             />

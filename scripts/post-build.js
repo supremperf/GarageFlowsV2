@@ -36,10 +36,74 @@ function copyDir(src, dst) {
 function main() {
   console.log('\n🔧 GarageFlows post-build\n')
 
-  // 1. Copy .next/static → .next/standalone/.next/static  (REQUIRED — CSS + JS bundles)
+  // Contexte d'empaquetage Desktop : positionné par `npm run dist`
+  // (cross-env GF_PACKAGE_DESKTOP=1). Distingue « on construit un installateur »
+  // de « CI/e2e construisent juste la sortie Next.js ».
+  const empaquetageDesktop = process.env.GF_PACKAGE_DESKTOP === '1' || process.env.GF_PACKAGE_DESKTOP === 'true'
+
+  // Déploiement cloud : Vercel consomme UNIQUEMENT `.next` (sortie standalone
+  // non utilisée) et n'a ni `keys/public.pem` ni le modèle SQLite du dépôt.
+  // Sans cette sortie anticipée, le hook `postbuild` ferait échouer chaque
+  // déploiement PWA sur un contrôle qui ne le concerne pas. Même logique que
+  // `scripts/setup-dev.js` (VERCEL ⇒ profil serveur).
+  if (process.env.VERCEL) {
+    console.log('  ℹ  Build Vercel détecté — post-build desktop ignoré (sortie standalone non empaquetée).\n')
+    return
+  }
+
+  // 0. LOCALISER la sortie standalone AVANT toute copie.
+  //
+  //    Le script écrivait auparavant vers des chemins FIXES sous
+  //    `.next/standalone/`, en supposant que Next.js y place `server.js`. Cette
+  //    supposition dépend de la racine de workspace inférée par Next.js : un
+  //    `package-lock.json` présent dans un dossier PARENT du dépôt (par ex.
+  //    C:\Users\<nom>\package-lock.json) faisait écrire l'application dans
+  //    `.next/standalone/Desktop/MonProjet/`, d'où le message trompeur
+  //    « ❌ server.js NOT found — make sure you ran: npm run build » alors que
+  //    `next build` avait réussi. On analyse donc la sortie réelle : racine
+  //    normale, ou imbrication à diagnostiquer puis refuser explicitement.
+  const { inspectStandaloneLayout } = require('./lib/standalone-layout.cjs')
+  const layout = inspectStandaloneLayout(ROOT)
+  if (!layout.ok) {
+    console.error(`  ❌ ${layout.error}`)
+    process.exit(1)
+  }
+  if (layout.staticCopied) {
+    console.log('  ℹ  .next/static déjà présent dans le standalone (build précédent réutilisé) — copie rafraîchie ci-dessous.')
+  }
+  const APP_DIR = layout.appDir
+  const foundServer = layout.serverJs
+
+  // 0 bis. COPIES PÉRIMÉES : un build antérieur, réalisé avec une racine de
+  //        workspace mal inférée, laisse une seconde application imbriquée
+  //        (par ex. `.next/standalone/Desktop/MonProjet/`). `build.extraResources`
+  //        copie `.next/standalone` EN ENTIER : sans purge, chaque installateur
+  //        embarquerait ce doublon — avec les ressources et, éventuellement, le
+  //        `.env` de l'époque (donc des secrets). On le retire, puis on vérifie.
+  {
+    const { staleAppDirs } = require('./lib/standalone-layout.cjs')
+    const obsolete = staleAppDirs(path.join(ROOT, '.next', 'standalone'), APP_DIR)
+    for (const dossier of obsolete) {
+      const relatif = path.relative(ROOT, dossier).split(path.sep).join('/')
+      try {
+        fs.rmSync(dossier, { recursive: true, force: true })
+        console.log(`  🧹 sortie imbriquée périmée supprimée : ${relatif}`)
+      } catch (err) {
+        console.error(`  ❌ suppression impossible de ${relatif} (${err.code || 'erreur'}) — artefact non distribuable.`)
+        process.exit(1)
+      }
+    }
+    if (obsolete.length) console.log('  ℹ  ces copies provenaient d’une racine de workspace Next.js mal inférée (lockfile parent) ; outputFileTracingRoot la verrouille désormais.')
+  }
+  {
+    const size = (fs.statSync(foundServer).size / 1024).toFixed(1)
+    console.log(`  ✅ server.js found        (${size} KB) → ${path.relative(ROOT, foundServer).split(path.sep).join('/')}`)
+  }
+
+  // 1. Copy .next/static → <standalone>/.next/static  (REQUIRED — CSS + JS bundles)
   {
     const src = path.join(ROOT, '.next', 'static')
-    const dst = path.join(ROOT, '.next', 'standalone', '.next', 'static')
+    const dst = path.join(APP_DIR, '.next', 'static')
     if (!fs.existsSync(src)) {
       console.error('  ❌ .next/static NOT found — run: npm run build first')
       process.exit(1)
@@ -49,33 +113,21 @@ function main() {
       console.error('  ❌ No files copied from .next/static — build output may be corrupted')
       process.exit(1)
     }
-    console.log(`  ✅ static assets copied   (${n} files) → .next/standalone/.next/static`)
+    console.log(`  ✅ static assets copied   (${n} files) → ${path.relative(ROOT, dst).split(path.sep).join('/')}`)
   }
 
-  // 2. Copy public/ → .next/standalone/public
+  // 2. Copy public/ → <standalone>/public
   {
     const src = path.join(ROOT, 'public')
-    const dst = path.join(ROOT, '.next', 'standalone', 'public')
+    const dst = path.join(APP_DIR, 'public')
     const n   = copyDir(src, dst)
-    console.log(`  ✅ public dir copied       (${n} files) → .next/standalone/public`)
-  }
-
-  // 3. Verify server.js exists
-  {
-    const serverJs = path.join(ROOT, '.next', 'standalone', 'server.js')
-    if (fs.existsSync(serverJs)) {
-      const size = (fs.statSync(serverJs).size / 1024).toFixed(1)
-      console.log(`  ✅ server.js found        (${size} KB)`)
-    } else {
-      console.error('  ❌ server.js NOT found — make sure you ran: npm run build')
-      process.exit(1)
-    }
+    console.log(`  ✅ public dir copied       (${n} files) → ${path.relative(ROOT, dst).split(path.sep).join('/')}`)
   }
 
   // 4. Copy Prisma engine binaries into standalone node_modules
   {
     const prismaClientSrc = path.join(ROOT, 'node_modules', '.prisma', 'client')
-    const prismaClientDst = path.join(ROOT, '.next', 'standalone', 'node_modules', '.prisma', 'client')
+    const prismaClientDst = path.join(APP_DIR, 'node_modules', '.prisma', 'client')
     if (fs.existsSync(prismaClientSrc)) {
       const n = copyDir(prismaClientSrc, prismaClientDst)
       console.log(`  ✅ Prisma client copied   (${n} files) → standalone node_modules/.prisma`)
@@ -98,8 +150,7 @@ function main() {
   //    faute de quoi elle laisse derrière elle ce qu'elle refuse (GF31-AUD-068).
   {
     const { purgerEnvStandalone } = require('./lib/purge-standalone-env.cjs')
-    const standaloneDir = path.join(ROOT, '.next', 'standalone')
-    const removed = purgerEnvStandalone(standaloneDir)
+    const removed = purgerEnvStandalone(APP_DIR)
     if (removed.length) {
       console.log(`  ✅ secrets retirés du package : ${removed.join(', ')} (jamais distribués)`)
     } else {
@@ -111,7 +162,7 @@ function main() {
   // NEVER fall back to garageflow.db/dev.db or reset a developer database.
   {
     const { copyPrismaResources } = require('./lib/package-prisma-resources.cjs')
-    copyPrismaResources(ROOT, path.join(ROOT, '.next', 'standalone'))
+    copyPrismaResources(ROOT, APP_DIR)
     console.log('  ✅ Prisma schema + empty release template copied')
   }
 
@@ -119,7 +170,7 @@ function main() {
   {
     const pubKey = path.join(ROOT, 'keys', 'public.pem')
     if (fs.existsSync(pubKey)) {
-      const dst = path.join(ROOT, '.next', 'standalone', 'keys')
+      const dst = path.join(APP_DIR, 'keys')
       fs.mkdirSync(dst, { recursive: true })
       fs.copyFileSync(pubKey, path.join(dst, 'public.pem'))
       console.log('  ✅ public.pem copied      → standalone/keys')
@@ -130,12 +181,25 @@ function main() {
       // keys/public.pem. Résultat observé : un installateur d'apparence normale
       // dont le manifeste d'intégrité ne couvre que 10 fichiers critiques au lieu
       // de 11, sans qu'aucune étape de la chaîne n'ait signalé d'erreur.
-      console.error('  ❌ keys/public.pem introuvable — artefact non distribuable.')
-      console.error('     package.json (build.extraResources) et electron/integrity.js')
-      console.error('     considèrent ce fichier comme critique. Générez la paire avec :')
-      console.error('       python scripts/keygen.py --init')
-      console.error('     puis synchronisez les ancres du code :  npm run keys:sync')
-      process.exit(1)
+      // Contexte d'EMPAQUETAGE desktop (npm run dist, GF_PACKAGE_DESKTOP=1) :
+      // sortie destinée à l'installateur, un fichier critique manquant est
+      // BLOQUANT (electron-builder se contenterait d'un avertissement non bloquant
+      // et l'artefact partirait sans son ancre → manifeste d'intégrité amputé).
+      //
+      // Contexte CI/analyse (`npm run build` seul, e2e, budget de bundle) : le
+      // dossier `keys/` n'existe pas dans un checkout frais ; le standalone n'est
+      // PAS empaqueté. On avertit sans casser le build — `npm run dist` exige de
+      // toute façon `keys/public.pem` via scripts/preflight-release.cjs.
+      if (empaquetageDesktop) {
+        console.error('  ❌ keys/public.pem introuvable — artefact non distribuable.')
+        console.error('     package.json (build.extraResources) et electron/integrity.js')
+        console.error('     considèrent ce fichier comme critique. Générez la paire avec :')
+        console.error('       python scripts/keygen.py --init')
+        console.error('     puis synchronisez les ancres du code :  npm run keys:sync')
+        process.exit(1)
+      }
+      console.warn('  ⚠  keys/public.pem absent — sortie NON distribuable en l’état (contexte non-empaquetage).')
+      console.warn('     Avant de produire un installateur : npm run keys:sync, puis npm run dist.')
     }
   }
 
@@ -150,7 +214,7 @@ function main() {
   //
   // On purge donc, puis on refuse de livrer si la moindre clé privée subsiste.
   {
-    const standalone = path.join(ROOT, '.next', 'standalone')
+    const standalone = APP_DIR
     const PRIVATE_MARKERS = ['BEGIN PRIVATE KEY', 'BEGIN EC PRIVATE KEY', 'BEGIN RSA PRIVATE KEY', 'BEGIN OPENSSH PRIVATE KEY']
     const purged = []
     const leaks = []
@@ -208,7 +272,7 @@ function main() {
       execSync('node scripts/generate-release-manifest.mjs', { cwd: ROOT, stdio: 'inherit' })
       const src = path.join(ROOT, 'release-manifest.json')
       if (fs.existsSync(src)) {
-        const dst = path.join(ROOT, '.next', 'standalone', 'release-manifest.json')
+        const dst = path.join(APP_DIR, 'release-manifest.json')
         fs.copyFileSync(src, dst)
         console.log('  ✅ release-manifest.json généré + inclus → standalone (artefact rattachable)')
       } else {

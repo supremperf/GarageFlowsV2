@@ -146,6 +146,56 @@ function genererPaire(keyId) {
   console.log('  utilisée coupe la mise à jour du parc installé, sans recours logiciel.\n')
 }
 
+/**
+ * Installeur le plus récent produit par `npm run dist` (dist/*Setup*.exe).
+ * Sert uniquement à GUIDER : les contrôles de cohérence restent inchangés, et
+ * aucune signature n'est produite tant que --file/--version/--download-url
+ * n'ont pas été fournis explicitement.
+ */
+function installeurDetecte() {
+  const dist = path.join(RACINE, 'dist')
+  let noms = []
+  try { noms = fs.readdirSync(dist) } catch { return null }
+  const candidats = noms
+    .filter((n) => /\.exe$/i.test(n) && /setup/i.test(n))
+    .map((n) => ({ nom: n, chemin: path.join(dist, n), taille: fs.statSync(path.join(dist, n)).size }))
+    .filter((f) => f.taille > 0)
+    .sort((a, b) => b.taille - a.taille)
+  if (candidats.length === 0) return null
+  const choisi = candidats[0]
+  const version = versionDans(choisi.nom) || versionDuDepot() || '<version>'
+  return {
+    ...choisi,
+    version,
+    argumentFile: path.relative(process.cwd(), choisi.chemin).split(path.sep).join('/'),
+    argumentUrl: `https://api.garageflows.fr/downloads/${encodeURIComponent(choisi.nom)}`,
+  }
+}
+
+/**
+ * Message d'erreur actionnable : ce que le script attend, ce qui est MESURÉ sur
+ * le disque, et la commande exacte prête à copier. L'ancien message (« --file
+ * <chemin de l'installeur> est obligatoire ») laissait l'opérateur devant une
+ * aide de 30 lignes alors que l'installeur venait d'être produit par npm run
+ * dist, deux dossiers plus loin.
+ */
+function argumentsManquants(manquants) {
+  const trouve = installeurDetecte()
+  console.error(`\n  ✗ ${manquants.join(' et ')} : obligatoire(s) pour signer un manifeste.`)
+  if (trouve) {
+    console.error(`\n    Installeur détecté : ${trouve.argumentFile} (${(trouve.taille / 1024 / 1024).toFixed(1)} Mo, version ${trouve.version})`)
+    console.error('    Commande prête à l’emploi :\n')
+    console.error(`      npm run release:sign -- --file "${trouve.argumentFile}" --version ${trouve.version} --download-url ${trouve.argumentUrl}`)
+    console.error('\n    (remplacez l’URL si l’installeur n’est pas publié sur api.garageflows.fr)')
+  } else {
+    console.error('\n    Aucun installeur détecté dans dist/ : lancez d’abord npm run dist,')
+    console.error('    puis relancez la signature avec --file <dist/GarageFlows Setup x.y.z.exe>.')
+  }
+  console.error('\n    Aucun fichier n’a été signé (on ne signe jamais un fichier inexistant).')
+  console.error('    Rappel : ne pas contourner ces contrôles avec --allow-mismatch.\n')
+  process.exit(1)
+}
+
 const AIDE = `
   Signature d'un manifeste de mise à jour GarageFlows (Ed25519).
 
@@ -197,17 +247,17 @@ function main() {
   if (a['gen-key']) return genererPaire(a['key-id'])
 
   const fichier = a.file
-  if (!fichier || fichier === true) mourir(`--file <chemin de l'installeur> est obligatoire.\n${AIDE}`)
+  if (!fichier || fichier === true) argumentsManquants(['--file <chemin de l’installeur>'])
   // Aucun test d'existence préalable : la lecture ci-dessous échoue proprement
   // si le fichier est absent, et un répertoire y lève EISDIR — même verdict,
   // sans fenêtre de course entre le contrôle et l'usage.
 
   const version = a.version
-  if (!version || version === true) mourir(`--version <x.y.z> est obligatoire.\n${AIDE}`)
+  if (!version || version === true) argumentsManquants(['--version <x.y.z>'])
   if (!/^\d+\.\d+\.\d+(?:[-+].+)?$/.test(version)) mourir(`Version non SemVer : ${version}`)
 
   const downloadUrl = a['download-url']
-  if (!downloadUrl || downloadUrl === true) mourir(`--download-url <https://…> est obligatoire.\n${AIDE}`)
+  if (!downloadUrl || downloadUrl === true) argumentsManquants(['--download-url <https://…>'])
   let hôte
   let cheminUrl = ''
   try {

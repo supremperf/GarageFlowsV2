@@ -6,7 +6,7 @@ import {
   CalendarDays, ClipboardList, Plus, Sparkles, Menu,
   BarChart3, Package, ShieldCheck, Car, Bell, BookOpen,
   FileText, BarChart2, ScanLine, Truck, Users, Boxes, Settings,
-  Sun, Moon, LogOut, MessageSquare, CalendarClock,
+  Sun, Moon, LogOut, MessageSquare,
 } from 'lucide-react'
 import { useScheduleStore } from '@/store/schedule-store'
 import { useTranslation } from '@/lib/i18n'
@@ -31,7 +31,6 @@ export interface MobileNavActions {
   onOpenSuppliers: () => void
   onOpenClients: () => void
   onOpenTickets: () => void
-  onOpenAppointments: () => void
   onOpenCatalog: () => void
   onOpenSettings: () => void
   warrantyAlerts?: number
@@ -207,7 +206,10 @@ export default function MobileNav(props: MobileNavActions) {
           <MoreItem icon={Truck} label={t.navSuppliers} onClick={() => run(props.onOpenSuppliers)} tone="finance" />
           <MoreItem icon={Users} label={t.navClients} onClick={() => run(props.onOpenClients)} tone="finance" />
           <MoreItem icon={MessageSquare} label="Messages" onClick={() => run(props.onOpenTickets)} tone="finance" />
-          <MoreItem icon={CalendarClock} label="Rendez-vous" onClick={() => run(props.onOpenAppointments)} tone="finance" />
+          {/* L'entrée « Rendez-vous » a été retirée du menu : la vue globale des
+              rendez-vous vit désormais dans le tableau de bord, où les filtres
+              par client, véhicule, plaque, date, période et statut existent.
+              La fonction est intacte (routes, tiroir de décision, espace client). */}
           <MoreItem icon={Boxes} label={t.navCatalog} onClick={() => run(props.onOpenCatalog)} tone="finance" />
         </div>
 

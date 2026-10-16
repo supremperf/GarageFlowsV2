@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
+import { useBrouillonPersistant } from '@/lib/ui/brouillon'
 
 interface Fil {
   id: string
@@ -75,7 +76,11 @@ export default function TicketsPanel({ onClose }: { onClose: () => void }) {
   const [vue, setVue] = useState<'a-traiter' | 'tous'>('a-traiter')
   const [ouvert, setOuvert] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[] | null>(null)
-  const [reponse, setReponse] = useState('')
+  /**
+   * Réponse en cours de rédaction, conservée d'une page à l'autre : l'appel du
+   * client au téléphone ne doit plus faire perdre le message commencé.
+   */
+  const [reponse, setReponse] = useBrouillonPersistant('tickets:reponse', '')
   const [occupe, setOccupe] = useState(false)
 
   const chargerFils = useCallback(async () => {
@@ -102,7 +107,8 @@ export default function TicketsPanel({ onClose }: { onClose: () => void }) {
     const d = await r.json().catch(() => null)
     if (!r.ok || !d?.ticket) { toast.error('Conversation introuvable.'); return }
     setMessages(d.ticket.messages ?? [])
-  }, [])
+    // `setReponse` est stable (associé à la clé du brouillon).
+  }, [setReponse])
 
   async function agir(corps: Record<string, unknown>, succes: string) {
     if (!ouvert) return
@@ -148,7 +154,7 @@ export default function TicketsPanel({ onClose }: { onClose: () => void }) {
             )}
           </div>
         </div>
-        <button onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
+        <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
           <X className="w-5 h-5" />
         </button>
       </div>

@@ -636,7 +636,7 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                 <Save className="w-3.5 h-3.5" /> {saving ? t.qiSaving : t.qiSave}
               </button>
             )}
-            <button onClick={onClose} className="gf-close p-2 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors">
+            <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>

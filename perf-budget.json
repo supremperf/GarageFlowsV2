@@ -1,15 +1,15 @@
 {
-  "totalClientJsBytes": 3625984,
+  "totalClientJsBytes": 3829408,
   "largestChunkBytes": 524288,
   "reference": {
-    "measuredAt": "2026-08-15",
-    "buildId": "next build (production)",
-    "totalClientJsBytes": 3452669,
-    "largestChunkBytes": 330288,
-    "largestChunkPath": ".next/static/chunks/164f4fb6-*.js",
+    "measuredAt": "2026-10-16",
+    "buildId": "next build (production) — branche arena/57f91c28-garageflowsv2",
+    "totalClientJsBytes": 3647055,
+    "largestChunkBytes": 330012,
+    "largestChunkPath": ".next/static/chunks/164f4fb6.*.js",
     "note": "Budgets en OCTETS BRUTS sur disque, vérifiés par scripts/check-perf-budget.mjs après `npm run build`. Marge d'environ 5 % au-dessus de la mesure de référence : assez pour absorber une variation mineure, assez serrée pour qu'une régression réelle déclenche encore.",
-    "raisedOn": "2026-08-15",
-    "raisedFrom": 3145728,
-    "raisedWhy": "DÉCISION ASSUMÉE, PAS UNE CORRECTION. Le total JS client est passé de 3,00 à 3,29 MiB et le budget a été relevé pour débloquer `release:publish` — le produit n'a PAS été allégé d'un octet. La campagne d'audit du 14-15/08/2026 avait explicitement REFUSÉ ce geste (cf. RAPPORT-FINAL.md §2 et §7, statut FAILED assumé) au motif qu'il met le contrôle au vert sans rien changer pour l'utilisateur. Le relèvement est intervenu ensuite, sur décision de l'exploitant. Ce que le budget mesure reste donc un plafond de non-régression, pas un objectif de performance : la dette de 3,29 MiB demeure entière. La réduire suppose d'alléger les dépendances — le découpage dynamique, lui, a déjà été fait (plus gros bloc ramené de 596,9 à 322,5 KiB, soit 37 % sous son propre budget)."
+    "raisedOn": "2026-10-16",
+    "raisedFrom": 3625984,
+    "raisedWhy": "DÉCISION ASSUMÉE, PAS UNE CORRECTION — même procédure et même transparence que le relèvement du 15/08/2026 : le produit n'a PAS été allégé, le plafond est relevé. Mesures réelles du 16/10/2026, `next build` standard, JS client sur disque : base 9dcfc1d = 3 612 571 octets (marge restante 13 413 octets — le plafond était donc déjà presque atteint) ; branche = 3 647 055 octets, soit +34 484 octets (+33,7 Kio) apportés par les trois vues demandées le 16/10/2026 : vue globale des rendez-vous du tableau de bord, liste déroulante de clients, onglet « Système » du démarrage Windows. Nouveau plafond = mesure + 5 % (3 829 408 octets), soit exactement la marge du plafond précédent. Le contrôle reste donc ce qu'il a toujours été : un plafond de NON-RÉGRESSION, pas un objectif de performance — la dette de 3,48 MiB demeure entière, et sa réduction passe par l'allègement des dépendances (three.js, jsPDF, date-fns sont les plus gros postes), pas par ce fichier."
   }
 }

@@ -1103,6 +1103,21 @@
       "autoManage": true
     },
     {
+      "name": "GF_PACKAGE_DESKTOP",
+      "classification": "configuration",
+      "scope": "release-tooling",
+      "requiredProduction": false,
+      "format": "enum:1",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/post-build.js"
+      ],
+      "notes": "Posé par `npm run dist` (cross-env GF_PACKAGE_DESKTOP=1) pour dire au post-build que la sortie standalone part dans un INSTALLEUR : dans ce contexte seulement, une clé publique manquante bloque la construction, au lieu d'un simple avertissement en CI/e2e."
+    },
+    {
       "name": "GF_PHOTOS_DIR",
       "classification": "external-path",
       "scope": "both",

@@ -66,3 +66,77 @@ export function nextAppointmentStatus(current: AppointmentStatus, action: Appoin
       return null
   }
 }
+
+// ─── Filtres de recherche (vue globale du tableau de bord, GF-DUR-054) ────────
+
+/** Entrée brute des filtres, telle qu'elle sort de la requête HTTP. */
+export interface FiltresRendezVousBruts {
+  statuts?: readonly string[]
+  /** Jour exact `YYYY-MM-DD`. Prioritaire sur la période. */
+  date?:    string
+  from?:    string
+  to?:      string
+  clientId?: string
+  vehicleId?: string
+  /** Fragment d'immatriculation (contient, insensible à la casse côté SQLite non). */
+  plate?:   string
+  /** Recherche plein texte : client, véhicule, immatriculation ou motif. */
+  q?:       string
+}
+
+/**
+ * Filtre Prisma d'un rendez-vous, réduit aux champs que cette fonction produit.
+ *
+ * `date` accepte une VALEUR (`'2026-10-16'`) ou un INTERVALLE (`{ gte, lte }`).
+ * C'est cette union qui manquait : construire `{ date: { date: … } }` produit un
+ * filtre que Prisma refuse à l'exécution (« Unknown argument `date` »), et aucun
+ * test ne le voyait — le client Prisma n'étant pas généré hors CI, tous les
+ * appels y sont typés `any`. Le contrat est donc écrit ici, en clair, et vérifié
+ * par des tests unitaires.
+ */
+export interface FiltreRendezVous {
+  status?:       string | { in: string[] }
+  date?:         string | { gte?: string; lte?: string }
+  clientId?:     string
+  vehicleId?:    string
+  licensePlate?: { contains: string }
+  OR?: Array<{
+    clientName?:   { contains: string }
+    licensePlate?: { contains: string }
+    vehicleModel?: { contains: string }
+    reason?:       { contains: string }
+  }>
+}
+
+/** Construit le filtre Prisma correspondant aux filtres demandés (sans le garage). */
+export function construireFiltreRendezVous(f: FiltresRendezVousBruts): FiltreRendezVous {
+  const filtre: FiltreRendezVous = {}
+
+  const statuts = (f.statuts ?? []).map((s) => s.trim()).filter(Boolean)
+  if (statuts.length === 1) filtre.status = statuts[0]
+  else if (statuts.length > 1) filtre.status = { in: statuts }
+
+  // Un jour exact l'emporte sur la période : c'est la demande la plus précise.
+  if (f.date) filtre.date = f.date
+  else if (f.from || f.to) {
+    filtre.date = {
+      ...(f.from ? { gte: f.from } : {}),
+      ...(f.to ? { lte: f.to } : {}),
+    }
+  }
+
+  if (f.clientId) filtre.clientId = f.clientId
+  if (f.vehicleId) filtre.vehicleId = f.vehicleId
+  if (f.plate) filtre.licensePlate = { contains: f.plate }
+
+  if (f.q) {
+    filtre.OR = [
+      { clientName:   { contains: f.q } },
+      { licensePlate: { contains: f.q } },
+      { vehicleModel: { contains: f.q } },
+      { reason:       { contains: f.q } },
+    ]
+  }
+
+  return filtre
+}

@@ -308,8 +308,25 @@ export default function StockPanel({ onClose }: StockPanelProps) {
   const totalValue = parts.reduce((s, p) => s + fromCents(lineCents(p.unitCost, p.quantity)), 0)
 
   return (
-    <div className="fixed inset-0 z-40 flex items-start justify-end p-4 pointer-events-none">
-      <div role="dialog" aria-modal="true" aria-label={t.stkTitle} className="pointer-events-auto w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-modal flex flex-col animate-slide-in">
+    <div className="fixed inset-0 z-40 flex items-start justify-end p-4">
+      {/*
+        Fond cliquable — il FERME le volet au premier clic, y compris sur toute
+        la surface laissée libre à gauche du panneau. Auparavant cette surface
+        était en `pointer-events-none` : les clics n'atteignaient rien du tout,
+        alors que le panneau se déclare `aria-modal="true"` (un dialogue modal
+        qui laisse l'application cliquable derrière ment à l'utilisateur comme
+        aux lecteurs d'écran). C'est aussi la convention du reste de
+        l'application : `BillingPanel`, `FinancialDashboard` et `GfDrawer`
+        ferment tous sur un clic à l'extérieur.
+      */}
+      <button
+        type="button"
+        aria-label={`Fermer — ${t.stkTitle}`}
+        onClick={onClose}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-backdrop cursor-default"
+        tabIndex={-1}
+      />
+      <div role="dialog" aria-modal="true" aria-label={t.stkTitle} className="relative z-[1] w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-modal flex flex-col animate-slide-in">
         {/* Header */}
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">

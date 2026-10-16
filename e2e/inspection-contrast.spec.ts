@@ -163,10 +163,25 @@ test.describe('Contrôle véhicule — contraste des champs (mesure Chromium)', 
   test('l’application applique bien class="dark" au thème par défaut', async ({ page }) => {
     // Sans cela, le bug d'origine serait irreproductible — on vérifie donc que
     // la condition de déclenchement existe toujours.
-    const applied = await page.evaluate(() => ({
-      cls: document.documentElement.className,
-      theme: document.documentElement.getAttribute('data-theme'),
-    }))
+    //
+    // ⚠️ Le thème est posé par le script client APRÈS l'hydratation. Sur un
+    // exécuteur partagé, `networkidle` peut être atteint avant que React n'ait
+    // démarré : lire l'attribut immédiatement mesurait alors une course, pas le
+    // comportement de l'application (échec observé sur le run 38952634453, qui a
+    // bloqué le job de fabrication de l'installeur). On ATTEND l'application du
+    // thème : l'exigence reste identique — si le thème n'est jamais appliqué, le
+    // test échoue toujours.
+    const lire = () =>
+      page.evaluate(() => ({
+        cls: document.documentElement.className,
+        theme: document.documentElement.getAttribute('data-theme'),
+      }))
+
+    await expect
+      .poll(lire, { message: 'le thème « dark » doit être appliqué au démarrage' })
+      .toMatchObject({ theme: 'dark' })
+
+    const applied = await lire()
     expect(applied.cls).toContain('dark')
     expect(applied.theme).toBe('dark')
   })

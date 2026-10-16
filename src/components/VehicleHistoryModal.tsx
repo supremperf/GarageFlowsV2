@@ -170,7 +170,7 @@ export default function VehicleHistoryModal({ vehicleId, onClose }: Props) {
             {vehicle.year && <span className="text-sm text-gray-400">{vehicle.year}</span>}
             {vehicle.color && <span className="text-sm text-gray-400">· {vehicle.color}</span>}
           </div>
-          <button onClick={onClose} className="gf-close p-2 hover:bg-gray-100 rounded-lg text-gray-400">
+          <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 hover:bg-gray-100 rounded-lg text-gray-400">
             <X className="w-5 h-5" />
           </button>
         </div>

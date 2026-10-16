@@ -195,7 +195,7 @@ export default function ReceptionBoard({ onClose }: Props) {
           <button onClick={fetchJobs} className="p-2 rounded-lg transition-colors" style={{ color: 'var(--text-secondary, #94a3b8)' }} title="Actualiser">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button onClick={onClose} className="gf-close p-2 rounded-lg" style={{ color: 'var(--text-secondary, #94a3b8)' }}>
+          <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 rounded-lg" style={{ color: 'var(--text-secondary, #94a3b8)' }}>
             <X className="w-5 h-5" />
           </button>
         </div>

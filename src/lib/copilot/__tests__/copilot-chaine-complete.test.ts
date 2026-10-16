@@ -63,6 +63,17 @@ function corpsDeLaBranche(id: string): string | null {
 
 const ACTIONS = INTENTS.filter((i) => i.kind === 'action')
 
+/**
+ * Ce qu'ouvrir un écran veut dire, en 2026-10 : `ouvrirPage('…')` (règle « une
+ * seule page à l'écran ») OU l'ouverture directe du formulaire d'intervention.
+ *
+ * Les anciennes formes (`setIsBillingOpen(true)`…) ont disparu avec les seize
+ * booléens de page : le garde doit suivre le mécanisme RÉEL, sinon il passerait
+ * au vert sur un aiguillage devenu vide — exactement ce qu'il est là pour
+ * empêcher.
+ */
+const OUVRE_UN_ECRAN = /ouvrirPage\('[a-z]+'\)|openCreateModal\(/g
+
 describe('étape 15 — toute intention d’ACTION mène à un écran réel', () => {
   it('le catalogue déclare bien des intentions d’action', () => {
     expect(ACTIONS.length, 'sans action, ce garde ne protège rien').toBeGreaterThan(0)
@@ -84,7 +95,7 @@ describe('étape 15 — toute intention d’ACTION mène à un écran réel', ()
       const corps = corpsDeLaBranche(id)
       expect(corps, `« ${id} » n’a aucune branche d’aiguillage`).not.toBeNull()
       expect(corps as string, `« ${id} » n’ouvre aucun écran : le garagiste confirmerait dans le vide`)
-        .toMatch(/set\w+\(true\)|openCreateModal\(/)
+        .toMatch(OUVRE_UN_ECRAN)
     }
   })
 
@@ -93,7 +104,7 @@ describe('étape 15 — toute intention d’ACTION mène à un écran réel', ()
     // contenir l'ouverture d'écran d'une AUTRE. C'est exactement ce que la
     // fenêtre de 120 caractères laissait passer.
     const ouvertures = ACTIONS
-      .map(({ id }) => [id, (corpsDeLaBranche(id) ?? '').match(/set\w+\(true\)|openCreateModal\(/g) ?? []] as const)
+      .map(({ id }) => [id, (corpsDeLaBranche(id) ?? '').match(OUVRE_UN_ECRAN) ?? []] as const)
     for (const [id, trouvees] of ouvertures) {
       expect(trouvees.length, `la branche « ${id} » déborde sur sa voisine`).toBe(1)
     }

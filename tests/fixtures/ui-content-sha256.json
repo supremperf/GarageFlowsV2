@@ -1,7 +1,7 @@
 {
   "algorithm": "sha256(JSON.stringify(UI))",
-  "before": "297db557405e6b7a465994970bcaa18a818d6dd25ea60cb65afa8cc55ad4def3",
-  "keys": 562,
+  "before": "21488fafa55a0512ff8f0d7d21f2638b01dc4f4764af286a850ea88244c8c172",
+  "keys": 564,
   "languages": [
     "fr",
     "en",
@@ -18,5 +18,5 @@
     "tr",
     "ko"
   ],
-  "source": "UI before lossless row compaction on 2026-10-14"
+  "source": "UI after lossless row compaction (14/10/2026) + 2 clés ajoutées le 16/10/2026 : navAppointments, ttAppointments (vue globale des rendez-vous, exigence du 16/10). Le référencement est réactualisé APRÈS une addition VOLONTAIRE — toute perte accidentuelle de clé ou de libellé reste détectée par le décompte et par le condensat."
 }

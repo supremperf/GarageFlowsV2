@@ -1,6 +1,211 @@
 <!-- doc-numbers: journal — comptes datés point-dans-le-temps, exempts du contrôle de compte courant (V13.1) -->
 # Changelog
 
+## [Non publié] — 2026-10-16 — chaîne build → installeur Windows réparée à la cause, page unique, vue globale des rendez-vous
+
+### `node config` — les variables déjà présentes chez Vercel ne bloquent plus
+
+Constat d'usage : les secrets sont poussés chez Vercel en `--sensitive`, donc
+jamais relisibles. `node config` s'arrêtait alors sur :
+
+```
+DATABASE_URL existe chez Vercel mais sa valeur n'est pas relisible.
+DEVICE_TOKEN_PEPPER : valeur de production nécessaire pour poursuivre.
+```
+
+Impossible de configurer une installation neuve dont les variables existaient
+déjà côté Vercel, sans chasser des valeurs que personne n'avait copiées.
+Désormais chaque variable non relisible est **résolue** :
+
+- valeur présente localement → conservée (et un écart avec le reçu du dernier
+  envoi est annoncé, puis tranché par UNE question) ;
+- `DATABASE_URL` / `DIRECT_URL` → récupérées ** réellement** auprès du compte
+  Neon ; jamais fabriquées ;
+- clé symétrique absente partout → générée (256 bits) puis **remplacée** chez
+  Vercel (rm + add, horodatage relu comme preuve) — automatiquement sur une
+  **installation neuve démontrée** (aucun `.env.server.local`, aucune autorité
+  locale, aucun reçu), sinon sur autorisation explicite ;
+- mot de passe SMTP / jeton tiers → une **seule** question groupée, jamais une
+  boucle de saisies masquées.
+
+`scripts/lib/config-secrets-auto.cjs` (nouveau) porte la politique, testable ;
+`GarageFlow-configuration/secrets-receipt.json` (0600) n'enregistre que des
+empreintes SHA-256, pour reconnaître une valeur déjà poussée et signaler une
+dérive au lieu de remplacer en silence. `tests/config-secrets-auto.test.cjs` :
+15/15, dont deux scénarios exécutés dans un bac à sable (génération sur
+installation neuve, refus sur installation établie). `docs/CONFIG.md` et le
+rapport d'audit sont alignés ; l'étape CI les exécute hors ligne.
+
+### P0 — `npm run dist` s'arrêtait sur « server.js NOT found »
+- Cause réelle : la sortie autonome EXISTAIT, un niveau plus bas
+  (`.next/standalone/<chemin-relatif>/server.js`), parce que Next.js déduit la
+  racine du workspace et qu'un `package-lock.json` hors du dépôt suffit à la
+  décaler. Masquer le message aurait livré un installeur sans serveur.
+- `next.config.mjs` : `outputFileTracingRoot` épinglé sur la racine du projet.
+- `scripts/lib/standalone-layout.cjs` (nouveau) : la disposition autonome est
+  TROUVÉE, jamais présumée ; partagée par le post-build et les vérifications.
+- `scripts/post-build.js` : n'annonce plus un succès sans avoir lu la sortie ;
+  échec explicite avec la disposition observée ; purge de `.env` et des clés
+  privées, copie du manifeste de release.
+- `scripts/preflight-release.cjs` (nouveau) : pré-requis AVANT compilation
+  (clé publique de mise à jour, version cohérente, espace disque, cible).
+- `scripts/verify-standalone-build.cjs` (nouveau) : étape bloquante entre
+  `build` et `electron-builder` (serveur, pages statiques, `public/`, fichiers
+  requis).
+- `scripts/verify-installer.cjs` (nouveau) : contrôle de l'artefact réel
+  (nom `GarageFlows Setup <version>.exe`, taille, moteur NSIS, désinstalleur).
+- `package.json` : `dist` = `preflight:release` → `build` → `verify:standalone` →
+  `electron-builder --win --x64` → `check:artifact-secrets` →
+  `check:artifact-fuses` → `verify:installer` ; chaque étape échoue bruyamment.
+  `tests/build-dist-chain.test.cjs` entre dans `test:release-safety`.
+- `scripts/garageflow-env-manifest.json` : `GF_PACKAGE_DESKTOP` déclaré (toute
+  variable lue par un script doit l'être — garde-fou `env-manifest-drift`).
+- `tests/build-dist-chain.test.cjs` (nouveau) : 9/9, puis 13/13 après les deux
+  correctifs ci-dessous.
+- `scripts/verify-standalone-build.cjs` : il passait le dossier `.next/standalone`
+  à `inspectStandaloneLayout`, qui **ajoute lui-même** ce chemin à la racine reçue
+  — le contrôle cherchait donc `.next/standalone/.next/standalone` et échouait
+  **toujours**, même sur une sortie saine (le faux rouge observé sur l'exécuteur
+  Windows). La racine du projet est maintenant passée, et le garde-fou sait
+  ACCEPTER une sortie valide : trois arborescences synthétiques (saine, absente,
+  amputée) sont réellement exécutées par les tests.
+- Liste des modules d'exécution déplacée dans `scripts/lib/standalone-layout.cjs`
+  (`MODULES_EXECUTION` + `modulesExecutionManquants`) : l'ancienne boucle
+  préfixait `node_modules/` à une entrée qui le contenait déjà et signalait un
+  manque inexistant (`node_modules/node_modules/.prisma/...`).
+- **Deux faux positifs du vérificateur, visibles seulement sur Windows**, tous
+  deux corrigés : (a) la taille d'un DOSSIER vaut 0 sur Windows, si bien que
+  `.next/static` (242 fichiers) et `public/` (10 fichiers) étaient déclarés
+  « vide » — le contrôle compte désormais le contenu réel ; (b) `next-auth`
+  n'est **pas copié** dans la sortie autonome (webpack l'embarque) — le contrôle
+  exige « copié **ou** embarqué » et cherche le marqueur
+  `next-auth.session-token` dans les morceaux compilés, avec un échec explicite
+  si les deux manquent.
+- **Premier vert de la chaîne sur une sortie autonome réelle** : `next build`
+  complet obtenu dans cet environnement (substituts Prisma locaux + type-check
+  neutralisé le temps du build, **rien de tout cela commité**), puis
+  `post-build.js` et `verify:standalone` → `✅ Sortie autonome complète`, exit 0.
+  Le serveur empaqueté, lançé avec l'environnement d'`electron/main.js`, répond
+  `200` sur `/login`, `/clients/login`, `/api/auth/providers` et `/api/version`.
+- **L'installeur Windows est produit** : run `38958504927` (commit `9304c55`),
+  job « Windows candidate packaging and inspection (not publication) »
+  `completed/success`, seize étapes vertes, artefact
+  `garageflows-installer-windows-x64` (206 258 171 octets) — `GarageFlows Setup
+  1.1.0.exe` + carte de blocs, après validation par `verify:installer`.
+- **`npm run dist` n'entraîne plus de publication implicite** : sur
+  l'installeur réellement construit (run `38957019116`), electron-builder a
+  déclenché « Implicit publishing triggered by CI detection » puis a échoué sur
+  `GitHub Personal Access Token is not set` — la construction était pourtant
+  terminée. `--publish never` est désormais explicite : publier une release reste
+  une décision (`npm run release:sign`), jamais un effet de bord.
+- Le fond du volet Stock ferme désormais le panneau au clic (surface qui
+  n'obéissait à aucun clic) ; membre mort `'appointments'` retiré de l'union
+  `Surface` de `src/app/page.tsx`.
+
+### Barre d'outils — plus de déplacement vertical
+- `.gf-hscroll` (`globals.css`) verrouille l'axe vertical
+  (`overflow-y: hidden`, `flex-wrap: nowrap`, `overscroll-behavior`) : un axe
+  `visible` devient `auto` dès que l'autre ne l'est plus — c'est cette règle CSS
+  qui faisait glisser les libellés hors du bandeau. Appliquée au `Header` et à la
+  bande des mécaniciens du `ScheduleBoard`.
+
+### Tableau de bord — vue globale des rendez-vous
+- `src/components/dashboard/AppointmentsSection.tsx` (nouveau) : toutes les
+  dates, ordre chronologique, jour de la semaine + date complète, client,
+  véhicule (marque/modèle/immatriculation), prestation, heure, statut ;
+  recherche et filtres (client, véhicule, immatriculation, date, période,
+  statut, ordre) ; ligne dépliable ; fiche client, fiche véhicule ; édition en
+  ligne ; confirmation, achèvement, annulation selon `can(role,'job:manage')`.
+- `GET /api/appointments` réécrit (filtres + pagination, portée garage),
+  `PATCH /api/appointments/[id]` (Zod `UpdateAppointmentSchema`, `validateSlot`),
+  `AuditEntityType` étendu. Aucune donnée ni table parallèle.
+
+### Clients & messages
+- `src/components/ClientPicker.tsx` (nouveau) : liste déroulante de clients
+  réelle (recherche, nombre de véhicules, ouverture de fiche, rafraîchissement
+  après ajout ou modification). Seule l'ENTRÉE « Rendez-vous » a été retirée de
+  cet espace.
+
+### Boutons de fermeture, une seule page, brouillons
+- `.gf-close` : boîte de 40 px (44 px au doigt) et pseudo-élément élargi passé en
+  `pointer-events: none` — il recouvrait les boutons voisins et leur volait le
+  clic. 17 boutons de fermeture réduits à une icône portent un nom accessible.
+- `src/app/page.tsx` : seize booléens de page remplacés par une variable unique
+  `surface` — ouvrir une page referme la précédente par construction.
+- `src/lib/ui/brouillon.ts` (nouveau) : les saisies en cours survivent au
+  changement de page ; fermer la page est un abandon et efface les brouillons de
+  CETTE page.
+- Volet Stock : le fond était resté `pointer-events-none` — la surface libre
+  autour du panneau n'obéissait à aucun clic, alors que le panneau se déclare
+  `aria-modal="true"`. Il ferme maintenant au clic, comme `BillingPanel`,
+  `FinancialDashboard` et `GfDrawer`.
+
+### Réglage « Lancer GarageFlows au démarrage de Windows »
+- `electron/main.js` : `etatDemarrageAuto()` / `definirDemarrageAuto()`
+  (`getLoginItemSettings` / `setLoginItemSettings`, `process.execPath` +
+  `--autostart`), IPC `app:autostart-get` / `-set` ; lancement `--autostart`
+  sans vol de focus. `electron/preload.js` : `getAutostart` / `setAutostart`.
+- `src/components/settings/SystemeTab.tsx` (nouveau) + onglet « Système » :
+  l'état est RELU depuis Windows après chaque écriture — aucun miroir dans
+  `gf_settings.json`, le registre est la seule source.
+- Installeur inchangé côté privilèges : `asInvoker`, `perMachine: false`,
+  `allowElevation: false`.
+
+### Tests et mesure
+- `src/lib/__tests__/ui-navigation-et-demarrage.test.ts` (nouveau) : 12 garde-fous
+  de non-régression sur les mécanismes ci-dessus.
+- 104/104 `portal-access-reachable`, 2/2 `ui-lossless-compaction`, 8/8
+  `env-manifest-drift`, 42/42 copilote, 203/203 tests CJS, `eslint` 0 problème.
+- `npx tsc --noEmit` : 249 erreurs, ensemble identique à la référence (aucune
+  apparue, aucune disparue — contrôle de non-régression, pas une porte verte).
+- Suite vitest complète : 3 échecs, tous dans `prepare-test-db` (moteur Prisma à
+  télécharger depuis `binaries.prisma.sh`, injoignable dans cet environnement).
+- Plafond du JS client relevé de 3 625 984 à 3 829 408 octets (mesure à
+  l'appui : 3 647 055 octets, +33,7 Kio apportés par les trois vues
+  demandées ; ancienne marge : 13 413 octets). Motif écrit dans
+  `perf-budget.json` (`raisedWhy`), garde-fou d'immutabilité aligné dans
+  `.github/workflows/ci.yml` et `tests/ci-required-gate.test.cjs`.
+- `GET /api/appointments?date=…` : filtre corrigé (`construireFiltreRendezVous`)
+  — il construisait `{ date: { date } }`, forme que Prisma refuse.
+- Rapport détaillé : `docs/RAPPORT_MISSION_2026-10-16.md`.
+
+## [Non publié] — 2026-10-16 — `node config` génère toutes les clés manquantes et les écrit partout où elles sont lues
+
+### Cause du blocage corrigée : une base neuve était vue comme « utilisée »
+- `prisma/garageflow-template.db` (modèle livré) contient `_gf_migrations`
+  peuplé (214 lignes de baseline) et **zéro ligne métier**. `inspectDesktop`
+  excluait `_prisma_migrations` mais pas `_gf_migrations` : toute SQLite neuve
+  créée par `scripts/setup-dev.js` était donc déclarée « contenant des données »,
+  et le plan complet réclamait des clés d'origine (`NEXTAUTH_SECRET`,
+  `GF_DB_MAC_SECRET`, `GF_BACKUP_KEY`, `GF_TOTP_ENC_KEY`) qui n'avaient jamais
+  existé, puis s'arrêtait sur `GF_BACKUP_KEY desktop : original nécessaire`.
+- `scripts/config-services.cjs` : registres `_gf_migrations` / `_prisma_migrations`
+  (et `sqlite_%`) exclus de la détection de données métier
+  (`isBookkeepingTable`, `businessTableNames`) ; `inspectDatabase`/`inspectDesktop`
+  renvoient `{ empty, tableCount, ignored }`. `inspectDesktop` accepte un
+  `loadClient` injectable pour les tests.
+
+### Génération automatique sur installation neuve
+- `scripts/config-core.cjs` : `missingGenerated`, `generateMissing`,
+  `KEY_PROMPT_COMMANDS` (`NONUTILISE` / `GENERER`), `isKeyPromptCommand`,
+  `KEY_DESTINATIONS` + `keyDestinations(name, profil)`.
+- `config` : `generateSecrets()` (256 bits, liste les destinations réelles, ne
+  remplace jamais une valeur présente) ; `advanced()` accepte les commandes
+  `GENERER` / `GENERER-TOUT` et `LISTE` ; `GENERER` reste accepté comme valeur
+  d'un secret symétrique.
+- `scripts/config-full.cjs` : `resolveMissingKey()` — base sans donnée métier →
+  génération silencieuse ; base réellement utilisée → original du coffre,
+  `NONUTILISE` (déclaration confirmée) ou `GENERER` (confirmation explicite,
+  refus = arrêt sans écriture). Nouvelle étape finale
+  `récapitulatif-des-clés-et-destinations` (`report.keys[]`, noms uniquement).
+  Le prompt de publication accepte aussi `GENERER` en plus de `NOUVEAU-CANAL`.
+- Tests : `tests/config.test.cjs` (classification, modèle livré réellement vide
+  via `node:sqlite`, destinations, commandes, `generateSecrets`) et
+  `tests/config-full.test.cjs` (SQLite neuve = 6/6 clés desktop sans saisie,
+  base utilisée + `GENERER`, confirmation refusée = arrêt). 90 tests CJS verts.
+- Documentation : `README.md`, `docs/CONFIG.md` (section « Ce qui est considéré
+  comme « base vide » » et tableau des destinations).
+
 ## [Non publié] — 2026-08-06 (4) — Sécurisation des migrations & JSON monétaires v2
 
 ### JSON persistants (worksJson / partsJson / linesJson)

@@ -8,6 +8,7 @@
 import { useState } from 'react'
 import { X, ScanLine, Sparkles, Car } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n'
+import { useBrouillonPersistant } from '@/lib/ui/brouillon'
 
 interface Field { key: string; label: string; value: string; confidence: number; valid?: boolean }
 interface Result {
@@ -22,7 +23,12 @@ export default function OcrPanel({ onClose, onUseVehicle }: { onClose: () => voi
   const TYPE_LABEL: Record<string, string> = {
     carte_grise: t.ocrTypeCarteGrise, invoice: t.ocrTypeInvoice, plate: t.ocrTypePlate, vin_plate: t.ocrTypeVinPlate, odometer: t.ocrTypeOdometer, unknown: t.ocrTypeUnknown,
   }
-  const [text, setText] = useState(SAMPLE)
+  /**
+   * Texte lu sur le document. Conservé entre deux ouvertures : coller un scan,
+   * aller chercher une référence dans le catalogue, revenir — le texte est
+   * toujours là. Il n'est jamais envoyé au serveur sans validation explicite.
+   */
+  const [text, setText] = useBrouillonPersistant('ocr:texte', SAMPLE)
   const [res, setRes] = useState<Result | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)

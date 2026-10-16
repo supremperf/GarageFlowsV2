@@ -39,6 +39,16 @@ locale des mises à jour. Saisir `AUTORISER` pour lancer le plan ; les demandes
 suivantes concernent des accès, une cible ambiguë ou une opération risquée.
 Il conserve les clés existantes et n'affiche jamais les secrets.
 
+Sur une **première installation** (base vide, aucune ligne métier), **toutes les
+clés absentes sont générées automatiquement** — secrets 256 bits, paire de
+licence P-256, clé Ed25519 de publication — puis écrites aux endroits réellement
+lus : `.env`, `.env.server.local`, `keys/private.pem`, `keys/public.pem`,
+`keys/server_config.json` (keygen), coffre hors dépôt, ancrages publics et
+**Vercel production** (ajouts en Sensitive, jamais de remplacement). Une base
+contenant de vraies **données métier** (les registres `_gf_migrations` /
+`_prisma_migrations` ne comptent pas) exige l'original du coffre : `GENERER` y
+reste une décision explicite et confirmée.
+
 **Analyse et couverture des 118 variables : [CONFIG_REPOSITORY_AUDIT.md](docs/CONFIG_REPOSITORY_AUDIT.md).**
 
 **Guide et limites d'automatisation : [docs/CONFIG.md](docs/CONFIG.md).**

@@ -142,6 +142,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   reportCrash:     (info)  => ipcRenderer.invoke('app:report-crash', info),
   addBreadcrumb:   (action) => ipcRenderer.send('app:breadcrumb', action),
 
+  // ── Démarrage automatique de Windows ───────────────────────────────────────
+  // Lecture seule de l'état RÉEL (registre) et bascule ON/OFF. Aucun accès au
+  // registre n'est exposé au-delà de ce réglage précis.
+  getAutostart: () => ipcRenderer.invoke('app:autostart-get'),
+  setAutostart: (actif) => ipcRenderer.invoke('app:autostart-set', actif === true),
+
   // ── Utility ───────────────────────────────────────────────────────────────
   isElectron: true,
 })

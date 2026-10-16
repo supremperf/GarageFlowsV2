@@ -147,9 +147,9 @@ test('private writes are atomic, replace existing files and refuse symlinks', t 
 })
 test('CLI --check is offline/read-only and reports names, never secret values', t => {
   const dir = fixture(t)
-  fs.mkdirSync(path.join(dir, 'scripts'), { recursive: true })
+  fs.mkdirSync(path.join(dir, 'scripts/lib'), { recursive: true })
   fs.mkdirSync(path.join(dir, 'src/lib/license'), { recursive: true })
-  for (const file of ['config', '.env.example', 'scripts/config-core.cjs', 'scripts/config-policy.cjs', 'scripts/garageflow-env-manifest.json', 'src/lib/license/public-key.ts']) {
+  for (const file of ['config', '.env.example', 'scripts/config-core.cjs', 'scripts/config-policy.cjs', 'scripts/garageflow-env-manifest.json', 'src/lib/license/public-key.ts', 'scripts/lib/config-secrets-auto.cjs']) {
     fs.copyFileSync(path.join(root, file), path.join(dir, file))
   }
   const secret = 'do-not-print-this-actual-secret-value'
@@ -407,7 +407,7 @@ test('dotenv codec preserves custom names, quotes, literal backslashes and dolla
 
 function cliFixture(t) {
   const dir = fixture(t)
-  for (const file of ['config', '.env.example', 'scripts/config-core.cjs', 'scripts/config-policy.cjs', 'scripts/config-env-coverage.cjs', 'scripts/garageflow-env-manifest.json', 'src/lib/license/public-key.ts']) {
+  for (const file of ['config', '.env.example', 'scripts/config-core.cjs', 'scripts/config-policy.cjs', 'scripts/config-env-coverage.cjs', 'scripts/garageflow-env-manifest.json', 'src/lib/license/public-key.ts', 'scripts/lib/config-secrets-auto.cjs']) {
     fs.mkdirSync(path.dirname(path.join(dir, file)), { recursive: true })
     fs.copyFileSync(path.join(root, file), path.join(dir, file))
   }
@@ -509,4 +509,112 @@ test('Copilot settings are preserved for desktop and server, never activated by 
     assert.equal(existing.GARAGEFLOW_LLM, 'anthropic')
     assert.equal(existing.GARAGEFLOW_LLM_MODEL, 'chosen-model')
   }
+})
+
+// ── Génération automatique des clés (première installation) ─────────────────
+test('les registres de migrations ne comptent pas comme données métier', () => {
+  const services = require('../scripts/config-services.cjs')
+  for (const name of ['_gf_migrations', '_prisma_migrations', '_GF_MIGRATIONS']) {
+    assert.equal(services.isBookkeepingTable(name), true, name)
+  }
+  for (const name of ['Garage', 'License', 'gf_migrations', 'migrations', '_gf_snapshots']) {
+    assert.equal(services.isBookkeepingTable(name), false, name)
+  }
+  assert.deepEqual(services.businessTableNames(['Garage', '_gf_migrations', '_prisma_migrations', 'sqlite_sequence', 'Garage']), ['Garage'])
+})
+
+test('inspectDesktop classe une base neuve issue du modèle comme vide malgré _gf_migrations', async t => {
+  const services = require('../scripts/config-services.cjs')
+  const dir = fixture(t)
+  fs.mkdirSync(path.join(dir, 'prisma'), { recursive: true })
+  fs.writeFileSync(path.join(dir, 'prisma/dev.db'), 'fixture-bytes')
+  const tables = ['_gf_migrations', 'Garage', 'License']
+  const state = { emptyBusiness: true, queried: [] }
+  const client = {
+    $queryRawUnsafe: async sql => {
+      state.queried.push(sql)
+      if (/sqlite_master/.test(sql)) return tables.map(name => ({ name }))
+      return [{ occupied: !state.emptyBusiness }]
+    },
+    $disconnect: async () => {},
+  }
+  const fresh = await services.inspectDesktop(dir, 'file:./dev.db', { loadClient: () => client })
+  assert.equal(fresh.empty, true, 'un registre de migrations ne rend pas la base « utilisée »')
+  assert.equal(fresh.tableCount, 2)
+  assert.equal(fresh.ignored, 1)
+  assert.ok(!state.queried.some(sql => /_gf_migrations/.test(sql)), 'le registre ne doit jamais être interrogé comme une table métier')
+  state.emptyBusiness = false
+  const used = await services.inspectDesktop(dir, 'file:./dev.db', { loadClient: () => client })
+  assert.equal(used.empty, false)
+  const missing = await services.inspectDesktop(dir, 'file:./missing.db', { loadClient: () => client })
+  assert.deepEqual(missing, { empty: true, tableCount: 0, ignored: 0 })
+})
+
+test('generateMissing ne crée que les secrets symétriques absents et jamais de valeur affichée', () => {
+  const selected = c.namesForProfile(names, 'pwa')
+  const env = { NEXTAUTH_SECRET: 'existing-never-replaced' }
+  const created = c.generateMissing(env, selected)
+  assert.ok(created.length >= 6)
+  assert.ok(!created.includes('NEXTAUTH_SECRET'))
+  assert.equal(env.NEXTAUTH_SECRET, 'existing-never-replaced')
+  for (const name of created) assert.equal(Buffer.from(env[name], c.GENERATED[name]).length, 32, name)
+  assert.equal(new Set(created.map(n => env[n])).size, created.length)
+  assert.equal(c.missingGenerated(env, selected).length, 0)
+  assert.equal(c.generateMissing(env, selected).length, 0, 'relancer ne régénère rien')
+  assert.ok(!created.includes('GF_PRIVATE_KEY') && !created.includes('GF_EINVOICE_CREDENTIALS_KEY'))
+  assert.deepEqual(selected.filter(n => c.GENERATED[n]).map(n => n).sort(), [...new Set(selected.filter(n => c.GENERATED[n]))].sort())
+})
+
+test('chaque clé générée annonce ses destinations réelles, par profil', () => {
+  assert.deepEqual(c.keyDestinations('GARAGEFLOW_API_KEY', 'server'), ['.env.server.local', 'keys/server_config.json (keygen)', 'Vercel production (Sensitive)'])
+  assert.deepEqual(c.keyDestinations('NEXTAUTH_SECRET', 'desktop'), ['.env (desktop)'])
+  assert.deepEqual(c.keyDestinations('NEXTAUTH_SECRET', 'server'), ['.env.server.local', 'Vercel production (Sensitive)'])
+  assert.deepEqual(c.keyDestinations('DEVICE_TOKEN_PEPPER', 'desktop'), [], 'un secret serveur ne va jamais dans .env desktop')
+  assert.deepEqual(c.keyDestinations('GF_PRIVATE_KEY', 'desktop'), [], 'l\'émetteur de licences n\'est jamais écrit dans .env desktop')
+  assert.deepEqual(c.keyDestinations('INCONNUE', 'server'), [])
+  for (const name of Object.keys(c.GENERATED)) assert.ok(c.KEY_DESTINATIONS[name] || name === 'GF_INTERNAL_EXPORT_KEY', name)
+})
+
+test('la commande GENERER (nom de variable ou valeur) est reconnue sans jamais être une valeur de secret', () => {
+  assert.equal(c.isKeyPromptCommand('GENERER', 'generate'), true)
+  assert.equal(c.isKeyPromptCommand(' generer ', 'generate'), true)
+  assert.equal(c.isKeyPromptCommand('NONUTILISE', 'declaredUnused'), true)
+  assert.equal(c.isKeyPromptCommand('nonutilise', 'declaredUnused'), true)
+  assert.equal(c.isKeyPromptCommand('GENERER', 'declaredUnused'), false)
+  assert.equal(c.isKeyPromptCommand('', 'generate'), false)
+  assert.equal(c.isKeyPromptCommand(undefined, 'generate'), false)
+  assert.equal(c.isKeyPromptCommand('vraie-valeur-de-cle', 'generate'), false)
+})
+
+test('generateSecrets génère tout l\'absent, préserve l\'existant et n\'exige aucune saisie', async () => {
+  const wizard = require('../config')
+  const selected = c.namesForProfile(names, 'desktop')
+  const env = { NEXTAUTH_SECRET: 'kept-as-is' }
+  const expected = selected.filter(n => c.GENERATED[n] && !env[n])
+  const created = await wizard.generateSecrets(env, selected, { authorize: true, profile: 'desktop' })
+  assert.deepEqual(created, expected)
+  assert.ok(created.length >= 5)
+  assert.equal(env.NEXTAUTH_SECRET, 'kept-as-is')
+  assert.ok(!created.includes('NEXTAUTH_SECRET'))
+  for (const name of created) assert.equal(Buffer.from(env[name], c.GENERATED[name]).length, 32, name)
+  assert.deepEqual(await wizard.generateSecrets(env, selected, { authorize: true, profile: 'desktop' }), [])
+  assert.equal(env.NEXTAUTH_SECRET, 'kept-as-is')
+})
+
+test('le modèle SQLite livré ne contient aucune ligne métier : seul _gf_migrations est peuplé', async () => {
+  let DatabaseSync
+  try { ({ DatabaseSync } = await import('node:sqlite')) } catch { return }
+  const services = require('../scripts/config-services.cjs')
+  const file = path.join(root, 'prisma/garageflow-template.db')
+  if (!fs.existsSync(file)) return
+  const db = new DatabaseSync(file)
+  try {
+    const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(r => r.name)
+    const business = services.businessTableNames(tables)
+    assert.ok(tables.includes('_gf_migrations'), 'le registre de migrations desktop doit être présent')
+    assert.ok(business.length > 0 && business.length < tables.length)
+    const occupied = business.filter(name => db.prepare(`SELECT 1 FROM "${name}" LIMIT 1`).all().length > 0)
+    assert.deepEqual(occupied, [], `une base neuve doit être vide : ${occupied.join(', ')}`)
+    assert.ok(db.prepare('SELECT 1 FROM "_gf_migrations" LIMIT 1').all().length > 0)
+  } finally { db.close() }
 })

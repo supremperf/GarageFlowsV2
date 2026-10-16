@@ -649,3 +649,99 @@ test('automatic keygen reuse preserves an existing unencrypted SEC1 PEM byte for
   assert.equal(fs.readFileSync(file, 'utf8'), original)
   assert.equal(services.publicFingerprint(fs.readFileSync(path.join(dir, 'keys/public.pem'))), services.publicFingerprint(original))
 })
+
+// ── Clés absentes : génération automatique vs base déjà utilisée ────────────
+const { resolveMissingKey } = require('../scripts/config-full.cjs')
+test('clé absente sur une base sans données métier : génération automatique, aucune saisie', async () => {
+  const calls = []
+  const api = { secretField: async () => { throw new Error('aucune saisie ne doit être demandée') }, yes: async () => { throw new Error('aucune confirmation nécessaire') } }
+  const env = {}
+  assert.equal(await resolveMissingKey(api, env, 'GF_TOTP_ENC_KEY', { used: false }), 'generated')
+  assert.equal(Buffer.from(env.GF_TOTP_ENC_KEY, 'base64').length, 32)
+  calls.length = 0
+})
+test('clé absente sur une base utilisée : original, NONUTILISE ou GENERER sans jamais écraser en silence', async () => {
+  const answers = { GF_TOTP_ENC_KEY: 'valeur-originale-du-coffre' }
+  const env = {}
+  const api = { secretField: async (target, name) => { target[name] = answers[name] }, yes: async () => true }
+  assert.equal(await resolveMissingKey(api, env, 'GF_TOTP_ENC_KEY', { used: true }), 'imported')
+  assert.equal(env.GF_TOTP_ENC_KEY, 'valeur-originale-du-coffre')
+  const declared = { GF_BACKUP_KEY: core.KEY_PROMPT_COMMANDS.declaredUnused }
+  const env2 = {}
+  const api2 = { secretField: async (target, name) => { target[name] = declared[name] }, yes: async () => true }
+  assert.equal(await resolveMissingKey(api2, env2, 'GF_BACKUP_KEY', { used: true }), 'declared-unused')
+  assert.equal(env2.GF_BACKUP_KEY, undefined, 'la déclaration sera suivie d’une génération, pas d’une valeur importée')
+  const generated = { GF_SIGNATURE_SECRET: core.KEY_PROMPT_COMMANDS.generate }
+  const env3 = {}
+  const api3 = { secretField: async (target, name) => { target[name] = generated[name] }, yes: async () => true }
+  assert.equal(await resolveMissingKey(api3, env3, 'GF_SIGNATURE_SECRET', { used: true }), 'generated')
+  assert.equal(Buffer.from(env3.GF_SIGNATURE_SECRET, 'base64').length, 32)
+  const refused = { GF_SMTP_CIPHER_KEY: core.KEY_PROMPT_COMMANDS.generate }
+  const api4 = { secretField: async (target, name) => { target[name] = refused[name] }, yes: async () => false }
+  await assert.rejects(() => resolveMissingKey(api4, {}, 'GF_SMTP_CIPHER_KEY', { used: true }), /original nécessaire/)
+  const empty = {}
+  const api5 = { secretField: async () => {}, yes: async () => true }
+  await assert.rejects(() => resolveMissingKey(api5, empty, 'GF_TOTP_ENC_KEY', { used: true }), /GF_TOTP_ENC_KEY : original nécessaire/)
+  assert.ok(!empty.GF_TOTP_ENC_KEY, 'aucune clé générée quand rien n’est fourni pour une base utilisée')
+})
+
+test('une SQLite sans données métier (registres ignorés) reçoit toutes ses clés desktop sans saisie', async t => {
+  const f = fullFixture(t)
+  const asked = []
+  // Aucune valeur de clé chez Vercel ni sur le poste : tout doit être généré, des deux côtés.
+  delete f.env.NEXTAUTH_SECRET
+  delete f.env.GF_TOTP_ENC_KEY
+  f.api.secretField = async (_env, name) => { asked.push(name); if (name !== 'ANTHROPIC_API_KEY') throw new Error(`Aucune valeur de clé ne doit être demandée (${name})`) }
+  f.api.services.inspectDesktop = async () => ({ empty: true, tableCount: 43, ignored: 1 })
+  await full(f.api)
+  const desktopNames = core.namesForProfile(policy.loadPolicy(f.dir).names, 'desktop')
+  const desktop = core.readEnv(path.join(f.dir, '.env'))
+  const server = core.readEnv(path.join(f.dir, '.env.server.local'))
+  for (const name of Object.keys(core.GENERATED)) {
+    if (!desktopNames.includes(name)) continue
+    assert.equal(Buffer.from(desktop[name], core.GENERATED[name]).length, 32, name)
+    assert.notEqual(desktop[name], server[name], `${name} desktop reste distinct du serveur`)
+  }
+  assert.deepEqual(asked, ['ANTHROPIC_API_KEY'])
+  assert.ok(!f.questions.some(q => /ORIGINALE|NONUTILISE/.test(q)))
+  assert.ok(f.calls.includes('sync'))
+  const report = JSON.parse(fs.readFileSync(path.join(f.dir, 'GarageFlow-configuration/report.json'), 'utf8'))
+  assert.equal(report.status, 'configured-with-external-actions')
+  for (const [name, scope] of [['NEXTAUTH_SECRET', 'desktop'], ['NEXTAUTH_SECRET', 'serveur'], ['GF_TOTP_ENC_KEY', 'serveur']]) {
+    assert.ok(report.keys.some(k => k.name === name && k.scope === scope), `${name} (${scope}) doit apparaître dans le récapitulatif`)
+  }
+  assert.equal(server.NEXTAUTH_SECRET.length >= 32, true)
+  assert.notEqual(server.NEXTAUTH_SECRET, desktop.NEXTAUTH_SECRET)
+  assert.ok(!JSON.stringify(report).includes(desktop.NEXTAUTH_SECRET))
+})
+
+test('une SQLite déjà utilisée accepte GENERER clé par clé et écrit les valeurs dans .env', async t => {
+  const f = fullFixture(t, { existing: true })
+  const answered = new Set()
+  f.api.secretField = async (env, name) => {
+    if (name === 'ANTHROPIC_API_KEY') return
+    assert.ok(answered.add(name), `une seule demande par clé (${name})`)
+    env[name] = core.KEY_PROMPT_COMMANDS.generate
+  }
+  f.api.services.inspectDesktop = async () => ({ empty: false, tableCount: 43, ignored: 1 })
+  await full(f.api)
+  const desktopNames = core.namesForProfile(policy.loadPolicy(f.dir).names, 'desktop')
+  const desktop = core.readEnv(path.join(f.dir, '.env'))
+  assert.ok(answered.size >= 4, 'chaque clé desktop absente a été traitée')
+  for (const name of Object.keys(core.GENERATED)) {
+    if (!desktopNames.includes(name)) continue
+    assert.equal(Buffer.from(desktop[name], core.GENERATED[name]).length, 32, name)
+  }
+  assert.ok(f.questions.some(q => q.includes('Confirmer la génération d’une NOUVELLE valeur pour NEXTAUTH_SECRET')))
+})
+
+test('refuser la confirmation GENERER arrête le plan sans écrire de clé de remplacement', async t => {
+  const f = fullFixture(t, { existing: true })
+  const oldYes = f.api.yes
+  f.api.yes = async label => label.includes('Confirmer la génération') ? false : oldYes(label)
+  f.api.secretField = async (env, name) => { if (name !== 'ANTHROPIC_API_KEY') env[name] = core.KEY_PROMPT_COMMANDS.generate }
+  f.api.services.inspectDesktop = async () => ({ empty: false, tableCount: 43, ignored: 1 })
+  await assert.rejects(() => full(f.api), /original nécessaire/)
+  assert.ok(!f.calls.includes('sync'))
+  assert.ok(!fs.existsSync(path.join(f.dir, '.env')))
+})

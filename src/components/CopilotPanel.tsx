@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, Sparkles, Send, ShieldCheck, User } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n'
+import { useBrouillonPersistant } from '@/lib/ui/brouillon'
 
 interface CopilotResponse {
   type: string
@@ -41,7 +42,12 @@ export default function CopilotPanel({ onClose, onAction }: { onClose: () => voi
     { label: t.cpSug3, query: 'Crée un devis pour ce client' },
     { label: 'Comment préparer un devis ?', query: 'Comment préparer un devis ?' },
   ]
-  const [messages, setMessages] = useState<Msg[]>([])
+  /**
+   * Conversation en cours. Conservée d'une page à l'autre : quitter l'assistant
+   * pour aller appliquer ce qu'il propose, puis revenir, ne doit pas remettre la
+   * discussion à zéro.
+   */
+  const [messages, setMessages] = useBrouillonPersistant<Msg[]>('copilot:conversation', [])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)

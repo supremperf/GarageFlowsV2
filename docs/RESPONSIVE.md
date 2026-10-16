@@ -9,7 +9,7 @@ sans perte de fonctionnalité ni régression desktop / Electron.
 | Symptôme signalé | Cause dans le code |
 |---|---|
 | L'« Assistant IA » prend presque toute la largeur, planning inutilisable derrière | `page.tsx` : `<aside class="w-72">` **fixe à 288 px**, toujours ouvert, à côté du planning → sur 375 px il ne reste ~87 px pour le planning |
-| Boutons du menu supérieur coupés / inaccessibles | `Header` : 2 lignes d'outils (~15 boutons) en `overflow-x-auto`, pensées pour desktop |
+| Boutons du menu supérieur coupés / inaccessibles | `Header` : 2 lignes d'outils (~15 boutons) en `overflow-x-auto`, pensées pour desktop — **et défilant verticalement** (voir §10, 16/10/2026) |
 | 4 colonnes de mécaniciens illisibles sur téléphone | `ScheduleBoard` : colonnes `flex-1` côte à côte, sans mode mobile |
 | Interface qui dépasse / scroll horizontal | largeurs fixes des drawers (`w-[480px]`, `w-[520px]`…) supérieures au viewport |
 | Contenu coupé sous l'encoche / la barre d'accueil iOS | pas de `viewport-fit=cover` ni de gestion `env(safe-area-inset-*)` |
@@ -72,3 +72,50 @@ BASE_URL=http://localhost:3000 npm run test:e2e   # E2E (app en cours d'exécuti
 
 - La suite Playwright **authentifiée** nécessite une instance en fonctionnement + une base de données PostgreSQL amorcée (indisponible dans l'environnement CI de ce commit) ; les tests de la page de connexion, eux, s'exécutent sans authentification. Les captures avant/après nécessitent donc un déploiement.
 - Le passage un-mécanicien ↔ multi-colonnes s'appuie sur `matchMedia` (JS) car il change la *logique* d'affichage : une très brève transition de mise en page peut apparaître à l'hydratation sur mobile.
+
+## 10. Correctifs du 16/10/2026 (barre d'outils, page unique, brouillons, fermeture)
+
+Quatre défauts signalés en atelier, traités à la CAUSE et verrouillés par des
+tests (`src/lib/__tests__/ui-navigation-et-demarrage.test.ts`).
+
+### 10.1 La barre d'outils se déplaçait VERTICALEMENT
+
+`overflow-x-auto` ne limite pas l'axe vertical : la spécification CSS impose
+qu'un axe `visible` devienne `auto` dès que l'autre ne l'est plus. Les rangées de
+la barre acceptaient donc un défilement vertical — molette, pavé tactile, et
+`scrollIntoView` des navigations clavier faisaient glisser les libellés hors du
+bandeau (« Tableau de bord » tronqué sur la capture du 16/10).
+
+Correctif : la classe `.gf-hscroll` (`globals.css`) verrouille les deux axes
+(`overflow-x: auto` + `overflow-y: hidden` + `flex-wrap: nowrap` +
+`overscroll-behavior`). Elle est appliquée à la rangée d'outils du `Header` et à
+la bande des mécaniciens du `ScheduleBoard`. Le défilement horizontal, lui,
+reste disponible : sur une fenêtre étroite, la barre glisse latéralement — elle
+ne passe jamais à la ligne et ne bouge jamais verticalement.
+
+### 10.2 Une seule page à l'écran
+
+`page.tsx` montait chaque panneau depuis un booléen indépendant
+(`isClientsOpen`, `isBillingOpen`, …), seize au total : ouvrir « Réception » puis
+« Clients » laissait deux pages plein écran (`fixed inset-0 z-50`) superposées.
+Une variable unique `surface` les remplace : ouvrir une page ferme la
+précédente, par construction. Le tableau de bord (piloté par le magasin d'état)
+est recalé sur le même état, et le volet « Stock » est refermé par `ouvrirPage`.
+
+### 10.3 Les brouillons survivent au changement de page
+
+Remplacer une page DÉMONTE ses composants : React jetait la saisie en cours
+(fiche client à moitié corrigée, réponse en cours de rédaction, texte OCR non
+appliqué). `src/lib/ui/brouillon.ts` (`useBrouillonPersistant`) conserve ces
+saisies en mémoire pour la session. Elles ne sont écrites nulle part : un
+brouillon n'est pas un enregistrement. Fermer la page par ✕ ou Échap est un
+ABANDON — `viderBrouillons(préfixe)` efface alors les brouillons de LA page.
+
+### 10.4 Boutons de fermeture
+
+`globals.css` : `.gf-close` porte une vraie boîte de 40 px (44 px sur pointeur
+grossier) et son pseudo-élément élargi ne capture plus les clics
+(`pointer-events: none`) — il recouvrait les boutons voisins et leur volait leur
+clic, d'où les clics « sans effet » et l'obligation de viser au pixel. Les 17
+boutons de fermeture qui n'avaient qu'une icône portent désormais
+`aria-label="Fermer"` (vérifié par test).

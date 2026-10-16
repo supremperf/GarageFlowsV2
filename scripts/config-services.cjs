@@ -35,6 +35,18 @@ async function configureServerEndpoint(env, api) {
   env.GF_APP_URL ||= DEFAULT_SERVER_URL
   console.log(`Serveur/keygen : ${DEFAULT_SERVER_URL}. La clé API serveur sera reprise automatiquement dans keys/server_config.json ; aucune clé affichée.`)
 }
+// Les registres de migrations ne sont PAS des données métier : une base neuve
+// issue du modèle SQLite livré contient déjà _gf_migrations (baseline complète)
+// et une base PostgreSQL migrée contient _prisma_migrations. Les compter comme
+// « données » ferait croire à une base utilisée et bloquerait la première
+// installation en réclamant des clés qui n'ont jamais existé.
+const BOOKKEEPING_TABLE = /^_(?:prisma|gf)_migrations$/i
+function isBookkeepingTable(name) {
+  return BOOKKEEPING_TABLE.test(String(name).trim())
+}
+function businessTableNames(names) {
+  return [...new Set(names.map(n => String(n)).filter(n => !isBookkeepingTable(n) && !/^sqlite_/i.test(n)))]
+}
 async function inspectDatabase(root, url) {
   let client
   try {
@@ -42,27 +54,32 @@ async function inspectDatabase(root, url) {
     client = new PrismaClient({ datasourceUrl: url, log: [] })
     const schema = new URL(url).searchParams.get('schema') || 'public'
     const rows = await client.$queryRawUnsafe("SELECT table_name FROM information_schema.tables WHERE table_schema=$1 AND table_type='BASE TABLE'", schema)
-    const tables = rows.map(r => r.table_name).filter(n => n !== '_prisma_migrations')
+    const tables = businessTableNames(rows.map(r => r.table_name))
     // Identifiers are quoted, never interpolated unescaped. Only row existence is read.
     const sql = tables.map(n => `SELECT EXISTS(SELECT 1 FROM "${schema.replace(/"/g, '""')}"."${n.replace(/"/g, '""')}" LIMIT 1) AS occupied`).join(' UNION ALL ')
     const occupied = tables.length ? await client.$queryRawUnsafe(sql) : []
-    return { empty: !occupied.some(r => r.occupied), tableCount: tables.length }
+    return { empty: !occupied.some(r => r.occupied), tableCount: tables.length, ignored: rows.length - tables.length }
   } catch { throw new Error('PostgreSQL : connexion/inspection impossible. Aucun secret généré en remplacement et aucune migration lancée.') }
   finally { if (client) await client.$disconnect().catch(() => {}) }
 }
-async function inspectDesktop(root, url) {
+async function inspectDesktop(root, url, { loadClient } = {}) {
   if (!url?.startsWith('file:')) throw new Error('Desktop : URL SQLite requise avant inspection.')
   const file = path.resolve(root, 'prisma', url.slice(5).split('?')[0])
-  if (!fs.existsSync(file)) return { empty: true, tableCount: 0 }
+  if (!fs.existsSync(file)) return { empty: true, tableCount: 0, ignored: 0 }
   let client
   try {
-    const { PrismaClient } = require(path.join(root, 'node_modules/@prisma/client'))
-    client = new PrismaClient({ datasourceUrl: `file:${file.replace(/\\/g, '/')}`, log: [] })
-    const rows = await client.$queryRawUnsafe("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name <> '_prisma_migrations'")
-    const tables = rows.map(r => r.name)
+    // loadClient n'existe que pour les tests : la production ouvre le client Prisma local.
+    if (loadClient) client = loadClient(file)
+    else {
+      const { PrismaClient } = require(path.join(root, 'node_modules/@prisma/client'))
+      client = new PrismaClient({ datasourceUrl: `file:${file.replace(/\\/g, '/')}`, log: [] })
+    }
+    const rows = await client.$queryRawUnsafe("SELECT name FROM sqlite_master WHERE type='table'")
+    const all = rows.map(r => r.name)
+    const tables = businessTableNames(all)
     const sql = tables.map(n => `SELECT EXISTS(SELECT 1 FROM "${n.replace(/"/g, '""')}" LIMIT 1) AS occupied`).join(' UNION ALL ')
     const occupied = tables.length ? await client.$queryRawUnsafe(sql) : []
-    return { empty: !occupied.some(r => r.occupied), tableCount: tables.length }
+    return { empty: !occupied.some(r => r.occupied), tableCount: tables.length, ignored: all.length - tables.length }
   } catch { throw new Error('SQLite : inspection impossible. Aucun secret absent généré à l’aveugle pour une base existante.') }
   finally { if (client) await client.$disconnect().catch(() => {}) }
 }
@@ -306,4 +323,5 @@ async function bootstrapAdmin(root, env) {
   finally { if (client) await client.$disconnect().catch(() => {}) }
 }
 module.exports = { DEFAULT_SERVER_URL, configureServerEndpoint, run, inspectDatabase, inspectDesktop, ensureDesktopDatabase, configureUpstash, createFreeRedis, testRedis, publicFingerprint,
-  configureKeygen, patchClientDefaults, assertExternalFile, installPublisherKey, buildAdminLicense, bootstrapAdmin }
+  configureKeygen, patchClientDefaults, assertExternalFile, installPublisherKey, buildAdminLicense, bootstrapAdmin,
+  BOOKKEEPING_TABLE, isBookkeepingTable, businessTableNames }
