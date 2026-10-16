@@ -32,7 +32,19 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm ls --all
       - run: npm run test:audit
-      - run: npm run test:release-safety
+      - name: Release safety tests (nommés en annotations)
+        run: |
+          set +e
+          npm run test:release-safety > /tmp/release-safety.txt 2>&1
+          statut=$?
+          set -e
+          cat /tmp/release-safety.txt
+          if [ $statut -ne 0 ]; then
+            while IFS= read -r ligne; do
+              echo "::error title=Release safety::${ligne}"
+            done < <(grep -aE '^not ok ' /tmp/release-safety.txt | head -n 10)
+          fi
+          exit $statut
       - run: npm run audit:strict
 
   secrets:
@@ -129,8 +141,20 @@ jobs:
           NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
           NEXTAUTH_URL: http://localhost:4028
       - name: Immutable client JS budget (3625984 bytes)
+        # Les MESURES sont remontées en annotations : le journal du runner est
+        # téléchargeable seulement via un point de terminaison signé
+        # (results-receiver.actions.githubusercontent.com) qui n'est pas toujours
+        # joignable — un « over-budget » sans chiffre obligerait à deviner de
+        # combien. Même pratique que la Gitleaks ci-dessous.
         run: |
-          npm run check:perf-budget
+          set +e
+          npm run check:perf-budget > /tmp/budget.txt 2>&1
+          statut=$?
+          set -e
+          cat /tmp/budget.txt
+          if [ $statut -ne 0 ]; then
+            while IFS= read -r ligne; do echo "::error title=Budget client::${ligne}"; done < <(head -n 6 /tmp/budget.txt)
+          fi
           node <<'NODE'
           const fs = require('node:fs'), path = require('node:path')
           const budget = JSON.parse(fs.readFileSync('perf-budget.json','utf8'))
@@ -304,7 +328,26 @@ jobs:
           node scripts/evaluate-copilot-phase4.cjs --verify-freeze
 
       - name: Tests (unit + integration)
-        run: npm test
+        # Un échec de suite doit être NOMMÉ. Les lignes « FAIL »/« × » sont
+        # remontées en annotations (lisibles par API), et le journal complet
+        # reste disponible. Le code de sortie est conservé tel quel.
+        run: |
+          set +e
+          npm test > /tmp/tests.txt 2>&1
+          statut=$?
+          set -e
+          cat /tmp/tests.txt
+          if [ $statut -ne 0 ]; then
+            trouve=0
+            while IFS= read -r ligne; do
+              echo "::error title=Test en échec::${ligne}"
+              trouve=1
+            done < <(grep -aE 'FAIL |× ' /tmp/tests.txt | sed 's/^[[:space:]]*//' | sort -u | head -n 10)
+            if [ "$trouve" -eq 0 ]; then
+              echo "::error::Suite de tests en échec — aucune ligne FAIL reconnue (voir journal)."
+            fi
+          fi
+          exit $statut
         env:
           DATABASE_URL: file:./dev.db
           NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
