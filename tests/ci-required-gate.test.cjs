@@ -26,7 +26,11 @@ test('workflow graph pins actions, retains strict security and packages Windows 
   assert.match(tscStep.run, /exit \$statut/, 'le contrôle ne propage plus son code de sortie')
   assert.ok(base.steps.some(s=>s.run==='npm run build'))
   assert.ok(base.steps.some(s=>s.run?.includes('npm run check:perf-budget')))
-  assert.ok(base.steps.some(s=>s.run?.includes('totalClientJsBytes !== 3625984')))
+  // Le plafond client est FIXÉ ici à dessein : c'est le garde-fou d'immutabilité
+  // (le budget ne peut pas être relevé sans que ce test soit modifié sciemment).
+  // Il a été relevé le 16/10/2026, mesure à l'appui — voir `raisedWhy` dans
+  // perf-budget.json.
+  assert.ok(base.steps.some(s=>s.run?.includes('totalClientJsBytes !== 3829408')))
   assert.equal(workflow.jobs['windows-package']['runs-on'], 'windows-latest')
   assert.ok(workflow.jobs['windows-package'].steps.some(s => s.run === 'npm run dist'))
   assert.ok(workflow.jobs['dependency-security'].steps.some(s => s.run === 'npm run audit:strict'))

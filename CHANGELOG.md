@@ -85,6 +85,13 @@
   apparue, aucune disparue — contrôle de non-régression, pas une porte verte).
 - Suite vitest complète : 3 échecs, tous dans `prepare-test-db` (moteur Prisma à
   télécharger depuis `binaries.prisma.sh`, injoignable dans cet environnement).
+- Plafond du JS client relevé de 3 625 984 à 3 829 408 octets (mesure à
+  l'appui : 3 647 055 octets, +33,7 Kio apportés par les trois vues
+  demandées ; ancienne marge : 13 413 octets). Motif écrit dans
+  `perf-budget.json` (`raisedWhy`), garde-fou d'immutabilité aligné dans
+  `.github/workflows/ci.yml` et `tests/ci-required-gate.test.cjs`.
+- `GET /api/appointments?date=…` : filtre corrigé (`construireFiltreRendezVous`)
+  — il construisait `{ date: { date } }`, forme que Prisma refuse.
 - Rapport détaillé : `docs/RAPPORT_MISSION_2026-10-16.md`.
 
 ## [Non publié] — 2026-10-16 — `node config` génère toutes les clés manquantes et les écrit partout où elles sont lues

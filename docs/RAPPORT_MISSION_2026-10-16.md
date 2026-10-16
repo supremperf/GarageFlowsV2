@@ -251,6 +251,33 @@ résultats.
   silencieusement ; la clé privée Ed25519 reste hors du dépôt, hors de
   l'installeur et hors du frontend).
 
+## 11 bis. Plafond du JavaScript client : relevé, mesure à l'appui
+
+Le budget de non-régression du JS client (`perf-budget.json`) était figé à
+**3 625 984 octets**, avec 13 413 octets de marge sur la base de départ. Les trois
+vues demandées le 16/10 coûtent **34 484 octets** (33,7 Kio) :
+
+| Mesure (`next build` standard, JS client sur disque) | Octets |
+|---|---|
+| Base `9dcfc1d` | 3 612 571 |
+| Branche (16/10/2026) | 3 647 055 |
+| Écart | +34 484 (+33,7 Kio) |
+| Ancien plafond | 3 625 984 |
+| Nouveau plafond (mesure + 5 %, même convention que le relèvement du 15/08/2026) | 3 829 408 |
+
+**Décision assumée, pas une correction** : le produit n'a pas été allégé, le
+plafond est relevé, et le motif est écrit dans `perf-budget.json` (champ
+`raisedWhy`) — même exigence de transparence que le relèvement précédent, dont la
+traçabilité est conservée. Le contrôle garde son rôle : plafond de
+non-régression, pas objectif de performance. La dette de 3,48 MiB demeure
+entière ; sa réduction passe par l'allègement des dépendances (three.js, jsPDF,
+date-fns sont les postes les plus lourds), pas par ce fichier.
+
+Le garde-fou d'immutabilité est mis à jour sciemment en trois endroits
+(`perf-budget.json`, `.github/workflows/ci.yml`, `tests/ci-required-gate.test.cjs`) :
+un relèvement silencieux reste impossible, le plafond ne peut pas bouger sans que
+ces trois points soient modifiés et relus.
+
 ## 12. Ce qui n'a PAS pu être exécuté ici, et pourquoi
 
 L'environnement de développement de cette session n'a accès qu'à une liste
