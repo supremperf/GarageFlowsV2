@@ -54,6 +54,11 @@
   `post-build.js` et `verify:standalone` → `✅ Sortie autonome complète`, exit 0.
   Le serveur empaqueté, lançé avec l'environnement d'`electron/main.js`, répond
   `200` sur `/login`, `/clients/login`, `/api/auth/providers` et `/api/version`.
+- **L'installeur Windows est produit** : run `38958504927` (commit `9304c55`),
+  job « Windows candidate packaging and inspection (not publication) »
+  `completed/success`, seize étapes vertes, artefact
+  `garageflows-installer-windows-x64` (206 258 171 octets) — `GarageFlows Setup
+  1.1.0.exe` + carte de blocs, après validation par `verify:installer`.
 - **`npm run dist` n'entraîne plus de publication implicite** : sur
   l'installeur réellement construit (run `38957019116`), electron-builder a
   déclenché « Implicit publishing triggered by CI detection » puis a échoué sur

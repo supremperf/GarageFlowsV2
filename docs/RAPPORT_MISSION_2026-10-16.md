@@ -487,6 +487,58 @@ Correctif : `--publish never` est passé explicitement à electron-builder dans
 (`npm run release:sign`, qui exige ses arguments), jamais un effet de bord de
 l'empaquetage. Un test verrouille ce point.
 
+## 11 septies. RÉSULTAT : l'installeur Windows est produit, le job d'empaquetage est vert
+
+Run `38958504927`, commit `9304c55`, job **`117168815728` — « Windows candidate
+packaging and inspection (not publication) » → `completed / success`**, avec
+**ses seize étapes vertes** :
+
+| Étape | Résultat |
+|---|---|
+| 10. Validate redacted packaging diagnostic | ✅ |
+| 11. Prepare a clean home directory for the tracing step | ✅ |
+| 12. **Official `npm run dist`** (diagnostic expurgé, code de sortie d'origine) | ✅ |
+| 13. `npm run check:perf-budget` | ✅ |
+| 14. Verify integrity against the actual packaged resources (required) | ✅ |
+| 15. `npm run release:verify-artifact` | ✅ |
+| 16. **Publish installer (Windows x64, NSIS)** | ✅ |
+
+L'étape 12 exécute la chaîne complète — `preflight:release` → `prisma generate`
+(×2) → `next build` → `post-build` → `verify:standalone` → `electron-builder
+--win --x64 --publish never` → `check:artifact-secrets` → `check:artifact-fuses`
+→ `verify:installer` — et **son succès signifie que `verify:installer` a validé
+l'artefact** : nom `GarageFlows Setup 1.1.0.exe` conforme à `package.json`,
+en-tête exécutable Windows, taille de l'ordre de 100 Mo, charge utile
+`win-unpacked` complète (`GarageFlows.exe`, `resources/app.asar`,
+`resources/standalone/server.js`, `icon.ico`), **aucun `.env` embarqué**.
+
+L'artefact est publié par l'étape 16 :
+
+```
+garageflows-installer-windows-x64 — 206 258 171 octets — 2026-10-16T20:06:13Z
+```
+
+Soit, en clair : **un installeur x64 NSIS, avec désinstalleur, produit par la
+chaîne réparée**, la priorité absolue de la mission. Le journal de la
+construction elle-même (run précédent, mêmes étapes) montre, dans l'ordre :
+`Electron Fuses appliqués (RunAsNode off, --inspect off, OnlyLoadAppFromAsar…)`,
+`Manifeste d'intégrité : 530 fichier(s) critique(s) signé(s)`, puis
+`building target=nsis file=dist\GarageFlows Setup 1.1.0.exe archs=x64
+oneClick=false perMachine=false` et `building block map`.
+
+Récupération de l'artefact côté dépositaire :
+
+```bash
+gh run download 38958504927 -n garageflows-installer-windows-x64 -D ./installeur
+```
+
+**Ce que cela ne prouve pas encore** : l'installation réelle sur un poste
+Windows (double-clic, écran de bienvenue, raccourci, premier lancement, puis
+désinstallation), et le réglage « Lancer GarageFlows au démarrage de Windows »
+sur un poste où l'application est installée. Ces deux points demandent un poste
+Windows ; la procédure exacte est en §13, et rien ici n'est présenté comme
+vérifié qui ne l'ait été.
+
 ## 12. Ce qui n'a PAS pu être exécuté ici, et pourquoi
 
 L'environnement de développement de cette session n'a accès qu'à une liste
