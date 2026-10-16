@@ -27,8 +27,9 @@ node config --conserver-secrets   # ancien plan conservateur, sans rotation glob
 Le mode automatique :
 
 1. Réutilise la session Vercel et récupère **production** avant toute suppression.
-   Si des connexions manquent, consulte le Storage et tente de rafraîchir les
-   intégrations **déjà attachées à ce projet**. Il ne choisit pas une autre base
+   Si des connexions manquent, tente les lectures API de production et consulte
+   le Storage **déjà attaché à ce projet**, sans rattacher/détacher une ressource.
+   Il ne choisit pas une autre base
    dans un compte et ne crée ni compte, ni ressource payante.
 2. Reconnaît `DATABASE_URL_UNPOOLED` / `POSTGRES_URL_NON_POOLING` comme
    `DIRECT_URL`, `POSTGRES_URL` / `POSTGRES_PRISMA_URL` comme `DATABASE_URL`, et
@@ -83,8 +84,11 @@ pour masquer un incident. Les fichiers privés contiennent des secrets en clair 
 les protéger par ACL/chiffrement sur Windows, ne jamais les publier. POSIX :
 fichiers `0600`, dossiers `0700`.
 
-**Limites externes :** une variable « Sensitive » est non relisible. Storage et
-ses intégrations ne peuvent être récupérés sans session et droits suffisants.
+**Limites externes :** le marquage « Sensitive » / `visibility: secret` décrit la
+protection, pas à lui seul la possibilité de lecture. Les valeurs réellement
+renvoyées par un pull authentifié sont utilisables ; les valeurs absentes ou
+masquées restent inconnues. Storage et ses intégrations ne peuvent être
+récupérés sans session et droits suffisants.
 Le configurateur ne peut ni inventer une clé API fournisseur ni retrouver un
 mot de passe perdu. Les identifiants publiés dans un chat doivent être révoqués
 chez leur fournisseur, puis récupérés depuis l’intégration actualisée. Aucun
@@ -94,6 +98,42 @@ SMTP/identité légale et service de publication externe restent signalées.
 
 Les sections suivantes décrivent aussi le **mode conservateur** et ses choix
 interactifs ; les différences du mode reconstruction sont précisées ci-dessus.
+
+### Si les quatre connexions semblaient introuvables
+
+Le correctif de lecture ne rejette plus une valeur authentiquement récupérée
+uniquement parce que sa métadonnée vaut `type: sensitive` ou
+`visibility: secret`. Le pull utilise toujours un **fichier temporaire neuf**
+pour ne pas confondre une ancienne valeur locale conservée par le CLI avec une
+réponse serveur. Les placeholders officiels `[SENSITIVE]`, valeurs vides et
+marqueurs de masquage ne sont jamais des credentials exploitables.
+
+Recherche, toujours limitée à l’équipe/projet sélectionné et à **production** :
+
+- pull officiel puis `/v3/env/pull/{projectId}/production` ;
+- liste `/v10/projects/{projectId}/env` avec demande de déchiffrement et filtre
+  production, puis lecture `/v1/projects/{projectId}/env/{envId}` pour les
+  variables fournisseur encore manquantes. Le ciphertext de la liste n’est
+  jamais interprété comme un mot de passe ;
+- une seule reconnexion officielle Vercel si des lectures Sensitive sont
+  refusées et qu’une session récente peut être requise. Il peut être nécessaire
+  de confirmer la connexion dans le navigateur, **sans saisir les variables** ;
+- inventaire Storage, détails de ressource et connexions du projet lorsque la
+  liste ne fournit pas les métadonnées. Postgres/Redis natifs et intégrations
+  sont reconnus. Les `contentHint` et préfixes (`NEON_`, `CACHE_`…) sont utilisés
+  seulement pour les variables/ressources de ce projet en production ; aucune
+  paire de connexions n’est assemblée depuis plusieurs bases différentes.
+
+Le diagnostic **`GarageFlow-configuration/storage-discovery.json`** contient
+uniquement les identifiants de cible, étapes et compteurs d’accès, et les
+**noms** des paramètres trouvés/manquants, jamais leurs valeurs. Il peut être
+partagé pour investiguer un refus. **Ne pas partager les autres fichiers du
+coffre**, les sauvegardes ou les `.env` : ils contiennent les secrets.
+
+Si les droits Vercel refusent encore la lecture après reconnexion, le script
+ne contourne ni MFA ni permissions : il s’arrête avant toute suppression et
+indique la lecture manquante. Une ressource liée ne garantit pas automatiquement
+que le compte courant a le droit d’en exporter les valeurs.
 
 ## Analyse du dépôt et couverture
 
@@ -211,7 +251,8 @@ Le remplacement Vercel utilise `env rm`, puis `env add --sensitive`.
 laisser la variable absente. Le profil local sauvegardé avant la synchronisation
 conserve la nouvelle valeur pour une relance. Aucun reçu de succès n’est écrit
 si la vérification finale échoue. Présence et métadonnées sont relues ; cela
-atteste l’écriture, pas une relecture du contenu Sensitive.
+atteste l’écriture ; lorsqu’une valeur reste masquée, elle ne permet pas de
+comparer son contenu. Les valeurs effectivement relisibles sont comparées.
 
 Le fichier **`GarageFlow-configuration/secrets-receipt.json`** (`0600`, ignoré par
 Git) ne contient aucune valeur secrète : empreintes SHA-256, identifiants

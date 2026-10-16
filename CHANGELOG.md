@@ -3,6 +3,24 @@
 
 ## [Non publié] — 2026-10-16 — chaîne build → installeur Windows réparée à la cause, page unique, vue globale des rendez-vous
 
+### `node config` — retrouver les connexions Storage au lieu de rejeter les secrets lus
+
+- Correction du blocage Windows sur les quatre paramètres PostgreSQL/Redis :
+  `pullVercel` supprimait systématiquement les valeurs marquées Sensitive ou
+  `visibility: secret`, même lorsqu’elles avaient été réellement renvoyées.
+  La lecture distingue désormais protection, valeur exploitable et placeholder.
+- Récupération API authentifiée de production, demande de déchiffrement puis
+  lectures ciblées par les IDs réels des variables. Une reconnexion officielle
+  au maximum si les droits de lecture nécessitent une authentification récente.
+- Découverte Storage en lecture seule, y compris types Postgres/Redis natifs,
+  métadonnées absentes de la liste, préfixes d’intégration et `contentHint`.
+  Pas de reconnexion de ressource « au cas où », pas de credential dev emprunté,
+  ni de mélange entre plusieurs bases.
+- Rapport de découverte sans valeurs secrètes, message distinguant accès refusé
+  et connexion manquante, réutilisation d’une valeur déchiffrée uniquement si sa
+  version distante est inchangée. Tests du scénario exact, placeholders,
+  permissions, sources préfixées et préservation des intégrations ajoutés en CI.
+
 ### `node config` — reconstruction automatique production après AUTORISER
 
 - Nouveau mode par défaut : sauvegardes privées, récupération des connexions

@@ -179,13 +179,13 @@ async function configureNeon(env, { auto = false, allowCreate = auto, api = { to
   env.DIRECT_URL ||= direct
   console.log('DATABASE_URL poolée et DIRECT_URL directe récupérées (valeurs masquées).')
 }
-async function pullVercel() {
-  fs.mkdirSync(path.join(ROOT, 'GarageFlow-configuration'), { recursive: true, mode: 0o700 })
-  const dir = fs.mkdtempSync(path.join(ROOT, 'GarageFlow-configuration/pull-'))
+async function pullVercel({ runTool = tool, root = ROOT } = {}) {
+  fs.mkdirSync(path.join(root, 'GarageFlow-configuration'), { recursive: true, mode: 0o700 })
+  const dir = fs.mkdtempSync(path.join(root, 'GarageFlow-configuration/pull-'))
   fs.chmodSync(dir, 0o700)
   const file = path.join(dir, '.env.production.local')
   try {
-    const raw = await tool('vercel', ['env', 'ls', 'production', '--format=json'])
+    const raw = await runTool('vercel', ['env', 'ls', 'production', '--format=json'])
     let records
     try {
       const inventory = JSON.parse(raw)
@@ -193,23 +193,15 @@ async function pullVercel() {
       records = inventory.envs
       if (!Array.isArray(records)) throw new Error()
     } catch { throw new Error('Vercel : métadonnées JSON invalides, synchronisation refusée.') }
-    await tool('vercel', ['env', 'pull', file, '--environment=production', '--yes'])
+    await runTool('vercel', ['env', 'pull', file, '--environment=production', '--yes'])
     fs.chmodSync(file, 0o600)
     const values = core.readEnv(file)
-    const hidden = new Set()
-    const present = new Set()
-    const stamps = {}
-    for (const r of records) {
-      present.add(r.key)
-      stamps[r.key] = JSON.stringify([r.updatedAt, r.createdAt, r.type, r.visibility, r.configurationId])
-      // Sensitive values cannot be retrieved: never mistake a placeholder for an absent secret.
-      if (r.type === 'sensitive' || r.visibility === 'secret' || !values[r.key]) {
-        hidden.add(r.key)
-        delete values[r.key]
-      }
-    }
-    return { values, hidden, present, stamps, records }
+    return require('./scripts/lib/config-vercel-env.cjs').fromPull(records, values)
   } finally { fs.rmSync(dir, { recursive: true, force: true }) }
+}
+async function refreshVercelAuth() {
+  if (!process.stdin.isTTY || !process.stdout.isTTY) throw new Error('Authentification Vercel récente requise : relancer dans un terminal interactif.')
+  await tool('vercel', ['login'], { interactive: true })
 }
 async function setupVercel({ authorized = false } = {}) {
   console.log('\nVercel : connexion puis sélection EXPLICITE du projet cible (production uniquement).')
@@ -492,7 +484,7 @@ async function syncVercel(env, names, expectedRemote, { authorized = false, read
       throw new Error(`Vercel : le remplacement de ${name} n’a pas été confirmé (variable absente ou inchangée).`)
     }
   }
-  console.log('Présence et horodatages vérifiés après écriture. Les valeurs Sensitive ne sont pas relisibles : leur contenu n’est jamais affiché.')
+  console.log('Présence, horodatages et valeurs relisibles vérifiés après écriture. Aucun contenu secret affiché ; les valeurs encore masquées ne sont pas comparables.')
   enregistrerRecus(env, names.filter(n => actual.hidden.has(n)), expectedRemote, actual)
   return true
 }
@@ -739,7 +731,7 @@ async function main() {
   console.log('GF_UPDATE_SIGNING_KEY reste EXCLUSIVEMENT dans le coffre du serveur de publication garagesite3 ; config ne la génère ni ne l’exporte ici.')
 }
 module.exports = { root: ROOT, question, yes, select, tool, execute, npmCli, generateSecrets,
-  setupVercel, pullVercel, importRemote, configureNeon, secretField, licenseKey,
+  setupVercel, pullVercel, refreshVercelAuth, importRemote, configureNeon, secretField, licenseKey,
   advanced, childEnv, syncVercel, licensePassphrase, diagnoseSql, summarizeSqlDiff }
 if (require.main === module) main().catch(error => {
   // Never expose raw provider payloads, JSON snippets, stacks or file error contents.

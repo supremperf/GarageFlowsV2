@@ -86,27 +86,34 @@ test('duplicate/branch-specific records cannot produce an ambiguous wipe', () =>
   assert.throws(() => rebuild.planRebuild({ values: {} }, {}, []), /inventaire complet/)
 })
 
-test('Storage recovery refreshes only resources already connected to the authorized project', async () => {
+test('Storage discovery is read-only and scopes every API request to the authorized team/project', async () => {
   const calls = []
   const base = { tool: async (_tool, args) => {
     calls.push(args)
-    if (args[0] === 'api') return JSON.stringify({ stores: [
-      { id: 'store_this', type: 'integration', projectsMetadata: [{ projectId: 'prj_test' }] },
+    if (args[1].startsWith('/v1/storage/stores?')) return JSON.stringify({ stores: [
+      { id: 'store_this', type: 'integration', projectsMetadata: [{ projectId: 'prj_test', environments: ['production'] }] },
       { id: 'store_other', type: 'integration', projectsMetadata: [{ projectId: 'prj_other' }] },
-      { id: 'store_blob', type: 'blob', projectsMetadata: [{ projectId: 'prj_test' }] },
+      { id: 'store_blob', type: 'blob', projectsMetadata: [{ projectId: 'prj_test', environments: ['production'] }] },
     ] })
-    return ''
-  }, pullVercel: async () => ({ recovered: true }) }
-  const result = await rebuild.recoverStorage(base, { values: {} }, { orgId: 'team_test', projectId: 'prj_test' })
-  assert.equal(result.recovered, true)
-  assert.equal(calls.length, 2)
-  assert.deepEqual(calls[1], ['integration-resource', 'connect', 'store_this', 'prj_test', '--environment', 'production', '--yes', '--scope', 'team_test'])
+    if (args[1].includes('/connections')) return JSON.stringify({ connections: [] })
+    if (args[1].includes('/env?')) return JSON.stringify({ envs: [] })
+    return JSON.stringify({ env: {} })
+  } }
+  const remote = { values: {}, hidden: new Set(), records: [] }
+  const result = await rebuild.recoverStorage(base, remote, { orgId: 'team_test', projectId: 'prj_test' })
+  assert.deepEqual(result.values, {})
+  assert.ok(calls.length >= 3)
+  assert.ok(calls.every(args => args[0] === 'api' && new URL('https://api.vercel.com' + args[1]).searchParams.get('teamId') === 'team_test'))
+  assert.ok(!calls.some(args => args.includes('connect') || args.includes('disconnect') || args.includes('rm')))
 })
 
 test('after authorization: backup, automatic generation, wipe and rewrite without credential prompts', async t => {
   const f = fixture(t), api = rebuild.automaticApi(f.base)
   assert.equal(await api.question('Saisir AUTORISER'), 'AUTORISER')
   const remote = await api.setupVercel()
+  const report = fs.readFileSync(path.join(f.root, 'GarageFlow-configuration/storage-discovery.json'), 'utf8')
+  assert.deepEqual(JSON.parse(report).missing, [])
+  for (const value of Object.values(f.values)) assert.ok(!report.includes(value), 'diagnostic has no credentials')
   const env = await api.importRemote({}, remote, f.names)
   assert.notEqual(env.NEXTAUTH_SECRET, f.values.NEXTAUTH_SECRET)
   assert.equal(Buffer.from(env.NEXTAUTH_SECRET, 'base64').length, 32)
@@ -261,4 +268,24 @@ test('real PG parameters can build URLs with encoded credentials, never invent t
   const withDirect = rebuild.normalizeStorage({ ...fields, PGHOST_UNPOOLED: 'ep-provider.neon.tech' })
   assert.equal(new URL(withDirect.DIRECT_URL).hostname, 'ep-provider.neon.tech')
   assert.equal(rebuild.normalizeStorage({ ...fields, PGPASSWORD: '' }).DATABASE_URL, undefined)
+})
+
+test('protected Storage values recovered by API stay usable for the unchanged version when env pull masks them', async t => {
+  const f = fixture(t)
+  const name = 'POSTGRES_URL'
+  f.current.records.find(r => r.key === name).configurationId = 'integration_pg'
+  f.current.records.find(r => r.key === name).id = 'env_pg'
+  delete f.current.values[name]
+  f.current.hidden.add(name)
+  const original = f.base.tool
+  f.base.tool = async (tool, args, options) => {
+    if (args[0] === 'api' && args[1].startsWith('/v3/env/pull/')) return JSON.stringify({ env: f.values })
+    return original(tool, args, options)
+  }
+  const api = rebuild.automaticApi(f.base)
+  const before = await api.setupVercel()
+  const env = await api.importRemote({}, before, f.names)
+  assert.equal(env.DATABASE_URL, f.values.POSTGRES_URL)
+  await api.syncVercel(env, f.names)
+  assert.ok(!f.commands.some(c => c.args[2] === name), 'protected source was neither deleted nor rewritten')
 })

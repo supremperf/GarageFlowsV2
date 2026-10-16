@@ -4,10 +4,11 @@ const fs = require('node:fs')
 const path = require('node:path')
 const crypto = require('node:crypto')
 const core = require('./config-core.cjs')
+const vercelEnv = require('./lib/config-vercel-env.cjs')
 
 const STORAGE_ALIASES = {
   DATABASE_URL: ['DATABASE_URL', 'POSTGRES_PRISMA_URL', 'POSTGRES_URL'],
-  DIRECT_URL: ['DIRECT_URL', 'DATABASE_URL_UNPOOLED', 'POSTGRES_URL_NON_POOLING'],
+  DIRECT_URL: ['DIRECT_URL', 'DATABASE_URL_UNPOOLED', 'POSTGRES_URL_NON_POOLING', 'POSTGRES_URL_UNPOOLED'],
   UPSTASH_REDIS_REST_URL: ['UPSTASH_REDIS_REST_URL', 'KV_REST_API_URL'],
   UPSTASH_REDIS_REST_TOKEN: ['UPSTASH_REDIS_REST_TOKEN', 'KV_REST_API_TOKEN'],
 }
@@ -16,9 +17,9 @@ function clean(value) {
   return String(value || '').replace(/\[([^\]\r\n]+)\]\([^\r\n)]*\)/g, '$1').replace(/&amp;/g, '&').trim()
 }
 function normalizeStorage(source) {
-  const result = { ...source }
+  const result = Object.fromEntries(Object.entries(source).filter(([, value]) => vercelEnv.readable(value)))
   for (const [canonical, aliases] of Object.entries(STORAGE_ALIASES)) {
-    const candidates = aliases.map(n => clean(source[n])).filter(Boolean)
+    const candidates = aliases.map(n => clean(source[n])).filter(vercelEnv.readable)
     if (candidates.length) result[canonical] = candidates[0]
   }
   // Build a connection only from actual provider parameters, never a guessed
@@ -28,7 +29,7 @@ function normalizeStorage(source) {
   const database = clean(source.PGDATABASE || source.POSTGRES_DATABASE)
   const port = clean(source.PGPORT)
   for (const [name, host] of [['DATABASE_URL', clean(source.PGHOST || source.POSTGRES_HOST)], ['DIRECT_URL', clean(source.PGHOST_UNPOOLED)]]) {
-    if (result[name] || !user || !password || !database || !/^[a-zA-Z0-9.-]+$/.test(host) || (port && (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535))) continue
+    if (result[name] || !vercelEnv.readable(user) || !vercelEnv.readable(password) || !vercelEnv.readable(database) || !/^[a-zA-Z0-9.-]+$/.test(host) || (port && (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535))) continue
     const url = new URL(`postgresql://${host}${port ? `:${port}` : ''}`)
     url.username = user; url.password = password
     url.pathname = `/${encodeURIComponent(database)}`
@@ -79,27 +80,11 @@ function planRebuild(remote, env, names, platform = [], excluded = []) {
   return { remove, values, protectedNames: [...protectedNames] }
 }
 
-// Refresh only resources already attached to THIS project; never select another
-// database from an account-wide list, never disconnect/delete a Storage resource.
+// Read authenticated project values and discover only resources bound to the
+// authorized project; no reconnect/reset as a substitute for recovering a value.
 async function recoverStorage(base, remote, project) {
-  if (REQUIRED.every(n => normalizeStorage(remote.values)[n])) return remote
-  let stores
-  try {
-    const raw = await base.tool('vercel', ['api', `/v1/storage/stores?teamId=${encodeURIComponent(project.orgId)}`])
-    stores = JSON.parse(raw).stores
-    if (!Array.isArray(stores)) throw new Error()
-    for (const store of stores) {
-      const connection = store.projectsMetadata?.find(p => p.projectId === project.projectId)
-      if (!connection || store.type !== 'integration') continue
-      const args = ['integration-resource', 'connect', store.id, project.projectId, '--environment', 'production', '--yes', '--scope', project.orgId]
-      if (connection.envVarPrefix) args.push('--prefix', connection.envVarPrefix)
-      try { await base.tool('vercel', args) } catch { /* Already attached: never disconnect as a workaround. */ }
-    }
-    return await base.pullVercel()
-  } catch {
-    console.log('Storage Vercel : rafraîchissement indisponible ; récupération depuis les sources locales privées du projet lié.')
-    return remote
-  }
+  return require('./config-storage-discovery.cjs').discover(base, remote, project,
+    { normalize: normalizeStorage, required: REQUIRED, aliases: STORAGE_ALIASES })
 }
 
 function automaticApi(base, { platform = [], excluded = [] } = {}) {
@@ -151,12 +136,13 @@ function automaticApi(base, { platform = [], excluded = [] } = {}) {
     fs.mkdirSync(folder, { recursive: true, mode: 0o700 })
     backup = fs.mkdtempSync(path.join(folder, 'rebuild-'))
     fs.chmodSync(backup, 0o700)
+    if (remote.discovery) core.writePrivate(path.join(folder, 'storage-discovery.json'), JSON.stringify(remote.discovery, null, 2) + '\n')
     for (const name of ['.env', '.env.server.local', '.env.storage.local', 'keys/server_config.json']) {
       const file = path.join(root, name)
       if (fs.existsSync(file)) core.writePrivate(path.join(backup, name), fs.readFileSync(file, 'utf8'))
     }
     core.writePrivate(path.join(backup, 'vercel-original.env'), core.serializeEnv(remote.values, Object.keys(remote.values), 'rebuild-backup'))
-    console.log('Sauvegarde privée des profils et des variables relisibles effectuée. Les secrets Sensitive inconnus ne sont pas récupérables par magie.')
+    console.log('Sauvegarde privée des profils et des valeurs récupérées effectuée. Aucune valeur secrète affichée.')
     return remote
   }
   api.importRemote = async (local, remote, names) => {
@@ -165,7 +151,7 @@ function automaticApi(base, { platform = [], excluded = [] } = {}) {
     const source = { ...normalizeStorage(savedSources), ...normalizeStorage(privateStorage), ...normalizeStorage(local), ...normalizeStorage(remote.values) }
     if (pending) Object.assign(source, pending.env)
     const missing = REQUIRED.filter(n => !source[n])
-    if (missing.length) throw new Error(`Accès Storage introuvables : ${missing.join(', ')}. Connectez Neon/Upstash à ce projet Vercel en production avec accès relisible. Aucune variable distante supprimée.`)
+    if (missing.length) throw new Error(`Accès Storage introuvables : ${missing.join(', ')}. Consultez le diagnostic de découverte (storage-discovery.json, sans valeurs). Si des lectures sont refusées, reconnectez le compte propriétaire Vercel et vérifiez ses droits sur cette équipe/ce projet ; les ressources peuvent être liées mais leurs valeurs rester masquées. Aucune variable distante supprimée.`)
     const connectionIssues = core.validate(source, 'pwa', { vercel: true })
       .filter(m => REQUIRED.some(n => m.startsWith(`${n} :`)))
     if (connectionIssues.length) throw new Error('Connexions Storage invalides ; aucune suppression. Vérifiez les connexions PostgreSQL poolée/directe et Redis REST du projet.')
@@ -223,11 +209,15 @@ function automaticApi(base, { platform = [], excluded = [] } = {}) {
   api.syncVercel = async (env, names) => {
     if (!sameProject(project, identity(root))) throw new Error('Projet Vercel modifié ; aucune suppression autorisée.')
     if (!(await api.services.inspectDatabase(root, env.DIRECT_URL)).empty) throw new Error('Des données métier sont apparues pendant le plan ; aucune suppression autorisée.')
-    const current = await base.pullVercel()
+    let current = await base.pullVercel()
     const oldKeys = [...snapshot.present].sort(), newKeys = [...current.present].sort()
     if (JSON.stringify(oldKeys) !== JSON.stringify(newKeys) || oldKeys.some(n => snapshot.stamps[n] !== current.stamps[n])) {
       throw new Error('Vercel a changé pendant le plan ; aucune suppression. Relancez config.')
     }
+    // A dedicated decryption read may have recovered a provider value that the
+    // regular pull still masks. Reuse it only for the exact unchanged version.
+    current = vercelEnv.attach(current, Object.fromEntries([...current.hidden].filter(n =>
+      snapshot.stamps[n] === current.stamps[n] && vercelEnv.readable(snapshot.values[n])).map(n => [n, snapshot.values[n]])))
     if (pending) current.values = { ...pending.originalValues, ...current.values }
     const plan = planRebuild(current, { ...serviceSource, ...env }, names, platform, excluded)
     if (pending) {
