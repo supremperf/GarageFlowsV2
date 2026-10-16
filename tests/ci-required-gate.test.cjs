@@ -17,7 +17,13 @@ test('workflow graph pins actions, retains strict security and packages Windows 
   assert.deepEqual(gate.needs, required)
   assert.equal(workflow.permissions.contents, 'read')
   const base=workflow.jobs['base-verification']
-  assert.ok(base.steps.some(s=>s.run==='npx tsc --noEmit'))
+  // L'étape de vérification de type standard doit EXISTER et échouer bruyamment.
+  // Sa forme a changé le 16/10/2026 (mêmes commande et code de sortie, plus
+  // des annotations d'erreur lisibles par API) : on vérifie donc la présence de
+  // la commande ET la propagation du code de sortie, pas une chaîne figée.
+  const tscStep = base.steps.find(s=>s.run?.includes('npx tsc --noEmit'))
+  assert.ok(tscStep, 'le contrôle TypeScript standard a disparu du job de base')
+  assert.match(tscStep.run, /exit \$statut/, 'le contrôle ne propage plus son code de sortie')
   assert.ok(base.steps.some(s=>s.run==='npm run build'))
   assert.ok(base.steps.some(s=>s.run?.includes('npm run check:perf-budget')))
   assert.ok(base.steps.some(s=>s.run?.includes('totalClientJsBytes !== 3625984')))

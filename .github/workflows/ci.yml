@@ -396,7 +396,26 @@ jobs:
       # Sans E2E_EMAIL/E2E_PASSWORD, seuls les tests PUBLICS (page de connexion,
       # responsive) s'exécutent ; les parcours authentifiés sont ignorés (skip).
       - name: Run E2E (public responsive suite)
-        run: npx playwright test
+        # Un échec Playwright doit être NOMMÉ : le rapport HTML est téléversé en
+        # artefact, mais son téléchargement peut être indisponible — sans ces
+        # annotations, un échec ne se lisait que comme « exit code 1 », sur une
+        # suite à 6 gabarits d'écran. Les en-têtes de tests en échec et la
+        # première ligne d'erreur remontent donc en annotations.
+        run: |
+          set +e
+          npx playwright test > /tmp/e2e.txt 2>&1
+          statut=$?
+          set -e
+          cat /tmp/e2e.txt
+          if [ $statut -ne 0 ]; then
+            while IFS= read -r ligne; do
+              echo "::error title=E2E::${ligne}"
+            done < <(grep -aE '^[[:space:]]+[0-9]+\) |^(Error|expect\.)|Reading the error|Timed out' /tmp/e2e.txt | sed 's/^[[:space:]]*//' | head -n 10)
+            if ! grep -qaE '^[[:space:]]+[0-9]+\) ' /tmp/e2e.txt; then
+              echo "::error::Suite E2E en échec — aucune ligne de test reconnue (voir le rapport HTML en artefact)."
+            fi
+          fi
+          exit $statut
         env:
           DATABASE_URL: file:./dev.db
           NEXTAUTH_SECRET: ci-e2e-secret-not-for-production-0123456789
