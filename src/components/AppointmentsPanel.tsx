@@ -145,7 +145,7 @@ export default function AppointmentsPanel({ onClose }: { onClose: () => void }) 
             className="p-2 rounded-lg text-slate-500 hover:bg-white/[0.07] hover:text-slate-300 transition-colors">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
+          <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>

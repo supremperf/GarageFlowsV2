@@ -29,6 +29,10 @@ const SuppliersPanel = dynamic(() => import('@/components/SuppliersPanel'), { ss
 const ClientsPanel = dynamic(() => import('@/components/ClientsPanel'), { ssr: false })
 const TicketsPanel = dynamic(() => import('@/components/TicketsPanel'), { ssr: false })
 const AppointmentsPanel = dynamic(() => import('@/components/AppointmentsPanel'), { ssr: false })
+// Fiche VÉHICULE : historique des interventions, devis et garanties d'un
+// véhicule. Elle n'était atteignable que depuis la fenêtre d'intervention ; le
+// tableau de bord doit pouvoir l'ouvrir depuis un rendez-vous (GF-DUR-054).
+const VehicleHistoryModal = dynamic(() => import('@/components/VehicleHistoryModal'), { ssr: false })
 const CatalogPanel = dynamic(() => import('@/components/CatalogPanel'), { ssr: false })
 import LicenseRevokedOverlay from '@/components/LicenseRevokedOverlay'
 const UpdateModal = dynamic(() => import('@/components/UpdateModal'), { ssr: false })
@@ -37,6 +41,7 @@ import GfDrawer from '@/components/GfDrawer'
 import { Loader2, Sparkles, RefreshCw } from 'lucide-react'
 import { GarageFlowIcon } from '@/components/GarageFlowLogo'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { viderBrouillons } from '@/lib/ui/brouillon'
 
 // ── Splash-loader shown while session + data load ─────────────────────────────
 const AppLoader = memo(function AppLoader() {
@@ -74,6 +79,9 @@ export default function Home() {
     loanerActif,
     runAI,
     isDashboardOpen,
+    // Le tableau de bord s'ouvre et se ferme par le magasin d'état (bouton de la
+    // barre d'outils, raccourci clavier) : la page unique s'y synchronise.
+    toggleDashboard,
     isStockPanelOpen,
     toggleStockPanel,
     openCreateModal,
@@ -89,24 +97,103 @@ export default function Home() {
   const [onboarding,           setOnboarding]           = useState<'loading' | 'needed' | 'done'>('loading')
   const [setupError,           setSetupError]           = useState<string | null>(null)
   const [view,                 setView]                 = useState<'day' | 'week'>('day')
-  const [isSettingsOpen,       setIsSettingsOpen]       = useState(false)
   const [showLangPicker,       setShowLangPicker]       = useState(false)
-  const [isReceptionBoardOpen, setIsReceptionBoardOpen] = useState(false)
-  const [isReminderPanelOpen,  setIsReminderPanelOpen]  = useState(false)
-  const [isBillingOpen,        setIsBillingOpen]        = useState(false)
-  const [isFinanceOpen,        setIsFinanceOpen]        = useState(false)
-  const [isLaborCatalogOpen,   setIsLaborCatalogOpen]   = useState(false)
-  const [isWarrantyPanelOpen,  setIsWarrantyPanelOpen]  = useState(false)
-  const [isLoanerPanelOpen,    setIsLoanerPanelOpen]    = useState(false)
-  const [isCopilotOpen,        setIsCopilotOpen]        = useState(false)
-  const [isOcrOpen,            setIsOcrOpen]            = useState(false)
-  const [isSuppliersOpen,      setIsSuppliersOpen]      = useState(false)
-  const [isClientsOpen,        setIsClientsOpen]        = useState(false)
-  const [isTicketsOpen,        setIsTicketsOpen]        = useState(false)
-  const [isApptsOpen,          setIsApptsOpen]          = useState(false)
-  const [isCatalogOpen,        setIsCatalogOpen]        = useState(false)
   const [isAssistantOpen,      setIsAssistantOpen]      = useState(false)
   const [warrantyAlerts,       setWarrantyAlerts]       = useState(0)
+  /** Fiche client à ouvrir directement dans la page « Clients ». */
+  const [clientACibler,        setClientACibler]        = useState<string | null>(null)
+  /**
+   * Incrémenté à chaque écriture dans les clients : le menu déroulant de la
+   * barre d'outils relit alors sa liste (voir `ClientPicker.refreshKey`).
+   */
+  const [clientsVersion,       setClientsVersion]       = useState(0)
+  /** Rendez-vous à mettre en évidence dans le tableau de bord. */
+  const [rdvACibler,           setRdvACibler]           = useState<string | null>(null)
+  /**
+   * Tiroir « Rendez-vous » (décisions détaillées). Ce n'est PAS une page : il
+   * s'ouvre PAR-DESSUS le tableau de bord, qui reste visible derrière lui.
+   * Il n'est atteignable que depuis le tableau de bord — l'entrée de barre
+   * d'outils a été retirée, la fonction est demeurée entière.
+   */
+  const [isApptsOpen,          setIsApptsOpen]          = useState(false)
+  /** Véhicule dont l'historique est affiché (fiche véhicule). */
+  const [vehiculeCible,        setVehiculeCible]        = useState<string | null>(null)
+
+  /**
+   * ── UNE SEULE PAGE À L'ÉCRAN (GF-DUR-053) ───────────────────────────────────
+   *
+   * Chaque entrée de la barre d'outils ouvrait SA propre variable booléenne
+   * (`isClientsOpen`, `isBillingOpen`, …). Rien ne les fermait les unes les
+   * autres : ouvrir « Réception » puis « Clients » laissait DEUX pages plein
+   * écran empilées, toutes deux en `fixed inset-0 z-50`. Le comptoir voyait
+   * l'écran clignoter, ne savait plus quelle page il avait devant lui, et un
+   * clic pouvait atterrir sur la page du dessous.
+   *
+   * Une seule variable remplace les seize booléens : `surface`. Ouvrir une page
+   * ferme donc la précédente, par construction — il n'existe plus d'état dans
+   * lequel deux pages cohabitent.
+   *
+   * Ce qui N'EST PAS une page garde son comportement : le planning, les
+   * fenêtres de dialogue (intervention, inspection, mise à jour) et la fenêtre
+   * de licence restent des MODALES par-dessus la page courante. Les fermer ne
+   * touche pas à la page qui est dessous.
+   */
+  type Surface =
+    | 'dashboard' | 'reception' | 'reminders' | 'billing' | 'finance'
+    | 'labor' | 'warranty' | 'loaner' | 'copilot' | 'ocr'
+    | 'suppliers' | 'clients' | 'tickets' | 'appointments' | 'catalog'
+    | 'settings'
+
+  const [surface, setSurface] = useState<Surface | null>(null)
+
+  /**
+   * Brouillons conservés lors d'un CHANGEMENT de page, effacés lors d'une
+   * FERMETURE volontaire (✕ ou Échap). Voir `src/lib/ui/brouillon.ts`.
+   */
+  const PREFIXE_BROUILLON: Partial<Record<Surface, string>> = {
+    clients: 'clients:', tickets: 'tickets:', ocr: 'ocr:', copilot: 'copilot:',
+    loaner: 'loaner:', warranty: 'warranty:', labor: 'labor:',
+    reminders: 'reminders:', suppliers: 'suppliers:', billing: 'billing:',
+  }
+
+  /**
+   * Ouvre une page — et ferme celle qui était affichée.
+   *
+   * Le tableau de bord est piloté par le store (`useScheduleStore`) parce que
+   * la barre d'outils et le raccourci clavier l'ouvrent tous les deux ; on le
+   * synchronise ici pour qu'il obéisse à la même règle que les autres.
+   */
+  const ouvrirPage = useCallback((cible: Surface) => {
+    setSurface(cible)
+    // Le tableau de bord appartient au store : c'est lui qui commande l'affichage.
+    if (cible === 'dashboard') { if (!isDashboardOpen) toggleDashboard() }
+    else if (isDashboardOpen) toggleDashboard()
+    // Le volet « Stock » est un tiroir latéral : il n'a rien à faire par-dessus
+    // une page plein écran. On le referme, et son état suit.
+    if (isStockPanelOpen) toggleStockPanel()
+  }, [isDashboardOpen, isStockPanelOpen, toggleDashboard, toggleStockPanel])
+
+  /** Ferme la page courante (✕, Échap) — un abandon, donc brouillons effacés. */
+  const fermerPage = useCallback(() => {
+    setSurface((courante) => {
+      const prefixe = courante ? PREFIXE_BROUILLON[courante] : undefined
+      if (prefixe) viderBrouillons(prefixe)
+      return null
+    })
+    if (isDashboardOpen) toggleDashboard()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDashboardOpen, toggleDashboard])
+
+  // Le tableau de bord peut aussi être ouvert ou fermé SANS passer par ici
+  // (bouton de la barre d'outils, raccourci clavier, ✕ de son propre en-tête).
+  // On recale `surface` sur son état réel, sinon la page suivante s'ouvrirait
+  // en refermant un tableau de bord déjà fermé.
+  useEffect(() => {
+    setSurface((courante) => {
+      if (isDashboardOpen) return 'dashboard'
+      return courante === 'dashboard' ? null : courante
+    })
+  }, [isDashboardOpen])
 
   const activeSuggestionsCount = suggestions.filter(s => !s.dismissed).length
 
@@ -122,21 +209,24 @@ export default function Home() {
   // Copilot proposes an action, then hands off to the real, fully-formed tool —
   // it never fires an underspecified write itself.
   const handleCopilotAction = useCallback((intent: string) => {
-    setIsCopilotOpen(false)
     switch (intent) {
       case 'create_appointment': openCreateModal(); break
-      case 'create_quote':       setIsBillingOpen(true); break
-      case 'order_parts':        setIsSuppliersOpen(true); break
-      case 'send_reminder':      setIsReminderPanelOpen(true); break
-      case 'generate_report':    setIsFinanceOpen(true); break
+      case 'create_quote':       ouvrirPage('billing'); break
+      case 'order_parts':        ouvrirPage('suppliers'); break
+      case 'send_reminder':      ouvrirPage('reminders'); break
+      case 'generate_report':    ouvrirPage('finance'); break
     }
-  }, [openCreateModal])
+    // La page demandée REMPLACE l'assistant : `ouvrirPage` s'en charge. Le
+    // fermer ici en plus ferait clignoter l'écran sans rien apporter.
+  }, [openCreateModal, ouvrirPage])
 
   // OCR decode → open the create-job modal pre-filled with the decoded vehicle.
   const handleOcrVehicle = useCallback((preset: { licensePlate?: string; vehicleModel?: string }) => {
-    setIsOcrOpen(false)
+    // Le véhicule décodé part dans le formulaire d'intervention ; la page OCR
+    // laisse place au PLANNING (la modale s'ouvre par-dessus).
+    fermerPage()
     openCreateModal(preset)
-  }, [openCreateModal])
+  }, [fermerPage, openCreateModal])
 
   useKeyboardShortcuts({
     onNewJob:  () => openCreateModal(),
@@ -148,13 +238,8 @@ export default function Home() {
     },
     onClose:   () => {
       closeModal()
-      setIsSettingsOpen(false)
-      setIsReceptionBoardOpen(false)
-      setIsReminderPanelOpen(false)
-      setIsBillingOpen(false)
-      setIsLaborCatalogOpen(false)
-      setIsWarrantyPanelOpen(false)
-      setIsLoanerPanelOpen(false)
+      // Une seule page peut être ouverte : une seule instruction la referme.
+      fermerPage()
       setIsAssistantOpen(false)
       if (isStockPanelOpen) toggleStockPanel()
     },
@@ -368,21 +453,23 @@ export default function Home() {
     <div className="flex flex-col h-app overflow-hidden bg-[#0f1629]">
       <Header
         session={session}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenReception={() => setIsReceptionBoardOpen(true)}
-        onOpenReminders={() => setIsReminderPanelOpen(true)}
-        onOpenBilling={() => setIsBillingOpen(true)}
-        onOpenFinance={() => setIsFinanceOpen(true)}
-        onOpenLaborCatalog={() => setIsLaborCatalogOpen(true)}
-        onOpenWarranties={() => setIsWarrantyPanelOpen(true)}
-        onOpenLoaner={loanerActif ? () => setIsLoanerPanelOpen(true) : undefined}
-        onOpenCopilot={() => setIsCopilotOpen(true)}
-        onOpenOcr={() => setIsOcrOpen(true)}
-        onOpenSuppliers={() => setIsSuppliersOpen(true)}
-        onOpenClients={() => setIsClientsOpen(true)}
-        onOpenTickets={() => setIsTicketsOpen(true)}
-        onOpenAppointments={() => setIsApptsOpen(true)}
-        onOpenCatalog={() => setIsCatalogOpen(true)}
+        surfaceActive={surface}
+        onOpenSettings={() => ouvrirPage('settings')}
+        onOpenReception={() => ouvrirPage('reception')}
+        onOpenReminders={() => ouvrirPage('reminders')}
+        onOpenBilling={() => ouvrirPage('billing')}
+        onOpenFinance={() => ouvrirPage('finance')}
+        onOpenLaborCatalog={() => ouvrirPage('labor')}
+        onOpenWarranties={() => ouvrirPage('warranty')}
+        onOpenLoaner={loanerActif ? () => ouvrirPage('loaner') : undefined}
+        onOpenCopilot={() => ouvrirPage('copilot')}
+        onOpenOcr={() => ouvrirPage('ocr')}
+        onOpenSuppliers={() => ouvrirPage('suppliers')}
+        onOpenClients={() => ouvrirPage('clients')}
+        onOpenClient={(id) => { setClientACibler(id); ouvrirPage('clients') }}
+        onOpenTickets={() => ouvrirPage('tickets')}
+        onOpenCatalog={() => ouvrirPage('catalog')}
+        clientsVersion={clientsVersion}
         warrantyAlerts={warrantyAlerts}
       />
 
@@ -437,21 +524,20 @@ export default function Home() {
       <MobileNav
         onNewJob={() => openCreateModal()}
         onOpenAssistant={() => setIsAssistantOpen(true)}
-        onOpenReception={() => setIsReceptionBoardOpen(true)}
-        onOpenReminders={() => setIsReminderPanelOpen(true)}
-        onOpenBilling={() => setIsBillingOpen(true)}
-        onOpenFinance={() => setIsFinanceOpen(true)}
-        onOpenLaborCatalog={() => setIsLaborCatalogOpen(true)}
-        onOpenWarranties={() => setIsWarrantyPanelOpen(true)}
-        onOpenLoaner={loanerActif ? () => setIsLoanerPanelOpen(true) : undefined}
-        onOpenCopilot={() => setIsCopilotOpen(true)}
-        onOpenOcr={() => setIsOcrOpen(true)}
-        onOpenSuppliers={() => setIsSuppliersOpen(true)}
-        onOpenClients={() => setIsClientsOpen(true)}
-        onOpenTickets={() => setIsTicketsOpen(true)}
-        onOpenAppointments={() => setIsApptsOpen(true)}
-        onOpenCatalog={() => setIsCatalogOpen(true)}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenReception={() => ouvrirPage('reception')}
+        onOpenReminders={() => ouvrirPage('reminders')}
+        onOpenBilling={() => ouvrirPage('billing')}
+        onOpenFinance={() => ouvrirPage('finance')}
+        onOpenLaborCatalog={() => ouvrirPage('labor')}
+        onOpenWarranties={() => ouvrirPage('warranty')}
+        onOpenLoaner={loanerActif ? () => ouvrirPage('loaner') : undefined}
+        onOpenCopilot={() => ouvrirPage('copilot')}
+        onOpenOcr={() => ouvrirPage('ocr')}
+        onOpenSuppliers={() => ouvrirPage('suppliers')}
+        onOpenClients={() => ouvrirPage('clients')}
+        onOpenTickets={() => ouvrirPage('tickets')}
+        onOpenCatalog={() => ouvrirPage('catalog')}
+        onOpenSettings={() => ouvrirPage('settings')}
         warrantyAlerts={warrantyAlerts}
         assistantCount={activeSuggestionsCount}
       />
@@ -481,23 +567,59 @@ export default function Home() {
       {/* ── Modals & panels (lazy rendered) ─────────────────────────────────── */}
       <JobModal />
 
-      {isDashboardOpen        && <Dashboard />}
-      {isStockPanelOpen       && <StockPanel     onClose={toggleStockPanel} />}
-      {isReceptionBoardOpen   && <ReceptionBoard onClose={() => setIsReceptionBoardOpen(false)} />}
-      {isReminderPanelOpen    && <ReminderPanel  onClose={() => setIsReminderPanelOpen(false)} />}
-      {isBillingOpen          && <BillingPanel         onClose={() => setIsBillingOpen(false)} />}
-      {isFinanceOpen          && <FinancialDashboard   onClose={() => setIsFinanceOpen(false)} />}
-      {isLaborCatalogOpen     && <LaborCatalogPanel     onClose={() => setIsLaborCatalogOpen(false)} />}
-      {isWarrantyPanelOpen    && <WarrantyPanel         onClose={() => setIsWarrantyPanelOpen(false)} />}
-      {isLoanerPanelOpen      && <LoanerPanel           onClose={() => setIsLoanerPanelOpen(false)} />}
-      {isCopilotOpen          && <CopilotPanel          onClose={() => setIsCopilotOpen(false)} onAction={handleCopilotAction} />}
-      {isOcrOpen              && <OcrPanel              onClose={() => setIsOcrOpen(false)} onUseVehicle={handleOcrVehicle} />}
-      {isSuppliersOpen        && <SuppliersPanel        onClose={() => setIsSuppliersOpen(false)} />}
-      {isClientsOpen          && <ClientsPanel          onClose={() => setIsClientsOpen(false)} />}
-      {isTicketsOpen          && <TicketsPanel          onClose={() => setIsTicketsOpen(false)} />}
-      {isApptsOpen            && <AppointmentsPanel     onClose={() => setIsApptsOpen(false)} />}
-      {isCatalogOpen          && <CatalogPanel          onClose={() => setIsCatalogOpen(false)} />}
-      {isSettingsOpen         && <SettingsModal        onClose={() => setIsSettingsOpen(false)} />}
+      {/*
+        ── Pages ─────────────────────────────────────────────────────────────
+        `surface` ne contient QU'UNE valeur : au plus une page est montée, donc
+        aucune ne peut recouvrir une autre. Le stock reste une page à part
+        (`isStockPanelOpen`), piloté par le magasin d'état — il se ferme dès
+        qu'une page s'ouvre, pour la même raison.
+      */}
+      {surface === 'dashboard'    && (
+        <Dashboard
+          onOpenClient={(id) => { setClientACibler(id); ouvrirPage('clients') }}
+          onOpenVehicle={(id) => setVehiculeCible(id)}
+          onOpenAppointments={() => setIsApptsOpen(true)}
+          rdvACibler={rdvACibler}
+        />
+      )}
+      {surface === 'reception'    && <ReceptionBoard     onClose={fermerPage} />}
+      {surface === 'reminders'    && <ReminderPanel      onClose={fermerPage} />}
+      {surface === 'billing'      && <BillingPanel       onClose={fermerPage} />}
+      {surface === 'finance'      && <FinancialDashboard onClose={fermerPage} />}
+      {surface === 'labor'        && <LaborCatalogPanel  onClose={fermerPage} />}
+      {surface === 'warranty'     && <WarrantyPanel      onClose={fermerPage} />}
+      {surface === 'loaner'       && <LoanerPanel        onClose={fermerPage} />}
+      {surface === 'copilot'      && <CopilotPanel       onClose={fermerPage} onAction={handleCopilotAction} />}
+      {surface === 'ocr'          && <OcrPanel           onClose={fermerPage} onUseVehicle={handleOcrVehicle} />}
+      {surface === 'suppliers'    && <SuppliersPanel     onClose={fermerPage} />}
+      {surface === 'clients'      && (
+        <ClientsPanel
+          onClose={fermerPage}
+          initialClientId={clientACibler}
+          onClientsChanged={() => setClientsVersion(v => v + 1)}
+        />
+      )}
+      {surface === 'tickets'      && <TicketsPanel       onClose={fermerPage} />}
+      {surface === 'catalog'      && <CatalogPanel       onClose={fermerPage} />}
+      {surface === 'settings'     && <SettingsModal      onClose={fermerPage} />}
+      {/* Le volet « Stock » est fermé par `ouvrirPage` : il ne peut donc pas
+          cohabiter avec une page plein écran (`z-40` sous un `z-50`). */}
+      {isStockPanelOpen && <StockPanel onClose={toggleStockPanel} />}
+
+      {/*
+        Tiroir des rendez-vous : décisions détaillées (confirmer, terminer,
+        annuler, consulter les demandes en attente), ouvert depuis le tableau de
+        bord. Il se ferme aussi lors d'un changement de page, pour ne jamais
+        survivre par-dessus un autre écran.
+      */}
+      {isApptsOpen && surface === 'dashboard' && (
+        <AppointmentsPanel onClose={() => setIsApptsOpen(false)} />
+      )}
+
+      {/* Fiche véhicule — historique complet, ouvert depuis un rendez-vous. */}
+      {vehiculeCible && (
+        <VehicleHistoryModal vehicleId={vehiculeCible} onClose={() => setVehiculeCible(null)} />
+      )}
 
       {/* ── First-launch onboarding ──────────────────────────────────────────── */}
       {showLangPicker && (

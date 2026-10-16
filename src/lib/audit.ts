@@ -17,6 +17,9 @@ export type AuditEntityType =
   | 'Job' | 'Client' | 'Vehicle' | 'Invoice' | 'Quote'
   | 'User' | 'Mechanic' | 'Part' | 'Inspection' | 'Reminder' | 'Garage'
   | 'PurchaseOrder' | 'License'
+  // Rendez-vous : modifier un créneau engage le garage vis-à-vis d'un client.
+  // L'écriture doit laisser une trace, comme une facture émise.
+  | 'Appointment'
   // Accès portail d'un client : ouverture, réinitialisation, désactivation.
   // Ce sont des décisions du garage sur qui peut voir les données d'un client —
   // elles doivent laisser une trace au même titre qu'une facture émise.

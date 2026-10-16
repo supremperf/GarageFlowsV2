@@ -100,13 +100,29 @@ describe('le panneau est atteignable depuis la navigation', () => {
     // compte est qu'il soit RÉFÉRENCÉ et monté, pas la forme de son import.
     expect(page).toMatch(/(import ClientsPanel from|const ClientsPanel = dynamic\()/)
     expect(page).toContain("import('@/components/ClientsPanel')")
-    expect(page).toMatch(/isClientsOpen\s+&&\s+<ClientsPanel/)
-    expect(page).toMatch(/onOpenClients=\{\(\) => setIsClientsOpen\(true\)\}/)
+    // Depuis la règle « une seule page à l'écran » (GF-DUR-053), le panneau est
+    // monté par la variable unique `surface`, et non plus par un booléen qui
+    // laissait deux pages se superposer.
+    expect(page).toMatch(/surface === 'clients'\s+&&/)
+    expect(page).toContain('<ClientsPanel')
+    expect(page).toMatch(/onOpenClients=\{\(\) => ouvrirPage\('clients'\)\}/)
   })
 
   it('un bouton existe en navigation desktop ET mobile', () => {
     expect(lire('src/components/Header.tsx')).toMatch(/onClick=\{onOpenClients\}/)
     expect(lire('src/components/MobileNav.tsx')).toMatch(/run\(props\.onOpenClients\)/)
+  })
+
+  it('un menu déroulant ouvre DIRECTEMENT la fiche d\'un client', () => {
+    // Le comptoir cherche un client téléphone en main : entrer dans l'annuaire
+    // puis l'y rechercher une seconde fois est une perte sèche.
+    const picker = lire('src/components/ClientPicker.tsx')
+    expect(picker).toMatch(/fetch\(`\/api\/clients\?limit=/)
+    expect(picker).toMatch(/onOpenClient\(client\.id\)/)
+    // Rafraîchi après chaque écriture, sinon la liste montre l'état d'avant.
+    expect(picker).toMatch(/refreshKey/)
+    expect(lire('src/components/Header.tsx')).toContain('<ClientPicker')
+    expect(lire('src/components/ClientsPanel.tsx')).toMatch(/onClientsChanged\?\.\(\)/)
   })
 })
 
@@ -299,7 +315,10 @@ describe('la messagerie existe des DEUX côtés (GF-DUR-014)', () => {
   })
 
   it('le panneau garage est atteignable en navigation desktop ET mobile', () => {
-    expect(lire('src/app/page.tsx')).toMatch(/isTicketsOpen\s+&& <TicketsPanel/)
+    const page = lire('src/app/page.tsx')
+    expect(page).toMatch(/surface === 'tickets'\s+&&/)
+    expect(page).toContain('<TicketsPanel')
+    expect(page).toMatch(/onOpenTickets=\{\(\) => ouvrirPage\('tickets'\)\}/)
     expect(lire('src/components/Header.tsx')).toMatch(/onClick=\{onOpenTickets\}/)
     expect(lire('src/components/MobileNav.tsx')).toMatch(/run\(props\.onOpenTickets\)/)
   })
@@ -424,10 +443,32 @@ describe('les rendez-vous existent des DEUX côtés (GF-DUR-017)', () => {
     expect(portail).toMatch(/method: 'DELETE'/)
   })
 
-  it('le panneau garage est atteignable en navigation desktop ET mobile', () => {
-    expect(lire('src/app/page.tsx')).toMatch(/isApptsOpen\s+&& <AppointmentsPanel/)
-    expect(lire('src/components/Header.tsx')).toMatch(/onClick=\{onOpenAppointments\}/)
-    expect(lire('src/components/MobileNav.tsx')).toMatch(/run\(props\.onOpenAppointments\)/)
+  it('le panneau garage reste atteignable — depuis le TABLEAU DE BORD', () => {
+    // L'entrée de barre d'outils « Rendez-vous » a été retirée : elle doublonnait
+    // le planning et ne montrait qu'UN jour. Le tiroir de décision, lui, existe
+    // toujours, et s'ouvre depuis la vue globale des rendez-vous du tableau de
+    // bord — qui, elle, couvre toutes les dates, avec recherche et filtres.
+    const page = lire('src/app/page.tsx')
+    expect(page).toMatch(/isApptsOpen\s*&&/)
+    expect(page).toContain('<AppointmentsPanel')
+    expect(page).toMatch(/onOpenAppointments=\{\(\) => setIsApptsOpen\(true\)\}/)
+    const dash = lire('src/components/Dashboard.tsx')
+    expect(dash).toContain('AppointmentsSection')
+    expect(dash).toMatch(/onOpenAppointments=\{onOpenAppointments\}/)
+    expect(lire('src/components/dashboard/AppointmentsSection.tsx')).toMatch(/onOpenAppointments && \(/)
+  })
+
+  it('la vue globale couvre TOUTES les dates, avec les filtres demandés', () => {
+    const vue = lire('src/components/dashboard/AppointmentsSection.tsx')
+    for (const filtre of ["p.set('q',", "p.set('plate',", "p.set('status',", "p.set('clientId',", "p.set('vehicleId',", "p.set('date',", "p.set('from',", "p.set('to',"]) {
+      expect(vue, filtre).toContain(filtre)
+    }
+    // Chronologique par défaut, inversable.
+    expect(vue).toMatch(/ordreDesc/)
+    // Jour de la semaine + date complète.
+    expect(vue).toMatch(/format\(d, 'EEEE d MMMM yyyy'/)
+    // Modification réelle : elle passe par la route dédiée.
+    expect(vue).toMatch(/method: 'PATCH'/)
   })
 
   it('une DEMANDE n\'est jamais présentée comme un rendez-vous pris', () => {

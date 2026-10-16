@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useScheduleStore } from '@/store/schedule-store'
 import { useSession } from 'next-auth/react'
 import { useTranslation } from '@/lib/i18n'
-import { X, BarChart3, Euro, Package, Users, Wrench, ChevronRight, Gauge } from 'lucide-react'
+import { X, BarChart3, Euro, Package, Users, Wrench, ChevronRight, Gauge, CalendarClock } from 'lucide-react'
 import { StatsData } from './dashboard/DashboardCharts'
 import {
   OverviewSection,
@@ -13,16 +13,34 @@ import {
   StockSection,
 } from './dashboard/DashboardSections'
 import DecisionSection from './dashboard/DecisionSection'
+import AppointmentsSection from './dashboard/AppointmentsSection'
 
-type Section = 'overview' | 'revenue' | 'mechanics' | 'stock' | 'decision'
+type Section = 'overview' | 'appointments' | 'revenue' | 'mechanics' | 'stock' | 'decision'
 
-export default function Dashboard() {
+export interface DashboardProps {
+  /** Ouvre la fiche client (panneau Clients) depuis la vue des rendez-vous. */
+  onOpenClient?: (clientId: string) => void
+  /** Ouvre l'historique du véhicule. */
+  onOpenVehicle?: (vehicleId: string) => void
+  /** Ouvre le tiroir de gestion des rendez-vous (décisions détaillées). */
+  onOpenAppointments?: () => void
+  /** Rendez-vous à déplier d'emblée. */
+  rdvACibler?: string | null
+}
+
+export default function Dashboard({
+  onOpenClient, onOpenVehicle, onOpenAppointments, rdvACibler = null,
+}: DashboardProps = {}) {
   const { toggleDashboard, statsVersion } = useScheduleStore()
   const { data: session } = useSession()
   const { t, lang } = useTranslation()
 
   const NAV = [
     { id: 'overview' as const, label: t.overview,     icon: <BarChart3 size={16} /> },
+    // Vue GLOBALE des rendez-vous (toutes dates) : elle répond à la question du
+    // lundi matin — « qu'est-ce qui m'attend, et chez qui ? » — que le tiroir
+    // d'un seul jour ne pouvait pas traiter.
+    { id: 'appointments' as const, label: t.navAppointments, icon: <CalendarClock size={16} /> },
     { id: 'revenue'  as const, label: t.revenueSec,   icon: <Euro size={16} /> },
     { id: 'mechanics'as const, label: t.mechanics,    icon: <Users size={16} /> },
     { id: 'stock'    as const, label: t.stock,        icon: <Package size={16} /> },
@@ -188,7 +206,7 @@ export default function Dashboard() {
 
         {/* Main content */}
         <div style={{ flex: 1, overflow: 'auto' }}>
-          {loading && section !== 'stock' && section !== 'decision' ? (
+          {loading && section !== 'stock' && section !== 'decision' && section !== 'appointments' ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{
@@ -201,7 +219,7 @@ export default function Dashboard() {
                 <p style={{ color: '#475569', fontSize: 13 }}>Chargement des données…</p>
               </div>
             </div>
-          ) : statsError && section !== 'stock' && section !== 'decision' ? (
+          ) : statsError && section !== 'stock' && section !== 'decision' && section !== 'appointments' ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
               <div style={{ textAlign: 'center' }}>
                 <p style={{ color: '#ef4444', fontSize: 14, marginBottom: 12 }}>Impossible de charger les statistiques.</p>
@@ -216,6 +234,20 @@ export default function Dashboard() {
           ) : (
             <>
               {section === 'overview' && <OverviewSection stats={stats} period={period} />}
+              {/*
+                La vue des rendez-vous ne dépend PAS des statistiques : elle ne
+                doit donc pas être retenue par leur chargement ni s'effacer quand
+                elles échouent — un tableau de bord en panne de statistiques
+                laisserait sinon le garage sans accès à ses rendez-vous.
+              */}
+              {section === 'appointments' && (
+                <AppointmentsSection
+                  onOpenClient={onOpenClient}
+                  onOpenVehicle={onOpenVehicle}
+                  onOpenAppointments={onOpenAppointments}
+                  rdvACibler={rdvACibler}
+                />
+              )}
               {section === 'revenue' && <RevenueSection stats={stats} />}
               {section === 'mechanics' && <MechanicsSection stats={stats} />}
               {section === 'stock' && <StockSection stats={stats} />}

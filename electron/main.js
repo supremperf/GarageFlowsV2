@@ -1158,6 +1158,91 @@ function crashConsentDecided() {
   return typeof readSettings().crashConsent === 'boolean'
 }
 
+// ── Démarrage automatique au lancement de Windows ────────────────────────────
+//
+// L'application s'ouvre au démarrage de la session Windows via le mécanisme
+// natif d'Electron (`app.setLoginItemSettings`), qui écrit l'entrée dans
+// `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` — la ruche de
+// l'UTILISATEUR. Aucun droit administrateur n'est demandé, et rien n'est
+// installé en service.
+//
+// ── Pourquoi l'état n'est PAS gardé dans gf_settings.json ────────────────────
+//
+// Le registre est la seule source de vérité : un utilisateur peut retirer
+// l'entrée lui-même (Gestionnaire des tâches → onglet Démarrage), ou le
+// programme de désinstallation peut la supprimer. Un booléen recopié dans nos
+// préférences afficherait alors un interrupteur « Activé » mensonger, et le
+// garage croirait son logiciel lancé à chaque ouverture de session. On lit donc
+// l'état RÉEL à chaque appel (`getLoginItemSettings`), et c'est lui qui pilote
+// l'interrupteur.
+//
+// ── Windows uniquement ──────────────────────────────────────────────────────
+//
+// Sur macOS, `setLoginItemSettings` passe par les préférences système et son
+// effet n'est pas immédiat ; le paquet ne cible que Windows. Ailleurs, on
+// répond franchement `supported: false` plutôt que d'afficher un interrupteur
+// inopérant.
+function etatDemarrageAuto() {
+  if (process.platform !== 'win32') {
+    return { supported: false, enabled: false, raison: 'PLATEFORME' }
+  }
+  try {
+    // `path` + `args` sont comparés par Electron : on fournit les mêmes valeurs
+    // qu'à l'activation, sinon `enabled` retomberait à false sur une entrée que
+    // nous venons nous-mêmes d'écrire (le cas d'une installation par utilisateur,
+    // où l'exécutable est sous %LOCALAPPDATA%).
+    const info = app.getLoginItemSettings({ path: process.execPath, args: demarrageArgs() })
+    return {
+      supported: true,
+      enabled: !!info.openAtLogin,
+      // Statut brut rendu tel quel ('enabled' | 'disabled' | 'not-registered'
+      // selon Windows) : l'écran peut ainsi distinguer « jamais activé » de
+      // « désactivé depuis le Gestionnaire des tâches », ce qu'un simple
+      // booléen confondrait.
+      statut: typeof info.status === 'string' ? info.status : undefined,
+    }
+  } catch (err) {
+    log('[autostart] lecture impossible :', err.message)
+    return { supported: true, enabled: false, erreur: err.message }
+  }
+}
+
+/**
+ * Arguments passés à l'exécutable au démarrage de session.
+ *
+ * `--autostart` permet à `main.js` de savoir qu'il est lancé par Windows et non
+ * par l'utilisateur (fenêtre réduite dans la zone de notification au lieu de
+ * s'ouvrir au premier plan) sans rien changer au reste du démarrage.
+ */
+function demarrageArgs() {
+  return ['--autostart']
+}
+
+function definirDemarrageAuto(actif) {
+  if (process.platform !== 'win32') {
+    return { supported: false, enabled: false, raison: 'PLATEFORME' }
+  }
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: !!actif,
+      openAsHidden: false,
+      path: process.execPath,
+      args: demarrageArgs(),
+    })
+    const etat = etatDemarrageAuto()
+    // On annonce l'état RELU après écriture, jamais celui demandé : si Windows a
+    // refusé l'opération (stratégie d'entreprise, registre verrouillé), l'écran
+    // doit le montrer au lieu d'afficher un succès.
+    if (etat.enabled !== !!actif) {
+      return { ...etat, erreur: 'Windows n’a pas appliqué le réglage.' }
+    }
+    return etat
+  } catch (err) {
+    log('[autostart] écriture impossible :', err.message)
+    return { supported: true, enabled: false, erreur: err.message }
+  }
+}
+
 // ── Entitlements (modules) — cache chiffré, lié au HWID ───────────────────────
 function saveEntitlements(modules) {
   try {
@@ -3213,7 +3298,20 @@ function createMainWindow() {
     closeSplash()
     mainWindow.show()
     mainWindow.maximize()
-    log('Main window shown')
+    /**
+     * Lancé par Windows au démarrage de session (`--autostart`, posé par le
+     * réglage « Lancer GarageFlows au démarrage de Windows ») : la fenêtre
+     * s'ouvre SANS voler le focus. L'utilisateur vient d'ouvrir sa session, son
+     * premier clic ne doit pas atterrir dans un logiciel qu'il n'a pas demandé à
+     * ce moment-là. L'application est bien visible et utilisable — elle n'est ni
+     * masquée ni réduite, ce qui la rendrait introuvable sans icône de zone de
+     * notification.
+     */
+    const lanceParWindows = process.argv.includes('--autostart')
+    if (lanceParWindows) {
+      try { mainWindow.blur() } catch (_) { /* le focus suit d'autres règles selon le gestionnaire de fenêtres */ }
+    }
+    log('Main window shown', lanceParWindows ? '(démarrage automatique)' : '')
   })
 
   // Fenêtres externes : n'ouvrir dans le navigateur QUE des URLs HTTPS vers des
@@ -3307,6 +3405,15 @@ function createMainWindow() {
 
 function setupIPC() {
   ipcMain.handle('app:version',      () => app.getVersion())
+
+  // Démarrage automatique : LECTURE de l'état réel, puis écriture. Le renderer
+  // ne peut rien d'autre que ces deux opérations — aucune clé de registre
+  // arbitraire n'est exposée.
+  ipcMain.handle('app:autostart-get', () => etatDemarrageAuto())
+  ipcMain.handle('app:autostart-set', (_e, actif) => {
+    log('[autostart] demande :', actif === true ? 'activer' : 'désactiver')
+    return definirDemarrageAuto(actif === true)
+  })
   ipcMain.handle('app:db-path',      () => DB_PATH)
   ipcMain.handle('app:open-backups', () => { fs.mkdirSync(BAK_HOURLY, { recursive: true }); shell.openPath(BAK_DIR) })
   ipcMain.handle('app:open-logs',    () => shell.openPath(LOG_PATH))

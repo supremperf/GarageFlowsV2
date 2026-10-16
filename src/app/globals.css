@@ -331,6 +331,41 @@
   .will-change-transform { will-change: transform; }
 
   /* Hide scrollbar but keep scroll functionality */
+  /* ── Barre d'outils HORIZONTALE : défilement horizontal UNIQUEMENT ─────────
+     Cause racine du défaut « la barre se déplace verticalement » :
+
+     `overflow-x: auto` SEUL ne limite pas l'axe vertical. La spécification
+     CSS Overflow impose qu'un axe `visible` devienne `auto` dès que l'autre ne
+     l'est plus. Un conteneur portant `overflow-x-auto` est donc, en pratique,
+     un conteneur `overflow: auto` — les rangées de la barre (Nouvelle
+     intervention, Actualiser, Réception, Tableau de bord…) acceptaient un
+     défilement VERTICAL : molettes, pavé tactile et `scrollIntoView` des
+     navigations clavier faisaient glisser les libellés hors du bandeau, et le
+     bouton « Tableau de bord » apparaissait tronqué (capture du 16/10/2026).
+
+     `.gf-hscroll` verrouille les deux axes :
+       • overflow-y: hidden  → aucun déplacement vertical, jamais ;
+       • overflow-x: auto    → le défilement horizontal reste possible ;
+       • flex-wrap: nowrap   → les boutons ne passent pas à la ligne (sinon la
+         barre gagnerait en hauteur et pousserait le planning vers le bas) ;
+       • overscroll-behavior-x: contain → la molette en butée ne propage plus le
+         défilement au planning.
+     Les enfants doivent porter `flex-shrink-0` (déjà le cas des boutons). */
+  .gf-hscroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: none;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    /* Aligne la barre sur le haut de sa boîte : un enfant plus haut ne peut pas
+       décaler la rangée vers le bas. */
+    align-items: center;
+  }
+  .gf-hscroll::-webkit-scrollbar { display: none; height: 0; width: 0; }
+  .gf-hscroll > * { flex-shrink: 0; }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -580,14 +615,58 @@ button:not(:disabled), a[href], [role="button"] { cursor: pointer; }
 button:not(:disabled):active,
 [role="button"]:active { filter: brightness(0.9); }
 
-/* Zone de clic élargie : cliquer un peu à côté d'un bouton de fermeture le ferme.
-   Invisible, sans décalage de mise en page (le bouton doit être position:relative). */
-.gf-close { position: relative; }
+/* ── Boutons de fermeture (✕) ─────────────────────────────────────────────────
+   Leur zone cliquable était obtenue par un pseudo-élément débordant de 12 px sur
+   TOUS les côtés, sans `pointer-events` ni empilement maîtrisé :
+
+     • il recouvrait les boutons VOISINS (Actualiser à côté de Fermer, onglets,
+       boutons d'en-tête) et leur volait leur clic — d'où des clics « sans
+       effet » et l'obligation de viser au pixel ;
+     • sa surface utile dépendait ensuite du parent : dès qu'un conteneur portait
+       `overflow: hidden`, la zone débordante était rognée et la cible redevenait
+       la taille du glyphe (≈ 16 px), inutilisable au doigt.
+
+   Deux changements : la ZONE est maintenant une vraie boîte du bouton
+   (`min-width`/`min-height`), donc jamais tronquée et jamais superposée à un
+   voisin ; le pseudo-élément ne capte plus aucun clic (`pointer-events: none`),
+   il ne sert plus qu'au halo visuel. */
+.gf-close {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.gf-close > svg { pointer-events: none; }
 .gf-close::before {
   content: '';
   position: absolute;
-  inset: -12px;
-  border-radius: 9999px;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  transition: background-color 120ms ease;
+}
+/* Halo de survol dérivé de la couleur du GLYPHE (`currentColor`) : il s'adapte
+   aux deux surfaces — gris clair sur les modales blanches, gris translucide sur
+   les surfaces sombres — sans qu'aucun composant ait à le préciser. Le repli
+   plein couvre les moteurs sans `color-mix`. */
+.gf-close:hover::before {
+  background-color: rgb(148 163 184 / 0.16);
+  background-color: color-mix(in srgb, currentColor 16%, transparent);
+}
+.gf-close:focus-visible {
+  outline: 2px solid rgb(96 165 250 / 0.9);
+  outline-offset: 2px;
+}
+/* Sur écran tactile, la cible atteint les 44 px recommandés — sans déplacer le
+   bouton : la boîte grandit, la position du glyphe reste identique. */
+@media (pointer: coarse) {
+  .gf-close { min-width: 44px; min-height: 44px; }
 }
 
 /* ── Paysage court (téléphone à l'horizontale) : on densifie le chrome ────────

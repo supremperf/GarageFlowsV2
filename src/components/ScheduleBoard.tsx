@@ -506,8 +506,11 @@ export default function ScheduleBoard() {
             </button>
 
             {/* Bandeau de sélection directe (mobile) ou repère de groupe. */}
+            {/* `gf-hscroll` : défilement HORIZONTAL uniquement. `overflow-x-auto`
+                seul rendait l'axe vertical défilant, et la bande des mécaniciens
+                se décalait à la molette. */}
             {isMobile ? (
-              <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Mécaniciens">
+              <div className="gf-hscroll flex-1 min-w-0 flex items-center gap-1.5" role="tablist" aria-label="Mécaniciens">
                 {mechanics.map(m => {
                   const visible = visibleMechanics.some(v => v.id === m.id)
                   return (

@@ -9,6 +9,7 @@ import { DateField } from '@/components/DateField'
 import toast from 'react-hot-toast'
 import { useTranslation } from '@/lib/i18n'
 import { dateLocale } from '@/lib/i18n/date-locale'
+import { useBrouillonPersistant } from '@/lib/ui/brouillon'
 
 interface Warranty {
   id: string
@@ -70,7 +71,12 @@ export default function WarrantyPanel({ onClose }: { onClose: () => void }) {
   const [alerts, setAlerts]         = useState<Alerts | null>(null)
   const [loading, setLoading]       = useState(true)
   const [showAdd, setShowAdd]       = useState(false)
-  const [form, setForm]             = useState(emptyForm)
+  /**
+   * Formulaire en cours. Une réclamation se remplit souvent entre deux clients :
+   * la saisie est conservée jusqu'à son enregistrement, et effacée si vous
+   * fermez la page.
+   */
+  const [form, setForm] = useBrouillonPersistant('warranty:form', emptyForm)
   /** Durée réglée par le garage — sert à réinitialiser le formulaire (GF-039). */
   const [dureeParDefaut, setDureeParDefaut] = useState(emptyForm.durationMonths)
   const [saving, setSaving]         = useState(false)
@@ -109,7 +115,8 @@ export default function WarrantyPanel({ onClose }: { onClose: () => void }) {
     } finally {
       setLoading(false)
     }
-  }, [])
+    // `setForm` (brouillon) est stable : le déclarer ne relance pas le chargement.
+  }, [setForm])
 
   useEffect(() => { load() }, [load])
 
@@ -194,7 +201,7 @@ export default function WarrantyPanel({ onClose }: { onClose: () => void }) {
           >
             <Plus className="w-3.5 h-3.5" /> {t.uiAdd}
           </button>
-          <button onClick={onClose} className="gf-close p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-400">
+          <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-400">
             <X className="w-5 h-5" />
           </button>
         </div>

@@ -19,6 +19,7 @@ import { X, Users, Search, Loader2, KeyRound, RotateCcw, Ban, Check, Copy, Penci
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 import { AddressAutocomplete } from '@/components/AddressAutocomplete'
+import { useBrouillonPersistant } from '@/lib/ui/brouillon'
 
 interface Vehicule { id: string; licensePlate: string | null; make: string | null; model: string | null }
 interface ClientRow {
@@ -41,7 +42,27 @@ interface EtatAcces {
   derniereConnexion?: string | null
 }
 
-export default function ClientsPanel({ onClose }: { onClose: () => void }) {
+export interface ClientsPanelProps {
+  onClose: () => void
+  /**
+   * Fiche à ouvrir dès l'affichage.
+   *
+   * Le sélecteur de client de la barre d'outils (`ClientPicker`) a déjà identifié
+   * le client : demander à l'utilisateur de le rechercher une SECONDE fois dans
+   * la liste serait une perte pure. La fiche est chargée par identifiant, même
+   * si le client n'apparaît pas dans la page courante de l'annuaire.
+   */
+  initialClientId?: string | null
+  /**
+   * Prévient l'appelant qu'une écriture a réussi (fiche modifiée, accès ouvert,
+   * réinitialisé, désactivé). Le menu déroulant s'en sert pour recharger sa
+   * liste : il affichait sinon l'état d'avant l'écriture jusqu'au rechargement
+   * de la page.
+   */
+  onClientsChanged?: () => void
+}
+
+export default function ClientsPanel({ onClose, initialClientId = null, onClientsChanged }: ClientsPanelProps) {
   const [recherche, setRecherche] = useState('')
   const [clients, setClients] = useState<ClientRow[]>([])
   const [chargement, setChargement] = useState(true)
@@ -52,8 +73,18 @@ export default function ClientsPanel({ onClose }: { onClose: () => void }) {
   const [occupe, setOccupe] = useState<string | null>(null)
   /** Mot de passe temporaire fraîchement émis — affiché une seule fois. */
   const [motDePasse, setMotDePasse] = useState<{ clientId: string; valeur: string } | null>(null)
-  /** Fiche en cours de modification (un seul client à la fois). */
-  const [brouillon, setBrouillon] = useState<{ clientId: string; valeurs: Brouillon } | null>(null)
+  /**
+   * Fiche en cours de modification (un seul client à la fois).
+   *
+   * Conservée par `useBrouillonPersistant` : passer au planning pour vérifier un
+   * chiffre puis revenir sur la fiche ne fait plus disparaître la correction en
+   * cours. Le brouillon n'est PAS écrit sur disque — seule la page « Clients »
+   * le retrouve, et l'abandonner (fermer la page) l'efface.
+   */
+  const [brouillon, setBrouillon] = useBrouillonPersistant<{ clientId: string; valeurs: Brouillon } | null>(
+    'clients:fiche',
+    null,
+  )
 
   // Recherche différée : sans cela, chaque frappe déclenche une requête.
   const minuterie = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -77,11 +108,45 @@ export default function ClientsPanel({ onClose }: { onClose: () => void }) {
     return () => { if (minuterie.current) clearTimeout(minuterie.current) }
   }, [recherche])
 
+  /**
+   * Ouvre une fiche désignée de l'extérieur (sélecteur de la barre d'outils).
+   *
+   * La fiche est lue par sa route dédiée : l'annuaire est paginé (50 max), donc
+   * le client demandé peut très bien ne pas figurer dans la page affichée. On
+   * l'AJOUTE à la liste au lieu de l'y chercher — sinon le panneau s'ouvrirait
+   * sur une fiche absente de son propre écran.
+   */
+  useEffect(() => {
+    if (!initialClientId) return
+    let vivant = true
+    setMotDePasse(null)
+    setBrouillon(null)
+    setOuvert(initialClientId)
+    fetch(`/api/clients/${initialClientId}`)
+      .then(async (r) => (r.ok ? r.json() : null))
+      .then((c) => {
+        if (!vivant || !c) return
+        setClients((liste) => (liste.some((x) => x.id === c.id) ? liste : [c, ...liste]))
+      })
+      .catch(() => { /* la fiche reste introuvable : la liste affichée fait foi */ })
+    return () => { vivant = false }
+    // `setBrouillon` est stable (mémorisé par clé) : l'ajouter évite un
+    // avertissement de dépendance manquante sans relancer la requête.
+  }, [initialClientId, setBrouillon])
+
   const chargerAcces = useCallback(async (clientId: string) => {
     const r = await fetch(`/api/clients/${clientId}/portal-access`)
     const d = await r.json().catch(() => null)
     if (r.ok && d) setAcces((a) => ({ ...a, [clientId]: d }))
   }, [])
+
+  useEffect(() => {
+    if (ouvert && !acces[ouvert]) void chargerAcces(ouvert)
+    // `acces` est volontairement hors dépendances : on ne veut charger les accès
+    // qu'à l'OUVERTURE d'une fiche, pas à chaque réponse reçue.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ouvert])
+
 
   function basculer(clientId: string) {
     const suivant = ouvert === clientId ? null : clientId
@@ -140,6 +205,11 @@ export default function ClientsPanel({ onClose }: { onClose: () => void }) {
       } else {
         toast.success('Fiche enregistrée')
       }
+
+      // Le sélecteur de la barre d'outils affiche le nom, le téléphone et les
+      // véhicules : il doit relire la liste après CHAQUE écriture réussie, sinon
+      // il continue de proposer les valeurs d'avant la correction.
+      onClientsChanged?.()
     } catch {
       toast.error('Serveur injoignable.')
     } finally {
@@ -160,6 +230,10 @@ export default function ClientsPanel({ onClose }: { onClose: () => void }) {
       if (!r.ok) { toast.error(d?.error ?? 'Action refusée par le serveur.'); return }
 
       setAcces((a) => ({ ...a, [clientId]: d }))
+
+      // Une réinitialisation d'accès change l'identifiant de connexion du client :
+      // la liste déroulante doit s'en apercevoir sans rechargement de page.
+      onClientsChanged?.()
 
       // Le portail client est servi par le service en ligne. Tant que l'accès n'y
       // est pas parvenu, le client se heurtera à un refus de connexion : annoncer
@@ -205,8 +279,7 @@ export default function ClientsPanel({ onClose }: { onClose: () => void }) {
             <p className="text-[11px] text-slate-500 mt-0.5">Annuaire et accès à l’espace client</p>
           </div>
         </div>
-        <button onClick={onClose} aria-label="Fermer"
-          className="p-2 rounded-lg text-slate-400 hover:bg-white/10 transition-colors">
+        <button onClick={onClose} aria-label="Fermer" title="Fermer" className="gf-close text-slate-400">
           <X className="w-4 h-4" />
         </button>
       </div>

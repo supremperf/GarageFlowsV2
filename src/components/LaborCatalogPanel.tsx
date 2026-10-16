@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { LABOR_DEFAULTS } from '@/lib/labor-defaults'
 import { useTranslation } from '@/lib/i18n'
+import { useBrouillonPersistant } from '@/lib/ui/brouillon'
 
 interface LaborOp {
   id: string; name: string; category: string | null; durationMin: number
@@ -43,7 +44,11 @@ export default function LaborCatalogPanel({ onClose }: { onClose: () => void }) 
   const [q, setQ]             = useState('')
   const [editId, setEditId]   = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm]       = useState(emptyForm)
+  /**
+   * Nouvelle opération en cours de saisie, conservée d'une page à l'autre —
+   * souvent interrompue par un appel du comptoir.
+   */
+  const [form, setForm] = useBrouillonPersistant('labor:form', emptyForm)
   const [saving, setSaving]   = useState(false)
   const [importing, setImporting] = useState(false)
 
@@ -152,7 +157,7 @@ export default function LaborCatalogPanel({ onClose }: { onClose: () => void }) 
             className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium">
             <Plus className="w-3.5 h-3.5" /> {t.uiAdd}
           </button>
-          <button onClick={onClose} className="gf-close p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-400"><X className="w-5 h-5" /></button>
+          <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-400"><X className="w-5 h-5" /></button>
         </div>
       </div>
 

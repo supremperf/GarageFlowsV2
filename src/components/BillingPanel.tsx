@@ -191,7 +191,7 @@ export default function BillingPanel({ onClose }: Props) {
               className={cn('p-2 rounded-lg hover:bg-white/[0.07] text-slate-500 hover:text-white transition-all', loading && 'pointer-events-none')}>
               <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin text-blue-400')} />
             </button>
-            <button onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
+            <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>

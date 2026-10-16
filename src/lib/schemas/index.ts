@@ -447,6 +447,38 @@ export const UpdateLoanerReservationSchema = z.object({
   depositAmount:  montantEntier('centimes'),
 })
 
+// ─── Rendez-vous ──────────────────────────────────────────────────────────────
+
+/**
+ * Modification d'un rendez-vous PAR LE GARAGE (GF-DUR-054).
+ *
+ * Le panneau d'origine ne savait que faire avancer un statut (confirmer,
+ * terminer, annuler). Déplacer un rendez-vous — le cas le plus courant quand un
+ * client rappelle, ou qu'un pont est occupé — était impossible, alors que la
+ * table le permet depuis toujours. Le garage notait la nouvelle heure sur un
+ * papier, et le planning de l'atelier gardait l'ancienne.
+ *
+ * Le STATUT ne figure volontairement PAS ici : il suit la machine à états
+ * (`requested → confirmed → completed`, annulation depuis les deux premiers),
+ * exposée par `POST /api/appointments/[id]`. Deux routes concurrentes pour la
+ * même transition, c'est la garantie d'en perdre une.
+ */
+export const UpdateAppointmentSchema = z.object({
+  clientName:   z.string().trim().min(1).max(200).optional(),
+  vehicleModel: z.string().trim().max(200).optional().nullable(),
+  licensePlate: z.string().trim().max(20).optional().nullable(),
+  reason:       z.string().trim().min(1, 'Motif requis').max(500).optional(),
+  date:         dateStr.optional(),
+  startTime:    z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Format heure invalide (HH:MM)').optional(),
+  durationMin:  z.number().int().min(15).max(600).optional(),
+  notes:        z.string().max(2000).optional().nullable(),
+  // Rattachement aux FICHES. Sur les rendez-vous venus de l'espace client, les
+  // identifiants sont déjà renseignés ; sur les autres, le garage peut lier une
+  // fiche à la main (le tableau de bord le propose).
+  clientId:     z.string().max(64).optional().nullable(),
+  vehicleId:    z.string().max(64).optional().nullable(),
+})
+
 // ─── Pagination helper ────────────────────────────────────────────────────────
 
 export const PaginationSchema = z.object({

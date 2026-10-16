@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useTranslation, type LangCode } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { X, Building2, Globe, Save, Users, Palette, Zap, Mail, RefreshCw, KeyRound, ReceiptText, UserCog } from 'lucide-react'
+import { X, Building2, Globe, Save, Users, Palette, Zap, Mail, RefreshCw, KeyRound, ReceiptText, UserCog, Power } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { CompanyTab }   from './settings/CompanyTab'
@@ -17,6 +17,7 @@ import { LanguageTab }  from './settings/LanguageTab'
 import { FeaturesTab }  from './settings/FeaturesTab'
 import { EmailTab }     from './settings/EmailTab'
 import { UpdatesTab }   from './settings/UpdatesTab'
+import { SystemeTab }   from './settings/SystemeTab'
 import type { GarageSettings, MechanicRecord } from './settings/types'
 import { nombreSaisi, entierSaisi } from '@/lib/settings/saisie-numerique'
 
@@ -32,7 +33,7 @@ export default function SettingsModal({ onClose }: Props) {
   // OWNER. L'onglet était proposé au MANAGER, qui n'y trouvait que des 403 :
   // une fonctionnalité visible et inutilisable (GF31-AUD-063).
   const canManageSettings = role === 'OWNER'
-  const [tab, setTab] = useState<'company' | 'mechanics' | 'team' | 'access' | 'einvoicing' | 'language' | 'theme' | 'features' | 'email' | 'updates'>('company')
+  const [tab, setTab] = useState<'company' | 'mechanics' | 'team' | 'access' | 'einvoicing' | 'language' | 'theme' | 'features' | 'email' | 'updates' | 'systeme'>('company')
   const [exporting, setExporting] = useState(false)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -263,6 +264,9 @@ export default function SettingsModal({ onClose }: Props) {
     { id: 'features'  as const, label: 'Fonctionnalités',              icon: <Zap        className="w-4 h-4" /> },
     { id: 'theme'     as const, label: t.themeTab    ?? 'Thèmes',      icon: <Palette    className="w-4 h-4" /> },
     { id: 'language'  as const, label: t.languageTab ?? 'Langue',      icon: <Globe      className="w-4 h-4" /> },
+    // Réglages du POSTE (démarrage de Windows) : ils n'ont de sens que dans
+    // l'application installée, et l'onglet le dit lui-même hors Electron.
+    { id: 'systeme'   as const, label: 'Système',                      icon: <Power      className="w-4 h-4" /> },
   ]
 
   return (
@@ -273,7 +277,7 @@ export default function SettingsModal({ onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.07]">
           <h2 className="text-lg font-bold text-white">Paramètres</h2>
-          <button onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
+          <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -323,6 +327,7 @@ export default function SettingsModal({ onClose }: Props) {
           {tab === 'einvoicing' && canManageSettings && <EInvoicingTab />}
           {tab === 'email'    && <EmailTab />}
           {tab === 'updates'  && <UpdatesTab />}
+          {tab === 'systeme'  && <SystemeTab />}
           {tab === 'features' && <FeaturesTab />}
           {tab === 'theme' && (
             <ThemeTab

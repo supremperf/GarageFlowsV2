@@ -452,7 +452,7 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
                 {t.insFinalize}
               </button>
             )}
-            <button onClick={() => { void handleClose() }} className="gf-close p-2 hover:bg-gray-100 rounded-lg text-gray-400">
+            <button onClick={() => { void handleClose() }} aria-label="Fermer" title="Fermer" className="gf-close p-2 hover:bg-gray-100 rounded-lg text-gray-400">
               <X className="w-5 h-5" />
             </button>
           </div>

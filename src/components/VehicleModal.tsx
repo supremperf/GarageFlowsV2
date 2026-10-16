@@ -169,7 +169,7 @@ export default function VehicleModal({ vehicleId, licensePlate, onClose, onEditJ
               <p className="text-gray-500">{t.jmVehicleNotFound}</p>
             )}
           </div>
-          <button onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-gray-100 text-gray-400">
+          <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-gray-100 text-gray-400">
             <X className="w-5 h-5" />
           </button>
         </div>

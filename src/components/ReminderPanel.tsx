@@ -11,6 +11,7 @@ import type { T } from '@/lib/i18n'
 import { dateLocale } from '@/lib/i18n/date-locale'
 import toast from 'react-hot-toast'
 import { DateField } from '@/components/DateField'
+import { useBrouillonPersistant } from '@/lib/ui/brouillon'
 
 // value canonique → clé de traduction (les valeurs stockées restent en FR)
 const TYPE_LABEL_KEYS: Record<string, keyof T> = {
@@ -199,7 +200,9 @@ function ReminderRow({ reminder, onStatusChange, onDelete, garagePhone }: {
 
 function AddReminderForm({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => void }) {
   const { t } = useTranslation()
-  const [form, setForm] = useState({
+  // Rappel en cours de saisie : conservé d'une page à l'autre (le comptoir est
+  // interrompu en permanence), effacé à la fermeture de la page.
+  const [form, setForm] = useBrouillonPersistant('reminders:form', {
     clientName: '', vehicleModel: '', licensePlate: '',
     phone: '', email: '', type: 'vidange',
     scheduledDate: format(addDays(new Date(), 30), 'yyyy-MM-dd'), scheduledTime: '', notes: '',
@@ -379,7 +382,7 @@ export default function ReminderPanel({ onClose }: Props) {
             <Plus className="w-3.5 h-3.5" />
             {t.rmNew}
           </button>
-          <button onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
+          <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>

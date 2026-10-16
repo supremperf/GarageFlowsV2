@@ -345,7 +345,7 @@ export default function WorkOrderModal({ jobId, workOrderId: initialId, prefill,
           </div>
           <div className="flex items-center gap-2">
             {savedId && <button onClick={handlePrint} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-slate-300 hover:bg-white/[0.07] text-sm"><Printer className="w-4 h-4" /> {t.woPrint}</button>}
-            <button onClick={onClose} className="gf-close p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-400"><X className="w-5 h-5" /></button>
+            <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-400"><X className="w-5 h-5" /></button>
           </div>
         </div>
 
