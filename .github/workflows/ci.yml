@@ -103,7 +103,25 @@ jobs:
           node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs tests/copilot-blind-intake.test.cjs tests/phase6-security-context.test.cjs tests/codeql-inventory.test.cjs tests/config-dotenv-context.test.cjs
           node scripts/evaluate-copilot-phase4.cjs --preflight
       - name: Standard TypeScript (no diagnostic declarations)
-        run: npx tsc --noEmit
+        # Le diagnostic complet reste dans le journal du run ; les dix premières
+        # lignes sont EN PLUS remontées en annotations, donc lisibles directement
+        # depuis l'onglet du run (et par API) sans télécharger le journal complet.
+        # Utile ici plus qu'ailleurs : ce poste n'a pas de client Prisma généré,
+        # la vérification de type y est donc aveugle aux appels Prisma, alors que
+        # la CI les contrôle réellement. Le code de sortie de `tsc` est conservé
+        # tel quel — une étape qui échoue reste une étape qui échoue.
+        run: |
+          set +e
+          npx tsc --noEmit > /tmp/tsc.txt 2>&1
+          statut=$?
+          set -e
+          if [ $statut -ne 0 ]; then
+            cat /tmp/tsc.txt
+            head -n 10 /tmp/tsc.txt | while IFS= read -r ligne; do
+              echo "::error::${ligne//$'\r'/}"
+            done
+          fi
+          exit $statut
       - name: Standard production build (no alternate flags)
         run: npm run build
         env:
@@ -195,7 +213,25 @@ jobs:
         run: node scripts/validate-copilot-native.cjs
 
       - name: TypeScript
-        run: npx tsc --noEmit
+        # Le diagnostic complet reste dans le journal du run ; les dix premières
+        # lignes sont EN PLUS remontées en annotations, donc lisibles directement
+        # depuis l'onglet du run (et par API) sans télécharger le journal complet.
+        # Utile ici plus qu'ailleurs : ce poste n'a pas de client Prisma généré,
+        # la vérification de type y est donc aveugle aux appels Prisma, alors que
+        # la CI les contrôle réellement. Le code de sortie de `tsc` est conservé
+        # tel quel — une étape qui échoue reste une étape qui échoue.
+        run: |
+          set +e
+          npx tsc --noEmit > /tmp/tsc.txt 2>&1
+          statut=$?
+          set -e
+          if [ $statut -ne 0 ]; then
+            cat /tmp/tsc.txt
+            head -n 10 /tmp/tsc.txt | while IFS= read -r ligne; do
+              echo "::error::${ligne//$'\r'/}"
+            done
+          fi
+          exit $statut
 
       - name: ESLint
         run: npm run lint

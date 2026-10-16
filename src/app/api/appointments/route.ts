@@ -46,6 +46,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { construireFiltreRendezVous } from '@/lib/portal/appointments'
 
 /** Jour au format `YYYY-MM-DD` — le format stocké dans `Appointment.date`. */
 const JOUR = /^\d{4}-\d{2}-\d{2}$/
@@ -79,31 +80,22 @@ export const GET = withAuth(async (req) => {
   const limit  = Math.min(LIMITE_MAX, Math.max(1, Number.parseInt(searchParams.get('limit') ?? '', 10) || LIMITE_DEFAUT))
   const offset = Math.max(0, Number.parseInt(searchParams.get('offset') ?? '', 10) || 0)
 
-  // Un jour exact l'emporte sur la période : c'est la demande la plus précise.
-  const bornesDate = date
-    ? { date }
-    : {
-        ...(from ? { gte: from } : {}),
-        ...(to ? { lte: to } : {}),
-      }
-
+  // Le filtre est construit par `construireFiltreRendezVous` (même module que
+  // `validateSlot`) : la forme `date` — valeur OU intervalle — y est écrite en
+  // clair et couverte par des tests unitaires. La route ne fait plus que
+  // l'entourer du périmètre garage, qu'aucun appelant ne peut élargir.
   const where = {
     garageId: session.user.garageId,
-    ...(statuts.length ? { status: statuts.length === 1 ? statuts[0] : { in: statuts } } : {}),
-    ...(date || from || to ? { date: bornesDate } : {}),
-    ...(clientId ? { clientId } : {}),
-    ...(vehicleId ? { vehicleId } : {}),
-    ...(plate ? { licensePlate: { contains: plate } } : {}),
-    ...(q
-      ? {
-          OR: [
-            { clientName:   { contains: q } },
-            { licensePlate: { contains: q } },
-            { vehicleModel: { contains: q } },
-            { reason:       { contains: q } },
-          ],
-        }
-      : {}),
+    ...construireFiltreRendezVous({
+      statuts,
+      date,
+      from,
+      to,
+      clientId,
+      vehicleId,
+      plate,
+      q,
+    }),
   }
 
   const [appointments, total] = await Promise.all([
