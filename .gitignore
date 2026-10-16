@@ -149,3 +149,8 @@ keys/bootstrap-*
 *.sqlite-wal
 *.sqlite-shm
 !prisma/garageflow-template.db
+
+# All environment variants may contain credentials. Examples stay value-free.
+.env.*
+!.env.example
+!.env.*.example

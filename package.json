@@ -96,7 +96,7 @@
     "check:artifact-fuses": "node scripts/check-artifact-fuses.mjs",
     "config": "node config",
     "config:check": "node config --check",
-    "test:config": "node --test tests/config.test.cjs tests/config-full.test.cjs tests/config-secrets-auto.test.cjs tests/config-rebuild.test.cjs tests/config-storage-discovery.test.cjs",
+    "test:config": "node --test tests/config.test.cjs tests/config-full.test.cjs tests/config-secrets-auto.test.cjs tests/config-rebuild.test.cjs tests/config-storage-discovery.test.cjs tests/config-manager.test.cjs",
     "config:audit": "node scripts/config-audit.cjs",
     "keygen": "node scripts/config-keygen.cjs",
     "audit:strict": "node scripts/audit-ci.js",
@@ -137,11 +137,13 @@
   },
   "devDependencies": {
     "@electron/fuses": "^1.8.0",
+    "@garageflows/braces-bounded": "file:vendor/braces-bounded",
     "@playwright/test": "^1.62.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@vercel/blob": "2.8.2",
     "@vitest/coverage-v8": "4.1.11",
     "autoprefixer": "^10",
     "cross-env": "^7.0.3",
@@ -154,8 +156,7 @@
     "tailwindcss": "3.4.19",
     "ts-node": "^10.9.2",
     "typescript": "^5",
-    "vitest": "4.1.11",
-    "@garageflows/braces-bounded": "file:vendor/braces-bounded"
+    "vitest": "4.1.11"
   },
   "build": {
     "appId": "com.garageflow.app",

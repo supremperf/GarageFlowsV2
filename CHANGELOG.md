@@ -3,6 +3,28 @@
 
 ## [Non publié] — 2026-10-16 — chaîne build → installeur Windows réparée à la cause, page unique, vue globale des rendez-vous
 
+### `node config` — gestion transactionnelle différentielle des trois environnements
+
+- Nouveau mode par défaut idempotent : compte/projet/équipe vérifiés, inventaire
+  Development/Preview/Production, sources locales par cible, plan différentiel,
+  confirmations, sauvegardes et journal avant chaque requête, relectures et
+  rollback vérifié lorsque possible. Aucune migration/déploiement implicite.
+- Simulation en ligne/hors ligne sans mutations ; clés existantes conservées,
+  génération conditionnée à une base vide et absence distante ; originaux
+  demandés sur base utilisée ; rotation des secrets de session explicite.
+- Neon : référence non secrète, encodage unique des mots de passe, SSL, probes
+  Prisma poolée/directe. Upstash PING ; Blob association/cible + SDK épinglé,
+  sonde PUT/HEAD/DELETE optionnelle autorisée. Aucun token fournisseur inventé.
+- `.env.storage.local` de test retiré du suivi ; empreintes des accès publiés
+  refusées avant utilisation. L’historique public n’est pas purgé : révocation
+  chez Neon/Upstash/Blob toujours obligatoire. `.env.*` privés ignorés.
+- Fichiers isolés par environnement, `.env` SQLite préservé, entrées à compléter
+  reprises sans recommencer. Valeurs masquées : vérification partielle explicite,
+  jamais un faux succès global. Aucun consommateur Blob applicatif trouvé.
+- Tests d’orchestration, idempotence, panne après mutation, rollback, Git,
+  séparation des cibles, secrets, sondes et API ajoutés aux commandes locales/CI.
+  Les validations cloud sur compte client restent à exécuter avec de nouveaux accès.
+
 ### `node config` — rendre le blocage Storage vérifiable sans reconstruire
 
 - Le retour réel après le correctif précédent détecte les ressources liées mais

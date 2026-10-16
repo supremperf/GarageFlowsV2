@@ -1,103 +1,180 @@
-# Config — configuration complète GarageFlow
+# Config — gestion des environnements GarageFlows
 
-## Ouvrir et lancer
-
-**Windows : double-cliquer sur `config.cmd`** (souvent affiché « config » lorsque les extensions sont masquées). Linux/macOS : `./config` ou `node config`. Depuis le dépôt :
+## Nouveau mode par défaut : différentiel, idempotent, trois cibles
 
 ```sh
-npm run config
+node config                         # préparation puis confirmation du plan
+node config --dry-run               # inventaire Vercel, aucune mutation
+node config --dry-run --offline     # simulation locale, aucun réseau/aucune écriture
+node config --probe-blob-write       # ajouter PUT/HEAD/DELETE sur un objet de sonde
+node config --rotate-session-secrets # rotation explicite session/appareils/API
+node config --conserver-secrets     # ancien assistant complet, migrations/déploiement inclus
+npm run test:config
 ```
 
-Le fichier **`config` à la racine lance désormais le mode complet par défaut**, pas une suite de réglages manuels. **Node.js >=22.12.0 et <23, et npm** sont les seuls prérequis du lanceur ; si Node est absent, le lanceur Windows le signale et conserve le message à l’écran. Il ne lance pas un installateur système privilégié sans autorisation.
+Windows : `config.cmd` ; Node.js **>=22.12.0 et <23**. Le nouveau gestionnaire ne
+lance ni migration SQL, ni déploiement, ni remplacement d’autorité de licence.
+Ces opérations restent dans l’assistant conservateur explicite. L’analyse lit
+les fichiers suivis/non ignorés, compte les binaires et recense les références
+littérales d’environnement. Elle ne désassemble pas les binaires et ne prouve
+pas l’absence d’accès dynamiques.
 
-Une fois le plan affiché, saisir **`AUTORISER`**. Par défaut, cette autorisation
-couvre désormais une **reconstruction** des variables production modifiables
-sur une base sans données métier. Le projet déjà lié est affiché avant
-l’autorisation. Une première connexion officielle et la sélection du projet
-restent nécessaires si aucune session/cible n’existe ; aucun mot de passe
-applicatif n’est demandé par le configurateur.
+### Séquence et confirmations
 
-## Reconstruction automatique (par défaut)
+1. Contrôle Git : aucun `.env` secret suivi, exemples sans secrets, destinations
+   ignorées et absence de liens symboliques (y compris les parents du coffre).
+2. `AUTORISER`, session Vercel officielle, sélection si le projet n’est pas lié,
+   puis vérification serveur de l’ID **et de son `accountId`**. Confirmation
+   explicite de l’équipe/projet et des trois cibles.
+3. Inventaire **Development, Preview, Production avant toute mutation** : liste,
+   pull API et lectures ciblées autorisées. Chiffrement, placeholders et valeur
+   réellement exploitable sont distingués. Les branches Preview spécifiques et
+   environnements personnalisés ne sont jamais modifiés.
+4. Sources locales **par cible** + variables distantes lisibles. Un fichier
+   `.env.storage.local` historique ne sert qu’à Production. Les valeurs exposées
+   connues sont éliminées **avant les sondes réseau** ; elles ne deviennent pas
+   utilisables en changeant le nom de variable ou les query parameters d’une URL.
+5. Récupération Neon/Upstash possible avec les sessions officielles et sélection
+   de ressource, **sans création de service**. Sinon saisie masquée précise des
+   accès manquants. Chaque saisie est checkpointée pour reprise. Une sonde
+   échouée propose une correction immédiate ou une suspension, pas un faux OK.
+6. Neon : deux connexions via le vrai client Prisma PostgreSQL et inspection SQL
+   en lecture seule. Redis : PING REST. Blob : association ressource/projet/cible,
+   token et `list` via SDK officiel épinglé. Aucun secret applicatif généré avant
+   ces validations. Les dépendances/client Prisma manquants sont préparés après
+   autorisation ; aucun `reset`, `db push` ni `migrate deploy` dans ce mode.
+7. Clés internes existantes préservées. Clés absentes générées avec 32 octets
+   cryptographiques **uniquement si absence distante et base vide confirmées**.
+   Sur base utilisée ou clé distante masquée : original nécessaire. Aucune clé
+   P-256/Ed25519 de remplacement n’est inventée. La rotation session/appareils/API
+   est séparée, nommée et soumise à confirmation avant application.
+8. Plan différentiel (créations, remplacements, retraits, fichiers). Le nettoyage
+   retire seulement les noms explicitement obsolètes et sauvegardables, une fois
+   leur remplaçant canonique prêt. Un nom inconnu n’est pas « inutile » par défaut.
+9. Confirmation distincte des modifications destructives, avec liste des valeurs
+   dont la restauration est impossible. Nouvelle confirmation d’application,
+   relecture des métadonnées/valeurs des trois cibles, contrôle de la cible et des
+   fichiers, sauvegarde privée, journal **avant chaque requête**.
+10. Écritures Vercel v10 POST/PATCH/DELETE, relecture après chaque opération et
+    vérification finale. Un PATCH remplace en place, sans suppression préalable.
+    Synchronisation locale seulement après vérification distante, puis relecture
+    des fichiers. Une relance réutilise valeurs et reçus, sans nouvelles clés ni
+    mutation distante inutile.
 
-```sh
-node config                       # reconstruction autorisée par AUTORISER
-node config --conserver-secrets   # ancien plan conservateur, sans rotation globale
-```
+Les variables d’intégration/plateforme restent protégées. Une valeur partagée
+entre plusieurs cibles ne peut pas être modifiée par un PATCH présenté comme
+isolé : le plan bloque et demande de séparer sa portée. Les overrides serveur
+`ELECTRON`, `NODE_ENV` incompatibles et noms publics de secrets bloquent le plan.
+Un partage de base entre deux cibles exige une confirmation distincte. Development
+autorise HTTP uniquement pour les origines loopback (`localhost`, `127.0.0.1`,
+`::1`) de NextAuth/application ; Preview/Production et Redis restent en HTTPS.
 
-Le mode automatique :
+### Destinations et reprise
 
-1. Réutilise la session Vercel et récupère **production** avant toute suppression.
-   Si des connexions manquent, tente les lectures API de production et consulte
-   le Storage **déjà attaché à ce projet**, sans rattacher/détacher une ressource.
-   Il ne choisit pas une autre base
-   dans un compte et ne crée ni compte, ni ressource payante.
-2. Reconnaît `DATABASE_URL_UNPOOLED` / `POSTGRES_URL_NON_POOLING` comme
-   `DIRECT_URL`, `POSTGRES_URL` / `POSTGRES_PRISMA_URL` comme `DATABASE_URL`, et
-   `KV_REST_API_URL` / `KV_REST_API_TOKEN` comme les paramètres REST Upstash.
-   Un token Redis **read-only** ne remplace jamais le token d’écriture. Les
-   connexions poolée/directe doivent réellement être disponibles : aucun
-   hostname n’est deviné. Les paramètres réels `PGHOST`/`PGHOST_UNPOOLED`,
-   `PGUSER`, `PGPASSWORD` et `PGDATABASE` peuvent aussi servir à construire les
-   connexions (credentials encodés, TLS requis). Les liens Markdown et `&amp;`
-   peuvent être nettoyés.
-3. Sauvegarde les profils existants, la configuration keygen et les variables
-   distantes relisibles dans un dossier privé
-   `GarageFlow-configuration/rebuild-*/`. Les secrets Sensitive illisibles ne
-   deviennent pas récupérables par cette sauvegarde.
-4. Inspecte PostgreSQL en lecture seule **avant** de générer des secrets. Une
-   base avec données métier bloque le mode reconstruction ; utiliser le mode
-   conservateur. Sur base vide, de nouvelles clés symétriques serveur de
-   256 bits sont générées, même si les précédentes étaient présentes. Les
-   autorités P-256/Ed25519 et les vraies clés historiques ne sont pas remplacées
-   au hasard. Un coffre chiffré non déverrouillé bloque plutôt que demander son
-   secret. Les clés desktop sont indépendantes : renouvelées seulement si la
-   SQLite locale est vide, conservées si elle contient des données.
-5. Écrit `.env.server.local`, `.env` (SQLite desktop), le keygen et les sources
-   Storage dans `.env.storage.local`. Les dernières connexions sont aussi
-   sauvegardées dans un coffre lié aux identifiants équipe/projet. Ces fichiers
-   sont privés/ignorés par Git et **ne sont jamais embarqués dans le code**.
-6. Conserve le domaine HTTPS existant ; s’il manque, récupère un alias production
-   réel via Vercel (préférence à un domaine personnalisé). Ne crée pas de DNS.
-   Valide Redis par PING et les profils, puis exécute les migrations/contrôles SQL
-   existants, sans reset ni `db push` destructif.
-7. Recontrôle projet, inventaire distant et absence de nouvelles données métier.
-   Prépare un journal privé et les valeurs de réécriture **avant** de retirer
-   les variables production modifiables ; les réécrit ensuite. Les noms connus
-   hors profil/obsolètes sont retirés sans réexporter de secrets desktop. Les
-   paramètres tiers non générables sont préservés lorsqu’ils sont disponibles.
-8. Relit présence/métadonnées et valeurs relisibles, enregistre les reçus, puis
-   crée le premier accès admin sur base vide et déploie. La licence admin est
-   uniquement dans `keys/bootstrap-admin-license.json`, jamais dans le terminal.
+| Cible | Fichiers applicatifs | Entrées fournisseur privées |
+|---|---|---|
+| Development | `.env.development.local`, `.env.local` | `.env.storage.development.local` |
+| Preview | `.env.preview.local` (export explicite, pas un fichier Next automatique) | `.env.storage.preview.local` |
+| Production | `.env.production.local`, `.env.server.local` | `.env.storage.production.local` |
 
-**Pas de suppression des variables gérées par les intégrations Storage ou la
-plateforme**, ni des environnements **preview/development**. Effacer ces accès
-avant leur récupération ne serait pas une automatisation sûre. Une variable
-requise non récupérable, un secret tiers illisible non sauvegardé, un défaut
-SQL/Redis ou un choix de ressource ambigu provoquent un arrêt explicite, **sans
-boucle de saisie manuelle et avant l’effacement distant**.
+`.env` reste le profil SQLite desktop et n’est pas écrasé. Les noms inconnus des
+fichiers locaux sont préservés, sauf les valeurs connues exposées. Les alias
+obsolètes sont migrés vers le contrat canonique. `DATABASE_URL_UNPOOLED`, les
+paramètres `PG*` et les variantes `POSTGRES_*` sont acceptés comme **entrées
+fournisseur** ; seuls les noms applicatifs canoniques sont déployés. Prisma
+attend `DIRECT_URL`, pas un alias supplémentaire. `.env.storage.example` montre
+les champs acceptés **sans aucun secret**. `.env.example` reste sans secrets.
 
-L’opération de suppression/réécriture **n’est pas atomique**. En cas d’échec,
-`GarageFlow-configuration/rebuild-pending.json` conserve en privé les nouvelles
-valeurs et le plan. Une relance sur la même cible les réutilise au lieu de
-régénérer les clés ; une autre cible est refusée. Ne pas supprimer ce journal
-pour masquer un incident. Les fichiers privés contiennent des secrets en clair :
-les protéger par ACL/chiffrement sur Windows, ne jamais les publier. POSIX :
-fichiers `0600`, dossiers `0700`.
+Le coffre privé `GarageFlow-configuration/` contient :
 
-**Limites externes :** le marquage « Sensitive » / `visibility: secret` décrit la
-protection, pas à lui seul la possibilité de lecture. Les valeurs réellement
-renvoyées par un pull authentifié sont utilisables ; les valeurs absentes ou
-masquées restent inconnues. Storage et ses intégrations ne peuvent être
-récupérés sans session et droits suffisants.
-Le configurateur ne peut ni inventer une clé API fournisseur ni retrouver un
-mot de passe perdu. Les identifiants publiés dans un chat doivent être révoqués
-chez leur fournisseur, puis récupérés depuis l’intégration actualisée. Aucun
-credential du chat n’est codé en dur. Conserver un token Blob ne suffit pas à
-implémenter les sauvegardes Blob : les limites applicatives de stockage durable,
-SMTP/identité légale et service de publication externe restent signalées.
+- `manager-state.json` : saisies/drafts, projet, tentatives et journal de reprise ;
+- `manager-backup-*/` : valeurs relisibles et originaux locaux avant application ;
+- `manager-receipts.json` : empreintes + versions distantes, liées au projet/cible ;
+- **`manager-report.json` : seul rapport partageable**, noms/statuts sans valeurs.
 
-Les sections suivantes décrivent aussi le **mode conservateur** et ses choix
-interactifs ; les différences du mode reconstruction sont précisées ci-dessus.
+Les sondes refusent les modes `DEBUG`/`NEXT_PUBLIC_DEBUG` actifs pour éviter les
+traces verbeuses des bibliothèques Prisma/Blob. Fichiers POSIX `0600`, dossiers
+`0700` ; sur Windows, utiliser en plus un dossier avec ACL utilisateur et
+chiffrement disque. Ne jamais partager les autres
+fichiers du coffre. Un verrou interdit les configurations simultanées sur ce
+poste ; un verrou interrompu doit être contrôlé avant retrait. Une transaction
+interrompue propose une restauration vérifiée à la reprise. Une modification
+locale concurrente n’est jamais écrasée par le rollback.
+
+### Neon, Blob et limites de vérification
+
+La référence Neon non secrète est intégrée : `neondb_owner`, base `neondb`,
+région `us-east-2`, hôtes poolé/direct `ep-aged-cell-ayqiwroc` fournis. **Aucun
+ancien mot de passe n’est embarqué**. Avec un nouveau mot de passe brut fourni
+localement, les URLs sont encodées une fois, y compris les `%` littéraux.
+`DATABASE_URL`/`DIRECT_URL` doivent viser la même branche/base/rôle avec SSL.
+`POSTGRES_URL_NO_SSL` est seulement une variante de compatibilité dans les
+entrées privées : jamais utilisée comme transport de production.
+
+La sonde Blob par défaut vérifie l’association et la lecture de liste, **pas
+l’écriture**. `--probe-blob-write` demande une autorisation PUT/HEAD/DELETE et la
+visibilité effective du store. Elle crée un objet unique sans contenu sensible,
+interdit l’écrasement, vérifie ses métadonnées, le supprime et relit la liste.
+Un échec de nettoyage est signalé sans secret. Ces opérations peuvent être
+facturées par le fournisseur. Aucun consommateur Blob applicatif n’a été trouvé
+lors de cet audit : cela ne migre **pas** les sauvegardes/uploads du disque.
+
+La simulation en ligne n’écrit pas les fichiers du projet et ne mute aucune
+variable ; le CLI officiel peut gérer son propre cache/session d’authentification.
+La simulation hors ligne ne lance aucun CLI externe au contrôle Git/audit local.
+
+Les créations Vercel portent un commentaire de transaction unique : une
+restauration ne retire pas la création concurrente d’un autre opérateur, même
+si sa valeur est identique. Les commentaires existants sont préservés.
+
+Les modifications multi-environnements ne sont **pas une transaction distribuée
+atomique**. Le rollback est vérifié là où les valeurs originales sont connues.
+Une valeur masquée/inaccessible n’a pas d’original sauvegardable ; une rotation
+ne peut pas être honnêtement annoncée réversible. Une modification concurrente
+ou une restauration non confirmée laisse un journal et un statut interrompu.
+
+Un reçu n’est jamais créé pour prétendre connaître la valeur d’une intégration
+masquée que le gestionnaire n’a ni lue ni écrite. Une métadonnée modifiée après
+envoi confirme la présence, **pas l’égalité en clair**. Dans ce cas le rapport
+reste **VÉRIFICATION PARTIELLE**, avec code de sortie 1. Sans connexion réellement
+testée, le rapport affiche **NON VÉRIFIÉ**. La simulation hors ligne ne valide ni
+le compte, ni les services, ni les suppressions distantes ; les clés générables
+restent conditionnelles à une inspection SQL future.
+
+### Incident de publication des accès de test
+
+Le fichier `.env.storage.local` publié au commit `290d290` est retiré du suivi
+courant. **Il reste dans l’historique public.** Les empreintes des accès publiés
+sont ajoutées à `scripts/compromised-secrets.json` ; les modes de validation les
+refusent, y compris si un mot de passe est réutilisé dans une autre URL.
+Révoquer le mot de passe Neon, les tokens Redis écriture/lecture seule et le
+token Blob chez leurs fournisseurs. Ni supprimer un fichier ni changer une
+variable ne prouve la révocation. Aucun accès client n’a été utilisé ici.
+
+### Validation de cette livraison — 17 octobre 2026
+
+| Contrôle exécuté dans le dépôt | Résultat |
+|---|---|
+| `node --test tests/*.cjs` | 314 tests réussis, aucun échec ni test ignoré |
+| `npm run test:config` (sous-ensemble du précédent) | 195 tests réussis, dont 33 pour le nouveau gestionnaire |
+| ESLint des modules de configuration modifiés et de leurs tests | Réussi |
+| Cohérence documentaire, marque et `git diff --check` | Réussis |
+| `npm audit --omit=optional --audit-level=low` | Aucune vulnérabilité signalée dans le périmètre audité |
+| Vraie commande `node config --dry-run --offline` | Code 0 ; contenu, permissions et dates de modification des fichiers `.env*` et du coffre inchangés ; aucune valeur sensible connue dans la sortie |
+| Compte/équipe/projet et écritures Vercel réels | **Non vérifiés** |
+| Nouveau mot de passe et connexions Neon poolée/directe via Prisma | **Non vérifiés** ; génération réelle du client et accès fournisseur non validés ici |
+| Nouveaux accès Upstash et token Blob ; opérations Blob réelles | **Non vérifiés** |
+| Synchronisation effective des trois environnements cloud | **Non finalisée** |
+
+Les tests automatisés des fournisseurs utilisent des doubles contrôlés, pas
+les services du client. Ils ne prouvent ni la validité des nouveaux accès, ni
+leur rotation/révocation, ni la disponibilité des services. Les accès manquants
+doivent être récupérés ou saisis dans le terminal masqué sur le poste autorisé ;
+ne pas les transmettre dans un chat, un ticket ou un commit.
+
+Les sections suivantes documentent les diagnostics de compatibilité et le
+**mode conservateur historique**. Ses migrations, keygen, modifications desktop
+et déploiements ne font pas partie du nouveau gestionnaire par défaut.
 
 ### Si les quatre connexions semblaient introuvables
 
@@ -236,7 +313,7 @@ Dans un Electron **déjà installé**, les secrets session/MAC/SMTP et la clé i
 ## Commandes disponibles
 
 ```sh
-npm run config                         # plan complet par défaut
+npm run config                         # gestion idempotente des trois cibles
 node config --profile full
 node config --list                     # inventaire en lecture seule, sans valeurs
 node config --diagnose-sql              # lecture seule : comparer PostgreSQL au schéma attendu
@@ -255,7 +332,7 @@ npm run release:sign -- --help          # wrapper qui réutilise le coffre confi
 
 Les profils ciblés restent des assistants à confirmations étape par étape ; le mode complet a une autorisation initiale pour la chaîne technique et ne redemande pas chaque commande sûre. Les valeurs dangereuses peuvent être corrigées dans les réglages avancés ; `GENERER` demande une génération explicite d’un secret symétrique, `SUPPRIMER` le retire du profil. Aucun remplacement automatique d’un secret non vide.
 
-## Génération automatique des clés — `node config`
+## Génération des clés dans le mode conservateur historique
 
 Pour une **première installation**, lancer simplement `node config` (ou double-cliquer `config.cmd`), puis autoriser le plan avec `AUTORISER`. Aucune commande OpenSSL, valeur de clé, choix de format ou copier-coller n'est nécessaire pour les secrets locaux ci-dessous. Les connexions officielles Vercel/Neon/Upstash précèdent l'inspection de la base : cela évite de remplacer par erreur des secrets distants déjà existants.
 

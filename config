@@ -23,7 +23,11 @@ function help() {
   console.log(`GarageFlow — assistant config (Node 22)
 
   npm run config                     Plan COMPLET automatique (autorisation initiale)
-  node config --profile full          Reconstruction automatique (production)
+  node config --profile full          Gestion idempotente des trois environnements
+  node config --dry-run               Plan sans mutation (lectures Vercel seulement)
+  node config --dry-run --offline     Simulation locale sans réseau ni écriture
+  node config --probe-blob-write       Ajouter une sonde Blob PUT/HEAD/DELETE autorisée
+  node config --rotate-session-secrets Rotation explicite session/appareils/API
   node config --conserver-secrets     Plan conservateur : garder les secrets existants
   node config --audit                 Inventaire/rapport du dépôt, sans accès cloud
   node config --list                  Couverture des variables, noms/destinations sans valeurs
@@ -36,10 +40,11 @@ function help() {
   node config --diagnose-sql          Diagnostic PostgreSQL en lecture seule
   node config --help
 
-Par défaut : AUTORISER lance la reconstruction des variables production sur une
-base sans données métier. Sauvegarde AVANT suppression ; Storage et variables
-plateforme protégés. Authentification officielle requise, aucun secret à saisir.
-Une base utilisée ou un credential inaccessible bloque AVANT suppression.
+Par défaut : gestion différentielle Development / Preview / Production.
+AUTORISER prépare le plan ; confirmation distincte avant application et retrait.
+Aucune rotation implicite, aucun déploiement/migration. Sauvegardes et reprise
+privées. Accès fournisseurs introuvables : saisie masquée sur votre poste.
+Les anciennes valeurs exposées sont interdites, même si elles fonctionnent encore.
 
 Mode --conserver-secrets : toute clé symétrique ABSENTE est générée automatiquement (256 bits) sur une
 première installation (base vide, aucune donnée métier) puis écrite dans .env,
@@ -609,12 +614,17 @@ async function diagnoseSql({ env, run = execute, root = ROOT, requestAccess = ye
   }
 }
 async function main() {
-  const accepted = new Set(['--help', '--check', '--profile', '--vercel', '--audit', '--diagnose-sql', '--list', '--diagnostic-storage'])
+  const accepted = new Set(['--help', '--check', '--profile', '--vercel', '--audit', '--diagnose-sql', '--list', '--diagnostic-storage', '--conserver-secrets', '--dry-run', '--simulate', '--offline', '--rotate-session-secrets', '--probe-blob-write'])
   for (let i = 0; i < args.length; i++) {
     if (!accepted.has(args[i])) throw new Error('Option inconnue. Utilisez node config --help.')
     if (args[i] === '--profile') { if (!PROFILES.includes(args[++i])) throw new Error('Profil attendu : full | desktop | pwa | licences.') }
   }
   if (args.includes('--help')) return help()
+  const simulation = args.includes('--dry-run') || args.includes('--simulate')
+  if (args.some(a => ['--rotate-session-secrets', '--probe-blob-write'].includes(a)) && args.some(a => ['--conserver-secrets', '--audit', '--check', '--list', '--diagnose-sql', '--diagnostic-storage'].includes(a))) throw new Error('Options de gestion incompatibles avec un diagnostic ou le mode conservateur.')
+  if (args.includes('--offline') && !simulation) throw new Error('--offline nécessite --dry-run.')
+  if (simulation && args.some(a => ['--check', '--audit', '--list', '--diagnostic-storage', '--diagnose-sql', '--conserver-secrets', '--rotate-session-secrets', '--probe-blob-write'].includes(a))) throw new Error('Simulation : options incompatibles ; aucun changement lancé.')
+  if ((simulation || args.includes('--rotate-session-secrets') || args.includes('--probe-blob-write')) && args.includes('--profile') && args[args.indexOf('--profile') + 1] !== 'full') throw new Error('Simulation/rotation : utiliser le profil full.')
   core.assertNodeVersion()
   if (args.includes('--list')) {
     if (args.length !== 1) throw new Error('Utiliser node config --list seul (lecture seule).')
@@ -648,7 +658,10 @@ async function main() {
   profile ||= 'full'
   if (profile === 'full') {
     if (args.includes('--check')) throw new Error('Pour une validation locale, choisir --profile desktop, pwa ou licences.')
-    return require('./scripts/config-full.cjs').full(module.exports, { automatic: !args.includes('--conserver-secrets') })
+    if (args.includes('--conserver-secrets')) return require('./scripts/config-full.cjs').full(module.exports, { automatic: false })
+    const report = await require('./scripts/config-manager.cjs').manage(module.exports, { dryRun: simulation, offline: args.includes('--offline'), rotateSessions: args.includes('--rotate-session-secrets'), blobWrite: args.includes('--probe-blob-write') })
+    if (report.status.startsWith('INTERROMPU') || report.status.includes('PARTIELLE')) process.exitCode = 1
+    return report
   }
   const names = core.namesForProfile(allNames, profile)
   const envFile = path.join(ROOT, profile === 'desktop' ? '.env' : '.env.server.local')

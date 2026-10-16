@@ -149,7 +149,7 @@ test('CLI --check is offline/read-only and reports names, never secret values', 
   const dir = fixture(t)
   fs.mkdirSync(path.join(dir, 'scripts/lib'), { recursive: true })
   fs.mkdirSync(path.join(dir, 'src/lib/license'), { recursive: true })
-  for (const file of ['config', '.env.example', 'scripts/config-core.cjs', 'scripts/config-policy.cjs', 'scripts/garageflow-env-manifest.json', 'src/lib/license/public-key.ts', 'scripts/lib/config-secrets-auto.cjs']) {
+  for (const file of ['config', '.env.example', 'scripts/config-core.cjs', 'scripts/compromised-secrets.json', 'scripts/lib/config-credentials.cjs', 'scripts/config-policy.cjs', 'scripts/garageflow-env-manifest.json', 'src/lib/license/public-key.ts', 'scripts/lib/config-secrets-auto.cjs']) {
     fs.copyFileSync(path.join(root, file), path.join(dir, file))
   }
   const secret = 'do-not-print-this-actual-secret-value'
@@ -407,7 +407,7 @@ test('dotenv codec preserves custom names, quotes, literal backslashes and dolla
 
 function cliFixture(t) {
   const dir = fixture(t)
-  for (const file of ['config', '.env.example', 'scripts/config-core.cjs', 'scripts/config-policy.cjs', 'scripts/config-env-coverage.cjs', 'scripts/garageflow-env-manifest.json', 'src/lib/license/public-key.ts', 'scripts/lib/config-secrets-auto.cjs']) {
+  for (const file of ['config', '.env.example', 'scripts/config-core.cjs', 'scripts/compromised-secrets.json', 'scripts/lib/config-credentials.cjs', 'scripts/config-policy.cjs', 'scripts/config-env-coverage.cjs', 'scripts/garageflow-env-manifest.json', 'src/lib/license/public-key.ts', 'scripts/lib/config-secrets-auto.cjs']) {
     fs.mkdirSync(path.dirname(path.join(dir, file)), { recursive: true })
     fs.copyFileSync(path.join(root, file), path.join(dir, file))
   }

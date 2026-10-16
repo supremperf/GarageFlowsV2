@@ -9,6 +9,20 @@ dépôt comme **compromise**.
 > fichier.** Les secrets exposés sont identifiés par une **empreinte SHA-256**
 > non réversible, jamais par leur valeur.
 
+## Publication des credentials de test — commit `290d290`
+
+Le fichier `.env.storage.local` a été publié dans le dépôt public sur demande
+explicite. Il est désormais retiré du suivi, **mais reste dans l’historique**.
+Les empreintes complètes figurent dans `scripts/compromised-secrets.json` ; ne
+jamais recopier ici les valeurs, même partiellement.
+
+À révoquer chez les fournisseurs : mot de passe du rôle Neon, tokens Redis
+REST écriture **et lecture seule**, token Vercel Blob. Vérifier les sessions,
+logs et accès historiques avec les outils des fournisseurs. Après rotation,
+`node config` accepte les nouvelles valeurs dans le terminal masqué ; les
+anciennes sont refusées avant les sondes du nouveau gestionnaire. Une analyse
+Git de l’arbre courant ne certifie jamais l’effacement des anciennes versions.
+
 ## 1. Secrets exposés à révoquer / régénérer
 
 | Secret | Empreinte (SHA-256, tronquée) | Où il était exposé | Action |

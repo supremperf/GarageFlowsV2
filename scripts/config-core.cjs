@@ -225,7 +225,7 @@ function embeddedLicenseKey(root) {
   if (!block) throw new Error('Clé publique embarquée introuvable.')
   return [...block[1].matchAll(/'([^']*)'/g)].map(m => m[1]).join('\n')
 }
-function validate(env, profile, { vercel = false, publicPem } = {}) {
+function validate(env, profile, { vercel = false, publicPem, allowLocalHttp = false } = {}) {
   const errors = []
   const required = ['DATABASE_URL', 'NEXTAUTH_SECRET']
   if (profile !== 'desktop') required.push('DIRECT_URL', 'NEXTAUTH_URL', 'DEVICE_TOKEN_PEPPER',
@@ -249,7 +249,11 @@ function validate(env, profile, { vercel = false, publicPem } = {}) {
     if (n === 'GF_EINVOICE_CREDENTIALS_KEY_VERSION' && (!/^\d+$/.test(v) || +v < 1)) errors.push(`${n} : version positive requise.`)
     if (/^GF_MIN_(ELECTRON|PWA)_VERSION$/.test(n) && !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(v)) errors.push(`${n} : version x.y.z requise.`)
     if (n === 'GF_DEVICE_AUTH_DEADLINE' && (!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(v) || !Number.isFinite(Date.parse(v)))) errors.push(`${n} : date RFC3339 requise.`)
-    if (['NEXTAUTH_URL', 'GF_APP_URL', 'GF_LICENSE_SERVER', 'GF_UPDATE_SERVER', 'UPSTASH_REDIS_REST_URL'].includes(n) &&
+    let localHttp = false
+    if (allowLocalHttp && ['NEXTAUTH_URL', 'GF_APP_URL'].includes(n)) {
+      try { const url = new URL(v); localHttp = url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) && !url.username && !url.password && !url.search && !url.hash } catch { /* validate below */ }
+    }
+    if (['NEXTAUTH_URL', 'GF_APP_URL', 'GF_LICENSE_SERVER', 'GF_UPDATE_SERVER', 'UPSTASH_REDIS_REST_URL'].includes(n) && !localHttp &&
       !urlValid(v, profile === 'desktop' && !['UPSTASH_REDIS_REST_URL', 'GF_APP_URL'].includes(n) ? ['http:', 'https:'] : ['https:'], { publicEndpoint: true })) errors.push(`${n} : URL ${profile === 'desktop' ? 'HTTP(S)' : 'HTTPS'} sans identifiants, query ni fragment requise.`)
     if (['DATABASE_URL', 'DIRECT_URL'].includes(n) && !(profile === 'desktop' && n === 'DATABASE_URL' ? /^file:.+/.test(v) : urlValid(v, ['postgres:', 'postgresql:']))) errors.push(`${n} : ${profile === 'desktop' ? 'SQLite file:' : 'PostgreSQL'} requis.`)
     if (n === 'DIRECT_URL' && urlValid(v, ['postgres:', 'postgresql:']) && /-pooler\./i.test(new URL(v).hostname)) errors.push(`${n} : URL directe requise (pas -pooler).`)
@@ -263,6 +267,9 @@ function validate(env, profile, { vercel = false, publicPem } = {}) {
   if (env.GARAGEFLOW_API_KEY && env.NEXTAUTH_SECRET && env.GARAGEFLOW_API_KEY === env.NEXTAUTH_SECRET) errors.push('GARAGEFLOW_API_KEY : doit être distincte de NEXTAUTH_SECRET.')
   if (vercel && (env.GF_BACKUP_DIR || env.GF_PHOTOS_DIR)) errors.push('GF_BACKUP_DIR / GF_PHOTOS_DIR : stockage fichier non persistant sur Vercel ; ne pas simuler un disque durable.')
   if (env.GF_PRIVATE_KEY && (!publicPem || !licenseKeyMatches(env.GF_PRIVATE_KEY, publicPem))) errors.push('GF_PRIVATE_KEY : clé P-256 incompatible avec la clé publique embarquée.')
+  const entries = JSON.parse(fs.readFileSync(path.join(__dirname, 'compromised-secrets.json'), 'utf8')).entries
+  const { compromised } = require('./lib/config-credentials.cjs')
+  for (const [name, value] of Object.entries(env)) if (compromised(value, entries)) errors.push(`${name} : identifiant connu exposé ; renouvellement fournisseur obligatoire.`)
   return [...new Set(errors)]
 }
 function syncPlan(local, remote, names) {
