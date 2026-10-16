@@ -54,6 +54,12 @@
   `post-build.js` et `verify:standalone` → `✅ Sortie autonome complète`, exit 0.
   Le serveur empaqueté, lançé avec l'environnement d'`electron/main.js`, répond
   `200` sur `/login`, `/clients/login`, `/api/auth/providers` et `/api/version`.
+- **`npm run dist` n'entraîne plus de publication implicite** : sur
+  l'installeur réellement construit (run `38957019116`), electron-builder a
+  déclenché « Implicit publishing triggered by CI detection » puis a échoué sur
+  `GitHub Personal Access Token is not set` — la construction était pourtant
+  terminée. `--publish never` est désormais explicite : publier une release reste
+  une décision (`npm run release:sign`), jamais un effet de bord.
 - Le fond du volet Stock ferme désormais le panneau au clic (surface qui
   n'obéissait à aucun clic) ; membre mort `'appointments'` retiré de l'union
   `Surface` de `src/app/page.tsx`.

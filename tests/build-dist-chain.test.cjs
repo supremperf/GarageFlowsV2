@@ -255,6 +255,18 @@ test('package.json : dist vérifie tout et échoue clairement à chaque étape',
   }
 })
 
+test('la chaîne n’essaie JAMAIS de publier une release toute seule', () => {
+  // Constaté en CI (run 38957019116) : l’installeur était construit, puis
+  // electron-builder déclenchait une publication implicite — « Implicit
+  // publishing triggered by CI detection » — et la construction échouait sur
+  // « GitHub Personal Access Token is not set ». La publication d’une release
+  // est une décision explicite (`npm run release:sign`), jamais un effet de bord
+  // de l’empaquetage.
+  const dist = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).scripts.dist
+  assert.match(dist, /electron-builder --win --x64 --publish never/)
+  assert.ok(!/--publish (always|onTag|onTagOrDraft)/.test(dist))
+})
+
 test('release:sign explique quoi fournir au lieu d’un « --file obligatoire » sec', () => {
   const source = fs.readFileSync(path.join(root, 'scripts', 'sign-release-manifest.mjs'), 'utf8')
   assert.match(source, /function installeurDetecte/)

@@ -458,6 +458,35 @@ Upstash, `TRUST_PROXY_HEADERS`). C'est voulu (`estPwaDeProduction()`), et c'est
 précisément l'environnement que `electron/main.js` renseigne — l'application
 de bureau ne démarre pas « par accident » avec une configuration de serveur web.
 
+## 11 sexies. L'installeur Windows a été construit — et ce qui l'a fait échouer ensuite
+
+Dernier run observé (`38957019116`, job `117164202469`), journal de l'étape
+d'empaquetage, après `✅ Sortie autonome complète` :
+
+```
+• packaging       platform=win32 arch=x64 electron=41.10.6 appOutDir=dist\win-unpacked
+• downloaded electron zip extracted successfully
+• updating asar integrity executable resource  executablePath=dist\win-unpacked\GarageFlows.exe
+✓ Electron Fuses appliqués (RunAsNode off, --inspect off, OnlyLoadAppFromAsar, …)
+✓ Manifeste d'intégrité : 530 fichier(s) critique(s) signé(s) → integrity.manifest.json
+• building        target=nsis file=dist\GarageFlows Setup 1.1.0.exe archs=x64 oneClick=false perMachine=false
+• building block map  blockMapFile=dist\GarageFlows Setup 1.1.0.exe.blockmap
+⨯ GitHub Personal Access Token is not set, neither programmatically, nor using env "GH_TOKEN"
+```
+
+Autrement dit : **l'installeur `GarageFlows Setup 1.1.0.exe` et sa carte de
+blocs ont bien été produits**, les fusibles Electron sont appliqués, le manifeste
+d'intégrité porte 530 fichiers critiques — puis la construction échoue sur
+l'étape SUIVANTE, une **publication implicite** qu'electron-builder déclenche
+tout seul parce qu'il se sait dans une CI (« Implicit publishing triggered by CI
+detection. This behavior will be disabled in electron-builder v27 »), faute d'un
+jeton GitHub. La configuration du dépôt ne demande pourtant aucune publication.
+
+Correctif : `--publish never` est passé explicitement à electron-builder dans
+`npm run dist`. Publier une release reste une décision séparée et explicite
+(`npm run release:sign`, qui exige ses arguments), jamais un effet de bord de
+l'empaquetage. Un test verrouille ce point.
+
 ## 12. Ce qui n'a PAS pu être exécuté ici, et pourquoi
 
 L'environnement de développement de cette session n'a accès qu'à une liste
