@@ -770,21 +770,21 @@ test('Blob errors expose only whitelisted diagnoses, never provider payloads, na
   }
 })
 
-test('an unconfirmed Blob binding can be rechecked after correction without requesting the same token again', async t => {
-  const f = fixture(t), output = [], yes = f.api.yes
+test('an unconfirmed Blob binding stops once with an exact scoped repair command instead of a retry loop', async t => {
+  const f = fixture(t), output = []
   t.mock.method(console, 'log', (...args) => output.push(args.join(' ')))
   let inventory = 0
   f.driver.blobStores = async () => {
-    if (++inventory === 1) { const error = new Error('private-payload'); error.configBlobCode = 'store_association'; throw error }
-    return ['store_UnitTest']
+    inventory++; const error = new Error('private-payload'); error.configBlobCode = 'store_association'; throw error
   }
-  f.api.yes = async label => label.includes('réessayer la vérification Blob') ? true : yes(label)
   const report = await f.run()
-  assert.match(report.status, /^CONFIGURATION VALIDÉE/)
+  assert.match(report.status, /INTERROMPU/)
   assert.ok(output.join('\n').includes('Connect Project'))
+  assert.ok(output.join('\n').includes('node config --connect-blob --environment development'))
   assert.ok(!output.join('\n').includes('private-payload'))
-  assert.equal(report.environments.development.blobDiagnostic, undefined)
-  assert.equal(inventory, 4)
+  assert.equal(report.environments.development.blobDiagnostic.code, 'store_association')
+  assert.equal(inventory, 1)
+  assert.equal(f.writes.length, 0)
 })
 
 test('unconfirmed Blob inventory is reported as such, not as an invalid token, and never triggers a replacement input', async t => {
@@ -1005,4 +1005,201 @@ test('simulation of exposed Blob inputs never asks for consent and cannot restor
   assert.ok(report.environments.development.missing.includes('BLOB_READ_WRITE_TOKEN'))
   assert.deepEqual(tree(f.dir), before)
   assert.equal(f.writes.length, 0)
+})
+
+function repairFixture(t) {
+  const f = fixture(t)
+  const store = { id: 'store_UnitTest', type: 'blob', name: 'Fixture Blob', projectsMetadata: [] }
+  const calls = []
+  const question = f.api.question
+  f.api.question = async label => label.includes('AUTORISER BLOB') ? 'AUTORISER BLOB' : question(label)
+  f.api.select = async (_label, items) => items[0]
+  f.driver.listBlobResources = async () => [{ id: store.id, name: store.name }]
+  f.driver.blobResource = async () => structuredClone(store)
+  f.driver.blobStores = async (_project, target) => store.projectsMetadata.some(c => c.projectId === project.projectId && c.environments.includes(target)) ? [store.id] : []
+  f.api.tool = async (name, args) => {
+    assert.equal(name, 'vercel')
+    assert.deepEqual(args.slice(0, 3), ['storage', args[1], store.id])
+    assert.equal(args[args.indexOf('--project') + 1], project.projectId)
+    assert.equal(args[args.indexOf('--scope') + 1], project.orgId)
+    assert.equal(args[args.indexOf('--auth') + 1], 'oidc')
+    assert.ok(args.includes('--add-rw-token'))
+    const target = args[args.indexOf('--environment') + 1]
+    const dryRun = args.includes('--dry-run')
+    calls.push({ args, dryRun })
+    const keys = ['BLOB_READ_WRITE_TOKEN', 'BLOB_STORE_ID', 'BLOB_WEBHOOK_PUBLIC_KEY']
+    if (!dryRun) {
+      assert.ok(args.includes('--yes'))
+      // The backup and a write-ahead journal MUST exist before the CLI mutation.
+      const backups = fs.readdirSync(path.join(f.dir, manager.VAULT)).filter(n => n.startsWith('blob-connect-backup-'))
+      assert.equal(backups.length, 1)
+      const journal = JSON.parse(fs.readFileSync(path.join(f.dir, manager.VAULT, backups[0], 'journal.json'), 'utf8'))
+      assert.equal(journal.phase, 'applying')
+      assert.ok(fs.existsSync(path.join(f.dir, manager.VAULT, backups[0], 'before.json')))
+      store.projectsMetadata = [...store.projectsMetadata.filter(c => !c.environments.includes(target)), { id: 'conn_fixture', projectId: project.projectId, environments: [target], environmentVariables: keys }]
+      for (const key of keys) addRecord(f, target, key, key === 'BLOB_READ_WRITE_TOKEN' ? f.values[target][key] : key === 'BLOB_STORE_ID' ? store.id : 'fixture-public-key', { contentHint: { storeId: store.id, type: key === 'BLOB_READ_WRITE_TOKEN' ? 'blob-read-write-token' : 'other' } })
+    }
+    return JSON.stringify({ action: args[1], store: { id: store.id, type: 'blob' }, projects: [{ id: project.projectId }], environments: [target],
+      auth: { effective: 'oidc', readWriteToken: true }, envVars: { add: keys, keep: [], remove: [] }, applied: !dryRun })
+  }
+  return { ...f, store, calls, setup: options => require('../scripts/config-blob-setup.cjs').setupBlob(f.api, { target: 'development', driver: f.driver, ...options }) }
+}
+
+test('guided Blob connection uses official scoped CLI plans, backs up first and verifies the association and list', async t => {
+  const f = repairFixture(t)
+  const result = await f.setup()
+  assert.equal(result.status, 'RATTACHEMENT BLOB VÉRIFIÉ')
+  assert.equal(result.checks.api, 'LISTE BLOB VÉRIFIÉE')
+  assert.equal(f.calls.filter(c => !c.dryRun).length, 1)
+  assert.ok(f.calls.every(c => c.args.filter(a => a === '--environment').length === 1 && c.args[c.args.indexOf('--environment') + 1] === 'development'))
+  assert.deepEqual(f.snapshots.preview.records, [])
+  assert.deepEqual(f.snapshots.production.records, [])
+  assert.equal(f.values.development.DATABASE_URL, core.readEnv(path.join(f.dir, '.env.storage.development.local')).DATABASE_URL)
+  assert.ok(!JSON.stringify(result).includes(f.values.development.BLOB_READ_WRITE_TOKEN))
+  assert.ok(!fs.existsSync(path.join(f.dir, manager.VAULT, 'manager.lock')))
+  assert.equal(JSON.parse(fs.readFileSync(path.join(f.dir, manager.VAULT, result.backup, 'journal.json'), 'utf8')).phase, 'verified')
+})
+
+test('a repeated Blob repair verifies the current connection without reconnecting or rewriting env files', async t => {
+  const f = repairFixture(t)
+  await f.setup()
+  const writes = f.calls.length
+  const result = await f.setup()
+  assert.equal(result.status, 'RATTACHEMENT DÉJÀ CONFIRMÉ')
+  assert.equal(f.calls.length, writes)
+  assert.ok(!fs.existsSync(path.join(f.dir, '.env.development.local')), 'repair is not the full config transaction')
+})
+
+test('Blob repair preserves main drafts and updates only the expected source stamp so node config resumes without rotation', async t => {
+  const f = repairFixture(t), crypto = require('node:crypto')
+  const original = crypto.randomBytes(32).toString('base64')
+  const state = { schema: 1, project, phase: 'preparing', attempts: [], drafts: { development: { NEXTAUTH_SECRET: original } }, sourceStamps: { development: manager.signature(f.snapshots.development) } }
+  core.writePrivate(path.join(f.dir, manager.VAULT, 'manager-state.json'), JSON.stringify(state))
+  await f.setup()
+  const saved = JSON.parse(fs.readFileSync(path.join(f.dir, manager.VAULT, 'manager-state.json'), 'utf8'))
+  assert.equal(saved.drafts.development.NEXTAUTH_SECRET, original)
+  assert.equal(saved.sourceStamps.development, manager.signature(f.snapshots.development))
+  const result = await f.run()
+  assert.match(result.status, /^CONFIGURATION VALIDÉE/)
+  assert.equal(core.readEnv(path.join(f.dir, '.env.development.local')).NEXTAUTH_SECRET, original)
+})
+
+test('Blob repair does not replace a Production connection when adding Development', async t => {
+  const f = repairFixture(t)
+  const production = { id: 'conn_production', projectId: project.projectId, environments: ['production'], environmentVariables: ['BLOB_READ_WRITE_TOKEN'] }
+  f.store.projectsMetadata.push(production)
+  await f.setup()
+  assert.deepEqual(f.store.projectsMetadata.find(c => c.id === production.id), production)
+  assert.ok(f.calls.every(c => c.args[1] === 'connect'))
+})
+
+test('Blob repair refuses plans that remove variables or point at another project or environment', async t => {
+  const inspect = require('../scripts/config-blob-setup.cjs').inspectPlan
+  const store = { id: 'store_fixture' }
+  const plan = { action: 'connect', store: { id: store.id, type: 'blob' }, projects: [{ id: project.projectId }], environments: ['development'],
+    auth: { effective: 'oidc', readWriteToken: true }, envVars: { add: ['BLOB_READ_WRITE_TOKEN'], keep: [], remove: [] }, applied: false }
+  for (const bad of [
+    { ...plan, environments: ['production'] }, { ...plan, environments: ['development', 'production'] },
+    { ...plan, projects: [{ id: 'prj_other' }] }, { ...plan, envVars: { ...plan.envVars, remove: ['NEXTAUTH_SECRET'] } },
+    { ...plan, auth: { effective: 'token', readWriteToken: true } }, { ...plan, applied: true },
+  ]) assert.throws(() => inspect(bad, project, store, 'development', 'connect', false), /plan inattendu/)
+  const f = repairFixture(t), tool = f.api.tool
+  f.api.tool = async (name, args) => {
+    const value = JSON.parse(await tool(name, args)); value.environments = ['production']; return JSON.stringify(value)
+  }
+  await assert.rejects(() => f.setup(), /plan inattendu/)
+  assert.equal(f.calls.filter(c => !c.dryRun).length, 0)
+})
+
+test('declining the final Blob connection confirmation never performs a CLI mutation', async t => {
+  const f = repairFixture(t), yes = f.api.yes
+  f.api.yes = async label => label.startsWith('Autoriser connect') ? false : yes(label)
+  assert.equal((await f.setup()).status, 'PLAN NON APPLIQUÉ')
+  assert.equal(f.calls.filter(c => !c.dryRun).length, 0)
+})
+
+test('Blob repair does not shrink a shared connection to add credentials and does not collide with main rollback', async t => {
+  const f = repairFixture(t)
+  f.store.projectsMetadata.push({ id: 'shared', projectId: project.projectId, environments: ['development', 'production'] })
+  await assert.rejects(() => f.setup(), /Connexion partagée/)
+  assert.equal(f.calls.length, 0)
+  f.store.projectsMetadata = []
+  core.writePrivate(path.join(f.dir, manager.VAULT, 'manager-state.json'), JSON.stringify({ project, phase: 'rollback-incomplete' }))
+  await assert.rejects(() => f.setup(), /transaction à restaurer/)
+  assert.equal(f.calls.length, 0)
+})
+
+test('a failed post-connect Blob probe leaves a verified backup and no false success or blind disconnect', async t => {
+  const f = repairFixture(t)
+  f.driver.probeBlob = async () => { throw new Error('private-provider-token-payload') }
+  await assert.rejects(() => f.setup(), e => e.configSafe && /NON CONFIRMÉ/.test(e.message) && !e.message.includes('private-provider-token'))
+  const folder = path.join(f.dir, manager.VAULT)
+  const backup = fs.readdirSync(folder).find(n => n.startsWith('blob-connect-backup-'))
+  assert.equal(JSON.parse(fs.readFileSync(path.join(folder, backup, 'journal.json'), 'utf8')).phase, 'unverified')
+  assert.equal(f.store.projectsMetadata.length, 1, 'do not blindly disconnect after a failed verification')
+  assert.equal(f.calls.filter(c => !c.dryRun).length, 1)
+  assert.ok(!fs.existsSync(path.join(folder, 'blob-setup-report.json')))
+})
+
+test('Blob repair CLI flags reject mixed diagnostics, missing scopes and invalid targets before network access', () => {
+  for (const args of [ ['--connect-blob'], ['--environment', 'development'], ['--connect-blob', '--environment', 'other'],
+    ['--connect-blob', '--environment', 'development', '--dry-run'], ['--connect-blob', '--environment', 'development', '--profile', 'full'] ]) {
+    const run = spawnSync(process.execPath, [path.join(root, 'config'), ...args], { encoding: 'utf8' })
+    assert.equal(run.status, 1)
+    assert.ok(!run.stdout.includes('AUTORISER BLOB'))
+  }
+})
+
+test('a lost CLI response can be reconciled by rereading the binding without reconnecting or losing saved secrets', async t => {
+  const f = repairFixture(t), tool = f.api.tool
+  const original = require('node:crypto').randomBytes(32).toString('base64')
+  core.writePrivate(path.join(f.dir, manager.VAULT, 'manager-state.json'), JSON.stringify({ schema: 1, project, phase: 'preparing', attempts: [], drafts: { development: { NEXTAUTH_SECRET: original } }, sourceStamps: { development: manager.signature(f.snapshots.development) } }))
+  f.api.tool = async (name, args) => {
+    const result = await tool(name, args)
+    if (!args.includes('--dry-run')) throw new Error('private-response-lost')
+    return result
+  }
+  await assert.rejects(() => f.setup(), /NON CONFIRMÉ/)
+  f.api.tool = tool
+  assert.equal((await f.setup()).status, 'RATTACHEMENT DÉJÀ CONFIRMÉ')
+  assert.equal(f.calls.filter(c => !c.dryRun).length, 1)
+  const saved = JSON.parse(fs.readFileSync(path.join(f.dir, manager.VAULT, 'manager-state.json'), 'utf8'))
+  assert.equal(saved.drafts.development.NEXTAUTH_SECRET, original)
+  assert.equal(saved.sourceStamps.development, manager.signature(f.snapshots.development))
+})
+
+test('Blob repair must detect a removed non-target connection even if its env values did not change', async t => {
+  const f = repairFixture(t), tool = f.api.tool
+  f.store.projectsMetadata.push({ id: 'production', projectId: project.projectId, environments: ['production'], environmentVariables: [] })
+  f.api.tool = async (name, args) => {
+    const result = await tool(name, args)
+    if (!args.includes('--dry-run')) f.store.projectsMetadata = f.store.projectsMetadata.filter(c => !c.environments.includes('production'))
+    return result
+  }
+  await assert.rejects(() => f.setup(), /connexion hors cible a changé/)
+  assert.ok(!fs.existsSync(path.join(f.dir, manager.VAULT, 'blob-setup-report.json')))
+})
+
+test('a connected exposed Blob token is not silently authorized by the repair helper', async t => {
+  const f = repairFixture(t); exposeFixtureBlob(f)
+  f.driver.probeBlob = async () => { throw new Error('an exposed token requires a separate consent in node config') }
+  const result = await f.setup()
+  assert.equal(result.status, 'RATTACHEMENT BLOB VÉRIFIÉ')
+  assert.match(result.checks.api, /NON VÉRIFIÉE — token exposé/)
+  assert.equal(result.nextCommand, 'node config')
+})
+
+test('Blob repair does not create a guessed resource when the verified team has no visible stores', async t => {
+  const f = repairFixture(t)
+  f.driver.listBlobResources = async () => []
+  await assert.rejects(() => f.setup(), /Aucun store Blob visible dans cette équipe/)
+  assert.equal(f.calls.length, 0)
+})
+
+test('normal Blob usage metrics do not masquerade as a concurrent connection change', async t => {
+  const f = repairFixture(t)
+  let counter = 0
+  f.driver.blobResource = async () => ({ ...structuredClone(f.store), count: ++counter, size: counter * 20, updatedAt: counter })
+  assert.equal((await f.setup()).status, 'RATTACHEMENT BLOB VÉRIFIÉ')
+  assert.equal(f.calls.filter(c => !c.dryRun).length, 1)
 })

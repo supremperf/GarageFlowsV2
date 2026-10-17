@@ -6,6 +6,7 @@
 node config                         # préparation puis confirmation du plan
 node config --dry-run               # inventaire Vercel, aucune mutation
 node config --dry-run --offline     # simulation locale, aucun réseau/aucune écriture
+node config --connect-blob --environment development # rattachement Blob ciblé
 node config --probe-blob-write       # ajouter PUT/HEAD/DELETE sur un objet de sonde
 node config --rotate-session-secrets # rotation explicite session/appareils/API
 node config --conserver-secrets     # ancien assistant complet, migrations/déploiement inclus
@@ -38,6 +39,93 @@ d’affichage du terminal et peuvent apparaître dans un enregistrement ou un
 partage d’écran. Ne partagez pas cette sortie. Ce choix ne révèle ni les valeurs
 déjà configurées/récupérées, ni le contenu des rapports, qui restent sans secrets.
 Il ne change pas non plus les invites des CLI officiels externes.
+
+### Windows : réparer le rattachement Blob, puis reprendre
+
+Le diagnostic `Aucun store Blob confirmé ... development` signifie que
+l’association projet/**Development** n’est pas prouvée. Accepter un token exposé
+ne crée pas cette association, et répondre « oui » pour retester ne la crée pas
+non plus. Le gestionnaire s’arrête maintenant avec la commande utile, au lieu de
+proposer de répéter cette vérification sans réparation.
+
+**1. Mettre le code à jour sans effacer les fichiers privés.** Si le projet vient
+d’un ZIP GitHub, télécharger la dernière version de la branche
+`arena/d8de065e-garageflowsv2`, puis remplacer les fichiers du code dans le dossier
+existant. Conserver `.vercel/`, `GarageFlow-configuration/`, les fichiers `.env*`
+privés et `keys/`. Ne pas extraire dans un sous-dossier supplémentaire par erreur.
+Si c’est un clone Git de cette branche, faire `git pull --ff-only origin
+arena/d8de065e-garageflowsv2` dans ce dossier, sans écraser d’éventuelles
+modifications locales. Un ZIP n’est pas automatiquement un clone Git.
+
+**2. Dans l’Invite de commandes Windows (CMD), taper :**
+
+```bat
+cd /d "%USERPROFILE%\Desktop\GarageFlowsV2-arena-d8de065e-garageflowsv2"
+node config --help
+node config --connect-blob --environment development
+```
+
+L’aide doit afficher `--connect-blob` : sinon les fichiers locaux ne sont pas
+encore à jour. Le chemin est celui de la capture ; l’adapter si le dossier a été
+déplacé. La troisième ligne ouvre une réparation **Development uniquement** :
+
+- saisir **`AUTORISER BLOB`** dans l’invite de l’assistant, pas dans une autre fenêtre ;
+- confirmer le bon projet/l’équipe avec **oui** ;
+- choisir le numéro du **store existant** dans la liste vérifiée de cette équipe
+  (nom et ID sont affichés) ; aucun token n’est à coller à cette étape ;
+- lire le plan de connexion et confirmer avec **oui** seulement si la cible/store
+  sont corrects. Le token statique est demandé explicitement au fournisseur à
+  côté des variables OIDC, car ce gestionnaire teste actuellement un vrai token.
+
+La commande prépare d’abord un `storage connect` ou `storage update` officiel,
+avec `--project`, `--scope`, **une seule** option `--environment`, `--auth oidc`
+et `--add-rw-token`. Elle vérifie son plan JSON `--dry-run`, sauvegarde l’état
+privé des trois cibles et du store, puis requiert l’accord final avant `--yes`.
+Aucune variable hors Blob ou suppression n’est permise dans le plan. Elle relit
+le rattachement et les autres cibles après l’opération. Une connexion partagée
+n’est jamais réduite à Development : si sa modification toucherait une autre
+cible, la commande bloque et demande une séparation explicite dans Vercel.
+
+**3. Une fois revenu à l’invite `C:\Users\...>` du même dossier, taper :**
+
+```bat
+node config
+```
+
+Les brouillons privés sont conservés ; les empreintes sont réconciliées lorsque
+seul le rattachement Blob prévu a changé, pour ne pas régénérer les clés déjà
+préparées. `node config` relit les trois environnements et reprend ses contrôles.
+Si Vercel masque encore le token, il faut une vraie valeur locale ; s’il est connu
+exposé, choisir son renouvellement ou l’autorisation temporaire décrite plus bas.
+Le rattachement ne révoque pas et ne renouvelle pas automatiquement les anciens
+tokens du store.
+
+Si le même diagnostic apparaît plus tard pour Preview ou Production, quitter
+l’assistant, puis utiliser **uniquement pour la cible voulue** :
+
+```bat
+node config --connect-blob --environment preview
+node config --connect-blob --environment production
+```
+
+Ces commandes ne sont pas à lancer dans le navigateur Vercel et ne sont pas des
+réponses aux questions oui/non : elles se tapent après le retour à CMD. Chaque
+rattachement a sa propre sélection et confirmation ; aucun partage de store
+entre les cibles n’est décidé silencieusement.
+
+Le coffre contient les sauvegardes `blob-connect-backup-*/before.json` et le
+journal `journal.json` écrits avant la mutation. Une réponse perdue ou une sonde
+en échec garde un état **non confirmé**, sans détachement/rollback aveugle. Une
+relance inspecte l’état réel avant de reconnecter. `blob-setup-report.json` ne
+contient que des noms/IDs/statuts ; les sauvegardes contiennent des secrets et ne
+se partagent pas. Le contrôle SDK n’est déclaré réussi que si `list` réussit ;
+un token illisible/exposé laisse ce contrôle non vérifié. Ce n’est pas encore
+une validation globale de l’application ni un déploiement.
+
+Les options ont été contrôlées dans le code officiel Vercel CLI **64.0.2** et
+avec les vraies commandes publiques `vercel storage connect --help` et
+`vercel storage update --help`. Les tests de
+réparation utilisent des doubles, pas les services du client.
 
 ### Séquence et confirmations
 
@@ -126,7 +214,9 @@ Un token de forme correcte ne suffit pas : son store doit être rattaché au bon
 Un rattachement Production ne vaut pas pour Development. Si l’association
 manque, ouvrir **Vercel > Storage > le store > Connect Project**, vérifier le
 projet et les cibles autorisées. L’assistant n’élargit pas les portées tout seul.
-Il permet de revérifier après correction sans ressaisir le token. Dans un champ
+Pour une association manquante, utiliser la réparation ciblée décrite plus haut ;
+pour les autres erreurs de réseau/inventaire, une nouvelle vérification peut être
+demandée sans ressaisir le token. Dans un champ
 de correction du token, Entrée conserve également la valeur courante comme
 défaut masqué et relance la vérification.
 
@@ -278,8 +368,8 @@ variable ne prouve la révocation. Aucun accès client n’a été utilisé ici.
 
 | Contrôle exécuté dans le dépôt | Résultat |
 |---|---|
-| `node --test tests/*.cjs` | 344 tests réussis, aucun échec ni test ignoré |
-| `npm run test:config` (sous-ensemble du précédent) | 225 tests réussis, dont 61 pour le nouveau gestionnaire |
+| `node --test tests/*.cjs` | 358 tests réussis, aucun échec ni test ignoré |
+| `npm run test:config` (sous-ensemble du précédent) | 239 tests réussis, dont 75 pour le nouveau gestionnaire et la réparation Blob |
 | ESLint des modules de configuration modifiés et de leurs tests | Réussi |
 | Cohérence documentaire, marque et `git diff --check` | Réussis |
 | `npm audit --omit=optional --audit-level=low` | Aucune vulnérabilité signalée dans le périmètre audité |

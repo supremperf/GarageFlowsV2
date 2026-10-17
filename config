@@ -27,6 +27,8 @@ function help() {
   node config --profile full          Gestion idempotente des trois environnements
   node config --dry-run               Plan sans mutation (lectures Vercel seulement)
   node config --dry-run --offline     Simulation locale sans réseau ni écriture
+  node config --connect-blob --environment development
+                                      Réparer le rattachement Blob (cible explicite)
   node config --probe-blob-write       Ajouter une sonde Blob PUT/HEAD/DELETE autorisée
   node config --rotate-session-secrets Rotation explicite session/appareils/API
   node config --conserver-secrets     Plan conservateur : garder les secrets existants
@@ -635,12 +637,19 @@ async function diagnoseSql({ env, run = execute, root = ROOT, requestAccess = ye
   }
 }
 async function main() {
-  const accepted = new Set(['--help', '--check', '--profile', '--vercel', '--audit', '--diagnose-sql', '--list', '--diagnostic-storage', '--conserver-secrets', '--dry-run', '--simulate', '--offline', '--rotate-session-secrets', '--probe-blob-write'])
+  const accepted = new Set(['--help', '--check', '--profile', '--vercel', '--audit', '--diagnose-sql', '--list', '--diagnostic-storage', '--conserver-secrets', '--dry-run', '--simulate', '--offline', '--rotate-session-secrets', '--probe-blob-write', '--connect-blob', '--environment'])
   for (let i = 0; i < args.length; i++) {
     if (!accepted.has(args[i])) throw new Error('Option inconnue. Utilisez node config --help.')
     if (args[i] === '--profile') { if (!PROFILES.includes(args[++i])) throw new Error('Profil attendu : full | desktop | pwa | licences.') }
+    if (args[i] === '--environment') { if (!['development', 'preview', 'production'].includes(args[++i])) throw new Error('Environnement attendu : development | preview | production.') }
   }
   if (args.includes('--help')) return help()
+  if (args.includes('--connect-blob')) {
+    if (args.length !== 3 || !args.includes('--environment')) throw new Error('Utiliser uniquement node config --connect-blob --environment development (ou preview / production).')
+    core.assertNodeVersion()
+    return require('./scripts/config-blob-setup.cjs').setupBlob(module.exports, { target: args[args.indexOf('--environment') + 1] })
+  }
+  if (args.includes('--environment')) throw new Error('--environment nécessite --connect-blob.')
   const simulation = args.includes('--dry-run') || args.includes('--simulate')
   if (args.some(a => ['--rotate-session-secrets', '--probe-blob-write'].includes(a)) && args.some(a => ['--conserver-secrets', '--audit', '--check', '--list', '--diagnose-sql', '--diagnostic-storage'].includes(a))) throw new Error('Options de gestion incompatibles avec un diagnostic ou le mode conservateur.')
   if (args.includes('--offline') && !simulation) throw new Error('--offline nécessite --dry-run.')

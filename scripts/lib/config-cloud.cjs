@@ -179,6 +179,29 @@ function cloud(api) {
     if (!ids.size && incomplete) throw blobFailure('stores_inventory')
     return [...ids]
   }
+  async function listBlobResources(project) {
+    const body = await get(project, '/v1/storage/stores')
+    if (!Array.isArray(body.stores) || body.pagination?.next) throw blobFailure('stores_inventory')
+    return body.stores.filter(s => /^store_[A-Za-z0-9_-]+$/.test(s?.id || '') && (!s.type || s.type === 'blob'))
+      .map(s => ({ id: s.id, name: typeof s.name === 'string' ? s.name : s.id }))
+  }
+  async function blobResource(project, id) {
+    if (!/^store_[A-Za-z0-9_-]+$/.test(id)) throw blobFailure('stores_inventory')
+    const body = await get(project, `/v1/storage/stores/${encodeURIComponent(id)}`)
+    if (body.store?.id !== id || (body.store.type && body.store.type !== 'blob')) throw blobFailure('stores_inventory')
+    const store = body.store
+    if (!Array.isArray(store.projectsMetadata) || !store.projectsMetadata.length || store.projectsMetadata.some(p => !Array.isArray(p.environments) && !Array.isArray(p.envVarEnvironments))) {
+      const detail = await get(project, `/v1/storage/stores/${encodeURIComponent(id)}/connections`)
+      if (!Array.isArray(detail.connections)) throw blobFailure('stores_inventory')
+      return { ...store, projectsMetadata: detail.connections }
+    }
+    return store
+  }
+  async function ensureBlobClient() {
+    if (!fs.existsSync(path.join(root, 'node_modules/@vercel/blob/package.json'))) {
+      await api.execute([api.npmCli(), 'ci', '--ignore-scripts', '--include=dev'], { label: 'Dépendances du contrôle Blob' })
+    }
+  }
   async function recover(target, env) {
     if ((!env.DATABASE_URL || !env.DIRECT_URL) && await api.yes(`${target} : récupérer Neon via une session fournisseur et choisir explicitement la branche`)) {
       try { await api.configureNeon(env, { auto: false, allowCreate: false }) } catch { console.log('Neon : récupération non obtenue ; saisie locale requise, erreur fournisseur masquée.') }
@@ -282,6 +305,6 @@ function cloud(api) {
     }
     return { write: true, read: true, delete: true }
   }
-  return { connect, read, write, blobStores, recover, ensureClients, probeDatabase, probeRedis, probeBlob, probeBlobWrite, normalize: normalizeStorage }
+  return { connect, read, write, blobStores, listBlobResources, blobResource, ensureBlobClient, recover, ensureClients, probeDatabase, probeRedis, probeBlob, probeBlobWrite, normalize: normalizeStorage }
 }
 module.exports = { BLOB_DIAGNOSTICS, BLOB_TOKEN_ERRORS, TARGETS, validName, targets, stamp, recordsFor, protectedRecord, resourceAliases, cloud }

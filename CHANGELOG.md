@@ -3,6 +3,19 @@
 
 ## [Non publié] — 2026-10-16 — chaîne build → installeur Windows réparée à la cause, page unique, vue globale des rendez-vous
 
+### `node config` — réparation vérifiée du rattachement Blob
+
+- Nouvelle commande `node config --connect-blob --environment development`
+  (ou preview/production), avec sélection d’un store existant et accord explicite.
+- Plans officiels Vercel CLI 64.0.2 `storage connect/update`, prévisualisation JSON,
+  sauvegarde privée, journal avant mutation et relecture de la connexion/cibles.
+  Token statique demandé explicitement en complément d’OIDC ; aucune création de
+  store, suppression ou réduction automatique d’une connexion partagée.
+- Un rattachement manquant arrête les tentatives à vide et affiche la commande
+  exacte à taper dans CMD. Reprise des brouillons et clés déjà générées lorsque
+  seuls les changements Blob autorisés ont eu lieu ; réponse perdue réconciliée
+  par relecture sans reconnecter en aveugle. Guide Windows détaillé dans CONFIG.
+
 ### `node config` — décision explicite sur un ancien token Blob
 
 - Le refus local par empreinte n’est plus une boucle de ressaisie : renouveler,

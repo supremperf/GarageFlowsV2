@@ -314,6 +314,11 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
                 const code = error.configBlobCode, message = BLOB_DIAGNOSTICS[code]
                 report.environments[target].blobDiagnostic = { code, message }
                 console.log(`${target} — Blob : ${message}`)
+                if (code === 'store_association') {
+                  const command = `node config --connect-blob --environment ${target}`
+                  console.log(`Après le retour à l’invite CMD du dossier du projet, taper : ${command}`)
+                  throw failure(`${target} : rattachement Blob manquant. Dans CMD, exécuter ${command}, puis node config. Les réponses oui seules ne créent pas le rattachement. Saisies conservées pour reprise.`)
+                }
                 if (!BLOB_TOKEN_ERRORS.has(code)) {
                   if (await api.yes(`${target} — réessayer la vérification Blob après correction du rattachement, des droits ou du réseau (sans ressaisir le token)`)) continue
                   throw failure(`${target} : Blob non vérifié ; ${message} Saisies conservées pour reprise.`)
@@ -535,4 +540,4 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
     console.log(render(report))
   }
 }
-module.exports = { FILES, BASE_REQUIRED, SESSION_KEYS, planTarget, summary, verifyOperation, signature, rollback, restoreFiles, render, manage }
+module.exports = { VAULT, FILES, BASE_REQUIRED, SESSION_KEYS, planTarget, summary, verifyOperation, signature, rollback, restoreFiles, render, manage }
