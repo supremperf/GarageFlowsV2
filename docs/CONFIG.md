@@ -60,12 +60,19 @@ Il ne change pas non plus les invites des CLI officiels externes.
    échouée propose une correction immédiate ou une suspension, pas un faux OK.
 6. Neon : deux connexions via le vrai client Prisma PostgreSQL et inspection SQL
    en lecture seule. Redis : PING REST. Blob : association ressource/projet/cible,
-   token et `list` via SDK officiel épinglé. Aucun secret applicatif généré avant
-   ces validations. Les dépendances/client Prisma manquants sont préparés après
+   token et `list` via SDK officiel épinglé. Les clés de protection des données
+   attendent ces validations. Les dépendances/client Prisma manquants sont préparés après
    autorisation ; aucun `reset`, `db push` ni `migrate deploy` dans ce mode.
-7. Clés internes existantes préservées. Clés absentes générées avec 32 octets
-   cryptographiques **uniquement si absence distante et base vide confirmées**.
-   Sur base utilisée ou clé distante masquée : original nécessaire. Aucune clé
+7. Clés internes existantes préservées. `NEXTAUTH_SECRET` (base64) et
+   `GARAGEFLOW_API_KEY` (hexadécimal) sont générées automatiquement avec 32 octets
+   cryptographiques dès que leur absence locale **et distante** est établie,
+   même si la base contient des données. Leur brouillon privé est sauvegardé
+   avant les demandes d’accès fournisseurs, sans rotation à la reprise. Les
+   autres clés internes absentes sont générées automatiquement après validation
+   des fournisseurs **si la base est vide et leur absence distante confirmée**.
+   Sur base utilisée, les clés de chiffrement/MAC/appareils peuvent protéger des
+   données existantes : original nécessaire. Une clé distante masquée n’est
+   jamais considérée absente. Aucune clé
    P-256/Ed25519 de remplacement n’est inventée. La rotation session/appareils/API
    est séparée, nommée et soumise à confirmation avant application.
 8. Plan différentiel (créations, remplacements, retraits, fichiers). Le nettoyage
@@ -88,6 +95,27 @@ isolé : le plan bloque et demande de séparer sa portée. Les overrides serveur
 Un partage de base entre deux cibles exige une confirmation distincte. Development
 autorise HTTP uniquement pour les origines loopback (`localhost`, `127.0.0.1`,
 `::1`) de NextAuth/application ; Preview/Production et Redis restent en HTTPS.
+
+### Génération automatique ou accès à fournir
+
+`node config` décide par cible, sans vous demander de fabriquer un secret :
+
+| Type | Comportement |
+|---|---|
+| `NEXTAUTH_SECRET` absent partout | Génération automatique : 32 octets aléatoires encodés en base64 |
+| `GARAGEFLOW_API_KEY` absente partout | Génération automatique : 32 octets aléatoires encodés en hexadécimal (64 caractères) |
+| Autres secrets internes absents sur une base neuve | Génération automatique de 32 octets, au format base64/hexadécimal déclaré par le contrat applicatif ; AES : 32 octets en base64 |
+| Valeur existante lisible sur la cible Vercel ou dans ses fichiers privés | Réutilisation ; aucune nouvelle génération inutile |
+| `DATABASE_URL`, `DIRECT_URL`, accès Redis/Blob et autres identifiants fournisseurs | Récupération depuis la cible Vercel ; sinon sources privées/sessions fournisseur autorisées ou saisie locale ; jamais une fausse valeur aléatoire |
+| Clé existante mais masquée, ou clé de protection manquante sur base utilisée | Original à récupérer ; aucun remplacement automatique qui rendrait les données illisibles |
+
+Les valeurs restent indépendantes entre Development, Preview et Production.
+Les générations sont annoncées par **nom uniquement**, puis mémorisées dans le
+brouillon privé pour reprise. Une saisie manquante chez un fournisseur ne fait
+pas perdre le `NEXTAUTH_SECRET` déjà préparé. Aucune clé n’est créée par une
+simulation. Les connexions sont validées avant toute synchronisation Vercel.
+Les sessions fournisseurs supplémentaires ne sont proposées que si des accès
+Neon/Redis sont encore manquants après lecture des valeurs Vercel/locales.
 
 ### Destinations et reprise
 
@@ -158,8 +186,8 @@ masquée que le gestionnaire n’a ni lue ni écrite. Une métadonnée modifiée
 envoi confirme la présence, **pas l’égalité en clair**. Dans ce cas le rapport
 reste **VÉRIFICATION PARTIELLE**, avec code de sortie 1. Sans connexion réellement
 testée, le rapport affiche **NON VÉRIFIÉ**. La simulation hors ligne ne valide ni
-le compte, ni les services, ni les suppressions distantes ; les clés générables
-restent conditionnelles à une inspection SQL future.
+le compte, ni les services, ni les suppressions distantes ; la génération des
+clés de protection reste conditionnelle à une inspection SQL future.
 
 ### Incident de publication des accès de test
 
@@ -175,8 +203,8 @@ variable ne prouve la révocation. Aucun accès client n’a été utilisé ici.
 
 | Contrôle exécuté dans le dépôt | Résultat |
 |---|---|
-| `node --test tests/*.cjs` | 314 tests réussis, aucun échec ni test ignoré |
-| `npm run test:config` (sous-ensemble du précédent) | 195 tests réussis, dont 33 pour le nouveau gestionnaire |
+| `node --test tests/*.cjs` | 321 tests réussis, aucun échec ni test ignoré |
+| `npm run test:config` (sous-ensemble du précédent) | 202 tests réussis, dont 39 pour le nouveau gestionnaire |
 | ESLint des modules de configuration modifiés et de leurs tests | Réussi |
 | Cohérence documentaire, marque et `git diff --check` | Réussis |
 | `npm audit --omit=optional --audit-level=low` | Aucune vulnérabilité signalée dans le périmètre audité |

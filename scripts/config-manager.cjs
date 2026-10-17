@@ -15,6 +15,9 @@ const FILES = Object.freeze({ development: ['.env.development.local', '.env.loca
   preview: ['.env.preview.local'], production: ['.env.production.local', '.env.server.local'] })
 const BASE_REQUIRED = ['DATABASE_URL', 'DIRECT_URL', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'BLOB_READ_WRITE_TOKEN', 'NEXTAUTH_URL']
 const SESSION_KEYS = ['NEXTAUTH_SECRET', 'DEVICE_TOKEN_PEPPER', 'GARAGEFLOW_API_KEY']
+// These can be bootstrapped when truly absent. Data encryption/MAC/device keys
+// still require an empty database (or the original key), even if absent in Vercel.
+const FIRST_USE_KEYS = ['NEXTAUTH_SECRET', 'GARAGEFLOW_API_KEY']
 function json(file, fallback) {
   try { return JSON.parse(fs.readFileSync(file, 'utf8')) } catch (error) {
     if (error.code === 'ENOENT') return fallback
@@ -137,7 +140,7 @@ function render(report) {
     if (e?.plan) for (const kind of ['create', 'update', 'remove']) lines.push(`  ${kind} : ${e.plan[kind].join(', ') || 'aucune'}`)
     if (e?.plan?.blocked.length) lines.push(`  bloquées : ${e.plan.blocked.map(b => `${b.key} (${b.reason})`).join(', ')}`)
     if (e?.plan?.unverified.length) lines.push(`  comparaison non vérifiable : ${e.plan.unverified.join(', ')}`)
-    if (e?.generated?.length) lines.push(`  clés ${report.dryRun ? 'générables SI base vide et absence distante confirmées' : 'générées'} : ${e.generated.join(', ')}`)
+    if (e?.generated?.length) lines.push(`  clés ${report.dryRun ? 'générables si absence distante confirmée (clés de données : base vide requise)' : 'générées'} : ${e.generated.join(', ')}`)
     if (e?.missing?.length) lines.push(`  manquantes : ${e.missing.join(', ')}`)
     lines.push(`  Neon pool/direct : ${e?.checks?.database ? 'connexion testée' : 'NON VÉRIFIÉ'} ; Redis : ${e?.checks?.redis ? 'PING vérifié' : 'NON VÉRIFIÉ'}`)
     lines.push(`  Blob : ${e?.checks?.blob ? e.checks.blob.write === 'verified' ? 'association + PUT/HEAD/DELETE vérifiés' : 'association + liste vérifiées ; écriture NON TESTÉE' : 'NON VÉRIFIÉ'}`)
@@ -215,9 +218,21 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
       const exposedNames = [...new Set([...Object.keys(env), ...snapshot.records.map(r => r.key)])].filter(n => /^NEXT_PUBLIC_/.test(n) && core.isSecret(n) && !/PUBLIC_KEY$/.test(n))
       if (exposedNames.length) throw failure(`${target} : noms de secrets publics interdits (${exposedNames.join(', ')}). Révoquer les valeurs exposées et retirer ces overrides avant synchronisation.`)
       if (snapshot.records.some(r => r.key === 'ELECTRON') || (target !== 'development' && env.NODE_ENV && env.NODE_ENV !== 'production')) throw failure(`${target} : override de runtime incompatible (ELECTRON ou NODE_ENV). Retirer cet override serveur avant synchronisation.`)
+      const generated = [], needsOriginal = []
+      report.environments[target].generated = generated
+      report.environments[target].needsOriginal = needsOriginal
       if (!dryRun) {
+        // The three remote inventories are already complete. Bootstrap first-use
+        // secrets before asking for external inputs and checkpoint them for resume.
+        for (const name of FIRST_USE_KEYS) {
+          if (decoder.readable(env[name]) || snapshot.records.some(r => r.key === name)) continue
+          env[name] = crypto.randomBytes(32).toString(core.GENERATED[name])
+          generated.push(name)
+          console.log(`${target} — ${name} : générée automatiquement (256 bits, valeur non affichée).`)
+        }
         checkpoint(target, env)
-        if (await api.yes(`${target} : tenter la récupération des accès manquants chez les fournisseurs`)) {
+        const missingProviderAccess = ['DATABASE_URL', 'DIRECT_URL', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'].some(name => !decoder.readable(env[name]))
+        if (missingProviderAccess && await api.yes(`${target} : tenter la récupération des accès manquants chez les fournisseurs`)) {
           await driver.recover(target, env)
           env = security.cleanCredentials(env, entries).safe
           checkpoint(target, env)
@@ -242,12 +257,11 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
       }
       if (env.NEXTAUTH_URL) env.GF_APP_URL ||= env.NEXTAUTH_URL
       if (env.DIRECT_URL) env.DATABASE_URL_UNPOOLED = env.DIRECT_URL
-      const generated = [], needsOriginal = []
       for (const name of core.namesForProfile(policy.names, 'pwa')) if (!env[name] && core.DEFAULTS[name]) env[name] = core.DEFAULTS[name]
       const required = [...new Set([...BASE_REQUIRED, ...policy.entries.filter(e => e.requiredProduction && e.action === 'application').map(e => e.name)])]
       if (!dryRun) {
         const checks = report.environments[target].checks
-        // All provider checks occur BEFORE generating or rotating application keys.
+        // Data-protection keys and explicit rotations require validated providers/SQL first.
         const probe = async (label, fields, action) => {
           for (;;) {
             try {
@@ -300,11 +314,17 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
         const generable = { ...core.GENERATED, ...(env.EINVOICING_ENABLED === 'true' ? { GF_EINVOICE_CREDENTIALS_KEY: 'base64' } : {}) }
         for (const [name, format] of Object.entries(generable)) {
           if (!core.namesForProfile(policy.names, 'pwa').includes(name)) continue
-          if (env[name] && !(rotateSessions && SESSION_KEYS.includes(name))) continue
+          if (generated.includes(name) || (env[name] && !(rotateSessions && SESSION_KEYS.includes(name)))) continue
           const existed = snapshot.records.some(r => r.key === name)
           if ((existed || !checks.database.empty) && !(rotateSessions && SESSION_KEYS.includes(name))) {
-            if (!env[name]) { console.log(safeMessage(target, name)); await api.secretField(env, name, `${target} — clé ORIGINALE ${name} (aucun remplacement automatique)`); needsOriginal.push(name) }
-          } else { env[name] = crypto.randomBytes(32).toString(format); generated.push(name) }
+            if (!env[name]) {
+              needsOriginal.push(name)
+              console.log(safeMessage(target, name))
+              await api.secretField(env, name, `${target} — clé ORIGINALE ${name} (aucun remplacement automatique)`)
+              checkpoint(target, env)
+              if (!decoder.readable(env[name])) throw failure(`Original indispensable non fourni : ${target} / ${name}.`)
+            }
+          } else { env[name] = crypto.randomBytes(32).toString(format); generated.push(name); console.log(`${target} — ${name} : générée automatiquement (256 bits, valeur non affichée).`) }
           checkpoint(target, env)
         }
         for (const r of snapshot.records.filter(r => core.namesForProfile(policy.names, 'pwa').includes(r.key) && !env[r.key])) {

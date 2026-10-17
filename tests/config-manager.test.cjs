@@ -551,3 +551,123 @@ test('verbose third-party debug modes are refused before libraries can print cre
   assert.equal(f.probes(), 0)
   assert.match(report.errors.join(' '), /DEBUG/)
 })
+
+test('fresh internal secrets are generated in the expected formats without secret input and stay independent per target', async t => {
+  const f = fixture(t)
+  f.driver.recover = async () => { throw new Error('unnecessary provider recovery') }
+  const first = await f.run()
+  assert.match(first.status, /^CONFIGURATION VALIDÉE/)
+  const seen = new Set()
+  for (const target of cloudModule.TARGETS) {
+    const env = core.readEnv(path.join(f.dir, `.env.${target}.local`))
+    for (const [name, format] of Object.entries(core.GENERATED)) {
+      if (!core.namesForProfile(policy.names, 'pwa').includes(name)) continue
+      assert.ok(env[name], `${target} / ${name} must be generated automatically`)
+      const bytes = Buffer.from(env[name], format)
+      assert.equal(bytes.length, 32, `${name} must have 256 bits`)
+      assert.equal(bytes.toString(format), env[name], `${name} must use canonical ${format}`)
+      assert.ok(!seen.has(env[name]), 'every key/environment must be independent')
+      seen.add(env[name])
+    }
+  }
+  assert.ok(!f.prompts.some(label => /tenter la récupération/.test(label)), 'complete Vercel/local values must not trigger provider recovery')
+  const files = () => Object.fromEntries(Object.entries(tree(f.dir)).filter(([name]) => !name.startsWith('GarageFlow-configuration/')))
+  const before = files(), count = f.writes.length
+  await f.run()
+  assert.equal(f.writes.length, count)
+  assert.deepEqual(files(), before)
+})
+
+test('a missing first-use NextAuth secret is generated even on a used database; existing protection keys are preserved', async t => {
+  const f = fixture(t)
+  f.driver.probeDatabase = async () => ({ pooled: true, direct: true, empty: false })
+  for (const target of cloudModule.TARGETS) {
+    for (const [name, format] of Object.entries(core.GENERATED)) {
+      if (!['NEXTAUTH_SECRET', 'GARAGEFLOW_API_KEY'].includes(name) && core.namesForProfile(policy.names, 'pwa').includes(name)) {
+        const value = require('node:crypto').randomBytes(32).toString(format)
+        f.values[target][name] = value
+        addRecord(f, target, name, value)
+      }
+    }
+  }
+  const report = await f.run()
+  assert.match(report.status, /^CONFIGURATION VALIDÉE/)
+  for (const target of cloudModule.TARGETS) {
+    const env = core.readEnv(path.join(f.dir, `.env.${target}.local`))
+    assert.equal(Buffer.from(env.NEXTAUTH_SECRET, 'base64').length, 32)
+    assert.match(env.GARAGEFLOW_API_KEY, /^[a-f0-9]{64}$/)
+    assert.equal(env.GF_BACKUP_KEY, f.values[target].GF_BACKUP_KEY)
+    assert.deepEqual(report.environments[target].generated, ['NEXTAUTH_SECRET', 'GARAGEFLOW_API_KEY'])
+  }
+})
+
+test('early first-use generation survives a missing provider input without inventing credentials or rotating on resume', async t => {
+  const f = fixture(t)
+  const file = path.join(f.dir, '.env.storage.development.local')
+  const seed = core.readEnv(file); delete seed.BLOB_READ_WRITE_TOKEN
+  core.writePrivate(file, core.serializeEnv(seed, Object.keys(seed), 'fixture'))
+  f.api.secretField = async () => {}
+  const first = await f.run()
+  assert.match(first.status, /INTERROMPU/)
+  assert.deepEqual(first.environments.development.generated, ['NEXTAUTH_SECRET', 'GARAGEFLOW_API_KEY'])
+  const state = JSON.parse(fs.readFileSync(path.join(f.dir, 'GarageFlow-configuration/manager-state.json'), 'utf8'))
+  const original = state.drafts.development.NEXTAUTH_SECRET
+  assert.equal(Buffer.from(original, 'base64').length, 32)
+  assert.ok(!state.drafts.development.BLOB_READ_WRITE_TOKEN)
+  assert.equal(f.writes.length, 0)
+  f.api.secretField = async (env, name) => { assert.equal(name, 'BLOB_READ_WRITE_TOKEN'); env[name] = f.values.development[name] }
+  assert.match((await f.run()).status, /^CONFIGURATION VALIDÉE/)
+  assert.equal(core.readEnv(path.join(f.dir, '.env.development.local')).NEXTAUTH_SECRET, original)
+})
+
+test('provider credentials and existing internal keys are taken from each Vercel target without manual input', async t => {
+  const f = fixture(t)
+  const originals = {}
+  for (const target of cloudModule.TARGETS) {
+    fs.rmSync(path.join(f.dir, `.env.storage.${target}.local`))
+    for (const name of manager.BASE_REQUIRED) addRecord(f, target, name, f.values[target][name])
+    originals[target] = require('node:crypto').randomBytes(32).toString('base64')
+    addRecord(f, target, 'NEXTAUTH_SECRET', originals[target])
+  }
+  f.driver.recover = async () => { throw new Error('Vercel already supplied provider values') }
+  assert.match((await f.run()).status, /^CONFIGURATION VALIDÉE/)
+  for (const target of cloudModule.TARGETS) {
+    const env = core.readEnv(path.join(f.dir, `.env.${target}.local`))
+    assert.equal(env.NEXTAUTH_SECRET, originals[target])
+    assert.equal(env.DATABASE_URL, f.values[target].DATABASE_URL)
+    assert.equal(env.UPSTASH_REDIS_REST_TOKEN, f.values[target].UPSTASH_REDIS_REST_TOKEN)
+    assert.equal(env.BLOB_READ_WRITE_TOKEN, f.values[target].BLOB_READ_WRITE_TOKEN)
+    assert.ok(!f.writes.some(w => w.target === target && w.key === 'NEXTAUTH_SECRET'))
+  }
+})
+
+test('unrecoverable provider values are requested, never generated as internal random secrets', async t => {
+  const f = fixture(t), requested = []
+  const file = path.join(f.dir, '.env.storage.development.local')
+  const seed = core.readEnv(file)
+  for (const name of ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN']) delete seed[name]
+  core.writePrivate(file, core.serializeEnv(seed, Object.keys(seed), 'fixture'))
+  f.api.secretField = async (env, name) => { requested.push(name); env[name] = f.values.development[name] }
+  const report = await f.run()
+  assert.match(report.status, /^CONFIGURATION VALIDÉE/)
+  assert.deepEqual(requested, ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'])
+  assert.ok(!report.environments.development.generated.some(name => /DATABASE|REDIS|BLOB/.test(name)))
+  assert.equal(core.readEnv(path.join(f.dir, '.env.development.local')).UPSTASH_REDIS_REST_TOKEN, f.values.development.UPSTASH_REDIS_REST_TOKEN)
+})
+
+test('a used database with a missing backup encryption key requires the original, even when the field is optional', async t => {
+  const f = fixture(t), requested = []
+  f.driver.probeDatabase = async () => ({ pooled: true, direct: true, empty: false })
+  for (const [name, format] of Object.entries(core.GENERATED)) {
+    if (!['NEXTAUTH_SECRET', 'GARAGEFLOW_API_KEY', 'GF_BACKUP_KEY'].includes(name) && core.namesForProfile(policy.names, 'pwa').includes(name)) {
+      addRecord(f, 'development', name, require('node:crypto').randomBytes(32).toString(format))
+    }
+  }
+  f.api.secretField = async (_env, name) => { requested.push(name) }
+  const report = await f.run()
+  assert.match(report.status, /INTERROMPU/)
+  assert.deepEqual(requested, ['GF_BACKUP_KEY'])
+  assert.ok(report.errors.some(message => message.includes('GF_BACKUP_KEY')))
+  assert.ok(!report.environments.development.generated.includes('GF_BACKUP_KEY'))
+  assert.equal(f.writes.length, 0)
+})

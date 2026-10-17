@@ -3,6 +3,18 @@
 
 ## [Non publié] — 2026-10-16 — chaîne build → installeur Windows réparée à la cause, page unique, vue globale des rendez-vous
 
+### `node config` — génération des secrets internes et récupération des accès
+
+- `NEXTAUTH_SECRET` et `GARAGEFLOW_API_KEY` réellement absents sont préparés
+  automatiquement (32 octets, base64/hexadécimal) et sauvegardés avant les saisies
+  fournisseurs ; reprise sans régénération. Les clés existantes sont préservées.
+- Les autres clés internes d’une base neuve sont générées au format applicatif.
+  Une base utilisée ou une clé distante masquée exige encore les originaux de
+  protection des données : aucune rotation aveugle de clés AES/MAC/appareils.
+- Les accès Vercel disponibles sont réutilisés par environnement ; les accès
+  fournisseurs irrécupérables sont demandés, jamais inventés. Les invitations
+  de récupération Neon/Redis inutiles ne sont plus affichées.
+
 ### `node config` — gestion transactionnelle différentielle des trois environnements
 
 - Nouveau mode par défaut idempotent : compte/projet/équipe vérifiés, inventaire
@@ -10,8 +22,9 @@
   confirmations, sauvegardes et journal avant chaque requête, relectures et
   rollback vérifié lorsque possible. Aucune migration/déploiement implicite.
 - Simulation en ligne/hors ligne sans mutations ; clés existantes conservées,
-  génération conditionnée à une base vide et absence distante ; originaux
-  demandés sur base utilisée ; rotation des secrets de session explicite.
+  génération des clés de protection conditionnée à une base vide et absence
+  distante ; originaux de protection demandés sur base utilisée ; rotation des
+  secrets de session existants explicite.
 - Neon : référence non secrète, encodage unique des mots de passe, SSL, probes
   Prisma poolée/directe. Upstash PING ; Blob association/cible + SDK épinglé,
   sonde PUT/HEAD/DELETE optionnelle autorisée. Aucun token fournisseur inventé.
