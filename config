@@ -17,6 +17,7 @@ const TOOLS = { vercel: 'vercel@64.0.2', neonctl: 'neonctl@8.4.4', upstash: 'ups
 const configPolicy = require('./scripts/config-policy.cjs').loadPolicy(ROOT)
 const allNames = configPolicy.names
 const knownSettings = new Set([...configPolicy.entries.map(e => e.name), ...configPolicy.manifest.platformProvided])
+let visibleSecretInput = false
 const safeLabel = s => String(s).replace(/[\x00-\x1f\x7f]/g, '').slice(0, 160)
 
 function help() {
@@ -43,7 +44,9 @@ function help() {
 Par défaut : gestion différentielle Development / Preview / Production.
 AUTORISER prépare le plan ; confirmation distincte avant application et retrait.
 Aucune rotation implicite, aucun déploiement/migration. Sauvegardes et reprise
-privées. Accès fournisseurs introuvables : saisie masquée sur votre poste.
+privées. Accès fournisseurs introuvables : saisie locale sur votre poste.
+Au démarrage, vous pouvez choisir une saisie visible (tokens compris) ; par
+défaut, les secrets restent masqués. Aucun secret récupéré n’est affiché.
 Les anciennes valeurs exposées sont interdites, même si elles fonctionnent encore.
 
 Mode --conserver-secrets : toute clé symétrique ABSENTE est générée automatiquement (256 bits) sur une
@@ -55,7 +58,8 @@ fabriquée, cible originale à confirmer) ; clé symétrique manquante généré
 REMPLACÉE après contrôle SQL vide dans le plan complet, ou autorisation explicite.
 L’absence de fichiers locaux ne prouve jamais que la production est neuve.
 Fichiers : desktop → .env ; serveur → .env.server.local (isolé des builds Electron).
-Aucun secret affiché ; « GarageFlow-configuration/secrets-receipt.json » ne stocke
+Secrets masqués sauf choix explicite de saisie visible ;
+« GarageFlow-configuration/secrets-receipt.json » ne stocke
 que des empreintes SHA-256, pour reconnaître une valeur déjà poussée et signaler
 une dérive au lieu de la remplacer en silence.
 Neon/Vercel : authentification officielle dans votre navigateur, sur votre poste.
@@ -70,16 +74,17 @@ async function question(label, { secret = false, defaultValue = '' } = {}) {
   // Let readline own visible prompts: an empty question redraws the line and
   // erases a separately printed label, notably in Windows Command Prompt.
   // A terminal readline with a muted output enables raw input without echoing passwords.
-  const output = secret ? new Writable({ write(_chunk, _encoding, done) { done() } }) : process.stdout
+  const masked = secret && !visibleSecretInput
+  const output = masked ? new Writable({ write(_chunk, _encoding, done) { done() } }) : process.stdout
   const rl = readline.createInterface({ input: process.stdin, output, terminal: true })
   try {
     return await new Promise((resolve, reject) => {
       rl.once('SIGINT', () => reject(new Error('Configuration annulée.')))
-      rl.question(secret ? '' : prompt, value => resolve((secret ? value : value.trim()) || defaultValue))
+      rl.question(masked ? '' : prompt, value => resolve((secret ? value : value.trim()) || defaultValue))
       // Display only after readline owns raw input, so an immediate paste cannot echo a secret.
-      if (secret) process.stdout.write(prompt)
+      if (masked) process.stdout.write(prompt)
     })
-  } finally { rl.close(); if (secret) process.stdout.write('\n') }
+  } finally { rl.close(); if (masked) process.stdout.write('\n') }
 }
 async function yes(label, defaultYes = false) {
   while (true) {
@@ -88,6 +93,16 @@ async function yes(label, defaultYes = false) {
     if (/^(n|non|no)$/i.test(answer)) return false
     console.log('Réponse attendue : oui ou non. Aucun autre texte ne vaut autorisation.')
   }
+}
+async function chooseInputVisibility(confirm = yes) {
+  // Session-only choice: never persisted in the vault, environment or reports.
+  visibleSecretInput = false
+  console.log('Attention : en saisie visible, les mots de passe et tokens tapés/collés apparaissent dans le terminal et son historique d’affichage. Évitez les captures et partages d’écran.')
+  visibleSecretInput = await confirm('Afficher les valeurs pendant la saisie, y compris les secrets', false) === true
+  console.log(visibleSecretInput
+    ? 'Saisie VISIBLE activée pour cette session uniquement. Les valeurs récupérées et les rapports restent masqués.'
+    : 'Saisie MASQUÉE conservée pour les secrets.')
+  return visibleSecretInput
 }
 async function select(label, items) {
   if (!items.length) throw new Error(`${label} : aucun résultat. Créez la ressource dans le tableau de bord du fournisseur, puis relancez config.`)
@@ -301,7 +316,7 @@ async function importRemote(local, remote, names, { rotationAutorisee = false, d
 }
 
 async function secretField(env, name, label = name) {
-  env[name] = await question(`${label} (saisie masquée${env[name] ? ', Entrée = conserver' : ''})`,
+  env[name] = await question(`${label} (saisie ${visibleSecretInput ? 'visible' : 'masquée'}${env[name] ? ', Entrée = conserver' : ''})`,
     { secret: true, defaultValue: env[name] || '' })
 }
 const privateKeyPassphrases = new Map()
@@ -659,6 +674,7 @@ async function main() {
   if (profile === 'full') {
     if (args.includes('--check')) throw new Error('Pour une validation locale, choisir --profile desktop, pwa ou licences.')
     if (args.includes('--conserver-secrets')) return require('./scripts/config-full.cjs').full(module.exports, { automatic: false })
+    if (!simulation) await chooseInputVisibility()
     const report = await require('./scripts/config-manager.cjs').manage(module.exports, { dryRun: simulation, offline: args.includes('--offline'), rotateSessions: args.includes('--rotate-session-secrets'), blobWrite: args.includes('--probe-blob-write') })
     if (report.status.startsWith('INTERROMPU') || report.status.includes('PARTIELLE')) process.exitCode = 1
     return report
@@ -756,7 +772,7 @@ async function main() {
   console.log('\nConfiguration terminée. Aucun secret n’a été committé ni affiché.')
   console.log('GF_UPDATE_SIGNING_KEY reste EXCLUSIVEMENT dans le coffre du serveur de publication garagesite3 ; config ne la génère ni ne l’exporte ici.')
 }
-module.exports = { root: ROOT, question, yes, select, tool, execute, npmCli, generateSecrets,
+module.exports = { root: ROOT, question, yes, chooseInputVisibility, select, tool, execute, npmCli, generateSecrets,
   setupVercel, pullVercel, refreshVercelAuth, importRemote, configureNeon, secretField, licenseKey,
   advanced, childEnv, syncVercel, licensePassphrase, diagnoseSql, summarizeSqlDiff }
 if (require.main === module) main().catch(error => {

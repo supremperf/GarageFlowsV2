@@ -19,6 +19,26 @@ les fichiers suivis/non ignorés, compte les binaires et recense les référence
 littérales d’environnement. Elle ne désassemble pas les binaires et ne prouve
 pas l’absence d’accès dynamiques.
 
+### Voir les caractères saisis dans `node config`
+
+Au démarrage de `node config`, répondre **oui** à :
+
+```text
+Afficher les valeurs pendant la saisie, y compris les secrets (oui/non) [non]
+```
+
+Les caractères tapés ou collés, y compris un `BLOB_READ_WRITE_TOKEN` ou un mot de
+passe, deviennent alors visibles dans les champs de saisie de cette session.
+Le libellé indique `saisie visible`. Répondre **non** ou appuyer sur Entrée conserve
+la saisie masquée. Le choix est redemandé à chaque lancement ; il n’est pas
+sauvegardé. Les simulations ne posent pas cette question.
+
+**Attention :** les secrets saisis en mode visible restent dans l’historique
+d’affichage du terminal et peuvent apparaître dans un enregistrement ou un
+partage d’écran. Ne partagez pas cette sortie. Ce choix ne révèle ni les valeurs
+déjà configurées/récupérées, ni le contenu des rapports, qui restent sans secrets.
+Il ne change pas non plus les invites des CLI officiels externes.
+
 ### Séquence et confirmations
 
 1. Contrôle Git : aucun `.env` secret suivi, exemples sans secrets, destinations

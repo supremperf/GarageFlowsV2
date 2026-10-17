@@ -618,3 +618,54 @@ test('le modèle SQLite livré ne contient aucune ligne métier : seul _gf_migra
     assert.ok(db.prepare('SELECT 1 FROM "_gf_migrations" LIMIT 1').all().length > 0)
   } finally { db.close() }
 })
+
+test('visible secret entry is explicit, session-only and preserves hidden defaults and raw input', async () => {
+  const readline = require('node:readline'), wizard = require('../config')
+  const original = readline.createInterface, log = console.log, write = process.stdout.write
+  const tty = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY')
+  const prompts = [], interfaces = [], messages = []
+  const existing = 'fixture-existing-token-not-for-display', typed = '  fixture-new-token-with-spaces  '
+  const answers = ['', typed, '']
+  Object.defineProperty(process.stdin, 'isTTY', { configurable: true, value: true })
+  console.log = message => messages.push(String(message))
+  process.stdout.write = chunk => { messages.push(String(chunk)); return true }
+  readline.createInterface = options => {
+    interfaces.push(options)
+    return { once() {}, close() {}, question(prompt, callback) { prompts.push(prompt); callback(answers.shift()) } }
+  }
+  try {
+    assert.equal(await wizard.chooseInputVisibility(async (_label, defaultYes) => { assert.equal(defaultYes, false); return false }), false)
+    const env = { BLOB_READ_WRITE_TOKEN: existing }
+    await wizard.secretField(env, 'BLOB_READ_WRITE_TOKEN')
+    assert.notEqual(interfaces[0].output, process.stdout, 'masked entry must still mute readline output')
+    assert.equal(prompts[0], '')
+    assert.equal(env.BLOB_READ_WRITE_TOKEN, existing)
+
+    assert.equal(await wizard.chooseInputVisibility(async (label, defaultYes) => {
+      assert.match(label, /y compris les secrets/)
+      assert.equal(defaultYes, false)
+      return true
+    }), true)
+    await wizard.secretField(env, 'BLOB_READ_WRITE_TOKEN')
+    assert.equal(interfaces[1].output, process.stdout, 'confirmed visible entry uses normal terminal echo')
+    assert.match(prompts[1], /saisie visible, Entrée = conserver/)
+    assert.match(prompts[1], /\[déjà configuré\]/)
+    assert.equal(env.BLOB_READ_WRITE_TOKEN, typed, 'password/token whitespace must not be trimmed in visible mode')
+    assert.ok(!prompts.join('\n').includes(existing), 'visible entry does not reveal existing secrets as defaults')
+    assert.ok(!messages.join('\n').includes(typed), 'the application must not log entered secrets a second time')
+    assert.match(messages.join('\n'), /historique d’affichage/)
+
+    await wizard.chooseInputVisibility(async () => false)
+    await wizard.secretField(env, 'BLOB_READ_WRITE_TOKEN')
+    assert.notEqual(interfaces[2].output, process.stdout, 'a new choice resets the previous visible session')
+    assert.equal(prompts[2], '')
+    assert.equal(env.BLOB_READ_WRITE_TOKEN, typed)
+  } finally {
+    await wizard.chooseInputVisibility(async () => false)
+    console.log = log
+    process.stdout.write = write
+    readline.createInterface = original
+    if (tty) Object.defineProperty(process.stdin, 'isTTY', tty)
+    else delete process.stdin.isTTY
+  }
+})

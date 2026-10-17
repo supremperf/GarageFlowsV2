@@ -23,7 +23,7 @@ function json(file, fallback) {
 }
 const sameProject = (a, b) => !!a?.projectId && !!a?.orgId && a.projectId === b?.projectId && a.orgId === b?.orgId
 const safeName = name => /^[A-Z][A-Z0-9_]*$/.test(name)
-const safeMessage = (target, name) => `CONFIGURATION INCOMPLÈTE — ${target} — Variable : ${name}. Valeur absente, inaccessible, invalide ou exposée ; fournir une nouvelle valeur réelle (terminal masqué).`
+const safeMessage = (target, name) => `CONFIGURATION INCOMPLÈTE — ${target} — Variable : ${name}. Valeur absente, inaccessible, invalide ou exposée ; fournir une nouvelle valeur réelle (saisie locale dans le terminal).`
 function recordMap(snapshot) { return new Map(snapshot.records.map(r => [r.key, r])) }
 function signature(snapshot) {
   return JSON.stringify(snapshot.records.map(r => [r.key, stamp(r), snapshot.values[r.key] === undefined ? null : security.hash(snapshot.values[r.key])]).sort((a, b) => a[0].localeCompare(b[0])))
