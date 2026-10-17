@@ -136,6 +136,23 @@ function main() {
     }
   }
 
+  // 4 bis. Rendre la sortie autonome réellement autonome. Next.js peut recopier
+  // des dépendances tracées sous forme de liens symboliques vers le node_modules
+  // du dépôt ; on les matérialise pour qu'elles restent portables. Autre piège
+  // confirmé dans le filtre interne d'electron-builder : le node_modules placé
+  // à la racine d'un FileSet extraResources est EXCLU. package.json le copie
+  // donc aussi comme ressource séparée (`from: .next/standalone/node_modules`).
+  // Matérialiser les liens AVANT les contrôles et avant electron-builder.
+  {
+    const { materializeStandaloneLinks } = require('./lib/materialize-standalone-links.cjs')
+    const materialises = materializeStandaloneLinks(APP_DIR)
+    if (materialises.length) {
+      console.log(`  ✅ liens node_modules matérialisés (${materialises.length}) : ${materialises.join(', ')}`)
+    } else {
+      console.log('  ✅ node_modules standalone sans liens symboliques externes')
+    }
+  }
+
   // 5. SÉCURITÉ — retirer TOUT fichier .env du standalone empaqueté.
   //    Next.js (`output: 'standalone'`) TRACE le `.env` du dépôt dans la sortie ;
   //    il contient des secrets de PRODUCTION (DATABASE_URL Neon, NEXTAUTH_SECRET

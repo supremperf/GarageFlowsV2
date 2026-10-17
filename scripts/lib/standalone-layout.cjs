@@ -27,6 +27,7 @@
 
 const fs = require('node:fs')
 const path = require('node:path')
+const { createRequire } = require('node:module')
 
 /** Profondeur maximale explorée : une imbrication de workspace reste faible. */
 const MAX_DEPTH = 6
@@ -214,12 +215,42 @@ function marqueurEmbarque(appDir, marqueur, profondeur = 0) {
 }
 
 /**
+ * Vérifie que Node résout réellement le module depuis server.js ET que la
+ * résolution reste dans le dossier autonome. `existsSync(node_modules/next)`
+ * suit les liens symboliques : il pouvait donc annoncer « présent » alors que
+ * electron-builder n'embarquait pas la cible située hors de standalone.
+ * @param {string} appDir dossier contenant `server.js`
+ * @param {string} moduleName nom du module à résoudre
+ * @returns {string|null} diagnostic si le runtime ne sera pas autonome
+ */
+function problemeResolutionRuntime(appDir, moduleName = 'next') {
+  const serverJs = path.join(appDir, 'server.js')
+  const packageDir = path.join(appDir, 'node_modules', moduleName)
+  if (!fs.existsSync(serverJs) || !fs.existsSync(path.join(packageDir, 'package.json'))) return null
+
+  let resolved
+  try {
+    resolved = createRequire(serverJs).resolve(moduleName)
+  } catch (error) {
+    return `${moduleName} non résolu depuis server.js (${error.code || error.message})`
+  }
+
+  const relatif = path.relative(packageDir, resolved)
+  if (relatif === '..' || relatif.startsWith(`..${path.sep}`) || path.isAbsolute(relatif)) {
+    return `${moduleName} résolu hors du standalone (${resolved})`
+  }
+  return null
+}
+
+/**
  * Modules d'exécution absents de la sortie autonome — ni copiés, ni embarqués.
  * @param {string} appDir dossier contenant `server.js`
  * @returns {string[]} chemins relatifs manquants (vide si la sortie est complète)
  */
 function modulesExecutionManquants(appDir) {
   const manquants = MODULES_EXECUTION.filter((relatif) => !fs.existsSync(path.join(appDir, relatif)))
+  const resolutionNext = problemeResolutionRuntime(appDir)
+  if (resolutionNext) manquants.push(resolutionNext)
   for (const { nom, marqueur } of MODULES_EMBARQUES) {
     const physique = fs.existsSync(path.join(appDir, 'node_modules', nom, 'package.json'))
     if (!physique && !marqueurEmbarque(appDir, marqueur)) manquants.push(`(ni copié, ni embarqué) ${nom}`)
@@ -263,4 +294,4 @@ function staleAppDirs(standaloneDir, appDir) {
   return [...trouvees]
 }
 
-module.exports = { MAX_DEPTH, IGNORED_DIRS, MODULES_EXECUTION, MODULES_EMBARQUES, marqueurEmbarque, modulesExecutionManquants, findServerJs, inspectStandaloneLayout, standaloneAppDir, staleAppDirs }
+module.exports = { MAX_DEPTH, IGNORED_DIRS, MODULES_EXECUTION, MODULES_EMBARQUES, marqueurEmbarque, problemeResolutionRuntime, modulesExecutionManquants, findServerJs, inspectStandaloneLayout, standaloneAppDir, staleAppDirs }

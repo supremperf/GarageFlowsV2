@@ -32,6 +32,7 @@ const os      = require('os')
 const { resolveMainSecret, resolveSmtpCipherKey, loadOrCreateInstallSecret } = require('./secret')
 const { sign: signState, verify: verifyState } = require('./signed-state')
 const { decodeDotenvValue } = require('./dotenv-value')
+const { waitForGarageFlowsServer } = require('./server-readiness')
 const { activationReport } = require('./activation-report')
 const {
   shouldAttemptActivation, afterRefusal, cleared, humanDelay,
@@ -2547,38 +2548,10 @@ function resolveServerPaths() {
  * d'attendre, puis on le DIT clairement.
  */
 function waitForServer(timeoutMs = 30_000) {
-  return new Promise((resolve, reject) => {
-    const start = Date.now()
-    let etranger = false
-    const check = setInterval(() => {
-      const echoue = (raison) => {
-        if (Date.now() - start > timeoutMs) {
-          clearInterval(check)
-          reject(new Error(raison))
-        }
-      }
-      http.get(`http://127.0.0.1:${PORT}/api/health`, res => {
-        let acc = ''
-        res.setEncoding('utf8')
-        res.on('data', c => { acc += c })
-        res.on('end', () => {
-          let identite = null
-          try { identite = JSON.parse(acc).app } catch (_) { /* corps illisible */ }
-          if (identite === 'garageflows') {
-            clearInterval(check)
-            resolve(res.statusCode)
-            return
-          }
-          if (!etranger) {
-            etranger = true
-            log(`[demarrage] le port ${PORT} repond, mais ce n'est pas GarageFlows — on continue d'attendre`)
-          }
-          echoue(`Le port ${PORT} est occupe par une autre application. Fermez-la puis relancez GarageFlows.`)
-        })
-      }).on('error', () => {
-        echoue(`Server did not respond within ${timeoutMs / 1000}s`)
-      })
-    }, 400)
+  return waitForGarageFlowsServer({
+    port: PORT,
+    timeoutMs,
+    onForeignServer: () => log(`[demarrage] le port ${PORT} repond, mais ce n'est pas GarageFlows — on continue d'attendre`),
   })
 }
 
@@ -2891,8 +2864,10 @@ function startNextServer() {
 
     if (!fs.existsSync(serverJs)) {
       if (IS_DEV) {
-        log('Dev: assuming Next.js dev server is running separately on port', PORT)
-        resolve()
+        log('Dev: waiting for the separately started Next.js dev server on port', PORT)
+        waitForServer(35_000)
+          .then(() => { log('Next.js dev server ready'); resolve() })
+          .catch(reject)
         return
       }
       reject(new Error(`server.js not found:\n${serverJs}\n\nRun: npm run build`))
@@ -2935,6 +2910,17 @@ function startNextServer() {
     // utilityProcess.fork() runs server.js in a real Node.js utility process.
     // spawn(process.execPath, [serverJs]) would start another Electron instance
     // instead, so we must use utilityProcess here (available since Electron 22).
+    let startupState = 'pending'
+    let startupOutput = ''
+    const appendStartupOutput = (text) => {
+      // Capture only a short, redacted tail: enough to diagnose a server crash
+      // without putting credentials or an unbounded child log in a native dialog.
+      const safe = cp.redactSensitive(text)
+        .replace(/\u001b\[[0-9;]*m/g, '')
+        .replace(/\bhttps?:\/\/[^\s"'<>]+/gi, '[URL_REDACTED]')
+        .replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, ' ')
+      startupOutput = `${startupOutput}${startupOutput ? '\n' : ''}${safe}`.slice(-2_400)
+    }
     nextServer = utilityProcess.fork(serverJs, [], {
       cwd,
       env,
@@ -2943,20 +2929,41 @@ function startNextServer() {
     })
 
     if (nextServer.stdout) {
-      nextServer.stdout.on('data', d => log('[next]', d.toString().trimEnd()))
+      nextServer.stdout.on('data', d => {
+        const msg = d.toString().trimEnd()
+        log('[next]', msg)
+        if (startupState === 'pending' && msg) appendStartupOutput(msg)
+      })
     }
     if (nextServer.stderr) {
       nextServer.stderr.on('data', d => {
         const msg = d.toString().trimEnd()
         log('[next:err]', msg)
+        if (startupState === 'pending' && msg) appendStartupOutput(msg)
         if (msg.includes('DATABASE_URL') || msg.includes('PrismaClientInitializationError')) {
           log('FATAL: Prisma cannot connect — check DATABASE_URL and run: npx prisma db push')
         }
       })
     }
+    nextServer.on('error', (type, location) => {
+      log('[next:fatal]', type, location)
+      if (startupState === 'pending') appendStartupOutput(`Fatal Node.js utility-process error: ${type} ${location}`)
+    })
     nextServer.on('exit', code => {
       log(`Next.js exited — code=${code}`)
       nextServer = null
+      if (startupState === 'pending') {
+        startupState = 'failed'
+        const output = startupOutput.trim() || 'Le serveur n’a fourni aucun message sur stdout/stderr.'
+        reject(new Error(
+          `Le serveur Next.js s'est arrêté pendant son démarrage (code ${code}).\n\n` +
+          `Diagnostic serveur (extrait expurgé) :\n${output}\n\nJournal complet : ${LOG_PATH}`,
+        ))
+        return
+      }
+      // Un échec de readiness est déjà traité par l'appelant ; ne pas ouvrir
+      // une seconde boîte native après avoir fermé le processus de démarrage.
+      if (startupState === 'failed') return
 
       // ── Mort du serveur : détectée, ANNONCÉE, et rattrapable ─────────────────
       // Elle n'était que journalisée. Sur un poste de comptoir allumé toute la
@@ -2999,8 +3006,19 @@ function startNextServer() {
     })
 
     waitForServer(35_000)
-      .then(() => { log('Next.js server ready'); resolve() })
-      .catch(err  => { log('Server timeout:', err.message); resolve() })  // fail-open
+      .then(() => {
+        if (startupState !== 'pending') return
+        startupState = 'ready'
+        log('Next.js server ready')
+        resolve()
+      })
+      .catch(err => {
+        if (startupState !== 'pending') return
+        startupState = 'failed'
+        log('Server readiness failed:', err.message)
+        try { nextServer?.kill() } catch (killErr) { log('Server stop after failed startup:', killErr.message) }
+        reject(err)
+      })
   })
 }
 

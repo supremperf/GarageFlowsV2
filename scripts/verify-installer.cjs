@@ -24,6 +24,7 @@
 const { createHash } = require('node:crypto')
 const fs = require('node:fs')
 const path = require('node:path')
+const { problemeResolutionRuntime } = require('./lib/standalone-layout.cjs')
 
 const RACINE = path.resolve(__dirname, '..')
 const DIST = path.join(RACINE, 'dist')
@@ -118,6 +119,7 @@ function main() {
       ['GarageFlows.exe',                           'exécutable de l’application'],
       [path.join('resources', 'app.asar'),          'archive applicative'],
       [path.join('resources', 'standalone', 'server.js'), 'serveur autonome embarqué'],
+      [path.join('resources', 'standalone', 'node_modules', 'next', 'package.json'), 'dépendance Next.js requise par le serveur autonome'],
       [path.join('resources', 'icon.ico'),          'icône de l’application'],
     ]
     for (const [rel, description] of attendus) {
@@ -127,6 +129,17 @@ function main() {
       } else if (fs.statSync(p).size === 0) {
         problemes.push(`${description} vide : ${rel}`)
       }
+    }
+
+    // electron-builder exclut le node_modules situé à la racine de chaque
+    // FileSet extraResources. Le standalone principal le perd donc si on ne
+    // copie pas ce dossier comme ressource séparée (from=.../node_modules).
+    // La présence du package dans la source ne suffit pas : vérifier sa présence
+    // puis refaire la résolution depuis server.js dans l'arborescence installée.
+    const standaloneApp = path.join(DECOMPRESSE, 'resources', 'standalone')
+    const resolutionNext = problemeResolutionRuntime(standaloneApp)
+    if (resolutionNext) {
+      problemes.push(`le serveur autonome ne peut pas charger Next.js dans l’artefact : ${resolutionNext}`)
     }
 
     // Un `.env` dans les ressources embarquées = configuration de développement

@@ -50,7 +50,7 @@ function sansCommentaires(source: string, marqueur: '//' | ';'): string {
 }
 
 describe('la mort du serveur interne ne passe plus inaperçue', () => {
-  const sortie = extrait(MAIN, "nextServer.on('exit'", 45)
+  const sortie = extrait(MAIN, "nextServer.on('exit'", 60)
 
   it('une sortie non voulue ouvre une boîte de dialogue', () => {
     // Avant : `log(...)` puis `nextServer = null`. La fenêtre restait ouverte
@@ -76,6 +76,29 @@ describe('la mort du serveur interne ne passe plus inaperçue', () => {
       const avant = MAIN.slice(Math.max(0, (t.index ?? 0) - 400), t.index)
       expect(avant, 'un kill sans drapeau ferait crier la fermeture normale').toMatch(/arretVoulu\s*=\s*true/)
     }
+  })
+})
+
+describe('le démarrage attend le vrai serveur avant de migrer', () => {
+  const demarrage = extrait(MAIN, 'function startNextServer()', 210)
+
+  it('une sonde en échec rejette le démarrage au lieu de continuer vers la migration', () => {
+    const readiness = demarrage.slice(demarrage.lastIndexOf('waitForServer(35_000)')).split('\n').slice(0, 45).join('\n')
+    expect(readiness).toMatch(/\.catch\(err\s*=>/)
+    expect(readiness).toMatch(/reject\(err\)/)
+    expect(readiness).not.toMatch(/resolve\(\)\s*\/\/ fail-open/)
+  })
+
+  it('en mode développement, attend aussi Next.js au lieu de supposer qu’il tourne', () => {
+    expect(demarrage).toMatch(/Dev: waiting for the separately started Next\.js dev server/)
+    expect(demarrage).toMatch(/waitForServer\(35_000\)[\s\S]*?\.catch\(reject\)/)
+  })
+
+  it('affiche un extrait de sortie du serveur expurgé et borné quand il plante', () => {
+    expect(demarrage).toMatch(/cp\.redactSensitive\(text\)/)
+    expect(demarrage).toMatch(/\.slice\(-2_400\)/)
+    expect(demarrage).toMatch(/Diagnostic serveur \(extrait expurgé\)/)
+    expect(demarrage).toMatch(/Journal complet : \$\{LOG_PATH\}/)
   })
 })
 
