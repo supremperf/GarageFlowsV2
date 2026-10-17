@@ -246,7 +246,7 @@ function embeddedLicenseKey(root) {
   if (!block) throw new Error('Clé publique embarquée introuvable.')
   return [...block[1].matchAll(/'([^']*)'/g)].map(m => m[1]).join('\n')
 }
-function validate(env, profile, { vercel = false, publicPem, allowLocalHttp = false } = {}) {
+function validate(env, profile, { vercel = false, publicPem, allowLocalHttp = false, allowedBlobHashes } = {}) {
   const errors = []
   const required = ['DATABASE_URL', 'NEXTAUTH_SECRET']
   if (profile !== 'desktop') required.push('DIRECT_URL', 'NEXTAUTH_URL', 'DEVICE_TOKEN_PEPPER',
@@ -289,8 +289,8 @@ function validate(env, profile, { vercel = false, publicPem, allowLocalHttp = fa
   if (vercel && (env.GF_BACKUP_DIR || env.GF_PHOTOS_DIR)) errors.push('GF_BACKUP_DIR / GF_PHOTOS_DIR : stockage fichier non persistant sur Vercel ; ne pas simuler un disque durable.')
   if (env.GF_PRIVATE_KEY && (!publicPem || !licenseKeyMatches(env.GF_PRIVATE_KEY, publicPem))) errors.push('GF_PRIVATE_KEY : clé P-256 incompatible avec la clé publique embarquée.')
   const entries = JSON.parse(fs.readFileSync(path.join(__dirname, 'compromised-secrets.json'), 'utf8')).entries
-  const { compromised } = require('./lib/config-credentials.cjs')
-  for (const [name, value] of Object.entries(env)) if (compromised(value, entries)) errors.push(`${name} : identifiant connu exposé ; renouvellement fournisseur obligatoire.`)
+  const { compromised, permittedBlob } = require('./lib/config-credentials.cjs')
+  for (const [name, value] of Object.entries(env)) if (compromised(value, entries) && !permittedBlob(name, value, allowedBlobHashes)) errors.push(`${name} : identifiant connu exposé ; renouvellement fournisseur obligatoire.`)
   return [...new Set(errors)]
 }
 function syncPlan(local, remote, names) {

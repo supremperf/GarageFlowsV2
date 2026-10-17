@@ -20,7 +20,9 @@ jamais recopier ici les valeurs, même partiellement.
 REST écriture **et lecture seule**, token Vercel Blob. Vérifier les sessions,
 logs et accès historiques avec les outils des fournisseurs. Après rotation,
 `node config` accepte les nouvelles valeurs dans le terminal masqué ; les
-anciennes sont refusées avant les sondes du nouveau gestionnaire. Une analyse
+anciennes sont bloquées par défaut avant les sondes du nouveau gestionnaire.
+Le dépannage Blob temporaire, limité et explicitement confirmé est documenté
+dans `docs/CONFIG.md` ; il ne constitue jamais une preuve de rotation/révocation. Une analyse
 Git de l’arbre courant ne certifie jamais l’effacement des anciennes versions.
 
 ## 1. Secrets exposés à révoquer / régénérer

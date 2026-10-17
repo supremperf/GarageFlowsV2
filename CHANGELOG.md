@@ -3,6 +3,15 @@
 
 ## [Non publié] — 2026-10-16 — chaîne build → installeur Windows réparée à la cause, page unique, vue globale des rendez-vous
 
+### `node config` — décision explicite sur un ancien token Blob
+
+- Le refus local par empreinte n’est plus une boucle de ressaisie : renouveler,
+  suspendre ou accepter un dépannage temporaire avec confirmation nominative.
+- Exception limitée au token Blob exact, à la cible et à la session ; aucune
+  autorisation persistée ou héritée. Les contrôles Vercel/SDK restent obligatoires.
+- Rapport avec avertissement et `securityDegraded` si un token exposé est utilisé ;
+  le token reste à révoquer. Aucun contournement pour Neon/Redis/clés de données.
+
 ### `node config` — saisie fournisseur et découverte Blob
 
 - Les champs fournisseur acceptent valeur brute, guillemets et ligne complète

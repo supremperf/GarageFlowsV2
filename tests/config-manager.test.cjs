@@ -853,3 +853,156 @@ test('a Blob token mismatch can be retried with Enter after a dashboard correcti
   assert.match((await f.run()).status, /^CONFIGURATION VALIDÉE/)
   assert.equal(inputs, 1)
 })
+
+function exposeFixtureBlob(f, target = 'development') {
+  const token = f.values[target].BLOB_READ_WRITE_TOKEN
+  const registry = path.join(f.dir, 'scripts/compromised-secrets.json')
+  const contents = JSON.parse(fs.readFileSync(registry, 'utf8'))
+  contents.entries.push({ env: 'BLOB_READ_WRITE_TOKEN', sha256Prefix: credentials.hash(token) })
+  fs.writeFileSync(registry, JSON.stringify(contents))
+  return token
+}
+
+test('an exposed Blob token requires an explicit choice, not an endless credential input loop', async t => {
+  const f = fixture(t), token = exposeFixtureBlob(f), prompts = []
+  let probes = 0
+  f.driver.probeBlob = async () => { probes++; throw new Error('must not be probed') }
+  f.api.select = async (label, items) => { prompts.push(label); assert.equal(items[0].id, 'renew'); return items.find(i => i.id === 'stop') }
+  const report = await f.run()
+  assert.match(report.status, /INTERROMPU/)
+  assert.equal(prompts.length, 1)
+  assert.match(report.errors[0], /sans boucle de saisie/)
+  assert.equal(probes, 0)
+  assert.equal(f.writes.length, 0)
+  assert.ok(!JSON.stringify(report).includes(token))
+})
+
+test('temporary exposed Blob use needs the exact target phrase and is not authorized by selecting the option alone', async t => {
+  const f = fixture(t); exposeFixtureBlob(f)
+  f.api.select = async (_label, items) => items.find(i => i.id === 'temporary')
+  const question = f.api.question
+  f.api.question = async label => label.includes('accepter le risque') ? 'UTILISER BLOB EXPOSE POUR production' : question(label)
+  const report = await f.run()
+  assert.match(report.status, /INTERROMPU/)
+  assert.equal(f.writes.length, 0)
+  assert.equal(report.securityDegraded, undefined)
+})
+
+test('explicit temporary consent permits only the chosen Blob value, preserves probes, warns and is requested again next run', async t => {
+  const f = fixture(t), token = exposeFixtureBlob(f)
+  let consent = 0, calls = 0
+  f.api.select = async (_label, items) => { consent++; return items.find(i => i.id === 'temporary') }
+  const question = f.api.question
+  f.api.question = async label => label.includes('accepter le risque') ? 'UTILISER BLOB EXPOSE POUR development' : question(label)
+  const adapter = cloudModule.cloud({ ...f.api, blobClient: { list: async () => { calls++; return { blobs: [] } } } })
+  f.driver.probeBlob = adapter.probeBlob
+  const report = await f.run()
+  assert.match(report.status, /^CONFIGURATION SYNCHRONISÉE/)
+  assert.match(report.status, /TOKEN BLOB EXPOSÉ/)
+  assert.equal(report.securityDegraded, true)
+  assert.equal(report.environments.development.checks.blob.list, true)
+  assert.equal(consent, 1)
+  assert.equal(calls, 3, 'all targets still require successful Blob API probes')
+  assert.equal(core.readEnv(path.join(f.dir, '.env.development.local')).BLOB_READ_WRITE_TOKEN, token)
+  assert.ok(!JSON.stringify(report).includes(token))
+  const state = fs.readFileSync(path.join(f.dir, 'GarageFlow-configuration/manager-state.json'), 'utf8')
+  assert.ok(!state.includes('allowedBlobHashes'), 'approval must not survive the session')
+  const writes = f.writes.length
+  f.api.select = async (_label, items) => { consent++; return items.find(i => i.id === 'stop') }
+  assert.match((await f.run()).status, /INTERROMPU/)
+  assert.equal(consent, 2)
+  assert.equal(f.writes.length, writes)
+  assert.equal(calls, 3, 'previous consent must not authorize a subsequent probe')
+})
+
+test('renewing an exposed Blob token requests its replacement directly and keeps the strict path warning-free', async t => {
+  const f = fixture(t); exposeFixtureBlob(f)
+  let selections = 0, inputs = 0
+  const renewed = 'vercel_blob_rw_UnitTest_fixture-renewed-not-issued'
+  f.api.select = async (_label, items) => { selections++; return items.find(i => i.id === 'renew') }
+  f.api.secretField = async (env, name) => { inputs++; assert.equal(name, 'BLOB_READ_WRITE_TOKEN'); env[name] = `BLOB_READ_WRITE_TOKEN="${renewed}"` }
+  const report = await f.run()
+  assert.match(report.status, /^CONFIGURATION VALIDÉE/)
+  assert.equal(report.securityDegraded, undefined)
+  assert.equal(selections, 1)
+  assert.equal(inputs, 1)
+  assert.equal(core.readEnv(path.join(f.dir, '.env.development.local')).BLOB_READ_WRITE_TOKEN, renewed)
+})
+
+test('a pasted exposed token is offered the same explicit choice after exactly one input', async t => {
+  const f = fixture(t), token = exposeFixtureBlob(f)
+  const file = path.join(f.dir, '.env.storage.development.local'), seed = core.readEnv(file)
+  delete seed.BLOB_READ_WRITE_TOKEN
+  core.writePrivate(file, core.serializeEnv(seed, Object.keys(seed), 'fixture'))
+  let inputs = 0, choices = 0
+  f.api.secretField = async (env, name) => { inputs++; assert.equal(name, 'BLOB_READ_WRITE_TOKEN'); env[name] = `BLOB_READ_WRITE_TOKEN="${token}"` }
+  f.api.select = async (_label, items) => { choices++; return items.find(i => i.id === 'stop') }
+  const report = await f.run()
+  assert.match(report.status, /INTERROMPU/)
+  assert.equal(inputs, 1)
+  assert.equal(choices, 1)
+  assert.equal(f.writes.length, 0)
+})
+
+test('a Blob permission is exact-value and exact-name only; it cannot waive database or signing-secret checks', async t => {
+  const f = fixture(t), token = exposeFixtureBlob(f), hash = credentials.hash(token), permits = new Set([hash])
+  assert.equal(credentials.permittedBlob('BLOB_READ_WRITE_TOKEN', token, permits), true)
+  for (const name of ['DATABASE_URL', 'NEXTAUTH_SECRET', 'UPSTASH_REDIS_REST_TOKEN']) assert.equal(credentials.permittedBlob(name, token, permits), false)
+  assert.equal(credentials.permittedBlob('BLOB_READ_WRITE_TOKEN', token + 'different', permits), false)
+  const entries = [{ sha256Prefix: hash }]
+  assert.deepEqual(credentials.cleanCredentials({ BLOB_READ_WRITE_TOKEN: token, NEXTAUTH_SECRET: token }, entries, permits).rejected, ['NEXTAUTH_SECRET'])
+  const read = fs.readFileSync
+  t.mock.method(fs, 'readFileSync', function (file, ...args) {
+    if (file === path.join(root, 'scripts/compromised-secrets.json')) return JSON.stringify({ entries })
+    return read.call(this, file, ...args)
+  })
+  const env = { ...f.values.development, NEXTAUTH_SECRET: token }
+  const strict = core.validate(env, 'pwa', { vercel: true })
+  assert.ok(strict.some(e => e.startsWith('BLOB_READ_WRITE_TOKEN : identifiant connu exposé')))
+  const allowed = core.validate(env, 'pwa', { vercel: true, allowedBlobHashes: permits })
+  assert.ok(!allowed.some(e => e.startsWith('BLOB_READ_WRITE_TOKEN : identifiant connu exposé')))
+  assert.ok(allowed.some(e => e.startsWith('NEXTAUTH_SECRET : identifiant connu exposé')))
+})
+
+test('temporary Blob consent still refuses unbound stores and SDK denial, and cannot authorize another token', async t => {
+  const f = fixture(t), token = exposeFixtureBlob(f), allowedBlobHashes = new Set([credentials.hash(token)])
+  let calls = 0
+  const adapter = cloudModule.cloud({ ...f.api, blobClient: { list: async () => { calls++; const e = new Error('private'); e.name = 'BlobAccessError'; throw e } } })
+  await assert.rejects(() => adapter.probeBlob(f.values.development, [], { allowedBlobHashes }), e => e.configBlobCode === 'store_association')
+  assert.equal(calls, 0)
+  await assert.rejects(() => adapter.probeBlob(f.values.development, ['store_UnitTest'], { allowedBlobHashes }), e => e.configBlobCode === 'access_denied')
+  assert.equal(calls, 1)
+  await assert.rejects(() => adapter.probeBlob(f.values.development, ['store_UnitTest']), e => e.configBlobCode === 'token_exposed')
+  assert.equal(calls, 1)
+})
+
+test('temporary Blob approval is not shared across environment targets even for the same token', async t => {
+  const f = fixture(t), token = exposeFixtureBlob(f), choices = []
+  const file = path.join(f.dir, '.env.storage.production.local'), seed = core.readEnv(file)
+  seed.BLOB_READ_WRITE_TOKEN = token
+  core.writePrivate(file, core.serializeEnv(seed, Object.keys(seed), 'fixture'))
+  const question = f.api.question
+  f.api.question = async label => label.includes('accepter le risque') ? 'UTILISER BLOB EXPOSE POUR development' : question(label)
+  f.api.select = async (label, items) => {
+    choices.push(label)
+    return items.find(i => i.id === (label.startsWith('development') ? 'temporary' : 'stop'))
+  }
+  const report = await f.run()
+  assert.match(report.status, /INTERROMPU/)
+  assert.equal(choices.length, 2)
+  assert.ok(choices[1].startsWith('production'))
+  assert.equal(report.environments.production.securityWarnings, undefined)
+  assert.equal(f.writes.length, 0, 'all targets must finish preparation before cloud mutations')
+})
+
+test('simulation of exposed Blob inputs never asks for consent and cannot restore a saved authorization', async t => {
+  const f = fixture(t); exposeFixtureBlob(f)
+  const before = tree(f.dir)
+  f.api.select = async () => { throw new Error('no interactive exception during simulation') }
+  const report = await f.run({ dryRun: true })
+  assert.match(report.status, /SIMULATION/)
+  assert.equal(report.securityDegraded, undefined)
+  assert.ok(report.environments.development.missing.includes('BLOB_READ_WRITE_TOKEN'))
+  assert.deepEqual(tree(f.dir), before)
+  assert.equal(f.writes.length, 0)
+})

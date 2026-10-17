@@ -222,12 +222,13 @@ function cloud(api) {
     await require('../config-services.cjs').testRedis(env, api.fetch || fetch)
     return true
   }
-  async function probeBlob(env, ids) {
+  async function probeBlob(env, ids, { allowedBlobHashes } = {}) {
     if (process.env.DEBUG || process.env.NEXT_PUBLIC_DEBUG) throw failure('Blob : DEBUG actif refusé pour protéger les sorties du SDK.')
     // Supported read-write token format used by @vercel/blob 2.8.2.
     const token = core.normalizeInput('BLOB_READ_WRITE_TOKEN', env.BLOB_READ_WRITE_TOKEN)
     const entries = JSON.parse(fs.readFileSync(path.join(root, 'scripts/compromised-secrets.json'), 'utf8')).entries
-    if (require('./config-credentials.cjs').compromised(token, entries)) throw blobFailure('token_exposed')
+    const credentials = require('./config-credentials.cjs')
+    if (credentials.compromised(token, entries) && !credentials.permittedBlob('BLOB_READ_WRITE_TOKEN', token, allowedBlobHashes)) throw blobFailure('token_exposed')
     const match = /^vercel_blob_rw_([A-Za-z0-9]+)_[A-Za-z0-9_-]+$/.exec(token || '')
     if (!match) throw blobFailure('token_format')
     if (!Array.isArray(ids) || !ids.length) throw blobFailure('store_association')
@@ -247,10 +248,10 @@ function cloud(api) {
       throw blobFailure(code || 'request_failed')
     }
   }
-  async function probeBlobWrite(env, ids, { authorized = false, access } = {}) {
+  async function probeBlobWrite(env, ids, { authorized = false, access, allowedBlobHashes } = {}) {
     if (!authorized || !['public', 'private'].includes(access)) throw failure('Blob : sonde mutante non autorisée.')
     // Recheck binding and prevent SDK API-override token exfiltration first.
-    await probeBlob(env, ids)
+    await probeBlob(env, ids, { allowedBlobHashes })
     const sdk = api.blobClient || require('@vercel/blob'), token = core.normalizeInput('BLOB_READ_WRITE_TOKEN', env.BLOB_READ_WRITE_TOKEN)
     const storeId = token.split('_')[3].toLowerCase(), pathname = `garageflows-config-probe/${crypto.randomUUID()}.txt`
     let object, verified = false, cleaned = false

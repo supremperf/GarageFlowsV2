@@ -15,10 +15,16 @@ function compromised(value, entries) {
   try { const u = new URL(value); if (u.password) candidates.push(decodeURIComponent(u.password)) } catch { /* not a URL */ }
   return candidates.some(candidate => entries.some(e => hash(candidate).startsWith(e.sha256Prefix)))
 }
-function cleanCredentials(values, entries) {
+// Deliberate, target/session-scoped exception for exactly one Blob value.
+// It never authorizes a different name, service or replacement token.
+function permittedBlob(name, value, allowedBlobHashes) {
+  return name === 'BLOB_READ_WRITE_TOKEN' && typeof value === 'string' &&
+    allowedBlobHashes instanceof Set && allowedBlobHashes.has(hash(value))
+}
+function cleanCredentials(values, entries, allowedBlobHashes) {
   const safe = {}, rejected = []
   for (const [name, value] of Object.entries(values)) {
-    if (compromised(value, entries)) rejected.push(name)
+    if (compromised(value, entries) && !permittedBlob(name, value, allowedBlobHashes)) rejected.push(name)
     else safe[name] = value
   }
   return { safe, rejected }
@@ -79,4 +85,4 @@ function gitProtection(root, destinations) {
   return { ok: !leaks.length && !unsafeExamples.length && !unignored.length && !symlinks.length,
     trackedSecretFiles: leaks, unsafeExamples: [...new Set(unsafeExamples)], unignored, symlinks }
 }
-module.exports = { NEON_REFERENCE, hash, compromised, cleanCredentials, neonVariables, postgresIssues, gitProtection }
+module.exports = { NEON_REFERENCE, hash, compromised, permittedBlob, cleanCredentials, neonVariables, postgresIssues, gitProtection }

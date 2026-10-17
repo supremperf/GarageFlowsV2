@@ -134,8 +134,41 @@ Les diagnostics sans secrets distinguent : format, inventaire Vercel inaccessibl
 association manquante, store différent, accès Blob refusé, store suspendu/absent
 et indisponibilité/réseau. Une erreur de réseau ou d’inventaire n’est plus
 présentée comme preuve que le token est mauvais. Les messages bruts des SDK ne
-sont jamais affichés. Les tokens déjà exposés restent refusés, même correctement
-formatés : les révoquer et saisir leurs remplaçants uniquement sur le poste.
+sont jamais affichés. Les tokens exposés sont bloqués par défaut, même correctement
+formatés ; voir ci-dessous le choix explicite de renouvellement, suspension ou
+dépannage temporaire. Révoquer les tokens exposés reste recommandé.
+
+### Token Blob reconnu comme exposé : choix explicite, sans boucle
+
+Le message « valeur précédemment exposée » est un **blocage local par empreinte**,
+pas un refus de l’API Vercel. Ajouter/retirer les guillemets ne change pas le token.
+Le gestionnaire propose maintenant trois choix :
+
+1. **Saisir un token renouvelé** — recommandé ; aucun ancien accès n’est réutilisé.
+2. **Autoriser temporairement ce token**, puis saisir exactement la confirmation
+   affichée pour la cible, par exemple `UTILISER BLOB EXPOSE POUR development`.
+3. **Suspendre** — aucun accès Blob ni changement distant après ce choix.
+
+L’exception du deuxième choix concerne **uniquement la valeur exacte du token
+Blob sélectionné**, dans **cette cible et cette exécution**. Elle n’est pas
+sauvegardée comme autorisation, ni étendue aux autres environnements, bases de
+données ou clés de chiffrement. Elle est redemandée à la relance, même si le token
+se trouve dans les fichiers privés ou Vercel. La simulation et les validateurs
+standards restent stricts. Aucun argument global ne désactive la protection.
+
+**Ce n’est pas une rotation ni un token éphémère :** le token peut être enregistré
+dans les fichiers privés et les variables Vercel après confirmation du plan. Il
+reste exploitable par un tiers jusqu’à sa révocation chez le fournisseur. Le
+rapport porte `securityDegraded: true` et un avertissement explicite ; il ne
+présente pas cette configuration comme sécurisée. Le registre des empreintes
+compromises n’est pas effacé. Le contrôle d’association projet/environnement,
+le vrai `list` Blob et l’autorisation séparée de toute sonde d’écriture restent
+obligatoires ; l’exception ne transforme pas un échec fournisseur en succès.
+
+Sur Windows, coller une ligne `BLOB_READ_WRITE_TOKEN="…"` **dans l’invite de
+`node config`**, pas après le retour à `C:\Users\…>`. Une affectation dotenv
+seule n’est pas une commande CMD. Relancer `node config` pour reprendre le brouillon.
+Ne partager ni le token renouvelé ni les captures d’une saisie visible.
 
 ### Génération automatique ou accès à fournir
 
@@ -235,7 +268,8 @@ clés de protection reste conditionnelle à une inspection SQL future.
 Le fichier `.env.storage.local` publié au commit `290d290` est retiré du suivi
 courant. **Il reste dans l’historique public.** Les empreintes des accès publiés
 sont ajoutées à `scripts/compromised-secrets.json` ; les modes de validation les
-refusent, y compris si un mot de passe est réutilisé dans une autre URL.
+refusent par défaut, y compris si un mot de passe est réutilisé dans une autre URL.
+Seul le dépannage Blob interactif décrit plus haut permet une exception ciblée.
 Révoquer le mot de passe Neon, les tokens Redis écriture/lecture seule et le
 token Blob chez leurs fournisseurs. Ni supprimer un fichier ni changer une
 variable ne prouve la révocation. Aucun accès client n’a été utilisé ici.
@@ -244,8 +278,8 @@ variable ne prouve la révocation. Aucun accès client n’a été utilisé ici.
 
 | Contrôle exécuté dans le dépôt | Résultat |
 |---|---|
-| `node --test tests/*.cjs` | 335 tests réussis, aucun échec ni test ignoré |
-| `npm run test:config` (sous-ensemble du précédent) | 216 tests réussis, dont 52 pour le nouveau gestionnaire |
+| `node --test tests/*.cjs` | 344 tests réussis, aucun échec ni test ignoré |
+| `npm run test:config` (sous-ensemble du précédent) | 225 tests réussis, dont 61 pour le nouveau gestionnaire |
 | ESLint des modules de configuration modifiés et de leurs tests | Réussi |
 | Cohérence documentaire, marque et `git diff --check` | Réussis |
 | `npm audit --omit=optional --audit-level=low` | Aucune vulnérabilité signalée dans le périmètre audité |

@@ -47,7 +47,9 @@ Aucune rotation implicite, aucun déploiement/migration. Sauvegardes et reprise
 privées. Accès fournisseurs introuvables : saisie locale sur votre poste.
 Au démarrage, vous pouvez choisir une saisie visible (tokens compris) ; par
 défaut, les secrets restent masqués. Aucun secret récupéré n’est affiché.
-Les anciennes valeurs exposées sont interdites, même si elles fonctionnent encore.
+Les anciennes valeurs exposées sont bloquées par défaut, même si elles fonctionnent.
+Blob uniquement : renouveler, suspendre ou autoriser temporairement après une
+confirmation nominative par cible/session, avec avertissement de sécurité.
 
 Mode --conserver-secrets : toute clé symétrique ABSENTE est générée automatiquement (256 bits) sur une
 première installation (base vide, aucune donnée métier) puis écrite dans .env,

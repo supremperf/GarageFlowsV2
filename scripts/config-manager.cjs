@@ -143,6 +143,7 @@ function render(report) {
     if (e?.generated?.length) lines.push(`  clés ${report.dryRun ? 'générables si absence distante confirmée (clés de données : base vide requise)' : 'générées'} : ${e.generated.join(', ')}`)
     if (e?.missing?.length) lines.push(`  manquantes : ${e.missing.join(', ')}`)
     if (e?.blobDiagnostic) lines.push(`  Diagnostic Blob : ${e.blobDiagnostic.message}`)
+    for (const warning of e?.securityWarnings || []) lines.push(`  AVERTISSEMENT SÉCURITÉ : ${warning}`)
     lines.push(`  Neon pool/direct : ${e?.checks?.database ? 'connexion testée' : 'NON VÉRIFIÉ'} ; Redis : ${e?.checks?.redis ? 'PING vérifié' : 'NON VÉRIFIÉ'}`)
     lines.push(`  Blob : ${e?.checks?.blob ? e.checks.blob.write === 'verified' ? 'association + PUT/HEAD/DELETE vérifiés' : 'association + liste vérifiées ; écriture NON TESTÉE' : 'NON VÉRIFIÉ'}`)
   }
@@ -206,10 +207,41 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
       const existing = Object.assign({}, ...[...FILES[target]].reverse().map(file => core.readEnv(path.join(root, file))))
       const seed = core.readEnv(path.join(root, `.env.storage.${target}.local`))
       const legacySeed = target === 'production' ? core.readEnv(path.join(root, '.env.storage.local')) : {}
-      const cleanedSources = [legacySeed, existing, seed, state.drafts[target] || {}, snapshot.values].map(source => security.cleanCredentials(normalizeStorage(source), entries))
+      const sources = [legacySeed, existing, seed, state.drafts[target] || {}, snapshot.values].map(normalizeStorage)
+      const cleanedSources = sources.map(source => security.cleanCredentials(source, entries))
       const cleaned = { safe: Object.assign({}, ...cleanedSources.map(s => s.safe)), rejected: [...new Set(cleanedSources.flatMap(s => s.rejected))] }
       let env = cleaned.safe
       report.environments[target] = { status: 'EN PRÉPARATION', rejectedExposed: cleaned.rejected, branchOverridesPreserved: snapshot.branchOverrides || 0, checks: {} }
+      const allowedBlobHashes = new Set() // Never persisted, inherited or shared between targets.
+      const authorizeBlob = async () => {
+        const name = 'BLOB_READ_WRITE_TOKEN', value = env[name]
+        if (!security.compromised(value, entries) || security.permittedBlob(name, value, allowedBlobHashes)) return true
+        console.log(`${target} — Blocage LOCAL : ce token figure dans le registre des accès exposés. Aucune requête Blob ne l’a testé ; cela ne prouve pas qu’il est invalide chez Vercel.`)
+        console.log('Recommandé : révoquer ce token et saisir son remplaçant. Un dépannage temporaire laisse un accès compromis utilisable par des tiers.')
+        console.log('En continuant, le token peut être enregistré dans les fichiers privés et Vercel. Il ne devient pas éphémère : il reste utilisable jusqu’à sa révocation chez le fournisseur.')
+        const choice = await api.select(`${target} — token Blob exposé : choisir la suite`, [
+          { id: 'renew', name: 'Saisir un token renouvelé (recommandé)' },
+          { id: 'temporary', name: 'Autoriser ce token temporairement, en acceptant le risque' },
+          { id: 'stop', name: 'Suspendre et reprendre ultérieurement' },
+        ])
+        if (choice.id === 'renew') { delete env[name]; checkpoint(target, env); return false }
+        if (choice.id === 'temporary') {
+          const phrase = `UTILISER BLOB EXPOSE POUR ${target}`
+          if (await api.question(`${target} — accepter le risque pour ce token et cette session uniquement : saisir ${phrase}`) === phrase) {
+            allowedBlobHashes.add(security.hash(value))
+            report.environments[target].securityWarnings = ['Token Blob connu exposé autorisé temporairement pour cette cible/session ; révocation toujours nécessaire.']
+            return true
+          }
+        }
+        checkpoint(target, env)
+        throw failure(`${target} : utilisation du token Blob exposé non autorisée ; configuration suspendue sans boucle de saisie. Renouveler le token ou relancer node config pour choisir explicitement.`)
+      }
+      // Retain an exposed Blob candidate only for an interactive decision. A
+      // simulation/default validator still rejects it, and no permit is restored.
+      if (!dryRun && !decoder.readable(env.BLOB_READ_WRITE_TOKEN)) {
+        const candidate = [...sources].reverse().find(source => decoder.readable(source.BLOB_READ_WRITE_TOKEN))
+        if (candidate) env.BLOB_READ_WRITE_TOKEN = candidate.BLOB_READ_WRITE_TOKEN
+      }
       // Remove aliases whose URL embeds a compromised password before normalizing.
       env = normalizeStorage(env)
       for (const [alias, definition] of Object.entries(policy.manifest.forbiddenAliases)) {
@@ -223,6 +255,7 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
       report.environments[target].generated = generated
       report.environments[target].needsOriginal = needsOriginal
       if (!dryRun) {
+        await authorizeBlob()
         // The three remote inventories are already complete. Bootstrap first-use
         // secrets before asking for external inputs and checkpoint them for resume.
         for (const name of FIRST_USE_KEYS) {
@@ -235,7 +268,7 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
         const missingProviderAccess = ['DATABASE_URL', 'DIRECT_URL', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'].some(name => !decoder.readable(env[name]))
         if (missingProviderAccess && await api.yes(`${target} : tenter la récupération des accès manquants chez les fournisseurs`)) {
           await driver.recover(target, env)
-          env = security.cleanCredentials(env, entries).safe
+          env = security.cleanCredentials(env, entries, allowedBlobHashes).safe
           checkpoint(target, env)
         }
         if (target === 'production' && (!env.DATABASE_URL || !env.DIRECT_URL) && await api.yes('Utiliser les hôtes Neon de référence us-east-2 avec votre NOUVEAU mot de passe')) {
@@ -245,14 +278,15 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
           checkpoint(target, env)
         }
         for (const name of BASE_REQUIRED) {
-          while (!decoder.readable(env[name]) || security.compromised(env[name], entries)) {
+          while (!decoder.readable(env[name]) || (security.compromised(env[name], entries) && !security.permittedBlob(name, env[name], allowedBlobHashes))) {
             delete env[name]
             console.log(safeMessage(target, name))
             if (cleaned.rejected.includes(name)) console.log(`${target} — ${name} : accès précédemment exposé refusé ; renouveler chez le fournisseur, sans partager le nouveau secret.`)
             await api.secretField(env, name, `${target} — ${name} (Entrée = interrompre et reprendre ultérieurement)`)
             Object.assign(env, normalizeStorage(env))
             if (!decoder.readable(env[name])) { checkpoint(target, env); throw failure(`Configuration suspendue : ${target} / ${name}. Relancer node config pour reprendre.`) }
-            if (security.compromised(env[name], entries)) { delete env[name]; console.log('Valeur précédemment exposée refusée ; rotation fournisseur obligatoire.') }
+            if (name === 'BLOB_READ_WRITE_TOKEN') await authorizeBlob()
+            else if (security.compromised(env[name], entries)) { delete env[name]; console.log('Valeur précédemment exposée refusée ; rotation fournisseur obligatoire.') }
             checkpoint(target, env)
           }
         }
@@ -267,7 +301,7 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
         const probe = async (label, fields, action) => {
           for (;;) {
             try {
-              if (fields.some(n => security.compromised(env[n], entries))) {
+              if (fields.some(n => security.compromised(env[n], entries) && !security.permittedBlob(n, env[n], allowedBlobHashes))) {
                 const error = failure('Valeur exposée interdite.')
                 if (label === 'Blob') error.configBlobCode = 'token_exposed'
                 throw error
@@ -294,6 +328,17 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
                 Object.assign(env, normalizeStorage(env))
                 checkpoint(target, env)
                 if (!decoder.readable(env[field])) throw failure(`Configuration suspendue : ${target} / ${field}.`)
+                if (field === 'BLOB_READ_WRITE_TOKEN' && !await authorizeBlob()) {
+                  // Renew was selected: ask directly for the replacement, not
+                  // another generic correction confirmation.
+                  while (!decoder.readable(env[field])) {
+                    await api.secretField(env, field, `${target} — token Blob renouvelé (Entrée = suspendre)`)
+                    Object.assign(env, normalizeStorage(env))
+                    if (!decoder.readable(env[field])) throw failure(`Configuration suspendue : ${target} / ${field}.`)
+                    if (!await authorizeBlob()) continue
+                  }
+                  checkpoint(target, env)
+                }
               }
               if (env.DIRECT_URL) env.DATABASE_URL_UNPOOLED = env.DIRECT_URL
             }
@@ -312,7 +357,7 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
         })
         checks.blob = await probe('Blob', ['BLOB_READ_WRITE_TOKEN'], async () => {
           const ids = await driver.blobStores(project, target, snapshot)
-          const result = await driver.probeBlob(env, ids)
+          const result = await driver.probeBlob(env, ids, { allowedBlobHashes })
           if (result?.associated !== true || result?.list !== true) throw failure('Sonde Blob incomplète.')
           return result
         })
@@ -321,7 +366,7 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
           if (!await api.yes(`${target} : autoriser PUT/HEAD/DELETE d’un objet de sonde Blob sans secret (opérations potentiellement facturées)`)) throw failure(`${target} : sonde Blob mutante non autorisée.`)
           const choice = await api.select(`${target} : visibilité effective du store Blob (aucune modification du store)`, [{ id: 'private', name: 'Privé' }, { id: 'public', name: 'Public' }])
           try {
-            const result = await driver.probeBlobWrite(env, await driver.blobStores(project, target, snapshot), { authorized: true, access: choice.id })
+            const result = await driver.probeBlobWrite(env, await driver.blobStores(project, target, snapshot), { authorized: true, access: choice.id, allowedBlobHashes })
             if (result?.write !== true || result?.read !== true || result?.delete !== true) throw failure('Sonde Blob incomplète.')
             checks.blob.write = 'verified'; checks.blob.delete = 'verified'
           } catch (error) {
@@ -356,17 +401,18 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
         }
       }
       let missing = required.filter(n => !decoder.readable(env[n]) && !(dryRun && generated.includes(n)))
-      let issues = dryRun ? security.postgresIssues(env) : [...security.postgresIssues(env), ...core.validate(env, 'pwa', { vercel: true, allowLocalHttp: target === 'development', publicPem: env.GF_PRIVATE_KEY ? core.embeddedLicenseKey(root) : undefined })]
+      let issues = dryRun ? security.postgresIssues(env) : [...security.postgresIssues(env), ...core.validate(env, 'pwa', { vercel: true, allowLocalHttp: target === 'development', allowedBlobHashes, publicPem: env.GF_PRIVATE_KEY ? core.embeddedLicenseKey(root) : undefined })]
       if (!dryRun && issues.length) {
         console.log(issues.join('\n'))
         const fixable = [...new Set(issues.map(issue => issue.match(/^([A-Z][A-Z0-9_]*) :/)?.[1]).filter(name => name && (!BASE_REQUIRED.includes(name) || name === 'NEXTAUTH_URL')))]
         if (fixable.length && await api.yes(`${target} : corriger les variables de format invalide avant toute mutation`)) {
           for (const name of fixable) { delete env[name]; await api.secretField(env, name, `${target} — ${name}`); checkpoint(target, env) }
           missing = required.filter(n => !decoder.readable(env[n]))
-          issues = [...security.postgresIssues(env), ...core.validate(env, 'pwa', { vercel: true, allowLocalHttp: target === 'development', publicPem: env.GF_PRIVATE_KEY ? core.embeddedLicenseKey(root) : undefined })]
+          issues = [...security.postgresIssues(env), ...core.validate(env, 'pwa', { vercel: true, allowLocalHttp: target === 'development', allowedBlobHashes, publicPem: env.GF_PRIVATE_KEY ? core.embeddedLicenseKey(root) : undefined })]
         }
       }
-      const rejected = security.cleanCredentials(env, entries).rejected
+      if (!security.compromised(env.BLOB_READ_WRITE_TOKEN, entries)) delete report.environments[target].securityWarnings
+      const rejected = security.cleanCredentials(env, entries, allowedBlobHashes).rejected
       if (rejected.length) throw failure(`${target} : valeur exposée refusée (${rejected.join(', ')}).`)
       if (Object.keys(env).some(n => /^NEXT_PUBLIC_.*(?:SECRET|PRIVATE_KEY|PEPPER|TOKEN|PASSWORD|API_KEY)/.test(n))) throw failure(`${target} : secret public interdit.`)
       if (!dryRun && (missing.length || issues.length)) throw failure(`${target} : configuration invalide (${[...missing, ...issues].join(', ')}).`)
@@ -474,6 +520,10 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
     }
     return report
   } finally {
+    if (Object.values(report.environments).some(e => e.securityWarnings?.length)) {
+      report.securityDegraded = true
+      if (report.status.startsWith('CONFIGURATION')) report.status = report.status.replace('CONFIGURATION VALIDÉE', 'CONFIGURATION SYNCHRONISÉE') + ' — AVERTISSEMENT : TOKEN BLOB EXPOSÉ AUTORISÉ TEMPORAIREMENT'
+    }
     if (!dryRun && locked) {
       try { core.writePrivate(path.join(folder, 'manager-report.json'), JSON.stringify(report, null, 2) + '\n') }
       catch { report.status = 'INTERROMPU — RAPPORT NON ENREGISTRÉ'; report.errors.push('Rapport privé non sauvegardé : vérifier les permissions et l’espace disque.') }
