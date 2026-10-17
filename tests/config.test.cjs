@@ -697,3 +697,31 @@ test('provider prompts normalize dashboard assignments and retry a wrong field w
     else delete process.stdin.isTTY
   }
 })
+
+test('long Windows prompts print explanations separately and keep the actual readline prompt short', async () => {
+  const readline = require('node:readline'), wizard = require('../config')
+  const original = readline.createInterface, write = process.stdout.write
+  const tty = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY'), output = [], prompts = [], events = []
+  Object.defineProperty(process.stdin, 'isTTY', { configurable: true, value: true })
+  process.stdout.write = chunk => { output.push(String(chunk)); events.push('output'); return true }
+  readline.createInterface = () => ({ once() {}, close() {}, question(prompt, callback) { prompts.push(prompt); events.push('input-ready'); callback('') } })
+  const label = 'Instruction longue de confirmation pour le terminal Windows : ' + 'explication '.repeat(12)
+  const secret = 'fixture-private-default-not-to-display'
+  try {
+    await wizard.question(label)
+    assert.deepEqual(prompts, ['Réponse : '])
+    assert.ok(output[0].includes(label))
+    assert.ok(output[0].endsWith('\n'))
+    events.length = 0; output.length = 0
+    assert.equal(await wizard.question(label, { secret: true, defaultValue: secret }), secret)
+    assert.equal(prompts[1], '')
+    assert.equal(events[0], 'input-ready', 'long masked prompt still waits for input ownership before printing')
+    assert.ok(output.join('').includes('Réponse : '))
+    assert.ok(!output.join('').includes(secret))
+  } finally {
+    process.stdout.write = write
+    readline.createInterface = original
+    if (tty) Object.defineProperty(process.stdin, 'isTTY', tty)
+    else delete process.stdin.isTTY
+  }
+})

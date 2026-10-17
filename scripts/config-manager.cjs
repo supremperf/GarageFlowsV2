@@ -152,6 +152,7 @@ function render(report) {
   lines.push(`Variables requises manquantes : ${completeInventory ? environments.reduce((n, e) => n + e.missing.length, 0) : 'NON FINALISÉ'} ; incohérences de format : ${completeInventory ? environments.reduce((n, e) => n + e.issues.length, 0) : 'NON FINALISÉ'} ; erreurs : ${report.errors?.length || 0}`)
   lines.push(`Fichiers .env secrets suivis détectés : ${report.security?.trackedSecretFiles?.length ?? 'NON VÉRIFIÉ'} (ce contrôle ne remplace pas un scan de secrets complet).`)
   for (const error of report.errors || []) lines.push(`ERREUR : ${error}`)
+  if (report.pendingReason) lines.push(`REPRISE GUIDÉE : ${report.pendingReason}`)
   lines.push(`Fichiers prévus/modifiés : ${report.files.join(', ') || 'aucun'}`, `Protection Git : ${report.security?.ok ? 'contrôlée sur l’arbre courant ; historique non purgé' : 'BLOQUÉE / NON VÉRIFIÉE'}`,
     `STATUT : ${report.status}`, report.blobApplicationConsumer ? 'Blob : consommateur littéral trouvé ; aucun test des parcours applicatifs effectué.' : 'Blob : aucun consommateur applicatif trouvé ; aucune migration des uploads/sauvegardes effectuée.', 'Aucun déploiement ni migration SQL exécuté par ce gestionnaire.', '========================================')
   return lines.join('\n')
@@ -316,6 +317,10 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
                 console.log(`${target} — Blob : ${message}`)
                 if (code === 'store_association') {
                   const command = `node config --connect-blob --environment ${target}`
+                  if (await api.yes(`${target} — ouvrir maintenant l’assistant de rattachement Blob puis reprendre la configuration`)) {
+                    report.nextAction = { type: 'connect-blob', target }
+                    throw failure(`${target} : préparation mise en pause ; l’assistant de rattachement va s’ouvrir après libération du verrou. Les brouillons sont conservés.`)
+                  }
                   console.log(`Après le retour à l’invite CMD du dossier du projet, taper : ${command}`)
                   throw failure(`${target} : rattachement Blob manquant. Dans CMD, exécuter ${command}, puis node config. Les réponses oui seules ne créent pas le rattachement. Saisies conservées pour reprise.`)
                 }
@@ -512,8 +517,10 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
     return report
   } catch (error) {
     // Provider messages and payloads must NEVER become report/log content.
-    report.status = 'INTERROMPU — AUCUNE VALIDATION GLOBALE'
-    report.errors.push(error.configSafe ? error.message : error.vercelApi ? `Vercel : ${require('./lib/config-vercel-api.cjs').safeFailure(error.vercelApi).reason} (HTTP ${require('./lib/config-vercel-api.cjs').safeFailure(error.vercelApi).httpStatus || 'indisponible'}).` : 'Opération non confirmée ; erreurs fournisseur masquées. Vérifier les étapes et les paramètres indiqués.')
+    report.status = report.nextAction ? 'EN ATTENTE — ASSISTANT DE RATTACHEMENT BLOB' : 'INTERROMPU — AUCUNE VALIDATION GLOBALE'
+    const message = error.configSafe ? error.message : error.vercelApi ? `Vercel : ${require('./lib/config-vercel-api.cjs').safeFailure(error.vercelApi).reason} (HTTP ${require('./lib/config-vercel-api.cjs').safeFailure(error.vercelApi).httpStatus || 'indisponible'}).` : 'Opération non confirmée ; erreurs fournisseur masquées. Vérifier les étapes et les paramètres indiqués.'
+    if (report.nextAction) report.pendingReason = message
+    else report.errors.push(message)
     if (writing && state) {
       state.phase = 'rolling-back'; save()
       report.restoration = await rollback(driver, project, state.attempts)

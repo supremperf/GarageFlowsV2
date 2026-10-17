@@ -45,8 +45,9 @@ Il ne change pas non plus les invites des CLI officiels externes.
 Le diagnostic `Aucun store Blob confirmé ... development` signifie que
 l’association projet/**Development** n’est pas prouvée. Accepter un token exposé
 ne crée pas cette association, et répondre « oui » pour retester ne la crée pas
-non plus. Le gestionnaire s’arrête maintenant avec la commande utile, au lieu de
-proposer de répéter cette vérification sans réparation.
+non plus. Le gestionnaire propose maintenant d’ouvrir directement l’assistant de
+rattachement dans la même session, au lieu de répéter la vérification sans
+réparation. Si cette ouverture est refusée, il affiche la commande manuelle.
 
 **1. Mettre le code à jour sans effacer les fichiers privés.** Si le projet vient
 d’un ZIP GitHub, télécharger la dernière version de la branche
@@ -57,7 +58,40 @@ Si c’est un clone Git de cette branche, faire `git pull --ff-only origin
 arena/d8de065e-garageflowsv2` dans ce dossier, sans écraser d’éventuelles
 modifications locales. Un ZIP n’est pas automatiquement un clone Git.
 
-**2. Dans l’Invite de commandes Windows (CMD), taper :**
+**2. Parcours intégré recommandé — dans CMD, taper :**
+
+```bat
+cd /d "%USERPROFILE%\Desktop\GarageFlowsV2-arena-d8de065e-garageflowsv2"
+node config
+```
+
+La commande est **`node config`**, avec le **g final**, pas `node confi`.
+`MODULE_NOT_FOUND` pour le fichier `confi` est une faute de commande, pas un
+problème de dépendance : Node cherche littéralement un fichier qui n’existe pas.
+Il n’est pas nécessaire d’installer un module nommé `confi`.
+
+Quand le diagnostic Blob apparaît, répondre **oui** à **« ouvrir maintenant
+l’assistant de rattachement Blob puis reprendre la configuration »**. Le verrou
+principal est libéré et l’assistant s’ouvre sans commande à retaper :
+
+- saisir **`AUTORISER BLOB`** lorsqu’il le demande ;
+- confirmer le projet/l’équipe, sélectionner le store existant et approuver son
+  plan si la cible est correcte ;
+- répondre **oui** à **« Rattachement confirmé : reprendre maintenant la
+  configuration complète »**. Les trois cibles sont relues et les brouillons
+  réconciliés sont réutilisés, sans appliquer l’ancien plan périmé.
+
+Une réparation annulée ou échouée ne lance pas la synchronisation complète.
+Une cible ne peut être réparée automatiquement qu’une fois par lancement :
+si elle reste non confirmée, la session s’arrête sans boucle. Les simulations
+n’ouvrent jamais cet assistant. Une rotation explicite n’est pas rejouée
+silencieusement pendant une reprise guidée.
+
+Les longues explications sont affichées sur leur propre ligne avec une courte
+invite `Réponse :`, pour éviter les chevauchements de prompts dans CMD. L’invite
+masquée ne s’affiche toujours qu’après initialisation de la saisie privée.
+
+**Alternative indépendante — dans CMD, taper :**
 
 ```bat
 cd /d "%USERPROFILE%\Desktop\GarageFlowsV2-arena-d8de065e-garageflowsv2"
@@ -86,7 +120,7 @@ le rattachement et les autres cibles après l’opération. Une connexion partag
 n’est jamais réduite à Development : si sa modification toucherait une autre
 cible, la commande bloque et demande une séparation explicite dans Vercel.
 
-**3. Une fois revenu à l’invite `C:\Users\...>` du même dossier, taper :**
+**Après la commande indépendante seulement : une fois revenu à l’invite `C:\Users\...>` du même dossier, taper :**
 
 ```bat
 node config
@@ -100,8 +134,10 @@ exposé, choisir son renouvellement ou l’autorisation temporaire décrite plus
 Le rattachement ne révoque pas et ne renouvelle pas automatiquement les anciens
 tokens du store.
 
-Si le même diagnostic apparaît plus tard pour Preview ou Production, quitter
-l’assistant, puis utiliser **uniquement pour la cible voulue** :
+Si le même diagnostic apparaît ensuite pour Preview ou Production, le parcours
+intégré propose de nouveau l’assistant, séparément pour chaque cible. Si vous
+préférez le mode indépendant, quitter puis utiliser **uniquement pour la cible
+voulue** :
 
 ```bat
 node config --connect-blob --environment preview
@@ -368,8 +404,8 @@ variable ne prouve la révocation. Aucun accès client n’a été utilisé ici.
 
 | Contrôle exécuté dans le dépôt | Résultat |
 |---|---|
-| `node --test tests/*.cjs` | 358 tests réussis, aucun échec ni test ignoré |
-| `npm run test:config` (sous-ensemble du précédent) | 239 tests réussis, dont 75 pour le nouveau gestionnaire et la réparation Blob |
+| `node --test tests/*.cjs` | 364 tests réussis, aucun échec ni test ignoré |
+| `npm run test:config` (sous-ensemble du précédent) | 245 tests réussis, dont 80 pour le gestionnaire/la réparation Blob et leurs reprises |
 | ESLint des modules de configuration modifiés et de leurs tests | Réussi |
 | Cohérence documentaire, marque et `git diff --check` | Réussis |
 | `npm audit --omit=optional --audit-level=low` | Aucune vulnérabilité signalée dans le périmètre audité |

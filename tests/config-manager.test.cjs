@@ -770,7 +770,7 @@ test('Blob errors expose only whitelisted diagnoses, never provider payloads, na
   }
 })
 
-test('an unconfirmed Blob binding stops once with an exact scoped repair command instead of a retry loop', async t => {
+test('an unconfirmed Blob binding schedules an explicitly accepted in-session repair after releasing the main lock', async t => {
   const f = fixture(t), output = []
   t.mock.method(console, 'log', (...args) => output.push(args.join(' ')))
   let inventory = 0
@@ -778,9 +778,11 @@ test('an unconfirmed Blob binding stops once with an exact scoped repair command
     inventory++; const error = new Error('private-payload'); error.configBlobCode = 'store_association'; throw error
   }
   const report = await f.run()
-  assert.match(report.status, /INTERROMPU/)
+  assert.match(report.status, /EN ATTENTE/)
   assert.ok(output.join('\n').includes('Connect Project'))
-  assert.ok(output.join('\n').includes('node config --connect-blob --environment development'))
+  assert.deepEqual(report.nextAction, { type: 'connect-blob', target: 'development' })
+  assert.ok(!fs.existsSync(path.join(f.dir, manager.VAULT, 'manager.lock')))
+  assert.deepEqual(report.errors, [])
   assert.ok(!output.join('\n').includes('private-payload'))
   assert.equal(report.environments.development.blobDiagnostic.code, 'store_association')
   assert.equal(inventory, 1)
@@ -1202,4 +1204,86 @@ test('normal Blob usage metrics do not masquerade as a concurrent connection cha
   f.driver.blobResource = async () => ({ ...structuredClone(f.store), count: ++counter, size: counter * 20, updatedAt: counter })
   assert.equal((await f.setup()).status, 'RATTACHEMENT BLOB VÉRIFIÉ')
   assert.equal(f.calls.filter(c => !c.dryRun).length, 1)
+})
+
+test('declining in-session Blob repair leaves a copyable scoped CMD command and performs no repair', async t => {
+  const f = fixture(t), yes = f.api.yes
+  f.api.yes = async label => label.includes('ouvrir maintenant l’assistant') ? false : yes(label)
+  f.driver.blobStores = async () => { const e = new Error('private'); e.configBlobCode = 'store_association'; throw e }
+  const result = await f.run()
+  assert.match(result.status, /INTERROMPU/)
+  assert.equal(result.nextAction, undefined)
+  assert.match(result.errors[0], /node config --connect-blob --environment development/)
+  assert.equal(f.writes.length, 0)
+})
+
+test('the CLI session hands off after lock release, verifies repair and resumes the real manager with preserved drafts', async t => {
+  const f = repairFixture(t)
+  f.store.projectsMetadata.push(...['preview', 'production'].map(target => ({ id: target, projectId: project.projectId, environments: [target], environmentVariables: ['BLOB_READ_WRITE_TOKEN'] })))
+  const otherConnections = structuredClone(f.store.projectsMetadata)
+  const probe = f.driver.probeBlob
+  f.driver.probeBlob = async (env, ids, options) => {
+    if (!ids.length) { const e = new Error('private'); e.configBlobCode = 'store_association'; throw e }
+    return probe(env, ids, options)
+  }
+  let manages = 0, setups = 0, preparedSecret
+  const result = await require('../scripts/config-session.cjs').configureSession(f.api, {}, {
+    manage: async (_api, options) => {
+      manages++
+      const report = await f.run(options)
+      if (manages === 1) preparedSecret = JSON.parse(fs.readFileSync(path.join(f.dir, manager.VAULT, 'manager-state.json'), 'utf8')).drafts.development.NEXTAUTH_SECRET
+      return report
+    },
+    setupBlob: async (_api, options) => {
+      setups++
+      assert.ok(!fs.existsSync(path.join(f.dir, manager.VAULT, 'manager.lock')))
+      assert.equal(options.target, 'development')
+      return f.setup(options)
+    },
+  })
+  assert.match(result.status, /^CONFIGURATION VALIDÉE/)
+  assert.equal(manages, 2)
+  assert.equal(setups, 1)
+  assert.equal(core.readEnv(path.join(f.dir, '.env.development.local')).NEXTAUTH_SECRET, preparedSecret)
+  assert.equal(f.calls.filter(c => !c.dryRun).length, 1)
+  assert.equal(result.nextAction, undefined)
+  assert.deepEqual(f.store.projectsMetadata.filter(c => ['preview', 'production'].includes(c.id)), otherConnections)
+})
+
+test('the CLI session does not resume full synchronization after canceled or failed repair', async () => {
+  const { configureSession } = require('../scripts/config-session.cjs')
+  const pending = { status: 'EN ATTENTE', nextAction: { type: 'connect-blob', target: 'development' } }
+  let manages = 0
+  const api = { yes: async () => true }
+  const result = await configureSession(api, {}, { manage: async () => { manages++; return pending }, setupBlob: async () => ({ status: 'PLAN NON APPLIQUÉ' }) })
+  assert.match(result.status, /INTERROMPU — RATTACHEMENT NON APPLIQUÉ/)
+  assert.equal(manages, 1)
+  await assert.rejects(() => configureSession(api, {}, { manage: async () => pending, setupBlob: async () => { throw new Error('controlled repair failed') } }), /controlled repair failed/)
+})
+
+test('the CLI session honors deferred resume, limits repairs and never opens a repair in dry-run', async () => {
+  const { configureSession } = require('../scripts/config-session.cjs')
+  const pending = { status: 'EN ATTENTE', nextAction: { type: 'connect-blob', target: 'development' } }
+  const repaired = { status: 'RATTACHEMENT BLOB VÉRIFIÉ' }
+  let manages = 0, setups = 0
+  const run = (api, options) => configureSession(api, options, { manage: async () => { manages++; return pending }, setupBlob: async () => { setups++; return repaired } })
+  assert.match((await run({ yes: async () => false }, {})).status, /REPRISE DIFFÉRÉE/)
+  assert.equal(manages, 1)
+  assert.equal(setups, 1)
+  repaired.status = 'RATTACHEMENT DÉJÀ CONFIRMÉ'
+  assert.match((await run({ yes: async () => true }, {})).status, /RATTACHEMENT NON CONFIRMÉ APRÈS RÉPARATION/)
+  assert.equal(manages, 3, 'only one resumed preparation before the same-target guard')
+  assert.equal(setups, 2)
+  for (const options of [{ dryRun: true }, { offline: true }]) await run({ yes: async () => { throw new Error('simulation cannot ask consent') } }, options)
+  assert.equal(setups, 2)
+})
+
+test('an explicit rotation is not silently repeated by in-session repair continuation', async () => {
+  let manages = 0
+  const result = await require('../scripts/config-session.cjs').configureSession({ yes: async () => { throw new Error('must not ask automatic resume for rotations') } }, { rotateSessions: true }, {
+    manage: async () => { manages++; return { status: 'EN ATTENTE', nextAction: { type: 'connect-blob', target: 'development' } } },
+    setupBlob: async () => ({ status: 'RATTACHEMENT BLOB VÉRIFIÉ' }),
+  })
+  assert.match(result.status, /ROTATION EXPLICITE À REPRENDRE/)
+  assert.equal(manages, 1)
 })

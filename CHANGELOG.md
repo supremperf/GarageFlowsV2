@@ -3,6 +3,18 @@
 
 ## [Non publié] — 2026-10-16 — chaîne build → installeur Windows réparée à la cause, page unique, vue globale des rendez-vous
 
+### `node config` — enchaîner la réparation sans commande supplémentaire
+
+- L’assistant Blob peut désormais être ouvert directement depuis `node config`,
+  après consentement et libération du verrou principal. Reprise avec inventaires
+  frais après réparation vérifiée, sans appliquer le plan précédant le changement.
+- Pas de reprise après annulation/échec, pas de réparation automatique répétée
+  pour la même cible, pas de mutation en simulation ni répétition d’une rotation.
+- Les longues questions CMD affichent leur explication séparément et utilisent
+  une courte invite ; masquage et valeurs par défaut privées conservés.
+- Le guide précise `node config` avec le g final : `node confi` recherche un
+  fichier inexistant, ce n’est pas une dépendance à installer.
+
 ### `node config` — réparation vérifiée du rattachement Blob
 
 - Nouvelle commande `node config --connect-blob --environment development`
