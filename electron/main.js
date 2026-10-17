@@ -2900,6 +2900,16 @@ function startNextServer() {
     // spawn(process.execPath, [serverJs]) would start another Electron instance
     // instead, so we must use utilityProcess here (available since Electron 22).
     let startupState = 'pending'
+    let startupOutput = ''
+    const appendStartupOutput = (text) => {
+      // Capture only a short, redacted tail: enough to diagnose a server crash
+      // without putting credentials or an unbounded child log in a native dialog.
+      const safe = cp.redactSensitive(text)
+        .replace(/\u001b\[[0-9;]*m/g, '')
+        .replace(/\bhttps?:\/\/[^\s"'<>]+/gi, '[URL_REDACTED]')
+        .replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, ' ')
+      startupOutput = `${startupOutput}${startupOutput ? '\n' : ''}${safe}`.slice(-2_400)
+    }
     nextServer = utilityProcess.fork(serverJs, [], {
       cwd,
       env,
@@ -2908,23 +2918,36 @@ function startNextServer() {
     })
 
     if (nextServer.stdout) {
-      nextServer.stdout.on('data', d => log('[next]', d.toString().trimEnd()))
+      nextServer.stdout.on('data', d => {
+        const msg = d.toString().trimEnd()
+        log('[next]', msg)
+        if (startupState === 'pending' && msg) appendStartupOutput(msg)
+      })
     }
     if (nextServer.stderr) {
       nextServer.stderr.on('data', d => {
         const msg = d.toString().trimEnd()
         log('[next:err]', msg)
+        if (startupState === 'pending' && msg) appendStartupOutput(msg)
         if (msg.includes('DATABASE_URL') || msg.includes('PrismaClientInitializationError')) {
           log('FATAL: Prisma cannot connect — check DATABASE_URL and run: npx prisma db push')
         }
       })
     }
+    nextServer.on('error', (type, location) => {
+      log('[next:fatal]', type, location)
+      if (startupState === 'pending') appendStartupOutput(`Fatal Node.js utility-process error: ${type} ${location}`)
+    })
     nextServer.on('exit', code => {
       log(`Next.js exited — code=${code}`)
       nextServer = null
       if (startupState === 'pending') {
         startupState = 'failed'
-        reject(new Error(`Le serveur Next.js s'est arrêté pendant son démarrage (code ${code}).`))
+        const output = startupOutput.trim() || 'Le serveur n’a fourni aucun message sur stdout/stderr.'
+        reject(new Error(
+          `Le serveur Next.js s'est arrêté pendant son démarrage (code ${code}).\n\n` +
+          `Diagnostic serveur (extrait expurgé) :\n${output}\n\nJournal complet : ${LOG_PATH}`,
+        ))
         return
       }
       // Un échec de readiness est déjà traité par l'appelant ; ne pas ouvrir

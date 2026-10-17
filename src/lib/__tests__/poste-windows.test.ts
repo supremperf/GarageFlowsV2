@@ -80,10 +80,10 @@ describe('la mort du serveur interne ne passe plus inaperçue', () => {
 })
 
 describe('le démarrage attend le vrai serveur avant de migrer', () => {
-  const demarrage = extrait(MAIN, 'function startNextServer()', 150)
+  const demarrage = extrait(MAIN, 'function startNextServer()', 210)
 
   it('une sonde en échec rejette le démarrage au lieu de continuer vers la migration', () => {
-    const readiness = demarrage.slice(demarrage.lastIndexOf('waitForServer(35_000)')).split('\n').slice(0, 18).join('\n')
+    const readiness = demarrage.slice(demarrage.lastIndexOf('waitForServer(35_000)')).split('\n').slice(0, 45).join('\n')
     expect(readiness).toMatch(/\.catch\(err\s*=>/)
     expect(readiness).toMatch(/reject\(err\)/)
     expect(readiness).not.toMatch(/resolve\(\)\s*\/\/ fail-open/)
@@ -92,6 +92,13 @@ describe('le démarrage attend le vrai serveur avant de migrer', () => {
   it('en mode développement, attend aussi Next.js au lieu de supposer qu’il tourne', () => {
     expect(demarrage).toMatch(/Dev: waiting for the separately started Next\.js dev server/)
     expect(demarrage).toMatch(/waitForServer\(35_000\)[\s\S]*?\.catch\(reject\)/)
+  })
+
+  it('affiche un extrait de sortie du serveur expurgé et borné quand il plante', () => {
+    expect(demarrage).toMatch(/cp\.redactSensitive\(text\)/)
+    expect(demarrage).toMatch(/\.slice\(-2_400\)/)
+    expect(demarrage).toMatch(/Diagnostic serveur \(extrait expurgé\)/)
+    expect(demarrage).toMatch(/Journal complet : \$\{LOG_PATH\}/)
   })
 })
 
