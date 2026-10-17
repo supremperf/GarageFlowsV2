@@ -1,12 +1,8 @@
 /**
- * /api/admin/licenses/revoke-by-key — le rate limiting ne doit JAMAIS bloquer
- * l'outillage de confiance (keygen, reset) sur une indisponibilité d'Upstash.
- *
- * Régression observée en production : le script de reset rote Upstash puis teste
- * cette route ; un repli fail-closed (503) cassait alors son propre test de clé
- * (et une réponse sans `ok` faisait planter le script sous Set-StrictMode).
- * Ici on prouve le contrat côté route : fail_closed → laissé passer (la clé API
- * reste le contrôle fort) ; vraie limite atteinte (429) → toujours bloquée.
+ * /api/admin/licenses/revoke-by-key — la route est fermée sur Vercel par défaut,
+ * et rate-limit fail-closed quand elle est explicitement autorisée.
+ * Les succès sans ligne existante restent des no-op `not_registered`, pas des
+ * preuves de révocation ni d'altération de licence.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -48,16 +44,41 @@ function req(body: unknown, key: string | null = process.env.GARAGEFLOW_API_KEY 
 beforeEach(() => {
   rlState.result = { ok: true, remaining: 99 }
   dbState.record = null
+  Reflect.set(process.env, 'VERCEL', '0')
+  delete process.env.GF_REVOKE_BY_KEY_ENABLED
 })
 
 describe('revoke-by-key — rate limiting & outillage de confiance', () => {
-  it('fail_closed (Upstash indispo) + clé valide → NON bloqué, réponse ok/not_registered', async () => {
+  it('Vercel : désactivée par défaut sans flag explicite', async () => {
+    process.env.VERCEL = '1'
+    const res = await POST(req({ licenseId: 'x', status: 'revoked' }) as never)
+    expect(res.status).toBe(404)
+  })
+
+  it('production self-hosted : désactivée par défaut aussi', async () => {
+    const previous = process.env.NODE_ENV
+    Reflect.set(process.env, 'NODE_ENV', 'production')
+    try {
+      const res = await POST(req({ licenseId: 'x', status: 'revoked' }) as never)
+      expect(res.status).toBe(404)
+    } finally {
+      if (previous === undefined) Reflect.deleteProperty(process.env, 'NODE_ENV')
+      else Reflect.set(process.env, 'NODE_ENV', previous)
+    }
+  })
+
+  it('Vercel : réouverture seulement avec GF_REVOKE_BY_KEY_ENABLED=true', async () => {
+    process.env.VERCEL = '1'
+    process.env.GF_REVOKE_BY_KEY_ENABLED = 'true'
+    const res = await POST(req({ licenseId: 'config-test-flag', status: 'active' }) as never)
+    expect(res.status).toBe(200)
+  })
+
+  it('fail_closed (Upstash indispo) → 503 avant comparaison de clé ou mutation', async () => {
     rlState.result = { ok: false, degraded: 'fail_closed', retryAfterSec: 60 }
     const res = await POST(req({ licenseId: 'config-test-x', status: 'active' }) as never)
-    expect(res.status).toBe(200)
-    const body = await res.json()
-    expect(body.ok).toBe(true)
-    expect(body.note).toBe('not_registered')
+    expect(res.status).toBe(503)
+    expect(dbState.record).toBeNull()
   })
 
   it('vraie limite atteinte (429) → bloqué', async () => {

@@ -41,10 +41,12 @@ import {
   InvalidHwidError,
 } from '@/lib/license/devices'
 import { logger } from '@/lib/logger'
+import { classifyServerFailure, ServerMisconfiguredError } from '@/lib/errors/apiErrors'
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365 * 5   // 5 years
 
 const IS_ELECTRON = () => process.env.ELECTRON === '1'
+const shortLicenseId = (id: string | null | undefined) => id ? `${id.slice(0, 8)}…` : '—'
 
 /** Types de licence « garage » valides comme parent d'une clé mécanicien. */
 const GARAGE_LICENSE_TYPES = new Set(['trial', 'premium', 'enterprise', 'admin'])
@@ -54,12 +56,15 @@ function getJwtSecret(): Uint8Array {
   return new TextEncoder().encode(getAuthSecret())
 }
 
-/** Erreur interne générique — aucun détail technique côté client. */
-function internalError(): NextResponse {
-  return NextResponse.json(
-    { ok: false, code: 'SERVICE_UNAVAILABLE', reason: 'Service temporairement indisponible. Réessayez plus tard.' },
-    { status: 503 },
-  )
+/** Échec d'infrastructure/configuration — aucun détail technique côté client. */
+function internalError(error: unknown): NextResponse {
+  const failure = classifyServerFailure(error)
+  const reason = failure.code === 'SERVER_MISCONFIGURED'
+    ? 'Configuration serveur indisponible.'
+    : failure.code === 'DB_UNAVAILABLE'
+      ? 'Service temporairement indisponible. Réessayez plus tard.'
+      : 'Erreur interne.'
+  return NextResponse.json({ ok: false, code: failure.code, reason }, { status: failure.status })
 }
 
 const COOKIE_BASE = (electron: boolean) =>
@@ -97,7 +102,7 @@ async function activateMechanicKey(input: {
    * n'exister nulle part.
    */
   const unassigned = (cause: 'licence-inconnue' | 'type-non-mecanicien' | 'sans-mecanicien-ni-garage' | 'mecanicien-absent-du-garage') => {
-    logger.warn('[license/activate:mechanic] refus MECHANIC_KEY_UNASSIGNED', { lid, cause })
+    logger.warn('[license/activate:mechanic] refus MECHANIC_KEY_UNASSIGNED', { lid: shortLicenseId(lid), cause })
     return NextResponse.json(
       { ok: false, code: 'MECHANIC_KEY_UNASSIGNED', reason: 'Cette clé n\'est pas encore attribuée à un mécanicien. Contactez le responsable du garage.' },
       { status: 403 },
@@ -114,11 +119,11 @@ async function activateMechanicKey(input: {
   try {
     record = await prisma.licenseKey.findUnique({ where: { licenseId: lid } })
   } catch (err) {
-    if (!IS_ELECTRON()) {
-      logger.error('[license/activate:mechanic] erreur DB (fail-closed serveur)', err)
-      return internalError()
-    }
-    record = null
+    const failure = classifyServerFailure(err)
+    logger.error('[license/activate:mechanic] vérification impossible', { code: failure.code, lid: shortLicenseId(lid) })
+    // Une panne DB ne signifie pas « clé non attribuée » et ne doit jamais
+    // déclencher un faux refus métier. L'activation reste fail-closed, Electron inclus.
+    return internalError(err)
   }
   if (!record) return unassigned('licence-inconnue')
   if (record.licenseType !== 'mechanic') return unassigned('type-non-mecanicien')
@@ -134,7 +139,7 @@ async function activateMechanicKey(input: {
   })
   if (mmac.tampered || mmac.missing) {
     return NextResponse.json(
-      { ok: false, code: 'LICENSE_INVALID', reason: 'Erreur d\'intégrité de la clé. Contactez le support.' },
+      { ok: false, code: 'LICENSE_TAMPERED', reason: 'Intégrité de la clé compromise. Contactez le support.' },
       { status: 403 },
     )
   }
@@ -223,10 +228,9 @@ async function activateMechanicKey(input: {
       if (err instanceof InvalidHwidError) {
         return NextResponse.json({ ok: false, code: 'VALIDATION_ERROR', reason: 'Identifiant matériel invalide.' }, { status: 400 })
       }
-      if (!IS_ELECTRON()) {
-        logger.error('[license/activate:mechanic] enregistrement appareil impossible', err)
-        return internalError()
-      }
+      const failure = classifyServerFailure(err)
+      logger.error('[license/activate:mechanic] enregistrement appareil impossible', { code: failure.code, lid: shortLicenseId(lid) })
+      return internalError(err)
     }
   }
   if (deviceRequired && !deviceId) {
@@ -284,6 +288,16 @@ export async function POST(req: NextRequest) {
   const rl = await enforceRateLimit('license_activate', clientIpFrom(req))
   if (!rl.ok) return rateLimitResponse(rl)
 
+  // Vérifier le secret de session AVANT toute lecture/écriture de licence ou de siège.
+  // GF_PRIVATE_KEY ne participe pas à l'activation : les tokens sont vérifiés avec
+  // la clé publique embarquée. NEXTAUTH_SECRET est requis pour signer la session.
+  try {
+    getJwtSecret()
+  } catch (error) {
+    logger.error('[license/activate] configuration de session invalide', { code: 'SERVER_MISCONFIGURED' })
+    return internalError(error)
+  }
+
   let licenseToken:    string
   let clientHwid:      string | undefined
   let clientInstallId: string | undefined
@@ -315,8 +329,12 @@ export async function POST(req: NextRequest) {
 
   // ── Step 1: Cryptographic verification ─────────────────────────────────────
   const result = verifyLicenseToken(licenseToken)
+  if (result.failure === 'misconfigured') {
+    logger.error('[license/activate] vérificateur cryptographique mal configuré', { code: 'SERVER_MISCONFIGURED' })
+    return internalError(new ServerMisconfiguredError('LICENSE_PUBLIC_KEY'))
+  }
   if (!result.valid || !result.payload) {
-    return NextResponse.json({ ok: false, code: 'LICENSE_INVALID', reason: result.reason })
+    return NextResponse.json({ ok: false, code: 'LICENSE_INVALID', reason: result.reason }, { status: 403 })
   }
 
   const { payload, isAdmin } = result
@@ -326,13 +344,19 @@ export async function POST(req: NextRequest) {
   // attribuées). Elle DOIT être préalablement enregistrée ET attribuée par le
   // responsable du garage. Toutes les erreurs sont neutres (aucune énumération).
   if (result.isMechanic) {
-    return await activateMechanicKey({
-      payload,
-      licenseToken,
-      clientHwid,
-      clientInstallId,
-      clientMeta,
-    })
+    try {
+      return await activateMechanicKey({
+        payload,
+        licenseToken,
+        clientHwid,
+        clientInstallId,
+        clientMeta,
+      })
+    } catch (error) {
+      const failure = classifyServerFailure(error)
+      logger.error('[license/activate:mechanic] activation impossible', { code: failure.code, lid: shortLicenseId(payload.lid) })
+      return internalError(error)
+    }
   }
 
   // ── Step 2: DB check (revocation, expiry, HWID binding) ─────────────────────
@@ -349,12 +373,12 @@ export async function POST(req: NextRequest) {
       const mac = verifyRecordMac(record)
       if (!recordIntegrityUsable(mac)) {
         logger.error('[license/activate] DB integrity check FAILED', {
-          lid: record.licenseId, cause: mac.missing ? 'mac-absent' : 'mac-invalide',
+          lid: shortLicenseId(record.licenseId), cause: mac.missing ? 'mac-absent' : 'mac-invalide',
         })
         return NextResponse.json({
-          ok: false, code: 'LICENSE_INVALID',
-          reason: 'Erreur d\'intégrité de la base de données. Contactez le support.',
-        })
+          ok: false, code: 'LICENSE_TAMPERED',
+          reason: 'Intégrité de la base de données compromise. Contactez le support.',
+        }, { status: 403 })
       }
 
       // Revocation / suspension / expiry — la base (gérée par l'admin) prime.
@@ -362,19 +386,19 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
           ok: false, code: 'LICENSE_REVOKED',
           reason: 'Cette licence a été révoquée. Contactez votre revendeur.',
-        })
+        }, { status: 403 })
       }
       if (record.status === 'suspended') {
         return NextResponse.json({
           ok: false, code: 'LICENSE_SUSPENDED',
           reason: 'Cette licence est temporairement suspendue.',
-        })
+        }, { status: 403 })
       }
       if (record.expiryAt.getTime() < Date.now()) {
         return NextResponse.json({
           ok: false, code: 'LICENSE_EXPIRED',
           reason: 'Cette licence a expiré. Contactez votre revendeur pour la renouveler.',
-        })
+        }, { status: 403 })
       }
       seats = record.seats ?? payload.seats ?? 1
 
@@ -461,14 +485,11 @@ export async function POST(req: NextRequest) {
       })
     }
   } catch (err) {
-    if (!IS_ELECTRON()) {
-      // Serveur/PWA : FAIL-CLOSED — jamais de session sans vérifications réussies.
-      logger.error('[license/activate] erreur DB (fail-closed serveur)', err)
-      return internalError()
-    }
-    // Electron : fail-open documenté (démarrage hors ligne, base locale absente
-    // à la première ouverture). Le control plane distant reste l'autorité.
-    logger.warn('[license/activate] erreur DB locale (fail-open Electron)')
+    const failure = classifyServerFailure(err)
+    logger.error('[license/activate] vérification/écriture impossible', { code: failure.code, lid: shortLicenseId(payload.lid) })
+    // En particulier, ne pas sauter le contrôle d'état/révocation quand une
+    // lecture échoue sous Electron puis qu'une écriture ultérieure réussit.
+    return internalError(err)
   }
 
   // ── Step 3: Enregistrement de l'appareil (consomme un siège) ────────────────
@@ -529,13 +550,11 @@ export async function POST(req: NextRequest) {
           { status: 400 },
         )
       }
-      if (!IS_ELECTRON()) {
-        logger.error('[license/activate] enregistrement appareil impossible (fail-closed serveur)', err)
-        return internalError()
-      }
-      // Electron : la base locale vient d'être refusée plus haut (fail-open) —
-      // l'activation distante (control plane) fournira le jeton d'appareil.
-      logger.warn('[license/activate] enregistrement appareil local impossible (fail-open Electron)')
+      const failure = classifyServerFailure(err)
+      logger.error('[license/activate] enregistrement appareil impossible', { code: failure.code, lid: shortLicenseId(payload.lid) })
+      // Un appareil ne peut pas être déclaré activé si sa réservation/son siège
+      // n'a pas été persisté — Electron inclus.
+      return internalError(err)
     }
   }
 

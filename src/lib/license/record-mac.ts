@@ -14,12 +14,13 @@
  */
 
 import crypto from 'crypto'
+import { ServerMisconfiguredError } from '@/lib/errors/apiErrors'
 
 function getSecret(): string {
   const s = process.env.GF_DB_MAC_SECRET
   if (!s) {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('[record-mac] GF_DB_MAC_SECRET must be set in production')
+      throw new ServerMisconfiguredError('GF_DB_MAC_SECRET')
     }
     // Dev fallback — never used in packaged Electron (which sets the env var)
     return 'gf-dev-record-mac-insecure-fallback'

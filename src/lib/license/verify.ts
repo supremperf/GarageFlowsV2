@@ -48,6 +48,8 @@ export interface VerifyResult {
   isAdmin?:   boolean
   isMechanic?: boolean
   reason?:    string
+  /** Runtime verifier configuration failure, distinct from an invalid token. */
+  failure?:   'misconfigured'
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
@@ -124,7 +126,13 @@ export function verifyLicenseToken(token: string): VerifyResult {
   // ── Detect placeholder key ───────────────────────────────────────────────
   const pubKey = _pubKey()
   if (pubKey.includes('REPLACE_WITH_YOUR_PUBLIC_KEY')) {
-    return { valid: false, reason: '[CONFIG] Clé publique non configurée — lancez: python scripts/keygen.py --init' }
+    return { valid: false, failure: 'misconfigured', reason: 'Clé publique serveur non configurée.' }
+  }
+  let publicKey: ReturnType<typeof crypto.createPublicKey>
+  try {
+    publicKey = crypto.createPublicKey(pubKey)
+  } catch {
+    return { valid: false, failure: 'misconfigured', reason: 'Clé publique serveur invalide.' }
   }
 
   // ── Cryptographic signature verification (ECDSA-SHA256, DER) ────────────
@@ -137,7 +145,7 @@ export function verifyLicenseToken(token: string): VerifyResult {
     const verifier = crypto.createVerify('SHA256')
     verifier.update(signingInput)
     // Node.js reads DER SEQUENCE by default — matches Python cryptography output
-    sigValid = verifier.verify({ key: pubKey, format: 'pem' }, sig)
+    sigValid = verifier.verify(publicKey, sig)
   } catch {
     return { valid: false, reason: 'Erreur de vérification cryptographique' }
   }

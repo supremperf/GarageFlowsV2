@@ -264,6 +264,20 @@
       "autoManage": true
     },
     {
+      "name": "GF_REVOKE_BY_KEY_ENABLED",
+      "classification": "dangerous",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "enum:true",
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "high",
+      "consumers": [
+        "src/app/api/admin/licenses/revoke-by-key/route.ts"
+      ],
+      "notes": "Désactivée par défaut en production. Ne mettre à true qu’après audit des événements, restriction d’accès et approbation du responsable incident."
+    },
+    {
       "name": "GARAGEFLOW_LLM",
       "classification": "configuration",
       "scope": "server",

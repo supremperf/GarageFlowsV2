@@ -32,19 +32,27 @@ import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/securit
 import { validateDeviceToken, type DeviceTokenFailure } from '@/lib/license/devices'
 import { isVersionSupported, seatlessCheckTolerated, parseClientPlatform, type ClientPlatform } from '@/lib/license/client-policy'
 import { logger } from '@/lib/logger'
+import { classifyServerFailure, isServerMisconfiguredError } from '@/lib/errors/apiErrors'
 
 const IS_ELECTRON = () => process.env.ELECTRON === '1'
 
 const FAIL_OPEN_UNKNOWN = { allowed: true, status: 'unknown' as const }
 
-function infraFailure(): NextResponse {
+function infraFailure(error: unknown): NextResponse {
+  const failure = classifyServerFailure(error)
+  // Une configuration de signature invalide n'est jamais un état « unknown » :
+  // elle doit rester explicitement fermée, y compris sous Electron.
+  if (isServerMisconfiguredError(error)) {
+    return NextResponse.json({ error: 'Configuration serveur indisponible.', code: failure.code }, { status: failure.status })
+  }
   if (IS_ELECTRON()) {
-    // Fail-open Electron : base locale indisponible ≠ licence invalide.
+    // Pour la vérification périodique Electron, une panne DB n'est pas une
+    // révocation et conserve le contrat local hors-ligne documenté.
     return NextResponse.json(FAIL_OPEN_UNKNOWN)
   }
   return NextResponse.json(
-    { error: 'Service temporairement indisponible.', code: 'SERVICE_UNAVAILABLE' },
-    { status: 503 },
+    { error: 'Service temporairement indisponible.', code: failure.code },
+    { status: failure.status },
   )
 }
 
@@ -141,8 +149,9 @@ export async function POST(req: NextRequest) {
     try {
       validationAppareil = await validateDeviceToken(deviceToken, { hwid, installId })
     } catch (err) {
-      logger.error('[license/check] erreur infra (validation jeton)', err)
-      return infraFailure()
+      const failure = classifyServerFailure(err)
+      logger.error('[license/check] échec validation', { code: failure.code })
+      return infraFailure(err)
     }
   }
   if (validationAppareil) {
@@ -198,7 +207,7 @@ export async function POST(req: NextRequest) {
     const mac = verifyRecordMac(record)
     if (!recordIntegrityUsable(mac)) {
       logger.error('[license/check] intégrité DB compromise', {
-        lid: record.licenseId, cause: mac.missing ? 'mac-absent' : 'mac-invalide',
+        lid: `${record.licenseId.slice(0, 8)}…`, cause: mac.missing ? 'mac-absent' : 'mac-invalide',
       })
       return NextResponse.json({
         allowed: false,
@@ -239,7 +248,8 @@ export async function POST(req: NextRequest) {
     // les anciens ignorent ce champ et continuent sur le statut seul.
     return NextResponse.json({ allowed: true, status: 'active', deviceRequired: true })
   } catch (err) {
-    logger.error('[license/check] erreur infra', err)
-    return infraFailure()
+    const failure = classifyServerFailure(err)
+    logger.error('[license/check] échec de vérification', { code: failure.code })
+    return infraFailure(err)
   }
 }

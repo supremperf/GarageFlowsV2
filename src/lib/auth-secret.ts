@@ -15,6 +15,8 @@
  * Compatible Edge (middleware) ET Node : n'importe AUCUN module Node.
  */
 
+import { ServerMisconfiguredError } from '@/lib/errors/apiErrors'
+
 /** Valeurs connues comme faibles / d'exemple / anciens replis à bannir. */
 const KNOWN_WEAK = new Set<string>([
   'gf-electron-local-secret-2026-xK9mP3qR',
@@ -37,10 +39,7 @@ export function isWeakSecret(v: string | undefined | null): boolean {
 }
 
 function refuse(name: string): never {
-  throw new Error(
-    `${name} absent, trop court ou générique. Configurez un secret aléatoire fort ` +
-      `(ex. « openssl rand -base64 32 »). Aucun repli codé en dur n'est autorisé.`,
-  )
+  throw new ServerMisconfiguredError(name)
 }
 
 /** Secret de session/JWT. Lève si absent/faible (jamais de repli en dur). */

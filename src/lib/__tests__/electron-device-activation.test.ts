@@ -87,6 +87,13 @@ describe('electron/main — activation d\'appareil, pas de boucle sans fin', () 
     expect(activateBody).not.toMatch(/return true/)
   })
 
+  it('une erreur DB/configuration distante ne devient pas un refus « appareil non enregistré »', () => {
+    expect(activateBody).toMatch(/DB_UNAVAILABLE/)
+    expect(activateBody).toMatch(/SERVER_MISCONFIGURED/)
+    expect(activateBody).toMatch(/authority unavailable/)
+    expect(activateBody).not.toMatch(/lastActivationRefusal = \{ reason: String\(reason\), authority \}/)
+  })
+
   it('un refus explicite de l\'autorité distante n\'est PAS contourné par le repli local', () => {
     // Dans la branche « refus », le cas 'remote' doit sortir immédiatement.
     const refusal = activateBody.slice(activateBody.indexOf('res.ok === false'))

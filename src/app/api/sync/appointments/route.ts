@@ -33,6 +33,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { authenticateGarageLicense, shortId } from '@/lib/sync/garage-auth'
+import { isDatabaseUnavailableError } from '@/lib/errors/apiErrors'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { nextAppointmentStatus, type AppointmentAction, type AppointmentStatus } from '@/lib/portal/appointments'
 import { logger } from '@/lib/logger'
@@ -40,7 +41,7 @@ import { logger } from '@/lib/logger'
 const FAILURE_STATUS: Record<string, number> = {
   MISSING_LICENSE: 400, LICENSE_INVALID: 403, NOT_A_GARAGE_LICENSE: 403,
   LICENSE_UNKNOWN: 403, LICENSE_REVOKED: 403, LICENSE_SUSPENDED: 403,
-  LICENSE_EXPIRED: 403, GARAGE_MISMATCH: 403,
+  LICENSE_EXPIRED: 403, SERVER_MISCONFIGURED: 500, DB_UNAVAILABLE: 503, GARAGE_MISMATCH: 403,
   GARAGE_ALREADY_CLAIMED: 409, LICENSE_NOT_BOUND: 409,
 }
 
@@ -117,7 +118,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: false, code: 'UNKNOWN_MODE' }, { status: 400 })
   } catch (err) {
-    logger.error('[sync/appointments] erreur infra', err, { garage: shortId(garageId) })
-    return NextResponse.json({ ok: false, code: 'INFRA' }, { status: 503 })
+    const databaseUnavailable = isDatabaseUnavailableError(err)
+    const code = databaseUnavailable ? 'DB_UNAVAILABLE' : 'INTERNAL_ERROR'
+    logger.error('[sync/appointments] échec de synchronisation', { code, garage: shortId(garageId) })
+    return NextResponse.json({ ok: false, code }, { status: databaseUnavailable ? 503 : 500 })
   }
 }

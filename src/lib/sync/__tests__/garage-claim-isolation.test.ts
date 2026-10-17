@@ -42,12 +42,15 @@ interface Row {
   revokedAt: Date | null
 }
 
-const store = vi.hoisted(() => ({ rows: new Map<string, Row>(), tokens: new Map<string, unknown>() }))
+const store = vi.hoisted(() => ({ rows: new Map<string, Row>(), tokens: new Map<string, unknown>(), findError: null as unknown }))
 
 vi.mock('@/lib/db', () => ({
   prisma: {
     licenseKey: {
-      findUnique: async (a: { where: { licenseId: string } }) => store.rows.get(a.where.licenseId) ?? null,
+      findUnique: async (a: { where: { licenseId: string } }) => {
+        if (store.findError) throw store.findError
+        return store.rows.get(a.where.licenseId) ?? null
+      },
       findFirst: async (a: {
         where: { garageId: string; licenseType: { not: string }; NOT: { licenseId: string } }
       }) => {
@@ -105,6 +108,7 @@ beforeAll(async () => {
 beforeEach(() => {
   store.rows.clear()
   store.tokens.clear()
+  store.findError = null
   jeton(JETON_ATTAQUANT, LIC_ATTAQUANT)
   jeton(JETON_VICTIME, LIC_VICTIME)
   // La victime exploite son garage : sa licence y est rattachée.
@@ -143,6 +147,20 @@ describe('GF31-AUD-003 — revendication du garage d’autrui', () => {
     const res = await authenticateGarageLicense(JETON_VICTIME, VICTIME, { requireBound: true })
     expect(res.ok).toBe(true)
     expect(res.ok === true && res.garageId).toBe(VICTIME)
+  })
+
+  it('renvoie SERVER_MISCONFIGURED si la clé publique est invalide, jamais LICENSE_INVALID', async () => {
+    store.tokens.set(JETON_VICTIME, { valid: false, failure: 'misconfigured' })
+    const res = await authenticateGarageLicense(JETON_VICTIME, VICTIME)
+    expect(res.ok).toBe(false)
+    expect(res.ok === false && res.code).toBe('SERVER_MISCONFIGURED')
+  })
+
+  it('renvoie DB_UNAVAILABLE pour une erreur Prisma Closed, jamais LICENSE_INVALID', async () => {
+    store.findError = { name: 'PrismaClientUnknownRequestError', cause: { kind: 'Closed' } }
+    const res = await authenticateGarageLicense(JETON_VICTIME, VICTIME)
+    expect(res.ok).toBe(false)
+    expect(res.ok === false && res.code).toBe('DB_UNAVAILABLE')
   })
 
   it('refuse toujours une licence rattachée qui revendique un AUTRE garage', async () => {

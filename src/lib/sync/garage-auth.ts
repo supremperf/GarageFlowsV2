@@ -20,6 +20,7 @@
  */
 import { prisma } from '@/lib/db'
 import { verifyLicenseToken, type LicensePayload } from '@/lib/license/verify'
+import { isDatabaseUnavailableError } from '@/lib/errors/apiErrors'
 
 /** Types de licence habilités à piloter un garage (identique à /license/activate). */
 export const GARAGE_LICENSE_TYPES = new Set(['trial', 'premium', 'enterprise', 'admin'])
@@ -37,6 +38,8 @@ export type GarageAuthFailure =
   | 'GARAGE_ALREADY_CLAIMED'
   /** La licence n'est pas encore rattachée : opération réservée aux licences liées. */
   | 'LICENSE_NOT_BOUND'
+  | 'DB_UNAVAILABLE'
+  | 'SERVER_MISCONFIGURED'
 
 export interface GarageAuthResult {
   ok: true
@@ -117,13 +120,20 @@ export async function authenticateGarageLicense(
   if (!token) return { ok: false, code: 'MISSING_LICENSE' }
 
   const verified = verifyLicenseToken(token)
+  if (verified.failure === 'misconfigured') return { ok: false, code: 'SERVER_MISCONFIGURED' }
   if (!verified.valid || !verified.payload) return { ok: false, code: 'LICENSE_INVALID' }
   const payload = verified.payload
   if (verified.isMechanic || !GARAGE_LICENSE_TYPES.has(payload.typ)) {
     return { ok: false, code: 'NOT_A_GARAGE_LICENSE' }
   }
 
-  const record = await prisma.licenseKey.findUnique({ where: { licenseId: payload.lid } })
+  let record
+  try {
+    record = await prisma.licenseKey.findUnique({ where: { licenseId: payload.lid } })
+  } catch (error) {
+    if (isDatabaseUnavailableError(error)) return { ok: false, code: 'DB_UNAVAILABLE' }
+    throw error
+  }
   if (!record) return { ok: false, code: 'LICENSE_UNKNOWN' }
   if (record.licenseType === 'mechanic') return { ok: false, code: 'NOT_A_GARAGE_LICENSE' }
   if (record.status === 'revoked' || record.revokedAt) return { ok: false, code: 'LICENSE_REVOKED' }
@@ -139,8 +149,15 @@ export async function authenticateGarageLicense(
     // Licence encore NON rattachée.
     if (opts?.requireBound) return { ok: false, code: 'LICENSE_NOT_BOUND' }
     // La revendication ne vaut que si personne ne détient déjà ce garage.
-    if (claimed && (await isGarageClaimedByAnotherLicense(prisma, claimed, record.licenseId))) {
-      return { ok: false, code: 'GARAGE_ALREADY_CLAIMED' }
+    if (claimed) {
+      try {
+        if (await isGarageClaimedByAnotherLicense(prisma, claimed, record.licenseId)) {
+          return { ok: false, code: 'GARAGE_ALREADY_CLAIMED' }
+        }
+      } catch (error) {
+        if (isDatabaseUnavailableError(error)) return { ok: false, code: 'DB_UNAVAILABLE' }
+        throw error
+      }
     }
   }
 

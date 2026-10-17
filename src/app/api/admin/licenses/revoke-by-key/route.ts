@@ -28,19 +28,27 @@ function safeEqual(a: string, b: string): boolean {
   return crypto.timingSafeEqual(ba, bb)
 }
 
+function licenseRef(licenseId: string): string {
+  return crypto.createHash('sha256').update(licenseId).digest('hex').slice(0, 12)
+}
+
 export async function POST(req: NextRequest) {
-  // Défense en profondeur (§5) : limite le débit AVANT toute comparaison — réduit
-  // la surface de brute-force sur la clé API réseau-accessible.
-  //
-  // MAIS cette route est appelée par l'outillage de CONFIANCE (keygen, script de
-  // reset) authentifié par une clé API forte à comparaison à temps constant. Un
-  // repli fail-closed (503) sur indisponibilité d'Upstash bloquerait le reset —
-  // qui rote justement Upstash — au moment où il teste cette route (chicken-and-egg
-  // observé en production). On rejette donc UNIQUEMENT une vraie limite atteinte
-  // (429) ; l'indisponibilité du backend (fail_closed) est laissée passer, la clé
-  // API restant le contrôle d'accès fort.
-  const rl = await enforceRateLimit('admin', clientIpFrom(req))
-  if (!rl.ok && rl.degraded !== 'fail_closed') return rateLimitResponse(rl)
+  // Mitigation SEV1 : route d'administration arrêtée par défaut en production.
+  // Les appels 200 observés ne suffisent pas à prouver une compromission, mais
+  // ce bearer secret seul n'offre ni identité nominative ni allowlist réseau.
+  // Réouverture uniquement après vérification/audit, par flag explicite et
+  // déploiement contrôlé. Hors Vercel (tests/outillage local), contrat inchangé.
+  if ((process.env.VERCEL === '1' || process.env.NODE_ENV === 'production') && process.env.GF_REVOKE_BY_KEY_ENABLED !== 'true') {
+    return new Response(null, { status: 404 })
+  }
+
+  // Défense en profondeur : limite le débit AVANT toute comparaison. En cas
+  // d'indisponibilité du backend de rate-limit, fail-closed (503), pas de bypass.
+  const clientIp = clientIpFrom(req)
+  const rl = await enforceRateLimit('admin', clientIp)
+  if (!rl.ok) return rateLimitResponse(rl)
+  const requestId = req.headers.get('x-vercel-id') ?? req.headers.get('x-request-id') ?? null
+  const userAgent = (req.headers.get('user-agent') ?? '').slice(0, 256) || null
 
   // Auth : compare x-gf-key à GARAGEFLOW_API_KEY (temps constant).
   const apiKey = req.headers.get('x-gf-key')?.trim() ?? ''
@@ -105,6 +113,9 @@ export async function POST(req: NextRequest) {
     // Licence non encore enregistrée côté serveur
     if (!record) {
       if (status === 'active') {
+        console.info('[admin/licenses/revoke-by-key] no-op non enregistré', {
+          requestId, clientIp, userAgent, licenseRef: licenseRef(licenseId), status, outcome: 'not_registered',
+        })
         return NextResponse.json({
           ok: true,
           licenseId,
@@ -139,6 +150,21 @@ export async function POST(req: NextRequest) {
               ? 'Révoquée avant activation'
               : 'Suspendue avant activation',
         },
+      })
+      await prisma.licenseDeviceEvent.create({
+        data: {
+          licenseId: created.licenseId,
+          deviceId: null,
+          action: status === 'revoked' ? 'revoked' : 'suspended',
+          detail: JSON.stringify({
+            from: null, to: status, actor: 'keygen (x-gf-key)',
+            requestId, clientIp, userAgent, at: new Date().toISOString(),
+          }),
+        },
+      }).catch(() => {
+        console.error('[admin/licenses/revoke-by-key] trace création non écrite', {
+          requestId, licenseRef: licenseRef(created.licenseId),
+        })
       })
 
       return NextResponse.json({
@@ -224,11 +250,14 @@ export async function POST(req: NextRequest) {
           to:     status,
           actor:  'keygen (x-gf-key)',
           reason: typeof reason === 'string' ? reason.slice(0, 500) : null,
+          requestId, clientIp, userAgent,
           at:     new Date().toISOString(),
         }),
       },
-    }).catch((e) => {
-      console.error('[admin/licenses/revoke-by-key] trace non écrite', e)
+    }).catch(() => {
+      console.error('[admin/licenses/revoke-by-key] trace non écrite', {
+        requestId, licenseRef: licenseRef(updated.licenseId),
+      })
     })
 
     return NextResponse.json({

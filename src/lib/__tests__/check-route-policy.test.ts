@@ -100,6 +100,14 @@ describe('/api/license/check — fin du contournement sans jeton', () => {
     expect(body.deviceRequired).toBe(true)
   })
 
+  it('révocation métier → HTTP 200 contient allowed:false et status:revoked', async () => {
+    state.tokenValid = false
+    state.failCode = 'license_revoked'
+    const res = await POST(req({ licenseId: 'lid-1', deviceToken: 't' }) as never)
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({ allowed: false, status: 'revoked' })
+  })
+
   it('jeton d\'appareil invalide → refus typé (device_unknown → deviceRequired)', async () => {
     state.tokenValid = false
     const res = await POST(req({ licenseId: 'lid-1', deviceToken: 'bad' }) as never)

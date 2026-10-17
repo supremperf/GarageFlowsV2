@@ -1,3 +1,4 @@
+import { classifyServerFailure } from '@/lib/errors/apiErrors'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -40,7 +41,7 @@ import { logger } from '@/lib/logger'
 const FAILURE_STATUS: Record<string, number> = {
   MISSING_LICENSE: 400, LICENSE_INVALID: 403, NOT_A_GARAGE_LICENSE: 403,
   LICENSE_UNKNOWN: 403, LICENSE_REVOKED: 403, LICENSE_SUSPENDED: 403,
-  LICENSE_EXPIRED: 403, GARAGE_MISMATCH: 403,
+  LICENSE_EXPIRED: 403, SERVER_MISCONFIGURED: 500, DB_UNAVAILABLE: 503, GARAGE_MISMATCH: 403,
   GARAGE_ALREADY_CLAIMED: 409, LICENSE_NOT_BOUND: 409,
 }
 
@@ -127,7 +128,8 @@ export async function POST(req: Request) {
     logger.info('[sync/portal-account] accès publié', { garage: shortId(garageId), compte: shortId(id) })
     return NextResponse.json({ ok: true, id })
   } catch (err) {
-    logger.error('[sync/portal-account] erreur infra', err, { garage: shortId(garageId) })
-    return NextResponse.json({ ok: false, code: 'INFRA' }, { status: 503 })
+    const failure = classifyServerFailure(err)
+    logger.error('[sync/portal-account] échec de synchronisation', { code: failure.code, garage: shortId(garageId) })
+    return NextResponse.json({ ok: false, code: failure.code }, { status: failure.status })
   }
 }

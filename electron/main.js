@@ -1823,6 +1823,17 @@ async function activateOnServer() {
     }
 
     if (res && res.ok === false) {
+      // Les erreurs d'infrastructure/configuration ne sont pas des refus métier
+      // et ne doivent pas déclencher « Appareil non enregistré ». Ne pas basculer
+      // vers la base locale après une réponse distante explicite d'infra : son état
+      // de révocation peut diverger et un fallback pourrait contourner l'autorité.
+      const code = String(res.code ?? '')
+      if (['DB_UNAVAILABLE', 'SERVER_MISCONFIGURED', 'INTERNAL_ERROR', 'SERVICE_UNAVAILABLE', 'RATE_LIMITED'].includes(code)) {
+        log('[license/activate] authority unavailable —', authority, '— code:', code)
+        if (authority === 'remote') return null
+        continue
+      }
+
       const reason = res.reason || res.status || 'refus sans motif'
       log('[license/activate] server refused —', authority, '—', reason)
       lastActivationRefusal = { reason: String(reason), authority }

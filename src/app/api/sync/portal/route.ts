@@ -1,3 +1,4 @@
+import { classifyServerFailure } from '@/lib/errors/apiErrors'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -49,7 +50,7 @@ const MAX_PAYLOAD_BYTES = 4 * 1024 * 1024
 const FAILURE_STATUS: Record<string, number> = {
   MISSING_LICENSE: 400, LICENSE_INVALID: 403, NOT_A_GARAGE_LICENSE: 403,
   LICENSE_UNKNOWN: 403, LICENSE_REVOKED: 403, LICENSE_SUSPENDED: 403,
-  LICENSE_EXPIRED: 403, GARAGE_MISMATCH: 403,
+  LICENSE_EXPIRED: 403, SERVER_MISCONFIGURED: 500, DB_UNAVAILABLE: 503, GARAGE_MISMATCH: 403,
   // Revendication d'un garage déjà réservé / licence pas encore rattachée :
   // conflit d'état, pas un défaut d'authentification (GF31-AUD-003).
   GARAGE_ALREADY_CLAIMED: 409, LICENSE_NOT_BOUND: 409,
@@ -178,7 +179,8 @@ export async function POST(req: Request) {
       })
       return NextResponse.json({ ok: false, code: 'GARAGE_ALREADY_CLAIMED' }, { status: 409 })
     }
-    logger.error('[sync/portal] erreur base', err)
-    return NextResponse.json({ ok: false, code: 'SERVICE_UNAVAILABLE' }, { status: 503 })
+    const failure = classifyServerFailure(err)
+    logger.error('[sync/portal] échec de synchronisation', { code: failure.code, garage: shortId(trustedGarageId) })
+    return NextResponse.json({ ok: false, code: failure.code }, { status: failure.status })
   }
 }

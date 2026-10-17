@@ -25,6 +25,7 @@ import { verifyRecordMac, recordIntegrityUsable } from '@/lib/license/record-mac
 import { getAuthSecret } from '@/lib/auth-secret'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { logger } from '@/lib/logger'
+import { classifyServerFailure, isServerMisconfiguredError } from '@/lib/errors/apiErrors'
 
 const IS_ELECTRON = () => process.env.ELECTRON === '1'
 
@@ -47,7 +48,10 @@ export async function GET(req: NextRequest) {
   try {
     const { payload } = await jwtVerify(raw, getJwtSecret())
     licenseId = typeof payload.lid === 'string' ? payload.lid : ''
-  } catch {
+  } catch (error) {
+    if (isServerMisconfiguredError(error)) {
+      return NextResponse.json({ error: 'Configuration serveur indisponible.', code: 'SERVER_MISCONFIGURED' }, { status: 500 })
+    }
     return NextResponse.json(OK_UNKNOWN)
   }
   if (!licenseId) return NextResponse.json(OK_UNKNOWN)
@@ -91,14 +95,15 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ allowed: true, status: 'active' })
   } catch (err) {
-    if (IS_ELECTRON()) {
-      // Fail-open Electron : base locale indisponible ≠ licence invalide.
+    const failure = classifyServerFailure(err)
+    if (IS_ELECTRON() && !isServerMisconfiguredError(err)) {
+      // Pour la vérification périodique Electron, panne DB ≠ révocation.
       return NextResponse.json(OK_UNKNOWN)
     }
-    logger.error('[license/status] erreur infra', err)
+    logger.error('[license/status] échec de vérification', { code: failure.code })
     return NextResponse.json(
-      { error: 'Service temporairement indisponible.', code: 'SERVICE_UNAVAILABLE' },
-      { status: 503 },
+      { error: 'Service temporairement indisponible.', code: failure.code },
+      { status: failure.status },
     )
   }
 }

@@ -103,7 +103,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `TRUST_PROXY_HEADERS` | CONFIGURATION | non | server | — |
 | `UPSTASH_REDIS_TIMEOUT_MS` | CONFIGURATION | non | server | Délai d'attente d'un appel Upstash, en millisecondes. Facultative : absente, le défaut est 1500 ms — la valeur qui était codée en dur, donc comportem… |
 
-### dangerous (15)
+### dangerous (16)
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
@@ -114,6 +114,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `GF_DB_MAC_SECRET` | SECRET | **oui** | both | Electron derives this from the HWID. A server value protects LicenseKey records and must not be rotated blindly. |
 | `GF_DEBUG` | CONFIGURATION | non | desktop-runtime | Journalisation détaillée du poste. À laisser absente en production (verbosité et informations d'environnement). |
 | `GF_EINVOICE_CREDENTIALS_KEY` | SECRET | non | server | Cle AES-256-GCM des identifiants de plateformes. NE JAMAIS roter automatiquement (rendrait les identifiants existants indechiffrables). Generee une s… |
+| `GF_REVOKE_BY_KEY_ENABLED` | CONFIGURATION | non | server | Route revoke-by-key désactivée par défaut en production ; ne l'activer qu'après audit, validation et contrôle d'accès approuvés. |
 | `GF_PORTAL_SECRET` | SECRET | non | server | Rotation invalidates portal and quote-signature JWTs. |
 | `GF_SIGNATURE_SECRET` | SECRET | non | server | Rotation changes the derived signature-sealing key. |
 | `GF_SMTP_CIPHER_KEY` | SECRET | non | server | Existing gsmtp1.k1 values require the same key. No automatic multi-key migration exists. — Statut « absent-consumer » corrigé le 15/08/2026 : la vari… |

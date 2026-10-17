@@ -113,7 +113,10 @@ vi.mock('@/lib/license/record-mac', () => ({
 }))
 
 // Couche crypto stubée — garde le VRAI verifyHwid/isValidHwidFormat.
-const verifyMock = vi.hoisted(() => ({ payload: null as Record<string, unknown> | null }))
+const verifyMock = vi.hoisted(() => ({
+  payload: null as Record<string, unknown> | null,
+  failure: undefined as 'misconfigured' | undefined,
+}))
 vi.mock('@/lib/license/verify', async (importOriginal) => {
   const actual = await importOriginal<OriginalModule1>()
   return {
@@ -121,6 +124,7 @@ vi.mock('@/lib/license/verify', async (importOriginal) => {
     verifyLicenseToken: () => ({
       valid: true,
       payload: verifyMock.payload,
+      failure: verifyMock.failure,
       isAdmin: verifyMock.payload?.typ === 'admin',
     }),
   }
@@ -144,6 +148,7 @@ const basePayload = {
 beforeEach(() => {
   licenseKey.record = null
   verifyMock.payload = { ...basePayload }
+  verifyMock.failure = undefined
   deviceStore.rows = []
   deviceStore.seq = 0
   vi.clearAllMocks()
@@ -240,6 +245,44 @@ describe('GF31-AUD-008 — la liaison matérielle SIGNÉE fait autorité', () =>
 })
 
 describe('POST /api/license/activate — révocation / suspension / première utilisation', () => {
+  it('clé publique cryptographique mal configurée → 500 SERVER_MISCONFIGURED', async () => {
+    verifyMock.failure = 'misconfigured'
+    const res = await POST(req({ license: 'GF2.x.y.z', hwid: BOUND_HWID }) as never)
+    expect(res.status).toBe(500)
+    expect((await res.json()).code).toBe('SERVER_MISCONFIGURED')
+    expect(licenseKey.findUnique).not.toHaveBeenCalled()
+  })
+
+  it('NEXTAUTH_SECRET absent → 500 SERVER_MISCONFIGURED avant toute mutation', async () => {
+    const previousSecret = process.env.NEXTAUTH_SECRET
+    delete process.env.NEXTAUTH_SECRET
+    try {
+      const res = await POST(req({ license: 'GF2.x.y.z', hwid: BOUND_HWID }) as never)
+      expect(res.status).toBe(500)
+      expect((await res.json()).code).toBe('SERVER_MISCONFIGURED')
+      expect(licenseKey.findUnique).not.toHaveBeenCalled()
+      expect(licenseKey.create).not.toHaveBeenCalled()
+    } finally {
+      if (previousSecret === undefined) delete process.env.NEXTAUTH_SECRET
+      else process.env.NEXTAUTH_SECRET = previousSecret
+    }
+  })
+
+  it('DB Closed sous Electron → 503 DB_UNAVAILABLE, jamais un succès fail-open', async () => {
+    const previousElectron = process.env.ELECTRON
+    process.env.ELECTRON = '1'
+    licenseKey.findUnique.mockRejectedValueOnce({ kind: 'Closed' })
+    try {
+      const res = await POST(req({ license: 'GF2.x.y.z', hwid: BOUND_HWID }) as never)
+      expect(res.status).toBe(503)
+      expect((await res.json()).code).toBe('DB_UNAVAILABLE')
+      expect(licenseKey.create).not.toHaveBeenCalled()
+    } finally {
+      if (previousElectron === undefined) delete process.env.ELECTRON
+      else process.env.ELECTRON = previousElectron
+    }
+  })
+
   it('licence révoquée → refus', async () => {
     licenseKey.record = { id: 1, licenseId: 'lid-1', status: 'revoked', hwid: null }
     const res = await POST(req({ license: 'GF2.x.y.z' }) as never)
