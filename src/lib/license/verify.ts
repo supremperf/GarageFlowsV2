@@ -51,6 +51,13 @@ export interface VerifyResult {
   reason?:    string
 }
 
+/** Internal support stages. Never include token/payload/key values in diagnostics. */
+export type LicenseVerificationFailureCode =
+  | 'FORMAT_INVALID' | 'SEGMENTS_INVALID' | 'HEADER_INVALID' | 'HEADER_UNSUPPORTED'
+  | 'TRUST_ANCHOR_INVALID' | 'SIGNATURE_ERROR' | 'SIGNATURE_INVALID'
+  | 'PAYLOAD_INVALID' | 'PAYLOAD_FIELDS_INVALID' | 'TYPE_UNSUPPORTED'
+  | 'EXPIRED' | 'VERSION_UNSUPPORTED' | 'MECHANIC_PARENT_REQUIRED'
+
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 function _b64urlDecode(s: string): Buffer {
   const pad = (4 - (s.length % 4)) % 4
@@ -100,15 +107,25 @@ const _VALID_TYPES = new Set<string>(['trial', 'premium', 'enterprise', 'admin',
  *
  * Returns { valid: false, reason } for invalid tokens; throws LicenseConfigurationError for an unusable trust anchor.
  */
-export function verifyLicenseToken(token: string): VerifyResult {
+export function verifyLicenseToken(
+  token: string,
+  onFailure?: (code: LicenseVerificationFailureCode) => void,
+): VerifyResult {
+  const reject = (code: LicenseVerificationFailureCode, reason: string): VerifyResult => {
+    onFailure?.(code)
+    // Diagnostics stay in the trusted caller, not in production HTTP/UI reasons.
+    const sensitiveStage = !['EXPIRED', 'TYPE_UNSUPPORTED', 'MECHANIC_PARENT_REQUIRED'].includes(code)
+    return { valid: false, reason: process.env.NODE_ENV === 'production' && sensitiveStage
+      ? 'Licence invalide ou modifiée' : reason }
+  }
   // ── Structure check ─────────────────────────────────────────────────────
   if (typeof token !== 'string' || !token.startsWith('GF2.')) {
-    return { valid: false, reason: 'Format de licence invalide' }
+    return reject('FORMAT_INVALID', 'Format de licence invalide')
   }
 
   const parts = token.split('.')
   if (parts.length !== 4) {
-    return { valid: false, reason: 'Token malformé (doit contenir 4 segments)' }
+    return reject('SEGMENTS_INVALID', 'Token malformé (doit contenir 4 segments)')
   }
 
   const [, headerB64, payloadB64, sigB64] = parts
@@ -116,10 +133,10 @@ export function verifyLicenseToken(token: string): VerifyResult {
   // ── Header check ────────────────────────────────────────────────────────
   const headerBuf = _safeJson(_b64urlDecode(headerB64))
   if (!headerBuf || typeof headerBuf !== 'object') {
-    return { valid: false, reason: 'En-tête de licence corrompu' }
+    return reject('HEADER_INVALID', 'En-tête de licence corrompu')
   }
   if (!_assertHeader(headerBuf as Record<string, unknown>)) {
-    return { valid: false, reason: 'Type de licence non reconnu (mauvais en-tête)' }
+    return reject('HEADER_UNSUPPORTED', 'Type de licence non reconnu (mauvais en-tête)')
   }
 
   // Une clé mal configurée n'est PAS une signature de licence invalide.
@@ -129,6 +146,7 @@ export function verifyLicenseToken(token: string): VerifyResult {
     if (verificationKey.asymmetricKeyType !== 'ec' ||
         verificationKey.asymmetricKeyDetails?.namedCurve !== 'prime256v1') throw new Error()
   } catch {
+    onFailure?.('TRUST_ANCHOR_INVALID')
     throw new LicenseConfigurationError()
   }
 
@@ -144,23 +162,23 @@ export function verifyLicenseToken(token: string): VerifyResult {
     // Node.js reads DER SEQUENCE by default — matches Python cryptography output
     sigValid = verifier.verify(verificationKey, sig)
   } catch {
-    return { valid: false, reason: 'Erreur de vérification cryptographique' }
+    return reject('SIGNATURE_ERROR', 'Erreur de vérification cryptographique')
   }
 
   if (!sigValid) {
     // Intentionally vague — don't reveal which check failed
-    return { valid: false, reason: 'Licence invalide ou modifiée' }
+    return reject('SIGNATURE_INVALID', 'Licence invalide ou modifiée')
   }
 
   // ── Payload parse ────────────────────────────────────────────────────────
   const rawPayload = _safeJson(_b64urlDecode(payloadB64))
   if (!rawPayload || typeof rawPayload !== 'object') {
-    return { valid: false, reason: 'Données de licence corrompues' }
+    return reject('PAYLOAD_INVALID', 'Données de licence corrompues')
   }
 
   const p = rawPayload as Record<string, unknown>
   if (!_assertPayload(p)) {
-    return { valid: false, reason: 'Champs de licence manquants ou invalides' }
+    return reject('PAYLOAD_FIELDS_INVALID', 'Champs de licence manquants ou invalides')
   }
 
   // Assertion passed — safe to treat as LicensePayload for remaining checks
@@ -169,19 +187,19 @@ export function verifyLicenseToken(token: string): VerifyResult {
   // ── Type check ───────────────────────────────────────────────────────────
   // Message fixe : ne jamais refléter le contenu du payload dans la réponse.
   if (!_VALID_TYPES.has(lic.typ)) {
-    return { valid: false, reason: 'Type de licence inconnu' }
+    return reject('TYPE_UNSUPPORTED', 'Type de licence inconnu')
   }
 
   // ── Expiry check (redundant — also in DB layer for revocation) ────────────
   const nowSec = Math.floor(Date.now() / 1000)
   if (lic.exp < nowSec) {
     const expDate = new Date(lic.exp * 1000).toLocaleDateString('fr-FR')
-    return { valid: false, reason: `Licence expirée le ${expDate}` }
+    return reject('EXPIRED', `Licence expirée le ${expDate}`)
   }
 
   // ── Version sanity ────────────────────────────────────────────────────────
   if (!lic.ver.startsWith('2')) {
-    return { valid: false, reason: 'Version de licence non supportée' }
+    return reject('VERSION_UNSUPPORTED', 'Version de licence non supportée')
   }
 
   // ── Règles MECHANIC ───────────────────────────────────────────────────────
@@ -190,7 +208,7 @@ export function verifyLicenseToken(token: string): VerifyResult {
   // Une clé mécanicien n'est JAMAIS admin, quel que soit le reste du payload.
   const isMechanic = lic.typ === 'mechanic'
   if (isMechanic && (typeof lic.plid !== 'string' || lic.plid.length === 0)) {
-    return { valid: false, reason: 'Licence mécanicien invalide' }
+    return reject('MECHANIC_PARENT_REQUIRED', 'Licence mécanicien invalide')
   }
 
   return {

@@ -1,0 +1,105 @@
+{
+  "generatedUtc": "2026-10-17T21:06:48.430Z",
+  "globalVerdict": "NO-GO",
+  "blocker4": "PARTIEL - instance evidence not provided; prevention fixed but incident cause NOT CONFIRMED",
+  "before": {
+    "file": "before-fixture.json",
+    "passed": 5,
+    "failed": 0
+  },
+  "fixtureReproduction": {
+    "command": "node scripts/reproduce-keygen-roundtrip.mjs",
+    "passed": 19,
+    "total": 19,
+    "ok": true,
+    "file": "roundtrip.json"
+  },
+  "targeted": {
+    "command": "PATH=\"$PWD/.venv/bin:$PATH\" npx vitest run src/lib/__tests__/keygen-activation-roundtrip.test.ts src/lib/__tests__/issuer-fixture-roundtrip.test.ts src/lib/__tests__/incident-license-infra.test.ts src/lib/license/__tests__/keygen-api-contract.test.ts",
+    "total": 46,
+    "passed": 46,
+    "failed": 0,
+    "pending": 0,
+    "exitCode": 0,
+    "file": "targeted.json"
+  },
+  "global": {
+    "command": "PATH=\"$PWD/.venv/bin:$PATH\" npx vitest run --maxWorkers=8 --reporter=default --reporter=json --outputFile=/tmp/gf7-final-verified.json",
+    "total": 4204,
+    "passed": 3353,
+    "failed": 3,
+    "pending": 848,
+    "files": 346,
+    "failedFiles": 79,
+    "exitCode": 1,
+    "sameFailedFileSetAsPhase6": true,
+    "file": "global-failures.json"
+  },
+  "node": {
+    "command": "node --test tests/*.test.cjs",
+    "passed": 376,
+    "failed": 0,
+    "pending": 0,
+    "exitCode": 0,
+    "file": "node-tests.txt"
+  },
+  "lint": {
+    "command": "npm run lint",
+    "exitCode": 0,
+    "file": "lint.txt"
+  },
+  "types": {
+    "command": "npm run type-check",
+    "exitCode": 0,
+    "file": "types.txt"
+  },
+  "pythonSyntax": {
+    "command": ".venv/bin/python -m py_compile scripts/keygen_core.py scripts/keygen_trust.py scripts/keygen_ui.py",
+    "exitCode": 0
+  },
+  "environment": {
+    "command": "node scripts/check-env-consistency.mjs",
+    "problems": 0,
+    "exitCode": 0,
+    "canonical": 126,
+    "forbiddenAliases": 8,
+    "platform": 48
+  },
+  "scope": {
+    "productionAccess": false,
+    "privateProductionKeysRead": false,
+    "productionMutation": false,
+    "remoteKeyCorrespondenceVerified": false,
+    "nativeDbActivationVerified": false,
+    "guiRenderingVerified": false,
+    "sourceVerifierAndActualActivationHandlerWithMockedDb": true
+  },
+  "missingInstanceEvidence": [
+    "public fingerprint receipt for actual keygen private key and attested deployed public key",
+    "exact rejected token diagnosis performed locally (no raw token export)",
+    "deployed artifact provenance/SHA/digest and correlated request ID"
+  ],
+  "setupRefactor": "External fixture prepared once in existing beforeAll hook budget, normal test assertion timeouts unchanged; intermediate failures preserved separately.",
+  "consistency": {
+    "command": "npm run check:consistency",
+    "exitCode": 0,
+    "issuerPublicChecks": "2 explicit SKIP: real public PEM absent",
+    "file": "consistency.txt"
+  },
+  "links": {
+    "checked": 77,
+    "missing": 0,
+    "scope": "local Markdown file existence, no external HTTP/fragment checks"
+  },
+  "diffCheck": {
+    "command": "git diff --check",
+    "exitCode": 0
+  },
+  "docsGuards": {
+    "passed": 24,
+    "failed": 0,
+    "pending": 0,
+    "exitCode": 0,
+    "file": "docs-guards.json"
+  }
+}

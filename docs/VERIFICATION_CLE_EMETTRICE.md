@@ -1,5 +1,7 @@
 # Vérifier la correspondance de l’émetteur licence (lecture seule)
 
+**Cas keygen GUI refusé à l’activation :** voir [la procédure immédiate](KEYGEN.md) et `python scripts/keygen_ui.py --verify-key-match` (ajouter `--ask-passphrase` pour un fichier chiffré). Le GUI n’utilise pas GF_PRIVATE_KEY. Aucun de ces diagnostics ne prouve un bundle distant non attesté.
+
 ## Ce qui doit correspondre
 
 - `POST /api/admin/licenses/generate` signe en ES256/P-256 avec `GF_PRIVATE_KEY` **PEM encodé en base64**, prioritaire ; sinon `keys/private.pem` local. Voir `src/app/api/admin/licenses/generate/route.ts:33-50`.

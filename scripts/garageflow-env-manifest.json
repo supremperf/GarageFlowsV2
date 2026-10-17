@@ -1167,7 +1167,7 @@
         "src/app/api/admin/licenses/generate/route.ts",
         "scripts/verify-license-issuer.mjs"
       ],
-      "notes": "P-256 : node config genere et sauvegarde la PREMIERE paire uniquement sur base vide sans autorite locale existante, apres AUTORISER ; ancrages publics synchronises. Original reutilise, jamais de rotation automatique ni de regeneration apres perte. Base64 PKCS#8, doit correspondre aux ancrages Next/Electron. autoGenerate/autoManage=false restent les protections des outils generiques/reset ; seule l'initialisation controlee de config cree une nouvelle autorite."
+      "notes": "P-256 : node config genere et sauvegarde la PREMIERE paire uniquement sur base vide sans autorite locale existante, apres AUTORISER ; ancrages publics synchronises. Original reutilise, jamais de rotation automatique ni de regeneration apres perte. Base64 PKCS#8, doit correspondre aux ancrages Next/Electron. autoGenerate/autoManage=false restent les protections des outils generiques/reset ; seule l'initialisation controlee de config cree une nouvelle autorite. GUI keygen_ui.py does NOT read this variable: it loads keys/private.pem. Both issuers must match the public trust anchor of the target artifact. Read-only GUI check: --verify-key-match; see docs/KEYGEN.md. Never regenerate issuer keys to diagnose a rejection."
     },
     {
       "name": "GF_PROBE_NAMES",

@@ -2,13 +2,21 @@
 
 # PHASE 6 — verdict final de cette vérification
 
-Date : **17 octobre 2026**. Mesure globale finale : **19:56:14–19:57:23 UTC** (21:56–21:57 Europe/Paris). Branche `arena/55edbdc1-garageflowsv2`, base Git `aa90f89c059db58a4a3fe3c339a2dffbfbf10fad`, **arbre de travail modifié**, pas un artefact construit ou déployé.
+Date : **17 octobre 2026**. Mesure globale finale **PHASE 6** : **19:56:14–19:57:23 UTC** (21:56–21:57 Europe/Paris). Branche `arena/55edbdc1-garageflowsv2`, base Git `aa90f89c059db58a4a3fe3c339a2dffbfbf10fad`, **arbre de travail modifié**, pas un artefact construit ou déployé.
 
 # Verdict : **NO-GO**
 
 Les six blocages ont été traités dans l'ordre et documentés, mais **ne sont pas tous résolus**. Le code n'est pas déclaré prêt avec de seules actions externes restantes : l'implémentation administrative renforcée, la minimisation/protection des diagnostics et la revue sémantique complète A–K restent notamment ouvertes **localement**. Un GO CONDITIONNEL ne serait donc pas justifié.
 
 Aucun déploiement, rotation de secret, migration ni changement de données de production effectué. Aucun accès DB de production utilisé. **Cause de l'incident : non vérifiable sans accès production.** Le seuil de preuve ≥90 % de la phase 0.5 n'est pas atteint ; aucun taux de certitude n'est inventé.
+
+## Mise à jour PHASE 7 — cas keygen rejeté
+
+Voir [07 — diagnostic et procédure immédiate](07-DIAGNOSTIC-KEYGEN.md), [runbook opérateur](../../KEYGEN.md) et [mesures PHASE 7](phase7/validation.json). Le chemin Python avec paire cohérente passe les vrais vérificateurs ; le GUI contrôle maintenant la paire et les ancres locales avant signature. Le serveur distingue les étapes dans des logs neutralisés, pas dans la réponse de production.
+
+**Blocage 4 reste PARTIEL pour l’instance réelle.** Aucun jeton refusé, reçu de clés publiques ou digest de cible n’a été fourni ici. Une différence de clés n’est donc pas démontrée : une altération du token ou une divergence du build peut donner le même message. Le défaut de prévention local est corrigé, mais n’est pas présenté comme la cause prouvée de cet incident. Il serait faux de passer à RÉSOLU ou BLOQUÉ-CONFIGURATION-DOCUMENTÉ sans cette preuve. Fournir les reçus non secrets du runbook permettra de qualifier exactement le cas, sans transmettre de clé privée.
+
+Les compteurs ci-dessous restent le relevé daté PHASE 6 ; la baseline canonique et les mesures PHASE 7 portent la revalidation ultérieure. **NO-GO global inchangé** : les autres blocages ne sont pas levés.
 
 ## 1. Tableau des six blocages
 
@@ -17,7 +25,7 @@ Aucun déploiement, rotation de secret, migration ni changement de données de p
 | 1 | Suite globale, trois assertions, 79 fichiers, pending | **BLOQUÉ-EXTERNE-DOCUMENTÉ** | Globale finale : **4 194 tests, 3 343 réussis, 3 échoués, 848 pending**, 345 fichiers dont 79 en échec/empêchés d'aboutir. Mêmes 79 fichiers que le diagnostic initial : 78 avec erreur de récupération du moteur, 1 avec client `--no-engine` exigeant `prisma://`. **0/79 réparé** en exécution native. Les messages complets/stacks des trois assertions et des hooks sont conservés ; aucune innocence du code métier n'en est déduite. Un skip illégitime `alg: none` a été retiré et le test passe sans clé privée. [Détail initial nominatif](phase6/01-TESTS-ET-TRACES.md), [traces finales](phase6/vitest-final-failures.json), [matrice finale par fichier](phase6/vitest-final-files.json). |
 | 2 | Build et alternatives Prisma | **BLOQUÉ-EXTERNE-DOCUMENTÉ** | `npm run build` exit 1 pendant `prisma generate`, **avant Next** ; déconnexion avant TLS vers `binaries.prisma.sh`. Vendor/cache/historique/mirrors/overrides/clients/artefacts CI examinés ; téléchargement d'artefact CI échoué. Data Proxy/Accelerate/adapters étudiés sur le runtime officiel 5.22.0, pas imposés comme contournement. Le build après restauration des moteurs reste inconnu. [Erreur complète](phase6/build.log), [étude et commandes de reprise](phase6/02-BUILD-ET-REPRISE.md). |
 | 3 | 28 incohérences d'environnement | **RÉSOLU** | Inventaire unitaire et corrections par lots **28 → 24 → 0**, avec exemples/docs/manifest/garde. Contrôle final exit 0 : 126 variables canoniques, 8 alias interdits, 48 variables plateforme. Ce résultat porte sur le contrat du dépôt, **pas** sur les valeurs effectivement déployées. [Journal, blocage 3](05-RESOLUTION-BLOCAGES.md), [contrôle final](phase6/env-final.log). |
-| 4 | Correspondance émetteur / vérificateurs | **PARTIEL** | Cartographie GF_PRIVATE_KEY/fichier Python/ancres PWA/Electron ; cinq tests cryptographiques avec paires éphémères et quatre tests Node du contrôle opérateur réussis. Mécanisme vérifié, aucune correspondance avec la clé privée ou les bundles de production attestée. [Procédure opérateur lecture seule](../../VERIFICATION_CLE_EMETTRICE.md). |
+| 4 | Correspondance émetteur / vérificateurs | **PARTIEL** | Cartographie GF_PRIVATE_KEY/fichier Python/ancres PWA/Electron et fixtures crypto vérifiées ; PHASE 7 ajoute contrôle bloquant avant émission GUI, CLI headless, diagnostics réels TypeScript/activation et runbook. Cause du rejet de l’instance NON CONFIRMÉE sans reçus publics et version cible ; correspondance production non attestée. [Procédure opérateur lecture seule](../../VERIFICATION_CLE_EMETTRICE.md). |
 | 5 | Remplacement administratif sécurisé | **PARTIEL** | Ancienne route maintenue en 404, probes PowerShell bloquants/sans envoi de secret, inventaire des usages du dépôt effectué. **SPEC P1 détaillée + runbook**, avec identité humaine, MFA récente, RBAC, CSRF, anti-rejeu, idempotence, tombstones, transaction/audit durable et recette. Ce remplacement **n'est pas implémenté** ; le PATCH existant avec licence admin n'est pas une preuve de MFA humaine. [SPEC et runbook](../../REVOCATION_ADMIN_RUNBOOK.md). |
 | 6 | Audit exhaustif A–K | **PARTIEL** | Inventaires code/routes/UI/encodage/schémas, inspections transversales et correctifs supplémentaires exécutés ; aucune catégorie n'est déclarée entièrement auditée. Les restes locaux et les prérequis externes sont distingués. [Grille A–K et reste à vérifier](phase6/03-GRILLE-A-K.md), [inventaire nominatif avec statut sémantique](phase6/review-inventory.tsv). |
 

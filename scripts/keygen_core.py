@@ -80,11 +80,22 @@ def generate_keys(passphrase: str = "") -> dict:
 
 def load_private_key(passphrase: str = ""):
     if not PRIV_FILE.exists():
-        raise FileNotFoundError(f"Clé privée introuvable: {PRIV_FILE}\nLancez d'abord 'Initialiser les clés'.")
+        raise FileNotFoundError(f"Clé privée introuvable: {PRIV_FILE}\nRestaurer la clé privée autorisée ; ne pas initialiser pour contourner un incident.")
     pw = passphrase.encode() if passphrase else None
     return serialization.load_pem_private_key(
         PRIV_FILE.read_bytes(), password=pw, backend=default_backend()
     )
+
+
+def load_checked_private_key(passphrase: str = ""):
+    """GUI signing boundary: fail before minting/persisting if any local anchor differs.
+
+    Does not attest a remote deployment. Never regenerate keys to bypass this check.
+    """
+    from keygen_trust import check_key_match
+    key = load_private_key(passphrase)
+    check_key_match(key, ROOT_DIR)
+    return key
 
 
 def load_public_key():

@@ -7,7 +7,7 @@
   "commitShort": "aa90f89",
   "branch": "arena/55edbdc1-garageflowsv2",
   "gitIdentity": true,
-  "generatedAtUtc": "2026-10-17T19:58:39.575Z",
+  "generatedAtUtc": "2026-10-17T21:06:48.480Z",
   "toolchain": {
     "node": "v22.22.3",
     "npm": "10.9.8",
@@ -59,11 +59,11 @@
   },
   "tests": {
     "measured": true,
-    "files": 345,
-    "suites": 1299,
-    "total": 4194,
-    "discovered": 4194,
-    "passed": 3343,
+    "files": 346,
+    "suites": 1300,
+    "total": 4204,
+    "discovered": 4204,
+    "passed": 3353,
     "failed": 3,
     "skipped": 848
   }

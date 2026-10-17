@@ -5,6 +5,11 @@ Fenêtre principale : onglets Générer / Gérer / Clés.
 
 import sys
 import os
+# Dispatch diagnostic mode before importing Tkinter or opening a GUI/database.
+if __name__ == "__main__" and "--verify-key-match" in sys.argv[1:]:
+    from keygen_trust import main as _key_match_main
+    sys.exit(_key_match_main(sys.argv[1:]))
+
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog, filedialog
 import threading
@@ -610,7 +615,7 @@ class TabGenerate(tk.Frame):
             messagebox.showerror(
                 "Clés manquantes",
                 "Aucune clé ECC trouvée.\n\n"
-                "Allez dans l'onglet  🔑 Clés  et initialisez la paire de clés."
+                "Restaurer les clés de l’autorité existante ; ne pas initialiser pour corriger un rejet."
             )
             return
 
@@ -686,7 +691,7 @@ class TabGenerate(tk.Frame):
 
         def _do():
             try:
-                pk   = core.load_private_key(self._passphrase)
+                pk   = core.load_checked_private_key(self._passphrase)
                 info = core.make_license(pk, cid, raw_type, years, seats, hwid, label)
                 db.add_license(info, client)
                 db.audit_log("gen_garage", info["lid"], f"type={raw_type}")
@@ -742,7 +747,7 @@ class TabGenerate(tk.Frame):
 
         def _do():
             try:
-                pk = core.load_private_key(self._passphrase)
+                pk = core.load_checked_private_key(self._passphrase)
                 children = []
                 for i in range(count):
                     name  = names[i] if i < len(names) else None
@@ -1180,10 +1185,10 @@ class TabKeys(tk.Frame):
         self.code_frame = _frame(self, bg=CARD, padx=16, pady=14)
         self.code_frame.pack(fill="x", padx=20, pady=(0, 12))
         _lbl(self.code_frame,
-             "Clé publique — format code  ✅  coller directement dans verify.ts et main.js",
+             "Clé publique — consultation uniquement (pas de copie manuelle)",
              font=FONTB).pack(anchor="w")
         _lbl(self.code_frame,
-             "Remplacez le bloc const _LINES = [...] / const _PK = [...] par ce texte.",
+             "Après changement approuvé : keys:sync, contrôle, rebuild et redistribution.",
              fg=MUTED, font=FONTS).pack(anchor="w", pady=(2, 6))
         self.code_text = tk.Text(
             self.code_frame, height=6, bg=CARD2, fg=GREEN,
@@ -1199,11 +1204,11 @@ class TabKeys(tk.Frame):
 
     def _refresh_status(self):
         if core.keys_exist():
-            self.lbl_status.config(text="✅  Clés ECC configurées", fg=GREEN)
+            self.lbl_status.config(text="⚠  Fichiers présents — correspondance contrôlée avant chaque signature", fg=GREEN)
             self.lbl_priv.config(text=f"  Privée : {core.PRIV_FILE}")
             self.lbl_pub.config( text=f"  Publique: {core.PUB_FILE}")
         else:
-            self.lbl_status.config(text="❌  Aucune clé trouvée — initialisez avant de générer.", fg=RED)
+            self.lbl_status.config(text="❌  Paire absente/incomplète — restaurer l’autorité existante, pas de rotation de dépannage.", fg=RED)
             self.lbl_priv.config(text="  Chemin attendu : " + str(core.PRIV_FILE))
             self.lbl_pub.config( text="")
 
@@ -1214,13 +1219,16 @@ class TabKeys(tk.Frame):
         # Test de chargement
         if core.keys_exist():
             try:
-                core.load_private_key(pp)
-                messagebox.showinfo("OK", "Passphrase correcte — clé chargée avec succès.")
+                key = core.load_private_key(pp)
+                from keygen_trust import check_key_match
+                receipt = check_key_match(key, core.ROOT_DIR)
+                messagebox.showinfo("Correspondance locale", _json.dumps(receipt, indent=2, ensure_ascii=False))
             except Exception as exc:
                 messagebox.showerror("Erreur passphrase", str(exc))
 
     def _init_keys(self):
-        if core.keys_exist():
+        # A partial pair must not be overwritten without the rotation warning either.
+        if core.PRIV_FILE.exists() or core.PUB_FILE.exists():
             if not messagebox.askyesno(
                 "Régénérer ?",
                 "Des clés existent déjà.\n\n"
@@ -1236,10 +1244,10 @@ class TabKeys(tk.Frame):
             messagebox.showinfo(
                 "Clés générées ✓",
                 "Paire de clés ECC P-256 créée.\n\n"
-                "⚠️  Copiez la clé publique dans :\n"
-                "  • src/lib/license/verify.ts   (tableau _K)\n"
-                "  • electron/main.js             (tableau _PK)\n\n"
-                "Puis relancez l'application.",
+                "Ne copiez pas les tableaux à la main. Après approbation :\n"
+                "npm run keys:sync puis npm run keys:check ; reconstruire et redistribuer.\n"
+                "Comparer aussi l’empreinte avec la version réellement déployée.\n"
+                "Une clé étrangère bloque désormais la génération ; ne pas régénérer pour contourner.",
             )
         except Exception as exc:
             messagebox.showerror("Erreur initialisation", str(exc))
@@ -1281,11 +1289,11 @@ class TabKeys(tk.Frame):
     def _copy_code(self):
         snippet = self._pem_to_code_snippet()
         if snippet == "(aucune clé publique)":
-            messagebox.showwarning("Clé manquante", "Initialisez les clés d'abord.")
+            messagebox.showwarning("Clé manquante", "Retrouver le PEM public officiel ; ne pas initialiser pour contourner un incident.")
             return
         self.clipboard_clear()
         self.clipboard_append(snippet)
-        messagebox.showinfo("Copié ✓", "Snippet de code copié.\nCollez-le dans public-key.ts et main.js.")
+        messagebox.showinfo("Copié", "Copie pour inspection seulement. Ne pas remplacer une ancre à la main ; voir docs/KEYGEN.md.")
 
 
 # ── Onglet 4 — Serveur GarageFlows ────────────────────────────────────────────
@@ -1504,7 +1512,7 @@ class App(tk.Tk):
                 "Clés ECC manquantes",
                 "Aucune paire de clés n'est configurée.\n\n"
                 "Allez dans l'onglet  🔑 Clés ECC  et cliquez\n"
-                "'Initialiser les clés' pour commencer.",
+                "Restaurer d’abord les clés de l’autorité existante ; initialiser seulement une nouvelle autorité approuvée.",
             )
 
 

@@ -23,8 +23,9 @@ export const dynamic = 'force-dynamic'
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'node:crypto'
 import { SignJWT } from 'jose'
-import { verifyLicenseToken, verifyHwid, hwidBindingSatisfied, isValidHwidFormat, type LicensePayload } from '@/lib/license/verify'
+import { verifyLicenseToken, verifyHwid, hwidBindingSatisfied, isValidHwidFormat, type LicensePayload, type LicenseVerificationFailureCode } from '@/lib/license/verify'
 import { prisma } from '@/lib/db'
 import { computeRecordMac, verifyRecordMac, recordIntegrityUsable } from '@/lib/license/record-mac'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
@@ -297,9 +298,19 @@ async function handlePOST(req: NextRequest) {
   getJwtSecret() // Configuration invalide : aucune écriture ni session.
 
   // ── Step 1: Cryptographic verification ─────────────────────────────────────
-  const result = verifyLicenseToken(licenseToken)
+  const verificationRequestId = randomUUID()
+  let diagnosticCode: LicenseVerificationFailureCode | undefined
+  const result = verifyLicenseToken(licenseToken, (stage) => {
+    diagnosticCode = stage
+    // Fixed stage + random correlation only: no token, payload, fingerprint or raw error.
+    logger.warn('[license-verification]', { stage, requestId: verificationRequestId })
+  })
   if (!result.valid || !result.payload) {
-    return NextResponse.json({ ok: false, code: 'LICENSE_INVALID', reason: result.reason })
+    return NextResponse.json({
+      ok: false, code: 'LICENSE_INVALID', reason: result.reason,
+      requestId: verificationRequestId,
+      ...(process.env.NODE_ENV !== 'production' ? { diagnosticCode } : {}),
+    }, { headers: { 'X-Request-ID': verificationRequestId } })
   }
 
   const { payload, isAdmin } = result

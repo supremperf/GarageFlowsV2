@@ -6,7 +6,8 @@
 Ce document et `artifacts/verification/baseline.json` reflètent la dernière
 mesure locale, y compris ses échecs. **Verdict : NO-GO.** Rapport de résolution :
 [phase 6](2026-10-17/05-RESOLUTION-BLOCAGES.md) ;
-[verdict détaillé](2026-10-17/06-VERDICT-FINAL.md).
+[verdict détaillé](2026-10-17/06-VERDICT-FINAL.md) ;
+[diagnostic keygen PHASE 7](2026-10-17/07-DIAGNOSTIC-KEYGEN.md).
 
 ## Identité et portée
 
@@ -14,8 +15,9 @@ mesure locale, y compris ses échecs. **Verdict : NO-GO.** Rapport de résolutio
 - Branche de travail : `arena/55edbdc1-garageflowsv2`.
 - Le commit machine est la **base HEAD** d’un arbre de travail modifié et non
   committé ; ce n’est ni le SHA d’un artefact construit ni une attestation de
-  déploiement. La liste de fichiers/hachages de la passe est fournie dans
-  `2026-10-17/phase6/review-inventory.tsv`.
+  déploiement. La liste de fichiers/hachages PHASE 6 est un snapshot historique dans
+  `2026-10-17/phase6/review-inventory.tsv` ; les sources modifiées PHASE 7
+  sont recensées séparément dans `2026-10-17/phase7/source-hashes.json`.
 - Aucun accès aux données/secrets production, aucune migration ou rotation,
   aucun déploiement effectué. Cause de l’incident : **non vérifiable sans accès
   production**, seuil ≥90 % non établi.
@@ -52,13 +54,13 @@ nombre d’assertions échouées. Voir la ventilation nominative de la phase 6.
 
 | Champ | Valeur |
 |---|---|
-| Test files | 345 |
-| Tests discovered | 4194 |
-| Tests passed | 3343 |
+| Test files | 346 |
+| Tests discovered | 4204 |
+| Tests passed | 3353 |
 | Tests failed | 3 |
 | Tests skipped | 848 |
 
-Commit : `aa90f89` · Branche : `arena/55edbdc1-garageflowsv2` · Généré (UTC) : `2026-10-17T19:58:39.575Z`
+Commit : `aa90f89` · Branche : `arena/55edbdc1-garageflowsv2` · Généré (UTC) : `2026-10-17T21:06:48.480Z`
 
 <!-- END AUTO-GENERATED BASELINE -->
 

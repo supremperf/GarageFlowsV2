@@ -105,6 +105,23 @@ GarageFlows/ (racine du depot)
 
 ## Système de licences
 
+### Diagnostic keygen → activation (à lire avant toute initialisation)
+
+**Le GUI utilise `keys/private.pem`, pas `GF_PRIVATE_KEY`. Cette clé privée doit
+appartenir à la même paire que l’ancre publique de l’instance cible. Ne jamais
+régénérer une paire pour corriger « Licence invalide ou modifiée ».**
+
+```sh
+python scripts/keygen_ui.py --verify-key-match
+# Ajouter --ask-passphrase pour un PEM chiffré ; aucun secret en argument.
+node scripts/diagnose-license.mjs --print-public-fingerprint
+```
+
+Contrôle automatique bloquant des ancres locales avant toute signature GUI ;
+aucune preuve du serveur distant sans provenance/PEM public attesté. Voir la
+[procédure immédiate et les diagnostics](docs/KEYGEN.md), puis la
+[preuve de reproduction et ses limites](docs/audit/2026-10-17/07-DIAGNOSTIC-KEYGEN.md).
+
 ### Initialisation (première fois)
 
 ```bash
