@@ -29,6 +29,19 @@ function fixture(t) {
   return dir
 }
 
+function writeRuntimeModuleFixtures(appDir) {
+  for (const relatif of layout.MODULES_EXECUTION) {
+    const cible = path.join(appDir, relatif)
+    fs.mkdirSync(path.dirname(cible), { recursive: true })
+    if (relatif === 'node_modules/next/package.json') {
+      fs.writeFileSync(cible, '{"name":"next","main":"index.js"}')
+      fs.writeFileSync(path.join(path.dirname(cible), 'index.js'), 'module.exports = {}')
+    } else {
+      fs.writeFileSync(cible, relatif.endsWith('.js') ? '// client genere' : '{"name":"fixture"}')
+    }
+  }
+}
+
 test('next.config.mjs verrouille la racine de tracing sur le dossier du projet', () => {
   const source = fs.readFileSync(path.join(root, 'next.config.mjs'), 'utf8')
   assert.match(source, /output:\s*'standalone'/, 'la sortie autonome reste activée')
@@ -121,10 +134,7 @@ test('le vérificateur standalone analyse la RACINE du projet, pas le dossier st
 test('la liste des modules d’exécution se résout sans double préfixe node_modules', () => {
   const layout = require(path.join(root, 'scripts', 'lib', 'standalone-layout.cjs'))
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-modules-'))
-  for (const relatif of layout.MODULES_EXECUTION) {
-    fs.mkdirSync(path.dirname(path.join(dir, relatif)), { recursive: true })
-    fs.writeFileSync(path.join(dir, relatif), relatif.endsWith('.js') ? '// client généré' : '{"name":"fixture"}')
-  }
+  writeRuntimeModuleFixtures(dir)
   // `next-auth` n'est pas un fichier de la sortie : la compilation l'embarque.
   fs.mkdirSync(path.join(dir, '.next', 'server', 'chunks'), { recursive: true })
   fs.writeFileSync(path.join(dir, '.next', 'server', 'chunks', '8858.js'), 'const c="next-auth.session-token";')
@@ -154,11 +164,7 @@ function arbreStandaloneSain(racine) {
   fs.writeFileSync(path.join(app, 'public', 'icon.ico'), 'ico')
   fs.writeFileSync(path.join(app, 'prisma', 'schema.prisma'), '// schema')
   fs.writeFileSync(path.join(app, 'keys', 'public.pem'), 'cle publique')
-  for (const relatif of require(path.join(root, 'scripts', 'lib', 'standalone-layout.cjs')).MODULES_EXECUTION) {
-    const cible = path.join(app, relatif)
-    fs.mkdirSync(path.dirname(cible), { recursive: true })
-    fs.writeFileSync(cible, relatif.endsWith('.js') ? '// client genere' : '{"name":"x"}')
-  }
+  writeRuntimeModuleFixtures(app)
   // `next-auth` n'est pas copié : la compilation l'embarque (constaté sur une
   // vraie sortie autonome). On reproduit le morceau qui le contient.
   fs.mkdirSync(path.join(app, '.next', 'server', 'chunks'), { recursive: true })
@@ -169,6 +175,34 @@ function arbreStandaloneSain(racine) {
 function executerVerificateur(racine) {
   return require('node:child_process').spawnSync(process.execPath, [path.join(root, 'scripts', 'verify-standalone-build.cjs'), racine], { encoding: 'utf8' })
 }
+
+test('les liens externes de node_modules sont matérialisés pour ne pas casser require("next") dans resources/standalone', t => {
+  const dir = fixture(t)
+  const app = path.join(dir, '.next', 'standalone')
+  const nodeModules = path.join(app, 'node_modules')
+  const nextTarget = path.join(dir, 'node_modules-externe', 'next')
+  fs.mkdirSync(nodeModules, { recursive: true })
+  fs.mkdirSync(nextTarget, { recursive: true })
+  fs.writeFileSync(path.join(nextTarget, 'package.json'), '{"name":"next","main":"index.js"}')
+  fs.writeFileSync(path.join(nextTarget, 'index.js'), 'module.exports = {}')
+  fs.writeFileSync(path.join(app, 'server.js'), 'require("next")')
+  fs.symlinkSync(nextTarget, path.join(nodeModules, 'next'), process.platform === 'win32' ? 'junction' : 'dir')
+
+  const diagnostic = require('node:child_process').spawnSync(process.execPath, ['-e',
+    `const l=require(${JSON.stringify(path.join(root, 'scripts', 'lib', 'standalone-layout.cjs'))}); process.stdout.write(l.problemeResolutionRuntime(${JSON.stringify(app)}) || '')`,
+  ], { encoding: 'utf8' })
+  assert.match(diagnostic.stdout, /résolu hors du standalone/,
+    'le contrôle doit détecter le faux positif fs.existsSync sur un lien externe')
+
+  const { materializeStandaloneLinks } = require('../scripts/lib/materialize-standalone-links.cjs')
+  const remplaces = materializeStandaloneLinks(app)
+  assert.deepEqual(remplaces, ['node_modules/next'])
+  assert.equal(fs.lstatSync(path.join(nodeModules, 'next')).isSymbolicLink(), false,
+    'l’artefact doit contenir un dossier réel, pas un lien vers la machine de build')
+  assert.equal(layout.problemeResolutionRuntime(app), null)
+  assert.equal(require('node:module').createRequire(path.join(app, 'server.js')).resolve('next'),
+    path.join(nodeModules, 'next', 'index.js'))
+})
 
 test('verify:standalone ACCEPTE une sortie saine (le garde-fou ne bloque pas un installeur valide)', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-standalone-ok-'))
@@ -205,11 +239,7 @@ test('next-auth est accepté COPIÉ ou EMBARQUÉ, et signalé s’il a disparu d
   const layout = require(path.join(root, 'scripts', 'lib', 'standalone-layout.cjs'))
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-embarque-'))
   const app = path.join(dir, '.next', 'standalone')
-  for (const relatif of layout.MODULES_EXECUTION) {
-    const cible = path.join(app, relatif)
-    fs.mkdirSync(path.dirname(cible), { recursive: true })
-    fs.writeFileSync(cible, relatif.endsWith('.js') ? '// client genere' : '{"name":"x"}')
-  }
+  writeRuntimeModuleFixtures(app)
 
   // Cas A — la compilation a embarqué next-auth dans un morceau (cas réel).
   fs.mkdirSync(path.join(app, '.next', 'server', 'chunks'), { recursive: true })
@@ -253,6 +283,11 @@ test('package.json : dist vérifie tout et échoue clairement à chaque étape',
   for (const fichier of ['scripts/post-build.js', 'scripts/preflight-release.cjs', 'scripts/verify-standalone-build.cjs', 'scripts/verify-installer.cjs', 'scripts/lib/standalone-layout.cjs']) {
     assert.ok(fs.existsSync(path.join(root, fichier)), `${fichier} doit exister`)
   }
+  const verifierArtefact = fs.readFileSync(path.join(root, 'scripts', 'verify-installer.cjs'), 'utf8')
+  assert.match(verifierArtefact, /standalone', 'node_modules', 'next', 'package\.json'/,
+    'la sortie win-unpacked doit contenir le module next lui-même')
+  assert.match(verifierArtefact, /problemeResolutionRuntime\(standaloneApp\)/,
+    'le vérificateur final doit tester require.resolve depuis le server.js empaqueté')
 })
 
 test('la chaîne n’essaie JAMAIS de publier une release toute seule', () => {
