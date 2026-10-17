@@ -671,3 +671,185 @@ test('a used database with a missing backup encryption key requires the original
   assert.ok(!report.environments.development.generated.includes('GF_BACKUP_KEY'))
   assert.equal(f.writes.length, 0)
 })
+
+test('dashboard input accepts bare, quoted and dotenv provider values without rewriting raw passwords', () => {
+  const token = 'vercel_blob_rw_UnitTest_fixture-renewed-not-issued'
+  for (const input of [token, `  ${token}  `, `"${token}"`, `'${token}'`, `BLOB_READ_WRITE_TOKEN="${token}"`, `export BLOB_READ_WRITE_TOKEN = '${token}'`]) {
+    assert.equal(core.normalizeInput('BLOB_READ_WRITE_TOKEN', input), token)
+    assert.equal(require('../scripts/config-rebuild.cjs').normalizeStorage({ BLOB_READ_WRITE_TOKEN: input }).BLOB_READ_WRITE_TOKEN, token)
+  }
+  assert.equal(core.normalizeInput('DATABASE_URL', 'DATABASE_URL="postgresql://unit:p%40ss@ep-unit-pooler.neon.tech/db?sslmode=require"'), 'postgresql://unit:p%40ss@ep-unit-pooler.neon.tech/db?sslmode=require')
+  assert.equal(core.normalizeInput('UPSTASH_REDIS_REST_TOKEN', 'ABCD='), 'ABCD=', 'an opaque base64 token is not a dotenv assignment')
+  const password = '  "raw=p#ss%40"  '
+  assert.equal(core.normalizeInput('PGPASSWORD', password), password)
+  for (const input of ['NEXTAUTH_URL="https://wrong-field.invalid"', `BLOB_READ_WRITE_TOKEN="${token}`, `BLOB_READ_WRITE_TOKEN=${token}\nOTHER=value`]) {
+    assert.throws(() => core.normalizeInput('BLOB_READ_WRITE_TOKEN', input), error => error.configSafe && !error.message.includes(token))
+  }
+})
+
+test('a previous draft containing the full dashboard assignment resumes with the normalized token', async t => {
+  const f = fixture(t)
+  core.writePrivate(path.join(f.dir, 'GarageFlow-configuration/manager-state.json'), JSON.stringify({ schema: 1, project, drafts: {
+    development: { BLOB_READ_WRITE_TOKEN: `BLOB_READ_WRITE_TOKEN="${f.values.development.BLOB_READ_WRITE_TOKEN}"` },
+  }, phase: 'preparing', attempts: [] }))
+  f.driver.probeBlob = async env => {
+    assert.match(env.BLOB_READ_WRITE_TOKEN, /^vercel_blob_rw_UnitTest_fixture-/)
+    assert.ok(!env.BLOB_READ_WRITE_TOKEN.includes('BLOB_READ_WRITE_TOKEN='))
+    return { associated: true, list: true, write: 'not_tested' }
+  }
+  assert.match((await f.run()).status, /^CONFIGURATION VALIDÉE/)
+  assert.equal(core.readEnv(path.join(f.dir, '.env.development.local')).BLOB_READ_WRITE_TOKEN, f.values.development.BLOB_READ_WRITE_TOKEN)
+})
+
+test('Blob discovery reads detailed scopes when a legacy list has no type and incomplete project metadata', async t => {
+  const f = fixture(t), calls = []
+  const adapter = cloudModule.cloud({ ...f.api, tool: async (_name, args) => {
+    const u = new URL('https://api.vercel.com' + args[1]); calls.push(u.pathname)
+    assert.equal(u.searchParams.get('teamId'), project.orgId)
+    if (u.pathname === '/v1/storage/stores') return JSON.stringify({ stores: [{ id: 'store_UnitTest', projectsMetadata: [] }] })
+    assert.equal(u.pathname, '/v1/storage/stores/store_UnitTest')
+    return JSON.stringify({ store: { id: 'store_UnitTest', projectsMetadata: [{ projectId: project.projectId, environments: ['development'] }] } })
+  } })
+  assert.deepEqual(await adapter.blobStores(project, 'development', { records: [] }), ['store_UnitTest'])
+  assert.deepEqual(calls, ['/v1/storage/stores', '/v1/storage/stores/store_UnitTest'])
+})
+
+test('Blob discovery falls back to connections and never imports Production binding into Development', async t => {
+  const f = fixture(t), calls = []
+  const adapter = cloudModule.cloud({ ...f.api, tool: async (_name, args) => {
+    const pathname = new URL('https://api.vercel.com' + args[1]).pathname; calls.push(pathname)
+    if (pathname === '/v1/storage/stores') return JSON.stringify({ stores: [{ id: 'store_UnitTest', type: 'blob', projectsMetadata: [{ projectId: project.projectId }] }] })
+    if (pathname.endsWith('/connections')) return JSON.stringify({ connections: [{ projectId: project.projectId, envVarEnvironments: ['production'] }] })
+    return JSON.stringify({ store: { id: 'store_UnitTest', type: 'blob', projectsMetadata: [] } })
+  } })
+  assert.deepEqual(await adapter.blobStores(project, 'development', { records: [] }), [])
+  assert.ok(calls.some(p => p.endsWith('/connections')))
+  assert.deepEqual(await adapter.blobStores(project, 'production', { records: [] }), ['store_UnitTest'])
+})
+
+test('project-scoped Blob hints remain usable when team-wide inventory is denied, without trusting other scopes', async t => {
+  const f = fixture(t)
+  const adapter = cloudModule.cloud({ ...f.api, tool: async () => { throw new Error('private-provider-response') } })
+  const record = { key: 'CUSTOM_BLOB_READ_WRITE_TOKEN', target: ['development'], contentHint: { type: 'blob-read-write-token', storeId: 'store_UnitTest' } }
+  assert.deepEqual(await adapter.blobStores(project, 'development', { records: [record] }), ['store_UnitTest'])
+  for (const other of [{ ...record, target: ['production'] }, { ...record, gitBranch: 'other' }, { ...record, customEnvironmentIds: ['custom'] }]) {
+    await assert.rejects(() => adapter.blobStores(project, 'development', { records: [other] }), e => e.configBlobCode === 'stores_inventory' && !e.message.includes('private-provider-response'))
+  }
+})
+
+test('a discovered binding accepts normalized Blob input but still requires a successful SDK list', async t => {
+  const f = fixture(t); let calls = 0
+  const token = f.values.development.BLOB_READ_WRITE_TOKEN
+  const adapter = cloudModule.cloud({ ...f.api, blobClient: { list: async options => {
+    calls++; assert.equal(options.token, token); return { blobs: [] }
+  } } })
+  assert.equal((await adapter.probeBlob({ BLOB_READ_WRITE_TOKEN: `BLOB_READ_WRITE_TOKEN="${token}"` }, ['store_UnitTest'])).list, true)
+  assert.equal(calls, 1)
+  await assert.rejects(() => adapter.probeBlob(f.values.development, []), e => e.configBlobCode === 'store_association')
+  await assert.rejects(() => adapter.probeBlob(f.values.development, ['store_other']), e => e.configBlobCode === 'token_store_mismatch')
+  assert.equal(calls, 1, 'no SDK request with an unbound token')
+})
+
+test('Blob errors expose only whitelisted diagnoses, never provider payloads, names or tokens', async t => {
+  const f = fixture(t)
+  for (const [name, code] of [
+    ['BlobAccessError', 'access_denied'], ['BlobStoreNotFoundError', 'store_not_found'],
+    ['BlobStoreSuspendedError', 'store_suspended'], ['BlobServiceNotAvailable', 'service_unavailable'],
+    ['BlobServiceRateLimited', 'service_unavailable'], ['TypeError', 'request_failed'],
+    ['private-name-with-token', 'request_failed'], ['constructor', 'request_failed'],
+  ]) {
+    const adapter = cloudModule.cloud({ ...f.api, blobClient: { list: async () => {
+      const error = new Error('private-provider-payload-with-token'); error.name = name; throw error
+    } } })
+    await assert.rejects(() => adapter.probeBlob(f.values.development, ['store_UnitTest']), error => {
+      assert.equal(error.configBlobCode, code)
+      assert.ok(!error.message.includes('private-'))
+      assert.ok(!error.message.includes(f.values.development.BLOB_READ_WRITE_TOKEN))
+      return true
+    })
+  }
+})
+
+test('an unconfirmed Blob binding can be rechecked after correction without requesting the same token again', async t => {
+  const f = fixture(t), output = [], yes = f.api.yes
+  t.mock.method(console, 'log', (...args) => output.push(args.join(' ')))
+  let inventory = 0
+  f.driver.blobStores = async () => {
+    if (++inventory === 1) { const error = new Error('private-payload'); error.configBlobCode = 'store_association'; throw error }
+    return ['store_UnitTest']
+  }
+  f.api.yes = async label => label.includes('réessayer la vérification Blob') ? true : yes(label)
+  const report = await f.run()
+  assert.match(report.status, /^CONFIGURATION VALIDÉE/)
+  assert.ok(output.join('\n').includes('Connect Project'))
+  assert.ok(!output.join('\n').includes('private-payload'))
+  assert.equal(report.environments.development.blobDiagnostic, undefined)
+  assert.equal(inventory, 4)
+})
+
+test('unconfirmed Blob inventory is reported as such, not as an invalid token, and never triggers a replacement input', async t => {
+  const f = fixture(t), yes = f.api.yes
+  f.driver.blobStores = async () => { const e = new Error('private inventory payload'); e.configBlobCode = 'stores_inventory'; throw e }
+  f.api.yes = async label => label.includes('réessayer la vérification Blob') ? false : yes(label)
+  const report = await f.run()
+  assert.match(report.status, /INTERROMPU/)
+  assert.equal(report.environments.development.blobDiagnostic.code, 'stores_inventory')
+  assert.match(manager.render(report), /Cela ne prouve pas que le token est invalide/)
+  assert.ok(!JSON.stringify(report).includes('private inventory payload'))
+  assert.equal(f.writes.length, 0)
+})
+
+test('real Blob SDK error classes are recognized even though Error.name is not the subclass name', async t => {
+  const f = fixture(t), sdk = require('@vercel/blob')
+  for (const [name, expected] of [['BlobAccessError', 'access_denied'], ['BlobStoreSuspendedError', 'store_suspended'], ['BlobServiceNotAvailable', 'service_unavailable']]) {
+    const error = new sdk[name]()
+    assert.equal(error.name, 'Error', 'official SDK 2.8.2 behavior')
+    error.message = 'private-provider-message-must-not-appear'
+    const adapter = cloudModule.cloud({ ...f.api, blobClient: { [name]: sdk[name], list: async () => { throw error } } })
+    await assert.rejects(() => adapter.probeBlob(f.values.development, ['store_UnitTest']), failure => {
+      assert.equal(failure.configBlobCode, expected)
+      assert.ok(!failure.message.includes('private-provider-message'))
+      return true
+    })
+  }
+})
+
+test('a unique prefixed Blob token from the current Vercel target is recovered, but ambiguous stores are never guessed', () => {
+  const key = 'CUSTOM_BLOB_READ_WRITE_TOKEN', token = 'vercel_blob_rw_UnitTest_fixture-not-issued'
+  assert.equal(cloudModule.resourceAliases([{ key }], { [key]: token }).BLOB_READ_WRITE_TOKEN, token)
+  assert.equal(cloudModule.resourceAliases([{ key, contentHint: { storeId: 'store_UnitTest' } }], { [key]: token }).BLOB_READ_WRITE_TOKEN, token)
+  const other = 'SECOND_BLOB_READ_WRITE_TOKEN'
+  assert.equal(cloudModule.resourceAliases([{ key }, { key: other }], { [key]: token, [other]: 'vercel_blob_rw_Other_fixture-not-issued' }).BLOB_READ_WRITE_TOKEN, undefined)
+  assert.equal(cloudModule.resourceAliases([{ key }], { [key]: token, BLOB_READ_WRITE_TOKEN: 'canonical-value' }).BLOB_READ_WRITE_TOKEN, 'canonical-value')
+  assert.equal(core.normalizeInput('NEXTAUTH_URL', 'https://unit.invalid/#fragment'), 'https://unit.invalid/#fragment', 'do not hide a raw URL fragment from validation')
+})
+
+test('known exposed Blob inputs are refused before SDK access, including dashboard wrappers', async t => {
+  const f = fixture(t), token = f.values.development.BLOB_READ_WRITE_TOKEN
+  const registry = path.join(f.dir, 'scripts/compromised-secrets.json')
+  const contents = JSON.parse(fs.readFileSync(registry, 'utf8'))
+  contents.entries.push({ env: 'BLOB_READ_WRITE_TOKEN', sha256Prefix: credentials.hash(token) })
+  fs.writeFileSync(registry, JSON.stringify(contents))
+  let calls = 0
+  const adapter = cloudModule.cloud({ ...f.api, blobClient: { list: async () => { calls++; return { blobs: [] } } } })
+  await assert.rejects(() => adapter.probeBlob({ BLOB_READ_WRITE_TOKEN: `BLOB_READ_WRITE_TOKEN="${token}"` }, ['store_UnitTest']), e => e.configBlobCode === 'token_exposed' && !e.message.includes(token))
+  assert.equal(calls, 0)
+})
+
+test('a Blob token mismatch can be retried with Enter after a dashboard correction, without losing the current token', async t => {
+  const f = fixture(t), yes = f.api.yes
+  let attempt = 0, inputs = 0
+  f.driver.probeBlob = async () => {
+    if (++attempt === 1) { const e = new Error('private'); e.configBlobCode = 'token_store_mismatch'; throw e }
+    return { associated: true, list: true, write: 'not_tested' }
+  }
+  f.api.yes = async label => label.includes('corriger les accès Blob') ? true : yes(label)
+  f.api.secretField = async (env, name, label) => {
+    inputs++; assert.equal(name, 'BLOB_READ_WRITE_TOKEN')
+    assert.equal(env[name], f.values.development.BLOB_READ_WRITE_TOKEN)
+    assert.match(label, /conserver et revérifier/)
+    // user presses Enter: normal secretField preserves this hidden default
+  }
+  assert.match((await f.run()).status, /^CONFIGURATION VALIDÉE/)
+  assert.equal(inputs, 1)
+})

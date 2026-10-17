@@ -316,8 +316,12 @@ async function importRemote(local, remote, names, { rotationAutorisee = false, d
 }
 
 async function secretField(env, name, label = name) {
-  env[name] = await question(`${label} (saisie ${visibleSecretInput ? 'visible' : 'masquée'}${env[name] ? ', Entrée = conserver' : ''})`,
-    { secret: true, defaultValue: env[name] || '' })
+  for (;;) {
+    const value = await question(`${label} (saisie ${visibleSecretInput ? 'visible' : 'masquée'}${env[name] ? ', Entrée = conserver' : ''})`,
+      { secret: true, defaultValue: env[name] || '' })
+    try { env[name] = core.normalizeInput(name, value); return }
+    catch { console.log(`${name} : saisie non reconnue ; coller la valeur seule ou une seule ligne ${name}="valeur".`) }
+  }
 }
 const privateKeyPassphrases = new Map()
 async function licensePassphrase(file) {

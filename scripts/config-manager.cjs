@@ -7,7 +7,7 @@ const { audit } = require('./config-audit.cjs')
 const { loadPolicy } = require('./config-policy.cjs')
 const decoder = require('./lib/config-vercel-env.cjs')
 const { normalizeStorage } = require('./config-rebuild.cjs')
-const { TARGETS, stamp, targets, protectedRecord, cloud } = require('./lib/config-cloud.cjs')
+const { BLOB_DIAGNOSTICS, BLOB_TOKEN_ERRORS, TARGETS, stamp, targets, protectedRecord, cloud } = require('./lib/config-cloud.cjs')
 const security = require('./lib/config-credentials.cjs')
 function failure(message) { const error = new Error(message); error.configSafe = true; return error }
 const VAULT = 'GarageFlow-configuration'
@@ -142,6 +142,7 @@ function render(report) {
     if (e?.plan?.unverified.length) lines.push(`  comparaison non vérifiable : ${e.plan.unverified.join(', ')}`)
     if (e?.generated?.length) lines.push(`  clés ${report.dryRun ? 'générables si absence distante confirmée (clés de données : base vide requise)' : 'générées'} : ${e.generated.join(', ')}`)
     if (e?.missing?.length) lines.push(`  manquantes : ${e.missing.join(', ')}`)
+    if (e?.blobDiagnostic) lines.push(`  Diagnostic Blob : ${e.blobDiagnostic.message}`)
     lines.push(`  Neon pool/direct : ${e?.checks?.database ? 'connexion testée' : 'NON VÉRIFIÉ'} ; Redis : ${e?.checks?.redis ? 'PING vérifié' : 'NON VÉRIFIÉ'}`)
     lines.push(`  Blob : ${e?.checks?.blob ? e.checks.blob.write === 'verified' ? 'association + PUT/HEAD/DELETE vérifiés' : 'association + liste vérifiées ; écriture NON TESTÉE' : 'NON VÉRIFIÉ'}`)
   }
@@ -247,6 +248,7 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
           while (!decoder.readable(env[name]) || security.compromised(env[name], entries)) {
             delete env[name]
             console.log(safeMessage(target, name))
+            if (cleaned.rejected.includes(name)) console.log(`${target} — ${name} : accès précédemment exposé refusé ; renouveler chez le fournisseur, sans partager le nouveau secret.`)
             await api.secretField(env, name, `${target} — ${name} (Entrée = interrompre et reprendre ultérieurement)`)
             Object.assign(env, normalizeStorage(env))
             if (!decoder.readable(env[name])) { checkpoint(target, env); throw failure(`Configuration suspendue : ${target} / ${name}. Relancer node config pour reprendre.`) }
@@ -265,15 +267,30 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
         const probe = async (label, fields, action) => {
           for (;;) {
             try {
-              if (fields.some(n => security.compromised(env[n], entries))) throw failure('Valeur exposée interdite.')
+              if (fields.some(n => security.compromised(env[n], entries))) {
+                const error = failure('Valeur exposée interdite.')
+                if (label === 'Blob') error.configBlobCode = 'token_exposed'
+                throw error
+              }
               return await action()
             } catch (error) {
               if (error.configPhase === 'dependencies') throw failure(error.message)
               console.log(`${target} — ${label} : vérification non confirmée (format, droits, association ou connexion). Aucune mutation distante.`)
+              if (label === 'Blob' && Object.hasOwn(BLOB_DIAGNOSTICS, error.configBlobCode)) {
+                const code = error.configBlobCode, message = BLOB_DIAGNOSTICS[code]
+                report.environments[target].blobDiagnostic = { code, message }
+                console.log(`${target} — Blob : ${message}`)
+                if (!BLOB_TOKEN_ERRORS.has(code)) {
+                  if (await api.yes(`${target} — réessayer la vérification Blob après correction du rattachement, des droits ou du réseau (sans ressaisir le token)`)) continue
+                  throw failure(`${target} : Blob non vérifié ; ${message} Saisies conservées pour reprise.`)
+                }
+              }
               if (!await api.yes(`${target} — corriger les accès ${label} maintenant (sinon suspendre avec reprise)`)) throw failure(`${target} : ${label} non vérifié ; saisies conservées pour reprise.`)
               for (const field of fields) {
-                delete env[field]
-                await api.secretField(env, field, `${target} — nouveau ${field}`)
+                // A valid Blob token can merely lack a confirmed binding. Keep
+                // it as a hidden default so Enter can retry after a dashboard fix.
+                if (label !== 'Blob') delete env[field]
+                await api.secretField(env, field, `${target} — ${label === 'Blob' ? `${field} (Entrée = conserver et revérifier)` : `nouveau ${field}`}`)
                 Object.assign(env, normalizeStorage(env))
                 checkpoint(target, env)
                 if (!decoder.readable(env[field])) throw failure(`Configuration suspendue : ${target} / ${field}.`)
@@ -299,6 +316,7 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
           if (result?.associated !== true || result?.list !== true) throw failure('Sonde Blob incomplète.')
           return result
         })
+        delete report.environments[target].blobDiagnostic
         if (blobWrite) {
           if (!await api.yes(`${target} : autoriser PUT/HEAD/DELETE d’un objet de sonde Blob sans secret (opérations potentiellement facturées)`)) throw failure(`${target} : sonde Blob mutante non autorisée.`)
           const choice = await api.select(`${target} : visibilité effective du store Blob (aucune modification du store)`, [{ id: 'private', name: 'Privé' }, { id: 'public', name: 'Public' }])

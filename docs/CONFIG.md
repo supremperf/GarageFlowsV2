@@ -96,6 +96,47 @@ Un partage de base entre deux cibles exige une confirmation distincte. Developme
 autorise HTTP uniquement pour les origines loopback (`localhost`, `127.0.0.1`,
 `::1`) de NextAuth/application ; Preview/Production et Redis restent en HTTPS.
 
+### Coller un token Blob et comprendre un refus
+
+Pour le champ `BLOB_READ_WRITE_TOKEN`, les trois formes suivantes sont acceptées
+(exemples fictifs, pas des tokens utilisables) :
+
+```dotenv
+vercel_blob_rw_STORE_EXEMPLE_TOKEN_FICTIF
+"vercel_blob_rw_STORE_EXEMPLE_TOKEN_FICTIF"
+BLOB_READ_WRITE_TOKEN="vercel_blob_rw_STORE_EXEMPLE_TOKEN_FICTIF"
+```
+
+Les accès copiés sous forme `NOM="valeur"` sont également reconnus pour les URLs
+Neon/NextAuth et les accès Redis. Une seule variable est acceptée par saisie ;
+une ligne destinée à un autre champ est refusée sans reproduire son contenu.
+Les mots de passe bruts ne sont pas réécrits. Les anciens brouillons contenant
+une ligne Blob complète sont normalisés à la reprise.
+
+La découverte Vercel lit, si nécessaire, la liste **puis les détails et les
+connexions** des stores, y compris les stores Blob historiques sans champ `type`
+et les listes ne contenant pas les portées complètes. Les hints du projet
+Vercel vérifiés pour la cible restent utilisables si la liste globale de l’équipe
+est interdite. Un token préfixé (par exemple `PREFIX_BLOB_READ_WRITE_TOKEN`) de
+la cible peut être récupéré s’il est unique ; plusieurs candidats différents
+ne sont jamais départagés au hasard.
+
+Un token de forme correcte ne suffit pas : son store doit être rattaché au bon
+**projet et environnement**, puis une vraie requête SDK `list` doit réussir.
+Un rattachement Production ne vaut pas pour Development. Si l’association
+manque, ouvrir **Vercel > Storage > le store > Connect Project**, vérifier le
+projet et les cibles autorisées. L’assistant n’élargit pas les portées tout seul.
+Il permet de revérifier après correction sans ressaisir le token. Dans un champ
+de correction du token, Entrée conserve également la valeur courante comme
+défaut masqué et relance la vérification.
+
+Les diagnostics sans secrets distinguent : format, inventaire Vercel inaccessible,
+association manquante, store différent, accès Blob refusé, store suspendu/absent
+et indisponibilité/réseau. Une erreur de réseau ou d’inventaire n’est plus
+présentée comme preuve que le token est mauvais. Les messages bruts des SDK ne
+sont jamais affichés. Les tokens déjà exposés restent refusés, même correctement
+formatés : les révoquer et saisir leurs remplaçants uniquement sur le poste.
+
 ### Génération automatique ou accès à fournir
 
 `node config` décide par cible, sans vous demander de fabriquer un secret :
@@ -203,8 +244,8 @@ variable ne prouve la révocation. Aucun accès client n’a été utilisé ici.
 
 | Contrôle exécuté dans le dépôt | Résultat |
 |---|---|
-| `node --test tests/*.cjs` | 321 tests réussis, aucun échec ni test ignoré |
-| `npm run test:config` (sous-ensemble du précédent) | 202 tests réussis, dont 39 pour le nouveau gestionnaire |
+| `node --test tests/*.cjs` | 335 tests réussis, aucun échec ni test ignoré |
+| `npm run test:config` (sous-ensemble du précédent) | 216 tests réussis, dont 52 pour le nouveau gestionnaire |
 | ESLint des modules de configuration modifiés et de leurs tests | Réussi |
 | Cohérence documentaire, marque et `git diff --check` | Réussis |
 | `npm audit --omit=optional --audit-level=low` | Aucune vulnérabilité signalée dans le périmètre audité |

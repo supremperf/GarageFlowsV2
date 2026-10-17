@@ -7,6 +7,28 @@ const core = require('../config-core.cjs')
 const codec = require('./config-vercel-api.cjs')
 const decoder = require('./config-vercel-env.cjs')
 const { normalizeStorage, STORAGE_ALIASES } = require('../config-rebuild.cjs')
+const BLOB_DIAGNOSTICS = Object.freeze({
+  token_exposed: 'Token Blob précédemment exposé : le révoquer dans Vercel Blob et saisir un token renouvelé, sans le partager en conversation.',
+  token_format: 'Format du token Blob non reconnu. Coller le token complet ou BLOB_READ_WRITE_TOKEN="valeur".',
+  stores_inventory: 'Inventaire Blob Vercel inaccessible ou incomplet : vérifier la session Vercel et les droits de l’équipe. Cela ne prouve pas que le token est invalide.',
+  store_association: 'Aucun store Blob confirmé pour ce projet et cet environnement. Dans Vercel > Storage > store > Connect Project, vérifier le projet et cocher cette cible (Development, Preview ou Production). Aucun rattachement automatique.',
+  token_store_mismatch: 'Le token ne correspond à aucun store Blob dont l’association avec ce projet/environnement a pu être confirmée. Vérifier le store émetteur et sa connexion à cette cible.',
+  access_denied: 'L’API Blob refuse l’accès : vérifier le token renouvelé et ses permissions de lecture/liste.',
+  store_not_found: 'L’API Blob ne trouve pas le store de ce token. Vérifier le store et renouveler son token si nécessaire.',
+  store_suspended: 'Le store Blob est suspendu côté fournisseur. Vérifier son statut/facturation ; ressaisir le même token ne corrigera pas cela.',
+  service_unavailable: 'Service Blob indisponible ou limité temporairement. Réessayer plus tard, sans remplacer le token.',
+  request_failed: 'Connexion ou réponse Blob non confirmée. Vérifier réseau/proxy/pare-feu et disponibilité du service ; cela ne prouve pas que le token est invalide.',
+  api_override: 'Blob : override d’API refusé pour protéger le token. Retirer VERCEL_BLOB_API_URL/NEXT_PUBLIC_VERCEL_BLOB_API_URL.',
+})
+const BLOB_TOKEN_ERRORS = new Set(['token_exposed', 'token_format', 'token_store_mismatch', 'access_denied', 'store_not_found'])
+const BLOB_SDK_ERRORS = Object.freeze({ BlobAccessError: 'access_denied', BlobClientTokenExpiredError: 'access_denied',
+  BlobStoreNotFoundError: 'store_not_found', BlobStoreSuspendedError: 'store_suspended',
+  BlobServiceNotAvailable: 'service_unavailable', BlobServiceRateLimited: 'service_unavailable' })
+function blobFailure(code) {
+  const error = failure(BLOB_DIAGNOSTICS[code])
+  error.configBlobCode = code
+  return error
+}
 const TARGETS = ['development', 'preview', 'production']
 const validName = name => typeof name === 'string' && /^[A-Za-z_][A-Za-z0-9_]*$/.test(name) && !['constructor', 'prototype', '__proto__'].includes(name)
 const targets = record => Array.isArray(record.target) ? record.target : [record.target]
@@ -25,7 +47,7 @@ function resourceAliases(records, values) {
     'postgres-url-non-pooling': 'POSTGRES_URL_NON_POOLING', 'postgres-host': 'PGHOST',
     'postgres-user': 'PGUSER', 'postgres-password': 'PGPASSWORD', 'postgres-database': 'PGDATABASE',
     'redis-rest-api-url': 'KV_REST_API_URL', 'redis-rest-api-token': 'KV_REST_API_TOKEN', 'blob-read-write-token': 'BLOB_READ_WRITE_TOKEN' }
-  const groups = new Map(), aliases = Object.values(STORAGE_ALIASES).flat().sort((a, b) => b.length - a.length)
+  const groups = new Map(), aliases = [...Object.values(STORAGE_ALIASES).flat(), 'BLOB_READ_WRITE_TOKEN'].sort((a, b) => b.length - a.length)
   for (const r of records) {
     const id = r.contentHint?.storeId
     if (!id || !decoder.readable(values[r.key])) continue
@@ -39,6 +61,12 @@ function resourceAliases(records, values) {
     const matches = normalized.filter(g => family.some(key => decoder.readable(g[key])))
     if (matches.length !== 1) continue
     for (const key of family) if (!result[key] && matches[0][key]) result[key] = matches[0][key]
+  }
+  // A single prefixed token from this target can be a candidate even when
+  // Vercel omits contentHint. Association is STILL mandatory in probeBlob.
+  if (!decoder.readable(result.BLOB_READ_WRITE_TOKEN)) {
+    const candidates = [...new Set(records.filter(r => r.key.endsWith('_BLOB_READ_WRITE_TOKEN') && decoder.readable(values[r.key])).map(r => values[r.key]))]
+    if (candidates.length === 1) result.BLOB_READ_WRITE_TOKEN = candidates[0]
   }
   return result
 }
@@ -113,19 +141,43 @@ function cloud(api) {
     } finally { if (temporary) fs.rmSync(temporary, { recursive: true, force: true }) }
   }
   async function blobStores(project, target, snapshot) {
-    const body = await get(project, '/v1/storage/stores')
-    if (!Array.isArray(body.stores)) throw failure('Blob : inventaire des ressources inaccessible.')
-    const ids = []
-    for (const store of body.stores.filter(s => s?.type === 'blob' && typeof s.id === 'string')) {
-      const hinted = snapshot.records.some(r => r.contentHint?.storeId === store.id && (r.key === 'BLOB_READ_WRITE_TOKEN' || r.contentHint?.type === 'blob-read-write-token'))
-      let links = store.projectsMetadata
-      if (!Array.isArray(links)) {
-        const detail = await get(project, `/v1/storage/stores/${encodeURIComponent(store.id)}/connections`)
-        links = detail.connections
-      }
-      if (hinted || links?.some(p => p.projectId === project.projectId && (p.environments || p.envVarEnvironments || []).includes(target))) ids.push(store.id)
+    if (!TARGETS.includes(target)) throw blobFailure('store_association')
+    const validId = id => typeof id === 'string' && /^store_[A-Za-z0-9_-]+$/.test(id)
+    // Hints originate from the authenticated, target-scoped project inventory.
+    // They remain valid evidence even when the account cannot list all team stores.
+    const ids = new Set(snapshot.records.filter(r => targets(r).includes(target) && !r.gitBranch && !r.customEnvironmentIds?.length &&
+      validId(r.contentHint?.storeId) && (r.key === 'BLOB_READ_WRITE_TOKEN' || r.contentHint?.type === 'blob-read-write-token')).map(r => r.contentHint.storeId))
+    const linked = links => Array.isArray(links) && links.some(p => p?.projectId === project.projectId &&
+      [p.environments, p.envVarEnvironments].some(envs => Array.isArray(envs) && envs.includes(target)))
+    let body
+    try {
+      body = await get(project, '/v1/storage/stores')
+      if (!Array.isArray(body.stores) || body.pagination?.next) throw blobFailure('stores_inventory')
+    } catch { if (ids.size) return [...ids]; throw blobFailure('stores_inventory') }
+    let incomplete = false
+    for (const listed of body.stores) {
+      // The official CLI also accepts legacy Blob stores without a type field.
+      if (!validId(listed?.id) || (listed.type && listed.type !== 'blob')) continue
+      if (ids.has(listed.id)) continue
+      if (linked(listed.projectsMetadata)) { ids.add(listed.id); continue }
+      // Lists can contain [] or project-only summaries, not complete scopes.
+      // Read the detail AND, if necessary, connections before declaring unbound.
+      let store
+      try {
+        const detail = await get(project, `/v1/storage/stores/${encodeURIComponent(listed.id)}`)
+        store = detail.store
+        if (!store || store.id !== listed.id) throw blobFailure('stores_inventory')
+        if (store.type && store.type !== 'blob') continue
+        if (linked(store.projectsMetadata)) { ids.add(listed.id); continue }
+      } catch { incomplete = true }
+      try {
+        const detail = await get(project, `/v1/storage/stores/${encodeURIComponent(listed.id)}/connections`)
+        if (!Array.isArray(detail.connections)) throw blobFailure('stores_inventory')
+        if (linked(detail.connections)) ids.add(listed.id)
+      } catch { incomplete = true }
     }
-    return ids
+    if (!ids.size && incomplete) throw blobFailure('stores_inventory')
+    return [...ids]
   }
   async function recover(target, env) {
     if ((!env.DATABASE_URL || !env.DIRECT_URL) && await api.yes(`${target} : récupérer Neon via une session fournisseur et choisir explicitement la branche`)) {
@@ -173,20 +225,33 @@ function cloud(api) {
   async function probeBlob(env, ids) {
     if (process.env.DEBUG || process.env.NEXT_PUBLIC_DEBUG) throw failure('Blob : DEBUG actif refusé pour protéger les sorties du SDK.')
     // Supported read-write token format used by @vercel/blob 2.8.2.
-    const match = /^vercel_blob_rw_([A-Za-z0-9]+)_[A-Za-z0-9_-]+$/.exec(env.BLOB_READ_WRITE_TOKEN || '')
-    if (!match || !ids.some(id => id.replace(/^store_/, '').toLowerCase() === match[1].toLowerCase())) throw failure('Blob : token absent/invalide ou aucune association vérifiée avec ce projet/environnement.')
-    if (process.env.VERCEL_BLOB_API_URL || process.env.NEXT_PUBLIC_VERCEL_BLOB_API_URL) throw failure('Blob : override d’API refusé pour protéger le token.')
+    const token = core.normalizeInput('BLOB_READ_WRITE_TOKEN', env.BLOB_READ_WRITE_TOKEN)
+    const entries = JSON.parse(fs.readFileSync(path.join(root, 'scripts/compromised-secrets.json'), 'utf8')).entries
+    if (require('./config-credentials.cjs').compromised(token, entries)) throw blobFailure('token_exposed')
+    const match = /^vercel_blob_rw_([A-Za-z0-9]+)_[A-Za-z0-9_-]+$/.exec(token || '')
+    if (!match) throw blobFailure('token_format')
+    if (!Array.isArray(ids) || !ids.length) throw blobFailure('store_association')
+    if (!ids.some(id => id.replace(/^store_/, '').toLowerCase() === match[1].toLowerCase())) throw blobFailure('token_store_mismatch')
+    if (process.env.VERCEL_BLOB_API_URL || process.env.NEXT_PUBLIC_VERCEL_BLOB_API_URL) throw blobFailure('api_override')
+    let sdk
     try {
-      const result = await (api.blobClient || require('@vercel/blob')).list({ token: env.BLOB_READ_WRITE_TOKEN, limit: 1, abortSignal: AbortSignal.timeout(15000) })
+      sdk = api.blobClient || require('@vercel/blob')
+      const result = await sdk.list({ token, limit: 1, abortSignal: AbortSignal.timeout(15000) })
       if (!Array.isArray(result.blobs)) throw failure()
       return { associated: true, list: true, write: 'not_tested', applicationConsumer: false }
-    } catch { throw failure('Blob : lecture API non confirmée. Fournir un nouveau token valide pour la ressource liée.') }
+    } catch (error) {
+      // Blob 2.8.2 subclasses retain Error.name === 'Error'. Prefer the
+      // exported SDK classes rather than parsing messages or constructor names.
+      const kind = Object.keys(BLOB_SDK_ERRORS).find(name => typeof sdk?.[name] === 'function' && error instanceof sdk[name])
+      const code = kind ? BLOB_SDK_ERRORS[kind] : typeof error?.name === 'string' && Object.hasOwn(BLOB_SDK_ERRORS, error.name) ? BLOB_SDK_ERRORS[error.name] : null
+      throw blobFailure(code || 'request_failed')
+    }
   }
   async function probeBlobWrite(env, ids, { authorized = false, access } = {}) {
     if (!authorized || !['public', 'private'].includes(access)) throw failure('Blob : sonde mutante non autorisée.')
     // Recheck binding and prevent SDK API-override token exfiltration first.
     await probeBlob(env, ids)
-    const sdk = api.blobClient || require('@vercel/blob'), token = env.BLOB_READ_WRITE_TOKEN
+    const sdk = api.blobClient || require('@vercel/blob'), token = core.normalizeInput('BLOB_READ_WRITE_TOKEN', env.BLOB_READ_WRITE_TOKEN)
     const storeId = token.split('_')[3].toLowerCase(), pathname = `garageflows-config-probe/${crypto.randomUUID()}.txt`
     let object, verified = false, cleaned = false
     const owns = blob => {
@@ -218,4 +283,4 @@ function cloud(api) {
   }
   return { connect, read, write, blobStores, recover, ensureClients, probeDatabase, probeRedis, probeBlob, probeBlobWrite, normalize: normalizeStorage }
 }
-module.exports = { TARGETS, validName, targets, stamp, recordsFor, protectedRecord, resourceAliases, cloud }
+module.exports = { BLOB_DIAGNOSTICS, BLOB_TOKEN_ERRORS, TARGETS, validName, targets, stamp, recordsFor, protectedRecord, resourceAliases, cloud }

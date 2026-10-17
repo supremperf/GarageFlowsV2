@@ -635,33 +635,61 @@ test('visible secret entry is explicit, session-only and preserves hidden defaul
   }
   try {
     assert.equal(await wizard.chooseInputVisibility(async (_label, defaultYes) => { assert.equal(defaultYes, false); return false }), false)
-    const env = { BLOB_READ_WRITE_TOKEN: existing }
-    await wizard.secretField(env, 'BLOB_READ_WRITE_TOKEN')
+    const env = { PGPASSWORD: existing }
+    await wizard.secretField(env, 'PGPASSWORD')
     assert.notEqual(interfaces[0].output, process.stdout, 'masked entry must still mute readline output')
     assert.equal(prompts[0], '')
-    assert.equal(env.BLOB_READ_WRITE_TOKEN, existing)
+    assert.equal(env.PGPASSWORD, existing)
 
     assert.equal(await wizard.chooseInputVisibility(async (label, defaultYes) => {
       assert.match(label, /y compris les secrets/)
       assert.equal(defaultYes, false)
       return true
     }), true)
-    await wizard.secretField(env, 'BLOB_READ_WRITE_TOKEN')
+    await wizard.secretField(env, 'PGPASSWORD')
     assert.equal(interfaces[1].output, process.stdout, 'confirmed visible entry uses normal terminal echo')
     assert.match(prompts[1], /saisie visible, Entrée = conserver/)
     assert.match(prompts[1], /\[déjà configuré\]/)
-    assert.equal(env.BLOB_READ_WRITE_TOKEN, typed, 'password/token whitespace must not be trimmed in visible mode')
+    assert.equal(env.PGPASSWORD, typed, 'password/token whitespace must not be trimmed in visible mode')
     assert.ok(!prompts.join('\n').includes(existing), 'visible entry does not reveal existing secrets as defaults')
     assert.ok(!messages.join('\n').includes(typed), 'the application must not log entered secrets a second time')
     assert.match(messages.join('\n'), /historique d’affichage/)
 
     await wizard.chooseInputVisibility(async () => false)
-    await wizard.secretField(env, 'BLOB_READ_WRITE_TOKEN')
+    await wizard.secretField(env, 'PGPASSWORD')
     assert.notEqual(interfaces[2].output, process.stdout, 'a new choice resets the previous visible session')
     assert.equal(prompts[2], '')
-    assert.equal(env.BLOB_READ_WRITE_TOKEN, typed)
+    assert.equal(env.PGPASSWORD, typed)
   } finally {
     await wizard.chooseInputVisibility(async () => false)
+    console.log = log
+    process.stdout.write = write
+    readline.createInterface = original
+    if (tty) Object.defineProperty(process.stdin, 'isTTY', tty)
+    else delete process.stdin.isTTY
+  }
+})
+
+test('provider prompts normalize dashboard assignments and retry a wrong field without leaking its contents', async () => {
+  const readline = require('node:readline'), wizard = require('../config')
+  const original = readline.createInterface, log = console.log, write = process.stdout.write
+  const tty = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY')
+  const token = 'vercel_blob_rw_UnitTest_fixture-not-issued', messages = []
+  const answers = ['NEXTAUTH_URL="https://wrong-field.invalid"', `BLOB_READ_WRITE_TOKEN="${token}"`]
+  Object.defineProperty(process.stdin, 'isTTY', { configurable: true, value: true })
+  console.log = message => messages.push(String(message))
+  process.stdout.write = chunk => { messages.push(String(chunk)); return true }
+  readline.createInterface = () => ({ once() {}, close() {}, question(_prompt, callback) { callback(answers.shift()) } })
+  try {
+    await wizard.chooseInputVisibility(async () => false)
+    const env = {}
+    await wizard.secretField(env, 'BLOB_READ_WRITE_TOKEN')
+    assert.equal(env.BLOB_READ_WRITE_TOKEN, token)
+    assert.equal(answers.length, 0)
+    assert.match(messages.join('\n'), /saisie non reconnue/)
+    assert.ok(!messages.join('\n').includes('wrong-field.invalid'))
+    assert.ok(!messages.join('\n').includes(token))
+  } finally {
     console.log = log
     process.stdout.write = write
     readline.createInterface = original

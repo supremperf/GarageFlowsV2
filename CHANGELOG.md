@@ -3,6 +3,20 @@
 
 ## [Non publié] — 2026-10-16 — chaîne build → installeur Windows réparée à la cause, page unique, vue globale des rendez-vous
 
+### `node config` — saisie fournisseur et découverte Blob
+
+- Les champs fournisseur acceptent valeur brute, guillemets et ligne complète
+  `NOM="valeur"` ; récupération des brouillons Blob mal enveloppés, sans modifier
+  les mots de passe bruts. Une mauvaise variable collée est redemandée sans fuite.
+- Blob : prise en charge des stores historiques sans `type`, détails/connexions
+  après liste incomplète et hints authentifiés par cible ; récupération d’un
+  unique token préfixé. Aucun contournement du rattachement ou des droits.
+- Diagnostic précis sans valeurs : inventaire, portée, format, refus API, store
+  suspendu/absent, réseau/service. Les erreurs d’association/réseau permettent
+  une nouvelle vérification sans demander le même token en boucle.
+- Empreintes des tokens exposés en transcription ajoutées au registre : renouveler
+  ces accès, sans les publier dans un chat. Aucun token client utilisé en test.
+
 ### `node config` — génération des secrets internes et récupération des accès
 
 - `NEXTAUTH_SECRET` et `GARAGEFLOW_API_KEY` réellement absents sont préparés

@@ -107,6 +107,27 @@ function serializeEnv(env, names, profile) {
   }
   return lines.join('\n') + '\n'
 }
+// Provider fields copied from dashboard snippets may include NAME="value".
+// Do not normalize arbitrary passwords: their spaces/quotes may be significant.
+const PASTABLE_INPUTS = new Set(['BLOB_READ_WRITE_TOKEN', 'DATABASE_URL', 'DIRECT_URL',
+  'DATABASE_URL_UNPOOLED', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN',
+  'KV_REST_API_URL', 'KV_REST_API_TOKEN', 'NEXTAUTH_URL', 'GF_APP_URL'])
+function normalizeInput(name, value) {
+  if (!PASTABLE_INPUTS.has(name) || typeof value !== 'string') return value
+  const text = value.trim()
+  const invalid = () => {
+    const error = new Error(`${name} : coller une valeur seule ou une seule ligne ${name}="valeur", sans autre variable.`)
+    error.configSafe = true
+    return error
+  }
+  if (/[\r\n\0]/.test(text)) throw invalid()
+  const assignment = text.match(/^(?:export[ \t]+)?([A-Z][A-Z0-9_]*)[ \t]*=/)
+  // Readable provider tokens do not have an uppercase NAME= envelope.
+  if (assignment && assignment[1] !== name && PASTABLE_INPUTS.has(assignment[1])) throw invalid()
+  if (assignment?.[1] !== name && !/^["'`]/.test(text)) return text
+  try { return parseEnv(assignment?.[1] === name ? text : `${name}=${text}`)[name] ?? '' }
+  catch { throw invalid() }
+}
 function readEnv(file) {
   try { return parseEnv(fs.readFileSync(file, 'utf8')) }
   catch (e) { if (e.code === 'ENOENT') return Object.create(null); throw new Error('Fichier env illisible.') }
@@ -281,7 +302,7 @@ function syncPlan(local, remote, names) {
   }
   return { additions, conflicts }
 }
-module.exports = { DEFAULTS, GENERATED, assertNodeVersion, normalizeValue, editableNames, templateNames, namesForProfile, isSecret, parseEnv,
+module.exports = { DEFAULTS, GENERATED, assertNodeVersion, normalizeValue, normalizeInput, editableNames, templateNames, namesForProfile, isSecret, parseEnv,
   serializeEnv, readEnv, writePrivate, saveDatabaseUrls, fillMissing, missingGenerated, generateMissing,
   KEY_PROMPT_COMMANDS, isKeyPromptCommand, KEY_DESTINATIONS, keyDestinations, validate, licenseKeyMatches,
   embeddedLicenseKey, syncPlan }

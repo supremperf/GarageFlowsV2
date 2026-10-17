@@ -17,6 +17,7 @@ function clean(value) {
   return String(value || '').replace(/\[([^\]\r\n]+)\]\([^\r\n)]*\)/g, '$1').replace(/&amp;/g, '&').trim()
 }
 function normalizeStorage(source) {
+  source = Object.fromEntries(Object.entries(source).map(([name, value]) => [name, core.normalizeInput(name, value)]))
   const result = Object.fromEntries(Object.entries(source).filter(([, value]) => vercelEnv.readable(value)))
   for (const [canonical, aliases] of Object.entries(STORAGE_ALIASES)) {
     const candidates = aliases.map(n => clean(source[n])).filter(vercelEnv.readable)
