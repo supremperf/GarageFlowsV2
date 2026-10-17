@@ -131,10 +131,11 @@ function main() {
       }
     }
 
-    // La simple présence du package.json ne suffit pas : un lien symbolique
-    // vers node_modules du dépôt est valide avant packaging mais cassé dans
-    // resources/standalone. Refaire la résolution depuis server.js dans
-    // l'arborescence exacte qui sera installée et refuser toute cible externe.
+    // electron-builder exclut le node_modules situé à la racine de chaque
+    // FileSet extraResources. Le standalone principal le perd donc si on ne
+    // copie pas ce dossier comme ressource séparée (from=.../node_modules).
+    // La présence du package dans la source ne suffit pas : vérifier sa présence
+    // puis refaire la résolution depuis server.js dans l'arborescence installée.
     const standaloneApp = path.join(DECOMPRESSE, 'resources', 'standalone')
     const resolutionNext = problemeResolutionRuntime(standaloneApp)
     if (resolutionNext) {

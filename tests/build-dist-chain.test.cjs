@@ -266,7 +266,7 @@ test('le post-build ne casse pas les builds cloud (Vercel) et distingue l’empa
   assert.match(source, /GF_PACKAGE_DESKTOP/, 'l’empaquetage desktop est déclaré explicitement')
 })
 
-test('package.json : dist vérifie tout et échoue clairement à chaque étape', () => {
+test('package.json : dist vérifie tout et échoue clairement à chaque étape', t => {
   const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
   const dist = pkg.scripts.dist
   const ordre = ['preflight:release', 'GF_PACKAGE_DESKTOP=1', 'npm run build', 'electron-builder', 'check:artifact-secrets', 'check:artifact-fuses', 'verify:installer']
@@ -280,6 +280,28 @@ test('package.json : dist vérifie tout et échoue clairement à chaque étape',
   assert.equal(pkg.scripts['verify:standalone'], 'node scripts/verify-standalone-build.cjs')
   assert.equal(pkg.scripts['preflight:release'], 'node scripts/preflight-release.cjs')
   assert.equal(pkg.scripts['verify:installer'], 'node scripts/verify-installer.cjs')
+  const modulesStandaloneExplicitementCopies = pkg.build.extraResources.some((resource) =>
+    resource.from === '.next/standalone/node_modules' && resource.to === 'standalone/node_modules')
+  assert.equal(modulesStandaloneExplicitementCopies, true,
+    'electron-builder exclut le node_modules racine d’une ressource : il faut le copier séparément')
+  const { FileMatcher } = require('app-builder-lib/out/fileMatcher')
+  const projectFixture = fixture(t)
+  const standaloneSet = pkg.build.extraResources.find((resource) => resource.from === '.next/standalone')
+  const modulesSet = pkg.build.extraResources.find((resource) => resource.from === '.next/standalone/node_modules')
+  const standaloneSource = path.resolve(projectFixture, standaloneSet.from)
+  const modulesSource = path.resolve(projectFixture, modulesSet.from)
+  const standaloneMatcher = new FileMatcher(standaloneSource, 'resources/standalone', (value) => value, standaloneSet.filter)
+  standaloneMatcher.prependPattern('**/*')
+  const modulesMatcher = new FileMatcher(modulesSource, 'resources/standalone/node_modules', (value) => value, modulesSet.filter)
+  modulesMatcher.prependPattern('**/*')
+  const sourceModules = path.resolve(projectFixture, '.next/standalone/node_modules')
+  const nextPackage = path.join(sourceModules, 'next', 'package.json')
+  fs.mkdirSync(path.dirname(nextPackage), { recursive: true })
+  fs.writeFileSync(nextPackage, '{"name":"next"}')
+  assert.equal(standaloneMatcher.createFilter()(sourceModules, fs.lstatSync(sourceModules)), false,
+    'le FileSet global ignore le node_modules racine conformément au filtre electron-builder')
+  assert.equal(modulesMatcher.createFilter()(nextPackage, fs.statSync(nextPackage)), true,
+    'le FileSet dédié inclut bien next/package.json')
   for (const fichier of ['scripts/post-build.js', 'scripts/preflight-release.cjs', 'scripts/verify-standalone-build.cjs', 'scripts/verify-installer.cjs', 'scripts/lib/standalone-layout.cjs']) {
     assert.ok(fs.existsSync(path.join(root, fichier)), `${fichier} doit exister`)
   }
