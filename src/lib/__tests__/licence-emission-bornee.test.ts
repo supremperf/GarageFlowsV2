@@ -79,7 +79,6 @@ describe('toutes les routes d’administration de licences sont limitées', () =
   const ROUTES = [
     'src/app/api/admin/licenses/create/route.ts',
     'src/app/api/admin/licenses/generate/route.ts',
-    'src/app/api/admin/licenses/revoke-by-key/route.ts',
     'src/app/api/admin/licenses/[id]/route.ts',
     'src/app/api/admin/licenses/[id]/devices/route.ts',
   ]

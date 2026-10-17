@@ -1,0 +1,33 @@
+
+❌ Cohérence des variables d'environnement : 28 problème(s) :
+   • scripts/compromised-secrets.json:29 : alias INTERDIT « DATABASE_URL_UNPOOLED » — utiliser « DIRECT_URL » (un nom canonique par configuration)
+   • scripts/config-core.cjs:113 : alias INTERDIT « DATABASE_URL_UNPOOLED » — utiliser « DIRECT_URL » (un nom canonique par configuration)
+   • scripts/config-full.cjs:134 : alias INTERDIT « DATABASE_URL_UNPOOLED » — utiliser « DIRECT_URL » (un nom canonique par configuration)
+   • scripts/config-manager.cjs:296 : alias INTERDIT « DATABASE_URL_UNPOOLED » — utiliser « DIRECT_URL » (un nom canonique par configuration)
+   • scripts/config-manager.cjs:353 : alias INTERDIT « DATABASE_URL_UNPOOLED » — utiliser « DIRECT_URL » (un nom canonique par configuration)
+   • scripts/config-rebuild.cjs:11 : alias INTERDIT « DATABASE_URL_UNPOOLED » — utiliser « DIRECT_URL » (un nom canonique par configuration)
+   • scripts/lib/config-credentials.cjs:41 : alias INTERDIT « DATABASE_URL_UNPOOLED » — utiliser « DIRECT_URL » (un nom canonique par configuration)
+   • scripts/lib/config-credentials.cjs:61 : alias INTERDIT « DATABASE_URL_UNPOOLED » — utiliser « DIRECT_URL » (un nom canonique par configuration)
+   • .env.storage.example : alias INTERDIT « DATABASE_URL_UNPOOLED » déclaré — renommer en « DIRECT_URL »
+   • docs/CONFIG.md:330 : documentation ACTIVE citant l'alias « DATABASE_URL_UNPOOLED » — utiliser « DIRECT_URL »
+   • .env.storage.example : nom non canonique « DATABASE_URL_UNPOOLED »
+   • .env.storage.example : nom non canonique « PGHOST »
+   • .env.storage.example : nom non canonique « PGHOST_UNPOOLED »
+   • .env.storage.example : nom non canonique « PGUSER »
+   • .env.storage.example : nom non canonique « PGDATABASE »
+   • .env.storage.example : nom non canonique « PGPASSWORD »
+   • .env.storage.example : nom non canonique « POSTGRES_URL »
+   • .env.storage.example : nom non canonique « POSTGRES_URL_NON_POOLING »
+   • .env.storage.example : nom non canonique « POSTGRES_USER »
+   • .env.storage.example : nom non canonique « POSTGRES_HOST »
+   • .env.storage.example : nom non canonique « POSTGRES_PASSWORD »
+   • .env.storage.example : nom non canonique « POSTGRES_DATABASE »
+   • .env.storage.example : nom non canonique « POSTGRES_URL_NO_SSL »
+   • .env.storage.example : nom non canonique « POSTGRES_PRISMA_URL »
+   • .env.storage.example : nom non canonique « BLOB_READ_WRITE_TOKEN »
+   • .env.storage.example : nom non canonique « KV_REST_API_URL »
+   • .env.storage.example : nom non canonique « KV_REST_API_TOKEN »
+   • .env.storage.example : nom non canonique « KV_REST_API_READ_ONLY_TOKEN »
+
+   Source de vérité : scripts/garageflow-env-manifest.json
+   Référence lisible : ENVIRONMENT-VARIABLES.md

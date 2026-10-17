@@ -227,6 +227,8 @@ def _remote_set_status(server_url: str, api_key: str, license_id: str, status: s
     except urllib.error.HTTPError as e:
         # Discrimination des erreurs HTTP en messages opérateur clairs.
         code = e.code
+        if code == 404:
+            return False, "Révocation par clé partagée désactivée. Utilisez l'administration authentifiée ; aucun état distant n'a été changé."
         if code in (401, 403):
             return False, "Clé API invalide (GARAGEFLOW_API_KEY) — vérifiez la clé du serveur."
         if code == 429:
@@ -1393,7 +1395,7 @@ class TabServer(tk.Frame):
                 if e.code in (401, 403):
                     _result("❌  Clé API invalide (GARAGEFLOW_API_KEY) — vérifiez la clé du serveur.", RED)
                 elif e.code == 404:
-                    _result("❌  Route de licences introuvable (HTTP 404) — l'URL ne pointe pas vers GarageFlows.", RED)
+                    _result("⚠️  Administration par clé partagée désactivée (HTTP 404). Ce test ne valide pas les accès admin.", RED)
                 elif e.code == 429:
                     _result("⚠️  Trop de requêtes (rate limit) — réessayez dans quelques instants.", AMBER)
                 elif e.code in (500, 502, 503, 504):

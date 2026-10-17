@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
+import { parsePagination } from '@/lib/pagination'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { redactLineCosts } from '@/lib/authz'
@@ -18,9 +19,9 @@ export const GET = withAuth(async (req) => {
   const jobId = searchParams.get('jobId')
   const status = searchParams.get('status')
 
-  const page  = Math.max(1, parseInt(searchParams.get('page') ?? '1'))
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '20')))
-  const skip  = (page - 1) * limit
+  const pagination = parsePagination(searchParams, 20)
+  if (!pagination) return NextResponse.json({ error: 'Pagination invalide', code: 'INVALID_PAGINATION' }, { status: 400 })
+  const { page, limit, skip } = pagination
 
   const where: Record<string, unknown> = { garageId: session.user.garageId }
   if (jobId) where.jobId = jobId

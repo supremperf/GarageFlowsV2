@@ -1,0 +1,998 @@
+[
+  {
+    "file": "electron/main.js",
+    "line": 744,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "electron/main.js",
+    "line": 750,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "electron/main.js",
+    "line": 754,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "electron/main.js",
+    "line": 818,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "electron/main.js",
+    "line": 825,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "electron/main.js",
+    "line": 2893,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "electron/main.js",
+    "line": 3884,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "electron/pre-migration-backup.js",
+    "line": 76,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "electron/pre-migration-backup.js",
+    "line": 129,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-empreinte.mjs",
+    "line": 57,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-empreinte.mjs",
+    "line": 66,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-empreinte.mjs",
+    "line": 72,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-empreinte.mjs",
+    "line": 79,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-empreinte.mjs",
+    "line": 87,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-empreinte.mjs",
+    "line": 99,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-mechanic-licenses.mjs",
+    "line": 82,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-mechanic-licenses.mjs",
+    "line": 92,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-mechanic-licenses.mjs",
+    "line": 106,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-mechanic-licenses.mjs",
+    "line": 117,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-mechanic-licenses.mjs",
+    "line": 128,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-mechanic-licenses.mjs",
+    "line": 143,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-migrations-restantes.mjs",
+    "line": 56,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-migrations-restantes.mjs",
+    "line": 60,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-migrations-restantes.mjs",
+    "line": 63,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-migrations-restantes.mjs",
+    "line": 66,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-neon-migrations-restantes.mjs",
+    "line": 68,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-perte-monetaire-scaled-units.mjs",
+    "line": 58,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-perte-monetaire-scaled-units.mjs",
+    "line": 72,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-sens-de-verite-monetaire.mjs",
+    "line": 51,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-sens-de-verite-monetaire.mjs",
+    "line": 59,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/audit-sens-de-verite-monetaire.mjs",
+    "line": 84,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/baseline-template.mjs",
+    "line": 48,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/baseline-template.mjs",
+    "line": 58,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/baseline-template.mjs",
+    "line": 101,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/baseline-template.mjs",
+    "line": 111,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/baseline-template.mjs",
+    "line": 114,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/capture-phase6-native-baseline.cjs",
+    "line": 16,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/capture-phase6-native-baseline.cjs",
+    "line": 17,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/check-branding.mjs",
+    "line": 103,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/check-branding.mjs",
+    "line": 166,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/check-converge-additive.mjs",
+    "line": 60,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/check-env-consistency.mjs",
+    "line": 238,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/check-env-consistency.mjs",
+    "line": 249,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/check-env-vercel.mjs",
+    "line": 44,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/check-migration-safety.mjs",
+    "line": 54,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/config-audit.cjs",
+    "line": 10,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/config-core.cjs",
+    "line": 56,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/config-keygen.cjs",
+    "line": 19,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/config-services.cjs",
+    "line": 11,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/config-services.cjs",
+    "line": 56,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/config-services.cjs",
+    "line": 60,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/config-services.cjs",
+    "line": 77,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/config-services.cjs",
+    "line": 81,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/diag-conflit-invoiceline.mjs",
+    "line": 30,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/diag-conflit-invoiceline.mjs",
+    "line": 37,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/diag-conflit-invoiceline.mjs",
+    "line": 44,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/diag-conflit-invoiceline.mjs",
+    "line": 49,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/diag-defauts-colonnes-float.mjs",
+    "line": 22,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/diag-loaner-divergence.mjs",
+    "line": 30,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/diag-loaner-divergence.mjs",
+    "line": 49,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/diag-loaner-divergence.mjs",
+    "line": 66,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/diagnose-typescript.cjs",
+    "line": 17,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/evaluate-copilot.cjs",
+    "line": 23,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/evaluate-copilot.cjs",
+    "line": 36,
+    "signal": "evalOrNewFunction",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/evaluate-copilot.cjs",
+    "line": 74,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/generate-release-manifest.mjs",
+    "line": 24,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/generate-release-manifest.mjs",
+    "line": 30,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/generate-verification-baseline.mjs",
+    "line": 41,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/gitleaks-ci.cjs",
+    "line": 65,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/lib/config-cloud.cjs",
+    "line": 234,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/lib/config-cloud.cjs",
+    "line": 255,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/lib/config-credentials.cjs",
+    "line": 66,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/lib/config-credentials.cjs",
+    "line": 80,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/lib/docs-consistency.mjs",
+    "line": 245,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/lib/docs-consistency.mjs",
+    "line": 246,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/package-artifact.mjs",
+    "line": 38,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/package-artifact.mjs",
+    "line": 45,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/package-artifact.mjs",
+    "line": 82,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/package-artifact.mjs",
+    "line": 89,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/post-build.js",
+    "line": 272,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/reparer-coherence-float-entier.mjs",
+    "line": 79,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/reparer-coherence-float-entier.mjs",
+    "line": 92,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/reparer-coherence-float-entier.mjs",
+    "line": 105,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/reparer-coherence-float-entier.mjs",
+    "line": 132,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/setup-dev.js",
+    "line": 156,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/setup-dev.js",
+    "line": 164,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/validate-server-db.js",
+    "line": 39,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/validate-server-db.js",
+    "line": 64,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/validate-server-db.js",
+    "line": 117,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/verifier-apres-deploiement-neon.mjs",
+    "line": 34,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/verifier-apres-deploiement-neon.mjs",
+    "line": 43,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/verifier-apres-deploiement-neon.mjs",
+    "line": 49,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/verifier-apres-deploiement-neon.mjs",
+    "line": 62,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/verifier-apres-deploiement-neon.mjs",
+    "line": 71,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/verifier-apres-deploiement-neon.mjs",
+    "line": 79,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "scripts/verify-artifact.mjs",
+    "line": 72,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/__tests__/security-headers.test.ts",
+    "line": 48,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/__tests__/security-headers.test.ts",
+    "line": 54,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/app/api/appointments/route.ts",
+    "line": 80,
+    "signal": "uncheckedPagination",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/app/api/internal/backup/route.ts",
+    "line": 110,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/app/api/internal/migrate/route.ts",
+    "line": 134,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/app/api/internal/migrate/route.ts",
+    "line": 142,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/app/api/internal/migrate/route.ts",
+    "line": 143,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/app/api/internal/migrate/route.ts",
+    "line": 144,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/app/api/internal/migrate/route.ts",
+    "line": 210,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/app/api/internal/migrate/route.ts",
+    "line": 211,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/app/api/internal/migrate/route.ts",
+    "line": 243,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/app/api/internal/migrate/route.ts",
+    "line": 253,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/app/api/internal/migrate/route.ts",
+    "line": 257,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/route.ts",
+    "line": 256,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/route.ts",
+    "line": 307,
+    "signal": "rawUnsafeSQL",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/components/DateField.tsx",
+    "line": 17,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/components/DateField.tsx",
+    "line": 22,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/components/JobQRCode.tsx",
+    "line": 117,
+    "signal": "rawHTML",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/desktop-schema-migration-parity.test.ts",
+    "line": 51,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/document-numbering.postgres.int.test.ts",
+    "line": 30,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/document-numbering.postgres.int.test.ts",
+    "line": 52,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/env-manifest-drift.test.ts",
+    "line": 93,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/fk-indexes.test.ts",
+    "line": 55,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/fk-indexes.test.ts",
+    "line": 56,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/fk-indexes.test.ts",
+    "line": 58,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/input-contrast.test.ts",
+    "line": 153,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/issuer-fixture-roundtrip.test.ts",
+    "line": 62,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/license-devices.postgres.int.test.ts",
+    "line": 72,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/licensed-session.postgres.int.test.ts",
+    "line": 73,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/migrations-unique-index.test.ts",
+    "line": 25,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/migrations-unique-index.test.ts",
+    "line": 50,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/migrations-unique-index.test.ts",
+    "line": 65,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/migrations-unique-index.test.ts",
+    "line": 78,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/migrations-unique-index.test.ts",
+    "line": 96,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/migrations-unique-index.test.ts",
+    "line": 110,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/migrations-vehicle-ctdate.test.ts",
+    "line": 48,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/migrations-vehicle-ctdate.test.ts",
+    "line": 62,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/migrations-vehicle-ctdate.test.ts",
+    "line": 64,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/migrations-vehicle-ctdate.test.ts",
+    "line": 72,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/migrations-vehicle-ctdate.test.ts",
+    "line": 81,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/money-schema-migration.test.ts",
+    "line": 18,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/money-schema-migration.test.ts",
+    "line": 26,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/money-schema-migration.test.ts",
+    "line": 35,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/money-schema-migration.test.ts",
+    "line": 39,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/money-schema-migration.test.ts",
+    "line": 42,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/money-schema-migration.test.ts",
+    "line": 52,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/money-schema-migration.test.ts",
+    "line": 126,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/money-schema-migration.test.ts",
+    "line": 159,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/money-schema-migration.test.ts",
+    "line": 160,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/money-schema-migration.test.ts",
+    "line": 161,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/money-schema-migration.test.ts",
+    "line": 180,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/money-schema-migration.test.ts",
+    "line": 181,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/portal-access-reachable.test.ts",
+    "line": 366,
+    "signal": "rawHTML",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/release-signing-chain.test.ts",
+    "line": 69,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/release-signing-chain.test.ts",
+    "line": 160,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/reset-schema-drift.test.ts",
+    "line": 35,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/reset-schema-drift.test.ts",
+    "line": 86,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/reset-schema-drift.test.ts",
+    "line": 99,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/stock-concurrency.postgres.int.test.ts",
+    "line": 22,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/__tests__/stock-concurrency.postgres.int.test.ts",
+    "line": 35,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/inspection/print-theme.ts",
+    "line": 57,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/license/__tests__/hwid-v1.test.ts",
+    "line": 13,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/license/__tests__/hwid-v1.test.ts",
+    "line": 66,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/license/hwid.ts",
+    "line": 67,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/planning/__tests__/bornes-partout.test.ts",
+    "line": 113,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/planning/__tests__/bornes-partout.test.ts",
+    "line": 136,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/lib/portal/appointments.ts",
+    "line": 35,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/test-utils/prepare-test-db.ts",
+    "line": 7,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/test-utils/prepare-test-db.ts",
+    "line": 52,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  },
+  {
+    "file": "src/types/node-sqlite.d.ts",
+    "line": 15,
+    "signal": "shellExecution",
+    "conclusion": "review cue only; not a confirmed vulnerability"
+  }
+]

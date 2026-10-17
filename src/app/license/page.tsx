@@ -1,5 +1,7 @@
 'use client'
 
+import { activationErrorMessage } from '@/lib/license/activation-message'
+
 /**
  * License activation page — shown BEFORE login/register.
  *
@@ -68,9 +70,9 @@ export default function LicensePage() {
         reason?:      string
       }
 
-      if (!data.ok) {
+      if (!res.ok || data.ok !== true) {
         setStatus('error')
-        setMessage(data.reason ?? 'Licence invalide')
+        setMessage(activationErrorMessage(data, res.status))
         return
       }
 

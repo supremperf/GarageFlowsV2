@@ -1,5 +1,8 @@
 'use client'
 
+import { activationErrorMessage } from '@/lib/license/activation-message'
+import { loadLicenseDeviceOverview, type LicenseDeviceOverview } from '@/lib/license/devices-overview'
+
 import { useEffect, useRef, useState } from 'react'
 import { X, KeyRound, CheckCircle, AlertCircle, Loader2, Monitor } from 'lucide-react'
 import { GarageFlowIcon } from './GarageFlowLogo'
@@ -7,14 +10,6 @@ import { getOrCreateInstallId } from '@/lib/pwa-install-id'
 
 interface Props {
   onClose: () => void
-}
-
-interface Poste {
-  deviceId: string
-  status: string
-  name: string | null
-  platform: string | null
-  lastSeenAt: string | null
 }
 
 /**
@@ -32,22 +27,30 @@ interface Poste {
  * pas fonctionner serait pire que de ne rien proposer.
  */
 function PostesActives() {
-  const [etat, setEtat] = useState<{ seats: number; activeCount: number; devices: Poste[] } | null>(null)
+  const [lecture, setLecture] = useState<
+    { kind: 'loading' | 'absent' | 'error' } | { kind: 'ready'; data: LicenseDeviceOverview }
+  >({ kind: 'loading' })
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let vivant = true
-    fetch('/api/license/devices', { cache: 'no-store' })
-      .then(async (r) => {
-        const d = await r.json().catch(() => null)
-        // 401 hors contexte licence, 404 licence inconnue : le bloc disparaît
-        // plutôt que d'afficher une erreur qui n'en est pas une.
-        if (vivant && r.ok && d?.ok) setEtat({ seats: d.seats, activeCount: d.activeCount, devices: d.devices ?? [] })
-      })
-      .catch(() => {})
+    setLecture({ kind: 'loading' })
+    loadLicenseDeviceOverview()
+      .then(d => { if (vivant) setLecture(d ? { kind: 'ready', data: d } : { kind: 'absent' }) })
+      .catch(() => { if (vivant) setLecture({ kind: 'error' }) })
     return () => { vivant = false }
-  }, [])
+  }, [attempt])
 
-  if (!etat) return null
+  if (lecture.kind === 'absent') return null
+  if (lecture.kind === 'loading') return <p role="status" className="mb-5 text-xs">Chargement des postes activés…</p>
+  if (lecture.kind === 'error') return (
+    <div role="alert" className="mb-5 text-xs">
+      <p>Liste des postes indisponible. Cela ne signifie pas que votre licence est invalide.</p>
+      <button type="button" onClick={() => setAttempt(n => n + 1)} className="mt-2 underline">Réessayer le chargement des postes</button>
+    </div>
+  )
+  if (lecture.kind !== 'ready') return null
+  const etat = lecture.data
   const complet = etat.activeCount >= etat.seats
 
   return (
@@ -152,7 +155,7 @@ export default function LicenseChangeModal({ onClose }: Props) {
           setResult({ ok: true, message: `Licence activée (${res.licenseType})`, licenseType: res.licenseType })
           setTimeout(() => { onClose(); window.location.reload() }, 1500)
         } else {
-          setResult({ ok: false, message: res.reason ?? 'Licence invalide' })
+          setResult({ ok: false, message: res.reason ?? 'La vérification n’a pas abouti.' })
         }
       } else {
         // ── Trois défauts cumulés, corrigés ensemble (GF-008) ─────────────────
@@ -174,11 +177,11 @@ export default function LicenseChangeModal({ onClose }: Props) {
           body: JSON.stringify({ license: t, ...(installId ? { installId } : {}) }),
         })
         const data = await res.json()
-        if (data.ok && data.licenseType) {
+        if (res.ok && data.ok === true && data.licenseType) {
           setResult({ ok: true, message: `Licence activée (${data.licenseType})`, licenseType: data.licenseType })
           setTimeout(() => { onClose(); window.location.reload() }, 1500)
         } else {
-          setResult({ ok: false, message: data.reason ?? data.error ?? 'Licence invalide' })
+          setResult({ ok: false, message: activationErrorMessage(data, res.status) })
         }
       }
     } catch {

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GF-DUR-037 — le décrément de stock résiste à un entrelacement IMPOSÉ.
  *
  * ─── Pourquoi ce test s'ajoute à `integration/invoice-stock-sync.test.ts` ───

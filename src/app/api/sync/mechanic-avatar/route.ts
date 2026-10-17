@@ -1,3 +1,4 @@
+import { licenseApiBoundary } from '@/lib/license/api-boundary'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -53,12 +54,15 @@ function horodatage(v: unknown): Date | null {
   return Number.isNaN(d.getTime()) ? null : d
 }
 
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
   const rl = await enforceRateLimit('license_status', clientIpFrom(req))
   if (!rl.ok) return rateLimitResponse(rl)
 
   let body: Record<string, unknown>
   try { body = await req.json() } catch { return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 }) }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 })
+  }
 
   const garage     = (body.garage as Record<string, unknown>) ?? {}
   const mechanic   = (body.mechanic as Record<string, unknown>) ?? {}
@@ -179,4 +183,8 @@ export async function POST(req: Request) {
   })
 
   return NextResponse.json({ ok: true, avatarUrl: `/api/photos/${nouveauChemin}` })
+}
+
+export async function POST(req: Request) {
+  return licenseApiBoundary(() => handlePOST(req))
 }

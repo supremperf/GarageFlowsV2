@@ -1,0 +1,23 @@
+2026-10-17T19:19:36Z
+--- Native engines in checkout/cache ---
+--- Mirror/engine variable NAMES only ---
+No PRISMA_* variables set
+--- Tracked engines/clients and available history ---
+true
+2
+--- Prisma engine identity ---
+605197351a3c8bdd595af2d2a9bc3025bca48ea2
+--- Mirror setting support in installed CLI (names only) ---
+node_modules/@prisma/fetch-engine/dist/chunk-PXQVM7NP.js:PRISMA_QUERY_ENGINE_LIBRARY
+node_modules/@prisma/fetch-engine/dist/chunk-PXQVM7NP.js:PRISMA_SCHEMA_ENGINE_BINARY
+node_modules/@prisma/fetch-engine/dist/chunk-FQ2BOR66.js:PRISMA_ENGINES_MIRROR
+--- Direct network evidence ---
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+curl: (35) OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to binaries.prisma.sh:443 
+--- After read-only history fetch ---
+2026-10-17T19:21:16Z
+false
+481
+No tracked clients/engines in matching historical paths.

@@ -1,5 +1,7 @@
 # Config — gestion des environnements GarageFlows
 
+> **Audit du 17 octobre 2026 : NO-GO production.** Les sondes PowerShell de validation de l’ancien admin sont volontairement bloquantes ; ne pas contourner leur échec ni réactiver `revoke-by-key`. Le [remplacement administratif](REVOCATION_ADMIN_RUNBOOK.md) est une SPEC P1, pas une fonctionnalité livrée. Voir la [vérification lecture seule de l’émetteur](VERIFICATION_CLE_EMETTRICE.md) et le [verdict détaillé](audit/2026-10-17/06-VERDICT-FINAL.md). Ce constat n’autorise aucune migration, rotation ou mise en production.
+
 ## Nouveau mode par défaut : différentiel, idempotent, trois cibles
 
 ```sh
@@ -327,9 +329,11 @@ Neon/Redis sont encore manquants après lecture des valeurs Vercel/locales.
 
 `.env` reste le profil SQLite desktop et n’est pas écrasé. Les noms inconnus des
 fichiers locaux sont préservés, sauf les valeurs connues exposées. Les alias
-obsolètes sont migrés vers le contrat canonique. `DATABASE_URL_UNPOOLED`, les
-paramètres `PG*` et les variantes `POSTGRES_*` sont acceptés comme **entrées
-fournisseur** ; seuls les noms applicatifs canoniques sont déployés. Prisma
+obsolètes sont migrés vers le contrat canonique. Les paramètres de connexion
+non canoniques fournis par le dashboard (paramètres `PG*` et variantes `POSTGRES_*`)
+sont des **entrées fournisseur**, jamais des noms runtime. Le normaliseur retire
+l’ancien alias direct et refuse un conflit avec `DIRECT_URL` avant toute écriture ;
+seuls les noms applicatifs canoniques sont déployés. Prisma
 attend `DIRECT_URL`, pas un alias supplémentaire. `.env.storage.example` montre
 les champs acceptés **sans aucun secret**. `.env.example` reste sans secrets.
 

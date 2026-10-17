@@ -97,7 +97,7 @@ GarageFlows/ (racine du depot)
 │   ├── keygen_core.py # Crypto ECC P-256 + HWID
 │   ├── keygen_db.py   # Base de données locale des licences (JSON)
 │   ├── keygen_ui.py   # Interface tkinter (génération, gestion, révocation)
-│   └── keygen_gui.py  # Point d'entrée GUI keygen
+│   └── keygen.py  # Point d'entrée GUI keygen
 └── keys/              # private.pem + public.pem (jamais committé)
 ```
 
@@ -108,12 +108,12 @@ GarageFlows/ (racine du depot)
 ### Initialisation (première fois)
 
 ```bash
-python scripts/keygen_gui.py
+python scripts/keygen.py
 ```
 
-Dans l'onglet **Clés** : cliquer **Initialiser les clés** → copier la clé publique dans :
-- `src/lib/license/public-key.ts` → tableau `_LINES`
-- `electron/main.js` → tableau `_PK`
+Conserver les clés existantes. Ne jamais réinitialiser la paire sur un parc actif.
+Après une initialisation explicitement approuvée, utiliser `npm run keys:sync`,
+puis `npm run keys:check` (pas de copie manuelle des tableaux embarqués).
 
 ### Types de licence
 
@@ -274,3 +274,13 @@ Côté serveur : voir le dépôt `garagesite3`, `docs/CONTROL_PLANE.md`.
 ## Langues supportées
 
 Français · English · Español · Deutsch · Italiano · Português · Nederlands · Polski · Русский · العربية · 中文 · 日本語 · Türkçe · 한국어
+
+### Contrat des entrées fournisseur
+
+`.env.example` décrit le runtime ; `.env.storage.example` contient uniquement les
+noms canoniques des saisies fournisseur. `node config` accepte les exports de
+dashboard à une frontière de normalisation : un alias direct est retiré de la
+sortie, une contradiction avec `DIRECT_URL` bloque avant toute écriture. Les
+variables d’outillage (dont le token Blob) ne deviennent pas une dépendance
+applicative implicite. Voir [configuration](docs/CONFIG.md) et
+[registre d’environnement](ENVIRONMENT-VARIABLES.md).

@@ -475,7 +475,7 @@
     "receiptSha256": "3c7a6379ece1061bd5bfcf410144134e415bb1409989608098a982c8b7330ccf",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -1214,7 +1214,7 @@
     "receiptSha256": "cb5bede36bca4fcbeb4e594f7f24becb92b2e28f1f279c1e474c7b78cfdf7ee2",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -1953,7 +1953,7 @@
     "receiptSha256": "6fca836e622a2e0ee6ebfa757307e469f759063add24141dc11eb3fd28201269",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -2692,7 +2692,7 @@
     "receiptSha256": "a7b7fe68efed915d0eb9f9d27184ade353f27a5fc16d499759077507bfb686d8",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -3431,7 +3431,7 @@
     "receiptSha256": "a453b0ab699fae2e12eefdd3be889a2d5029986ea1e1b3618831ee9df8cdcf0c",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -4170,7 +4170,7 @@
     "receiptSha256": "92a7a2a704e7f44b72bb2b55ee3a195f9659022679a150c443f55b7353061cf3",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -4909,7 +4909,7 @@
     "receiptSha256": "6fd1052de7756f0250a351537fc3d9ac2cf3d677adb7b72121ea9b540b8f00be",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -5648,7 +5648,7 @@
     "receiptSha256": "fff5fe4a65638aee94c6902154fd715c3646ffbbb0e27e04e5e8eddf95c6a9ac",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -6387,7 +6387,7 @@
     "receiptSha256": "03aa37fbf2207dcb5db06a83680d9041d971a1a462f6cfe6b8634f2a1159fe74",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -7126,7 +7126,7 @@
     "receiptSha256": "b1e31856e1b57e1109fdfe675bf70dffc4f0fed817dce2c8cb60bfe7e5366dcb",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -7865,7 +7865,7 @@
     "receiptSha256": "99cd12c10c32801e6ce4d6698db7a441ee229b329474033c6946ee0fd1e5ffc5",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -8604,7 +8604,7 @@
     "receiptSha256": "83affff7e52c3ee743836c509fd04ca6555cb662f6a9dbf8dd920e158ad2e5ff",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -9343,7 +9343,7 @@
     "receiptSha256": "00fad355540d5de059bc01dd12a601cb546e3d5c46cf187aa17ab0ea7e11bcfd",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -10082,7 +10082,7 @@
     "receiptSha256": "43ca293c980b28a55d8203677e57d723f51e85e0485b787eb211c0c9bfbba91f",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -10821,7 +10821,7 @@
     "receiptSha256": "d3d1168b904d2d449d8c5c5619aaefe8d8d398f111c9123d863809d8a81b97dc",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -11560,7 +11560,7 @@
     "receiptSha256": "bced94db36a77dbac6d8191f5b0f8325f00f690d9dab78218750242ae90c2def",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -12299,7 +12299,7 @@
     "receiptSha256": "4442561c7cac3b0d16f50cd3f8160ae91e35dc758288dc2c05daf237b722c0c5",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -13038,7 +13038,7 @@
     "receiptSha256": "23db71689bf997ddb9339ee0e739a2eed354fcf933d912df82ceb359699740d7",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -13777,7 +13777,7 @@
     "receiptSha256": "561c87f345248bef5c4669769494f30d71162f8300e939f1fd483f78fcda41f2",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -14516,7 +14516,7 @@
     "receiptSha256": "ec37ff974eecab59cd3eb2a3eca1d296c3c8634ee99ced1d05e45ac89e6319b5",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -15255,7 +15255,7 @@
     "receiptSha256": "872fa93d2df31c54a1fce0e56f102420f732bedf02fd8dbce3a654e303c30607",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -15994,7 +15994,7 @@
     "receiptSha256": "27127640dd7386829d97dc78986044f23a53d5f162dcc3d11119928c18f543a7",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -16733,7 +16733,7 @@
     "receiptSha256": "6bb176e50c2b974152851c19a42ee45cb2d60f59a0b2ec05fcaf37d4b086894e",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -17472,7 +17472,7 @@
     "receiptSha256": "52f8cd27615544892a99dd6751f33f86ec22ac99f8d9e1d69e47c83b52ceb561",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -18211,7 +18211,7 @@
     "receiptSha256": "d8a5060625b24ac40d14560fd8b6c5a81c0daf84505df6a4cb6a01718a917504",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -18950,7 +18950,7 @@
     "receiptSha256": "92cfc8a3c57d8e591aeae81a5de133bccebe1e7f5642ef8ab3c05778a729c7cd",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -19689,7 +19689,7 @@
     "receiptSha256": "0f0fafae0e9ef242ba157bd0b88d7907aeaad1c935d4b2d03a84903972827d03",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -20428,7 +20428,7 @@
     "receiptSha256": "d8c5bbf4c5f605967163c0b8b017f405117cb96b3a91ecc0419964aa3e301e7a",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,
@@ -21167,7 +21167,7 @@
     "receiptSha256": "31bd492f471fb483ccf7350e5e238983670beda314c2e1b5f43fee111516e675",
     "sourcePath": "scripts/keygen_ui.py",
     "sourceSha256": "688839a8a3d21f9e8928ecc379aa9138cde5fc5ca6f7499c34032b27a079ce96",
-    "sourceSnapshot": null,
+    "sourceSnapshot": "docs/audit/2026-10-17/snapshots/keygen_ui.before.py.txt",
     "verifiedSourceCommit": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
     "history": {
       "present": true,

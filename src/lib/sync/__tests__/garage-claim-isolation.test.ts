@@ -44,6 +44,12 @@ interface Row {
 
 const store = vi.hoisted(() => ({ rows: new Map<string, Row>(), tokens: new Map<string, unknown>() }))
 
+// Cette suite isole l'orchestration/tenant ; intégrité réelle testée dans incident-record-integrity.test.ts.
+vi.mock('@/lib/license/record-mac', async (original) => ({
+  ...await original<typeof import('@/lib/license/record-mac')>(),
+  verifyRecordMac: () => ({ ok: true, tampered: false, missing: false }),
+}))
+
 vi.mock('@/lib/db', () => ({
   prisma: {
     licenseKey: {

@@ -32,9 +32,16 @@ function licenseOf(c) {
 }
 
 /** Cherche le texte de licence d'un paquet dans node_modules. */
-function licenseText(name) {
-  const dir = path.join(ROOT, 'node_modules', name)
+function licenseText(component) {
+  const { name, version } = component
+  const declared = component.properties?.find(p => p.name === 'cdx:npm:package:path')?.value
+  const dir = path.resolve(ROOT, declared || path.join('node_modules', name))
+  const base = path.resolve(ROOT, 'node_modules') + path.sep
+  if (!dir.startsWith(base)) throw new Error('Invalid SBOM package location')
   if (!fs.existsSync(dir)) return null
+  if (!fs.realpathSync(dir).startsWith(base)) throw new Error('Invalid SBOM package location')
+  const installed = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'))
+  if (installed.name !== name || installed.version !== version) throw new Error('SBOM package identity/version mismatch')
   for (const f of fs.readdirSync(dir)) {
     if (/^licen[cs]e/i.test(f) && fs.statSync(path.join(dir, f)).isFile()) {
       try { return fs.readFileSync(path.join(dir, f), 'utf8').trim() } catch { return null }
@@ -76,12 +83,12 @@ lines.push('')
 lines.push('## Textes de licence')
 lines.push('')
 for (const c of comps) {
-  const text = licenseText(c.name)
+  const text = licenseText(c)
   lines.push(`### ${c.name}@${c.version || ''} — ${licenseOf(c)}`)
   lines.push('')
   if (text) {
     lines.push('```')
-    lines.push(text.slice(0, 8000))
+    lines.push(text)
     lines.push('```')
   } else {
     lines.push('_(Texte de licence non trouvé sur disque — se référer au dépôt amont du paquet.)_')

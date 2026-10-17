@@ -1,4 +1,4 @@
-﻿/**
+/**
  * INVENTAIRE des routes d'API qu'aucun code appelant ne mentionne.
  *
  * ─── Pourquoi cette garde existe ────────────────────────────────────────────

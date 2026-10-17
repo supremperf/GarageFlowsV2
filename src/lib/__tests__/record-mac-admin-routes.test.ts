@@ -229,49 +229,15 @@ describe('GF31-AUD-006 — PATCH /api/admin/licenses/[id]', () => {
   })
 })
 
-describe('GF31-AUD-006 — POST /api/admin/licenses/revoke-by-key', () => {
-  it('révoquer une clé mécanicien laisse un MAC qui se re-vérifie', async () => {
-    const avant = cleMecanicien()
-    db.ligne = avant
-
-    const res = await POST_REVOCATION(
-      new Request('http://127.0.0.1/api/admin/licenses/revoke-by-key', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-gf-key': process.env.GARAGEFLOW_API_KEY! },
-        body: JSON.stringify({ licenseId: 'lid-mecanicien', status: 'revoked' }),
-      }) as never,
-    )
-    expect(res.status).toBe(200)
-
-    const ecrit = ecritureUnique()
-    expect(typeof ecrit.recordMac).toBe('string')
-    expect(macCoherent({ ...avant, status: 'revoked' }, ecrit.recordMac)).toBe(true)
-  })
-
-  it('réactiver ensuite la même clé produit encore un MAC cohérent', async () => {
-    const avant = cleMecanicien({ status: 'revoked' })
-    db.ligne = avant
-
-    // Le sujet de ce test est la COHÉRENCE DU MAC après réactivation, pas la
-    // politique de transition. Il empruntait un `{status:'active'}` nu parce que
-    // la route l'acceptait alors — c'était précisément le défaut GF-DUR-048 :
-    // `revoked` est terminal, on n'en sort que par un geste dédié avec motif.
-    // L'intention du test est conservée, la voie empruntée est la bonne.
-    await POST_REVOCATION(
-      new Request('http://127.0.0.1/api/admin/licenses/revoke-by-key', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-gf-key': process.env.GARAGEFLOW_API_KEY! },
-        body: JSON.stringify({
-          licenseId: 'lid-mecanicien',
-          status: 'active',
-          confirmReactivation: true,
-          reason: 'Rétablissement après révocation par erreur (test de cohérence MAC)',
-        }),
-      }) as never,
-    )
-
-    const ecrit = ecritureUnique()
-    expect(macCoherent({ ...avant, status: 'active' }, ecrit.recordMac)).toBe(true)
+describe('GF31-AUD-006 — ancien endpoint retiré', () => {
+  it.each(['active', 'revoked'])('aucune écriture de MAC via revoke-by-key : %s', async (status) => {
+    db.ligne = cleMecanicien()
+    const res = await POST_REVOCATION(new Request('https://example.invalid/api/admin/licenses/revoke-by-key', {
+      method: 'POST', body: JSON.stringify({ licenseId: 'lid-mecanicien', status }),
+    }) as never)
+    expect(res.status).toBe(404)
+    expect((await res.json()).code).toBe('ENDPOINT_DISABLED')
+    expect(db.ecrits).toHaveLength(0)
   })
 })
 

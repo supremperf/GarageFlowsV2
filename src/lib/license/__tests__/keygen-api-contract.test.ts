@@ -73,11 +73,12 @@ describe('Endpoints appelés par le Keygen', () => {
     ])
   })
 
-  it('chaque route ciblée expose bien POST et exige x-gf-key', () => {
+  it('chaque route ciblée est authentifiée ou explicitement retirée', () => {
     for (const endpoint of endpointsUsedByKeygen()) {
       const src = routeSource(endpoint)
       expect(src, `${endpoint} doit exposer POST`).toMatch(/export async function POST|export const POST/)
-      expect(src, `${endpoint} doit authentifier par x-gf-key`).toContain('x-gf-key')
+      if (endpoint.endsWith('/revoke-by-key')) expect(src).toContain('ENDPOINT_DISABLED')
+      else expect(src, `${endpoint} doit authentifier par x-gf-key`).toContain('x-gf-key')
     }
   })
 
@@ -102,38 +103,12 @@ describe('POST /api/admin/licenses/create', () => {
   })
 })
 
-describe('POST /api/admin/licenses/revoke-by-key', () => {
-  const ENDPOINT = '/api/admin/licenses/revoke-by-key'
-
-  it('reçoit les champs `licenseId` et `status` envoyés par le Keygen', () => {
-    expect(python).toMatch(/_json\.dumps\(\{"licenseId": license_id, "status": status\}\)/)
-    const src = routeSource(ENDPOINT)
-    expect(src).toMatch(/body\.licenseId/)
-    expect(src).toMatch(/body\.status/)
-  })
-
-  it('accepte les trois statuts que le Keygen peut émettre', () => {
-    const src = routeSource(ENDPOINT)
-    const declared = src.match(/const VALID_STATUSES = \[([^\]]+)\]/)?.[1] ?? ''
-    const serverStatuses = Array.from(declared.matchAll(/'([a-z]+)'/g)).map(m => m[1]).sort()
-
-    // Statuts réellement passés à _apply_status() dans l'interface Python.
-    const keygenStatuses = Array.from(python.matchAll(/_apply_status\(lid,\s*"([a-z]+)"\)/g))
-      .map(m => m[1])
-    expect(keygenStatuses.length).toBeGreaterThan(0)
-
-    for (const s of keygenStatuses) {
-      expect(serverStatuses, `statut « ${s} » refusé par l'API`).toContain(s)
-    }
-    expect(serverStatuses).toEqual(['active', 'revoked', 'suspended'])
-  })
-
-  it('le test de connexion s’appuie sur une réponse réellement produite', () => {
-    // Le Keygen conclut « connexion réussie » sur note === 'not_registered'
-    // pour un licenceId factice : cette valeur doit exister côté serveur.
-    expect(python).toContain('__test_ping__')
-    expect(python).toContain('not_registered')
-    expect(routeSource(ENDPOINT)).toContain("not_registered")
+describe('POST /api/admin/licenses/revoke-by-key — retiré', () => {
+  it('ne traite plus de corps ni de transition authentifiée par clé partagée', () => {
+    const src = routeSource('/api/admin/licenses/revoke-by-key')
+    expect(src).toContain('ENDPOINT_DISABLED')
+    expect(src).not.toContain('prisma.')
+    expect(src).not.toContain('body.licenseId')
   })
 })
 

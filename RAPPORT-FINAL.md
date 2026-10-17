@@ -1,3 +1,7 @@
+<!-- doc-status: historique -->
+
+> **HISTORIQUE — campagne d’août 2026, pas état courant ni autorisation de promotion.** Le verdict actuel est **NO-GO** : voir [PHASE 6 — verdict](docs/audit/2026-10-17/06-VERDICT-FINAL.md) et la [baseline canonique](docs/audit/FINAL_VERIFICATION_BASELINE.md). Les mesures et déclarations ci-dessous sont conservées pour cette campagne ancienne, non revérifiées pour la version actuelle.
+
 # GarageFlows — rapport final de campagne
 
 **Période** : 14–15/08/2026 · **Branche** : `claude/garageflow-final-unified-merge-ub0l67`

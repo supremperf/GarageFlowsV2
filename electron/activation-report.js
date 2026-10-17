@@ -33,6 +33,7 @@
 
 /** Statut d'overlay pour un refus d'activation. Distinct de `revoked`. */
 const ACTIVATION_REFUSED = 'activation_refused'
+const REPORT_STATUSES = new Set(['infrastructure_error', 'revoked', 'suspended', 'expired', 'tampered', 'device_revoked', 'device_hwid_mismatch', 'device_required'])
 
 /**
  * @param {object}  state
@@ -46,7 +47,7 @@ const ACTIVATION_REFUSED = 'activation_refused'
  *                                       le battement repart aussitôt.)
  * @returns {{ log: ?string, overlay: ?{status: string, reason: string}, loggedRefusal: ?string }}
  */
-function activationReport({ refusal, streak, loggedRefusal, warnAt, authority = null }) {
+function activationReport({ refusal, streak, loggedRefusal, warnAt, authority = null, status = ACTIVATION_REFUSED }) {
   if (refusal) {
     // L'overlay est renvoyé à CHAQUE battement tant que le refus tient : c'est
     // idempotent côté rendu, et c'est la seule façon qu'il survive à un
@@ -54,7 +55,7 @@ function activationReport({ refusal, streak, loggedRefusal, warnAt, authority = 
     // JOURNAL, lui, ne répète pas le même motif.
     return {
       log: refusal === loggedRefusal ? null : `[license/check] activation refusée par l'autorité — ${refusal}`,
-      overlay: { status: ACTIVATION_REFUSED, reason: refusal },
+      overlay: { status: REPORT_STATUSES.has(status) ? status : ACTIVATION_REFUSED, reason: refusal },
       loggedRefusal: refusal,
     }
   }

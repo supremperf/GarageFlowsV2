@@ -36,7 +36,7 @@ describe('electron/main — activation d\'appareil, pas de boucle sans fin', () 
   const activateBody = (() => {
     const start = mainSrc.indexOf('async function activateOnServer()')
     expect(start).toBeGreaterThan(-1)
-    return mainSrc.slice(start, start + 2200)
+    return mainSrc.slice(start, mainSrc.indexOf('\n/**', start))
   })()
 
   /**
@@ -75,23 +75,17 @@ describe('electron/main — activation d\'appareil, pas de boucle sans fin', () 
     return mainSrc.slice(start, end)
   })()
 
-  it('activateOnServer distingue les deux autorités interrogées', () => {
-    // Les bases ne sont plus une simple liste d'URL : chacune porte son rôle.
-    expect(activateBody).toMatch(/authority:\s*'remote'/)
-    expect(activateBody).toMatch(/authority:\s*'local'/)
-  })
-
-  it('activateOnServer renvoie l\'autorité émettrice, jamais un booléen nu', () => {
-    expect(activateBody).toMatch(/return authority/)
-    // Un `return true` rétablirait exactement l'ambiguïté d'origine.
+  it('activation distante uniquement — aucun repli local', () => {
+    expect(activateBody).toContain('activateAtAuthority(httpPost, `${LICENSE_SERVER}/api/license/activate`, body)')
+    expect(activateBody).not.toContain('127.0.0.1')
+    expect(activateBody).toContain("return 'remote'")
     expect(activateBody).not.toMatch(/return true/)
   })
 
-  it('un refus explicite de l\'autorité distante n\'est PAS contourné par le repli local', () => {
-    // Dans la branche « refus », le cas 'remote' doit sortir immédiatement.
-    const refusal = activateBody.slice(activateBody.indexOf('res.ok === false'))
-    expect(refusal).toMatch(/authority === 'remote'/)
-    expect(refusal).toMatch(/return null/)
+  it('tout échec est classé par le module comportemental testé séparément', () => {
+    expect(activateBody).toContain("decision.kind === 'success'")
+    expect(activateBody).toContain('status: decision.status')
+    expect(activateBody).toContain('return null')
   })
 
   it('la re-sonde immédiate est conditionnée à l\'autorité distante', () => {

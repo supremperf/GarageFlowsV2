@@ -46,8 +46,8 @@ function heartbeatDecision({ result, authority, blocked }) {
   if (result.allowed === false) {
     return {
       action: 'block',
-      status: typeof result.status === 'string' && result.status ? result.status : 'revoked',
-      reason: typeof result.reason === 'string' && result.reason ? result.reason : 'Licence révoquée ou suspendue.',
+      status: typeof result.status === 'string' && result.status ? result.status : 'unknown',
+      reason: typeof result.reason === 'string' && result.reason ? result.reason : 'Vérification de licence non aboutie.',
     }
   }
 

@@ -25,14 +25,14 @@ const AUTRE_PUBLIC_PEM = crypto
   .generateKeyPairSync('ec', { namedCurve: 'P-256' })
   .publicKey.export({ type: 'spki', format: 'pem' }) as string
 
-const etat = vi.hoisted(() => ({ publicPem: '' }))
+const etat = vi.hoisted(() => ({ publicPem: '', limiterDown: false }))
 
 vi.mock('@/lib/license/public-key', () => ({ getPublicKeyPem: () => etat.publicPem }))
 vi.mock('@/lib/env', () => ({ validateEnv: () => ({ ok: true, issues: [] }) }))
 vi.mock('@/lib/security/rate-limit', () => ({
   clientIpFrom: () => '127.0.0.1',
-  enforceRateLimit: async () => ({ ok: true }),
-  rateLimitResponse: () => new Response('trop de requêtes', { status: 429 }),
+  enforceRateLimit: async () => etat.limiterDown ? ({ ok: false, degraded: 'fail_closed' }) : ({ ok: true }),
+  rateLimitResponse: () => new Response('Service temporairement indisponible', { status: 503 }),
 }))
 
 import { GET } from '@/app/api/admin/diagnostics/route'
@@ -69,6 +69,7 @@ function variable(corps: { env: Variable[] }, nom: string): Variable {
 }
 
 beforeEach(() => {
+  etat.limiterDown = false
   etat.publicPem = PUBLIC_PEM
   process.env.GARAGEFLOW_API_KEY = CLE_API
   process.env.GF_PRIVATE_KEY = Buffer.from(PRIVATE_PEM, 'utf8').toString('base64')
@@ -199,4 +200,11 @@ describe('aucune valeur ne sort de cette route', () => {
     expect(variable(corps, 'GF_BACKUP_KEY').fingerprint)
       .not.toBe(variable(corps, 'NEXTAUTH_SECRET').fingerprint)
   })
+})
+
+it('panne du limiteur : 503 sans métadonnée sensible même avec une clé correcte', async () => {
+  etat.limiterDown = true
+  const { status, corps } = await interroger()
+  expect(status).toBe(503)
+  expect(corps).toBeNull()
 })

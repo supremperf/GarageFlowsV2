@@ -152,7 +152,8 @@ describe('Acceptation / refus des licences', () => {
     }
   })
 
-  it.skipIf(SANS_CLE)('7. en-tête d’algorithme détourné (alg: none) → refusé', () => {
+  // Ce refus ne dépend d’aucune signature valide ni de la clé émettrice.
+  it('7. en-tête d’algorithme détourné (alg: none) → refusé', () => {
     const header = b64u(Buffer.from(JSON.stringify({ alg: 'none', typ: 'GF-LIC', v: 2 })))
     const body = b64u(Buffer.from(JSON.stringify(basePayload())))
     expect(verifyLicenseToken(`GF2.${header}.${body}.`).valid).toBe(false)

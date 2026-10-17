@@ -1,3 +1,4 @@
+import { licenseApiBoundary } from '@/lib/license/api-boundary'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -92,12 +93,15 @@ function parseJob(raw: unknown): SyncJob | null {
   }
 }
 
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
   const rl = await enforceRateLimit('license_status', clientIpFrom(req))
   if (!rl.ok) return rateLimitResponse(rl)
 
   let body: Record<string, unknown>
   try { body = await req.json() } catch {
+    return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 })
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
     return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 })
   }
 
@@ -277,8 +281,11 @@ export async function POST(req: Request) {
       syncedAt: new Date().toISOString(),
     })
   } catch (err) {
-    logger.error('[sync/jobs] erreur base', err)
-    return NextResponse.json({ ok: false, code: 'SERVICE_UNAVAILABLE' }, { status: 503 })
+    throw err
   }
 }
 
+
+export async function POST(req: Request) {
+  return licenseApiBoundary(() => handlePOST(req))
+}

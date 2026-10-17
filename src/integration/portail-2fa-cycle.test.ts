@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GF-DUR-022 — cycle de vie du double facteur du portail, et son secret au repos.
  *
  * ─── Ce que ces tests cherchent d'abord ─────────────────────────────────────

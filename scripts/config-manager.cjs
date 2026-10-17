@@ -293,7 +293,6 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
         }
       }
       if (env.NEXTAUTH_URL) env.GF_APP_URL ||= env.NEXTAUTH_URL
-      if (env.DIRECT_URL) env.DATABASE_URL_UNPOOLED = env.DIRECT_URL
       for (const name of core.namesForProfile(policy.names, 'pwa')) if (!env[name] && core.DEFAULTS[name]) env[name] = core.DEFAULTS[name]
       const required = [...new Set([...BASE_REQUIRED, ...policy.entries.filter(e => e.requiredProduction && e.action === 'application').map(e => e.name)])]
       if (!dryRun) {
@@ -350,7 +349,6 @@ async function manage(api, { dryRun = false, offline = false, rotateSessions = f
                   checkpoint(target, env)
                 }
               }
-              if (env.DIRECT_URL) env.DATABASE_URL_UNPOOLED = env.DIRECT_URL
             }
           }
         }

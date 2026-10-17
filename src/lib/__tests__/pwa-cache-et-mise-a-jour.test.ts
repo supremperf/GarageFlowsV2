@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GF-DUR-039 / GF-DUR-040 — cache PWA et chaîne de mise à jour.
  *
  * Deux défauts distincts, tous deux invisibles en développement et coûteux en

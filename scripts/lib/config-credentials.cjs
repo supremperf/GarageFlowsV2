@@ -38,7 +38,7 @@ function neonVariables(password, reference = NEON_REFERENCE) {
   }
   const pooled = url(reference.pooled), direct = url(reference.direct)
   return { DATABASE_URL: `${pooled}?channel_binding=require&sslmode=require`,
-    DIRECT_URL: `${direct}?sslmode=require`, DATABASE_URL_UNPOOLED: `${direct}?sslmode=require`,
+    DIRECT_URL: `${direct}?sslmode=require`,
     PGHOST: reference.pooled, PGHOST_UNPOOLED: reference.direct, PGUSER: reference.user,
     PGDATABASE: reference.database, PGPASSWORD: password,
     POSTGRES_URL: `${pooled}?channel_binding=require&sslmode=require`,
@@ -58,7 +58,6 @@ function postgresIssues(env) {
     if (a.pathname !== b.pathname || a.username !== b.username || a.password !== b.password ||
       (a.searchParams.get('schema') || 'public') !== (b.searchParams.get('schema') || 'public') ||
       a.hostname.replace(/-pooler\./, '.') !== b.hostname || /-pooler\./.test(b.hostname)) return ['DATABASE_URL / DIRECT_URL : même branche, base, rôle et mot de passe ; URL directe sans pooler.']
-    if (env.DATABASE_URL_UNPOOLED && env.DATABASE_URL_UNPOOLED !== env.DIRECT_URL) return ['DATABASE_URL_UNPOOLED : doit correspondre exactement à DIRECT_URL.']
     return []
   } catch { return ['DATABASE_URL / DIRECT_URL : URLs PostgreSQL invalides.'] }
 }

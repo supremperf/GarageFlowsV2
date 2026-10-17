@@ -17,6 +17,7 @@
  */
 
 import crypto from 'crypto'
+import { LicenseConfigurationError } from './failures'
 import { getPublicKeyPem } from './public-key'
 
 // Re-export so callers only need one import point
@@ -97,7 +98,7 @@ const _VALID_TYPES = new Set<string>(['trial', 'premium', 'enterprise', 'admin',
  *  - payload: LicensePayload JSON
  *  - sig:     DER-encoded ECDSA-SHA256 signature over "<header>.<payload>"
  *
- * Returns { valid: false, reason } on any failure; never throws.
+ * Returns { valid: false, reason } for invalid tokens; throws LicenseConfigurationError for an unusable trust anchor.
  */
 export function verifyLicenseToken(token: string): VerifyResult {
   // ── Structure check ─────────────────────────────────────────────────────
@@ -121,10 +122,14 @@ export function verifyLicenseToken(token: string): VerifyResult {
     return { valid: false, reason: 'Type de licence non reconnu (mauvais en-tête)' }
   }
 
-  // ── Detect placeholder key ───────────────────────────────────────────────
-  const pubKey = _pubKey()
-  if (pubKey.includes('REPLACE_WITH_YOUR_PUBLIC_KEY')) {
-    return { valid: false, reason: '[CONFIG] Clé publique non configurée — lancez: python scripts/keygen.py --init' }
+  // Une clé mal configurée n'est PAS une signature de licence invalide.
+  let verificationKey: crypto.KeyObject
+  try {
+    verificationKey = crypto.createPublicKey(_pubKey())
+    if (verificationKey.asymmetricKeyType !== 'ec' ||
+        verificationKey.asymmetricKeyDetails?.namedCurve !== 'prime256v1') throw new Error()
+  } catch {
+    throw new LicenseConfigurationError()
   }
 
   // ── Cryptographic signature verification (ECDSA-SHA256, DER) ────────────
@@ -137,7 +142,7 @@ export function verifyLicenseToken(token: string): VerifyResult {
     const verifier = crypto.createVerify('SHA256')
     verifier.update(signingInput)
     // Node.js reads DER SEQUENCE by default — matches Python cryptography output
-    sigValid = verifier.verify({ key: pubKey, format: 'pem' }, sig)
+    sigValid = verifier.verify(verificationKey, sig)
   } catch {
     return { valid: false, reason: 'Erreur de vérification cryptographique' }
   }

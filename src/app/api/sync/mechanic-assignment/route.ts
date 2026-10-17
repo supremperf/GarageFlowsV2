@@ -1,3 +1,4 @@
+import { licenseApiBoundary } from '@/lib/license/api-boundary'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -60,12 +61,15 @@ function str(v: unknown, max: number): string {
   return typeof v === 'string' ? v.trim().slice(0, max) : ''
 }
 
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
   const rl = await enforceRateLimit('license_status', clientIpFrom(req))
   if (!rl.ok) return rateLimitResponse(rl)
 
   let body: Record<string, unknown>
   try { body = await req.json() } catch { return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 }) }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 })
+  }
 
   const garage   = (body.garage as Record<string, unknown>) ?? {}
   const mechanic = (body.mechanic as Record<string, unknown>) ?? {}
@@ -219,11 +223,14 @@ export async function POST(req: Request) {
       logger.warn('[sync/mechanic] conflit', { code: err.code, key: shortId(mechLid), garage: shortId(garageId) })
       return NextResponse.json({ ok: false, code: err.code }, { status: 409 })
     }
-    logger.error('[sync/mechanic] erreur base', err)
-    return NextResponse.json({ ok: false, code: 'SERVICE_UNAVAILABLE' }, { status: 503 })
+    throw err
   }
 }
 
 class SyncConflict extends Error {
   constructor(public readonly code: string) { super(code) }
+}
+
+export async function POST(req: Request) {
+  return licenseApiBoundary(() => handlePOST(req))
 }

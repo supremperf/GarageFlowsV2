@@ -6,9 +6,11 @@ const crypto = require('node:crypto')
 const core = require('./config-core.cjs')
 const vercelEnv = require('./lib/config-vercel-env.cjs')
 
+// INPUT boundary only; this provider spelling must never survive in runtime output.
+const DIRECT_URL_PROVIDER_ALIAS = 'DATABASE_URL_UNPOOLED'
 const STORAGE_ALIASES = {
   DATABASE_URL: ['DATABASE_URL', 'POSTGRES_PRISMA_URL', 'POSTGRES_URL'],
-  DIRECT_URL: ['DIRECT_URL', 'DATABASE_URL_UNPOOLED', 'POSTGRES_URL_NON_POOLING', 'POSTGRES_URL_UNPOOLED'],
+  DIRECT_URL: ['DIRECT_URL', DIRECT_URL_PROVIDER_ALIAS, 'POSTGRES_URL_NON_POOLING', 'POSTGRES_URL_UNPOOLED'],
   UPSTASH_REDIS_REST_URL: ['UPSTASH_REDIS_REST_URL', 'KV_REST_API_URL'],
   UPSTASH_REDIS_REST_TOKEN: ['UPSTASH_REDIS_REST_TOKEN', 'KV_REST_API_TOKEN'],
 }
@@ -37,6 +39,13 @@ function normalizeStorage(source) {
     url.searchParams.set('sslmode', 'require')
     result[name] = url.toString()
   }
+  if (vercelEnv.readable(source.DIRECT_URL) && vercelEnv.readable(source[DIRECT_URL_PROVIDER_ALIAS]) &&
+      source.DIRECT_URL !== source[DIRECT_URL_PROVIDER_ALIAS]) {
+    const error = new Error('Import fournisseur : connexion directe contradictoire ; aucune cible choisie et aucune écriture.')
+    error.configSafe = true
+    throw error
+  }
+  delete result[DIRECT_URL_PROVIDER_ALIAS]
   return result
 }
 function identity(root) {

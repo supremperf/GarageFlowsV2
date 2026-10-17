@@ -1,0 +1,131 @@
+{
+  "generatedAtUtc": "2026-10-17T19:59:14.215Z",
+  "verdict": "NO-GO",
+  "baseCommit": "aa90f89c059db58a4a3fe3c339a2dffbfbf10fad",
+  "branch": "arena/55edbdc1-garageflowsv2",
+  "dirtyWorktree": true,
+  "scope": "local working tree; not a production or built-artifact attestation",
+  "node": "v22.22.3",
+  "npmObserved": "10.9.8",
+  "npmDeclared": "11.16.0",
+  "global": {
+    "command": "PATH=\"$PWD/.venv/bin:$PATH\" npx vitest run --maxWorkers=8 --reporter=json --outputFile=/tmp/gf6-release-verdict.json",
+    "exitCode": 1,
+    "total": 4194,
+    "passed": 3343,
+    "failed": 3,
+    "pending": 848,
+    "todo": 0,
+    "files": 345,
+    "filesFailed": 79,
+    "nativeBlockedFiles": 79,
+    "nativeBlockedFilesRepaired": 0,
+    "hookBlockedTests": 813,
+    "conditionalTests": 35,
+    "sourceReportSha256": "9fe5732304db80527223bca79aae20923f457442b34ed752efad36b9b2032d84",
+    "details": "vitest-final-failures.json",
+    "fileMatrix": "vitest-final-files.json",
+    "pendingDetails": "pending-tests-final.tsv"
+  },
+  "targeted": {
+    "command": "PATH=\"$PWD/.venv/bin:$PATH\" npx vitest run src/__tests__/baseline-canonical-guard.test.ts src/__tests__/baseline-git-identity.test.ts src/__tests__/docs-consistency-guard.test.ts src/__tests__/docs-consistency-ignored-residue.test.ts src/lib/__tests__/contrats-parametres-api.test.ts src/lib/__tests__/create-license-route.test.ts src/lib/__tests__/devices-overview.test.ts src/lib/__tests__/electron-activation-backoff.test.ts src/lib/__tests__/electron-activation-report.test.ts src/lib/__tests__/electron-device-activation.test.ts src/lib/__tests__/electron-fuses.test.ts src/lib/__tests__/electron-heartbeat-policy.test.ts src/lib/__tests__/electron-integrity.test.ts src/lib/__tests__/electron-license-endpoint.test.ts src/lib/__tests__/electron-loopback.test.ts src/lib/__tests__/electron-nav-guard.test.ts src/lib/__tests__/electron-secret.test.ts src/lib/__tests__/electron-signed-state.test.ts src/lib/__tests__/electron-startup-gate.test.ts src/lib/__tests__/env-contract.test.ts src/lib/__tests__/env-manifest-drift.test.ts src/lib/__tests__/incident-license-infra.test.ts src/lib/__tests__/incident-record-integrity.test.ts src/lib/__tests__/incident-safety.test.ts src/lib/__tests__/incident-sync-contracts.test.ts src/lib/__tests__/issuer-fixture-roundtrip.test.ts src/lib/__tests__/licence-changement-contrat.test.ts src/lib/__tests__/pagination-cloisonnee.test.ts src/lib/__tests__/pagination-routes.test.ts src/lib/__tests__/pagination.test.ts src/lib/__tests__/portal-access-reachable.test.ts src/app/api/admin/__tests__/diagnostics-route.test.ts",
+    "exitCode": 0,
+    "total": 477,
+    "passed": 477,
+    "failed": 0,
+    "pending": 0
+  },
+  "activatedConditionalTest": {
+    "file": "src/lib/license/__tests__/forgery-resistance.test.ts",
+    "name": "7. en-tête d’algorithme détourné (alg: none) → refusé",
+    "status": "passed",
+    "suite": {
+      "total": 10,
+      "passed": 5,
+      "failed": 0,
+      "pending": 5
+    },
+    "proof": "conditional-test-activated.json"
+  },
+  "nodeTests": {
+    "command": "node --test tests/*.test.cjs",
+    "exitCode": 0,
+    "total": 376,
+    "passed": 376,
+    "failed": 0,
+    "pending": 0,
+    "proof": "node-tests.log"
+  },
+  "lint": {
+    "command": "npm run lint",
+    "exitCode": 0,
+    "proof": "lint.log"
+  },
+  "types": {
+    "command": "npm run type-check",
+    "exitCode": 0,
+    "proof": "type-check.log"
+  },
+  "environment": {
+    "command": "node scripts/check-env-consistency.mjs",
+    "exitCode": 0,
+    "problems": 0,
+    "canonicalVariables": 126,
+    "forbiddenAliases": 8,
+    "platformVariables": 48,
+    "proof": "env-final.log"
+  },
+  "build": {
+    "command": "npm run build",
+    "exitCode": 1,
+    "phase": "prisma generate; next build not reached",
+    "proof": "build.log"
+  },
+  "browser": {
+    "discovered": 144,
+    "executed": 0,
+    "installationExitCode": 1,
+    "proof": "browser-install.log"
+  },
+  "gitleaks": {
+    "scanExecuted": false,
+    "downloadExitCode": 35,
+    "proof": "gitleaks-download.log"
+  },
+  "production": {
+    "accessUsed": false,
+    "mutationPerformed": false,
+    "issuerCorrespondence": "non vérifiable sans accès production",
+    "incidentCause": "non vérifiable sans accès production",
+    "evidenceThreshold90PercentMet": false
+  },
+  "limitations": "A–K partial; local P1 administrative workflow and diagnostics protection/minimisation open; native DB tests, build, packaging and browser not validated; licenses and full semantic review not closed.",
+  "consistency": {
+    "command": "npm run check:consistency",
+    "exitCode": 0,
+    "publicKeyChecks": "2 SKIP (issuer public PEM absent)",
+    "proof": "consistency-final.log"
+  },
+  "npmAudit": {
+    "command": "npm audit --json",
+    "exitCode": 0,
+    "totalKnownVulnerabilities": 0,
+    "proof": "npm-audit.json"
+  },
+  "finalChecksUtc": "2026-10-17T20:08:18+00:00",
+  "links": {
+    "scope": "11 changed audit/runbook/canonical/config documents; local file existence only, not external URLs or fragments",
+    "checked": 104,
+    "missing": 0,
+    "proof": "links-final.json"
+  },
+  "diffCheck": {
+    "command": "git diff --check",
+    "exitCode": 0
+  },
+  "warnings": {
+    "suppressed": false,
+    "proof": "warnings-final.json",
+    "status": "SQLite experimental warnings observed; not a warning-free runtime attestation"
+  }
+}

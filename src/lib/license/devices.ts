@@ -1,3 +1,5 @@
+import { LicenseConfigurationError } from './failures'
+import { verifyRecordMac, recordIntegrityUsable } from './record-mac'
 /**
  * Gestion des appareils par licence — activation atomique, jetons d'appareil.
  *
@@ -36,10 +38,7 @@ export function getDevicePepper(): string {
   const p = process.env.DEVICE_TOKEN_PEPPER
   if (p && !isWeakSecret(p)) return p
   if (isPwaProduction()) {
-    throw new Error(
-      'DEVICE_TOKEN_PEPPER absent ou faible en production PWA. ' +
-        'Configurez un secret aléatoire fort (openssl rand -base64 32).',
-    )
+    throw new LicenseConfigurationError('DEVICE_TOKEN_PEPPER absent ou trop faible.')
   }
   return getAuthSecret()
 }
@@ -322,6 +321,7 @@ export type DeviceTokenFailure =
   | 'license_revoked'
   | 'license_suspended'
   | 'license_expired'
+  | 'license_tampered'
 
 export type ValidateDeviceTokenResult =
   | { ok: true; licenseId: string; deviceId: string }
@@ -359,6 +359,7 @@ export async function validateDeviceToken(
 
   const license = await prisma.licenseKey.findUnique({ where: { licenseId: device.licenseId } })
   if (!license) return { ok: false, code: 'license_unknown' }
+  if (!recordIntegrityUsable(verifyRecordMac(license))) return { ok: false, code: 'license_tampered' }
   if (license.status === 'revoked') return { ok: false, code: 'license_revoked' }
   if (license.status === 'suspended') return { ok: false, code: 'license_suspended' }
   if (license.expiryAt.getTime() < Date.now()) return { ok: false, code: 'license_expired' }

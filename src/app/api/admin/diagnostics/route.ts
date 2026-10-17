@@ -147,13 +147,9 @@ function privateKeyPublicFingerprint(): { fingerprint: string | null; error?: st
 }
 
 export async function GET(req: NextRequest) {
-  // Limite de débit AVANT toute comparaison — réduit la surface de force brute
-  // sur la clé API. Même arbitrage que revoke-by-key : on rejette une limite
-  // réellement atteinte, pas une indisponibilité du limiteur (la clé API forte
-  // reste le contrôle d'accès), sans quoi une panne Upstash rendrait le
-  // diagnostic inaccessible au moment précis où il est le plus utile.
+  // Diagnostic sensible : une panne du limiteur requis doit fermer l’accès.
   const rl = await enforceRateLimit('admin', clientIpFrom(req))
-  if (!rl.ok && rl.degraded !== 'fail_closed') return rateLimitResponse(rl)
+  if (!rl.ok) return rateLimitResponse(rl)
 
   const apiKey = req.headers.get('x-gf-key')?.trim() ?? ''
   const serverApiKey = process.env.GARAGEFLOW_API_KEY?.trim() ?? ''

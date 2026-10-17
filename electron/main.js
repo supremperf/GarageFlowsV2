@@ -1,5 +1,8 @@
 'use strict'
 
+const { activateAtAuthority } = require('./activation-policy')
+const { assertLicenseTrust } = require('./license-trust')
+
 // ─────────────────────────────────────────────────────────────────────────────
 //  GarageFlow — Electron Main Process v2
 //
@@ -918,6 +921,7 @@ function publicKeyFingerprint() {
 }
 
 function verifyEccToken(token) {
+  const verificationKey = assertLicenseTrust(PUBLIC_KEY_PEM)
   try {
     if (typeof token !== 'string' || !token.startsWith('GF2.')) return null
 
@@ -925,16 +929,6 @@ function verifyEccToken(token) {
     if (parts.length !== 4) return null
 
     const [, headerB64, payloadB64, sigB64] = parts
-
-    // Detect placeholder public key
-    if (PUBLIC_KEY_PEM.includes('REPLACE_WITH_YOUR_PUBLIC_KEY')) {
-      log('WARNING: ECC public key not configured — using dev bypass')
-      // In dev mode only: allow a special dev token that bypasses verification
-      if (IS_DEV && token === 'GF2.DEV.DEV.DEV') {
-        return { lid: 'dev', cid: 'DEV', typ: 'admin', iss: 0, exp: 9999999999, seats: 999, wm: '', ver: '2.0' }
-      }
-      return null
-    }
 
     // Header check
     try {
@@ -947,14 +941,13 @@ function verifyEccToken(token) {
     const sig = b64uDecode(sigB64)
     const verifier = crypto.createVerify('SHA256')
     verifier.update(signingInput)
-    if (!verifier.verify({ key: PUBLIC_KEY_PEM, format: 'pem' }, sig)) {
+    if (!verifier.verify(verificationKey, sig)) {
       // Ce rejet était TOTALEMENT muet : la seule trace était « No valid license »
       // plus haut, indiscernable d'une absence de licence. Diagnostiquer une clé
       // embarquée divergente demandait alors de désosser le binaire.
       // On journalise une empreinte TRONQUÉE de la clé de vérification (une clé
       // publique n'est pas un secret, mais on n'en écrit jamais le corps complet).
-      log('Signature de licence invalide — la clé publique embarquée ne correspond',
-          'pas à la clé émettrice. Empreinte clé embarquée:', publicKeyFingerprint())
+      log('Signature de licence non vérifiée. Empreinte clé embarquée:', publicKeyFingerprint())
       return null
     }
 
@@ -1647,7 +1640,7 @@ function httpPost(url, body) {
         res => {
           let data = ''
           res.on('data', chunk => { data += chunk })
-          res.on('end',  ()    => { try { resolve(JSON.parse(data)) } catch { resolve(null) } })
+          res.on('end',  ()    => { try { resolve({ ...JSON.parse(data), httpStatus: res.statusCode }) } catch { resolve(null) } })
         }
       )
       req.on('error',   () => resolve(null))
@@ -1799,44 +1792,18 @@ async function activateOnServer() {
     arch:    info.arch,
   }
 
-  // Autorité distante COMPILÉE en priorité, repli serveur local (127.0.0.1).
-  const bases = [
-    { url: LICENSE_SERVER,             authority: 'remote' },
-    { url: `http://127.0.0.1:${PORT}`, authority: 'local'  },
-  ]
-
-  for (const { url, authority } of bases) {
-    const res = await httpPost(`${url}/api/license/activate`, body)
-
-    if (res && res.ok && res.deviceToken) {
-      activeDeviceToken = res.deviceToken
-      saveLicense(activeLicense.token, activeLicense.payload, res.deviceToken)
-      if (Array.isArray(res.modules)) currentModules = res.modules.slice().sort()
-      // Un succès DISTANT lève tout refus ; un succès local ne lève qu'un refus
-      // local — il ne dit rien de ce que l'autorité distante avait décidé.
-      if (authority === 'remote' || lastActivationRefusal?.authority === authority) {
-        lastActivationRefusal = null
-        loggedActivationRefusal = null
-      }
-      log('[license/activate] device token obtained —', authority, '— deviceId:', res.deviceId || '?')
-      return authority
-    }
-
-    if (res && res.ok === false) {
-      const reason = res.reason || res.status || 'refus sans motif'
-      log('[license/activate] server refused —', authority, '—', reason)
-      lastActivationRefusal = { reason: String(reason), authority }
-      if (authority === 'remote') {
-        // Un REFUS EXPLICITE de l'autorité est une réponse DÉFINITIVE, pas une
-        // panne : on n'essaie PAS le repli local derrière. Le faire revenait à
-        // laisser le serveur local délivrer un jeton que l'autorité venait de
-        // refuser — ce qui rendait inopérante la limite d'appareils (une
-        // décision commerciale) tout en amorçant la boucle sans fin.
-        return null
-      }
-    }
-    // res === null → autorité injoignable (et non refus) : le repli est légitime.
+  const { response: res, decision } = await activateAtAuthority(httpPost, `${LICENSE_SERVER}/api/license/activate`, body)
+  if (decision.kind === 'success') {
+    activeDeviceToken = res.deviceToken
+    saveLicense(activeLicense.token, activeLicense.payload, res.deviceToken)
+    if (Array.isArray(res.modules)) currentModules = res.modules.slice().sort()
+    lastActivationRefusal = null
+    loggedActivationRefusal = null
+    return 'remote'
   }
+  // Panne/config et refus métier restent distincts jusque dans l'overlay.
+  lastActivationRefusal = { reason: decision.reason, status: decision.status, authority: 'remote' }
+  log('[license/activate] activation non effectuée —', decision.kind)
   return null
 }
 
@@ -1855,9 +1822,8 @@ async function activateOnServer() {
  * mécanicien faisait déjà cet enregistrement (establishMechanicSession) ; la
  * voie garage n'avait aucun équivalent — c'est cette asymétrie qui était le bug.
  *
- * Best-effort et idempotent : le control plane distant reste l'autorité, la
- * réponse est ignorée, et ni le device token ni l'état des refus ne sont
- * touchés. Si la ligne existe déjà, la route se contente d'actualiser lastSeenAt.
+ * Idempotent : le control plane distant reste l'autorité. Le résultat local
+ * doit réussir avant ouverture d'une session ; le jeton distant est conservé. Si la ligne existe déjà, la route se contente d'actualiser lastSeenAt.
  */
 async function recordLicenseInLocalDatabase() {
   if (!activeLicense?.token) return false
@@ -1870,7 +1836,7 @@ async function recordLicenseInLocalDatabase() {
     arch:    info.arch,
   }).catch(() => null)
   const ok = !!(res && res.ok)
-  log('[license] enregistrement dans la base locale —', ok ? 'OK' : 'ignoré')
+  log('[license] enregistrement dans la base locale —', ok ? 'OK' : 'échec')
   return ok
 }
 
@@ -2018,6 +1984,7 @@ async function periodicLicenseCheck() {
       // sinon l'utilisateur ne verrait plus ce qu'on attend de lui.
       if (lastActivationRefusal && mainWindow && !mainWindow.isDestroyed()) {
         const held = activationReport({
+          status:        lastActivationRefusal.status,
           refusal:       lastActivationRefusal.reason,
           streak:        deviceRetryStreak,
           loggedRefusal: lastActivationRefusal.reason, // déjà journalisé : ne pas répéter
@@ -2054,6 +2021,7 @@ async function periodicLicenseCheck() {
     // est décidé par un module testable ; voir electron/activation-report.js
     // pour les deux mensonges que cette séparation a supprimés.
     const report = activationReport({
+      status:        lastActivationRefusal?.status,
       refusal:       lastActivationRefusal?.reason ?? null,
       streak:        deviceRetryStreak,
       loggedRefusal: loggedActivationRefusal,
@@ -3089,17 +3057,23 @@ function createLicenseWindow() {
       ipcMain.removeAllListeners('license-quit')
     }
 
-    ipcMain.on('license-submit', (event, token) => {
-      const payload = verifyEccToken(token)
+    ipcMain.on('license-submit', async (event, token) => {
+      let payload
+      try { payload = verifyEccToken(token) } catch {
+        event.sender.send('license-error', 'Configuration de vérification indisponible. Contactez le support.')
+        return
+      }
       if (payload) {
         activeLicense = { token, payload }
         activeDeviceToken = null
-        saveLicense(token, payload)
-        // Register this device with the server to obtain a device token (device
-        // auth). Best-effort — the heartbeat re-tries if the server is offline now.
-        // Licence NEUVE : le backoff d'un refus précédent ne la concerne pas.
         resetActivationBackoff()
-        activateOnServer().catch(() => {})
+        const authority = await activateOnServer()
+        if (authority !== 'remote') {
+          activeLicense = null
+          activeDeviceToken = null
+          event.sender.send('license-error', lastActivationRefusal?.reason || 'Service de vérification indisponible.')
+          return
+        }
         cleanup()
         // resolve(true) DOIT précéder win.destroy() : destroy() émet « closed »
         // de façon SYNCHRONE, et le gestionnaire de cette fenêtre appelle
@@ -4035,13 +4009,11 @@ function setupIPC() {
       // le disque et ses cookies posés.
       //
       // On distingue les deux causes possibles d'un `null` :
-      //   · autorité INJOIGNABLE → aucun refus enregistré. C'est le cas hors
-      //     ligne, et le produit doit continuer de fonctionner : on accepte,
-      //     le contrôle périodique tranchera au retour du réseau ;
+      //   · autorité INJOIGNABLE / erreur technique → activation non effectuée ;
       //   · REFUS EXPLICITE de l'autorité distante → réponse définitive. On
       //     restaure l'état précédent et on renvoie le motif.
-      if (!autorite && lastActivationRefusal?.authority === 'remote') {
-        const motif = lastActivationRefusal.reason
+      if (autorite !== 'remote') {
+        const motif = lastActivationRefusal?.reason || 'Service de vérification indisponible.'
         activeLicense = licencePrecedente
         activeDeviceToken = jetonAppareilPrecedent
         try {
@@ -4058,24 +4030,19 @@ function setupIPC() {
         log('[update-license] REFUSÉ par l’autorité —', motif)
         return { ok: false, reason: motif }
       }
-      // Re-inject session cookies so Next.js picks up the new type
+      // La DB locale doit aussi confirmer l'activation avant toute nouvelle session.
+      const localReady = payload.typ === 'mechanic'
+        ? await establishMechanicSession()
+        : await recordLicenseInLocalDatabase()
+      if (!localReady) {
+        activeLicense = licencePrecedente
+        activeDeviceToken = jetonAppareilPrecedent
+        if (licencePrecedente?.token) saveLicense(licencePrecedente.token, licencePrecedente.payload, jetonAppareilPrecedent ?? null)
+        else if (fs.existsSync(LIC_PATH)) fs.unlinkSync(LIC_PATH)
+        return { ok: false, reason: 'Vérification locale indisponible. Activation non effectuée.' }
+      }
       await injectLicenseCookies(payload.typ, payload.lid ?? 'runtime')
       if (licenceDifferente) await clearAppSessionCookies()
-
-      // ── Enregistrement dans la base LOCALE ────────────────────────────────
-      // Symétrique du démarrage (voir recordLicenseInLocalDatabase /
-      // establishMechanicSession). Sans cet appel, la nouvelle licence n'existe
-      // que sur disque : la table LicenseKey du poste l'ignore et
-      // « Paramètres › Accès mécaniciens » répond « Licence garage parente
-      // introuvable pour ce garage » jusqu'au prochain redémarrage — le patron
-      // ne peut ni enregistrer ni attribuer de clé mécanicien après avoir
-      // changé de licence. Reproduit le 2026-08-10.
-      // Best-effort : un échec ici ne doit pas annuler le changement de licence.
-      if (payload.typ === 'mechanic') {
-        await establishMechanicSession().catch(err => log('[update-license] session mécanicien:', err.message))
-      } else {
-        await recordLicenseInLocalDatabase().catch(err => log('[update-license] enregistrement local ignoré:', err.message))
-      }
 
       log('[update-license] upgraded to type:', payload.typ, '| lid:', payload.lid)
       return {
@@ -4086,7 +4053,8 @@ function setupIPC() {
       }
     } catch (err) {
       log('[update-license] error:', err.message)
-      return { ok: false, reason: err.message }
+      return { ok: false, code: err.code === 'SERVER_MISCONFIGURED' ? err.code : 'INTERNAL_ERROR',
+        reason: 'Vérification indisponible. Activation non effectuée ; contactez le support.' }
     }
   })
 }
@@ -4258,6 +4226,12 @@ app.whenReady().then(async () => {
 
   // ── License check ──────────────────────────────────────────────────────────
   if (!IS_DEV) {
+    try { assertLicenseTrust(PUBLIC_KEY_PEM) } catch {
+      ecarterSplash()
+      dialog.showErrorBox('GarageFlows — Configuration indisponible', 'SERVER_MISCONFIGURED : la clé publique de vérification est inutilisable. Contactez le support.')
+      app.quit()
+      return
+    }
     let payload = checkStoredLicense()
 
     // ── Blocage PERSISTÉ — évalué ICI, avant toute ouverture (GF-DUR-019) ────
@@ -4371,20 +4345,18 @@ app.whenReady().then(async () => {
     return
   }
 
-  // ── Session MÉCANICIEN (mono-poste) ─────────────────────────────────────
-  // Une clé mécanicien ouvre l'espace /mechanic : on complète la session locale
-  // (gid + mid) une fois la base migrée. Sans cela, les API mécanicien refusent
-  // l'accès (fail-closed).
-  if (!IS_DEV && activeLicense?.payload?.typ === 'mechanic') {
-    await establishMechanicSession().catch(err => log('[mechanic] session error:', err.message))
-  }
-
-  // ── Licence GARAGE : enregistrement dans la base locale ───────────────────
-  // Symétrique du bloc mécanicien ci-dessus. Voir recordLicenseInLocalDatabase()
-  // pour le détail : sans cet appel, un poste EN LIGNE n'écrit jamais sa licence
-  // garage en base locale et le module « Accès mécaniciens » est inutilisable.
-  if (!IS_DEV && activeLicense?.token && activeLicense?.payload?.typ !== 'mechanic') {
-    await recordLicenseInLocalDatabase().catch(err => log('[license] enregistrement local ignoré:', err.message))
+  // Aucune fenêtre métier si la validation locale DB/appareil échoue.
+  if (!IS_DEV && activeLicense?.token) {
+    const localReady = await (activeLicense.payload?.typ === 'mechanic'
+      ? establishMechanicSession()
+      : recordLicenseInLocalDatabase()).catch(() => false)
+    if (!localReady) {
+      ecarterSplash()
+      dialog.showErrorBox('GarageFlows — Vérification indisponible',
+        'La vérification locale n’a pas abouti. Aucune session métier ne sera ouverte. Réessayez plus tard.')
+      app.quit()
+      return
+    }
   }
 
   // ── Open main window ──────────────────────────────────────────────────────

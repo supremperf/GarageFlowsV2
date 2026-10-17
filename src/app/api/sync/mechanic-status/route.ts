@@ -1,3 +1,4 @@
+import { licenseApiBoundary } from '@/lib/license/api-boundary'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -35,12 +36,15 @@ const FAILURE_STATUS: Record<string, number> = {
   GARAGE_ALREADY_CLAIMED: 409, LICENSE_NOT_BOUND: 409,
 }
 
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
   const rl = await enforceRateLimit('license_status', clientIpFrom(req))
   if (!rl.ok) return rateLimitResponse(rl)
 
   let body: Record<string, unknown>
   try { body = await req.json() } catch { return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 }) }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 })
+  }
 
   const status = typeof body.status === 'string' ? body.status : ''
   const mechanicToken = typeof body.mechanicLicense === 'string' ? body.mechanicLicense.trim() : ''
@@ -121,7 +125,10 @@ export async function POST(req: Request) {
     logger.info('[sync/mechanic-status] statut propagé', { key: shortId(mechLid), status, source: 'desktop', at: now.toISOString() })
     return NextResponse.json({ ok: true, licenseId: mechLid, status, syncedAt: now.toISOString() })
   } catch (err) {
-    logger.error('[sync/mechanic-status] erreur base', err)
-    return NextResponse.json({ ok: false, code: 'SERVICE_UNAVAILABLE' }, { status: 503 })
+    throw err
   }
+}
+
+export async function POST(req: Request) {
+  return licenseApiBoundary(() => handlePOST(req))
 }

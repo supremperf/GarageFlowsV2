@@ -1,3 +1,4 @@
+import { licenseApiBoundary } from '@/lib/license/api-boundary'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -14,8 +15,7 @@ export const dynamic = 'force-dynamic'
  * status='unknown' : un utilisateur légitime n'est jamais bloqué par un état
  * transitoire. Seul un état explicite revoked/suspended/expired/tampered bloque.
  *
- * Erreur infra : Electron → fail-open documenté (base locale) ; serveur/PWA →
- * 503 générique (le client UI ignore les réponses non-200 et conserve son état).
+ * Erreurs infra : codes dédiés 500/503 ; jamais allowed:true sur erreur DB/config.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -24,28 +24,27 @@ import { prisma } from '@/lib/db'
 import { verifyRecordMac, recordIntegrityUsable } from '@/lib/license/record-mac'
 import { getAuthSecret } from '@/lib/auth-secret'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
-import { logger } from '@/lib/logger'
 
-const IS_ELECTRON = () => process.env.ELECTRON === '1'
 
 function getJwtSecret(): Uint8Array {
-  // No hard-coded fallback — a missing/weak secret throws, caught below → fail-open unknown.
+  // No hard-coded fallback — a missing/weak secret throws, translated by the outer boundary to SERVER_MISCONFIGURED.
   return new TextEncoder().encode(getAuthSecret())
 }
 
 const OK_UNKNOWN = { allowed: true, status: 'unknown' as const }
 
-export async function GET(req: NextRequest) {
+async function handleGET(req: NextRequest) {
   const rl = await enforceRateLimit('license_status', clientIpFrom(req))
   if (!rl.ok) return rateLimitResponse(rl)
 
   // ── Resolve licenseId from the signed session cookie ────────────────────────
+  const secret = getJwtSecret() // Configuration ≠ session invalide.
   const raw = req.cookies.get('gf_session')?.value
   if (!raw) return NextResponse.json(OK_UNKNOWN)
 
   let licenseId = ''
   try {
-    const { payload } = await jwtVerify(raw, getJwtSecret())
+    const { payload } = await jwtVerify(raw, secret)
     licenseId = typeof payload.lid === 'string' ? payload.lid : ''
   } catch {
     return NextResponse.json(OK_UNKNOWN)
@@ -62,7 +61,7 @@ export async function GET(req: NextRequest) {
     if (!recordIntegrityUsable(mac)) {
       return NextResponse.json({
         allowed: false,
-        status:  'tampered',
+        status:  'tampered', code: 'LICENSE_TAMPERED',
         reason:  'Intégrité de la base de données compromise.',
       })
     }
@@ -91,14 +90,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ allowed: true, status: 'active' })
   } catch (err) {
-    if (IS_ELECTRON()) {
-      // Fail-open Electron : base locale indisponible ≠ licence invalide.
-      return NextResponse.json(OK_UNKNOWN)
-    }
-    logger.error('[license/status] erreur infra', err)
-    return NextResponse.json(
-      { error: 'Service temporairement indisponible.', code: 'SERVICE_UNAVAILABLE' },
-      { status: 503 },
-    )
+    throw err
   }
+}
+
+export async function GET(req: NextRequest) {
+  return licenseApiBoundary(() => handleGET(req))
 }

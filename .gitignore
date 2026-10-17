@@ -154,3 +154,9 @@ keys/bootstrap-*
 .env.*
 !.env.example
 !.env.*.example
+
+# Environnement Python isolé pour les tests (aucune dépendance vendue).
+.venv/
+
+# Dated, non-secret audit evidence required by PHASE 6 (not application logs).
+!docs/audit/2026-10-17/phase6/*.log

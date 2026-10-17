@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { Session } from 'next-auth'
 import { signOut } from 'next-auth/react'

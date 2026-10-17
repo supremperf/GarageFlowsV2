@@ -93,93 +93,18 @@ beforeEach(async () => {
   h.admin = true
 })
 
-describe('revoke-by-key : `revoked` reste TERMINAL (GF-DUR-048)', () => {
-  it('révoquer fonctionne, et laisse une trace', async () => {
-    await poser('lic-a', 'active')
-    const r = await revokeByKey(post('/api/admin/licenses/revoke-by-key', { licenseId: 'lic-a', status: 'revoked' }, CLE))
-    expect(r.status).toBe(200)
-
-    const e = await etat('lic-a')
-    expect(e.status).toBe('revoked')
-    expect(e.revokedAt, 'la date de révocation doit être posée').not.toBeNull()
-
-    const t = await traces('lic-a')
-    expect(t, 'une révocation sans trace est intraçable').toHaveLength(1)
-    expect(t[0].action).toBe('revoked')
-    expect(t[0].detail, 'aucun jeton ni clé dans la trace').not.toMatch(/GF2\.|BEGIN .*PRIVATE/)
-  })
-
-  it('RÉACTIVER une licence révoquée par un PATCH ordinaire est REFUSÉ', async () => {
-    // Le défaut : c'était une écriture de champ ordinaire, qui effaçait même
-    // `revokedAt`.
-    //
-    // La machine à états distingue deux refus, et c'est plus fin que ce que ce
-    // test attendait d'abord : un `{status:'active'}` nu ne se voit pas opposer
-    // « révoqué est terminal » mais « la réactivation exige un geste dédié ».
-    // La propriété qui compte est la même — la licence ne repasse pas active.
-    await poser('lic-b', 'revoked')
-    const r = await revokeByKey(post('/api/admin/licenses/revoke-by-key', { licenseId: 'lic-b', status: 'active' }, CLE))
-    expect(r.status).toBe(400)
-    expect((await r.json()).code).toBe('REACTIVATION_REQUIRES_CONFIRMATION')
-
-    const e = await etat('lic-b')
-    expect(e.status, 'la licence ne doit PAS être repassée active').toBe('revoked')
-    expect(e.revokedAt, 'la date de révocation ne doit pas être effacée').not.toBeNull()
-    expect(await traces('lic-b'), 'un refus n’écrit aucune transition').toHaveLength(0)
-  })
-
-  it('réactiver SANS motif reste refusé, même avec confirmation', async () => {
-    await poser('lic-c', 'revoked')
-    const r = await revokeByKey(post('/api/admin/licenses/revoke-by-key',
-      { licenseId: 'lic-c', status: 'active', confirmReactivation: true }, CLE))
-    expect(r.status).toBe(400)
-    expect((await etat('lic-c')).status).toBe('revoked')
-  })
-
-  it('réactiver AVEC confirmation ET motif est possible — la voie légitime existe', async () => {
-    // Contrôle positif : sans lui, les tests ci-dessus passeraient aussi si la
-    // route refusait tout.
-    await poser('lic-d', 'revoked')
-    const r = await revokeByKey(post('/api/admin/licenses/revoke-by-key', {
-      licenseId: 'lic-d', status: 'active',
-      confirmReactivation: true, reason: 'Erreur de saisie du support, licence rétablie',
-    }, CLE))
-    expect(r.status).toBe(200)
-
-    const e = await etat('lic-d')
-    expect(e.status).toBe('active')
-    expect(e.revokedAt, 'une réactivation légitime efface la date de révocation').toBeNull()
-
-    const t = await traces('lic-d')
-    expect(t).toHaveLength(1)
-    expect(t[0].action).toBe('reactivated')
-    expect(JSON.parse(t[0].detail).reason, 'le motif doit être conservé').toContain('Erreur de saisie')
-  })
-
-  it('suspendre puis réactiver reste libre — ce n’est pas un état terminal', async () => {
-    await poser('lic-e', 'active')
-    expect((await revokeByKey(post('/api/admin/licenses/revoke-by-key', { licenseId: 'lic-e', status: 'suspended' }, CLE))).status).toBe(200)
-    expect((await etat('lic-e')).status).toBe('suspended')
-
-    expect((await revokeByKey(post('/api/admin/licenses/revoke-by-key', { licenseId: 'lic-e', status: 'active' }, CLE))).status).toBe(200)
-    expect((await etat('lic-e')).status).toBe('active')
-  })
-
-  it('une clé API fausse ne change RIEN', async () => {
-    await poser('lic-f', 'active')
-    const r = await revokeByKey(post('/api/admin/licenses/revoke-by-key',
-      { licenseId: 'lic-f', status: 'revoked' }, { 'x-gf-key': 'mauvaise-cle-0123456789abcdef' }))
-    expect(r.status).toBe(403)
-    expect((await etat('lic-f')).status).toBe('active')
-    expect(await traces('lic-f')).toHaveLength(0)
-  })
-
-  it('un statut hors énumération est refusé', async () => {
-    await poser('lic-g', 'active')
-    for (const mauvais of ['Revoked', 'revoked ', 'REVOKED', 'deleted', '']) {
-      const r = await revokeByKey(post('/api/admin/licenses/revoke-by-key', { licenseId: 'lic-g', status: mauvais }, CLE))
-      expect(r.status, `statut « ${mauvais} » accepté`).toBe(400)
+describe('revoke-by-key : retiré, aucun état DB ne peut changer', () => {
+  it.each(['active', 'revoked', 'suspended'])('refuse toute transition depuis %s, même avec clé partagée', async (from) => {
+    const id = `lic-disabled-${from}`
+    await poser(id, from)
+    for (const status of ['active', 'revoked', 'suspended']) {
+      const r = await revokeByKey(post('/api/admin/licenses/revoke-by-key', {
+        licenseId: id, status, confirmReactivation: true, reason: 'test de fermeture',
+      }, CLE))
+      expect(r.status).toBe(404)
+      expect((await r.json()).code).toBe('ENDPOINT_DISABLED')
+      expect((await etat(id)).status).toBe(from)
+      expect(await traces(id)).toHaveLength(0)
     }
-    expect((await etat('lic-g')).status).toBe('active')
   })
 })

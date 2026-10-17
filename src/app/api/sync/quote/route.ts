@@ -1,3 +1,4 @@
+import { licenseApiBoundary } from '@/lib/license/api-boundary'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -77,12 +78,15 @@ const strOrNull = (v: unknown, max: number): string | null => {
 const entier = (v: unknown, defaut = 0): number =>
   Number.isSafeInteger(v) ? (v as number) : defaut
 
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
   const rl = await enforceRateLimit('license_status', clientIpFrom(req))
   if (!rl.ok) return rateLimitResponse(rl)
 
   let body: Record<string, unknown>
   try { body = await req.json() } catch {
+    return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 })
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
     return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 })
   }
 
@@ -209,7 +213,10 @@ export async function POST(req: Request) {
       expiresAt: new Date(Date.now() + VALIDITE_MS).toISOString(),
     })
   } catch (err) {
-    logger.error('[sync/quote] erreur infra', err)
-    return NextResponse.json({ ok: false, code: 'INFRA' }, { status: 503 })
+    throw err
   }
+}
+
+export async function POST(req: Request) {
+  return licenseApiBoundary(() => handlePOST(req))
 }

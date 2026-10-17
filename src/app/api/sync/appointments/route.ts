@@ -1,3 +1,4 @@
+import { licenseApiBoundary } from '@/lib/license/api-boundary'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -50,12 +51,15 @@ const MAX_DEMANDES = 100
 const chaine = (v: unknown): string | undefined =>
   typeof v === 'string' && v.trim() !== '' ? v.trim() : undefined
 
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
   const rl = await enforceRateLimit('license_status', `appointments-sync:${clientIpFrom(req)}`)
   if (!rl.ok) return rateLimitResponse(rl)
 
   let body: Record<string, unknown>
   try { body = await req.json() } catch {
+    return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 })
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
     return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 })
   }
 
@@ -117,7 +121,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: false, code: 'UNKNOWN_MODE' }, { status: 400 })
   } catch (err) {
-    logger.error('[sync/appointments] erreur infra', err, { garage: shortId(garageId) })
-    return NextResponse.json({ ok: false, code: 'INFRA' }, { status: 503 })
+    throw err
   }
+}
+
+export async function POST(req: Request) {
+  return licenseApiBoundary(() => handlePOST(req))
 }

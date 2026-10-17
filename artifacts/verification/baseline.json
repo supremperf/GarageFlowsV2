@@ -3,19 +3,19 @@
   "schemaVersion": 2,
   "product": "GarageFlows",
   "version": "1.1.0",
-  "commit": "dba4fc77eca789963e8047faae4d90d82071377a",
-  "commitShort": "dba4fc7",
-  "branch": "claude/garageflow-final-unified-merge-ub0l67",
+  "commit": "aa90f89c059db58a4a3fe3c339a2dffbfbf10fad",
+  "commitShort": "aa90f89",
+  "branch": "arena/55edbdc1-garageflowsv2",
   "gitIdentity": true,
-  "generatedAtUtc": "2026-08-16T13:13:43.670Z",
+  "generatedAtUtc": "2026-10-17T19:58:39.575Z",
   "toolchain": {
-    "node": "v22.23.2",
+    "node": "v22.22.3",
     "npm": "10.9.8",
-    "os": "win32 x64",
+    "os": "linux x64",
     "dependencies": {
       "next": {
-        "declared": "^14.2.35",
-        "resolved": "14.2.35",
+        "declared": "15.5.27",
+        "resolved": "15.5.27",
         "source": "node_modules"
       },
       "react": {
@@ -44,13 +44,13 @@
         "source": "node_modules"
       },
       "electron": {
-        "declared": "^31.7.7",
-        "resolved": "31.7.7",
+        "declared": "41.10.6",
+        "resolved": "41.10.6",
         "source": "node_modules"
       },
       "vitest": {
-        "declared": "^4.1.5",
-        "resolved": "4.1.5",
+        "declared": "4.1.11",
+        "resolved": "4.1.11",
         "source": "node_modules"
       }
     },
@@ -59,12 +59,12 @@
   },
   "tests": {
     "measured": true,
-    "files": 318,
-    "suites": 1218,
-    "total": 3699,
-    "discovered": 3699,
-    "passed": 3671,
-    "failed": 0,
-    "skipped": 28
+    "files": 345,
+    "suites": 1299,
+    "total": 4194,
+    "discovered": 4194,
+    "passed": 3343,
+    "failed": 3,
+    "skipped": 848
   }
 }

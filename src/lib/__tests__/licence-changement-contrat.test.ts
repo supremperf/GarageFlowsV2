@@ -67,7 +67,7 @@ describe('changement de licence — navigateur et PWA (GF-008)', () => {
   it('le motif du refus affiché est celui que la route émet', () => {
     // La route répond `{ ok:false, code, reason }` — jamais `error`.
     expect(route(), 'la route émet `reason`').toMatch(/reason\s*:/)
-    expect(modale(), 'l’écran doit afficher `reason`').toMatch(/data\.reason/)
+    expect(modale(), 'message partagé distinguant infra/métier').toContain('activationErrorMessage(data, res.status)')
   })
 
   it('le succès est décidé par `data.ok`, pas par le seul statut HTTP', () => {
@@ -95,19 +95,14 @@ describe('changement de licence — poste Electron (GF-009)', () => {
     expect(g, 'appel dont le résultat est jeté').not.toMatch(/^\s*await\s+activateOnServer\(\)\s*$/m)
   })
 
-  it('un REFUS EXPLICITE de l’autorité distante renvoie ok:false', () => {
+  it('tout échec de l’autorité distante renvoie ok:false', () => {
     const g = gestionnaire()
-    expect(g, 'le refus distant doit être distingué d’une autorité injoignable')
-      .toMatch(/lastActivationRefusal\?\.authority\s*===\s*'remote'/)
+    expect(g, 'seul un succès distant permet la bascule').toContain("autorite !== 'remote'")
     expect(g, 'un refus doit produire une réponse négative').toMatch(/ok:\s*false/)
   })
 
-  it('une autorité INJOIGNABLE ne bloque pas le changement (fonctionnement hors ligne)', () => {
-    // Le produit doit rester utilisable sans réseau : seul un refus explicite
-    // arrête la bascule. Le garde vérifie que la condition n'est pas le simple
-    // `!autorite`, qui refuserait aussi le hors-ligne.
-    const g = gestionnaire()
-    expect(g).not.toMatch(/if\s*\(\s*!\s*autorite\s*\)\s*\{[^}]*return\s*\{\s*ok:\s*false/)
+  it('une nouvelle activation hors ligne est refusée, sans fallback silencieux', () => {
+    expect(gestionnaire()).toContain("if (autorite !== 'remote')")
   })
 
   it('l’état précédent est restauré au lieu de laisser la clé refusée sur le disque', () => {

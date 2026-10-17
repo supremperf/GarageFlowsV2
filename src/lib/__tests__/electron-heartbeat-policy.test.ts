@@ -60,10 +60,10 @@ describe('heartbeat licence — aucune réactivation automatique', () => {
       })
     })
 
-    it('un refus sans statut retombe sur « revoked », jamais sur un laissez-passer', () => {
+    it('un refus sans statut retombe sur « unknown » bloquant, sans inventer de révocation', () => {
       const d = decide({ allowed: false }, 'remote', false)
       expect(d.action).toBe('block')
-      expect(d.status).toBe('revoked')
+      expect(d.status).toBe('unknown')
       expect(d.reason).toBeTruthy()
     })
 

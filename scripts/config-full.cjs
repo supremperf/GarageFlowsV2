@@ -5,6 +5,7 @@ const os = require('node:os')
 const crypto = require('node:crypto')
 const core = require('./config-core.cjs')
 const { loadPolicy, assertNoAliases, assertSafeServerOverrides } = require('./config-policy.cjs')
+const { normalizeStorage } = require('./config-rebuild.cjs')
 const services = require('./config-services.cjs')
 const keys = require('./config-keys.cjs')
 const { audit, render } = require('./config-audit.cjs')
@@ -130,8 +131,9 @@ async function full(api, { automatic = false } = {}) {
       for (const n of excluded) delete env[n]
     }
     const remote = await step('accès-et-configuration-Vercel', () => api.setupVercel())
-    // Reject obsolete names even if they came from an integration; don't quietly paper over them.
-    assertNoAliases(automatic ? Object.fromEntries(Object.entries(remote.values).filter(([n]) => !['DATABASE_URL_UNPOOLED'].includes(n))) : remote.values, policy)
+    // Normalize authenticated provider INPUT once, reject contradictions, then enforce canonical names.
+    remote.values = normalizeStorage(remote.values)
+    assertNoAliases(remote.values, policy)
     assertSafeServerOverrides(remote)
     env = await api.importRemote(env, remote, names, { deferGenerated: true })
     if (automatic) for (const name of remote.generatedHere || []) noteGenerated('serveur', name)

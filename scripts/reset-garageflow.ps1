@@ -1508,7 +1508,7 @@ function Test-LicenseActivationRateLimit {
     }
 
     if ($payload -and [string]$payload.code -eq 'SERVICE_UNAVAILABLE') {
-        throw '/api/license/activate renvoie encore SERVICE_UNAVAILABLE malgré le repli contrôlé. Consultez les logs détaillés de la route.'
+        throw '/api/license/activate est indisponible : deploiement refuse. Verifiez le service de limitation.'
     }
     if ($payload -and [string]$payload.code -eq 'RATE_LIMITED') {
         throw '/api/license/activate est joignable mais le compteur de test est temporairement limité. Attendez le Retry-After ou augmentez temporairement RATE_LIMIT_LICENSE_ACTIVATE_MAX.'
@@ -1527,281 +1527,23 @@ function Test-ProtectedApiKeyEndpoint {
         [Parameter(Mandatory=$true)][string]$DeploymentUrl,
         [Parameter(Mandatory=$true)][string]$ApiKey
     )
-    $script:LastApiKeyDiag = ''
-    Add-SecretToRegistry $ApiKey
-
-    # Juste après `vercel --prod`, la nouvelle valeur GARAGEFLOW_API_KEY vient
-    # d'être écrite : le runtime de la fonction fraîchement déployée peut mettre
-    # quelques secondes à la lire. On RETENTE avec backoff, et surtout on
-    # DIAGNOSTIQUE le vrai code HTTP au lieu d'un échec opaque (le check /api/health
-    # a déjà prouvé que `vercel curl` traverse la Deployment Protection : un échec
-    # ICI n'est donc PAS un problème de protection, mais de propagation/valeur).
-    $maxAttempts = 4
-    $backoff = @(0, 3, 6, 9)
-    $lastStatus = 0
-    $lastReason = ''
-
-    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-        if ($backoff[$attempt - 1] -gt 0) { Start-Sleep -Seconds $backoff[$attempt - 1] }
-
-        $licenseId = 'config-test-' + [Guid]::NewGuid().ToString('N')
-        $body = @{ licenseId = $licenseId; status = 'active' } | ConvertTo-Json -Compress
-        $result = Invoke-ProtectedDeploymentRequest `
-            -Path '/api/admin/licenses/revoke-by-key' `
-            -DeploymentUrl $DeploymentUrl `
-            -Method POST `
-            -Headers @{ 'x-gf-key' = $ApiKey; 'Content-Type' = 'application/json'; 'Accept' = 'application/json' } `
-            -Body $body
-
-        $status = [int]$result.HttpStatus
-        $lastStatus = $status
-
-        # Réponse attendue : HTTP 200 + { ok:true, note:'not_registered' }.
-        # Accès SÛR sous Set-StrictMode : une réponse d'erreur ne contient pas
-        # 'ok'/'note' — on teste l'existence de la propriété avant lecture.
-        $payload = $result.Payload
-        $payloadOk = $payload -and $payload.PSObject.Properties['ok'] -and $payload.PSObject.Properties['ok'].Value -eq $true
-        $payloadNote = if ($payload -and $payload.PSObject.Properties['note']) { [string]$payload.PSObject.Properties['note'].Value } else { '' }
-        if (($status -eq 200 -or $status -eq 0) -and $payloadOk -and $payloadNote -eq 'not_registered') {
-            Write-Host "[OK] GARAGEFLOW_API_KEY authentifiée via vercel curl (test non destructif, tentative $attempt/$maxAttempts)." -ForegroundColor Green
-            return $true
-        }
-
-        if ($result.ProtectionIntercepted) {
-            $lastReason = "Deployment Protection a intercepté la requête. vercel curl doit être authentifié (vercel whoami) et lié au projet ; sinon fournir un VERCEL_TOKEN valide."
-        } else {
-            switch ($status) {
-                403 { $lastReason = "HTTP 403 : la fonction déployée lit un GARAGEFLOW_API_KEY DIFFÉRENT de la nouvelle clé. La valeur envoyée ne correspond pas à celle du runtime — variable pas encore propagée à CE déploiement, ou écrite dans un autre environnement que Production." }
-                500 {
-                    # Deux causes de 500 sur cette route : (a) clé API absente/faible,
-                    # (b) erreur base de données (schéma Neon désaligné du code). On
-                    # LES DISTINGUE via le champ 'error' du corps JSON — ne jamais
-                    # attribuer un 500 DB à un problème de clé.
-                    $errText = if ($payload -and $payload.PSObject.Properties['error']) { [string]$payload.PSObject.Properties['error'].Value } else { '' }
-                    if ($errText -match 'base de donn') {
-                        $lastReason = "HTTP 500 (erreur base de données) : le schéma Neon Production ne correspond PAS au code déployé — colonne/table manquante (ex. LicenseKey.parentLicenseId). La rotation converge désormais le schéma (DDL idempotent) AVANT le déploiement ; si l'erreur persiste, REJOUEZ la convergence (converge-server-schema.sql via 'prisma db execute') — évitez 'migrate deploy' seul, qui saute une migration inscrite-mais-manquante et laisserait le 500. Voir docs/POST_ROTATION_RECOVERY.md §7."
-                    } elseif ($errText -match 'Configuration serveur') {
-                        $lastReason = "HTTP 500 (configuration) : GARAGEFLOW_API_KEY absente ou trop courte (<16) dans le runtime déployé. La variable n'a pas été appliquée à l'environnement Production."
-                    } else {
-                        $lastReason = "HTTP 500 : erreur serveur inattendue$(if ($errText) { " — $errText" } else { '' })."
-                    }
-                }
-                401 { $lastReason = "HTTP 401 : couche d'authentification (Deployment Protection) devant la fonction." }
-                429 { $lastReason = "HTTP 429 : rate limit admin atteint ; nouvelle tentative." }
-                502 { $lastReason = "HTTP 502 : passerelle ; fonction pas encore prête, nouvelle tentative." }
-                503 { $lastReason = "HTTP 503 : service indisponible (rate limiter/Upstash) ; nouvelle tentative." }
-                504 { $lastReason = "HTTP 504 : délai dépassé ; nouvelle tentative." }
-                0   { $lastReason = if (-not $result.Ok) { "vercel curl a échoué (code $($result.ExitCode)) sans code HTTP exploitable." } else { "Réponse sans code HTTP exploitable." } }
-                default { $lastReason = "HTTP $status : réponse inattendue, payload non conforme au test non destructif." }
-            }
-        }
-        Write-Host "[ATTENTION] Test clé API tentative $attempt/$maxAttempts : $lastReason" -ForegroundColor Yellow
-    }
-
-    $script:LastApiKeyDiag = "Dernier code HTTP=$lastStatus. $lastReason"
-    Write-Host "[ERREUR] Validation GARAGEFLOW_API_KEY échouée après $maxAttempts tentatives — $($script:LastApiKeyDiag)" -ForegroundColor Red
+    # Aucun appel destructif ni test de cle partagee via une route retiree.
+    # Bloquer explicitement l'ancien workflow plutot que certifier un faux succes.
+    $script:LastApiKeyDiag = 'Endpoint revoke-by-key retire. Recette admin authentifiee requise avant promotion.'
+    Write-Host ('[BLOQUE] ' + $script:LastApiKeyDiag) -ForegroundColor Red
     return $false
 }
 
-
 function Ensure-LicenseActivationDiagnostics {
     param([Parameter(Mandatory=$true)][string]$Root)
-
-    $candidates = @(
-        (Join-Path $Root 'src\app\api\license\activate\route.ts'),
-        (Join-Path $Root 'app\api\license\activate\route.ts')
-    )
-    $routePath = $candidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
-    if ([string]::IsNullOrWhiteSpace([string]$routePath)) {
-        Write-Host '[INFO] Route /api/license/activate introuvable : diagnostic ignoré sans bloquer le déploiement.' -ForegroundColor DarkYellow
-        return
-    }
-
-    $raw = [IO.File]::ReadAllText($routePath)
-    $tag = 'GF_LICENSE_ACTIVATE_DIAGNOSTICS_V174'
-    if ($raw.Contains($tag)) {
-        Write-Host '[OK] Diagnostic détaillé de /api/license/activate et du rate limiter déjà présent.' -ForegroundColor Green
-        return
-    }
-
-    $helperAnchor = "const IS_ELECTRON = () => process.env.ELECTRON === '1'"
-    if (-not $raw.Contains($helperAnchor)) {
-        Write-Host '[INFO] Point d-insertion diagnostic introuvable : route laissée intacte.' -ForegroundColor DarkYellow
-        return
-    }
-
-    $helper = @'
-
-// GF_LICENSE_ACTIVATE_DIAGNOSTICS_V174
-function serializeActivationError(error: unknown) {
-  if (error instanceof Error) {
-    return {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      cause: error.cause instanceof Error
-        ? { name: error.cause.name, message: error.cause.message, stack: error.cause.stack }
-        : error.cause ? String(error.cause) : undefined,
-    }
-  }
-  return { value: String(error) }
+    # SECURITE : aucun patch de source dans un outil de deploiement.
+    Write-Host '[OK] Sources de licence conservees intactes ; diagnostics injectes desactives.' -ForegroundColor Green
 }
-
-function activationRuntimeState(req: NextRequest) {
-  return {
-    requestId: req.headers.get('x-vercel-id') ?? req.headers.get('x-request-id') ?? undefined,
-    databaseProvider: /^postgres(?:ql)?:\/\//i.test(process.env.DATABASE_URL?.trim() ?? '') ? 'postgresql' : 'invalid',
-    hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
-    hasDirectUrl: Boolean(process.env.DIRECT_URL),
-    hasDbMacSecret: Boolean(process.env.GF_DB_MAC_SECRET),
-    hasPrivateKey: Boolean(process.env.GF_PRIVATE_KEY),
-    nodeEnv: process.env.NODE_ENV,
-    vercel: process.env.VERCEL,
-  }
-}
-'@
-    $patched = $raw.Replace($helperAnchor, $helperAnchor + $helper)
-
-    $step0 = "export async function POST(req: NextRequest) {"
-    if (-not $patched.Contains($step0)) { Write-Host '[INFO] Fonction POST non reconnue : route laissée intacte.' -ForegroundColor DarkYellow; return }
-    $patched = $patched.Replace($step0, $step0 + "`r`n  console.info('[license/activate] étape 0 : requête reçue', activationRuntimeState(req))")
-
-    $rateLimitAnchor = "  const rl = await enforceRateLimit('license_activate', clientIpFrom(req))"
-    if (-not $patched.Contains($rateLimitAnchor)) { Write-Host '[INFO] Appel rate-limit non reconnu : route laissée intacte.' -ForegroundColor DarkYellow; return }
-    $rateLimitReturn = '  if (!rl.ok) return rateLimitResponse(rl)'
-    if (-not $patched.Contains($rateLimitReturn)) { Write-Host '[INFO] Retour rate-limit non reconnu : route laissée intacte.' -ForegroundColor DarkYellow; return }
-    $rateLimitDiagnostic = @'
-  console.info('[license/activate] rate-limit', {
-    ok: rl.ok,
-    remaining: rl.remaining,
-    retryAfterSec: rl.retryAfterSec,
-    degraded: rl.degraded,
-    hasUpstashUrl: Boolean(process.env.UPSTASH_REDIS_REST_URL),
-    hasUpstashToken: Boolean(process.env.UPSTASH_REDIS_REST_TOKEN),
-  })
-  // GF_LICENSE_ACTIVATE_UPSTASH_FALLBACK_V184
-  // En cas d'indisponibilité temporaire d'Upstash, ne pas bloquer toutes les
-  // activations. Les contrôles cryptographiques, DB, seats et appareils restent
-  // appliqués. Les vraies limites atteintes continuent de renvoyer 429.
-  if (!rl.ok && rl.degraded === 'fail_closed') {
-    console.error('[license/activate] rate-limit dégradé : repli contrôlé actif', {
-      retryAfterSec: rl.retryAfterSec,
-      hasUpstashUrl: Boolean(process.env.UPSTASH_REDIS_REST_URL),
-      hasUpstashToken: Boolean(process.env.UPSTASH_REDIS_REST_TOKEN),
-      ...activationRuntimeState(req),
-    })
-  } else if (!rl.ok) {
-    return rateLimitResponse(rl)
-  }
-'@
-    # Remplacement tolérant CRLF/LF et espaces entre l'appel et le retour.
-    $rateLimitPattern = '(?ms)^\s*const rl = await enforceRateLimit\(''license_activate'', clientIpFrom\(req\)\)\s*\r?\n\s*if \(!rl\.ok\) return rateLimitResponse\(rl\)'
-    $rateLimitReplacement = $rateLimitAnchor + "`r`n" + $rateLimitDiagnostic.TrimEnd()
-    $patchedRateLimit = [regex]::Replace($patched, $rateLimitPattern, [System.Text.RegularExpressions.MatchEvaluator]{
-        param($m)
-        return $rateLimitReplacement
-    }, 1)
-    if ($patchedRateLimit -eq $patched -and -not $patched.Contains('GF_LICENSE_ACTIVATE_UPSTASH_FALLBACK_V184')) {
-        Write-Host '[INFO] Bloc rate-limit déjà différent : aucun remplacement fragile appliqué.' -ForegroundColor DarkYellow
-    } else {
-        $patched = $patchedRateLimit
-    }
-
-    $step1 = '  const result = verifyLicenseToken(licenseToken)'
-    if ($patched.Contains($step1)) {
-        $patched = $patched.Replace($step1, "  console.info('[license/activate] étape 1 : validation cryptographique')`r`n" + $step1)
-    }
-
-    $step2 = '  let seats = payload.seats ?? 1'
-    if ($patched.Contains($step2)) {
-        $patched = $patched.Replace($step2, "  console.info('[license/activate] étape 2 : contrôle base et intégrité', { lid: payload.lid })`r`n" + $step2)
-    }
-
-    $oldDbLog = "      logger.error('[license/activate] erreur DB (fail-closed serveur)', err)"
-    $newDbLog = @'
-      console.error('[license/activate] erreur DB complète (fail-closed serveur)', {
-        error: serializeActivationError(err),
-        ...activationRuntimeState(req),
-        lid: payload.lid,
-      })
-      logger.error('[license/activate] erreur DB (fail-closed serveur)', err)
-'@
-    if (-not $patched.Contains($oldDbLog)) { Write-Host '[INFO] Bloc erreur DB déjà différent : diagnostic détaillé ignoré.' -ForegroundColor DarkYellow; return }
-    $patched = $patched.Replace($oldDbLog, $newDbLog.TrimEnd())
-
-    $oldDeviceLog = "        logger.error('[license/activate] enregistrement appareil impossible (fail-closed serveur)', err)"
-    $newDeviceLog = @'
-        console.error('[license/activate] enregistrement appareil impossible — erreur complète', {
-          error: serializeActivationError(err),
-          ...activationRuntimeState(req),
-          lid: payload.lid,
-          hasHwid,
-          hasInstallId,
-          seats,
-        })
-        logger.error('[license/activate] enregistrement appareil impossible (fail-closed serveur)', err)
-'@
-    if (-not $patched.Contains($oldDeviceLog)) { Write-Host '[INFO] Bloc erreur appareil déjà différent : diagnostic détaillé ignoré.' -ForegroundColor DarkYellow; return }
-    $patched = $patched.Replace($oldDeviceLog, $newDeviceLog.TrimEnd())
-
-    $oldIntegrity = "        logger.error('[license/activate] DB integrity check FAILED', { lid: record.licenseId })"
-    $newIntegrity = @'
-        console.error('[license/activate] DB integrity check FAILED', {
-          lid: record.licenseId,
-          hasStoredMac: Boolean(record.recordMac),
-          hasMacSecret: Boolean(process.env.GF_DB_MAC_SECRET),
-          ...activationRuntimeState(req),
-        })
-        logger.error('[license/activate] DB integrity check FAILED', { lid: record.licenseId })
-'@
-    if ($patched.Contains($oldIntegrity)) {
-        $patched = $patched.Replace($oldIntegrity, $newIntegrity.TrimEnd())
-    }
-
-    $activationAnchor = '      const activation = await activateDevice({'
-    if ($patched.Contains($activationAnchor)) {
-        $patched = $patched.Replace($activationAnchor, "      console.info('[license/activate] étape 3 : enregistrement appareil', { lid: payload.lid, seats, hasHwid, hasInstallId })`r`n" + $activationAnchor)
-    }
-
-    $successAnchor = '  return response'
-    if ($patched.Contains($successAnchor)) {
-        $patched = $patched.Replace($successAnchor, "  console.info('[license/activate] étape 5 : activation réussie', { lid: payload.lid, deviceId: deviceId ?? null })`r`n" + $successAnchor)
-    }
-
-    $backup = $routePath + '.before-v174-' + (Get-Date -Format 'yyyyMMdd-HHmmss')
-    Copy-Item -LiteralPath $routePath -Destination $backup -Force
-    [IO.File]::WriteAllText($routePath, $patched, $script:Utf8NoBom)
-
-    $verify = [IO.File]::ReadAllText($routePath)
-    $diagnosticOk = $verify.Contains($tag) -and $verify.Contains('serializeActivationError') -and $verify.Contains('erreur DB complète')
-    $fallbackOk = $verify.Contains('GF_LICENSE_ACTIVATE_UPSTASH_FALLBACK_V184')
-    if (-not $diagnosticOk -or -not $fallbackOk) {
-        # Ne jamais bloquer le déploiement sur un contrôle textuel. Restaurer le
-        # fichier original si le patch n'est pas entièrement vérifiable.
-        Copy-Item -LiteralPath $backup -Destination $routePath -Force
-        Write-Host '[INFO] Patch diagnostic non vérifiable : route originale restaurée, déploiement poursuivi sans modification fragile.' -ForegroundColor DarkYellow
-        return
-    }
-    Write-Host '[OK] /api/license/activate enrichie avec diagnostic et repli contrôlé vérifiés.' -ForegroundColor Green
-}
-
 
 function Ensure-UpstashRuntimeReliability {
     param([Parameter(Mandatory=$true)][string]$Root)
-
-    # v1.8.4 : ne plus réécrire src/lib/security/rate-limit.ts.
-    # Les versions précédentes ont démontré que modifier automatiquement une
-    # méthode TypeScript complexe est trop fragile. Le backend d'origine reste
-    # intact ; le repli contrôlé est limité à /api/license/activate.
-    $candidates = @(
-        (Join-Path $Root 'src\lib\security\rate-limit.ts'),
-        (Join-Path $Root 'lib\security\rate-limit.ts')
-    )
-    $rateLimitPath = $candidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
-    if ([string]::IsNullOrWhiteSpace([string]$rateLimitPath)) {
-        throw 'Fichier src/lib/security/rate-limit.ts introuvable.'
-    }
-    Write-Host '[OK] Rate limiter d-origine conservé intact ; repli contrôlé appliqué uniquement à /api/license/activate.' -ForegroundColor Green
+    # Le rate limiter versionne reste fail-closed. Aucun repli de deploiement.
+    Write-Host '[OK] Rate limiter conserve intact (fail-closed).' -ForegroundColor Green
 }
 
 function Invoke-ProductionDeployFromCleanCopy {

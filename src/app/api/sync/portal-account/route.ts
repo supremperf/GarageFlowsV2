@@ -1,3 +1,4 @@
+import { licenseApiBoundary } from '@/lib/license/api-boundary'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -53,12 +54,15 @@ const date = (v: unknown): Date | null => {
   return Number.isNaN(d.getTime()) ? null : d
 }
 
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
   const rl = await enforceRateLimit('license_status', `portal-account:${clientIpFrom(req)}`)
   if (!rl.ok) return rateLimitResponse(rl)
 
   let body: Record<string, unknown>
   try { body = await req.json() } catch {
+    return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 })
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
     return NextResponse.json({ ok: false, code: 'BAD_REQUEST' }, { status: 400 })
   }
 
@@ -127,7 +131,10 @@ export async function POST(req: Request) {
     logger.info('[sync/portal-account] accès publié', { garage: shortId(garageId), compte: shortId(id) })
     return NextResponse.json({ ok: true, id })
   } catch (err) {
-    logger.error('[sync/portal-account] erreur infra', err, { garage: shortId(garageId) })
-    return NextResponse.json({ ok: false, code: 'INFRA' }, { status: 503 })
+    throw err
   }
+}
+
+export async function POST(req: Request) {
+  return licenseApiBoundary(() => handlePOST(req))
 }

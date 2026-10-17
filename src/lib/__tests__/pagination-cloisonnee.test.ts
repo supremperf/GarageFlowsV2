@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GF-DUR-038 — le COMPTE de pagination est cloisonné, comme la liste.
  *
  * ─── La question posée ──────────────────────────────────────────────────────

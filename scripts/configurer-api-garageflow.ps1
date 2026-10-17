@@ -1157,32 +1157,10 @@ function Test-HealthEndpoint {
 
 function Test-ApiKeyEndpoint {
     param([Parameter(Mandatory = $true)][string]$BaseUrl, [Parameter(Mandatory = $true)][string]$ApiKey)
-    Add-SecretToRegistry $ApiKey
-    $headers = @{ 'x-gf-key' = $ApiKey; 'Content-Type' = 'application/json' }
-    # Un UUID neuf avec status=active suit la branche not_registered et ne crée
-    # ni ne modifie de licence. Une collision avec un licenseId réel est négligeable.
-    $licenseId = 'config-test-' + [Guid]::NewGuid().ToString('N')
-    $body = @{ licenseId = $licenseId; status = 'active' } | ConvertTo-Json -Compress
-    try {
-        $response = Invoke-WebRequest -Uri ($BaseUrl.TrimEnd('/') + '/api/admin/licenses/revoke-by-key') -Method Post -Headers $headers -Body $body -UseBasicParsing -TimeoutSec 20
-        if ([int]$response.StatusCode -ne 200) { Write-GFStatus ERREUR "Endpoint clé API : HTTP $($response.StatusCode), attendu 200."; return $false }
-        try { $payload = $response.Content | ConvertFrom-Json } catch { $payload = $null }
-        # Accès SÛR sous Set-StrictMode : tester l'existence de 'ok'/'note' avant
-        # lecture (une réponse inattendue ne doit jamais lever « propriété introuvable »).
-        $payloadOk = $payload -and $payload.PSObject.Properties['ok'] -and $payload.PSObject.Properties['ok'].Value -eq $true
-        $payloadNote = if ($payload -and $payload.PSObject.Properties['note']) { [string]$payload.PSObject.Properties['note'].Value } else { '' }
-        if ($payloadOk -and $payloadNote -eq 'not_registered') {
-            Write-GFStatus OK 'GARAGEFLOW_API_KEY authentifiée par un test distant non destructif.'
-            return $true
-        }
-        Write-GFStatus ERREUR 'La clé a reçu HTTP 200 mais la réponse non destructive attendue est absente.'
-        return $false
-    } catch {
-        $status = $null
-        if ($_.Exception.Response) { try { $status = [int]$_.Exception.Response.StatusCode } catch { } }
-        Write-GFStatus ERREUR "Test authentifié de GARAGEFLOW_API_KEY en échec$(if ($status) { " (HTTP $status)" } else { '' })."
-        return $false
-    }
+    # Le point par cle partagee est retire : aucun ping ni envoi de secret.
+    # Ne pas lui substituer create/diagnostics ou rouvrir un flag.
+    Write-GFStatus ERREUR 'Controle administratif retire. Suivre docs/REVOCATION_ADMIN_RUNBOOK.md ; recette authentifiee requise avant promotion.'
+    return $false
 }
 
 function Invoke-ProjectCommand {

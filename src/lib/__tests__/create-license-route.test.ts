@@ -7,7 +7,7 @@
  *  - clé mécanicien : parentLicenseId posé SEULEMENT si le garage parent existe
  *    (sinon null → pas de violation de FK, l'activation retombe sur le plid signé) ;
  *  - idempotence (déjà enregistrée → 409, traité comme succès par le keygen) ;
- *  - le rate limit ne bloque pas l'outillage de confiance sur fail_closed.
+ *  - panne du rate limiter : 503 sans écriture, même avec une clé correcte.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -143,10 +143,11 @@ describe('POST /api/admin/licenses/create', () => {
     expect(dbState.created?.garageId).toBe(null)
   })
 
-  it('fail_closed (Upstash indispo) + clé valide → NON bloqué (201)', async () => {
+  it('fail_closed (Upstash indispo) + clé valide → 503 sans enregistrement', async () => {
     rlState.result = { ok: false, degraded: 'fail_closed', retryAfterSec: 60 }
     const res = await POST(req({ token: 'GF2.x' }) as never)
-    expect(res.status).toBe(201)
+    expect(res.status).toBe(503)
+    expect(dbState.created).toBeNull()
   })
 
   it('vraie limite atteinte (429) → bloqué', async () => {

@@ -1,0 +1,527 @@
+{
+  "scope": "local Markdown file links in 11 changed audit/runbook/canonical/config documents; no external HTTP or anchor-fragment validation",
+  "checked": 104,
+  "missing": [],
+  "links": [
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/01-TESTS-ET-TRACES.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/vitest-failures.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/pending-tests.tsv",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/ci-caches.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/ci-artifacts.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/engine-alternatives.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/prisma-generate-initial.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/build.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/env-before.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/env-batch1.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/env-batch2.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "../../VERIFICATION_CLE_EMETTRICE.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "../../REVOCATION_ADMIN_RUNBOOK.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/03-GRILLE-A-K.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/intermediate-ui-guard-failure.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/intermediate-pagination-guard-failure.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/vitest-final-failures.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/pending-tests-final.tsv",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "phase6/validation.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "target": "06-VERDICT-FINAL.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/01-TESTS-ET-TRACES.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/vitest-final-failures.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/vitest-final-files.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/build.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/02-BUILD-ET-REPRISE.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "05-RESOLUTION-BLOCAGES.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/env-final.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "../../VERIFICATION_CLE_EMETTRICE.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "../../REVOCATION_ADMIN_RUNBOOK.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/03-GRILLE-A-K.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/review-inventory.tsv",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/validation.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "../FINAL_VERIFICATION_BASELINE.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/vitest-final-failures.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/pending-tests-final.tsv",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/validation.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/targeted-validation.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/conditional-test-activated.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/node-tests.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/lint.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/type-check.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/warnings-final.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/env-final.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/consistency-final.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/npm-audit.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/outdated.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/sqlite-readonly.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/schema-inventory.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/intermediate-ui-guard-failure.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/intermediate-pagination-guard-failure.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "03-JOURNAL-ET-INCIDENT.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/02-BUILD-ET-REPRISE.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "../../VERIFICATION_CLE_EMETTRICE.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "05-RESOLUTION-BLOCAGES.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/03-GRILLE-A-K.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "phase6/validation.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "target": "snapshots/baseline-before-phase6.md.txt",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/04-REVALIDATION-ET-CHECKLIST.md",
+      "target": "06-VERDICT-FINAL.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/04-REVALIDATION-ET-CHECKLIST.md",
+      "target": "05-RESOLUTION-BLOCAGES.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/04-REVALIDATION-ET-CHECKLIST.md",
+      "target": "00-INVENTAIRE.tsv",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/04-REVALIDATION-ET-CHECKLIST.md",
+      "target": "01-AUDIT-INITIAL.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/04-REVALIDATION-ET-CHECKLIST.md",
+      "target": "02-CONTRATS-LICENCE-SYNC.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/04-REVALIDATION-ET-CHECKLIST.md",
+      "target": "03-JOURNAL-ET-INCIDENT.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/04-REVALIDATION-ET-CHECKLIST.md",
+      "target": "04-PREUVES.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/01-TESTS-ET-TRACES.md",
+      "target": "validation.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/01-TESTS-ET-TRACES.md",
+      "target": "vitest-final-failures.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/01-TESTS-ET-TRACES.md",
+      "target": "pending-tests-final.tsv",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/02-BUILD-ET-REPRISE.md",
+      "target": "build.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/02-BUILD-ET-REPRISE.md",
+      "target": "engine-alternatives.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/02-BUILD-ET-REPRISE.md",
+      "target": "ci-caches.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/02-BUILD-ET-REPRISE.md",
+      "target": "ci-artifacts.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/02-BUILD-ET-REPRISE.md",
+      "target": "prisma-5.22-getEngineInstance.ts.txt",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/02-BUILD-ET-REPRISE.md",
+      "target": "../../../../THIRD_PARTY_NOTICES.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/02-BUILD-ET-REPRISE.md",
+      "target": "gitleaks-download.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/02-BUILD-ET-REPRISE.md",
+      "target": "browser-install.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "review-inventory.tsv",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "route-inventory.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "ui-inventory.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "static-signals.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "encoding.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "schema-inventory.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "sqlite-readonly.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "e2e-discovery.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "browser-install.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "gitleaks-download.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "validation.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "01-TESTS-ET-TRACES.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "consistency-final.log",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "outdated.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "npm-audit.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "pending-tests-final.tsv",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "vitest-final-files.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "intermediate-ui-guard-failure.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "intermediate-pagination-guard-failure.json",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/2026-10-17/phase6/03-GRILLE-A-K.md",
+      "target": "prisma-5.22-getEngineInstance.ts.txt",
+      "exists": true
+    },
+    {
+      "from": "docs/CONFIG.md",
+      "target": "REVOCATION_ADMIN_RUNBOOK.md",
+      "exists": true
+    },
+    {
+      "from": "docs/CONFIG.md",
+      "target": "VERIFICATION_CLE_EMETTRICE.md",
+      "exists": true
+    },
+    {
+      "from": "docs/CONFIG.md",
+      "target": "audit/2026-10-17/06-VERDICT-FINAL.md",
+      "exists": true
+    },
+    {
+      "from": "docs/CONFIG.md",
+      "target": "CONFIG_REPOSITORY_AUDIT.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/FINAL_VERIFICATION_BASELINE.md",
+      "target": "2026-10-17/05-RESOLUTION-BLOCAGES.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/FINAL_VERIFICATION_BASELINE.md",
+      "target": "2026-10-17/06-VERDICT-FINAL.md",
+      "exists": true
+    },
+    {
+      "from": "docs/audit/FINAL_VERIFICATION_BASELINE.md",
+      "target": "2026-10-17/snapshots/baseline-before-phase6.md.txt",
+      "exists": true
+    },
+    {
+      "from": "RAPPORT-FINAL.md",
+      "target": "docs/audit/2026-10-17/06-VERDICT-FINAL.md",
+      "exists": true
+    },
+    {
+      "from": "RAPPORT-FINAL.md",
+      "target": "docs/audit/FINAL_VERIFICATION_BASELINE.md",
+      "exists": true
+    }
+  ]
+}

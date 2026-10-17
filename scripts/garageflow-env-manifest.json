@@ -1164,7 +1164,8 @@
       "autoManage": false,
       "rotationRisk": "critical",
       "consumers": [
-        "src/app/api/admin/licenses/generate/route.ts"
+        "src/app/api/admin/licenses/generate/route.ts",
+        "scripts/verify-license-issuer.mjs"
       ],
       "notes": "P-256 : node config genere et sauvegarde la PREMIERE paire uniquement sur base vide sans autorite locale existante, apres AUTORISER ; ancrages publics synchronises. Original reutilise, jamais de rotation automatique ni de regeneration apres perte. Base64 PKCS#8, doit correspondre aux ancrages Next/Electron. autoGenerate/autoManage=false restent les protections des outils generiques/reset ; seule l'initialisation controlee de config cree une nouvelle autorite."
     },
@@ -1928,6 +1929,69 @@
         ".github/workflows/ci.yml"
       ],
       "notes": "URL HTTPS de recette isolée pour le job E2E authentifié ; stockée dans l’environnement GitHub e2e-staging autorisé. Jamais la production ; aucune valeur automatique ni déploiement."
+    },
+    {
+      "name": "NEXT_PUBLIC_DEBUG",
+      "classification": "dangerous",
+      "scope": "release-tooling",
+      "requiredProduction": false,
+      "format": "must-be-absent",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/config-blob-setup.cjs",
+        "scripts/config-manager.cjs",
+        "scripts/lib/config-cloud.cjs"
+      ],
+      "notes": "Garde négative : toute présence active bloque le configurateur pour éviter des logs de credentials. Ne pas définir ni déployer."
+    },
+    {
+      "name": "NEXT_PUBLIC_VERCEL_BLOB_API_URL",
+      "classification": "dangerous",
+      "scope": "release-tooling",
+      "requiredProduction": false,
+      "format": "must-be-absent",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/lib/config-cloud.cjs"
+      ],
+      "notes": "Garde négative publique : override Blob refusé ; ne pas définir ni exposer au navigateur."
+    },
+    {
+      "name": "VERCEL_BLOB_API_URL",
+      "classification": "dangerous",
+      "scope": "release-tooling",
+      "requiredProduction": false,
+      "format": "must-be-absent",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/lib/config-cloud.cjs"
+      ],
+      "notes": "Garde négative : override de destination Blob refusé pour empêcher la fuite du token. Ne pas définir."
+    },
+    {
+      "name": "BLOB_READ_WRITE_TOKEN",
+      "classification": "secret",
+      "scope": "release-tooling",
+      "requiredProduction": false,
+      "format": "provider-token",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "high",
+      "consumers": [
+        "scripts/config-manager.cjs",
+        "scripts/lib/config-cloud.cjs"
+      ],
+      "notes": "Entrée fournisseur privée des outils de configuration et de validation Blob. Aucun consommateur applicatif actuel ; ne pas exposer au navigateur ni inventer une dépendance runtime."
     }
   ],
   "auditCleanup": {

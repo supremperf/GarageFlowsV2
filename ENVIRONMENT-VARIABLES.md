@@ -34,7 +34,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 
 ## Contrat par catégorie
 
-### Configuration fonctionnelle (64)
+### Configuration fonctionnelle (65)
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
@@ -86,6 +86,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `GF_MECHANIC_TIMER_AUTOCOMPLETE` | CONFIGURATION | non | server | Bascule l'achèvement automatique d'une intervention à l'arrêt du chronomètre mécanicien. |
 | `GF_MIN_ELECTRON_VERSION` | CONFIGURATION | non | server | — |
 | `GF_MIN_PWA_VERSION` | CONFIGURATION | non | server | — |
+| `GF_PACKAGE_DESKTOP` | CONFIGURATION | non | release-tooling | Posé par `npm run dist` (cross-env GF_PACKAGE_DESKTOP=1) pour dire au post-build que la sortie standalone part dans un INSTALLEUR : dans ce contexte … |
 | `GF_PROBE_NAMES` | CONFIGURATION | non | maintenance-tool | Liste de noms, separes par des virgules, que la sonde de verification post-rotation doit mesurer. Posee par reset-garageflow.ps1 juste avant `vercel … |
 | `GF_UPDATE_CHANNEL` | CONFIGURATION | non | desktop | — |
 | `GF_UPDATE_SIGNING_KEY_FILE` | SECRET | non | release-tooling | Chemin d'un fichier contenant la clé privée de signature, alternative à GF_UPDATE_SIGNING_KEY. Outillage de release uniquement. |
@@ -103,7 +104,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `TRUST_PROXY_HEADERS` | CONFIGURATION | non | server | — |
 | `UPSTASH_REDIS_TIMEOUT_MS` | CONFIGURATION | non | server | Délai d'attente d'un appel Upstash, en millisecondes. Facultative : absente, le défaut est 1500 ms — la valeur qui était codée en dur, donc comportem… |
 
-### dangerous (15)
+### dangerous (18)
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
@@ -120,8 +121,11 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `GF_SMTP_CIPHER_KEY_OLD` | SECRET | non | server | MIGRATION DE ROTATION de GF_SMTP_CIPHER_KEY : anciennes clés (séparées par des virgules) conservées le temps de rechiffrer les mots de passe SMTP exi… |
 | `GF_TOTP_ENC_KEY` | SECRET | non | server | Chiffre les secrets TOTP du portail au repos (format gtotp1.<kid>.<iv>.<tag>.<ct>, AES-256-GCM avec AAD de domaine). DISTINCTE de GF_SMTP_CIPHER_KEY … |
 | `GF_TOTP_ENC_KEY_OLD` | SECRET | non | server | MIGRATION DE ROTATION de GF_TOTP_ENC_KEY : anciennes cles (separees par des virgules) conservees le temps de rechiffrer les secrets TOTP existants. S… |
+| `NEXT_PUBLIC_DEBUG` | PUBLIC | non | release-tooling | Garde négative : toute présence active bloque le configurateur pour éviter des logs de credentials. Ne pas définir ni déployer. |
+| `NEXT_PUBLIC_VERCEL_BLOB_API_URL` | PUBLIC | non | release-tooling | Garde négative publique : override Blob refusé ; ne pas définir ni exposer au navigateur. |
 | `NEXTAUTH_SECRET` | SECRET | **oui** | both | Rotation invalidates sessions and may make d1-encrypted TOTP/SMTP data unreadable. |
 | `SEED_ADMIN_PASSWORD` | SECRET | non | development | Mot de passe du compte administrateur créé par les jeux de données de démonstration. Ne JAMAIS réutiliser une valeur de production ; sans elle, l'amo… |
+| `VERCEL_BLOB_API_URL` | CONFIGURATION | non | release-tooling | Garde négative : override de destination Blob refusé pour empêcher la fuite du token. Ne pas définir. |
 
 ### dangerous-external (3)
 
@@ -200,6 +204,12 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `NODE_ENV` | CONFIGURATION | non | runtime-system | Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually. |
 | `NODE_INSPECTOR_IPC` | CONFIGURATION | non | runtime-system | Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually. |
 | `VERCEL` | CONFIGURATION | non | runtime-system | Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually. |
+
+### Secrets générés par GarageFlows (1)
+
+| Nom | Sensibilité | Requise en production | Portée | Rôle |
+| --- | --- | --- | --- | --- |
+| `BLOB_READ_WRITE_TOKEN` | SECRET | non | release-tooling | Entrée fournisseur privée des outils de configuration et de validation Blob. Aucun consommateur applicatif actuel ; ne pas exposer au navigateur ni i… |
 
 ### Harnais de test (4)
 

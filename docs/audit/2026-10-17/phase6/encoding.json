@@ -1,0 +1,22 @@
+{
+  "files": 2373,
+  "utf8": 2363,
+  "binary": [
+    "icon.ico",
+    "icon.png",
+    "prisma/garageflow-template.db",
+    "public/icons/apple-touch-icon.png",
+    "public/icons/icon-192.png",
+    "public/icons/icon-512.png",
+    "public/icons/maskable-192.png",
+    "public/icons/maskable-512.png",
+    "src/app/favicon.ico",
+    "src/components/brand/logo-mark.png"
+  ],
+  "invalidUtf8Text": [],
+  "bom": [
+    "scripts/configurer-api-garageflow.ps1",
+    "scripts/reset-garageflow.ps1"
+  ],
+  "replacementCharacter": []
+}

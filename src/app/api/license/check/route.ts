@@ -1,3 +1,4 @@
+import { licenseApiBoundary } from '@/lib/license/api-boundary'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -17,12 +18,8 @@ export const dynamic = 'force-dynamic'
  *     la licence par licenseId + indication deviceRequired pour que les clients
  *     récents obtiennent un jeton.
  *
- * Politique d'erreur infra :
- *  - Electron (base SQLite locale) : fail-open documenté — hors ligne, l'app
- *    reste utilisable ; le client applique ses propres verrous 48 h/72 h.
- *  - Serveur/PWA : 503 générique — on n'affirme JAMAIS allowed:true sans
- *    vérification réussie. (Le client Electron traite toute réponse sans
- *    allowed=false ni status='active' comme indéterminée et conserve son état.)
+ * Erreurs techniques : DB_UNAVAILABLE (503), SERVER_MISCONFIGURED (500),
+ * INTERNAL_ERROR (500). Aucun succès implicite sur panne, sur toutes plateformes.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -34,19 +31,6 @@ import { isVersionSupported, seatlessCheckTolerated, parseClientPlatform, type C
 import { logger } from '@/lib/logger'
 
 const IS_ELECTRON = () => process.env.ELECTRON === '1'
-
-const FAIL_OPEN_UNKNOWN = { allowed: true, status: 'unknown' as const }
-
-function infraFailure(): NextResponse {
-  if (IS_ELECTRON()) {
-    // Fail-open Electron : base locale indisponible ≠ licence invalide.
-    return NextResponse.json(FAIL_OPEN_UNKNOWN)
-  }
-  return NextResponse.json(
-    { error: 'Service temporairement indisponible.', code: 'SERVICE_UNAVAILABLE' },
-    { status: 503 },
-  )
-}
 
 /** Réponse de blocage pour un échec de validation de jeton d'appareil. */
 function deviceFailureResponse(code: DeviceTokenFailure): NextResponse {
@@ -77,6 +61,8 @@ function deviceFailureResponse(code: DeviceTokenFailure): NextResponse {
         allowed: false, status: 'suspended',
         reason: 'Cette licence est temporairement suspendue.',
       })
+    case 'license_tampered':
+      return NextResponse.json({ allowed: false, status: 'tampered', code: 'LICENSE_TAMPERED' })
     case 'license_expired':
       return NextResponse.json({
         allowed: false, status: 'expired',
@@ -85,7 +71,7 @@ function deviceFailureResponse(code: DeviceTokenFailure): NextResponse {
   }
 }
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const rl = await enforceRateLimit('license_status', clientIpFrom(req))
   if (!rl.ok) return rateLimitResponse(rl)
 
@@ -141,8 +127,7 @@ export async function POST(req: NextRequest) {
     try {
       validationAppareil = await validateDeviceToken(deviceToken, { hwid, installId })
     } catch (err) {
-      logger.error('[license/check] erreur infra (validation jeton)', err)
-      return infraFailure()
+      throw err
     }
   }
   if (validationAppareil) {
@@ -198,11 +183,11 @@ export async function POST(req: NextRequest) {
     const mac = verifyRecordMac(record)
     if (!recordIntegrityUsable(mac)) {
       logger.error('[license/check] intégrité DB compromise', {
-        lid: record.licenseId, cause: mac.missing ? 'mac-absent' : 'mac-invalide',
+        cause: mac.missing ? 'mac-absent' : 'mac-invalide',
       })
       return NextResponse.json({
         allowed: false,
-        status:  'tampered',
+        status:  'tampered', code: 'LICENSE_TAMPERED',
         reason:  'Intégrité de la base de données compromise.',
       })
     }
@@ -239,7 +224,10 @@ export async function POST(req: NextRequest) {
     // les anciens ignorent ce champ et continuent sur le statut seul.
     return NextResponse.json({ allowed: true, status: 'active', deviceRequired: true })
   } catch (err) {
-    logger.error('[license/check] erreur infra', err)
-    return infraFailure()
+    throw err
   }
+}
+
+export async function POST(req: NextRequest) {
+  return licenseApiBoundary(() => handlePOST(req))
 }

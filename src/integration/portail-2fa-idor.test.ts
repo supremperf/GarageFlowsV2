@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GF-DUR-024 — 2FA : ciblage d'autrui, concurrence, et diagnostic de clé.
  *
  * ─── Ce qu'on refuse de supposer ────────────────────────────────────────────

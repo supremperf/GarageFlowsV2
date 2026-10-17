@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
  * connaissent. Utilisé par l'outil keygen (User-Agent GarageFlow-KeygenGUI).
  *
  * Auth : en-tête `x-gf-key` == GARAGEFLOW_API_KEY (comparaison à temps constant),
- * comme /api/admin/licenses/revoke-by-key — l'admin par cookie ne s'applique PAS
+ * point historique distinct de revoke-by-key (retiré) — le cookie ne s’applique PAS
  * ici (le keygen n'a pas de session navigateur).
  *
  * Corps : { token }  — jeton GF2 signé ES256. Le token est VÉRIFIÉ
@@ -37,12 +37,9 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  // Défense en profondeur : limite le débit AVANT toute comparaison. Comme
-  // revoke-by-key, on NE bloque PAS sur indisponibilité du backend (fail_closed)
-  // — l'outillage de confiance authentifié par clé API forte doit pouvoir
-  // enregistrer un lot de clés ; seule une vraie limite atteinte (429) rejette.
+  // Limiteur obligatoire, y compris pour le keygen : aucune exception sur panne.
   const rl = await enforceRateLimit('admin', clientIpFrom(req))
-  if (!rl.ok && rl.degraded !== 'fail_closed') return rateLimitResponse(rl)
+  if (!rl.ok) return rateLimitResponse(rl)
 
   // Auth : x-gf-key == GARAGEFLOW_API_KEY (temps constant).
   const apiKey = req.headers.get('x-gf-key')?.trim() ?? ''

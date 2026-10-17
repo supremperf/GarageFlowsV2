@@ -214,7 +214,12 @@ describe('les postes de licence sont visibles et libérables (GF-DUR-010/011)', 
   })
 
   it('l\'exploitant voit ses sièges consommés', () => {
-    expect(exploitant).toMatch(/fetch\('\/api\/license\/devices'/)
+    // Transport extracted for independent HTTP/error tests; follow both edges.
+    expect(exploitant).toContain("from '@/lib/license/devices-overview'")
+    expect(exploitant).toContain('loadLicenseDeviceOverview()')
+    expect(lire('src/lib/license/devices-overview.ts')).toMatch(/fetcher\('\/api\/license\/devices'/)
+    expect(exploitant).toContain('role="alert"')
+    expect(exploitant).toContain('Réessayer le chargement des postes')
     expect(exploitant).toMatch(/siège\$\{|siège/)
   })
 

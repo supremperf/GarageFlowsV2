@@ -83,6 +83,21 @@ const FICHIERS_PREUVE = new Set(['src/lib/__tests__/env-contract.test.ts'])
  */
 const AUTORISEES = [
   {
+    file: 'scripts/compromised-secrets.json',
+    needle: '"env": "DATABASE_URL_UNPOOLED",',
+    reason: 'Métadonnée historique de détection de valeurs exposées : empreinte conservée, jamais lue comme variable runtime.',
+  },
+  {
+    file: 'scripts/config-core.cjs',
+    needle: "'DATABASE_URL_UNPOOLED', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN',",
+    reason: 'Parsing de saisie fournisseur uniquement ; pas lecture process.env ni export. Testé par tests/env-provider-contract.test.cjs.',
+  },
+  {
+    file: 'scripts/config-rebuild.cjs',
+    needle: "const DIRECT_URL_PROVIDER_ALIAS = 'DATABASE_URL_UNPOOLED'",
+    reason: 'Frontière INPUT explicite : normalizeStorage refuse un conflit et SUPPRIME cette clé de sa sortie. Testé par tests/env-provider-contract.test.cjs.',
+  },
+  {
     file: 'scripts/reset-garageflow.ps1',
     needle: "foreach ($aliasName in @('DESKTOP_DATABASE_URL','PWA_DATABASE_URL','PWA_DIRECT_URL','DATABASE_URL_UNPOOLED'))",
     reason: "Boucle de NETTOYAGE : elle supprime ces alias de Vercel, elle ne les crée pas.",

@@ -72,8 +72,15 @@ const APPELS = /['"`](\/api\/[^'"`?\s]*)\?([^'"`]*)['"`]/g
 
 /** Un paramètre est-il réellement lu par la route ? */
 function luPar(source: string, param: string): boolean {
-  return new RegExp(`searchParams\\.get\\(\\s*['"\`]${param}['"\`]`).test(source)
+  const direct = new RegExp(`searchParams\\.get\\(\\s*['"\`]${param}['"\`]`).test(source)
     || new RegExp(`['"\`]${param}['"\`]\\s*\\)`).test(source)
+  if (direct) return true
+  const clean = sansCommentaires(source)
+  if (/import\s*\{\s*parsePagination\s*\}\s*from\s*['"]@\/lib\/pagination['"]/.test(clean) &&
+      /\bparsePagination\(\s*searchParams\s*,/.test(clean)) {
+    return luPar(fs.readFileSync(path.join(RACINE, 'src/lib/pagination.ts'), 'utf8'), param)
+  }
+  return false
 }
 
 /** Inventaire des couples (appel client, paramètre) et de ceux qui sont ignorés. */
@@ -110,6 +117,16 @@ describe('paramètres de requête — le client et la route parlent la même lan
     const route = "const q = searchParams.get('q') ?? ''"
     expect(luPar(route, 'q')).toBe(true)
     expect(luPar(route, 'query'), 'le nom EXACT doit compter').toBe(false)
+  })
+
+  it('suit un helper réellement importé et appelé, sans accepter un import mort ou un autre nom', () => {
+    const imp = "import { parsePagination } from '@/lib/pagination'"
+    const call = 'const p = parsePagination(searchParams, 20)'
+    expect(luPar(imp + '\n' + call, 'page')).toBe(true)
+    expect(luPar(imp + '\n' + call, 'limit')).toBe(true)
+    expect(luPar(imp, 'page')).toBe(false)
+    expect(luPar(call, 'page')).toBe(false)
+    expect(luPar(imp + '\n' + call, 'query')).toBe(false)
   })
 
   it('la route véhicules lit bien le paramètre que la modale envoie', () => {

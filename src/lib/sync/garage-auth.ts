@@ -1,3 +1,4 @@
+import { verifyRecordMac, recordIntegrityUsable } from '@/lib/license/record-mac'
 /**
  * Authentification POSTE → CLOUD pour les endpoints de synchronisation.
  *
@@ -27,6 +28,7 @@ export const GARAGE_LICENSE_TYPES = new Set(['trial', 'premium', 'enterprise', '
 export type GarageAuthFailure =
   | 'MISSING_LICENSE'
   | 'LICENSE_INVALID'
+  | 'LICENSE_TAMPERED'
   | 'NOT_A_GARAGE_LICENSE'
   | 'LICENSE_UNKNOWN'
   | 'LICENSE_REVOKED'
@@ -125,6 +127,7 @@ export async function authenticateGarageLicense(
 
   const record = await prisma.licenseKey.findUnique({ where: { licenseId: payload.lid } })
   if (!record) return { ok: false, code: 'LICENSE_UNKNOWN' }
+  if (!recordIntegrityUsable(verifyRecordMac(record))) return { ok: false, code: 'LICENSE_TAMPERED' }
   if (record.licenseType === 'mechanic') return { ok: false, code: 'NOT_A_GARAGE_LICENSE' }
   if (record.status === 'revoked' || record.revokedAt) return { ok: false, code: 'LICENSE_REVOKED' }
   if (record.status === 'suspended') return { ok: false, code: 'LICENSE_SUSPENDED' }

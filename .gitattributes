@@ -12,3 +12,7 @@
 *.exe       binary
 *.dll       binary
 *.node      binary
+
+# Scripts Windows : CRLF volontaire, pas un espace final accidentel.
+*.ps1 whitespace=cr-at-eol
+*.cmd whitespace=cr-at-eol

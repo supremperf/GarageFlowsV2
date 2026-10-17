@@ -14,12 +14,13 @@
  */
 
 import crypto from 'crypto'
+import { LicenseConfigurationError } from './failures'
 
 function getSecret(): string {
   const s = process.env.GF_DB_MAC_SECRET
   if (!s) {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('[record-mac] GF_DB_MAC_SECRET must be set in production')
+      throw new LicenseConfigurationError('GF_DB_MAC_SECRET must be set in production')
     }
     // Dev fallback — never used in packaged Electron (which sets the env var)
     return 'gf-dev-record-mac-insecure-fallback'
@@ -95,6 +96,7 @@ export function recordIntegrityUsable(v: RecordMacVerdict): boolean {
 }
 
 export function verifyRecordMac(r: VerifyInput): { ok: boolean; tampered: boolean; missing: boolean } {
+  getSecret() // Une configuration absente n'est pas une preuve d'altération.
   if (!r.recordMac) {
     return { ok: true, tampered: false, missing: true }
   }

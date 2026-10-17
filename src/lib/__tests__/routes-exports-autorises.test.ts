@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GF-DUR-027 — un fichier de route n'exporte QUE ce que Next.js autorise.
  *
  * ─── Le défaut que ce garde empêche de revenir ──────────────────────────────
