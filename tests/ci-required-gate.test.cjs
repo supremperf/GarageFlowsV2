@@ -72,6 +72,10 @@ test('authenticated gate refuses missing fixtures, HTTP and known production tar
   ]) {
     const result = run(overrides)
     assert.notEqual(result.status, 0)
+    assert.match(result.stderr, /::error title=Authenticated staging prerequisite::(?:MISSING_INPUT|INVALID_TARGET_URL|UNSAFE_TARGET|NON_PRODUCTION_APPROVAL_REQUIRED)/)
+    if ('E2E_EMAIL' in overrides) assert.match(result.stderr, /MISSING_INPUT:E2E_EMAIL/)
+    if ('E2E_PASSWORD' in overrides) assert.match(result.stderr, /MISSING_INPUT:E2E_PASSWORD/)
+    if ('E2E_LICENSE' in overrides) assert.match(result.stderr, /MISSING_INPUT:E2E_LICENSE/)
     assert.ok(!`${result.stdout}${result.stderr}`.includes('synthetic-do-not-print'))
     assert.ok(!`${result.stdout}${result.stderr}`.includes('synthetic-token-do-not-print'))
   }

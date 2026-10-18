@@ -454,16 +454,21 @@ jobs:
         shell: bash
         run: |
           node <<'NODE'
+          function refuse(code, field = '') {
+            // Fixed codes and allowlisted names only: no URL, credential or token.
+            console.error('::error title=Authenticated staging prerequisite::' + code + (field ? ':' + field : ''))
+            throw new Error(code)
+          }
           for (const name of ['BASE_URL', 'E2E_EMAIL', 'E2E_PASSWORD', 'E2E_LICENSE']) {
-            if (!process.env[name]) throw new Error(`Missing required staging input: ${name}`)
+            if (!process.env[name]) refuse('MISSING_INPUT', name)
           }
           let target
-          try { target = new URL(process.env.BASE_URL) } catch { throw new Error('Invalid staging URL') }
+          try { target = new URL(process.env.BASE_URL) } catch { refuse('INVALID_TARGET_URL') }
           const production = new Set(['garageflows.fr', 'www.garageflows.fr', 'app.garageflows.fr', 'api.garageflows.fr'])
           if (target.protocol !== 'https:' || target.username || target.password || production.has(target.hostname.toLowerCase().replace(/\.+$/, ''))) {
-            throw new Error('Refused staging target: HTTPS/non-production host without URL credentials required')
+            refuse('UNSAFE_TARGET')
           }
-          if (process.env.E2E_NON_PRODUCTION !== 'true') throw new Error('Non-production environment approval required')
+          if (process.env.E2E_NON_PRODUCTION !== 'true') refuse('NON_PRODUCTION_APPROVAL_REQUIRED')
           NODE
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:

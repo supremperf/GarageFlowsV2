@@ -17,3 +17,7 @@ E2E authentifié : échec du précontrôle de cible/fixtures non-production appr
 4. Rejouer les tests concernés, puis les contrôles existants et les vrais checks CodeQL. Aucune règle/exclusion CodeQL ajoutée, aucun dismissal, pas de garantie « toutes vulnérabilités éliminées ».
 
 Limite de menace : l’identité d’un descripteur n’immobilise pas les octets contre un acteur pouvant écrire dans le même inode. O_NOFOLLOW n’est pas disponible sur toutes les plateformes, et ne protège pas les composants parents. Les workspaces/répertoires de preuve doivent rester contrôlés en permissions ; ne pas prétendre à une sandbox filesystem complète et atomique sur Windows.
+
+## Diagnostic du précontrôle staging, sans changement de politique
+
+L’échec n’était visible en annotations que sous forme « exit1 », et les logs complets ne sont pas récupérables ici. Ajout d’annotations à codes fixes (MISSING_INPUT avec nom autorisé, INVALID_TARGET_URL, UNSAFE_TARGET, NON_PRODUCTION_APPROVAL_REQUIRED). Aucun contenu d’URL, email, mot de passe ou licence n’est publié. Les quatre inputs, HTTPS/non-production/sans credentials et l’approbation explicite restent obligatoires et inchangés ; les tests exécutent le vrai script extrait du workflow, positivement et négativement. Le diagnostic doit permettre de nommer le champ réellement bloquant, pas d’inventer une cible ou de masquer un test non exécuté.
