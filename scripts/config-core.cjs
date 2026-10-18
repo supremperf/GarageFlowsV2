@@ -142,18 +142,25 @@ function writePrivate(file, text, { exclusive = false } = {}) {
   // Refuse symlinks, exclusive temporary file, atomic replacement; never leave a backup of secrets.
   try { if (fs.lstatSync(file).isSymbolicLink()) throw new Error('Lien symbolique refusé pour un fichier secret.') }
   catch (e) { if (e.code !== 'ENOENT') throw e }
+  function populate(fd) {
+    try {
+      fs.writeFileSync(fd, text)
+      fs.fchmodSync(fd, 0o600) // Same owned object, never a path replaced after rename.
+    } finally { fs.closeSync(fd) }
+  }
   if (exclusive) {
-    // O_EXCL refuses existing files/symlinks, including concurrent first-install writers.
-    fs.writeFileSync(file, text, { mode: 0o600, flag: 'wx' })
-    fs.chmodSync(file, 0o600)
+    // Reservation and permissions bind to the same exclusively opened object.
+    populate(fs.openSync(file, 'wx', 0o600))
     return
   }
   const tmp = `${file}.${crypto.randomBytes(8).toString('hex')}.tmp`
+  let owned = false
   try {
-    fs.writeFileSync(tmp, text, { mode: 0o600, flag: 'wx' })
+    const fd = fs.openSync(tmp, 'wx', 0o600)
+    owned = true
+    populate(fd)
     fs.renameSync(tmp, file)
-    fs.chmodSync(file, 0o600)
-  } finally { fs.rmSync(tmp, { force: true }) }
+  } finally { if (owned) fs.rmSync(tmp, { force: true }) }
 }
 function saveDatabaseUrls(file, env) {
   let original = ''
