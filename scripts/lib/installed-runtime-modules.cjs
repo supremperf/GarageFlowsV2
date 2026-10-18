@@ -10,11 +10,24 @@ function projectRuntimeModules(resourcesPath, projectRoot = path.resolve(__dirna
   const asar = require('@electron/asar')
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-production-modules-'))
   try {
-    asar.extractAll(path.join(resourcesPath, 'app.asar'), temp)
-    const source = path.join(temp, 'node_modules')
+    const traced = path.join(projectRoot, '.next', 'standalone')
+    let source, sourceMode = 'next-traced-closure'
+    try {
+      const resolveTraced = createRequire(path.join(traced, 'server.js'))
+      for (const name of ['next', 'react', 'react-dom', '@prisma/client']) {
+        const relative = path.relative(traced, resolveTraced.resolve(name))
+        if (relative.startsWith('..') || path.isAbsolute(relative)) throw new Error('Traced closure incomplete')
+      }
+      source = path.join(traced, 'node_modules')
+    } catch {
+      // Bounded compatibility fallback: use Builder's actual production graph,
+      // never the entire development node_modules or NODE_PATH.
+      asar.extractAll(path.join(resourcesPath, 'app.asar'), temp)
+      source = path.join(temp, 'node_modules'); sourceMode = 'builder-production-closure'
+    }
     const standalone = path.join(resourcesPath, 'standalone')
     const destination = path.join(standalone, 'node_modules')
-    if (!fs.statSync(source).isDirectory()) throw new Error('Collected production modules absent from ASAR')
+    if (!fs.statSync(source).isDirectory()) throw new Error('Collected production modules absent')
     fs.mkdirSync(destination, { recursive: true })
     // Preserve the generated .prisma client and server client already copied
     // by postbuild. Merge in the full production closure, not just next.js.
@@ -32,7 +45,7 @@ function projectRuntimeModules(resourcesPath, projectRoot = path.resolve(__dirna
       if (relative.startsWith('..') || path.isAbsolute(relative)) throw new Error('Runtime module resolves outside installed standalone: ' + name)
     }
     if (!fs.existsSync(path.join(destination, '.prisma', 'client', 'query_engine-windows.dll.node'))) throw new Error('Generated Windows Prisma Node-API library missing')
-    return { runtimeModules: ['next', 'react', 'react-dom', '@prisma/client'], outsideAsar: true }
+    return { runtimeModules: ['next', 'react', 'react-dom', '@prisma/client'], outsideAsar: true, sourceMode }
   } finally { fs.rmSync(temp, { recursive: true, force: true }) }
 }
 module.exports = { projectRuntimeModules }

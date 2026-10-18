@@ -31,7 +31,7 @@ exports.default = async function afterPack(context) {
   // Complete the installed Node server's production closure BEFORE sealing resources.
   const { projectRuntimeModules } = require('./lib/installed-runtime-modules.cjs')
   const runtime = projectRuntimeModules(resourcesPath)
-  console.log('  ✓ Standalone production modules projected outside ASAR:', runtime.runtimeModules.join(', '))
+  console.log('  ✓ Standalone production modules projected outside ASAR:', runtime.runtimeModules.join(', '), '| source:', runtime.sourceMode)
 
   // ── Durcissement des Electron Fuses sur le binaire packagé ──────────────────
   // Grave les bits qui désactivent RunAsNode, --inspect, NODE_OPTIONS, etc. Échec

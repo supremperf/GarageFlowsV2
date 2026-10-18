@@ -20,7 +20,11 @@ $Result = [ordered]@{ success = $false; stage = 'install'; installExecuted = $fa
 function Install-Setup {
   $p = Start-Process -FilePath $Setup -ArgumentList @('/S', "/D=$InstallDir") -PassThru
   $null = $p.Handle # Cache the OS handle before the process exits (ExitCode stays observable).
-  if (-not $p.WaitForExit(120000)) { throw 'Installer timeout' }
+  $finished = $p.WaitForExit(120000)
+  $Result['installerProcessExited'] = $finished
+  $Result['installerExitCode'] = $(if ($finished) { $p.ExitCode } else { $null })
+  $Result['installedExePresent'] = Test-Path $Exe
+  if (-not $finished) { throw 'Installer timeout' }
   if ($p.ExitCode -ne 0 -or -not (Test-Path $Exe)) { throw 'Installer failed' }
 }
 function Open-And-CloseInstalled {
@@ -93,6 +97,10 @@ try {
   $Result.uninstallPreservedData = $true
   $Result.stage = 'complete'
   $Result.success = $true
+} catch {
+  $fixed = @('Installer timeout','Installer failed','Installed standalone component tests failed','Installed application exited before activation window','Activation window did not appear (integrity/bootstrap/resource failure possible)','Reinstall overwrote persistent data','Reinstall changed an installation secret','Uninstall deleted or altered user data')
+  $Result['failureReason'] = $(if ($fixed -contains $_.Exception.Message) { $_.Exception.Message } else { 'OS_OR_HARNESS_ERROR' })
+  throw
 } finally {
   # Never publish the userData folder, secrets, licence tokens, log contents or paths.
   $json = $Result | ConvertTo-Json -Compress
