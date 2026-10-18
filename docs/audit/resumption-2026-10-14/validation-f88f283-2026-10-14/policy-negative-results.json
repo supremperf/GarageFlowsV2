@@ -1,0 +1,58 @@
+[
+  {
+    "id": "baseline",
+    "argv": [
+      "node",
+      "--test",
+      "tests/secret-scan-policy.test.cjs"
+    ],
+    "cwd": "isolated owned copies, no production files",
+    "startedAt": "2026-10-14T17:05:21.875794+00:00",
+    "finishedAt": "2026-10-14T17:05:22.194707+00:00",
+    "exitCode": 0,
+    "expectedExitCode": 0,
+    "childOutputWithheld": true
+  },
+  {
+    "id": "changed-frozen-prose",
+    "argv": [
+      "node",
+      "--test",
+      "tests/secret-scan-policy.test.cjs"
+    ],
+    "cwd": "isolated owned copies, no production files",
+    "startedAt": "2026-10-14T17:05:22.194979+00:00",
+    "finishedAt": "2026-10-14T17:05:22.480561+00:00",
+    "exitCode": 1,
+    "expectedExitCode": 1,
+    "childOutputWithheld": true
+  },
+  {
+    "id": "changed-public-header",
+    "argv": [
+      "node",
+      "--test",
+      "tests/secret-scan-policy.test.cjs"
+    ],
+    "cwd": "isolated owned copies, no production files",
+    "startedAt": "2026-10-14T17:05:22.480842+00:00",
+    "finishedAt": "2026-10-14T17:05:22.764033+00:00",
+    "exitCode": 1,
+    "expectedExitCode": 1,
+    "childOutputWithheld": true
+  },
+  {
+    "id": "unapproved-fingerprint",
+    "argv": [
+      "node",
+      "--test",
+      "tests/secret-scan-policy.test.cjs"
+    ],
+    "cwd": "isolated owned copies, no production files",
+    "startedAt": "2026-10-14T17:05:22.764346+00:00",
+    "finishedAt": "2026-10-14T17:05:23.098978+00:00",
+    "exitCode": 1,
+    "expectedExitCode": 1,
+    "childOutputWithheld": true
+  }
+]

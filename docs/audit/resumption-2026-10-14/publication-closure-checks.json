@@ -1,0 +1,54 @@
+{
+  "at": "2026-10-14T16:57:52.908026+00:00",
+  "allStagedWhitespace": {
+    "argv": [
+      "git",
+      "diff",
+      "--cached",
+      "--check"
+    ],
+    "exitCode": 2,
+    "proof": "publication-closure-whitespace.log",
+    "paths": [
+      "docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/consistency-corrected.log",
+      "docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/consistency-final.log",
+      "docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/invoice-authz-isolated.log",
+      "docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/lint-final.log",
+      "docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/lint.log",
+      "docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/vitest-candidate.log",
+      "docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/vitest-observed.log",
+      "docs/audit/resumption-2026-10-14/closure-2026-10-14/source-changes.patch"
+    ],
+    "explanation": "Verbatim frozen tool logs and diff context contain original whitespace; retained unchanged to preserve evidence SHA256. Full staged check is not reported successful."
+  },
+  "sourceAndIndexWhitespace": {
+    "argv": [
+      "git",
+      "diff",
+      "--cached",
+      "--check",
+      "--",
+      "src",
+      "docs/audit/resumption-2026-10-14/LATEST.md"
+    ],
+    "exitCode": 0
+  },
+  "consistency": {
+    "argv": [
+      "npm",
+      "run",
+      "check:consistency"
+    ],
+    "exitCode": 0,
+    "proof": "publication-closure-consistency.log"
+  },
+  "coherence": {
+    "argv": [
+      "python3",
+      "docs/audit/resumption-2026-10-14/closure-2026-10-14/verify-current.py"
+    ],
+    "exitCode": 0,
+    "proof": "publication-closure-coherence.log"
+  },
+  "limits": "No test/security gate altered or failure reclassified; whitespace in immutable raw evidence is distinguished from source formatting."
+}

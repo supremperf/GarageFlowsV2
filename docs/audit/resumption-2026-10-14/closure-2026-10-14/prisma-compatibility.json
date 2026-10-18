@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-14T16:39:15.059857+00:00",
+  "argv": [
+    "node",
+    "-e",
+    "console.log(JSON.stringify(require('@prisma/client').Prisma.prismaVersion))"
+  ],
+  "exitCode": 0,
+  "generatedClientVersions": {
+    "client": "5.22.0",
+    "engine": "605197351a3c8bdd595af2d2a9bc3025bca48ea2"
+  },
+  "schemas": [
+    {
+      "path": "prisma/schema.prisma",
+      "sha256": "dde9715787f2e299e6781cac0b2d6641be449d097559ad90aa8f204c6ea7f620"
+    },
+    {
+      "path": "prisma/server/schema.prisma",
+      "sha256": "011a45fa3980477fefb43c52adb460fae57a9d298603e52ab0ef92343cee60ee"
+    }
+  ],
+  "actualCliRequestedChecksum": "https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256",
+  "directNetworkProbeChecksum": "https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256",
+  "limits": "Generated JS version metadata agrees with CLI 5.22.0/engine commit; no native engine downloaded, checksum-verified or loaded successfully. Diagnostic and actual CLI checksum URL differ by gzip suffix and are explicitly distinguished."
+}

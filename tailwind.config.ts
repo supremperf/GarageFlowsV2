@@ -7,6 +7,14 @@ const config: Config = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  // ── Contrat du design system : classes de SURFACE ─────────────────────────
+  // `gf-surface-light` / `gf-surface-dark` déclarent la nature d'une surface et
+  // pilotent la couleur des champs (cf. globals.css § Surfaces). Tailwind élague
+  // les règles dont la classe n'apparaît pas dans le contenu scanné : sans cette
+  // liste, l'échappatoire `gf-surface-dark` n'existerait pas tant qu'aucun
+  // composant ne l'utilise — précisément quand on en a besoin. Elles sont donc
+  // TOUJOURS émises (deux règles de quelques octets).
+  safelist: ['gf-surface-light', 'gf-surface-dark'],
   theme: {
     // ── Breakpoints centralisés (alignés sur la stratégie responsive) ──────────
     //  xs  480px  → mobile large (au-dessus du portrait étroit)

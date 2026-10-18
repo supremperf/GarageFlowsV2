@@ -1,0 +1,3673 @@
+{
+  "integrity": [
+    {
+      "integrity_check": "ok"
+    }
+  ],
+  "foreignKeyViolations": [],
+  "tables": [
+    {
+      "name": "Garage",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "slug",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "plan",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "hourlyRateTenThousandths",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "workshopStartHour",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "workshopEndHour",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "address",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "phone",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "website",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "logoBase64",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "logoPath",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "siret",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "vatNumber",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "taxRate",
+          "type": "REAL",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "iban",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "bic",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "bankName",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "currency",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "paymentTerms",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "invoicePrefix",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "invoiceCounter",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "quotePrefix",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "quoteCounter",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "invoiceFooter",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "language",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "onboardingComplete",
+          "type": "BOOLEAN",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "smsPhone",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "workOrderPrefix",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "workOrderCounter",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "warrantyMonthsDefault",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "loanerEnabled",
+          "type": "BOOLEAN",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "smartReminderMonths",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "purchaseOrderPrefix",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "purchaseOrderCounter",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "smtpHost",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "smtpPort",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "smtpUser",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "smtpPass",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "smtpFrom",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "smtpSecure",
+          "type": "BOOLEAN",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "workshopStartMinute",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "workshopEndMinute",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "password",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "role",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "Mechanic",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "avatar",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "color",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "isAbsent",
+          "type": "BOOLEAN",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "specialty",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "order",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "avatarPath",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "avatarMime",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "avatarHash",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "avatarUpdatedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "archivedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "Client",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "phone",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "address",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "Vehicle",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "licensePlate",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "vin",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "make",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "model",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "year",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "mileage",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "color",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "ctDate",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "Part",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "reference",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "quantity",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "minQuantity",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "unitCostTenThousandths",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "location",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "supplierName",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "supplierRef",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "JobPart",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "jobId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "partId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "quantity",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "unitCostTenThousandths",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "RepairTypePart",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "repairType",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "partId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "defaultQty",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "Job",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "customerName",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "vehicleModel",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "licensePlate",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "repairType",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "estimatedDuration",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "actualDuration",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "startTime",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "date",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "isUrgent",
+          "type": "BOOLEAN",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "delayMinutes",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "mileageAtVisit",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "timerStartedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "timerAccumulatedSec",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "mechanicId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "vehicleId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "Quote",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "number",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "clientId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "vehicleId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "jobId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientName",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "clientEmail",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientPhone",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientAddress",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "vehicleModel",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "licensePlate",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "issueDate",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "validUntil",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "taxRate",
+          "type": "REAL",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "invoiceId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "QuoteLine",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "quoteId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "quantityTenThousandths",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "unitCostTenThousandths",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "isLabor",
+          "type": "BOOLEAN",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "sortOrder",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "partId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "Invoice",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "number",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "clientId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "vehicleId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "jobId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "quoteId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientName",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "clientEmail",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientPhone",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientAddress",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "vehicleModel",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "licensePlate",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "issueDate",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "dueDate",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "taxRate",
+          "type": "REAL",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "stockCommittedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "InvoiceLine",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "invoiceId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "quantityTenThousandths",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "unitCostTenThousandths",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "isLabor",
+          "type": "BOOLEAN",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "sortOrder",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "partId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "JobPhoto",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "jobId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "phase",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "caption",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "base64",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "photoPath",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "mechanicId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "Inspection",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "jobId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "vehicleId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientName",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "vehicleModel",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "licensePlate",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "mileage",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "InspectionItem",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "inspectionId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "category",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "label",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "photoBase64",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "photoPath",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "sortOrder",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "LicenseKey",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "licenseId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "token",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "customerId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "licenseType",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "expiryAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "isAdmin",
+          "type": "BOOLEAN",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "seats",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "hwid",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "label",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "recordMac",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "activatedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "revokedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "lastSeenAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "parentLicenseId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "mechanicId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "mechanicHint",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "assignedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "assignedBy",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "suspendedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "cloudSyncedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "sqlite_sequence",
+      "columns": [
+        {
+          "name": "name",
+          "type": "",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "seq",
+          "type": "",
+          "notnull": 0,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "MechanicLicenseAssignment",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "licenseId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "mechanicId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "assignedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "assignedBy",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "unassignedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "previousMechanicId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "JobMechanicNote",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "jobId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "mechanicId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "licenseId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "type",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "body",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "MechanicActionAudit",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "actorUserId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "actorRole",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "targetMechanicId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "licenseId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "jobId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "action",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "targetType",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "targetId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "metadata",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "LicenseDevice",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "deviceId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "licenseId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "hwidHash",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "tokenHash",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "platform",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "appVersion",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "firstActivatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "lastSeenAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "revokedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "revokeReason",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "LicenseDeviceEvent",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "licenseId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "deviceId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "action",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "detail",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "Reminder",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "vehicleId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientName",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "vehicleModel",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "licensePlate",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "phone",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "type",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "scheduledDate",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "scheduledTime",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "WorkOrder",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "number",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "jobId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "mechanicId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientName",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "clientPhone",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientEmail",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientAddress",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "vehicleMake",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "vehicleModel",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "licensePlate",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "mileage",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "vin",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "worksJson",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "partsJson",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "taxRate",
+          "type": "REAL",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "totalHtCents",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "totalTtcCents",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "signatureData",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "signedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "LaborOperation",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "category",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "durationMin",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "isActive",
+          "type": "BOOLEAN",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "Warranty",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "jobId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "vehicleId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientName",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "licensePlate",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "vehicleModel",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "partName",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "partReference",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "lotNumber",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "installedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "durationMonths",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "expiresAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "mileageAtInstall",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "supplierName",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "claimedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "claimNotes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "LoanerVehicle",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "licensePlate",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "make",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "model",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "year",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "color",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "isActive",
+          "type": "BOOLEAN",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "LoanerReservation",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "vehicleId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "jobId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientName",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "clientPhone",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "startDate",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "endDate",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "returnedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "mileageOut",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "mileageIn",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "conditionOut",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "conditionIn",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "isPaid",
+          "type": "BOOLEAN",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "dailyRateTenThousandths",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "depositAmountCents",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "PurchaseOrder",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "number",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "supplierName",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "supplierEmail",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "linesJson",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "totalHtCents",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "sentAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "receivedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "AuditLog",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "action",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "entityType",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "entityId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "userId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "userName",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "details",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "ipAddress",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "VinSearch",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "vin",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "resultJson",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "source",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "Signature",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "entityType",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "entityId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "signerName",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "signerRole",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "algorithm",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "contentHash",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "imageHash",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "seal",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "signatureData",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "documentSnapshotJson",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "ipAddress",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "userAgent",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "signedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "invalidatedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "NotificationLog",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "trigger",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "channel",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "recipient",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "subject",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "body",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "providerId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "error",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "attempts",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "PortalUser",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "clientId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "passwordHash",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "emailVerified",
+          "type": "BOOLEAN",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "emailVerifyToken",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "twoFactorEnabled",
+          "type": "BOOLEAN",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "twoFactorSecret",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "twoFactorPending",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "backupCodes",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "failedLoginCount",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "lockedUntil",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "lastLoginAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "disabledAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "mustChangePassword",
+          "type": "BOOLEAN",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "passwordChangedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "pendingEmail",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "PortalDevice",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "portalUserId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "sessionId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "userAgent",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "ipAddress",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "lastSeenAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "revokedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "PortalTicket",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "portalUserId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "clientId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "vehicleId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "subject",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "category",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "priority",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "lastMessageAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "closedAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "PortalTicketMessage",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "ticketId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "authorType",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "authorName",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "body",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "attachmentPath",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "Appointment",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "portalUserId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "vehicleId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "clientName",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "vehicleModel",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "licensePlate",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "reason",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "date",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "startTime",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "durationMin",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "reminderSentAt",
+          "type": "DATETIME",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "BackupRecord",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "filename",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "sizeBytes",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "checksum",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "algorithm",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "kdf",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "entityCounts",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "note",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "ReportSnapshot",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "periodDays",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "healthScore",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "summary",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "payload",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdBy",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "_gf_migrations",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 1
+        },
+        {
+          "name": "appliedAt",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "checksum",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "schemaVersion",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "PortalSnapshot",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "jobId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "payload",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "expiresAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "updatedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "StockMovement",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "partId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "type",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "quantityDelta",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "invoiceId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "invoiceLineId",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "reason",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0
+        },
+        {
+          "name": "createdAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    },
+    {
+      "name": "JobTombstone",
+      "columns": [
+        {
+          "name": "jobId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1
+        },
+        {
+          "name": "garageId",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0
+        },
+        {
+          "name": "deletedAt",
+          "type": "DATETIME",
+          "notnull": 1,
+          "pk": 0
+        }
+      ]
+    }
+  ]
+}

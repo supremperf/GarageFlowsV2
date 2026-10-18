@@ -12,12 +12,19 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { collectGarageWindows, normalizePeriod } from '@/lib/analytics/collect'
 import { computeMetrics } from '@/lib/analytics/metrics'
 import { buildCopilotReport } from '@/lib/analytics/insights'
 
 export const GET = withAuth(async (req) => {
   const session = await requireSession()
+  // Le rapport expose CA / marge / prévisions financières → réservé à financial:read
+  // (OWNER/MANAGER), comme l'export FEC. Sans ce contrôle, RECEPTIONIST/MECHANIC
+  // liraient les chiffres financiers du garage.
+  if (!can(session.user.role, 'financial:read')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const { searchParams } = new URL(req.url)
   const period = normalizePeriod(searchParams.get('period') ?? '30')
 

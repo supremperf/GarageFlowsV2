@@ -1,0 +1,215 @@
+{
+  "at": "2026-10-14T16:40:40.103624+00:00",
+  "files": {
+    "src/lib/authz.ts": {
+      "complete": true,
+      "categories": [
+        "authorization",
+        "prototype-boundaries"
+      ],
+      "note": "Entire permission matrix, defensive copying and monetary projections read. Found inherited-property exceptions in both role helpers; twelve failing regressions before fix, 205 focused authorization/secret cases after fix. Own-property guard retains existing role permissions. Not authentication/session freshness certification.",
+      "proof": [
+        "evidence/authz-before.json",
+        "evidence/authz-after.json"
+      ]
+    },
+    "src/lib/__tests__/authz.test.ts": {
+      "complete": true,
+      "categories": [
+        "tests",
+        "authorization"
+      ],
+      "note": "Entire original tests and twelve added prototype-name cases read. No removed assertions or role grants; pure real helpers tested, no service mock.",
+      "proof": [
+        "evidence/authz-before.json",
+        "evidence/authz-after.json"
+      ]
+    },
+    "src/lib/auth-secret.ts": {
+      "complete": true,
+      "categories": [
+        "secrets",
+        "errors"
+      ],
+      "note": "All known-weak checks, fail-fast branches and portal-to-auth fallback read. No value logging. Minimum length/marker heuristics are not entropy measurement; production secret authority remains external.",
+      "proof": [
+        "evidence/authz-after.json"
+      ]
+    },
+    "src/lib/auth.ts": {
+      "complete": false,
+      "categories": [
+        "authentication",
+        "sessions",
+        "logging"
+      ],
+      "note": "All lines read: bcrypt unknown-user timing guard, database failure denial, garage requirement, JWT/session projection. Role/tenant claims persist in JWT without refresh here; staff role revocation/freshness and actual browser integration need further caller/policy validation.",
+      "proof": [
+        "../investigation-2026-10-14/evidence/vitest-complete.json"
+      ]
+    },
+    "src/lib/api-helpers.ts": {
+      "complete": false,
+      "categories": [
+        "authorization",
+        "license",
+        "errors"
+      ],
+      "note": "All lines read: requireSession garage binding/licence enforcement, withAuth rate limit/error boundary, database revalidation for admin JWT. withAuth alone does not authenticate; handler coverage and transactional error boundaries remain separate.",
+      "proof": [
+        "manual-review-notes-final.json"
+      ]
+    },
+    "src/lib/internal-auth.ts": {
+      "complete": false,
+      "categories": [
+        "authorization",
+        "network",
+        "secrets"
+      ],
+      "note": "All lines read: minimum key length and timing-safe equality; forwarded origin checked if header exists. No direct socket-origin attestation in Request here; listener/proxy trust boundary and absent/spoofed header remain caller review tasks.",
+      "proof": [
+        "manual-review-notes-final.json"
+      ]
+    },
+    "src/app/api/admin/backups/route.ts": {
+      "complete": false,
+      "categories": [
+        "authorization",
+        "backup",
+        "errors"
+      ],
+      "note": "All lines read: requireSession and OWNER gate precede service calls, garageId from signed session, id lookup scoped in service. Restore confirmation, download filename headers, storage exceptions and post-commit audit failure require persistence/caller proofs; no live restore executed.",
+      "proof": [
+        "manual-review-notes-final.json"
+      ]
+    },
+    "src/app/api/admin/backups/[id]/download/route.ts": {
+      "complete": false,
+      "categories": [
+        "authorization",
+        "backup",
+        "errors"
+      ],
+      "note": "All lines read: requireSession and OWNER gate precede service calls, garageId from signed session, id lookup scoped in service. Restore confirmation, download filename headers, storage exceptions and post-commit audit failure require persistence/caller proofs; no live restore executed.",
+      "proof": [
+        "manual-review-notes-final.json"
+      ]
+    },
+    "src/app/api/admin/backups/[id]/restore/route.ts": {
+      "complete": false,
+      "categories": [
+        "authorization",
+        "backup",
+        "errors"
+      ],
+      "note": "All lines read: requireSession and OWNER gate precede service calls, garageId from signed session, id lookup scoped in service. Restore confirmation, download filename headers, storage exceptions and post-commit audit failure require persistence/caller proofs; no live restore executed.",
+      "proof": [
+        "manual-review-notes-final.json"
+      ]
+    },
+    "src/app/api/admin/backups/[id]/verify/route.ts": {
+      "complete": false,
+      "categories": [
+        "authorization",
+        "backup",
+        "errors"
+      ],
+      "note": "All lines read: requireSession and OWNER gate precede service calls, garageId from signed session, id lookup scoped in service. Restore confirmation, download filename headers, storage exceptions and post-commit audit failure require persistence/caller proofs; no live restore executed.",
+      "proof": [
+        "manual-review-notes-final.json"
+      ]
+    },
+    "src/lib/backup/service.ts": {
+      "complete": false,
+      "categories": [
+        "backup",
+        "crypto",
+        "filesystem",
+        "transactions"
+      ],
+      "note": "All lines read: snapshot transaction, authenticated envelope, checksum, garage-scoped records, restore confirmation and transaction. DB filename trusted on reads; file write failure can leave completed/pending metadata, collision/symlink containment and crash atomicity not proved. Not a confirmed external traversal nor a blanket false positive.",
+      "proof": [
+        "manual-review-notes-final.json",
+        "sast-triage-final.jsonl"
+      ]
+    },
+    "src/lib/backup/snapshot.ts": {
+      "complete": false,
+      "categories": [
+        "backup",
+        "transactions",
+        "data-isolation"
+      ],
+      "note": "All lines read: seventeen ordered table specifications, reverse deletes/forward inserts, legacy money conversion. Snapshot table/version completeness, foreign-key ordering and row-tenant consistency need schema/runtime round-trip validation; no destructive database operation performed.",
+      "proof": [
+        "manual-review-notes-final.json"
+      ]
+    },
+    "src/app/api/internal/backup/route.ts": {
+      "complete": false,
+      "categories": [
+        "backup",
+        "filesystem",
+        "sql",
+        "concurrency"
+      ],
+      "note": "All lines read: internal key guard, SQLite-only check, lexical containment, basename filter, SQL quote escaping, VACUUM INTO. Race between existence check and SQL/error cleanup may remove a concurrently created destination; symlink/parent ownership and actual Prisma route execution remain unproved. Existing pre-migration backup 10/10 does not validate this distinct route.",
+      "proof": [
+        "manual-review-notes-final.json"
+      ]
+    },
+    "src/lib/portal/backup-codes.ts": {
+      "complete": true,
+      "categories": [
+        "authentication",
+        "crypto"
+      ],
+      "note": "All generation/hash/normalization/timing-safe verification lines read. Alphabet contains 32 symbols (unbiased byte modulo), eight characters per code, no early return. Atomic single use belongs to caller/store, not this pure helper; no claim of live portal validation.",
+      "proof": [
+        "manual-review-notes-final.json"
+      ]
+    },
+    "src/lib/portal/backup-codes-store.ts": {
+      "complete": false,
+      "categories": [
+        "authentication",
+        "transactions",
+        "concurrency"
+      ],
+      "note": "All lines read: compare-and-swap predicate includes exact observed serialized hashes, bounded retries and fail-closed conflict. Real SQLite/PostgreSQL atomicity, user binding and route rate limit remain unvalidated here.",
+      "proof": [
+        "manual-review-notes-final.json"
+      ]
+    },
+    "src/lib/security/rate-limit.ts": {
+      "complete": false,
+      "categories": [
+        "authorization",
+        "network",
+        "concurrency",
+        "privacy"
+      ],
+      "note": "All lines read: atomic Lua EVAL, timeout, test isolation, PWA fail-closed critical categories, explicit proxy trust. Five real isolated Redis cases pass; managed Upstash/TLS/proxy/deployment and shared-IP policy remain separate. Hashes pseudonymize low-entropy IPs, not anonymize them.",
+      "proof": [
+        "evidence/redis-real.json",
+        "redis-runtime.json"
+      ]
+    },
+    "src/integration/invoice-authz.test.ts": {
+      "complete": false,
+      "categories": [
+        "tests",
+        "authorization",
+        "persistence"
+      ],
+      "note": "Entire suite read, actual CI assertion response analyzed without exporting values. Five deterministic fixture IDs replace ambiguous generated IDs; all sixteen expect lines, including whole-response cost absence, remain byte-identical. SQLite integration cannot execute until official engine works.",
+      "proof": [
+        "ci-assertion-analysis.json",
+        "fixture-correction.json",
+        "evidence/invoice-authz-isolated.json"
+      ]
+    }
+  },
+  "limits": "Full text read, completed bounded semantic assessment, and functional validation are separate. No exhaustive review claimed."
+}

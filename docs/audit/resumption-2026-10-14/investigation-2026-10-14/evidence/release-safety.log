@@ -1,0 +1,324 @@
+
+> garageflow@1.1.0 test:release-safety
+> node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/ci-required-gate.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs tests/secret-scan-policy.test.cjs tests/pre-migration-backup-safety.test.cjs tests/gitleaks-ci.test.cjs
+
+TAP version 13
+# Subtest: restores same public key idempotently, never creates private key
+ok 1 - restores same public key idempotently, never creates private key
+  ---
+  duration_ms: 7.072024
+  type: 'test'
+  ...
+# Subtest: preserves existing mismatched resource and refuses overwrite
+ok 2 - preserves existing mismatched resource and refuses overwrite
+  ---
+  duration_ms: 1.788528
+  type: 'test'
+  ...
+# Subtest: rejects disagreement between anchors before writing any resource
+ok 3 - rejects disagreement between anchors before writing any resource
+  ---
+  duration_ms: 1.371918
+  type: 'test'
+  ...
+# Subtest: mandatory gate rejects any failed, cancelled or skipped upstream job
+ok 4 - mandatory gate rejects any failed, cancelled or skipped upstream job
+  ---
+  duration_ms: 49.935059
+  type: 'test'
+  ...
+# Subtest: workflow graph pins actions, retains strict security and packages Windows before gate
+ok 5 - workflow graph pins actions, retains strict security and packages Windows before gate
+  ---
+  duration_ms: 1.054582
+  type: 'test'
+  ...
+# Subtest: authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+ok 6 - authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+  ---
+  duration_ms: 364.878344
+  type: 'test'
+  ...
+# Subtest: empty successful report preserves scanner exit zero
+ok 7 - empty successful report preserves scanner exit zero
+  ---
+  duration_ms: 1.909039
+  type: 'test'
+  ...
+# Subtest: official nil-slice JSON null is empty, but exit one remains inconsistent
+ok 8 - official nil-slice JSON null is empty, but exit one remains inconsistent
+  ---
+  duration_ms: 0.850433
+  type: 'test'
+  ...
+# Subtest: finding metadata preserves exit one and never prints secret/match/child output
+ok 9 - finding metadata preserves exit one and never prints secret/match/child output
+  ---
+  duration_ms: 0.867742
+  type: 'test'
+  ...
+# Subtest: workflow command characters are escaped in file/rule/commit metadata
+ok 10 - workflow command characters are escaped in file/rule/commit metadata
+  ---
+  duration_ms: 0.479847
+  type: 'test'
+  ...
+# Subtest: scanner failure is fail-closed
+ok 11 - scanner failure is fail-closed
+  ---
+  duration_ms: 0.407629
+  type: 'test'
+  ...
+# Subtest: spawn failure is fail-closed
+ok 12 - spawn failure is fail-closed
+  ---
+  duration_ms: 0.311021
+  type: 'test'
+  ...
+# Subtest: killed scanner is fail-closed
+ok 13 - killed scanner is fail-closed
+  ---
+  duration_ms: 0.331541
+  type: 'test'
+  ...
+# Subtest: missing report is fail-closed
+ok 14 - missing report is fail-closed
+  ---
+  duration_ms: 0.441351
+  type: 'test'
+  ...
+# Subtest: bad JSON is fail-closed
+ok 15 - bad JSON is fail-closed
+  ---
+  duration_ms: 0.522678
+  type: 'test'
+  ...
+# Subtest: non-array report is fail-closed
+ok 16 - non-array report is fail-closed
+  ---
+  duration_ms: 0.502121
+  type: 'test'
+  ...
+# Subtest: success with finding is fail-closed
+ok 17 - success with finding is fail-closed
+  ---
+  duration_ms: 0.344683
+  type: 'test'
+  ...
+# Subtest: failure without finding is fail-closed
+ok 18 - failure without finding is fail-closed
+  ---
+  duration_ms: 0.306995
+  type: 'test'
+  ...
+# Subtest: invalid location is fail-closed
+ok 19 - invalid location is fail-closed
+  ---
+  duration_ms: 0.411021
+  type: 'test'
+  ...
+# Subtest: only whitelisted fields survive report projection
+ok 20 - only whitelisted fields survive report projection
+  ---
+  duration_ms: 0.111967
+  type: 'test'
+  ...
+# (node:42742) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: copies only schema and empty template; leaves local user DB unchanged
+ok 21 - copies only schema and empty template; leaves local user DB unchanged
+  ---
+  duration_ms: 10.195806
+  type: 'test'
+  ...
+# Subtest: missing template never falls back to local DB
+ok 22 - missing template never falls back to local DB
+  ---
+  duration_ms: 6.328665
+  type: 'test'
+  ...
+# Subtest: nonempty template is refused without changing it
+ok 23 - nonempty template is refused without changing it
+  ---
+  duration_ms: 7.129195
+  type: 'test'
+  ...
+# Subtest: stale databases in output fail closed rather than being packaged or deleted
+ok 24 - stale databases in output fail closed rather than being packaged or deleted
+  ---
+  duration_ms: 4.76326
+  type: 'test'
+  ...
+# Subtest: packaging filter cannot wildcard local databases
+ok 25 - packaging filter cannot wildcard local databases
+  ---
+  duration_ms: 0.532492
+  type: 'test'
+  ...
+# Subtest: refuses an output directory junction without overwriting its external target
+ok 26 - refuses an output directory junction without overwriting its external target
+  ---
+  duration_ms: 5.239899
+  type: 'test'
+  ...
+# Subtest: refuses a source directory junction without touching its files
+ok 27 - refuses a source directory junction without touching its files
+  ---
+  duration_ms: 4.608606
+  type: 'test'
+  ...
+# Subtest: same-second backups preserve distinct real SQLite snapshots
+ok 28 - same-second backups preserve distinct real SQLite snapshots
+  ---
+  duration_ms: 67.485613
+  type: 'test'
+  ...
+# Subtest: same-second copies never inherit another snapshot rollback journal
+ok 29 - same-second copies never inherit another snapshot rollback journal
+  ---
+  duration_ms: 30.016627
+  type: 'test'
+  ...
+# Subtest: retention removes all owned annexes including journal
+ok 30 - retention removes all owned annexes including journal
+  ---
+  duration_ms: 35.230898
+  type: 'test'
+  ...
+# Subtest: retention does not delete unrelated files with the application prefix
+ok 31 - retention does not delete unrelated files with the application prefix
+  ---
+  duration_ms: 17.240093
+  type: 'test'
+  ...
+# Subtest: same-second retention keeps the actual latest five snapshots
+ok 32 - same-second retention keeps the actual latest five snapshots
+  ---
+  duration_ms: 206.782141
+  type: 'test'
+  ...
+# Subtest: copy permission failure blocks migration without attempting retention
+ok 33 - copy permission failure blocks migration without attempting retention
+  ---
+  duration_ms: 17.525321
+  type: 'test'
+  ...
+# Subtest: rotation failure is an explicit warning, not a lost valid backup
+ok 34 - rotation failure is an explicit warning, not a lost valid backup
+  ---
+  duration_ms: 29.776209
+  type: 'test'
+  ...
+# Subtest: collision retries are bounded and always use exclusive copy
+ok 35 - collision retries are bounded and always use exclusive copy
+  ---
+  duration_ms: 55.427482
+  type: 'test'
+  ...
+# Subtest: source permission error is not treated as a first-install skip
+ok 36 - source permission error is not treated as a first-install skip
+  ---
+  duration_ms: 0.707171
+  type: 'test'
+  ...
+# Subtest: orphan journal names are reserved without overwriting or reusing them
+ok 37 - orphan journal names are reserved without overwriting or reusing them
+  ---
+  duration_ms: 16.227326
+  type: 'test'
+  ...
+# Subtest: cleanup onLicenseError preserves other subscribers
+ok 38 - cleanup onLicenseError preserves other subscribers
+  ---
+  duration_ms: 2.718746
+  type: 'test'
+  ...
+# Subtest: cleanup windowAPI.onMaximizedChange preserves other subscribers
+ok 39 - cleanup windowAPI.onMaximizedChange preserves other subscribers
+  ---
+  duration_ms: 0.809169
+  type: 'test'
+  ...
+# Subtest: cleanup windowAPI.onFullscreenChange preserves other subscribers
+ok 40 - cleanup windowAPI.onFullscreenChange preserves other subscribers
+  ---
+  duration_ms: 1.792282
+  type: 'test'
+  ...
+# Subtest: cleanup onDesktopExportDone preserves other subscribers
+ok 41 - cleanup onDesktopExportDone preserves other subscribers
+  ---
+  duration_ms: 0.929624
+  type: 'test'
+  ...
+# Subtest: cleanup onLicenseRevoked preserves other subscribers
+ok 42 - cleanup onLicenseRevoked preserves other subscribers
+  ---
+  duration_ms: 0.871017
+  type: 'test'
+  ...
+# Subtest: cleanup onLicenseReactivated preserves other subscribers
+ok 43 - cleanup onLicenseReactivated preserves other subscribers
+  ---
+  duration_ms: 0.815042
+  type: 'test'
+  ...
+# Subtest: cleanup onOnlineStatus preserves other subscribers
+ok 44 - cleanup onOnlineStatus preserves other subscribers
+  ---
+  duration_ms: 0.860394
+  type: 'test'
+  ...
+# Subtest: cleanup onEntitlements preserves other subscribers
+ok 45 - cleanup onEntitlements preserves other subscribers
+  ---
+  duration_ms: 0.764789
+  type: 'test'
+  ...
+# Subtest: cleanup onNotifications preserves other subscribers
+ok 46 - cleanup onNotifications preserves other subscribers
+  ---
+  duration_ms: 1.16277
+  type: 'test'
+  ...
+# (node:42790) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: copies a real legacy SQLite database exclusively and keeps its original
+ok 47 - copies a real legacy SQLite database exclusively and keeps its original
+  ---
+  duration_ms: 8.142396
+  type: 'test'
+  ...
+# Subtest: never deletes either distinct database or other nested files when canonical exists
+ok 48 - never deletes either distinct database or other nested files when canonical exists
+  ---
+  duration_ms: 8.907269
+  type: 'test'
+  ...
+# Subtest: absent legacy database does not overwrite a canonical SQLite database
+ok 49 - absent legacy database does not overwrite a canonical SQLite database
+  ---
+  duration_ms: 5.674297
+  type: 'test'
+  ...
+# Subtest: actual setup-dev bootstrap preserves both databases and unrelated nested files
+ok 50 - actual setup-dev bootstrap preserves both databases and unrelated nested files
+  ---
+  duration_ms: 35.718623
+  type: 'test'
+  ...
+# Subtest: secret scanner retains default rules and never exempts whole critical auth/public-key sources
+ok 51 - secret scanner retains default rules and never exempts whole critical auth/public-key sources
+  ---
+  duration_ms: 1.015696
+  type: 'test'
+  ...
+1..51
+# tests 51
+# suites 0
+# pass 51
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1384.205653

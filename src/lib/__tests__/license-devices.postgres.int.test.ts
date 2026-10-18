@@ -21,6 +21,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { execFileSync } from 'child_process'
 import path from 'path'
+import { computeRecordMac } from '@/lib/license/record-mac'
 
 const ADMIN_URL = process.env.TEST_POSTGRES_URL
 
@@ -45,16 +46,22 @@ let TEST_URL = ''
 const HW = (c: string) => c.repeat(64)
 
 async function createLicense(licenseId: string, seats: number, opts: { status?: string; expiryAt?: Date } = {}) {
-  await db.prisma.licenseKey.create({
-    data: {
-      licenseId,
-      token:       `GF2.it.${licenseId}`,
-      customerId:  'it-customer',
-      licenseType: 'premium',
-      expiryAt:    opts.expiryAt ?? new Date(Date.now() + 30 * 24 * 3600 * 1000),
-      status:      opts.status ?? 'active',
-      seats,
-    },
+  // Genuine fixture records must satisfy the same integrity contract as activation.
+  // Never mock/disable recordIntegrityUsable to make native tests pass.
+  const data = {
+    licenseId, token: `GF2.it.${licenseId}`, customerId: 'it-customer',
+    licenseType: 'premium', expiryAt: opts.expiryAt ?? new Date(Date.now() + 30 * 24 * 3600 * 1000),
+    status: opts.status ?? 'active', seats, hwid: null,
+  }
+  await db.prisma.licenseKey.create({ data: { ...data, recordMac: computeRecordMac(data) } })
+}
+
+// Simulate an authorized state transition, including its MAC update. Separate
+// tampering cases below deliberately omit this and must remain rejected.
+async function updateLicense(licenseId: string, change: { status?: string; expiryAt?: Date }) {
+  const existing = await db.prisma.licenseKey.findUniqueOrThrow({ where: { licenseId } })
+  await db.prisma.licenseKey.update({
+    where: { licenseId }, data: { ...change, recordMac: computeRecordMac({ ...existing, ...change }) },
   })
 }
 
@@ -64,10 +71,14 @@ describe.skipIf(!ADMIN_URL)('appareils par licence — PostgreSQL réel (migrati
 
     // ── Base VIDE + VRAIES migrations (prisma migrate deploy crée la base) ────
     const root = path.resolve(__dirname, '../../..')
-    const prismaBin = path.join(root, 'node_modules', '.bin', 'prisma')
+    // Entrée JS de la CLI lancée par le Node courant, jamais le lanceur de
+    // node_modules/.bin : sous Windows c'est un script sans extension que
+    // `execFileSync` ne sait pas exécuter (ENOENT), et sa variante `.cmd`
+    // imposerait `shell: true`. Portable, sans shell.
+    const prismaCli = require.resolve('prisma/build/index.js')
     const out = execFileSync(
-      prismaBin,
-      ['migrate', 'deploy', '--schema', 'prisma/server/schema.prisma'],
+      process.execPath,
+      [prismaCli, 'migrate', 'deploy', '--schema', 'prisma/server/schema.prisma'],
       { cwd: root, env: { ...process.env, DATABASE_URL: TEST_URL, DIRECT_URL: TEST_URL } },
     ).toString()
     expect(out).toMatch(/migrations? (have|has) been successfully applied|No pending migrations/i)
@@ -192,7 +203,7 @@ describe.skipIf(!ADMIN_URL)('appareils par licence — PostgreSQL réel (migrati
     const d2 = await devices.activateDevice({ licenseId: 'lic-kill', seats: 2, hwid: HW('f') })
     expect((await devices.validateDeviceToken(d1.deviceToken)).ok).toBe(true)
 
-    await db.prisma.licenseKey.update({ where: { licenseId: 'lic-kill' }, data: { status: 'revoked' } })
+    await updateLicense('lic-kill', { status: 'revoked' })
 
     expect(await devices.validateDeviceToken(d1.deviceToken)).toEqual({ ok: false, code: 'license_revoked' })
     expect(await devices.validateDeviceToken(d2.deviceToken)).toEqual({ ok: false, code: 'license_revoked' })
@@ -201,11 +212,23 @@ describe.skipIf(!ADMIN_URL)('appareils par licence — PostgreSQL réel (migrati
   it('licence EXPIRÉE → jetons refusés', async () => {
     await createLicense('lic-exp', 1, { expiryAt: new Date(Date.now() + 60_000) })
     const d = await devices.activateDevice({ licenseId: 'lic-exp', seats: 1, hwid: HW('9') })
-    await db.prisma.licenseKey.update({
-      where: { licenseId: 'lic-exp' },
-      data:  { expiryAt: new Date(Date.now() - 1000) },
-    })
+    await updateLicense('lic-exp', { expiryAt: new Date(Date.now() - 1000) })
     expect(await devices.validateDeviceToken(d.deviceToken)).toEqual({ ok: false, code: 'license_expired' })
+  })
+
+  it('MAC effacé sur une licence active → jeton appareil refusé, sans rescellement', async () => {
+    await createLicense('lic-missing-mac', 1)
+    const device = await devices.activateDevice({ licenseId: 'lic-missing-mac', seats: 1, hwid: HW('a') })
+    await db.prisma.licenseKey.update({ where: { licenseId: 'lic-missing-mac' }, data: { recordMac: null } })
+    expect(await devices.validateDeviceToken(device.deviceToken)).toEqual({ ok: false, code: 'license_tampered' })
+    expect((await db.prisma.licenseKey.findUniqueOrThrow({ where: { licenseId: 'lic-missing-mac' } })).recordMac).toBeNull()
+  })
+
+  it('statut modifié sans MAC correspondant → refus intégrité avant autorisation', async () => {
+    await createLicense('lic-altered-mac', 1)
+    const device = await devices.activateDevice({ licenseId: 'lic-altered-mac', seats: 1, hwid: HW('b') })
+    await db.prisma.licenseKey.update({ where: { licenseId: 'lic-altered-mac' }, data: { status: 'suspended' } })
+    expect(await devices.validateDeviceToken(device.deviceToken)).toEqual({ ok: false, code: 'license_tampered' })
   })
 
   it('auto-désactivation (deactivateByToken) libère le siège', async () => {

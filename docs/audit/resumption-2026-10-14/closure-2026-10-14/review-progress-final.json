@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-14T16:40:40.103624+00:00",
+  "total": 1250,
+  "manualReview": {
+    "EN ATTENTE DE REVUE": 1135,
+    "VALID\u00c9": 72,
+    "PARTIELLEMENT VALID\u00c9": 43
+  },
+  "fullTextReadFiles": 85,
+  "changedSources": 18,
+  "sourceBoundariesReviewedNow": [
+    "src/lib/authz.ts",
+    "src/lib/__tests__/authz.test.ts",
+    "src/lib/auth-secret.ts",
+    "src/lib/auth.ts",
+    "src/lib/api-helpers.ts",
+    "src/lib/internal-auth.ts",
+    "src/app/api/admin/backups/route.ts",
+    "src/app/api/admin/backups/[id]/download/route.ts",
+    "src/app/api/admin/backups/[id]/restore/route.ts",
+    "src/app/api/admin/backups/[id]/verify/route.ts",
+    "src/lib/backup/service.ts",
+    "src/lib/backup/snapshot.ts",
+    "src/app/api/internal/backup/route.ts",
+    "src/lib/portal/backup-codes.ts",
+    "src/lib/portal/backup-codes-store.ts",
+    "src/lib/security/rate-limit.ts",
+    "src/integration/invoice-authz.test.ts"
+  ],
+  "exclusions": "Same explicit product scope as historical ledger: generated audit evidence/inventories, git-ignored private configuration/dependencies/runtime outputs excluded; no new product-source exemption. No symlink followed.",
+  "limits": "Full text read, completed bounded semantic assessment, and functional validation are separate. No exhaustive review claimed."
+}

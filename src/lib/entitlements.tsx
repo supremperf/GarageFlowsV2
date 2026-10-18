@@ -11,6 +11,7 @@
  */
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { useElectronApi } from '@/lib/use-electron-api'
 
 interface EntitlementsValue {
   modules: string[]
@@ -20,18 +21,18 @@ interface EntitlementsValue {
 
 const EntitlementsContext = createContext<EntitlementsValue | null>(null)
 
-function getElectronAPI(): any {
-  if (typeof window === 'undefined') return null
-  return (window as any).electronAPI ?? null
-}
-
 export function EntitlementsProvider({ children }: { children: React.ReactNode }) {
   const [modules, setModules] = useState<string[]>([])
   const [ready, setReady] = useState(false)
-  const isElectron = typeof window !== 'undefined' && !!getElectronAPI()?.isElectron
+  // Lu APRÈS montage (voir useElectronApi). `isElectron` ne change pas ce que
+  // CE composant rend, mais il change ce que renvoie `hasModule()` — donc ce
+  // que rendent ses descendants. Le lire pendant le rendu ferait diverger le
+  // premier rendu client du HTML serveur dès le premier appelant de
+  // `useModule()` (aucun aujourd'hui : le risque était latent).
+  const api = useElectronApi<any>()
+  const isElectron = !!api?.isElectron
 
   useEffect(() => {
-    const api = getElectronAPI()
     if (!api?.getEntitlements) {
       // Web/dev : pas de pont Electron → permissif (l'enforcement est serveur).
       setReady(true)
@@ -52,7 +53,10 @@ export function EntitlementsProvider({ children }: { children: React.ReactNode }
     return () => {
       if (unsub) unsub()
     }
-  }, [])
+    // `api` arrive APRÈS montage (null au premier rendu) : sans cette
+    // dépendance, l'effet ne tournerait qu'avec api=null et les entitlements
+    // ne seraient JAMAIS chargés sous Electron.
+  }, [api])
 
   const value = useMemo<EntitlementsValue>(() => {
     const set = new Set(modules)

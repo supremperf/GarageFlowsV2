@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-14T15:17:19.757907+00:00",
+  "run": 38587226456,
+  "commit": "387073637e4c86ceec1db7b595b7846ecc19acab",
+  "runConclusion": "failure",
+  "jobs": [
+    {
+      "id": 115932329806,
+      "name": "Secret scan (Gitleaks)",
+      "conclusion": "failure",
+      "url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38587226456/job/115932329806",
+      "apiExit": 1,
+      "annotations": [],
+      "diagnostic": "GitHub annotations API inaccessible; raw response omitted."
+    },
+    {
+      "id": 115932330194,
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "conclusion": "failure",
+      "url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38587226456/job/115932330194",
+      "apiExit": 1,
+      "annotations": [],
+      "diagnostic": "GitHub annotations API inaccessible; raw response omitted."
+    },
+    {
+      "id": 115933937066,
+      "name": "Required validation",
+      "conclusion": "failure",
+      "url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38587226456/job/115933937066",
+      "apiExit": 1,
+      "annotations": [],
+      "diagnostic": "GitHub annotations API inaccessible; raw response omitted."
+    }
+  ]
+}

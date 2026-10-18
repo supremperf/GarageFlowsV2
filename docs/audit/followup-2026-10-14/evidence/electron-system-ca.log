@@ -1,0 +1,7 @@
+TypeError: fetch failed
+    at node:internal/deps/undici/undici:14976:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async FetchDownloader.download (file:///home/user/GarageFlowsV2/node_modules/@electron/get/dist/FetchDownloader.js:46:30)
+    at async file:///home/user/GarageFlowsV2/node_modules/@electron/get/dist/index.js:158:9
+    at async useAndRemoveDirectory (file:///home/user/GarageFlowsV2/node_modules/@electron/get/dist/utils.js:10:18)
+    at async downloadArtifact (file:///home/user/GarageFlowsV2/node_modules/@electron/get/dist/index.js:154:12)

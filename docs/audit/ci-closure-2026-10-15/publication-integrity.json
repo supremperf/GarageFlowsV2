@@ -1,0 +1,293 @@
+{
+  "at": "2026-10-15T17:37:24.609687+02:00",
+  "sourceCandidate": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+  "files": [
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/AUTHENTICATED-ACCEPTANCE.md",
+      "bytes": 6408,
+      "sha256": "3159c6fe640e350b60cf7e4116a4d4175db1de73928192abd2bf49c14fc46e2e"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C01.json",
+      "bytes": 193462,
+      "sha256": "b089f0f7fbce0a29eb8cf9e0ef7fb4808af46b722d83008e0b9ecb4668c1f4a7"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C01.txt",
+      "bytes": 4296,
+      "sha256": "020b15e7fa90fa19db89598ad113645979c17c89b477320bf6a084bb93e00de0"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C02.json",
+      "bytes": 193512,
+      "sha256": "fbce87e2416dedd1fd11fa6c7895d1fa8b8f2cdc87d0f20aa70f501323727bfd"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C02.txt",
+      "bytes": 725,
+      "sha256": "3045f46c3a2acd03dd55d724c76697d7ce66879e6e97080a6e1bdfbad01f6961"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C03.json",
+      "bytes": 193797,
+      "sha256": "7b5a4382f0c548a7c3503dc3951e793780d382b298da96690a4c784cbd272474"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C03.txt",
+      "bytes": 26806,
+      "sha256": "26193dc0c1b3a09e257818314dfe87d09693ff27385ccd71547ba12f2536eb97"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C04.json",
+      "bytes": 193747,
+      "sha256": "6209302329da5653b9067e75d33f1c662df6f70ab3c9fefc00b486e9ca0ca87f"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C04.txt",
+      "bytes": 3741,
+      "sha256": "a68e7529a4ff77e079897887542ed392315f9fb1cfd4b40c8340847b25403e9e"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C05.json",
+      "bytes": 193897,
+      "sha256": "4af57075d8cc9e27edfc93bcdc884dcd58a6a0dbada4e471098a7c9851fbb98f"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C05.txt",
+      "bytes": 1988,
+      "sha256": "37d38712783cfae28c9bfe2a9bde899743685c3129fadca07867ee9f06db4092"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C06.json",
+      "bytes": 195093,
+      "sha256": "09697e0f06fe99f43df5b435537d8e3fae53f49a7a7b7d2995c1121246b542f8"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C06.txt",
+      "bytes": 120805,
+      "sha256": "d1a4e2b31cb56acee8276c7e7816062816b836a19dc913dc7a84cdf0d9320290"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C07.json",
+      "bytes": 195093,
+      "sha256": "27db2548475221c93ae1c9729a1af874f5f2298f9e1568169a87a6047443390b"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C07.txt",
+      "bytes": 196167,
+      "sha256": "02923b4c8104d5922b5ea90efb669750eb016051c72a3ee1a2e8043cf1988e97"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C08.json",
+      "bytes": 193753,
+      "sha256": "0242da10dc40f967e5daed27357fadc94098c0bc29c6aaae83d28f107e133b3f"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C08.txt",
+      "bytes": 473,
+      "sha256": "5378047a068bf06b7339b060fd213c002812c9d1a966dd6692edce9fea61a926"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C09.json",
+      "bytes": 193759,
+      "sha256": "14228cae7704231204ff5abe0ba62589428a5e00e62a5959cac849849c9e3444"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C09.txt",
+      "bytes": 1640,
+      "sha256": "e31af75044a08cf1d04ca9e91ea463ee41df51f416b07add21972ab4c5cb4b97"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C10.json",
+      "bytes": 194154,
+      "sha256": "eaec5445dcd7d750bfc40a64d52c1a6889a5eb2dd78d9489d3b4ce8616537431"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C10.txt",
+      "bytes": 2237,
+      "sha256": "45e6ffe3f20f4f512310185d17a389a1b6556c8f723d2cd12b10162c052611d8"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C11.json",
+      "bytes": 193802,
+      "sha256": "54ea0360602395848778d48e4fcbee60527e1ef083c4e7e2a75247bbc36c4043"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C11.txt",
+      "bytes": 867,
+      "sha256": "6993e75dd1d9545dc7468e9e26abe763efdc8fb77327586c1d86a6fecfc549b5"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C12.json",
+      "bytes": 193813,
+      "sha256": "e3ca7aae74c1b4720bb1b83418a7b60a4a6a26c9cef03b2590c24893bd3ee7b9"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C12.txt",
+      "bytes": 3192,
+      "sha256": "a6e57c29ff65a8f693c6257b62b27ec49276f464a3eded2adad4dd80cd8ce94e"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C13.json",
+      "bytes": 193752,
+      "sha256": "869bd236b76c28ee2946b6dff6a764089dc4cdcd1770357208ae116dd3a323d2"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C13.txt",
+      "bytes": 190,
+      "sha256": "9311de4b70dfdf6d0199459cdb35ba707299ea3a692d40b6c2d8e3e50d3924dd"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C14.json",
+      "bytes": 195093,
+      "sha256": "7fb214791896e27e225c1a6d4a342b35e6e8ac34e88dd073141a916eec6da5a1"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C14.txt",
+      "bytes": 196148,
+      "sha256": "178cde570193e5d7ebde9d255feeb58b3c60769aa7a4ca2e64400b79759ff56c"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C15.json",
+      "bytes": 193822,
+      "sha256": "144200da9311d1632175c5a601ab486eac24fed3a7dee60d0aa3fe2a7e33e408"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C15.txt",
+      "bytes": 4536,
+      "sha256": "8d0da29758d5288efb7e2a1444889607ce56581bf3c3d9b384b19110a9e86d3a"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C16.json",
+      "bytes": 193805,
+      "sha256": "36ce75fade36087541223f14e80c1c5b75366d1705a3cf399b9f4130ef216b47"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C16.txt",
+      "bytes": 4536,
+      "sha256": "f774f5fc0db63aab7c5610a25e50808a98397c1896923152f4ba7ce49aab40c0"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C17.json",
+      "bytes": 193758,
+      "sha256": "7a55a44b0a1b86703f66897ddb787de4f514d2ed3cb53f6e62840f98926ad145"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C17.txt",
+      "bytes": 1651,
+      "sha256": "2a6b66dcc2447a0fe1bb417fb29db44a0c035ea6e37877fae103c9733e6e7d6d"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C18.json",
+      "bytes": 193751,
+      "sha256": "426ef476444947a81a64e82259c1f8b27cda8f9a8860b67d7320edf40947d087"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/C18.txt",
+      "bytes": 488,
+      "sha256": "b7942c50f37c074a6b1713e9053b598a6c1ab7734167aed73e2ffa256ea659d4"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/CI-CLOSURE.md",
+      "bytes": 24973,
+      "sha256": "a7d3b33c568814ced9a4ab20903371cb54130c0a0c2ab7adb2df0a74b1246c57"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/REPORT-CLOSURE.md",
+      "bytes": 20814,
+      "sha256": "c8f6d793bdca0dba491054df9245c94ae4bb46629e048979f408d0f1cef774c3"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/befc-completed-ci.json",
+      "bytes": 79973,
+      "sha256": "bb36ac015d12b68e9b6d0b538584ce8c0b3dc2a66ac6062e7c9ffeef676f8a54"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/befc-completed-codeql.json",
+      "bytes": 62601,
+      "sha256": "3f0080d1b608fc5f1e1e4e9dd478f9c1bc47b7616739939250b5aef1da15845b"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/checkout-tree-provenance.json",
+      "bytes": 5251,
+      "sha256": "71b1f07a119a41a9fcece91d4136ac2a0c4c7dd945b2635ffdc52457fcbe4e05"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/codeql-closure-review.json",
+      "bytes": 210284,
+      "sha256": "702eae15f689bc02ec05a7d4a0a01908059f114f681a04810e81d68bc215630f"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/codeql-fcc-physical-flows.json",
+      "bytes": 62658,
+      "sha256": "75518fe6a8ebbcb0e5f73c9ae2f02961c762b1c186379d7ea077ebb404eba36e"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/df66-completed-push-observation-ci.json",
+      "bytes": 98423,
+      "sha256": "dae0a13358dabf772159c15e3c5c9eca97a36ace76bf170464475ed11f6cbd88"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/df66-completed-push-observation-codeql.json",
+      "bytes": 62601,
+      "sha256": "fa38ece1a8237b2397667cf8398371bfb3c2c101d8cc056906597cff8d78a12b"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/df66-completed-push-observation-windows-116507743106.json",
+      "bytes": 2586,
+      "sha256": "66fabff356603568054d8c3aefbe68299bdcca6e5660b122051c15a29a21aa6b"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/df66-completed-push-observation-windows-116507945231.json",
+      "bytes": 2509,
+      "sha256": "08a8ee9b5e2449db4be2b61eabcc6792e329a255d51adac62f0eff200af60543"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/df66-initial-corrected-ci.json",
+      "bytes": 62261,
+      "sha256": "d7697281a3756bfa3d59ada6cc35ecba3f687a78be6db4b935904c2f47536e53"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/df66-initial-corrected-codeql.json",
+      "bytes": 62601,
+      "sha256": "ac6737228613c3b0ad1819fe0fed0abd80a9a2a060981127e9a1f28e60a4d661"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/fcc-completed-ci.json",
+      "bytes": 80614,
+      "sha256": "8fd802fe04d3b5c59b4d628636359389edc766642eb36a044c594e4d7098f0d9"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/official-alert-access.json",
+      "bytes": 1640,
+      "sha256": "e31af75044a08cf1d04ca9e91ea463ee41df51f416b07add21972ab4c5cb4b97"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/preservation-check.json",
+      "bytes": 1651,
+      "sha256": "2a6b66dcc2447a0fe1bb417fb29db44a0c035ea6e37877fae103c9733e6e7d6d"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/proof-index.json",
+      "bytes": 15398,
+      "sha256": "fd8409063032fa2382ee383889db57743e68b230ffacb1469eba77ef57420576"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/second-corpus-draft.json",
+      "bytes": 29956,
+      "sha256": "ff82625bbe7349c34afb979dcc3c04d930a2403c599415c75d2d5c86f97cd242"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/second-corpus-preparation.json",
+      "bytes": 4276,
+      "sha256": "4f1922bb7acc21c92cd680cc8b7007c888774e533dfe526c847698b6ac576a54"
+    },
+    {
+      "path": "docs/audit/ci-closure-2026-10-15/source-review.json",
+      "bytes": 6314,
+      "sha256": "16344212b7110173e3407bd1c4b923b00e205c1f22c2ce5812573192306c7f0b"
+    }
+  ],
+  "preserves": "Previous copilot-phase6 manifests and files unchanged; preservation-check.json",
+  "limits": "This manifest excludes itself and records prepublication bytes only. Integrity is not functional/security/readiness evidence. A later documentary commit has a different SHA and distinct CI; see PR9 publication update."
+}

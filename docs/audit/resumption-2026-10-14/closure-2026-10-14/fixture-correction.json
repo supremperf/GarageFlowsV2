@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-14T16:38:16.073375+00:00",
+  "path": "src/integration/invoice-authz.test.ts",
+  "beforeSha256": "3954ddb865fc9410b61ec3e9ef2eb43c8cbf2ccfe87ff863f71f88496443edf5",
+  "afterSha256": "823bbe33b432a1a7a8fe4cd764924600f1d900881dcc6e42df7ee640866fd94c",
+  "rootCauseProof": "ci-assertion-analysis.json",
+  "cause": "Whole-response absence-of-cost substring matched generated opaque garageId, not a numeric cost value. Expurgated CI annotation contains one complete response object and only garageId marker occurrence.",
+  "correction": "Five created fixture IDs are explicit stable strings disjoint from numeric cost marker; all original confidentiality assertions and full JSON check preserved byte-for-byte.",
+  "unchangedExpectLines": 16,
+  "nativeValidation": "BLOQU\u00c9 pending real Prisma engine; full and isolated runs reported separately.",
+  "limits": "Corrects demonstrated fixture ambiguity; does not prove production financial authorization or excuse a real cost leak."
+}

@@ -1,0 +1,27 @@
+{
+  "id": "policy-negative-regressions",
+  "startedAt": "2026-10-14T17:05:21.641334+00:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "argv": [
+    "python3",
+    "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/check-policy-negatives.py"
+  ],
+  "timeoutSeconds": 600,
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+  "trackedNonAuditFiles": 1220,
+  "environmentOverrides": {
+    "PATH": "pinned npm 11.16.0 first",
+    "NODE_USE_SYSTEM_CA": "1"
+  },
+  "proof": "evidence/policy-negative-regressions.log",
+  "exitCode": 0,
+  "finishedAt": "2026-10-14T17:05:23.155944+00:00",
+  "afterIdentity": {
+    "head": "f88f2832eb256310852ed86040057c062d44433e",
+    "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+    "trackedNonAuditFiles": 1220
+  },
+  "logSha256": "77d9023657654aaff71e213919b6eef90ca89c63b10ffc228a031c3c5ae515bd"
+}

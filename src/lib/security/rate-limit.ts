@@ -23,7 +23,7 @@
 
 import crypto from 'crypto'
 import { NextResponse } from 'next/server'
-import { isPwaProduction } from '@/lib/env'
+import { isPwaProduction, upstashTimeoutMs } from '@/lib/env'
 
 // ─── Catégories et politiques ────────────────────────────────────────────────
 
@@ -45,6 +45,7 @@ function envInt(name: string, fallback: number): number {
   const v = Number.parseInt(process.env[name] ?? '', 10)
   return Number.isFinite(v) && v > 0 ? v : fallback
 }
+
 
 /** Politiques par défaut — surchargées par variables d'environnement. */
 function policyFor(category: RateLimitCategory): Policy {
@@ -120,7 +121,9 @@ class UpstashBackend implements Backend {
 
   private async command(cmd: unknown[]): Promise<unknown> {
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 1500)
+    // Relu à chaque appel : une surcharge en test ou un changement de
+    // configuration ne doit pas dépendre de l'instant d'import du module.
+    const timer = setTimeout(() => controller.abort(), upstashTimeoutMs())
     try {
       const res = await fetch(this.url, {
         method:  'POST',
@@ -195,10 +198,29 @@ class MemoryBackend implements Backend {
 let cachedBackend: Backend | null | undefined
 let warnedMemory = false
 
+/**
+ * Nettoie une valeur d'environnement Upstash. ROBUSTESSE CRITIQUE : un retour à
+ * la ligne / espace parasite (copié-collé, ou ajouté à l'écriture Vercel) casse
+ * `fetch` AVANT tout appel réseau — un `\n` dans le token produit un en-tête
+ * « Authorization: Bearer <token>\n » invalide (TypeError, aucune requête
+ * sortante) → repli fail-closed 503 alors qu'Upstash est pourtant configuré
+ * (symptôme observé : hasUpstash=true, degraded=fail_closed, ~47 ms). Ni l'URL
+ * REST ni le token n'ont d'espace légitime : on retire tout blanc de bord et
+ * tout CR/LF/tab (y compris interne, illégal dans un en-tête HTTP).
+ */
+function cleanUpstashValue(v: string | undefined): string {
+  return (v ?? '').replace(/[\r\n\t]/g, '').trim()
+}
+
 function upstashConfig(): { url: string; token: string } | null {
-  const url   = process.env.UPSTASH_REDIS_REST_URL ?? ''
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? ''
-  return url && token ? { url, token } : null
+  const url   = cleanUpstashValue(process.env.UPSTASH_REDIS_REST_URL)
+  const token = cleanUpstashValue(process.env.UPSTASH_REDIS_REST_TOKEN)
+  if (!url || !token) return null
+  // URL invalide (protocole non http, ex. « rediss:// ») : inutilisable via l'API
+  // REST — on la traite comme absente plutôt que de laisser fetch lever à chaque
+  // requête (le configurateur exige déjà une URL https ...upstash.io).
+  if (!/^https?:\/\//i.test(url)) return null
+  return { url, token }
 }
 
 /**
@@ -209,7 +231,21 @@ function upstashConfig(): { url: string; token: string } | null {
 function resolveBackend(): Backend | null {
   if (cachedBackend !== undefined) return cachedBackend
 
-  const upstash = upstashConfig()
+  // ── Une suite de tests ne parle JAMAIS au Redis de production (GF-041) ──────
+  // Le poste porte un `.env` avec des identifiants Upstash RÉELS : sous vitest,
+  // `resolveBackend` ouvrait donc des compteurs sur le magasin PARTAGÉ. Deux
+  // conséquences mesurées : les tests dépendaient de leur ordre d'exécution —
+  // un fichier consommait le quota d'inscription portail, et le suivant
+  // recevait un 429 qu'aucune de ses lignes n'expliquait — et chaque exécution
+  // laissait des clés dans un service de production.
+  //
+  // Les tests qui vérifient précisément la SÉLECTION du backend posent
+  // `GF_TEST_ALLOW_UPSTASH` : eux seuls voient la configuration distante, et
+  // avec les valeurs qu'ils fournissent, jamais celles de l'environnement.
+  const enTest = process.env.NODE_ENV === 'test' || Boolean(process.env.VITEST)
+  const upstash = enTest && process.env.GF_TEST_ALLOW_UPSTASH !== '1'
+    ? null
+    : upstashConfig()
   if (upstash) {
     cachedBackend = new UpstashBackend(upstash.url, upstash.token)
     return cachedBackend

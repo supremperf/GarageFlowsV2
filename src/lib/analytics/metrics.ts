@@ -7,6 +7,7 @@
 
 import { differenceInCalendarDays, parseISO, isValid } from 'date-fns'
 import { calcTotalHT, calcTotalTTC, roundCents } from '@/lib/billing'
+import { fromCents, lineCents } from '@/lib/money'
 import {
   type GarageDataset,
   type AnalyticsLine,
@@ -168,8 +169,10 @@ export interface GarageMetrics {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+// Coût total des lignes via la couche centimes (arrondi PAR LIGNE, cohérent avec
+// calcTotalHT/le FEC), au lieu d'une accumulation flottante native.
 const lineCost = (lines: AnalyticsLine[]): number =>
-  lines.reduce((s, l) => s + l.quantity * l.unitCost, 0)
+  fromCents(lines.reduce((c, l) => c + lineCents(l.unitCost, l.quantity), 0))
 
 /** Parse a 'YYYY-MM-DD' string to a Date, or null when absent/invalid. */
 function parseDay(s: string | null | undefined): Date | null {

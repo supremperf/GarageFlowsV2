@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-14T16:50:03.049704+00:00",
+  "rootCause": "Bare remote commit label 4989 followed by test job was misread as a current test count by unchanged docs checker. Active matrix now spells commit4989b53.",
+  "initialMatrixSnapshot": "ISSUE-MATRIX-before-doc-correction.md.snapshot",
+  "snapshotSha256": "877aaaa6c63ceac4a2ea57582d3d7710158498c29b8abdfa5c09c0cce2300e69",
+  "priorSnapshotPath": "ISSUE-MATRIX-before-doc-correction.md",
+  "pathChangeOnly": true,
+  "reason": "A byte-identical intermediate historical snapshot is evidence, not an active documentation page. Original bytes retained, no historical published report or checker exclusion changed.",
+  "failedProofs": [
+    "evidence/consistency-final.log",
+    "evidence/consistency-corrected.log"
+  ],
+  "activeCurrentMatrix": "ISSUE-MATRIX.md"
+}

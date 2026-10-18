@@ -1,0 +1,141 @@
+TAP version 13
+# Subtest: same-second backups preserve distinct real SQLite snapshots
+not ok 1 - same-second backups preserve distinct real SQLite snapshots
+  ---
+  duration_ms: 103.781435
+  type: 'test'
+  location: '/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:9:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected "actual" to be strictly unequal to:
+    
+    '/tmp/gf-backup-safety-HEW1mk/backups/garageflows-pre-migration-20261014-120000.db'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '/tmp/gf-backup-safety-HEW1mk/backups/garageflows-pre-migration-20261014-120000.db'
+  actual: '/tmp/gf-backup-safety-HEW1mk/backups/garageflows-pre-migration-20261014-120000.db'
+  operator: 'notStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:9:272)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: same-second copies never inherit another snapshot rollback journal
+not ok 2 - same-second copies never inherit another snapshot rollback journal
+  ---
+  duration_ms: 31.678735
+  type: 'test'
+  location: '/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:10:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected "actual" to be strictly unequal to:
+    
+    '/tmp/gf-backup-safety-XX9MnR/backups/garageflows-pre-migration-20261014-120000.db'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '/tmp/gf-backup-safety-XX9MnR/backups/garageflows-pre-migration-20261014-120000.db'
+  actual: '/tmp/gf-backup-safety-XX9MnR/backups/garageflows-pre-migration-20261014-120000.db'
+  operator: 'notStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:10:324)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: retention removes all owned annexes including journal
+not ok 3 - retention removes all owned annexes including journal
+  ---
+  duration_ms: 17.721044
+  type: 'test'
+  location: '/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:11:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    /tmp/gf-backup-safety-CdmvtL/backups/garageflows-pre-migration-20261014-120000.db-journal
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:11:460)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: retention does not delete unrelated files with the application prefix
+not ok 4 - retention does not delete unrelated files with the application prefix
+  ---
+  duration_ms: 17.115797
+  type: 'test'
+  location: '/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:12:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/tmp/gf-backup-safety-3RF6BS/backups/garageflows-pre-migration-00000000-customer-import.db'"
+  code: 'ENOENT'
+  stack: |-
+    Object.readFileSync (node:fs:440:20)
+    TestContext.<anonymous> (/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:12:380)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: same-second retention keeps the actual latest five snapshots
+not ok 5 - same-second retention keeps the actual latest five snapshots
+  ---
+  duration_ms: 119.588133
+  type: 'test'
+  location: '/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:13:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    1 !== 8
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 8
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/home/user/GarageFlowsV2/tests/pre-migration-backup-safety.test.cjs:13:218)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: copy permission failure blocks migration without attempting retention
+ok 6 - copy permission failure blocks migration without attempting retention
+  ---
+  duration_ms: 17.577284
+  type: 'test'
+  ...
+# Subtest: rotation failure is an explicit warning, not a lost valid backup
+ok 7 - rotation failure is an explicit warning, not a lost valid backup
+  ---
+  duration_ms: 29.260587
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 2
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 386.147033

@@ -1,0 +1,43 @@
+TAP version 13
+# Subtest: secret scanner retains default rules and never exempts whole critical auth/public-key sources
+ok 1 - secret scanner retains default rules and never exempts whole critical auth/public-key sources
+  ---
+  duration_ms: 1.20166
+  type: 'test'
+  ...
+# Subtest: three public OAuth headers and one frozen prose fingerprint are individually hash-locked
+ok 2 - three public OAuth headers and one frozen prose fingerprint are individually hash-locked
+  ---
+  duration_ms: 4.654134
+  type: 'test'
+  ...
+# Subtest: phase4 digest exception requires exact receipt path AND exact hash-locked source line; no secret-shaped substitution
+ok 3 - phase4 digest exception requires exact receipt path AND exact hash-locked source line; no secret-shaped substitution
+  ---
+  duration_ms: 2.224707
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 61.059118
+
+> garageflow@1.1.0 check:docs
+> node scripts/check-docs-consistency.mjs
+
+✅ Cohérence docs : source canonique unique, comptes & statuts cohérents (191 .md scannés).
+✅ Contrat d'environnement : 121 variables canoniques, 8 alias interdits absents du code actif, 48 variables plateforme, 1015 fichiers balayés.
+TOML_VALID; default rule extension only
+{
+  "status": "METADATA_ONLY_PASS",
+  "receipts": 30,
+  "normalizedLogs": 27,
+  "reviewedFiles": 21,
+  "preservedHistoricalDocuments": 8,
+  "limits": "No runtime/SQL/auth/paid-model/production validation; index self-hash closed by containing Git commit, final verification receipt intentionally outside this index."
+}

@@ -1,3 +1,4 @@
+import { licenseApiBoundary } from '@/lib/license/api-boundary'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -18,18 +19,15 @@ export const dynamic = 'force-dynamic'
  * Body:    { license: string; hwid?: string; version?: string; os?: string; arch?: string; name?: string }
  * Returns: { ok, isAdmin?, licenseType?, expiryAt?, seats?, deviceToken?, deviceId?, reason?, code? }
  *
- * Politique d'erreur DB :
- *  - Electron (ELECTRON=1, SQLite locale) : fail-open documenté — l'application
- *    doit démarrer hors ligne ; le control plane distant reste l'autorité.
- *  - Serveur/PWA : FAIL-CLOSED — erreur interne générique 503, jamais de
- *    session émise sans vérifications réussies.
+ * Activation fail-closed sur Electron et PWA : aucune session sur erreur technique.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'node:crypto'
 import { SignJWT } from 'jose'
-import { verifyLicenseToken, verifyHwid, isValidHwidFormat } from '@/lib/license/verify'
+import { verifyLicenseToken, verifyHwid, hwidBindingSatisfied, isValidHwidFormat, type LicensePayload, type LicenseVerificationFailureCode } from '@/lib/license/verify'
 import { prisma } from '@/lib/db'
-import { computeRecordMac, verifyRecordMac } from '@/lib/license/record-mac'
+import { computeRecordMac, verifyRecordMac, recordIntegrityUsable } from '@/lib/license/record-mac'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { getAuthSecret } from '@/lib/auth-secret'
 import {
@@ -46,20 +44,222 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 365 * 5   // 5 years
 
 const IS_ELECTRON = () => process.env.ELECTRON === '1'
 
+/** Types de licence « garage » valides comme parent d'une clé mécanicien. */
+const GARAGE_LICENSE_TYPES = new Set(['trial', 'premium', 'enterprise', 'admin'])
+
 function getJwtSecret(): Uint8Array {
   // No hard-coded fallback — a predictable secret would let anyone mint an admin session.
   return new TextEncoder().encode(getAuthSecret())
 }
 
-/** Erreur interne générique — aucun détail technique côté client. */
-function internalError(): NextResponse {
-  return NextResponse.json(
-    { ok: false, code: 'SERVICE_UNAVAILABLE', reason: 'Service temporairement indisponible. Réessayez plus tard.' },
-    { status: 503 },
-  )
+const COOKIE_BASE = (electron: boolean) =>
+  `; Path=/; Max-Age=${COOKIE_MAX_AGE}; SameSite=Strict${electron ? '' : '; Secure'}`
+
+/**
+ * Active une clé MÉCANICIEN : valide la chaîne complète (licence attribuée +
+ * parente valide), enregistre l'appareil (1 siège), puis émet une session
+ * `gf_session` de type 'mechanic' portant garageId + mechanicId de CONFIANCE
+ * (issus de la base, jamais du client). Toutes les erreurs sont neutres.
+ */
+async function activateMechanicKey(input: {
+  payload: LicensePayload
+  licenseToken: string
+  clientHwid?: string
+  clientInstallId?: string
+  clientMeta: { platform?: string; appVersion?: string; name?: string }
+}): Promise<NextResponse> {
+  const { payload, clientHwid, clientInstallId, clientMeta } = input
+  const lid = payload.lid
+
+  /**
+   * Refus « clé non attribuée ».
+   *
+   * La réponse CLIENT reste rigoureusement identique quelle que soit la cause :
+   * distinguer « licence inconnue » de « licence connue mais sans mécanicien »
+   * dirait à un inconnu quels identifiants existent en base.
+   *
+   * Mais le SERVEUR, lui, doit savoir. Quatre situations très différentes
+   * partageaient ce message — dont « la licence n'existe pas du tout côté
+   * serveur », cas devenu courant après une purge de la table `LicenseKey` — et
+   * les journaux de production n'en disaient rien : on y voyait « étape 0 :
+   * requête reçue » puis un 403 muet. L'exploitant lisait « pas encore attribuée
+   * à un mécanicien » et allait chercher un problème d'attribution qui pouvait
+   * n'exister nulle part.
+   */
+  const unassigned = (cause: 'licence-inconnue' | 'type-non-mecanicien' | 'sans-mecanicien-ni-garage' | 'mecanicien-absent-du-garage') => {
+    logger.warn('[license/activate:mechanic] refus MECHANIC_KEY_UNASSIGNED', { cause })
+    return NextResponse.json(
+      { ok: false, code: 'MECHANIC_KEY_UNASSIGNED', reason: 'Cette clé n\'est pas encore attribuée à un mécanicien. Contactez le responsable du garage.' },
+      { status: 403 },
+    )
+  }
+  const parentInvalid = () =>
+    NextResponse.json(
+      { ok: false, code: 'PARENT_LICENSE_INVALID', reason: 'La licence du garage n\'est plus valide.' },
+      { status: 403 },
+    )
+
+  // La clé doit être PRÉ-ENREGISTRÉE et ATTRIBUÉE par le responsable du garage.
+  let record
+  try {
+    record = await prisma.licenseKey.findUnique({ where: { licenseId: lid } })
+  } catch (err) {
+    throw err
+  }
+  if (!record) return unassigned('licence-inconnue')
+  if (record.licenseType !== 'mechanic') return unassigned('type-non-mecanicien')
+
+  // Intégrité DB (inclut mechanicId/parent — anti-altération).
+  // Un MAC ABSENT n'est jamais légitime pour une clé mécanicien (toujours créée
+  // avec un recordMac) : le traiter comme une altération empêche l'usurpation
+  // par mise à NULL du MAC + modification de mechanicId en base.
+  const mmac = verifyRecordMac({
+    licenseId: record.licenseId, token: record.token, status: record.status,
+    expiryAt: record.expiryAt, hwid: record.hwid, recordMac: record.recordMac,
+    parentLicenseId: record.parentLicenseId, mechanicId: record.mechanicId,
+  })
+  if (mmac.tampered || mmac.missing) {
+    return NextResponse.json(
+      { ok: false, code: 'LICENSE_TAMPERED', reason: 'Erreur d\'intégrité de la clé. Contactez le support.' },
+      { status: 403 },
+    )
+  }
+
+  if (record.status === 'revoked' || record.revokedAt) {
+    return NextResponse.json({ ok: false, code: 'MECHANIC_LICENSE_REVOKED', reason: 'Cette clé mécanicien a été révoquée.' }, { status: 403 })
+  }
+  if (record.status === 'suspended') {
+    return NextResponse.json({ ok: false, code: 'MECHANIC_LICENSE_SUSPENDED', reason: 'Cette clé mécanicien est temporairement suspendue.' }, { status: 403 })
+  }
+  if (record.expiryAt.getTime() < Date.now()) {
+    return NextResponse.json({ ok: false, code: 'MECHANIC_LICENSE_EXPIRED', reason: 'Cette clé mécanicien a expiré.' }, { status: 403 })
+  }
+  if (!record.mechanicId || !record.garageId) return unassigned('sans-mecanicien-ni-garage')
+
+  // Licence Garage parente valide (chaîne de confiance).
+  const parentLid = record.parentLicenseId ?? payload.plid
+  if (!parentLid) return parentInvalid()
+  const parent = await prisma.licenseKey.findUnique({ where: { licenseId: parentLid } })
+  if (!parent || !GARAGE_LICENSE_TYPES.has(parent.licenseType)) return parentInvalid()
+  if (!recordIntegrityUsable(verifyRecordMac(parent))) {
+    return NextResponse.json({ ok: false, code: 'LICENSE_TAMPERED', reason: 'Intégrité de la licence parente non vérifiée.' }, { status: 403 })
+  }
+  if (parent.status !== 'active' || parent.revokedAt) return parentInvalid()
+  if (parent.expiryAt.getTime() < Date.now()) return parentInvalid()
+  if (parent.garageId && parent.garageId !== record.garageId) return parentInvalid()
+
+  // Le mécanicien attribué doit exister dans le garage.
+  const mechanic = await prisma.mechanic.findFirst({
+    where: { id: record.mechanicId, garageId: record.garageId },
+    select: { id: true },
+  })
+  if (!mechanic) return unassigned('mecanicien-absent-du-garage')
+
+  // Liaison matérielle éventuelle (si la clé porte un hwid).
+  if (record.hwid) {
+    if (!clientHwid || !isValidHwidFormat(clientHwid) || !verifyHwid(record.hwid, clientHwid)) {
+      return NextResponse.json(
+        { ok: false, code: 'HWID_MISMATCH', reason: 'Cette clé est liée à un autre matériel.' },
+        { status: 403 },
+      )
+    }
+  }
+
+  // Enregistrement de l'appareil (1 siège) — obligatoire sur toutes les plateformes.
+  const hasHwid = !!clientHwid && isValidHwidFormat(clientHwid)
+  const hasInstallId = !!clientInstallId && isValidInstallId(clientInstallId)
+  const deviceRequired = true
+  if (deviceRequired && !hasHwid && !hasInstallId) {
+    return NextResponse.json(
+      { ok: false, code: 'DEVICE_REQUIRED', reason: 'Identifiant d\'installation requis pour activer cette clé.' },
+      { status: 400 },
+    )
+  }
+
+  let deviceToken: string | undefined
+  let deviceId: string | undefined
+  // Une clé mécanicien consomme exactement un siège.
+  const seats = 1
+  if (hasHwid || hasInstallId) {
+    try {
+      const activation = await activateDevice({
+        licenseId: lid,
+        seats,
+        ...(hasHwid ? { hwid: clientHwid } : { installId: clientInstallId }),
+        ...clientMeta,
+      })
+      deviceToken = activation.deviceToken
+      deviceId = activation.deviceId
+    } catch (err) {
+      if (err instanceof DeviceLimitError) {
+        await recordDeviceDenial(lid, 'limit_denied')
+        return NextResponse.json(
+          { ok: false, code: 'DEVICE_LIMIT_REACHED', reason: 'Cette clé mécanicien est déjà utilisée sur un autre appareil.' },
+          { status: 403 },
+        )
+      }
+      if (err instanceof DeviceRevokedError) {
+        await recordDeviceDenial(lid, 'revoked_denied')
+        return NextResponse.json(
+          { ok: false, code: 'MECHANIC_DEVICE_REVOKED', reason: 'Cet appareil a été révoqué pour cette clé.' },
+          { status: 403 },
+        )
+      }
+      if (err instanceof InvalidHwidError) {
+        return NextResponse.json({ ok: false, code: 'VALIDATION_ERROR', reason: 'Identifiant matériel invalide.' }, { status: 400 })
+      }
+      throw err
+    }
+  }
+  if (deviceRequired && !deviceId) {
+    return NextResponse.json(
+      { ok: false, code: 'DEVICE_REQUIRED', reason: 'Enregistrement de l\'appareil impossible : activation refusée.' },
+      { status: 400 },
+    )
+  }
+
+  await prisma.licenseKey.update({ where: { id: record.id }, data: { lastSeenAt: new Date() } })
+
+  // Session MÉCANICIEN — garageId + mechanicId de CONFIANCE (base, pas client).
+  const sessionJwt = await new SignJWT({
+    typ: 'mechanic',
+    lid,
+    gid: record.garageId,
+    mid: record.mechanicId,
+    ...(deviceId ? { did: deviceId } : {}),
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(IS_ELECTRON() ? '5y' : '30d')
+    .sign(getJwtSecret())
+
+  // Journal d'audit (connexion mécanicien) — jamais de token complet.
+  // Action MÉCANICIEN (le mécanicien active sa propre clé) : pas d'acteur staff.
+  await prisma.mechanicActionAudit.create({
+    data: { garageId: record.garageId, actorUserId: null, actorRole: null, targetMechanicId: record.mechanicId, licenseId: lid, action: 'login', targetType: 'LicenseKey', targetId: lid },
+  }).catch(() => {})
+
+  const res = NextResponse.json({
+    ok: true,
+    licenseType: 'mechanic',
+    isAdmin: false,
+    redirect: '/mechanic',
+    // garageId + mechanicId renvoyés pour permettre au client Electron de
+    // reconstituer la session mécanicien locale (mono-poste). Ce sont les
+    // identifiants du mécanicien lui-même — aucune donnée d'un tiers.
+    garageId: record.garageId,
+    mechanicId: record.mechanicId,
+    expiryAt: new Date(payload.exp * 1000).toISOString(),
+    ...(deviceToken ? { deviceToken, deviceId } : {}),
+  })
+  const base = COOKIE_BASE(IS_ELECTRON())
+  res.headers.append('Set-Cookie', `gf_session=${sessionJwt}${base}; HttpOnly`)
+  res.headers.append('Set-Cookie', `gf_license_validated=1${base}`)
+  res.headers.append('Set-Cookie', `gf_license_type=mechanic${base}`)
+  return res
 }
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   // ── Step 0: Rate limiting ───────────────────────────────────────────────────
   // Distribué en production PWA (Upstash), mémoire sous Electron. Clé = IP
   // hachée — empêche la soumission de tokens en force brute.
@@ -95,13 +295,39 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  getJwtSecret() // Configuration invalide : aucune écriture ni session.
+
   // ── Step 1: Cryptographic verification ─────────────────────────────────────
-  const result = verifyLicenseToken(licenseToken)
+  const verificationRequestId = randomUUID()
+  let diagnosticCode: LicenseVerificationFailureCode | undefined
+  const result = verifyLicenseToken(licenseToken, (stage) => {
+    diagnosticCode = stage
+    // Fixed stage + random correlation only: no token, payload, fingerprint or raw error.
+    logger.warn('[license-verification]', { stage, requestId: verificationRequestId })
+  })
   if (!result.valid || !result.payload) {
-    return NextResponse.json({ ok: false, code: 'LICENSE_INVALID', reason: result.reason })
+    return NextResponse.json({
+      ok: false, code: 'LICENSE_INVALID', reason: result.reason,
+      requestId: verificationRequestId,
+      ...(process.env.NODE_ENV !== 'production' ? { diagnosticCode } : {}),
+    }, { headers: { 'X-Request-ID': verificationRequestId } })
   }
 
   const { payload, isAdmin } = result
+
+  // ── Licence MÉCANICIEN : espace restreint, jamais l'application garage ──────
+  // Une clé mécanicien n'ouvre QUE /mechanic (planning + interventions
+  // attribuées). Elle DOIT être préalablement enregistrée ET attribuée par le
+  // responsable du garage. Toutes les erreurs sont neutres (aucune énumération).
+  if (result.isMechanic) {
+    return await activateMechanicKey({
+      payload,
+      licenseToken,
+      clientHwid,
+      clientInstallId,
+      clientMeta,
+    })
+  }
 
   // ── Step 2: DB check (revocation, expiry, HWID binding) ─────────────────────
   let seats = payload.seats ?? 1
@@ -109,12 +335,18 @@ export async function POST(req: NextRequest) {
     const record = await prisma.licenseKey.findUnique({ where: { licenseId: payload.lid } })
 
     if (record) {
-      // DB integrity check — detect SQLite tampering
+      // DB integrity check — detect SQLite tampering.
+      // Un MAC ABSENT est traité comme une altération, exactement comme sur le
+      // chemin MÉCANICIEN ci-dessus : effacer la colonne est plus simple que de
+      // forger un HMAC, et le tolérer rendait toute la protection contournable
+      // (GF31-AUD-005).
       const mac = verifyRecordMac(record)
-      if (mac.tampered) {
-        logger.error('[license/activate] DB integrity check FAILED', { lid: record.licenseId })
+      if (!recordIntegrityUsable(mac)) {
+        logger.error('[license/activate] DB integrity check FAILED', {
+          cause: mac.missing ? 'mac-absent' : 'mac-invalide',
+        })
         return NextResponse.json({
-          ok: false, code: 'LICENSE_INVALID',
+          ok: false, code: 'LICENSE_TAMPERED',
           reason: 'Erreur d\'intégrité de la base de données. Contactez le support.',
         })
       }
@@ -147,19 +379,36 @@ export async function POST(req: NextRequest) {
       // licence liée + HWID identique→ autorisé
       // Aucun contournement silencieux : dès que le record porte un HWID, le
       // client DOIT présenter un HWID bien formé ET identique.
-      if (record.hwid) {
-        if (!clientHwid || !isValidHwidFormat(clientHwid)) {
-          return NextResponse.json(
-            { ok: false, code: 'HWID_REQUIRED', reason: 'Cette licence est liée à un matériel : identifiant matériel requis et valide.' },
-            { status: 403 },
-          )
-        }
-        if (!verifyHwid(record.hwid, clientHwid)) {
-          return NextResponse.json(
-            { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un autre matériel.' },
-            { status: 403 },
-          )
-        }
+      // La liaison matérielle SIGNÉE du jeton (`payload.hwid`) fait autorité au
+      // même titre que celle de la base. Ne contrôler que `record.hwid` laissait
+      // la liaison tomber silencieusement dès que la ligne perdait sa valeur —
+      // ce qui arrive sans aucune altération de base : la pierre tombale créée
+      // par `/api/admin/licenses/revoke-by-key` pour une licence pas encore
+      // enregistrée porte `hwid: null`, et un `PATCH /api/admin/licenses/[id]`
+      // peut poser `hwid: null` explicitement. Après réactivation, un jeton volé
+      // s'activait alors sur n'importe quelle machine, alors même que sa
+      // signature le liait à un matériel précis (GF31-AUD-008).
+      const hwidLie = record.hwid ?? payload.hwid ?? null
+      // La décision ne repose QUE sur les résultats des vérifications
+      // (format du HWID + comparaison HMAC en temps constant via verifyHwid),
+      // jamais sur la simple présence d'une valeur fournie par le client :
+      // omettre le HWID fait échouer clientHwidValide, il ne contourne rien.
+      const clientHwidValide = !!clientHwid && isValidHwidFormat(clientHwid)
+      if (hwidLie !== null && !clientHwidValide) {
+        return NextResponse.json(
+          { ok: false, code: 'HWID_REQUIRED', reason: 'Cette licence est liée à un matériel : identifiant matériel requis et valide.' },
+          { status: 403 },
+        )
+      }
+      // Les DEUX liaisons connues doivent tenir : celle de la base ET celle
+      // que porte la signature du jeton (déjà vérifiée : verifyLicenseToken).
+      const liaisonBaseOk = hwidBindingSatisfied(record.hwid, clientHwid)
+      const liaisonJetonOk = hwidBindingSatisfied(payload.hwid, clientHwid)
+      if (!liaisonBaseOk || !liaisonJetonOk) {
+        return NextResponse.json(
+          { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un autre matériel.' },
+          { status: 403 },
+        )
       }
 
       // Update last-seen timestamp
@@ -172,13 +421,12 @@ export async function POST(req: NextRequest) {
       // Si le TOKEN est lié à un matériel (payload.hwid), la machine qui
       // présente la licence doit correspondre AVANT tout enregistrement —
       // sinon un token volé s'auto-enregistrerait sur une autre machine.
-      if (payload.hwid) {
-        if (!clientHwid || !isValidHwidFormat(clientHwid) || !verifyHwid(payload.hwid, clientHwid)) {
-          return NextResponse.json(
-            { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un matériel : activation refusée sur cet appareil.' },
-            { status: 403 },
-          )
-        }
+      const liaisonJetonOk = hwidBindingSatisfied(payload.hwid, clientHwid)
+      if (!liaisonJetonOk) {
+        return NextResponse.json(
+          { ok: false, code: 'HWID_MISMATCH', reason: 'Cette licence est liée à un matériel : activation refusée sur cet appareil.' },
+          { status: 403 },
+        )
       }
       const expiryAt  = new Date(payload.exp * 1000)
       const hwid      = payload.hwid ?? null
@@ -207,14 +455,7 @@ export async function POST(req: NextRequest) {
       })
     }
   } catch (err) {
-    if (!IS_ELECTRON()) {
-      // Serveur/PWA : FAIL-CLOSED — jamais de session sans vérifications réussies.
-      logger.error('[license/activate] erreur DB (fail-closed serveur)', err)
-      return internalError()
-    }
-    // Electron : fail-open documenté (démarrage hors ligne, base locale absente
-    // à la première ouverture). Le control plane distant reste l'autorité.
-    logger.warn('[license/activate] erreur DB locale (fail-open Electron)')
+    throw err
   }
 
   // ── Step 3: Enregistrement de l'appareil (consomme un siège) ────────────────
@@ -227,7 +468,7 @@ export async function POST(req: NextRequest) {
   // plusieurs navigateurs partageraient une licence sans consommer de siège.
   const hasHwid      = !!clientHwid && isValidHwidFormat(clientHwid)
   const hasInstallId = !!clientInstallId && isValidInstallId(clientInstallId)
-  const deviceRequired = !IS_ELECTRON() && !(isAdmin ?? false)
+  const deviceRequired = !(isAdmin ?? false)
 
   if (deviceRequired && !hasHwid && !hasInstallId) {
     return NextResponse.json(
@@ -275,18 +516,12 @@ export async function POST(req: NextRequest) {
           { status: 400 },
         )
       }
-      if (!IS_ELECTRON()) {
-        logger.error('[license/activate] enregistrement appareil impossible (fail-closed serveur)', err)
-        return internalError()
-      }
-      // Electron : la base locale vient d'être refusée plus haut (fail-open) —
-      // l'activation distante (control plane) fournira le jeton d'appareil.
-      logger.warn('[license/activate] enregistrement appareil local impossible (fail-open Electron)')
+      throw err
     }
   }
 
   // Serveur/PWA non-admin : refuser la session si aucun appareil n'a pu être
-  // enregistré (jamais de session « sans siège »). Electron reste fail-open.
+  // enregistré (jamais de session « sans siège »).
   if (deviceRequired && !deviceId) {
     return NextResponse.json(
       {
@@ -333,4 +568,8 @@ export async function POST(req: NextRequest) {
   res.headers.append('Set-Cookie', `gf_license_type=${payload.typ}${base}`)
 
   return res
+}
+
+export async function POST(req: NextRequest) {
+  return licenseApiBoundary(() => handlePOST(req))
 }

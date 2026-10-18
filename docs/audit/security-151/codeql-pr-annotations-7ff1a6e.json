@@ -1,0 +1,135 @@
+[
+  {
+    "path": "tests/config-storage-discovery.test.cjs",
+    "line": 51,
+    "title": "Potential file system race condition",
+    "level": "failure",
+    "message": "The file may have changed since it [was checked](1)."
+  },
+  {
+    "path": "scripts/verify-installer.cjs",
+    "line": 100,
+    "title": "Potential file system race condition",
+    "level": "failure",
+    "message": "The file may have changed since it [was checked](1)."
+  },
+  {
+    "path": "scripts/lib/standalone-layout.cjs",
+    "line": 207,
+    "title": "Potential file system race condition",
+    "level": "failure",
+    "message": "The file may have changed since it [was checked](1)."
+  },
+  {
+    "path": "scripts/lib/config-credentials.cjs",
+    "line": 11,
+    "title": "Use of password hash with insufficient computational effort",
+    "level": "failure",
+    "message": "Password from [an access to PGPASSWORD](1) is hashed insecurely.\nPassword from [an access to password](2) is hashed insecurely.\nPassword from [an access to password](3) is hashed insecurely.\nPassword from [an access to password](4) is hashed insecurely.\nPassword from [an access to password](5) is hashed insecurely.\nPassword from [an access to password](6) is hashed insecurely.\nPassword from [a call to neonVariables](7) is hashed insecurely.\nPassword from [an access to password](8) is hashed insecurely.\nPassword from [a call to neonVariables](9) is hashed insecurely.\nPassword from [an access to password](10) is hashed insecurely."
+  },
+  {
+    "path": "scripts/config-core.cjs",
+    "line": 97,
+    "title": "Incomplete string escaping or encoding",
+    "level": "failure",
+    "message": "This does not escape backslash characters in the input."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/run-command.cjs",
+    "line": 11,
+    "title": "Potential file system race condition",
+    "level": "failure",
+    "message": "The file may have changed since it [was checked](1)."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/publication-preflight.cjs",
+    "line": 8,
+    "title": "Potential file system race condition",
+    "level": "failure",
+    "message": "The file may have changed since it [was checked](1)."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/investigation-2026-10-14/run-command.cjs",
+    "line": 11,
+    "title": "Potential file system race condition",
+    "level": "failure",
+    "message": "The file may have changed since it [was checked](1)."
+  },
+  {
+    "path": "docs/audit/resumption-2026-10-14/closure-2026-10-14/run-command.cjs",
+    "line": 11,
+    "title": "Potential file system race condition",
+    "level": "failure",
+    "message": "The file may have changed since it [was checked](1)."
+  },
+  {
+    "path": "docs/audit/followup-2026-10-14/build-review-ledger.cjs",
+    "line": 61,
+    "title": "Potential file system race condition",
+    "level": "failure",
+    "message": "The file may have changed since it [was checked](1)."
+  },
+  {
+    "path": "docs/audit/2026-10-17/phase6/collect-review-inventory.mjs",
+    "line": 25,
+    "title": "Potential file system race condition",
+    "level": "failure",
+    "message": "The file may have changed since it [was checked](1)."
+  },
+  {
+    "path": "electron/main.js",
+    "line": 648,
+    "title": "Network data written to file",
+    "level": "warning",
+    "message": "Write to file system depends on [Untrusted data](1)."
+  },
+  {
+    "path": "electron/main.js",
+    "line": 1648,
+    "title": "File data in outbound network request",
+    "level": "warning",
+    "message": "Outbound network request depends on [file data](1)."
+  },
+  {
+    "path": "electron/main.js",
+    "line": 2164,
+    "title": "Network data written to file",
+    "level": "warning",
+    "message": "Write to file system depends on [Untrusted data](1)."
+  },
+  {
+    "path": "scripts/config-core.cjs",
+    "line": 142,
+    "title": "Network data written to file",
+    "level": "warning",
+    "message": "Write to file system depends on [Untrusted data](1)."
+  },
+  {
+    "path": "scripts/config-core.cjs",
+    "line": 148,
+    "title": "Network data written to file",
+    "level": "warning",
+    "message": "Write to file system depends on [Untrusted data](1)."
+  },
+  {
+    "path": "scripts/config-services.cjs",
+    "line": 153,
+    "title": "File data in outbound network request",
+    "level": "warning",
+    "message": "Outbound network request depends on [file data](1)."
+  },
+  {
+    "path": "src/lib/einvoicing/__tests__/formats.test.ts",
+    "line": 28,
+    "title": "Replacement of a substring with itself",
+    "level": "warning",
+    "message": "This replaces ' ' with itself."
+  },
+  {
+    "path": "src/lib/sync/cloud-client.ts",
+    "line": 78,
+    "title": "File data in outbound network request",
+    "level": "warning",
+    "message": "Outbound network request depends on [file data](1)."
+  }
+]

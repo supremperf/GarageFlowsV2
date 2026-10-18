@@ -1,3 +1,5 @@
+import { LicenseConfigurationError } from '@/lib/license/failures'
+
 /**
  * Accès CENTRALISÉ aux secrets de signature — AUCUN repli codé en dur.
  *
@@ -37,10 +39,7 @@ export function isWeakSecret(v: string | undefined | null): boolean {
 }
 
 function refuse(name: string): never {
-  throw new Error(
-    `${name} absent, trop court ou générique. Configurez un secret aléatoire fort ` +
-      `(ex. « openssl rand -base64 32 »). Aucun repli codé en dur n'est autorisé.`,
-  )
+  throw new LicenseConfigurationError(`${name} absent, trop court ou générique.`)
 }
 
 /** Secret de session/JWT. Lève si absent/faible (jamais de repli en dur). */

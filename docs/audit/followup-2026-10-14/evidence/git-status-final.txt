@@ -1,0 +1,82 @@
+ M .github/workflows/ci.yml
+ M .github/workflows/codeql.yml
+ M .gitignore
+ M .gitleaks.toml
+ M ENVIRONMENT-VARIABLES.md
+ M README.md
+ M electron/preload.js
+ M next.config.mjs
+ M package-lock.json
+ M package.json
+ M scripts/audit-ci.js
+ M scripts/check-branding.mjs
+ M scripts/check-desktop-runtime-audit.mjs
+ M scripts/check-perf-budget.mjs
+ M scripts/final-release-gate.mjs
+ M scripts/garageflow-env-manifest.json
+ M scripts/keygen_ui.py
+ M scripts/post-build.js
+ M scripts/setup-dev.js
+ M src/__tests__/integrity-diagnostics.test.ts
+ M src/app/api/admin/licenses/[id]/devices/[deviceId]/route.ts
+ M src/app/api/admin/licenses/[id]/devices/route.ts
+ M src/app/api/admin/licenses/[id]/route.ts
+ M src/app/api/admin/updates/file/[name]/route.ts
+ M src/app/api/auth/[...nextauth]/route.ts
+ M src/app/api/mechanic-licenses/route.ts
+ M src/app/api/mechanic/logout/route.ts
+ M src/app/api/portal/[token]/route.ts
+ M src/app/api/portal/quote/[token]/route.ts
+ M src/app/api/signatures/route.ts
+ M src/app/mechanic/jobs/[id]/page.tsx
+ M src/lib/__tests__/license-admin-state-machine.test.ts
+ M src/lib/__tests__/record-mac-admin-routes.test.ts
+ M src/lib/__tests__/release-signing-chain.test.ts
+ M src/lib/api-helpers.ts
+ M src/lib/audit.ts
+ M src/lib/i18n/ui.ts
+ M src/lib/license/__tests__/license-keygen-e2e.test.ts
+ M src/lib/mechanic-api.ts
+ M src/lib/portal/auth-helpers.ts
+ M src/test-utils/prepare-test-db.ts
+ M tsconfig.json
+?? .github/dependabot.yml
+?? config
+?? config.cmd
+?? docs/CONFIG.md
+?? docs/CONFIG_REPOSITORY_AUDIT.md
+?? docs/audit/REPORT-2026-10-14.md
+?? docs/audit/evidence/
+?? docs/audit/followup-2026-10-14/
+?? docs/audit/inventory-current.jsonl
+?? docs/audit/inventory.jsonl
+?? docs/audit/module-map.jsonl
+?? docs/audit/scope.json
+?? prisma/server/migrations/20261014000000_jobpart_snapshot_defaults/
+?? scripts/config-audit.cjs
+?? scripts/config-core.cjs
+?? scripts/config-full.cjs
+?? scripts/config-keygen.cjs
+?? scripts/config-policy.cjs
+?? scripts/config-release.cjs
+?? scripts/config-services.cjs
+?? scripts/lib/package-prisma-resources.cjs
+?? scripts/lib/preserve-legacy-dev-db.cjs
+?? scripts/lib/repository-audit-map.cjs
+?? scripts/materialize-build-public-key.cjs
+?? src/lib/__tests__/route-context.test.ts
+?? src/lib/__tests__/ui-lossless-compaction.test.ts
+?? src/lib/route-context.ts
+?? tests/audit-security.test.cjs
+?? tests/build-public-key.test.cjs
+?? tests/ci-required-gate.test.cjs
+?? tests/config-full.test.cjs
+?? tests/config.test.cjs
+?? tests/fixtures/braces-upstream.json
+?? tests/fixtures/ui-content-sha256.json
+?? tests/package-prisma-resources.test.cjs
+?? tests/preload-listeners.test.cjs
+?? tests/preserve-legacy-dev-db.test.cjs
+?? tests/requirements-keygen.txt
+?? tests/secret-scan-policy.test.cjs
+?? vendor/

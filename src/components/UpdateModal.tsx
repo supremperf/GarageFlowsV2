@@ -30,6 +30,28 @@ interface UpdateInfo {
   fileName?: string | null
   mandatory?: boolean
   minVersion?: string | null
+  /**
+   * Manifeste SIGNÉ (Ed25519) publié par le serveur de mise à jour.
+   *
+   * `app:install-update` le REFUSE absent dès qu'une clé de vérification est
+   * embarquée (`updateVerify.signingConfigured()`), et c'est bien lui qui fait
+   * autorité : les champs signés (URL, sha256, taille, version) écrasent toute
+   * valeur non signée. Il était absent de ce type, donc jamais transporté
+   * jusqu'à `install()` : dans la configuration SÛRE — celle où une clé est
+   * embarquée — chaque tentative de mise à jour depuis l'application était
+   * refusée avec « Mise à jour non signée » (GF31-AUD-013).
+   *
+   * Forme opaque côté rendu : seul le processus principal le valide.
+   */
+  manifest?: unknown
+  /**
+   * Faux quand la source de mise à jour ne fournit AUCUN manifeste alors qu'une
+   * clé de vérification est embarquée — deux des trois sources étaient dans ce
+   * cas (publication locale par l'administrateur, repli GitHub). L'écran
+   * proposait alors un bouton dont l'échec était certain (GF31-AUD-042).
+   */
+  installable?: boolean
+  unsignedReason?: string | null
 }
 
 function fmtSize(bytes?: number | null): string | null {
@@ -90,6 +112,14 @@ export default function UpdateModal() {
       if (info?.downloadUrl) window.open(info.downloadUrl, '_blank')
       return
     }
+    // Sans manifeste signé, le processus principal refusera : on ouvre le
+    // téléchargement et on explique, au lieu de lancer une opération vouée à
+    // l'échec (GF31-AUD-042).
+    if (info.installable === false) {
+      window.open(info.downloadUrl, '_blank')
+      setError(info.unsignedReason ?? 'Mise à jour non signée : installation manuelle requise.')
+      return
+    }
     setInstalling(true)
     setProgress(0)
     setError(null)
@@ -99,8 +129,25 @@ export default function UpdateModal() {
         sha256: info.sha256 ?? undefined,
         fileName: info.fileName ?? undefined,
         version: info.latestVersion,
+        // Transmis TEL QUEL : c'est l'autorité de confiance de l'installation,
+        // vérifiée par le processus principal (GF31-AUD-013).
+        manifest: info.manifest ?? undefined,
       })
       if (res && res.ok === false) throw new Error(res.reason || 'Échec de la mise à jour')
+      // Le téléchargement a pu ÉCHOUER tout en rendant `ok: true` : le processus
+      // principal ouvre alors le navigateur en repli (`method: 'browser-fallback'`).
+      // Sans ce cas, la modale restait indéfiniment sur « Téléchargement… » —
+      // non fermable pour une mise à jour obligatoire — et recouvrait
+      // l'application alors que rien ne s'installait.
+      if (res && (res as { method?: string }).method === 'browser-fallback') {
+        setError(
+          'Le téléchargement automatique a échoué. La page de téléchargement a été ouverte ' +
+          'dans votre navigateur : installez la mise à jour manuellement.',
+        )
+        setInstalling(false)
+        setProgress(null)
+        return
+      }
       // Succès : l'installateur est lancé, l'app va se fermer (données conservées).
     } catch (e: any) {
       setError(e?.message ?? 'Échec du téléchargement de la mise à jour')
@@ -127,7 +174,7 @@ export default function UpdateModal() {
         className="w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-[#0b1220] shadow-2xl"
         style={{ boxShadow: '0 25px 80px -20px rgba(37,99,235,0.55)' }}
       >
-        {/* En-tête aux couleurs GarageFlow */}
+        {/* En-tête aux couleurs GarageFlows */}
         <div
           className="relative flex items-center gap-4 px-6 py-5"
           style={{ background: 'linear-gradient(135deg, rgba(37,99,235,0.22), rgba(14,165,233,0.10))' }}
@@ -143,7 +190,7 @@ export default function UpdateModal() {
               </p>
             </div>
             <h2 id="gf-update-title" className="mt-0.5 truncate text-lg font-bold text-white">
-              {info.title || `GarageFlow ${info.latestVersion}`}
+              {info.title || `GarageFlows ${info.latestVersion}`}
             </h2>
           </div>
         </div>
@@ -239,7 +286,7 @@ export default function UpdateModal() {
 
           {info.mandatory && !installing && (
             <p className="text-center text-[11px] text-amber-400/80">
-              Cette mise à jour est obligatoire pour continuer à utiliser GarageFlow.
+              Cette mise à jour est obligatoire pour continuer à utiliser GarageFlows.
             </p>
           )}
         </div>

@@ -1,0 +1,5 @@
+
+> garageflow@1.1.0 env:doc
+> node scripts/generate-env-doc.mjs
+
+ENVIRONMENT-VARIABLES.md généré : 120 variables, 8 alias interdits, 48 variables plateforme.

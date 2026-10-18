@@ -4,6 +4,14 @@ out/
 build/
 
 # Dependencies
+# Les deux formes sont nécessaires. `node_modules/` (barre finale) ne
+# correspond QU'À un répertoire : dans un clone où `node_modules` est un LIEN
+# SYMBOLIQUE vers l'installation partagée du poste, git ne l'ignore pas et le
+# voit comme un fichier non suivi. `git stash -u` et `git clean -fd`
+# SUPPRIMENT alors le lien (vérifié), ce qui casse l'installation partagée et
+# fait échouer build et tests jusqu'à un `npm ci`. La forme sans barre couvre
+# aussi bien le lien que le répertoire.
+node_modules
 node_modules/
 
 # Env
@@ -14,6 +22,9 @@ node_modules/
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Répertoires de sonde jetables (reproduction locale d'un défaut, jamais livrés)
+.tmp-*/
 
 # Clients Prisma générés (desktop → node_modules, serveur → src/generated)
 src/generated/
@@ -49,6 +60,12 @@ keys/*.json
 keys/licenses_db.json
 keys/server_config.json
 
+# État d'une rotation interrompue APRÈS mutation de Vercel. Propre au poste et à
+# l'incident en cours : le versionner ferait refuser la rotation sur toutes les
+# machines du dépôt, longtemps après la résolution. Voir
+# docs/ROTATION-INCIDENT-2026-08-16.md.
+rotation.lock
+
 # Generated icons (keep SVG source, not binaries)
 # icon.ico
 # icon.png
@@ -66,3 +83,84 @@ gf_update.json
 # Captures E2E générées localement (livrées séparément, pas versionnées)
 e2e/shots/
 playwright-report/
+
+# Session E2E ouverte par e2e/global-setup.ts : contient des COOKIES RÉELS
+# (session applicative + licence). Régénérée automatiquement, jamais versionnée.
+e2e/.auth/
+
+# Sorties des scripts de configuration/rotation — peuvent contenir des secrets en clair
+GarageFlow-configuration/
+API générées/
+*.pfx
+*.p12
+test-results/
+
+# Vérification (V13.1) : baseline.json est SUIVI (métadonnées canoniques) ;
+# le rapport brut vitest est un artefact local volumineux, non suivi.
+artifacts/verification/test-results.json
+
+# Lien de projet Vercel : créé par `vercel link`, propre à la machine.
+# Non suivi pour qu'un déploiement local ne réécrive pas la cible de tous.
+.vercel/
+
+# Bases SQLite jetables créées par les tests d'intégration à la racine.
+# Sans cette règle, elles restent dans `git status` après chaque `npm test` et
+# un `git add -A` les committerait — 20 bases de test dans le dépôt.
+.tmp-*.db
+.tmp-*.db-journal
+
+# Build artifact — generated at release time (scripts/generate-release-manifest.mjs), binds to HEAD
+release-manifest.json
+
+# Release artifacts (build output — not committed)
+dist-artifact/
+
+.vercel
+.env*
+
+# Sauvegardes locales laissées par les scripts de rotation/configuration
+# (`*.before-<version>-<horodatage>`), et copies manuelles.
+#
+# Ce n'est PAS qu'une question de propreté du dépôt : `package.json` déclare
+# `files: ["electron/**/*"]` pour electron-builder — un joker SANS filtre
+# d'extension. Une sauvegarde déposée dans `electron/` part donc dans
+# `app.asar`, et c'est arrivé : `electron/main.js.before-v171-20260813-164006`
+# a été retrouvée dans l'installateur 1.1.0 livré (GF-DUR-034). Le `files` porte
+# désormais des exclusions explicites, et un garde les vérifie.
+*.before-*
+*.bak
+*.backup
+*.orig
+*.rej
+
+.vercel
+.env*
+
+# Configuration complète : licences d’administration bootstrap (jetons réels)
+keys/bootstrap-*
+
+# Bases desktop personnalisées : données utilisateur, jamais dans les sources.
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+!prisma/garageflow-template.db
+
+# All environment variants may contain credentials. Examples stay value-free.
+.env.*
+!.env.example
+!.env.*.example
+
+# Environnement Python isolé pour les tests (aucune dépendance vendue).
+.venv/
+
+# Dated, non-secret audit evidence required by PHASE 6 (not application logs).
+!docs/audit/2026-10-17/phase6/*.log
+
+# Client installer and non-secret delivery/test receipts (generated, never Git).
+/release/
+/artifacts/windows-delivery/

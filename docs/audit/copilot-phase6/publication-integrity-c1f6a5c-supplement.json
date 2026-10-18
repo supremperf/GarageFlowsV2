@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-15T14:53:19.175480+00:00",
+  "supplements": "publication-integrity-c1f6a5c.json",
+  "doesNotReplaceInitialManifest": true,
+  "files": [
+    {
+      "sha256": "56ed7fbd5865e2cd7954a9fc03026c8d52cb72b27e2f3fcc781a9503688faf24",
+      "bytes": 193255,
+      "path": "docs/audit/copilot-phase6/P29.json"
+    },
+    {
+      "sha256": "7aeedf19c5412136bbd048c758ec7e9bb3a32a6f2b20fb1fe0abdef32053895b",
+      "bytes": 488,
+      "path": "docs/audit/copilot-phase6/P29.txt"
+    },
+    {
+      "sha256": "f57c5028491e8d793c1758d30e00748d005a0b5e663a4f1144af8a196350e7c3",
+      "bytes": 1708,
+      "path": "docs/audit/copilot-phase6/PUBLICATION-NOTE.md"
+    }
+  ],
+  "limits": "Integrity metadata only. P29 is a documented formatting failure, not a passing gate."
+}

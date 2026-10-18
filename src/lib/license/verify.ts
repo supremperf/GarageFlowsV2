@@ -17,13 +17,17 @@
  */
 
 import crypto from 'crypto'
+import { LicenseConfigurationError } from './failures'
 import { getPublicKeyPem } from './public-key'
 
 // Re-export so callers only need one import point
 function _pubKey(): string { return getPublicKeyPem() }
 
 // ─── License types ────────────────────────────────────────────────────────────
-export type LicenseType = 'trial' | 'premium' | 'enterprise' | 'admin'
+// 'mechanic' : licence SECONDAIRE réservée à un mécanicien, obligatoirement
+// rattachée à une licence Garage parente (champ plid signé). Elle ne donne
+// JAMAIS accès à l'application garage ni aux fonctions administratives.
+export type LicenseType = 'trial' | 'premium' | 'enterprise' | 'admin' | 'mechanic'
 
 export interface LicensePayload {
   lid:    string       // Unique license UUID
@@ -35,14 +39,24 @@ export interface LicensePayload {
   hwid?:  string       // Optional hardware fingerprint (SHA-256 hex)
   wm:     string       // Watermark — opaque base64url blob
   ver:    string       // Schema version
+  plid?:  string       // MECHANIC uniquement : lid de la licence Garage parente (OBLIGATOIRE)
+  mn?:    string       // MECHANIC uniquement : nom du mécanicien suggéré (optionnel)
 }
 
 export interface VerifyResult {
-  valid:    boolean
-  payload?: LicensePayload
-  isAdmin?: boolean
-  reason?:  string
+  valid:      boolean
+  payload?:   LicensePayload
+  isAdmin?:   boolean
+  isMechanic?: boolean
+  reason?:    string
 }
+
+/** Internal support stages. Never include token/payload/key values in diagnostics. */
+export type LicenseVerificationFailureCode =
+  | 'FORMAT_INVALID' | 'SEGMENTS_INVALID' | 'HEADER_INVALID' | 'HEADER_UNSUPPORTED'
+  | 'TRUST_ANCHOR_INVALID' | 'SIGNATURE_ERROR' | 'SIGNATURE_INVALID'
+  | 'PAYLOAD_INVALID' | 'PAYLOAD_FIELDS_INVALID' | 'TYPE_UNSUPPORTED'
+  | 'EXPIRED' | 'VERSION_UNSUPPORTED' | 'MECHANIC_PARENT_REQUIRED'
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 function _b64urlDecode(s: string): Buffer {
@@ -79,7 +93,7 @@ function _assertPayload(p: Record<string, unknown>): boolean {
   )
 }
 
-const _VALID_TYPES = new Set<string>(['trial', 'premium', 'enterprise', 'admin'])
+const _VALID_TYPES = new Set<string>(['trial', 'premium', 'enterprise', 'admin', 'mechanic'])
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
@@ -91,17 +105,27 @@ const _VALID_TYPES = new Set<string>(['trial', 'premium', 'enterprise', 'admin']
  *  - payload: LicensePayload JSON
  *  - sig:     DER-encoded ECDSA-SHA256 signature over "<header>.<payload>"
  *
- * Returns { valid: false, reason } on any failure; never throws.
+ * Returns { valid: false, reason } for invalid tokens; throws LicenseConfigurationError for an unusable trust anchor.
  */
-export function verifyLicenseToken(token: string): VerifyResult {
+export function verifyLicenseToken(
+  token: string,
+  onFailure?: (code: LicenseVerificationFailureCode) => void,
+): VerifyResult {
+  const reject = (code: LicenseVerificationFailureCode, reason: string): VerifyResult => {
+    onFailure?.(code)
+    // Diagnostics stay in the trusted caller, not in production HTTP/UI reasons.
+    const sensitiveStage = !['EXPIRED', 'TYPE_UNSUPPORTED', 'MECHANIC_PARENT_REQUIRED'].includes(code)
+    return { valid: false, reason: process.env.NODE_ENV === 'production' && sensitiveStage
+      ? 'Licence invalide ou modifiée' : reason }
+  }
   // ── Structure check ─────────────────────────────────────────────────────
   if (typeof token !== 'string' || !token.startsWith('GF2.')) {
-    return { valid: false, reason: 'Format de licence invalide' }
+    return reject('FORMAT_INVALID', 'Format de licence invalide')
   }
 
   const parts = token.split('.')
   if (parts.length !== 4) {
-    return { valid: false, reason: 'Token malformé (doit contenir 4 segments)' }
+    return reject('SEGMENTS_INVALID', 'Token malformé (doit contenir 4 segments)')
   }
 
   const [, headerB64, payloadB64, sigB64] = parts
@@ -109,16 +133,21 @@ export function verifyLicenseToken(token: string): VerifyResult {
   // ── Header check ────────────────────────────────────────────────────────
   const headerBuf = _safeJson(_b64urlDecode(headerB64))
   if (!headerBuf || typeof headerBuf !== 'object') {
-    return { valid: false, reason: 'En-tête de licence corrompu' }
+    return reject('HEADER_INVALID', 'En-tête de licence corrompu')
   }
   if (!_assertHeader(headerBuf as Record<string, unknown>)) {
-    return { valid: false, reason: 'Type de licence non reconnu (mauvais en-tête)' }
+    return reject('HEADER_UNSUPPORTED', 'Type de licence non reconnu (mauvais en-tête)')
   }
 
-  // ── Detect placeholder key ───────────────────────────────────────────────
-  const pubKey = _pubKey()
-  if (pubKey.includes('REPLACE_WITH_YOUR_PUBLIC_KEY')) {
-    return { valid: false, reason: '[CONFIG] Clé publique non configurée — lancez: python scripts/keygen.py --init' }
+  // Une clé mal configurée n'est PAS une signature de licence invalide.
+  let verificationKey: crypto.KeyObject
+  try {
+    verificationKey = crypto.createPublicKey(_pubKey())
+    if (verificationKey.asymmetricKeyType !== 'ec' ||
+        verificationKey.asymmetricKeyDetails?.namedCurve !== 'prime256v1') throw new Error()
+  } catch {
+    onFailure?.('TRUST_ANCHOR_INVALID')
+    throw new LicenseConfigurationError()
   }
 
   // ── Cryptographic signature verification (ECDSA-SHA256, DER) ────────────
@@ -131,25 +160,25 @@ export function verifyLicenseToken(token: string): VerifyResult {
     const verifier = crypto.createVerify('SHA256')
     verifier.update(signingInput)
     // Node.js reads DER SEQUENCE by default — matches Python cryptography output
-    sigValid = verifier.verify({ key: pubKey, format: 'pem' }, sig)
+    sigValid = verifier.verify(verificationKey, sig)
   } catch {
-    return { valid: false, reason: 'Erreur de vérification cryptographique' }
+    return reject('SIGNATURE_ERROR', 'Erreur de vérification cryptographique')
   }
 
   if (!sigValid) {
     // Intentionally vague — don't reveal which check failed
-    return { valid: false, reason: 'Licence invalide ou modifiée' }
+    return reject('SIGNATURE_INVALID', 'Licence invalide ou modifiée')
   }
 
   // ── Payload parse ────────────────────────────────────────────────────────
   const rawPayload = _safeJson(_b64urlDecode(payloadB64))
   if (!rawPayload || typeof rawPayload !== 'object') {
-    return { valid: false, reason: 'Données de licence corrompues' }
+    return reject('PAYLOAD_INVALID', 'Données de licence corrompues')
   }
 
   const p = rawPayload as Record<string, unknown>
   if (!_assertPayload(p)) {
-    return { valid: false, reason: 'Champs de licence manquants ou invalides' }
+    return reject('PAYLOAD_FIELDS_INVALID', 'Champs de licence manquants ou invalides')
   }
 
   // Assertion passed — safe to treat as LicensePayload for remaining checks
@@ -158,43 +187,87 @@ export function verifyLicenseToken(token: string): VerifyResult {
   // ── Type check ───────────────────────────────────────────────────────────
   // Message fixe : ne jamais refléter le contenu du payload dans la réponse.
   if (!_VALID_TYPES.has(lic.typ)) {
-    return { valid: false, reason: 'Type de licence inconnu' }
+    return reject('TYPE_UNSUPPORTED', 'Type de licence inconnu')
   }
 
   // ── Expiry check (redundant — also in DB layer for revocation) ────────────
   const nowSec = Math.floor(Date.now() / 1000)
   if (lic.exp < nowSec) {
     const expDate = new Date(lic.exp * 1000).toLocaleDateString('fr-FR')
-    return { valid: false, reason: `Licence expirée le ${expDate}` }
+    return reject('EXPIRED', `Licence expirée le ${expDate}`)
   }
 
   // ── Version sanity ────────────────────────────────────────────────────────
   if (!lic.ver.startsWith('2')) {
-    return { valid: false, reason: 'Version de licence non supportée' }
+    return reject('VERSION_UNSUPPORTED', 'Version de licence non supportée')
+  }
+
+  // ── Règles MECHANIC ───────────────────────────────────────────────────────
+  // Une clé mécanicien DOIT référencer sa licence Garage parente (plid signé) ;
+  // sans parent, la clé est invalide — elle ne peut exister « seule ».
+  // Une clé mécanicien n'est JAMAIS admin, quel que soit le reste du payload.
+  const isMechanic = lic.typ === 'mechanic'
+  if (isMechanic && (typeof lic.plid !== 'string' || lic.plid.length === 0)) {
+    return reject('MECHANIC_PARENT_REQUIRED', 'Licence mécanicien invalide')
   }
 
   return {
-    valid:   true,
-    payload: lic,
-    isAdmin: lic.typ === 'admin',
+    valid:      true,
+    payload:    lic,
+    isAdmin:    !isMechanic && lic.typ === 'admin',
+    isMechanic,
   }
 }
 
-/** Empreinte matérielle attendue : digest SHA-256 en hexadécimal (64 caractères). */
-const HWID_RE = /^[0-9a-f]{64}$/
+/**
+ * Deux formats d'empreinte matérielle sont acceptés, tous deux stricts :
+ *  - v0 (legacy)   : digest SHA-256 hex de 64 caractères — `sha256(join("||GF2-HWID-SALT||", …))`
+ *                    reconstruit historiquement par Electron ET le keygen (cf. AUD-036).
+ *  - v1 (canonique): `HWID1-<64 hex>` — empreinte produite par UNE SEULE autorité
+ *                    (le client) via l'algorithme canonique `hwid-v1.ts` puis LIÉE
+ *                    telle quelle (le keygen ne reconstruit plus). Après
+ *                    normalisation (minuscules) le préfixe devient `hwid1-`.
+ *
+ * Les deux formats coexistent : une licence v0 reste valide, une nouvelle
+ * activation peut être v1. Ils ne peuvent JAMAIS se confondre : longueurs
+ * différentes (64 vs 70) → `verifyHwid` renvoie false entre versions.
+ */
+const HWID_V0_RE = /^[0-9a-f]{64}$/
+const HWID_V1_RE = /^hwid1-[0-9a-f]{64}$/
 
 /**
  * Normalise un HWID pour une comparaison stricte : retire les espaces de bord
- * et met en minuscules (un digest hex est insensible à la casse). Ne modifie
- * jamais la valeur au-delà de la casse/espaces (aucune tolérance sémantique).
+ * et met en minuscules (un digest hex est insensible à la casse ; le préfixe
+ * `HWID1-` d'une empreinte v1 devient `hwid1-`, appliqué identiquement des deux
+ * côtés d'une comparaison). Ne modifie jamais la valeur au-delà de la
+ * casse/espaces (aucune tolérance sémantique).
  */
 export function normalizeHwid(hwid: string | null | undefined): string {
   return String(hwid ?? '').trim().toLowerCase()
 }
 
-/** Le HWID est-il bien formé (SHA-256 hex de 64 caractères) après normalisation ? */
+/**
+ * Le HWID est-il bien formé après normalisation ? Accepte v0 (64 hex) OU v1
+ * (`hwid1-<64 hex>`). Tout autre motif (mauvaise longueur, non-hexadécimal,
+ * autre préfixe) est rejeté.
+ */
 export function isValidHwidFormat(hwid: string | null | undefined): boolean {
-  return HWID_RE.test(normalizeHwid(hwid))
+  const n = normalizeHwid(hwid)
+  return HWID_V0_RE.test(n) || HWID_V1_RE.test(n)
+}
+
+/**
+ * Version d'empreinte détectée : 1 pour `HWID1-…`, 0 pour un digest hex nu,
+ * `null` si le format est invalide. Utilitaire de diagnostic/branchement — la
+ * comparaison stricte ne dépend PAS de ce résultat (elle compare les chaînes
+ * normalisées telles quelles, ce qui exclut naturellement toute confusion de
+ * version par différence de longueur).
+ */
+export function hwidVersionOf(hwid: string | null | undefined): 0 | 1 | null {
+  const n = normalizeHwid(hwid)
+  if (HWID_V1_RE.test(n)) return 1
+  if (HWID_V0_RE.test(n)) return 0
+  return null
 }
 
 /**
@@ -223,6 +296,25 @@ export function verifyHwid(storedHwid: string, currentHwid: string): boolean {
   const bb = Buffer.from(b, 'utf8')
   if (ba.length !== bb.length) return false
   return crypto.timingSafeEqual(ba, bb)
+}
+
+/**
+ * La liaison matériel est-elle satisfaite ?
+ *  - aucune liaison enregistrée (`storedHwid` absent) → satisfaite : la
+ *    licence n'est tout simplement pas liée à un matériel ;
+ *  - liaison enregistrée → le HWID client doit être présent, bien formé,
+ *    et égal au HWID enregistré (verifyHwid, temps constant).
+ * Centraliser la règle évite que chaque appelant réinterprète la présence
+ * d'une valeur comme un droit de passage : seul le RÉSULTAT de cette
+ * vérification autorise la suite.
+ */
+export function hwidBindingSatisfied(
+  storedHwid: string | null | undefined,
+  currentHwid: string | null | undefined,
+): boolean {
+  if (storedHwid == null) return true
+  if (!currentHwid || !isValidHwidFormat(currentHwid)) return false
+  return verifyHwid(storedHwid, currentHwid)
 }
 
 /**

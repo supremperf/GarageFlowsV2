@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-14T16:34:04.371882+00:00",
+  "runId": "38589332331",
+  "headSha": "64619b6270d7923167130246c061ad5773e3f29a",
+  "jobId": 115939685204,
+  "argv": [
+    "gh",
+    "api",
+    "repos/supremperf/GarageFlowsV2/check-runs/115939685204/annotations?per_page=100"
+  ],
+  "exitCode": 0,
+  "annotations": [
+    {
+      "path": "src/integration/invoice-authz.test.ts",
+      "start_line": 170,
+      "end_line": 170,
+      "safeMarkers": [
+        "AssertionError"
+      ],
+      "rawMessageWithheld": true
+    }
+  ],
+  "limitation": "Safe annotation markers do not establish backend/root cause. Full expurgated test/HTTP response logs still required; latest 4989 check success does not retroactively repair this run."
+}

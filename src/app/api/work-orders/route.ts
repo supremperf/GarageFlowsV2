@@ -3,37 +3,63 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { assertRelations } from '@/lib/tenant'
+import { parseWorksJson, parsePartsJson, serializeWorksJsonV2, serializePartsJsonV2, workOrderTotalHtCents, workLinesToEuros, partLinesToEuros } from '@/lib/money-json'
+import { workOrderToEuros } from '@/lib/money-db'
+import { taxCentsFromBasis } from '@/lib/money'
 
-interface WorkLine {
-  description: string
-  durationMin: number
-  unitPrice: number
-  laborOpId?: string
-}
 
-interface PartLine {
-  name: string
-  reference?: string
-  qty: number
-  unitPrice: number
-}
-
-/** Returns null when worksJson/partsJson are not valid JSON arrays. */
-function computeTotals(worksJson: string, partsJson: string, taxRate: number): { totalHT: number; totalTTC: number } | null {
-  let works: WorkLine[]
-  let parts: PartLine[]
+/**
+ * Normalise l'entrée client (tableaux euros v1 OU objet v2 OU chaîne JSON) en
+ * lignes EXACTES via lib/money-json (validation STRICTE — NaN/Infinity/formes
+ * inattendues rejetées), calcule les totaux en centimes et produit les chaînes
+ * V2 persistées (AUCUN flottant monétaire stocké). Renvoie null si invalide.
+ */
+function normalizeWorkOrderJson(
+  worksInput: unknown,
+  partsInput: unknown,
+  taxRate: number,
+): {
+  worksJson: string
+  partsJson: string
+  totalHtCents: number
+  totalTtcCents: number
+} | null {
   try {
-    works = JSON.parse(worksJson)
-    parts = JSON.parse(partsJson)
+    const worksRaw = typeof worksInput === 'string' ? worksInput : JSON.stringify(worksInput ?? [])
+    const partsRaw = typeof partsInput === 'string' ? partsInput : JSON.stringify(partsInput ?? [])
+    const works = parseWorksJson(worksRaw).lines
+    const parts = parsePartsJson(partsRaw).lines
+    const totalHtCents = workOrderTotalHtCents(works, parts)
+    const rate = Number(taxRate) || 0
+    // TVA via la règle centrale (entiers exacts, arrondi fiscal unique) — la
+    // formule flottante Math.round(ht*rate/100) dérivait d'un centime sur les
+    // taux non standard (ex. 0,7 %) et sur les HT négatifs (avoirs).
+    const totalTtcCents = totalHtCents + taxCentsFromBasis(totalHtCents, rate)
+    return {
+      worksJson: serializeWorksJsonV2(works),
+      partsJson: serializePartsJsonV2(parts),
+      totalHtCents,
+      totalTtcCents,
+    }
   } catch {
     return null
   }
-  if (!Array.isArray(works) || !Array.isArray(parts)) return null
-  const worksHT = works.reduce((s, w) => s + (Number(w.unitPrice) || 0), 0)
-  const partsHT = parts.reduce((s, p) => s + (Number(p.qty) || 0) * (Number(p.unitPrice) || 0), 0)
-  const totalHT = Math.round((worksHT + partsHT) * 100) / 100
-  const totalTTC = Math.round(totalHT * (1 + taxRate / 100) * 100) / 100
-  return { totalHT, totalTTC }
+}
+
+
+/** Vue API d'un OR : euros dérivés + lignes euros parsées (v1 signés / v2). */
+function workOrderView(wo: Parameters<typeof workOrderToEuros>[0] & { worksJson: string; partsJson: string }) {
+  const base = workOrderToEuros(wo)
+  try {
+    return {
+      ...base,
+      works: workLinesToEuros(parseWorksJson(wo.worksJson).lines),
+      parts: partLinesToEuros(parsePartsJson(wo.partsJson).lines),
+    }
+  } catch {
+    // Ligne au JSON illisible : on n'écrase rien, on signale (jamais de crash de liste).
+    return { ...base, works: [], parts: [], jsonError: true }
+  }
 }
 
 // GET /api/work-orders
@@ -56,7 +82,7 @@ export const GET = withAuth(async (req) => {
     orderBy: { createdAt: 'desc' },
   })
 
-  return NextResponse.json(orders)
+  return NextResponse.json(orders.map(workOrderView)) // euros dérivés + lignes euros
 })
 
 // POST /api/work-orders
@@ -75,19 +101,13 @@ export const POST = withAuth(async (req) => {
   ])
   if (relErr) return relErr
 
-  const worksJson = typeof body.worksJson === 'string'
-    ? body.worksJson
-    : JSON.stringify(body.worksJson ?? [])
-  const partsJson = typeof body.partsJson === 'string'
-    ? body.partsJson
-    : JSON.stringify(body.partsJson ?? [])
   const taxRate = body.taxRate ?? 20
-
-  const totals = computeTotals(worksJson, partsJson, taxRate)
-  if (!totals) {
+  // Validation stricte + conversion v1→exact + sérialisation V2 (entiers).
+  const normalized = normalizeWorkOrderJson(body.worksJson, body.partsJson, taxRate)
+  if (!normalized) {
     return NextResponse.json({ error: 'worksJson/partsJson invalides' }, { status: 400 })
   }
-  const { totalHT, totalTTC } = totals
+  const { worksJson, partsJson, totalHtCents, totalTtcCents } = normalized
 
   // Validate optional foreign keys belong to THIS garage before referencing them.
   if (body.jobId) {
@@ -129,8 +149,9 @@ export const POST = withAuth(async (req) => {
           worksJson,
           partsJson,
           taxRate,
-          totalHT,
-          totalTTC,
+          // Centimes entiers = UNIQUE source de vérité (colonnes Float supprimées).
+          totalHtCents,
+          totalTtcCents,
           notes: body.notes ?? null,
           status: 'draft',
         },
@@ -147,5 +168,5 @@ export const POST = withAuth(async (req) => {
     throw e
   }
 
-  return NextResponse.json(workOrder, { status: 201 })
+  return NextResponse.json(workOrderView(workOrder), { status: 201 })
 })

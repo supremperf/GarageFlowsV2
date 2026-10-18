@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-15T13:41:34.556432+00:00",
+  "scope": "Official configured directory scan, not full history; exact location policy + hash-lock tests",
+  "checks": [
+    {
+      "checkId": 116453329080,
+      "headSha": "5c1d082f59f09254452858de77d12aaebc1b3909",
+      "conclusion": "success",
+      "completedAt": "2026-10-15T13:36:54Z",
+      "detailsUrl": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38744173524/job/116453329080",
+      "inventory": [
+        {
+          "schemaVersion": 2,
+          "commit": "f852ec10a9b1daa2acdffd0df9f639b3fc0d7ab4",
+          "total": 0,
+          "page": 1,
+          "pages": 1,
+          "coverageComplete": true,
+          "groups": []
+        }
+      ]
+    },
+    {
+      "checkId": 116453295217,
+      "headSha": "5c1d082f59f09254452858de77d12aaebc1b3909",
+      "conclusion": "success",
+      "completedAt": "2026-10-15T13:36:52Z",
+      "detailsUrl": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38744163741/job/116453295217",
+      "inventory": [
+        {
+          "schemaVersion": 2,
+          "commit": "5c1d082f59f09254452858de77d12aaebc1b3909",
+          "total": 0,
+          "page": 1,
+          "pages": 1,
+          "coverageComplete": true,
+          "groups": []
+        }
+      ]
+    }
+  ]
+}

@@ -61,4 +61,13 @@ describe('rowsToCsv', () => {
     const csv = rowsToCsv(['a', 'b'], [{ a: null, b: undefined }], { header: false })
     expect(csv).toBe(',')
   })
+  it("neutralise l'injection de formule sans casser les nombres (A50)", () => {
+    const csv = rowsToCsv(
+      ['a'],
+      [{ a: '=1+1' }, { a: '@SUM(A1)' }, { a: '-50' }, { a: '=HYPERLINK("http://x")' }],
+      { header: false },
+    )
+    // Formules préfixées d'une apostrophe ; le nombre « -50 » (avoir) reste intact.
+    expect(csv).toBe("'=1+1\r\n'@SUM(A1)\r\n-50\r\n\"'=HYPERLINK(\"\"http://x\"\")\"")
+  })
 })

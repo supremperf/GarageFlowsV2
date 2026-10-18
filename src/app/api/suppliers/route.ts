@@ -1,8 +1,11 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
+import { fromScaled, toScaled, fromCents, lineTotalCentsFromScaled } from '@/lib/money'
+import { serializePoLinesJsonV2, poTotalHtCents, parsePoLinesJson } from '@/lib/money-json'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { enforceRateLimit } from '@/lib/security/rate-limit'
 import { logAudit } from '@/lib/audit'
 import {
@@ -14,6 +17,7 @@ import {
   type PartQuery,
   type SupplierConnector,
 } from '@/lib/suppliers'
+import { MOVEMENT } from '@/lib/stock/invoice-stock'
 
 // Assumed lead time (days) for a garage's habitual supplier when unknown, and the
 // sentinel "available to order" quantity for a catalogue we don't hold stock for.
@@ -69,11 +73,13 @@ function lowStockQueries(parts: PartRow[], targetMultiplier: number): PartQuery[
 }
 
 async function loadParts(garageId: string): Promise<PartRow[]> {
-  return prisma.part.findMany({
+  const rows = await prisma.part.findMany({
     where: { garageId },
-    select: { id: true, name: true, reference: true, supplierName: true, supplierRef: true, unitCost: true, quantity: true, minQuantity: true },
+    select: { id: true, name: true, reference: true, supplierName: true, supplierRef: true, unitCostTenThousandths: true, quantity: true, minQuantity: true },
     take: 5000,
   })
+  // Vue euros du coût exact (dix-millièmes) pour le contrat PartRow existant.
+  return rows.map(({ unitCostTenThousandths, ...r }) => ({ ...r, unitCost: fromScaled(unitCostTenThousandths) }))
 }
 
 // ── GET: preview the automatic reorder plan (read-only, no writes) ─────────────
@@ -121,6 +127,9 @@ interface POLine {
 
 export const POST = withAuth(async (req) => {
   const session = await requireSession()
+  if (!can(session.user.role, 'stock:manage')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const garageId = session.user.garageId
 
   const rl = await enforceRateLimit('api', `suppliers:${garageId}`, { max: 30, windowSec: 60 })
@@ -161,13 +170,19 @@ export const POST = withAuth(async (req) => {
     // collide on the unique (garageId, number) constraint.
     const created: { id: string; number: string; supplierName: string; totalHT: number }[] = []
     for (const order of plan.orders) {
-      const lines: POLine[] = order.lines.map((l) => ({
-        partId: l.partId,
-        partName: l.name,
-        reference: l.reference ?? null,
-        qty: l.quantity,
-        unitCost: l.unitPrice,
-      }))
+      // Lignes en ENTIERS exacts (dix-millièmes) — persistées au format V2.
+      const exactLines = order.lines.map((l) => {
+        const qtyTenThousandths = toScaled(l.quantity)
+        const unitCostTenThousandths = toScaled(l.unitPrice)
+        return {
+          partId: l.partId,
+          partName: l.name,
+          reference: l.reference ?? null,
+          qtyTenThousandths,
+          unitCostTenThousandths,
+          lineTotalCents: lineTotalCentsFromScaled(unitCostTenThousandths, qtyTenThousandths),
+        }
+      })
       const po = await prisma.$transaction(async (tx) => {
         const garage = await tx.garage.update({ where: { id: garageId }, data: { purchaseOrderCounter: { increment: 1 } } })
         const year = new Date().getFullYear()
@@ -177,15 +192,15 @@ export const POST = withAuth(async (req) => {
             number,
             garageId,
             supplierName: order.supplierName,
-            linesJson: JSON.stringify(lines),
-            totalHT: order.totalHT,
+            linesJson: serializePoLinesJsonV2(exactLines),
+            totalHtCents: poTotalHtCents(exactLines), // centimes exacts par ligne
             status: 'draft',
             notes: `Commande auto — ${order.lines.length} référence(s), livraison ~${order.maxLeadTimeDays} j.`,
           },
         })
       })
-      created.push({ id: po.id, number: po.number, supplierName: po.supplierName ?? '—', totalHT: po.totalHT })
-      await logAudit({ action: 'create', entityType: 'PurchaseOrder', entityId: po.id, session, req, details: { auto: true, supplier: po.supplierName, totalHT: po.totalHT } })
+      created.push({ id: po.id, number: po.number, supplierName: po.supplierName ?? '—', totalHT: fromCents(po.totalHtCents) })
+      await logAudit({ action: 'create', entityType: 'PurchaseOrder', entityId: po.id, session, req, details: { auto: true, supplier: po.supplierName, totalHT: fromCents(po.totalHtCents) } })
     }
 
     return NextResponse.json({ created, unfulfillable: plan.unfulfillable }, { status: 201 })
@@ -207,8 +222,23 @@ export const POST = withAuth(async (req) => {
     return NextResponse.json({ confirmationRequired: true, order: { id: order.id, number: order.number, status: from }, to: body.to, effects: t.effects })
   }
 
+  // Parsing STRICT versionné (v1 historique OU v2), comme
+  // `/api/purchase-orders/[id]/receive`. Un `JSON.parse` nu suivi de
+  // `lines.filter(...)` levait un TypeError sur TOUTE commande écrite par
+  // `action: 'create-orders'` ci-dessus — qui persiste un OBJET
+  // `{ schemaVersion: 2, lines: [...] }` et non un tableau : 500 systématique et
+  // stock jamais incrémenté à la réception (GF31-AUD-002).
   let lines: POLine[] = []
-  try { lines = JSON.parse(order.linesJson) } catch { lines = [] }
+  try {
+    lines = parsePoLinesJson(order.linesJson).lines.map((l) => ({
+      partId: l.partId,
+      partName: l.partName,
+      reference: l.reference,
+      // Stock en unités entières — même conversion que la route de réception.
+      qty: Math.round(fromScaled(l.qtyTenThousandths)),
+      unitCost: fromScaled(l.unitCostTenThousandths),
+    }))
+  } catch { lines = [] }
   const stockLines = lines.filter((l): l is POLine & { partId: string } => !!l.partId && l.qty > 0)
 
   const result = await prisma.$transaction(async (tx) => {
@@ -224,15 +254,56 @@ export const POST = withAuth(async (req) => {
     })
     if (claim.count === 0) return { raced: true }
 
+    // ── Les mouvements fournisseur sont journalisés (GF-037) ─────────────────
+    // Réception et retour sont les deux ENTRÉES/SORTIES fournisseur du garage,
+    // et n'écrivaient rien dans `StockMovement`. Le journal ne montrait donc
+    // que les ventes : un inventaire qui ne tombe pas juste n'avait aucune
+    // entrée à confronter, alors que le schéma pose le stock comme
+    // reconstituable à partir de ce journal.
+    const journaliser = (partId: string, delta: number) =>
+      tx.stockMovement.create({
+        data: {
+          garageId, partId, type: MOVEMENT.ADJUST, quantityDelta: delta,
+          reason: `Commande fournisseur ${order.number} — ${from} → ${body.to}`,
+        },
+      })
+
     if (t.effects.incrementStock) {
       for (const l of stockLines) {
         const part = await tx.part.findFirst({ where: { id: l.partId, garageId }, select: { id: true } })
-        if (part) await tx.part.update({ where: { id: l.partId }, data: { quantity: { increment: l.qty } } })
+        if (part) {
+          await tx.part.update({ where: { id: l.partId }, data: { quantity: { increment: l.qty } } })
+          await journaliser(l.partId, l.qty)
+        }
       }
     } else if (t.effects.decrementStock) {
       for (const l of stockLines) {
-        const part = await tx.part.findFirst({ where: { id: l.partId, garageId }, select: { id: true, quantity: true } })
-        if (part) await tx.part.update({ where: { id: l.partId }, data: { quantity: Math.max(0, part.quantity - l.qty) } })
+        // Décrément ATOMIQUE (comme l'incrément ci-dessus) : updateMany conditionnel
+        // sur un stock suffisant → { decrement } — évite la course lecture-modif-écriture
+        // (lost update) qui, sur PostgreSQL multi-instance, écrasait un incrément concurrent.
+        const dec = await tx.part.updateMany({
+          where: { id: l.partId, garageId, quantity: { gte: l.qty } },
+          data: { quantity: { decrement: l.qty } },
+        })
+        if (dec.count === 1) {
+          await journaliser(l.partId, -l.qty)
+          continue
+        }
+        // Stock insuffisant (donnée incohérente) : on plafonne à 0 de façon atomique
+        // (condition quantity < qty → set 0), sans jamais passer sous zéro.
+        //
+        // Le mouvement journalisé est alors celui RÉELLEMENT appliqué — la
+        // quantité qui restait — et non celui demandé : le journal doit décrire
+        // le stock, pas l'intention.
+        const avant = await tx.part.findFirst({
+          where: { id: l.partId, garageId }, select: { quantity: true },
+        })
+        if (!avant) continue
+        await tx.part.updateMany({
+          where: { id: l.partId, garageId, quantity: { lt: l.qty } },
+          data: { quantity: 0 },
+        })
+        if (avant.quantity > 0) await journaliser(l.partId, -avant.quantity)
       }
     }
     return { raced: false }

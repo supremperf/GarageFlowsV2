@@ -1,25 +1,39 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { useTranslation, type LangCode } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { X, Building2, Globe, Save, Users, Palette, Zap, Mail, RefreshCw } from 'lucide-react'
+import { X, Building2, Globe, Save, Users, Palette, Zap, Mail, RefreshCw, KeyRound, ReceiptText, UserCog, Power } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { CompanyTab }   from './settings/CompanyTab'
 import { MechanicsTab, MECHANIC_COLORS } from './settings/MechanicsTab'
+import { MechanicAccessTab } from './settings/MechanicAccessTab'
+import { TeamTab } from './settings/TeamTab'
+import { EInvoicingTab } from './settings/EInvoicingTab'
 import { ThemeTab }     from './settings/ThemeTab'
 import { LanguageTab }  from './settings/LanguageTab'
 import { FeaturesTab }  from './settings/FeaturesTab'
 import { EmailTab }     from './settings/EmailTab'
 import { UpdatesTab }   from './settings/UpdatesTab'
+import { SystemeTab }   from './settings/SystemeTab'
 import type { GarageSettings, MechanicRecord } from './settings/types'
+import { nombreSaisi, entierSaisi } from '@/lib/settings/saisie-numerique'
 
 interface Props { onClose: () => void }
 
 export default function SettingsModal({ onClose }: Props) {
   const { t, lang, setLang, theme, setTheme } = useTranslation()
-  const [tab, setTab] = useState<'company' | 'mechanics' | 'language' | 'theme' | 'features' | 'email' | 'updates'>('company')
+  const { data: sessionData } = useSession()
+  const role = (sessionData?.user as { role?: string } | undefined)?.role
+  // La gestion des accès mécaniciens est réservée au propriétaire / responsable.
+  const canManageAccess = role === 'OWNER' || role === 'MANAGER'
+  // La CONNEXION à une plateforme agréée relève de `settings:manage`, réservé à
+  // OWNER. L'onglet était proposé au MANAGER, qui n'y trouvait que des 403 :
+  // une fonctionnalité visible et inutilisable (GF31-AUD-063).
+  const canManageSettings = role === 'OWNER'
+  const [tab, setTab] = useState<'company' | 'mechanics' | 'team' | 'access' | 'einvoicing' | 'language' | 'theme' | 'features' | 'email' | 'updates' | 'systeme'>('company')
   const [exporting, setExporting] = useState(false)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -31,6 +45,7 @@ export default function SettingsModal({ onClose }: Props) {
     invoicePrefix: 'FAC', quotePrefix: 'DEV',
     invoiceFooter: '', logoBase64: '', logoPath: '', hourlyRate: '60',
     workshopStartHour: '8', workshopEndHour: '18',
+    workshopStartMinute: '0', workshopEndMinute: '0',
     smsPhone: '',
   })
 
@@ -39,6 +54,7 @@ export default function SettingsModal({ onClose }: Props) {
   const [editingMech, setEditingMech]   = useState<MechanicRecord | null>(null)
   const [newMech, setNewMech]           = useState({ name: '', color: MECHANIC_COLORS[0], specialty: [] as string[] })
   const [showAddForm, setShowAddForm]   = useState(false)
+  const [addingMechanic, setAddingMechanic] = useState(false)
 
   useEffect(() => {
     fetch('/api/garages')
@@ -67,6 +83,8 @@ export default function SettingsModal({ onClose }: Props) {
             hourlyRate: String(data.hourlyRate ?? 60),
             workshopStartHour: String(data.workshopStartHour ?? 8),
             workshopEndHour: String(data.workshopEndHour ?? 18),
+            workshopStartMinute: String(data.workshopStartMinute ?? 0),
+            workshopEndMinute: String(data.workshopEndMinute ?? 0),
             smsPhone: data.smsPhone ?? '',
           })
         }
@@ -77,7 +95,10 @@ export default function SettingsModal({ onClose }: Props) {
   const loadMechanics = useCallback(async () => {
     setMechLoading(true)
     try {
-      const res = await fetch('/api/mechanics')
+      // L'écran de GESTION doit voir les archivés : sans eux, le bouton de
+      // réactivation n'aurait jamais de ligne où s'afficher, et l'archivage
+      // serait une porte à sens unique (GF-040).
+      const res = await fetch('/api/mechanics?includeArchived=1')
       if (res.ok) setMechanics(await res.json())
     } finally {
       setMechLoading(false)
@@ -97,15 +118,29 @@ export default function SettingsModal({ onClose }: Props) {
       const res = await fetch('/api/garages', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        // `|| 60` / `|| 20` ne distinguaient pas « rien saisi » de « zéro
+        // saisi » : un garage en franchise de TVA voyait 20 % réécrits sur son
+        // dos, un atelier qui ne facture pas l'heure voyait 60 €/h. Un champ
+        // illisible n'est plus envoyé du tout — le serveur garde alors sa
+        // valeur, plutôt que d'en recevoir une inventée par l'écran.
         body: JSON.stringify({
           ...s,
-          hourlyRate:        parseFloat(s.hourlyRate) || 60,
-          taxRate:           parseFloat(s.taxRate) || 20,
-          workshopStartHour: parseInt(s.workshopStartHour, 10) || 8,
-          workshopEndHour:   parseInt(s.workshopEndHour,   10) || 18,
+          hourlyRate:        nombreSaisi(s.hourlyRate),
+          taxRate:           nombreSaisi(s.taxRate),
+          workshopStartHour: entierSaisi(s.workshopStartHour),
+          workshopEndHour:   entierSaisi(s.workshopEndHour),
+          workshopStartMinute: entierSaisi(s.workshopStartMinute),
+          workshopEndMinute:   entierSaisi(s.workshopEndMinute),
         }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        // Le refus du serveur porte la raison — tarif hors bornes, fermeture
+        // avant ouverture. La remplacer par « Erreur » laisserait l'utilisateur
+        // sans rien à corriger.
+        const d = await res.json().catch(() => null)
+        toast.error(d?.error ?? t.error)
+        return
+      }
       toast.success(t.success)
     } catch {
       toast.error(t.error)
@@ -115,25 +150,34 @@ export default function SettingsModal({ onClose }: Props) {
   }
 
   async function handleAddMechanic() {
-    if (!newMech.name.trim()) { toast.error('Nom requis'); return }
+    const name = newMech.name.trim()
+    if (!name) { toast.error('Le nom du mécanicien est obligatoire.'); return }
+    if (addingMechanic) return // anti double-clic / double création
+    setAddingMechanic(true)
     try {
+      // Initiales robustes (accents/apostrophes/tirets OK) ; le serveur re-dérive
+      // si vide. Espaces multiples filtrés pour éviter un avatar incohérent.
+      const avatar =
+        name.split(/\s+/).filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2)
+        || name.slice(0, 2).toUpperCase()
       const res = await fetch('/api/mechanics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name:    newMech.name.trim(),
-          color:   newMech.color,
-          specialty: newMech.specialty,
-          avatar:  newMech.name.trim().split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2),
-        }),
+        body: JSON.stringify({ name, color: newMech.color, specialty: newMech.specialty, avatar }),
       })
-      if (!res.ok) throw new Error()
-      toast.success('Mécanicien ajouté')
+      if (!res.ok) {
+        const serverMsg = await res.json().then(d => (d && typeof d.error === 'string' ? d.error : null)).catch(() => null)
+        throw new Error(serverMsg || "Erreur lors de l'ajout")
+      }
+      toast.success('Mécanicien ajouté avec succès')
       setNewMech({ name: '', color: MECHANIC_COLORS[0], specialty: [] })
       setShowAddForm(false)
-      loadMechanics()
-    } catch {
-      toast.error("Erreur lors de l'ajout")
+      loadMechanics() // rafraîchissement immédiat de la liste
+    } catch (e) {
+      // Conserver les données saisies pour permettre un nouvel essai.
+      toast.error(e instanceof Error ? e.message : "Erreur lors de l'ajout")
+    } finally {
+      setAddingMechanic(false)
     }
   }
 
@@ -164,7 +208,11 @@ export default function SettingsModal({ onClose }: Props) {
     if (!confirm(`Supprimer ${name} ? Les interventions planifiées seront annulées.`)) return
     try {
       const res = await fetch(`/api/mechanics/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error()
+      const corps = await res.json().catch(() => ({}))
+      // Le refus « archivez-le plutôt » porte son motif : sans lui, la
+      // suppression échouait sur un message générique et l'utilisateur n'avait
+      // aucune piste (GF-040).
+      if (!res.ok) { toast.error(corps?.error ?? 'Erreur lors de la suppression'); return }
       toast.success('Mécanicien supprimé')
       loadMechanics()
     } catch {
@@ -172,14 +220,53 @@ export default function SettingsModal({ onClose }: Props) {
     }
   }
 
+  /**
+   * ARCHIVAGE — la sortie de secours que le produit annonçait sans l'offrir.
+   *
+   * `DELETE /api/mechanics/:id` refuse en 409 un mécanicien qui porte des
+   * interventions, avec le message « Archivez-le : il sortira du planning en
+   * conservant ses données ». La route `PATCH { archived: true }` existait et
+   * fonctionnait — mais AUCUN écran ne l'appelait : l'utilisateur était renvoyé
+   * vers un bouton inexistant, sans autre issue que d'abandonner (GF-040).
+   */
+  async function basculerArchive(id: string, name: string, archived: boolean) {
+    const question = archived
+      ? `Archiver ${name} ? Il sortira du planning ; ses interventions et son historique sont conservés.`
+      : `Réactiver ${name} ? Il réapparaîtra dans le planning.`
+    if (!confirm(question)) return
+    try {
+      const res = await fetch(`/api/mechanics/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ archived }),
+      })
+      const corps = await res.json().catch(() => ({}))
+      if (!res.ok) { toast.error(corps?.error ?? 'Opération refusée par le serveur.'); return }
+      toast.success(archived ? 'Mécanicien archivé' : 'Mécanicien réactivé')
+      loadMechanics()
+    } catch {
+      toast.error(archived ? 'Erreur lors de l’archivage' : 'Erreur lors de la réactivation')
+    }
+  }
+
   const TABS = [
     { id: 'company'   as const, label: t.companyTab  ?? 'Entreprise',  icon: <Building2  className="w-4 h-4" /> },
     { id: 'mechanics' as const, label: t.mechanics   ?? 'Mécaniciens', icon: <Users      className="w-4 h-4" /> },
+    // Comptes du PERSONNEL (OWNER/MANAGER/RECEPTIONIST) : `/api/users` existait
+    // sans écran, si bien qu'un garage restait à l'unique compte né de son
+    // installation — tout le modèle de rôles protégeait une distinction que
+    // personne ne pouvait créer (GF-DUR-021).
+    ...(canManageAccess ? [{ id: 'team' as const, label: 'Équipe', icon: <UserCog className="w-4 h-4" /> }] : []),
+    ...(canManageAccess ? [{ id: 'access' as const, label: 'Accès mécaniciens', icon: <KeyRound className="w-4 h-4" /> }] : []),
+    ...(canManageSettings ? [{ id: 'einvoicing' as const, label: 'Facturation électronique', icon: <ReceiptText className="w-4 h-4" /> }] : []),
     { id: 'email'     as const, label: t.emailTab    ?? 'Email',       icon: <Mail       className="w-4 h-4" /> },
     { id: 'updates'   as const, label: t.updatesTab  ?? 'Mises à jour',icon: <RefreshCw  className="w-4 h-4" /> },
     { id: 'features'  as const, label: 'Fonctionnalités',              icon: <Zap        className="w-4 h-4" /> },
     { id: 'theme'     as const, label: t.themeTab    ?? 'Thèmes',      icon: <Palette    className="w-4 h-4" /> },
     { id: 'language'  as const, label: t.languageTab ?? 'Langue',      icon: <Globe      className="w-4 h-4" /> },
+    // Réglages du POSTE (démarrage de Windows) : ils n'ont de sens que dans
+    // l'application installée, et l'onglet le dit lui-même hors Electron.
+    { id: 'systeme'   as const, label: 'Système',                      icon: <Power      className="w-4 h-4" /> },
   ]
 
   return (
@@ -190,7 +277,7 @@ export default function SettingsModal({ onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.07]">
           <h2 className="text-lg font-bold text-white">Paramètres</h2>
-          <button onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
+          <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -226,13 +313,21 @@ export default function SettingsModal({ onClose }: Props) {
               setNewMech={setNewMech}
               showAddForm={showAddForm}
               setShowAddForm={setShowAddForm}
+              adding={addingMechanic}
               onAdd={handleAddMechanic}
               onUpdate={handleUpdateMechanic}
               onDelete={handleDeleteMechanic}
+              onArchive={(id, name) => basculerArchive(id, name, true)}
+              onUnarchive={(id, name) => basculerArchive(id, name, false)}
+              onAvatarChanged={loadMechanics}
             />
           )}
+          {tab === 'team' && canManageAccess && <TeamTab />}
+          {tab === 'access' && canManageAccess && <MechanicAccessTab />}
+          {tab === 'einvoicing' && canManageSettings && <EInvoicingTab />}
           {tab === 'email'    && <EmailTab />}
           {tab === 'updates'  && <UpdatesTab />}
+          {tab === 'systeme'  && <SystemeTab />}
           {tab === 'features' && <FeaturesTab />}
           {tab === 'theme' && (
             <ThemeTab

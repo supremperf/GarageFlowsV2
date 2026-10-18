@@ -1,0 +1,107 @@
+{
+  "tests/secret-scan-policy.test.cjs": {
+    "status": "VALIDÉ",
+    "fullFileRead": true,
+    "ranges": [
+      [
+        1,
+        43
+      ]
+    ],
+    "categories": [
+      "secrets",
+      "ci",
+      "tests"
+    ],
+    "notes": "Re-reviewed modified policy in full. Exactly three public OAuth headers plus one frozen prose fingerprint, full hashes checked; precise path/rule/line and prose structure asserted. Mandatory CI command unchanged. Positive and three negative cases executed in owned copies; not a secret scan.",
+    "tests": [
+      "evidence/secret-policy-after.log",
+      "policy-negative-results.json"
+    ]
+  },
+  ".gitleaksignore": {
+    "status": "VALIDÉ",
+    "fullFileRead": true,
+    "ranges": [
+      [
+        1,
+        10
+      ]
+    ],
+    "categories": [
+      "secrets",
+      "policy"
+    ],
+    "notes": "Four exact fingerprints only; source report remains immutable and hash-locked. No global rule or file/path exemption. Full Gitleaks local unavailable; remote f88 failed pre-correction.",
+    "tests": [
+      "evidence/secret-policy-after.log",
+      "gitleaks-triage.jsonl"
+    ]
+  },
+  "src/lib/db.ts": {
+    "status": "PARTIELLEMENT VALIDÉ",
+    "fullFileRead": true,
+    "ranges": [
+      [
+        1,
+        71
+      ]
+    ],
+    "categories": [
+      "database",
+      "secrets",
+      "initialization"
+    ],
+    "notes": "Entire singleton/provider selection, cache and serverPrisma guard read. Creates native Prisma client at import; unit-only consumers import it transitively. Four actual isolated rejections cannot be suppressed. Actual provider parity/loading and persistence remain blocked.",
+    "tests": [
+      "evidence/publication-isolated.log",
+      "evidence/license-devices-isolated.log",
+      "evidence/mechanic-admin-isolated.log",
+      "evidence/audit-v21-isolated.log"
+    ]
+  },
+  "scripts/final-release-gate.mjs": {
+    "status": "PARTIELLEMENT VALIDÉ",
+    "fullFileRead": true,
+    "ranges": [
+      [
+        1,
+        184
+      ]
+    ],
+    "categories": [
+      "ci",
+      "commands",
+      "release",
+      "artifacts"
+    ],
+    "notes": "All current run callsites read, shell commands are repository literals, no CLI command interpolation observed. Uses inherited PATH/environment; runtime supply chain and Windows execution not proven. Optional missing service/build/budget controls are displayed, but a gate0 is NOT a production decision. Not executed because it regenerates baseline/artifacts and cannot validate native prerequisites.",
+    "tests": [
+      "../closure-2026-10-14/sast-triage-final.jsonl#SAST-20261014-0172"
+    ]
+  },
+  "scripts/keygen_ui.py": {
+    "status": "PARTIELLEMENT VALIDÉ",
+    "fullFileRead": false,
+    "ranges": [
+      [
+        275,
+        315
+      ],
+      [
+        875,
+        915
+      ]
+    ],
+    "categories": [
+      "licensing",
+      "gui",
+      "secrets"
+    ],
+    "notes": "Only selected constructor/callback and surrounding HTTP error/display excerpts read; full 1527-line module not reviewed in this phase. Existing two ERROR signals point to fallback lambdas, not explicit returning __init__. Issuer trust, UI thread lifetime and server authorization remain open.",
+    "tests": [
+      "../closure-2026-10-14/sast-triage-final.jsonl#SAST-20261014-0181",
+      "../closure-2026-10-14/sast-triage-final.jsonl#SAST-20261014-0182"
+    ]
+  }
+}

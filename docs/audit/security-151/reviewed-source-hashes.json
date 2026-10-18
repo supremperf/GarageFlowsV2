@@ -1,0 +1,32 @@
+[
+  {
+    "file": "src/app/api/parts/route.ts",
+    "sha256": "af37ea4dd996ac031626a4e985cb53f3fe40bb84f19febbd9b590956470f7f8c",
+    "semanticCompleteness": "specific findings reviewed only; not a full module audit"
+  },
+  {
+    "file": "src/lib/portal/backup-codes.ts",
+    "sha256": "173d92998fa999a2d851a6f78b79e5d0b0300c6d7dc92c150522ab00c3cf9bb1",
+    "semanticCompleteness": "specific findings reviewed only; not a full module audit"
+  },
+  {
+    "file": "scripts/config-core.cjs",
+    "sha256": "fb1fee0a49356b30d02d33dd3431a22efd4a868c24d7c34c7dbed55dc35524de",
+    "semanticCompleteness": "specific findings reviewed only; not a full module audit"
+  },
+  {
+    "file": "scripts/lib/config-credentials.cjs",
+    "sha256": "49cac4de7ad59d20efccbb08fc8e7e2a2bdee1fb9006f744a13542a7e01ecb0e",
+    "semanticCompleteness": "specific findings reviewed only; not a full module audit"
+  },
+  {
+    "file": "src/lib/sync/cloud-client.ts",
+    "sha256": "1e9bbd7e0f02f5290812082085ecbffa89aba913c06db04aa409a98178b7b25d",
+    "semanticCompleteness": "specific findings reviewed only; not a full module audit"
+  },
+  {
+    "file": "scripts/check-github-security.cjs",
+    "sha256": "8ddd18f26b303b52b5f7e44b60bfab8e78168813db62e2ef53bd9f695c64801a",
+    "semanticCompleteness": "specific findings reviewed only; not a full module audit"
+  }
+]

@@ -17,8 +17,9 @@ import { logger } from '@/lib/logger'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params: pendingParams }: { params: Promise<{ id: string }> }
 ) {
+  const params = await pendingParams
   const rl = await enforceRateLimit('admin', clientIpFrom(req))
   if (!rl.ok) return rateLimitResponse(rl)
 

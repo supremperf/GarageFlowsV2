@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-14T17:51:46.509072+00:00",
+  "docsConsistency": {
+    "argv": [
+      "node",
+      "scripts/check-docs-consistency.mjs"
+    ],
+    "exitCode": 0,
+    "proof": "docs-consistency.log"
+  },
+  "fullStagedWhitespace": {
+    "argv": [
+      "git",
+      "diff",
+      "--cached",
+      "--check"
+    ],
+    "exitCode": 2,
+    "proof": "staged-whitespace.log",
+    "limits": "Frozen verbatim artifacts preserved; any negative whitespace result remains negative, not a production-gate pass."
+  },
+  "changedSourceNavigationWhitespace": {
+    "argv": [
+      "git",
+      "diff",
+      "--cached",
+      "--check",
+      "--",
+      ".gitleaksignore",
+      "tests/secret-scan-policy.test.cjs",
+      "docs/audit/resumption-2026-10-14/LATEST.md"
+    ],
+    "exitCode": 0
+  },
+  "limits": "No full suite/build/Gitleaks rerun for publication; new 16/16 policy tests plus historical scoped artifacts only."
+}

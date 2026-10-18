@@ -1,0 +1,3107 @@
+[
+  {
+    "file": "src/__tests__/artifact-fuses-gate.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/__tests__/baseline-canonical-guard.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/__tests__/baseline-git-identity.test.ts",
+    "status": "passed",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/__tests__/docs-consistency-guard.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/__tests__/docs-consistency-ignored-residue.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/__tests__/integrity-diagnostics.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 1,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/__tests__/integrity-io-retry.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/__tests__/middleware.test.ts",
+    "status": "passed",
+    "passed": 47,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/__tests__/release-gate-idempotent.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/__tests__/security-headers.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/__tests__/server-schema-validate-env.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/__tests__/toolchain-versions.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/integration/business-workflow-e2e.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 15,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/catalog.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 9,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/client-email-garage-portail.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 16,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/copilot-conversation.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 9,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/copilot-cout-achat.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 5,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/copilot-ecusson-verifie.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 9,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/copilot-financial-authz-v15.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 6,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/copilot-portee-et-porte-financiere.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 18,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/copilot.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 7,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/dashboard.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 3,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/devis-signature-depuis-un-poste.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 9,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/document-integrity-v15.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 3,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/fec-injection-v15.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 3,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/finance-margin.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 1,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/intervention-rattache-client-vehicule.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 8,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/invoice-authz.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 7,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/invoice-document-integrity-p3.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 15,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/invoice-stock-sync.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 29,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/licence-admin-durcissement.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 3,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/loaner-availability.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 41,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/mechanic-avatar-archive.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 19,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/mechanic-avatar-sync.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 11,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/mechanic-scope-realtime.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 14,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/messagerie-client-garage.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 16,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/ocr.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/integration/part-deletion-history.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 3,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/part-inventory-adjustment.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 13,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/planning-journee-complete.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 5,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/portail-2fa-cycle.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 20,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/portail-2fa-idor.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 11,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/portail-instantane-borne.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 5,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/portail-lien-revoque-a-la-republication.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 7,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/portail-mot-de-passe-provisoire.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 6,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/portal-access-lifecycle.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 15,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/portal-account-takeover-v15.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 2,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/portal-email-sync.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 12,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/portal-password-enforcement.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 10,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/portal-rbac-p3.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 15,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/portal-token-isolation.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 5,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/publication-mise-a-jour.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/integration/pulse-boucle-de-synchronisation.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 6,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/purchase-order-receive-returned.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 7,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/pwa-fenetre-et-photos.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 13,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/quote-acceptance-proof.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 10,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/quotes-generate.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 7,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/rbac-enforcement-e2e.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 5,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/reglages-appliques.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 5,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/reglages-enfin-lus.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 8,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/reglages-logo-et-cout-achat.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 14,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/rendez-vous-client-garage.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 16,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/robustness-v15.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 4,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/scenario-maitre.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 8,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/statistiques-au-centime.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 9,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/status-mass-assignment-v15.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 3,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/stock-money-p3.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 11,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/stock-suppression-et-entrees.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 8,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/stock-tracabilite-et-suppression.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 10,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/supplier-linkage.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 6,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/suppliers.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 18,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/synchro-voie-de-retour.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 24,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/tenant-idor-patch.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 4,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/integration/tenant-isolation-matrix.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 42,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/components/__tests__/electron-bridge-hydration.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/components/__tests__/loaner-estimate-formatting.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/components/__tests__/update-manifest-forwarding.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/components/__tests__/update-sources-installable.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/audit-v21-fixes.test.ts",
+    "status": "passed",
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/auth-authorize.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/auth-secret.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/authz-full-matrix.test.ts",
+    "status": "passed",
+    "passed": 139,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/authz-mechanic-matrix.test.ts",
+    "status": "passed",
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/authz.test.ts",
+    "status": "passed",
+    "passed": 43,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/billing-api-projection.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/billing-view.test.ts",
+    "status": "passed",
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/boucle-mecanicien-robustesse.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/business-logic.test.ts",
+    "status": "passed",
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/check-route-policy.test.ts",
+    "status": "passed",
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/client-policy.test.ts",
+    "status": "passed",
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/composants-atteignables.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/contrats-parametres-api.test.ts",
+    "status": "passed",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/control-plane.test.ts",
+    "status": "passed",
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/crash-redaction.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/create-license-route.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/depouillement-commentaires.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/desktop-schema-migration-parity.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/devices-overview.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/document-lock-row-locking.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/document-numbering.postgres.int.test.ts",
+    "status": "passed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 1,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/document-numbering.test.ts",
+    "status": "passed",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/document-status.test.ts",
+    "status": "passed",
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/echeance-export.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/einvoicing-platforms-contract.test.ts",
+    "status": "passed",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/electron-activation-backoff.test.ts",
+    "status": "passed",
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/electron-activation-report.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/electron-device-activation.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/electron-fuses.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/electron-heartbeat-policy.test.ts",
+    "status": "passed",
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/electron-integrity.test.ts",
+    "status": "passed",
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/electron-license-endpoint.test.ts",
+    "status": "passed",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/electron-loopback.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/electron-nav-guard.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/electron-secret.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/electron-signed-state.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/electron-startup-gate.test.ts",
+    "status": "passed",
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/env-contract.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/env-manifest-drift.test.ts",
+    "status": "passed",
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/env.test.ts",
+    "status": "passed",
+    "passed": 24,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/erreur-affichable.test.ts",
+    "status": "passed",
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/faux-succes.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/filtres-rendez-vous.test.ts",
+    "status": "passed",
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/fk-indexes.test.ts",
+    "status": "passed",
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/garage-settings-validation.test.ts",
+    "status": "passed",
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/gcm-tag-length.test.ts",
+    "status": "passed",
+    "passed": 54,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/grace-hors-ligne.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/hors-ligne-honnete.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/hwid-verify.test.ts",
+    "status": "passed",
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/i18n-rtl.test.ts",
+    "status": "passed",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/incident-license-infra.test.ts",
+    "status": "passed",
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/incident-record-integrity.test.ts",
+    "status": "passed",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/incident-safety.test.ts",
+    "status": "passed",
+    "passed": 23,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/incident-sync-contracts.test.ts",
+    "status": "passed",
+    "passed": 68,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/input-contrast.test.ts",
+    "status": "passed",
+    "passed": 23,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/inspection-autosave.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/installer-shortcuts.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/issuer-fixture-roundtrip.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/licence-changement-contrat.test.ts",
+    "status": "passed",
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/licence-emission-bornee.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/licence-p3.test.ts",
+    "status": "passed",
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/license-activate.test.ts",
+    "status": "passed",
+    "passed": 25,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/license-admin-state-machine.test.ts",
+    "status": "passed",
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/license-devices-unit.test.ts",
+    "status": "passed",
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/license-devices.postgres.int.test.ts",
+    "status": "passed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 13,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/license-public-key.test.ts",
+    "status": "passed",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 1,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/licensed-session.postgres.int.test.ts",
+    "status": "passed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 6,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/licensed-session.test.ts",
+    "status": "passed",
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/live-sync.test.ts",
+    "status": "passed",
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/mecanicien-boucle-401.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/mechanic-admin.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/mechanic-device-lifecycle.test.ts",
+    "status": "passed",
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/mechanic-photo.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/mechanic-record-mac.test.ts",
+    "status": "passed",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/mechanic-session.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/mechanic-verify.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/migrations-add-column-guard.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/migrations-unique-index.test.ts",
+    "status": "passed",
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/migrations-vehicle-ctdate.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/money-display.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/money-document-consistency.test.ts",
+    "status": "passed",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/money-json.test.ts",
+    "status": "passed",
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/money-migration.test.ts",
+    "status": "passed",
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/money-schema-migration.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/money.test.ts",
+    "status": "passed",
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/or-pieces-rattachees.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/packaging-sans-sauvegarde.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/pagination-cloisonnee.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/pagination-routes.test.ts",
+    "status": "passed",
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/pagination.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/photo-store-traversal.test.ts",
+    "status": "passed",
+    "passed": 20,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/pieces-intervention-atteignables.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/plate-format.test.ts",
+    "status": "passed",
+    "passed": 19,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/portail-client-parcours.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/portail-lien-unique.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/portal-access-reachable.test.ts",
+    "status": "passed",
+    "passed": 104,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/poste-windows.test.ts",
+    "status": "passed",
+    "passed": 28,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/pre-migration-backup.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/public-url.test.ts",
+    "status": "passed",
+    "passed": 28,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/pwa-cache-et-mise-a-jour.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/pwa-trois-publics.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/pwa.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/quoted-secret-redaction.test.ts",
+    "status": "passed",
+    "passed": 33,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/rate-limit-multi-instance.int.test.ts",
+    "status": "passed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 5,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/record-mac-admin-routes.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/redact.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/release-signing-chain.test.ts",
+    "status": "passed",
+    "passed": 20,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/remac-script-parity.test.ts",
+    "status": "passed",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/reminder-send-honesty.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/require-session-enforcement.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/reset-schema-drift.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/restore-script.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/revoke-by-key-route.test.ts",
+    "status": "passed",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/rotation-caractere-invisible.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/rotation-cle-ancrages.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/route-context.test.ts",
+    "status": "passed",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/routes-exports-autorises.test.ts",
+    "status": "passed",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/routes-sans-appelant.test.ts",
+    "status": "passed",
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/safe-redirect.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/sauvegarde-en-souffrance.test.ts",
+    "status": "passed",
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/schemas-optional-email.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/secrets-jamais-distribues.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/secrets.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/security-rate-limit.test.ts",
+    "status": "passed",
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/signature-release-coherence.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/smtp-cipher-key-electron.test.ts",
+    "status": "passed",
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/specialty.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/stock-concurrency.postgres.int.test.ts",
+    "status": "passed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 1,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/stock-missing-part-release.test.ts",
+    "status": "passed",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/stock-parts.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/sync-parent-en-base.test.ts",
+    "status": "passed",
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/synchronisation-asymetrie.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/taux-horaire-main-doeuvre.test.ts",
+    "status": "passed",
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/temps-reel-garde-fous.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/tenant-guard.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/tenant-isolation.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 7,
+    "prerequisite": "NO_ENGINE_CLIENT_REQUIRES_DATAPROXY_URL",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/lib/__tests__/tenant-matrix-completude.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/themes-surfaces-couvertes.test.ts",
+    "status": "passed",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/toolchain-node-version.test.ts",
+    "status": "passed",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/tva.test.ts",
+    "status": "passed",
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/ui-lossless-compaction.test.ts",
+    "status": "passed",
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/ui-navigation-et-demarrage.test.ts",
+    "status": "passed",
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/ui-sort-resilience.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/update-verify.test.ts",
+    "status": "passed",
+    "passed": 28,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/user-data-path.test.ts",
+    "status": "passed",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/utils.test.ts",
+    "status": "passed",
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/ux-pwa-derniers-culs-de-sac.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/verify-rotation.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/verify.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/__tests__/version-compatibility.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/test-utils/__tests__/prepare-test-db.test.ts",
+    "status": "failed",
+    "passed": 1,
+    "failed": 3,
+    "skipped": 0,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/app/api/__tests__/document-immutability.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/__tests__/fec-export.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/__tests__/financial-authz.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/analytics/__tests__/analytics.test.ts",
+    "status": "passed",
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/analytics/__tests__/report-export.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/backup/__tests__/crypto.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/backup/__tests__/restore-roundtrip.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 6,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/lib/backup/__tests__/snapshot.test.ts",
+    "status": "passed",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/banque/__tests__/iban.test.ts",
+    "status": "passed",
+    "passed": 28,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/catalog/__tests__/catalog.test.ts",
+    "status": "passed",
+    "passed": 28,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/copilot/__tests__/conversation.test.ts",
+    "status": "passed",
+    "passed": 26,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/copilot/__tests__/copilot-chaine-complete.test.ts",
+    "status": "passed",
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/copilot/__tests__/copilot.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/copilot/__tests__/phase3-security.test.ts",
+    "status": "passed",
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/copilot/__tests__/planning-execution.test.ts",
+    "status": "passed",
+    "passed": 44,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/copilot/__tests__/semantic.test.ts",
+    "status": "passed",
+    "passed": 40,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/copilot-llm/__tests__/copilot-llm.test.ts",
+    "status": "passed",
+    "passed": 25,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/copilot-llm/__tests__/paid-block.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/copilot-llm/__tests__/planning-provider.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/copilot-llm/__tests__/provider.test.ts",
+    "status": "passed",
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/dashboard/__tests__/dashboard.test.ts",
+    "status": "passed",
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/diagnostic/__tests__/diagnostic.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/einvoicing/__tests__/catalog-provenance.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/einvoicing/__tests__/desktop-bridge.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 20,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/lib/einvoicing/__tests__/dns-deadline.test.ts",
+    "status": "passed",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/einvoicing/__tests__/einvoicing-foundation.test.ts",
+    "status": "passed",
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/einvoicing/__tests__/formats.test.ts",
+    "status": "passed",
+    "passed": 29,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/einvoicing/__tests__/generic-pa-adapter.test.ts",
+    "status": "passed",
+    "passed": 36,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/einvoicing/__tests__/ssrf-guard-dns.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/einvoicing/__tests__/ssrf-guard.test.ts",
+    "status": "passed",
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/einvoicing/__tests__/submit-chain.test.ts",
+    "status": "passed",
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/einvoicing/__tests__/submit-replay.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/email/__tests__/smtp-config.test.ts",
+    "status": "passed",
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/forecast/__tests__/forecast.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/forgotten-parts/__tests__/forgotten-parts.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/gamification/__tests__/gamification.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/inspection/__tests__/inspection-context.test.ts",
+    "status": "passed",
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/license/__tests__/attach-license-to-garage.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/license/__tests__/forgery-resistance.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 5,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/license/__tests__/hwid-v1.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/license/__tests__/keygen-api-contract.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/license/__tests__/license-crosslang-format.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/license/__tests__/license-keygen-e2e.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/license/__tests__/public-key-consistency.test.ts",
+    "status": "passed",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 2,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/license/__tests__/state-machine.test.ts",
+    "status": "passed",
+    "passed": 23,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/mechanics/__tests__/avatar-client.test.ts",
+    "status": "passed",
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/mechanics/__tests__/avatar-contrat-affichage.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/mechanics/__tests__/avatar-image.test.ts",
+    "status": "passed",
+    "passed": 20,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/memory/__tests__/memory.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/monitoring/__tests__/metrics.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/notifications/__tests__/notifications.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/ocr/__tests__/ocr.test.ts",
+    "status": "passed",
+    "passed": 28,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/pdf/__tests__/pdf-print-quality.test.ts",
+    "status": "passed",
+    "passed": 19,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/pdf/__tests__/poids-pdf.test.ts",
+    "status": "passed",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/pdf/__tests__/print-html-escaping.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/planning/__tests__/avatar.test.ts",
+    "status": "passed",
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/planning/__tests__/bornes-partout.test.ts",
+    "status": "passed",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/planning/__tests__/horaires.test.ts",
+    "status": "passed",
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/planning/__tests__/mechanic-window.test.ts",
+    "status": "passed",
+    "passed": 31,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/planning/__tests__/schedule-board-contract.test.ts",
+    "status": "passed",
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/portal/__tests__/auth-core.test.ts",
+    "status": "passed",
+    "passed": 20,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/portal/__tests__/backup-codes-store.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/portal/__tests__/garage-slug.test.ts",
+    "status": "passed",
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/portal/__tests__/portal-line-contract.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/portal/__tests__/repair-timeline.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/portal/__tests__/session.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/portal/__tests__/tickets-appointments.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/portal/__tests__/totp-crypto.test.ts",
+    "status": "passed",
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/pricing/__tests__/pricing.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/proactive/__tests__/proactive.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/profitability/__tests__/profitability.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/quote-gen/__tests__/quote-gen.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/recherche/__tests__/normalisation.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/reports/__tests__/reports.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/scheduling/__tests__/scheduling.test.ts",
+    "status": "passed",
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/security/__tests__/secret-cipher.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/signature/__tests__/signature.test.ts",
+    "status": "passed",
+    "passed": 11,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/stock/__tests__/inventory.test.ts",
+    "status": "passed",
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/stock/__tests__/invoice-stock-entrelacement.test.ts",
+    "status": "passed",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/stock/__tests__/search.test.ts",
+    "status": "passed",
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/stock-forecast/__tests__/stock-forecast.test.ts",
+    "status": "passed",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/suppliers/__tests__/suppliers.test.ts",
+    "status": "passed",
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/sync/__tests__/clock-and-truncation.test.ts",
+    "status": "passed",
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/sync/__tests__/garage-claim-isolation.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/sync/__tests__/job-tombstones.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 6,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/lib/sync/__tests__/mechanic-rattrapage.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 9,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/lib/sync/__tests__/messages-voie-de-retour.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 9,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/lib/sync/__tests__/passe-lecture-seule.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 5,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/lib/sync/__tests__/quote-return.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 10,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/lib/sync/__tests__/redirect-security.test.ts",
+    "status": "passed",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 10,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/lib/text/__tests__/apostrophes.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/lib/vin/__tests__/vin.test.ts",
+    "status": "passed",
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/admin/__tests__/diagnostics-route.test.ts",
+    "status": "passed",
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/clients/__tests__/portal-access-publication.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 14,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/app/api/internal/__tests__/backup-coherent.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 9,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/app/api/mechanic/__tests__/timer-pause-resume.test.ts",
+    "status": "passed",
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/mechanic/__tests__/timer-route.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/__tests__/assign-route.test.ts",
+    "status": "passed",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/__tests__/register-adopt-route.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/__tests__/status-route.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/__tests__/token-route.test.ts",
+    "status": "passed",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/mechanics/__tests__/create-route.test.ts",
+    "status": "passed",
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/parts/__tests__/parts-pagination.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 4,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/app/api/plate-ocr/__tests__/plate-ocr-route.test.ts",
+    "status": "passed",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/sync/__tests__/appointments-sync.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 6,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/app/api/sync/__tests__/einvoicing-tunnel.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 13,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/app/api/sync/__tests__/invoice-publication.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 13,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/app/api/sync/__tests__/mechanic-assignment.test.ts",
+    "status": "passed",
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/sync/__tests__/mechanic-status.test.ts",
+    "status": "passed",
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/sync/__tests__/portal-account-publication.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 9,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/app/api/sync/__tests__/portal-snapshot.test.ts",
+    "status": "passed",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  },
+  {
+    "file": "src/app/api/sync/__tests__/quote-publication.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 11,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/app/api/sync/__tests__/tickets-sync.test.ts",
+    "status": "failed",
+    "passed": 0,
+    "failed": 0,
+    "skipped": 9,
+    "prerequisite": "NATIVE_ENGINE_DOWNLOAD_TLS",
+    "regressionsExcluded": false
+  },
+  {
+    "file": "src/app/api/portal/auth/__tests__/register-verification-email.test.ts",
+    "status": "passed",
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "prerequisite": null,
+    "regressionsExcluded": null
+  }
+]

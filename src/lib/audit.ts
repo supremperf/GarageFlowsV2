@@ -16,7 +16,14 @@ export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout'
 export type AuditEntityType =
   | 'Job' | 'Client' | 'Vehicle' | 'Invoice' | 'Quote'
   | 'User' | 'Mechanic' | 'Part' | 'Inspection' | 'Reminder' | 'Garage'
-  | 'PurchaseOrder'
+  | 'PurchaseOrder' | 'License'
+  // Rendez-vous : modifier un créneau engage le garage vis-à-vis d'un client.
+  // L'écriture doit laisser une trace, comme une facture émise.
+  | 'Appointment'
+  // Accès portail d'un client : ouverture, réinitialisation, désactivation.
+  // Ce sont des décisions du garage sur qui peut voir les données d'un client —
+  // elles doivent laisser une trace au même titre qu'une facture émise.
+  | 'PortalUser'
 
 interface LogAuditOptions {
   action:     AuditAction
@@ -27,7 +34,7 @@ interface LogAuditOptions {
   details?:   Record<string, unknown>
 }
 
-function getIp(req?: Request): string | undefined {
+async function getIp(req?: Request): Promise<string | undefined> {
   try {
     if (req) {
       const forwarded = req.headers.get('x-forwarded-for')
@@ -36,7 +43,7 @@ function getIp(req?: Request): string | undefined {
       if (real) return real
     }
     // Fallback: read from Next.js headers() in server context
-    const h = headers()
+    const h = await headers()
     return h.get('x-forwarded-for')?.split(',')[0].trim() ?? h.get('x-real-ip') ?? undefined
   } catch {
     return undefined
@@ -54,36 +61,10 @@ export async function logAudit(opts: LogAuditOptions): Promise<void> {
         userName:   opts.session.user.name ?? opts.session.user.email ?? 'unknown',
         garageId:   opts.session.user.garageId,
         details:    opts.details ? JSON.stringify(opts.details) : null,
-        ipAddress:  getIp(opts.req) ?? null,
+        ipAddress:  (await getIp(opts.req)) ?? null,
       },
     })
   } catch (err) {
     logger.warn('[audit] Failed to write audit log:', err)
-  }
-}
-
-/** Log a login event — called from auth callbacks, no garageId needed at that point */
-export async function logLogin(opts: {
-  userId:    string
-  userName:  string
-  garageId:  string
-  success:   boolean
-  ipAddress?: string
-}): Promise<void> {
-  try {
-    await prisma.auditLog.create({
-      data: {
-        action:     'login',
-        entityType: 'User',
-        entityId:   opts.userId,
-        userId:     opts.userId,
-        userName:   opts.userName,
-        garageId:   opts.garageId,
-        details:    JSON.stringify({ success: opts.success }),
-        ipAddress:  opts.ipAddress ?? null,
-      },
-    })
-  } catch (err) {
-    logger.warn('[audit] Failed to write login log:', err)
   }
 }

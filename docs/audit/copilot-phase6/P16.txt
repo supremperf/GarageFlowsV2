@@ -1,0 +1,50 @@
+TAP version 13
+# Subtest: historical trace transport roundtrips full ANSI, unicode, percent signs and failure stacks
+ok 1 - historical trace transport roundtrips full ANSI, unicode, percent signs and failure stacks
+  ---
+  duration_ms: 8.100053
+  type: 'test'
+  ...
+# Subtest: backup-code modulo has exactly eight preimages per symbol, not biased: real source alphabet has 32 unique symbols
+ok 2 - backup-code modulo has exactly eight preimages per symbol, not biased: real source alphabet has 32 unique symbols
+  ---
+  duration_ms: 14.71304
+  type: 'test'
+  ...
+# Subtest: actual extracted Electron flush function: revoked consent performs no queue read and no send (unit, not packaged Electron)
+ok 3 - actual extracted Electron flush function: revoked consent performs no queue read and no send (unit, not packaged Electron)
+  ---
+  duration_ms: 126.735403
+  type: 'test'
+  ...
+# Subtest: actual extracted Electron logger: redacts network URLs/secrets and emits a single controlled line (unit)
+ok 4 - actual extracted Electron logger: redacts network URLs/secrets and emits a single controlled line (unit)
+  ---
+  duration_ms: 76.320874
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 458.461703
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /home/user/GarageFlowsV2
+
+ ✓ src/lib/__tests__/electron-startup-gate.test.ts (17 tests) 9ms
+ ✓ src/lib/__tests__/electron-activation-report.test.ts (11 tests) 7ms
+ ✓ src/lib/__tests__/control-plane.test.ts (16 tests) 12ms
+ ✓ src/lib/__tests__/electron-signed-state.test.ts (7 tests) 6ms
+
+ Test Files  4 passed (4)
+      Tests  51 passed (51)
+   Start at  14:33:35
+   Duration  833ms (transform 94ms, setup 0ms, import 152ms, tests 33ms, environment 0ms)
+

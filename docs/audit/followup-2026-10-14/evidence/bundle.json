@@ -1,0 +1,9 @@
+{
+  "measure": "raw JS bytes under .next/static",
+  "before": 3632537,
+  "after": 3609457,
+  "budget": 3625984,
+  "saved": 23080,
+  "headroom": 16527,
+  "fullStandardBuildValidated": false
+}

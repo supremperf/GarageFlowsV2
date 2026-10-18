@@ -1,0 +1,34 @@
+{
+  "id": "authz",
+  "startedAt": "2026-10-14T17:03:09.854339+00:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "argv": [
+    "node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "src/lib/__tests__/authz.test.ts",
+    "src/lib/__tests__/authz-full-matrix.test.ts",
+    "src/lib/__tests__/authz-mechanic-matrix.test.ts",
+    "src/lib/__tests__/auth-secret.test.ts",
+    "--reporter=json",
+    "--outputFile=docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/evidence/authz.json"
+  ],
+  "timeoutSeconds": 600,
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+  "trackedNonAuditFiles": 1220,
+  "environmentOverrides": {
+    "PATH": "pinned npm 11.16.0 first",
+    "NODE_USE_SYSTEM_CA": "1"
+  },
+  "proof": "evidence/authz.log",
+  "exitCode": 0,
+  "finishedAt": "2026-10-14T17:03:11.168996+00:00",
+  "afterIdentity": {
+    "head": "f88f2832eb256310852ed86040057c062d44433e",
+    "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+    "trackedNonAuditFiles": 1220
+  },
+  "logSha256": "7cc7518e96fda71d4cab79e02013fb2e98a5531ffbc29fa53cbaf2b602af3852"
+}

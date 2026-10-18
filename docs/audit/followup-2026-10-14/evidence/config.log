@@ -1,0 +1,591 @@
+
+> garageflow@1.1.0 test:config
+> node --test tests/config.test.cjs tests/config-full.test.cjs
+
+TAP version 13
+# CONFIG COMPLET — 120 variables classées, 54 paramètres applicatifs.
+# Plan : inventaire → dépendances → accès Vercel/Neon/Redis → secrets/licences → fichiers/keygen/client → SQL → Vercel → santé → publication locale.
+# Les comptes externes, ressources choisies et éventuels frais restent sous votre contrôle. Aucun reset, aucune rotation automatique, aucune création de comptes fictifs.
+# Une autorisation initiale couvre les installations npm, fichiers locaux, migrations sur une BASE VIDE et déploiement sur le projet Vercel que vous autorisez. Une base existante et un changement d’autorité exigent une confirmation supplémentaire.
+# La configuration de production n’est pas exécutée sur vos comptes tant que vous n’autorisez pas ce plan.
+# ▶ inventaire-du-dépôt
+# 1200 fichiers inventoriés, 1150 textes lus. Aucune valeur secrète dans le rapport.
+# ▶ dépendances-et-clients-Prisma
+# ▶ accès-et-configuration-Vercel
+# ▶ PostgreSQL-Neon-ou-existant
+# URLs PostgreSQL manquantes sauvegardées dans .env.server.local (masquées), avant les étapes de licences/SQL.
+# ▶ inspection-SQL-lecture-seule
+# Base sans données métier : initialisation possible.
+# ▶ URLs-publiques
+# Serveur/keygen : https://garageflows.fr. La clé API serveur sera reprise automatiquement dans keys/server_config.json ; aucune clé affichée.
+# ▶ Redis-Upstash-et-test-REST
+# Accès optionnel : OCR existant nécessite une clé Anthropic. Entrée sans clé laisse OCR/IA désactivé ; le Copilot LLM n’est pas implémenté dans ce dépôt.
+# ▶ secrets-indépendants-et-licences
+# La clé de licence doit correspondre aux ancrages publics. Aucune licence client commerciale n’est créée automatiquement.
+# ▶ sauvegarde-des-profils-et-keygen
+# Serveur → .env.server.local ; émetteur → keys/private.pem + public.pem + server_config.json. Secrets non affichés.
+# keygen_ui : URL serveur et GARAGEFLOW_API_KEY préremplies automatiquement à la prochaine ouverture, avec la même clé que le profil serveur destiné à Vercel.
+# ▶ desktop-SQLite-et-endpoints-compilés
+#   À fournir/vérifier : Les clients packagés conservent leur autorité compilée actuelle ; reconstruire/configurer leurs endpoints pour un autre serveur.
+# ▶ migrations-PostgreSQL-et-détection-de-drift
+# Migrations et schéma vérifiés.
+# ▶ première-licence-admin
+#   À fournir/vérifier : Licence admin à émettre avec le keygen ; aucun privilège attribué automatiquement.
+# ▶ variables-Vercel-production
+# ▶ déploiement-et-santé
+# Nouveau déploiement : /api/health répond status=ok.
+# ▶ signature-locale-des-mises-à-jour
+# Publication : importer le PEM Ed25519 ORIGINAL depuis le coffre si des clients ont déjà reçu des mises à jour.
+# Une nouvelle clé ne répare pas le parc existant : les anciens clients ne la connaissent pas. Les anciennes clés publiques seront conservées.
+#   À fournir/vérifier : Clé Ed25519 originale et accès au serveur de publication garagesite3 requis.
+# ▶ prérequis-keygen-Python
+#   À fournir/vérifier : La publication/upload des installateurs de ce dépôt utilise aussi des fichiers locaux : sur Vercel, hébergement durable des binaires ou service de publication externe requis.
+#   À fournir/vérifier : Le service de sauvegarde PWA utilise encore le disque : sur Vercel, stockage objet durable + adaptation du code nécessaires. Ne pas utiliser /tmp comme sauvegarde permanente.
+#   À fournir/vérifier : Identité légale/SIRET, SMTP, comptes des plateformes de facturation et éventuelle clé OCR nécessitent vos données/accès. Facturation électronique reste OFF ; les saisir dans l’application ou le profil ciblé.
+# Plan technique exécuté. Les opérations réellement réussies et les limites restantes sont dans GarageFlow-configuration/report.json (sans secrets).
+# Aucune prétention « tout est opérationnel » tant que les actions externes/stockage durable ne sont pas résolues.
+# CONFIG COMPLET — 120 variables classées, 54 paramètres applicatifs.
+# Plan : inventaire → dépendances → accès Vercel/Neon/Redis → secrets/licences → fichiers/keygen/client → SQL → Vercel → santé → publication locale.
+# Les comptes externes, ressources choisies et éventuels frais restent sous votre contrôle. Aucun reset, aucune rotation automatique, aucune création de comptes fictifs.
+# Une autorisation initiale couvre les installations npm, fichiers locaux, migrations sur une BASE VIDE et déploiement sur le projet Vercel que vous autorisez. Une base existante et un changement d’autorité exigent une confirmation supplémentaire.
+# La configuration de production n’est pas exécutée sur vos comptes tant que vous n’autorisez pas ce plan.
+# ▶ inventaire-du-dépôt
+# 1200 fichiers inventoriés, 1150 textes lus. Aucune valeur secrète dans le rapport.
+# ▶ dépendances-et-clients-Prisma
+# ▶ accès-et-configuration-Vercel
+# ▶ PostgreSQL-Neon-ou-existant
+# URLs PostgreSQL manquantes sauvegardées dans .env.server.local (masquées), avant les étapes de licences/SQL.
+# ▶ inspection-SQL-lecture-seule
+# Base contient des données : préservation des clés et sauvegarde indispensables.
+# ▶ URLs-publiques
+# Serveur/keygen : https://garageflows.fr. La clé API serveur sera reprise automatiquement dans keys/server_config.json ; aucune clé affichée.
+# ▶ Redis-Upstash-et-test-REST
+# Accès optionnel : OCR existant nécessite une clé Anthropic. Entrée sans clé laisse OCR/IA désactivé ; le Copilot LLM n’est pas implémenté dans ce dépôt.
+# ▶ secrets-indépendants-et-licences
+# La clé de licence doit correspondre aux ancrages publics. Aucune licence client commerciale n’est créée automatiquement.
+# ▶ sauvegarde-des-profils-et-keygen
+# Serveur → .env.server.local ; émetteur → keys/private.pem + public.pem + server_config.json. Secrets non affichés.
+# keygen_ui : URL serveur et GARAGEFLOW_API_KEY préremplies automatiquement à la prochaine ouverture, avec la même clé que le profil serveur destiné à Vercel.
+# ▶ desktop-SQLite-et-endpoints-compilés
+#   À fournir/vérifier : Les clients packagés conservent leur autorité compilée actuelle ; reconstruire/configurer leurs endpoints pour un autre serveur.
+# ▶ migrations-PostgreSQL-et-détection-de-drift
+# CONFIG COMPLET — 120 variables classées, 54 paramètres applicatifs.
+# Plan : inventaire → dépendances → accès Vercel/Neon/Redis → secrets/licences → fichiers/keygen/client → SQL → Vercel → santé → publication locale.
+# Les comptes externes, ressources choisies et éventuels frais restent sous votre contrôle. Aucun reset, aucune rotation automatique, aucune création de comptes fictifs.
+# Une autorisation initiale couvre les installations npm, fichiers locaux, migrations sur une BASE VIDE et déploiement sur le projet Vercel que vous autorisez. Une base existante et un changement d’autorité exigent une confirmation supplémentaire.
+# La configuration de production n’est pas exécutée sur vos comptes tant que vous n’autorisez pas ce plan.
+# CONFIG COMPLET — 120 variables classées, 54 paramètres applicatifs.
+# Plan : inventaire → dépendances → accès Vercel/Neon/Redis → secrets/licences → fichiers/keygen/client → SQL → Vercel → santé → publication locale.
+# Les comptes externes, ressources choisies et éventuels frais restent sous votre contrôle. Aucun reset, aucune rotation automatique, aucune création de comptes fictifs.
+# Une autorisation initiale couvre les installations npm, fichiers locaux, migrations sur une BASE VIDE et déploiement sur le projet Vercel que vous autorisez. Une base existante et un changement d’autorité exigent une confirmation supplémentaire.
+# La configuration de production n’est pas exécutée sur vos comptes tant que vous n’autorisez pas ce plan.
+# ▶ inventaire-du-dépôt
+# 1200 fichiers inventoriés, 1150 textes lus. Aucune valeur secrète dans le rapport.
+# ▶ dépendances-et-clients-Prisma
+# ▶ accès-et-configuration-Vercel
+# ▶ PostgreSQL-Neon-ou-existant
+# URLs PostgreSQL manquantes sauvegardées dans .env.server.local (masquées), avant les étapes de licences/SQL.
+# ▶ inspection-SQL-lecture-seule
+# Base contient des données : préservation des clés et sauvegarde indispensables.
+# ▶ URLs-publiques
+# Serveur/keygen : https://garageflows.fr. La clé API serveur sera reprise automatiquement dans keys/server_config.json ; aucune clé affichée.
+# ▶ Redis-Upstash-et-test-REST
+# Accès optionnel : OCR existant nécessite une clé Anthropic. Entrée sans clé laisse OCR/IA désactivé ; le Copilot LLM n’est pas implémenté dans ce dépôt.
+# ▶ secrets-indépendants-et-licences
+# GF_TOTP_ENC_KEY absent du poste et non récupéré depuis Vercel. Une base utilisée ne prouve pas qu’un secret n’a jamais existé.
+# CONFIG COMPLET — 120 variables classées, 54 paramètres applicatifs.
+# Plan : inventaire → dépendances → accès Vercel/Neon/Redis → secrets/licences → fichiers/keygen/client → SQL → Vercel → santé → publication locale.
+# Les comptes externes, ressources choisies et éventuels frais restent sous votre contrôle. Aucun reset, aucune rotation automatique, aucune création de comptes fictifs.
+# Une autorisation initiale couvre les installations npm, fichiers locaux, migrations sur une BASE VIDE et déploiement sur le projet Vercel que vous autorisez. Une base existante et un changement d’autorité exigent une confirmation supplémentaire.
+# La configuration de production n’est pas exécutée sur vos comptes tant que vous n’autorisez pas ce plan.
+# ▶ inventaire-du-dépôt
+# 1200 fichiers inventoriés, 1150 textes lus. Aucune valeur secrète dans le rapport.
+# ▶ dépendances-et-clients-Prisma
+# ▶ accès-et-configuration-Vercel
+# ▶ PostgreSQL-Neon-ou-existant
+# URLs PostgreSQL manquantes sauvegardées dans .env.server.local (masquées), avant les étapes de licences/SQL.
+# ▶ inspection-SQL-lecture-seule
+# Base contient des données : préservation des clés et sauvegarde indispensables.
+# ▶ URLs-publiques
+# Serveur/keygen : https://garageflows.fr. La clé API serveur sera reprise automatiquement dans keys/server_config.json ; aucune clé affichée.
+# ▶ Redis-Upstash-et-test-REST
+# Accès optionnel : OCR existant nécessite une clé Anthropic. Entrée sans clé laisse OCR/IA désactivé ; le Copilot LLM n’est pas implémenté dans ce dépôt.
+# ▶ secrets-indépendants-et-licences
+# GF_PORTAL_SECRET : repli historique sur NEXTAUTH_SECRET préservé, pas de rotation des signatures/liens existants.
+# GF_SIGNATURE_SECRET : repli historique sur NEXTAUTH_SECRET préservé, pas de rotation des signatures/liens existants.
+# La clé de licence doit correspondre aux ancrages publics. Aucune licence client commerciale n’est créée automatiquement.
+# ▶ sauvegarde-des-profils-et-keygen
+# Serveur → .env.server.local ; émetteur → keys/private.pem + public.pem + server_config.json. Secrets non affichés.
+# keygen_ui : URL serveur et GARAGEFLOW_API_KEY préremplies automatiquement à la prochaine ouverture, avec la même clé que le profil serveur destiné à Vercel.
+# ▶ desktop-SQLite-et-endpoints-compilés
+#   À fournir/vérifier : Les clients packagés conservent leur autorité compilée actuelle ; reconstruire/configurer leurs endpoints pour un autre serveur.
+# ▶ migrations-PostgreSQL-et-détection-de-drift
+# Migrations et schéma vérifiés.
+# ▶ variables-Vercel-production
+# ▶ déploiement-et-santé
+# Nouveau déploiement : /api/health répond status=ok.
+# ▶ signature-locale-des-mises-à-jour
+# Publication : importer le PEM Ed25519 ORIGINAL depuis le coffre si des clients ont déjà reçu des mises à jour.
+# Une nouvelle clé ne répare pas le parc existant : les anciens clients ne la connaissent pas. Les anciennes clés publiques seront conservées.
+#   À fournir/vérifier : Clé Ed25519 originale et accès au serveur de publication garagesite3 requis.
+# ▶ prérequis-keygen-Python
+#   À fournir/vérifier : La publication/upload des installateurs de ce dépôt utilise aussi des fichiers locaux : sur Vercel, hébergement durable des binaires ou service de publication externe requis.
+#   À fournir/vérifier : Le service de sauvegarde PWA utilise encore le disque : sur Vercel, stockage objet durable + adaptation du code nécessaires. Ne pas utiliser /tmp comme sauvegarde permanente.
+#   À fournir/vérifier : Identité légale/SIRET, SMTP, comptes des plateformes de facturation et éventuelle clé OCR nécessitent vos données/accès. Facturation électronique reste OFF ; les saisir dans l’application ou le profil ciblé.
+# Plan technique exécuté. Les opérations réellement réussies et les limites restantes sont dans GarageFlow-configuration/report.json (sans secrets).
+# Aucune prétention « tout est opérationnel » tant que les actions externes/stockage durable ne sont pas résolues.
+# CONFIG COMPLET — 120 variables classées, 54 paramètres applicatifs.
+# Plan : inventaire → dépendances → accès Vercel/Neon/Redis → secrets/licences → fichiers/keygen/client → SQL → Vercel → santé → publication locale.
+# Les comptes externes, ressources choisies et éventuels frais restent sous votre contrôle. Aucun reset, aucune rotation automatique, aucune création de comptes fictifs.
+# Une autorisation initiale couvre les installations npm, fichiers locaux, migrations sur une BASE VIDE et déploiement sur le projet Vercel que vous autorisez. Une base existante et un changement d’autorité exigent une confirmation supplémentaire.
+# La configuration de production n’est pas exécutée sur vos comptes tant que vous n’autorisez pas ce plan.
+# ▶ inventaire-du-dépôt
+# 1200 fichiers inventoriés, 1150 textes lus. Aucune valeur secrète dans le rapport.
+# ▶ dépendances-et-clients-Prisma
+# ▶ accès-et-configuration-Vercel
+# ▶ PostgreSQL-Neon-ou-existant
+# URLs PostgreSQL manquantes sauvegardées dans .env.server.local (masquées), avant les étapes de licences/SQL.
+# ▶ inspection-SQL-lecture-seule
+# Base sans données métier : initialisation possible.
+# ▶ URLs-publiques
+# Serveur/keygen : https://garageflows.fr. La clé API serveur sera reprise automatiquement dans keys/server_config.json ; aucune clé affichée.
+# ▶ Redis-Upstash-et-test-REST
+# Accès optionnel : OCR existant nécessite une clé Anthropic. Entrée sans clé laisse OCR/IA désactivé ; le Copilot LLM n’est pas implémenté dans ce dépôt.
+# ▶ secrets-indépendants-et-licences
+# La clé de licence doit correspondre aux ancrages publics. Aucune licence client commerciale n’est créée automatiquement.
+# ▶ sauvegarde-des-profils-et-keygen
+# Serveur → .env.server.local ; émetteur → keys/private.pem + public.pem + server_config.json. Secrets non affichés.
+# keygen_ui : URL serveur et GARAGEFLOW_API_KEY préremplies automatiquement à la prochaine ouverture, avec la même clé que le profil serveur destiné à Vercel.
+# ▶ desktop-SQLite-et-endpoints-compilés
+#   À fournir/vérifier : Les clients packagés conservent leur autorité compilée actuelle ; reconstruire/configurer leurs endpoints pour un autre serveur.
+# ▶ migrations-PostgreSQL-et-détection-de-drift
+# CONFIG COMPLET — 120 variables classées, 54 paramètres applicatifs.
+# Plan : inventaire → dépendances → accès Vercel/Neon/Redis → secrets/licences → fichiers/keygen/client → SQL → Vercel → santé → publication locale.
+# Les comptes externes, ressources choisies et éventuels frais restent sous votre contrôle. Aucun reset, aucune rotation automatique, aucune création de comptes fictifs.
+# Une autorisation initiale couvre les installations npm, fichiers locaux, migrations sur une BASE VIDE et déploiement sur le projet Vercel que vous autorisez. Une base existante et un changement d’autorité exigent une confirmation supplémentaire.
+# La configuration de production n’est pas exécutée sur vos comptes tant que vous n’autorisez pas ce plan.
+# ▶ inventaire-du-dépôt
+# 1200 fichiers inventoriés, 1150 textes lus. Aucune valeur secrète dans le rapport.
+# ▶ dépendances-et-clients-Prisma
+# ▶ accès-et-configuration-Vercel
+# ▶ PostgreSQL-Neon-ou-existant
+# URLs PostgreSQL manquantes sauvegardées dans .env.server.local (masquées), avant les étapes de licences/SQL.
+# ▶ inspection-SQL-lecture-seule
+# Base sans données métier : initialisation possible.
+# ▶ URLs-publiques
+# Serveur/keygen : https://garageflows.fr. La clé API serveur sera reprise automatiquement dans keys/server_config.json ; aucune clé affichée.
+# ▶ Redis-Upstash-et-test-REST
+# Accès optionnel : OCR existant nécessite une clé Anthropic. Entrée sans clé laisse OCR/IA désactivé ; le Copilot LLM n’est pas implémenté dans ce dépôt.
+# ▶ secrets-indépendants-et-licences
+# La clé de licence doit correspondre aux ancrages publics. Aucune licence client commerciale n’est créée automatiquement.
+# ▶ sauvegarde-des-profils-et-keygen
+# Serveur → .env.server.local ; émetteur → keys/private.pem + public.pem + server_config.json. Secrets non affichés.
+# keygen_ui : URL serveur et GARAGEFLOW_API_KEY préremplies automatiquement à la prochaine ouverture, avec la même clé que le profil serveur destiné à Vercel.
+# ▶ desktop-SQLite-et-endpoints-compilés
+#   À fournir/vérifier : Les clients packagés conservent leur autorité compilée actuelle ; reconstruire/configurer leurs endpoints pour un autre serveur.
+# ▶ migrations-PostgreSQL-et-détection-de-drift
+# Serveur/keygen : https://garageflows.fr. La clé API serveur sera reprise automatiquement dans keys/server_config.json ; aucune clé affichée.
+# Serveur/keygen : https://garageflows.fr. La clé API serveur sera reprise automatiquement dans keys/server_config.json ; aucune clé affichée.
+# CONFIG COMPLET — 120 variables classées, 54 paramètres applicatifs.
+# Plan : inventaire → dépendances → accès Vercel/Neon/Redis → secrets/licences → fichiers/keygen/client → SQL → Vercel → santé → publication locale.
+# Les comptes externes, ressources choisies et éventuels frais restent sous votre contrôle. Aucun reset, aucune rotation automatique, aucune création de comptes fictifs.
+# Une autorisation initiale couvre les installations npm, fichiers locaux, migrations sur une BASE VIDE et déploiement sur le projet Vercel que vous autorisez. Une base existante et un changement d’autorité exigent une confirmation supplémentaire.
+# La configuration de production n’est pas exécutée sur vos comptes tant que vous n’autorisez pas ce plan.
+# ▶ inventaire-du-dépôt
+# 1200 fichiers inventoriés, 1150 textes lus. Aucune valeur secrète dans le rapport.
+# ▶ dépendances-et-clients-Prisma
+# ▶ accès-et-configuration-Vercel
+# ▶ PostgreSQL-Neon-ou-existant
+# URLs PostgreSQL manquantes sauvegardées dans .env.server.local (masquées), avant les étapes de licences/SQL.
+# ▶ inspection-SQL-lecture-seule
+# Base sans données métier : initialisation possible.
+# ▶ URLs-publiques
+# Serveur/keygen : https://garageflows.fr. La clé API serveur sera reprise automatiquement dans keys/server_config.json ; aucune clé affichée.
+# ▶ Redis-Upstash-et-test-REST
+# Accès optionnel : OCR existant nécessite une clé Anthropic. Entrée sans clé laisse OCR/IA désactivé ; le Copilot LLM n’est pas implémenté dans ce dépôt.
+# ▶ secrets-indépendants-et-licences
+# La clé de licence doit correspondre aux ancrages publics. Aucune licence client commerciale n’est créée automatiquement.
+# ▶ sauvegarde-des-profils-et-keygen
+# Serveur → .env.server.local ; émetteur → keys/private.pem + public.pem + server_config.json. Secrets non affichés.
+# keygen_ui : URL serveur et GARAGEFLOW_API_KEY préremplies automatiquement à la prochaine ouverture, avec la même clé que le profil serveur destiné à Vercel.
+# ▶ desktop-SQLite-et-endpoints-compilés
+#   À fournir/vérifier : Les clients packagés conservent leur autorité compilée actuelle ; reconstruire/configurer leurs endpoints pour un autre serveur.
+# ▶ migrations-PostgreSQL-et-détection-de-drift
+# Migrations et schéma vérifiés.
+# ▶ première-licence-admin
+#   À fournir/vérifier : Licence admin à émettre avec le keygen ; aucun privilège attribué automatiquement.
+# ▶ variables-Vercel-production
+# ▶ déploiement-et-santé
+# Nouveau déploiement : /api/health répond status=ok.
+# ▶ signature-locale-des-mises-à-jour
+# Publication : importer le PEM Ed25519 ORIGINAL depuis le coffre si des clients ont déjà reçu des mises à jour.
+# Une nouvelle clé ne répare pas le parc existant : les anciens clients ne la connaissent pas. Les anciennes clés publiques seront conservées.
+#   À fournir/vérifier : Clé Ed25519 originale et accès au serveur de publication garagesite3 requis.
+# ▶ prérequis-keygen-Python
+#   À fournir/vérifier : La publication/upload des installateurs de ce dépôt utilise aussi des fichiers locaux : sur Vercel, hébergement durable des binaires ou service de publication externe requis.
+#   À fournir/vérifier : Le service de sauvegarde PWA utilise encore le disque : sur Vercel, stockage objet durable + adaptation du code nécessaires. Ne pas utiliser /tmp comme sauvegarde permanente.
+#   À fournir/vérifier : Identité légale/SIRET, SMTP, comptes des plateformes de facturation et éventuelle clé OCR nécessitent vos données/accès. Facturation électronique reste OFF ; les saisir dans l’application ou le profil ciblé.
+# Plan technique exécuté. Les opérations réellement réussies et les limites restantes sont dans GarageFlow-configuration/report.json (sans secrets).
+# Aucune prétention « tout est opérationnel » tant que les actions externes/stockage durable ne sont pas résolues.
+# CONFIG COMPLET — 120 variables classées, 54 paramètres applicatifs.
+# Plan : inventaire → dépendances → accès Vercel/Neon/Redis → secrets/licences → fichiers/keygen/client → SQL → Vercel → santé → publication locale.
+# Les comptes externes, ressources choisies et éventuels frais restent sous votre contrôle. Aucun reset, aucune rotation automatique, aucune création de comptes fictifs.
+# Une autorisation initiale couvre les installations npm, fichiers locaux, migrations sur une BASE VIDE et déploiement sur le projet Vercel que vous autorisez. Une base existante et un changement d’autorité exigent une confirmation supplémentaire.
+# La configuration de production n’est pas exécutée sur vos comptes tant que vous n’autorisez pas ce plan.
+# ▶ inventaire-du-dépôt
+# 1200 fichiers inventoriés, 1150 textes lus. Aucune valeur secrète dans le rapport.
+# ▶ dépendances-et-clients-Prisma
+# ▶ accès-et-configuration-Vercel
+# ▶ PostgreSQL-Neon-ou-existant
+# ▶ inspection-SQL-lecture-seule
+# Base sans données métier : initialisation possible.
+# ▶ URLs-publiques
+# Serveur/keygen : https://garageflows.fr. La clé API serveur sera reprise automatiquement dans keys/server_config.json ; aucune clé affichée.
+# ▶ Redis-Upstash-et-test-REST
+# Accès optionnel : OCR existant nécessite une clé Anthropic. Entrée sans clé laisse OCR/IA désactivé ; le Copilot LLM n’est pas implémenté dans ce dépôt.
+# ▶ secrets-indépendants-et-licences
+# La clé de licence doit correspondre aux ancrages publics. Aucune licence client commerciale n’est créée automatiquement.
+# ▶ sauvegarde-des-profils-et-keygen
+# Serveur → .env.server.local ; émetteur → keys/private.pem + public.pem + server_config.json. Secrets non affichés.
+# keygen_ui : URL serveur et GARAGEFLOW_API_KEY préremplies automatiquement à la prochaine ouverture, avec la même clé que le profil serveur destiné à Vercel.
+# ▶ desktop-SQLite-et-endpoints-compilés
+#   À fournir/vérifier : Les clients packagés conservent leur autorité compilée actuelle ; reconstruire/configurer leurs endpoints pour un autre serveur.
+# ▶ migrations-PostgreSQL-et-détection-de-drift
+# Migrations et schéma vérifiés.
+# ▶ première-licence-admin
+#   À fournir/vérifier : Licence admin à émettre avec le keygen ; aucun privilège attribué automatiquement.
+# ▶ variables-Vercel-production
+# ▶ déploiement-et-santé
+# Nouveau déploiement : /api/health répond status=ok.
+# ▶ signature-locale-des-mises-à-jour
+# Publication : importer le PEM Ed25519 ORIGINAL depuis le coffre si des clients ont déjà reçu des mises à jour.
+# Une nouvelle clé ne répare pas le parc existant : les anciens clients ne la connaissent pas. Les anciennes clés publiques seront conservées.
+#   À fournir/vérifier : Clé Ed25519 originale et accès au serveur de publication garagesite3 requis.
+# ▶ prérequis-keygen-Python
+#   À fournir/vérifier : La publication/upload des installateurs de ce dépôt utilise aussi des fichiers locaux : sur Vercel, hébergement durable des binaires ou service de publication externe requis.
+#   À fournir/vérifier : Le service de sauvegarde PWA utilise encore le disque : sur Vercel, stockage objet durable + adaptation du code nécessaires. Ne pas utiliser /tmp comme sauvegarde permanente.
+#   À fournir/vérifier : Identité légale/SIRET, SMTP, comptes des plateformes de facturation et éventuelle clé OCR nécessitent vos données/accès. Facturation électronique reste OFF ; les saisir dans l’application ou le profil ciblé.
+# Plan technique exécuté. Les opérations réellement réussies et les limites restantes sont dans GarageFlow-configuration/report.json (sans secrets).
+# Aucune prétention « tout est opérationnel » tant que les actions externes/stockage durable ne sont pas résolues.
+# Clé privée détectée et importée automatiquement : /tmp/gf-config-full-1NqRdv/keys/private.pem. Identité publique vérifiée ; fichier original conservé.
+# Licences : la clé privée doit correspondre à la clé publique embarquée.
+# Subtest: canonical policy classifies every manifest variable without deploying runtime or unused fields
+ok 1 - canonical policy classifies every manifest variable without deploying runtime or unused fields
+  ---
+  duration_ms: 2.973479
+  type: 'test'
+  ...
+# Subtest: Redis PING uses a secret header, refuses redirects, never falls back
+ok 2 - Redis PING uses a secret header, refuses redirects, never falls back
+  ---
+  duration_ms: 0.817306
+  type: 'test'
+  ...
+# Subtest: Redis provisioning requests an explicit free EU plan; never auto-upgrades to payg
+ok 3 - Redis provisioning requests an explicit free EU plan; never auto-upgrades to payg
+  ---
+  duration_ms: 0.495348
+  type: 'test'
+  ...
+# Subtest: issuer config writes exactly the locations and field names read by Python
+ok 4 - issuer config writes exactly the locations and field names read by Python
+  ---
+  duration_ms: 8.171611
+  type: 'test'
+  ...
+# Subtest: client defaults align all compiled URLs and permit only the authorized update host
+ok 5 - client defaults align all compiled URLs and permit only the authorized update host
+  ---
+  duration_ms: 11.066909
+  type: 'test'
+  ...
+# Subtest: publisher private key stays outside repository; all historical verification keys are retained
+ok 6 - publisher private key stays outside repository; all historical verification keys are retained
+  ---
+  duration_ms: 6.08289
+  type: 'test'
+  ...
+# Subtest: bootstrap admin license has a real P-256 signature and correct record MAC, no shared password
+ok 7 - bootstrap admin license has a real P-256 signature and correct record MAC, no shared password
+  ---
+  duration_ms: 2.05865
+  type: 'test'
+  ...
+# Subtest: Vercel filesystem paths and invalid TOTP/old TOTP keys fail validation
+ok 8 - Vercel filesystem paths and invalid TOTP/old TOTP keys fail validation
+  ---
+  duration_ms: 0.941019
+  type: 'test'
+  ...
+# Subtest: full plan runs SQL before deployment, saves correct destinations, reports unresolved external limitations honestly
+ok 9 - full plan runs SQL before deployment, saves correct destinations, reports unresolved external limitations honestly
+  ---
+  duration_ms: 28.783216
+  type: 'test'
+  ...
+# Subtest: migration failure prevents cloud synchronization/deployment and leaves a truthful resumable report
+ok 10 - migration failure prevents cloud synchronization/deployment and leaves a truthful resumable report
+  ---
+  duration_ms: 12.742052
+  type: 'test'
+  ...
+# Subtest: full plan has no side effects without initial authorization
+ok 11 - full plan has no side effects without initial authorization
+  ---
+  duration_ms: 2.960308
+  type: 'test'
+  ...
+# Subtest: existing DB missing a critical encryption key cannot silently regenerate or deploy
+ok 12 - existing DB missing a critical encryption key cannot silently regenerate or deploy
+  ---
+  duration_ms: 9.203984
+  type: 'test'
+  ...
+# Subtest: existing signature/portal fallback preserves the original session key instead of invalidating proofs and links
+ok 13 - existing signature/portal fallback preserves the original session key instead of invalidating proofs and links
+  ---
+  duration_ms: 17.197664
+  type: 'test'
+  ...
+# Subtest: keygen retains the encryption of an existing private PEM after masked passphrase authorization
+ok 14 - keygen retains the encryption of an existing private PEM after masked passphrase authorization
+  ---
+  duration_ms: 4.627969
+  type: 'test'
+  ...
+# Subtest: pooled/direct pair must target the same database/schema and Neon branch
+ok 15 - pooled/direct pair must target the same database/schema and Neon branch
+  ---
+  duration_ms: 0.536715
+  type: 'test'
+  ...
+# Subtest: cloud preflight refuses desktop/runtime downgrades and public secret names without deleting platform variables
+ok 16 - cloud preflight refuses desktop/runtime downgrades and public secret names without deleting platform variables
+  ---
+  duration_ms: 0.185796
+  type: 'test'
+  ...
+# Subtest: SQLite initialization honors the configured filename and never overwrites an existing DB
+ok 17 - SQLite initialization honors the configured filename and never overwrites an existing DB
+  ---
+  duration_ms: 1.000463
+  type: 'test'
+  ...
+# Subtest: SQL drift and technical comparison failures both stop before cloud mutations
+ok 18 - SQL drift and technical comparison failures both stop before cloud mutations
+  ---
+  duration_ms: 27.489528
+  type: 'test'
+  ...
+# Subtest: full config selects garageflows.fr automatically and rejects an unapproved endpoint change
+ok 19 - full config selects garageflows.fr automatically and rejects an unapproved endpoint change
+  ---
+  duration_ms: 0.360985
+  type: 'test'
+  ...
+# Subtest: node config writes one server API key and garageflows.fr to the Python UI config, Vercel plan and server profile without rerun rotation
+ok 20 - node config writes one server API key and garageflows.fr to the Python UI config, Vercel plan and server profile without rerun rotation
+  ---
+  duration_ms: 37.681804
+  type: 'test'
+  ...
+# Subtest: JobPart snapshots stay mandatory and the corrective migration drops only their historical defaults
+ok 21 - JobPart snapshots stay mandatory and the corrective migration drops only their historical defaults
+  ---
+  duration_ms: 0.872006
+  type: 'test'
+  ...
+# Subtest: license import automatically uses the repo keys/private.pem path and verifies identity before assignment
+ok 22 - license import automatically uses the repo keys/private.pem path and verifies identity before assignment
+  ---
+  duration_ms: 5.02322
+  type: 'test'
+  ...
+# Subtest: manual original-key import proposes the exact repo path and accepts quoted Windows-style pasted paths
+ok 23 - manual original-key import proposes the exact repo path and accepts quoted Windows-style pasted paths
+  ---
+  duration_ms: 1.544803
+  type: 'test'
+  ...
+# Réponse attendue : oui ou non. Aucun autre texte ne vaut autorisation.
+# Diagnostic SQL en lecture seule : profil .env.server.local, sans migration, reset, synchronisation ni déploiement.
+# Code Prisma 0 : schéma conforme, aucune différence détectée.
+# Diagnostic SQL en lecture seule : profil .env.server.local, sans migration, reset, synchronisation ni déploiement.
+# Code Prisma 1 : comparaison impossible (erreur technique, pas une preuve de drift). Vérifier accès réseau, URLs, droits et installation Prisma. Sorties brutes masquées.
+# Diagnostic SQL en lecture seule : profil .env.server.local, sans migration, reset, synchronisation ni déploiement.
+# Code Prisma 2 : différence de schéma (drift) détectée. Les migrations appliquées et/ou la base diffèrent du schéma Prisma attendu. Aucun correctif appliqué.
+# Résumé indisponible dans cette exécution.
+# Subtest: extracts every documented variable including commented fields
+ok 24 - extracts every documented variable including commented fields
+  ---
+  duration_ms: 1.972203
+  type: 'test'
+  ...
+# Subtest: profiles exclude publication private key and keep server credentials out of desktop
+ok 25 - profiles exclude publication private key and keep server credentials out of desktop
+  ---
+  duration_ms: 0.251591
+  type: 'test'
+  ...
+# Subtest: generates independent 32-byte keys and never replaces existing values
+ok 26 - generates independent 32-byte keys and never replaces existing values
+  ---
+  duration_ms: 1.305701
+  type: 'test'
+  ...
+# Subtest: dotenv roundtrip preserves dollars, hashes, empty lines, comments and CRLF
+ok 27 - dotenv roundtrip preserves dollars, hashes, empty lines, comments and CRLF
+  ---
+  duration_ms: 0.704345
+  type: 'test'
+  ...
+# Subtest: malformed quoted secrets fail closed rather than triggering regeneration
+ok 28 - malformed quoted secrets fail closed rather than triggering regeneration
+  ---
+  duration_ms: 0.416935
+  type: 'test'
+  ...
+# Subtest: does not serialize PEM multiline values or unsafe quoting
+ok 29 - does not serialize PEM multiline values or unsafe quoting
+  ---
+  duration_ms: 0.128934
+  type: 'test'
+  ...
+# Subtest: production validator requires PostgreSQL, direct endpoint, HTTPS, Redis and pepper
+ok 30 - production validator requires PostgreSQL, direct endpoint, HTTPS, Redis and pepper
+  ---
+  duration_ms: 2.425157
+  type: 'test'
+  ...
+# Subtest: self-hosted production requires declared trusted proxy, Vercel does not
+ok 31 - self-hosted production requires declared trusted proxy, Vercel does not
+  ---
+  duration_ms: 0.436944
+  type: 'test'
+  ...
+# Subtest: desktop uses SQLite defaults and has no server dependency
+ok 32 - desktop uses SQLite defaults and has no server dependency
+  ---
+  duration_ms: 1.421231
+  type: 'test'
+  ...
+# Subtest: checks AES lengths, old keys, weak secrets, limits and optional enums
+ok 33 - checks AES lengths, old keys, weak secrets, limits and optional enums
+  ---
+  duration_ms: 1.728199
+  type: 'test'
+  ...
+# Subtest: electronic invoicing never enables itself or silently generates its encryption key
+ok 34 - electronic invoicing never enables itself or silently generates its encryption key
+  ---
+  duration_ms: 0.561115
+  type: 'test'
+  ...
+# Subtest: license signing import must be P-256 and match embedded public key
+ok 35 - license signing import must be P-256 and match embedded public key
+  ---
+  duration_ms: 4.051087
+  type: 'test'
+  ...
+# Subtest: sync plan only adds absent values; conflicts are not overwritten
+ok 36 - sync plan only adds absent values; conflicts are not overwritten
+  ---
+  duration_ms: 0.191924
+  type: 'test'
+  ...
+# Subtest: private writes are atomic, replace existing files and refuse symlinks
+ok 37 - private writes are atomic, replace existing files and refuse symlinks
+  ---
+  duration_ms: 1.881648
+  type: 'test'
+  ...
+# Subtest: CLI --check is offline/read-only and reports names, never secret values
+ok 38 - CLI --check is offline/read-only and reports names, never secret values
+  ---
+  duration_ms: 69.28773
+  type: 'test'
+  ...
+# Subtest: CLI rejects unknown profiles and provides help without a TTY or network
+ok 39 - CLI rejects unknown profiles and provides help without a TTY or network
+  ---
+  duration_ms: 122.905822
+  type: 'test'
+  ...
+# Subtest: all secret output paths are ignored by Git and Vercel
+ok 40 - all secret output paths are ignored by Git and Vercel
+  ---
+  duration_ms: 12.570861
+  type: 'test'
+  ...
+# Subtest: interactive confirmations pass their visible label to readline (Windows redraw regression)
+ok 41 - interactive confirmations pass their visible label to readline (Windows redraw regression)
+  ---
+  duration_ms: 3.675116
+  type: 'test'
+  ...
+# Subtest: SQL diagnostic is read-only, uses the server profile and distinguishes drift from technical failure
+ok 42 - SQL diagnostic is read-only, uses the server profile and distinguishes drift from technical failure
+  ---
+  duration_ms: 3.254077
+  type: 'test'
+  ...
+# Subtest: subprocess failures retain exit status without exposing stdout or stderr
+ok 43 - subprocess failures retain exit status without exposing stdout or stderr
+  ---
+  duration_ms: 26.353462
+  type: 'test'
+  ...
+# Subtest: SQL difference summaries identify canonical structures without disclosing defaults, URLs or unknown names
+ok 44 - SQL difference summaries identify canonical structures without disclosing defaults, URLs or unknown names
+  ---
+  duration_ms: 2.818377
+  type: 'test'
+  ...
+# URLs PostgreSQL manquantes : récupération depuis votre compte Neon, sans création de projet/base ni génération de secrets.
+# DATABASE_URL et DIRECT_URL récupérées et sauvegardées localement (valeurs masquées). Les autres paramètres/secrets restent inchangés.
+# Diagnostic SQL en lecture seule : profil .env.server.local, sans migration, reset, synchronisation ni déploiement.
+# Code Prisma 0 : schéma conforme, aucune différence détectée.
+# URLs PostgreSQL manquantes : récupération depuis votre compte Neon, sans création de projet/base ni génération de secrets.
+# Connexion Neon via le CLI officiel. Aucun jeton Neon stocké par config.
+# DATABASE_URL poolée et DIRECT_URL directe récupérées (valeurs masquées).
+# Connexion Neon via le CLI officiel. Aucun jeton Neon stocké par config.
+# Connexion Neon via le CLI officiel. Aucun jeton Neon stocké par config.
+# Subtest: Prisma drift exit code retains only a redacted structural summary
+ok 45 - Prisma drift exit code retains only a redacted structural summary
+  ---
+  duration_ms: 26.452975
+  type: 'test'
+  ...
+# Subtest: missing diagnostic URLs request access, recover an existing Neon pair and preserve other local secrets verbatim
+ok 46 - missing diagnostic URLs request access, recover an existing Neon pair and preserve other local secrets verbatim
+  ---
+  duration_ms: 2.741329
+  type: 'test'
+  ...
+# Subtest: URL recovery cancellation never creates files or runs a SQL query
+ok 47 - URL recovery cancellation never creates files or runs a SQL query
+  ---
+  duration_ms: 0.873413
+  type: 'test'
+  ...
+# Subtest: Neon recovery authenticates, selects existing resources, gets both connection strings and never creates a project
+ok 48 - Neon recovery authenticates, selects existing resources, gets both connection strings and never creates a project
+  ---
+  duration_ms: 1.113563
+  type: 'test'
+  ...
+# Subtest: saving missing URLs keeps existing URLs and handles UTF-8 BOM without resetting the profile
+ok 49 - saving missing URLs keeps existing URLs and handles UTF-8 BOM without resetting the profile
+  ---
+  duration_ms: 1.105098
+  type: 'test'
+  ...
+1..49
+# tests 49
+# suites 0
+# pass 49
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 588.661432

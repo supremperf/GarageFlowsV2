@@ -16,11 +16,11 @@ import type {
   QuoteSuggestionInput,
   SuggestionLine,
 } from './types'
+import { toCents, fromCents, lineCents, taxCentsFromBasis } from '@/lib/money'
 
-/** Float-safe rounding to cents. */
+/** Arrondi au centime — délègue à la couche financière centrale (centimes exacts). */
 export function roundMoney(n: number): number {
-  const sign = n < 0 ? -1 : 1
-  return (sign * Math.round(Math.abs(n) * 100 + 1e-6)) / 100
+  return fromCents(toCents(n))
 }
 
 /** Billed hours: minutes → hours, rounded UP to the step (min one step when > 0). */
@@ -64,7 +64,7 @@ export function generateQuote(
         quantity: hours,
         unitPrice: unitRate,
         unitCost: 0,
-        lineTotalHT: roundMoney(hours * unitRate),
+        lineTotalHT: fromCents(lineCents(unitRate, hours)),
         isLabor: true,
         repairType: op.repairType,
       })
@@ -76,12 +76,15 @@ export function generateQuote(
       const unitPrice = roundMoney(price)
       lines.push({
         kind: 'part',
+        // Le lien vers le catalogue traverse la génération (GF-040) : sans lui,
+        // la facture issue de la conversion ne décrémentait aucun stock.
+        partId: p.partId ?? null,
         description: p.name,
         reference: p.reference ?? null,
         quantity: p.quantity,
         unitPrice,
         unitCost: roundMoney(cost),
-        lineTotalHT: roundMoney(p.quantity * unitPrice),
+        lineTotalHT: fromCents(lineCents(unitPrice, p.quantity)),
         isLabor: false,
         repairType: op.repairType,
       })
@@ -92,21 +95,26 @@ export function generateQuote(
     const priced = s.unitPrice != null && Number.isFinite(s.unitPrice) && s.unitPrice >= 0
     const unit = priced ? roundMoney(s.unitPrice as number) : null
     return {
+      partId: s.partId ?? null,
       name: s.name,
       reference: s.reference ?? null,
       quantity: s.quantity,
       unitPrice: unit,
-      lineTotalHT: unit != null ? roundMoney(s.quantity * unit) : null,
+      lineTotalHT: unit != null ? fromCents(lineCents(unit, s.quantity)) : null,
       reason: s.reason,
     }
   })
 
   const laborHT = roundMoney(lines.filter((l) => l.isLabor).reduce((s, l) => s + l.lineTotalHT, 0))
   const partsHT = roundMoney(lines.filter((l) => !l.isLabor).reduce((s, l) => s + l.lineTotalHT, 0))
-  const subtotalHT = roundMoney(laborHT + partsHT)
-  const vat = roundMoney(subtotalHT * (vatRate / 100))
-  const totalTTC = roundMoney(subtotalHT + vat)
-  const estimatedCostHT = roundMoney(lines.reduce((s, l) => s + l.unitCost * l.quantity, 0))
+  // TVA/TTC via la règle centrale (centimes entiers, arrondi unique) :
+  // TTC = HT + TVA garanti au centime, comme les factures/devis persistés.
+  const subtotalHTCents = toCents(laborHT) + toCents(partsHT)
+  const vatCents = taxCentsFromBasis(subtotalHTCents, vatRate)
+  const subtotalHT = fromCents(subtotalHTCents)
+  const vat = fromCents(vatCents)
+  const totalTTC = fromCents(subtotalHTCents + vatCents)
+  const estimatedCostHT = fromCents(lines.reduce((s, l) => s + lineCents(l.unitCost, l.quantity), 0))
   const marginHT = roundMoney(subtotalHT - estimatedCostHT)
   const marginPct = subtotalHT > 0 ? Math.round((marginHT / subtotalHT) * 1000) / 10 : null
   const suggestionsHT = roundMoney(suggestionLines.reduce((s, l) => s + (l.lineTotalHT ?? 0), 0))

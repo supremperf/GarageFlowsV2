@@ -11,7 +11,7 @@
  */
 
 /** Clés d'objet dont la VALEUR doit toujours être masquée. */
-const SENSITIVE_KEY = /^(password|passwd|pwd|secret|.*secret|token|.*token|api[_-]?key|authorization|cookie|set-cookie|hwid|jwt|signature|private[_-]?key|nextauth_secret|gf_session)$/i
+const SENSITIVE_KEY = /^(password|passwd|pwd|secret|.*secret|token|.*token|.*api[_-]?key|.*password|.*passwd|.*pwd|authorization|cookie|set-cookie|hwid|jwt|signature|private[_-]?key|nextauth_secret|gf_session)$/i
 
 /** Masque les motifs sensibles dans une chaîne. */
 export function redactString(input: string): string {
@@ -24,13 +24,32 @@ export function redactString(input: string): string {
   // URLs de connexion base de données avec identifiants.
   s = s.replace(/\b(postgres(?:ql)?|mysql|mongodb(?:\+srv)?):\/\/[^\s"']+/gi, '$1://<redacted>')
 
+  // Jetons de portail client dans un CHEMIN d'URL (mission §10) :
+  //   /clients/<token>  et  /clients/quote/<token>  →  /clients[/quote]/[REDACTED]
+  // On ne masque QUE les segments « jeton » (longs / de forme JWT ou base64url),
+  // jamais les pages statiques (/clients/login, /clients/register, /clients/account).
+  // Placé AVANT la règle JWT générique pour émettre exactement « [REDACTED] ».
+  //
+  // L'ancien préfixe `/portal` reste couvert : les journaux déjà écrits, et les
+  // requêtes qui arrivent encore dessus avant la redirection permanente,
+  // contiennent des jetons tout aussi valides.
+  s = s.replace(
+    /\/(clients|portal)(\/quote)?\/(?:eyJ[A-Za-z0-9._-]+|[A-Za-z0-9_-]{20,}(?:\.[A-Za-z0-9_-]+){0,2})/g,
+    '/$1$2/[REDACTED]',
+  )
+
   // En-têtes sensibles (valeur jusqu'à la fin de ligne).
   s = s.replace(/\b(authorization|cookie|set-cookie)\b\s*[:=]\s*[^\r\n]+/gi, '$1: <redacted>')
 
+  // Guillemets/espaces/échappements et préfixes env (bornés à 64 caractères).
+  // Une valeur citée tronquée est masquée jusqu’à la fin, pas laissée en clair.
   // Paires clé=valeur sensibles.
   s = s.replace(
-    /\b(password|passwd|pwd|secret|token|api[_-]?key|access[_-]?token|refresh[_-]?token|client[_-]?secret|nextauth_secret)\b\s*[:=]\s*[^\s,;"']+/gi,
-    '$1=<redacted>',
+    /\b((?:[a-z0-9_-]{1,64}[_-])?(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?token|refresh[_-]?token|client[_-]?secret|nextauth_secret|authorization|cookie|set-cookie|jwt|signature|private[_-]?key|gf_session))\b(["']?\s*[:=]\s*)("(?:\\.|\\$|[^"\\])*(?:"|$)|'(?:\\.|\\$|[^'\\])*(?:'|$)|[^\s,;"'}\]]+)/gi,
+    (_match, key, separator, value) => {
+      const quote = value[0] === '"' || value[0] === "'" ? value[0] : ''
+      return `${key}${separator}${quote}<redacted>${quote}`
+    },
   )
 
   // Bearer tokens.

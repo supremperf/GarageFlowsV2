@@ -1,0 +1,81 @@
+{
+  "recordedAt": "2026-10-15T14:41:58.576025+02:00",
+  "basePublishedCommit": "ce5d2815ce185030aebccfc56c1d3eefd955aaa7",
+  "status": "PARTIALLY_VALIDATED",
+  "review": [
+    {
+      "path": ".gitleaks.toml",
+      "sha256": "d7c3238cf5e0d8b32d061b57f5b6b322aa321a1c2d4229eb12d2bf6a44db41ca",
+      "range": {
+        "start": 1,
+        "end": 85
+      },
+      "category": "security follow-up / metadata",
+      "depth": "Manual semantic/policy/data review of added scope, not inventory proof",
+      "review": "Manual security-policy review: original rules/global allowlist unchanged; default generic-api-key inherited; AND scope existing F01..F32 plus ten exact source-path/digest lines, no general SHA or file exemption. Official8.24.3 syntax checked against pinned upstream docs; live scanner confirmation pending.",
+      "status": "PARTIALLY_VALIDATED_PENDING_EFFECTIVE_SCANNER"
+    },
+    {
+      "path": "tests/secret-scan-policy.test.cjs",
+      "sha256": "8f8e80e0f8f39e0f619ff6c30646b008a394f8244538c1fc543ec7a2a2d332a0",
+      "range": {
+        "start": 1,
+        "end": 71
+      },
+      "category": "security follow-up / metadata",
+      "depth": "Manual semantic/policy/data review of added scope, not inventory proof",
+      "review": "Existing two policy tests unchanged; one additional test enforces exact source digest and rejects scope/value substitutions. F33 policy3/3 release53/53.",
+      "status": "PARTIALLY_VALIDATED_PENDING_EFFECTIVE_SCANNER"
+    },
+    {
+      "path": "docs/audit/copilot-phase4/gitleaks-code-digest-triage.json",
+      "sha256": "c335881aa575669fb5d94839cc1e39c00d222ebc2607b125a3029d390d4ce044",
+      "range": {
+        "start": 1,
+        "end": 87
+      },
+      "category": "security follow-up / metadata",
+      "depth": "Manual semantic/policy/data review of added scope, not inventory proof",
+      "review": "Ten receipt digest values independently match public source bytes; metadata only, no scanner values/Secret/Match fields; no credential rotation/history change.",
+      "status": "PARTIALLY_VALIDATED_PENDING_EFFECTIVE_SCANNER"
+    },
+    {
+      "path": "docs/COPILOT_PHASE4_GITHUB_FOLLOWUP.md",
+      "sha256": "844ff0188bc5241decef9dc9b6e073dbead2dffa7b41475b1b6bc084678f3c36",
+      "range": {
+        "start": 1,
+        "end": 37
+      },
+      "category": "security follow-up / metadata",
+      "depth": "Manual semantic/policy/data review of added scope, not inventory proof",
+      "review": "Timestamp-specific GitHub publication/failed checks/triage/limits; supplements\u2014not overwrites\u2014original indexed report.",
+      "status": "PARTIALLY_VALIDATED_PENDING_EFFECTIVE_SCANNER"
+    },
+    {
+      "path": "docs/audit/copilot-phase4/F33.json",
+      "sha256": "f40812348e75c0c570909f56d25302322b8253c80f49a8fd8eb781fbfa462368",
+      "range": {
+        "start": 1,
+        "end": 25
+      },
+      "category": "security follow-up / metadata",
+      "depth": "Manual semantic/policy/data review of added scope, not inventory proof",
+      "review": "New proof only; typed path/sha256 entries instead of ambiguous map; old receipts unchanged.",
+      "status": "PARTIALLY_VALIDATED_PENDING_EFFECTIVE_SCANNER"
+    },
+    {
+      "path": "docs/audit/copilot-phase4/normalized/F33.txt",
+      "sha256": "b3185f53472127641450ad513e375d0eef851006ca1f1e3d6052fdc06d3519d1",
+      "range": {
+        "start": 1,
+        "end": 372
+      },
+      "category": "security follow-up / metadata",
+      "depth": "Manual semantic/policy/data review of added scope, not inventory proof",
+      "review": "Normalized policy-test output, no official-scanner success inferred.",
+      "status": "PARTIALLY_VALIDATED_PENDING_EFFECTIVE_SCANNER"
+    }
+  ],
+  "unchangedOriginalIndexSha256": "89118121006b6ea0c066f04edf5591fc8a5cd0f1486003a6e0e15e4950ec4afb",
+  "limits": "Application/golds unchanged; original28 execution receipts plus closing/preparation records unchanged. No actual scanner success until new GitHub run; final check receipt intentionally outside index."
+}

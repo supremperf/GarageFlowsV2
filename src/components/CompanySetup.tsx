@@ -8,6 +8,7 @@ import {
   CreditCard, Image as ImageIcon, ChevronRight, Check, Wrench, X,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { AddressAutocomplete } from '@/components/AddressAutocomplete'
 
 interface CompanyData {
   name: string
@@ -264,8 +265,20 @@ export default function CompanySetup({ onComplete, onSkip, initialData }: Props)
                 </div>
 
                 <Field label={t.companyName + ' *'} value={data.name} onChange={v => set('name', v)} placeholder="Mon Garage SARL" />
-                <Field label={t.companyAddress} value={data.address} onChange={v => set('address', v)}
-                  placeholder="12 rue de la Mécanique, 75001 Paris" optional optionalText={t.optional} />
+                {/* Adresse avec propositions dès la création du garage (GF-022) :
+                    c'est celle qui figurera sur toutes les factures. */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1" htmlFor="gf-adresse-setup">
+                    {t.companyAddress}<span className="ml-1 text-slate-600">({t.optional})</span>
+                  </label>
+                  <AddressAutocomplete
+                    id="gf-adresse-setup"
+                    value={data.address}
+                    onChange={v => set('address', v)}
+                    placeholder="12 rue de la Mécanique, 75001 Paris"
+                    className="w-full rounded-lg border border-white/10 bg-white/[0.05] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-600"
+                  />
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label={t.companyPhone} value={data.phone} onChange={v => set('phone', v)} type="tel" placeholder="+33 1 23 45 67 89" optional optionalText={t.optional} />
                   <Field label={t.companyEmail} value={data.email} onChange={v => set('email', v)} type="email" placeholder="contact@garage.fr" optional optionalText={t.optional} />

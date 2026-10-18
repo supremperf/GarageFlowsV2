@@ -1,0 +1,4 @@
+docs/audit/copilot-phase5/V28.txt:40: trailing whitespace.
++
+docs/audit/copilot-phase5/V28.txt:50: trailing whitespace.
++

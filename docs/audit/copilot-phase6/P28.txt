@@ -1,0 +1,1 @@
+{"scope":"PROOF_METADATA_AND_PRESERVATION_NOT_FUNCTIONAL_VALIDATION","receiptLogsVerified":27,"changedSourceHashesVerified":24,"originalCodeqlRows":17,"originalHighRows":7,"alertNumbersNotFabricated":true,"risksAccepted":0,"alertsDismissed":0,"individualTriagesVerified":959,"historicalEvidenceAndFrozen48Unmodified":true,"packageLockAndGitleaksAndJsBudgetUnmodified":true}

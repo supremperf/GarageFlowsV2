@@ -1,0 +1,155 @@
+{
+  "numTotalTestSuites": 3,
+  "numPassedTestSuites": 3,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 10,
+  "numPassedTests": 5,
+  "numFailedTests": 0,
+  "numPendingTests": 5,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1792266970461,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Clé embarquée"
+          ],
+          "fullName": "Clé embarquée correspond à keys/public.pem (clé émettrice réelle)",
+          "status": "skipped",
+          "title": "correspond à keys/public.pem (clé émettrice réelle)",
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Clé embarquée"
+          ],
+          "fullName": "Clé embarquée n’est AUCUNE des empreintes retirées",
+          "status": "passed",
+          "title": "n’est AUCUNE des empreintes retirées",
+          "duration": 3.8849240000000123,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptation / refus des licences"
+          ],
+          "fullName": "Acceptation / refus des licences 1. licence signée par la clé COURANTE → acceptée",
+          "status": "skipped",
+          "title": "1. licence signée par la clé COURANTE → acceptée",
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptation / refus des licences"
+          ],
+          "fullName": "Acceptation / refus des licences 2. licence ALTÉRÉE → refusée",
+          "status": "skipped",
+          "title": "2. licence ALTÉRÉE → refusée",
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptation / refus des licences"
+          ],
+          "fullName": "Acceptation / refus des licences 3. licence signée par une clé QUELCONQUE → refusée",
+          "status": "passed",
+          "title": "3. licence signée par une clé QUELCONQUE → refusée",
+          "duration": 1.8702380000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptation / refus des licences"
+          ],
+          "fullName": "Acceptation / refus des licences 4. licence NEUVE forgée avec la clé SORTANTE → refusée (cœur de la rotation)",
+          "status": "passed",
+          "title": "4. licence NEUVE forgée avec la clé SORTANTE → refusée (cœur de la rotation)",
+          "duration": 0.8097469999999873,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptation / refus des licences"
+          ],
+          "fullName": "Acceptation / refus des licences 5. licence expirée → refusée",
+          "status": "skipped",
+          "title": "5. licence expirée → refusée",
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptation / refus des licences"
+          ],
+          "fullName": "Acceptation / refus des licences 6. jeton malformé / vide / bruit → refusé sans lever",
+          "status": "passed",
+          "title": "6. jeton malformé / vide / bruit → refusé sans lever",
+          "duration": 1.168407000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptation / refus des licences"
+          ],
+          "fullName": "Acceptation / refus des licences 7. en-tête d’algorithme détourné (alg: none) → refusé",
+          "status": "passed",
+          "title": "7. en-tête d’algorithme détourné (alg: none) → refusé",
+          "duration": 0.3502890000000036,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "Acceptation / refus des licences"
+          ],
+          "fullName": "Acceptation / refus des licences 8. licence mécanicien sans parent → refusée",
+          "status": "skipped",
+          "title": "8. licence mécanicien sans parent → refusée",
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1792266970867,
+      "endTime": 1792266970875.3503,
+      "status": "passed",
+      "message": "",
+      "name": "/home/user/GarageFlowsV2/src/lib/license/__tests__/forgery-resistance.test.ts"
+    }
+  ]
+}

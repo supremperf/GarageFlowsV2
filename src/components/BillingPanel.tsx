@@ -3,11 +3,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   X, FileText, Receipt, Plus, Search, Eye, Loader2,
-  CheckCircle2, Clock, Send, Ban, TrendingUp, Euro, RefreshCw
+  CheckCircle2, Clock, Send, Ban, TrendingUp, Euro, RefreshCw, Sparkles
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { asDocArray, docMatchesSearch, formatAmount, sumTTC } from '@/lib/billing-view'
 import toast from 'react-hot-toast'
 import QuoteInvoiceModal from './QuoteInvoiceModal'
+import { QuoteGenerator } from './billing/QuoteGenerator'
 import { useTranslation } from '@/lib/i18n'
 import { useScheduleStore } from '@/store/schedule-store'
 
@@ -88,7 +90,7 @@ function DocRow({ doc, type, onClick }: { doc: Doc; type: 'quote' | 'invoice'; o
         <p className="text-[10px] text-slate-600">{date}</p>
       </div>
       <div className="text-right flex-shrink-0">
-        <p className="text-sm font-bold text-white">{(doc.totalTTC ?? 0).toFixed(2)} €</p>
+        <p className="text-sm font-bold text-white">{formatAmount(doc.totalTTC)} €</p>
         <p className="text-[10px] text-slate-500">TTC</p>
       </div>
       <Eye className="w-4 h-4 text-slate-600 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -108,6 +110,7 @@ export default function BillingPanel({ onClose }: Props) {
   const [loading, setLoading] = useState(true)
   const [search,  setSearch]  = useState('')
   const [openDoc, setOpenDoc] = useState<{ type: 'quote' | 'invoice'; jobId?: string | null; docId: string } | null>(null)
+  const [generateur, setGenerateur] = useState(false)
   const [creating,setCreating]= useState<'quote' | 'invoice' | null>(null)
 
   const load = useCallback(async () => {
@@ -117,8 +120,11 @@ export default function BillingPanel({ onClose }: Props) {
         fetch('/api/quotes'),
         fetch('/api/invoices'),
       ])
-      if (qRes.ok) { const qData = await qRes.json(); setQuotes(qData?.data ?? qData ?? []) }
-      if (iRes.ok) { const iData = await iRes.json(); setInvoices(iData?.data ?? iData ?? []) }
+      // asDocArray : une réponse non-tableau (objet d'erreur, null, {data:[]})
+      // ne doit JAMAIS être stockée telle quelle (sinon filter/reduce crashe la
+      // page entière). On stocke toujours un tableau.
+      if (qRes.ok) { setQuotes(asDocArray<Doc>(await qRes.json())) }
+      if (iRes.ok) { setInvoices(asDocArray<Doc>(await iRes.json())) }
     } catch {
       toast.error('Erreur de chargement')
     } finally {
@@ -138,22 +144,14 @@ export default function BillingPanel({ onClose }: Props) {
     }
   }, [statsVersion, load])
 
-  const docs     = tab === 'quotes' ? quotes : invoices
-  const filtered = docs.filter(d => {
-    if (!search) return true
-    const q = search.toLowerCase()
-    return (
-      d.number.toLowerCase().includes(q) ||
-      (d.job?.customerName ?? d.clientName ?? '').toLowerCase().includes(q) ||
-      (d.job?.vehicleModel ?? d.vehicleModel ?? '').toLowerCase().includes(q) ||
-      (d.job?.licensePlate ?? d.licensePlate ?? '').toLowerCase().includes(q)
-    )
-  })
+  const docs     = asDocArray<Doc>(tab === 'quotes' ? quotes : invoices)
+  // Recherche robuste aux champs null/legacy (docMatchesSearch garde `number` null).
+  const filtered = docs.filter(d => docMatchesSearch(d, search))
 
-  // Panel stats
-  const totalTTC      = docs.reduce((s, d) => s + (d.totalTTC ?? 0), 0)
+  // Panel stats (montants non finis comptés comme 0 — jamais de NaN affiché).
+  const totalTTC      = sumTTC(docs)
   const paidOrAccepted = docs.filter(d => d.status === 'paid' || d.status === 'accepted')
-  const totalPaid     = paidOrAccepted.reduce((s, d) => s + (d.totalTTC ?? 0), 0)
+  const totalPaid     = sumTTC(paidOrAccepted)
   const pending       = docs.filter(d => ['draft', 'sent'].includes(d.status)).length
 
   function openExisting(doc: Doc) {
@@ -181,11 +179,19 @@ export default function BillingPanel({ onClose }: Props) {
               <h2 className="text-base font-bold text-white">Devis &amp; Facturation</h2>
               <p className="text-[11px] text-slate-500">Gestion commerciale</p>
             </div>
+            {/* `POST /api/quotes/generate` existait — nomenclature, taux horaire,
+                TVA, pièces oubliées, numérotation — sans qu'aucun écran ne
+                l'appelle. Le garage ressaisissait à la main ce que le logiciel
+                savait composer (GF-DUR-031). */}
+            <button onClick={() => setGenerateur(true)} title="Générer un devis"
+              className="p-2 rounded-lg hover:bg-white/[0.07] text-purple-400 hover:text-purple-300 transition-all">
+              <Sparkles className="w-4 h-4" />
+            </button>
             <button onClick={load} title="Actualiser"
               className={cn('p-2 rounded-lg hover:bg-white/[0.07] text-slate-500 hover:text-white transition-all', loading && 'pointer-events-none')}>
               <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin text-blue-400')} />
             </button>
-            <button onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
+            <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -197,7 +203,7 @@ export default function BillingPanel({ onClose }: Props) {
               <p className="text-[10px] text-slate-500 uppercase tracking-wide">{tab === 'quotes' ? 'Devis' : 'Factures'}</p>
             </div>
             <div className="bg-emerald-500/10 rounded-xl p-3 text-center border border-emerald-500/20">
-              <p className="text-lg font-black text-emerald-400">{totalPaid.toFixed(0)} €</p>
+              <p className="text-lg font-black text-emerald-400">{formatAmount(totalPaid, 0)} €</p>
               <p className="text-[10px] text-emerald-600 uppercase tracking-wide">{tab === 'quotes' ? 'Acceptés' : 'Encaissé'}</p>
             </div>
             <div className="bg-amber-500/10 rounded-xl p-3 text-center border border-amber-500/20">
@@ -254,7 +260,8 @@ export default function BillingPanel({ onClose }: Props) {
                   {tab === 'quotes' ? <FileText className="w-6 h-6 text-slate-600" /> : <Receipt className="w-6 h-6 text-slate-600" />}
                 </div>
                 <p className="text-slate-400 font-medium mb-1">
-                  {search ? 'Aucun résultat' : `Aucune ${tab === 'quotes' ? 'devis' : 'facture'}`}
+                  {/* « devis » est masculin : l'article était figé au féminin pour les deux onglets. */}
+                  {search ? 'Aucun résultat' : (tab === 'quotes' ? 'Aucun devis' : 'Aucune facture')}
                 </p>
                 <p className="text-slate-600 text-sm">
                   {search ? 'Modifiez votre recherche' : 'Cliquez "Nouveau" pour créer'}
@@ -281,7 +288,7 @@ export default function BillingPanel({ onClose }: Props) {
               </div>
               <div className="flex items-center gap-1 text-white font-bold">
                 <Euro className="w-3.5 h-3.5 text-slate-400" />
-                {filtered.reduce((s, d) => s + (d.totalTTC ?? 0), 0).toFixed(2)}
+                {formatAmount(sumTTC(filtered))}
               </div>
             </div>
           )}
@@ -317,6 +324,18 @@ export default function BillingPanel({ onClose }: Props) {
             load()
           }}
           onSaved={() => {
+            load()
+            invalidateStats()
+          }}
+        />
+      )}
+
+      {generateur && (
+        <QuoteGenerator
+          onClose={() => setGenerateur(false)}
+          onCree={() => {
+            // Le devis créé doit apparaître dans l'onglet où on le cherchera.
+            setTab('quotes')
             load()
             invalidateStats()
           }}

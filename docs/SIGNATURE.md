@@ -1,7 +1,15 @@
 # Module Premium — Signature électronique renforcée
 
-Signature électronique **inviolable** avec preuve d'intégrité cryptographique.
-Toute modification du document **après** signature l'invalide automatiquement.
+Signature électronique **scellée par un sceau d'intégrité cryptographique**
+(HMAC-SHA256 avec clé d'installation) : toute modification du document **après**
+signature invalide le sceau de façon détectable.
+
+> **Qualification honnête (AUD-043)** : ce mécanisme est un **sceau d'intégrité
+> local** (HMAC symétrique), PAS une signature électronique qualifiée au sens
+> eIDAS ni un dispositif à clé asymétrique horodaté par un tiers de confiance. Il
+> détecte toute altération post-signature ; il ne confère pas à lui seul une
+> valeur probante « qualifiée ». Le terme « inviolable » est **interdit** dans la
+> documentation active : aucune protection logicielle locale ne l'est.
 
 ## Principe
 

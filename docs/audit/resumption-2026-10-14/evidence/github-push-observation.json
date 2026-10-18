@@ -1,0 +1,24 @@
+{
+  "recordedAt": "2026-10-14T14:41:44.206850+00:00",
+  "source": "Git push tool output transcribed, not a captured machine log; precise push start/end timestamps not recorded. Remote SHA independently verified in gh-published-sha.log.",
+  "argv": [
+    "git",
+    "push",
+    "origin",
+    "arena/c9eaae15-garageflowsv2"
+  ],
+  "exitCode": 0,
+  "publishedCommit": "c53d8e5e933221dc790ca7c0758ece95a7eab053",
+  "remoteWarning": {
+    "scope": "default branch main, not this session branch",
+    "total": 151,
+    "critical": 2,
+    "high": 63,
+    "moderate": 71,
+    "low": 15
+  },
+  "remoteHistoryPreserved": true,
+  "mergeSourceTreeIdenticalTo": "ef8e88f",
+  "sourceTree": "4c597e7991e940d59f5f25194f09a422c86e966b",
+  "restrictions": "No force push, no PR/main merge, no release/deployment/protection changes."
+}

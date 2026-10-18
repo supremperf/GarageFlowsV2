@@ -1,3 +1,5 @@
+import { LicenseConfigurationError } from './failures'
+import { verifyRecordMac, recordIntegrityUsable } from './record-mac'
 /**
  * Gestion des appareils par licence — activation atomique, jetons d'appareil.
  *
@@ -36,10 +38,7 @@ export function getDevicePepper(): string {
   const p = process.env.DEVICE_TOKEN_PEPPER
   if (p && !isWeakSecret(p)) return p
   if (isPwaProduction()) {
-    throw new Error(
-      'DEVICE_TOKEN_PEPPER absent ou faible en production PWA. ' +
-        'Configurez un secret aléatoire fort (openssl rand -base64 32).',
-    )
+    throw new LicenseConfigurationError('DEVICE_TOKEN_PEPPER absent ou trop faible.')
   }
   return getAuthSecret()
 }
@@ -129,6 +128,42 @@ export class InvalidHwidError extends Error {
     super('Identifiant d\'appareil invalide.')
     this.name = 'InvalidHwidError'
   }
+}
+
+// ─── Cycle de vie d'un appareil (§1) ─────────────────────────────────────────
+/**
+ * États canoniques d'un appareil :
+ *  - 'active'      : session possible ; CONSOMME un siège.
+ *  - 'deactivated' : « disconnected » — session coupée, siège LIBÉRÉ, RÉACTIVABLE
+ *                    (l'appareil peut se reconnecter si la licence reste valide).
+ *  - 'revoked'     : PERMANENT — ne consomme plus de siège et n'est JAMAIS
+ *                    réactivable en self-service (activateDevice lève DeviceRevokedError).
+ *
+ * Transitions autorisées : active→deactivated, deactivated→active, active→revoked,
+ * deactivated→revoked. INTERDIT (irréversible) : revoked→active, revoked→deactivated.
+ *
+ * La suspension d'une clé mécanicien est portée au niveau LICENCE : une licence
+ * 'suspended' bloque toute session (validateDeviceToken/validateMechanicSession)
+ * tout en laissant l'appareil 'active' — le siège est donc CONSERVÉ pendant la
+ * suspension (les clés suspendues comptent dans le quota) et l'accès est rétabli
+ * INSTANTANÉMENT au retour en 'active', sans re-consommer de siège.
+ */
+export const DEVICE_STATES = ['active', 'deactivated', 'revoked'] as const
+export type DeviceState = (typeof DEVICE_STATES)[number]
+
+/** Un appareil dans cet état consomme-t-il un siège ? (seul 'active' le fait.) */
+export function isSeatConsumingStatus(status: string): boolean {
+  return status === 'active'
+}
+
+/** Transition d'état autorisée ? 'revoked' est TERMINAL (révocation irréversible). */
+export function canTransitionDevice(from: string, to: DeviceState): boolean {
+  if (from === 'revoked') return false // terminal
+  const allowed: Record<string, DeviceState[]> = {
+    active:      ['deactivated', 'revoked'],
+    deactivated: ['active', 'revoked'],
+  }
+  return (allowed[from] ?? []).includes(to)
 }
 
 // ─── Activation atomique ─────────────────────────────────────────────────────
@@ -286,6 +321,7 @@ export type DeviceTokenFailure =
   | 'license_revoked'
   | 'license_suspended'
   | 'license_expired'
+  | 'license_tampered'
 
 export type ValidateDeviceTokenResult =
   | { ok: true; licenseId: string; deviceId: string }
@@ -323,6 +359,7 @@ export async function validateDeviceToken(
 
   const license = await prisma.licenseKey.findUnique({ where: { licenseId: device.licenseId } })
   if (!license) return { ok: false, code: 'license_unknown' }
+  if (!recordIntegrityUsable(verifyRecordMac(license))) return { ok: false, code: 'license_tampered' }
   if (license.status === 'revoked') return { ok: false, code: 'license_revoked' }
   if (license.status === 'suspended') return { ok: false, code: 'license_suspended' }
   if (license.expiryAt.getTime() < Date.now()) return { ok: false, code: 'license_expired' }

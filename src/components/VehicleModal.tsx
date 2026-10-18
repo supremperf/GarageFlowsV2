@@ -1,4 +1,5 @@
 'use client'
+import { lineCents, fromCents } from '@/lib/money'
 
 import { useState, useEffect } from 'react'
 import {
@@ -129,7 +130,7 @@ export default function VehicleModal({ vehicleId, licensePlate, onClose, onEditJ
   }
 
   const totalRevenue = vehicle?.jobs.reduce((sum, j) => {
-    const parts = j.jobParts.reduce((s, p) => s + p.unitPrice * p.quantity, 0)
+    const parts = j.jobParts.reduce((s, p) => s + fromCents(lineCents(p.unitPrice, p.quantity)), 0)
     return sum + parts
   }, 0) ?? 0
 
@@ -168,7 +169,7 @@ export default function VehicleModal({ vehicleId, licensePlate, onClose, onEditJ
               <p className="text-gray-500">{t.jmVehicleNotFound}</p>
             )}
           </div>
-          <button onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-gray-100 text-gray-400">
+          <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-gray-100 text-gray-400">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -322,7 +323,7 @@ export default function VehicleModal({ vehicleId, licensePlate, onClose, onEditJ
                   {vehicle.jobs.map(job => {
                     const config = REPAIR_TYPES[job.repairType as keyof typeof REPAIR_TYPES]
                     const statusColor = getStatusColor(job.status as any)
-                    const partsTotal = job.jobParts.reduce((s, p) => s + p.unitPrice * p.quantity, 0)
+                    const partsTotal = job.jobParts.reduce((s, p) => s + fromCents(lineCents(p.unitPrice, p.quantity)), 0)
 
                     return (
                       <div
@@ -377,7 +378,7 @@ export default function VehicleModal({ vehicleId, licensePlate, onClose, onEditJ
                                   >
                                     <Package className="w-2.5 h-2.5" />
                                     {jp.part.name} ×{jp.quantity}
-                                    <span className="text-gray-400">{(jp.unitPrice * jp.quantity).toFixed(0)}€</span>
+                                    <span className="text-gray-400">{fromCents(lineCents(jp.unitPrice, jp.quantity)).toFixed(0)}€</span>
                                   </span>
                                 ))}
                               </div>

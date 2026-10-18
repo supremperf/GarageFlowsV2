@@ -1,0 +1,46 @@
+[
+  {
+    "index": 1,
+    "errorClass": "PrismaClientInitializationError",
+    "queryEngineNotLocated": true,
+    "testFileMentions": [
+      "src/integration/publication-mise-a-jour.test.ts"
+    ],
+    "status": "BLOQU\u00c9",
+    "proof": "evidence/vitest-candidate.log#Unhandled-Rejection-1",
+    "limits": "Immediate failure cause only; no native-runtime repair or blanket dismissal of unhandled errors."
+  },
+  {
+    "index": 2,
+    "errorClass": "PrismaClientInitializationError",
+    "queryEngineNotLocated": true,
+    "testFileMentions": [
+      "src/lib/__tests__/license-devices-unit.test.ts"
+    ],
+    "status": "BLOQU\u00c9",
+    "proof": "evidence/vitest-candidate.log#Unhandled-Rejection-2",
+    "limits": "Immediate failure cause only; no native-runtime repair or blanket dismissal of unhandled errors."
+  },
+  {
+    "index": 3,
+    "errorClass": "PrismaClientInitializationError",
+    "queryEngineNotLocated": true,
+    "testFileMentions": [
+      "src/lib/__tests__/mechanic-admin.test.ts"
+    ],
+    "status": "BLOQU\u00c9",
+    "proof": "evidence/vitest-candidate.log#Unhandled-Rejection-3",
+    "limits": "Immediate failure cause only; no native-runtime repair or blanket dismissal of unhandled errors."
+  },
+  {
+    "index": 4,
+    "errorClass": "PrismaClientInitializationError",
+    "queryEngineNotLocated": true,
+    "testFileMentions": [
+      "src/lib/__tests__/audit-v21-fixes.test.ts"
+    ],
+    "status": "BLOQU\u00c9",
+    "proof": "evidence/vitest-candidate.log#Unhandled-Rejection-4",
+    "limits": "Immediate failure cause only; no native-runtime repair or blanket dismissal of unhandled errors."
+  }
+]

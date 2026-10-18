@@ -1,0 +1,62 @@
+{
+  "repository": "supremperf/GarageFlowsV2",
+  "runId": 39144372534,
+  "jobId": 117726161834,
+  "commit": "5a10e96396ba2a78e447a65959cf5491fa5d8a67",
+  "jobConclusion": "success",
+  "workflowConclusion": "failure",
+  "source": "GitHub Checks API annotations",
+  "runUrl": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39144372534",
+  "installerArtifact": {
+    "id": 12143410620,
+    "archiveSizeBytes": 230787648,
+    "url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39144372534/artifacts/12143410620"
+  },
+  "receipts": {
+    "GarageFlows Setup identity": {
+      "schema": 1,
+      "file": "release/GarageFlows-Setup.exe",
+      "version": "1.1.0",
+      "commit": "5a10e96396ba2a78e447a65959cf5491fa5d8a67",
+      "dirty": false,
+      "size": 231057824,
+      "sha256": "faf8c3e6ddb8534125469795f70cefd5b75d596431775f6d122d62a08d615c59",
+      "platform": "win32",
+      "arch": "x64",
+      "payloadFiles": 3045,
+      "payloadVerified": true,
+      "offlinePayloadEmbedded": true,
+      "extractionMode": "embedded-7z-sfx",
+      "authenticodeVerified": false,
+      "cleanMachineLicensedBusinessWorkflowVerified": false
+    },
+    "Windows installed Setup smoke": {
+      "success": true,
+      "stage": "complete",
+      "installExecuted": true,
+      "activationWindowOpened": true,
+      "restrictedPathLaunch": true,
+      "sqliteSentinelWritten": true,
+      "installedServerComponentsPassed": true,
+      "reinstallPreservedData": true,
+      "uninstallPreservedData": true,
+      "licensedBusinessWorkflowTested": false,
+      "cleanOSWithoutBuildToolsTested": false,
+      "authenticodeStatus": "NotSigned",
+      "installerProcessExited": true,
+      "installerExitCode": 0,
+      "installedExePresent": true
+    },
+    "Installed standalone component test": {
+      "success": true,
+      "stage": "complete",
+      "runtime": "CI Node against installed standalone (not licensed Electron UI)",
+      "modulesRestrictedToInstalledPayload": true
+    }
+  },
+  "limitations": [
+    "Receipts read through GitHub API; Azure artifact download blocked in Arena sandbox. No independent local binary hash computed.",
+    "Authenticated staging E2E and aggregate required validation failed; not a production authorization.",
+    "Windows runner smoke is not a clean physical Windows installation or licensed end-to-end business validation."
+  ]
+}

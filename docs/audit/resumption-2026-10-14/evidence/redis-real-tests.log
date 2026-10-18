@@ -1,0 +1,15 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/home/user/GarageFlowsV2[39m
+
+ [32m✓[39m src/lib/__tests__/rate-limit-multi-instance.int.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1423[2mms[22m[39m
+     [33m[2m✓[22m[39m l'expiration de la fenêtre fonctionne sur le vrai Redis [33m 1208[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 14:03:05
+[2m   Duration [22m 1.78s[2m (transform 114ms, setup 0ms, import 72ms, tests 1.42s, environment 0ms)[22m
+
+JSON report written to /home/user/GarageFlowsV2/docs/audit/resumption-2026-10-14/evidence/redis-real-tests.json
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.

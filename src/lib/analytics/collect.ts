@@ -14,6 +14,8 @@
 
 import { subDays, startOfDay, endOfDay, format } from 'date-fns'
 import { prisma } from '@/lib/db'
+import { fromScaled } from '@/lib/money'
+import { partToEuros } from '@/lib/money-db'
 import {
   type GarageDataset,
   type JobInput,
@@ -25,9 +27,10 @@ import {
 
 const TERMINAL = Array.from(TERMINAL_JOB_STATUSES)
 
-type LineRow = { quantity: number; unitPrice: number; unitCost: number; isLabor: boolean }
+// Lignes stockées en ENTIERS exacts (dix-millièmes) ; l'analytics consomme la vue euros dérivée.
+type LineRow = { quantityTenThousandths: number; unitPriceTenThousandths: number; unitCostTenThousandths: number; isLabor: boolean }
 const mapLines = (lines: LineRow[]): AnalyticsLine[] =>
-  lines.map(l => ({ quantity: l.quantity, unitPrice: l.unitPrice, unitCost: l.unitCost, isLabor: l.isLabor }))
+  lines.map(l => ({ quantity: fromScaled(l.quantityTenThousandths), unitPrice: fromScaled(l.unitPriceTenThousandths), unitCost: fromScaled(l.unitCostTenThousandths), isLabor: l.isLabor }))
 
 const JOB_SELECT = {
   id: true, status: true, estimatedDuration: true, actualDuration: true,
@@ -88,12 +91,12 @@ export async function collectGarageWindows(
   ] = await Promise.all([
     prisma.garage.findUnique({
       where: { id: garageId },
-      select: { hourlyRate: true, workshopStartHour: true, workshopEndHour: true },
+      select: { hourlyRateTenThousandths: true, workshopStartHour: true, workshopEndHour: true },
     }),
     prisma.mechanic.findMany({ where: { garageId }, select: { id: true, name: true, isAbsent: true } }),
     prisma.part.findMany({
       where: { garageId },
-      select: { id: true, name: true, reference: true, quantity: true, minQuantity: true, unitCost: true, unitPrice: true },
+      select: { id: true, name: true, reference: true, quantity: true, minQuantity: true, unitCostTenThousandths: true, unitPriceTenThousandths: true },
     }),
     prisma.warranty.findMany({
       where: { garageId, status: { in: ['active', 'claimed'] } },
@@ -109,34 +112,37 @@ export async function collectGarageWindows(
     // Current window: paid invoices in-window OR any unpaid invoice.
     prisma.invoice.findMany({
       where: { garageId, OR: [{ status: 'paid', createdAt: { gte: startOfDay(curStart), lte: endOfDay(curEnd) } }, { status: { in: ['sent', 'overdue'] } }] },
-      select: { id: true, number: true, status: true, issueDate: true, dueDate: true, createdAt: true, taxRate: true, clientId: true, clientName: true, lines: { select: { quantity: true, unitPrice: true, unitCost: true, isLabor: true } } },
+      select: { id: true, number: true, status: true, issueDate: true, dueDate: true, createdAt: true, taxRate: true, clientId: true, clientName: true, lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true, unitCostTenThousandths: true, isLabor: true } } },
     }),
     // Current window: quotes created in-window OR any still-sent quote.
     prisma.quote.findMany({
       where: { garageId, OR: [{ createdAt: { gte: startOfDay(curStart), lte: endOfDay(curEnd) } }, { status: 'sent' }] },
-      select: { id: true, number: true, status: true, issueDate: true, validUntil: true, createdAt: true, taxRate: true, clientId: true, clientName: true, lines: { select: { quantity: true, unitPrice: true, unitCost: true, isLabor: true } } },
+      select: { id: true, number: true, status: true, issueDate: true, validUntil: true, createdAt: true, taxRate: true, clientId: true, clientName: true, lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true, unitCostTenThousandths: true, isLabor: true } } },
     }),
 
     // Previous window: transactional data only (for the trend).
     prisma.job.findMany({ where: { garageId, date: { gte: prevStartStr, lte: prevEndStr } }, select: JOB_SELECT }),
     prisma.invoice.findMany({
       where: { garageId, createdAt: { gte: startOfDay(prevStart), lte: endOfDay(prevEnd) } },
-      select: { id: true, number: true, status: true, issueDate: true, dueDate: true, createdAt: true, taxRate: true, clientId: true, clientName: true, lines: { select: { quantity: true, unitPrice: true, unitCost: true, isLabor: true } } },
+      select: { id: true, number: true, status: true, issueDate: true, dueDate: true, createdAt: true, taxRate: true, clientId: true, clientName: true, lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true, unitCostTenThousandths: true, isLabor: true } } },
     }),
     prisma.quote.findMany({
       where: { garageId, createdAt: { gte: startOfDay(prevStart), lte: endOfDay(prevEnd) } },
-      select: { id: true, number: true, status: true, issueDate: true, validUntil: true, createdAt: true, taxRate: true, clientId: true, clientName: true, lines: { select: { quantity: true, unitPrice: true, unitCost: true, isLabor: true } } },
+      select: { id: true, number: true, status: true, issueDate: true, validUntil: true, createdAt: true, taxRate: true, clientId: true, clientName: true, lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true, unitCostTenThousandths: true, isLabor: true } } },
     }),
   ])
 
   const mechanicsInput = mechanics.map(m => ({ ...m }))
-  const partsInput = parts.map(p => ({ ...p }))
+  const partsInput = parts.map(p => partToEuros(p))
   const warrantiesInput = warranties.map(w => ({ ...w }))
   const clientsInput = clients.map(c => ({ ...c }))
 
   const shared = {
     periodDays,
-    hourlyRate: garage?.hourlyRate ?? 60,
+    // Sans garage lisible, le tarif est INCONNU — surtout pas 60 €/h, qui
+    // ferait apparaître une valorisation d'heures et des marges calculées sur un
+    // tarif que personne n'a choisi. Zéro se voit ; un faux tarif se croit.
+    hourlyRate: garage ? fromScaled(garage.hourlyRateTenThousandths) : 0,
     workshopStartHour: garage?.workshopStartHour ?? 8,
     workshopEndHour: garage?.workshopEndHour ?? 18,
     parts: partsInput,

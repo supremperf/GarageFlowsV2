@@ -20,6 +20,22 @@ describe('redactString — motifs sensibles', () => {
     expect(redactString('lic GF2.aaa.bbb.ccc used')).toContain('GF2.<redacted>')
   })
 
+  it('masque un jeton de portail dans un chemin d\'URL (§10)', () => {
+    // Jeton JWT dans /portal/<token>
+    const jwtish = 'eyJhbGciOiJIUzI1NiJ9.eyJzaWQiOiJhYmMifQ.SIG_part-9'
+    expect(redactString(`GET /portal/${jwtish} 200`)).toContain('/portal/[REDACTED]')
+    expect(redactString(`GET /portal/${jwtish} 200`)).not.toContain(jwtish)
+    // Jeton dans /portal/quote/<token>
+    const opaque = 'abcdef0123456789ABCDEF0123456789'
+    expect(redactString(`hit /portal/quote/${opaque}`)).toContain('/portal/quote/[REDACTED]')
+  })
+
+  it('ne masque PAS les pages statiques du portail', () => {
+    for (const p of ['/portal/login', '/portal/register', '/portal/account']) {
+      expect(redactString(`GET ${p} 200`)).toContain(p)
+    }
+  })
+
   it('tronque un HWID / SHA-256 (64 hex) en empreinte courte', () => {
     const hwid = 'a'.repeat(64)
     const out = redactString(`hwid=${hwid}`)

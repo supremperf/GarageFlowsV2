@@ -1,0 +1,435 @@
+diff --git a/src/integration/devis-signature-depuis-un-poste.test.ts b/src/integration/devis-signature-depuis-un-poste.test.ts
+index 788ebec..70ff98e 100644
+--- a/src/integration/devis-signature-depuis-un-poste.test.ts
++++ b/src/integration/devis-signature-depuis-un-poste.test.ts
+@@ -37,6 +37,8 @@
+  * quand la publication échoue — licence absente, cloud injoignable, refus.
+  * La route de publication elle-même est éprouvée par ses propres tests.
+  */
++type OriginalModule1 = typeof import('@/lib/sync/cloud-client')
++
+ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
+ import fs from 'node:fs'
+ import path from 'node:path'
+@@ -84,7 +86,7 @@ vi.mock('@/lib/api-helpers', () => ({
+ // enregistrement de licence complet (MAC, expiration) sans rapport avec ce qui
+ // est testé ici.
+ vi.mock('@/lib/sync/cloud-client', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/sync/cloud-client')>()
++  const reel = await importOriginal<OriginalModule1>()
+   return {
+     ...reel,
+     isDesktopInstance: () => h.poste,
+diff --git a/src/integration/intervention-rattache-client-vehicule.test.ts b/src/integration/intervention-rattache-client-vehicule.test.ts
+index 5a75489..e1d23c1 100644
+--- a/src/integration/intervention-rattache-client-vehicule.test.ts
++++ b/src/integration/intervention-rattache-client-vehicule.test.ts
+@@ -17,6 +17,8 @@
+  * Le rattachement se fait désormais CÔTÉ SERVEUR, à l'écriture de
+  * l'intervention : l'unique point par lequel passent toutes les créations.
+  */
++type OriginalModule1 = typeof import('@/lib/api-helpers')
++
+ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
+ import fs from 'node:fs'
+ import path from 'node:path'
+@@ -26,7 +28,7 @@ process.env.DATABASE_URL = `file:${DB_PATH}`
+ 
+ const h = vi.hoisted(() => ({ session: null as any }))
+ vi.mock('@/lib/api-helpers', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
++  const reel = await importOriginal<OriginalModule1>()
+   return { ...reel, withAuth: (fn: any) => fn, requireSession: async () => h.session }
+ })
+ vi.mock('@/lib/sync/job-sync', () => ({ pollJobSync: () => {}, scheduleJobSync: () => {} }))
+diff --git a/src/integration/invoice-authz.test.ts b/src/integration/invoice-authz.test.ts
+index 4d3784c..8d4addf 100644
+--- a/src/integration/invoice-authz.test.ts
++++ b/src/integration/invoice-authz.test.ts
+@@ -59,15 +59,18 @@ beforeAll(async () => {
+   ;({ PATCH: invoicePATCH, DELETE: invoiceDELETE } = (await import('@/app/api/invoices/[id]/route')) as any)
+   ;({ POST: convertPOST } = (await import('@/app/api/quotes/[id]/convert/route')) as any)
+ 
+-  garageId = (await prisma.garage.create({ data: { name: 'Authz', slug: 'authz-aud-009' } })).id
++  // Keep opaque fixture IDs deterministic: a generated CUID contained the cost
++  // marker in CI 38589332331, tripping the whole-response confidentiality check.
++  // All cost assertions below remain unchanged, including the full JSON check.
++  garageId = (await prisma.garage.create({ data: { id: 'authz-aud-garage', name: 'Authz', slug: 'authz-aud-009' } })).id
+ 
+   invoiceId = (await prisma.invoice.create({
+     data: {
+-      number: 'FAC-2026-500', garageId, clientName: 'Client', status: 'draft',
++      id: 'authz-aud-invoice', number: 'FAC-2026-500', garageId, clientName: 'Client', status: 'draft',
+       issueDate: '2026-05-01', taxRate: 20,
+       lines: {
+         create: [{
+-          description: 'Plaquettes', sortOrder: 0,
++          id: 'authz-aud-invoice-line', description: 'Plaquettes', sortOrder: 0,
+           quantityTenThousandths: 10000,
+           unitPriceTenThousandths: PRIX_VENTE_SCALED,
+           unitCostTenThousandths: COUT_ACHAT_SCALED,
+@@ -78,11 +81,11 @@ beforeAll(async () => {
+ 
+   quoteId = (await prisma.quote.create({
+     data: {
+-      number: 'DEV-2026-500', garageId, clientName: 'Client', status: 'draft',
++      id: 'authz-aud-quote', number: 'DEV-2026-500', garageId, clientName: 'Client', status: 'draft',
+       issueDate: '2026-05-01', taxRate: 20,
+       lines: {
+         create: [{
+-          description: 'Plaquettes', sortOrder: 0,
++          id: 'authz-aud-quote-line', description: 'Plaquettes', sortOrder: 0,
+           quantityTenThousandths: 10000,
+           unitPriceTenThousandths: PRIX_VENTE_SCALED,
+           unitCostTenThousandths: COUT_ACHAT_SCALED,
+diff --git a/src/integration/planning-journee-complete.test.ts b/src/integration/planning-journee-complete.test.ts
+index 80253b6..f124d75 100644
+--- a/src/integration/planning-journee-complete.test.ts
++++ b/src/integration/planning-journee-complete.test.ts
+@@ -16,6 +16,8 @@
+  * Une requête `?date=` n'est pas une liste qu'on feuillette : c'est le contenu
+  * d'un écran. Son défaut est désormais un plafond de sécurité, pas une page.
+  */
++type OriginalModule1 = typeof import('@/lib/api-helpers')
++
+ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+ import fs from 'node:fs'
+ import path from 'node:path'
+@@ -25,7 +27,7 @@ process.env.DATABASE_URL = `file:${DB_PATH}`
+ 
+ const h = vi.hoisted(() => ({ session: null as any }))
+ vi.mock('@/lib/api-helpers', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
++  const reel = await importOriginal<OriginalModule1>()
+   return { ...reel, withAuth: (fn: any) => fn, requireSession: async () => h.session }
+ })
+ // La remontée cloud n'est pas le sujet ici (et ne doit pas partir en test).
+diff --git a/src/integration/portail-lien-revoque-a-la-republication.test.ts b/src/integration/portail-lien-revoque-a-la-republication.test.ts
+index 438a719..0657ae4 100644
+--- a/src/integration/portail-lien-revoque-a-la-republication.test.ts
++++ b/src/integration/portail-lien-revoque-a-la-republication.test.ts
+@@ -37,6 +37,8 @@
+  * l'ancien lien, qui sert le même instantané. Ce qui disparaît, c'est la
+  * révocation ACCIDENTELLE d'une URL déjà distribuée.
+  */
++type OriginalModule1 = typeof import('@/lib/license/verify')
++
+ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
+ import fs from 'node:fs'
+ import path from 'node:path'
+@@ -52,7 +54,7 @@ const LID = 'lid-garage-recette'
+ // la ligne LicenseKey, elle, est vraie et tous les contrôles d'état (révoquée,
+ // expirée, rattachement) s'exécutent réellement.
+ vi.mock('@/lib/license/verify', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/license/verify')>()
++  const reel = await importOriginal<OriginalModule1>()
+   return {
+     ...reel,
+     verifyLicenseToken: (token: string) =>
+diff --git a/src/integration/publication-mise-a-jour.test.ts b/src/integration/publication-mise-a-jour.test.ts
+index 0880241..10b2525 100644
+--- a/src/integration/publication-mise-a-jour.test.ts
++++ b/src/integration/publication-mise-a-jour.test.ts
+@@ -13,6 +13,8 @@
+  *    suit le manifeste ; empreinte divergente → chaque poste télécharge puis
+  *    refuse le fichier, et l'administrateur ne l'apprend que par ses clients.
+  */
++type OriginalModule1 = typeof import('@/lib/api-helpers')
++
+ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
+ import crypto from 'node:crypto'
+ import fs from 'node:fs'
+@@ -24,7 +26,7 @@ const RACINE_DONNEES = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-maj-'))
+ process.env.GF_PHOTOS_DIR = path.join(RACINE_DONNEES, 'photos')
+ 
+ vi.mock('@/lib/api-helpers', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
++  const reel = await importOriginal<OriginalModule1>()
+   return { ...reel, isAdminSession: async () => true }
+ })
+ 
+diff --git a/src/integration/pulse-boucle-de-synchronisation.test.ts b/src/integration/pulse-boucle-de-synchronisation.test.ts
+index 631d10b..cab05ca 100644
+--- a/src/integration/pulse-boucle-de-synchronisation.test.ts
++++ b/src/integration/pulse-boucle-de-synchronisation.test.ts
+@@ -22,6 +22,8 @@
+  * synchronisation réussie ne faisait alors pas bouger l'empreinte, et l'écran ne
+  * se rechargeait pas.
+  */
++type OriginalModule1 = typeof import('@/lib/api-helpers')
++
+ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+ import fs from 'node:fs'
+ import path from 'node:path'
+@@ -36,7 +38,7 @@ const h = vi.hoisted(() => ({
+ }))
+ 
+ vi.mock('@/lib/api-helpers', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
++  const reel = await importOriginal<OriginalModule1>()
+   return { ...reel, withAuth: (fn: any) => fn, requireSession: async () => h.session }
+ })
+ // On observe le DÉCLENCHEMENT de la voie de retour ; la remontée réseau
+diff --git a/src/integration/pwa-fenetre-et-photos.test.ts b/src/integration/pwa-fenetre-et-photos.test.ts
+index 3429e3b..5fcc457 100644
+--- a/src/integration/pwa-fenetre-et-photos.test.ts
++++ b/src/integration/pwa-fenetre-et-photos.test.ts
+@@ -14,6 +14,8 @@
+  * passage canvas. Le quatrième — celui qui prend le plus de photos — envoyait
+  * le fichier brut de l'appareil.
+  */
++type OriginalModule1 = typeof import('@/lib/mechanic-api')
++
+ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
+ import fs from 'node:fs'
+ import path from 'node:path'
+@@ -23,7 +25,7 @@ process.env.DATABASE_URL = `file:${DB_PATH}`
+ 
+ const h = vi.hoisted(() => ({ ctx: null as any }))
+ vi.mock('@/lib/mechanic-api', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/mechanic-api')>()
++  const reel = await importOriginal<OriginalModule1>()
+   return { ...reel, withMechanic: (fn: any) => fn, requireMechanic: async () => h.ctx }
+ })
+ 
+diff --git a/src/integration/reglages-appliques.test.ts b/src/integration/reglages-appliques.test.ts
+index a2578e1..f14e1ed 100644
+--- a/src/integration/reglages-appliques.test.ts
++++ b/src/integration/reglages-appliques.test.ts
+@@ -16,6 +16,8 @@
+  * rechargement de l'inspection, et le fichier restait sur le disque. Le garage
+  * la « supprimait » sans effet, indéfiniment.
+  */
++type OriginalModule1 = typeof import('@/lib/api-helpers')
++
+ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+ import fs from 'node:fs'
+ import os from 'node:os'
+@@ -32,7 +34,7 @@ const PNG =
+ 
+ const h = vi.hoisted(() => ({ session: null as any }))
+ vi.mock('@/lib/api-helpers', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
++  const reel = await importOriginal<OriginalModule1>()
+   return { ...reel, withAuth: (fn: any) => fn, requireSession: async () => h.session }
+ })
+ 
+diff --git a/src/integration/reglages-enfin-lus.test.ts b/src/integration/reglages-enfin-lus.test.ts
+index ac276b7..5b570fe 100644
+--- a/src/integration/reglages-enfin-lus.test.ts
++++ b/src/integration/reglages-enfin-lus.test.ts
+@@ -7,6 +7,8 @@
+  * Le mensonge était explicite, pas implicite. Même chose pour `loanerEnabled`,
+  * dont l'entrée de menu s'affichait quoi qu'ait décidé le garage.
+  */
++type OriginalModule1 = typeof import('@/lib/api-helpers')
++
+ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
+ import fs from 'node:fs'
+ import path from 'node:path'
+@@ -16,7 +18,7 @@ process.env.DATABASE_URL = `file:${DB_PATH}`
+ 
+ const h = vi.hoisted(() => ({ session: null as any }))
+ vi.mock('@/lib/api-helpers', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
++  const reel = await importOriginal<OriginalModule1>()
+   return { ...reel, withAuth: (fn: any) => fn, requireSession: async () => h.session }
+ })
+ vi.mock('@/lib/audit', () => ({ logAudit: async () => {} }))
+diff --git a/src/integration/reglages-logo-et-cout-achat.test.ts b/src/integration/reglages-logo-et-cout-achat.test.ts
+index cb907f4..4f9a989 100644
+--- a/src/integration/reglages-logo-et-cout-achat.test.ts
++++ b/src/integration/reglages-logo-et-cout-achat.test.ts
+@@ -18,6 +18,9 @@
+  * posé sur une porte se contournait par celle d'à côté — exactement ce que
+  * `redactLineCosts` avait été écrit pour empêcher (GF31-AUD-009).
+  */
++type OriginalModule1 = typeof import('@/lib/api-helpers')
++type OriginalModule2 = typeof import('@/lib/security/rate-limit')
++
+ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
+ import fs from 'node:fs'
+ import os from 'node:os'
+@@ -35,7 +38,7 @@ const PNG =
+ 
+ const h = vi.hoisted(() => ({ session: null as any }))
+ vi.mock('@/lib/api-helpers', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
++  const reel = await importOriginal<OriginalModule1>()
+   return {
+     ...reel,
+     withAuth: (fn: (req: unknown, ctx: unknown) => Promise<Response>) =>
+@@ -50,7 +53,7 @@ vi.mock('@/lib/api-helpers', async (importOriginal) => {
+ })
+ // Le limiteur de débit n'est pas le sujet ; il reste réel ailleurs.
+ vi.mock('@/lib/security/rate-limit', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/security/rate-limit')>()
++  const reel = await importOriginal<OriginalModule2>()
+   return { ...reel, enforceRateLimit: async () => ({ ok: true as const }) }
+ })
+ 
+diff --git a/src/integration/scenario-maitre.test.ts b/src/integration/scenario-maitre.test.ts
+index 6c3348a..45979bc 100644
+--- a/src/integration/scenario-maitre.test.ts
++++ b/src/integration/scenario-maitre.test.ts
+@@ -20,6 +20,8 @@
+  * un NAVIGATEUR (clics, modales, rendu), qui exige des identifiants E2E et une
+  * licence — cf. `e2e/` et le rapport final.
+  */
++type OriginalModule1 = typeof import('@/lib/api-helpers')
++
+ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+ import fs from 'node:fs'
+ import path from 'node:path'
+@@ -29,7 +31,7 @@ process.env.DATABASE_URL = `file:${DB_PATH}`
+ 
+ const h = vi.hoisted(() => ({ session: null as any }))
+ vi.mock('@/lib/api-helpers', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
++  const reel = await importOriginal<OriginalModule1>()
+   return { ...reel, withAuth: (fn: any) => fn, requireSession: async () => h.session }
+ })
+ vi.mock('@/lib/sync/job-sync', () => ({ pollJobSync: () => {}, scheduleJobSync: () => {} }))
+diff --git a/src/integration/statistiques-au-centime.test.ts b/src/integration/statistiques-au-centime.test.ts
+index d6eb5ac..bf43e32 100644
+--- a/src/integration/statistiques-au-centime.test.ts
++++ b/src/integration/statistiques-au-centime.test.ts
+@@ -17,6 +17,8 @@
+  *    texte libre ressaisi à chaque intervention : « Jean Dupont », « jean
+  *    dupont » et la fiche client renommée comptaient pour trois personnes.
+  */
++type OriginalModule1 = typeof import('@/lib/api-helpers')
++
+ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
+ import fs from 'node:fs'
+ import path from 'node:path'
+@@ -26,7 +28,7 @@ process.env.DATABASE_URL = `file:${DB_PATH}`
+ 
+ const h = vi.hoisted(() => ({ session: null as any }))
+ vi.mock('@/lib/api-helpers', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
++  const reel = await importOriginal<OriginalModule1>()
+   return { ...reel, withAuth: (fn: any) => fn, requireSession: async () => h.session }
+ })
+ vi.mock('@/lib/audit', () => ({ logAudit: async () => {} }))
+diff --git a/src/integration/stock-suppression-et-entrees.test.ts b/src/integration/stock-suppression-et-entrees.test.ts
+index 2c2da4a..181297c 100644
+--- a/src/integration/stock-suppression-et-entrees.test.ts
++++ b/src/integration/stock-suppression-et-entrees.test.ts
+@@ -20,6 +20,8 @@
+  *    commande, ni retour fournisseur. Le journal ne montrait que des sorties,
+  *    alors que le schéma pose le stock comme reconstituable à partir de lui.
+  */
++type OriginalModule1 = typeof import('@/lib/api-helpers')
++
+ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
+ import fs from 'node:fs'
+ import path from 'node:path'
+@@ -29,7 +31,7 @@ process.env.DATABASE_URL = `file:${DB_PATH}`
+ 
+ const h = vi.hoisted(() => ({ session: null as any }))
+ vi.mock('@/lib/api-helpers', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
++  const reel = await importOriginal<OriginalModule1>()
+   return { ...reel, withAuth: (fn: any) => fn, requireSession: async () => h.session }
+ })
+ vi.mock('@/lib/sync/job-sync', () => ({ pollJobSync: () => {}, scheduleJobSync: () => {} }))
+diff --git a/src/integration/stock-tracabilite-et-suppression.test.ts b/src/integration/stock-tracabilite-et-suppression.test.ts
+index 3cacef5..5484a0b 100644
+--- a/src/integration/stock-tracabilite-et-suppression.test.ts
++++ b/src/integration/stock-tracabilite-et-suppression.test.ts
+@@ -21,6 +21,9 @@
+  * partait physiquement, avec son numéro de la série séquentielle. Aucun avoir,
+  * aucune reprise possible : un trou dans la numérotation au contrôle FEC.
+  */
++type OriginalModule1 = typeof import('@/lib/api-helpers')
++type OriginalModule2 = typeof import('@/lib/stock/invoice-stock')
++
+ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
+ import fs from 'node:fs'
+ import path from 'node:path'
+@@ -30,7 +33,7 @@ process.env.DATABASE_URL = `file:${DB_PATH}`
+ 
+ const h = vi.hoisted(() => ({ session: null as any, emettrePendantLaTransaction: false }))
+ vi.mock('@/lib/api-helpers', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/api-helpers')>()
++  const reel = await importOriginal<OriginalModule1>()
+   return { ...reel, withAuth: (fn: any) => fn, requireSession: async () => h.session }
+ })
+ vi.mock('@/lib/sync/job-sync', () => ({ pollJobSync: () => {}, scheduleJobSync: () => {} }))
+@@ -48,7 +51,7 @@ vi.mock('@/lib/audit', () => ({ logAudit: async () => {} }))
+  * sérialise les écritures et attendrait la fin de la transaction.
+  */
+ vi.mock('@/lib/stock/invoice-stock', async (importOriginal) => {
+-  const reel = await importOriginal<typeof import('@/lib/stock/invoice-stock')>()
++  const reel = await importOriginal<OriginalModule2>()
+   return {
+     ...reel,
+     releaseInvoiceStock: async (tx: any, args: any) => {
+diff --git a/src/lib/__tests__/authz.test.ts b/src/lib/__tests__/authz.test.ts
+index f623490..e3f393b 100644
+--- a/src/lib/__tests__/authz.test.ts
++++ b/src/lib/__tests__/authz.test.ts
+@@ -29,6 +29,18 @@ describe('authz — MECHANIC (périmètre strict)', () => {
+ })
+ 
+ describe('authz — deny by default', () => {
++  // Object-prototype property names are strings too, but never application roles.
++  // Both public helpers must reject them without throwing or returning permissions.
++  const inheritedNames = ['__proto__', 'constructor', 'toString', 'valueOf', 'hasOwnProperty', '__defineGetter__']
++
++  it.each(inheritedNames)('can refuse le rôle hérité %s sans exception', (role) => {
++    expect(can(role, 'job:manage')).toBe(false)
++  })
++
++  it.each(inheritedNames)('permissionsOf refuse le rôle hérité %s sans exception', (role) => {
++    expect(permissionsOf(role)).toEqual([])
++  })
++
+   it('un rôle inconnu ne possède aucune permission', () => {
+     expect(can('HACKER', 'job:read_assigned')).toBe(false)
+     expect(can('', 'job:manage')).toBe(false)
+diff --git a/src/lib/__tests__/license-activate.test.ts b/src/lib/__tests__/license-activate.test.ts
+index ca7ded5..1aee47f 100644
+--- a/src/lib/__tests__/license-activate.test.ts
++++ b/src/lib/__tests__/license-activate.test.ts
+@@ -6,6 +6,8 @@
+  * logique d'orchestration DB + HWID de la route : on stube verifyLicenseToken
+  * (couche crypto) mais on utilise le VRAI verifyHwid/isValidHwidFormat.
+  */
++type OriginalModule1 = typeof import('../license/verify')
++
+ import { describe, it, expect, vi, beforeEach } from 'vitest'
+ 
+ // Secret fort requis par getAuthSecret() (pas de repli en dur).
+@@ -113,7 +115,7 @@ vi.mock('@/lib/license/record-mac', () => ({
+ // Couche crypto stubée — garde le VRAI verifyHwid/isValidHwidFormat.
+ const verifyMock = vi.hoisted(() => ({ payload: null as Record<string, unknown> | null }))
+ vi.mock('@/lib/license/verify', async (importOriginal) => {
+-  const actual = await importOriginal<typeof import('../license/verify')>()
++  const actual = await importOriginal<OriginalModule1>()
+   return {
+     ...actual,
+     verifyLicenseToken: () => ({
+diff --git a/src/lib/authz.ts b/src/lib/authz.ts
+index 9585c74..dec94ab 100644
+--- a/src/lib/authz.ts
++++ b/src/lib/authz.ts
+@@ -115,7 +115,7 @@ const PERM_LIST: Record<Role, Permission[]> = {
+  * matrice ⇒ false (deny by default), jamais d'exception.
+  */
+ export function can(role: string | null | undefined, permission: Permission): boolean {
+-  if (!role) return false
++  if (!role || !Object.hasOwn(MATRIX, role)) return false
+   const set = MATRIX[role as Role]
+   if (!set) return false
+   return set.has(permission)
+@@ -123,7 +123,7 @@ export function can(role: string | null | undefined, permission: Permission): bo
+ 
+ /** Liste des permissions d'un rôle (copie défensive — la matrice est immuable). */
+ export function permissionsOf(role: string | null | undefined): Permission[] {
+-  if (!role) return []
++  if (!role || !Object.hasOwn(PERM_LIST, role)) return []
+   const list = PERM_LIST[role as Role]
+   return list ? [...list] : []
+ }

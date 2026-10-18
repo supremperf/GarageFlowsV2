@@ -1,38 +1,47 @@
 'use client'
 
 import { useEffect, useRef, useState, memo, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { format, addDays, subDays, parseISO } from 'date-fns'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useScheduleStore } from '@/store/schedule-store'
 import Header from '@/components/Header'
 import ScheduleBoard from '@/components/ScheduleBoard'
-import WeekView from '@/components/WeekView'
+const WeekView = dynamic(() => import('@/components/WeekView'), { ssr: false })
 import SuggestionPanel from '@/components/SuggestionPanel'
 import JobModal from '@/components/JobModal'
-import Dashboard from '@/components/Dashboard'
-import StockPanel from '@/components/StockPanel'
-import CompanySetup from '@/components/CompanySetup'
-import SettingsModal from '@/components/SettingsModal'
-import LanguageSelector from '@/components/LanguageSelector'
-import ReceptionBoard from '@/components/ReceptionBoard'
-import ReminderPanel from '@/components/ReminderPanel'
-import BillingPanel from '@/components/BillingPanel'
-import FinancialDashboard from '@/components/FinancialDashboard'
-import LaborCatalogPanel from '@/components/LaborCatalogPanel'
-import WarrantyPanel from '@/components/WarrantyPanel'
-import LoanerPanel from '@/components/LoanerPanel'
-import CopilotPanel from '@/components/CopilotPanel'
-import OcrPanel from '@/components/OcrPanel'
-import SuppliersPanel from '@/components/SuppliersPanel'
-import CatalogPanel from '@/components/CatalogPanel'
+const Dashboard = dynamic(() => import('@/components/Dashboard'), { ssr: false })
+const StockPanel = dynamic(() => import('@/components/StockPanel'), { ssr: false })
+const CompanySetup = dynamic(() => import('@/components/CompanySetup'), { ssr: false })
+const SettingsModal = dynamic(() => import('@/components/SettingsModal'), { ssr: false })
+const LanguageSelector = dynamic(() => import('@/components/LanguageSelector'), { ssr: false })
+const ReceptionBoard = dynamic(() => import('@/components/ReceptionBoard'), { ssr: false })
+const ReminderPanel = dynamic(() => import('@/components/ReminderPanel'), { ssr: false })
+const BillingPanel = dynamic(() => import('@/components/BillingPanel'), { ssr: false })
+const FinancialDashboard = dynamic(() => import('@/components/FinancialDashboard'), { ssr: false })
+const LaborCatalogPanel = dynamic(() => import('@/components/LaborCatalogPanel'), { ssr: false })
+const WarrantyPanel = dynamic(() => import('@/components/WarrantyPanel'), { ssr: false })
+const LoanerPanel = dynamic(() => import('@/components/LoanerPanel'), { ssr: false })
+const CopilotPanel = dynamic(() => import('@/components/CopilotPanel'), { ssr: false })
+const OcrPanel = dynamic(() => import('@/components/OcrPanel'), { ssr: false })
+const SuppliersPanel = dynamic(() => import('@/components/SuppliersPanel'), { ssr: false })
+const ClientsPanel = dynamic(() => import('@/components/ClientsPanel'), { ssr: false })
+const TicketsPanel = dynamic(() => import('@/components/TicketsPanel'), { ssr: false })
+const AppointmentsPanel = dynamic(() => import('@/components/AppointmentsPanel'), { ssr: false })
+// Fiche VÉHICULE : historique des interventions, devis et garanties d'un
+// véhicule. Elle n'était atteignable que depuis la fenêtre d'intervention ; le
+// tableau de bord doit pouvoir l'ouvrir depuis un rendez-vous (GF-DUR-054).
+const VehicleHistoryModal = dynamic(() => import('@/components/VehicleHistoryModal'), { ssr: false })
+const CatalogPanel = dynamic(() => import('@/components/CatalogPanel'), { ssr: false })
 import LicenseRevokedOverlay from '@/components/LicenseRevokedOverlay'
-import UpdateModal from '@/components/UpdateModal'
+const UpdateModal = dynamic(() => import('@/components/UpdateModal'), { ssr: false })
 import MobileNav from '@/components/MobileNav'
 import GfDrawer from '@/components/GfDrawer'
 import { Loader2, Sparkles, RefreshCw } from 'lucide-react'
 import { GarageFlowIcon } from '@/components/GarageFlowLogo'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { viderBrouillons } from '@/lib/ui/brouillon'
 
 // ── Splash-loader shown while session + data load ─────────────────────────────
 const AppLoader = memo(function AppLoader() {
@@ -47,7 +56,7 @@ const AppLoader = memo(function AppLoader() {
           <div className="absolute inset-0 rounded-2xl ring-2 ring-blue-500/30 animate-ping" />
         </div>
         <div className="text-center">
-          <p className="text-slate-300 text-sm font-semibold">GarageFlow</p>
+          <p className="text-slate-300 text-sm font-semibold">GarageFlows</p>
           <p className="text-slate-600 text-xs mt-0.5">Chargement du planning…</p>
         </div>
         <Loader2 className="w-4 h-4 animate-spin text-blue-500/60" />
@@ -63,8 +72,16 @@ export default function Home() {
   const {
     fetchData,
     fetchMechanics,
+    fetchHoraires,
+    // Le réglage `loanerEnabled` commande l'entrée de menu (GF-039). Le panneau
+    // lui-même n'est PAS démonté : une réservation ouverte resterait sinon
+    // inaccessible du jour où le garage décoche la case.
+    loanerActif,
     runAI,
     isDashboardOpen,
+    // Le tableau de bord s'ouvre et se ferme par le magasin d'état (bouton de la
+    // barre d'outils, raccourci clavier) : la page unique s'y synchronise.
+    toggleDashboard,
     isStockPanelOpen,
     toggleStockPanel,
     openCreateModal,
@@ -80,21 +97,103 @@ export default function Home() {
   const [onboarding,           setOnboarding]           = useState<'loading' | 'needed' | 'done'>('loading')
   const [setupError,           setSetupError]           = useState<string | null>(null)
   const [view,                 setView]                 = useState<'day' | 'week'>('day')
-  const [isSettingsOpen,       setIsSettingsOpen]       = useState(false)
   const [showLangPicker,       setShowLangPicker]       = useState(false)
-  const [isReceptionBoardOpen, setIsReceptionBoardOpen] = useState(false)
-  const [isReminderPanelOpen,  setIsReminderPanelOpen]  = useState(false)
-  const [isBillingOpen,        setIsBillingOpen]        = useState(false)
-  const [isFinanceOpen,        setIsFinanceOpen]        = useState(false)
-  const [isLaborCatalogOpen,   setIsLaborCatalogOpen]   = useState(false)
-  const [isWarrantyPanelOpen,  setIsWarrantyPanelOpen]  = useState(false)
-  const [isLoanerPanelOpen,    setIsLoanerPanelOpen]    = useState(false)
-  const [isCopilotOpen,        setIsCopilotOpen]        = useState(false)
-  const [isOcrOpen,            setIsOcrOpen]            = useState(false)
-  const [isSuppliersOpen,      setIsSuppliersOpen]      = useState(false)
-  const [isCatalogOpen,        setIsCatalogOpen]        = useState(false)
   const [isAssistantOpen,      setIsAssistantOpen]      = useState(false)
   const [warrantyAlerts,       setWarrantyAlerts]       = useState(0)
+  /** Fiche client à ouvrir directement dans la page « Clients ». */
+  const [clientACibler,        setClientACibler]        = useState<string | null>(null)
+  /**
+   * Incrémenté à chaque écriture dans les clients : le menu déroulant de la
+   * barre d'outils relit alors sa liste (voir `ClientPicker.refreshKey`).
+   */
+  const [clientsVersion,       setClientsVersion]       = useState(0)
+  /** Rendez-vous à mettre en évidence dans le tableau de bord. */
+  const [rdvACibler,           setRdvACibler]           = useState<string | null>(null)
+  /**
+   * Tiroir « Rendez-vous » (décisions détaillées). Ce n'est PAS une page : il
+   * s'ouvre PAR-DESSUS le tableau de bord, qui reste visible derrière lui.
+   * Il n'est atteignable que depuis le tableau de bord — l'entrée de barre
+   * d'outils a été retirée, la fonction est demeurée entière.
+   */
+  const [isApptsOpen,          setIsApptsOpen]          = useState(false)
+  /** Véhicule dont l'historique est affiché (fiche véhicule). */
+  const [vehiculeCible,        setVehiculeCible]        = useState<string | null>(null)
+
+  /**
+   * ── UNE SEULE PAGE À L'ÉCRAN (GF-DUR-053) ───────────────────────────────────
+   *
+   * Chaque entrée de la barre d'outils ouvrait SA propre variable booléenne
+   * (`isClientsOpen`, `isBillingOpen`, …). Rien ne les fermait les unes les
+   * autres : ouvrir « Réception » puis « Clients » laissait DEUX pages plein
+   * écran empilées, toutes deux en `fixed inset-0 z-50`. Le comptoir voyait
+   * l'écran clignoter, ne savait plus quelle page il avait devant lui, et un
+   * clic pouvait atterrir sur la page du dessous.
+   *
+   * Une seule variable remplace les seize booléens : `surface`. Ouvrir une page
+   * ferme donc la précédente, par construction — il n'existe plus d'état dans
+   * lequel deux pages cohabitent.
+   *
+   * Ce qui N'EST PAS une page garde son comportement : le planning, les
+   * fenêtres de dialogue (intervention, inspection, mise à jour) et la fenêtre
+   * de licence restent des MODALES par-dessus la page courante. Les fermer ne
+   * touche pas à la page qui est dessous.
+   */
+  type Surface =
+    | 'dashboard' | 'reception' | 'reminders' | 'billing' | 'finance'
+    | 'labor' | 'warranty' | 'loaner' | 'copilot' | 'ocr'
+    | 'suppliers' | 'clients' | 'tickets' | 'catalog'
+    | 'settings'
+
+  const [surface, setSurface] = useState<Surface | null>(null)
+
+  /**
+   * Brouillons conservés lors d'un CHANGEMENT de page, effacés lors d'une
+   * FERMETURE volontaire (✕ ou Échap). Voir `src/lib/ui/brouillon.ts`.
+   */
+  const PREFIXE_BROUILLON: Partial<Record<Surface, string>> = {
+    clients: 'clients:', tickets: 'tickets:', ocr: 'ocr:', copilot: 'copilot:',
+    loaner: 'loaner:', warranty: 'warranty:', labor: 'labor:',
+    reminders: 'reminders:', suppliers: 'suppliers:', billing: 'billing:',
+  }
+
+  /**
+   * Ouvre une page — et ferme celle qui était affichée.
+   *
+   * Le tableau de bord est piloté par le store (`useScheduleStore`) parce que
+   * la barre d'outils et le raccourci clavier l'ouvrent tous les deux ; on le
+   * synchronise ici pour qu'il obéisse à la même règle que les autres.
+   */
+  const ouvrirPage = useCallback((cible: Surface) => {
+    setSurface(cible)
+    // Le tableau de bord appartient au store : c'est lui qui commande l'affichage.
+    if (cible === 'dashboard') { if (!isDashboardOpen) toggleDashboard() }
+    else if (isDashboardOpen) toggleDashboard()
+    // Le volet « Stock » est un tiroir latéral : il n'a rien à faire par-dessus
+    // une page plein écran. On le referme, et son état suit.
+    if (isStockPanelOpen) toggleStockPanel()
+  }, [isDashboardOpen, isStockPanelOpen, toggleDashboard, toggleStockPanel])
+
+  /** Ferme la page courante (✕, Échap) — un abandon, donc brouillons effacés. */
+  const fermerPage = useCallback(() => {
+    setSurface((courante) => {
+      const prefixe = courante ? PREFIXE_BROUILLON[courante] : undefined
+      if (prefixe) viderBrouillons(prefixe)
+      return null
+    })
+    if (isDashboardOpen) toggleDashboard()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDashboardOpen, toggleDashboard])
+
+  // Le tableau de bord peut aussi être ouvert ou fermé SANS passer par ici
+  // (bouton de la barre d'outils, raccourci clavier, ✕ de son propre en-tête).
+  // On recale `surface` sur son état réel, sinon la page suivante s'ouvrirait
+  // en refermant un tableau de bord déjà fermé.
+  useEffect(() => {
+    setSurface((courante) => {
+      if (isDashboardOpen) return 'dashboard'
+      return courante === 'dashboard' ? null : courante
+    })
+  }, [isDashboardOpen])
 
   const activeSuggestionsCount = suggestions.filter(s => !s.dismissed).length
 
@@ -110,21 +209,24 @@ export default function Home() {
   // Copilot proposes an action, then hands off to the real, fully-formed tool —
   // it never fires an underspecified write itself.
   const handleCopilotAction = useCallback((intent: string) => {
-    setIsCopilotOpen(false)
     switch (intent) {
       case 'create_appointment': openCreateModal(); break
-      case 'create_quote':       setIsBillingOpen(true); break
-      case 'order_parts':        setIsSuppliersOpen(true); break
-      case 'send_reminder':      setIsReminderPanelOpen(true); break
-      case 'generate_report':    setIsFinanceOpen(true); break
+      case 'create_quote':       ouvrirPage('billing'); break
+      case 'order_parts':        ouvrirPage('suppliers'); break
+      case 'send_reminder':      ouvrirPage('reminders'); break
+      case 'generate_report':    ouvrirPage('finance'); break
     }
-  }, [openCreateModal])
+    // La page demandée REMPLACE l'assistant : `ouvrirPage` s'en charge. Le
+    // fermer ici en plus ferait clignoter l'écran sans rien apporter.
+  }, [openCreateModal, ouvrirPage])
 
   // OCR decode → open the create-job modal pre-filled with the decoded vehicle.
   const handleOcrVehicle = useCallback((preset: { licensePlate?: string; vehicleModel?: string }) => {
-    setIsOcrOpen(false)
+    // Le véhicule décodé part dans le formulaire d'intervention ; la page OCR
+    // laisse place au PLANNING (la modale s'ouvre par-dessus).
+    fermerPage()
     openCreateModal(preset)
-  }, [openCreateModal])
+  }, [fermerPage, openCreateModal])
 
   useKeyboardShortcuts({
     onNewJob:  () => openCreateModal(),
@@ -136,13 +238,8 @@ export default function Home() {
     },
     onClose:   () => {
       closeModal()
-      setIsSettingsOpen(false)
-      setIsReceptionBoardOpen(false)
-      setIsReminderPanelOpen(false)
-      setIsBillingOpen(false)
-      setIsLaborCatalogOpen(false)
-      setIsWarrantyPanelOpen(false)
-      setIsLoanerPanelOpen(false)
+      // Une seule page peut être ouverte : une seule instruction la referme.
+      fermerPage()
       setIsAssistantOpen(false)
       if (isStockPanelOpen) toggleStockPanel()
     },
@@ -165,6 +262,82 @@ export default function Home() {
     document.addEventListener('visibilitychange', onVisibility)
     return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [status, fetchData, fetchMechanics])
+
+  /**
+   * SENS MÉCANICIEN → POSTE (GF-DUR-041).
+   *
+   * Mesuré avant correction : un mécanicien démarre son intervention depuis la
+   * PWA, la base enregistre `status=in_progress`, et l'écran du poste reste
+   * inchangé — indéfiniment. Le rafraîchissement au retour de focus ne sert à
+   * rien sur un écran d'atelier qui ne perd jamais le focus.
+   *
+   * On sonde une EMPREINTE (`/api/jobs/pulse`, deux agrégats, aucune donnée
+   * métier) toutes les 10 s, et on ne recharge le planning que si elle change.
+   * Coût en régime stable : 6 req/min, contre ~40 pour un sondage classique des
+   * deux listes — ce qui, avec la limite de 120 req/min PAR IP partagée par tout
+   * le garage, faisait la différence entre tenir et fabriquer des 429.
+   *
+   * En arrière-plan, aucune requête : `document.hidden` suspend la boucle, et
+   * le retour au premier plan relance immédiatement.
+   */
+  const [syncCloud, setSyncCloud] = useState<'attente' | null>(null)
+
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    let vu: string | null = null
+    let actif = true
+    let minuteur: ReturnType<typeof setTimeout> | null = null
+
+    const battre = async () => {
+      if (!actif) return
+      if (!document.hidden) {
+        try {
+          const r = await fetch(`/api/jobs/pulse?date=${encodeURIComponent(selectedDate)}`, { cache: 'no-store' })
+          if (r.ok) {
+            const { v, cloud } = await r.json()
+            // Premier passage : on mémorise sans recharger (les données
+            // viennent d'être chargées par le bootstrap).
+            if (vu !== null && v !== vu) { fetchData(); fetchMechanics() }
+            vu = v
+            // ── L'état de la remontée cloud devient VISIBLE (GF-039) ────────
+            // Une remontée non confirmée n'était que journalisée : rien ne
+            // distinguait « le mécanicien a reçu l'affectation » de « le cloud
+            // ne répond plus ». Le rattrapage a lieu au passage suivant, mais
+            // tant qu'il n'a pas abouti, le comptoir doit le savoir.
+            setSyncCloud(cloud === 'attente' ? 'attente' : null)
+          }
+        } catch { /* hors ligne : on retentera au prochain battement */ }
+      }
+      if (actif) minuteur = setTimeout(battre, 10_000)
+    }
+
+    minuteur = setTimeout(battre, 10_000)
+
+    /**
+     * Retour au premier plan : on REMPLACE la chaîne en cours, on n'en ajoute
+     * pas une seconde.
+     *
+     * `battre()` se replanifie lui-même. Sans annuler le minuteur déjà en vol,
+     * chaque bascule arrière-plan → premier plan engendrait une chaîne
+     * indépendante et durable : vingt bascules dans la journée = vingt et une
+     * chaînes, soit 126 requêtes/min au lieu de 6. Le poste finissait par
+     * atteindre son propre quota (120 req/min, sujet partagé sous Electron) et
+     * le garage recevait « Trop de requêtes » en enregistrant une intervention,
+     * sans qu'aucune action humaine ne l'explique.
+     */
+    const auRetour = () => {
+      if (document.hidden) return
+      if (minuteur) { clearTimeout(minuteur); minuteur = null }
+      battre()
+    }
+    document.addEventListener('visibilitychange', auRetour)
+
+    return () => {
+      actif = false
+      if (minuteur) clearTimeout(minuteur)
+      document.removeEventListener('visibilitychange', auRetour)
+    }
+  }, [status, selectedDate, fetchData, fetchMechanics])
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -209,9 +382,20 @@ export default function Home() {
       .then(data => { if (data?.totalAlerts) setWarrantyAlerts(data.totalAlerts) })
       .catch(() => {})
 
-    // Load mechanics first (faster perceived startup), then jobs + AI
+    // Load mechanics first (faster perceived startup), then jobs + AI.
+    // `alive` évite de créer l'intervalle APRÈS un démontage survenu pendant les
+    // deux fetch de bootstrap (sinon runAI tournait indéfiniment sur un composant
+    // démonté, jamais nettoyé).
+    // Les horaires d'atelier bornent la grille du planning : sans ce chargement,
+    // elle repart des constantes 8 h – 18 h et le réglage du garage reste sans
+    // effet (GF-021). Non bloquant : la grille s'affiche avec le repli en
+    // attendant la réponse.
+    void fetchHoraires()
+
+    let alive = true
     fetchMechanics().then(() => {
       fetchData().then(() => {
+        if (!alive) return
         runAI()
         // Refresh AI analysis every 3 minutes (reduced frequency = less CPU)
         aiIntervalRef.current = setInterval(runAI, 3 * 60 * 1000)
@@ -219,9 +403,10 @@ export default function Home() {
     })
 
     return () => {
+      alive = false
       if (aiIntervalRef.current) clearInterval(aiIntervalRef.current)
     }
-  }, [status, fetchData, fetchMechanics, runAI])
+  }, [status, fetchData, fetchMechanics, fetchHoraires, runAI])
 
   // Backend setup error — show clear instructions instead of blue screen
   if (setupError) {
@@ -268,24 +453,40 @@ export default function Home() {
     <div className="flex flex-col h-app overflow-hidden bg-[#0f1629]">
       <Header
         session={session}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenReception={() => setIsReceptionBoardOpen(true)}
-        onOpenReminders={() => setIsReminderPanelOpen(true)}
-        onOpenBilling={() => setIsBillingOpen(true)}
-        onOpenFinance={() => setIsFinanceOpen(true)}
-        onOpenLaborCatalog={() => setIsLaborCatalogOpen(true)}
-        onOpenWarranties={() => setIsWarrantyPanelOpen(true)}
-        onOpenLoaner={() => setIsLoanerPanelOpen(true)}
-        onOpenCopilot={() => setIsCopilotOpen(true)}
-        onOpenOcr={() => setIsOcrOpen(true)}
-        onOpenSuppliers={() => setIsSuppliersOpen(true)}
-        onOpenCatalog={() => setIsCatalogOpen(true)}
+        surfaceActive={surface}
+        onOpenSettings={() => ouvrirPage('settings')}
+        onOpenReception={() => ouvrirPage('reception')}
+        onOpenReminders={() => ouvrirPage('reminders')}
+        onOpenBilling={() => ouvrirPage('billing')}
+        onOpenFinance={() => ouvrirPage('finance')}
+        onOpenLaborCatalog={() => ouvrirPage('labor')}
+        onOpenWarranties={() => ouvrirPage('warranty')}
+        onOpenLoaner={loanerActif ? () => ouvrirPage('loaner') : undefined}
+        onOpenCopilot={() => ouvrirPage('copilot')}
+        onOpenOcr={() => ouvrirPage('ocr')}
+        onOpenSuppliers={() => ouvrirPage('suppliers')}
+        onOpenClients={() => ouvrirPage('clients')}
+        onOpenClient={(id) => { setClientACibler(id); ouvrirPage('clients') }}
+        onOpenTickets={() => ouvrirPage('tickets')}
+        onOpenCatalog={() => ouvrirPage('catalog')}
+        clientsVersion={clientsVersion}
         warrantyAlerts={warrantyAlerts}
       />
 
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden min-h-0">
         <main className="gf-app-main flex-1 min-w-0 p-3 overflow-hidden flex flex-col">
+          {/* ── Remontée cloud en attente : le comptoir doit le savoir (GF-039)
+              Le planning reste pleinement utilisable — l'écriture locale est
+              déjà faite. Ce qui est en attente, c'est sa propagation vers la
+              PWA du mécanicien, rejouée au passage suivant. */}
+          {syncCloud === 'attente' && (
+            <div className="mb-2 flex-shrink-0 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-1.5 text-[11px] text-amber-300">
+              Synchronisation cloud en attente — les affectations n’ont pas encore
+              atteint l’espace mécanicien. Nouvel essai automatique.
+            </div>
+          )}
+
           {/* ── View toggle ─────────────────────────────────────────────────── */}
           {!isDashboardOpen && (
             <div className="flex items-center gap-1 mb-2 flex-shrink-0">
@@ -323,18 +524,20 @@ export default function Home() {
       <MobileNav
         onNewJob={() => openCreateModal()}
         onOpenAssistant={() => setIsAssistantOpen(true)}
-        onOpenReception={() => setIsReceptionBoardOpen(true)}
-        onOpenReminders={() => setIsReminderPanelOpen(true)}
-        onOpenBilling={() => setIsBillingOpen(true)}
-        onOpenFinance={() => setIsFinanceOpen(true)}
-        onOpenLaborCatalog={() => setIsLaborCatalogOpen(true)}
-        onOpenWarranties={() => setIsWarrantyPanelOpen(true)}
-        onOpenLoaner={() => setIsLoanerPanelOpen(true)}
-        onOpenCopilot={() => setIsCopilotOpen(true)}
-        onOpenOcr={() => setIsOcrOpen(true)}
-        onOpenSuppliers={() => setIsSuppliersOpen(true)}
-        onOpenCatalog={() => setIsCatalogOpen(true)}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenReception={() => ouvrirPage('reception')}
+        onOpenReminders={() => ouvrirPage('reminders')}
+        onOpenBilling={() => ouvrirPage('billing')}
+        onOpenFinance={() => ouvrirPage('finance')}
+        onOpenLaborCatalog={() => ouvrirPage('labor')}
+        onOpenWarranties={() => ouvrirPage('warranty')}
+        onOpenLoaner={loanerActif ? () => ouvrirPage('loaner') : undefined}
+        onOpenCopilot={() => ouvrirPage('copilot')}
+        onOpenOcr={() => ouvrirPage('ocr')}
+        onOpenSuppliers={() => ouvrirPage('suppliers')}
+        onOpenClients={() => ouvrirPage('clients')}
+        onOpenTickets={() => ouvrirPage('tickets')}
+        onOpenCatalog={() => ouvrirPage('catalog')}
+        onOpenSettings={() => ouvrirPage('settings')}
         warrantyAlerts={warrantyAlerts}
         assistantCount={activeSuggestionsCount}
       />
@@ -364,20 +567,59 @@ export default function Home() {
       {/* ── Modals & panels (lazy rendered) ─────────────────────────────────── */}
       <JobModal />
 
-      {isDashboardOpen        && <Dashboard />}
-      {isStockPanelOpen       && <StockPanel     onClose={toggleStockPanel} />}
-      {isReceptionBoardOpen   && <ReceptionBoard onClose={() => setIsReceptionBoardOpen(false)} />}
-      {isReminderPanelOpen    && <ReminderPanel  onClose={() => setIsReminderPanelOpen(false)} />}
-      {isBillingOpen          && <BillingPanel         onClose={() => setIsBillingOpen(false)} />}
-      {isFinanceOpen          && <FinancialDashboard   onClose={() => setIsFinanceOpen(false)} />}
-      {isLaborCatalogOpen     && <LaborCatalogPanel     onClose={() => setIsLaborCatalogOpen(false)} />}
-      {isWarrantyPanelOpen    && <WarrantyPanel         onClose={() => setIsWarrantyPanelOpen(false)} />}
-      {isLoanerPanelOpen      && <LoanerPanel           onClose={() => setIsLoanerPanelOpen(false)} />}
-      {isCopilotOpen          && <CopilotPanel          onClose={() => setIsCopilotOpen(false)} onAction={handleCopilotAction} />}
-      {isOcrOpen              && <OcrPanel              onClose={() => setIsOcrOpen(false)} onUseVehicle={handleOcrVehicle} />}
-      {isSuppliersOpen        && <SuppliersPanel        onClose={() => setIsSuppliersOpen(false)} />}
-      {isCatalogOpen          && <CatalogPanel          onClose={() => setIsCatalogOpen(false)} />}
-      {isSettingsOpen         && <SettingsModal        onClose={() => setIsSettingsOpen(false)} />}
+      {/*
+        ── Pages ─────────────────────────────────────────────────────────────
+        `surface` ne contient QU'UNE valeur : au plus une page est montée, donc
+        aucune ne peut recouvrir une autre. Le stock reste une page à part
+        (`isStockPanelOpen`), piloté par le magasin d'état — il se ferme dès
+        qu'une page s'ouvre, pour la même raison.
+      */}
+      {surface === 'dashboard'    && (
+        <Dashboard
+          onOpenClient={(id) => { setClientACibler(id); ouvrirPage('clients') }}
+          onOpenVehicle={(id) => setVehiculeCible(id)}
+          onOpenAppointments={() => setIsApptsOpen(true)}
+          rdvACibler={rdvACibler}
+        />
+      )}
+      {surface === 'reception'    && <ReceptionBoard     onClose={fermerPage} />}
+      {surface === 'reminders'    && <ReminderPanel      onClose={fermerPage} />}
+      {surface === 'billing'      && <BillingPanel       onClose={fermerPage} />}
+      {surface === 'finance'      && <FinancialDashboard onClose={fermerPage} />}
+      {surface === 'labor'        && <LaborCatalogPanel  onClose={fermerPage} />}
+      {surface === 'warranty'     && <WarrantyPanel      onClose={fermerPage} />}
+      {surface === 'loaner'       && <LoanerPanel        onClose={fermerPage} />}
+      {surface === 'copilot'      && <CopilotPanel       onClose={fermerPage} onAction={handleCopilotAction} />}
+      {surface === 'ocr'          && <OcrPanel           onClose={fermerPage} onUseVehicle={handleOcrVehicle} />}
+      {surface === 'suppliers'    && <SuppliersPanel     onClose={fermerPage} />}
+      {surface === 'clients'      && (
+        <ClientsPanel
+          onClose={fermerPage}
+          initialClientId={clientACibler}
+          onClientsChanged={() => setClientsVersion(v => v + 1)}
+        />
+      )}
+      {surface === 'tickets'      && <TicketsPanel       onClose={fermerPage} />}
+      {surface === 'catalog'      && <CatalogPanel       onClose={fermerPage} />}
+      {surface === 'settings'     && <SettingsModal      onClose={fermerPage} />}
+      {/* Le volet « Stock » est fermé par `ouvrirPage` : il ne peut donc pas
+          cohabiter avec une page plein écran (`z-40` sous un `z-50`). */}
+      {isStockPanelOpen && <StockPanel onClose={toggleStockPanel} />}
+
+      {/*
+        Tiroir des rendez-vous : décisions détaillées (confirmer, terminer,
+        annuler, consulter les demandes en attente), ouvert depuis le tableau de
+        bord. Il se ferme aussi lors d'un changement de page, pour ne jamais
+        survivre par-dessus un autre écran.
+      */}
+      {isApptsOpen && surface === 'dashboard' && (
+        <AppointmentsPanel onClose={() => setIsApptsOpen(false)} />
+      )}
+
+      {/* Fiche véhicule — historique complet, ouvert depuis un rendez-vous. */}
+      {vehiculeCible && (
+        <VehicleHistoryModal vehicleId={vehiculeCible} onClose={() => setVehiculeCible(null)} />
+      )}
 
       {/* ── First-launch onboarding ──────────────────────────────────────────── */}
       {showLangPicker && (

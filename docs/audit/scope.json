@@ -1,0 +1,157 @@
+{
+  "date": "2026-10-14",
+  "trackedAndUntracked": true,
+  "directoriesVisited": 399,
+  "files": 1233,
+  "textFiles": 1223,
+  "binaryFiles": 10,
+  "automaticallyParsedModules": 974,
+  "apiFilesMapped": 164,
+  "manualCompleteFilesClaimed": 0,
+  "schemas": {
+    "prisma/schema.prisma": [
+      "Garage",
+      "User",
+      "Mechanic",
+      "Client",
+      "Vehicle",
+      "Part",
+      "JobPart",
+      "RepairTypePart",
+      "Job",
+      "Quote",
+      "QuoteLine",
+      "Invoice",
+      "InvoiceLine",
+      "JobTombstone",
+      "StockMovement",
+      "JobPhoto",
+      "Inspection",
+      "InspectionItem",
+      "LicenseKey",
+      "MechanicLicenseAssignment",
+      "JobMechanicNote",
+      "MechanicActionAudit",
+      "LicenseDevice",
+      "LicenseDeviceEvent",
+      "Reminder",
+      "WorkOrder",
+      "LaborOperation",
+      "Warranty",
+      "LoanerVehicle",
+      "LoanerReservation",
+      "PurchaseOrder",
+      "AuditLog",
+      "VinSearch",
+      "Signature",
+      "NotificationLog",
+      "PortalUser",
+      "PortalDevice",
+      "PortalTicket",
+      "PortalTicketMessage",
+      "Appointment",
+      "BackupRecord",
+      "ReportSnapshot",
+      "PortalSnapshot"
+    ],
+    "prisma/server/schema.prisma": [
+      "Garage",
+      "User",
+      "Mechanic",
+      "Client",
+      "Vehicle",
+      "Part",
+      "JobPart",
+      "RepairTypePart",
+      "Job",
+      "Quote",
+      "QuoteLine",
+      "Invoice",
+      "InvoiceLine",
+      "JobTombstone",
+      "StockMovement",
+      "JobPhoto",
+      "Inspection",
+      "InspectionItem",
+      "LicenseKey",
+      "MechanicLicenseAssignment",
+      "JobMechanicNote",
+      "MechanicActionAudit",
+      "LicenseDevice",
+      "LicenseDeviceEvent",
+      "Reminder",
+      "WorkOrder",
+      "LaborOperation",
+      "Warranty",
+      "LoanerVehicle",
+      "LoanerReservation",
+      "PurchaseOrder",
+      "AuditLog",
+      "VinSearch",
+      "Signature",
+      "NotificationLog",
+      "PortalUser",
+      "PortalDevice",
+      "PortalTicket",
+      "PortalTicketMessage",
+      "Appointment",
+      "BackupRecord",
+      "ReportSnapshot",
+      "GarageEInvoiceConnection",
+      "EInvoiceTransmission",
+      "EInvoiceEvent",
+      "EInvoiceAuditEvent",
+      "PortalSnapshot"
+    ]
+  },
+  "excluded": [
+    {
+      "path": ".git",
+      "reason": "cache/generated/runtime/Git or local configuration"
+    },
+    {
+      "path": ".next",
+      "reason": "cache/generated/runtime/Git or local configuration"
+    },
+    {
+      "path": "docs/audit/REPORT-2026-10-14.md",
+      "reason": "self-generated audit output"
+    },
+    {
+      "path": "docs/audit/inventory-current.jsonl",
+      "reason": "self-generated audit output"
+    },
+    {
+      "path": "docs/audit/module-map.jsonl",
+      "reason": "self-generated audit output"
+    },
+    {
+      "path": "docs/audit/scope.json",
+      "reason": "self-generated audit output"
+    },
+    {
+      "path": "node_modules",
+      "reason": "cache/generated/runtime/Git or local configuration"
+    },
+    {
+      "path": "playwright-report",
+      "reason": "cache/generated/runtime/Git or local configuration"
+    },
+    {
+      "path": "scripts/__pycache__",
+      "reason": "cache/generated/runtime/Git or local configuration"
+    },
+    {
+      "path": "src/generated",
+      "reason": "cache/generated/runtime/Git or local configuration"
+    }
+  ],
+  "inaccessible": [],
+  "limitations": [
+    "Inventory is a point-in-time snapshot, not an exhaustive manual audit.",
+    "Generated audit output files excluded to avoid self-referential hashes.",
+    "Static imports only: dynamic paths, aliases, requires and Prisma properties can require contextual review.",
+    "No environment values or local secret contents are recorded.",
+    "Every module-map and inventory entry still requires semantic verification unless separately evidenced in the report."
+  ]
+}

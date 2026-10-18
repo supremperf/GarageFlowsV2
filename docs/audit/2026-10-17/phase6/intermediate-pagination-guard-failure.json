@@ -1,0 +1,13 @@
+{
+  "fixedIn": "src/lib/__tests__/contrats-parametres-api.test.ts",
+  "reason": "Follow exact import plus call to parsePagination and prove false for dead imports, missing import and unknown parameter; do not whitelist parameters.",
+  "failures": [
+    {
+      "file": "/home/user/GarageFlowsV2/src/lib/__tests__/contrats-parametres-api.test.ts",
+      "name": "paramètres de requête — le client et la route parlent la même langue (GF-005) aucun appel client n’envoie un paramètre que sa route ignore",
+      "stack": [
+        "AssertionError: un paramètre ignoré n’est pas une erreur : c’est un filtre qui disparaît: expected [ …(4) ] to deeply equal []\n    at /home/user/GarageFlowsV2/src/lib/__tests__/contrats-parametres-api.test.ts:128:97\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2956:64"
+      ]
+    }
+  ]
+}

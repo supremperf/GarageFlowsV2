@@ -8,7 +8,17 @@
  *    On ne met jamais en cache de session, de token ni de réponse authentifiée.
  *  - invalidation : le nom de cache est versionné ; les anciens sont purgés.
  */
-const VERSION = 'gf-v1'
+/*
+ * Nom de cache VERSIONNÉ PAR RELEASE.
+ *
+ * `gf-v1` était figé dans le code : deux releases successives partageaient donc
+ * le même cache, et comme le fichier sw.js lui-même ne changeait pas d'un octet,
+ * le navigateur ne détectait aucune mise à jour du service worker.
+ * La page enregistre désormais `/sw.js?v=<version applicative>` : l'URL change à
+ * chaque release, le navigateur ré-évalue le worker, et le cache porte le numéro
+ * de version — les anciens sont purgés à l'activation (voir plus bas).
+ */
+const VERSION = `gf-${new URL(self.location.href).searchParams.get('v') || 'v1'}`
 const STATIC_CACHE = `${VERSION}-static`
 const PAGE_CACHE = `${VERSION}-pages`
 const OFFLINE_URL = '/offline.html'
@@ -16,12 +26,18 @@ const OFFLINE_URL = '/offline.html'
 const PRECACHE = [OFFLINE_URL, '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png']
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(STATIC_CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()),
-  )
+  // On NE force PAS l'activation ici (pas de self.skipWaiting() à l'install) : un
+  // nouveau SW qui prendrait le contrôle immédiatement déclencherait un
+  // rechargement de page NON CONSENTI (controllerchange), avec perte de la saisie
+  // en cours (devis, OR, fiche véhicule). Le nouveau SW RESTE EN ATTENTE ; la
+  // page propose « Mettre à jour » et n'active le nouveau SW que sur clic de
+  // l'utilisateur, via le message SKIP_WAITING ci-dessous.
+  event.waitUntil(caches.open(STATIC_CACHE).then((c) => c.addAll(PRECACHE)))
 })
 
 self.addEventListener('activate', (event) => {
+  // Purge de TOUT cache d'une autre version : après une mise à jour, aucune
+  // page ni aucun asset de la version précédente ne peut resurgir.
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k))),
@@ -31,6 +47,8 @@ self.addEventListener('activate', (event) => {
 
 // Messages de la page : activation forcée + purge des caches à la déconnexion.
 self.addEventListener('message', (event) => {
+  // Seules les pages de NOTRE origine peuvent piloter le service worker.
+  if (event.origin && event.origin !== self.location.origin) return
   if (event.data === 'SKIP_WAITING') self.skipWaiting()
   // À la déconnexion, on efface le cache de pages (aucune page privée ne doit
   // survivre pour un autre utilisateur du même appareil). Le cache statique
@@ -56,12 +74,29 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api/')) return
 
   // Assets statiques immuables → cache-first.
+  //
+  // ─── Pourquoi `res.ok` est INDISPENSABLE ici (GF-DUR-039) ─────────────────
+  // Cette branche mettait en cache la réponse SANS regarder son statut. Or elle
+  // est cache-first : une fois stockée, la réponse est resservie sans jamais
+  // réinterroger le réseau, pour toute la durée de vie de la version.
+  //
+  // Pendant une mise en production, un fragment `/_next/static/chunks/*.js` peut
+  // manquer quelques secondes — le HTML de la nouvelle version est servi alors
+  // que l'asset n'est pas encore en place. Le navigateur recevait un 404, LE
+  // METTAIT EN CACHE, et le resservait indéfiniment : l'application restait
+  // cassée sur cet appareil jusqu'à la version suivante, sans qu'aucun
+  // rechargement n'y change quoi que ce soit. Le cache des pages, lui, vérifiait
+  // déjà `res.ok` — c'est ce même contrôle qui manquait ici.
   if (isStaticAsset(url)) {
     event.respondWith(
       caches.match(request).then((hit) =>
         hit || fetch(request).then((res) => {
-          const copy = res.clone()
-          caches.open(STATIC_CACHE).then((c) => c.put(request, copy))
+          // On ne conserve QUE les réponses saines. Un 404/5xx transitoire est
+          // rendu à la page (elle réessaiera) mais jamais mémorisé.
+          if (res.ok) {
+            const copy = res.clone()
+            caches.open(STATIC_CACHE).then((c) => c.put(request, copy))
+          }
           return res
         }),
       ),

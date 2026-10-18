@@ -1,0 +1,174 @@
+{
+  "date": "2026-10-14",
+  "versions": {
+    "node": "v22.22.3",
+    "npm": "11.16.0",
+    "systemNpmObservedEarlier": "10.9.8",
+    "python": "Python 3.11.2"
+  },
+  "checks": [
+    {
+      "name": "lint",
+      "command": "node /home/user/audit-followup/tools/node_modules/npm/bin/npm-cli.js run lint",
+      "cwd": "/home/user/GarageFlowsV2",
+      "started": "2026-10-14T13:04:11.324Z",
+      "finished": "2026-10-14T13:04:21.704Z",
+      "exitCode": 0,
+      "error": null,
+      "proof": "evidence/lint.log"
+    },
+    {
+      "name": "type-check",
+      "command": "node /home/user/audit-followup/tools/node_modules/npm/bin/npm-cli.js run type-check",
+      "cwd": "/home/user/GarageFlowsV2",
+      "started": "2026-10-14T13:04:21.705Z",
+      "finished": "2026-10-14T13:04:26.685Z",
+      "exitCode": 0,
+      "error": null,
+      "proof": "evidence/type-check.log"
+    },
+    {
+      "name": "config",
+      "command": "node /home/user/audit-followup/tools/node_modules/npm/bin/npm-cli.js run test:config",
+      "cwd": "/home/user/GarageFlowsV2",
+      "started": "2026-10-14T13:04:26.685Z",
+      "finished": "2026-10-14T13:04:27.399Z",
+      "exitCode": 0,
+      "error": null,
+      "proof": "evidence/config.log"
+    },
+    {
+      "name": "security",
+      "command": "node /home/user/audit-followup/tools/node_modules/npm/bin/npm-cli.js run test:audit",
+      "cwd": "/home/user/GarageFlowsV2",
+      "started": "2026-10-14T13:04:27.399Z",
+      "finished": "2026-10-14T13:04:27.923Z",
+      "exitCode": 0,
+      "error": null,
+      "proof": "evidence/security.log"
+    },
+    {
+      "name": "release-safety",
+      "command": "node /home/user/audit-followup/tools/node_modules/npm/bin/npm-cli.js run test:release-safety",
+      "cwd": "/home/user/GarageFlowsV2",
+      "started": "2026-10-14T13:04:27.923Z",
+      "finished": "2026-10-14T13:04:28.839Z",
+      "exitCode": 0,
+      "error": null,
+      "proof": "evidence/release-safety.log"
+    },
+    {
+      "name": "consistency",
+      "command": "node /home/user/audit-followup/tools/node_modules/npm/bin/npm-cli.js run check:consistency",
+      "cwd": "/home/user/GarageFlowsV2",
+      "started": "2026-10-14T13:04:28.840Z",
+      "finished": "2026-10-14T13:04:31.542Z",
+      "exitCode": 0,
+      "error": null,
+      "proof": "evidence/consistency.log"
+    },
+    {
+      "name": "audit-strict",
+      "command": "node /home/user/audit-followup/tools/node_modules/npm/bin/npm-cli.js run audit:strict",
+      "cwd": "/home/user/GarageFlowsV2",
+      "started": "2026-10-14T13:04:31.543Z",
+      "finished": "2026-10-14T13:04:32.146Z",
+      "exitCode": 0,
+      "error": null,
+      "proof": "evidence/audit-strict.log"
+    },
+    {
+      "name": "npm-audit",
+      "command": "node /home/user/audit-followup/tools/node_modules/npm/bin/npm-cli.js audit --json",
+      "cwd": "/home/user/GarageFlowsV2",
+      "started": "2026-10-14T13:04:32.146Z",
+      "finished": "2026-10-14T13:04:32.662Z",
+      "exitCode": 0,
+      "error": null,
+      "proof": "evidence/npm-audit.json"
+    },
+    {
+      "name": "npm-ls",
+      "command": "node /home/user/audit-followup/tools/node_modules/npm/bin/npm-cli.js ls --all",
+      "cwd": "/home/user/GarageFlowsV2",
+      "started": "2026-10-14T13:04:32.662Z",
+      "finished": "2026-10-14T13:04:33.509Z",
+      "exitCode": 0,
+      "error": null,
+      "proof": "evidence/npm-ls.log"
+    },
+    {
+      "name": "targeted",
+      "command": "node /home/user/audit-followup/tools/node_modules/npm/bin/npm-cli.js test -- src/lib/__tests__/toolchain-node-version.test.ts src/lib/__tests__/ui-lossless-compaction.test.ts src/lib/__tests__/route-context.test.ts",
+      "cwd": "/home/user/GarageFlowsV2",
+      "started": "2026-10-14T13:04:33.509Z",
+      "finished": "2026-10-14T13:04:34.861Z",
+      "exitCode": 0,
+      "error": null,
+      "proof": "evidence/confirmation-targeted.log"
+    }
+  ],
+  "priorCommands": [
+    {
+      "name": "normal-ci",
+      "command": "NODE_USE_SYSTEM_CA=1 node /home/user/audit-followup/tools/node_modules/npm/bin/npm-cli.js ci --foreground-scripts --no-fund",
+      "cwd": "/home/user/audit-followup/clean-lifecycle",
+      "exitCode": 1,
+      "proof": "evidence/normal-ci.log",
+      "limitation": "Executed earlier, not re-executed by this indexing script; see snapshot/run qualifications in REPORT.md."
+    },
+    {
+      "name": "normal-build",
+      "command": "NODE_USE_SYSTEM_CA=1 node /home/user/audit-followup/tools/node_modules/npm/bin/npm-cli.js run build",
+      "cwd": "/home/user/GarageFlowsV2",
+      "exitCode": 1,
+      "proof": "evidence/normal-build.log",
+      "limitation": "Executed earlier, not re-executed by this indexing script; see snapshot/run qualifications in REPORT.md."
+    },
+    {
+      "name": "normal-dist",
+      "command": "NODE_USE_SYSTEM_CA=1 node /home/user/audit-followup/tools/node_modules/npm/bin/npm-cli.js run dist",
+      "cwd": "/home/user/GarageFlowsV2",
+      "exitCode": 1,
+      "proof": "evidence/normal-dist.log",
+      "limitation": "Executed earlier, not re-executed by this indexing script; see snapshot/run qualifications in REPORT.md."
+    },
+    {
+      "name": "vitest-latest",
+      "command": "PATH=<isolated-python>:$PATH NODE_USE_SYSTEM_CA=1 node /home/user/audit-followup/tools/node_modules/npm/bin/npm-cli.js test -- --maxWorkers=2 --reporter=default --reporter=json --outputFile.json=docs/audit/followup-2026-10-14/evidence/vitest-latest.json",
+      "cwd": "/home/user/GarageFlowsV2",
+      "exitCode": 1,
+      "proof": "evidence/vitest-latest.log",
+      "limitation": "Executed earlier, not re-executed by this indexing script; see snapshot/run qualifications in REPORT.md."
+    },
+    {
+      "name": "e2e",
+      "command": "BASE_URL=http://127.0.0.1:4028 AUDIT_E2E_DATABASE_URL=file:/home/user/audit-followup/e2e-attempt.db E2E_EMAIL= E2E_PASSWORD= E2E_LICENSE= NODE_USE_SYSTEM_CA=1 node node_modules/@playwright/test/cli.js test --config docs/audit/followup-2026-10-14/playwright-attempt.config.ts --workers=1",
+      "cwd": "/home/user/GarageFlowsV2",
+      "exitCode": 1,
+      "proof": "evidence/e2e.log",
+      "limitation": "Executed earlier, not re-executed by this indexing script; see snapshot/run qualifications in REPORT.md."
+    }
+  ],
+  "negativeChecks": [
+    {
+      "command": "GF_REQUIRE_ARTIFACT_TEST=1 npm test -- src/__tests__/integrity-diagnostics.test.ts",
+      "observedExitCode": 1,
+      "expectedExitCode": 1,
+      "proof": "evidence/artifact-required-negative.log",
+      "meaning": "Missing real artefact fails; NOT positive artefact proof"
+    },
+    {
+      "command": "npm test -- src/lib/license/__tests__/license-keygen-e2e.test.ts (system Python without cryptography)",
+      "observedExitCode": 1,
+      "expectedExitCode": 1,
+      "proof": "evidence/keygen-missing-negative.log",
+      "meaning": "Missing keygen dependency fails; positive run uses actual installed PyPI wheels separately"
+    }
+  ],
+  "finalDocumentationCheck": {
+    "command": "node scripts/check-docs-consistency.mjs",
+    "exitCode": 0,
+    "proof": "evidence/docs-final.log"
+  }
+}

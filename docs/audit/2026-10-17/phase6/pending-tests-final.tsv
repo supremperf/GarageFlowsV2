@@ -1,0 +1,849 @@
+file	test	reason
+src/__tests__/integrity-diagnostics.test.ts	matrice A–G G — build fraîchement généré (dist/win-unpacked réel) → aucun échec	dist/win-unpacked integrity manifest
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 1. équipe : création du mécanicien via l’API	HOOK_FAILED: download engines
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 2. client + véhicule (rattachement contrôlé)	HOOK_FAILED: download engines
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 2b. ÉCHEC contrôlé : véhicule rattaché au client d’un AUTRE garage → refus	HOOK_FAILED: download engines
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 3. rendez-vous persisté puis intervention créée via l’API	HOOK_FAILED: download engines
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 4. stock : pièce créée, consommée sur l’intervention, décrément vérifié en base	HOOK_FAILED: download engines
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 4b. ÉCHEC contrôlé : consommation au-delà du stock → 409, stock intact	HOOK_FAILED: download engines
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 5. devis numéroté DEV-…-001, lignes MO + pièce, montants exacts en base	HOOK_FAILED: download engines
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 5b. ÉCHEC contrôlé : devis pointant le client d’un autre garage → refus	HOOK_FAILED: download engines
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 6. acceptation du devis puis conversion en facture FAC-…-001	HOOK_FAILED: download engines
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 6b. ÉCHEC contrôlé : double conversion du même devis → refus, pas de 2e facture	HOOK_FAILED: download engines
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 7. cycle de paiement : draft → sent → paid, persisté	HOOK_FAILED: download engines
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 8. IMMUABILITÉ : retour en brouillon → 409 ; suppression → 409 ; base inchangée	HOOK_FAILED: download engines
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 9. numérotation contiguë : 2e devis converti → FAC-…-002	HOOK_FAILED: download engines
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 10. portail client : lien tokenisé du job → 200 ; jeton falsifié → refus	HOOK_FAILED: download engines
+src/integration/business-workflow-e2e.test.ts	parcours métier complet — garage → facture payée → portail 11. bilan de persistance : toutes les entités du parcours existent en base, scopées au garage	HOOK_FAILED: download engines
+src/integration/catalog.test.ts	GET /api/catalog returns ranked text-search results from the seed catalogue	HOOK_FAILED: download engines
+src/integration/catalog.test.ts	GET /api/catalog caps results by limit while total reports the full (pre-limit) match count	HOOK_FAILED: download engines
+src/integration/catalog.test.ts	GET /api/catalog ranks an exact reference first and surfaces a transitive cross-reference	HOOK_FAILED: download engines
+src/integration/catalog.test.ts	GET /api/catalog annotates inStock/stockQuantity, aggregating refs that normalise equal	HOOK_FAILED: download engines
+src/integration/catalog.test.ts	GET /api/catalog resolves the vehicle from a stored plate, scoped per garage	HOOK_FAILED: download engines
+src/integration/catalog.test.ts	GET /api/catalog guards a non-numeric year param to null (never NaN)	HOOK_FAILED: download engines
+src/integration/catalog.test.ts	GET /api/catalog scopes the in-stock join per garage	HOOK_FAILED: download engines
+src/integration/catalog.test.ts	GET /api/catalog returns the cross-reference equivalence class (action=equivalents)	HOOK_FAILED: download engines
+src/integration/catalog.test.ts	GET /api/catalog 400s on equivalents with no reference, and serves the category tree	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	le garage modifie l'adresse (§20) la fiche ET l'identifiant de connexion changent ensemble	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	le garage modifie l'adresse (§20) la preuve de vérification ne suit PAS la nouvelle adresse (§23)	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	le garage modifie l'adresse (§20) un lien de confirmation part sur la NOUVELLE adresse, et il fonctionne	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	le garage modifie l'adresse (§20) les sessions ouvertes tombent — l'identifiant a changé (§21)	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	le garage modifie l'adresse (§20) le mot de passe n'est pas touché : seul l'identifiant change	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	le garage modifie l'adresse (§20) modifier le nom ou le téléphone ne touche ni au compte ni aux sessions	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	le garage modifie l'adresse (§20) réenregistrer la MÊME adresse ne coupe rien	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	le garage modifie l'adresse (§20) un client SANS accès portail se modifie sans effet de bord	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	collision d'adresses (§22) deux clients du même garage ne peuvent pas partager un identifiant portail	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	collision d'adresses (§22) la même adresse dans un AUTRE garage n'est pas un conflit	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	conflit entre les deux sens (§25) une demande du client encore en attente est ANNULÉE par la correction du garage	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	conflit entre les deux sens (§25) le journal d'audit dit ce qui a été annulé (§26)	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	le sens portail → garage reste branché (§24) la confirmation du client remonte toujours à la fiche du garage	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	portée et permissions un client d'un AUTRE garage est introuvable, pas refusé	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	portée et permissions un mécanicien ne modifie pas une fiche client	HOOK_FAILED: download engines
+src/integration/client-email-garage-portail.test.ts	portée et permissions une adresse invalide est refusée avant toute écriture	HOOK_FAILED: download engines
+src/integration/copilot-conversation.test.ts	conversation HTTP contract with real database scopes a fresh dossier lookup and returns no financial/private notes	HOOK_FAILED: download engines
+src/integration/copilot-conversation.test.ts	conversation HTTP contract with real database rereads changed data instead of trusting conversation contents	HOOK_FAILED: download engines
+src/integration/copilot-conversation.test.ts	conversation HTTP contract with real database does not turn sourced help into a verified financial answer or a write	HOOK_FAILED: download engines
+src/integration/copilot-conversation.test.ts	conversation HTTP contract with real database rejects forged tenant/history and malformed JSON	HOOK_FAILED: download engines
+src/integration/copilot-conversation.test.ts	conversation HTTP contract with real database reports readiness after a garage-scoped database probe without calling a model	HOOK_FAILED: download engines
+src/integration/copilot-conversation.test.ts	conversation HTTP contract with real database rejects oversized streamed bodies	HOOK_FAILED: download engines
+src/integration/copilot-conversation.test.ts	conversation HTTP contract with real database executes two fresh authorized reads and leaves the database unchanged	HOOK_FAILED: download engines
+src/integration/copilot-conversation.test.ts	conversation HTTP contract with real database does not report operational for a garage absent from the actual database	HOOK_FAILED: download engines
+src/integration/copilot-conversation.test.ts	conversation HTTP contract with real database asks for a supported period instead of reporting today as last year	HOOK_FAILED: download engines
+src/integration/copilot-cout-achat.test.ts	le copilote ne livre pas le prix d’achat à un rôle non financier MECHANIC et rôle inconnu : refus 403 avant toute lecture de stock	HOOK_FAILED: download engines
+src/integration/copilot-cout-achat.test.ts	le copilote ne livre pas le prix d’achat à un rôle non financier RECEPTIONIST autorisé : quoi commander et combien, jamais le coût	HOOK_FAILED: download engines
+src/integration/copilot-cout-achat.test.ts	le copilote ne livre pas le prix d’achat à un rôle non financier un OWNER, lui, voit le coût — la donnée n’est pas supprimée, elle est réservée	HOOK_FAILED: download engines
+src/integration/copilot-cout-achat.test.ts	/api/stock-forecast applique la même règle un MECHANIC n’obtient ni coût par pièce ni total	HOOK_FAILED: download engines
+src/integration/copilot-cout-achat.test.ts	/api/stock-forecast applique la même règle un MANAGER conserve l’accès complet	HOOK_FAILED: download engines
+src/integration/copilot-ecusson-verifie.test.ts	l’écusson s’affiche quand la réponse porte vraiment des données une réponse chiffrée tirée de la base est marquée vérifiée	HOOK_FAILED: download engines
+src/integration/copilot-ecusson-verifie.test.ts	l’écusson s’affiche quand la réponse porte vraiment des données la provenance du texte cesse d’être indevinable	HOOK_FAILED: download engines
+src/integration/copilot-ecusson-verifie.test.ts	l’écusson disparaît quand il n’y a aucune donnée à ancrer une panne de lecture n’est pas une réponse vérifiée	HOOK_FAILED: download engines
+src/integration/copilot-ecusson-verifie.test.ts	l’écusson disparaît quand il n’y a aucune donnée à ancrer une demande de VIN n’est pas une réponse vérifiée	HOOK_FAILED: download engines
+src/integration/copilot-ecusson-verifie.test.ts	l’écusson disparaît quand il n’y a aucune donnée à ancrer une demande de précision de diagnostic n’est pas une réponse vérifiée	HOOK_FAILED: download engines
+src/integration/copilot-ecusson-verifie.test.ts	le rejet d’une invention ne doit pas éteindre l’écusson une reformulation inventée est rejetée, et la réponse reste vérifiée	HOOK_FAILED: download engines
+src/integration/copilot-ecusson-verifie.test.ts	le rejet d’une invention ne doit pas éteindre l’écusson une reformulation ancrée est acceptée et signalée comme telle	HOOK_FAILED: download engines
+src/integration/copilot-ecusson-verifie.test.ts	le panneau lit le verdict du serveur, il ne le recalcule pas l’écusson ne se déduit plus de la simple présence de `phrasing`	HOOK_FAILED: download engines
+src/integration/copilot-ecusson-verifie.test.ts	le panneau lit le verdict du serveur, il ne le recalcule pas l’écusson vient du verdict serveur `ancrage.verifie`	HOOK_FAILED: download engines
+src/integration/copilot-financial-authz-v15.test.ts	Copilote — rapport financier (V15 P2) RECEPTIONIST → 403 (pas de financial:read)	HOOK_FAILED: download engines
+src/integration/copilot-financial-authz-v15.test.ts	Copilote — rapport financier (V15 P2) MECHANIC → 403	HOOK_FAILED: download engines
+src/integration/copilot-financial-authz-v15.test.ts	Copilote — rapport financier (V15 P2) OWNER → 200 (accès financier légitime)	HOOK_FAILED: download engines
+src/integration/copilot-financial-authz-v15.test.ts	Copilote conversationnel — gate par résolveur (V15 P2) intention FINANCIÈRE (marge) par RECEPTIONIST → 403	HOOK_FAILED: download engines
+src/integration/copilot-financial-authz-v15.test.ts	Copilote conversationnel — gate par résolveur (V15 P2) intention OPÉRATIONNELLE (mécaniciens disponibles) par RECEPTIONIST → autorisée	HOOK_FAILED: download engines
+src/integration/copilot-financial-authz-v15.test.ts	Copilote conversationnel — gate par résolveur (V15 P2) intention FINANCIÈRE (marge) par OWNER → autorisée	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	la porte financière tient sur les QUATRE résolveurs, pas seulement sur la marge « revenue_today » est refusé à un RECEPTIONIST	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	la porte financière tient sur les QUATRE résolveurs, pas seulement sur la marge « margin » est refusé à un RECEPTIONIST	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	la porte financière tient sur les QUATRE résolveurs, pas seulement sur la marge « top_clients » est refusé à un RECEPTIONIST	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	la porte financière tient sur les QUATRE résolveurs, pas seulement sur la marge « forecast » est refusé à un RECEPTIONIST	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	la porte financière tient sur les QUATRE résolveurs, pas seulement sur la marge « revenue_today » est refusé à un MECHANIC	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	la porte financière tient sur les QUATRE résolveurs, pas seulement sur la marge « margin » est refusé à un MECHANIC	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	la porte financière tient sur les QUATRE résolveurs, pas seulement sur la marge « top_clients » est refusé à un MECHANIC	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	la porte financière tient sur les QUATRE résolveurs, pas seulement sur la marge « forecast » est refusé à un MECHANIC	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	la porte financière tient sur les QUATRE résolveurs, pas seulement sur la marge « revenue_today » répond VRAIMENT à un OWNER	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	la porte financière tient sur les QUATRE résolveurs, pas seulement sur la marge « margin » répond VRAIMENT à un OWNER	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	la porte financière tient sur les QUATRE résolveurs, pas seulement sur la marge « top_clients » répond VRAIMENT à un OWNER	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	la porte financière tient sur les QUATRE résolveurs, pas seulement sur la marge « forecast » répond VRAIMENT à un OWNER	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	aucun résolveur ne laisse passer les données d’un autre garage les devis en attente sont ceux du garage de la session	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	aucun résolveur ne laisse passer les données d’un autre garage les meilleurs clients n’agrègent pas ceux d’un autre garage	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	aucun résolveur ne laisse passer les données d’un autre garage la marge ne mélange pas deux garages	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	aucun résolveur ne laisse passer les données d’un autre garage les mécaniciens disponibles sont ceux du garage	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	aucun résolveur ne laisse passer les données d’un autre garage les véhicules en retard sont ceux du garage	HOOK_FAILED: download engines
+src/integration/copilot-portee-et-porte-financiere.test.ts	aucun résolveur ne laisse passer les données d’un autre garage vu depuis le garage B, ce sont les données de B — et elles seules	HOOK_FAILED: download engines
+src/integration/copilot.test.ts	POST /api/copilot answers revenue_today from garage-scoped, date/status-filtered data	HOOK_FAILED: download engines
+src/integration/copilot.test.ts	POST /api/copilot scopes revenue strictly to the session garage	HOOK_FAILED: download engines
+src/integration/copilot.test.ts	POST /api/copilot answers low_stock with the reorder plan (deterministic, zero consumption)	HOOK_FAILED: download engines
+src/integration/copilot.test.ts	POST /api/copilot gates an action intent behind confirmation and writes NOTHING	HOOK_FAILED: download engines
+src/integration/copilot.test.ts	POST /api/copilot returns unknown for an unrecognised query (no phrasing, no write)	HOOK_FAILED: download engines
+src/integration/copilot.test.ts	POST /api/copilot — grounding guard through the route rejects a fabricated figure from a provider and keeps the deterministic message	HOOK_FAILED: download engines
+src/integration/copilot.test.ts	POST /api/copilot — grounding guard through the route passes a grounded provider rephrase through unchanged	HOOK_FAILED: download engines
+src/integration/dashboard.test.ts	GET /api/dashboard (integration) renders a no-data margin as neutral, not a false critical, on a new garage	HOOK_FAILED: download engines
+src/integration/dashboard.test.ts	GET /api/dashboard (integration) computes revenue and margin from real paid invoices	HOOK_FAILED: download engines
+src/integration/dashboard.test.ts	GET /api/dashboard (integration) scopes strictly to the session garage (no cross-tenant leakage)	HOOK_FAILED: download engines
+src/integration/devis-signature-depuis-un-poste.test.ts	signature de devis — depuis un POSTE installé (GF-003) sans licence garage active : refuse explicitement, sans rien laisser fuir	HOOK_FAILED: download engines
+src/integration/devis-signature-depuis-un-poste.test.ts	signature de devis — depuis un POSTE installé (GF-003) publie le devis au cloud et rend le lien QUE LE CLOUD a émis	HOOK_FAILED: download engines
+src/integration/devis-signature-depuis-un-poste.test.ts	signature de devis — depuis un POSTE installé (GF-003) la charge publiée porte les montants ENTIERS, à l’unité près	HOOK_FAILED: download engines
+src/integration/devis-signature-depuis-un-poste.test.ts	signature de devis — depuis un POSTE installé (GF-003) cloud injoignable : 503, aucun courriel, devis intact	HOOK_FAILED: download engines
+src/integration/devis-signature-depuis-un-poste.test.ts	signature de devis — depuis un POSTE installé (GF-003) publication refusée par le cloud : 409, aucun faux succès	HOOK_FAILED: download engines
+src/integration/devis-signature-depuis-un-poste.test.ts	signature de devis — depuis un POSTE installé (GF-003) ne fait PAS basculer le devis en « envoyé »	HOOK_FAILED: download engines
+src/integration/devis-signature-depuis-un-poste.test.ts	signature de devis — depuis un POSTE installé (GF-003) n’envoie AUCUN courriel	HOOK_FAILED: download engines
+src/integration/devis-signature-depuis-un-poste.test.ts	signature de devis — sur l’espace en ligne (comportement préservé) produit le lien, marque le devis « envoyé » et l’envoie au client	HOOK_FAILED: download engines
+src/integration/devis-signature-depuis-un-poste.test.ts	signature de devis — sur l’espace en ligne (comportement préservé) le jeton produit est bien celui que la page de signature accepte	HOOK_FAILED: download engines
+src/integration/document-integrity-v15.test.ts	OR signé — non re-signable (V15 P0) 1re signature → 200 ; 2e signature → 409 ; sceau d’origine préservé	HOOK_FAILED: download engines
+src/integration/document-integrity-v15.test.ts	OR signé — non re-signable (V15 P0) signature concurrente : une seule scelle (updateMany conditionnel atomique)	HOOK_FAILED: download engines
+src/integration/document-integrity-v15.test.ts	Facture émise — verrou tient via le re-contrôle en transaction (V15 P1) facture « sent » : édition financière refusée (409), lignes inchangées	HOOK_FAILED: download engines
+src/integration/fec-injection-v15.test.ts	Export FEC — injection neutralisée (V15 P1) aucune ligne ne dépasse 18 colonnes (le « | » du nom client n’injecte pas de champ)	HOOK_FAILED: download engines
+src/integration/fec-injection-v15.test.ts	Export FEC — injection neutralisée (V15 P1) le libellé démarrant par « = » est neutralisé (préfixe apostrophe, pas de formule)	HOOK_FAILED: download engines
+src/integration/fec-injection-v15.test.ts	GF31-AUD-014 — les factures annulées ne sont pas du chiffre d’affaires une facture ANNULÉE ne produit aucune écriture, une facture envoyée si	HOOK_FAILED: download engines
+src/integration/finance-margin.test.ts	GET /api/finance — Marge pièces cohérente coût des pièces = pièces des factures PAYÉES uniquement (MO, brouillons et consommations exclus)	HOOK_FAILED: download engines
+src/integration/intervention-rattache-client-vehicule.test.ts	planifier une intervention matérialise le client et le véhicule (GF-015) crée le client, le véhicule, et RATTACHE l’intervention	HOOK_FAILED: download engines
+src/integration/intervention-rattache-client-vehicule.test.ts	planifier une intervention matérialise le client et le véhicule (GF-015) la MÊME plaque écrite autrement ne crée pas un second véhicule	HOOK_FAILED: download engines
+src/integration/intervention-rattache-client-vehicule.test.ts	planifier une intervention matérialise le client et le véhicule (GF-015) le même client écrit avec une autre casse ou un accent n’est pas dupliqué	HOOK_FAILED: download engines
+src/integration/intervention-rattache-client-vehicule.test.ts	planifier une intervention matérialise le client et le véhicule (GF-015) un véhicule connu ne CHANGE PAS de propriétaire sur une saisie différente	HOOK_FAILED: download engines
+src/integration/intervention-rattache-client-vehicule.test.ts	planifier une intervention matérialise le client et le véhicule (GF-015) sans plaque, le client est créé mais aucun véhicule inventé	HOOK_FAILED: download engines
+src/integration/intervention-rattache-client-vehicule.test.ts	planifier une intervention matérialise le client et le véhicule (GF-015) un `vehicleId` explicite est respecté tel quel	HOOK_FAILED: download engines
+src/integration/intervention-rattache-client-vehicule.test.ts	planifier une intervention matérialise le client et le véhicule (GF-015) compléter la plaque APRÈS coup rattache aussi	HOOK_FAILED: download engines
+src/integration/intervention-rattache-client-vehicule.test.ts	planifier une intervention matérialise le client et le véhicule (GF-015) le rattachement reste cloisonné au garage	HOOK_FAILED: download engines
+src/integration/invoice-authz.test.ts	GF31-AUD-009 — mutations de factures réservées à invoice:manage un RECEPTIONIST ne peut pas créer de facture	HOOK_FAILED: download engines
+src/integration/invoice-authz.test.ts	GF31-AUD-009 — mutations de factures réservées à invoice:manage un RECEPTIONIST ne peut ni modifier ni supprimer une facture	HOOK_FAILED: download engines
+src/integration/invoice-authz.test.ts	GF31-AUD-009 — mutations de factures réservées à invoice:manage un RECEPTIONIST ne peut pas contourner en convertissant un devis	HOOK_FAILED: download engines
+src/integration/invoice-authz.test.ts	GF31-AUD-009 — mutations de factures réservées à invoice:manage un MANAGER conserve tous ses droits de facturation	HOOK_FAILED: download engines
+src/integration/invoice-authz.test.ts	GF31-AUD-009 — le coût d’achat n’est servi qu’avec financial:read un RECEPTIONIST lit la facture mais SANS le coût d’achat	HOOK_FAILED: download engines
+src/integration/invoice-authz.test.ts	GF31-AUD-009 — le coût d’achat n’est servi qu’avec financial:read un MANAGER (financial:read) voit bien le coût d’achat	HOOK_FAILED: download engines
+src/integration/invoice-authz.test.ts	GF31-AUD-009 — le coût d’achat n’est servi qu’avec financial:read un OWNER voit également le coût d’achat	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-046 — plus aucune écriture hors schéma refuse une plaque hors bornes au lieu de la persister	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-046 — plus aucune écriture hors schéma accepte une valeur légitime	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-049 — l’identité de l’acheteur est scellée avec le document facture sent : le nom du client n’est plus modifiable	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-049 — l’identité de l’acheteur est scellée avec le document facture paid : le nom du client n’est plus modifiable	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-049 — l’identité de l’acheteur est scellée avec le document facture overdue : le nom du client n’est plus modifiable	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-049 — l’identité de l’acheteur est scellée avec le document facture émise : clientEmail est également scellé	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-049 — l’identité de l’acheteur est scellée avec le document facture émise : clientPhone est également scellé	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-049 — l’identité de l’acheteur est scellée avec le document facture émise : clientAddress est également scellé	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-049 — l’identité de l’acheteur est scellée avec le document facture émise : vehicleModel est également scellé	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-049 — l’identité de l’acheteur est scellée avec le document facture émise : licensePlate est également scellé	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-049 — l’identité de l’acheteur est scellée avec le document un BROUILLON reste librement modifiable	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-049 — l’identité de l’acheteur est scellée avec le document les champs NON identitaires restent modifiables sur une facture émise	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-047 — supprimer la facture rend le devis à son état d’avant le devis redevient accepté, sans pointeur mort, et reconvertible	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-047 — supprimer la facture rend le devis à son état d’avant un devis d’un AUTRE garage n’est jamais touché	HOOK_FAILED: download engines
+src/integration/invoice-document-integrity-p3.test.ts	GF31-AUD-048 — la conversion laisse une trace au journal d’audit crée une entrée nommant l’auteur et le devis d’origine	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TEST 1 — validation d’une facture : décrément réel stock 10, facture de 2 → stock 8, un mouvement SALE de −2	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TESTS 2 & 3 — modification : SEUL le delta est appliqué 2 → 3 retire 1 de plus (stock 8 → 7), pas 3 à nouveau	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TESTS 2 & 3 — modification : SEUL le delta est appliqué 3 → 1 restitue 2 (stock 7 → 9)	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TESTS 2 & 3 — modification : SEUL le delta est appliqué suppression de la ligne restitue tout	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TESTS 2 & 3 — modification : SEUL le delta est appliqué l’API REFUSE de modifier les lignes d’une facture émise (règle légale préservée)	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TEST 4 — annulation : restitution intégrale facture annulée → stock revenu à 10, mouvement CANCEL de +2	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TEST 4 — annulation : restitution intégrale annuler DEUX fois ne restitue pas deux fois	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TEST 4 — annulation : restitution intégrale « cancelled » est TERMINAL : impossible de réactiver pour re-décrémenter	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TEST 5 — concurrence : une seule vente peut consommer la dernière unité stock 1, deux factures de 1 validées simultanément → une seule réussit	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TEST 5 — concurrence : une seule vente peut consommer la dernière unité stock insuffisant dès la validation → 409 et AUCUN mouvement (rollback total)	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TESTS 6 & 7 — main-d’œuvre et lignes libres n’impactent pas l’inventaire main-d’œuvre seule : aucun mouvement	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TESTS 6 & 7 — main-d’œuvre et lignes libres n’impactent pas l’inventaire ligne libre (pièce commandée spécialement) : aucun mouvement	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TESTS 6 & 7 — main-d’œuvre et lignes libres n’impactent pas l’inventaire facture mixte : seule la ligne de stock bouge	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TESTS 6 & 7 — main-d’œuvre et lignes libres n’impactent pas l’inventaire une ligne marquée main-d’œuvre ne peut PAS engager de stock même avec un partId	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TESTS 8 & 9 — devis puis conversion : un SEUL mouvement définitif un devis n’engage jamais le stock	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TESTS 8 & 9 — devis puis conversion : un SEUL mouvement définitif devis → facture → validation : le stock ne bouge QU’UNE fois	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TEST 10 — isolation inter-garage valider une facture du garage A ne touche pas la pièce homonyme du garage B	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TEST 10 — isolation inter-garage IDOR — référencer la pièce d’un AUTRE garage est refusé (400), stock intact	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	TEST 10 — isolation inter-garage IDOR — la facture d’un autre garage est invisible (404)	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	double-clic / rejeu — idempotence deux « Valider » simultanés ne décrémentent qu’une fois	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	double-clic / rejeu — idempotence valider puis passer « payée » ne re-décrémente pas	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	double-clic / rejeu — idempotence une facture BROUILLON supprimée ne libère aucun stock (rien n’était engagé)	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	validation serveur des quantités une quantité FRACTIONNAIRE sur une ligne de stock est refusée à la validation	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	validation serveur des quantités deux lignes de la MÊME pièce sont cumulées (et peuvent dépasser le stock)	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	autocomplétion — API réelle, périmètre garage « F » propose les pièces du garage courant, « Fil » affine	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	autocomplétion — API réelle, périmètre garage la suggestion porte tout ce qu’il faut : id, référence, stock, prix	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	autocomplétion — API réelle, périmètre garage recherche insensible à la casse et aux accents	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	autocomplétion — API réelle, périmètre garage AUCUNE pièce d’un autre garage n’est proposée	HOOK_FAILED: download engines
+src/integration/invoice-stock-sync.test.ts	autocomplétion — API réelle, périmètre garage requête vide → aucune suggestion (on ne déverse pas le catalogue)	HOOK_FAILED: download engines
+src/integration/licence-admin-durcissement.test.ts	revoke-by-key : retiré, aucun état DB ne peut changer refuse toute transition depuis active, même avec clé partagée	HOOK_FAILED: download engines
+src/integration/licence-admin-durcissement.test.ts	revoke-by-key : retiré, aucun état DB ne peut changer refuse toute transition depuis revoked, même avec clé partagée	HOOK_FAILED: download engines
+src/integration/licence-admin-durcissement.test.ts	revoke-by-key : retiré, aucun état DB ne peut changer refuse toute transition depuis suspended, même avec clé partagée	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — disponibilité du véhicule de prêt (§64) refuse une seconde réservation qui chevauche la première	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — disponibilité du véhicule de prêt (§64) refuse une période englobante	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — disponibilité du véhicule de prêt (§64) refuse une période incluse	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — disponibilité du véhicule de prêt (§64) refuse une période débordant à gauche	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — disponibilité du véhicule de prêt (§64) refuse une période débordant à droite	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — disponibilité du véhicule de prêt (§64) accepte une période strictement ADJACENTE (aucun chevauchement)	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — disponibilité du véhicule de prêt (§64) une réservation ANNULÉE ou RENDUE libère le véhicule	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — disponibilité du véhicule de prêt (§64) un AUTRE véhicule reste réservable sur la même période	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — disponibilité du véhicule de prêt (§64) deux réservations CONCURRENTES du même véhicule : une seule aboutit	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — dates refuse une période inversée	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — dates refuse une date illisible plutôt que de persister « Invalid Date »	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — dates accepte le prêt d’une journée (fin = début) — cas d’usage réel	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — dates mais cette journée OCCUPE bien le véhicule (pas d’intervalle vide)	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — dates le lendemain reste libre après un prêt d’une journée	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-031 — fenêtre du planning affiche une réservation qui englobe la semaine consultée	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-031 — fenêtre du planning affiche une réservation qui commence le DERNIER jour de la fenêtre	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-031 — fenêtre du planning n’affiche pas une réservation hors fenêtre	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — montants refuse tarif journalier non numérique au lieu de l’enregistrer à 0 €	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — montants refuse caution non numérique au lieu de l’enregistrer à 0 €	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — montants refuse tarif négatif au lieu de l’enregistrer à 0 €	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — montants enregistre exactement un montant valide	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-022 — montants accepte l’absence de montant (champs facultatifs)	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation refuse un statut hors énumération au lieu de l’écrire verbatim	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation accepte le statut légitime reserved	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation accepte le statut légitime active	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation accepte le statut légitime returned	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation accepte le statut légitime cancelled	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation refuse de déplacer une réservation sur une période déjà occupée (§64 sur le chemin PATCH)	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation ranimer une réservation annulée qui recouvre une autre est refusé	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation déplacer une réservation sur une période LIBRE reste possible	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation ne se déclare pas en conflit avec elle-même (mise à jour sans changement de période)	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation refuse période inversée	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation refuse date illisible	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation refuse tarif non numérique	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation refuse caution négative	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation refuse kilométrage non numérique	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation borne les montants au domaine des colonnes Int (pas de dépassement 32 bits)	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-026 — modification d’une réservation enregistre un statut « returned » avec son horodatage	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-027 — suppression d’un véhicule de prêt refuse de supprimer un véhicule qui a un historique, et le dit	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-027 — suppression d’un véhicule de prêt le contournement par statut inventé est fermé de bout en bout	HOOK_FAILED: download engines
+src/integration/loaner-availability.test.ts	GF31-AUD-027 — suppression d’un véhicule de prêt un véhicule sans aucun prêt reste supprimable	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	téléversement de la photo enregistre l'image, écrit le fichier et rend une URL servable	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	téléversement de la photo la photo est réellement servie par la route authentifiée	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	téléversement de la photo refuse un contenu qui n'est pas une image, sans rien écrire	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	téléversement de la photo remplacer une photo change l'URL et retire l'ancien fichier	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	téléversement de la photo supprimer la photo revient au repli et nettoie le disque	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	téléversement de la photo supprimer une photo absente est sans effet, pas une erreur	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	isolation entre garages le garage A ne peut pas poser de photo sur un mécanicien du garage B	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	isolation entre garages le garage A ne peut pas supprimer la photo d'un mécanicien du garage B	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	isolation entre garages le garage A ne peut pas LIRE la photo d'un mécanicien du garage B	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	isolation entre garages le garage A ne voit pas le mécanicien du garage B dans sa liste	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	isolation entre garages la traversée de chemin est refusée	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	permissions un rôle sans gestion ne peut pas modifier une photo	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	archivage — l'historique survit la suppression d'un mécanicien AYANT un historique est refusée, avec la marche à suivre	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	archivage — l'historique survit archiver le retire du planning SANS toucher à son historique	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	archivage — l'historique survit réactiver le fait réapparaître, sans le marquer absent	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	archivage — l'historique survit un mécanicien SANS historique peut être réellement supprimé	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	archivage — l'historique survit un rôle sans gestion ne peut pas archiver	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	archivage — l'historique survit `archived` doit être un booléen — pas une date choisie par le client	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-archive.test.ts	archivage — l'historique survit le garage A ne peut pas archiver un mécanicien du garage B	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-sync.test.ts	réception de la photo enregistre l'image, écrit le fichier et rend une URL	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-sync.test.ts	réception de la photo l'horodatage du poste fait foi pour la date de mise à jour	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-sync.test.ts	le cloud ne croit pas le poste sur parole refuse une image invalide, même annoncée comme valide	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-sync.test.ts	le cloud ne croit pas le poste sur parole un poste ne peut pas poser de photo sur un mécanicien d'un AUTRE garage	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-sync.test.ts	le cloud ne croit pas le poste sur parole un refus d'authentification bloque tout	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-sync.test.ts	le cloud ne croit pas le poste sur parole un mécanicien inconnu du cloud ne se crée pas par une simple photo	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-sync.test.ts	idempotence et ordre d'arrivée une photo INCHANGÉE ne réécrit rien et garde la même URL	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-sync.test.ts	idempotence et ordre d'arrivée une propagation RETARDÉE n'écrase pas une photo plus récente	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-sync.test.ts	idempotence et ordre d'arrivée une photo plus RÉCENTE remplace bien l'ancienne et nettoie le disque	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-sync.test.ts	propagation du RETRAIT supprimer la photo sur le poste la retire du cloud et du disque	HOOK_FAILED: download engines
+src/integration/mechanic-avatar-sync.test.ts	propagation du RETRAIT retirer une photo déjà absente est sans effet	HOOK_FAILED: download engines
+src/integration/mechanic-scope-realtime.test.ts	périmètre : un mécanicien ne voit QUE ses interventions le planning ne contient que les interventions attribuées	HOOK_FAILED: download engines
+src/integration/mechanic-scope-realtime.test.ts	périmètre : un mécanicien ne voit QUE ses interventions l’intervention d’un COLLÈGUE du même garage est inaccessible (404)	HOOK_FAILED: download engines
+src/integration/mechanic-scope-realtime.test.ts	périmètre : un mécanicien ne voit QUE ses interventions l’intervention d’un AUTRE GARAGE est inaccessible (404)	HOOK_FAILED: download engines
+src/integration/mechanic-scope-realtime.test.ts	périmètre : un mécanicien ne voit QUE ses interventions sans session → 401 et aucune donnée	HOOK_FAILED: download engines
+src/integration/mechanic-scope-realtime.test.ts	anti-spoof : l’identité vient de la SESSION, jamais du client ?mechanicId= d’un collègue est IGNORÉ	HOOK_FAILED: download engines
+src/integration/mechanic-scope-realtime.test.ts	anti-spoof : l’identité vient de la SESSION, jamais du client ?garageId= d’un autre garage est IGNORÉ	HOOK_FAILED: download engines
+src/integration/mechanic-scope-realtime.test.ts	anti-spoof : l’identité vient de la SESSION, jamais du client un mechanicId injecté dans le CORPS n’ouvre aucun accès	HOOK_FAILED: download engines
+src/integration/mechanic-scope-realtime.test.ts	anti-spoof : l’identité vient de la SESSION, jamais du client une note écrite sur SON intervention porte l’identité de la SESSION	HOOK_FAILED: download engines
+src/integration/mechanic-scope-realtime.test.ts	affectation : propagation vers la PWA une intervention créée puis affectée apparaît au rafraîchissement suivant	HOOK_FAILED: download engines
+src/integration/mechanic-scope-realtime.test.ts	affectation : propagation vers la PWA RÉAFFECTATION A → B : A perd l’accès, B le gagne, sans reconnexion	HOOK_FAILED: download engines
+src/integration/mechanic-scope-realtime.test.ts	affectation : propagation vers la PWA après réaffectation, l’ancien mécanicien ne peut plus écrire	HOOK_FAILED: download engines
+src/integration/mechanic-scope-realtime.test.ts	confidentialité : aucune donnée financière ni interne le planning n’expose ni prix, ni coût, ni marge, ni identifiant de mécanicien	HOOK_FAILED: download engines
+src/integration/mechanic-scope-realtime.test.ts	confidentialité : aucune donnée financière ni interne le détail d’intervention n’expose aucun montant	HOOK_FAILED: download engines
+src/integration/mechanic-scope-realtime.test.ts	confidentialité : aucune donnée financière ni interne les réponses mécanicien sont marquées NON CACHABLES (aucune donnée figée)	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	la conversation traverse réellement les deux côtés le message du client arrive dans la boîte du garage	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	la conversation traverse réellement les deux côtés la réponse du garage revient au client, et le statut change de camp	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	la conversation traverse réellement les deux côtés une relance du client remet la balle chez le garage	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	la conversation traverse réellement les deux côtés le véhicule choisi par le client est rattaché au fil	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	clôture — aucun message n'entre plus le garage clôt ; le client ne peut plus écrire, mais peut rouvrir	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	clôture — aucun message n'entre plus le client clôt de son côté ; le garage peut rouvrir	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	clôture — aucun message n'entre plus le garage ne peut pas répondre à un fil clos	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	isolation un garage voisin ne voit rien de cette conversation	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	isolation un autre client du MÊME garage n'atteint pas ce fil	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	isolation un véhicule qui n'appartient pas au client est refusé	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	la correspondance client n'est pas ouverte à tout le garage un mécanicien ne lit pas la boîte du garage	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	la correspondance client n'est pas ouverte à tout le garage un mécanicien ne lit ni ne répond à une conversation	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	la correspondance client n'est pas ouverte à tout le garage le comptoir, lui, y a bien accès	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	validation un sujet ou un message vide est refusé	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	validation une catégorie inconnue retombe sur « general » plutôt que de passer telle quelle	HOOK_FAILED: download engines
+src/integration/messagerie-client-garage.test.ts	validation sans session portail, rien n'est lisible	HOOK_FAILED: download engines
+src/integration/part-deletion-history.test.ts	GF31-AUD-015 — une pièce avec historique n’est pas supprimable refuse la suppression et CONSERVE les mouvements	HOOK_FAILED: download engines
+src/integration/part-deletion-history.test.ts	GF31-AUD-015 — une pièce avec historique n’est pas supprimable laisse supprimer une pièce jamais mouvementée (cas courant, non entravé)	HOOK_FAILED: download engines
+src/integration/part-deletion-history.test.ts	GF31-AUD-015 — une facture reste annulable même si la pièce a disparu restitue ce qui existe, ignore ce qui n’existe plus, et n’échoue pas	HOOK_FAILED: download engines
+src/integration/part-inventory-adjustment.test.ts	GF31-AUD-030 — correction d’inventaire conditionnelle refuse une correction qui n’annonce pas la quantité observée	HOOK_FAILED: download engines
+src/integration/part-inventory-adjustment.test.ts	GF31-AUD-030 — correction d’inventaire conditionnelle applique la correction et écrit un mouvement ADJUST signé	HOOK_FAILED: download engines
+src/integration/part-inventory-adjustment.test.ts	GF31-AUD-030 — correction d’inventaire conditionnelle une correction à la BAISSE écrit un delta négatif	HOOK_FAILED: download engines
+src/integration/part-inventory-adjustment.test.ts	GF31-AUD-030 — correction d’inventaire conditionnelle LE DÉFAUT : une vente concurrente n’est plus écrasée	HOOK_FAILED: download engines
+src/integration/part-inventory-adjustment.test.ts	GF31-AUD-030 — correction d’inventaire conditionnelle deux corrections CONCURRENTES : une seule aboutit	HOOK_FAILED: download engines
+src/integration/part-inventory-adjustment.test.ts	GF31-AUD-030 — correction d’inventaire conditionnelle une correction sans changement réel n’invente pas de mouvement	HOOK_FAILED: download engines
+src/integration/part-inventory-adjustment.test.ts	GF31-AUD-030 — correction d’inventaire conditionnelle les champs descriptifs restent modifiables sans témoin de quantité	HOOK_FAILED: download engines
+src/integration/part-inventory-adjustment.test.ts	GF31-AUD-030 — correction d’inventaire conditionnelle la correction accompagnée d’autres champs les applique dans la MÊME transaction	HOOK_FAILED: download engines
+src/integration/part-inventory-adjustment.test.ts	GF31-AUD-030 — correction d’inventaire conditionnelle rien n’est appliqué quand le conflit survient, pas même les champs descriptifs	HOOK_FAILED: download engines
+src/integration/part-inventory-adjustment.test.ts	GF31-AUD-030 — correction d’inventaire conditionnelle RECEPTIONIST : correction refusée (stock:manage)	HOOK_FAILED: download engines
+src/integration/part-inventory-adjustment.test.ts	GF31-AUD-030 — correction d’inventaire conditionnelle MECHANIC : correction refusée (stock:manage)	HOOK_FAILED: download engines
+src/integration/part-inventory-adjustment.test.ts	GF31-AUD-030 — correction d’inventaire conditionnelle undefined : correction refusée (stock:manage)	HOOK_FAILED: download engines
+src/integration/part-inventory-adjustment.test.ts	GF31-AUD-030 — correction d’inventaire conditionnelle un autre garage ne corrige pas mes pièces	HOOK_FAILED: download engines
+src/integration/planning-journee-complete.test.ts	planning — la journée entière est servie (GF-011) sans `limit`, la journée complète arrive (c’est l’appel du planning)	HOOK_FAILED: download engines
+src/integration/planning-journee-complete.test.ts	planning — la journée entière est servie (GF-011) les interventions de FIN de journée sont bien là	HOOK_FAILED: download engines
+src/integration/planning-journee-complete.test.ts	planning — la journée entière est servie (GF-011) rien n’est servi au-delà du plafond de sécurité	HOOK_FAILED: download engines
+src/integration/planning-journee-complete.test.ts	planning — la journée entière est servie (GF-011) une limite explicite reste respectée	HOOK_FAILED: download engines
+src/integration/planning-journee-complete.test.ts	planning — la journée entière est servie (GF-011) une liste SANS date reste paginée à 20 (comportement inchangé)	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	le secret TOTP n'est plus lisible dans la base la colonne ne contient PAS le secret en clair	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	le secret TOTP n'est plus lisible dans la base le secret EN ATTENTE est protégé lui aussi	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	le secret TOTP n'est plus lisible dans la base un enrôlement abandonné ne protège PAS faussement le compte	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	enrôlement rend de quoi configurer une application d'authentification	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	enrôlement un code faux n'active rien	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	enrôlement activer sans avoir commencé l'enrôlement est refusé	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	enrôlement le secret n'est plus jamais rendu après activation	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	connexion en deux temps le mot de passe seul ne crée AUCUNE session	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	connexion en deux temps le bon code ouvre la session	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	connexion en deux temps un mauvais code, un challenge inventé ou absent sont refusés	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	connexion en deux temps un code d'une fenêtre trop ancienne est refusé	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	codes de secours — la sortie quand l'appareil est perdu dix codes sont remis une seule fois, et stockés hachés	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	codes de secours — la sortie quand l'appareil est perdu un code de secours ouvre la session, et ne resert JAMAIS	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	désactivation exige le mot de passe — une session ne suffit pas	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	désactivation efface le secret ET les codes de secours	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	rétrogradation du format — la porte que le repli laissait ouverte un secret remis EN CLAIR dans la colonne ne valide plus rien	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	rétrogradation du format — la porte que le repli laissait ouverte un chiffré ALTÉRÉ ne valide rien non plus	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	rétrogradation du format — la porte que le repli laissait ouverte mais le compte n'est PAS enfermé : le code de secours fonctionne encore	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	rétrogradation du format — la porte que le repli laissait ouverte un enrôlement EN COURS au format clair ne s'active pas	HOOK_FAILED: download engines
+src/integration/portail-2fa-cycle.test.ts	isolation entre comptes le secret d'un compte ne valide pas la connexion d'un autre	HOOK_FAILED: download engines
+src/integration/portail-2fa-idor.test.ts	A ne peut pas atteindre le 2FA de B setup : A ne déclenche pas d'enrôlement pour B	HOOK_FAILED: download engines
+src/integration/portail-2fa-idor.test.ts	A ne peut pas atteindre le 2FA de B enable : aucun code, ni de A ni de B, n'active quoi que ce soit chez B	HOOK_FAILED: download engines
+src/integration/portail-2fa-idor.test.ts	A ne peut pas atteindre le 2FA de B disable : A ne désactive pas le 2FA de B, même avec SON propre mot de passe	HOOK_FAILED: download engines
+src/integration/portail-2fa-idor.test.ts	A ne peut pas atteindre le 2FA de B recovery : un code de secours de B ne sert pas à A, et reste intact	HOOK_FAILED: download engines
+src/integration/portail-2fa-idor.test.ts	A ne peut pas atteindre le 2FA de B le secret de A ne valide pas le challenge de B	HOOK_FAILED: download engines
+src/integration/portail-2fa-idor.test.ts	l'identité ne vient JAMAIS de la requête aucune route 2FA ne lit d'identifiant d'utilisateur fourni par le client	HOOK_FAILED: download engines
+src/integration/portail-2fa-idor.test.ts	l'identité ne vient JAMAIS de la requête la vérification du second facteur part du challenge SIGNÉ, pas d'un identifiant	HOOK_FAILED: download engines
+src/integration/portail-2fa-idor.test.ts	concurrence sur un code de secours deux requêtes simultanées avec le MÊME code : une seule ouvre une session	HOOK_FAILED: download engines
+src/integration/portail-2fa-idor.test.ts	concurrence sur un code de secours deux codes DIFFÉRENTS simultanés : les deux ouvrent, et aucun ne ressuscite	HOOK_FAILED: download engines
+src/integration/portail-2fa-idor.test.ts	diagnostic de lisibilité des secrets compte les comptes enrôlés et ceux devenus illisibles	HOOK_FAILED: download engines
+src/integration/portail-2fa-idor.test.ts	diagnostic de lisibilité des secrets ne compte pas les comptes NON enrôlés	HOOK_FAILED: download engines
+src/integration/portail-instantane-borne.test.ts	GF-034 — l’instantané tient dans ce que le serveur accepte une photo de mécanicien LOURDE n’envoie plus un instantané refusable	HOOK_FAILED: download engines
+src/integration/portail-instantane-borne.test.ts	GF-034 — l’instantané tient dans ce que le serveur accepte vingt-quatre photos moyennes tiennent encore dans le plafond	HOOK_FAILED: download engines
+src/integration/portail-instantane-borne.test.ts	GF-034 — l’instantané tient dans ce que le serveur accepte des photos LÉGÈRES passent toutes — la borne ne bride pas le cas normal	HOOK_FAILED: download engines
+src/integration/portail-instantane-borne.test.ts	GF-034 — l’instantané tient dans ce que le serveur accepte aucun chemin de fichier du poste ne part vers le cloud	HOOK_FAILED: download engines
+src/integration/portail-instantane-borne.test.ts	GF-034 — l’instantané tient dans ce que le serveur accepte l’intervention d’un AUTRE garage reste inaccessible	HOOK_FAILED: download engines
+src/integration/portail-lien-revoque-a-la-republication.test.ts	portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) publication simple : le lien est lisible	HOOK_FAILED: download engines
+src/integration/portail-lien-revoque-a-la-republication.test.ts	portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) DEUX publications concurrentes (QR + lien « copier ») : les DEUX jetons restent lisibles	HOOK_FAILED: download engines
+src/integration/portail-lien-revoque-a-la-republication.test.ts	portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) republication séquentielle : le lien déjà distribué survit	HOOK_FAILED: download engines
+src/integration/portail-lien-revoque-a-la-republication.test.ts	portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) une seule publication VIVANTE par intervention (pas d’accumulation sans borne)	HOOK_FAILED: download engines
+src/integration/portail-lien-revoque-a-la-republication.test.ts	portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) la rétractation fonctionne : le contenu retiré disparaît AUSSI de l’ancien lien	HOOK_FAILED: download engines
+src/integration/portail-lien-revoque-a-la-republication.test.ts	portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) un instantané périmé reste refusé	HOOK_FAILED: download engines
+src/integration/portail-lien-revoque-a-la-republication.test.ts	portail — republier ne doit pas tuer le lien déjà remis au client (GF-002) l’instantané d’un autre garage n’est jamais servi	HOOK_FAILED: download engines
+src/integration/portail-mot-de-passe-provisoire.test.ts	le mot de passe provisoire ferme bien le portail la connexion réussit, mais annonce que le mot de passe doit être défini	HOOK_FAILED: download engines
+src/integration/portail-mot-de-passe-provisoire.test.ts	le mot de passe provisoire ferme bien le portail toute route du portail refuse avec un code exploitable par l'interface	HOOK_FAILED: download engines
+src/integration/portail-mot-de-passe-provisoire.test.ts	la sortie existe et fonctionne définir son mot de passe rouvre tout le portail	HOOK_FAILED: download engines
+src/integration/portail-mot-de-passe-provisoire.test.ts	la sortie existe et fonctionne le nouveau mot de passe est celui qui sert désormais à se connecter	HOOK_FAILED: download engines
+src/integration/portail-mot-de-passe-provisoire.test.ts	la sortie existe et fonctionne le mot de passe actuel reste exigé, même provisoire	HOOK_FAILED: download engines
+src/integration/portail-mot-de-passe-provisoire.test.ts	la sortie existe et fonctionne reprendre le mot de passe provisoire ne définit rien	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	ouverture de l'accès par le garage crée l'accès et rend le mot de passe temporaire UNE fois	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	ouverture de l'accès par le garage la relecture ne redonne JAMAIS le mot de passe	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	ouverture de l'accès par le garage refuse un client sans adresse e-mail, avec une consigne claire	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	ouverture de l'accès par le garage refuse d'ouvrir deux fois le même accès	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	ouverture de l'accès par le garage deux ouvertures CONCURRENTES ne créent qu'un seul accès	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	réinitialisation remet un mot de passe temporaire DIFFÉRENT et coupe les sessions	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	réinitialisation débloque un compte verrouillé par des échecs de connexion	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	réinitialisation refuse pour un client sans accès	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	désactivation et réactivation désactiver coupe l'accès ET les sessions ouvertes	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	désactivation et réactivation le CLIENT MÉTIER et son historique survivent à la désactivation	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	désactivation et réactivation réactiver rend l'accès sans ressusciter les anciennes sessions	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	désactivation et réactivation `actif` doit être un booléen	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	isolation entre garages et permissions le garage A ne peut pas ouvrir d'accès pour un client du garage B	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	isolation entre garages et permissions le garage A ne peut ni lire, ni réinitialiser, ni désactiver l'accès d'un client du garage B	HOOK_FAILED: download engines
+src/integration/portal-access-lifecycle.test.ts	isolation entre garages et permissions un rôle sans gestion ne peut rien modifier	HOOK_FAILED: download engines
+src/integration/portal-account-takeover-v15.test.ts	Portail — anti-prise de contrôle de compte (V15 P1) l'inscription avec l'email d'un client existant NE lie PAS le compte au Client	HOOK_FAILED: download engines
+src/integration/portal-account-takeover-v15.test.ts	Portail — anti-prise de contrôle de compte (V15 P1) le rattachement au Client n’a lieu qu’APRÈS vérification de l’email (possession prouvée)	HOOK_FAILED: download engines
+src/integration/portal-email-sync.test.ts	demande de changement met l'adresse EN ATTENTE et envoie la confirmation sur la NOUVELLE	HOOK_FAILED: download engines
+src/integration/portal-email-sync.test.ts	demande de changement exige le mot de passe — un cookie volé ne suffit pas	HOOK_FAILED: download engines
+src/integration/portal-email-sync.test.ts	demande de changement refuse une adresse invalide ou identique	HOOK_FAILED: download engines
+src/integration/portal-email-sync.test.ts	demande de changement refuse une adresse déjà utilisée DANS LE GARAGE, sans attendre la confirmation	HOOK_FAILED: download engines
+src/integration/portal-email-sync.test.ts	demande de changement la même adresse dans un AUTRE garage n'est pas un conflit	HOOK_FAILED: download engines
+src/integration/portal-email-sync.test.ts	demande de changement un échec d'envoi est DIT, pas masqué	HOOK_FAILED: download engines
+src/integration/portal-email-sync.test.ts	confirmation — c'est là que tout bascule l'adresse devient l'identifiant ET remonte à la fiche garage	HOOK_FAILED: download engines
+src/integration/portal-email-sync.test.ts	confirmation — c'est là que tout bascule le lien ne fonctionne qu'une fois	HOOK_FAILED: download engines
+src/integration/portal-email-sync.test.ts	confirmation — c'est là que tout bascule une collision survenue ENTRE la demande et la confirmation ne casse rien	HOOK_FAILED: download engines
+src/integration/portal-email-sync.test.ts	confirmation — c'est là que tout bascule un jeton inconnu est refusé	HOOK_FAILED: download engines
+src/integration/portal-email-sync.test.ts	le mot de passe temporaire ne fuit jamais dans les traces le message d'ouverture d'accès contient le mot de passe — et lui seul le contient	HOOK_FAILED: download engines
+src/integration/portal-email-sync.test.ts	le mot de passe temporaire ne fuit jamais dans les traces la route d'accès portail ne journalise jamais le mot de passe	HOOK_FAILED: download engines
+src/integration/portal-password-enforcement.test.ts	mot de passe TEMPORAIRE — aucune donnée servie avant changement une route protégée est refusée avec un code exploitable	HOOK_FAILED: download engines
+src/integration/portal-password-enforcement.test.ts	mot de passe TEMPORAIRE — aucune donnée servie avant changement la route de CHANGEMENT reste accessible — sinon la contrainte serait indépassable	HOOK_FAILED: download engines
+src/integration/portal-password-enforcement.test.ts	mot de passe TEMPORAIRE — aucune donnée servie avant changement une fois le mot de passe défini, les données sont servies	HOOK_FAILED: download engines
+src/integration/portal-password-enforcement.test.ts	changement de mot de passe — garanties exige le mot de passe ACTUEL, même quand il est temporaire	HOOK_FAILED: download engines
+src/integration/portal-password-enforcement.test.ts	changement de mot de passe — garanties refuse de réutiliser le mot de passe temporaire	HOOK_FAILED: download engines
+src/integration/portal-password-enforcement.test.ts	changement de mot de passe — garanties refuse un mot de passe trop court ou absurde	HOOK_FAILED: download engines
+src/integration/portal-password-enforcement.test.ts	changement de mot de passe — garanties révoque les AUTRES sessions mais conserve la sienne	HOOK_FAILED: download engines
+src/integration/portal-password-enforcement.test.ts	accès DÉSACTIVÉ par le garage la session en cours cesse immédiatement de valoir	HOOK_FAILED: download engines
+src/integration/portal-password-enforcement.test.ts	accès DÉSACTIVÉ par le garage même la route de changement de mot de passe est fermée	HOOK_FAILED: download engines
+src/integration/portal-password-enforcement.test.ts	accès DÉSACTIVÉ par le garage réactiver ne suffit pas : la session révoquée reste morte	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-059 — l’annuaire du personnel suit la même règle partout RECEPTIONIST : ne reçoit PAS la liste des comptes	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-059 — l’annuaire du personnel suit la même règle partout MECHANIC : ne reçoit PAS la liste des comptes	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-059 — l’annuaire du personnel suit la même règle partout undefined : ne reçoit PAS la liste des comptes	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-059 — l’annuaire du personnel suit la même règle partout OWNER : conserve l’annuaire	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-059 — l’annuaire du personnel suit la même règle partout MANAGER : conserve l’annuaire	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-059 — l’annuaire du personnel suit la même règle partout le mot de passe SMTP n’est jamais exposé, quel que soit le rôle	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-060 — l’inscription ne révèle plus l’existence d’un compte deux inscriptions sur la même adresse rendent la MÊME réponse	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-060 — l’inscription ne révèle plus l’existence d’un compte aucun second compte n’est créé, et le titulaire légitime est prévenu	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-060 — l’inscription ne révèle plus l’existence d’un compte le mot de passe existant n’est jamais réécrit par une seconde tentative	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-061 / 062 — le tableau de bord client dit ce qui se passe les redirections conservent le garage	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-061 / 062 — le tableau de bord client dit ce qui se passe un compte non rattaché est signalé, au lieu d’un « Aucune facture » trompeur	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-057 — chaque redirection de téléchargement est revalidée la règle existe en un seul endroit et couvre protocole et domaine	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-057 — chaque redirection de téléchargement est revalidée le téléchargeur l’applique à CHAQUE saut	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-063 — l’onglet e-facturation n’est proposé qu’à qui peut s’en servir il suit `settings:manage`, pas la permission d’accès mécaniciens	HOOK_FAILED: download engines
+src/integration/portal-rbac-p3.test.ts	GF31-AUD-063 — l’onglet e-facturation n’est proposé qu’à qui peut s’en servir la route, elle, exigeait déjà settings:manage — les deux concordent enfin	HOOK_FAILED: download engines
+src/integration/portal-token-isolation.test.ts	portal/[token] — accès légitime jeton valide (jobId+garageId de A) → 200 sur le job de A	HOOK_FAILED: download engines
+src/integration/portal-token-isolation.test.ts	portal/[token] — cloisonnement (deputy confus) jeton {jobId de B, garageId de A} → 404 (le scope garageId empêche l'accès croisé)	HOOK_FAILED: download engines
+src/integration/portal-token-isolation.test.ts	portal/[token] — cloisonnement (deputy confus) jeton de mauvais type → 403	HOOK_FAILED: download engines
+src/integration/portal-token-isolation.test.ts	portal/[token] — cloisonnement (deputy confus) jeton signé avec un autre secret → rejeté (403/erreur, jamais 200)	HOOK_FAILED: download engines
+src/integration/portal-token-isolation.test.ts	portal/[token] — cloisonnement (deputy confus) jeton illisible → rejeté (jamais 200)	HOOK_FAILED: download engines
+src/integration/pulse-boucle-de-synchronisation.test.ts	battement du planning — la boucle est ouverte (GF-012) le battement DÉCLENCHE la voie de retour cloud → poste	HOOK_FAILED: download engines
+src/integration/pulse-boucle-de-synchronisation.test.ts	battement du planning — la boucle est ouverte (GF-012) l’empreinte est stable quand rien ne change	HOOK_FAILED: download engines
+src/integration/pulse-boucle-de-synchronisation.test.ts	battement du planning — la boucle est ouverte (GF-012) un changement de STATUT d’intervention change l’empreinte	HOOK_FAILED: download engines
+src/integration/pulse-boucle-de-synchronisation.test.ts	battement du planning — la boucle est ouverte (GF-012) un COMMENTAIRE de mécanicien change l’empreinte	HOOK_FAILED: download engines
+src/integration/pulse-boucle-de-synchronisation.test.ts	battement du planning — la boucle est ouverte (GF-012) une PHOTO de mécanicien change l’empreinte	HOOK_FAILED: download engines
+src/integration/pulse-boucle-de-synchronisation.test.ts	battement du planning — la boucle est ouverte (GF-012) l’empreinte ne divulgue ni volumétrie ni horodatage	HOOK_FAILED: download engines
+src/integration/purchase-order-receive-returned.test.ts	réception d'un bon de commande incrémente le stock exactement une fois	HOOK_FAILED: download engines
+src/integration/purchase-order-receive-returned.test.ts	réception d'un bon de commande un second appel sur le MÊME bon n'incrémente pas une seconde fois	HOOK_FAILED: download engines
+src/integration/purchase-order-receive-returned.test.ts	réception d'un bon de commande un bon RETOURNÉ ne peut pas être réceptionné — le défaut corrigé	HOOK_FAILED: download engines
+src/integration/purchase-order-receive-returned.test.ts	réception d'un bon de commande un bon annulé reste refusé	HOOK_FAILED: download engines
+src/integration/purchase-order-receive-returned.test.ts	réception d'un bon de commande deux réceptions CONCURRENTES du même bon n'incrémentent qu'une fois	HOOK_FAILED: download engines
+src/integration/purchase-order-receive-returned.test.ts	réception d'un bon de commande un bon d'un AUTRE garage est introuvable	HOOK_FAILED: download engines
+src/integration/purchase-order-receive-returned.test.ts	la réception est atteignable depuis le produit le panneau Fournisseurs appelle réellement la route de réception	HOOK_FAILED: download engines
+src/integration/pwa-fenetre-et-photos.test.ts	GF-038 — la PWA ne montre que ce qui est tenu à jour une intervention DANS la fenêtre s’affiche	HOOK_FAILED: download engines
+src/integration/pwa-fenetre-et-photos.test.ts	GF-038 — la PWA ne montre que ce qui est tenu à jour une intervention trop ANCIENNE n’est plus servie	HOOK_FAILED: download engines
+src/integration/pwa-fenetre-et-photos.test.ts	GF-038 — la PWA ne montre que ce qui est tenu à jour une intervention trop LOINTAINE n’est plus servie	HOOK_FAILED: download engines
+src/integration/pwa-fenetre-et-photos.test.ts	GF-038 — la PWA ne montre que ce qui est tenu à jour les bornes de la fenêtre elles-mêmes passent	HOOK_FAILED: download engines
+src/integration/pwa-fenetre-et-photos.test.ts	GF-038 — la PWA ne montre que ce qui est tenu à jour une DATE demandée hors fenêtre est refusée explicitement	HOOK_FAILED: download engines
+src/integration/pwa-fenetre-et-photos.test.ts	GF-038 — la PWA ne montre que ce qui est tenu à jour la réponse annonce toujours la fenêtre servie	HOOK_FAILED: download engines
+src/integration/pwa-fenetre-et-photos.test.ts	GF-038 — la PWA ne montre que ce qui est tenu à jour ouvrir une fiche hors fenêtre est refusé aussi	HOOK_FAILED: download engines
+src/integration/pwa-fenetre-et-photos.test.ts	GF-038 — la PWA ne montre que ce qui est tenu à jour l’intervention d’un AUTRE mécanicien reste invisible	HOOK_FAILED: download engines
+src/integration/pwa-fenetre-et-photos.test.ts	GF-038 — plus aucun écran n’envoie la photo brute components/JobPhotos.tsx passe par la réduction partagée	HOOK_FAILED: download engines
+src/integration/pwa-fenetre-et-photos.test.ts	GF-038 — plus aucun écran n’envoie la photo brute components/InspectionModal.tsx passe par la réduction partagée	HOOK_FAILED: download engines
+src/integration/pwa-fenetre-et-photos.test.ts	GF-038 — plus aucun écran n’envoie la photo brute app/mechanic/jobs/[id]/page.tsx passe par la réduction partagée	HOOK_FAILED: download engines
+src/integration/pwa-fenetre-et-photos.test.ts	GF-038 — plus aucun écran n’envoie la photo brute le module partagé fixe des bornes explicites	HOOK_FAILED: download engines
+src/integration/pwa-fenetre-et-photos.test.ts	GF-038 — plus aucun écran n’envoie la photo brute le poids DÉCODÉ d’une data-URL est mesuré correctement	HOOK_FAILED: download engines
+src/integration/quote-acceptance-proof.test.ts	GF31-AUD-045 — une acceptation produit une preuve accepter enregistre une signature liée au contenu, datée et circonstanciée	HOOK_FAILED: download engines
+src/integration/quote-acceptance-proof.test.ts	GF31-AUD-045 — une acceptation produit une preuve refuser produit également une trace opposable	HOOK_FAILED: download engines
+src/integration/quote-acceptance-proof.test.ts	GF31-AUD-045 — une acceptation produit une preuve le statut et la preuve sont posés dans la MÊME transaction	HOOK_FAILED: download engines
+src/integration/quote-acceptance-proof.test.ts	GF31-AUD-045 — une acceptation produit une preuve la lecture distingue un accord CLIENT d’un statut posé par le garage	HOOK_FAILED: download engines
+src/integration/quote-acceptance-proof.test.ts	GF31-AUD-045 — une preuve périmée n’est plus présentée comme valide (§74) le garage ne peut PAS ramener un devis accepté en « envoyé »	HOOK_FAILED: download engines
+src/integration/quote-acceptance-proof.test.ts	GF31-AUD-045 — une preuve périmée n’est plus présentée comme valide (§74) transformer un accord en REFUS invalide la preuve d’accord	HOOK_FAILED: download engines
+src/integration/quote-acceptance-proof.test.ts	GF31-AUD-045 — une preuve périmée n’est plus présentée comme valide (§74) rouvrir un devis REFUSÉ invalide la preuve de refus	HOOK_FAILED: download engines
+src/integration/quote-acceptance-proof.test.ts	GF31-AUD-045 — une preuve périmée n’est plus présentée comme valide (§74) convertir un devis accepté CONSERVE la preuve (suite naturelle de l’accord)	HOOK_FAILED: download engines
+src/integration/quote-acceptance-proof.test.ts	GF31-AUD-045 — une preuve périmée n’est plus présentée comme valide (§74) un contenu modifié après accord se voit : la preuve ne correspond plus	HOOK_FAILED: download engines
+src/integration/quote-acceptance-proof.test.ts	GF31-AUD-045 — une preuve périmée n’est plus présentée comme valide (§74) une nouvelle réponse après réouverture crée une preuve neuve	HOOK_FAILED: download engines
+src/integration/quotes-generate.test.ts	POST /api/quotes/generate (integration) previews without writing anything when confirm is absent	HOOK_FAILED: download engines
+src/integration/quotes-generate.test.ts	POST /api/quotes/generate (integration) persists a draft quote with labour + part lines when confirmed	HOOK_FAILED: download engines
+src/integration/quotes-generate.test.ts	POST /api/quotes/generate (integration) la ligne de pièce PORTE son rattachement au stock (GF-040)	HOOK_FAILED: download engines
+src/integration/quotes-generate.test.ts	POST /api/quotes/generate (integration) une pièce hors catalogue reste sans rattachement	HOOK_FAILED: download engines
+src/integration/quotes-generate.test.ts	POST /api/quotes/generate (integration) drops a clientId that belongs to another garage (tenant isolation)	HOOK_FAILED: download engines
+src/integration/quotes-generate.test.ts	POST /api/quotes/generate (integration) does not double-count a duplicated repair type	HOOK_FAILED: download engines
+src/integration/quotes-generate.test.ts	POST /api/quotes/generate (integration) rejects an unknown repair type with 400	HOOK_FAILED: download engines
+src/integration/rbac-enforcement-e2e.test.ts	RBAC — un RECEPTIONIST est REFUSÉ par les handlers sur les actions OWNER/gérant users POST (créer un compte, potentiellement admin) → 403	HOOK_FAILED: download engines
+src/integration/rbac-enforcement-e2e.test.ts	RBAC — un RECEPTIONIST est REFUSÉ par les handlers sur les actions OWNER/gérant garages PATCH (modifier les paramètres du garage) → 403	HOOK_FAILED: download engines
+src/integration/rbac-enforcement-e2e.test.ts	RBAC — un RECEPTIONIST est REFUSÉ par les handlers sur les actions OWNER/gérant mechanic-licenses register (gérer les licences mécanicien) → 403	HOOK_FAILED: download engines
+src/integration/rbac-enforcement-e2e.test.ts	RBAC — un OWNER est AUTORISÉ sur les mêmes actions users POST → succès + persistance	HOOK_FAILED: download engines
+src/integration/rbac-enforcement-e2e.test.ts	RBAC — un OWNER est AUTORISÉ sur les mêmes actions garages PATCH → succès + persistance	HOOK_FAILED: download engines
+src/integration/reglages-appliques.test.ts	photo d’inspection — la suppression supprime vraiment (GF-026) ajouter une photo la range dans un fichier	HOOK_FAILED: download engines
+src/integration/reglages-appliques.test.ts	photo d’inspection — la suppression supprime vraiment (GF-026) retirer la photo efface le CHEMIN, pas seulement le contenu inline	HOOK_FAILED: download engines
+src/integration/reglages-appliques.test.ts	photo d’inspection — la suppression supprime vraiment (GF-026) remplacer une photo ne laisse pas l’ancienne sur le disque	HOOK_FAILED: download engines
+src/integration/reglages-appliques.test.ts	les réglages du garage sont réellement appliqués (GF-026) la modale devis/facture reprend le taux de TVA du garage	HOOK_FAILED: download engines
+src/integration/reglages-appliques.test.ts	les réglages du garage sont réellement appliqués (GF-026) la ligne de main-d’œuvre reprend le tarif horaire du garage	HOOK_FAILED: download engines
+src/integration/reglages-enfin-lus.test.ts	GF-039 — la durée de garantie du garage est appliquée une garantie SANS durée suit le réglage du garage	HOOK_FAILED: download engines
+src/integration/reglages-enfin-lus.test.ts	GF-039 — la durée de garantie du garage est appliquée une durée EXPLICITE reste prioritaire sur le réglage	HOOK_FAILED: download engines
+src/integration/reglages-enfin-lus.test.ts	GF-039 — la durée de garantie du garage est appliquée un garage qui n’a rien réglé garde 12 mois	HOOK_FAILED: download engines
+src/integration/reglages-enfin-lus.test.ts	GF-039 — la durée de garantie du garage est appliquée le réglage ne franchit pas la frontière du garage	HOOK_FAILED: download engines
+src/integration/reglages-enfin-lus.test.ts	GF-039 — les écrans lisent bien ces réglages le formulaire de garantie s’ouvre sur la durée réglée	HOOK_FAILED: download engines
+src/integration/reglages-enfin-lus.test.ts	GF-039 — les écrans lisent bien ces réglages l’entrée « véhicules de prêt » suit `loanerEnabled`	HOOK_FAILED: download engines
+src/integration/reglages-enfin-lus.test.ts	GF-039 — les écrans lisent bien ces réglages le panneau lui-même n’est PAS démonté	HOOK_FAILED: download engines
+src/integration/reglages-enfin-lus.test.ts	GF-039 — les écrans lisent bien ces réglages le repli est l’activation — un réglage indisponible ne fait rien disparaître	HOOK_FAILED: download engines
+src/integration/reglages-logo-et-cout-achat.test.ts	réglages du garage — un garage sans site web peut enregistrer (GF-010) `website: ""` n’est pas une adresse invalide, c’est l’absence d’adresse	HOOK_FAILED: download engines
+src/integration/reglages-logo-et-cout-achat.test.ts	réglages du garage — un garage sans site web peut enregistrer (GF-010) une adresse web réellement saisie reste vérifiée	HOOK_FAILED: download engines
+src/integration/reglages-logo-et-cout-achat.test.ts	horaires d’atelier — la demi-heure est enregistrable (GF-021) 8 h 30 → 18 h 30 est accepté et persisté	HOOK_FAILED: download engines
+src/integration/reglages-logo-et-cout-achat.test.ts	horaires d’atelier — la demi-heure est enregistrable (GF-021) une minute hors demi-heure est refusée	HOOK_FAILED: download engines
+src/integration/reglages-logo-et-cout-achat.test.ts	horaires d’atelier — la demi-heure est enregistrable (GF-021) une fermeture AVANT l’ouverture est refusée, minutes comprises	HOOK_FAILED: download engines
+src/integration/reglages-logo-et-cout-achat.test.ts	horaires d’atelier — la demi-heure est enregistrable (GF-021) une amplitude de moins d’une heure est refusée	HOOK_FAILED: download engines
+src/integration/reglages-logo-et-cout-achat.test.ts	horaires d’atelier — la demi-heure est enregistrable (GF-021) un atelier ouvert 24 h/24 reste possible	HOOK_FAILED: download engines
+src/integration/reglages-logo-et-cout-achat.test.ts	réglages du garage — le logo survit à un enregistrement (GF-006) importer un logo le range dans un FICHIER	HOOK_FAILED: download engines
+src/integration/reglages-logo-et-cout-achat.test.ts	réglages du garage — le logo survit à un enregistrement (GF-006) un enregistrement ORDINAIRE ne touche pas au logo	HOOK_FAILED: download engines
+src/integration/reglages-logo-et-cout-achat.test.ts	réglages du garage — le logo survit à un enregistrement (GF-006) remplacer le logo retire l’ancien fichier	HOOK_FAILED: download engines
+src/integration/reglages-logo-et-cout-achat.test.ts	réglages du garage — le logo survit à un enregistrement (GF-006) la suppression EXPLICITE (les deux champs vides) efface bien tout	HOOK_FAILED: download engines
+src/integration/reglages-logo-et-cout-achat.test.ts	coût d’achat des pièces d’une intervention (GF-007) OWNER (financial:read) voit le coût d’achat	HOOK_FAILED: download engines
+src/integration/reglages-logo-et-cout-achat.test.ts	coût d’achat des pièces d’une intervention (GF-007) RECEPTIONIST ne le voit NI sur la ligne NI sur la pièce imbriquée	HOOK_FAILED: download engines
+src/integration/reglages-logo-et-cout-achat.test.ts	coût d’achat des pièces d’une intervention (GF-007) MANAGER (financial:read) le voit	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	la demande traverse jusqu'au garage le créneau proposé arrive dans la liste du garage, en ATTENTE	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	la demande traverse jusqu'au garage la confirmation du garage est visible par le client	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	la demande traverse jusqu'au garage les heures d'ouverture accompagnent la liste du client	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	la demande traverse jusqu'au garage un rendez-vous confirmé puis honoré se clôt	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	la validation du créneau protège les deux parties un créneau hors des heures d'ouverture est refusé	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	la validation du créneau protège les deux parties un créneau dans le passé est refusé	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	la validation du créneau protège les deux parties un motif vide est refusé	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	la validation du créneau protège les deux parties un véhicule qui n'appartient pas au client est refusé	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	déplacement et annulation par le client déplacer un créneau CONFIRMÉ le remet en attente	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	déplacement et annulation par le client le nouveau créneau est validé comme le premier	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	déplacement et annulation par le client le client annule le sien	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	déplacement et annulation par le client un rendez-vous terminé ne se déplace ni ne s'annule plus	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	transitions impossibles et isolation on ne confirme pas deux fois	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	transitions impossibles et isolation on ne clôt pas une demande jamais confirmée	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	transitions impossibles et isolation un mécanicien ne s'engage pas à la place du comptoir	HOOK_FAILED: download engines
+src/integration/rendez-vous-client-garage.test.ts	transitions impossibles et isolation un garage voisin ne voit ni ne touche ce rendez-vous	HOOK_FAILED: download engines
+src/integration/robustness-v15.test.ts	labor bulk-import — borne anti-DoS (V15 P2) > 500 opérations → 400, rien inséré	HOOK_FAILED: download engines
+src/integration/robustness-v15.test.ts	labor bulk-import — borne anti-DoS (V15 P2) lot raisonnable → 201	HOOK_FAILED: download engines
+src/integration/robustness-v15.test.ts	appointment — transition atomique (V15 P2) confirm + cancel concurrents : aucune mise à jour perdue, état final cohérent	HOOK_FAILED: download engines
+src/integration/robustness-v15.test.ts	mechanics — dé-doublonnage réel (V15 P2) même nom (casse différente) → 409 ; nom distinct → 201	HOOK_FAILED: download engines
+src/integration/scenario-maitre.test.ts	SCÉNARIO MAÎTRE — une journée complète, du planning aux statistiques 1. planifier une intervention CRÉE le client et le véhicule	HOOK_FAILED: download engines
+src/integration/scenario-maitre.test.ts	SCÉNARIO MAÎTRE — une journée complète, du planning aux statistiques 2. poser une pièce décrémente le stock ET laisse un mouvement	HOOK_FAILED: download engines
+src/integration/scenario-maitre.test.ts	SCÉNARIO MAÎTRE — une journée complète, du planning aux statistiques 3. établir un devis rattaché au client	HOOK_FAILED: download engines
+src/integration/scenario-maitre.test.ts	SCÉNARIO MAÎTRE — une journée complète, du planning aux statistiques 4. convertir le devis produit une facture cohérente	HOOK_FAILED: download engines
+src/integration/scenario-maitre.test.ts	SCÉNARIO MAÎTRE — une journée complète, du planning aux statistiques 5. émettre puis encaisser la facture n’entame PAS une seconde fois le stock	HOOK_FAILED: download engines
+src/integration/scenario-maitre.test.ts	SCÉNARIO MAÎTRE — une journée complète, du planning aux statistiques 6. les statistiques reflètent la journée, au centime	HOOK_FAILED: download engines
+src/integration/scenario-maitre.test.ts	SCÉNARIO MAÎTRE — une journée complète, du planning aux statistiques 7. supprimer l’intervention REND les pièces au stock	HOOK_FAILED: download engines
+src/integration/scenario-maitre.test.ts	SCÉNARIO MAÎTRE — une journée complète, du planning aux statistiques 8. rien de tout cela n’a franchi la frontière du garage voisin	HOOK_FAILED: download engines
+src/integration/statistiques-au-centime.test.ts	GF-036 — le cumul se fait au centime sept journées de 1 h 30 font 682,50 €, pas 686 €	HOOK_FAILED: download engines
+src/integration/statistiques-au-centime.test.ts	GF-036 — le cumul se fait au centime chaque journée porte le montant EXACT, pas un euro rond	HOOK_FAILED: download engines
+src/integration/statistiques-au-centime.test.ts	GF-036 — le cumul se fait au centime une marge pièces de moins d’un euro ne disparaît plus	HOOK_FAILED: download engines
+src/integration/statistiques-au-centime.test.ts	GF-036 — le cumul se fait au centime aucune intervention : tout reste à zéro, sans NaN	HOOK_FAILED: download engines
+src/integration/statistiques-au-centime.test.ts	GF-036 — `confirmedRevenue` compare enfin deux grandeurs HT une facture payée n’efface plus l’activité de l’atelier	HOOK_FAILED: download engines
+src/integration/statistiques-au-centime.test.ts	GF-036 — `confirmedRevenue` compare enfin deux grandeurs HT une grosse facture l’emporte sur un planning vide	HOOK_FAILED: download engines
+src/integration/statistiques-au-centime.test.ts	GF-036 — le classement suit le client, pas l’orthographe trois graphies d’un même client rattaché ne font qu’une entrée	HOOK_FAILED: download engines
+src/integration/statistiques-au-centime.test.ts	GF-036 — le classement suit le client, pas l’orthographe sans plaque, le repli sur le nom reste — et tolère la casse	HOOK_FAILED: download engines
+src/integration/statistiques-au-centime.test.ts	GF-036 — le classement suit le client, pas l’orthographe deux clients DIFFÉRENTS restent deux entrées	HOOK_FAILED: download engines
+src/integration/status-mass-assignment-v15.test.ts	Bon de commande — anti ré-inflation du stock (V15 P2) réception unique puis rétrogradation refusée → stock non ré-incrémenté	HOOK_FAILED: download engines
+src/integration/status-mass-assignment-v15.test.ts	Bon de commande — anti ré-inflation du stock (V15 P2) « received » n’est pas atteignable via le PATCH générique (réception = /receive)	HOOK_FAILED: download engines
+src/integration/status-mass-assignment-v15.test.ts	Garantie — « claimed » terminal (V15 P2) impossible de dé-réclamer via PATCH puis de supprimer une garantie réclamée	HOOK_FAILED: download engines
+src/integration/stock-money-p3.test.ts	GF31-AUD-050 — import du barème : un prix illisible est refusé, pas mis à 0 € refuse un prix texte	HOOK_FAILED: download engines
+src/integration/stock-money-p3.test.ts	GF31-AUD-050 — import du barème : un prix illisible est refusé, pas mis à 0 € refuse un prix vide	HOOK_FAILED: download engines
+src/integration/stock-money-p3.test.ts	GF31-AUD-050 — import du barème : un prix illisible est refusé, pas mis à 0 € refuse un prix négatif	HOOK_FAILED: download engines
+src/integration/stock-money-p3.test.ts	GF31-AUD-050 — import du barème : un prix illisible est refusé, pas mis à 0 € refuse un prix notation exponentielle	HOOK_FAILED: download engines
+src/integration/stock-money-p3.test.ts	GF31-AUD-050 — import du barème : un prix illisible est refusé, pas mis à 0 € refuse une durée non numérique	HOOK_FAILED: download engines
+src/integration/stock-money-p3.test.ts	GF31-AUD-050 — import du barème : un prix illisible est refusé, pas mis à 0 € un seul prix fautif annule TOUT l’import (rien à moitié importé)	HOOK_FAILED: download engines
+src/integration/stock-money-p3.test.ts	GF31-AUD-050 — import du barème : un prix illisible est refusé, pas mis à 0 € enregistre exactement un barème valide	HOOK_FAILED: download engines
+src/integration/stock-money-p3.test.ts	GF31-AUD-051 — réception : une quantité fractionnaire est refusée refuse 2,4 unités au lieu d’enregistrer 2 en silence	HOOK_FAILED: download engines
+src/integration/stock-money-p3.test.ts	GF31-AUD-051 — réception : une quantité fractionnaire est refusée accepte une quantité entière et incrémente exactement	HOOK_FAILED: download engines
+src/integration/stock-money-p3.test.ts	GF31-AUD-052 — la quantité saisie n’est plus réécrite en silence le motif fautif a disparu du composant	HOOK_FAILED: download engines
+src/integration/stock-money-p3.test.ts	GF31-AUD-052 — la quantité saisie n’est plus réécrite en silence une quantité invalide interrompt l’enregistrement avec un message	HOOK_FAILED: download engines
+src/integration/stock-suppression-et-entrees.test.ts	GF-037 — supprimer une pièce dit ce qui l’en empêche une pièce jamais utilisée reste librement supprimable	HOOK_FAILED: download engines
+src/integration/stock-suppression-et-entrees.test.ts	GF-037 — supprimer une pièce dit ce qui l’en empêche une pièce POSÉE sur une intervention : refus métier, pas une 500	HOOK_FAILED: download engines
+src/integration/stock-suppression-et-entrees.test.ts	GF-037 — supprimer une pièce dit ce qui l’en empêche une ligne de FACTURE est déliée, jamais laissée orpheline	HOOK_FAILED: download engines
+src/integration/stock-suppression-et-entrees.test.ts	GF-037 — supprimer une pièce dit ce qui l’en empêche une ligne de DEVIS est déliée elle aussi	HOOK_FAILED: download engines
+src/integration/stock-suppression-et-entrees.test.ts	GF-037 — supprimer une pièce dit ce qui l’en empêche une pièce AVEC HISTORIQUE de mouvements reste protégée	HOOK_FAILED: download engines
+src/integration/stock-suppression-et-entrees.test.ts	GF-037 — supprimer une pièce dit ce qui l’en empêche une pièce d’un AUTRE garage reste introuvable	HOOK_FAILED: download engines
+src/integration/stock-suppression-et-entrees.test.ts	GF-037 — ce qui ENTRE en stock est journalisé la réception d’un bon de commande écrit son mouvement	HOOK_FAILED: download engines
+src/integration/stock-suppression-et-entrees.test.ts	GF-037 — ce qui ENTRE en stock est journalisé une réception REJOUÉE n’écrit pas un second mouvement	HOOK_FAILED: download engines
+src/integration/stock-tracabilite-et-suppression.test.ts	GF-028 — poser une pièce laisse une trace le décrément est journalisé, et le journal reconstitue le stock	HOOK_FAILED: download engines
+src/integration/stock-tracabilite-et-suppression.test.ts	GF-028 — poser une pièce laisse une trace retirer la pièce journalise la restitution — mouvements symétriques	HOOK_FAILED: download engines
+src/integration/stock-tracabilite-et-suppression.test.ts	GF-028 — poser une pièce laisse une trace un stock INSUFFISANT n’écrit aucun mouvement	HOOK_FAILED: download engines
+src/integration/stock-tracabilite-et-suppression.test.ts	GF-028 — poser une pièce laisse une trace SUPPRIMER l’intervention rend les pièces au stock, et le dit	HOOK_FAILED: download engines
+src/integration/stock-tracabilite-et-suppression.test.ts	GF-028 — poser une pièce laisse une trace plusieurs pièces sur la même intervention sont TOUTES rendues	HOOK_FAILED: download engines
+src/integration/stock-tracabilite-et-suppression.test.ts	GF-028 — poser une pièce laisse une trace une intervention d’un AUTRE garage ne rend rien chez nous	HOOK_FAILED: download engines
+src/integration/stock-tracabilite-et-suppression.test.ts	GF-029 — une facture émise entre-temps n’est plus effacée un brouillon reste supprimable — le correctif ne bloque rien	HOOK_FAILED: download engines
+src/integration/stock-tracabilite-et-suppression.test.ts	GF-029 — une facture émise entre-temps n’est plus effacée une facture émise AVANT l’appel est refusée (contrôle existant)	HOOK_FAILED: download engines
+src/integration/stock-tracabilite-et-suppression.test.ts	GF-029 — une facture émise entre-temps n’est plus effacée émise PENDANT la transaction : refus, et rien n’est perdu	HOOK_FAILED: download engines
+src/integration/stock-tracabilite-et-suppression.test.ts	GF-029 — une facture émise entre-temps n’est plus effacée le devis source n’est PAS déconverti quand la suppression échoue	HOOK_FAILED: download engines
+src/integration/supplier-linkage.test.ts	POST /api/parts — le fournisseur est réellement enregistrable persiste supplierName et supplierRef	HOOK_FAILED: download engines
+src/integration/supplier-linkage.test.ts	POST /api/parts — le fournisseur est réellement enregistrable une pièce sans fournisseur reste valide (le champ est facultatif)	HOOK_FAILED: download engines
+src/integration/supplier-linkage.test.ts	POST /api/parts — le fournisseur est réellement enregistrable les espaces de bordure sont retirés, une saisie vide vaut « pas de fournisseur »	HOOK_FAILED: download engines
+src/integration/supplier-linkage.test.ts	POST /api/parts — le fournisseur est réellement enregistrable un nom de fournisseur démesuré est refusé, pas tronqué en silence	HOOK_FAILED: download engines
+src/integration/supplier-linkage.test.ts	PATCH /api/parts/[id] — le fournisseur est modifiable change le fournisseur d'une pièce existante	HOOK_FAILED: download engines
+src/integration/supplier-linkage.test.ts	le plan de réapprovisionnement voit les pièces saisies par le produit un fournisseur créé UNIQUEMENT via l'API apparaît dans le plan	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	GET /api/suppliers (reorder plan) groups low-stock parts by supplier, tenant-scoped, excluding well-stocked parts	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	POST create-orders (confirmation-gated) previews without persisting any purchase order	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	POST create-orders (confirmation-gated) persists one draft PO per supplier when confirmed	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	POST create-orders (confirmation-gated) rejects a targeted order for a foreign part with 400	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	POST transition (guarded lifecycle + stock effects) previews a transition without writing	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	POST transition (guarded lifecycle + stock effects) confirms draft→sent and stamps sentAt without touching stock	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	POST transition (guarded lifecycle + stock effects) confirms →received and atomically increments part stock, once	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	POST transition (guarded lifecycle + stock effects) serialises two concurrent receipts: exactly one applies, stock incremented once	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	POST transition (guarded lifecycle + stock effects) rejects an illegal transition (draft→received) even with confirm	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	POST transition (guarded lifecycle + stock effects) returns 404 for an order belonging to another garage (tenant isolation)	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	GF31-AUD-002 — cycle de vie sur une commande écrite par la production (V2) crée, envoie et réceptionne une commande issue de create-orders, et incrémente le stock	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	GF31-AUD-029 — `stock:manage` sur les écritures fournisseur RECEPTIONIST : lecture du plan de réapprovisionnement autorisée	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	GF31-AUD-029 — `stock:manage` sur les écritures fournisseur RECEPTIONIST : création de commandes refusée	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	GF31-AUD-029 — `stock:manage` sur les écritures fournisseur MECHANIC : création de commandes refusée	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	GF31-AUD-029 — `stock:manage` sur les écritures fournisseur undefined : création de commandes refusée	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	GF31-AUD-029 — `stock:manage` sur les écritures fournisseur RECEPTIONIST : transition de commande refusée (pas d’entrée en stock)	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	GF31-AUD-029 — `stock:manage` sur les écritures fournisseur OWNER : conserve l’accès en écriture	HOOK_FAILED: download engines
+src/integration/suppliers.test.ts	GF31-AUD-029 — `stock:manage` sur les écritures fournisseur MANAGER : conserve l’accès en écriture	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	curseurs indépendants (GF-030) une photo ANCIENNE ne retient plus le curseur des commentaires	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	curseurs indépendants (GF-030) un commentaire RÉCENT ne fait pas sauter des photos	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	curseurs indépendants (GF-030) un garage neuf ne demande AUCUN curseur (tout depuis l’origine)	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	curseurs indépendants (GF-030) `since` reste envoyé pour un serveur pas encore à jour	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	le serveur dit qu’il a tronqué (GF-030) en dessous du plafond, rien n’est annoncé tronqué	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	le serveur dit qu’il a tronqué (GF-030) au plafond, le serveur l’ANNONCE — sinon le poste croit avoir tout reçu	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	le serveur dit qu’il a tronqué (GF-030) aucune intervention dans la fenêtre : forme stable, jamais d’exception	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	curseurs annoncés par le poste — lecture côté serveur les trois curseurs sont lus séparément	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	curseurs annoncés par le poste — lecture côté serveur un poste ANCIEN, qui n’envoie que `since`, fonctionne comme avant	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	curseurs annoncés par le poste — lecture côté serveur une valeur illisible n’est jamais prise pour un instant	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	photo stockée sur DISQUE : elle redescend (GF-030) la passerelle SERT une photo stockée en fichier	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	photo stockée sur DISQUE : elle redescend (GF-030) une photo stockée en colonne continue de passer	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	photo stockée sur DISQUE : elle redescend (GF-030) ni colonne ni fichier : refus explicite, sans détail technique	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	photo stockée sur DISQUE : elle redescend (GF-030) la photo d’un AUTRE garage reste introuvable	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	photo stockée sur DISQUE : elle redescend (GF-030) le magasin relit un fichier écrit	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	photo stockée sur DISQUE : elle redescend (GF-030) refuse de sortir du dossier des photos	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	photo stockée sur DISQUE : elle redescend (GF-030) un fichier absent ne rend rien plutôt qu’une exception	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	GF-031 — le décalage d’horloge compte AUSSI à la descente un poste EN AVANCE réapplique quand même le travail du mécanicien	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	GF-031 — le décalage d’horloge compte AUSSI à la descente un poste EN RETARD n’écrase plus ses propres saisies avec un miroir périmé	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	GF-031 — le décalage d’horloge compte AUSSI à la descente sans `syncedAt`, le comportement reste EXACTEMENT celui d’avant	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	GF-032 — la fenêtre entière n’est plus redemandée à chaque passage le premier passage demande tout, le suivant seulement le nouveau	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	GF-032 — la fenêtre entière n’est plus redemandée à chaque passage le curseur des interventions ne contamine pas le repli `since`	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	écoulement de l’arriéré (GF-030) une réponse tronquée demande un nouveau passage	HOOK_FAILED: download engines
+src/integration/synchro-voie-de-retour.test.ts	écoulement de l’arriéré (GF-030) sans PROGRÈS, on ne repasse pas — pas de boucle sur un cloud bloqué	HOOK_FAILED: download engines
+src/integration/tenant-idor-patch.test.ts	IDOR 2nd ordre — vehicles/[id] PATCH REFUSE de rattacher le véhicule à un client d'un autre garage	HOOK_FAILED: download engines
+src/integration/tenant-idor-patch.test.ts	IDOR 2nd ordre — vehicles/[id] PATCH ACCEPTE un client du même garage	HOOK_FAILED: download engines
+src/integration/tenant-idor-patch.test.ts	IDOR 2nd ordre — jobs/[id] PATCH REFUSE d'assigner un mécanicien d'un autre garage	HOOK_FAILED: download engines
+src/integration/tenant-idor-patch.test.ts	IDOR 2nd ordre — jobs/[id] PATCH ACCEPTE un mécanicien du même garage	HOOK_FAILED: download engines
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B vehicles : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B jobs : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B invoices : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B quotes : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B work-orders : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B purchase-orders : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B parts : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B appointments : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B inspections : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B loaner-vehicles : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B loaner-reservations : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B warranties : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B labor-operations : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B mechanics : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B clients : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Isolation inter-garage — session A ne peut atteindre AUCUNE ressource de B tickets : tous les verbes exportés sur la ressource de B échouent et laissent B intact	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources vehicles : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources jobs : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources invoices : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources quotes : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources work-orders : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources purchase-orders : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources parts : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources appointments : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources inspections : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources loaner-vehicles : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources loaner-reservations : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources warranties : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources labor-operations : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources mechanics : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources clients : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Contrôle positif — A accède bien à ses propres ressources tickets : une opération non destructive sur la ressource de A réussit	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Scoping des listes — les collections de A excluent les ressources de B jobs : la liste de A contient l'objet de A et jamais celui de B	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Scoping des listes — les collections de A excluent les ressources de B invoices : la liste de A contient l'objet de A et jamais celui de B	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Scoping des listes — les collections de A excluent les ressources de B quotes : la liste de A contient l'objet de A et jamais celui de B	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Scoping des listes — les collections de A excluent les ressources de B work-orders : la liste de A contient l'objet de A et jamais celui de B	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Scoping des listes — les collections de A excluent les ressources de B appointments : la liste de A contient l'objet de A et jamais celui de B	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Scoping des listes — les collections de A excluent les ressources de B inspections : la liste de A contient l'objet de A et jamais celui de B	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Scoping des listes — les collections de A excluent les ressources de B loaner-vehicles : la liste de A contient l'objet de A et jamais celui de B	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Scoping des listes — les collections de A excluent les ressources de B warranties : la liste de A contient l'objet de A et jamais celui de B	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Scoping des listes — les collections de A excluent les ressources de B labor-operations : la liste de A contient l'objet de A et jamais celui de B	HOOK_FAILED: no-engine client
+src/integration/tenant-isolation-matrix.test.ts	Scoping des listes — les collections de A excluent les ressources de B mechanics : la liste de A contient l'objet de A et jamais celui de B	HOOK_FAILED: no-engine client
+src/lib/__tests__/document-numbering.postgres.int.test.ts	Numérotation de factures — concurrence réelle PostgreSQL 50 créations parallèles → 50 numéros distincts, contigus, aucun échec	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/license-devices.postgres.int.test.ts	appareils par licence — PostgreSQL réel (migrations + concurrence) la base neuve est utilisable sans AUCUNE modification manuelle	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/license-devices.postgres.int.test.ts	appareils par licence — PostgreSQL réel (migrations + concurrence) activation du premier appareil → deviceToken retourné, haché en base	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/license-devices.postgres.int.test.ts	appareils par licence — PostgreSQL réel (migrations + concurrence) réactivation même HWID → rotation du jeton, toujours UN SEUL appareil	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/license-devices.postgres.int.test.ts	appareils par licence — PostgreSQL réel (migrations + concurrence) CONCURRENCE seats=1 : 8 activations simultanées de HWID distincts → EXACTEMENT 1 admise	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/license-devices.postgres.int.test.ts	appareils par licence — PostgreSQL réel (migrations + concurrence) CONCURRENCE seats=2 : 10 activations simultanées → EXACTEMENT 2 admises	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/license-devices.postgres.int.test.ts	appareils par licence — PostgreSQL réel (migrations + concurrence) CONCURRENCE même HWID : 6 activations simultanées → un seul appareil, jetons tournés	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/license-devices.postgres.int.test.ts	appareils par licence — PostgreSQL réel (migrations + concurrence) refus au-delà du plafond, puis révocation d'un appareil → le siège se libère	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/license-devices.postgres.int.test.ts	appareils par licence — PostgreSQL réel (migrations + concurrence) reset admin → la machine révoquée peut se réactiver (si un siège est libre)	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/license-devices.postgres.int.test.ts	appareils par licence — PostgreSQL réel (migrations + concurrence) licence RÉVOQUÉE → tous ses jetons d'appareil refusés immédiatement	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/license-devices.postgres.int.test.ts	appareils par licence — PostgreSQL réel (migrations + concurrence) licence EXPIRÉE → jetons refusés	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/license-devices.postgres.int.test.ts	appareils par licence — PostgreSQL réel (migrations + concurrence) auto-désactivation (deactivateByToken) libère le siège	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/license-devices.postgres.int.test.ts	appareils par licence — PostgreSQL réel (migrations + concurrence) jeton inconnu / HWID d'une autre machine → refus typés	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/license-devices.postgres.int.test.ts	appareils par licence — PostgreSQL réel (migrations + concurrence) fonctionnement après « redémarrage » (nouveau client Prisma, mêmes données)	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/license-public-key.test.ts	clé publique de licence embarquée la clé embarquée est IDENTIQUE à keys/public.pem (clé émettrice des licences)	keys/public.pem and/or issuer private key (see individual source guards)
+src/lib/__tests__/licensed-session.postgres.int.test.ts	session licenciée — PostgreSQL réel PWA : install id consomme un siège (appareil « pwa »)	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/licensed-session.postgres.int.test.ts	session licenciée — PostgreSQL réel session valide (licence + appareil PWA + garage) → ok, rattachement au 1er usage	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/licensed-session.postgres.int.test.ts	session licenciée — PostgreSQL réel usage inter-garages REFUSÉ (licence rattachée à un autre garage)	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/licensed-session.postgres.int.test.ts	session licenciée — PostgreSQL réel révocation d'appareil → session invalidée immédiatement	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/licensed-session.postgres.int.test.ts	session licenciée — PostgreSQL réel licence expirée → session refusée	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/licensed-session.postgres.int.test.ts	session licenciée — PostgreSQL réel CONCURRENCE PWA seats=1 : 6 install ids simultanés → EXACTEMENT 1 siège	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/rate-limit-multi-instance.int.test.ts	rate limiting distribué — partage réel entre instances (Redis requis) le compteur est partagé : instance B voit les hits de l'instance A, 429 + Retry-After	TEST_REDIS_URL
+src/lib/__tests__/rate-limit-multi-instance.int.test.ts	rate limiting distribué — partage réel entre instances (Redis requis) l'incrément est atomique : 20 requêtes concurrentes sur 2 instances, max 10 ⇒ exactement 10 admises	TEST_REDIS_URL
+src/lib/__tests__/rate-limit-multi-instance.int.test.ts	rate limiting distribué — partage réel entre instances (Redis requis) l'expiration de la fenêtre fonctionne sur le vrai Redis	TEST_REDIS_URL
+src/lib/__tests__/rate-limit-multi-instance.int.test.ts	rate limiting distribué — partage réel entre instances (Redis requis) les clés Redis sont pseudonymisées : jamais de sujet en clair	TEST_REDIS_URL
+src/lib/__tests__/rate-limit-multi-instance.int.test.ts	rate limiting distribué — partage réel entre instances (Redis requis) nettoyage	TEST_REDIS_URL
+src/lib/__tests__/stock-concurrency.postgres.int.test.ts	Décrément de stock — concurrence réelle PostgreSQL stock 5, 10 ajouts parallèles de 2 → 2 succès, 8 refus (409), stock final = 1, jamais négatif	TEST_POSTGRES_URL + psql + engines
+src/lib/__tests__/tenant-isolation.test.ts	isolation multi-tenant (garages A & B) relationInGarage accepte une FK du même garage	HOOK_FAILED: no-engine client
+src/lib/__tests__/tenant-isolation.test.ts	isolation multi-tenant (garages A & B) relationInGarage REFUSE une FK appartenant à un autre garage	HOOK_FAILED: no-engine client
+src/lib/__tests__/tenant-isolation.test.ts	isolation multi-tenant (garages A & B) relationInGarage(null) ne bloque pas (rien à vérifier)	HOOK_FAILED: no-engine client
+src/lib/__tests__/tenant-isolation.test.ts	isolation multi-tenant (garages A & B) lecture scopée : A ne voit pas le job de B	HOOK_FAILED: no-engine client
+src/lib/__tests__/tenant-isolation.test.ts	isolation multi-tenant (garages A & B) écriture atomique : A ne peut pas modifier le job de B (updateMany count=0)	HOOK_FAILED: no-engine client
+src/lib/__tests__/tenant-isolation.test.ts	isolation multi-tenant (garages A & B) suppression atomique : A ne peut pas supprimer le job de B (deleteMany count=0)	HOOK_FAILED: no-engine client
+src/lib/__tests__/tenant-isolation.test.ts	isolation multi-tenant (garages A & B) le garage propriétaire, lui, peut modifier son objet	HOOK_FAILED: no-engine client
+src/lib/backup/__tests__/restore-roundtrip.test.ts	Sauvegarde → restauration réelle crée une sauvegarde chiffrée vérifiable (checksum)	HOOK_FAILED: download engines
+src/lib/backup/__tests__/restore-roundtrip.test.ts	Sauvegarde → restauration réelle restaure EXACTEMENT après corruption des données vivantes	HOOK_FAILED: download engines
+src/lib/backup/__tests__/restore-roundtrip.test.ts	Sauvegarde → restauration réelle la restauration ne touche PAS le garage B (scopée)	HOOK_FAILED: download engines
+src/lib/backup/__tests__/restore-roundtrip.test.ts	Sauvegarde → restauration réelle refuse une restauration sans confirmation exacte	HOOK_FAILED: download engines
+src/lib/backup/__tests__/restore-roundtrip.test.ts	Sauvegarde → restauration réelle refuse de restaurer la sauvegarde de A sur le garage B (inter-garage)	HOOK_FAILED: download engines
+src/lib/backup/__tests__/restore-roundtrip.test.ts	Sauvegarde → restauration réelle détecte une sauvegarde altérée (intégrité)	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	le poste dit la vérité sur ce qui s’est passé sans licence garage : refus explicite, aucun appel réseau	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	le poste dit la vérité sur ce qui s’est passé réseau absent : 503, et la facture reste enregistrée	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	le poste dit la vérité sur ce qui s’est passé délai dépassé : 503 également	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	le poste dit la vérité sur ce qui s’est passé un refus de la plateforme est rendu TEL QUEL, motif et statut compris	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	le poste dit la vérité sur ce qui s’est passé la licence accompagne chaque appel : l’identité ne vient pas du corps	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	l’enrichissement local ne retouche jamais un refus une lecture aboutie reçoit la donnée que seul le poste connaît	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	l’enrichissement local ne retouche jamais un refus un refus ressort intact — rien n’y est ajouté	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	portée garage AVANT tout appel réseau une facture d’un autre garage est introuvable localement	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	portée garage AVANT tout appel réseau la route refuse 404 sans déranger le service en ligne	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	les routes du poste délèguent au lieu de refuser (fin des 501) l’envoi d’une facture est relayé, pas refusé	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	les routes du poste délèguent au lieu de refuser (fin des 501) un brouillon est refusé LOCALEMENT, sans aller-retour inutile	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	les routes du poste délèguent au lieu de refuser (fin des 501) la relecture de statut est relayée sur l’action correspondante	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	les routes du poste délèguent au lieu de refuser (fin des 501) la déclaration « non parvenue » a sa propre action	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	les routes du poste délèguent au lieu de refuser (fin des 501) sans transmissionId : 400, sans appel réseau	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	les routes du poste délèguent au lieu de refuser (fin des 501) la lecture des transmissions ajoute le droit d’émettre, calculé ici	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	les routes du poste délèguent au lieu de refuser (fin des 501) le test de connexion est relayé, pas refusé	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	aucune route de facturation électronique ne répond plus 501 le corpus est exempt de SERVER_ONLY	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	un drapeau LOCAL ne doit jamais barrer la route au service l’enregistrement d’une connexion est RELAYÉ, pas refusé	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	un drapeau LOCAL ne doit jamais barrer la route au service les drapeaux affichés sont ceux du SERVICE, pas ceux du poste	HOOK_FAILED: download engines
+src/lib/einvoicing/__tests__/desktop-bridge.test.ts	un drapeau LOCAL ne doit jamais barrer la route au service service injoignable : on le DIT, on ne prétend pas que c’est désactivé	HOOK_FAILED: download engines
+src/lib/license/__tests__/forgery-resistance.test.ts	Clé embarquée correspond à keys/public.pem (clé émettrice réelle)	keys/public.pem and/or issuer private key (see individual source guards)
+src/lib/license/__tests__/forgery-resistance.test.ts	Acceptation / refus des licences 1. licence signée par la clé COURANTE → acceptée	keys/public.pem and/or issuer private key (see individual source guards)
+src/lib/license/__tests__/forgery-resistance.test.ts	Acceptation / refus des licences 2. licence ALTÉRÉE → refusée	keys/public.pem and/or issuer private key (see individual source guards)
+src/lib/license/__tests__/forgery-resistance.test.ts	Acceptation / refus des licences 5. licence expirée → refusée	keys/public.pem and/or issuer private key (see individual source guards)
+src/lib/license/__tests__/forgery-resistance.test.ts	Acceptation / refus des licences 8. licence mécanicien sans parent → refusée	keys/public.pem and/or issuer private key (see individual source guards)
+src/lib/license/__tests__/public-key-consistency.test.ts	bout en bout — jeton GF2 réel (optionnel : GF_TEST_LICENSE) un jeton GF2 signé par le keygen est ACCEPTÉ par verifyLicenseToken	GF_TEST_LICENSE signed by real issuer
+src/lib/license/__tests__/public-key-consistency.test.ts	bout en bout — jeton GF2 réel (optionnel : GF_TEST_LICENSE) un jeton dont la signature est altérée est REJETÉ	GF_TEST_LICENSE signed by real issuer
+src/lib/sync/__tests__/job-tombstones.test.ts	GF31-AUD-044 — la suppression laisse une trace explicite supprimer une intervention écrit une pierre tombale	HOOK_FAILED: download engines
+src/lib/sync/__tests__/job-tombstones.test.ts	GF31-AUD-044 — la suppression laisse une trace explicite la trace part avec la remontée, INDÉPENDAMMENT de la fenêtre	HOOK_FAILED: download engines
+src/lib/sync/__tests__/job-tombstones.test.ts	GF31-AUD-044 — la suppression laisse une trace explicite la trace n’est effacée QUE sur accusé de réception	HOOK_FAILED: download engines
+src/lib/sync/__tests__/job-tombstones.test.ts	GF31-AUD-044 — la suppression laisse une trace explicite une remontée en échec réseau ne perd pas la trace	HOOK_FAILED: download engines
+src/lib/sync/__tests__/job-tombstones.test.ts	GF31-AUD-044 — la suppression laisse une trace explicite n’accuse que ce que le cloud a réellement listé	HOOK_FAILED: download engines
+src/lib/sync/__tests__/job-tombstones.test.ts	GF31-AUD-044 — la suppression laisse une trace explicite la suppression et sa trace sont atomiques	HOOK_FAILED: download engines
+src/lib/sync/__tests__/mechanic-rattrapage.test.ts	une révocation faite hors ligne est rattrapée le rattrapage rejoue le STATUT, pas seulement les attributions	HOOK_FAILED: download engines
+src/lib/sync/__tests__/mechanic-rattrapage.test.ts	une révocation faite hors ligne est rattrapée une suspension aussi	HOOK_FAILED: download engines
+src/lib/sync/__tests__/mechanic-rattrapage.test.ts	une révocation faite hors ligne est rattrapée confirmée par le cloud, elle cesse d’être en attente	HOOK_FAILED: download engines
+src/lib/sync/__tests__/mechanic-rattrapage.test.ts	une révocation faite hors ligne est rattrapée refusée par le cloud, elle RESTE en attente	HOOK_FAILED: download engines
+src/lib/sync/__tests__/mechanic-rattrapage.test.ts	retirer un accès prime sur en accorder un la clé révoquée passe avant la clé active quand le plafond est de 1	HOOK_FAILED: download engines
+src/lib/sync/__tests__/mechanic-rattrapage.test.ts	une clé attribuée mais jamais confirmée reste rattrapée le canal ATTRIBUTION est utilisé pour une clé active	HOOK_FAILED: download engines
+src/lib/sync/__tests__/mechanic-rattrapage.test.ts	une clé attribuée mais jamais confirmée reste rattrapée une clé active SANS titulaire n’a rien à annoncer	HOOK_FAILED: download engines
+src/lib/sync/__tests__/mechanic-rattrapage.test.ts	l’état poussé est celui de la base, jamais une supposition pushMechanicStatus confirme en base ce que le cloud a accepté	HOOK_FAILED: download engines
+src/lib/sync/__tests__/mechanic-rattrapage.test.ts	la ROUTE marque elle-même la clé « à rattraper » révoquer une clé DÉJÀ synchronisée la remet en attente	HOOK_FAILED: download engines
+src/lib/sync/__tests__/messages-voie-de-retour.test.ts	les messages des clients arrivent enfin sur le poste la conversation et ses messages sont créés localement	HOOK_FAILED: download engines
+src/lib/sync/__tests__/messages-voie-de-retour.test.ts	les messages des clients arrivent enfin sur le poste rejouer un passage ne duplique ni la conversation ni les messages	HOOK_FAILED: download engines
+src/lib/sync/__tests__/messages-voie-de-retour.test.ts	les messages des clients arrivent enfin sur le poste une réponse du garage venue du cloud s’ajoute à la conversation	HOOK_FAILED: download engines
+src/lib/sync/__tests__/messages-voie-de-retour.test.ts	les messages des clients arrivent enfin sur le poste sans licence garage : aucun appel réseau	HOOK_FAILED: download engines
+src/lib/sync/__tests__/messages-voie-de-retour.test.ts	le compte « ombre » ne peut pas servir à s’authentifier l’auteur inconnu est créé avec un haché VIDE	HOOK_FAILED: download engines
+src/lib/sync/__tests__/messages-voie-de-retour.test.ts	le compte « ombre » ne peut pas servir à s’authentifier un compte local EXISTANT n’est jamais écrasé	HOOK_FAILED: download engines
+src/lib/sync/__tests__/messages-voie-de-retour.test.ts	répondre atteint réellement le client la réponse remonte avec son texte et son auteur	HOOK_FAILED: download engines
+src/lib/sync/__tests__/messages-voie-de-retour.test.ts	répondre atteint réellement le client hors ligne : la remontée échoue et le DIT	HOOK_FAILED: download engines
+src/lib/sync/__tests__/messages-voie-de-retour.test.ts	répondre atteint réellement le client la clôture remonte aussi	HOOK_FAILED: download engines
+src/lib/sync/__tests__/passe-lecture-seule.test.ts	une fenêtre inchangée n’est pas republiée la première remontée pousse, la seconde passe en LECTURE SEULE	HOOK_FAILED: download engines
+src/lib/sync/__tests__/passe-lecture-seule.test.ts	une fenêtre inchangée n’est pas republiée une MODIFICATION locale fait repartir une vraie poussée	HOOK_FAILED: download engines
+src/lib/sync/__tests__/passe-lecture-seule.test.ts	une fenêtre inchangée n’est pas republiée une intervention AJOUTÉE fait repartir une vraie poussée	HOOK_FAILED: download engines
+src/lib/sync/__tests__/passe-lecture-seule.test.ts	une fenêtre inchangée n’est pas republiée une suppression en attente interdit la lecture seule	HOOK_FAILED: download engines
+src/lib/sync/__tests__/passe-lecture-seule.test.ts	une fenêtre inchangée n’est pas republiée la voie de retour continue d’être demandée en lecture seule	HOOK_FAILED: download engines
+src/lib/sync/__tests__/quote-return.test.ts	rapatriement de l’accord client enregistre la preuve ET fait avancer le devis	HOOK_FAILED: download engines
+src/lib/sync/__tests__/quote-return.test.ts	rapatriement de l’accord client un refus client est appliqué comme une acceptation	HOOK_FAILED: download engines
+src/lib/sync/__tests__/quote-return.test.ts	rapatriement de l’accord client rejouer le passage n’empile AUCUN doublon	HOOK_FAILED: download engines
+src/lib/sync/__tests__/quote-return.test.ts	non-régression du statut un devis déjà CONVERTI garde son statut, mais reçoit la preuve	HOOK_FAILED: download engines
+src/lib/sync/__tests__/quote-return.test.ts	refus d’écrire n’importe quoi une preuve dont le devis est INCONNU localement est ignorée	HOOK_FAILED: download engines
+src/lib/sync/__tests__/quote-return.test.ts	refus d’écrire n’importe quoi un devis d’un AUTRE garage n’est pas touché	HOOK_FAILED: download engines
+src/lib/sync/__tests__/quote-return.test.ts	refus d’écrire n’importe quoi un cloud injoignable n’écrit rien et le dit	HOOK_FAILED: download engines
+src/lib/sync/__tests__/quote-return.test.ts	curseur premier passage : aucun curseur — le poste ne détient rien	HOOK_FAILED: download engines
+src/lib/sync/__tests__/quote-return.test.ts	curseur passages suivants : curseur RECULÉ d’une minute sur la dernière preuve	HOOK_FAILED: download engines
+src/lib/sync/__tests__/quote-return.test.ts	curseur remonte l’arriéré annoncé par le cloud	HOOK_FAILED: download engines
+src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts	les demandes du client arrivent enfin sur le poste une demande inconnue est créée localement	HOOK_FAILED: download engines
+src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts	les demandes du client arrivent enfin sur le poste aucun lien pendant vers une fiche client non publiée	HOOK_FAILED: download engines
+src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts	les demandes du client arrivent enfin sur le poste rejouer le même passage ne crée pas de doublon	HOOK_FAILED: download engines
+src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts	les demandes du client arrivent enfin sur le poste le curseur repart de ce que le poste détient RÉELLEMENT	HOOK_FAILED: download engines
+src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts	les demandes du client arrivent enfin sur le poste sans licence garage : aucun appel réseau	HOOK_FAILED: download engines
+src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts	le poste fait autorité sur la RÉPONSE une confirmation locale n’est pas effacée par un rapatriement	HOOK_FAILED: download engines
+src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts	le poste fait autorité sur la RÉPONSE mais le texte de la demande, lui, est mis à jour	HOOK_FAILED: download engines
+src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts	le poste fait autorité sur la RÉPONSE une demande encore « requested » localement suit le cloud	HOOK_FAILED: download engines
+src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts	la décision du garage remonte au client l’ACTION est transmise, pas le statut	HOOK_FAILED: download engines
+src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts	la décision du garage remonte au client hors ligne : la remontée échoue et le DIT	HOOK_FAILED: download engines
+src/app/api/clients/__tests__/portal-access-publication.test.ts	l’accès est PUBLIÉ vers le service qui sert le portail ouvrir un accès le publie, avec le haché — jamais le mot de passe en clair	HOOK_FAILED: download engines
+src/app/api/clients/__tests__/portal-access-publication.test.ts	l’accès est PUBLIÉ vers le service qui sert le portail l’identité vient de la LICENCE, jamais du corps	HOOK_FAILED: download engines
+src/app/api/clients/__tests__/portal-access-publication.test.ts	l’accès est PUBLIÉ vers le service qui sert le portail publié : l’accès est annoncé prêt, et le client est prévenu	HOOK_FAILED: download engines
+src/app/api/clients/__tests__/portal-access-publication.test.ts	hors ligne, rien n’est annoncé au client la réponse dit que l’accès n’est PAS en ligne, et pourquoi	HOOK_FAILED: download engines
+src/app/api/clients/__tests__/portal-access-publication.test.ts	hors ligne, rien n’est annoncé au client aucun e-mail n’est envoyé : il porterait un lien vers un refus	HOOK_FAILED: download engines
+src/app/api/clients/__tests__/portal-access-publication.test.ts	hors ligne, rien n’est annoncé au client sans licence garage : dit LICENCE_ABSENTE, sans appel réseau	HOOK_FAILED: download engines
+src/app/api/clients/__tests__/portal-access-publication.test.ts	hors ligne, rien n’est annoncé au client adresse déjà prise en ligne : le motif est rendu tel quel	HOOK_FAILED: download engines
+src/app/api/clients/__tests__/portal-access-publication.test.ts	hors ligne, rien n’est annoncé au client l’accès reste créé LOCALEMENT : c’est lui qu’une republication renverra	HOOK_FAILED: download engines
+src/app/api/clients/__tests__/portal-access-publication.test.ts	réinitialiser et désactiver doivent atteindre le service une réinitialisation republie ET coupe les sessions en ligne	HOOK_FAILED: download engines
+src/app/api/clients/__tests__/portal-access-publication.test.ts	réinitialiser et désactiver doivent atteindre le service une réinitialisation rattrape une ouverture faite hors ligne	HOOK_FAILED: download engines
+src/app/api/clients/__tests__/portal-access-publication.test.ts	réinitialiser et désactiver doivent atteindre le service désactiver coupe aussi les sessions en ligne	HOOK_FAILED: download engines
+src/app/api/clients/__tests__/portal-access-publication.test.ts	réinitialiser et désactiver doivent atteindre le service une désactivation qui n’atteint pas le service ne coupe RIEN, et le dit	HOOK_FAILED: download engines
+src/app/api/clients/__tests__/portal-access-publication.test.ts	réinitialiser et désactiver doivent atteindre le service réactiver ne coupe pas de sessions	HOOK_FAILED: download engines
+src/app/api/clients/__tests__/portal-access-publication.test.ts	le lien de connexion désigne le garage l’e-mail porte ?garage=<slug>	HOOK_FAILED: download engines
+src/app/api/internal/__tests__/backup-coherent.test.ts	la sauvegarde produite est réellement restaurable le fichier écrit passe le contrôle d’intégrité et contient les données	HOOK_FAILED: download engines
+src/app/api/internal/__tests__/backup-coherent.test.ts	la sauvegarde produite est réellement restaurable reste cohérente quand des écritures ont lieu PENDANT la sauvegarde	HOOK_FAILED: download engines
+src/app/api/internal/__tests__/backup-coherent.test.ts	la destination ne peut pas désigner autre chose que le dossier de sauvegarde refuse une remontée de dossier	HOOK_FAILED: download engines
+src/app/api/internal/__tests__/backup-coherent.test.ts	la destination ne peut pas désigner autre chose que le dossier de sauvegarde refuse un chemin absolu ailleurs	HOOK_FAILED: download engines
+src/app/api/internal/__tests__/backup-coherent.test.ts	la destination ne peut pas désigner autre chose que le dossier de sauvegarde refuse une extension inattendue	HOOK_FAILED: download engines
+src/app/api/internal/__tests__/backup-coherent.test.ts	la destination ne peut pas désigner autre chose que le dossier de sauvegarde n’écrase jamais une sauvegarde existante	HOOK_FAILED: download engines
+src/app/api/internal/__tests__/backup-coherent.test.ts	la route reste réservée au processus local sans clé interne : 401, et rien n’est écrit	HOOK_FAILED: download engines
+src/app/api/internal/__tests__/backup-coherent.test.ts	la route reste réservée au processus local avec une mauvaise clé : 401	HOOK_FAILED: download engines
+src/app/api/internal/__tests__/backup-coherent.test.ts	la route reste réservée au processus local une requête relayée par un proxy est refusée	HOOK_FAILED: download engines
+src/app/api/parts/__tests__/parts-pagination.test.ts	/api/parts — borne & pagination ?limit=10 → au plus 10 résultats	HOOK_FAILED: download engines
+src/app/api/parts/__tests__/parts-pagination.test.ts	/api/parts — borne & pagination ?page=2&limit=10 → page suivante disjointe	HOOK_FAILED: download engines
+src/app/api/parts/__tests__/parts-pagination.test.ts	/api/parts — borne & pagination sans limite → cap de sécurité appliqué (≤ 5000), tout le petit catalogue rendu	HOOK_FAILED: download engines
+src/app/api/parts/__tests__/parts-pagination.test.ts	/api/parts — borne & pagination limite excessive bornée au maximum (5000)	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/appointments-sync.test.ts	la lecture est bornée au garage de la licence les demandes d’un autre garage ne sortent pas	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/appointments-sync.test.ts	la lecture est bornée au garage de la licence une licence refusée ne lit rien	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/appointments-sync.test.ts	la machine à états décide, pas le poste confirmer une demande en attente aboutit	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/appointments-sync.test.ts	la machine à états décide, pas le poste une transition impossible est REFUSÉE	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/appointments-sync.test.ts	la machine à états décide, pas le poste la demande d’un autre garage est INTROUVABLE, pas refusée	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/appointments-sync.test.ts	la machine à états décide, pas le poste un mode inconnu est refusé	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/einvoicing-tunnel.test.ts	l’identité vient de la LICENCE, jamais du poste une licence refusée ne déclenche AUCUN travail	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/einvoicing-tunnel.test.ts	l’identité vient de la LICENCE, jamais du poste la facture d’un AUTRE garage est introuvable, pas refusée	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/einvoicing-tunnel.test.ts	l’identité vient de la LICENCE, jamais du poste la lecture des transmissions est bornée au garage de la licence	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/einvoicing-tunnel.test.ts	l’identité vient de la LICENCE, jamais du poste le poste ne choisit pas son environnement	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/einvoicing-tunnel.test.ts	les verrous de la route de session existent AUSSI ici émission désactivée : refus, sans appel à la plateforme	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/einvoicing-tunnel.test.ts	les verrous de la route de session existent AUSSI ici une facture en BROUILLON ne part pas	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/einvoicing-tunnel.test.ts	les verrous de la route de session existent AUSSI ici une facture ANNULÉE ne part pas	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/einvoicing-tunnel.test.ts	les verrous de la route de session existent AUSSI ici connexions désactivées : la DESTRUCTION des identifiants est bloquée	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/einvoicing-tunnel.test.ts	les verrous de la route de session existent AUSSI ici fonctionnalité globalement coupée : tout est refusé	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/einvoicing-tunnel.test.ts	les verrous de la route de session existent AUSSI ici une action inconnue est refusée avant tout accès base	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/einvoicing-tunnel.test.ts	le document transmis ne dépend pas du chemin emprunté les lignes arrivent avec les entiers exacts, pas des flottants	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/einvoicing-tunnel.test.ts	le document transmis ne dépend pas du chemin emprunté l’identité transmise est celle de la licence	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/einvoicing-tunnel.test.ts	le document transmis ne dépend pas du chemin emprunté l’auteur reste nul : inventer une correspondance ferait mentir l’audit	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/invoice-publication.test.ts	l’inventaire appartient au POSTE publier une facture ne crée AUCUN mouvement de stock	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/invoice-publication.test.ts	l’inventaire appartient au POSTE publier une facture ne décrémente AUCUNE pièce	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/invoice-publication.test.ts	l’inventaire appartient au POSTE la ligne ne garde AUCUN lien vers une pièce non publiée	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/invoice-publication.test.ts	l’inventaire appartient au POSTE l’engagement du stock est recopié tel quel — c’est un fait daté	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/invoice-publication.test.ts	écriture et montants crée la facture sous l’identifiant du poste	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/invoice-publication.test.ts	écriture et montants recopie les montants ENTIERS sans les recalculer	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/invoice-publication.test.ts	idempotence republier NE CRÉE PAS une seconde facture	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/invoice-publication.test.ts	idempotence une ligne SUPPRIMÉE sur le poste disparaît de la facture publiée	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/invoice-publication.test.ts	refus une facture d’un AUTRE garage n’est jamais écrasée	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/invoice-publication.test.ts	refus un numéro déjà pris par une AUTRE facture est refusé explicitement	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/invoice-publication.test.ts	refus un refus n’empêche pas les AUTRES factures du lot de passer	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/invoice-publication.test.ts	refus le garageId vient de la LICENCE, jamais du corps	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/invoice-publication.test.ts	refus une licence refusée ne laisse rien s’écrire	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/portal-account-publication.test.ts	l’identité vient de la licence une licence refusée n’écrit rien	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/portal-account-publication.test.ts	l’identité vient de la licence le garage du compte créé est celui de la LICENCE	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/portal-account-publication.test.ts	l’identité vient de la licence la fiche client n’est pas publiée : aucun lien pendant	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/portal-account-publication.test.ts	une adresse déjà prise n’est pas volée un AUTRE compte du même garage avec la même adresse : refus 409	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/portal-account-publication.test.ts	une adresse déjà prise n’est pas volée la même adresse dans un AUTRE garage ne gêne pas	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/portal-account-publication.test.ts	republier mène au même état, pas à un doublon deux publications successives ne créent qu’un compte	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/portal-account-publication.test.ts	republier mène au même état, pas à un doublon le verrouillage par échecs de connexion est levé à la republication	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/portal-account-publication.test.ts	couper les sessions en ligne `revoquerAppareils` révoque les appareils encore actifs	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/portal-account-publication.test.ts	couper les sessions en ligne sans le drapeau, les sessions restent ouvertes	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/quote-publication.test.ts	publication d’un devis — écriture crée le devis avec l’IDENTIFIANT DU POSTE et rend un lien	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/quote-publication.test.ts	publication d’un devis — écriture recopie les montants ENTIERS sans les recalculer	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/quote-publication.test.ts	publication d’un devis — écriture ne publie NI client NI véhicule : les clés étrangères restent nulles	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/quote-publication.test.ts	publication d’un devis — idempotence republier NE CRÉE PAS un second devis	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/quote-publication.test.ts	publication d’un devis — idempotence republier MET À JOUR le devis existant	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/quote-publication.test.ts	publication d’un devis — idempotence une ligne SUPPRIMÉE sur le poste disparaît du devis publié	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/quote-publication.test.ts	publication d’un devis — refus un devis appartenant à un AUTRE garage n’est jamais écrasé	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/quote-publication.test.ts	publication d’un devis — refus un numéro déjà pris par un AUTRE devis est refusé explicitement	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/quote-publication.test.ts	publication d’un devis — refus un devis déjà accepté ou converti ne se republie pas	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/quote-publication.test.ts	publication d’un devis — refus le garageId vient de la LICENCE, jamais du corps de la requête	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/quote-publication.test.ts	publication d’un devis — refus une licence refusée ne laisse rien s’écrire	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/tickets-sync.test.ts	la lecture est bornée au garage, et ne fait sortir aucun secret la correspondance d’un autre garage ne sort pas	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/tickets-sync.test.ts	la lecture est bornée au garage, et ne fait sortir aucun secret le haché de mot de passe de l’auteur ne redescend JAMAIS	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/tickets-sync.test.ts	la lecture est bornée au garage, et ne fait sortir aucun secret une licence refusée ne lit rien	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/tickets-sync.test.ts	répondre passe par la machine à états une réponse est enregistrée et fait avancer la conversation	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/tickets-sync.test.ts	répondre passe par la machine à états répondre dans une conversation CLÔTURÉE est refusé	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/tickets-sync.test.ts	répondre passe par la machine à états un message vide est refusé	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/tickets-sync.test.ts	répondre passe par la machine à états un message démesuré est refusé	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/tickets-sync.test.ts	répondre passe par la machine à états le ticket d’un autre garage est INTROUVABLE	HOOK_FAILED: download engines
+src/app/api/sync/__tests__/tickets-sync.test.ts	répondre passe par la machine à états un mode inconnu est refusé	HOOK_FAILED: download engines

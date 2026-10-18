@@ -2,11 +2,11 @@
 'use strict'
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  GarageFlow — Chiffrement des ressources (build)
+//  GarageFlows — Chiffrement des ressources (build)
 //
 //  Chiffre des ressources sensibles en AES-256-GCM (→ fichiers .enc) avec la clé
 //  dérivée du secret fragmenté (electron/secure-key.js). À l'exécution,
-//  GarageFlow.exe les déchiffre UNIQUEMENT en mémoire
+//  GarageFlows.exe les déchiffre UNIQUEMENT en mémoire
 //  (electron/secure-resources.js → decryptFileToMemory). Aucun fichier sensible
 //  ne reste en clair sur le disque.
 //

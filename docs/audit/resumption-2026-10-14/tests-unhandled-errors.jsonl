@@ -1,0 +1,4 @@
+{"sequence":1,"status":"ÉCHOUÉ","origin":"src/integration/publication-mise-a-jour.test.ts","cause":"PrismaClientInitializationError / Query Engine absent","evidence":"evidence/vitest-final.log:2839","issue":"FUP-20261014-002"}
+{"sequence":2,"status":"ÉCHOUÉ","origin":"src/lib/__tests__/license-devices-unit.test.ts","cause":"PrismaClientInitializationError / Query Engine absent","evidence":"evidence/vitest-final.log:2862","issue":"FUP-20261014-002"}
+{"sequence":3,"status":"ÉCHOUÉ","origin":"src/lib/__tests__/mechanic-admin.test.ts","cause":"PrismaClientInitializationError / Query Engine absent","evidence":"evidence/vitest-final.log:2885","issue":"FUP-20261014-002"}
+{"sequence":4,"status":"ÉCHOUÉ","origin":"src/lib/__tests__/audit-v21-fixes.test.ts","cause":"PrismaClientInitializationError / Query Engine absent","evidence":"evidence/vitest-final.log:2908","issue":"FUP-20261014-002"}

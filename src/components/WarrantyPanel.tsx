@@ -9,6 +9,7 @@ import { DateField } from '@/components/DateField'
 import toast from 'react-hot-toast'
 import { useTranslation } from '@/lib/i18n'
 import { dateLocale } from '@/lib/i18n/date-locale'
+import { useBrouillonPersistant } from '@/lib/ui/brouillon'
 
 interface Warranty {
   id: string
@@ -70,19 +71,42 @@ export default function WarrantyPanel({ onClose }: { onClose: () => void }) {
   const [alerts, setAlerts]         = useState<Alerts | null>(null)
   const [loading, setLoading]       = useState(true)
   const [showAdd, setShowAdd]       = useState(false)
-  const [form, setForm]             = useState(emptyForm)
+  /**
+   * Formulaire en cours. Une réclamation se remplit souvent entre deux clients :
+   * la saisie est conservée jusqu'à son enregistrement, et effacée si vous
+   * fermez la page.
+   */
+  const [form, setForm] = useBrouillonPersistant('warranty:form', emptyForm)
+  /** Durée réglée par le garage — sert à réinitialiser le formulaire (GF-039). */
+  const [dureeParDefaut, setDureeParDefaut] = useState(emptyForm.durationMonths)
   const [saving, setSaving]         = useState(false)
   const [claiming, setClaiming]     = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [wRes, aRes] = await Promise.all([
+      const [wRes, aRes, gRes] = await Promise.all([
         fetch('/api/warranties'),
         fetch('/api/warranties/alerts'),
+        // ── La durée par défaut vient du RÉGLAGE, pas d'une constante ────────
+        // Le formulaire s'ouvrait toujours sur 12 mois, et l'écran des réglages
+        // affirme pourtant que la valeur enregistrée est « appliquée
+        // automatiquement à chaque nouvelle garantie » (GF-039). Échec
+        // silencieux assumé : sans réponse, on garde le repli de 12 mois.
+        fetch('/api/garages').catch(() => null),
       ])
       const wData = await wRes.json().catch(() => null)
       const aData = await aRes.json().catch(() => null)
+      const gData = gRes && gRes.ok ? await gRes.json().catch(() => null) : null
+      const defaut = Number(gData?.warrantyMonthsDefault)
+      if (Number.isFinite(defaut) && defaut > 0) {
+        setDureeParDefaut(defaut)
+        // La saisie en cours n'est jamais écrasée : seul un formulaire encore
+        // vierge suit le réglage.
+        setForm(f => (f.partName === '' && f.durationMonths === emptyForm.durationMonths
+          ? { ...f, durationMonths: defaut }
+          : f))
+      }
       setWarranties(Array.isArray(wData) ? wData : (wData?.warranties ?? []))
       setAlerts(aData && aData.expiringSoon ? aData : { expiringSoon: [], justExpired: [], totalAlerts: 0 })
     } catch {
@@ -91,7 +115,8 @@ export default function WarrantyPanel({ onClose }: { onClose: () => void }) {
     } finally {
       setLoading(false)
     }
-  }, [])
+    // `setForm` (brouillon) est stable : le déclarer ne relance pas le chargement.
+  }, [setForm])
 
   useEffect(() => { load() }, [load])
 
@@ -134,7 +159,7 @@ export default function WarrantyPanel({ onClose }: { onClose: () => void }) {
       toast.success(t.wrSaved)
       await load()
       setShowAdd(false)
-      setForm(emptyForm)
+      setForm({ ...emptyForm, durationMonths: dureeParDefaut })
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t.uiSaveError)
     } finally { setSaving(false) }
@@ -171,12 +196,12 @@ export default function WarrantyPanel({ onClose }: { onClose: () => void }) {
             <RefreshCw className="w-4 h-4" />
           </button>
           <button
-            onClick={() => { setShowAdd(true); setForm(emptyForm) }}
+            onClick={() => { setShowAdd(true); setForm({ ...emptyForm, durationMonths: dureeParDefaut }) }}
             className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium"
           >
             <Plus className="w-3.5 h-3.5" /> {t.uiAdd}
           </button>
-          <button onClick={onClose} className="gf-close p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-400">
+          <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-400">
             <X className="w-5 h-5" />
           </button>
         </div>

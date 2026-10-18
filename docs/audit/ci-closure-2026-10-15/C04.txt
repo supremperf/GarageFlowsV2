@@ -1,0 +1,60 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /home/user/GarageFlowsV2
+
+ ✓ src/lib/einvoicing/__tests__/submit-chain.test.ts (17 tests) 32ms
+ ✓ src/lib/einvoicing/__tests__/submit-replay.test.ts (12 tests) 42ms
+ ❯ src/lib/einvoicing/__tests__/desktop-bridge.test.ts (20 tests | 20 skipped) 3436ms
+     ↓ sans licence garage : refus explicite, aucun appel réseau
+     ↓ réseau absent : 503, et la facture reste enregistrée
+     ↓ délai dépassé : 503 également
+     ↓ un refus de la plateforme est rendu TEL QUEL, motif et statut compris
+     ↓ la licence accompagne chaque appel : l’identité ne vient pas du corps
+     ↓ une lecture aboutie reçoit la donnée que seul le poste connaît
+     ↓ un refus ressort intact — rien n’y est ajouté
+     ↓ une facture d’un autre garage est introuvable localement
+     ↓ la route refuse 404 sans déranger le service en ligne
+     ↓ l’envoi d’une facture est relayé, pas refusé
+     ↓ un brouillon est refusé LOCALEMENT, sans aller-retour inutile
+     ↓ la relecture de statut est relayée sur l’action correspondante
+     ↓ la déclaration « non parvenue » a sa propre action
+     ↓ sans transmissionId : 400, sans appel réseau
+     ↓ la lecture des transmissions ajoute le droit d’émettre, calculé ici
+     ↓ le test de connexion est relayé, pas refusé
+     ↓ le corpus est exempt de SERVER_ONLY
+     ↓ l’enregistrement d’une connexion est RELAYÉ, pas refusé
+     ↓ les drapeaux affichés sont ceux du SERVICE, pas ceux du poste
+     ↓ service injoignable : on le DIT, on ne prétend pas que c’est désactivé
+ ✓ src/lib/einvoicing/__tests__/formats.test.ts (29 tests) 18ms
+ ✓ src/lib/einvoicing/__tests__/generic-pa-adapter.test.ts (36 tests) 20ms
+ ✓ src/lib/einvoicing/__tests__/ssrf-guard.test.ts (16 tests) 13ms
+ ✓ src/lib/einvoicing/__tests__/einvoicing-foundation.test.ts (16 tests) 22ms
+ ✓ src/lib/einvoicing/__tests__/catalog-provenance.test.ts (12 tests) 40ms
+ ✓ src/lib/einvoicing/__tests__/ssrf-guard-dns.test.ts (9 tests) 10ms
+ ✓ src/lib/einvoicing/__tests__/dns-deadline.test.ts (4 tests) 12ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/lib/einvoicing/__tests__/desktop-bridge.test.ts [ src/lib/einvoicing/__tests__/desktop-bridge.test.ts ]
+Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+Error: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+
+ ❯ construireModele src/test-utils/prepare-test-db.ts:52:3
+     50|
+     51| function construireModele(cible: string): void {
+     52|   execFileSync(
+       |   ^
+     53|     process.execPath,
+     54|     [prismaCli(), 'db', 'push', '--skip-generate', '--accept-data-loss…
+ ❯ prepareTestDb src/test-utils/prepare-test-db.ts:72:7
+ ❯ src/lib/einvoicing/__tests__/desktop-bridge.test.ts:81:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 9 passed (10)
+      Tests  151 passed | 20 skipped (171)
+   Start at  15:14:44
+   Duration  5.81s (transform 443ms, setup 0ms, import 693ms, tests 3.64s, environment 1ms)

@@ -1,0 +1,18 @@
+{
+  "id": "F24",
+  "recordedAt": "2026-10-15T14:27:54.541380+02:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "command": "npm run start -- --hostname 0.0.0.0 --port 4028",
+  "tool": "functions.start_process",
+  "head": "c4a2cca2cf446f96be580e99cca8afbca45396c5",
+  "remoteAnchor": "bd05cd521917cc059fc21780d1b562c020534942",
+  "processId": "garageflows-v-rification-du-d-ma-64eb3196",
+  "exitCode": 1,
+  "toolDurationMs": 933,
+  "listeningPorts": [],
+  "status": "BLOCKED_MISSING_STANDARD_BUILD",
+  "summary": "next start exited1: production build missing; no listening port. Not a startup latency measurement.",
+  "limits": "Normalized tool result, not a raw process log or exact launch timestamp. Source hashes: final application source snapshot F19 (no application source changes since).",
+  "sourceReceipt": "F19.json"
+}

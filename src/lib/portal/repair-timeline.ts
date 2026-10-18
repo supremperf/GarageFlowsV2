@@ -34,6 +34,10 @@ export function stageIndexForStatus(status: string): number {
     case 'in_progress':
     case 'delayed':
       return 3
+    case 'awaiting_validation':
+      // Mécanicien a terminé, en attente de validation du responsable : plus
+      // avancé qu'« en cours », mais pas encore clôturé/livré.
+      return 4
     case 'done':
     case 'completed':
       return 5

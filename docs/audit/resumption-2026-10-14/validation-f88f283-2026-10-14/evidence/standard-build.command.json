@@ -1,0 +1,28 @@
+{
+  "id": "standard-build",
+  "startedAt": "2026-10-14T17:06:45.322025+00:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "argv": [
+    "npm",
+    "run",
+    "build"
+  ],
+  "timeoutSeconds": 240,
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+  "trackedNonAuditFiles": 1220,
+  "environmentOverrides": {
+    "PATH": "pinned npm 11.16.0 first",
+    "NODE_USE_SYSTEM_CA": "1"
+  },
+  "proof": "evidence/standard-build.log",
+  "exitCode": 1,
+  "finishedAt": "2026-10-14T17:06:48.810765+00:00",
+  "afterIdentity": {
+    "head": "f88f2832eb256310852ed86040057c062d44433e",
+    "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+    "trackedNonAuditFiles": 1220
+  },
+  "logSha256": "b4dce524be0aaa5c68e371705821f424f50271872e0673ff9a1393e497380b18"
+}

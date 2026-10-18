@@ -1,0 +1,29 @@
+{
+  "id": "F34",
+  "command": "node --test tests/secret-scan-policy.test.cjs && npm run check:docs && node scripts/check-env-consistency.mjs && npx eslint tests/secret-scan-policy.test.cjs && python3 -c 'import tomllib; c=tomllib.load(open(\".gitleaks.toml\",\"rb\")); r=c[\"rules\"]; assert len(r)==1 and r[0][\"id\"]==\"generic-api-key\" and r[0][\"allowlists\"][0][\"condition\"]==\"AND\"; print(\"TOML_VALID; default rule extension only\")' && node scripts/verify-copilot-phase4-evidence.cjs && git diff --check",
+  "cwd": "/home/user/GarageFlowsV2",
+  "start": "2026-10-15T14:41:58.616137+02:00",
+  "timezone": "Europe/Paris",
+  "head": "ce5d2815ce185030aebccfc56c1d3eefd955aaa7",
+  "remoteAnchor": "bd05cd521917cc059fc21780d1b562c020534942",
+  "sourceHashes": [
+    {
+      "path": ".gitleaks.toml",
+      "sha256": "d7c3238cf5e0d8b32d061b57f5b6b322aa321a1c2d4229eb12d2bf6a44db41ca"
+    },
+    {
+      "path": "docs/COPILOT_PHASE4_GITHUB_FOLLOWUP.md",
+      "sha256": "844ff0188bc5241decef9dc9b6e073dbead2dffa7b41475b1b6bc084678f3c36"
+    },
+    {
+      "path": "tests/secret-scan-policy.test.cjs",
+      "sha256": "8f8e80e0f8f39e0f619ff6c30646b008a394f8244538c1fc543ec7a2a2d332a0"
+    }
+  ],
+  "logPath": "/home/user/copilot-phase4-2026-10-15/F34.log",
+  "limits": "Raw log outside Git; public receipt contains its digest and execution metadata only. Summary/results in phase4 report; missing prior raw logs not re-created.",
+  "exitCode": 0,
+  "end": "2026-10-15T14:42:01.056117+02:00",
+  "durationSeconds": 2.438360841000076,
+  "logSha256": "f67e3f75fcf9163e26a81b4fe7415903274bbfa3f1044d3e8d5833d6ba378662"
+}

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "frozenAt": "2026-10-15T14:20:51.876331+02:00",
+  "timezone": "Europe/Paris",
+  "file": "src/lib/copilot/evaluation-phase4-validation.json",
+  "sha256": "7b23aa75f2f08b6b23e9bf65a64d1051c95aef0bac33168257f562feb1227092",
+  "count": 48,
+  "purpose": "Distinct validation set; never imported by unit/development fixtures. Criteria frozen before first measurement. No tuning against results.",
+  "independenceLimit": "Same author as implementation: NOT independent human/external statistical holdout. External blind review remains required.",
+  "metrics": [
+    "semantic intent when IR exists",
+    "response contract",
+    "ordered tools",
+    "parameters",
+    "period/status constraints",
+    "RBAC/confirmations",
+    "facts (native only)",
+    "final response (native/human only)",
+    "latency/technical errors"
+  ],
+  "prohibited": "No silent rubric adjustment, generated gold model responses or live/facts claims from local/simulated runs."
+}

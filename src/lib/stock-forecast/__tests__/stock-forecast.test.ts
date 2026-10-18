@@ -66,3 +66,47 @@ describe('planReorders', () => {
     expect(report.summary.totalOrderCost).toBe(44)
   })
 })
+
+/**
+ * Les deux MONTANTS de ce module passent par la couche monétaire centrale.
+ *
+ * `round2` (`Math.round(n * 100) / 100`) est naïf face au bruit IEEE-754 : sur
+ * 1,005 € il rend 1,00 € là où `lineCents`/`toCents` rendent 1,01 €, parce que
+ * la couche centrale ajoute sa tolérance APRÈS passage en centimes. Deux écrans
+ * affichant le même coût estimé doivent afficher le même chiffre — c'est la
+ * raison d'être de la règle « aucun calcul monétaire hors couche centrale ».
+ */
+describe('les montants du plan de réapprovisionnement sont exacts au centime', () => {
+  const piece = (unitCost: number, currentStock = 0, minStock = 1) => ({
+    item: { id: 'p1', name: 'P', currentStock, unitCost, minStock, leadTimeDays: 7, periodDays: 30 },
+    consumption: [] as number[],
+  })
+
+  it('un prix à la demi-unité de centime n’est pas rogné', () => {
+    // round2 : Math.round(1.005 * 100) / 100 === 1 (le produit binaire vaut
+    // 100.49999999999999). La couche centrale rend 1,01 €.
+    const { plans } = planReorders([piece(1.005)])
+    expect(plans[0].recommendedOrderQty).toBe(1)
+    expect(plans[0].estimatedCost, 'arrondi demi-éloigné-de-zéro, comme partout ailleurs').toBe(1.01)
+  })
+
+  it('le total est sommé en centimes entiers, pas en euros flottants', () => {
+    // 0,10 € × 3 pièces : en flottants, 0.1+0.1+0.1 = 0.30000000000000004.
+    const { summary } = planReorders([
+      { ...piece(0.1), item: { ...piece(0.1).item, id: 'a' } },
+      { ...piece(0.1), item: { ...piece(0.1).item, id: 'b' } },
+      { ...piece(0.1), item: { ...piece(0.1).item, id: 'c' } },
+    ])
+    expect(summary.totalOrderCost).toBe(0.3)
+  })
+
+  it('les grandeurs NON monétaires gardent leur arrondi propre', () => {
+    // La correction ne doit pas transformer des jours ou des cadences en argent.
+    const { plans } = planReorders([{
+      item: { id: 'p', name: 'P', currentStock: 10, unitCost: 1, minStock: 0, leadTimeDays: 7, periodDays: 30 },
+      consumption: [3, 3, 3],
+    }])
+    expect(typeof plans[0].dailyRate).toBe('number')
+    expect(plans[0].daysToStockout).not.toBeNull()
+  })
+})

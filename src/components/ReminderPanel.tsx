@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { ReminderSuggestions } from '@/components/reminders/ReminderSuggestions'
 import { X, Plus, Bell, CheckCircle2, Mail, Phone, Trash2, Loader2, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format, parseISO, isPast, isToday, isTomorrow, addDays } from 'date-fns'
@@ -10,6 +11,7 @@ import type { T } from '@/lib/i18n'
 import { dateLocale } from '@/lib/i18n/date-locale'
 import toast from 'react-hot-toast'
 import { DateField } from '@/components/DateField'
+import { useBrouillonPersistant } from '@/lib/ui/brouillon'
 
 // value canonique → clé de traduction (les valeurs stockées restent en FR)
 const TYPE_LABEL_KEYS: Record<string, keyof T> = {
@@ -79,16 +81,37 @@ function ReminderRow({ reminder, onStatusChange, onDelete, garagePhone }: {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: reminder.id }),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
+
+      // ── L'ÉTAT « envoyé » n'est posé que si un message est RÉELLEMENT parti ──
       if (data.sent) {
         toast.success(t.rmEmailSent)
         onStatusChange(reminder.id, 'sent')
-      } else if (data.reason === 'no_smtp') {
+        return
+      }
+
+      // Pas de SMTP configuré : on prépare le message dans le logiciel de
+      // messagerie du poste. Le rappel n'est PAS marqué « envoyé » — rien n'est
+      // encore parti, et personne ne peut savoir ici si l'utilisateur cliquera
+      // « Envoyer ». L'ancien code posait `sent` dès l'ouverture du brouillon :
+      // le garage lisait « Envoyé » sur un rappel que le client n'a jamais reçu.
+      // Sous l'application packagée, c'était même systématique : `mailto:`
+      // n'était pas dans les protocoles autorisés par le processus principal, le
+      // brouillon ne s'ouvrait donc jamais (GF-FINAL-024).
+      if (data.reason === 'no_smtp') {
         const sub = encodeURIComponent(data.subject ?? `${t.rmTitle} - ${typeName}`)
         const bod = encodeURIComponent(data.body ?? '')
         window.open(`mailto:${reminder.email}?subject=${sub}&body=${bod}`)
-        onStatusChange(reminder.id, 'sent')
+        toast(t.rmEmailDraftOpened, { icon: '✉️' })
+        return
       }
+
+      // Tout autre échec — SMTP refusé, adresse invalide, panne du serveur —
+      // ne produisait AUCUN retour : l'utilisateur cliquait et il ne se passait
+      // rien du tout, sans le moindre message.
+      toast.error(data.error || data.reason || t.rmEmailFailed)
+    } catch {
+      toast.error(t.rmEmailFailed)
     } finally {
       setSending(false)
     }
@@ -177,7 +200,9 @@ function ReminderRow({ reminder, onStatusChange, onDelete, garagePhone }: {
 
 function AddReminderForm({ onAdd, onCancel }: { onAdd: () => void; onCancel: () => void }) {
   const { t } = useTranslation()
-  const [form, setForm] = useState({
+  // Rappel en cours de saisie : conservé d'une page à l'autre (le comptoir est
+  // interrompu en permanence), effacé à la fermeture de la page.
+  const [form, setForm] = useBrouillonPersistant('reminders:form', {
     clientName: '', vehicleModel: '', licensePlate: '',
     phone: '', email: '', type: 'vidange',
     scheduledDate: format(addDays(new Date(), 30), 'yyyy-MM-dd'), scheduledTime: '', notes: '',
@@ -272,10 +297,18 @@ export default function ReminderPanel({ onClose }: Props) {
   const [reminders, setReminders] = useState<Reminder[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
-  const [filter, setFilter] = useState<'pending' | 'sent' | 'all'>('pending')
+  // « suggestions » n'est pas un filtre de la liste : c'est une autre source —
+  // ce que le logiciel PROPOSE, par opposition à ce que le garage a déjà décidé.
+  // Les mêler dans la même liste ferait passer une proposition pour un
+  // engagement pris.
+  const [filter, setFilter] = useState<'pending' | 'sent' | 'all' | 'suggestions'>('pending')
   const [garagePhone, setGaragePhone] = useState<string | undefined>()
 
   const fetchReminders = useCallback(async () => {
+    // L'onglet des suggestions ne lit pas la liste des rappels : interroger
+    // `/api/reminders?status=suggestions` renverrait tout, et l'onglet
+    // afficherait des rappels existants sous un titre qui promet autre chose.
+    if (filter === 'suggestions') { setLoading(false); return }
     setLoading(true)
     try {
       const res = await fetch(`/api/reminders?status=${filter}`)
@@ -316,7 +349,12 @@ export default function ReminderPanel({ onClose }: Props) {
     return r.status === 'pending' && isPast(d) && !isToday(d)
   }).length
 
-  const FILTER_LABELS = { pending: t.rmFilterTodo, sent: t.rmFilterSent, all: t.catAll }
+  const FILTER_LABELS = {
+    pending: t.rmFilterTodo,
+    sent: t.rmFilterSent,
+    all: t.catAll,
+    suggestions: 'À relancer',
+  }
 
   return (
     <div className="fixed right-0 top-0 bottom-0 w-full max-w-[480px] bg-[#0f1629] z-40 shadow-2xl shadow-black/50 flex flex-col border-l border-white/[0.07] pt-safe pb-safe pr-safe">
@@ -344,7 +382,7 @@ export default function ReminderPanel({ onClose }: Props) {
             <Plus className="w-3.5 h-3.5" />
             {t.rmNew}
           </button>
-          <button onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
+          <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -352,7 +390,7 @@ export default function ReminderPanel({ onClose }: Props) {
 
       {/* Filters */}
       <div className="flex gap-1 px-5 py-3 border-b border-white/[0.05] flex-shrink-0">
-        {(['pending', 'sent', 'all'] as const).map(f => (
+        {(['pending', 'sent', 'all', 'suggestions'] as const).map(f => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -377,7 +415,11 @@ export default function ReminderPanel({ onClose }: Props) {
         {showAdd && (
           <AddReminderForm onAdd={fetchReminders} onCancel={() => setShowAdd(false)} />
         )}
-        {loading ? (
+        {filter === 'suggestions' ? (
+          // Le rappel créé bascule dans « À faire » : on y renvoie l'utilisateur
+          // plutôt que de le laisser deviner où sa décision a atterri.
+          <ReminderSuggestions onCreated={() => setFilter('pending')} />
+        ) : loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
           </div>

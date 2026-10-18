@@ -1,0 +1,120 @@
+{
+  "ok": true,
+  "scope": "FIXTURES_ONLY; no deployed keys/runtime, DB or GUI rendering verified",
+  "steps": [
+    {
+      "name": "headless GUI diagnostic: coherent private/PEM/PWA/Electron",
+      "expected": 0,
+      "actual": 0,
+      "passed": true
+    },
+    {
+      "name": "headless diagnostic exposes no private key",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "name": "actual checked Python garage generator -> actual verify.ts (Unicode, DER)",
+      "expected": "VERIFIED",
+      "actual": "VERIFIED",
+      "passed": true
+    },
+    {
+      "name": "actual checked Python mechanic generator -> actual verify.ts",
+      "expected": "VERIFIED",
+      "actual": "VERIFIED",
+      "passed": true
+    },
+    {
+      "name": "same Python token, different verifier public key",
+      "expected": "SIGNATURE_INVALID",
+      "actual": "SIGNATURE_INVALID",
+      "passed": true
+    },
+    {
+      "name": "payload modified without re-signing",
+      "expected": "SIGNATURE_INVALID",
+      "actual": "SIGNATURE_INVALID",
+      "passed": true
+    },
+    {
+      "name": "unrecognized token format",
+      "expected": "FORMAT_INVALID",
+      "actual": "FORMAT_INVALID",
+      "passed": true
+    },
+    {
+      "name": "correct signature but expiration",
+      "expected": "EXPIRED",
+      "actual": "EXPIRED",
+      "passed": true
+    },
+    {
+      "name": "correct signature but missing exp",
+      "expected": "PAYLOAD_FIELDS_INVALID",
+      "actual": "PAYLOAD_FIELDS_INVALID",
+      "passed": true
+    },
+    {
+      "name": "correct signature but unsupported version",
+      "expected": "VERSION_UNSUPPORTED",
+      "actual": "VERSION_UNSUPPORTED",
+      "passed": true
+    },
+    {
+      "name": "algorithm substitution rejected before signature",
+      "expected": "HEADER_UNSUPPORTED",
+      "actual": "HEADER_UNSUPPORTED",
+      "passed": true
+    },
+    {
+      "name": "different Electron anchor makes GUI diagnostic fail closed",
+      "expected": 1,
+      "actual": 1,
+      "passed": true
+    },
+    {
+      "name": "same GUI key-loading boundary blocks minting on divergence",
+      "expected": 1,
+      "actual": 1,
+      "passed": true
+    },
+    {
+      "name": "no token emitted on divergence",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "name": "no license database written",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "name": "operator target PEM mismatch cannot be overridden by matching local anchors",
+      "expected": 1,
+      "actual": 1,
+      "passed": true
+    },
+    {
+      "name": "missing local PEM fails closed",
+      "expected": 1,
+      "actual": 1,
+      "passed": true
+    },
+    {
+      "name": "encrypted private PEM loads only with the fixture passphrase",
+      "expected": "KEY_MATCH",
+      "actual": "KEY_MATCH",
+      "passed": true
+    },
+    {
+      "name": "wrong signing curve rejected",
+      "expected": "P256_REQUIRED",
+      "actual": "P256_REQUIRED",
+      "passed": true
+    }
+  ]
+}

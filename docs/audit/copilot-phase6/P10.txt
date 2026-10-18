@@ -1,0 +1,60 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /home/user/GarageFlowsV2
+
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > token NextAuth invalide (getToken lève) → traité comme non connecté, pas de 500
+[middleware] getToken a échoué
+
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > absence de NEXTAUTH_SECRET → getToken lève → fail-closed vers /login, pas de 500
+[middleware] getToken a échoué
+
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > absence de NEXTAUTH_SECRET → vérification gf_session échoue (getAuthSecret lève) → /license
+[middleware] échec vérification gf_session INATTENDU
+
+stderr | src/__tests__/middleware.test.ts > sécurité — fail-closed > charge utile gf_session sans typ/lid → rejetée → /license
+[middleware] gf_session rejeté (charge utile invalide)
+
+ ✓ src/__tests__/middleware.test.ts (47 tests) 52ms
+ ✓ src/lib/copilot/__tests__/semantic.test.ts (40 tests) 95ms
+ ✓ src/lib/copilot-llm/__tests__/provider.test.ts (15 tests) 53ms
+ ✓ src/lib/copilot/__tests__/planning-execution.test.ts (44 tests) 82ms
+ ✓ src/lib/copilot/__tests__/phase3-security.test.ts (18 tests) 46ms
+ ✓ src/lib/copilot-llm/__tests__/planning-provider.test.ts (6 tests) 37ms
+ ✓ src/lib/copilot/__tests__/conversation.test.ts (26 tests) 34ms
+ ✓ src/lib/copilot-llm/__tests__/copilot-llm.test.ts (25 tests) 21ms
+ ✓ src/lib/copilot/__tests__/copilot-chaine-complete.test.ts (16 tests) 16ms
+ ✓ src/lib/copilot/__tests__/copilot.test.ts (12 tests) 21ms
+ ❯ src/lib/copilot-llm/__tests__/paid-block.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/lib/copilot-llm/__tests__/paid-block.test.ts [ src/lib/copilot-llm/__tests__/paid-block.test.ts ]
+Error: Transform failed with 1 error:
+
+[PARSE_ERROR] Expected a semicolon or an implicit semicolon after a statement, but found none
+    ╭─[ src/lib/copilot-llm/__tests__/paid-block.test.ts:34:4 ]
+    │
+ 34 │  }) it('rejects an explicitly supplied transport outside the test runtime',async()=>{
+    │    │
+    │    ╰─
+    │
+    │ Help: Try inserting a semicolon here
+────╯
+
+  Plugin: vite:oxc
+  File: /home/user/GarageFlowsV2/src/lib/copilot-llm/__tests__/paid-block.test.ts
+ ❯ transformWithOxc node_modules/vite/dist/node/chunks/node.js:7581:19
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/node.js:7653:26
+ ❯ EnvironmentPluginContainer.transform node_modules/vite/dist/node/chunks/node.js:8545:51
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/node.js:20184:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 10 passed (11)
+      Tests  249 passed (249)
+   Start at  14:28:39
+   Duration  3.51s (transform 395ms, setup 0ms, import 1.44s, tests 456ms, environment 1ms)
+

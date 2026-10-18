@@ -1,0 +1,29 @@
+{
+  "observedUtc": "2026-10-18T13:36:56.185Z",
+  "repository": "supremperf/GarageFlowsV2",
+  "defaultBranch": "main",
+  "defaultCommit": "e3ac5f5a55284906531dcc5d4a620cb0ff072313",
+  "lastPushNotice": {
+    "total": 151,
+    "critical": 2,
+    "high": 63,
+    "moderate": 71,
+    "low": 15,
+    "source": "GitHub receive-pack warning on preceding push; not an enumerated alert export"
+  },
+  "rest": {
+    "command": "gh api --paginate repos/supremperf/GarageFlowsV2/dependabot/alerts?state=open&per_page=100",
+    "exitCode": 1,
+    "httpStatus": 403,
+    "error": "Resource not accessible by integration",
+    "alertsEnumerated": false
+  },
+  "graphql": {
+    "totalCount": 0,
+    "nodes": [],
+    "status": "INCONCLUSIVE_CONTRADICTORY_WITH_REST_AND_RECEIVE_PACK",
+    "doNotTreatAsVerifiedZero": true
+  },
+  "github151InventoryComplete": false,
+  "requiredAction": "Restore Dependabot alerts read permission in the Arena GitHub connection, or provide a non-secret GitHub alert JSON export. Never request a token/password."
+}

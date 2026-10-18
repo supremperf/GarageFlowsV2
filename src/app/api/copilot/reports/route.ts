@@ -9,12 +9,17 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can } from '@/lib/authz'
 import { collectGarageWindows, normalizePeriod } from '@/lib/analytics/collect'
 import { computeMetrics } from '@/lib/analytics/metrics'
 import { buildCopilotReport } from '@/lib/analytics/insights'
 
 export const GET = withAuth(async () => {
   const session = await requireSession()
+  // Historique de rapports financiers (score, CA, marge) → financial:read requis.
+  if (!can(session.user.role, 'financial:read')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const reports = await prisma.reportSnapshot.findMany({
     where: { garageId: session.user.garageId },
     orderBy: { createdAt: 'desc' },
@@ -26,6 +31,9 @@ export const GET = withAuth(async () => {
 
 export const POST = withAuth(async (req) => {
   const session = await requireSession()
+  if (!can(session.user.role, 'financial:read')) {
+    return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+  }
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>
   const period = normalizePeriod(body.period ?? 30)
 

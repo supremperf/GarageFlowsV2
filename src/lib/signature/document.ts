@@ -4,24 +4,37 @@
  * updatedAt, internal flags) can change without breaking the seal.
  */
 import type { SignableEntityType } from './types'
+import { fromScaled, fromCents } from '@/lib/money'
 
 interface Line {
   description: string
-  quantity: number
-  unitPrice: number
+  // Vue euros (historique) OU entiers exacts (stockage actuel) — les deux formes
+  // sont acceptées et produisent le MÊME document canonique en euros.
+  quantity?: number
+  unitPrice?: number
   unitCost?: number
+  quantityTenThousandths?: number
+  unitPriceTenThousandths?: number
+  unitCostTenThousandths?: number
   isLabor?: boolean
   sortOrder?: number
 }
 
+/**
+ * IMPORTANT (compatibilité des signatures) : le document canonique est TOUJOURS
+ * exprimé en EUROS (nombres), comme historiquement. La dérivation
+ * `scaled/10000` est une division IEEE correctement arrondie → elle redonne
+ * EXACTEMENT le même double que la valeur euro d'origine, donc le hachage des
+ * documents déjà signés reste identique.
+ */
 function mapLines(lines: unknown): Array<Record<string, unknown>> {
   if (!Array.isArray(lines)) return []
   return (lines as Line[])
     .map((l) => ({
       description: l.description,
-      quantity: l.quantity,
-      unitPrice: l.unitPrice,
-      unitCost: l.unitCost ?? 0,
+      quantity: l.quantity ?? fromScaled(l.quantityTenThousandths ?? 0),
+      unitPrice: l.unitPrice ?? fromScaled(l.unitPriceTenThousandths ?? 0),
+      unitCost: l.unitCost ?? fromScaled(l.unitCostTenThousandths ?? 0),
       isLabor: l.isLabor ?? false,
       sortOrder: l.sortOrder ?? 0,
     }))
@@ -80,8 +93,10 @@ export function buildSignableDocument(
         worksJson: entity.worksJson ?? '[]',
         partsJson: entity.partsJson ?? '[]',
         taxRate: entity.taxRate,
-        totalHT: entity.totalHT,
-        totalTTC: entity.totalTTC,
+        // Euros canoniques, dérivés des CENTIMES stockés (mêmes doubles
+        // qu'historiquement → hachages des documents signés inchangés).
+        totalHT: entity.totalHT ?? fromCents((entity.totalHtCents as number) ?? 0),
+        totalTTC: entity.totalTTC ?? fromCents((entity.totalTtcCents as number) ?? 0),
       }
     default:
       return { type: entityType }

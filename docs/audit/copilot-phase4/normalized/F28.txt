@@ -1,0 +1,40 @@
+
+> garageflow@1.1.0 check:docs
+> node scripts/check-docs-consistency.mjs
+
+✅ Cohérence docs : source canonique unique, comptes & statuts cohérents (190 .md scannés).
+✅ Contrat d'environnement : 121 variables canoniques, 8 alias interdits absents du code actif, 48 variables plateforme, 1015 fichiers balayés.
+TAP version 13
+# Subtest: budget manifest refuses unbounded/missing/extra/increased output fields
+ok 1 - budget manifest refuses unbounded/missing/extra/increased output fields
+  ---
+  duration_ms: 4.58623
+  type: 'test'
+  ...
+# Subtest: reserves the worst cost before dispatch, no automatic replenishment
+ok 2 - reserves the worst cost before dispatch, no automatic replenishment
+  ---
+  duration_ms: 0.317357
+  type: 'test'
+  ...
+# Subtest: cost or input limit blocks before consuming any call
+ok 3 - cost or input limit blocks before consuming any call
+  ---
+  duration_ms: 0.235728
+  type: 'test'
+  ...
+# Subtest: empty latency samples stay null, not synthetic zeros
+ok 4 - empty latency samples stay null, not synthetic zeros
+  ---
+  duration_ms: 0.665252
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 121.63321

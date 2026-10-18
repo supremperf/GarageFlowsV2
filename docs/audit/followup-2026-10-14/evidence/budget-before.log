@@ -1,0 +1,10 @@
+Budget de performance — mesure du bundle client :
+  Total JS client : 3.46 MiB (budget 3.46 MiB)
+  Plus gros chunk : 322.3 KiB — .next/static/chunks/164f4fb6.f11ea67e0ec94950.js (budget 512.0 KiB)
+  Fichiers .js scannés : 237
+
+❌ Budget de performance dépassé :
+   • Total JS client 3.46 MiB (3632537 octets) > budget 3.46 MiB (3625984 octets), dépassement 6553 octets
+
+   → Réduisez le JS (imports dynamiques, code-splitting, dépendances plus légères)
+     ou relevez explicitement le budget dans perf-budget.json (décision assumée).

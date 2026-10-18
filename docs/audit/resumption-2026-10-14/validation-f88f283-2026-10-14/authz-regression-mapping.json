@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-14T17:12:11.612473+00:00",
+  "historicalBefore": "../closure-2026-10-14/evidence/authz-before.json",
+  "currentAfter": "evidence/authz.json",
+  "historicalFailedNames": [
+    "authz \u2014 deny by default can refuse le r\u00f4le h\u00e9rit\u00e9 __proto__ sans exception",
+    "authz \u2014 deny by default can refuse le r\u00f4le h\u00e9rit\u00e9 constructor sans exception",
+    "authz \u2014 deny by default can refuse le r\u00f4le h\u00e9rit\u00e9 toString sans exception",
+    "authz \u2014 deny by default can refuse le r\u00f4le h\u00e9rit\u00e9 valueOf sans exception",
+    "authz \u2014 deny by default can refuse le r\u00f4le h\u00e9rit\u00e9 hasOwnProperty sans exception",
+    "authz \u2014 deny by default can refuse le r\u00f4le h\u00e9rit\u00e9 __defineGetter__ sans exception",
+    "authz \u2014 deny by default permissionsOf refuse le r\u00f4le h\u00e9rit\u00e9 __proto__ sans exception",
+    "authz \u2014 deny by default permissionsOf refuse le r\u00f4le h\u00e9rit\u00e9 constructor sans exception",
+    "authz \u2014 deny by default permissionsOf refuse le r\u00f4le h\u00e9rit\u00e9 toString sans exception",
+    "authz \u2014 deny by default permissionsOf refuse le r\u00f4le h\u00e9rit\u00e9 valueOf sans exception",
+    "authz \u2014 deny by default permissionsOf refuse le r\u00f4le h\u00e9rit\u00e9 hasOwnProperty sans exception",
+    "authz \u2014 deny by default permissionsOf refuse le r\u00f4le h\u00e9rit\u00e9 __defineGetter__ sans exception"
+  ],
+  "allTwelveNowPassed": true,
+  "currentTargetedPassed": 205,
+  "limits": "Historical failures not rerun by downgrading source; exact case names matched to new execution. No grants widened."
+}

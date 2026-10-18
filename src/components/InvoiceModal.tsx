@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from '@/lib/i18n'
 import { X, Printer, FileText, Receipt, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { computeTotals, multiplyCents, toCents, fromCents } from '@/lib/money'
+import { computeTotals, fromCents, lineCents } from '@/lib/money'
+import { renderElementToA4Pdf } from '@/lib/pdf/render-a4'
 
 interface Job {
   id: string
@@ -105,8 +106,15 @@ export default function InvoiceModal({ job, mode, onClose }: Props) {
   const laborLine  = { quantity: laborHours, unitPrice: garage.hourlyRate }
   const partLines  = parts.map(p => ({ quantity: p.quantity, unitPrice: p.unitPrice }))
   const totals     = computeTotals([laborLine, ...partLines], garage.taxRate)
-  const laborHT    = fromCents(multiplyCents(toCents(garage.hourlyRate), laborHours))
-  const partsHT    = fromCents(partLines.reduce((c, l) => c + multiplyCents(toCents(l.unitPrice), l.quantity), 0))
+  // ── Le total de la ligne MO suit la formule du sous-total (GF-036) ────────
+  // `multiplyCents(toCents(taux), heures)` arrondit le taux AVANT de
+  // multiplier, alors que `computeTotals` — donc le sous-total imprimé juste
+  // en dessous — passe par `lineCents`. Le taux horaire admettant quatre
+  // décimales (colonne en dix-millièmes), les deux divergeaient : à 62,5050 €/h
+  // sur 1 h 45, la ligne affichait 109,39 € et le sous-total comptait 109,38 €.
+  // Une facture dont les lignes ne s'additionnent pas au sous-total est une
+  // facture qu'un client conteste.
+  const laborHT    = fromCents(lineCents(garage.hourlyRate, laborHours))
   const totalHT    = totals.totalHT
   const tva        = totals.taxAmount
   const totalTTC   = totals.totalTTC
@@ -115,22 +123,19 @@ export default function InvoiceModal({ job, mode, onClose }: Props) {
   const issueDate = new Date().toLocaleDateString('fr-FR')
   const jobDate = new Date(job.date).toLocaleDateString('fr-FR')
 
+  /**
+   * Export PDF via le rendu A4 mutualisé.
+   *
+   * L'ancien code posait l'image en `Math.min(imgH, pageH - 20)` : dès que le
+   * document dépassait une page, il était ÉCRASÉ en entier sur une seule page
+   * au lieu d'être paginé. `renderElementToA4Pdf` découpe en bandes à l'échelle
+   * exacte.
+   */
   async function handleDownloadPDF() {
     try {
       const el = document.getElementById('invoice-content')
       if (!el) return
-      const { default: html2canvas } = await import('html2canvas')
-      const { default: jsPDF } = await import('jspdf')
-      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' })
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const pageW = pdf.internal.pageSize.getWidth()
-      const pageH = pdf.internal.pageSize.getHeight()
-      const imgW = pageW - 20
-      const imgH = (canvas.height * imgW) / canvas.width
-      const yOffset = imgH > pageH - 20 ? 10 : (pageH - imgH) / 2
-      pdf.addImage(imgData, 'PNG', 10, yOffset > 10 ? 10 : yOffset, imgW, Math.min(imgH, pageH - 20))
-      pdf.save(`${docNumber}.pdf`)
+      await renderElementToA4Pdf(el, { fileName: docNumber })
     } catch (err) {
       console.error('PDF generation failed', err)
     }
@@ -176,7 +181,7 @@ export default function InvoiceModal({ job, mode, onClose }: Props) {
                 <Printer className="w-4 h-4" />
                 {t.print}
               </button>
-              <button onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-gray-100 text-gray-400">
+              <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 rounded-lg hover:bg-gray-100 text-gray-400">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -266,7 +271,7 @@ export default function InvoiceModal({ job, mode, onClose }: Props) {
                       </td>
                       <td className="px-3 py-3 text-center text-gray-600">{p.quantity}</td>
                       <td className="px-3 py-3 text-right text-gray-600">{fmt(p.unitPrice, currency)}</td>
-                      <td className="px-4 py-3 text-right font-semibold">{fmt(p.unitPrice * p.quantity, currency)}</td>
+                      <td className="px-4 py-3 text-right font-semibold">{fmt(fromCents(lineCents(p.unitPrice, p.quantity)), currency)}</td>
                     </tr>
                   ))}
                 </tbody>

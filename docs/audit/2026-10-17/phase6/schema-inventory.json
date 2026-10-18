@@ -1,0 +1,6526 @@
+{
+  "prisma/schema.prisma": [
+    {
+      "model": "Garage",
+      "line": 24,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "slug",
+          "type": "String"
+        },
+        {
+          "name": "plan",
+          "type": "String"
+        },
+        {
+          "name": "hourlyRateTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "workshopStartHour",
+          "type": "Int"
+        },
+        {
+          "name": "workshopEndHour",
+          "type": "Int"
+        },
+        {
+          "name": "workshopStartMinute",
+          "type": "Int"
+        },
+        {
+          "name": "workshopEndMinute",
+          "type": "Int"
+        },
+        {
+          "name": "address",
+          "type": "String?"
+        },
+        {
+          "name": "phone",
+          "type": "String?"
+        },
+        {
+          "name": "email",
+          "type": "String?"
+        },
+        {
+          "name": "website",
+          "type": "String?"
+        },
+        {
+          "name": "logoBase64",
+          "type": "String?"
+        },
+        {
+          "name": "logoPath",
+          "type": "String?"
+        },
+        {
+          "name": "siret",
+          "type": "String?"
+        },
+        {
+          "name": "vatNumber",
+          "type": "String?"
+        },
+        {
+          "name": "taxRate",
+          "type": "Float"
+        },
+        {
+          "name": "iban",
+          "type": "String?"
+        },
+        {
+          "name": "bic",
+          "type": "String?"
+        },
+        {
+          "name": "bankName",
+          "type": "String?"
+        },
+        {
+          "name": "currency",
+          "type": "String"
+        },
+        {
+          "name": "paymentTerms",
+          "type": "String?"
+        },
+        {
+          "name": "invoicePrefix",
+          "type": "String"
+        },
+        {
+          "name": "invoiceCounter",
+          "type": "Int"
+        },
+        {
+          "name": "quotePrefix",
+          "type": "String"
+        },
+        {
+          "name": "quoteCounter",
+          "type": "Int"
+        },
+        {
+          "name": "invoiceFooter",
+          "type": "String?"
+        },
+        {
+          "name": "language",
+          "type": "String"
+        },
+        {
+          "name": "onboardingComplete",
+          "type": "Boolean"
+        },
+        {
+          "name": "smsPhone",
+          "type": "String?"
+        },
+        {
+          "name": "workOrderPrefix",
+          "type": "String"
+        },
+        {
+          "name": "workOrderCounter",
+          "type": "Int"
+        },
+        {
+          "name": "warrantyMonthsDefault",
+          "type": "Int"
+        },
+        {
+          "name": "loanerEnabled",
+          "type": "Boolean"
+        },
+        {
+          "name": "smartReminderMonths",
+          "type": "Int"
+        },
+        {
+          "name": "purchaseOrderPrefix",
+          "type": "String"
+        },
+        {
+          "name": "purchaseOrderCounter",
+          "type": "Int"
+        },
+        {
+          "name": "smtpHost",
+          "type": "String?"
+        },
+        {
+          "name": "smtpPort",
+          "type": "Int?"
+        },
+        {
+          "name": "smtpUser",
+          "type": "String?"
+        },
+        {
+          "name": "smtpPass",
+          "type": "String?"
+        },
+        {
+          "name": "smtpFrom",
+          "type": "String?"
+        },
+        {
+          "name": "smtpSecure",
+          "type": "Boolean"
+        },
+        {
+          "name": "users",
+          "type": "User[]"
+        },
+        {
+          "name": "mechanics",
+          "type": "Mechanic[]"
+        },
+        {
+          "name": "jobs",
+          "type": "Job[]"
+        },
+        {
+          "name": "clients",
+          "type": "Client[]"
+        },
+        {
+          "name": "vehicles",
+          "type": "Vehicle[]"
+        },
+        {
+          "name": "parts",
+          "type": "Part[]"
+        },
+        {
+          "name": "repairTypeParts",
+          "type": "RepairTypePart[]"
+        },
+        {
+          "name": "reminders",
+          "type": "Reminder[]"
+        },
+        {
+          "name": "quotes",
+          "type": "Quote[]"
+        },
+        {
+          "name": "invoices",
+          "type": "Invoice[]"
+        },
+        {
+          "name": "inspections",
+          "type": "Inspection[]"
+        },
+        {
+          "name": "workOrders",
+          "type": "WorkOrder[]"
+        },
+        {
+          "name": "laborOperations",
+          "type": "LaborOperation[]"
+        },
+        {
+          "name": "warranties",
+          "type": "Warranty[]"
+        },
+        {
+          "name": "loanerVehicles",
+          "type": "LoanerVehicle[]"
+        },
+        {
+          "name": "loanerReservations",
+          "type": "LoanerReservation[]"
+        },
+        {
+          "name": "purchaseOrders",
+          "type": "PurchaseOrder[]"
+        },
+        {
+          "name": "licenses",
+          "type": "LicenseKey[]"
+        },
+        {
+          "name": "mechanicLicenseAssignments",
+          "type": "MechanicLicenseAssignment[]"
+        },
+        {
+          "name": "jobMechanicNotes",
+          "type": "JobMechanicNote[]"
+        },
+        {
+          "name": "mechanicActionAudits",
+          "type": "MechanicActionAudit[]"
+        },
+        {
+          "name": "vinSearches",
+          "type": "VinSearch[]"
+        },
+        {
+          "name": "signatures",
+          "type": "Signature[]"
+        },
+        {
+          "name": "notificationLogs",
+          "type": "NotificationLog[]"
+        },
+        {
+          "name": "portalUsers",
+          "type": "PortalUser[]"
+        },
+        {
+          "name": "portalTickets",
+          "type": "PortalTicket[]"
+        },
+        {
+          "name": "appointments",
+          "type": "Appointment[]"
+        },
+        {
+          "name": "backupRecords",
+          "type": "BackupRecord[]"
+        },
+        {
+          "name": "reportSnapshots",
+          "type": "ReportSnapshot[]"
+        },
+        {
+          "name": "stockMovements",
+          "type": "StockMovement[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "User",
+      "line": 133,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "email",
+          "type": "String"
+        },
+        {
+          "name": "password",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "role",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "assignedLicenses",
+          "type": "LicenseKey[]"
+        },
+        {
+          "name": "mechanicLicenseAssignments",
+          "type": "MechanicLicenseAssignment[]"
+        },
+        {
+          "name": "mechanicActionAudits",
+          "type": "MechanicActionAudit[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Mechanic",
+      "line": 149,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "avatar",
+          "type": "String"
+        },
+        {
+          "name": "avatarPath",
+          "type": "String?"
+        },
+        {
+          "name": "avatarMime",
+          "type": "String?"
+        },
+        {
+          "name": "avatarHash",
+          "type": "String?"
+        },
+        {
+          "name": "avatarUpdatedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "archivedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "color",
+          "type": "String"
+        },
+        {
+          "name": "isAbsent",
+          "type": "Boolean"
+        },
+        {
+          "name": "specialty",
+          "type": "String"
+        },
+        {
+          "name": "order",
+          "type": "Int"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "jobs",
+          "type": "Job[]"
+        },
+        {
+          "name": "workOrders",
+          "type": "WorkOrder[]"
+        },
+        {
+          "name": "assignedLicenses",
+          "type": "LicenseKey[]"
+        },
+        {
+          "name": "licenseAssignments",
+          "type": "MechanicLicenseAssignment[]"
+        },
+        {
+          "name": "prevLicenseAssignments",
+          "type": "MechanicLicenseAssignment[]"
+        },
+        {
+          "name": "jobNotes",
+          "type": "JobMechanicNote[]"
+        },
+        {
+          "name": "actionAudits",
+          "type": "MechanicActionAudit[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Client",
+      "line": 189,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "phone",
+          "type": "String?"
+        },
+        {
+          "name": "email",
+          "type": "String?"
+        },
+        {
+          "name": "address",
+          "type": "String?"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "vehicles",
+          "type": "Vehicle[]"
+        },
+        {
+          "name": "reminders",
+          "type": "Reminder[]"
+        },
+        {
+          "name": "quotes",
+          "type": "Quote[]"
+        },
+        {
+          "name": "invoices",
+          "type": "Invoice[]"
+        },
+        {
+          "name": "portalUsers",
+          "type": "PortalUser[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Vehicle",
+      "line": 210,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String"
+        },
+        {
+          "name": "vin",
+          "type": "String?"
+        },
+        {
+          "name": "make",
+          "type": "String"
+        },
+        {
+          "name": "model",
+          "type": "String"
+        },
+        {
+          "name": "year",
+          "type": "Int?"
+        },
+        {
+          "name": "mileage",
+          "type": "Int?"
+        },
+        {
+          "name": "color",
+          "type": "String?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "ctDate",
+          "type": "String?"
+        },
+        {
+          "name": "clientId",
+          "type": "String"
+        },
+        {
+          "name": "client",
+          "type": "Client"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "jobs",
+          "type": "Job[]"
+        },
+        {
+          "name": "reminders",
+          "type": "Reminder[]"
+        },
+        {
+          "name": "quotes",
+          "type": "Quote[]"
+        },
+        {
+          "name": "invoices",
+          "type": "Invoice[]"
+        },
+        {
+          "name": "inspections",
+          "type": "Inspection[]"
+        },
+        {
+          "name": "warranties",
+          "type": "Warranty[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Part",
+      "line": 241,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "reference",
+          "type": "String?"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "description",
+          "type": "String?"
+        },
+        {
+          "name": "quantity",
+          "type": "Int"
+        },
+        {
+          "name": "minQuantity",
+          "type": "Int"
+        },
+        {
+          "name": "unitCostTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "location",
+          "type": "String?"
+        },
+        {
+          "name": "supplierName",
+          "type": "String?"
+        },
+        {
+          "name": "supplierRef",
+          "type": "String?"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "jobParts",
+          "type": "JobPart[]"
+        },
+        {
+          "name": "defaultFor",
+          "type": "RepairTypePart[]"
+        },
+        {
+          "name": "invoiceLines",
+          "type": "InvoiceLine[]"
+        },
+        {
+          "name": "quoteLines",
+          "type": "QuoteLine[]"
+        },
+        {
+          "name": "movements",
+          "type": "StockMovement[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "JobPart",
+      "line": 272,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "jobId",
+          "type": "String"
+        },
+        {
+          "name": "job",
+          "type": "Job"
+        },
+        {
+          "name": "partId",
+          "type": "String"
+        },
+        {
+          "name": "part",
+          "type": "Part"
+        },
+        {
+          "name": "quantity",
+          "type": "Int"
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "unitCostTenThousandths",
+          "type": "Int"
+        }
+      ]
+    },
+    {
+      "model": "RepairTypePart",
+      "line": 287,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "repairType",
+          "type": "String"
+        },
+        {
+          "name": "partId",
+          "type": "String"
+        },
+        {
+          "name": "part",
+          "type": "Part"
+        },
+        {
+          "name": "defaultQty",
+          "type": "Int"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        }
+      ]
+    },
+    {
+      "model": "Job",
+      "line": 300,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "customerName",
+          "type": "String"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "repairType",
+          "type": "String"
+        },
+        {
+          "name": "estimatedDuration",
+          "type": "Int"
+        },
+        {
+          "name": "actualDuration",
+          "type": "Int?"
+        },
+        {
+          "name": "startTime",
+          "type": "String"
+        },
+        {
+          "name": "date",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "isUrgent",
+          "type": "Boolean"
+        },
+        {
+          "name": "delayMinutes",
+          "type": "Int?"
+        },
+        {
+          "name": "mileageAtVisit",
+          "type": "Int?"
+        },
+        {
+          "name": "timerStartedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "timerAccumulatedSec",
+          "type": "Int"
+        },
+        {
+          "name": "mechanicId",
+          "type": "String"
+        },
+        {
+          "name": "mechanic",
+          "type": "Mechanic"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicle",
+          "type": "Vehicle?"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "jobParts",
+          "type": "JobPart[]"
+        },
+        {
+          "name": "photos",
+          "type": "JobPhoto[]"
+        },
+        {
+          "name": "quotes",
+          "type": "Quote[]"
+        },
+        {
+          "name": "invoices",
+          "type": "Invoice[]"
+        },
+        {
+          "name": "inspections",
+          "type": "Inspection[]"
+        },
+        {
+          "name": "workOrder",
+          "type": "WorkOrder?"
+        },
+        {
+          "name": "warranties",
+          "type": "Warranty[]"
+        },
+        {
+          "name": "loanerReservations",
+          "type": "LoanerReservation[]"
+        },
+        {
+          "name": "mechanicNotes",
+          "type": "JobMechanicNote[]"
+        },
+        {
+          "name": "mechanicActionAudits",
+          "type": "MechanicActionAudit[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Quote",
+      "line": 344,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "number",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "clientId",
+          "type": "String?"
+        },
+        {
+          "name": "client",
+          "type": "Client?"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicle",
+          "type": "Vehicle?"
+        },
+        {
+          "name": "jobId",
+          "type": "String?"
+        },
+        {
+          "name": "job",
+          "type": "Job?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "clientEmail",
+          "type": "String?"
+        },
+        {
+          "name": "clientPhone",
+          "type": "String?"
+        },
+        {
+          "name": "clientAddress",
+          "type": "String?"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String?"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "issueDate",
+          "type": "String"
+        },
+        {
+          "name": "validUntil",
+          "type": "String?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "taxRate",
+          "type": "Float"
+        },
+        {
+          "name": "invoiceId",
+          "type": "String?"
+        },
+        {
+          "name": "lines",
+          "type": "QuoteLine[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "QuoteLine",
+      "line": 380,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "quoteId",
+          "type": "String"
+        },
+        {
+          "name": "quote",
+          "type": "Quote"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "name": "quantityTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "unitCostTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "isLabor",
+          "type": "Boolean"
+        },
+        {
+          "name": "sortOrder",
+          "type": "Int"
+        },
+        {
+          "name": "partId",
+          "type": "String?"
+        },
+        {
+          "name": "part",
+          "type": "Part?"
+        }
+      ]
+    },
+    {
+      "model": "Invoice",
+      "line": 401,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "number",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "clientId",
+          "type": "String?"
+        },
+        {
+          "name": "client",
+          "type": "Client?"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicle",
+          "type": "Vehicle?"
+        },
+        {
+          "name": "jobId",
+          "type": "String?"
+        },
+        {
+          "name": "job",
+          "type": "Job?"
+        },
+        {
+          "name": "quoteId",
+          "type": "String?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "clientEmail",
+          "type": "String?"
+        },
+        {
+          "name": "clientPhone",
+          "type": "String?"
+        },
+        {
+          "name": "clientAddress",
+          "type": "String?"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String?"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "issueDate",
+          "type": "String"
+        },
+        {
+          "name": "dueDate",
+          "type": "String?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "taxRate",
+          "type": "Float"
+        },
+        {
+          "name": "lines",
+          "type": "InvoiceLine[]"
+        },
+        {
+          "name": "stockCommittedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "stockMovements",
+          "type": "StockMovement[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "InvoiceLine",
+      "line": 444,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "invoiceId",
+          "type": "String"
+        },
+        {
+          "name": "invoice",
+          "type": "Invoice"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "name": "quantityTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "unitCostTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "isLabor",
+          "type": "Boolean"
+        },
+        {
+          "name": "sortOrder",
+          "type": "Int"
+        },
+        {
+          "name": "partId",
+          "type": "String?"
+        },
+        {
+          "name": "part",
+          "type": "Part?"
+        }
+      ]
+    },
+    {
+      "model": "JobTombstone",
+      "line": 486,
+      "fields": [
+        {
+          "name": "jobId",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "deletedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "StockMovement",
+      "line": 494,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "partId",
+          "type": "String"
+        },
+        {
+          "name": "part",
+          "type": "Part"
+        },
+        {
+          "name": "type",
+          "type": "String"
+        },
+        {
+          "name": "quantityDelta",
+          "type": "Int"
+        },
+        {
+          "name": "invoiceId",
+          "type": "String?"
+        },
+        {
+          "name": "invoice",
+          "type": "Invoice?"
+        },
+        {
+          "name": "invoiceLineId",
+          "type": "String?"
+        },
+        {
+          "name": "reason",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "JobPhoto",
+      "line": 516,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "jobId",
+          "type": "String"
+        },
+        {
+          "name": "job",
+          "type": "Job"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "phase",
+          "type": "String"
+        },
+        {
+          "name": "caption",
+          "type": "String?"
+        },
+        {
+          "name": "base64",
+          "type": "String"
+        },
+        {
+          "name": "photoPath",
+          "type": "String?"
+        },
+        {
+          "name": "mechanicId",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Inspection",
+      "line": 532,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "jobId",
+          "type": "String?"
+        },
+        {
+          "name": "job",
+          "type": "Job?"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicle",
+          "type": "Vehicle?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String?"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "mileage",
+          "type": "Int?"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "items",
+          "type": "InspectionItem[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "InspectionItem",
+      "line": 551,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "inspectionId",
+          "type": "String"
+        },
+        {
+          "name": "inspection",
+          "type": "Inspection"
+        },
+        {
+          "name": "category",
+          "type": "String"
+        },
+        {
+          "name": "label",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "photoBase64",
+          "type": "String?"
+        },
+        {
+          "name": "photoPath",
+          "type": "String?"
+        },
+        {
+          "name": "sortOrder",
+          "type": "Int"
+        }
+      ]
+    },
+    {
+      "model": "LicenseKey",
+      "line": 566,
+      "fields": [
+        {
+          "name": "id",
+          "type": "Int"
+        },
+        {
+          "name": "licenseId",
+          "type": "String"
+        },
+        {
+          "name": "token",
+          "type": "String"
+        },
+        {
+          "name": "customerId",
+          "type": "String"
+        },
+        {
+          "name": "licenseType",
+          "type": "String"
+        },
+        {
+          "name": "expiryAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "isAdmin",
+          "type": "Boolean"
+        },
+        {
+          "name": "seats",
+          "type": "Int"
+        },
+        {
+          "name": "hwid",
+          "type": "String?"
+        },
+        {
+          "name": "label",
+          "type": "String?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "recordMac",
+          "type": "String?"
+        },
+        {
+          "name": "activatedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "revokedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "lastSeenAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "garageId",
+          "type": "String?"
+        },
+        {
+          "name": "garage",
+          "type": "Garage?"
+        },
+        {
+          "name": "parentLicenseId",
+          "type": "String?"
+        },
+        {
+          "name": "parentLicense",
+          "type": "LicenseKey?"
+        },
+        {
+          "name": "childLicenses",
+          "type": "LicenseKey[]"
+        },
+        {
+          "name": "mechanicId",
+          "type": "String?"
+        },
+        {
+          "name": "mechanic",
+          "type": "Mechanic?"
+        },
+        {
+          "name": "mechanicHint",
+          "type": "String?"
+        },
+        {
+          "name": "assignedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "assignedBy",
+          "type": "String?"
+        },
+        {
+          "name": "assignedByUser",
+          "type": "User?"
+        },
+        {
+          "name": "suspendedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "cloudSyncedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "devices",
+          "type": "LicenseDevice[]"
+        },
+        {
+          "name": "mechanicLicenseAssignments",
+          "type": "MechanicLicenseAssignment[]"
+        },
+        {
+          "name": "jobMechanicNotes",
+          "type": "JobMechanicNote[]"
+        },
+        {
+          "name": "actionAudits",
+          "type": "MechanicActionAudit[]"
+        }
+      ]
+    },
+    {
+      "model": "MechanicLicenseAssignment",
+      "line": 629,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "licenseId",
+          "type": "String?"
+        },
+        {
+          "name": "license",
+          "type": "LicenseKey?"
+        },
+        {
+          "name": "mechanicId",
+          "type": "String?"
+        },
+        {
+          "name": "mechanic",
+          "type": "Mechanic?"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "assignedAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "assignedBy",
+          "type": "String?"
+        },
+        {
+          "name": "assignedByUser",
+          "type": "User?"
+        },
+        {
+          "name": "unassignedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "previousMechanicId",
+          "type": "String?"
+        },
+        {
+          "name": "previousMechanic",
+          "type": "Mechanic?"
+        }
+      ]
+    },
+    {
+      "model": "JobMechanicNote",
+      "line": 652,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "jobId",
+          "type": "String"
+        },
+        {
+          "name": "job",
+          "type": "Job"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "mechanicId",
+          "type": "String?"
+        },
+        {
+          "name": "mechanic",
+          "type": "Mechanic?"
+        },
+        {
+          "name": "licenseId",
+          "type": "String?"
+        },
+        {
+          "name": "license",
+          "type": "LicenseKey?"
+        },
+        {
+          "name": "type",
+          "type": "String"
+        },
+        {
+          "name": "body",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "MechanicActionAudit",
+      "line": 679,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "actorUserId",
+          "type": "String?"
+        },
+        {
+          "name": "actorUser",
+          "type": "User?"
+        },
+        {
+          "name": "actorRole",
+          "type": "String?"
+        },
+        {
+          "name": "targetMechanicId",
+          "type": "String?"
+        },
+        {
+          "name": "targetMechanic",
+          "type": "Mechanic?"
+        },
+        {
+          "name": "licenseId",
+          "type": "String?"
+        },
+        {
+          "name": "license",
+          "type": "LicenseKey?"
+        },
+        {
+          "name": "jobId",
+          "type": "String?"
+        },
+        {
+          "name": "job",
+          "type": "Job?"
+        },
+        {
+          "name": "action",
+          "type": "String"
+        },
+        {
+          "name": "targetType",
+          "type": "String?"
+        },
+        {
+          "name": "targetId",
+          "type": "String?"
+        },
+        {
+          "name": "metadata",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "LicenseDevice",
+      "line": 712,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "deviceId",
+          "type": "String"
+        },
+        {
+          "name": "licenseId",
+          "type": "String"
+        },
+        {
+          "name": "license",
+          "type": "LicenseKey"
+        },
+        {
+          "name": "hwidHash",
+          "type": "String"
+        },
+        {
+          "name": "tokenHash",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String?"
+        },
+        {
+          "name": "platform",
+          "type": "String?"
+        },
+        {
+          "name": "appVersion",
+          "type": "String?"
+        },
+        {
+          "name": "firstActivatedAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "lastSeenAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "revokedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "revokeReason",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "LicenseDeviceEvent",
+      "line": 741,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "licenseId",
+          "type": "String"
+        },
+        {
+          "name": "deviceId",
+          "type": "String?"
+        },
+        {
+          "name": "action",
+          "type": "String"
+        },
+        {
+          "name": "detail",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Reminder",
+      "line": 753,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicle",
+          "type": "Vehicle?"
+        },
+        {
+          "name": "clientId",
+          "type": "String?"
+        },
+        {
+          "name": "client",
+          "type": "Client?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String?"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "phone",
+          "type": "String?"
+        },
+        {
+          "name": "email",
+          "type": "String?"
+        },
+        {
+          "name": "type",
+          "type": "String"
+        },
+        {
+          "name": "scheduledDate",
+          "type": "String"
+        },
+        {
+          "name": "scheduledTime",
+          "type": "String?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "WorkOrder",
+      "line": 776,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "number",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "jobId",
+          "type": "String?"
+        },
+        {
+          "name": "job",
+          "type": "Job?"
+        },
+        {
+          "name": "mechanicId",
+          "type": "String?"
+        },
+        {
+          "name": "mechanic",
+          "type": "Mechanic?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "clientPhone",
+          "type": "String?"
+        },
+        {
+          "name": "clientEmail",
+          "type": "String?"
+        },
+        {
+          "name": "clientAddress",
+          "type": "String?"
+        },
+        {
+          "name": "vehicleMake",
+          "type": "String?"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String?"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "mileage",
+          "type": "Int?"
+        },
+        {
+          "name": "vin",
+          "type": "String?"
+        },
+        {
+          "name": "worksJson",
+          "type": "String"
+        },
+        {
+          "name": "partsJson",
+          "type": "String"
+        },
+        {
+          "name": "taxRate",
+          "type": "Float"
+        },
+        {
+          "name": "totalHtCents",
+          "type": "Int"
+        },
+        {
+          "name": "totalTtcCents",
+          "type": "Int"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "signatureData",
+          "type": "String?"
+        },
+        {
+          "name": "signedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "LaborOperation",
+      "line": 820,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "category",
+          "type": "String?"
+        },
+        {
+          "name": "durationMin",
+          "type": "Int"
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "description",
+          "type": "String?"
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Warranty",
+      "line": 838,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "jobId",
+          "type": "String?"
+        },
+        {
+          "name": "job",
+          "type": "Job?"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicle",
+          "type": "Vehicle?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String?"
+        },
+        {
+          "name": "partName",
+          "type": "String"
+        },
+        {
+          "name": "partReference",
+          "type": "String?"
+        },
+        {
+          "name": "lotNumber",
+          "type": "String?"
+        },
+        {
+          "name": "installedAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "durationMonths",
+          "type": "Int"
+        },
+        {
+          "name": "expiresAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "mileageAtInstall",
+          "type": "Int?"
+        },
+        {
+          "name": "supplierName",
+          "type": "String?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "claimedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "claimNotes",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "LoanerVehicle",
+      "line": 870,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String"
+        },
+        {
+          "name": "make",
+          "type": "String?"
+        },
+        {
+          "name": "model",
+          "type": "String?"
+        },
+        {
+          "name": "year",
+          "type": "Int?"
+        },
+        {
+          "name": "color",
+          "type": "String?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean"
+        },
+        {
+          "name": "reservations",
+          "type": "LoanerReservation[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "LoanerReservation",
+      "line": 889,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String"
+        },
+        {
+          "name": "vehicle",
+          "type": "LoanerVehicle"
+        },
+        {
+          "name": "jobId",
+          "type": "String?"
+        },
+        {
+          "name": "job",
+          "type": "Job?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "clientPhone",
+          "type": "String?"
+        },
+        {
+          "name": "startDate",
+          "type": "DateTime"
+        },
+        {
+          "name": "endDate",
+          "type": "DateTime"
+        },
+        {
+          "name": "returnedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "mileageOut",
+          "type": "Int?"
+        },
+        {
+          "name": "mileageIn",
+          "type": "Int?"
+        },
+        {
+          "name": "conditionOut",
+          "type": "String?"
+        },
+        {
+          "name": "conditionIn",
+          "type": "String?"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "isPaid",
+          "type": "Boolean"
+        },
+        {
+          "name": "dailyRateTenThousandths",
+          "type": "Int?"
+        },
+        {
+          "name": "depositAmountCents",
+          "type": "Int?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "PurchaseOrder",
+      "line": 922,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "number",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "supplierName",
+          "type": "String?"
+        },
+        {
+          "name": "supplierEmail",
+          "type": "String?"
+        },
+        {
+          "name": "linesJson",
+          "type": "String"
+        },
+        {
+          "name": "totalHtCents",
+          "type": "Int"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "sentAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "receivedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "AuditLog",
+      "line": 946,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "action",
+          "type": "String"
+        },
+        {
+          "name": "entityType",
+          "type": "String"
+        },
+        {
+          "name": "entityId",
+          "type": "String?"
+        },
+        {
+          "name": "userId",
+          "type": "String"
+        },
+        {
+          "name": "userName",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "details",
+          "type": "String?"
+        },
+        {
+          "name": "ipAddress",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "VinSearch",
+      "line": 976,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "vin",
+          "type": "String"
+        },
+        {
+          "name": "resultJson",
+          "type": "String"
+        },
+        {
+          "name": "source",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Signature",
+      "line": 990,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "entityType",
+          "type": "String"
+        },
+        {
+          "name": "entityId",
+          "type": "String"
+        },
+        {
+          "name": "signerName",
+          "type": "String"
+        },
+        {
+          "name": "signerRole",
+          "type": "String?"
+        },
+        {
+          "name": "algorithm",
+          "type": "String"
+        },
+        {
+          "name": "contentHash",
+          "type": "String"
+        },
+        {
+          "name": "imageHash",
+          "type": "String"
+        },
+        {
+          "name": "seal",
+          "type": "String"
+        },
+        {
+          "name": "signatureData",
+          "type": "String"
+        },
+        {
+          "name": "documentSnapshotJson",
+          "type": "String"
+        },
+        {
+          "name": "ipAddress",
+          "type": "String?"
+        },
+        {
+          "name": "userAgent",
+          "type": "String?"
+        },
+        {
+          "name": "signedAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "invalidatedAt",
+          "type": "DateTime?"
+        }
+      ]
+    },
+    {
+      "model": "NotificationLog",
+      "line": 1013,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "trigger",
+          "type": "String?"
+        },
+        {
+          "name": "channel",
+          "type": "String"
+        },
+        {
+          "name": "recipient",
+          "type": "String"
+        },
+        {
+          "name": "subject",
+          "type": "String?"
+        },
+        {
+          "name": "body",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "providerId",
+          "type": "String?"
+        },
+        {
+          "name": "error",
+          "type": "String?"
+        },
+        {
+          "name": "attempts",
+          "type": "Int"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "PortalUser",
+      "line": 1038,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "clientId",
+          "type": "String?"
+        },
+        {
+          "name": "client",
+          "type": "Client?"
+        },
+        {
+          "name": "email",
+          "type": "String"
+        },
+        {
+          "name": "passwordHash",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String?"
+        },
+        {
+          "name": "emailVerified",
+          "type": "Boolean"
+        },
+        {
+          "name": "emailVerifyToken",
+          "type": "String?"
+        },
+        {
+          "name": "pendingEmail",
+          "type": "String?"
+        },
+        {
+          "name": "twoFactorEnabled",
+          "type": "Boolean"
+        },
+        {
+          "name": "twoFactorSecret",
+          "type": "String?"
+        },
+        {
+          "name": "twoFactorPending",
+          "type": "String?"
+        },
+        {
+          "name": "backupCodes",
+          "type": "String"
+        },
+        {
+          "name": "disabledAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "mustChangePassword",
+          "type": "Boolean"
+        },
+        {
+          "name": "passwordChangedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "failedLoginCount",
+          "type": "Int"
+        },
+        {
+          "name": "lockedUntil",
+          "type": "DateTime?"
+        },
+        {
+          "name": "lastLoginAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "devices",
+          "type": "PortalDevice[]"
+        },
+        {
+          "name": "tickets",
+          "type": "PortalTicket[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "PortalDevice",
+      "line": 1082,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "portalUserId",
+          "type": "String"
+        },
+        {
+          "name": "portalUser",
+          "type": "PortalUser"
+        },
+        {
+          "name": "sessionId",
+          "type": "String"
+        },
+        {
+          "name": "userAgent",
+          "type": "String?"
+        },
+        {
+          "name": "ipAddress",
+          "type": "String?"
+        },
+        {
+          "name": "lastSeenAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "revokedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "PortalTicket",
+      "line": 1096,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "portalUserId",
+          "type": "String"
+        },
+        {
+          "name": "portalUser",
+          "type": "PortalUser"
+        },
+        {
+          "name": "clientId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "subject",
+          "type": "String"
+        },
+        {
+          "name": "category",
+          "type": "String"
+        },
+        {
+          "name": "priority",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "lastMessageAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "closedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "messages",
+          "type": "PortalTicketMessage[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "PortalTicketMessage",
+      "line": 1119,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "ticketId",
+          "type": "String"
+        },
+        {
+          "name": "ticket",
+          "type": "PortalTicket"
+        },
+        {
+          "name": "authorType",
+          "type": "String"
+        },
+        {
+          "name": "authorName",
+          "type": "String"
+        },
+        {
+          "name": "body",
+          "type": "String"
+        },
+        {
+          "name": "attachmentPath",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Appointment",
+      "line": 1132,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "portalUserId",
+          "type": "String?"
+        },
+        {
+          "name": "clientId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String?"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "reason",
+          "type": "String"
+        },
+        {
+          "name": "date",
+          "type": "String"
+        },
+        {
+          "name": "startTime",
+          "type": "String"
+        },
+        {
+          "name": "durationMin",
+          "type": "Int"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "reminderSentAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "BackupRecord",
+      "line": 1157,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "filename",
+          "type": "String"
+        },
+        {
+          "name": "sizeBytes",
+          "type": "Int"
+        },
+        {
+          "name": "checksum",
+          "type": "String"
+        },
+        {
+          "name": "algorithm",
+          "type": "String"
+        },
+        {
+          "name": "kdf",
+          "type": "String"
+        },
+        {
+          "name": "entityCounts",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "note",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "ReportSnapshot",
+      "line": 1175,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "periodDays",
+          "type": "Int"
+        },
+        {
+          "name": "healthScore",
+          "type": "Int"
+        },
+        {
+          "name": "summary",
+          "type": "String"
+        },
+        {
+          "name": "payload",
+          "type": "String"
+        },
+        {
+          "name": "createdBy",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "PortalSnapshot",
+      "line": 1198,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "jobId",
+          "type": "String"
+        },
+        {
+          "name": "payload",
+          "type": "String"
+        },
+        {
+          "name": "expiresAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    }
+  ],
+  "prisma/server/schema.prisma": [
+    {
+      "model": "Garage",
+      "line": 30,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "slug",
+          "type": "String"
+        },
+        {
+          "name": "plan",
+          "type": "String"
+        },
+        {
+          "name": "hourlyRateTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "workshopStartHour",
+          "type": "Int"
+        },
+        {
+          "name": "workshopEndHour",
+          "type": "Int"
+        },
+        {
+          "name": "workshopStartMinute",
+          "type": "Int"
+        },
+        {
+          "name": "workshopEndMinute",
+          "type": "Int"
+        },
+        {
+          "name": "address",
+          "type": "String?"
+        },
+        {
+          "name": "phone",
+          "type": "String?"
+        },
+        {
+          "name": "email",
+          "type": "String?"
+        },
+        {
+          "name": "website",
+          "type": "String?"
+        },
+        {
+          "name": "logoBase64",
+          "type": "String?"
+        },
+        {
+          "name": "logoPath",
+          "type": "String?"
+        },
+        {
+          "name": "siret",
+          "type": "String?"
+        },
+        {
+          "name": "vatNumber",
+          "type": "String?"
+        },
+        {
+          "name": "taxRate",
+          "type": "Float"
+        },
+        {
+          "name": "iban",
+          "type": "String?"
+        },
+        {
+          "name": "bic",
+          "type": "String?"
+        },
+        {
+          "name": "bankName",
+          "type": "String?"
+        },
+        {
+          "name": "currency",
+          "type": "String"
+        },
+        {
+          "name": "paymentTerms",
+          "type": "String?"
+        },
+        {
+          "name": "invoicePrefix",
+          "type": "String"
+        },
+        {
+          "name": "invoiceCounter",
+          "type": "Int"
+        },
+        {
+          "name": "quotePrefix",
+          "type": "String"
+        },
+        {
+          "name": "quoteCounter",
+          "type": "Int"
+        },
+        {
+          "name": "invoiceFooter",
+          "type": "String?"
+        },
+        {
+          "name": "language",
+          "type": "String"
+        },
+        {
+          "name": "onboardingComplete",
+          "type": "Boolean"
+        },
+        {
+          "name": "smsPhone",
+          "type": "String?"
+        },
+        {
+          "name": "workOrderPrefix",
+          "type": "String"
+        },
+        {
+          "name": "workOrderCounter",
+          "type": "Int"
+        },
+        {
+          "name": "warrantyMonthsDefault",
+          "type": "Int"
+        },
+        {
+          "name": "loanerEnabled",
+          "type": "Boolean"
+        },
+        {
+          "name": "smartReminderMonths",
+          "type": "Int"
+        },
+        {
+          "name": "purchaseOrderPrefix",
+          "type": "String"
+        },
+        {
+          "name": "purchaseOrderCounter",
+          "type": "Int"
+        },
+        {
+          "name": "smtpHost",
+          "type": "String?"
+        },
+        {
+          "name": "smtpPort",
+          "type": "Int?"
+        },
+        {
+          "name": "smtpUser",
+          "type": "String?"
+        },
+        {
+          "name": "smtpPass",
+          "type": "String?"
+        },
+        {
+          "name": "smtpFrom",
+          "type": "String?"
+        },
+        {
+          "name": "smtpSecure",
+          "type": "Boolean"
+        },
+        {
+          "name": "users",
+          "type": "User[]"
+        },
+        {
+          "name": "mechanics",
+          "type": "Mechanic[]"
+        },
+        {
+          "name": "jobs",
+          "type": "Job[]"
+        },
+        {
+          "name": "clients",
+          "type": "Client[]"
+        },
+        {
+          "name": "vehicles",
+          "type": "Vehicle[]"
+        },
+        {
+          "name": "parts",
+          "type": "Part[]"
+        },
+        {
+          "name": "repairTypeParts",
+          "type": "RepairTypePart[]"
+        },
+        {
+          "name": "reminders",
+          "type": "Reminder[]"
+        },
+        {
+          "name": "quotes",
+          "type": "Quote[]"
+        },
+        {
+          "name": "invoices",
+          "type": "Invoice[]"
+        },
+        {
+          "name": "inspections",
+          "type": "Inspection[]"
+        },
+        {
+          "name": "workOrders",
+          "type": "WorkOrder[]"
+        },
+        {
+          "name": "laborOperations",
+          "type": "LaborOperation[]"
+        },
+        {
+          "name": "warranties",
+          "type": "Warranty[]"
+        },
+        {
+          "name": "loanerVehicles",
+          "type": "LoanerVehicle[]"
+        },
+        {
+          "name": "loanerReservations",
+          "type": "LoanerReservation[]"
+        },
+        {
+          "name": "purchaseOrders",
+          "type": "PurchaseOrder[]"
+        },
+        {
+          "name": "licenses",
+          "type": "LicenseKey[]"
+        },
+        {
+          "name": "mechanicLicenseAssignments",
+          "type": "MechanicLicenseAssignment[]"
+        },
+        {
+          "name": "jobMechanicNotes",
+          "type": "JobMechanicNote[]"
+        },
+        {
+          "name": "mechanicActionAudits",
+          "type": "MechanicActionAudit[]"
+        },
+        {
+          "name": "vinSearches",
+          "type": "VinSearch[]"
+        },
+        {
+          "name": "signatures",
+          "type": "Signature[]"
+        },
+        {
+          "name": "notificationLogs",
+          "type": "NotificationLog[]"
+        },
+        {
+          "name": "portalUsers",
+          "type": "PortalUser[]"
+        },
+        {
+          "name": "portalTickets",
+          "type": "PortalTicket[]"
+        },
+        {
+          "name": "appointments",
+          "type": "Appointment[]"
+        },
+        {
+          "name": "backupRecords",
+          "type": "BackupRecord[]"
+        },
+        {
+          "name": "reportSnapshots",
+          "type": "ReportSnapshot[]"
+        },
+        {
+          "name": "stockMovements",
+          "type": "StockMovement[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "User",
+      "line": 139,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "email",
+          "type": "String"
+        },
+        {
+          "name": "password",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "role",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "assignedLicenses",
+          "type": "LicenseKey[]"
+        },
+        {
+          "name": "mechanicLicenseAssignments",
+          "type": "MechanicLicenseAssignment[]"
+        },
+        {
+          "name": "mechanicActionAudits",
+          "type": "MechanicActionAudit[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Mechanic",
+      "line": 155,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "avatar",
+          "type": "String"
+        },
+        {
+          "name": "avatarPath",
+          "type": "String?"
+        },
+        {
+          "name": "avatarMime",
+          "type": "String?"
+        },
+        {
+          "name": "avatarHash",
+          "type": "String?"
+        },
+        {
+          "name": "avatarUpdatedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "archivedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "color",
+          "type": "String"
+        },
+        {
+          "name": "isAbsent",
+          "type": "Boolean"
+        },
+        {
+          "name": "specialty",
+          "type": "String"
+        },
+        {
+          "name": "order",
+          "type": "Int"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "jobs",
+          "type": "Job[]"
+        },
+        {
+          "name": "workOrders",
+          "type": "WorkOrder[]"
+        },
+        {
+          "name": "assignedLicenses",
+          "type": "LicenseKey[]"
+        },
+        {
+          "name": "licenseAssignments",
+          "type": "MechanicLicenseAssignment[]"
+        },
+        {
+          "name": "prevLicenseAssignments",
+          "type": "MechanicLicenseAssignment[]"
+        },
+        {
+          "name": "jobNotes",
+          "type": "JobMechanicNote[]"
+        },
+        {
+          "name": "actionAudits",
+          "type": "MechanicActionAudit[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Client",
+      "line": 195,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "phone",
+          "type": "String?"
+        },
+        {
+          "name": "email",
+          "type": "String?"
+        },
+        {
+          "name": "address",
+          "type": "String?"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "vehicles",
+          "type": "Vehicle[]"
+        },
+        {
+          "name": "reminders",
+          "type": "Reminder[]"
+        },
+        {
+          "name": "quotes",
+          "type": "Quote[]"
+        },
+        {
+          "name": "invoices",
+          "type": "Invoice[]"
+        },
+        {
+          "name": "portalUsers",
+          "type": "PortalUser[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Vehicle",
+      "line": 216,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String"
+        },
+        {
+          "name": "vin",
+          "type": "String?"
+        },
+        {
+          "name": "make",
+          "type": "String"
+        },
+        {
+          "name": "model",
+          "type": "String"
+        },
+        {
+          "name": "year",
+          "type": "Int?"
+        },
+        {
+          "name": "mileage",
+          "type": "Int?"
+        },
+        {
+          "name": "color",
+          "type": "String?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "ctDate",
+          "type": "String?"
+        },
+        {
+          "name": "clientId",
+          "type": "String"
+        },
+        {
+          "name": "client",
+          "type": "Client"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "jobs",
+          "type": "Job[]"
+        },
+        {
+          "name": "reminders",
+          "type": "Reminder[]"
+        },
+        {
+          "name": "quotes",
+          "type": "Quote[]"
+        },
+        {
+          "name": "invoices",
+          "type": "Invoice[]"
+        },
+        {
+          "name": "inspections",
+          "type": "Inspection[]"
+        },
+        {
+          "name": "warranties",
+          "type": "Warranty[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Part",
+      "line": 247,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "reference",
+          "type": "String?"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "description",
+          "type": "String?"
+        },
+        {
+          "name": "quantity",
+          "type": "Int"
+        },
+        {
+          "name": "minQuantity",
+          "type": "Int"
+        },
+        {
+          "name": "unitCostTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "location",
+          "type": "String?"
+        },
+        {
+          "name": "supplierName",
+          "type": "String?"
+        },
+        {
+          "name": "supplierRef",
+          "type": "String?"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "jobParts",
+          "type": "JobPart[]"
+        },
+        {
+          "name": "defaultFor",
+          "type": "RepairTypePart[]"
+        },
+        {
+          "name": "invoiceLines",
+          "type": "InvoiceLine[]"
+        },
+        {
+          "name": "quoteLines",
+          "type": "QuoteLine[]"
+        },
+        {
+          "name": "movements",
+          "type": "StockMovement[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "JobPart",
+      "line": 278,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "jobId",
+          "type": "String"
+        },
+        {
+          "name": "job",
+          "type": "Job"
+        },
+        {
+          "name": "partId",
+          "type": "String"
+        },
+        {
+          "name": "part",
+          "type": "Part"
+        },
+        {
+          "name": "quantity",
+          "type": "Int"
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "unitCostTenThousandths",
+          "type": "Int"
+        }
+      ]
+    },
+    {
+      "model": "RepairTypePart",
+      "line": 293,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "repairType",
+          "type": "String"
+        },
+        {
+          "name": "partId",
+          "type": "String"
+        },
+        {
+          "name": "part",
+          "type": "Part"
+        },
+        {
+          "name": "defaultQty",
+          "type": "Int"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        }
+      ]
+    },
+    {
+      "model": "Job",
+      "line": 306,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "customerName",
+          "type": "String"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "repairType",
+          "type": "String"
+        },
+        {
+          "name": "estimatedDuration",
+          "type": "Int"
+        },
+        {
+          "name": "actualDuration",
+          "type": "Int?"
+        },
+        {
+          "name": "startTime",
+          "type": "String"
+        },
+        {
+          "name": "date",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "isUrgent",
+          "type": "Boolean"
+        },
+        {
+          "name": "delayMinutes",
+          "type": "Int?"
+        },
+        {
+          "name": "mileageAtVisit",
+          "type": "Int?"
+        },
+        {
+          "name": "timerStartedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "timerAccumulatedSec",
+          "type": "Int"
+        },
+        {
+          "name": "mechanicId",
+          "type": "String"
+        },
+        {
+          "name": "mechanic",
+          "type": "Mechanic"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicle",
+          "type": "Vehicle?"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "jobParts",
+          "type": "JobPart[]"
+        },
+        {
+          "name": "photos",
+          "type": "JobPhoto[]"
+        },
+        {
+          "name": "quotes",
+          "type": "Quote[]"
+        },
+        {
+          "name": "invoices",
+          "type": "Invoice[]"
+        },
+        {
+          "name": "inspections",
+          "type": "Inspection[]"
+        },
+        {
+          "name": "workOrder",
+          "type": "WorkOrder?"
+        },
+        {
+          "name": "warranties",
+          "type": "Warranty[]"
+        },
+        {
+          "name": "loanerReservations",
+          "type": "LoanerReservation[]"
+        },
+        {
+          "name": "mechanicNotes",
+          "type": "JobMechanicNote[]"
+        },
+        {
+          "name": "mechanicActionAudits",
+          "type": "MechanicActionAudit[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Quote",
+      "line": 350,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "number",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "clientId",
+          "type": "String?"
+        },
+        {
+          "name": "client",
+          "type": "Client?"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicle",
+          "type": "Vehicle?"
+        },
+        {
+          "name": "jobId",
+          "type": "String?"
+        },
+        {
+          "name": "job",
+          "type": "Job?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "clientEmail",
+          "type": "String?"
+        },
+        {
+          "name": "clientPhone",
+          "type": "String?"
+        },
+        {
+          "name": "clientAddress",
+          "type": "String?"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String?"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "issueDate",
+          "type": "String"
+        },
+        {
+          "name": "validUntil",
+          "type": "String?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "taxRate",
+          "type": "Float"
+        },
+        {
+          "name": "invoiceId",
+          "type": "String?"
+        },
+        {
+          "name": "lines",
+          "type": "QuoteLine[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "QuoteLine",
+      "line": 386,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "quoteId",
+          "type": "String"
+        },
+        {
+          "name": "quote",
+          "type": "Quote"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "name": "quantityTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "unitCostTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "isLabor",
+          "type": "Boolean"
+        },
+        {
+          "name": "sortOrder",
+          "type": "Int"
+        },
+        {
+          "name": "partId",
+          "type": "String?"
+        },
+        {
+          "name": "part",
+          "type": "Part?"
+        }
+      ]
+    },
+    {
+      "model": "Invoice",
+      "line": 407,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "number",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "clientId",
+          "type": "String?"
+        },
+        {
+          "name": "client",
+          "type": "Client?"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicle",
+          "type": "Vehicle?"
+        },
+        {
+          "name": "jobId",
+          "type": "String?"
+        },
+        {
+          "name": "job",
+          "type": "Job?"
+        },
+        {
+          "name": "quoteId",
+          "type": "String?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "clientEmail",
+          "type": "String?"
+        },
+        {
+          "name": "clientPhone",
+          "type": "String?"
+        },
+        {
+          "name": "clientAddress",
+          "type": "String?"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String?"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "issueDate",
+          "type": "String"
+        },
+        {
+          "name": "dueDate",
+          "type": "String?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "taxRate",
+          "type": "Float"
+        },
+        {
+          "name": "lines",
+          "type": "InvoiceLine[]"
+        },
+        {
+          "name": "stockCommittedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "stockMovements",
+          "type": "StockMovement[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "InvoiceLine",
+      "line": 450,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "invoiceId",
+          "type": "String"
+        },
+        {
+          "name": "invoice",
+          "type": "Invoice"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "name": "quantityTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "unitCostTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "isLabor",
+          "type": "Boolean"
+        },
+        {
+          "name": "sortOrder",
+          "type": "Int"
+        },
+        {
+          "name": "partId",
+          "type": "String?"
+        },
+        {
+          "name": "part",
+          "type": "Part?"
+        }
+      ]
+    },
+    {
+      "model": "JobTombstone",
+      "line": 484,
+      "fields": [
+        {
+          "name": "jobId",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "deletedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "StockMovement",
+      "line": 492,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "partId",
+          "type": "String"
+        },
+        {
+          "name": "part",
+          "type": "Part"
+        },
+        {
+          "name": "type",
+          "type": "String"
+        },
+        {
+          "name": "quantityDelta",
+          "type": "Int"
+        },
+        {
+          "name": "invoiceId",
+          "type": "String?"
+        },
+        {
+          "name": "invoice",
+          "type": "Invoice?"
+        },
+        {
+          "name": "invoiceLineId",
+          "type": "String?"
+        },
+        {
+          "name": "reason",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "JobPhoto",
+      "line": 514,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "jobId",
+          "type": "String"
+        },
+        {
+          "name": "job",
+          "type": "Job"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "phase",
+          "type": "String"
+        },
+        {
+          "name": "caption",
+          "type": "String?"
+        },
+        {
+          "name": "base64",
+          "type": "String"
+        },
+        {
+          "name": "photoPath",
+          "type": "String?"
+        },
+        {
+          "name": "mechanicId",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Inspection",
+      "line": 530,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "jobId",
+          "type": "String?"
+        },
+        {
+          "name": "job",
+          "type": "Job?"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicle",
+          "type": "Vehicle?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String?"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "mileage",
+          "type": "Int?"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "items",
+          "type": "InspectionItem[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "InspectionItem",
+      "line": 549,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "inspectionId",
+          "type": "String"
+        },
+        {
+          "name": "inspection",
+          "type": "Inspection"
+        },
+        {
+          "name": "category",
+          "type": "String"
+        },
+        {
+          "name": "label",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "photoBase64",
+          "type": "String?"
+        },
+        {
+          "name": "photoPath",
+          "type": "String?"
+        },
+        {
+          "name": "sortOrder",
+          "type": "Int"
+        }
+      ]
+    },
+    {
+      "model": "LicenseKey",
+      "line": 564,
+      "fields": [
+        {
+          "name": "id",
+          "type": "Int"
+        },
+        {
+          "name": "licenseId",
+          "type": "String"
+        },
+        {
+          "name": "token",
+          "type": "String"
+        },
+        {
+          "name": "customerId",
+          "type": "String"
+        },
+        {
+          "name": "licenseType",
+          "type": "String"
+        },
+        {
+          "name": "expiryAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "isAdmin",
+          "type": "Boolean"
+        },
+        {
+          "name": "seats",
+          "type": "Int"
+        },
+        {
+          "name": "hwid",
+          "type": "String?"
+        },
+        {
+          "name": "label",
+          "type": "String?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "recordMac",
+          "type": "String?"
+        },
+        {
+          "name": "activatedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "revokedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "lastSeenAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "garageId",
+          "type": "String?"
+        },
+        {
+          "name": "garage",
+          "type": "Garage?"
+        },
+        {
+          "name": "parentLicenseId",
+          "type": "String?"
+        },
+        {
+          "name": "parentLicense",
+          "type": "LicenseKey?"
+        },
+        {
+          "name": "childLicenses",
+          "type": "LicenseKey[]"
+        },
+        {
+          "name": "mechanicId",
+          "type": "String?"
+        },
+        {
+          "name": "mechanic",
+          "type": "Mechanic?"
+        },
+        {
+          "name": "mechanicHint",
+          "type": "String?"
+        },
+        {
+          "name": "assignedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "assignedBy",
+          "type": "String?"
+        },
+        {
+          "name": "assignedByUser",
+          "type": "User?"
+        },
+        {
+          "name": "suspendedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "cloudSyncedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "devices",
+          "type": "LicenseDevice[]"
+        },
+        {
+          "name": "mechanicLicenseAssignments",
+          "type": "MechanicLicenseAssignment[]"
+        },
+        {
+          "name": "jobMechanicNotes",
+          "type": "JobMechanicNote[]"
+        },
+        {
+          "name": "actionAudits",
+          "type": "MechanicActionAudit[]"
+        }
+      ]
+    },
+    {
+      "model": "MechanicLicenseAssignment",
+      "line": 626,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "licenseId",
+          "type": "String?"
+        },
+        {
+          "name": "license",
+          "type": "LicenseKey?"
+        },
+        {
+          "name": "mechanicId",
+          "type": "String?"
+        },
+        {
+          "name": "mechanic",
+          "type": "Mechanic?"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "assignedAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "assignedBy",
+          "type": "String?"
+        },
+        {
+          "name": "assignedByUser",
+          "type": "User?"
+        },
+        {
+          "name": "unassignedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "previousMechanicId",
+          "type": "String?"
+        },
+        {
+          "name": "previousMechanic",
+          "type": "Mechanic?"
+        }
+      ]
+    },
+    {
+      "model": "JobMechanicNote",
+      "line": 649,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "jobId",
+          "type": "String"
+        },
+        {
+          "name": "job",
+          "type": "Job"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "mechanicId",
+          "type": "String?"
+        },
+        {
+          "name": "mechanic",
+          "type": "Mechanic?"
+        },
+        {
+          "name": "licenseId",
+          "type": "String?"
+        },
+        {
+          "name": "license",
+          "type": "LicenseKey?"
+        },
+        {
+          "name": "type",
+          "type": "String"
+        },
+        {
+          "name": "body",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "MechanicActionAudit",
+      "line": 671,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "actorUserId",
+          "type": "String?"
+        },
+        {
+          "name": "actorUser",
+          "type": "User?"
+        },
+        {
+          "name": "actorRole",
+          "type": "String?"
+        },
+        {
+          "name": "targetMechanicId",
+          "type": "String?"
+        },
+        {
+          "name": "targetMechanic",
+          "type": "Mechanic?"
+        },
+        {
+          "name": "licenseId",
+          "type": "String?"
+        },
+        {
+          "name": "license",
+          "type": "LicenseKey?"
+        },
+        {
+          "name": "jobId",
+          "type": "String?"
+        },
+        {
+          "name": "job",
+          "type": "Job?"
+        },
+        {
+          "name": "action",
+          "type": "String"
+        },
+        {
+          "name": "targetType",
+          "type": "String?"
+        },
+        {
+          "name": "targetId",
+          "type": "String?"
+        },
+        {
+          "name": "metadata",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "LicenseDevice",
+      "line": 704,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "deviceId",
+          "type": "String"
+        },
+        {
+          "name": "licenseId",
+          "type": "String"
+        },
+        {
+          "name": "license",
+          "type": "LicenseKey"
+        },
+        {
+          "name": "hwidHash",
+          "type": "String"
+        },
+        {
+          "name": "tokenHash",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String?"
+        },
+        {
+          "name": "platform",
+          "type": "String?"
+        },
+        {
+          "name": "appVersion",
+          "type": "String?"
+        },
+        {
+          "name": "firstActivatedAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "lastSeenAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "revokedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "revokeReason",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "LicenseDeviceEvent",
+      "line": 733,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "licenseId",
+          "type": "String"
+        },
+        {
+          "name": "deviceId",
+          "type": "String?"
+        },
+        {
+          "name": "action",
+          "type": "String"
+        },
+        {
+          "name": "detail",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Reminder",
+      "line": 745,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicle",
+          "type": "Vehicle?"
+        },
+        {
+          "name": "clientId",
+          "type": "String?"
+        },
+        {
+          "name": "client",
+          "type": "Client?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String?"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "phone",
+          "type": "String?"
+        },
+        {
+          "name": "email",
+          "type": "String?"
+        },
+        {
+          "name": "type",
+          "type": "String"
+        },
+        {
+          "name": "scheduledDate",
+          "type": "String"
+        },
+        {
+          "name": "scheduledTime",
+          "type": "String?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "WorkOrder",
+      "line": 768,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "number",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "jobId",
+          "type": "String?"
+        },
+        {
+          "name": "job",
+          "type": "Job?"
+        },
+        {
+          "name": "mechanicId",
+          "type": "String?"
+        },
+        {
+          "name": "mechanic",
+          "type": "Mechanic?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "clientPhone",
+          "type": "String?"
+        },
+        {
+          "name": "clientEmail",
+          "type": "String?"
+        },
+        {
+          "name": "clientAddress",
+          "type": "String?"
+        },
+        {
+          "name": "vehicleMake",
+          "type": "String?"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String?"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "mileage",
+          "type": "Int?"
+        },
+        {
+          "name": "vin",
+          "type": "String?"
+        },
+        {
+          "name": "worksJson",
+          "type": "String"
+        },
+        {
+          "name": "partsJson",
+          "type": "String"
+        },
+        {
+          "name": "taxRate",
+          "type": "Float"
+        },
+        {
+          "name": "totalHtCents",
+          "type": "Int"
+        },
+        {
+          "name": "totalTtcCents",
+          "type": "Int"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "signatureData",
+          "type": "String?"
+        },
+        {
+          "name": "signedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "LaborOperation",
+      "line": 812,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "category",
+          "type": "String?"
+        },
+        {
+          "name": "durationMin",
+          "type": "Int"
+        },
+        {
+          "name": "unitPriceTenThousandths",
+          "type": "Int"
+        },
+        {
+          "name": "description",
+          "type": "String?"
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Warranty",
+      "line": 830,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "jobId",
+          "type": "String?"
+        },
+        {
+          "name": "job",
+          "type": "Job?"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicle",
+          "type": "Vehicle?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String?"
+        },
+        {
+          "name": "partName",
+          "type": "String"
+        },
+        {
+          "name": "partReference",
+          "type": "String?"
+        },
+        {
+          "name": "lotNumber",
+          "type": "String?"
+        },
+        {
+          "name": "installedAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "durationMonths",
+          "type": "Int"
+        },
+        {
+          "name": "expiresAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "mileageAtInstall",
+          "type": "Int?"
+        },
+        {
+          "name": "supplierName",
+          "type": "String?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "claimedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "claimNotes",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "LoanerVehicle",
+      "line": 862,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String"
+        },
+        {
+          "name": "make",
+          "type": "String?"
+        },
+        {
+          "name": "model",
+          "type": "String?"
+        },
+        {
+          "name": "year",
+          "type": "Int?"
+        },
+        {
+          "name": "color",
+          "type": "String?"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "isActive",
+          "type": "Boolean"
+        },
+        {
+          "name": "reservations",
+          "type": "LoanerReservation[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "LoanerReservation",
+      "line": 881,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String"
+        },
+        {
+          "name": "vehicle",
+          "type": "LoanerVehicle"
+        },
+        {
+          "name": "jobId",
+          "type": "String?"
+        },
+        {
+          "name": "job",
+          "type": "Job?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "clientPhone",
+          "type": "String?"
+        },
+        {
+          "name": "startDate",
+          "type": "DateTime"
+        },
+        {
+          "name": "endDate",
+          "type": "DateTime"
+        },
+        {
+          "name": "returnedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "mileageOut",
+          "type": "Int?"
+        },
+        {
+          "name": "mileageIn",
+          "type": "Int?"
+        },
+        {
+          "name": "conditionOut",
+          "type": "String?"
+        },
+        {
+          "name": "conditionIn",
+          "type": "String?"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "isPaid",
+          "type": "Boolean"
+        },
+        {
+          "name": "dailyRateTenThousandths",
+          "type": "Int?"
+        },
+        {
+          "name": "depositAmountCents",
+          "type": "Int?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "PurchaseOrder",
+      "line": 914,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "number",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "supplierName",
+          "type": "String?"
+        },
+        {
+          "name": "supplierEmail",
+          "type": "String?"
+        },
+        {
+          "name": "linesJson",
+          "type": "String"
+        },
+        {
+          "name": "totalHtCents",
+          "type": "Int"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "sentAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "receivedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "AuditLog",
+      "line": 938,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "action",
+          "type": "String"
+        },
+        {
+          "name": "entityType",
+          "type": "String"
+        },
+        {
+          "name": "entityId",
+          "type": "String?"
+        },
+        {
+          "name": "userId",
+          "type": "String"
+        },
+        {
+          "name": "userName",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "details",
+          "type": "String?"
+        },
+        {
+          "name": "ipAddress",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "VinSearch",
+      "line": 967,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "vin",
+          "type": "String"
+        },
+        {
+          "name": "resultJson",
+          "type": "String"
+        },
+        {
+          "name": "source",
+          "type": "String"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Signature",
+      "line": 980,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "entityType",
+          "type": "String"
+        },
+        {
+          "name": "entityId",
+          "type": "String"
+        },
+        {
+          "name": "signerName",
+          "type": "String"
+        },
+        {
+          "name": "signerRole",
+          "type": "String?"
+        },
+        {
+          "name": "algorithm",
+          "type": "String"
+        },
+        {
+          "name": "contentHash",
+          "type": "String"
+        },
+        {
+          "name": "imageHash",
+          "type": "String"
+        },
+        {
+          "name": "seal",
+          "type": "String"
+        },
+        {
+          "name": "signatureData",
+          "type": "String"
+        },
+        {
+          "name": "documentSnapshotJson",
+          "type": "String"
+        },
+        {
+          "name": "ipAddress",
+          "type": "String?"
+        },
+        {
+          "name": "userAgent",
+          "type": "String?"
+        },
+        {
+          "name": "signedAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "invalidatedAt",
+          "type": "DateTime?"
+        }
+      ]
+    },
+    {
+      "model": "NotificationLog",
+      "line": 1002,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "trigger",
+          "type": "String?"
+        },
+        {
+          "name": "channel",
+          "type": "String"
+        },
+        {
+          "name": "recipient",
+          "type": "String"
+        },
+        {
+          "name": "subject",
+          "type": "String?"
+        },
+        {
+          "name": "body",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "providerId",
+          "type": "String?"
+        },
+        {
+          "name": "error",
+          "type": "String?"
+        },
+        {
+          "name": "attempts",
+          "type": "Int"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "PortalUser",
+      "line": 1027,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "clientId",
+          "type": "String?"
+        },
+        {
+          "name": "client",
+          "type": "Client?"
+        },
+        {
+          "name": "email",
+          "type": "String"
+        },
+        {
+          "name": "passwordHash",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String?"
+        },
+        {
+          "name": "emailVerified",
+          "type": "Boolean"
+        },
+        {
+          "name": "emailVerifyToken",
+          "type": "String?"
+        },
+        {
+          "name": "pendingEmail",
+          "type": "String?"
+        },
+        {
+          "name": "twoFactorEnabled",
+          "type": "Boolean"
+        },
+        {
+          "name": "twoFactorSecret",
+          "type": "String?"
+        },
+        {
+          "name": "twoFactorPending",
+          "type": "String?"
+        },
+        {
+          "name": "backupCodes",
+          "type": "String"
+        },
+        {
+          "name": "disabledAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "mustChangePassword",
+          "type": "Boolean"
+        },
+        {
+          "name": "passwordChangedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "failedLoginCount",
+          "type": "Int"
+        },
+        {
+          "name": "lockedUntil",
+          "type": "DateTime?"
+        },
+        {
+          "name": "lastLoginAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "devices",
+          "type": "PortalDevice[]"
+        },
+        {
+          "name": "tickets",
+          "type": "PortalTicket[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "PortalDevice",
+      "line": 1071,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "portalUserId",
+          "type": "String"
+        },
+        {
+          "name": "portalUser",
+          "type": "PortalUser"
+        },
+        {
+          "name": "sessionId",
+          "type": "String"
+        },
+        {
+          "name": "userAgent",
+          "type": "String?"
+        },
+        {
+          "name": "ipAddress",
+          "type": "String?"
+        },
+        {
+          "name": "lastSeenAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "revokedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "PortalTicket",
+      "line": 1085,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "portalUserId",
+          "type": "String"
+        },
+        {
+          "name": "portalUser",
+          "type": "PortalUser"
+        },
+        {
+          "name": "clientId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "subject",
+          "type": "String"
+        },
+        {
+          "name": "category",
+          "type": "String"
+        },
+        {
+          "name": "priority",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "lastMessageAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "closedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "messages",
+          "type": "PortalTicketMessage[]"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "PortalTicketMessage",
+      "line": 1108,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "ticketId",
+          "type": "String"
+        },
+        {
+          "name": "ticket",
+          "type": "PortalTicket"
+        },
+        {
+          "name": "authorType",
+          "type": "String"
+        },
+        {
+          "name": "authorName",
+          "type": "String"
+        },
+        {
+          "name": "body",
+          "type": "String"
+        },
+        {
+          "name": "attachmentPath",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "Appointment",
+      "line": 1121,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "portalUserId",
+          "type": "String?"
+        },
+        {
+          "name": "clientId",
+          "type": "String?"
+        },
+        {
+          "name": "vehicleId",
+          "type": "String?"
+        },
+        {
+          "name": "clientName",
+          "type": "String"
+        },
+        {
+          "name": "vehicleModel",
+          "type": "String?"
+        },
+        {
+          "name": "licensePlate",
+          "type": "String?"
+        },
+        {
+          "name": "reason",
+          "type": "String"
+        },
+        {
+          "name": "date",
+          "type": "String"
+        },
+        {
+          "name": "startTime",
+          "type": "String"
+        },
+        {
+          "name": "durationMin",
+          "type": "Int"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "notes",
+          "type": "String?"
+        },
+        {
+          "name": "reminderSentAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "BackupRecord",
+      "line": 1146,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "filename",
+          "type": "String"
+        },
+        {
+          "name": "sizeBytes",
+          "type": "Int"
+        },
+        {
+          "name": "checksum",
+          "type": "String"
+        },
+        {
+          "name": "algorithm",
+          "type": "String"
+        },
+        {
+          "name": "kdf",
+          "type": "String"
+        },
+        {
+          "name": "entityCounts",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "note",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "ReportSnapshot",
+      "line": 1164,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "garage",
+          "type": "Garage"
+        },
+        {
+          "name": "periodDays",
+          "type": "Int"
+        },
+        {
+          "name": "healthScore",
+          "type": "Int"
+        },
+        {
+          "name": "summary",
+          "type": "String"
+        },
+        {
+          "name": "payload",
+          "type": "String"
+        },
+        {
+          "name": "createdBy",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "GarageEInvoiceConnection",
+      "line": 1185,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "providerId",
+          "type": "String"
+        },
+        {
+          "name": "environment",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "authMethod",
+          "type": "String?"
+        },
+        {
+          "name": "externalAccountId",
+          "type": "String?"
+        },
+        {
+          "name": "legalEntityId",
+          "type": "String?"
+        },
+        {
+          "name": "siren",
+          "type": "String?"
+        },
+        {
+          "name": "capabilities",
+          "type": "String?"
+        },
+        {
+          "name": "credentials",
+          "type": "String?"
+        },
+        {
+          "name": "credentialsKeyVersion",
+          "type": "Int"
+        },
+        {
+          "name": "lastTestedAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "lastTestOk",
+          "type": "Boolean"
+        },
+        {
+          "name": "expiresAt",
+          "type": "DateTime?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "EInvoiceTransmission",
+      "line": 1209,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "invoiceId",
+          "type": "String"
+        },
+        {
+          "name": "providerId",
+          "type": "String"
+        },
+        {
+          "name": "connectionId",
+          "type": "String?"
+        },
+        {
+          "name": "environment",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "documentFormat",
+          "type": "String?"
+        },
+        {
+          "name": "documentSha256",
+          "type": "String?"
+        },
+        {
+          "name": "externalId",
+          "type": "String?"
+        },
+        {
+          "name": "idempotencyKey",
+          "type": "String"
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "EInvoiceEvent",
+      "line": 1230,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "transmissionId",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "type",
+          "type": "String"
+        },
+        {
+          "name": "status",
+          "type": "String?"
+        },
+        {
+          "name": "message",
+          "type": "String?"
+        },
+        {
+          "name": "payload",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "EInvoiceAuditEvent",
+      "line": 1244,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "actorUserId",
+          "type": "String?"
+        },
+        {
+          "name": "action",
+          "type": "String"
+        },
+        {
+          "name": "targetType",
+          "type": "String?"
+        },
+        {
+          "name": "targetId",
+          "type": "String?"
+        },
+        {
+          "name": "metadata",
+          "type": "String?"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "model": "PortalSnapshot",
+      "line": 1266,
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "garageId",
+          "type": "String"
+        },
+        {
+          "name": "jobId",
+          "type": "String"
+        },
+        {
+          "name": "payload",
+          "type": "String"
+        },
+        {
+          "name": "expiresAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "createdAt",
+          "type": "DateTime"
+        },
+        {
+          "name": "updatedAt",
+          "type": "DateTime"
+        }
+      ]
+    }
+  ]
+}

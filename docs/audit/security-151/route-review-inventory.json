@@ -1,0 +1,1589 @@
+[
+  {
+    "file": "src/app/api/admin/backups/[id]/download/route.ts",
+    "sha256": "812327ef108cc302e22dcc62773eefd1ec5a5a601a09c4fd5fbe762caf1eb523",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/admin/backups/[id]/restore/route.ts",
+    "sha256": "017be1fd37c0ccbee365de179912660b190e1aff0b1524aeb41504db77acbb85",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/admin/backups/[id]/verify/route.ts",
+    "sha256": "79a33983b20b1e25fbf88ea2cc0b844216cc25f122d969ff13edd6a47dc24a44",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/admin/backups/route.ts",
+    "sha256": "6c7acf4ac20801870f84a63e00de429220a88af271b3faee628351d7af67a4e0",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/admin/diagnostics/route.ts",
+    "sha256": "8d2862d53080d305d8a88139b161995032c1a8437bc14d5aee5805d87c388039",
+    "markers": [
+      "enforceRateLimit"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/admin/licenses/[id]/devices/[deviceId]/route.ts",
+    "sha256": "5c3edc64450f17e6b6c4fe74c7311b035e5fbdcbd9fea0d5403722488d9dde1c",
+    "markers": [
+      "isAdminSession",
+      "enforceRateLimit"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/admin/licenses/[id]/devices/route.ts",
+    "sha256": "99eb45b8c01575e3dc60d6a6c2289260adf838c91142bb39b906598cf57a248e",
+    "markers": [
+      "isAdminSession",
+      "enforceRateLimit"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/admin/licenses/[id]/route.ts",
+    "sha256": "279be7769cd7e780bea7a50ca6de8858232fbb4f88aeddea3503f0a00fbe96d3",
+    "markers": [
+      "isAdminSession",
+      "enforceRateLimit"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/admin/licenses/create/route.ts",
+    "sha256": "b9c04d0e2eaccca6839c7d7820f9d793a2f597df802482d19a62e09b8d1adeee",
+    "markers": [
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/admin/licenses/generate/route.ts",
+    "sha256": "0010444af0895f85364dfa8c9eb7ad782acecf1126d3bfff5e111016d970272e",
+    "markers": [
+      "isAdminSession",
+      "enforceRateLimit"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/admin/licenses/revoke-by-key/route.ts",
+    "sha256": "b07c7981f31bb7399fa15c0594571fa55b75f1096cf88392e3371281ee6481a9",
+    "markers": [],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/admin/licenses/route.ts",
+    "sha256": "53a420822ec4e8657fa0780a85902a48bbe16e52ac4551a1535274f0b47b8bac",
+    "markers": [
+      "isAdminSession"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/admin/monitoring/route.ts",
+    "sha256": "964daefa23a7dbd48bbd72ad0830fd040694e7b5f013ce2ee7e8ee72f4dab1a0",
+    "markers": [
+      "withAuth",
+      "requireSession"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/admin/updates/file/[name]/route.ts",
+    "sha256": "5b238321928e18b1df85c03da0bc8455e0a398b1ba5f0a2d60ced5a40045c3ae",
+    "markers": [],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/admin/updates/route.ts",
+    "sha256": "7fd58b3ecf4bddbc0793c7d4da252fa7305824ad2590505a67acb3d992998f27",
+    "markers": [
+      "isAdminSession"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/adresse/recherche/route.ts",
+    "sha256": "04dab85890c29d3ecd84be8bf251aad4423b68b39a4e9d0a41f40e31ae193ed7",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/analytics/health/route.ts",
+    "sha256": "30fb90dd96a5a7d9a1b8f073c3df04ad99c4825030f55b060a33f24c6240170b",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/appointments/[id]/route.ts",
+    "sha256": "db7a1e4b37431fba13dbf05bab9588ac841030fa58dfd70447df981853a7918e",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/appointments/route.ts",
+    "sha256": "04ecaf03d1620e33ffd0e27faad2219c02b726cf200c569e81fdad1f76a70d80",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/auth/[...nextauth]/route.ts",
+    "sha256": "92b2b11167a849dd22f02058cc6be8a9b7a26516c0ee30e34ef30ff68fc8db88",
+    "markers": [
+      "enforceRateLimit"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/catalog/route.ts",
+    "sha256": "b3ee9bd6b155f86dec53785757680af8f3fbea55e968749c0b9139f2841c036f",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/clients/[id]/portal-access/route.ts",
+    "sha256": "d2d682096208a6c1b3a5bf93ba812140bcdbd0f93e4fe8e2cd85dc788ce2d1c6",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/clients/[id]/route.ts",
+    "sha256": "65d0dcec13aeff259a1ddd90c80741d45a3632728ee330a19e229edc0084be5c",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/clients/route.ts",
+    "sha256": "62099c246472b7b6c6cdab1e070d448df2258b33c2f39863a3d3912da69ce292",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/copilot/report/route.ts",
+    "sha256": "19fc43ef74bbc52fd3b1e82db63236d3a97684ef43e4eddccd0c0ac690aefd27",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/copilot/reports/[id]/export/route.ts",
+    "sha256": "58f6c5dd7cb83d0d4208b96019781690ad294a9dba91703e38fe2ce8352d90b8",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/copilot/reports/route.ts",
+    "sha256": "5fa6ffb217509ff18ce17fef5092de69cfc41f9dac9d3c101abc908d6441b1f0",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/copilot/route.ts",
+    "sha256": "e20ee7bfa931565a165dfcb09e5aee269f1aa657c562fe964a541b9d28c75833",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/dashboard/route.ts",
+    "sha256": "9fd8ba2b0fa3b2c57fe8f6e42f932ee887a587f5c497bb83aecf86f86a259029",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/diagnostic/route.ts",
+    "sha256": "2454a76afd4b0230a2607631ceb8c22caf12e7b29ad15652737eb8d5a62f1a3d",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/einvoicing/connection/route.ts",
+    "sha256": "eda13243f67bccee572862c10104a76ffbd15ff58e4b6cba989fe3e62f14b9af",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/einvoicing/connection/test/route.ts",
+    "sha256": "e8fa07a5ff1a1ca285235036dd545b22faf206b9430c46fdb3780883c43796ba",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/einvoicing/invoices/[id]/submit/route.ts",
+    "sha256": "8df214f3bc5758862f2a917eadf248682e3e1e6330a8d8213c27d7233c559fce",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/einvoicing/status/route.ts",
+    "sha256": "a70ee6efe1af50bc586bdb68e733dc08c907d857565c71d3bd8ca69d247e5aa5",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/email/route.ts",
+    "sha256": "8d1f1ad32ce2905a706ab197d34c6243ab66beda043be7804d3cca1e59072715",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/estimate/route.ts",
+    "sha256": "dc975d60c099db7f6f80e5e6165f3b162a81377d73e87d69b9120880bdc5725d",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/export/fec/route.ts",
+    "sha256": "2d731dff08bdae1f2d678604d4ea6ef0a736f5a3507a15c637e4ab7b34c2a53f",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/finance/route.ts",
+    "sha256": "52adc3a80deab956e8f3264c1caa6463fa1e7acbb483118d3993ada46d072f21",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/forecast/route.ts",
+    "sha256": "5357e0937b3e1740d556a6b0ab4d70aba2190d72b8fa7b3bce8c791779d2f340",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/forgotten-parts/route.ts",
+    "sha256": "deda7f27c6a9f2220faadb1098512b189e1dd3994dbe9ea4e4fde4e44d6d6b8e",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/garages/route.ts",
+    "sha256": "d5e104b1eee075435f9c36c334e493be16d7fa24442372d93bcaeba00f477ffc",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/health/route.ts",
+    "sha256": "28b865e8c6b31b03ce24508bdd2429c7156b6b8effea46b36e82936c6c27d7f5",
+    "markers": [],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/inspections/[id]/route.ts",
+    "sha256": "54d85f4af801826c9b277b6c6a2566f78297e0eaa928e1ea59e8d36470666992",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/inspections/prefill/route.ts",
+    "sha256": "eecceb0aee11fbffcd89580be911849a4daab4692e2c83bbd8abd1aefe251046",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/inspections/route.ts",
+    "sha256": "4a25adec6300f280d233e811f68d421976ed6b01829a27c141b24da9a521264b",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/internal/backup/route.ts",
+    "sha256": "d15803316f614354e546a312e6fcb378dfd25cfa19e6004bc750a4d7c5971920",
+    "markers": [
+      "internalRequestAuthorized"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/internal/export/route.ts",
+    "sha256": "08b12f814bbc2594aa0b06ea71371f85958d57f337da74d1f6307b3f5a8c7758",
+    "markers": [
+      "internalRequestAuthorized"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/internal/license-status/route.ts",
+    "sha256": "e80fab79ff168683177702288c8620c7e7d6d7dbd87a246c9b65e6f93dae3ae1",
+    "markers": [
+      "internalRequestAuthorized"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/internal/migrate/route.ts",
+    "sha256": "47b48a3643ca5d4ae8d5d85718eb298630bf9f964feab57a5ee77bde13962e2d",
+    "markers": [
+      "internalRequestAuthorized"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/invoices/[id]/route.ts",
+    "sha256": "c821be166285ed46d6331165addd92eacf3ae6e1f3a2f5778218eddb55731155",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/invoices/route.ts",
+    "sha256": "543c5fc5c175fefd2c6a4263214a68f18eba9dc3bb3d237d148f96f1d8be5c4b",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/jobs/[id]/parts/route.ts",
+    "sha256": "b70494f5d1273829ada2584f21c04cd04d295f575ce1bc236023cf7037b97c82",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/jobs/[id]/photos/route.ts",
+    "sha256": "d33d23247da44f545752a55381ed32890a2513422a9bd102482cba652db23b27",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/jobs/[id]/route.ts",
+    "sha256": "0b45613b2a4cceb0d671c2d20b877f6b2d87a5dc33d5df145450c2e1faf2bacd",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/jobs/[id]/timer/route.ts",
+    "sha256": "4ebedb0ff5d7cddf06d61850d8eeda6e99dc86552c1db70ce2b3aa6064de3b92",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/jobs/pulse/route.ts",
+    "sha256": "177d470e9762f3cde448415bda9660970dded32b93f1cff546afb8fcac491789",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/jobs/route.ts",
+    "sha256": "5c928f7e7c1f125a36294ff7f79c2b4881b0a19e6e6ac24800f2386c95b7e23d",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/labor-operations/[id]/route.ts",
+    "sha256": "a6562ed15dd93975dca392edd00940b49065d79b0c8a153d0e4b6b4add283892",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/labor-operations/bulk-import/route.ts",
+    "sha256": "ace5bc539a5f2ee846059531d90498b2b918409ba4e690aeb34dad5a49996d1d",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/labor-operations/route.ts",
+    "sha256": "1b574002d080107108ad1e09049c32d7eae3dddae369cea255be31e7006de608",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/license/activate/route.ts",
+    "sha256": "6e13e19327acbd767da8f7f41477c6f776f21d7b96909b73c39d6f86a2d0108a",
+    "markers": [
+      "licenseApiBoundary",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/license/check/route.ts",
+    "sha256": "e83159f9c0f5267c964fb90549ace7b18489c84aa512990d4c28db25e26d6a94",
+    "markers": [
+      "licenseApiBoundary",
+      "enforceRateLimit"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/license/deactivate/route.ts",
+    "sha256": "0fb80bd449faf772f3361101c3fa9da5451ec92c93a11cd8e842d448e35d9d56",
+    "markers": [
+      "licenseApiBoundary",
+      "enforceRateLimit"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/license/devices/route.ts",
+    "sha256": "d66d9db0ea58a589e84a1843930aacaa134c6be9bfcdbf607bd57e3547aa70dd",
+    "markers": [
+      "licenseApiBoundary",
+      "enforceRateLimit"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/license/status/route.ts",
+    "sha256": "1916254a6c08f7c2b09ddf2b274d0775e84b08d6540a5beb9a3b17dc3db314ff",
+    "markers": [
+      "licenseApiBoundary",
+      "enforceRateLimit"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/license/type/route.ts",
+    "sha256": "2061100d75e147b896beb6147dc31a9d4cff4521b589de74dfa66c3fdb8ea1a8",
+    "markers": [
+      "licenseApiBoundary"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/loaner-reservations/[id]/route.ts",
+    "sha256": "7a9a11a48cbdd9d21ab44c44c02b12135fbdddbb8bd13cb7346c13c795108c06",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/loaner-reservations/route.ts",
+    "sha256": "8237eb2582cd872dfd5f49d3ae8c7bdcd16325150b1940e7965993e6714814ad",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/loaner-vehicles/[id]/route.ts",
+    "sha256": "65a154fa1bec2ad6ab5a8ed2db0d1fbf9d6e95d1f7a228a599800610e765e4da",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/loaner-vehicles/route.ts",
+    "sha256": "d952fb7475f3f9cd904512d8691ea19efe8585e4a8141c3c870845977a51b705",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/[lid]/assign/route.ts",
+    "sha256": "09438a3e8b0ccf54fdfdb228b8214efaba8d2cdee8548c7f60a3bc055429b75b",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/[lid]/disconnect/route.ts",
+    "sha256": "e6238a6d824ade9aae5f1cd49d48bebdfe36398d512e18d3476749615fdb1d39",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/[lid]/status/route.ts",
+    "sha256": "b6ac5dd55f0993674023eb163776f814a5387ac2d4e0fa180048b7ecef51ce87",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "validateMechanicSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/[lid]/token/route.ts",
+    "sha256": "5ebde266066933aab5be33a2233294f49cfcadf8dac7c6c2d53d9e264d1e5233",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/route.ts",
+    "sha256": "21a2176cce88fc6fd65b56dd22dda12f89661bda7d9f2e272c9b7386314c3c7b",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanic/jobs/[id]/checklist/[itemId]/route.ts",
+    "sha256": "940369f03360299ab97fff43a2f8f7c943485f007acec8ca29738b94087cb027",
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanic/jobs/[id]/notes/route.ts",
+    "sha256": "0f4632abd7d30e8825893200dee89892f112b383203249241fe01022f6253fa3",
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanic/jobs/[id]/photos/route.ts",
+    "sha256": "7bc1e9c9fecc8d24ca8991626428213a548eb17b99dba079fbe9c944cfff1c41",
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanic/jobs/[id]/route.ts",
+    "sha256": "fa56b23ad453ed996bc920fd4f56274d4b1665ff05f6f38ab81e61c3222ec078",
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanic/jobs/[id]/timer/route.ts",
+    "sha256": "c4323c4e8df5c38a7034a0847e0a1a441b603e964ae8ec539d398eecd2c62cd7",
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanic/logout/route.ts",
+    "sha256": "65e2b93b173ed89e8c07005da6f3f118abc5b47b736cbd733076dc521d5e6a29",
+    "markers": [
+      "validateMechanicSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanic/me/route.ts",
+    "sha256": "43cd593e400ffe5e8d2188cbea40a430052550e7d364e85ebf278bdaa36da9a8",
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanic/photos/[...path]/route.ts",
+    "sha256": "2955c0b73df86a602d7916337493944eff25df006586990fb2053d2260b40031",
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanic/schedule/route.ts",
+    "sha256": "69ea61adb66a0e1303c105ab818926d219dfb55781ffcb46420d9cccad62fb8d",
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanics/[id]/avatar/route.ts",
+    "sha256": "49fc1efaf35efcc81dfe5228b24c5cef2d86639e0f3798d1422c7ba74175e643",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanics/[id]/route.ts",
+    "sha256": "94f055fed65edfc5f59b75990de9f99db35afab26ad7136db0bb969631573569",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/mechanics/route.ts",
+    "sha256": "52d2637c71a6a7eb9264024a17642eaebf41783390e5827bf286b89a1ef5a3ab",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/notifications/dispatch/route.ts",
+    "sha256": "a104d74591a98637e1e30a4f69f3e54747901d61646dfa9041634e5f841ed0c5",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/ocr/route.ts",
+    "sha256": "a10d7a547650f371eca135c7bc322962a82d8b4f5f555f35d285d5958f6ddc03",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/parts/[id]/route.ts",
+    "sha256": "38b6a09889766cbce5d3bce7afef675082cf3600dba14dbcec27ec8a87007918",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/parts/low-stock/route.ts",
+    "sha256": "ce0b257a413e6e154ff2cfaaf0060ed40a8a0e55c0fd11658bb9608408acebf0",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/parts/route.ts",
+    "sha256": "af37ea4dd996ac031626a4e985cb53f3fe40bb84f19febbd9b590956470f7f8c",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/parts/search/route.ts",
+    "sha256": "bf601d3dc3fffaf156ef4073e7fa6cd87762e9f2828ede0d51da385e854e7f83",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/photos/[...path]/route.ts",
+    "sha256": "9149e0c95d20d8f6ed6cdab9228fc4202127cb8dc3050bb39da22bd7861c1243",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/ping/route.ts",
+    "sha256": "3846d875cd950ce01bb44265b17350520ffa4e3f97381936dcb2d03f96cefa8a",
+    "markers": [],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/plate-lookup/route.ts",
+    "sha256": "ed9c5fd7482abcd998bf12214adef9161789fedd9b4b9e17d3b9c5cc592a70ee",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/plate-ocr/route.ts",
+    "sha256": "8c14f799df7be1a24a7e29808d609ff5c3f4e32a312350f300d7ad1affdfde6d",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/[token]/route.ts",
+    "sha256": "f8d2571e6a9eda29047002df736ee7c27021fb81a9fd41492749456ddc5c0a92",
+    "markers": [
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/appointments/[id]/route.ts",
+    "sha256": "b253205ebe2f8a62a68aba2d6785b5fa68a5afc638b316101e12de5ba4a80643",
+    "markers": [
+      "withPortalAuth",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/appointments/route.ts",
+    "sha256": "555d4ff736e1e727a5a349db45bb108db7efb3e5bb1dbaa9040f60eb0f7f2565",
+    "markers": [
+      "withPortalAuth",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/auth/2fa/disable/route.ts",
+    "sha256": "db94006ed6c09abc5254e8e4e84559fc10518f78648f0f3d34f0419d4f425524",
+    "markers": [
+      "withPortalAuth"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/auth/2fa/enable/route.ts",
+    "sha256": "520352ea1aaf8cf0fd65a6647aab0f17e71295a7ddc084ad58afe1dd91af40d8",
+    "markers": [
+      "withPortalAuth"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/auth/2fa/setup/route.ts",
+    "sha256": "d5ee189f10e3d83bb782d28ad6c76def1d43e1713f9d9ec0fdac1351478a5846",
+    "markers": [
+      "withPortalAuth"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/auth/2fa/verify/route.ts",
+    "sha256": "4602c24bff18ea96870f2a17f55d6814e6ed0e9d6b71cf44a22b3884175283f8",
+    "markers": [
+      "enforceRateLimit"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/auth/devices/route.ts",
+    "sha256": "2096965d32c794ca026b35fff6f368e6ac0d4ab0ea5a241ed6f30e3795a55389",
+    "markers": [
+      "withPortalAuth"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/auth/email/route.ts",
+    "sha256": "9b348849dfce0f773755a22fbba4e6445fb8e935ad53b2fb6619800d1ff3c5aa",
+    "markers": [
+      "withPortalAuth",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/auth/login/route.ts",
+    "sha256": "b43c4ded7a8b4b6546961250e4c0f04dce62df49d0d6607bbae7a988bd46528f",
+    "markers": [
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/auth/logout/route.ts",
+    "sha256": "f14e14c58b978bceac632dc2a01c2dc9a7c706a661bdc6d6df4b918f5ea341cf",
+    "markers": [
+      "withPortalAuth"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/auth/me/route.ts",
+    "sha256": "9be99b3a2928473e2761e1bb91c72e8be50d01ad44969984a0a4494b0710d65a",
+    "markers": [
+      "withPortalAuth"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/auth/password/route.ts",
+    "sha256": "1406abde46c0e2cd9a1eb764844a27c7b88d119c6a2c8d19f161e12d7d289eff",
+    "markers": [
+      "withPortalAuth"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/auth/register/route.ts",
+    "sha256": "d884c57960e5d49a6f47376ad79e58707d710809cbce0f7e67fd00746e79e148",
+    "markers": [
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/auth/verify-email/route.ts",
+    "sha256": "ddccda8b3b2bdef86c5abdcc04073bb19b9e4b10a9d00b591374d9207d993454",
+    "markers": [
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/generate/route.ts",
+    "sha256": "4e88aa0c6e8b9cf876d435b7015fbd45ba54074fb1576563587fd763367c36f9",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/me/dashboard/route.ts",
+    "sha256": "40ca11410b7bc430eb1e6ac40ca627ec083eaee85ee768e538427598db65a432",
+    "markers": [
+      "withPortalAuth",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/quote/[token]/route.ts",
+    "sha256": "85b9d477a87879c387100f348cdbca1bb9ac43f6224c246c1bf11b4b908e3d56",
+    "markers": [
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/tickets/[id]/close/route.ts",
+    "sha256": "569ffea5995b03712d35795aadd8f22a0d8f34f4f5aa0c980ffa7767a2f81641",
+    "markers": [
+      "withPortalAuth"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/tickets/[id]/route.ts",
+    "sha256": "f660447f54c2d3041a506b65e6f492841a9bf0a5aaf82d5dc8a8cf4dee0bbbbc",
+    "markers": [
+      "withPortalAuth"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/portal/tickets/route.ts",
+    "sha256": "b2ad7bd1eb9d2b2f38a98428e84c8787fdf014ecb816948dae92a91cb0fc06f6",
+    "markers": [
+      "withPortalAuth",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/profitability/route.ts",
+    "sha256": "47808152c67d9c710041f5a43a5a6409bf3db1329a682525e0ba16fb5d43e3a0",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/purchase-orders/[id]/receive/route.ts",
+    "sha256": "d9d7fa0be38fbc8b96063cbf60ab3a835b1be267cbb1cae30e7725d8461bef2c",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/purchase-orders/[id]/route.ts",
+    "sha256": "0d06f37fd66f54d2afce46b41be38f145d73f8806787cffc661398195a943de2",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/purchase-orders/route.ts",
+    "sha256": "54d79b0415999ff2e08785956301ea3465ad038abedb9c3fb2e4e1f1c39d0e8e",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/quotes/[id]/convert/route.ts",
+    "sha256": "a04c4066c9b04da02d74fbb1841c8607705a8547e102fd8ba5f0286f8db7edf8",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/quotes/[id]/route.ts",
+    "sha256": "527edf8bac2549d34f3b79086e8ef833edc683aceab0d6131268bd2af93dbb06",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/quotes/[id]/signature-token/route.ts",
+    "sha256": "23e7a55c091e40512f875b31808a585f395f4d34983c282507ef1c8c7c4029ab",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/quotes/generate/route.ts",
+    "sha256": "949bf21979666dfec1e762db2b56328b4fd7916291b052791c253d3620794108",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/quotes/route.ts",
+    "sha256": "625d8ae82deb02d2a8eee1d27aaee09de23475b5cba5924fe297895259e06654",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/reminders/route.ts",
+    "sha256": "215c225a411d484f5e59d63f96914d23227a72ced8c4f687df3b40e2d076f288",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/reminders/send/route.ts",
+    "sha256": "7b45e1c1a3eda2135c6bc1b7115a2451c18f929a400667d4ffc9262dc92f0690",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/reminders/suggestions/route.ts",
+    "sha256": "0051324805439f82926697892739336247b4dd48240eec22df6fdc8089d9511e",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/reports/route.ts",
+    "sha256": "628a252d3df0b8b9e2893f51c9b6cc33b00cdf323e583ec976c78ad78ccd5422",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/signatures/route.ts",
+    "sha256": "77d0d798a4fba9ef4c3b25a48815b4b715e0413fc5bdd9242c375cb9d91333fa",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/stats/route.ts",
+    "sha256": "a3146ebcd6939acc8fa26cba010eb08111497eb5f81965d7567b5465787215c4",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/stock-forecast/route.ts",
+    "sha256": "60698254dbca943cfb6dfacb2976b297fddfdddef3ef211cbc6c0611008f56ca",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/suggestions/route.ts",
+    "sha256": "cf4a932db5abfe80ba21148be07169a4e7eb73e9b7eabca1e01f5aeb272db6a1",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/suppliers/route.ts",
+    "sha256": "0d13a3810922e448a710406b0fe6c45fae149cdab4c12a410223533c34c350a0",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/sync/appointments/route.ts",
+    "sha256": "b4e841472d13d14e794ea39409aa619f7f2f756dbf457465548e8e52b3adbeee",
+    "markers": [
+      "authenticateGarageLicense",
+      "licenseApiBoundary",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/sync/einvoicing/route.ts",
+    "sha256": "a069848836988300e74332c7702a52f62e81710615c0fcc960a50000f82565dd",
+    "markers": [
+      "authenticateGarageLicense",
+      "licenseApiBoundary",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/sync/invoice/route.ts",
+    "sha256": "fa8b1c6a50effb08b988f834da29b636dccf026046f795804225b5ec60668b2a",
+    "markers": [
+      "authenticateGarageLicense",
+      "licenseApiBoundary",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/sync/job-photo/route.ts",
+    "sha256": "19a7731d2d22e5f637a8b41f99f488176fd2da9ce16a195aa22cfecac9bb8b30",
+    "markers": [
+      "authenticateGarageLicense",
+      "licenseApiBoundary",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/sync/jobs/route.ts",
+    "sha256": "853dea0e28f1a48114aed73cc0224ab9dbfad856197fa48e35777b8e8373fd6a",
+    "markers": [
+      "authenticateGarageLicense",
+      "licenseApiBoundary",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/sync/mechanic-assignment/route.ts",
+    "sha256": "19f406fada1a8cc69d5d43b3e6a4760b515cd1e934123b05136c5fce60760216",
+    "markers": [
+      "authenticateGarageLicense",
+      "licenseApiBoundary",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/sync/mechanic-avatar/route.ts",
+    "sha256": "ef3f6382892fbe459bb1ed657539d4ab18e2e539ffd7af1243e0999170d60695",
+    "markers": [
+      "authenticateGarageLicense",
+      "licenseApiBoundary",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/sync/mechanic-status/route.ts",
+    "sha256": "c88ec205da7fc95618564d5977f5048af72f8dffb48b4af39a3c7a475218c922",
+    "markers": [
+      "authenticateGarageLicense",
+      "licenseApiBoundary",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/sync/portal-account/route.ts",
+    "sha256": "5864acc82d8fc4649cc88e7372a32d6d8cfb611d4e0aaf5e6c55f84b00d868b0",
+    "markers": [
+      "authenticateGarageLicense",
+      "licenseApiBoundary",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/sync/portal/route.ts",
+    "sha256": "49ac962640dab3452bd3b6a1e79e83ba7d8969161ad0cdebe21409b27cfcd172",
+    "markers": [
+      "authenticateGarageLicense",
+      "licenseApiBoundary",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/sync/quote-return/route.ts",
+    "sha256": "18b11aadc12de5eaf3736e5db23436acb390d0d64c625273e60f30f9e07bf452",
+    "markers": [
+      "authenticateGarageLicense",
+      "licenseApiBoundary",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/sync/quote/route.ts",
+    "sha256": "9c6e5dce0b221236fce4a5e97280d1004a9dda6c0364c86178ca48c9bf2fd9c4",
+    "markers": [
+      "authenticateGarageLicense",
+      "licenseApiBoundary",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/sync/tickets/route.ts",
+    "sha256": "2ec111b44679fb4d6b06442eeee973c4bad59da68f608d7230c8790b0ddd3e30",
+    "markers": [
+      "authenticateGarageLicense",
+      "licenseApiBoundary",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/tickets/[id]/route.ts",
+    "sha256": "e4cbe20c5dce1b151b449f9c962b69e34df84e27be632836d353ca735df6d24c",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/tickets/route.ts",
+    "sha256": "8b12701d25502d0d63baf3729b14cfed786ac3dda45bd94a1d986401040a9e00",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/users/route.ts",
+    "sha256": "d6a7c7fd5b2af05d9204e29fc2ba92981cd7969c3cc95f451f001169642a408f",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/vehicles/[id]/route.ts",
+    "sha256": "88d9552af6e9f155e73289b9f260188fc1f78a915a8af4168f16e59d3826ef0a",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/vehicles/[id]/timeline/route.ts",
+    "sha256": "41cf4b428dea5906901728afd260576205382bd3c0b9d79cf3c9ad04497672f3",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/vehicles/ct-alerts/route.ts",
+    "sha256": "ee9e90042deb1dc606c4f5e9bd539d6e70f5188f8c18eb79bd7889460f88be27",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/vehicles/route.ts",
+    "sha256": "302082d61b2a2b8371f1f0f30ba76606529f8601dd18f63dee6ac55f7e87279b",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/version/route.ts",
+    "sha256": "c826832157426deb343eeb7419fed233996f13e712961cf6f11537036e82338e",
+    "markers": [],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/vin/route.ts",
+    "sha256": "ee21fc756330e148db316adb5996a78736a8550aec863a01cc68da4ba9b1149b",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/warranties/[id]/route.ts",
+    "sha256": "f40639b55c31d23601604e9d9003de669c76127ebc5d3fee94c3962f80688407",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/warranties/alerts/route.ts",
+    "sha256": "db97328fa238375e17b4ce2baa0127797fe59a84b24d8e8a1fca77d3d7d12f71",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/warranties/route.ts",
+    "sha256": "46d967521839a41f37ab5c7ee3a76cf7df50bb57d04137f6c7175f0833ce8352",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/work-orders/[id]/route.ts",
+    "sha256": "6de03af0e2cbbe1003d2396f5b42ee9cc0247ac564cf1e6b9517339445590e11",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/work-orders/[id]/sign/route.ts",
+    "sha256": "16e1ff9b61b8a0c857dc37c68dde6e763bba51a85bc5e6a7e5a619765028e6f1",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  },
+  {
+    "file": "src/app/api/work-orders/route.ts",
+    "sha256": "817a7e370ba1884716c671b25f220a11712fd4fa2247af38998ca8c5885f7d35",
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticCompleteness": "NOT_CERTIFIED; markers are lexical cues, delegated guards and all branches require review"
+  }
+]

@@ -3,19 +3,23 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   X, Plus, Trash2, Download, Send, CheckCircle2, ArrowRight,
-  FileText, Receipt, Edit3, Save
+  FileText, Receipt, Edit3, Save, PenLine, Copy
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format, parseISO, addDays } from 'date-fns'
 import toast from 'react-hot-toast'
 import { useScheduleStore } from '@/store/schedule-store'
-import { searchClients } from '@/lib/client-memory'
-import type { ClientRecord } from '@/lib/client-memory'
+import { useRechercheClient } from '@/lib/clients/use-recherche-client'
+import { AddressAutocomplete } from '@/components/AddressAutocomplete'
 import { DateField } from '@/components/DateField'
 import { useTranslation } from '@/lib/i18n'
 import { dateLocale } from '@/lib/i18n/date-locale'
 import { docStatusLabel } from '@/lib/i18n/labels'
-import { computeTotals, multiplyCents, toCents, fromCents } from '@/lib/money'
+import { computeTotals, toCents, fromCents, parseAmountToScaled, fromScaled, lineCents, formatEuros, roundEurosForDisplay } from '@/lib/money'
+import { PartAutocomplete, type PartSuggestion } from '@/components/invoice/PartAutocomplete'
+import { QuoteInvoicePrintDocument } from '@/components/invoice/QuoteInvoicePrintDocument'
+import { EInvoicePanel } from '@/components/invoice/EInvoicePanel'
+import { renderElementToA4Pdf, PRINT_HOST_STYLE } from '@/lib/pdf/render-a4'
 
 interface Line {
   id?: string
@@ -25,6 +29,16 @@ interface Line {
   unitCost: number
   isLabor: boolean
   sortOrder: number
+  /**
+   * Lien INTERNE vers la pièce du stock choisie dans l'autocomplétion. C'est ce
+   * champ — jamais le libellé — qui rend fiable la décrémentation à la
+   * validation puis la restitution à l'annulation.
+   */
+  partId?: string | null
+  /** Stock disponible connu au moment du choix (affichage/garde-fou saisie). */
+  stockAvailable?: number | null
+  /** Nom exact de la pièce liée (message d'alerte lisible). */
+  partName?: string | null
 }
 
 interface QuoteOrInvoice {
@@ -59,6 +73,10 @@ interface Garage {
   logoPath?:   string | null
   invoiceFooter?: string | null
   paymentTerms?: string | null
+  /** Taux de TVA du garage — n'était pas déclaré, donc jamais lu (GF-026). */
+  taxRate?: number
+  /** Tarif horaire du garage, en euros. */
+  hourlyRate?: number
 }
 
 interface Props {
@@ -78,11 +96,13 @@ const STATUS_COLORS: Record<string, string> = {
   converted: 'bg-purple-100 text-purple-700',
   paid:      'bg-emerald-100 text-emerald-700',
   overdue:   'bg-red-100 text-red-600',
+  cancelled: 'bg-gray-200 text-gray-600',
 }
 
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Brouillon', sent: 'Envoyé', accepted: 'Accepté',
   refused: 'Refusé', converted: 'Converti', paid: 'Payé', overdue: 'En retard',
+  cancelled: 'Annulée',
 }
 
 // Input class for use inside the white invoice area — always dark text
@@ -97,9 +117,14 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
   const loc = dateLocale(lang)
   const { invalidateStats } = useScheduleStore()
 
-  const [clientSuggestions, setClientSuggestions] = useState<ClientRecord[]>([])
+  // Depuis la BASE, plus depuis le `localStorage` du poste : un téléphone
+  // corrigé dans l'écran Clients ressortait ici avec l'ANCIENNE valeur, et
+  // était recopié tel quel dans la facture émise (GF-016).
+  const { suggestions: clientSuggestions, chercher: chercherClient, vider: viderClients } = useRechercheClient()
   const [showClientDrop, setShowClientDrop]       = useState(false)
   const clientDropRef = useRef<HTMLDivElement>(null)
+  /** Nœud du document d'impression, rendu hors écran (jamais l'interface). */
+  const printRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -117,7 +142,12 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
   const [editing,    setEditing]    = useState(!documentId)
   const [saving,     setSaving]     = useState(false)
   const [converting, setConverting] = useState(false)
+  const [signing,    setSigning]    = useState(false)
+  /** Lien de signature fraîchement produit — affiché pour être communiqué. */
+  const [signatureUrl, setSignatureUrl] = useState<string | null>(null)
   const [printing,   setPrinting]   = useState(false)
+  /** Un changement de statut est en vol → neutralise le double-clic. */
+  const [statusBusy, setStatusBusy] = useState(false)
   const [form, setForm] = useState({
     clientName:   prefill?.clientName   ?? '',
     clientEmail:  prefill?.clientEmail  ?? '',
@@ -136,8 +166,25 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
 
   const fetchGarage = useCallback(async () => {
     const r = await fetch('/api/garages')
-    if (r.ok) setGarage(await r.json())
-  }, [])
+    if (!r.ok) return
+    const g: Garage = await r.json()
+    setGarage(g)
+
+    // ── Le taux de TVA du garage est APPLIQUÉ (GF-026) ─────────────────────
+    // L'état initial valait `prefill?.taxRate ?? 20`, et aucun appelant ne
+    // fournit `prefill.taxRate` : tout devis et toute facture partaient donc à
+    // 20 %. Le repli côté serveur (`body.taxRate ?? garage.taxRate`) ne se
+    // déclenchait jamais, puisque le corps portait toujours une valeur. Un
+    // garage en franchise de TVA, en outre-mer ou à taux réduit facturait ainsi
+    // 20 % à son insu — sur CHAQUE document.
+    //
+    // `!documentId` : on ne touche pas au taux d'un document existant, que
+    // `fetchDoc` réinjecte — le taux appliqué à une facture émise ne doit pas
+    // bouger parce que le garage a changé son réglage depuis.
+    if (!documentId && prefill?.taxRate == null && typeof g.taxRate === 'number') {
+      setForm(f => ({ ...f, taxRate: g.taxRate as number }))
+    }
+  }, [documentId, prefill?.taxRate])
 
   const fetchDoc = useCallback(async () => {
     if (!documentId) return
@@ -166,18 +213,26 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
     fetchDoc()
   }, [fetchGarage, fetchDoc])
 
-  // Pre-fill lines from job parts if creating new from a job
+  // Pre-fill lines from job parts if creating new from a job.
+  //
+  // IMPORTANT — ces lignes NE SONT PAS rattachées au stock (`partId` absent).
+  // Les pièces d'une intervention ont DÉJÀ été sorties de l'inventaire au
+  // moment où elles ont été ajoutées à l'intervention (POST /api/jobs/:id/parts
+  // décrémente atomiquement). Les rattacher ici ferait décrémenter une SECONDE
+  // fois à la validation de la facture. Le rattachement au stock est réservé aux
+  // pièces choisies dans l'autocomplétion de la facture (vente directe).
   useEffect(() => {
     if (documentId || !jobId) return
-    fetch(`/api/jobs/${jobId}/parts`).then(r => r.ok ? r.json() : []).then((parts: { description?: string; name?: string; quantity: number; unitPrice: number; unitCost: number }[]) => {
+    fetch(`/api/jobs/${jobId}/parts`).then(r => r.ok ? r.json() : []).then((parts: { description?: string; name?: string; quantity: number; unitPrice: number; unitCost: number; part?: { name?: string } }[]) => {
       if (parts.length > 0) {
         setLines(parts.map((p, i) => ({
-          description: p.description ?? p.name ?? '',
+          description: p.description ?? p.part?.name ?? p.name ?? '',
           quantity:    p.quantity,
           unitPrice:   p.unitPrice,
           unitCost:    p.unitCost,
           isLabor:     false,
           sortOrder:   i,
+          partId:      null, // stock déjà consommé par l'intervention — cf. ci-dessus
         })))
       }
     })
@@ -186,7 +241,14 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
   // Totaux EXACTS en centimes entiers (identiques à l'API/DB via lib/money).
   const _t          = computeTotals(lines.map(l => ({ quantity: l.quantity, unitPrice: l.unitPrice })), form.taxRate)
   const subtotalHT  = _t.totalHT
-  const totalCost   = fromCents(lines.reduce((c, l) => c + multiplyCents(toCents(l.unitCost), l.quantity), 0))
+  // ── Le coût suit la MÊME formule que le serveur (GF-036) ──────────────────
+  // `multiplyCents(toCents(prix), qté)` arrondit le prix AVANT de multiplier —
+  // le motif que `lib/money.ts` documente comme fautif. Le coût d'achat admet
+  // quatre décimales (les pièces sont stockées en dix-millièmes) : sur
+  // 0,3333 € × 900, l'ancienne formule rendait 297,00 € là où le serveur
+  // (`profitability`, `finance`, `analytics`) compte 299,97 €. La carte de
+  // rentabilité affichait donc une marge que les rapports contredisaient.
+  const totalCost   = fromCents(lines.reduce((c, l) => c + lineCents(l.unitCost, l.quantity), 0))
   const taxAmount   = _t.taxAmount
   const totalTTC    = _t.totalTTC
   const profit      = fromCents(toCents(subtotalHT) - toCents(totalCost))
@@ -196,19 +258,65 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
       toast.error(t.qiNameRequired)
       return
     }
+
+    // ── QUANTITÉ : ne jamais corriger la saisie en silence ────────────────────
+    // `Math.max(0.01, Number(quantity) || 1)` transformait une quantité à 0 —
+    // ou toute saisie non numérique — en **1**. Le document enregistré ne valait
+    // alors pas le montant affiché ; sur une facture, ce montant devient immuable
+    // dès l'émission et la correction impose un avoir (GF31-AUD-052).
+    const lignesRetenues = lines.filter(
+      l => l.description.trim() !== '' || Number(l.unitPrice) > 0 || Number(l.unitCost) > 0,
+    )
+    const quantiteFautive = lignesRetenues.findIndex(l => {
+      const q = Number(l.quantity)
+      return !Number.isFinite(q) || q < 0.01
+    })
+    if (quantiteFautive !== -1) {
+      const l = lignesRetenues[quantiteFautive]
+      toast.error(
+        `Quantité invalide ligne ${quantiteFautive + 1}${l.description.trim() ? ` (${l.description.trim()})` : ''} : `
+        + 'saisissez une quantité supérieure à 0, ou supprimez la ligne.',
+      )
+      return
+    }
+
+    // ── Une ligne LIÉE AU STOCK se compte en unités entières (GF-037) ─────────
+    // Le champ accepte le pas de 0,01 et rien ne distinguait une ligne libre
+    // d'une ligne rattachée à une pièce. Le document s'enregistrait donc sans
+    // broncher, et le refus n'arrivait qu'à la VALIDATION de la facture —
+    // « Quantité invalide pour la pièce … : le stock se gère en unités
+    // entières », sans dire laquelle sur un document de vingt lignes, ni que
+    // délier la pièce suffisait. La règle du moteur de stock reste intacte : on
+    // la fait simplement respecter là où l'on sait encore désigner la ligne.
+    const fractionFautive = lignesRetenues.findIndex(
+      l => l.partId && !Number.isInteger(Number(l.quantity)),
+    )
+    if (fractionFautive !== -1) {
+      const l = lignesRetenues[fractionFautive]
+      toast.error(
+        `Ligne ${fractionFautive + 1}${l.description.trim() ? ` (${l.description.trim()})` : ''} : `
+        + 'une pièce du stock se compte en unités entières. '
+        + 'Arrondissez la quantité, ou déliez la ligne de la pièce.',
+      )
+      return
+    }
+
     setSaving(true)
     try {
       // Keep only meaningful lines and normalise numbers so the server-side
       // validation (description requis, quantité ≥ 0.01…) never rejects the save.
-      const cleanLines = lines
-        .filter(l => l.description.trim() !== '' || Number(l.unitPrice) > 0 || Number(l.unitCost) > 0)
+      const cleanLines = lignesRetenues
         .map((l, i) => ({
           description: l.description.trim() || t.qiServiceFallback,
-          quantity:    Math.min(9999, Math.max(0.01, Number(l.quantity) || 1)),
+          // Validée juste au-dessus : on ne fabrique plus de quantité.
+          quantity:    Math.min(9999, Number(l.quantity)),
           unitPrice:   Math.max(0, Number(l.unitPrice) || 0),
           unitCost:    Math.max(0, Number(l.unitCost) || 0),
           isLabor:     !!l.isLabor,
           sortOrder:   i,
+          // Lien vers la pièce du stock — le serveur revérifie qu'elle
+          // appartient bien au garage avant de l'enregistrer.
+          partId:      l.isLabor ? null : (l.partId ?? null),
         }))
       const payload = {
         ...form,
@@ -251,6 +359,37 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
     }
   }
 
+  /**
+   * Produit le lien de signature du devis et l'envoie au client (GF-DUR-020).
+   *
+   * La page de signature existait, complète, mais rien ne fabriquait le jeton :
+   * la moitié cliente attendait un lien que la moitié garage ne savait pas
+   * produire. Personne ne pouvait donc faire signer un devis.
+   *
+   * Le lien est AFFICHÉ même quand l'e-mail part : un garage sans SMTP, ou dont
+   * le client n'a pas d'adresse, doit pouvoir le communiquer autrement.
+   */
+  async function handleSignatureLink() {
+    if (!doc || signing) return
+    setSigning(true)
+    try {
+      const r = await fetch(`/api/quotes/${doc.id}/signature-token`, { method: 'POST' })
+      const d = await r.json().catch(() => ({}))
+      if (!r.ok) { toast.error(d?.error ?? 'Lien de signature refusé par le serveur.'); return }
+      setSignatureUrl(d.url)
+      // L'état du devis passe à « envoyé » côté serveur : l'écran doit suivre,
+      // sinon il continue d'afficher « brouillon » sur un devis déjà parti.
+      setDoc(prev => (prev && prev.status === 'draft' ? { ...prev, status: 'sent' } : prev))
+      if (d.emailEnvoye === true) toast.success(`Devis envoyé à ${d.destinataire}`)
+      else if (d.emailEnvoye === false) toast.error('Lien créé, mais l’e-mail n’a pas pu être envoyé — communiquez-le vous-même.')
+      else toast.success('Lien de signature créé — ce client n’a pas d’adresse e-mail.')
+    } catch {
+      toast.error('Serveur injoignable.')
+    } finally {
+      setSigning(false)
+    }
+  }
+
   async function handleConvert() {
     if (!doc) return
     setConverting(true)
@@ -269,47 +408,59 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
     }
   }
 
+  /**
+   * Changement de statut — c'est ICI que le stock bascule pour une facture
+   * (draft → émise = décrément ; → cancelled = restitution).
+   *
+   * `statusBusy` neutralise le DOUBLE-CLIC côté interface ; l'idempotence réelle
+   * est garantie côté serveur par le verrou `stockCommittedAt` (deux requêtes
+   * simultanées ne peuvent pas décrémenter deux fois).
+   *
+   * Un refus (stock insuffisant → 409) doit être VU : l'ancien code ignorait
+   * silencieusement toute réponse non-OK, laissant croire à une validation.
+   */
   async function handleStatusChange(status: string) {
-    if (!doc) return
-    const r = await fetch(`${apiBase}/${doc.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    })
-    if (r.ok) {
-      const updated = await r.json()
-      setDoc(updated)
+    if (!doc || statusBusy) return
+    setStatusBusy(true)
+    try {
+      const r = await fetch(`${apiBase}/${doc.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      const payload = await r.json().catch(() => null)
+      if (!r.ok) {
+        toast.error(payload?.error ?? `${t.qiSaveFailedN} (${r.status})`)
+        return
+      }
+      setDoc(payload)
       toast.success(t.qiStatusUpdated)
       // Always sync stats — especially important when marking as paid
       invalidateStats()
-      onSaved?.(updated)
+      onSaved?.(payload)
+    } catch {
+      toast.error(t.qiSaveError)
+    } finally {
+      setStatusBusy(false)
     }
   }
 
+  /**
+   * Export PDF — depuis le DOCUMENT D'IMPRESSION dédié, jamais depuis la modale.
+   *
+   * L'ancien export photographiait `#qimodal-print`, c'est-à-dire l'interface
+   * d'édition telle qu'elle était mise en page à l'écran. Le PDF variait donc
+   * selon l'appareil (896 px de large sur poste, 358 px sur iPhone, 328 px sur
+   * Android) et embarquait champs de saisie et boutons. Le rendu passe
+   * désormais par `renderElementToA4Pdf`, sur un nœud de largeur fixe.
+   */
   async function handleDownloadPDF() {
-    const el = document.getElementById('qimodal-print')
+    const el = printRef.current
     if (!el) return
     setPrinting(true)
     try {
-      const { default: html2canvas } = await import('html2canvas')
-      const { default: jsPDF }       = await import('jspdf')
-      const canvas  = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false })
-      const imgData = canvas.toDataURL('image/png')
-      const pdf     = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const pageW   = 210, pageH = 297
-      const imgW    = pageW - 20
-      const imgH    = (canvas.height * imgW) / canvas.width
-      let yOffset   = 10
-      let remaining = imgH
-      while (remaining > 0) {
-        const sliceH = Math.min(remaining, pageH - 20)
-        if (yOffset !== 10) pdf.addPage()
-        pdf.addImage(imgData, 'PNG', 10, yOffset, imgW, sliceH)
-        remaining -= sliceH
-        yOffset    = 10
-      }
       const number = doc?.number ?? (mode === 'quote' ? 'DEV-DRAFT' : 'FAC-DRAFT')
-      pdf.save(`${number}.pdf`)
+      await renderElementToA4Pdf(el, { fileName: number })
     } catch {
       toast.error(t.qiPdfGenError)
     } finally {
@@ -318,10 +469,17 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
   }
 
   function addLine(isLabor = false) {
+    // Le tarif horaire du GARAGE, pas 60 € codés en dur (GF-026) : le réglage
+    // existait, était persisté, et cette ligne l'ignorait — chaque ligne de
+    // main-d'œuvre partait au tarif d'un autre atelier, et le garage devait la
+    // corriger à la main sur chaque document.
+    const tarifHoraire = typeof garage?.hourlyRate === 'number' && garage.hourlyRate > 0
+      ? garage.hourlyRate
+      : 60
     setLines(l => [...l, {
       description: isLabor ? t.jmLabor : '',
       quantity:    1,
-      unitPrice:   isLabor ? 60 : 0,
+      unitPrice:   isLabor ? tarifHoraire : 0,
       unitCost:    0,
       isLabor,
       sortOrder:   l.length,
@@ -332,12 +490,60 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
     setLines(l => l.map((line, idx) => idx === i ? { ...line, [field]: value } : line))
   }
 
+  /**
+   * Choix d'une pièce du stock : la ligne est PRÉREMPLIE (désignation,
+   * référence, prix de vente, coût) ET rattachée par identifiant. La TVA reste
+   * celle du document — GarageFlows applique un taux par document, pas par
+   * ligne (cf. modèle Invoice.taxRate).
+   */
+  function selectPartForLine(i: number, part: PartSuggestion) {
+    setLines(l => l.map((line, idx) => idx === i ? {
+      ...line,
+      description: part.reference ? `${part.name} (réf. ${part.reference})` : part.name,
+      unitPrice: part.unitPrice,
+      unitCost: part.unitCost,
+      isLabor: false,
+      partId: part.id,
+      partName: part.name,
+      stockAvailable: part.quantity,
+    } : line))
+  }
+
+  /** La saisie libre a divergé de la pièce : on retire le lien (et son garde-fou). */
+  function unlinkPart(i: number) {
+    setLines(l => l.map((line, idx) => idx === i
+      ? { ...line, partId: null, partName: null, stockAvailable: null }
+      : line))
+  }
+
+  /**
+   * Lignes dont la quantité demandée dépasse le stock connu. Simple GARDE-FOU
+   * D'INTERFACE : la disponibilité réelle est revalidée par le serveur dans la
+   * transaction de validation — le stock affiché ici n'est jamais cru sur parole.
+   */
+  const overstockedLines = lines.filter(
+    l => l.partId && typeof l.stockAvailable === 'number' && Number(l.quantity) > l.stockAvailable,
+  )
+
   function removeLine(i: number) {
     setLines(l => l.filter((_, idx) => idx !== i))
   }
 
   const docTitle  = mode === 'quote' ? t.jmQuote : t.jmInvoice
   const docNumber = doc?.number ?? (mode === 'quote' ? 'DEV-XXXX-XXX' : 'FAC-XXXX-XXX')
+
+  /**
+   * Date lisible, TOLÉRANTE à une saisie incomplète. Le document d'impression
+   * est rendu en permanence (hors écran) : pendant que l'utilisateur tape une
+   * date, la valeur intermédiaire n'est pas encore une date valide, et un
+   * `format(parseISO(…))` nu lèverait « Invalid time value » PENDANT LE RENDU —
+   * ce qui emporterait toute la modale.
+   */
+  function safeDateLabel(value: string | null | undefined): string {
+    if (!value) return '—'
+    const parsed = parseISO(value)
+    return Number.isNaN(parsed.getTime()) ? value : format(parsed, 'd MMMM yyyy', { locale: loc })
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
@@ -369,6 +575,17 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                 </button>
                 {mode === 'quote' && doc.status !== 'converted' && (
                   <>
+                    {/* Signature en ligne : la page cliente existait, mais rien
+                        ne produisait le lien qu'elle attend (GF-DUR-020). Un
+                        devis accepté ou refusé n'est plus signable — le serveur
+                        le refuse, autant ne pas le proposer. */}
+                    {['draft', 'sent'].includes(doc.status) && (
+                      <button onClick={handleSignatureLink} disabled={signing}
+                        title="Envoyer le devis au client pour signature en ligne"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg disabled:opacity-50 transition-colors">
+                        <PenLine className="w-3.5 h-3.5" /> {signing ? 'Lien…' : 'Faire signer'}
+                      </button>
+                    )}
                     {doc.status === 'draft' && (
                       <button onClick={() => handleStatusChange('sent')}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg transition-colors">
@@ -387,10 +604,28 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                     </button>
                   </>
                 )}
-                {mode === 'invoice' && doc.status !== 'paid' && (
-                  <button onClick={() => handleStatusChange('paid')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg transition-colors">
+                {/* VALIDATION de la facture : c'est cette action qui engage le
+                    stock (décrément atomique, une seule fois). */}
+                {mode === 'invoice' && doc.status === 'draft' && (
+                  <button onClick={() => handleStatusChange('sent')} disabled={statusBusy}
+                    title="Valider et émettre la facture — le stock des pièces liées sera décrémenté."
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg disabled:opacity-50 transition-colors">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> {statusBusy ? '…' : 'Valider la facture'}
+                  </button>
+                )}
+                {mode === 'invoice' && doc.status !== 'paid' && doc.status !== 'cancelled' && (
+                  <button onClick={() => handleStatusChange('paid')} disabled={statusBusy}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg disabled:opacity-50 transition-colors">
                     <CheckCircle2 className="w-3.5 h-3.5" /> {t.qiMarkPaid}
+                  </button>
+                )}
+                {/* ANNULATION : la facture est CONSERVÉE (série séquentielle,
+                    FEC) et les pièces reviennent en stock. */}
+                {mode === 'invoice' && doc.status !== 'draft' && doc.status !== 'cancelled' && (
+                  <button onClick={() => handleStatusChange('cancelled')} disabled={statusBusy}
+                    title="Annuler la facture — les pièces liées reviennent en stock. La facture reste conservée."
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 rounded-lg disabled:opacity-50 transition-colors">
+                    <X className="w-3.5 h-3.5" /> Annuler
                   </button>
                 )}
               </>
@@ -401,7 +636,7 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                 <Save className="w-3.5 h-3.5" /> {saving ? t.qiSaving : t.qiSave}
               </button>
             )}
-            <button onClick={onClose} className="gf-close p-2 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors">
+            <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-2 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -486,10 +721,10 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                         value={form.clientName}
                         onChange={e => {
                           setForm(f => ({ ...f, clientName: e.target.value }))
-                          setClientSuggestions(searchClients(e.target.value))
+                          chercherClient(e.target.value)
                           setShowClientDrop(true)
                         }}
-                        onFocus={() => { setClientSuggestions(searchClients(form.clientName)); setShowClientDrop(true) }}
+                        onFocus={() => { chercherClient(form.clientName); setShowClientDrop(true) }}
                         placeholder={t.qiClientNamePh}
                         autoComplete="off"
                         className={cn(INP, 'w-full font-semibold')}
@@ -497,17 +732,23 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                       {showClientDrop && clientSuggestions.length > 0 && (
                         <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl bg-[#1a2235] border border-white/10 shadow-2xl overflow-hidden">
                           {clientSuggestions.map(c => (
-                            <button key={c.customerName} type="button"
+                            <button key={c.cle} type="button"
                               onMouseDown={e => {
                                 e.preventDefault()
                                 setForm(f => ({
                                   ...f,
-                                  clientName:   c.customerName,
-                                  licensePlate: c.licensePlate ?? f.licensePlate,
-                                  vehicleModel: c.vehicleModel ?? f.vehicleModel,
-                                  clientPhone:  c.phone        ?? f.clientPhone,
+                                  clientName:    c.customerName,
+                                  licensePlate:  c.licensePlate ?? f.licensePlate,
+                                  vehicleModel:  c.vehicleModel ?? f.vehicleModel,
+                                  clientPhone:   c.phone        ?? f.clientPhone,
+                                  // L'adresse et l'e-mail viennent de la fiche
+                                  // client : les laisser vides obligeait à les
+                                  // ressaisir sur chaque document.
+                                  clientEmail:   c.email        ?? f.clientEmail,
+                                  clientAddress: c.address      ?? f.clientAddress,
                                 }))
                                 setShowClientDrop(false)
+                                viderClients()
                               }}
                               className="w-full text-left px-3 py-2 text-sm text-slate-200 hover:bg-white/[0.07] border-b border-white/[0.05] last:border-0"
                             >
@@ -521,7 +762,14 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                     </div>
                     <input value={form.clientEmail}   onChange={e => setForm(f => ({ ...f, clientEmail:   e.target.value }))} placeholder={t.uiEmail}    className={cn(INP, 'w-full')} />
                     <input value={form.clientPhone}   onChange={e => setForm(f => ({ ...f, clientPhone:   e.target.value }))} placeholder={t.uiPhone}    className={cn(INP, 'w-full')} />
-                    <input value={form.clientAddress} onChange={e => setForm(f => ({ ...f, clientAddress: e.target.value }))} placeholder={t.woAddress}  className={cn(INP, 'w-full')} />
+                    {/* Adresse avec propositions (GF-022) — saisie libre conservée. */}
+                    <AddressAutocomplete
+                      value={form.clientAddress}
+                      onChange={v => setForm(f => ({ ...f, clientAddress: v }))}
+                      placeholder={t.woAddress}
+                      aria-label={t.woAddress}
+                      className={cn(INP, 'w-full')}
+                    />
                   </div>
                 ) : (
                   <>
@@ -566,8 +814,21 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                       {editing ? (
                         <div className="flex items-center gap-2">
                           {line.isLabor && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold shrink-0">{t.qiLaborBadge}</span>}
-                          <input value={line.description} onChange={e => updateLine(i, 'description', e.target.value)}
-                            placeholder={t.woColDesc} className={cn(INP, 'w-full')} />
+                          {line.isLabor ? (
+                            // MAIN-D'ŒUVRE : jamais rattachable au stock.
+                            <input value={line.description} onChange={e => updateLine(i, 'description', e.target.value)}
+                              placeholder={t.woColDesc} className={cn(INP, 'w-full')} />
+                          ) : (
+                            <PartAutocomplete
+                              value={line.description}
+                              onChange={v => updateLine(i, 'description', v)}
+                              onSelectPart={p => selectPartForLine(i, p)}
+                              onClearPart={() => unlinkPart(i)}
+                              linkedPartId={line.partId}
+                              placeholder={t.woColDesc}
+                              className={cn(INP, 'w-full', line.partId && 'pr-16')}
+                            />
+                          )}
                         </div>
                       ) : (
                         <span className="flex items-center gap-2 text-gray-800">
@@ -578,20 +839,37 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                     </td>
                     <td className="py-2 text-center text-gray-800">
                       {editing ? (
-                        <input type="number" min="0.01" step="0.01" value={line.quantity}
-                          onChange={e => updateLine(i, 'quantity', parseFloat(e.target.value) || 0)}
-                          className={cn(INP, 'w-16 text-center')} />
+                        <>
+                          <input type="number" min="0.01" step="0.01" value={line.quantity}
+                            onChange={e => updateLine(i, 'quantity', fromScaled(parseAmountToScaled(e.target.value) ?? 0))}
+                            className={cn(
+                              INP, 'w-16 text-center',
+                              line.partId && typeof line.stockAvailable === 'number'
+                                && Number(line.quantity) > line.stockAvailable
+                                && 'border-red-400 ring-1 ring-red-300',
+                            )} />
+                          {line.partId && typeof line.stockAvailable === 'number' && (
+                            <span className={cn(
+                              'mt-0.5 block text-[10px]',
+                              Number(line.quantity) > line.stockAvailable ? 'font-semibold text-red-600' : 'text-gray-400',
+                            )}>
+                              {Number(line.quantity) > line.stockAvailable
+                                ? `${line.stockAvailable} dispo.`
+                                : `stock ${line.stockAvailable}`}
+                            </span>
+                          )}
+                        </>
                       ) : line.quantity}
                     </td>
                     <td className="py-2 text-right text-gray-800">
                       {editing ? (
                         <input type="number" min="0" step="0.01" value={line.unitPrice}
-                          onChange={e => updateLine(i, 'unitPrice', parseFloat(e.target.value) || 0)}
+                          onChange={e => updateLine(i, 'unitPrice', fromScaled(parseAmountToScaled(e.target.value) ?? 0))}
                           className={cn(INP, 'w-24 text-right')} />
                       ) : `${line.unitPrice.toFixed(2)} €`}
                     </td>
                     <td className="py-2 text-right font-medium text-gray-800">
-                      {(line.quantity * line.unitPrice).toFixed(2)} €
+                      {fromCents(lineCents(line.unitPrice, line.quantity)).toFixed(2)} €
                     </td>
                     {editing && (
                       <td className="py-2 pl-2">
@@ -604,6 +882,28 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                 ))}
               </tbody>
             </table>
+
+            {/* Stock insuffisant : on PRÉVIENT explicitement plutôt que de laisser
+                l'utilisateur découvrir le refus au moment de la validation. Le
+                serveur reste l'autorité (revalidation transactionnelle). */}
+            {editing && overstockedLines.length > 0 && (
+              <div className="mb-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <span className="text-base leading-none">⚠️</span>
+                <div className="text-xs text-amber-800">
+                  <p className="font-semibold">Stock insuffisant sur {overstockedLines.length} ligne(s)</p>
+                  <ul className="mt-1 space-y-0.5">
+                    {overstockedLines.map((l, idx) => (
+                      <li key={idx}>
+                        {l.partName ?? l.description} — {l.quantity} demandé(s), {l.stockAvailable} disponible(s)
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-1 opacity-80">
+                    La facture reste enregistrable en brouillon ; sa validation sera refusée tant que le stock ne suffit pas.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {editing && (
               <div className="flex gap-2 mb-6">
@@ -629,7 +929,7 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                   <span>
                     {t.woVAT} ({editing ? (
                       <input type="number" min="0" max="100" value={form.taxRate}
-                        onChange={e => setForm(f => ({ ...f, taxRate: parseFloat(e.target.value) || 0 }))}
+                        onChange={e => setForm(f => ({ ...f, taxRate: fromScaled(parseAmountToScaled(e.target.value) ?? 0) }))}
                         className="w-10 text-center border-b border-gray-300 text-sm text-gray-800 bg-transparent focus:outline-none" />
                     ) : form.taxRate}%)
                   </span>
@@ -677,7 +977,7 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>
                   <p className="text-gray-500">{t.jmPartsCost}</p>
-                  <p className="font-bold text-red-600">− {totalCost.toFixed(2)} €</p>
+                  <p className="font-bold text-red-600">{formatEuros(totalCost, 'negative')}</p>
                 </div>
                 <div>
                   <p className="text-gray-500">{t.qiSaleHT}</p>
@@ -685,13 +985,108 @@ export default function QuoteInvoiceModal({ mode, documentId, jobId, prefill, on
                 </div>
                 <div>
                   <p className="text-gray-500">{t.qiGrossMargin}</p>
-                  <p className={cn('font-bold text-lg', profit >= 0 ? 'text-emerald-600' : 'text-red-600')}>
-                    {profit >= 0 ? '+' : ''}{profit.toFixed(2)} €
+                  <p className={cn('font-bold text-lg', roundEurosForDisplay(profit) >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+                    {formatEuros(profit, 'always')}
                   </p>
                 </div>
               </div>
             </div>
           )}
+
+          {/* ── Lien de signature du devis ────────────────────────────────────
+              Affiché MÊME quand l'e-mail est parti : un garage sans SMTP, ou
+              dont le client n'a pas d'adresse, doit pouvoir le communiquer
+              autrement — par SMS, de vive voix, en le recopiant. */}
+          {signatureUrl && (
+            <div className="mx-8 mb-8 rounded-xl border border-purple-200 bg-purple-50/60 p-4">
+              <p className="text-xs font-semibold text-purple-800">Lien de signature du devis</p>
+              <p className="mt-0.5 text-[11px] text-purple-700/80">
+                Valable sept jours. Le client y consulte le devis, l’accepte ou le refuse.
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <code className="flex-1 select-all break-all rounded bg-white px-2.5 py-1.5 text-[11px] text-gray-700 border border-purple-200">
+                  {signatureUrl}
+                </code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard?.writeText(signatureUrl)
+                      .then(() => toast.success('Lien copié'))
+                      .catch(() => toast.error('Copie impossible — sélectionnez le texte'))
+                  }}
+                  aria-label="Copier le lien de signature"
+                  className="p-2 rounded-lg text-purple-700 hover:bg-purple-100 transition-colors"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Transmission à la plateforme agréée ───────────────────────────
+              Uniquement sur une FACTURE enregistrée, et hors édition : on ne
+              transmet pas un document en cours de modification. Le panneau se
+              retire de lui-même là où la fonctionnalité n'existe pas — sur le
+              poste, ou sans droit de lecture financière. */}
+          {mode === 'invoice' && doc?.id && !editing && (
+            <EInvoicePanel invoiceId={doc.id} statutFacture={doc.status} />
+          )}
+        </div>
+      </div>
+
+      {/* ── Document d'impression ────────────────────────────────────────────
+          Rendu HORS ÉCRAN, à largeur A4 fixe : c'est LUI qui part dans le PDF,
+          jamais la modale ci-dessus. Le PDF est ainsi identique sur poste et
+          sur téléphone, et ne contient ni champ de saisie ni bouton. */}
+      <div aria-hidden="true" data-gf-print="quote-invoice" style={PRINT_HOST_STYLE}>
+        <div ref={printRef}>
+          <QuoteInvoicePrintDocument
+            mode={mode}
+            garage={garage}
+            documentTitle={docTitle}
+            documentNumber={docNumber}
+            issueDateLabel={`${t.woIssuedOn} ${safeDateLabel(form.issueDate)}`}
+            secondaryDateLabel={
+              mode === 'quote'
+                ? (form.validUntil ? `${t.qiValidUntil} ${safeDateLabel(form.validUntil)}` : null)
+                : (form.dueDate ? `${t.qiDueDate} : ${safeDateLabel(form.dueDate)}` : null)
+            }
+            clientName={form.clientName}
+            clientEmail={form.clientEmail}
+            clientPhone={form.clientPhone}
+            clientAddress={form.clientAddress}
+            vehicleModel={form.vehicleModel}
+            licensePlate={form.licensePlate}
+            lines={lines.map(l => ({
+              description: l.description,
+              quantity: l.quantity,
+              unitPrice: l.unitPrice,
+              // Même calcul EXACT que la ligne affichée (centimes entiers) :
+              // le PDF ne peut pas diverger du document enregistré.
+              lineTotal: fromCents(lineCents(l.unitPrice, l.quantity)),
+              isLabor: l.isLabor,
+            }))}
+            subtotalHT={subtotalHT}
+            taxRate={form.taxRate}
+            taxAmount={taxAmount}
+            totalTTC={totalTTC}
+            notes={form.notes}
+            labels={{
+              client: t.vmClient,
+              vehicle: t.jmVehicle,
+              description: t.woColDesc,
+              quantity: t.woColQty,
+              priceHT: t.qiPriceHT,
+              totalHT: t.woTotalHT,
+              subtotalHT: t.qiSubtotalHT,
+              vat: t.woVAT,
+              totalTTC: t.woTotalTTC,
+              notes: t.uiNotes,
+              labor: t.qiLaborBadge,
+              siret: t.qiSiretLabel,
+              vatNumber: t.qiVatLabel,
+              paymentTransfer: t.qiPaymentTransfer,
+            }}
+          />
         </div>
       </div>
     </div>

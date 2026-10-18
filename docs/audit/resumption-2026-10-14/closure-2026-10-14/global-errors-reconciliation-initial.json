@@ -1,0 +1,58 @@
+{
+  "at": "2026-10-14T16:38:16.071239+00:00",
+  "observations": [
+    {
+      "scope": "historical",
+      "unhandledRejectionSections": 4,
+      "classes": [
+        {
+          "index": 1,
+          "prismaClientInitializationError": true,
+          "engineNotLocated": true
+        },
+        {
+          "index": 2,
+          "prismaClientInitializationError": true,
+          "engineNotLocated": true
+        },
+        {
+          "index": 3,
+          "prismaClientInitializationError": true,
+          "engineNotLocated": true
+        },
+        {
+          "index": 4,
+          "prismaClientInitializationError": true,
+          "engineNotLocated": true
+        }
+      ]
+    },
+    {
+      "scope": "observed-pre-fixture",
+      "unhandledRejectionSections": 4,
+      "classes": [
+        {
+          "index": 1,
+          "prismaClientInitializationError": true,
+          "engineNotLocated": true
+        },
+        {
+          "index": 2,
+          "prismaClientInitializationError": true,
+          "engineNotLocated": true
+        },
+        {
+          "index": 3,
+          "prismaClientInitializationError": true,
+          "engineNotLocated": true
+        },
+        {
+          "index": 4,
+          "prismaClientInitializationError": true,
+          "engineNotLocated": true
+        }
+      ]
+    }
+  ],
+  "limits": "JSON-only Vitest reports omit global errors; two initial JSON-only runs cannot prove zero. Final candidate dual-reporter run remains authoritative when complete. Missing real engine is not corrected by source refactors."
+}

@@ -32,14 +32,18 @@ import {
   Sparkles,
   ScanLine,
   Truck,
+  Users,
   Boxes,
+  MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { can } from '@/lib/authz'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import LanguageSelector from '@/components/LanguageSelector'
 import { GarageFlowIcon } from '@/components/GarageFlowLogo'
 import { useTranslation } from '@/lib/i18n'
 import WindowControls from '@/components/WindowControls'
+import ClientPicker from '@/components/ClientPicker'
 import LicenseChangeModal from '@/components/LicenseChangeModal'
 
 const ROLE_COLORS: Record<string, string> = {
@@ -119,6 +123,13 @@ function SectionGroup({
 
 interface HeaderProps {
   session: Session | null
+  /**
+   * Page actuellement affichée. La barre d'outils s'en sert pour montrer OÙ l'on
+   * est : sans ce repère, un bouton de barre d'outils ressemblait à un bouton
+   * d'action sans effet, la page ouverte n'étant pas forcément celle qu'on
+   * venait d'ouvrir (GF-DUR-053).
+   */
+  surfaceActive?: string | null
   onOpenSettings?:      () => void
   onOpenReception?:     () => void
   onOpenReminders?:     () => void
@@ -130,12 +141,19 @@ interface HeaderProps {
   onOpenCopilot?:       () => void
   onOpenOcr?:           () => void
   onOpenSuppliers?:     () => void
+  onOpenClients?:       () => void
+  /** Ouvre DIRECTEMENT la fiche d'un client choisi dans le menu déroulant. */
+  onOpenClient?:        (clientId: string) => void
+  onOpenTickets?:       () => void
   onOpenCatalog?:       () => void
+  /** Incrémenté à chaque écriture dans les clients : le menu relit sa liste. */
+  clientsVersion?:      number
   warrantyAlerts?:      number
 }
 
 export default function Header({
   session,
+  surfaceActive = null,
   onOpenSettings,
   onOpenReception,
   onOpenReminders,
@@ -147,7 +165,11 @@ export default function Header({
   onOpenCopilot,
   onOpenOcr,
   onOpenSuppliers,
+  onOpenClients,
+  onOpenClient,
+  onOpenTickets,
   onOpenCatalog,
+  clientsVersion = 0,
   warrantyAlerts = 0,
 }: HeaderProps) {
   const {
@@ -171,6 +193,11 @@ export default function Header({
   const menuRef = useRef<HTMLDivElement>(null)
   const [stockAlertCount, setStockAlertCount] = useState(0)
   const [garageLogo, setGarageLogo] = useState<string | null>(null)
+  // Le logo du garage peut échouer (fichier supprimé du disque, base restaurée
+  // sur un autre poste…). On bascule alors sur l'icône GarageFlows : la zone de
+  // marque ne doit JAMAIS afficher une image cassée. La cause racine du 404
+  // (logoPath non autorisé par /api/photos) est corrigée côté serveur.
+  const [logoFailed, setLogoFailed] = useState(false)
 
   // Fetch stock alerts once
   useEffect(() => {
@@ -186,7 +213,7 @@ export default function Header({
       .then(g => {
         if (!g) return
         const logo = g.logoBase64 || (g.logoPath ? `/api/photos/${g.logoPath}` : null)
-        if (logo) setGarageLogo(logo)
+        if (logo) { setLogoFailed(false); setGarageLogo(logo) }
       })
       .catch(() => {})
   }, [])
@@ -220,7 +247,17 @@ export default function Header({
 
   return (
     <header
-      className="gf-app-header bg-[#111827] border-b border-white/[0.07] z-20 relative shadow-lg shadow-black/20 select-none flex-shrink-0 pt-safe pl-safe pr-safe"
+      /**
+       * z-40 (et non z-20) : `relative z-20` créait un CONTEXTE D'EMPILEMENT
+       * dont l'en-tête ne sortait jamais. Le `z-50` du menu profil est LOCAL à
+       * ce contexte : il ne pouvait donc pas passer devant la barre des
+       * mécaniciens du planning (`sticky top-0 z-30`, ScheduleBoard.tsx:435),
+       * qui appartient au contexte racine. Résultat observé : le menu
+       * « Changer de licence / Déconnexion » se faisait recouvrir par la bande
+       * « Mécanicien 1…4 ». L'en-tête passe au-dessus du plateau (z-30) tout en
+       * restant SOUS les modales (z-50 et plus).
+       */
+      className="gf-app-header bg-[#111827] border-b border-white/[0.07] z-40 relative shadow-lg shadow-black/20 select-none flex-shrink-0 pt-safe pl-safe pr-safe"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
 
@@ -232,9 +269,14 @@ export default function Header({
           className="flex items-center gap-2 mr-0 sm:mr-1 min-w-0 flex-shrink-0"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
-          {garageLogo ? (
+          {garageLogo && !logoFailed ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={garageLogo} alt="logo" className="w-[26px] h-[26px] object-contain rounded flex-shrink-0" />
+            <img
+              src={garageLogo}
+              alt="logo"
+              className="w-[26px] h-[26px] object-contain rounded flex-shrink-0"
+              onError={() => setLogoFailed(true)}
+            />
           ) : (
             <GarageFlowIcon size={26} />
           )}
@@ -242,7 +284,7 @@ export default function Header({
           <div className="hidden xs:block min-w-0">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="font-black text-white text-xs leading-none flex-shrink-0">
-                Garage<span className="text-blue-400">Flow</span>
+                Garage<span className="text-blue-400">Flows</span>
               </span>
               {user?.garageName && (
                 <span className="hidden sm:flex items-center gap-1.5 min-w-0">
@@ -410,9 +452,17 @@ export default function Header({
       {/* py-1.5 (auto height) instead of a fixed h-9 so each section's tiny
           label sits cleanly ABOVE its buttons without overflowing into row 1.
           Masquée sous md : sur téléphone, ces actions passent dans la barre de
-          navigation inférieure + le menu « Plus » (aucune fonction perdue). */}
+          navigation inférieure + le menu « Plus » (aucune fonction perdue).
+
+          `gf-hscroll` et non `overflow-x-auto` : cette dernière laisse l'axe
+          VERTICAL défilant (la spécification CSS force `visible` → `auto` dès
+          qu'un axe est réglé), d'où les libellés qui glissaient hors du bandeau
+          à la molette et le bouton « Tableau de bord » tronqué. `gf-hscroll`
+          verrouille l'axe vertical et n'autorise que l'horizontal. Les enfants
+          ne se compriment pas (règle CSS) : les libellés restent entiers et la
+          barre défile latéralement quand la fenêtre est étroite. */}
       <div
-        className="hidden md:flex items-center px-4 py-1.5 gap-0 overflow-x-auto scrollbar-hide"
+        className="hidden md:flex gf-hscroll items-center px-4 py-1.5 gap-0"
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
 
@@ -446,6 +496,7 @@ export default function Header({
               icon={ClipboardList}
               label={t.navReception}
               title={t.ttReception}
+              active={surfaceActive === 'reception'}
             />
           )}
           <ToolBtn
@@ -515,6 +566,7 @@ export default function Header({
               label={t.navBilling}
               title={t.ttBilling}
               variant="finance"
+              active={surfaceActive === 'billing'}
             />
           )}
           {onOpenFinance && (
@@ -524,6 +576,7 @@ export default function Header({
               label={t.navFinance}
               title={t.ttFinance}
               variant="finance"
+              active={surfaceActive === 'finance'}
             />
           )}
           {onOpenCopilot && (
@@ -549,7 +602,53 @@ export default function Header({
               onClick={onOpenSuppliers}
               icon={Truck}
               label={t.navSuppliers}
+              active={surfaceActive === 'suppliers'}
               title={t.ttSuppliers}
+              variant="finance"
+            />
+          )}
+          {onOpenClients && (
+            <ToolBtn
+              onClick={onOpenClients}
+              icon={Users}
+              label={t.navClients}
+              active={surfaceActive === 'clients'}
+              title={t.ttClients}
+              variant="finance"
+            />
+          )}
+          {/* Menu déroulant : chercher un client et ouvrir SA fiche, sans
+              entrer dans l'annuaire puis l'y rechercher une seconde fois. */}
+          {onOpenClient && can(role, 'customer:manage') && (
+            <ClientPicker
+              onOpenClient={onOpenClient}
+              refreshKey={clientsVersion}
+              idPrefix="gf-header-clients"
+            />
+          )}
+          {/*
+            ── L'entrée « Rendez-vous » a été RETIRÉE de cet espace (16/10/2026) ──
+            Elle menait à un tiroir montrant le planning d'un seul jour, à côté du
+            planning lui-même : on ne savait pas si l'on devait consulter l'un OU
+            l'autre, et les rendez-vous au-delà du jour affiché restaient
+            introuvables.
+
+            RIEN n'a été supprimé du produit : la table, les routes
+            (`/api/appointments`, `/api/appointments/[id]`), la machine à états,
+            la remontée vers l'espace client et le tiroir de décision existent
+            toujours. Ils sont désormais atteints depuis le TABLEAU DE BORD, dont
+            la section « Rendez-vous » liste toutes les dates avec recherche et
+            filtres, et dont le bouton « Gérer les demandes » ouvre ce même
+            tiroir. La fonction a déménagé, elle n'a pas disparu.
+          */}
+          {/* La correspondance client relève de `customer:manage`, comme la fiche
+              elle-même. Un bouton qui mène à un 403 est pire que pas de bouton. */}
+          {onOpenTickets && can(role, 'customer:manage') && (
+            <ToolBtn
+              onClick={onOpenTickets}
+              icon={MessageSquare}
+              label="Messages"
+              title="Messages reçus de vos clients depuis leur espace en ligne"
               variant="finance"
             />
           )}
@@ -558,6 +657,7 @@ export default function Header({
               onClick={onOpenCatalog}
               icon={Boxes}
               label={t.navCatalog}
+              active={surfaceActive === 'catalog'}
               title={t.ttCatalog}
               variant="finance"
             />

@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-14T16:57:07.780356+00:00",
+  "authorization": "User: Mets \u00e0 jour GitHub",
+  "branch": "arena/c9eaae15-garageflowsv2",
+  "baseHead": "4989b53d4a8f10cf8afb2f7c579d1de354f58508",
+  "sourceDeltaSha256": "075562ac7cc0ebbd36a04f0d883157dc40a5ebcc4bc8e4e0839dd4810b55e80e",
+  "sourceFiles": 18,
+  "frozenProofFiles": 146,
+  "frozenManifestSha256": "7f6c460702f20ea90a4a9f75f23a529a8e4a81bcfe22171d876b2a2674725a7b",
+  "scope": "18 previously audited source/test changes, frozen closure evidence, navigation index and publication preflight only",
+  "productionDecision": "VALIDATION PARTIELLE \u2014 NON PR\u00caT POUR LA PRODUCTION",
+  "limits": "Pre-publication receipt, not proof of push/CI success. Exact new commit recorded by Git; no historical evidence mutated."
+}

@@ -1,0 +1,25 @@
+{
+  "id": "F33",
+  "command": "node --test tests/secret-scan-policy.test.cjs && npm run test:release-safety && node scripts/verify-copilot-phase4-evidence.cjs && git diff --check",
+  "cwd": "/home/user/GarageFlowsV2",
+  "start": "2026-10-15T14:40:29.442286+02:00",
+  "timezone": "Europe/Paris",
+  "head": "ce5d2815ce185030aebccfc56c1d3eefd955aaa7",
+  "remoteAnchor": "bd05cd521917cc059fc21780d1b562c020534942",
+  "sourceHashes": [
+    {
+      "path": ".gitleaks.toml",
+      "sha256": "d7c3238cf5e0d8b32d061b57f5b6b322aa321a1c2d4229eb12d2bf6a44db41ca"
+    },
+    {
+      "path": "tests/secret-scan-policy.test.cjs",
+      "sha256": "8f8e80e0f8f39e0f619ff6c30646b008a394f8244538c1fc543ec7a2a2d332a0"
+    }
+  ],
+  "logPath": "/home/user/copilot-phase4-2026-10-15/F33.log",
+  "limits": "Raw log outside Git; public receipt contains its digest and execution metadata only. Summary/results in phase4 report; missing prior raw logs not re-created.",
+  "exitCode": 0,
+  "end": "2026-10-15T14:40:31.375751+02:00",
+  "durationSeconds": 1.931762320999951,
+  "logSha256": "b3185f53472127641450ad513e375d0eef851006ca1f1e3d6052fdc06d3519d1"
+}

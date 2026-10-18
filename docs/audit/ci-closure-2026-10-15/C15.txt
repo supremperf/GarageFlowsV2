@@ -1,0 +1,146 @@
+{
+  "at": "2026-10-15T17:25:51.639139+02:00",
+  "branchCandidateSha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+  "checks": [
+    {
+      "id": 116508982443,
+      "name": "Required validation",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116508789948,
+      "name": "Required validation",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116507945231,
+      "name": "Windows candidate packaging and inspection (not publication)",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116507944698,
+      "name": "Authenticated browser validation (approved staging only)",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116507743486,
+      "name": "Authenticated browser validation (approved staging only)",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116507743106,
+      "name": "Windows candidate packaging and inspection (not publication)",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116506483787,
+      "name": "CodeQL",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116505424151,
+      "name": "Final release gate (full)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116505422238,
+      "name": "Full dependency tree \u2014 zero vulnerabilities",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116505422142,
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116505421878,
+      "name": "Native base (TypeScript, standard build, fixed JS budget)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116505421830,
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116505421487,
+      "name": "Secret scan (Gitleaks)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116505421070,
+      "name": "Analyze (javascript-typescript)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116505385543,
+      "name": "Final release gate (full)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116505383497,
+      "name": "Native base (TypeScript, standard build, fixed JS budget)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116505383362,
+      "name": "Secret scan (Gitleaks)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116505383085,
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116505383050,
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    },
+    {
+      "id": 116505382701,
+      "name": "Full dependency tree \u2014 zero vulnerabilities",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+    }
+  ]
+}

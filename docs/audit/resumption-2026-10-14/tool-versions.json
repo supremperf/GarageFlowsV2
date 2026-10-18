@@ -1,0 +1,27 @@
+{
+  "capturedAt": "2026-10-14T14:21:27.119Z",
+  "timezone": "Europe/Paris",
+  "node": "v22.22.3",
+  "platform": "linux",
+  "arch": "x64",
+  "npmPinned": "11.16.0",
+  "python": "Python 3.11.2",
+  "gh": "gh version 2.23.0 (2023-02-27 Debian 2.23.0+dfsg1-1)",
+  "compiler": "cc (Debian 12.2.0-14+deb12u1) 12.2.0",
+  "packages": {
+    "electron": "41.10.6",
+    "electron-builder": "26.15.3",
+    "prisma": "5.22.0",
+    "@prisma/client": "5.22.0",
+    "@playwright/test": "1.62.1",
+    "vitest": "4.1.11",
+    "next": "15.5.27",
+    "typescript": "5.9.3",
+    "eslint": "8.57.1"
+  },
+  "semgrep": "1.180.0 (verified wheels; scanner-version.log)",
+  "redis": "8.10.2 (compiled official source; redis-source-provenance.json)",
+  "limitations": [
+    "Captured after execution; unchanged package versions across commands, historical command node version retained per record."
+  ]
+}

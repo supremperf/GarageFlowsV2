@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
+import { parsePagination } from '@/lib/pagination'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
 import { CreateVehicleSchema } from '@/lib/schemas'
@@ -13,9 +14,9 @@ export const GET = withAuth(async (req) => {
   const clientId = searchParams.get('clientId') ?? ''
   const q = searchParams.get('q') ?? ''
 
-  const page  = Math.max(1, parseInt(searchParams.get('page') ?? '1'))
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '15')))
-  const skip  = (page - 1) * limit
+  const pagination = parsePagination(searchParams, 15)
+  if (!pagination) return NextResponse.json({ error: 'Pagination invalide', code: 'INVALID_PAGINATION' }, { status: 400 })
+  const { page, limit, skip } = pagination
 
   const where = {
     garageId: session.user.garageId,

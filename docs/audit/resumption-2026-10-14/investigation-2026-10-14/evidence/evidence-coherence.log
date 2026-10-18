@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-14T15:37:03.947896+00:00",
+  "historicalEvidence": "unchanged",
+  "currentReviewHashes": 1250,
+  "sastRaw": 865,
+  "sastGroups": 845,
+  "triage": 17,
+  "cases": 3829,
+  "skips": 844,
+  "issues": 26,
+  "commands": 41,
+  "graph": "acyclic",
+  "budget": "unchanged",
+  "gitleaksCommit646": "inventory0 exit0",
+  "limits": "Coherence only, no production/security certification."
+}

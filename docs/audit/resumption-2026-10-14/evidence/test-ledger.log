@@ -1,0 +1,51 @@
+{
+  "source": "vitest-final.json",
+  "sourceSha256": "98da5279384d2ff1b86af9a3bfe6cadf75efe8cefaa3ed67b2495e139469f246",
+  "total": 3829,
+  "passed": 2982,
+  "failed": 3,
+  "skipped": 844,
+  "categories": {
+    "DECLARED_REAL_ARTIFACT_ABSENT": 1,
+    "SETUP_FAILURE_NOT_DECLARED_SKIP": 808,
+    "DECLARED_POSTGRES_UNAVAILABLE": 21,
+    "DECLARED_EXTERNAL_PUBLIC_KEY_ABSENT": 2,
+    "DECLARED_REDIS_UNAVAILABLE": 5,
+    "DECLARED_ISSUER_PRIVATE_KEY_ABSENT": 5,
+    "DECLARED_ISSUED_TOKEN_ABSENT": 2
+  },
+  "files": {
+    "total": 325,
+    "failed": 78,
+    "explicitlySkipped": 5,
+    "allBodiesSkippedAfterSetupFailure": 77
+  },
+  "unhandledErrors": 4,
+  "e2e": {
+    "total": 144,
+    "stats": {
+      "startTime": "2026-10-14T12:42:25.197Z",
+      "duration": 37457.358,
+      "expected": 0,
+      "skipped": 90,
+      "unexpected": 54,
+      "flaky": 0
+    },
+    "historicalSource": "../followup-2026-10-14/evidence/e2e.json",
+    "currentExecution": "NON EXÉCUTÉ",
+    "limitation": "Prior actual attempt retained; current --list is discovery only."
+  },
+  "uniqueCoverageAcrossFullAndRedisRun": {
+    "total": 3829,
+    "passed": 2987,
+    "failed": 3,
+    "notExecuted": 839,
+    "caution": "Separate executions. Full-run skipped results remain skipped; do not add overlapping targeted suite counts."
+  },
+  "limitations": [
+    "Categories attach observed runner status to source skip conditions and shared hook errors; they do not certify every test implementation.",
+    "Criticality is conservative/provisional, not a completed per-scenario business-risk review.",
+    "Initial nominal 2896 passes included seven empty Python checks and one empty artifact check. Seven now execute the official Python keygen with an ephemeral test key; the artifact check is explicit locally and mandatory/fail-closed in the Windows workflow.",
+    "Python cross-language proof injects an ephemeral PUBLIC test key into the Node verifier; it does NOT validate the production issuer or a native Electron/browser runtime."
+  ]
+}

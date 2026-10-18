@@ -1,0 +1,1005 @@
+[
+  {
+    "file": "src/app/admin/licenses/page.tsx",
+    "lines": 777,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/clients/[token]/page.tsx",
+    "lines": 399,
+    "markers": [
+      "alt=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/clients/account/page.tsx",
+    "lines": 241,
+    "markers": [
+      "role=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/clients/appointments/page.tsx",
+    "lines": 375,
+    "markers": [
+      "aria-label",
+      "role=",
+      "htmlFor=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/clients/layout.tsx",
+    "lines": 24,
+    "markers": [],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/clients/login/page.tsx",
+    "lines": 219,
+    "markers": [
+      "role=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/clients/messages/page.tsx",
+    "lines": 483,
+    "markers": [
+      "aria-label",
+      "role=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/clients/password/page.tsx",
+    "lines": 188,
+    "markers": [
+      "role=",
+      "htmlFor=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/clients/quote/[token]/page.tsx",
+    "lines": 452,
+    "markers": [
+      "role=",
+      "alt=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/clients/register/page.tsx",
+    "lines": 133,
+    "markers": [
+      "role=",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/copilot/page.tsx",
+    "lines": 286,
+    "markers": [
+      "aria-label",
+      "role=",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/error.tsx",
+    "lines": 112,
+    "markers": [
+      "role=",
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/global-error.tsx",
+    "lines": 37,
+    "markers": [
+      "role=",
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/layout.tsx",
+    "lines": 45,
+    "markers": [],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/license/page.tsx",
+    "lines": 258,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/login/page.tsx",
+    "lines": 267,
+    "markers": [
+      "aria-label",
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/mechanic/jobs/[id]/page.tsx",
+    "lines": 328,
+    "markers": [
+      "aria-label",
+      "alt=",
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/mechanic/layout.tsx",
+    "lines": 43,
+    "markers": [],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/mechanic/page.tsx",
+    "lines": 319,
+    "markers": [
+      "aria-label",
+      "role=",
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/monitoring/page.tsx",
+    "lines": 130,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/page.tsx",
+    "lines": 651,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/providers.tsx",
+    "lines": 41,
+    "markers": [],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/app/register/page.tsx",
+    "lines": 352,
+    "markers": [
+      "aria-label",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/AddressAutocomplete.tsx",
+    "lines": 222,
+    "markers": [
+      "aria-label",
+      "role=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/AppointmentsPanel.tsx",
+    "lines": 237,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/BillingPanel.tsx",
+    "lines": 347,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/CatalogPanel.tsx",
+    "lines": 98,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/ClientPicker.tsx",
+    "lines": 297,
+    "markers": [
+      "aria-label",
+      "role=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/ClientsPanel.tsx",
+    "lines": 495,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/CompanySetup.tsx",
+    "lines": 404,
+    "markers": [
+      "htmlFor=",
+      "alt=",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/CopilotPanel.tsx",
+    "lines": 241,
+    "markers": [
+      "aria-label",
+      "role=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/CrashConsentModal.tsx",
+    "lines": 96,
+    "markers": [
+      "aria-label",
+      "role=",
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/Dashboard.tsx",
+    "lines": 266,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/DateField.tsx",
+    "lines": 134,
+    "markers": [
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/FinancialDashboard.tsx",
+    "lines": 220,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/GarageFlowLogo.tsx",
+    "lines": 54,
+    "markers": [
+      "alt="
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/GfDrawer.tsx",
+    "lines": 143,
+    "markers": [
+      "aria-label",
+      "role=",
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/Header.tsx",
+    "lines": 698,
+    "markers": [
+      "alt=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/InspectionModal.tsx",
+    "lines": 641,
+    "markers": [
+      "aria-label",
+      "alt=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/InvoiceModal.tsx",
+    "lines": 345,
+    "markers": [
+      "aria-label",
+      "alt=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/JobCard.tsx",
+    "lines": 227,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/JobModal.tsx",
+    "lines": 765,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/JobPhotos.tsx",
+    "lines": 186,
+    "markers": [
+      "alt=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/JobQRCode.tsx",
+    "lines": 125,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/LaborCatalogPanel.tsx",
+    "lines": 270,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/LanguageSelector.tsx",
+    "lines": 102,
+    "markers": [],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/LicenseChangeModal.tsx",
+    "lines": 330,
+    "markers": [
+      "aria-label",
+      "role=",
+      "htmlFor=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/LicenseRevokedOverlay.tsx",
+    "lines": 253,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/LoanerPanel.tsx",
+    "lines": 741,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/MechanicAvatar.tsx",
+    "lines": 94,
+    "markers": [
+      "alt=",
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/MobileNav.tsx",
+    "lines": 243,
+    "markers": [
+      "aria-label"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/NotificationCenter.tsx",
+    "lines": 208,
+    "markers": [
+      "aria-label",
+      "role=",
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/OcrPanel.tsx",
+    "lines": 138,
+    "markers": [
+      "aria-label",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/PwaRegister.tsx",
+    "lines": 181,
+    "markers": [
+      "role=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/QuoteInvoiceModal.tsx",
+    "lines": 1095,
+    "markers": [
+      "aria-label",
+      "alt=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/ReceptionBoard.tsx",
+    "lines": 261,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/ReminderPanel.tsx",
+    "lines": 451,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/ScheduleBoard.tsx",
+    "lines": 658,
+    "markers": [
+      "aria-label",
+      "role=",
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/SettingsModal.tsx",
+    "lines": 364,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/StockPanel.tsx",
+    "lines": 431,
+    "markers": [
+      "aria-label",
+      "role=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/SuggestionPanel.tsx",
+    "lines": 209,
+    "markers": [
+      "aria-label"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/SuppliersPanel.tsx",
+    "lines": 233,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/TicketsPanel.tsx",
+    "lines": 314,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/UpdateModal.tsx",
+    "lines": 297,
+    "markers": [
+      "aria-label",
+      "role=",
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/VehicleHistoryModal.tsx",
+    "lines": 332,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/VehicleModal.tsx",
+    "lines": 419,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/WarrantyPanel.tsx",
+    "lines": 397,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/WeekView.tsx",
+    "lines": 187,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/WindowControls.tsx",
+    "lines": 72,
+    "markers": [
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/WorkOrderModal.tsx",
+    "lines": 560,
+    "markers": [
+      "aria-label",
+      "htmlFor=",
+      "alt=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/admin/LicenseDevices.tsx",
+    "lines": 205,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/billing/QuoteGenerator.tsx",
+    "lines": 283,
+    "markers": [
+      "role=",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/copilot/HistoriqueRapports.tsx",
+    "lines": 153,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/dashboard/AppointmentsSection.tsx",
+    "lines": 719,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/dashboard/DashboardCharts.tsx",
+    "lines": 493,
+    "markers": [],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/dashboard/DashboardSections.tsx",
+    "lines": 579,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/dashboard/DecisionSection.tsx",
+    "lines": 185,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/inspection/InspectionPrintDocument.tsx",
+    "lines": 277,
+    "markers": [
+      "alt="
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/invoice/EInvoicePanel.tsx",
+    "lines": 273,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/invoice/PartAutocomplete.tsx",
+    "lines": 234,
+    "markers": [
+      "role=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/invoice/QuoteInvoicePrintDocument.tsx",
+    "lines": 300,
+    "markers": [
+      "alt="
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/job-modal/AIEstimationCard.tsx",
+    "lines": 97,
+    "markers": [],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/job-modal/JobModalFooter.tsx",
+    "lines": 208,
+    "markers": [],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/job-modal/JobPartsSection.tsx",
+    "lines": 204,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/job-modal/JobScheduleSection.tsx",
+    "lines": 165,
+    "markers": [],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/job-modal/PlateSearchField.tsx",
+    "lines": 133,
+    "markers": [
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/job-modal/VehicleAutocompleteField.tsx",
+    "lines": 101,
+    "markers": [
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/job-modal/VehicleHistoryCard.tsx",
+    "lines": 61,
+    "markers": [],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/portal/PortalEmail.tsx",
+    "lines": 194,
+    "markers": [
+      "role=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/portal/PortalSessions.tsx",
+    "lines": 160,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/portal/PortalTwoFactor.tsx",
+    "lines": 443,
+    "markers": [
+      "aria-label",
+      "role=",
+      "alt=",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/reminders/ReminderSuggestions.tsx",
+    "lines": 256,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/settings/CompanyTab.tsx",
+    "lines": 277,
+    "markers": [
+      "htmlFor=",
+      "alt="
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/settings/CoordonneesBancaires.tsx",
+    "lines": 192,
+    "markers": [
+      "aria-label",
+      "role=",
+      "htmlFor="
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/settings/EInvoicingConnectionForm.tsx",
+    "lines": 299,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/settings/EInvoicingTab.tsx",
+    "lines": 237,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/settings/EmailTab.tsx",
+    "lines": 295,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/settings/FeaturesTab.tsx",
+    "lines": 232,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/settings/LanguageTab.tsx",
+    "lines": 41,
+    "markers": [],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/settings/MechanicAccessTab.tsx",
+    "lines": 316,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/settings/MechanicAvatarField.tsx",
+    "lines": 140,
+    "markers": [
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/settings/MechanicsTab.tsx",
+    "lines": 283,
+    "markers": [],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/settings/SystemeTab.tsx",
+    "lines": 225,
+    "markers": [
+      "aria-label",
+      "role=",
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/settings/TeamTab.tsx",
+    "lines": 224,
+    "markers": [
+      "aria-label",
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/settings/ThemeTab.tsx",
+    "lines": 161,
+    "markers": [
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/components/settings/UpdatesTab.tsx",
+    "lines": 428,
+    "markers": [
+      "useEffect",
+      "fetch("
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/lib/entitlements.tsx",
+    "lines": 87,
+    "markers": [
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/lib/i18n.tsx",
+    "lines": 96,
+    "markers": [
+      "useEffect"
+    ],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  },
+  {
+    "file": "src/lib/planning/bornes-contexte.tsx",
+    "lines": 30,
+    "markers": [],
+    "semanticStatus": "not an accessibility/render/browser verification"
+  }
+]

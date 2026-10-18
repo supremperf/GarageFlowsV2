@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-15T17:36:52.798330+02:00",
+  "receiptsVerified": 17,
+  "sourceReviewHashesVerified": 8,
+  "completedCiSnapshots": 3,
+  "perSnapshotChecks": 20,
+  "windowsOfficialFailuresRetained": 2,
+  "blindDraftUnchanged": true,
+  "stagedWhitespaceCheckExit": 0,
+  "tools": {
+    "gh": "gh version 2.23.0 (2023-02-27 Debian 2.23.0+dfsg1-1)",
+    "git": "git version 2.39.5",
+    "python": "Python 3.11.2"
+  },
+  "status": "METADATA_AND_PRESERVATION_ONLY_NOT_PRODUCTION_VALIDATION"
+}

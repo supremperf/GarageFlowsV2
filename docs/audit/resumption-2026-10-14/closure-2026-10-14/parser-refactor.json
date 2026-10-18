@@ -1,0 +1,271 @@
+{
+  "at": "2026-10-14T16:25:40.231Z",
+  "typescript": "5.9.3",
+  "rows": [
+    {
+      "path": "src/integration/reglages-logo-et-cout-achat.test.ts",
+      "beforeSha256": "765e8e414c150f36d6d7189cfd40dc57b4493da3bf355bffecefefad50251221",
+      "afterSha256": "56ac845015813a775c4e051c95ec31dd32b929e4e3a5e7b53a090e70d27fefb4",
+      "replacements": 2,
+      "aliases": [
+        {
+          "module": "@/lib/api-helpers",
+          "name": "OriginalModule1",
+          "query": "typeof import('@/lib/api-helpers')"
+        },
+        {
+          "module": "@/lib/security/rate-limit",
+          "name": "OriginalModule2",
+          "query": "typeof import('@/lib/security/rate-limit')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "4181eedd482b0aa9eb64bd9a961e7060e47777ec9e052d8d25faf6a82f28ca9f",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    },
+    {
+      "path": "src/integration/portail-lien-revoque-a-la-republication.test.ts",
+      "beforeSha256": "a10d9648fabbf3dc061f8d51593021d7ba1465796ebfc74ab8c6903aa23b8c85",
+      "afterSha256": "8cb72e9cc76585526c6e6d98300f55a95ea230c9040cb1d509973827b02e8ac9",
+      "replacements": 1,
+      "aliases": [
+        {
+          "module": "@/lib/license/verify",
+          "name": "OriginalModule1",
+          "query": "typeof import('@/lib/license/verify')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "3fd99aed2123122176a372c195d86dc223bf46d9dfda3b1fdcd6b8a1ea1a1f7d",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    },
+    {
+      "path": "src/integration/stock-tracabilite-et-suppression.test.ts",
+      "beforeSha256": "4bcacb7a862bcd3bfb6e4daa17307fd668a6bc3a5b6a0b675eb1009c615ba281",
+      "afterSha256": "4220fb844f77baf900f2f5a63334a680833c37890e16f49289edb2cd005b0eb7",
+      "replacements": 2,
+      "aliases": [
+        {
+          "module": "@/lib/api-helpers",
+          "name": "OriginalModule1",
+          "query": "typeof import('@/lib/api-helpers')"
+        },
+        {
+          "module": "@/lib/stock/invoice-stock",
+          "name": "OriginalModule2",
+          "query": "typeof import('@/lib/stock/invoice-stock')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "76fbe9aa853fce0ef265585cf12d05dad0957c0e03099b9dbb590f77b5a7d736",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    },
+    {
+      "path": "src/lib/__tests__/license-activate.test.ts",
+      "beforeSha256": "3060285db13373066921a8b52998e5a37588c14335877721ebd0c094bc47b430",
+      "afterSha256": "6a86d817e4af44b0ff9b059d92ce80341f216ed922bdedf8a359953015ff584b",
+      "replacements": 1,
+      "aliases": [
+        {
+          "module": "../license/verify",
+          "name": "OriginalModule1",
+          "query": "typeof import('../license/verify')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "8cd210aca83f243df10e3015cb341e400c61e251ccff909b5ab158a90b727dca",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    },
+    {
+      "path": "src/integration/devis-signature-depuis-un-poste.test.ts",
+      "beforeSha256": "5ac05fbd004c9ad391211c842f8435a69c06e564d6c5cd5125bff783a53d89b7",
+      "afterSha256": "104ff1699a71e83e7aba8212ffc5d90a17a5c737a6d270c0a5607b4b7ed53712",
+      "replacements": 1,
+      "aliases": [
+        {
+          "module": "@/lib/sync/cloud-client",
+          "name": "OriginalModule1",
+          "query": "typeof import('@/lib/sync/cloud-client')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "57411756713da36aa6af42868cb11b99040bd0dee16bd81d7a86359ccd6afb39",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    },
+    {
+      "path": "src/integration/intervention-rattache-client-vehicule.test.ts",
+      "beforeSha256": "32f952aa4e73459c9276732591873b97dae6977e0a2e418a4d52e517e8553ed2",
+      "afterSha256": "3138bec05c69ce0133e23452bb4686a480f7d9b619bfc8362868ae1308158e74",
+      "replacements": 1,
+      "aliases": [
+        {
+          "module": "@/lib/api-helpers",
+          "name": "OriginalModule1",
+          "query": "typeof import('@/lib/api-helpers')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "1bc5dfaf9c6ae7508ba7c2cc15945640ee9e6421532dd781782eb0cd59cd6adb",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    },
+    {
+      "path": "src/integration/planning-journee-complete.test.ts",
+      "beforeSha256": "c5fddfd19b3913728192e7d3de101bec366288714d572fdf66cdd82bfac8d8a6",
+      "afterSha256": "44755ddaadd6304a7b0b5c0d732a1f48aa133fb089714d2776261e53ba208687",
+      "replacements": 1,
+      "aliases": [
+        {
+          "module": "@/lib/api-helpers",
+          "name": "OriginalModule1",
+          "query": "typeof import('@/lib/api-helpers')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "4ba7ccd6cf4e6b9d0918f998ccb9dc047d5e48d5cabb792f597a3fbad75ac6cb",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    },
+    {
+      "path": "src/integration/publication-mise-a-jour.test.ts",
+      "beforeSha256": "0b939fd997286ba7a9f916c288fce48a8d98c916ad9120e2f85e14f04a17d908",
+      "afterSha256": "1717c0432d3e8e4c53ef109a4238701b7401bcddd67842e4e9d24a78c21de94c",
+      "replacements": 1,
+      "aliases": [
+        {
+          "module": "@/lib/api-helpers",
+          "name": "OriginalModule1",
+          "query": "typeof import('@/lib/api-helpers')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "c199475d451af747fe0b97b7fafae4f2590f2fddeab4b4e38f945dd0f4d3cbcc",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    },
+    {
+      "path": "src/integration/pulse-boucle-de-synchronisation.test.ts",
+      "beforeSha256": "fc7046440f5d4c4de7c02afb82f858332127f907d16f49e5950a7540f163f73d",
+      "afterSha256": "64711107041ebe577abbcccc02af86323b681487b221b8e382352283e8b4a12b",
+      "replacements": 1,
+      "aliases": [
+        {
+          "module": "@/lib/api-helpers",
+          "name": "OriginalModule1",
+          "query": "typeof import('@/lib/api-helpers')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "d815673dcce5e9849981a0152490d88b5390a6dcfa3737c2f88adbc28c867847",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    },
+    {
+      "path": "src/integration/pwa-fenetre-et-photos.test.ts",
+      "beforeSha256": "7fdad7763552f1d83b59e554e4badad42e041527f7fea46273b35eae00657d4c",
+      "afterSha256": "0bb1dd1ab3d896f37888feaf2bc5efa539893cd0a50326c94b337e98c4036be3",
+      "replacements": 1,
+      "aliases": [
+        {
+          "module": "@/lib/mechanic-api",
+          "name": "OriginalModule1",
+          "query": "typeof import('@/lib/mechanic-api')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "beeae32aaf7be3f55874a7f3ac53cc85a179b9b76bc1b853c77281c1982acf30",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    },
+    {
+      "path": "src/integration/reglages-appliques.test.ts",
+      "beforeSha256": "325cdb6a40699f048ff7f8e57771702b0d2ec9490a25b92250ada1cdf859368c",
+      "afterSha256": "eade55fed31112243adeb00b1157d75550862bc62e4bf366f9c57355d334eb43",
+      "replacements": 1,
+      "aliases": [
+        {
+          "module": "@/lib/api-helpers",
+          "name": "OriginalModule1",
+          "query": "typeof import('@/lib/api-helpers')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "a93d97f7087fbeac418bd41407eb73cc3b42d97b708a5eba8cb4f5662a8edfd3",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    },
+    {
+      "path": "src/integration/reglages-enfin-lus.test.ts",
+      "beforeSha256": "1225bac04e2be47dedf56c124a1029f05d03e17c6e91de2164da026d10b50c00",
+      "afterSha256": "618fdee274dab910633dc075c58b0ecb3d79c4722f96e1034d2a324553abfd6b",
+      "replacements": 1,
+      "aliases": [
+        {
+          "module": "@/lib/api-helpers",
+          "name": "OriginalModule1",
+          "query": "typeof import('@/lib/api-helpers')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "510ef91d9b513850dab85db32277539fe8b0e888d676e3029a6403e086adc797",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    },
+    {
+      "path": "src/integration/scenario-maitre.test.ts",
+      "beforeSha256": "0d6b403f1f9b4993c4bf3b57074c87264557e101824e1fb92e5f172673da63a4",
+      "afterSha256": "04fcf0eee3ef374346f64c73edb78baef2b02662b1c154932ced6dfd560e9769",
+      "replacements": 1,
+      "aliases": [
+        {
+          "module": "@/lib/api-helpers",
+          "name": "OriginalModule1",
+          "query": "typeof import('@/lib/api-helpers')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "0bc150366d5dce50531fd79979831ef1d29962c12f7c1a6217bdedf94cc3557c",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    },
+    {
+      "path": "src/integration/statistiques-au-centime.test.ts",
+      "beforeSha256": "47735f1b9aeffe4919a81d20d1fbfd814e7161b2af2f66cba13b8a8a9731771c",
+      "afterSha256": "a022e9181ed60760157e24ea05a43f579306b6af3d62665baf51e4d54411fb10",
+      "replacements": 1,
+      "aliases": [
+        {
+          "module": "@/lib/api-helpers",
+          "name": "OriginalModule1",
+          "query": "typeof import('@/lib/api-helpers')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "3d423dc22fd65258a620e46a13478dac4da27ffc28513971275041a5154121cd",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    },
+    {
+      "path": "src/integration/stock-suppression-et-entrees.test.ts",
+      "beforeSha256": "ccc2fcd4851663bebacf0069691a00a2c87b1cb1d05c0b3f9cdfea55e9204d93",
+      "afterSha256": "02b5614091b268bf707d1496641456c7540f7a6a0853436f7fd8530248e054c3",
+      "replacements": 1,
+      "aliases": [
+        {
+          "module": "@/lib/api-helpers",
+          "name": "OriginalModule1",
+          "query": "typeof import('@/lib/api-helpers')"
+        }
+      ],
+      "emittedJsIdentical": true,
+      "emittedJsSha256": "c98eeedced97c804a437da561c663ed101bc78b0683d7314cc24758e70aa9593",
+      "status": "PARTIELLEMENT VALIDÉ",
+      "limits": "Type-only refactor; TS 5.9.3 ES2022/ESNext emitted JavaScript byte-identical with removeComments=true and sourceMap=false. All source comments preserved. Full-project typecheck and real scanner rerun required; not persistence/browser validation."
+    }
+  ]
+}

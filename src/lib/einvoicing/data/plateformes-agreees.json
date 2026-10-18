@@ -1,0 +1,2174 @@
+{
+ "source": {
+  "jeuDeDonnees": "Plateformes Agréées de facturation électronique (PA / ex-PDP) — annuaire DGFiP",
+  "portail": "https://www.data.gouv.fr/datasets/plateformes-agreees-de-facturation-electronique-pa-ex-pdp-annuaire-dgfip",
+  "fichier": "https://static.data.gouv.fr/resources/plateformes-agreees-de-facturation-electronique-pa-ex-pdp-annuaire-dgfip/20260725-150905/plateformes-agreees-facturation-electronique.json",
+  "licence": "ODbL",
+  "autoriteDeReference": "https://www.impots.gouv.fr/je-consulte-la-liste-des-plateformes-agreees",
+  "avertissement": "Republication enrichie par un tiers du registre DGFiP — seule la page impots.gouv.fr fait foi."
+ },
+ "importedAt": "2026-08-12",
+ "count": 135,
+ "skipped": 13,
+ "platforms": [
+  {
+   "id": "gp",
+   "officialName": "@GP",
+   "normalizedName": "@gp",
+   "slug": "gp",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://www.atgp.net/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "ipaidthat-pa-des-banques-populaires-et-caisses-d-epargne",
+   "officialName": "@iPaidThat - PA des Banques Populaires et Caisses d'Épargne",
+   "normalizedName": "@ipaidthat - pa des banques populaires et caisses d'epargne",
+   "slug": "ipaidthat-pa-des-banques-populaires-et-caisses-d-epargne",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-06",
+   "officialWebsite": "https://ipaidthat.io/fr",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "n2f-pdp",
+   "officialName": "@N2F PDP",
+   "normalizedName": "@n2f pdp",
+   "slug": "n2f-pdp",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-19",
+   "officialWebsite": "https://www.n2f.com/fr/note-de-frais/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "abby",
+   "officialName": "ABBY",
+   "normalizedName": "abby",
+   "slug": "abby",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-29",
+   "officialWebsite": "https://abby.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "accenture",
+   "officialName": "ACCENTURE",
+   "normalizedName": "accenture",
+   "slug": "accenture",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-22",
+   "officialWebsite": "https://www.accenture.com/fr-fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "ademico-software",
+   "officialName": "ADEMICO SOFTWARE",
+   "normalizedName": "ademico software",
+   "slug": "ademico-software",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-16",
+   "officialWebsite": "https://ademico-software.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "agena-3000",
+   "officialName": "AGENA 3000",
+   "normalizedName": "agena 3000",
+   "slug": "agena-3000",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://www.agena3000.com/fr/nos-solutions/a3-e-facture",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "agicap",
+   "officialName": "AGICAP",
+   "normalizedName": "agicap",
+   "slug": "agicap",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-20",
+   "officialWebsite": "https://agicap.com/fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "arteva",
+   "officialName": "ARTEVA",
+   "normalizedName": "arteva",
+   "slug": "arteva",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://www.arteva.fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "avalara",
+   "officialName": "AVALARA",
+   "normalizedName": "avalara",
+   "slug": "avalara",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://www.avalara.com/eu/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "axelor",
+   "officialName": "AXELOR",
+   "normalizedName": "axelor",
+   "slug": "axelor",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-13",
+   "officialWebsite": "https://axelor.com/fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "axonaut",
+   "officialName": "AXONAUT",
+   "normalizedName": "axonaut",
+   "slug": "axonaut",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-08",
+   "officialWebsite": "https://axonaut.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "axway-software",
+   "officialName": "AXWAY SOFTWARE",
+   "normalizedName": "axway software",
+   "slug": "axway-software",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-14",
+   "officialWebsite": "https://www.axway.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "azopio",
+   "officialName": "AZOPIO",
+   "normalizedName": "azopio",
+   "slug": "azopio",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-22",
+   "officialWebsite": "https://www.azopio.com/fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "b2brouter",
+   "officialName": "B2BRouter",
+   "normalizedName": "b2brouter",
+   "slug": "b2brouter",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-12",
+   "officialWebsite": "https://www.b2brouter.net/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "b4value-net",
+   "officialName": "B4VALUE.NET",
+   "normalizedName": "b4value.net",
+   "slug": "b4value-net",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-03-04",
+   "officialWebsite": "https://www.b4value.net/en/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "basware",
+   "officialName": "BASWARE",
+   "normalizedName": "basware",
+   "slug": "basware",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://www.basware.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "bc-solutions",
+   "officialName": "BC SOLUTIONS",
+   "normalizedName": "bc solutions",
+   "slug": "bc-solutions",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://bcsolutions.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "billit",
+   "officialName": "BILLIT",
+   "normalizedName": "billit",
+   "slug": "billit",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-19",
+   "officialWebsite": "https://www.billit.eu/fr-be/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "cbs-corporate-business-solutions",
+   "officialName": "CBS Corporate Business Solutions",
+   "normalizedName": "cbs corporate business solutions",
+   "slug": "cbs-corporate-business-solutions",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-02-25",
+   "officialWebsite": "https://www.cbs-consulting.com/en/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "cecurity",
+   "officialName": "CECURITY",
+   "normalizedName": "cecurity",
+   "slug": "cecurity",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://www.cecurity.com",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "cegedim",
+   "officialName": "CEGEDIM",
+   "normalizedName": "cegedim",
+   "slug": "cegedim",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://www.cegedim.fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "cegi-alfa",
+   "officialName": "CEGI ALFA",
+   "normalizedName": "cegi alfa",
+   "slug": "cegi-alfa",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-14",
+   "officialWebsite": "https://www.cegi.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "cegid",
+   "officialName": "CEGID",
+   "normalizedName": "cegid",
+   "slug": "cegid",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://www.cegid.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "chaintrust-by-visma",
+   "officialName": "CHAINTRUST BY VISMA",
+   "normalizedName": "chaintrust by visma",
+   "slug": "chaintrust-by-visma",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://www.chaintrust.io",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "cleartax",
+   "officialName": "CLEARTAX",
+   "normalizedName": "cleartax",
+   "slug": "cleartax",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-24",
+   "officialWebsite": "https://www.cleartax.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "comarch-sa",
+   "officialName": "COMARCH SA",
+   "normalizedName": "comarch sa",
+   "slug": "comarch-sa",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://www.comarch.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "darva",
+   "officialName": "DARVA",
+   "normalizedName": "darva",
+   "slug": "darva",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://www.darva.com",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "dext",
+   "officialName": "DEXT",
+   "normalizedName": "dext",
+   "slug": "dext",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://dext.com/fr/produits/logiciel-facturation",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "digipharmacie",
+   "officialName": "DIGIPHARMACIE",
+   "normalizedName": "digipharmacie",
+   "slug": "digipharmacie",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-23",
+   "officialWebsite": "https://digipharmacie.fr/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "digital-technologies",
+   "officialName": "DIGITAL TECHNOLOGIES",
+   "normalizedName": "digital technologies",
+   "slug": "digital-technologies",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-15",
+   "officialWebsite": "https://digtechs.com/?lang=fr",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "docnova-melasoft-gmbh",
+   "officialName": "Docnova, MELASOFT GmbH",
+   "normalizedName": "docnova, melasoft gmbh",
+   "slug": "docnova-melasoft-gmbh",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-05-13",
+   "officialWebsite": "https://www.melasoft.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "docoon",
+   "officialName": "DOCOON",
+   "normalizedName": "docoon",
+   "slug": "docoon",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-15",
+   "officialWebsite": "https://docoon.com",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "docoon-immo-freedz",
+   "officialName": "DOCOON IMMO / FREEDZ",
+   "normalizedName": "docoon immo / freedz",
+   "slug": "docoon-immo-freedz",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-23",
+   "officialWebsite": "https://docoon.immo/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "docprocess",
+   "officialName": "DOCPROCESS",
+   "normalizedName": "docprocess",
+   "slug": "docprocess",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-15",
+   "officialWebsite": "https://doc-process.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "docuware",
+   "officialName": "DOCUWARE",
+   "normalizedName": "docuware",
+   "slug": "docuware",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-22",
+   "officialWebsite": "https://start.docuware.com/fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "dougs-facturation-gratuite",
+   "officialName": "Dougs Facturation gratuite",
+   "normalizedName": "dougs facturation gratuite",
+   "slug": "dougs-facturation-gratuite",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-12",
+   "officialWebsite": "https://www.dougs.fr/logiciel-facturation-gratuit/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "doxallia",
+   "officialName": "DOXALLIA",
+   "normalizedName": "doxallia",
+   "slug": "doxallia",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://www.doxallia.com",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "ecosio",
+   "officialName": "ECOSIO",
+   "normalizedName": "ecosio",
+   "slug": "ecosio",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-12",
+   "officialWebsite": "https://ecosio.com",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "ecosio-intercom-a-vertex-company",
+   "officialName": "ecosio InterCom, a Vertex Company",
+   "normalizedName": "ecosio intercom, a vertex company",
+   "slug": "ecosio-intercom-a-vertex-company",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-30",
+   "officialWebsite": "https://ecosio.com/fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "edicom-france",
+   "officialName": "EDICOM France",
+   "normalizedName": "edicom france",
+   "slug": "edicom-france",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://edicomgroup.fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "edicom-group",
+   "officialName": "EDICOM Group",
+   "normalizedName": "edicom group",
+   "slug": "edicom-group",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://edicomgroup.com",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "edics-france",
+   "officialName": "EDICS France",
+   "normalizedName": "edics france",
+   "slug": "edics-france",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-08",
+   "officialWebsite": "https://edics.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "edieyes-vision-care",
+   "officialName": "EdiEyes Vision Care",
+   "normalizedName": "edieyes vision care",
+   "slug": "edieyes-vision-care",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-06-01",
+   "officialWebsite": "https://www.edieyes.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "edt",
+   "officialName": "EDT",
+   "normalizedName": "edt",
+   "slug": "edt",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-08",
+   "officialWebsite": "https://www.group-edt.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "eezi-powered-by-vat-it",
+   "officialName": "EEZI powered by VAT IT",
+   "normalizedName": "eezi powered by vat it",
+   "slug": "eezi-powered-by-vat-it",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-13",
+   "officialWebsite": "https://eezi.io/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "effinum-by-spee",
+   "officialName": "Effinum by SPEE",
+   "normalizedName": "effinum by spee",
+   "slug": "effinum-by-spee",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://www.effinum.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "enerj",
+   "officialName": "ENERJ",
+   "normalizedName": "enerj",
+   "slug": "enerj",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://www.enerj.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "entropics",
+   "officialName": "ENTROPICS",
+   "normalizedName": "entropics",
+   "slug": "entropics",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-13",
+   "officialWebsite": "https://entropics.fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "esalink",
+   "officialName": "ESALINK",
+   "normalizedName": "esalink",
+   "slug": "esalink",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://www.esalink.com",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "esi",
+   "officialName": "ESI",
+   "normalizedName": "esi",
+   "slug": "esi",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-13",
+   "officialWebsite": "https://www.esi-groupe.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "esker",
+   "officialName": "ESKER",
+   "normalizedName": "esker",
+   "slug": "esker",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://www.esker.fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "euro-information",
+   "officialName": "EURO INFORMATION",
+   "normalizedName": "euro information",
+   "slug": "euro-information",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-22",
+   "officialWebsite": "https://www.e-i.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "facnote-pdp",
+   "officialName": "FACNOTE PDP",
+   "normalizedName": "facnote pdp",
+   "slug": "facnote-pdp",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://www.facnote.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "fiducial-cloud",
+   "officialName": "FIDUCIAL CLOUD",
+   "normalizedName": "fiducial cloud",
+   "slug": "fiducial-cloud",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-08",
+   "officialWebsite": "https://www.fiducial.fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "flowie",
+   "officialName": "FLOWIE",
+   "normalizedName": "flowie",
+   "slug": "flowie",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-07",
+   "officialWebsite": "https://www.get-flowie.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "fonoa-technologies-limited",
+   "officialName": "Fonoa Technologies Limited",
+   "normalizedName": "fonoa technologies limited",
+   "slug": "fonoa-technologies-limited",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-29",
+   "officialWebsite": "https://www.fonoa.com/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "fulll",
+   "officialName": "FULLL",
+   "normalizedName": "fulll",
+   "slug": "fulll",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://www.fulll.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "generix-group",
+   "officialName": "GENERIX Group",
+   "normalizedName": "generix group",
+   "slug": "generix-group",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://www.generixgroup.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "gestav",
+   "officialName": "GESTAV",
+   "normalizedName": "gestav",
+   "slug": "gestav",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-19",
+   "officialWebsite": "https://gestav.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "groupe-sigma",
+   "officialName": "GROUPE SIGMA",
+   "normalizedName": "groupe sigma",
+   "slug": "groupe-sigma",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://www.sigma.fr/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "gurusoft",
+   "officialName": "GURUSOFT",
+   "normalizedName": "gurusoft",
+   "slug": "gurusoft",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-03-31",
+   "officialWebsite": "https://guru-soft.com/home-espana/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "icd-international",
+   "officialName": "ICD International",
+   "normalizedName": "icd international",
+   "slug": "icd-international",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-22",
+   "officialWebsite": "https://icdint.fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "iedi-aps",
+   "officialName": "iEDI ApS",
+   "normalizedName": "iedi aps",
+   "slug": "iedi-aps",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-02-11",
+   "officialWebsite": "https://www.iedi.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "iga-assurance",
+   "officialName": "IGA ASSURANCE",
+   "normalizedName": "iga assurance",
+   "slug": "iga-assurance",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-03-03",
+   "officialWebsite": "https://www.iga-assurance.fr/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "indicom",
+   "officialName": "INDICOM",
+   "normalizedName": "indicom",
+   "slug": "indicom",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-13",
+   "officialWebsite": "https://www.indicom.eu/en/idc-home",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "indy",
+   "officialName": "INDY",
+   "normalizedName": "indy",
+   "slug": "indy",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-09",
+   "officialWebsite": "https://www.indy.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "infologic",
+   "officialName": "INFOLOGIC",
+   "normalizedName": "infologic",
+   "slug": "infologic",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-28",
+   "officialWebsite": "https://www.infologic-copilote.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "invopop",
+   "officialName": "INVOPOP",
+   "normalizedName": "invopop",
+   "slug": "invopop",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://www.invopop.com/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "iopole",
+   "officialName": "IOPOLE",
+   "normalizedName": "iopole",
+   "slug": "iopole",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://www.iopole.com",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "itesoft",
+   "officialName": "ITESOFT",
+   "normalizedName": "itesoft",
+   "slug": "itesoft",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://www.itesoft.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "jefacture-com",
+   "officialName": "jefacture.com",
+   "normalizedName": "jefacture.com",
+   "slug": "jefacture-com",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://www.ecma-solutions.com",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "klekoon",
+   "officialName": "KLEKOON",
+   "normalizedName": "klekoon",
+   "slug": "klekoon",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-16",
+   "officialWebsite": "https://www.klekoon.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "kolecto-pa",
+   "officialName": "KOLECTO PA",
+   "normalizedName": "kolecto pa",
+   "slug": "kolecto-pa",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-22",
+   "officialWebsite": "https://www.kolecto.fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "kolecto-pdp",
+   "officialName": "KOLECTO PDP",
+   "normalizedName": "kolecto pdp",
+   "slug": "kolecto-pdp",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://www.kolecto.fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "le-village-connecte",
+   "officialName": "LE VILLAGE CONNECTE",
+   "normalizedName": "le village connecte",
+   "slug": "le-village-connecte",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-08",
+   "officialWebsite": "https://village-connecte.fr/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "legalinvoice-by-tinexta-infocert",
+   "officialName": "Legalinvoice by Tinexta Infocert",
+   "normalizedName": "legalinvoice by tinexta infocert",
+   "slug": "legalinvoice-by-tinexta-infocert",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-13",
+   "officialWebsite": "https://www.infocert.it/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "logilec",
+   "officialName": "LOGILEC",
+   "normalizedName": "logilec",
+   "slug": "logilec",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-06",
+   "officialWebsite": "https://www.logilec.fr/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "lucca",
+   "officialName": "LUCCA",
+   "normalizedName": "lucca",
+   "slug": "lucca",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-24",
+   "officialWebsite": "https://www.lucca.fr",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "macompta-fr",
+   "officialName": "MACOMPTA.FR",
+   "normalizedName": "macompta.fr",
+   "slug": "macompta-fr",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://www.macompta.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "marosa",
+   "officialName": "MAROSA",
+   "normalizedName": "marosa",
+   "slug": "marosa",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://marosavat.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "medius",
+   "officialName": "MEDIUS",
+   "normalizedName": "medius",
+   "slug": "medius",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-08",
+   "officialWebsite": "https://www.medius.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "my-fiteco",
+   "officialName": "MY FITECO",
+   "normalizedName": "my fiteco",
+   "slug": "my-fiteco",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-05-12",
+   "officialWebsite": "https://myfiteco.com/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "my-unisoft",
+   "officialName": "MY UNISOFT",
+   "normalizedName": "my unisoft",
+   "slug": "my-unisoft",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-15",
+   "officialWebsite": "https://myunisoft.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "mykinexo-pdp",
+   "officialName": "MyKinexo PDP",
+   "normalizedName": "mykinexo pdp",
+   "slug": "mykinexo-pdp",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://www.kinexo.fr/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "mysupply-aps",
+   "officialName": "MySupply Aps",
+   "normalizedName": "mysupply aps",
+   "slug": "mysupply-aps",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-03-03",
+   "officialWebsite": "https://mysupply.dk/en",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "neotimo",
+   "officialName": "NEOTIMO",
+   "normalizedName": "neotimo",
+   "slug": "neotimo",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-13",
+   "officialWebsite": "https://neotimo.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "ntt-data-business-solutions",
+   "officialName": "NTT DATA Business Solutions",
+   "normalizedName": "ntt data business solutions",
+   "slug": "ntt-data-business-solutions",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-05-13",
+   "officialWebsite": "https://fr.nttdata.com/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "odoo",
+   "officialName": "ODOO",
+   "normalizedName": "odoo",
+   "slug": "odoo",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-15",
+   "officialWebsite": "https://www.odoo.com/fr_FR",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "one-up",
+   "officialName": "ONE UP",
+   "normalizedName": "one up",
+   "slug": "one-up",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-08",
+   "officialWebsite": "https://smallbusiness.oneup.com/fr/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "open-bee",
+   "officialName": "OPEN BEE",
+   "normalizedName": "open bee",
+   "slug": "open-bee",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-13",
+   "officialWebsite": "https://www.openbee.com",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "opentext",
+   "officialName": "OPENTEXT",
+   "normalizedName": "opentext",
+   "slug": "opentext",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-12",
+   "officialWebsite": "https://www.opentext.fr",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "pagero",
+   "officialName": "PAGERO",
+   "normalizedName": "pagero",
+   "slug": "pagero",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-19",
+   "officialWebsite": "https://www.pagero.com/fr",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "paragon",
+   "officialName": "PARAGON",
+   "normalizedName": "paragon",
+   "slug": "paragon",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-22",
+   "officialWebsite": "https://www.paragon.world/fr",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "payflows",
+   "officialName": "PAYFLOWS",
+   "normalizedName": "payflows",
+   "slug": "payflows",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-15",
+   "officialWebsite": "https://payflows.io",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "pennylane",
+   "officialName": "PENNYLANE",
+   "normalizedName": "pennylane",
+   "slug": "pennylane",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://www.pennylane.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "pitney-bowes",
+   "officialName": "PITNEY BOWES",
+   "normalizedName": "pitney bowes",
+   "slug": "pitney-bowes",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-13",
+   "officialWebsite": "https://www.pitneybowes.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "qonto",
+   "officialName": "QONTO",
+   "normalizedName": "qonto",
+   "slug": "qonto",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://qonto.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "qweeby",
+   "officialName": "QWEEBY",
+   "normalizedName": "qweeby",
+   "slug": "qweeby",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-22",
+   "officialWebsite": "https://www.qweeby.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "sage",
+   "officialName": "SAGE",
+   "normalizedName": "sage",
+   "slug": "sage",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-22",
+   "officialWebsite": "https://www.sage.com/fr-fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "sap",
+   "officialName": "SAP",
+   "normalizedName": "sap",
+   "slug": "sap",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://www.sap.com/france/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "scribee",
+   "officialName": "SCRIBEE",
+   "normalizedName": "scribee",
+   "slug": "scribee",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-22",
+   "officialWebsite": "https://www.scribee.tech/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "seeburger",
+   "officialName": "SEEBURGER",
+   "normalizedName": "seeburger",
+   "slug": "seeburger",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://www.seeburger.com/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "sellsy",
+   "officialName": "SELLSY",
+   "normalizedName": "sellsy",
+   "slug": "sellsy",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-24",
+   "officialWebsite": "https://go.sellsy.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "septeo",
+   "officialName": "SEPTEO",
+   "normalizedName": "septeo",
+   "slug": "septeo",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-09",
+   "officialWebsite": "https://www.septeopdp.com",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "seqino",
+   "officialName": "SEQINO",
+   "normalizedName": "seqino",
+   "slug": "seqino",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://seqino.com",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "serensia-by-quadient",
+   "officialName": "SERENSIA by Quadient",
+   "normalizedName": "serensia by quadient",
+   "slug": "serensia-by-quadient",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://www.serensia.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "seres",
+   "officialName": "SERES",
+   "normalizedName": "seres",
+   "slug": "seres",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://www.seres.fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "shine",
+   "officialName": "Shine",
+   "normalizedName": "shine",
+   "slug": "shine",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-05-21",
+   "officialWebsite": "https://www.shine.fr/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "sni",
+   "officialName": "SNI",
+   "normalizedName": "sni",
+   "slug": "sni",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-13",
+   "officialWebsite": "https://snitechnology.net/fr",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "solo",
+   "officialName": "SOLO",
+   "normalizedName": "solo",
+   "slug": "solo",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-02-16",
+   "officialWebsite": "https://www.solo.fr",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "sovos",
+   "officialName": "SOVOS",
+   "normalizedName": "sovos",
+   "slug": "sovos",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://www.saphety.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "spendesk",
+   "officialName": "SPENDESK",
+   "normalizedName": "spendesk",
+   "slug": "spendesk",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://www.spendesk.com/fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "sps-commerce",
+   "officialName": "SPS COMMERCE",
+   "normalizedName": "sps commerce",
+   "slug": "sps-commerce",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://tiekinetix.com/fr",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "srci",
+   "officialName": "SRCI",
+   "normalizedName": "srci",
+   "slug": "srci",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-19",
+   "officialWebsite": "https://solutions.srci.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "storecove",
+   "officialName": "STORECOVE",
+   "normalizedName": "storecove",
+   "slug": "storecove",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-28",
+   "officialWebsite": "https://www.storecove.com/fr/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "super-pdp",
+   "officialName": "SUPER PDP",
+   "normalizedName": "super pdp",
+   "slug": "super-pdp",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-22",
+   "officialWebsite": "https://www.superpdp.tech/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "symtrax",
+   "officialName": "SYMTRAX",
+   "normalizedName": "symtrax",
+   "slug": "symtrax",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://www.symtrax.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "tenor",
+   "officialName": "TENOR",
+   "normalizedName": "tenor",
+   "slug": "tenor",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://tenorsolutions.com",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "tesisquare-spa",
+   "officialName": "TESISQUARE SPA",
+   "normalizedName": "tesisquare spa",
+   "slug": "tesisquare-spa",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://www.tesisquare.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "tessi-technologies",
+   "officialName": "TESSI Technologies",
+   "normalizedName": "tessi technologies",
+   "slug": "tessi-technologies",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://www.tessi.eu/fr",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "tiime-pdp",
+   "officialName": "TIIME PDP",
+   "normalizedName": "tiime pdp",
+   "slug": "tiime-pdp",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-18",
+   "officialWebsite": "https://www.tiime.fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "tradeshift-babelway",
+   "officialName": "TRADESHIFT BABELWAY",
+   "normalizedName": "tradeshift babelway",
+   "slug": "tradeshift-babelway",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-06",
+   "officialWebsite": "https://tradeshift.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "transalis-limited",
+   "officialName": "Transalis Limited",
+   "normalizedName": "transalis limited",
+   "slug": "transalis-limited",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-19",
+   "officialWebsite": "https://www.transalis.com/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "treso2",
+   "officialName": "TRESO2",
+   "normalizedName": "treso2",
+   "slug": "treso2",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-08",
+   "officialWebsite": "http://www.treso2.com",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "tungsten-automation-france",
+   "officialName": "TUNGSTEN AUTOMATION FRANCE",
+   "normalizedName": "tungsten automation france",
+   "slug": "tungsten-automation-france",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-23",
+   "officialWebsite": "https://www.tungstenautomation.fr/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "tx2-concept",
+   "officialName": "TX2 Concept",
+   "normalizedName": "tx2 concept",
+   "slug": "tx2-concept",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-14",
+   "officialWebsite": "https://tx2.fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "ventya",
+   "officialName": "VENTYA",
+   "normalizedName": "ventya",
+   "slug": "ventya",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-12-18",
+   "officialWebsite": "https://www.ventya.fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "veryswing",
+   "officialName": "VERYSWING",
+   "normalizedName": "veryswing",
+   "slug": "veryswing",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://veryswing.com/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "vosfactures",
+   "officialName": "VosFactures",
+   "normalizedName": "vosfactures",
+   "slug": "vosfactures",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-04-15",
+   "officialWebsite": "https://vosfactures.fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": true
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "voxel-an-amadeus-company",
+   "officialName": "VOXEL, an Amadeus company",
+   "normalizedName": "voxel, an amadeus company",
+   "slug": "voxel-an-amadeus-company",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://www.voxelgroup.net/facture-electronique/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "weproc",
+   "officialName": "WEPROC",
+   "normalizedName": "weproc",
+   "slug": "weproc",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-23",
+   "officialWebsite": "https://www.weproc.com/fr/",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  },
+  {
+   "id": "wisetech-global",
+   "officialName": "WiseTech GLOBAL",
+   "normalizedName": "wisetech global",
+   "slug": "wisetech-global",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2026-01-15",
+   "officialWebsite": "https://www.wisetechglobal.com/fr-fr/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "xelya",
+   "officialName": "XELYA",
+   "normalizedName": "xelya",
+   "slug": "xelya",
+   "approvalStatus": "provisionally_approved",
+   "officialWebsite": "https://www.xelya.com/",
+   "declaredFormats": {
+    "facturX": false,
+    "ubl": false,
+    "cii": false,
+    "peppolBis": false
+   },
+   "declaredEReporting": false
+  },
+  {
+   "id": "yooz-pdp",
+   "officialName": "YOOZ PDP",
+   "normalizedName": "yooz pdp",
+   "slug": "yooz-pdp",
+   "approvalStatus": "provisionally_approved",
+   "registeredAt": "2025-12-11",
+   "officialWebsite": "https://www.getyooz.com/fr",
+   "declaredFormats": {
+    "facturX": true,
+    "ubl": true,
+    "cii": true,
+    "peppolBis": false
+   },
+   "declaredEReporting": true
+  }
+ ]
+}
