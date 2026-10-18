@@ -53,12 +53,11 @@ const partial = {
 const owned = 'docs/audit/followup-2026-10-14/'
 const excluded = new Set(['docs/audit/inventory.jsonl','docs/audit/inventory-current.jsonl','docs/audit/module-map.jsonl','docs/audit/scope.json'])
 const entries = cp.execFileSync('git', ['ls-files','-c','-o','--exclude-standard','-z'], { cwd: root }).toString().split('\0').filter(Boolean).filter(name => !name.startsWith(owned) && !excluded.has(name)).sort()
+const { readGitEntry } = require(path.join(root, 'scripts/lib/file-snapshot.cjs'))
 const rows = []
 for (const name of [...new Set(entries)]) {
-  const file = path.join(root, name); let stat
-  try { stat = fs.lstatSync(file) } catch (error) { if(error.code === 'ENOENT') continue; throw error }
-  if (!stat.isFile() && !stat.isSymbolicLink()) continue
-  const bytes = stat.isSymbolicLink() ? Buffer.from(fs.readlinkSync(file)) : fs.readFileSync(file)
+  const file = path.join(root, name); let bytes
+  try { bytes = readGitEntry(file) } catch (error) { if (['ENOENT', 'EISDIR'].includes(error.code)) continue; throw error }
   const info = full[name], part = partial[name]
   const critical = /^(electron\/|prisma\/|src\/middleware|src\/app\/api\/|src\/lib\/(auth|db|env|security|license|portal|money|sync)|scripts\/(config|restore|.*migrat|.*release|afterPack|fuse))/.test(name)
   rows.push({ order: 0, path: name, sha256: crypto.createHash('sha256').update(bytes).digest('hex'), bytes: bytes.length, automaticInventory: true,

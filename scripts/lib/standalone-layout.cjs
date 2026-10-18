@@ -27,6 +27,7 @@
 
 const fs = require('node:fs')
 const path = require('node:path')
+const { readRegularFile } = require('./file-snapshot.cjs')
 
 /** Profondeur maximale explorée : une imbrication de workspace reste faible. */
 const MAX_DEPTH = 6
@@ -203,8 +204,7 @@ function marqueurEmbarque(appDir, marqueur, profondeur = 0) {
         if (parcourir(chemin, niveau + 1)) return true
       } else if (entree.name.endsWith('.js')) {
         try {
-          if (fs.statSync(chemin).size > 20 * 1024 * 1024) continue
-          if (fs.readFileSync(chemin, 'utf8').includes(marqueur)) return true
+          if (readRegularFile(chemin, { maxBytes: 20 * 1024 * 1024 }).toString('utf8').includes(marqueur)) return true
         } catch { /* fichier illisible : on continue, la décision se prend plus loin */ }
       }
     }

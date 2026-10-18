@@ -40,8 +40,8 @@ test('historical closure writer uses real OS exclusive create: a pre-existing sy
  const path=require('node:path'),os=require('node:os'),dir=fs.mkdtempSync(path.join(os.tmpdir(),'gf-phase6-exclusive-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}))
  const target=path.join(dir,'previous-proof.log'),dest=path.join(dir,'next-proof.log');fs.writeFileSync(target,'ORIGINAL_PROOF');fs.symlinkSync(target,dest)
  const source=fs.readFileSync('docs/audit/resumption-2026-10-14/closure-2026-10-14/run-command.cjs','utf8'),ast=ts.createSourceFile('run-command.cjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS)
- const write=ast.statements.find(n=>ts.isExpressionStatement(n)&&ts.isCallExpression(n.expression)&&n.expression.expression.getText(ast)==='fs.writeFileSync');a.ok(write)
- a.throws(()=>vm.runInNewContext(write.getText(ast),{fs,dest,r:{stdout:'NEW_PROOF',stderr:''}}),{code:'EEXIST'})
+ const reservation=ast.statements.find(n=>ts.isVariableStatement(n)&&n.declarationList.declarations.some(d=>d.name.getText(ast)==='proofFd'));a.ok(reservation)
+ a.throws(()=>vm.runInNewContext(reservation.getText(ast),{fs,dest}),{code:'EEXIST'})
  a.equal(fs.readFileSync(target,'utf8'),'ORIGINAL_PROOF')
 })
 test('actual extracted Electron flush function: continued consent preserves successful send and retains failed item (simulated transport)',async()=>{

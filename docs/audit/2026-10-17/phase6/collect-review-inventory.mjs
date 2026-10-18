@@ -6,8 +6,10 @@ import crypto from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
+import { createRequire } from 'node:module'
 const output = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(output, '../../../..')
+const { readGitEntry } = createRequire(import.meta.url)(path.join(root, 'scripts/lib/file-snapshot.cjs'))
 const paths = [...new Set(execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean))].sort()
 const scope = p => p.startsWith('src/app/api/') ? 'D/API' : p.endsWith('.tsx') ? 'K/UI' : p.startsWith('prisma/') ? 'J/DB' : /\.md$/.test(p) ? 'G/docs' : /(?:^|\/)(?:LICENSE|THIRD_PARTY_NOTICES)/.test(p) ? 'F/licenses' : /^(?:scripts|electron|\.github)\//.test(p) ? 'I/tooling' : 'A/other'
 const rows = ['path\tsha256\tbytes\tcategory\tsemanticStatus']
@@ -21,8 +23,8 @@ const signalPatterns = {
 }
 for (const p of paths) {
   const file = path.join(root, p)
-  if (!fs.existsSync(file) || !fs.statSync(file).isFile()) continue
-  const bytes = fs.readFileSync(file)
+  let bytes
+  try { bytes = readGitEntry(file) } catch (error) { if (['ENOENT', 'EISDIR'].includes(error.code)) continue; throw error }
   // Self-generated outputs are evidence, not source to recursively hash into themselves.
   if (['review-inventory.tsv','route-inventory.json','ui-inventory.json','static-signals.json','encoding.json'].some(n => p === path.relative(root, path.join(output, n)))) continue
   rows.push([p, crypto.createHash('sha256').update(bytes).digest('hex'), bytes.length, scope(p), 'inventoried; semantic completeness NOT attested'].join('\t'))

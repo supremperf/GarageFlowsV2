@@ -46,9 +46,8 @@ test('regression Windows: env pull returned four secrets; protection metadata mu
   const result = await wizard.pullVercel({ root, runTool: async (_tool, args) => {
     if (args[1] === 'ls') return JSON.stringify({ envs: records })
     assert.equal(args[1], 'pull')
-    assert.ok(!fs.existsSync(args[2]), 'fresh file: no stale local credential preserved by the Vercel CLI')
     assert.ok(args.includes('--environment=production'))
-    fs.writeFileSync(args[2], core.serializeEnv(credentials, Object.keys(credentials), 'test-production'))
+    fs.writeFileSync(args[2], core.serializeEnv(credentials, Object.keys(credentials), 'test-production'), { flag: 'wx', mode: 0o600 })
     return ''
   } })
   assert.deepEqual(result.values, credentials)
