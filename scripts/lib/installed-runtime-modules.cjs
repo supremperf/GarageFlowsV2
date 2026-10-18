@@ -6,7 +6,7 @@ const { createRequire } = require('node:module')
  * copy of the traced tree alone can omit runtime package entry files.
  * No dev dependency installation and no resolution fallback to the checkout.
  */
-function projectRuntimeModules(resourcesPath) {
+function projectRuntimeModules(resourcesPath, projectRoot = path.resolve(__dirname, '../..')) {
   const asar = require('@electron/asar')
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-production-modules-'))
   try {
@@ -19,6 +19,13 @@ function projectRuntimeModules(resourcesPath) {
     // Preserve the generated .prisma client and server client already copied
     // by postbuild. Merge in the full production closure, not just next.js.
     fs.cpSync(source, destination, { recursive: true, dereference: true })
+    // Generated hidden .prisma content is not a published npm dependency and
+    // must be placed explicitly after Builder's resource filtering as well.
+    const generated = path.join(projectRoot, 'node_modules', '.prisma', 'client')
+    for (const file of ['index.js', 'schema.prisma', 'query_engine-windows.dll.node']) {
+      if (!fs.statSync(path.join(generated, file)).isFile()) throw new Error('Generated Windows Prisma resource missing: ' + file)
+    }
+    fs.cpSync(generated, path.join(destination, '.prisma', 'client'), { recursive: true, dereference: true })
     const resolver = createRequire(path.join(standalone, 'server.js'))
     for (const name of ['next', 'react', 'react-dom', '@prisma/client']) {
       const resolved = resolver.resolve(name), relative = path.relative(standalone, resolved)
