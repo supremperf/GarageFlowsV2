@@ -1,0 +1,43 @@
+{
+  "passed": 2,
+  "failed": 7,
+  "pending": 0,
+  "assertions": [
+    {
+      "name": "HTTP200 html is not an acknowledgement",
+      "status": "failed"
+    },
+    {
+      "name": "HTTP200 malformed is not an acknowledgement",
+      "status": "failed"
+    },
+    {
+      "name": "HTTP200 empty is not an acknowledgement",
+      "status": "failed"
+    },
+    {
+      "name": "HTTP200 missing acknowledgement is not an acknowledgement",
+      "status": "failed"
+    },
+    {
+      "name": "HTTP200 array is not an acknowledgement",
+      "status": "failed"
+    },
+    {
+      "name": "HTTP200 scalar is not an acknowledgement",
+      "status": "failed"
+    },
+    {
+      "name": "HTTP200 wrong ack type is not an acknowledgement",
+      "status": "failed"
+    },
+    {
+      "name": "keeps explicit success, real status and refusal data without a redirect",
+      "status": "passed"
+    },
+    {
+      "name": "HTTP503 cannot succeed even with a forged positive JSON acknowledgement",
+      "status": "passed"
+    }
+  ]
+}

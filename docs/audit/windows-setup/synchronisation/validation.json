@@ -1,0 +1,61 @@
+{
+  "productionGo": false,
+  "missionComplete": false,
+  "ciVerifiedCommit": "7e6891e290120cc68f0997b9bd5e2c138b427ab8",
+  "ciRun": 39153598489,
+  "windowsJob": 117753171801,
+  "windows": "success",
+  "nativeTestsBuildLintTypesAuditGitleaksPublicE2E": "success",
+  "authenticatedE2E": "failure MISSING_INPUT:BASE_URL",
+  "codeql": {
+    "results": 9,
+    "high": 2,
+    "medium": 7,
+    "zeroVerified": false
+  },
+  "local": {
+    "nodePassed": 431,
+    "nodeFailed": 0,
+    "targetedPassed": 35,
+    "targetedFailed": 0,
+    "typecheckExit": 0,
+    "lintExit": 0,
+    "environmentProblems": 0,
+    "consistencyExit": 0,
+    "npmVulnerabilities": 0,
+    "global": {
+      "total": 4272,
+      "passed": 3420,
+      "failed": 3,
+      "pending": 849,
+      "failedFiles": 79
+    },
+    "docsGuardsPassed": 24
+  },
+  "before": {
+    "passed": 2,
+    "failed": 7,
+    "actualLegacyHttpBodyAbortReturnedSuccess": true
+  },
+  "responsePolicy": {
+    "singleItemMaxBytes": 16777216,
+    "legacyBulkBytes": "Infinity explicitly retained pending pagination; NOT memory safe",
+    "maxChunks": 65536,
+    "timeoutsChanged": false,
+    "photoMaxDecodedBytes": 8388608,
+    "fullMaxPhotoAndBulkOver16MiBTested": true
+  },
+  "remaining": [
+    "Bulk response pagination/byte bounds",
+    "9 CodeQL results",
+    "Authenticated staging target/fixtures/approval",
+    "Authenticode, actual production-license business UI, factory-clean physical OS",
+    "Default main151/Dependabot REST403"
+  ],
+  "mainModified": false,
+  "productionActions": {
+    "merges": 0,
+    "deployments": 0,
+    "secretRotations": 0
+  }
+}

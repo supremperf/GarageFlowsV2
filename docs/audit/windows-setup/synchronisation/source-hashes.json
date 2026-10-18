@@ -1,0 +1,27 @@
+{
+  "workspaceHead": "e28acd82e4ad3afafdf4cf19ba4e15ae5c7cbb93",
+  "ciRuntimeVerifiedCommit": "7e6891e290120cc68f0997b9bd5e2c138b427ab8",
+  "warning": "Bridge test additions are later than CI runtime SHA; do not attribute old checks to later commits.",
+  "files": [
+    {
+      "file": "src/lib/sync/cloud-client.ts",
+      "sha256": "4c1497a5c0d804f6969122a8199d425bd551b1f5f62fd7b48b6c65ce11c11aec"
+    },
+    {
+      "file": "src/lib/security/bounded-json-response.ts",
+      "sha256": "d79203ecb07b4e2c7a3f6379336fca1f2e3f9e0c0cb50ab778207aec5d84a6fc"
+    },
+    {
+      "file": "src/lib/sync/__tests__/cloud-response-contract.test.ts",
+      "sha256": "42af00010d35139d5c3a587324bb93bebec907ac6abe72ad99904cc42c86777c"
+    },
+    {
+      "file": "src/lib/sync/__tests__/mechanic-response-confirmation.test.ts",
+      "sha256": "fd32e3e52e3746da3e691d6a35127c69107fd9d170028d0f76f610bc5a6264e3"
+    },
+    {
+      "file": "src/lib/einvoicing/__tests__/bridge-response-contract.test.ts",
+      "sha256": "fb3b545c4896f8895111419daaeff4dcd23cca8aeb2d83780f63b5df8aebd955"
+    }
+  ]
+}

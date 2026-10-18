@@ -1,0 +1,147 @@
+{
+  "passed": 35,
+  "failed": 0,
+  "pending": 0,
+  "assertions": [
+    {
+      "name": "real bridge does not forward HTTP200 HTML as success or enrich it with local data",
+      "status": "passed"
+    },
+    {
+      "name": "real bridge preserves provider rejection code/status without enrichment",
+      "status": "passed"
+    },
+    {
+      "name": "real bridge keeps successful JSON and the existing role-local enrichment path",
+      "status": "passed"
+    },
+    {
+      "name": "decodes a split UTF8 codepoint once and returns only JSON objects",
+      "status": "passed"
+    },
+    {
+      "name": "rejects non-object/malformed body []",
+      "status": "passed"
+    },
+    {
+      "name": "rejects non-object/malformed body true",
+      "status": "passed"
+    },
+    {
+      "name": "rejects non-object/malformed body 123",
+      "status": "passed"
+    },
+    {
+      "name": "rejects non-object/malformed body null",
+      "status": "passed"
+    },
+    {
+      "name": "rejects non-object/malformed body \"text\"",
+      "status": "passed"
+    },
+    {
+      "name": "rejects non-object/malformed body {",
+      "status": "passed"
+    },
+    {
+      "name": "rejects non-object/malformed body <html>unavailable</html>",
+      "status": "passed"
+    },
+    {
+      "name": "cancels an announced oversized body before reading it",
+      "status": "passed"
+    },
+    {
+      "name": "counts actual bytes even if Content-Length is absent or false",
+      "status": "passed"
+    },
+    {
+      "name": "bounds chunk overhead and cancels rather than accepting an incomplete prefix",
+      "status": "passed"
+    },
+    {
+      "name": "abort cancels a pending reader without depending on the fetch mock to reject",
+      "status": "passed"
+    },
+    {
+      "name": "refuses invalid UTF8 rather than silently replacing bytes",
+      "status": "passed"
+    },
+    {
+      "name": "rejects invalid budgets and pre-aborted input with controlled errors",
+      "status": "passed"
+    },
+    {
+      "name": "HTTP200 html is not an acknowledgement",
+      "status": "passed"
+    },
+    {
+      "name": "HTTP200 malformed is not an acknowledgement",
+      "status": "passed"
+    },
+    {
+      "name": "HTTP200 empty is not an acknowledgement",
+      "status": "passed"
+    },
+    {
+      "name": "HTTP200 missing acknowledgement is not an acknowledgement",
+      "status": "passed"
+    },
+    {
+      "name": "HTTP200 array is not an acknowledgement",
+      "status": "passed"
+    },
+    {
+      "name": "HTTP200 scalar is not an acknowledgement",
+      "status": "passed"
+    },
+    {
+      "name": "HTTP200 wrong ack type is not an acknowledgement",
+      "status": "passed"
+    },
+    {
+      "name": "keeps explicit success, real status and refusal data without a redirect",
+      "status": "passed"
+    },
+    {
+      "name": "HTTP503 cannot succeed even with a forged positive JSON acknowledgement",
+      "status": "passed"
+    },
+    {
+      "name": "keeps the full existing maximum 8 MiB photo after base64 expansion",
+      "status": "passed"
+    },
+    {
+      "name": "returns a protocol failure and cancels an oversized cloud body",
+      "status": "passed"
+    },
+    {
+      "name": "retains timeout classification and cancels a stalled body after fetch has resolved",
+      "status": "passed"
+    },
+    {
+      "name": "does not impose the single-item cap on existing bulk proof/history responses",
+      "status": "passed"
+    },
+    {
+      "name": "real loopback HTTP200 with an aborted incomplete body remains TIMEOUT, not synced",
+      "status": "passed"
+    },
+    {
+      "name": "assignment stays pending on HTTP200 HTML, then confirms only on a real JSON acknowledgement",
+      "status": "passed"
+    },
+    {
+      "name": "revocation stays pending on HTTP200 HTML, then confirms only on a real JSON acknowledgement",
+      "status": "passed"
+    },
+    {
+      "name": "a local sync action never marks cloudSyncedAt on HTTP503 with a positive-looking JSON",
+      "status": "passed"
+    },
+    {
+      "name": "does not forward a synthetic private request body to a redirect recipient",
+      "status": "passed"
+    }
+  ]
+}
