@@ -2068,7 +2068,12 @@
     "VERCEL_ENV",
     "VERCEL_REGION",
     "VERCEL_URL",
-    "VITEST"
+    "VITEST",
+    "GITHUB_ACTIONS",
+    "RUNNER_OS",
+    "RUNNER_TEMP",
+    "GF_WINDOWS_SMOKE_ISOLATED",
+    "GF_SETUP_SMOKE_DB"
   ],
   "forbiddenAliases": {
     "PWA_DATABASE_URL": {
