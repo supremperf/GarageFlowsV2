@@ -18,11 +18,17 @@ Les corrections et tests de ce lot sont décrits dans [le journal](01-JOURNAL-ET
 | `npm audit` complet | 0 | **0 vérifié** avec npm11.16.0 ; prod/dev/optional/peer inclus. Pas de suppression de dépendance essentielle, `--force` ou exclusion de gravité. |
 | Lock / compatibilité | Compatibles | `npm ci --ignore-scripts` et `npm ls --all` réussis, lock inchangé ; installation normale **échouée** sur téléchargement Electron. Compatibilité native/distribution non entièrement validée. |
 | TypeScript / ESLint | Aucune erreur bloquante | **Exit0 / exit0** localement avec clients générés sans moteur pour typage/mocks. |
-| Compilation standard | Réussie | **Non validée localement** : build échoué au téléchargement du moteur Prisma, avant Next. Le build réussi d’un précédent commit ne certifie pas le nouveau. |
-| Tests | Tous réussis | **380/380 Node** ; ciblé **30/30**, dont 15 tests catalogue ; audit/critique **13/13**. Globale **3368 réussis / 4222, 3 échecs TLS préparation DB, 851 pending, 79 fichiers empêchés**. Nouvelles fixtures natives à confirmer en CI. |
-| Sécurité du code | Audit effectué et corrections complètes | **Partiel**, S01/S02 corrigés et protections existantes maintenues ; confidentialité des coûts, admin/MFA/diagnostics et revue sémantique complète encore ouverts. |
-| Fonctions essentielles | Préservées | Aucun écran/fonction supprimé ; comportements nominaux du catalogue testés. Recettes DB native, authentification navigateur, Windows et scénario complet requises pour affirmer absence de régression. |
+| Compilation standard | Réussie | **Réussie en CI sur 7ff1a6e**, build/budget + packaging/inspection Windows. Bloquée localement avant Next. Contrôles d’un SHA ne sont pas attribués aux commits ultérieurs. |
+| Tests | Tous réussis | **387/387 Node** ; ciblé **30/30**, dont 15 tests catalogue ; audit/critique/contrôleur **20/20**. Globale **3368 réussis / 4222, 3 échecs TLS préparation DB, 851 pending, 79 fichiers empêchés**. Fixtures natives validées dans le job standard réussi de 7ff1a6e ; E2E authentifié non atteint (précontrôle échoué). |
+| Sécurité du code | Audit effectué et corrections complètes | **Partiel**, S01/S02 corrigés ; CodeQL signale **19 alertes PR (11 high / 8 medium)** et 20 résultats SARIF projetés au total. Confidentialité des coûts, admin/MFA/diagnostics et revue complète encore ouverts. |
+| Fonctions essentielles | Préservées | Aucun écran/fonction supprimé ; comportements nominaux du catalogue testés. CI native et packaging Windows réussis sur 7ff1a6e ; authentification navigateur/scénarios métier complets encore requis. |
 | GitHub Security Alerts sur main | 0 après intégration | **Non vérifiable / non atteint** : REST403, main reste sur e3ac5f5 ; pas d’intégration rouge forcée. |
+
+## Preuves GitHub complémentaires, sans fausse clôture
+
+[CI du SHA 7ff1a6e](candidate-ci-7ff1a6e.json) : tests natifs, build/budget, dépendances, Gitleaks, E2E publics et packaging Windows réussis. E2E authentifié échoue à son précontrôle d’environnement/fixtures approuvées ; contrôle requis rouge. **CodeQL : analyse/upload réussis mais contrôle de résultats rouge**, [19 alertes PR](codeql-pr-check-7ff1a6e.json), [20 résultats projetés avec chemins complets](codeql-flow-inventory-7ff1a6e.json), [triage restant](codeql-triage.json). Le compteur Dependabot151 et ces alertes SAST ne sont pas fusionnés.
+
+Le [contrôleur REST](../../../scripts/check-github-security.cjs) produit [count:null sur HTTP403](github-rest-check.json), jamais le zéro GraphQL ambigu. L’[API Code Scanning est également refusée](code-scanning-access.json). Les ajouts d’outil/rapport ultérieurs à 7ff1a6e ont des tests locaux, mais ne reçoivent pas artificiellement la validation CI de ce SHA.
 
 ## Pourquoi les alertes n’ont pas disparu avec les travaux précédents
 
@@ -39,9 +45,16 @@ Les corrections et tests de ce lot sont décrits dans [le journal](01-JOURNAL-ET
    ```
 
    Le flux contient les fiches, pas des identifiants de connexion. Ne fournir aucun PAT/cookie/mot de passe. Classer les IDs et comparer GHSA/manifest/scope/plages au présent inventaire ; garder les nouveaux avis apparus depuis la mesure. L’échec HTTP403 est un blocage, pas zéro alerte.
+   Contrôle automatique neutralisé (aucune mutation GitHub), après rétablissement des droits :
+
+   ```sh
+   node scripts/check-github-security.cjs
+   ```
+
+   Sa sortie ne prétend jamais attester à elle seule la fraîcheur du scan ou la fin de mission.
 2. **CI exacte du candidat** : pousser uniquement la branche de session et préparer une PR brouillon vers main. Lire les jobs et annotations du **nouveau SHA**. Corriger tout échec fonctionnel réellement accessible ; ne pas déclarer les tests natifs verts à partir de types/mocks. Les cas PostgreSQL/Redis, Windows et E2E authentifiés restent obligatoires. Les éléments de la CI précédente sont conservés séparément.
 3. **Environnement** : rétablir téléchargements HTTPS officiels des moteurs Prisma/Electron/Chromium ou un cache attesté, sans désactiver TLS/checksums. Exécuter `npm ci`, génération native des deux clients, `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, packaging et recettes. Voir également la procédure technique [Prisma/build](../2026-10-17/phase6/02-BUILD-ET-REPRISE.md).
-4. **Source/autorisation** : terminer O01 (coût serveur, projections par rôle et snapshots monétaires) et O02 (identité humaine/MFA, audit durable et nouveau protocole diagnostic compatible), puis toutes les frontières tenant/CSRF/SSRF/IA. Aucun contournement d’accès ni réparation de données production implicite. L’[inventaire de revue antérieur](../2026-10-17/phase6/review-inventory.tsv) est un point de départ historique, pas un certificat du code actuel.
+4. **Source/autorisation** : qualifier/corriger tous les résultats SAST réellement vulnérables sans supprimer les fonctions ni masquer les contrôles ; traiter les TOCTOU, destinations/flux de données et protocoles identifiés, puis terminer O01 (coût serveur, projections par rôle et snapshots monétaires) et O02 (identité humaine/MFA, audit durable et nouveau protocole diagnostic compatible), puis toutes les frontières tenant/CSRF/SSRF/IA. Aucun contournement d’accès ni réparation de données production implicite. L’[inventaire de revue antérieur](../2026-10-17/phase6/review-inventory.tsv) est un point de départ historique, pas un certificat du code actuel.
 5. **Fork maintenu localement** : conserver l’audit source de `vendor/braces-bounded`, les bornes et tests 4653 vecteurs ; GHSA-vfj7-8cjw-p6xm n’a pas de version upstream corrigée au relevé. Surveiller les nouveaux avis upstream, que le nom privé ne fera pas automatiquement remonter. Son renommage seul ne justifierait jamais une clôture. Mainteneur/revue indépendante et suivi nécessaires.
 6. **Intégration** : revue de l’ensemble du diff préexistant (plus de deux mille fichiers, pas seulement ce lot), contrôles obligatoires réellement verts et approbation humaine. **Ne pas fusionner** tant que tests/revue sont rouges ou qu’un déploiement automatique production n’est pas explicitement approuvé. Aucun push direct sur main et aucune migration/rotation dans cet audit.
 7. **Après intégration autorisée**, confirmer SHA de main et lock réellement analysé, laisser terminer les scans GitHub, récupérer de nouveau toutes les pages REST. Pour chaque ID initial : fixé / encore ouvert / nouvel avis, preuve de version et cause. Exiger zéro pour **toutes** les gravités ; si une alerte subsiste, la diagnostiquer, pas la dismiss/supprimer pour obtenir du vert.

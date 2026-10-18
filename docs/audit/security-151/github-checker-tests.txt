@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: counts every severity without an audit-level exclusion or suppression
+ok 1 - counts every severity without an audit-level exclusion or suppression
+  ---
+  duration_ms: 1.765781
+  type: 'test'
+  ...
+# Subtest: rejects malformed/unknown/duplicate/closed input rather than silently counting zero
+ok 2 - rejects malformed/unknown/duplicate/closed input rather than silently counting zero
+  ---
+  duration_ms: 0.449571
+  type: 'test'
+  ...
+# Subtest: REST403 cannot turn an empty/error stdout into zero or leak the error body
+ok 3 - REST403 cannot turn an empty/error stdout into zero or leak the error body
+  ---
+  duration_ms: 0.513562
+  type: 'test'
+  ...
+# Subtest: REST inventory requests complete pagination and never falls back to GraphQL
+ok 4 - REST inventory requests complete pagination and never falls back to GraphQL
+  ---
+  duration_ms: 0.593485
+  type: 'test'
+  ...
+# Subtest: valid empty REST snapshot is not a certificate of freshness or mission completion
+ok 5 - valid empty REST snapshot is not a certificate of freshness or mission completion
+  ---
+  duration_ms: 0.2978
+  type: 'test'
+  ...
+# Subtest: default branch movement during query blocks a zero conclusion
+ok 6 - default branch movement during query blocks a zero conclusion
+  ---
+  duration_ms: 0.199454
+  type: 'test'
+  ...
+# Subtest: a truncated or malformed successful API output remains invalid, not zero
+ok 7 - a truncated or malformed successful API output remains invalid, not zero
+  ---
+  duration_ms: 0.20399
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 67.142217

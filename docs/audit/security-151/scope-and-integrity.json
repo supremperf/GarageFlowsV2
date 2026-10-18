@@ -1,0 +1,21 @@
+{
+  "observedUtc": "2026-10-18T14:18:41.997Z",
+  "node": "v22.22.3",
+  "npmDeclared": "npm@11.16.0",
+  "rootLockSha256": "167af5e646207bd1467875edb823b112c6310c88d2abd6a376134e886002775f",
+  "mainLockSha256": "54d6a7829e723a035414edde60e7e302e4e84b6d842e6786db3c046d85c0b0c7",
+  "lockUnchangedSincePublishedPhase7": true,
+  "sourceFilesInventoried": 1045,
+  "routes": 164,
+  "otherPackageLocks": [
+    "package-lock.json"
+  ],
+  "workflows": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/codeql.yml"
+  ],
+  "declarations": 47,
+  "sourceAuditComplete": false,
+  "latestNode22NpmDistributionObserved": "22.23.3",
+  "noProductionRuntimePatchAttestation": true
+}

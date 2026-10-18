@@ -44,7 +44,7 @@ Marque — exceptions techniques ACTIVES (précises, documentées) :
    • src/lib/__tests__/user-data-path.test.ts — intitulé du test de compat du dossier historique  (1)
    • src/lib/signature/__tests__/signature.test.ts — User-Agent HTTP « GarageFlow/<version> »  (1)
 
-✅ Marque cohérente : « GarageFlows » dans tout le visible (1094 fichiers). Exceptions techniques uniquement.
+✅ Marque cohérente : « GarageFlows » dans tout le visible (1095 fichiers). Exceptions techniques uniquement.
 
 > garageflow@1.1.0 check:docs
 > node scripts/check-docs-consistency.mjs
@@ -81,7 +81,7 @@ Champs Float NON monétaires classés (autorisés) : 4
 > garageflow@1.1.0 check:env-consistency
 > node scripts/check-env-consistency.mjs
 
-✅ Contrat d'environnement : 126 variables canoniques, 8 alias interdits absents du code actif, 48 variables plateforme, 1067 fichiers balayés.
+✅ Contrat d'environnement : 126 variables canoniques, 8 alias interdits absents du code actif, 48 variables plateforme, 1068 fichiers balayés.
 
 > garageflow@1.1.0 check:migration-safety
 > node scripts/check-migration-safety.mjs
@@ -92,9 +92,9 @@ Champs Float NON monétaires classés (autorisés) : 4
 > node scripts/check-sqlite-template.mjs
 
 ✅ Modèle SQLite : intégrité + clés étrangères OK, baseline complète (214 migrations enregistrées, 0 en attente), checksums conformes, schéma final.
-(node:13544) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(node:24531) ExperimentalWarning: SQLite is an experimental feature and might change at any time
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:13544) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/user/GarageFlowsV2/src/lib/migrations.ts is not specified and it doesn't parse as CommonJS.
+(node:24531) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/user/GarageFlowsV2/src/lib/migrations.ts is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
 To eliminate this warning, add "type": "module" to /home/user/GarageFlowsV2/package.json.
 

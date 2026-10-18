@@ -2,235 +2,235 @@ TAP version 13
 # Subtest: audit rejects every severity and missing/error/inconsistent service responses
 ok 1 - audit rejects every severity and missing/error/inconsistent service responses
   ---
-  duration_ms: 1.159872
+  duration_ms: 1.496792
   type: 'test'
   ...
 # Subtest: bounded braces retains compile, parse, stringify, ranges and ordinary glob behavior
 ok 2 - bounded braces retains compile, parse, stringify, ranges and ordinary glob behavior
   ---
-  duration_ms: 2.926973
+  duration_ms: 5.094193
   type: 'test'
   ...
 # Subtest: bounded braces rejects nesting, caller-crafted cyclic ASTs and oversized expansions before process exhaustion
 ok 3 - bounded braces rejects nesting, caller-crafted cyclic ASTs and oversized expansions before process exhaustion
   ---
-  duration_ms: 37.650225
+  duration_ms: 41.458616
   type: 'test'
   ...
 # Subtest: Electron builder can consume the upgraded downloader in CommonJS on the supported Node runtime
 ok 4 - Electron builder can consume the upgraded downloader in CommonJS on the supported Node runtime
   ---
-  duration_ms: 175.854812
+  duration_ms: 166.920263
   type: 'test'
   ...
 # Subtest: differential compatibility: 4653 outputs from pristine MIT upstream 3.0.3
 ok 5 - differential compatibility: 4653 outputs from pristine MIT upstream 3.0.3
   ---
-  duration_ms: 241.431211
+  duration_ms: 174.35751
   type: 'test'
   ...
 # Subtest: descending, Unicode, unsafe-number and stepped compile ranges cannot evade limits
 ok 6 - descending, Unicode, unsafe-number and stepped compile ranges cannot evade limits
   ---
-  duration_ms: 11.236285
+  duration_ms: 10.152534
   type: 'test'
   ...
 # Subtest: Nodemailer retains Promise/MIME transport API without contacting an SMTP service
 ok 7 - Nodemailer retains Promise/MIME transport API without contacting an SMTP service
   ---
-  duration_ms: 99.388013
+  duration_ms: 45.468787
   type: 'test'
   ...
 # Subtest: Sharp loads its actual platform binary and encodes/decodes PNG assets
 ok 8 - Sharp loads its actual platform binary and encodes/decodes PNG assets
   ---
-  duration_ms: 60.69631
+  duration_ms: 46.359155
   type: 'test'
   ...
 # Subtest: arrays of patterns cannot evade the aggregate output budget
 ok 9 - arrays of patterns cannot evade the aggregate output budget
   ---
-  duration_ms: 36.648765
+  duration_ms: 30.852235
   type: 'test'
   ...
 # Subtest: next.config.mjs verrouille la racine de tracing sur le dossier du projet
 ok 10 - next.config.mjs verrouille la racine de tracing sur le dossier du projet
   ---
-  duration_ms: 1.354514
+  duration_ms: 1.168085
   type: 'test'
   ...
 # Subtest: sortie saine : server.js à la racine, ressources au bon endroit
 ok 11 - sortie saine : server.js à la racine, ressources au bon endroit
   ---
-  duration_ms: 5.501167
+  duration_ms: 2.948434
   type: 'test'
   ...
 # Subtest: sortie IMBRIQUÉE (lockfile parent) : refusée avec la cause exacte, jamais « server.js NOT found »
 ok 12 - sortie IMBRIQUÉE (lockfile parent) : refusée avec la cause exacte, jamais « server.js NOT found »
   ---
-  duration_ms: 3.524045
+  duration_ms: 1.698719
   type: 'test'
   ...
 # Subtest: sortie absente ou sans server.js : diagnostic explicite
 ok 13 - sortie absente ou sans server.js : diagnostic explicite
   ---
-  duration_ms: 2.231727
+  duration_ms: 1.209967
   type: 'test'
   ...
 # Subtest: détecte les copies périmées de l’application à purger avant empaquetage
 ok 14 - détecte les copies périmées de l’application à purger avant empaquetage
   ---
-  duration_ms: 2.936169
+  duration_ms: 2.036375
   type: 'test'
   ...
 # Subtest: le post-build dirige les copies vers le dossier d’application (pas un chemin supposé)
 ok 15 - le post-build dirige les copies vers le dossier d’application (pas un chemin supposé)
   ---
-  duration_ms: 0.461039
+  duration_ms: 0.400029
   type: 'test'
   ...
 # Subtest: le vérificateur standalone analyse la RACINE du projet, pas le dossier standalone
 ok 16 - le vérificateur standalone analyse la RACINE du projet, pas le dossier standalone
   ---
-  duration_ms: 0.218285
+  duration_ms: 0.23108
   type: 'test'
   ...
 # Subtest: la liste des modules d’exécution se résout sans double préfixe node_modules
 ok 17 - la liste des modules d’exécution se résout sans double préfixe node_modules
   ---
-  duration_ms: 3.22834
+  duration_ms: 2.411446
   type: 'test'
   ...
 # Subtest: verify:standalone ACCEPTE une sortie saine (le garde-fou ne bloque pas un installeur valide)
 ok 18 - verify:standalone ACCEPTE une sortie saine (le garde-fou ne bloque pas un installeur valide)
   ---
-  duration_ms: 41.684464
+  duration_ms: 32.962262
   type: 'test'
   ...
 # Subtest: verify:standalone REFUSE une sortie absente, incomplète ou sans moteur Prisma
 ok 19 - verify:standalone REFUSE une sortie absente, incomplète ou sans moteur Prisma
   ---
-  duration_ms: 95.959326
+  duration_ms: 66.814301
   type: 'test'
   ...
 # Subtest: next-auth est accepté COPIÉ ou EMBARQUÉ, et signalé s’il a disparu des deux côtés
 ok 20 - next-auth est accepté COPIÉ ou EMBARQUÉ, et signalé s’il a disparu des deux côtés
   ---
-  duration_ms: 1.851261
+  duration_ms: 1.722165
   type: 'test'
   ...
 # Subtest: le post-build ne casse pas les builds cloud (Vercel) et distingue l’empaquetage desktop
 ok 21 - le post-build ne casse pas les builds cloud (Vercel) et distingue l’empaquetage desktop
   ---
-  duration_ms: 0.239808
+  duration_ms: 0.193345
   type: 'test'
   ...
 # Subtest: package.json : dist vérifie tout et échoue clairement à chaque étape
 ok 22 - package.json : dist vérifie tout et échoue clairement à chaque étape
   ---
-  duration_ms: 0.56442
+  duration_ms: 0.570946
   type: 'test'
   ...
 # Subtest: la chaîne n’essaie JAMAIS de publier une release toute seule
 ok 23 - la chaîne n’essaie JAMAIS de publier une release toute seule
   ---
-  duration_ms: 0.370316
+  duration_ms: 0.266197
   type: 'test'
   ...
 # Subtest: release:sign explique quoi fournir au lieu d’un « --file obligatoire » sec
 ok 24 - release:sign explique quoi fournir au lieu d’un « --file obligatoire » sec
   ---
-  duration_ms: 0.228192
+  duration_ms: 0.220119
   type: 'test'
   ...
 # Subtest: restores same public key idempotently, never creates private key
 ok 25 - restores same public key idempotently, never creates private key
   ---
-  duration_ms: 8.385747
+  duration_ms: 8.000306
   type: 'test'
   ...
 # Subtest: preserves existing mismatched resource and refuses overwrite
 ok 26 - preserves existing mismatched resource and refuses overwrite
   ---
-  duration_ms: 2.217621
+  duration_ms: 2.293363
   type: 'test'
   ...
 # Subtest: rejects disagreement between anchors before writing any resource
 ok 27 - rejects disagreement between anchors before writing any resource
   ---
-  duration_ms: 1.645548
+  duration_ms: 1.647408
   type: 'test'
   ...
 # Subtest: refuses a symlink directory without writing outside the fixture
 ok 28 - refuses a symlink directory without writing outside the fixture
   ---
-  duration_ms: 5.333829
+  duration_ms: 2.432805
   type: 'test'
   ...
 # Subtest: a replaced pathname cannot change the descriptor already being checked
 ok 29 - a replaced pathname cannot change the descriptor already being checked
   ---
-  duration_ms: 2.162006
+  duration_ms: 2.186961
   type: 'test'
   ...
 # Subtest: mandatory gate rejects any failed, cancelled or skipped upstream job
 ok 30 - mandatory gate rejects any failed, cancelled or skipped upstream job
   ---
-  duration_ms: 142.912907
+  duration_ms: 48.093066
   type: 'test'
   ...
 # Subtest: workflow graph pins actions, retains strict security and packages Windows before gate
 ok 31 - workflow graph pins actions, retains strict security and packages Windows before gate
   ---
-  duration_ms: 6.107235
+  duration_ms: 1.469319
   type: 'test'
   ...
 # Subtest: authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
 ok 32 - authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
   ---
-  duration_ms: 537.039413
+  duration_ms: 494.893609
   type: 'test'
   ...
 # Subtest: SARIF projection retains rules and all source/sink locations, never code snippets/messages
 ok 33 - SARIF projection retains rules and all source/sink locations, never code snippets/messages
   ---
-  duration_ms: 1.413611
+  duration_ms: 1.336528
   type: 'test'
   ...
 # Subtest: bounded pages preserve all results and reject overflow rather than fake completeness
 ok 34 - bounded pages preserve all results and reject overflow rather than fake completeness
   ---
-  duration_ms: 17.070129
+  duration_ms: 9.18646
   type: 'test'
   ...
 # Subtest: artifact indexes resolve to physical source paths without leaking artifact bodies
 ok 35 - artifact indexes resolve to physical source paths without leaking artifact bodies
   ---
-  duration_ms: 0.299265
+  duration_ms: 0.195847
   type: 'test'
   ...
 # Subtest: CodeQL query pack extension metadata supplies rule severity without messages
 ok 36 - CodeQL query pack extension metadata supplies rule severity without messages
   ---
-  duration_ms: 0.291421
+  duration_ms: 0.278547
   type: 'test'
   ...
 # Subtest: all validated fingerprints survive; unsupported fingerprints or absolute/traversing paths fail closed
 ok 37 - all validated fingerprints survive; unsupported fingerprints or absolute/traversing paths fail closed
   ---
-  duration_ms: 0.527918
+  duration_ms: 0.48718
   type: 'test'
   ...
 # Subtest: real Next dotenv consumer preserves dollar/backslash/quote attack strings and cannot create extra keys
 ok 38 - real Next dotenv consumer preserves dollar/backslash/quote attack strings and cannot create extra keys
   ---
-  duration_ms: 3.640612
+  duration_ms: 3.560188
   type: 'test'
   ...
 # Subtest: actual extracted Electron dotenv loader consumes config output without altering dollars, backticks or pre-existing environment (real FS unit)
 ok 39 - actual extracted Electron dotenv loader consumes config output without altering dollars, backticks or pre-existing environment (real FS unit)
   ---
-  duration_ms: 476.265136
+  duration_ms: 340.399766
   type: 'test'
   ...
 # CONFIG COMPLET — 126 variables classées, 56 paramètres applicatifs.
@@ -806,7 +806,7 @@ ok 39 - actual extracted Electron dotenv loader consumes config output without a
 # keygen_ui : URL serveur et GARAGEFLOW_API_KEY préremplies automatiquement à la prochaine ouverture, avec la même clé que le profil serveur destiné à Vercel.
 # ▶ signature-locale-des-mises-à-jour
 # Première clé Ed25519 générée et enregistrée automatiquement dans le coffre externe ; chemin/keyId mémorisés, clés publiques historiques conservées.
-# Signature locale préparée ; clé publique gf-update-b179b20f4290 alignée. Clé privée exclusivement dans le coffre externe.
+# Signature locale préparée ; clé publique gf-update-3b9ee7a9b342 alignée. Clé privée exclusivement dans le coffre externe.
 #   À fournir/vérifier : La publication distante dépend de garagesite3, absent de ce checkout. Reporter la clé publique/keyId et autoriser ce serveur séparément ; aucune clé privée envoyée à la PWA.
 # ▶ desktop-SQLite-et-endpoints-compilés
 # SQLite sans données métier (aucune ligne métier) : 6 clé(s) desktop générée(s) automatiquement, valeurs masquées.
@@ -873,7 +873,7 @@ ok 39 - actual extracted Electron dotenv loader consumes config output without a
 # Serveur → .env.server.local ; émetteur → keys/private.pem + public.pem + server_config.json. Secrets non affichés.
 # keygen_ui : URL serveur et GARAGEFLOW_API_KEY préremplies automatiquement à la prochaine ouverture, avec la même clé que le profil serveur destiné à Vercel.
 # ▶ signature-locale-des-mises-à-jour
-# Signature locale préparée ; clé publique gf-update-b179b20f4290 alignée. Clé privée exclusivement dans le coffre externe.
+# Signature locale préparée ; clé publique gf-update-3b9ee7a9b342 alignée. Clé privée exclusivement dans le coffre externe.
 #   À fournir/vérifier : La publication distante dépend de garagesite3, absent de ce checkout. Reporter la clé publique/keyId et autoriser ce serveur séparément ; aucune clé privée envoyée à la PWA.
 # ▶ desktop-SQLite-et-endpoints-compilés
 #   À fournir/vérifier : Les clients packagés conservent leur autorité compilée actuelle ; reconstruire/configurer leurs endpoints pour un autre serveur.
@@ -928,7 +928,7 @@ ok 39 - actual extracted Electron dotenv loader consumes config output without a
 # keygen_ui : URL serveur et GARAGEFLOW_API_KEY préremplies automatiquement à la prochaine ouverture, avec la même clé que le profil serveur destiné à Vercel.
 # ▶ signature-locale-des-mises-à-jour
 # Première clé Ed25519 générée et enregistrée automatiquement dans le coffre externe ; chemin/keyId mémorisés, clés publiques historiques conservées.
-# Signature locale préparée ; clé publique gf-update-ba3f6c48466f alignée. Clé privée exclusivement dans le coffre externe.
+# Signature locale préparée ; clé publique gf-update-6eb816abba4e alignée. Clé privée exclusivement dans le coffre externe.
 #   À fournir/vérifier : La publication distante dépend de garagesite3, absent de ce checkout. Reporter la clé publique/keyId et autoriser ce serveur séparément ; aucune clé privée envoyée à la PWA.
 # ▶ desktop-SQLite-et-endpoints-compilés
 # SQLite sans données métier (aucune ligne métier) : 6 clé(s) desktop générée(s) automatiquement, valeurs masquées.
@@ -962,7 +962,7 @@ ok 39 - actual extracted Electron dotenv loader consumes config output without a
 # Serveur → .env.server.local ; émetteur → keys/private.pem + public.pem + server_config.json. Secrets non affichés.
 # keygen_ui : URL serveur et GARAGEFLOW_API_KEY préremplies automatiquement à la prochaine ouverture, avec la même clé que le profil serveur destiné à Vercel.
 # ▶ signature-locale-des-mises-à-jour
-# Signature locale préparée ; clé publique gf-update-ba3f6c48466f alignée. Clé privée exclusivement dans le coffre externe.
+# Signature locale préparée ; clé publique gf-update-6eb816abba4e alignée. Clé privée exclusivement dans le coffre externe.
 #   À fournir/vérifier : La publication distante dépend de garagesite3, absent de ce checkout. Reporter la clé publique/keyId et autoriser ce serveur séparément ; aucune clé privée envoyée à la PWA.
 # ▶ desktop-SQLite-et-endpoints-compilés
 #   À fournir/vérifier : Les clients packagés conservent leur autorité compilée actuelle ; reconstruire/configurer leurs endpoints pour un autre serveur.
@@ -1017,7 +1017,7 @@ ok 39 - actual extracted Electron dotenv loader consumes config output without a
 # keygen_ui : URL serveur et GARAGEFLOW_API_KEY préremplies automatiquement à la prochaine ouverture, avec la même clé que le profil serveur destiné à Vercel.
 # ▶ signature-locale-des-mises-à-jour
 # Première clé Ed25519 générée et enregistrée automatiquement dans le coffre externe ; chemin/keyId mémorisés, clés publiques historiques conservées.
-# Signature locale préparée ; clé publique gf-update-6f1576d0778a alignée. Clé privée exclusivement dans le coffre externe.
+# Signature locale préparée ; clé publique gf-update-233d2068e3e4 alignée. Clé privée exclusivement dans le coffre externe.
 #   À fournir/vérifier : La publication distante dépend de garagesite3, absent de ce checkout. Reporter la clé publique/keyId et autoriser ce serveur séparément ; aucune clé privée envoyée à la PWA.
 # ▶ desktop-SQLite-et-endpoints-compilés
 # SQLite sans données métier (aucune ligne métier) : 6 clé(s) desktop générée(s) automatiquement, valeurs masquées.
@@ -1451,277 +1451,277 @@ ok 39 - actual extracted Electron dotenv loader consumes config output without a
 # Subtest: canonical policy classifies every manifest variable without deploying runtime or unused fields
 ok 40 - canonical policy classifies every manifest variable without deploying runtime or unused fields
   ---
-  duration_ms: 3.168596
+  duration_ms: 2.428477
   type: 'test'
   ...
 # Subtest: Redis PING uses a secret header, refuses redirects, never falls back
 ok 41 - Redis PING uses a secret header, refuses redirects, never falls back
   ---
-  duration_ms: 1.002189
+  duration_ms: 0.876836
   type: 'test'
   ...
 # Subtest: Redis provisioning requests an explicit free EU plan; never auto-upgrades to payg
 ok 42 - Redis provisioning requests an explicit free EU plan; never auto-upgrades to payg
   ---
-  duration_ms: 0.524378
+  duration_ms: 0.509923
   type: 'test'
   ...
 # Subtest: issuer config writes exactly the locations and field names read by Python
 ok 43 - issuer config writes exactly the locations and field names read by Python
   ---
-  duration_ms: 11.590342
+  duration_ms: 9.376424
   type: 'test'
   ...
 # Subtest: client defaults align all compiled URLs and permit only the authorized update host
 ok 44 - client defaults align all compiled URLs and permit only the authorized update host
   ---
-  duration_ms: 14.439417
+  duration_ms: 14.544992
   type: 'test'
   ...
 # Subtest: publisher private key stays outside repository; all historical verification keys are retained
 ok 45 - publisher private key stays outside repository; all historical verification keys are retained
   ---
-  duration_ms: 6.421813
+  duration_ms: 7.710905
   type: 'test'
   ...
 # Subtest: bootstrap admin license has a real P-256 signature and correct record MAC, no shared password
 ok 46 - bootstrap admin license has a real P-256 signature and correct record MAC, no shared password
   ---
-  duration_ms: 2.08398
+  duration_ms: 2.091535
   type: 'test'
   ...
 # Subtest: Vercel filesystem paths and invalid TOTP/old TOTP keys fail validation
 ok 47 - Vercel filesystem paths and invalid TOTP/old TOTP keys fail validation
   ---
-  duration_ms: 2.168165
+  duration_ms: 1.821937
   type: 'test'
   ...
 # Subtest: full plan runs SQL before deployment, saves correct destinations, reports unresolved external limitations honestly
 ok 48 - full plan runs SQL before deployment, saves correct destinations, reports unresolved external limitations honestly
   ---
-  duration_ms: 55.349428
+  duration_ms: 40.015787
   type: 'test'
   ...
 # Subtest: migration failure prevents cloud synchronization/deployment and leaves a truthful resumable report
 ok 49 - migration failure prevents cloud synchronization/deployment and leaves a truthful resumable report
   ---
-  duration_ms: 36.170703
+  duration_ms: 26.812183
   type: 'test'
   ...
 # Subtest: full plan has no side effects without initial authorization
 ok 50 - full plan has no side effects without initial authorization
   ---
-  duration_ms: 5.279813
+  duration_ms: 3.860883
   type: 'test'
   ...
 # Subtest: existing DB missing a critical encryption key cannot silently regenerate or deploy
 ok 51 - existing DB missing a critical encryption key cannot silently regenerate or deploy
   ---
-  duration_ms: 14.461609
+  duration_ms: 11.286967
   type: 'test'
   ...
 # Subtest: existing signature/portal fallback preserves the original session key instead of invalidating proofs and links
 ok 52 - existing signature/portal fallback preserves the original session key instead of invalidating proofs and links
   ---
-  duration_ms: 56.182225
+  duration_ms: 31.03985
   type: 'test'
   ...
 # Subtest: keygen retains the encryption of an existing private PEM after masked passphrase authorization
 ok 53 - keygen retains the encryption of an existing private PEM after masked passphrase authorization
   ---
-  duration_ms: 14.797739
+  duration_ms: 5.570505
   type: 'test'
   ...
 # Subtest: pooled/direct pair must target the same database/schema and Neon branch
 ok 54 - pooled/direct pair must target the same database/schema and Neon branch
   ---
-  duration_ms: 1.197837
+  duration_ms: 1.14805
   type: 'test'
   ...
 # Subtest: cloud preflight refuses desktop/runtime downgrades and public secret names without deleting platform variables
 ok 55 - cloud preflight refuses desktop/runtime downgrades and public secret names without deleting platform variables
   ---
-  duration_ms: 0.243248
+  duration_ms: 0.247236
   type: 'test'
   ...
 # Subtest: SQLite initialization honors the configured filename and never overwrites an existing DB
 ok 56 - SQLite initialization honors the configured filename and never overwrites an existing DB
   ---
-  duration_ms: 1.945393
+  duration_ms: 2.394838
   type: 'test'
   ...
 # Subtest: SQL drift and technical comparison failures both stop before cloud mutations
 ok 57 - SQL drift and technical comparison failures both stop before cloud mutations
   ---
-  duration_ms: 63.105678
+  duration_ms: 46.39525
   type: 'test'
   ...
 # Subtest: full config selects garageflows.fr automatically and rejects an unapproved endpoint change
 ok 58 - full config selects garageflows.fr automatically and rejects an unapproved endpoint change
   ---
-  duration_ms: 0.793208
+  duration_ms: 0.512415
   type: 'test'
   ...
 # Subtest: node config writes one server API key and garageflows.fr to the Python UI config, Vercel plan and server profile without rerun rotation
 ok 59 - node config writes one server API key and garageflows.fr to the Python UI config, Vercel plan and server profile without rerun rotation
   ---
-  duration_ms: 69.148498
+  duration_ms: 49.299945
   type: 'test'
   ...
 # Subtest: JobPart snapshots stay mandatory and the corrective migration drops only their historical defaults
 ok 60 - JobPart snapshots stay mandatory and the corrective migration drops only their historical defaults
   ---
-  duration_ms: 4.095461
+  duration_ms: 1.112724
   type: 'test'
   ...
 # Subtest: license import automatically uses the repo keys/private.pem path and verifies identity before assignment
 ok 61 - license import automatically uses the repo keys/private.pem path and verifies identity before assignment
   ---
-  duration_ms: 11.574788
+  duration_ms: 6.343064
   type: 'test'
   ...
 # Subtest: manual original-key import proposes the exact repo path and accepts quoted Windows-style pasted paths
 ok 62 - manual original-key import proposes the exact repo path and accepts quoted Windows-style pasted paths
   ---
-  duration_ms: 1.88694
+  duration_ms: 1.536984
   type: 'test'
   ...
 # Subtest: full wizard offers optional server and desktop variables and saves chosen values in their own profiles
 ok 63 - full wizard offers optional server and desktop variables and saves chosen values in their own profiles
   ---
-  duration_ms: 63.435194
+  duration_ms: 25.253611
   type: 'test'
   ...
 # Subtest: optional database edits are inspected before missing keys are generated or migrations authorized
 ok 64 - optional database edits are inspected before missing keys are generated or migrations authorized
   ---
-  duration_ms: 29.968231
+  duration_ms: 22.299696
   type: 'test'
   ...
 # Subtest: validation corrections cannot silently switch databases after the data-preservation inspection
 ok 65 - validation corrections cannot silently switch databases after the data-preservation inspection
   ---
-  duration_ms: 32.202197
+  duration_ms: 17.416044
   type: 'test'
   ...
 # Subtest: known compromised secrets remain blocked after advanced validation corrections
 ok 66 - known compromised secrets remain blocked after advanced validation corrections
   ---
-  duration_ms: 16.274658
+  duration_ms: 14.588077
   type: 'test'
   ...
 # Subtest: fresh authority generates, saves and synchronizes real P-256 keys without asking for values; rerun reuses them
 ok 67 - fresh authority generates, saves and synchronizes real P-256 keys without asking for values; rerun reuses them
   ---
-  duration_ms: 115.257321
+  duration_ms: 86.994378
   type: 'test'
   ...
 # Subtest: automatic generation refuses lost originals indicated by an existing public key or issuer config
 ok 68 - automatic generation refuses lost originals indicated by an existing public key or issuer config
   ---
-  duration_ms: 11.878294
+  duration_ms: 4.193563
   type: 'test'
   ...
 # Subtest: interrupted first public synchronization resumes using the exact saved private key
 ok 69 - interrupted first public synchronization resumes using the exact saved private key
   ---
-  duration_ms: 60.875294
+  duration_ms: 47.171487
   type: 'test'
   ...
 # Subtest: missing or different private key after recorded creation never triggers automatic regeneration
 ok 70 - missing or different private key after recorded creation never triggers automatic regeneration
   ---
-  duration_ms: 70.931472
+  duration_ms: 45.624313
   type: 'test'
   ...
 # Subtest: default full plan generates and saves every first-install key, API configuration and external signer automatically
 ok 71 - default full plan generates and saves every first-install key, API configuration and external signer automatically
   ---
-  duration_ms: 186.654325
+  duration_ms: 118.594917
   type: 'test'
   ...
 # Subtest: an interrupted fresh full plan reuses all saved secrets including the signer on resume
 ok 72 - an interrupted fresh full plan reuses all saved secrets including the signer on resume
   ---
-  duration_ms: 159.776622
+  duration_ms: 104.370353
   type: 'test'
   ...
 # Subtest: a lost initialized publisher key is never regenerated by first-install automation
 ok 73 - a lost initialized publisher key is never regenerated by first-install automation
   ---
-  duration_ms: 129.76747
+  duration_ms: 105.65187
   type: 'test'
   ...
 # Subtest: corrupt public-only creation receipt fails closed without creating keys
 ok 74 - corrupt public-only creation receipt fails closed without creating keys
   ---
-  duration_ms: 1.05387
+  duration_ms: 0.965321
   type: 'test'
   ...
 # Subtest: used database never receives an automatically generated replacement issuer
 ok 75 - used database never receives an automatically generated replacement issuer
   ---
-  duration_ms: 12.519054
+  duration_ms: 9.213842
   type: 'test'
   ...
 # Subtest: first-install recovery synchronizes all public anchors even when the Next anchor already matches
 ok 76 - first-install recovery synchronizes all public anchors even when the Next anchor already matches
   ---
-  duration_ms: 100.789494
+  duration_ms: 97.101988
   type: 'test'
   ...
 # Subtest: automatic keygen reuse preserves an existing unencrypted SEC1 PEM byte for byte
 ok 77 - automatic keygen reuse preserves an existing unencrypted SEC1 PEM byte for byte
   ---
-  duration_ms: 2.608867
+  duration_ms: 3.577586
   type: 'test'
   ...
 # Subtest: clé absente sur une base sans données métier : génération automatique, aucune saisie
 ok 78 - clé absente sur une base sans données métier : génération automatique, aucune saisie
   ---
-  duration_ms: 0.297416
+  duration_ms: 0.433033
   type: 'test'
   ...
 # Subtest: clé absente sur une base utilisée : original, NONUTILISE ou GENERER sans jamais écraser en silence
 ok 79 - clé absente sur une base utilisée : original, NONUTILISE ou GENERER sans jamais écraser en silence
   ---
-  duration_ms: 0.621233
+  duration_ms: 0.918521
   type: 'test'
   ...
 # Subtest: une SQLite sans données métier (registres ignorés) reçoit toutes ses clés desktop sans saisie
 ok 80 - une SQLite sans données métier (registres ignorés) reçoit toutes ses clés desktop sans saisie
   ---
-  duration_ms: 38.254026
+  duration_ms: 30.457074
   type: 'test'
   ...
 # Subtest: une SQLite déjà utilisée accepte GENERER clé par clé et écrit les valeurs dans .env
 ok 81 - une SQLite déjà utilisée accepte GENERER clé par clé et écrit les valeurs dans .env
   ---
-  duration_ms: 34.22855
+  duration_ms: 28.398334
   type: 'test'
   ...
 # Subtest: refuser la confirmation GENERER arrête le plan sans écrire de clé de remplacement
 ok 82 - refuser la confirmation GENERER arrête le plan sans écrire de clé de remplacement
   ---
-  duration_ms: 20.974214
+  duration_ms: 16.354428
   type: 'test'
   ...
 # Subtest: secret Vercel illisible différé : inspection SQL avant résolution (base vide)
 ok 83 - secret Vercel illisible différé : inspection SQL avant résolution (base vide)
   ---
-  duration_ms: 35.128458
+  duration_ms: 23.104094
   type: 'test'
   ...
 # Subtest: secret Vercel illisible différé : inspection SQL avant résolution (base utilisée)
 ok 84 - secret Vercel illisible différé : inspection SQL avant résolution (base utilisée)
   ---
-  duration_ms: 11.7115
+  duration_ms: 7.318195
   type: 'test'
   ...
 # Subtest: automatic full plan: one AUTORISER, no manual credential prompts, backups before production rewrite
 ok 85 - automatic full plan: one AUTORISER, no manual credential prompts, backups before production rewrite
   ---
-  duration_ms: 64.237569
+  duration_ms: 46.325962
   type: 'test'
   ...
 # development — NEXTAUTH_SECRET : générée automatiquement (256 bits, valeur non affichée).
@@ -4303,14 +4303,14 @@ ok 85 - automatic full plan: one AUTORISER, no manual credential prompts, backup
 # Le CLI officiel peut ajouter un rattachement et ses variables, dont un token statique privé, après sauvegarde et confirmation. Les autres cibles ne doivent pas changer.
 # Plan Blob : connect, store store_UnitTest, projet prj_unit, cible development uniquement.
 # Variables ajoutées : BLOB_READ_WRITE_TOKEN, BLOB_STORE_ID, BLOB_WEBHOOK_PUBLIC_KEY ; conservées : aucune ; suppressions : aucune. Valeurs non affichées.
-# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-LgwVCe. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
+# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-MFiSzo. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
 # Rattachement development vérifié par relecture. LISTE BLOB VÉRIFIÉE.
 # Dans le même dossier CMD, taper maintenant : node config. La synchronisation globale prendra de nouveaux inventaires ; les brouillons privés ont été conservés.
 # Réparation Blob uniquement — cible development. Aucun déploiement, migration, création de store ni suppression de connexion.
 # Le CLI officiel peut ajouter un rattachement et ses variables, dont un token statique privé, après sauvegarde et confirmation. Les autres cibles ne doivent pas changer.
 # Plan Blob : connect, store store_UnitTest, projet prj_unit, cible development uniquement.
 # Variables ajoutées : BLOB_READ_WRITE_TOKEN, BLOB_STORE_ID, BLOB_WEBHOOK_PUBLIC_KEY ; conservées : aucune ; suppressions : aucune. Valeurs non affichées.
-# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-usYMtS. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
+# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-iQsFM1. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
 # Rattachement development vérifié par relecture. LISTE BLOB VÉRIFIÉE.
 # Dans le même dossier CMD, taper maintenant : node config. La synchronisation globale prendra de nouveaux inventaires ; les brouillons privés ont été conservés.
 # Réparation Blob uniquement — cible development. Aucun déploiement, migration, création de store ni suppression de connexion.
@@ -4320,7 +4320,7 @@ ok 85 - automatic full plan: one AUTORISER, no manual credential prompts, backup
 # Le CLI officiel peut ajouter un rattachement et ses variables, dont un token statique privé, après sauvegarde et confirmation. Les autres cibles ne doivent pas changer.
 # Plan Blob : connect, store store_UnitTest, projet prj_unit, cible development uniquement.
 # Variables ajoutées : BLOB_READ_WRITE_TOKEN, BLOB_STORE_ID, BLOB_WEBHOOK_PUBLIC_KEY ; conservées : aucune ; suppressions : aucune. Valeurs non affichées.
-# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-juYFNL. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
+# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-ATND2g. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
 # Rattachement development vérifié par relecture. LISTE BLOB VÉRIFIÉE.
 # Dans le même dossier CMD, taper maintenant : node config. La synchronisation globale prendra de nouveaux inventaires ; les brouillons privés ont été conservés.
 # development — GARAGEFLOW_API_KEY : générée automatiquement (256 bits, valeur non affichée).
@@ -4423,7 +4423,7 @@ ok 85 - automatic full plan: one AUTORISER, no manual credential prompts, backup
 # Le CLI officiel peut ajouter un rattachement et ses variables, dont un token statique privé, après sauvegarde et confirmation. Les autres cibles ne doivent pas changer.
 # Plan Blob : connect, store store_UnitTest, projet prj_unit, cible development uniquement.
 # Variables ajoutées : BLOB_READ_WRITE_TOKEN, BLOB_STORE_ID, BLOB_WEBHOOK_PUBLIC_KEY ; conservées : aucune ; suppressions : aucune. Valeurs non affichées.
-# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-T6RJ5V. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
+# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-NfN1pN. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
 # Rattachement development vérifié par relecture. LISTE BLOB VÉRIFIÉE.
 # Dans le même dossier CMD, taper maintenant : node config. La synchronisation globale prendra de nouveaux inventaires ; les brouillons privés ont été conservés.
 # Réparation Blob uniquement — cible development. Aucun déploiement, migration, création de store ni suppression de connexion.
@@ -4432,7 +4432,7 @@ ok 85 - automatic full plan: one AUTORISER, no manual credential prompts, backup
 # Le CLI officiel peut ajouter un rattachement et ses variables, dont un token statique privé, après sauvegarde et confirmation. Les autres cibles ne doivent pas changer.
 # Plan Blob : connect, store store_UnitTest, projet prj_unit, cible development uniquement.
 # Variables ajoutées : BLOB_READ_WRITE_TOKEN, BLOB_STORE_ID, BLOB_WEBHOOK_PUBLIC_KEY ; conservées : aucune ; suppressions : aucune. Valeurs non affichées.
-# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-0FgluU. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
+# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-momxxN. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
 # Réparation Blob uniquement — cible development. Aucun déploiement, migration, création de store ni suppression de connexion.
 # Le CLI officiel peut ajouter un rattachement et ses variables, dont un token statique privé, après sauvegarde et confirmation. Les autres cibles ne doivent pas changer.
 # Réparation Blob uniquement — cible development. Aucun déploiement, migration, création de store ni suppression de connexion.
@@ -4441,12 +4441,12 @@ ok 85 - automatic full plan: one AUTORISER, no manual credential prompts, backup
 # Le CLI officiel peut ajouter un rattachement et ses variables, dont un token statique privé, après sauvegarde et confirmation. Les autres cibles ne doivent pas changer.
 # Plan Blob : connect, store store_UnitTest, projet prj_unit, cible development uniquement.
 # Variables ajoutées : BLOB_READ_WRITE_TOKEN, BLOB_STORE_ID, BLOB_WEBHOOK_PUBLIC_KEY ; conservées : aucune ; suppressions : aucune. Valeurs non affichées.
-# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-nC2Maf. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
+# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-a5PQyM. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
 # Réparation Blob uniquement — cible development. Aucun déploiement, migration, création de store ni suppression de connexion.
 # Le CLI officiel peut ajouter un rattachement et ses variables, dont un token statique privé, après sauvegarde et confirmation. Les autres cibles ne doivent pas changer.
 # Plan Blob : connect, store store_UnitTest, projet prj_unit, cible development uniquement.
 # Variables ajoutées : BLOB_READ_WRITE_TOKEN, BLOB_STORE_ID, BLOB_WEBHOOK_PUBLIC_KEY ; conservées : aucune ; suppressions : aucune. Valeurs non affichées.
-# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-72zOPN. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
+# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-O4EXgD. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
 # Réparation Blob uniquement — cible development. Aucun déploiement, migration, création de store ni suppression de connexion.
 # Le CLI officiel peut ajouter un rattachement et ses variables, dont un token statique privé, après sauvegarde et confirmation. Les autres cibles ne doivent pas changer.
 # Rattachement development déjà confirmé, aucune mutation. LISTE BLOB VÉRIFIÉE. Taper ensuite dans CMD : node config
@@ -4454,12 +4454,12 @@ ok 85 - automatic full plan: one AUTORISER, no manual credential prompts, backup
 # Le CLI officiel peut ajouter un rattachement et ses variables, dont un token statique privé, après sauvegarde et confirmation. Les autres cibles ne doivent pas changer.
 # Plan Blob : connect, store store_UnitTest, projet prj_unit, cible development uniquement.
 # Variables ajoutées : BLOB_READ_WRITE_TOKEN, BLOB_STORE_ID, BLOB_WEBHOOK_PUBLIC_KEY ; conservées : aucune ; suppressions : aucune. Valeurs non affichées.
-# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-SHVSfN. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
+# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-6NrpZl. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
 # Réparation Blob uniquement — cible development. Aucun déploiement, migration, création de store ni suppression de connexion.
 # Le CLI officiel peut ajouter un rattachement et ses variables, dont un token statique privé, après sauvegarde et confirmation. Les autres cibles ne doivent pas changer.
 # Plan Blob : connect, store store_UnitTest, projet prj_unit, cible development uniquement.
 # Variables ajoutées : BLOB_READ_WRITE_TOKEN, BLOB_STORE_ID, BLOB_WEBHOOK_PUBLIC_KEY ; conservées : aucune ; suppressions : aucune. Valeurs non affichées.
-# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-FRJa3p. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
+# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-BxoX4m. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
 # Rattachement development vérifié par relecture. NON VÉRIFIÉE — token exposé ; renouveler ou décider explicitement dans node config.
 # Dans le même dossier CMD, taper maintenant : node config. La synchronisation globale prendra de nouveaux inventaires ; les brouillons privés ont été conservés.
 # Réparation Blob uniquement — cible development. Aucun déploiement, migration, création de store ni suppression de connexion.
@@ -4468,7 +4468,7 @@ ok 85 - automatic full plan: one AUTORISER, no manual credential prompts, backup
 # Le CLI officiel peut ajouter un rattachement et ses variables, dont un token statique privé, après sauvegarde et confirmation. Les autres cibles ne doivent pas changer.
 # Plan Blob : connect, store store_UnitTest, projet prj_unit, cible development uniquement.
 # Variables ajoutées : BLOB_READ_WRITE_TOKEN, BLOB_STORE_ID, BLOB_WEBHOOK_PUBLIC_KEY ; conservées : aucune ; suppressions : aucune. Valeurs non affichées.
-# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-p5AMfA. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
+# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-5DK58P. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
 # Rattachement development vérifié par relecture. LISTE BLOB VÉRIFIÉE.
 # Dans le même dossier CMD, taper maintenant : node config. La synchronisation globale prendra de nouveaux inventaires ; les brouillons privés ont été conservés.
 # development — NEXTAUTH_SECRET : générée automatiquement (256 bits, valeur non affichée).
@@ -4537,7 +4537,7 @@ ok 85 - automatic full plan: one AUTORISER, no manual credential prompts, backup
 # Le CLI officiel peut ajouter un rattachement et ses variables, dont un token statique privé, après sauvegarde et confirmation. Les autres cibles ne doivent pas changer.
 # Plan Blob : connect, store store_UnitTest, projet prj_unit, cible development uniquement.
 # Variables ajoutées : BLOB_READ_WRITE_TOKEN, BLOB_STORE_ID, BLOB_WEBHOOK_PUBLIC_KEY ; conservées : aucune ; suppressions : aucune. Valeurs non affichées.
-# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-TqyQcO. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
+# Sauvegarde privée créée : GarageFlow-configuration/blob-connect-backup-AXV4zv. Les valeurs masquées ne sont pas restaurables ; aucun détachement automatique en cas d’échec.
 # Rattachement development vérifié par relecture. LISTE BLOB VÉRIFIÉE.
 # Dans le même dossier CMD, taper maintenant : node config. La synchronisation globale prendra de nouveaux inventaires ; les brouillons privés ont été conservés.
 # Reprise de node config dans la même session. Le projet et les trois environnements seront contrôlés à nouveau avant toute synchronisation.
@@ -4649,481 +4649,481 @@ ok 85 - automatic full plan: one AUTORISER, no manual credential prompts, backup
 # Subtest: Neon password encoding is exactly once, including %, quotes, unicode, \#, @ and ampersands
 ok 86 - Neon password encoding is exactly once, including %, quotes, unicode, \#, @ and ampersands
   ---
-  duration_ms: 5.753225
+  duration_ms: 4.192212
   type: 'test'
   ...
 # Subtest: compromised password cannot be reused under an alias, alternate query order, or percent encoding
 ok 87 - compromised password cannot be reused under an alias, alternate query order, or percent encoding
   ---
-  duration_ms: 1.34415
+  duration_ms: 0.979863
   type: 'test'
   ...
 # Subtest: real manager orchestration synchronizes three separate environments, then makes ZERO repeat mutations
 ok 88 - real manager orchestration synchronizes three separate environments, then makes ZERO repeat mutations
   ---
-  duration_ms: 672.229658
+  duration_ms: 355.594316
   type: 'test'
   ...
 # Subtest: online simulation reads all targets but performs no probes, inputs, writes, backups or generated files
 ok 89 - online simulation reads all targets but performs no probes, inputs, writes, backups or generated files
   ---
-  duration_ms: 51.204213
+  duration_ms: 50.532025
   type: 'test'
   ...
 # Subtest: offline simulation never attempts account access and cannot claim Vercel or provider validation
 ok 90 - offline simulation never attempts account access and cannot claim Vercel or provider validation
   ---
-  duration_ms: 52.070639
+  duration_ms: 50.229036
   type: 'test'
   ...
 # Subtest: a failed response AFTER server mutation is journaled and rolled back, including that attempted write
 ok 91 - a failed response AFTER server mutation is journaled and rolled back, including that attempted write
   ---
-  duration_ms: 81.776489
+  duration_ms: 107.181849
   type: 'test'
   ...
 # Subtest: a provider failure aborts globally BEFORE any env mutation; it is never printed as OK
 ok 92 - a provider failure aborts globally BEFORE any env mutation; it is never printed as OK
   ---
-  duration_ms: 44.220401
+  duration_ms: 68.347929
   type: 'test'
   ...
 # Subtest: missing information is checkpointed and the next run resumes with previously supplied values
 ok 93 - missing information is checkpointed and the next run resumes with previously supplied values
   ---
-  duration_ms: 313.01888
+  duration_ms: 309.687841
   type: 'test'
   ...
 # Subtest: masked existing keys on a USED database are not regenerated, and missing originals block mutations
 ok 94 - masked existing keys on a USED database are not regenerated, and missing originals block mutations
   ---
-  duration_ms: 46.763232
+  duration_ms: 42.244676
   type: 'test'
   ...
 # Subtest: concurrent remote changes during preparation refuse the entire plan
 ok 95 - concurrent remote changes during preparation refuse the entire plan
   ---
-  duration_ms: 84.612148
+  duration_ms: 68.443525
   type: 'test'
   ...
 # Subtest: masked readback gives partial verification, not a fictitious configuration OK
 ok 96 - masked readback gives partial verification, not a fictitious configuration OK
   ---
-  duration_ms: 335.350927
+  duration_ms: 285.150501
   type: 'test'
   ...
 # Subtest: protected/integration and shared-target values cannot be silently changed; unknowns are preserved
 ok 97 - protected/integration and shared-target values cannot be silently changed; unknowns are preserved
   ---
-  duration_ms: 0.494937
+  duration_ms: 0.373171
   type: 'test'
   ...
 # Subtest: protected masked values never acquire a fictional plaintext receipt
 ok 98 - protected masked values never acquire a fictional plaintext receipt
   ---
-  duration_ms: 226.563312
+  duration_ms: 192.213454
   type: 'test'
   ...
 # Subtest: Git tracking even an ignored .env blocks configuration, without force-adding or weakening rules
 ok 99 - Git tracking even an ignored .env blocks configuration, without force-adding or weakening rules
   ---
-  duration_ms: 42.584695
+  duration_ms: 39.80275
   type: 'test'
   ...
 # Subtest: symlinked vault parent is rejected before secret checkpoints
 ok 100 - symlinked vault parent is rejected before secret checkpoints
   ---
-  duration_ms: 43.35983
+  duration_ms: 38.038999
   type: 'test'
   ...
 # Subtest: record filtering preserves branch/custom overrides and refuses duplicate general keys
 ok 101 - record filtering preserves branch/custom overrides and refuses duplicate general keys
   ---
-  duration_ms: 0.803732
+  duration_ms: 0.730721
   type: 'test'
   ...
 # Subtest: CLI simulation rejects incompatible options without starting the legacy full plan
 ok 102 - CLI simulation rejects incompatible options without starting the legacy full plan
   ---
-  duration_ms: 276.583519
+  duration_ms: 241.16978
   type: 'test'
   ...
 # Subtest: local concurrent edits are preserved rather than overwritten by rollback
 ok 103 - local concurrent edits are preserved rather than overwritten by rollback
   ---
-  duration_ms: 313.797994
+  duration_ms: 205.606162
   type: 'test'
   ...
 # Subtest: rollback restores a readable removed variable and original type
 ok 104 - rollback restores a readable removed variable and original type
   ---
-  duration_ms: 136.18523
+  duration_ms: 160.993082
   type: 'test'
   ...
 # Subtest: prefixed provider aliases are grouped by a bound resource and never assembled across two databases
 ok 105 - prefixed provider aliases are grouped by a bound resource and never assembled across two databases
   ---
-  duration_ms: 0.716195
+  duration_ms: 0.721815
   type: 'test'
   ...
 # Subtest: API adapter checks actual project ownership and keeps team + target scoping explicit
 ok 106 - API adapter checks actual project ownership and keeps team + target scoping explicit
   ---
-  duration_ms: 12.898439
+  duration_ms: 15.05172
   type: 'test'
   ...
 # Subtest: API writes use official v10 endpoints and private temporary JSON, never credential argv
 ok 107 - API writes use official v10 endpoints and private temporary JSON, never credential argv
   ---
-  duration_ms: 12.831696
+  duration_ms: 17.125753
   type: 'test'
   ...
 # Subtest: Blob refuses an unbound token BEFORE SDK call; permitted list is bounded and never uploads
 ok 108 - Blob refuses an unbound token BEFORE SDK call; permitted list is bounded and never uploads
   ---
-  duration_ms: 11.60725
+  duration_ms: 19.197666
   type: 'test'
   ...
 # Subtest: SQL probes use the actual Prisma client contract for BOTH URLs and disconnect on failure
 ok 109 - SQL probes use the actual Prisma client contract for BOTH URLs and disconnect on failure
   ---
-  duration_ms: 10.402916
+  duration_ms: 17.314807
   type: 'test'
   ...
 # Subtest: Blob write probe has separate consent, uses unique harmless content, and verifies deletion
 ok 110 - Blob write probe has separate consent, uses unique harmless content, and verifies deletion
   ---
-  duration_ms: 11.309832
+  duration_ms: 15.972746
   type: 'test'
   ...
 # Subtest: invalid Blob token can be corrected in-place without restarting preparation or leaking provider text
 ok 111 - invalid Blob token can be corrected in-place without restarting preparation or leaking provider text
   ---
-  duration_ms: 238.444442
+  duration_ms: 226.760591
   type: 'test'
   ...
 # Subtest: an interrupted process journal is reconciled before any new configuration mutation
 ok 112 - an interrupted process journal is reconciled before any new configuration mutation
   ---
-  duration_ms: 255.401003
+  duration_ms: 213.220825
   type: 'test'
   ...
 # Subtest: rollback will not delete or overwrite an unrelated concurrent value after a failed write
 ok 113 - rollback will not delete or overwrite an unrelated concurrent value after a failed write
   ---
-  duration_ms: 80.686353
+  duration_ms: 66.646488
   type: 'test'
   ...
 # Subtest: a masked NEXT_PUBLIC secret is still detected before probes and never counted as safe
 ok 114 - a masked NEXT_PUBLIC secret is still detected before probes and never counted as safe
   ---
-  duration_ms: 48.048247
+  duration_ms: 38.84841
   type: 'test'
   ...
 # Subtest: Blob write probe never claims successful cleanup when deletion/readback is unconfirmed
 ok 115 - Blob write probe never claims successful cleanup when deletion/readback is unconfirmed
   ---
-  duration_ms: 12.772568
+  duration_ms: 11.71713
   type: 'test'
   ...
 # Subtest: rollback never removes another concurrent creator even if they supplied the same value
 ok 116 - rollback never removes another concurrent creator even if they supplied the same value
   ---
-  duration_ms: 17.478747
+  duration_ms: 10.190019
   type: 'test'
   ...
 # Subtest: HTTP loopback is allowed only for Development URLs, never Redis or Production
 ok 117 - HTTP loopback is allowed only for Development URLs, never Redis or Production
   ---
-  duration_ms: 8.348044
+  duration_ms: 14.23382
   type: 'test'
   ...
 # Subtest: verbose third-party debug modes are refused before libraries can print credentials
 ok 118 - verbose third-party debug modes are refused before libraries can print credentials
   ---
-  duration_ms: 11.869906
+  duration_ms: 12.087558
   type: 'test'
   ...
 # Subtest: fresh internal secrets are generated in the expected formats without secret input and stay independent per target
 ok 119 - fresh internal secrets are generated in the expected formats without secret input and stay independent per target
   ---
-  duration_ms: 369.401233
+  duration_ms: 291.904675
   type: 'test'
   ...
 # Subtest: a missing first-use NextAuth secret is generated even on a used database; existing protection keys are preserved
 ok 120 - a missing first-use NextAuth secret is generated even on a used database; existing protection keys are preserved
   ---
-  duration_ms: 231.901634
+  duration_ms: 195.739228
   type: 'test'
   ...
 # Subtest: early first-use generation survives a missing provider input without inventing credentials or rotating on resume
 ok 121 - early first-use generation survives a missing provider input without inventing credentials or rotating on resume
   ---
-  duration_ms: 284.940154
+  duration_ms: 262.999797
   type: 'test'
   ...
 # Subtest: provider credentials and existing internal keys are taken from each Vercel target without manual input
 ok 122 - provider credentials and existing internal keys are taken from each Vercel target without manual input
   ---
-  duration_ms: 173.260688
+  duration_ms: 142.124017
   type: 'test'
   ...
 # Subtest: unrecoverable provider values are requested, never generated as internal random secrets
 ok 123 - unrecoverable provider values are requested, never generated as internal random secrets
   ---
-  duration_ms: 196.226876
+  duration_ms: 241.843346
   type: 'test'
   ...
 # Subtest: a used database with a missing backup encryption key requires the original, even when the field is optional
 ok 124 - a used database with a missing backup encryption key requires the original, even when the field is optional
   ---
-  duration_ms: 43.197682
+  duration_ms: 42.590479
   type: 'test'
   ...
 # Subtest: dashboard input accepts bare, quoted and dotenv provider values without rewriting raw passwords
 ok 125 - dashboard input accepts bare, quoted and dotenv provider values without rewriting raw passwords
   ---
-  duration_ms: 1.008249
+  duration_ms: 0.990991
   type: 'test'
   ...
 # Subtest: a previous draft containing the full dashboard assignment resumes with the normalized token
 ok 126 - a previous draft containing the full dashboard assignment resumes with the normalized token
   ---
-  duration_ms: 187.792787
+  duration_ms: 198.125784
   type: 'test'
   ...
 # Subtest: Blob discovery reads detailed scopes when a legacy list has no type and incomplete project metadata
 ok 127 - Blob discovery reads detailed scopes when a legacy list has no type and incomplete project metadata
   ---
-  duration_ms: 11.436674
+  duration_ms: 11.269057
   type: 'test'
   ...
 # Subtest: Blob discovery falls back to connections and never imports Production binding into Development
 ok 128 - Blob discovery falls back to connections and never imports Production binding into Development
   ---
-  duration_ms: 10.490449
+  duration_ms: 10.363301
   type: 'test'
   ...
 # Subtest: project-scoped Blob hints remain usable when team-wide inventory is denied, without trusting other scopes
 ok 129 - project-scoped Blob hints remain usable when team-wide inventory is denied, without trusting other scopes
   ---
-  duration_ms: 10.399316
+  duration_ms: 9.892218
   type: 'test'
   ...
 # Subtest: a discovered binding accepts normalized Blob input but still requires a successful SDK list
 ok 130 - a discovered binding accepts normalized Blob input but still requires a successful SDK list
   ---
-  duration_ms: 10.761959
+  duration_ms: 10.440852
   type: 'test'
   ...
 # Subtest: Blob errors expose only whitelisted diagnoses, never provider payloads, names or tokens
 ok 131 - Blob errors expose only whitelisted diagnoses, never provider payloads, names or tokens
   ---
-  duration_ms: 11.767526
+  duration_ms: 11.48001
   type: 'test'
   ...
 # Subtest: an unconfirmed Blob binding schedules an explicitly accepted in-session repair after releasing the main lock
 ok 132 - an unconfirmed Blob binding schedules an explicitly accepted in-session repair after releasing the main lock
   ---
-  duration_ms: 40.097319
+  duration_ms: 44.99576
   type: 'test'
   ...
 # Subtest: unconfirmed Blob inventory is reported as such, not as an invalid token, and never triggers a replacement input
 ok 133 - unconfirmed Blob inventory is reported as such, not as an invalid token, and never triggers a replacement input
   ---
-  duration_ms: 40.096728
+  duration_ms: 50.928741
   type: 'test'
   ...
 # Subtest: real Blob SDK error classes are recognized even though Error.name is not the subclass name
 ok 134 - real Blob SDK error classes are recognized even though Error.name is not the subclass name
   ---
-  duration_ms: 121.369821
+  duration_ms: 115.434513
   type: 'test'
   ...
 # Subtest: a unique prefixed Blob token from the current Vercel target is recovered, but ambiguous stores are never guessed
 ok 135 - a unique prefixed Blob token from the current Vercel target is recovered, but ambiguous stores are never guessed
   ---
-  duration_ms: 0.319459
+  duration_ms: 0.336607
   type: 'test'
   ...
 # Subtest: known exposed Blob inputs are refused before SDK access, including dashboard wrappers
 ok 136 - known exposed Blob inputs are refused before SDK access, including dashboard wrappers
   ---
-  duration_ms: 12.161213
+  duration_ms: 13.579392
   type: 'test'
   ...
 # Subtest: a Blob token mismatch can be retried with Enter after a dashboard correction, without losing the current token
 ok 137 - a Blob token mismatch can be retried with Enter after a dashboard correction, without losing the current token
   ---
-  duration_ms: 281.263657
+  duration_ms: 214.314238
   type: 'test'
   ...
 # Subtest: an exposed Blob token requires an explicit choice, not an endless credential input loop
 ok 138 - an exposed Blob token requires an explicit choice, not an endless credential input loop
   ---
-  duration_ms: 52.28424
+  duration_ms: 41.048184
   type: 'test'
   ...
 # Subtest: temporary exposed Blob use needs the exact target phrase and is not authorized by selecting the option alone
 ok 139 - temporary exposed Blob use needs the exact target phrase and is not authorized by selecting the option alone
   ---
-  duration_ms: 42.072594
+  duration_ms: 43.63637
   type: 'test'
   ...
 # Subtest: explicit temporary consent permits only the chosen Blob value, preserves probes, warns and is requested again next run
 ok 140 - explicit temporary consent permits only the chosen Blob value, preserves probes, warns and is requested again next run
   ---
-  duration_ms: 249.310653
+  duration_ms: 227.630093
   type: 'test'
   ...
 # Subtest: renewing an exposed Blob token requests its replacement directly and keeps the strict path warning-free
 ok 141 - renewing an exposed Blob token requests its replacement directly and keeps the strict path warning-free
   ---
-  duration_ms: 226.567143
+  duration_ms: 206.461974
   type: 'test'
   ...
 # Subtest: a pasted exposed token is offered the same explicit choice after exactly one input
 ok 142 - a pasted exposed token is offered the same explicit choice after exactly one input
   ---
-  duration_ms: 46.434283
+  duration_ms: 42.497138
   type: 'test'
   ...
 # Subtest: a Blob permission is exact-value and exact-name only; it cannot waive database or signing-secret checks
 ok 143 - a Blob permission is exact-value and exact-name only; it cannot waive database or signing-secret checks
   ---
-  duration_ms: 14.684578
+  duration_ms: 11.118371
   type: 'test'
   ...
 # Subtest: temporary Blob consent still refuses unbound stores and SDK denial, and cannot authorize another token
 ok 144 - temporary Blob consent still refuses unbound stores and SDK denial, and cannot authorize another token
   ---
-  duration_ms: 14.465987
+  duration_ms: 10.908839
   type: 'test'
   ...
 # Subtest: temporary Blob approval is not shared across environment targets even for the same token
 ok 145 - temporary Blob approval is not shared across environment targets even for the same token
   ---
-  duration_ms: 75.82166
+  duration_ms: 66.786856
   type: 'test'
   ...
 # Subtest: simulation of exposed Blob inputs never asks for consent and cannot restore a saved authorization
 ok 146 - simulation of exposed Blob inputs never asks for consent and cannot restore a saved authorization
   ---
-  duration_ms: 53.097588
+  duration_ms: 51.002909
   type: 'test'
   ...
 # Subtest: guided Blob connection uses official scoped CLI plans, backs up first and verifies the association and list
 ok 147 - guided Blob connection uses official scoped CLI plans, backs up first and verifies the association and list
   ---
-  duration_ms: 51.787033
+  duration_ms: 46.573859
   type: 'test'
   ...
 # Subtest: a repeated Blob repair verifies the current connection without reconnecting or rewriting env files
 ok 148 - a repeated Blob repair verifies the current connection without reconnecting or rewriting env files
   ---
-  duration_ms: 87.51787
+  duration_ms: 69.25763
   type: 'test'
   ...
 # Subtest: Blob repair preserves main drafts and updates only the expected source stamp so node config resumes without rotation
 ok 149 - Blob repair preserves main drafts and updates only the expected source stamp so node config resumes without rotation
   ---
-  duration_ms: 293.345007
+  duration_ms: 256.872449
   type: 'test'
   ...
 # Subtest: Blob repair does not replace a Production connection when adding Development
 ok 150 - Blob repair does not replace a Production connection when adding Development
   ---
-  duration_ms: 55.355981
+  duration_ms: 43.050673
   type: 'test'
   ...
 # Subtest: Blob repair refuses plans that remove variables or point at another project or environment
 ok 151 - Blob repair refuses plans that remove variables or point at another project or environment
   ---
-  duration_ms: 45.003138
+  duration_ms: 40.695271
   type: 'test'
   ...
 # Subtest: declining the final Blob connection confirmation never performs a CLI mutation
 ok 152 - declining the final Blob connection confirmation never performs a CLI mutation
   ---
-  duration_ms: 41.97598
+  duration_ms: 52.940867
   type: 'test'
   ...
 # Subtest: Blob repair does not shrink a shared connection to add credentials and does not collide with main rollback
 ok 153 - Blob repair does not shrink a shared connection to add credentials and does not collide with main rollback
   ---
-  duration_ms: 91.416109
+  duration_ms: 83.260123
   type: 'test'
   ...
 # Subtest: a failed post-connect Blob probe leaves a verified backup and no false success or blind disconnect
 ok 154 - a failed post-connect Blob probe leaves a verified backup and no false success or blind disconnect
   ---
-  duration_ms: 41.931215
+  duration_ms: 51.11946
   type: 'test'
   ...
 # Subtest: Blob repair CLI flags reject mixed diagnostics, missing scopes and invalid targets before network access
 ok 155 - Blob repair CLI flags reject mixed diagnostics, missing scopes and invalid targets before network access
   ---
-  duration_ms: 204.456915
+  duration_ms: 233.263465
   type: 'test'
   ...
 # Subtest: a lost CLI response can be reconciled by rereading the binding without reconnecting or losing saved secrets
 ok 156 - a lost CLI response can be reconciled by rereading the binding without reconnecting or losing saved secrets
   ---
-  duration_ms: 73.468146
+  duration_ms: 77.732997
   type: 'test'
   ...
 # Subtest: Blob repair must detect a removed non-target connection even if its env values did not change
 ok 157 - Blob repair must detect a removed non-target connection even if its env values did not change
   ---
-  duration_ms: 41.798317
+  duration_ms: 40.923478
   type: 'test'
   ...
 # Subtest: a connected exposed Blob token is not silently authorized by the repair helper
 ok 158 - a connected exposed Blob token is not silently authorized by the repair helper
   ---
-  duration_ms: 43.125114
+  duration_ms: 40.425629
   type: 'test'
   ...
 # Subtest: Blob repair does not create a guessed resource when the verified team has no visible stores
 ok 159 - Blob repair does not create a guessed resource when the verified team has no visible stores
   ---
-  duration_ms: 41.51559
+  duration_ms: 38.867896
   type: 'test'
   ...
 # Subtest: normal Blob usage metrics do not masquerade as a concurrent connection change
 ok 160 - normal Blob usage metrics do not masquerade as a concurrent connection change
   ---
-  duration_ms: 42.775096
+  duration_ms: 38.412176
   type: 'test'
   ...
 # Subtest: declining in-session Blob repair leaves a copyable scoped CMD command and performs no repair
 ok 161 - declining in-session Blob repair leaves a copyable scoped CMD command and performs no repair
   ---
-  duration_ms: 43.284202
+  duration_ms: 42.594314
   type: 'test'
   ...
 # Subtest: the CLI session hands off after lock release, verifies repair and resumes the real manager with preserved drafts
 ok 162 - the CLI session hands off after lock release, verifies repair and resumes the real manager with preserved drafts
   ---
-  duration_ms: 296.732787
+  duration_ms: 261.792274
   type: 'test'
   ...
 # Subtest: the CLI session does not resume full synchronization after canceled or failed repair
 ok 163 - the CLI session does not resume full synchronization after canceled or failed repair
   ---
-  duration_ms: 0.876891
+  duration_ms: 0.520007
   type: 'test'
   ...
 # Subtest: the CLI session honors deferred resume, limits repairs and never opens a repair in dry-run
 ok 164 - the CLI session honors deferred resume, limits repairs and never opens a repair in dry-run
   ---
-  duration_ms: 4.789272
+  duration_ms: 0.472703
   type: 'test'
   ...
 # Subtest: an explicit rotation is not silently repeated by in-session repair continuation
 ok 165 - an explicit rotation is not silently repeated by in-session repair continuation
   ---
-  duration_ms: 0.588006
+  duration_ms: 0.339684
   type: 'test'
   ...
 # Découverte Vercel production : pull API lu ; liste déchiffrée lu ; lectures ciblées réussies 0, non exploitables 0 (pas nécessairement des refus HTTP).
@@ -5182,259 +5182,259 @@ ok 165 - an explicit rotation is not silently repeated by in-session repair cont
 # Subtest: Storage vendor aliases map to canonical names without guessing an unpooled host
 ok 166 - Storage vendor aliases map to canonical names without guessing an unpooled host
   ---
-  duration_ms: 2.652665
+  duration_ms: 2.712943
   type: 'test'
   ...
 # Subtest: read-only Redis credentials are never mistaken for a write token
 ok 167 - read-only Redis credentials are never mistaken for a write token
   ---
-  duration_ms: 0.33321
+  duration_ms: 0.440259
   type: 'test'
   ...
 # Subtest: planning protects integration and platform variables and refuses un-restorable values
 ok 168 - planning protects integration and platform variables and refuses un-restorable values
   ---
-  duration_ms: 1.947118
+  duration_ms: 1.952537
   type: 'test'
   ...
 # Subtest: duplicate/branch-specific records cannot produce an ambiguous wipe
 ok 169 - duplicate/branch-specific records cannot produce an ambiguous wipe
   ---
-  duration_ms: 0.292655
+  duration_ms: 0.276859
   type: 'test'
   ...
 # Subtest: Storage discovery is read-only and scopes every API request to the authorized team/project
 ok 170 - Storage discovery is read-only and scopes every API request to the authorized team/project
   ---
-  duration_ms: 6.941766
+  duration_ms: 7.073228
   type: 'test'
   ...
 # Subtest: after authorization: backup, automatic generation, wipe and rewrite without credential prompts
 ok 171 - after authorization: backup, automatic generation, wipe and rewrite without credential prompts
   ---
-  duration_ms: 16.198925
+  duration_ms: 17.7583
   type: 'test'
   ...
 # Subtest: provider aliases from Vercel take precedence over stale local canonical credentials
 ok 172 - provider aliases from Vercel take precedence over stale local canonical credentials
   ---
-  duration_ms: 3.957701
+  duration_ms: 3.770601
   type: 'test'
   ...
 # Subtest: missing Storage access fails before generation/deletion, without requesting manual values
 ok 173 - missing Storage access fails before generation/deletion, without requesting manual values
   ---
-  duration_ms: 2.62212
+  duration_ms: 2.622161
   type: 'test'
   ...
 # Subtest: used database cannot be silently given new encryption keys
 ok 174 - used database cannot be silently given new encryption keys
   ---
-  duration_ms: 2.735555
+  duration_ms: 2.746168
   type: 'test'
   ...
 # Subtest: concurrent Vercel mutation blocks the wipe
 ok 175 - concurrent Vercel mutation blocks the wipe
   ---
-  duration_ms: 3.254041
+  duration_ms: 3.43467
   type: 'test'
   ...
 # Subtest: failed rewrite preserves new keys in a private journal, retry reuses them
 ok 176 - failed rewrite preserves new keys in a private journal, retry reuses them
   ---
-  duration_ms: 10.554043
+  duration_ms: 10.300457
   type: 'test'
   ...
 # Subtest: a changed linked project blocks apply
 ok 177 - a changed linked project blocks apply
   ---
-  duration_ms: 2.905053
+  duration_ms: 2.884555
   type: 'test'
   ...
 # Subtest: unknown secret credentials are not requested or fabricated
 ok 178 - unknown secret credentials are not requested or fabricated
   ---
-  duration_ms: 0.713178
+  duration_ms: 0.722655
   type: 'test'
   ...
 # Subtest: existing valid public domain is preserved rather than forcing another domain
 ok 179 - existing valid public domain is preserved rather than forcing another domain
   ---
-  duration_ms: 0.818654
+  duration_ms: 0.785746
   type: 'test'
   ...
 # Subtest: service backup is bound to the linked project and never reused for another project
 ok 180 - service backup is bound to the linked project and never reused for another project
   ---
-  duration_ms: 2.359447
+  duration_ms: 2.361206
   type: 'test'
   ...
 # Subtest: known desktop/runtime/obsolete values are removed without republishing them to production
 ok 181 - known desktop/runtime/obsolete values are removed without republishing them to production
   ---
-  duration_ms: 0.191444
+  duration_ms: 0.160221
   type: 'test'
   ...
 # Subtest: business data arriving after preflight blocks the wipe at apply time
 ok 182 - business data arriving after preflight blocks the wipe at apply time
   ---
-  duration_ms: 3.595534
+  duration_ms: 3.531733
   type: 'test'
   ...
 # Subtest: a failed final verification keeps the private pending journal instead of reporting success
 ok 183 - a failed final verification keeps the private pending journal instead of reporting success
   ---
-  duration_ms: 3.785865
+  duration_ms: 3.830979
   type: 'test'
   ...
 # Subtest: real PG parameters can build URLs with encoded credentials, never invent the direct host
 ok 184 - real PG parameters can build URLs with encoded credentials, never invent the direct host
   ---
-  duration_ms: 0.446404
+  duration_ms: 0.41852
   type: 'test'
   ...
 # Subtest: protected Storage values recovered by API stay usable for the unchanged version when env pull masks them
 ok 185 - protected Storage values recovered by API stay usable for the unchanged version when env pull masks them
   ---
-  duration_ms: 4.928829
+  duration_ms: 4.994898
   type: 'test'
   ...
 # Subtest: une valeur présente localement est adoptée : aucune génération, aucun remplacement
 ok 186 - une valeur présente localement est adoptée : aucune génération, aucun remplacement
   ---
-  duration_ms: 1.734975
+  duration_ms: 1.651236
   type: 'test'
   ...
 # Subtest: un écart avec le reçu du dernier envoi est signalé, jamais avalé
 ok 187 - un écart avec le reçu du dernier envoi est signalé, jamais avalé
   ---
-  duration_ms: 0.681975
+  duration_ms: 0.580373
   type: 'test'
   ...
 # Subtest: une clé symétrique absente partout est générée et marquée pour remplacement
 ok 188 - une clé symétrique absente partout est générée et marquée pour remplacement
   ---
-  duration_ms: 0.444838
+  duration_ms: 0.377902
   type: 'test'
   ...
 # Subtest: SANS autorisation, aucune rotation silencieuse sur une installation établie
 ok 189 - SANS autorisation, aucune rotation silencieuse sur une installation établie
   ---
-  duration_ms: 0.21468
+  duration_ms: 0.20385
   type: 'test'
   ...
 # Subtest: DATABASE_URL n’est JAMAIS fabriquée : elle vient du fournisseur ou reste à fournir
 ok 190 - DATABASE_URL n’est JAMAIS fabriquée : elle vient du fournisseur ou reste à fournir
   ---
-  duration_ms: 0.254048
+  duration_ms: 0.23827
   type: 'test'
   ...
 # Subtest: un identifiant de service non générable demande une valeur, il ne la fabrique pas
 ok 191 - un identifiant de service non générable demande une valeur, il ne la fabrique pas
   ---
-  duration_ms: 0.184718
+  duration_ms: 0.174247
   type: 'test'
   ...
 # Subtest: un checkout vierge ne prouve pas que la production est neuve
 ok 192 - un checkout vierge ne prouve pas que la production est neuve
   ---
-  duration_ms: 2.474478
+  duration_ms: 2.514674
   type: 'test'
   ...
 # Subtest: aucun témoin MAIS base serveur non vide ne vaut pas « installation neuve »
 ok 193 - aucun témoin MAIS base serveur non vide ne vaut pas « installation neuve »
   ---
-  duration_ms: 0.474635
+  duration_ms: 0.399597
   type: 'test'
   ...
 # Subtest: un reçu illisible est ignoré au lieu de fonder une décision
 ok 194 - un reçu illisible est ignoré au lieu de fonder une décision
   ---
-  duration_ms: 0.786723
+  duration_ms: 0.748789
   type: 'test'
   ...
 # Subtest: le reçu ne contient QUE des empreintes, en permissions privées
 ok 195 - le reçu ne contient QUE des empreintes, en permissions privées
   ---
-  duration_ms: 1.154587
+  duration_ms: 1.234402
   type: 'test'
   ...
 # Subtest: verifierRecus distingue accord, dérive et absence de reçu
 ok 196 - verifierRecus distingue accord, dérive et absence de reçu
   ---
-  duration_ms: 0.371559
+  duration_ms: 0.378701
   type: 'test'
   ...
 # Subtest: écriture Vercel : ajout simple, ou retrait + recréation pour un remplacement
 ok 197 - écriture Vercel : ajout simple, ou retrait + recréation pour un remplacement
   ---
-  duration_ms: 0.169747
+  duration_ms: 0.154772
   type: 'test'
   ...
 # Subtest: rotation autorisée après inspection SQL : génération 256 bits et remplacement planifié
 ok 198 - rotation autorisée après inspection SQL : génération 256 bits et remplacement planifié
   ---
-  duration_ms: 45.401809
+  duration_ms: 43.624572
   type: 'test'
   ...
 # Subtest: installation établie : pas de rotation silencieuse (le plan s’arrête, rien n’est généré)
 ok 199 - installation établie : pas de rotation silencieuse (le plan s’arrête, rien n’est généré)
   ---
-  duration_ms: 42.133555
+  duration_ms: 41.027407
   type: 'test'
   ...
 # Subtest: le wizard ne bloque plus et n’invente jamais une valeur
 ok 200 - le wizard ne bloque plus et n’invente jamais une valeur
   ---
-  duration_ms: 0.576442
+  duration_ms: 0.585181
   type: 'test'
   ...
 # Subtest: nouveau PC sans autorisation : aucun remplacement automatique des secrets distants
 ok 201 - nouveau PC sans autorisation : aucun remplacement automatique des secrets distants
   ---
-  duration_ms: 43.399988
+  duration_ms: 40.690155
   type: 'test'
   ...
 # Subtest: plan complet : diffère les secrets illisibles jusqu’au contrôle SQL
 ok 202 - plan complet : diffère les secrets illisibles jusqu’au contrôle SQL
   ---
-  duration_ms: 41.696089
+  duration_ms: 48.361389
   type: 'test'
   ...
 # Subtest: reçu : projet ET version distante doivent correspondre avant toute adoption
 ok 203 - reçu : projet ET version distante doivent correspondre avant toute adoption
   ---
-  duration_ms: 0.408016
+  duration_ms: 0.393188
   type: 'test'
   ...
 # Subtest: ancien reçu sans identité ni version : confirmation obligatoire
 ok 204 - ancien reçu sans identité ni version : confirmation obligatoire
   ---
-  duration_ms: 0.977145
+  duration_ms: 0.129058
   type: 'test'
   ...
 # Subtest: la génération après SQL utilise exactement l’encodage contractuel
 ok 205 - la génération après SQL utilise exactement l’encodage contractuel
   ---
-  duration_ms: 0.840542
+  duration_ms: 0.796842
   type: 'test'
   ...
 # Subtest: synchronisation simulée — ajout : reçus liés à la version distante, reprise sans rotation
 ok 206 - synchronisation simulée — ajout : reçus liés à la version distante, reprise sans rotation
   ---
-  duration_ms: 44.583093
+  duration_ms: 43.265982
   type: 'test'
   ...
 # Subtest: synchronisation simulée — remplacement : reçus liés à la version distante, reprise sans rotation
 ok 207 - synchronisation simulée — remplacement : reçus liés à la version distante, reprise sans rotation
   ---
-  duration_ms: 44.540761
+  duration_ms: 43.858295
   type: 'test'
   ...
 # Subtest: synchronisation simulée — échec : reçus liés à la version distante, reprise sans rotation
 ok 208 - synchronisation simulée — échec : reçus liés à la version distante, reprise sans rotation
   ---
-  duration_ms: 43.502485
+  duration_ms: 40.565684
   type: 'test'
   ...
 # Découverte Vercel production : pull API lu ; liste déchiffrée non tenté ; lectures ciblées réussies 0, non exploitables 0 (pas nécessairement des refus HTTP).
@@ -5486,109 +5486,109 @@ ok 208 - synchronisation simulée — échec : reçus liés à la version distan
 # Subtest: regression Windows: env pull returned four secrets; protection metadata must not discard them
 ok 209 - regression Windows: env pull returned four secrets; protection metadata must not discard them
   ---
-  duration_ms: 4.513383
+  duration_ms: 4.313025
   type: 'test'
   ...
 # Subtest: empty values and Vercel [SENSITIVE] placeholders remain unknown; ciphertext metadata is never used
 ok 210 - empty values and Vercel [SENSITIVE] placeholders remain unknown; ciphertext metadata is never used
   ---
-  duration_ms: 0.792588
+  duration_ms: 0.7396
   type: 'test'
   ...
 # Subtest: readable encrypted/secret values are accepted only from pull, not from env ls value
 ok 211 - readable encrypted/secret values are accepted only from pull, not from env ls value
   ---
-  duration_ms: 0.233197
+  duration_ms: 0.264553
   type: 'test'
   ...
 # Subtest: authenticated production pull API recovers masked values without touching Storage
 ok 212 - authenticated production pull API recovers masked values without touching Storage
   ---
-  duration_ms: 4.942835
+  duration_ms: 4.754821
   type: 'test'
   ...
 # Subtest: decrypted production listing can recover four values, no preview credential is selected
 ok 213 - decrypted production listing can recover four values, no preview credential is selected
   ---
-  duration_ms: 1.109194
+  duration_ms: 1.070636
   type: 'test'
   ...
 # Subtest: dedicated per-variable decryption uses the real env IDs and never imports listing ciphertext
 ok 214 - dedicated per-variable decryption uses the real env IDs and never imports listing ciphertext
   ---
-  duration_ms: 1.456941
+  duration_ms: 1.415153
   type: 'test'
   ...
 # Subtest: wrong target/key, ciphertext or placeholder from per-variable API is refused
 ok 215 - wrong target/key, ciphertext or placeholder from per-variable API is refused
   ---
-  duration_ms: 1.726995
+  duration_ms: 1.680004
   type: 'test'
   ...
 # Subtest: one official reauthentication is attempted when sensitive reads are denied; then the project is reread
 ok 216 - one official reauthentication is attempted when sensitive reads are denied; then the project is reread
   ---
-  duration_ms: 1.605757
+  duration_ms: 1.539926
   type: 'test'
   ...
 # Subtest: failed reauthentication is not an infinite login loop and does not mutate resources
 ok 217 - failed reauthentication is not an infinite login loop and does not mutate resources
   ---
-  duration_ms: 1.321509
+  duration_ms: 1.30751
   type: 'test'
   ...
 # Subtest: native Postgres/Redis hints recover prefixed names without requiring type=integration
 ok 218 - native Postgres/Redis hints recover prefixed names without requiring type=integration
   ---
-  duration_ms: 1.60128
+  duration_ms: 1.541751
   type: 'test'
   ...
 # Subtest: integration prefixes are discovered from project connections missing in the store list
 ok 219 - integration prefixes are discovered from project connections missing in the store list
   ---
-  duration_ms: 1.259512
+  duration_ms: 1.248974
   type: 'test'
   ...
 # Subtest: multiple Postgres resources never lead to a mixed database/direct URL pair
 ok 220 - multiple Postgres resources never lead to a mixed database/direct URL pair
   ---
-  duration_ms: 0.726591
+  duration_ms: 0.724042
   type: 'test'
   ...
 # Subtest: development-only Storage connection never supplies production credentials
 ok 221 - development-only Storage connection never supplies production credentials
   ---
-  duration_ms: 0.683318
+  duration_ms: 0.697104
   type: 'test'
   ...
 # Subtest: discovery diagnostics never print a credential or a raw provider error
 ok 222 - discovery diagnostics never print a credential or a raw provider error
   ---
-  duration_ms: 0.97777
+  duration_ms: 0.921483
   type: 'test'
   ...
 # Subtest: HTTP envelopes retain only numeric status, never response/auth headers
 ok 223 - HTTP envelopes retain only numeric status, never response/auth headers
   ---
-  duration_ms: 0.913977
+  duration_ms: 1.477445
   type: 'test'
   ...
 # Subtest: same schema-1 totals as the real report can mean 18 masked HTTP-200 values, not 18 HTTP refusals
 ok 224 - same schema-1 totals as the real report can mean 18 masked HTTP-200 values, not 18 HTTP refusals
   ---
-  duration_ms: 3.667989
+  duration_ms: 3.125426
   type: 'test'
   ...
 # Subtest: masked values alone no longer cause a speculative login merely because metadata says Sensitive
 ok 225 - masked values alone no longer cause a speculative login merely because metadata says Sensitive
   ---
-  duration_ms: 0.987916
+  duration_ms: 1.534685
   type: 'test'
   ...
 # Subtest: a structured permission refusal is distinct from a mask and not automatically repaired by login
 ok 226 - a structured permission refusal is distinct from a mask and not automatically repaired by login
   ---
-  duration_ms: 2.038642
+  duration_ms: 1.015327
   type: 'test'
   ...
 # Découverte Vercel production : pull API lu ; liste déchiffrée lu ; lectures ciblées réussies 0, non exploitables 4 (pas nécessairement des refus HTTP).
@@ -5617,49 +5617,49 @@ ok 226 - a structured permission refusal is distinct from a mask and not automat
 # Subtest: nonzero CLI exit retains a filtered API failure, not captured stdout/stderr or auth headers
 ok 227 - nonzero CLI exit retains a filtered API failure, not captured stdout/stderr or auth headers
   ---
-  duration_ms: 83.313887
+  duration_ms: 61.541777
   type: 'test'
   ...
 # Subtest: an unknown CLI failure stays unknown, not permission denied; arbitrary error codes cannot leak
 ok 228 - an unknown CLI failure stays unknown, not permission denied; arbitrary error codes cannot leak
   ---
-  duration_ms: 0.524355
+  duration_ms: 0.679333
   type: 'test'
   ...
 # Subtest: each rejected variable response has a reason, without echoing unexpected keys or values
 ok 229 - each rejected variable response has a reason, without echoing unexpected keys or values
   ---
-  duration_ms: 1.51389
+  duration_ms: 1.159201
   type: 'test'
   ...
 # Subtest: invalid JSON, missing values, and truncated inventory are not reported as permission refusals
 ok 230 - invalid JSON, missing values, and truncated inventory are not reported as permission refusals
   ---
-  duration_ms: 1.567883
+  duration_ms: 0.933132
   type: 'test'
   ...
 # Subtest: standalone diagnostic writes only its safe report, without rebuilding, login, env export or cloud mutations
 ok 231 - standalone diagnostic writes only its safe report, without rebuilding, login, env export or cloud mutations
   ---
-  duration_ms: 3.920026
+  duration_ms: 3.55538
   type: 'test'
   ...
 # Subtest: standalone diagnostic cannot run without a linked/confirmed target or publish after a target change
 ok 232 - standalone diagnostic cannot run without a linked/confirmed target or publish after a target change
   ---
-  duration_ms: 1.517268
+  duration_ms: 1.760468
   type: 'test'
   ...
 # Subtest: standalone diagnostic records a challenge without attempting another generic login
 ok 233 - standalone diagnostic records a challenge without attempting another generic login
   ---
-  duration_ms: 1.546146
+  duration_ms: 1.48019
   type: 'test'
   ...
 # Subtest: actual CLI-64 debug status survives its non-2xx throw, but 403 alone is not claimed to prove RBAC
 ok 234 - actual CLI-64 debug status survives its non-2xx throw, but 403 alone is not claimed to prove RBAC
   ---
-  duration_ms: 37.430369
+  duration_ms: 30.85137
   type: 'test'
   ...
 # Réponse attendue : oui ou non. Aucun autre texte ne vaut autorisation.
@@ -5673,127 +5673,127 @@ ok 234 - actual CLI-64 debug status survives its non-2xx throw, but 403 alone is
 # Subtest: extracts every documented variable including commented fields
 ok 235 - extracts every documented variable including commented fields
   ---
-  duration_ms: 1.301228
+  duration_ms: 1.182618
   type: 'test'
   ...
 # Subtest: profiles exclude publication private key and keep server credentials out of desktop
 ok 236 - profiles exclude publication private key and keep server credentials out of desktop
   ---
-  duration_ms: 0.35031
+  duration_ms: 0.264864
   type: 'test'
   ...
 # Subtest: generates independent 32-byte keys and never replaces existing values
 ok 237 - generates independent 32-byte keys and never replaces existing values
   ---
-  duration_ms: 1.617509
+  duration_ms: 1.611358
   type: 'test'
   ...
 # Subtest: dotenv roundtrip preserves dollars, hashes, empty lines, comments and CRLF
 ok 238 - dotenv roundtrip preserves dollars, hashes, empty lines, comments and CRLF
   ---
-  duration_ms: 0.907351
+  duration_ms: 0.841651
   type: 'test'
   ...
 # Subtest: malformed quoted secrets fail closed rather than triggering regeneration
 ok 239 - malformed quoted secrets fail closed rather than triggering regeneration
   ---
-  duration_ms: 0.566836
+  duration_ms: 0.548873
   type: 'test'
   ...
 # Subtest: does not serialize PEM multiline values or unsafe quoting
 ok 240 - does not serialize PEM multiline values or unsafe quoting
   ---
-  duration_ms: 0.233641
+  duration_ms: 0.189953
   type: 'test'
   ...
 # Subtest: production validator requires PostgreSQL, direct endpoint, HTTPS, Redis and pepper
 ok 241 - production validator requires PostgreSQL, direct endpoint, HTTPS, Redis and pepper
   ---
-  duration_ms: 39.028121
+  duration_ms: 38.134269
   type: 'test'
   ...
 # Subtest: self-hosted production requires declared trusted proxy, Vercel does not
 ok 242 - self-hosted production requires declared trusted proxy, Vercel does not
   ---
-  duration_ms: 3.166582
+  duration_ms: 3.660355
   type: 'test'
   ...
 # Subtest: desktop uses SQLite defaults and has no server dependency
 ok 243 - desktop uses SQLite defaults and has no server dependency
   ---
-  duration_ms: 1.725032
+  duration_ms: 1.685183
   type: 'test'
   ...
 # Subtest: checks AES lengths, old keys, weak secrets, limits and optional enums
 ok 244 - checks AES lengths, old keys, weak secrets, limits and optional enums
   ---
-  duration_ms: 21.71517
+  duration_ms: 20.935802
   type: 'test'
   ...
 # Subtest: electronic invoicing never enables itself or silently generates its encryption key
 ok 245 - electronic invoicing never enables itself or silently generates its encryption key
   ---
-  duration_ms: 3.510286
+  duration_ms: 3.350067
   type: 'test'
   ...
 # Subtest: license signing import must be P-256 and match embedded public key
 ok 246 - license signing import must be P-256 and match embedded public key
   ---
-  duration_ms: 9.144198
+  duration_ms: 8.689532
   type: 'test'
   ...
 # Subtest: sync plan only adds absent values; conflicts are not overwritten
 ok 247 - sync plan only adds absent values; conflicts are not overwritten
   ---
-  duration_ms: 0.211219
+  duration_ms: 0.287324
   type: 'test'
   ...
 # Subtest: private writes are atomic, replace existing files and refuse symlinks
 ok 248 - private writes are atomic, replace existing files and refuse symlinks
   ---
-  duration_ms: 2.216221
+  duration_ms: 2.078434
   type: 'test'
   ...
 # Subtest: CLI --check is offline/read-only and reports names, never secret values
 ok 249 - CLI --check is offline/read-only and reports names, never secret values
   ---
-  duration_ms: 112.810701
+  duration_ms: 94.83971
   type: 'test'
   ...
 # Subtest: CLI rejects unknown profiles and provides help without a TTY or network
 ok 250 - CLI rejects unknown profiles and provides help without a TTY or network
   ---
-  duration_ms: 179.016665
+  duration_ms: 150.557706
   type: 'test'
   ...
 # Subtest: all secret output paths are ignored by Git and Vercel
 ok 251 - all secret output paths are ignored by Git and Vercel
   ---
-  duration_ms: 17.433426
+  duration_ms: 13.515595
   type: 'test'
   ...
 # Subtest: interactive confirmations pass their visible label to readline (Windows redraw regression)
 ok 252 - interactive confirmations pass their visible label to readline (Windows redraw regression)
   ---
-  duration_ms: 5.196411
+  duration_ms: 4.751873
   type: 'test'
   ...
 # Subtest: SQL diagnostic is read-only, uses the server profile and distinguishes drift from technical failure
 ok 253 - SQL diagnostic is read-only, uses the server profile and distinguishes drift from technical failure
   ---
-  duration_ms: 2.690052
+  duration_ms: 2.800526
   type: 'test'
   ...
 # Subtest: subprocess failures retain exit status without exposing stdout or stderr
 ok 254 - subprocess failures retain exit status without exposing stdout or stderr
   ---
-  duration_ms: 34.933809
+  duration_ms: 31.353565
   type: 'test'
   ...
 # Subtest: SQL difference summaries identify canonical structures without disclosing defaults, URLs or unknown names
 ok 255 - SQL difference summaries identify canonical structures without disclosing defaults, URLs or unknown names
   ---
-  duration_ms: 2.232898
+  duration_ms: 2.025592
   type: 'test'
   ...
 # URLs PostgreSQL manquantes : récupération depuis votre compte Neon, sans création de projet/base ni génération de secrets.
@@ -5818,765 +5818,807 @@ ok 255 - SQL difference summaries identify canonical structures without disclosi
 # Subtest: Prisma drift exit code retains only a redacted structural summary
 ok 256 - Prisma drift exit code retains only a redacted structural summary
   ---
-  duration_ms: 33.527165
+  duration_ms: 27.532609
   type: 'test'
   ...
 # Subtest: missing diagnostic URLs request access, recover an existing Neon pair and preserve other local secrets verbatim
 ok 257 - missing diagnostic URLs request access, recover an existing Neon pair and preserve other local secrets verbatim
   ---
-  duration_ms: 3.59893
+  duration_ms: 3.305171
   type: 'test'
   ...
-# (node:8664) ExperimentalWarning: SQLite is an experimental feature and might change at any time
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: URL recovery cancellation never creates files or runs a SQL query
 ok 258 - URL recovery cancellation never creates files or runs a SQL query
   ---
-  duration_ms: 0.676833
+  duration_ms: 0.614022
   type: 'test'
   ...
 # Subtest: Neon recovery authenticates, selects existing resources, gets both connection strings and never creates a project
 ok 259 - Neon recovery authenticates, selects existing resources, gets both connection strings and never creates a project
   ---
-  duration_ms: 1.436851
+  duration_ms: 1.39244
   type: 'test'
   ...
 # Subtest: saving missing URLs keeps existing URLs and handles UTF-8 BOM without resetting the profile
 ok 260 - saving missing URLs keeps existing URLs and handles UTF-8 BOM without resetting the profile
   ---
-  duration_ms: 1.397406
+  duration_ms: 1.191812
   type: 'test'
   ...
 # Subtest: Windows data directories can be configured and serialized without interpreting path escapes
 ok 261 - Windows data directories can be configured and serialized without interpreting path escapes
   ---
-  duration_ms: 1.364688
+  duration_ms: 0.990307
   type: 'test'
   ...
 # Subtest: public HTTP endpoints reject embedded credentials and URL query secrets
 ok 262 - public HTTP endpoints reject embedded credentials and URL query secrets
   ---
-  duration_ms: 7.763313
+  duration_ms: 5.930785
   type: 'test'
   ...
 # Subtest: custom local passwords and credential variables are masked by the configurator
 ok 263 - custom local passwords and credential variables are masked by the configurator
   ---
-  duration_ms: 0.533628
+  duration_ms: 0.510592
   type: 'test'
   ...
 # Subtest: configuration enforces the supported Node runtime before operational actions
 ok 264 - configuration enforces the supported Node runtime before operational actions
   ---
-  duration_ms: 0.364037
+  duration_ms: 0.34119
   type: 'test'
   ...
 # Subtest: local custom settings are editable but known runtime and publisher variables stay separated
 ok 265 - local custom settings are editable but known runtime and publisher variables stay separated
   ---
-  duration_ms: 1.052392
+  duration_ms: 0.995375
   type: 'test'
   ...
 # Subtest: environment coverage lists every template setting with a destination without printing values
 ok 266 - environment coverage lists every template setting with a destination without printing values
   ---
-  duration_ms: 10.568968
+  duration_ms: 10.103043
   type: 'test'
   ...
 # Subtest: dotenv codec preserves custom names, quotes, literal backslashes and dollars without silent deletion
 ok 267 - dotenv codec preserves custom names, quotes, literal backslashes and dollars without silent deletion
   ---
-  duration_ms: 0.478482
+  duration_ms: 0.512804
   type: 'test'
   ...
 # Subtest: CLI --list is offline and read-only, covers existing custom names and never prints values
 ok 268 - CLI --list is offline and read-only, covers existing custom names and never prints values
   ---
-  duration_ms: 94.953371
+  duration_ms: 86.57786
   type: 'test'
   ...
+# (node:23745) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: CLI --list fails when a new template name has no declared configuration destination
 ok 269 - CLI --list fails when a new template name has no declared configuration destination
   ---
-  duration_ms: 65.745598
+  duration_ms: 50.224782
   type: 'test'
   ...
 # Subtest: CLI --check rejects publisher/runtime settings in application profiles without leaking or changing files
 ok 270 - CLI --check rejects publisher/runtime settings in application profiles without leaking or changing files
   ---
-  duration_ms: 45.822893
+  duration_ms: 46.530888
   type: 'test'
   ...
 # Subtest: Windows launcher forwards arguments from its own directory and preserves failure without pausing CLI invocations (static)
 ok 271 - Windows launcher forwards arguments from its own directory and preserves failure without pausing CLI invocations (static)
   ---
-  duration_ms: 0.706907
+  duration_ms: 0.418861
   type: 'test'
   ...
 # Subtest: masked input is initialized before its prompt becomes visible (immediate-paste echo regression)
 ok 272 - masked input is initialized before its prompt becomes visible (immediate-paste echo regression)
   ---
-  duration_ms: 0.65146
+  duration_ms: 0.704155
   type: 'test'
   ...
 # Subtest: exclusive first-key writes never replace an existing file or concurrent creation
 ok 273 - exclusive first-key writes never replace an existing file or concurrent creation
   ---
-  duration_ms: 0.891667
+  duration_ms: 0.972867
   type: 'test'
   ...
 # Subtest: Copilot settings are preserved for desktop and server, never activated by default
 ok 274 - Copilot settings are preserved for desktop and server, never activated by default
   ---
-  duration_ms: 0.490595
+  duration_ms: 0.485311
   type: 'test'
   ...
 # Subtest: les registres de migrations ne comptent pas comme données métier
 ok 275 - les registres de migrations ne comptent pas comme données métier
   ---
-  duration_ms: 1.157449
+  duration_ms: 1.193974
   type: 'test'
   ...
 # Subtest: inspectDesktop classe une base neuve issue du modèle comme vide malgré _gf_migrations
 ok 276 - inspectDesktop classe une base neuve issue du modèle comme vide malgré _gf_migrations
   ---
-  duration_ms: 1.018551
+  duration_ms: 0.95407
   type: 'test'
   ...
 # Subtest: generateMissing ne crée que les secrets symétriques absents et jamais de valeur affichée
 ok 277 - generateMissing ne crée que les secrets symétriques absents et jamais de valeur affichée
   ---
-  duration_ms: 0.442601
+  duration_ms: 0.438718
   type: 'test'
   ...
 # Subtest: chaque clé générée annonce ses destinations réelles, par profil
 ok 278 - chaque clé générée annonce ses destinations réelles, par profil
   ---
-  duration_ms: 0.227161
+  duration_ms: 0.153119
   type: 'test'
   ...
 # Subtest: la commande GENERER (nom de variable ou valeur) est reconnue sans jamais être une valeur de secret
 ok 279 - la commande GENERER (nom de variable ou valeur) est reconnue sans jamais être une valeur de secret
   ---
-  duration_ms: 0.243207
+  duration_ms: 0.249774
   type: 'test'
   ...
 # Subtest: generateSecrets génère tout l'absent, préserve l'existant et n'exige aucune saisie
 ok 280 - generateSecrets génère tout l'absent, préserve l'existant et n'exige aucune saisie
   ---
-  duration_ms: 0.618596
+  duration_ms: 0.550724
   type: 'test'
   ...
 # Subtest: le modèle SQLite livré ne contient aucune ligne métier : seul _gf_migrations est peuplé
 ok 281 - le modèle SQLite livré ne contient aucune ligne métier : seul _gf_migrations est peuplé
   ---
-  duration_ms: 5.491644
+  duration_ms: 4.284095
   type: 'test'
   ...
 # Subtest: visible secret entry is explicit, session-only and preserves hidden defaults and raw input
 ok 282 - visible secret entry is explicit, session-only and preserves hidden defaults and raw input
   ---
-  duration_ms: 1.025565
+  duration_ms: 0.792842
   type: 'test'
   ...
 # Subtest: provider prompts normalize dashboard assignments and retry a wrong field without leaking its contents
 ok 283 - provider prompts normalize dashboard assignments and retry a wrong field without leaking its contents
   ---
-  duration_ms: 0.740608
+  duration_ms: 0.613728
   type: 'test'
   ...
 # Subtest: long Windows prompts print explanations separately and keep the actual readline prompt short
 ok 284 - long Windows prompts print explanations separately and keep the actual readline prompt short
   ---
-  duration_ms: 0.343206
+  duration_ms: 0.487079
   type: 'test'
   ...
 # Subtest: validates structural intake without pretending unit fixtures are independent
 ok 285 - validates structural intake without pretending unit fixtures are independent
   ---
-  duration_ms: 301.416978
+  duration_ms: 319.080631
   type: 'test'
   ...
 # Subtest: rejects overlap, duplicate IDs, incomplete strata, false independence and extra fields
 ok 286 - rejects overlap, duplicate IDs, incomplete strata, false independence and extra fields
   ---
-  duration_ms: 171.599877
+  duration_ms: 214.237424
   type: 'test'
   ...
 # Subtest: rejects fabricated tool/parameters, unauthorized gold calls and missing fact oracle
 ok 287 - rejects fabricated tool/parameters, unauthorized gold calls and missing fact oracle
   ---
-  duration_ms: 127.4759
+  duration_ms: 126.562388
   type: 'test'
   ...
 # Subtest: freeze is exclusive, hash-bearing, offline and never overwrites an existing gold
 ok 288 - freeze is exclusive, hash-bearing, offline and never overwrites an existing gold
   ---
-  duration_ms: 66.6148
+  duration_ms: 72.962411
   type: 'test'
   ...
 # Subtest: operator signature binds scope, model, corpus, runner and bounded time; not a billing enforcement proof
 ok 289 - operator signature binds scope, model, corpus, runner and bounded time; not a billing enforcement proof
   ---
-  duration_ms: 12.523415
+  duration_ms: 12.034663
   type: 'test'
   ...
 # Subtest: copying or renaming a grant cannot reset its exclusive authorization-ID claim
 ok 290 - copying or renaming a grant cannot reset its exclusive authorization-ID claim
   ---
-  duration_ms: 3.211175
+  duration_ms: 3.18686
   type: 'test'
   ...
 # Subtest: unsafe state permissions and traversal IDs fail closed
 ok 291 - unsafe state permissions and traversal IDs fail closed
   ---
-  duration_ms: 0.40775
+  duration_ms: 0.400244
   type: 'test'
   ...
 # Subtest: native summary accepts only six actual suites and all 54 passed assertions
 ok 292 - native summary accepts only six actual suites and all 54 passed assertions
   ---
-  duration_ms: 1.621782
+  duration_ms: 1.727638
   type: 'test'
   ...
 # Subtest: setup failure skips, missing/duplicate suites, killed Vitest or fewer assertions never pass
 ok 293 - setup failure skips, missing/duplicate suites, killed Vitest or fewer assertions never pass
   ---
-  duration_ms: 3.385178
+  duration_ms: 3.090585
   type: 'test'
   ...
 # Subtest: summary never projects failure messages or raw fields
 ok 294 - summary never projects failure messages or raw fields
   ---
-  duration_ms: 0.376961
+  duration_ms: 0.448269
   type: 'test'
   ...
 # Subtest: budget manifest refuses unbounded/missing/extra/increased output fields
 ok 295 - budget manifest refuses unbounded/missing/extra/increased output fields
   ---
-  duration_ms: 4.631877
+  duration_ms: 4.434966
   type: 'test'
   ...
 # Subtest: reserves the worst cost before dispatch, no automatic replenishment
 ok 296 - reserves the worst cost before dispatch, no automatic replenishment
   ---
-  duration_ms: 0.754319
+  duration_ms: 0.679465
   type: 'test'
   ...
 # Subtest: cost or input limit blocks before consuming any call
 ok 297 - cost or input limit blocks before consuming any call
   ---
-  duration_ms: 0.319321
+  duration_ms: 0.326683
   type: 'test'
   ...
 # Subtest: empty latency samples stay null, not synthetic zeros
 ok 298 - empty latency samples stay null, not synthetic zeros
   ---
-  duration_ms: 0.755576
+  duration_ms: 0.771238
   type: 'test'
   ...
 # Subtest: live gate refuses before any provider/network setup even with CLI approval flag
 ok 299 - live gate refuses before any provider/network setup even with CLI approval flag
   ---
-  duration_ms: 4.796435
+  duration_ms: 3.75743
   type: 'test'
   ...
 # Subtest: model JSON, local fallback, no-call guards and accepted interpretation remain separate
 ok 300 - model JSON, local fallback, no-call guards and accepted interpretation remain separate
   ---
-  duration_ms: 0.303921
+  duration_ms: 0.294794
   type: 'test'
   ...
 # Subtest: corrupt/missing accounting, absent/invalid/exceeded cap never grants a reservation
 ok 301 - corrupt/missing accounting, absent/invalid/exceeded cap never grants a reservation
   ---
-  duration_ms: 0.839379
+  duration_ms: 0.733064
   type: 'test'
   ...
 # Subtest: concurrent reservations and uncertain failure/timeouts do not replenish allowance
 ok 302 - concurrent reservations and uncertain failure/timeouts do not replenish allowance
   ---
-  duration_ms: 1.4716
+  duration_ms: 1.422289
   type: 'test'
   ...
 # Subtest: all installed Next instances include the Windows RCE and AVIF fixes, without removing Next
 ok 303 - all installed Next instances include the Windows RCE and AVIF fixes, without removing Next
   ---
-  duration_ms: 3.893958
+  duration_ms: 5.942334
   type: 'test'
   ...
 # Subtest: all tar instances include the critical decompression fix and later traversal fixes; builder resolves this tar
 ok 304 - all tar instances include the critical decompression fix and later traversal fixes; builder resolves this tar
   ---
-  duration_ms: 3.732144
+  duration_ms: 5.299351
   type: 'test'
   ...
 # Subtest: patched tar aborts a bounded high-compression fixture without extracting or exhausting disk
 ok 305 - patched tar aborts a bounded high-compression fixture without extracting or exhausting disk
   ---
-  duration_ms: 16.615113
+  duration_ms: 21.948751
   type: 'test'
   ...
 # Subtest: patched tar still accepts a normal uncompressed archive and preserves file content
 ok 306 - patched tar still accepts a normal uncompressed archive and preserves file content
   ---
-  duration_ms: 2.490633
+  duration_ms: 2.641281
   type: 'test'
   ...
 # Subtest: provider INPUT direct alias is canonicalized and stripped, never mutates source
 ok 307 - provider INPUT direct alias is canonicalized and stripped, never mutates source
   ---
-  duration_ms: 2.112047
+  duration_ms: 2.584739
   type: 'test'
   ...
 # Subtest: contradictory direct sources refuse before export, without leaking values
 ok 308 - contradictory direct sources refuse before export, without leaking values
   ---
-  duration_ms: 0.915483
+  duration_ms: 2.231317
   type: 'test'
   ...
 # Subtest: legacy runtime alias remains forbidden; unrelated aliases are not silently accepted
 ok 309 - legacy runtime alias remains forbidden; unrelated aliases are not silently accepted
   ---
-  duration_ms: 0.538587
+  duration_ms: 0.664391
   type: 'test'
   ...
 # Subtest: guard still detects reintroduction in active code, even in an input parser file
 ok 310 - guard still detects reintroduction in active code, even in an input parser file
   ---
-  duration_ms: 1262.718802
+  duration_ms: 1030.2752
+  type: 'test'
+  ...
+# Subtest: counts every severity without an audit-level exclusion or suppression
+ok 311 - counts every severity without an audit-level exclusion or suppression
+  ---
+  duration_ms: 1.857272
+  type: 'test'
+  ...
+# Subtest: rejects malformed/unknown/duplicate/closed input rather than silently counting zero
+ok 312 - rejects malformed/unknown/duplicate/closed input rather than silently counting zero
+  ---
+  duration_ms: 0.488504
+  type: 'test'
+  ...
+# Subtest: REST403 cannot turn an empty/error stdout into zero or leak the error body
+ok 313 - REST403 cannot turn an empty/error stdout into zero or leak the error body
+  ---
+  duration_ms: 0.49263
+  type: 'test'
+  ...
+# Subtest: REST inventory requests complete pagination and never falls back to GraphQL
+ok 314 - REST inventory requests complete pagination and never falls back to GraphQL
+  ---
+  duration_ms: 0.546981
+  type: 'test'
+  ...
+# Subtest: valid empty REST snapshot is not a certificate of freshness or mission completion
+ok 315 - valid empty REST snapshot is not a certificate of freshness or mission completion
+  ---
+  duration_ms: 0.247712
+  type: 'test'
+  ...
+# Subtest: default branch movement during query blocks a zero conclusion
+ok 316 - default branch movement during query blocks a zero conclusion
+  ---
+  duration_ms: 0.254126
+  type: 'test'
+  ...
+# Subtest: a truncated or malformed successful API output remains invalid, not zero
+ok 317 - a truncated or malformed successful API output remains invalid, not zero
+  ---
+  duration_ms: 0.240426
   type: 'test'
   ...
 # Subtest: empty successful report preserves scanner exit zero
-ok 311 - empty successful report preserves scanner exit zero
+ok 318 - empty successful report preserves scanner exit zero
   ---
-  duration_ms: 2.747736
+  duration_ms: 2.747103
   type: 'test'
   ...
 # Subtest: official nil-slice JSON null is empty, but exit one remains inconsistent
-ok 312 - official nil-slice JSON null is empty, but exit one remains inconsistent
+ok 319 - official nil-slice JSON null is empty, but exit one remains inconsistent
   ---
-  duration_ms: 0.93351
+  duration_ms: 1.020494
   type: 'test'
   ...
 # Subtest: finding metadata preserves exit one and never prints secret/match/child output
-ok 313 - finding metadata preserves exit one and never prints secret/match/child output
+ok 320 - finding metadata preserves exit one and never prints secret/match/child output
   ---
-  duration_ms: 1.055726
+  duration_ms: 1.030396
   type: 'test'
   ...
 # Subtest: workflow command characters are escaped in file/rule/commit metadata
-ok 314 - workflow command characters are escaped in file/rule/commit metadata
+ok 321 - workflow command characters are escaped in file/rule/commit metadata
   ---
-  duration_ms: 0.568261
+  duration_ms: 0.580231
   type: 'test'
   ...
 # Subtest: scanner failure is fail-closed
-ok 315 - scanner failure is fail-closed
+ok 322 - scanner failure is fail-closed
   ---
-  duration_ms: 0.432545
+  duration_ms: 0.447376
   type: 'test'
   ...
 # Subtest: spawn failure is fail-closed
-ok 316 - spawn failure is fail-closed
+ok 323 - spawn failure is fail-closed
   ---
-  duration_ms: 0.483887
+  duration_ms: 0.38067
   type: 'test'
   ...
 # Subtest: killed scanner is fail-closed
-ok 317 - killed scanner is fail-closed
+ok 324 - killed scanner is fail-closed
   ---
-  duration_ms: 0.436551
+  duration_ms: 0.431885
   type: 'test'
   ...
 # Subtest: missing report is fail-closed
-ok 318 - missing report is fail-closed
+ok 325 - missing report is fail-closed
   ---
-  duration_ms: 0.437398
+  duration_ms: 0.50631
   type: 'test'
   ...
 # Subtest: bad JSON is fail-closed
-ok 319 - bad JSON is fail-closed
+ok 326 - bad JSON is fail-closed
   ---
-  duration_ms: 0.673686
+  duration_ms: 0.700145
   type: 'test'
   ...
 # Subtest: non-array report is fail-closed
-ok 320 - non-array report is fail-closed
+ok 327 - non-array report is fail-closed
   ---
-  duration_ms: 0.621463
+  duration_ms: 0.613457
   type: 'test'
   ...
 # Subtest: success with finding is fail-closed
-ok 321 - success with finding is fail-closed
+ok 328 - success with finding is fail-closed
   ---
-  duration_ms: 0.500696
+  duration_ms: 0.518462
   type: 'test'
   ...
 # Subtest: failure without finding is fail-closed
-ok 322 - failure without finding is fail-closed
+ok 329 - failure without finding is fail-closed
   ---
-  duration_ms: 1.348503
+  duration_ms: 0.370675
   type: 'test'
   ...
 # Subtest: invalid location is fail-closed
-ok 323 - invalid location is fail-closed
+ok 330 - invalid location is fail-closed
   ---
-  duration_ms: 0.358303
+  duration_ms: 0.398084
   type: 'test'
   ...
 # Subtest: only whitelisted fields survive report projection
-ok 324 - only whitelisted fields survive report projection
+ok 331 - only whitelisted fields survive report projection
   ---
-  duration_ms: 0.123698
+  duration_ms: 0.129083
   type: 'test'
   ...
 # Subtest: complete inventory pages precede capped per-finding annotations without changing scanner exit
-ok 325 - complete inventory pages precede capped per-finding annotations without changing scanner exit
+ok 332 - complete inventory pages precede capped per-finding annotations without changing scanner exit
   ---
-  duration_ms: 5.053086
+  duration_ms: 4.964753
   type: 'test'
   ...
 # Subtest: metadata overflow is explicitly incomplete, never reported as full inventory
-ok 326 - metadata overflow is explicitly incomplete, never reported as full inventory
+ok 333 - metadata overflow is explicitly incomplete, never reported as full inventory
   ---
-  duration_ms: 24.359863
+  duration_ms: 23.212152
   type: 'test'
   ...
 # Subtest: read-only issuer check proves mathematical correspondence for multiple P-256 anchors
-ok 327 - read-only issuer check proves mathematical correspondence for multiple P-256 anchors
+ok 334 - read-only issuer check proves mathematical correspondence for multiple P-256 anchors
   ---
-  duration_ms: 10.573959
+  duration_ms: 10.247496
   type: 'test'
   ...
 # Subtest: any mismatched anchor fails; no majority or first-key-only acceptance
-ok 328 - any mismatched anchor fails; no majority or first-key-only acceptance
+ok 335 - any mismatched anchor fails; no majority or first-key-only acceptance
   ---
-  duration_ms: 1.566766
+  duration_ms: 1.614923
   type: 'test'
   ...
 # Subtest: non-P256 keys cannot validate issuer correspondence even when matching
-ok 329 - non-P256 keys cannot validate issuer correspondence even when matching
+ok 336 - non-P256 keys cannot validate issuer correspondence even when matching
   ---
-  duration_ms: 1.558456
+  duration_ms: 1.544813
   type: 'test'
   ...
 # Subtest: CLI missing/foreign private key exits nonzero without key material or crypto stack
-ok 330 - CLI missing/foreign private key exits nonzero without key material or crypto stack
+ok 337 - CLI missing/foreign private key exits nonzero without key material or crypto stack
   ---
-  duration_ms: 86.30493
+  duration_ms: 73.650797
   type: 'test'
   ...
 # Subtest: license text is complete past 8000 characters and nested versions keep their own license
-ok 331 - license text is complete past 8000 characters and nested versions keep their own license
+ok 338 - license text is complete past 8000 characters and nested versions keep their own license
   ---
-  duration_ms: 50.178844
+  duration_ms: 44.964378
   type: 'test'
   ...
 # Subtest: wrong SBOM package version is refused instead of attributing another installed version
-ok 332 - wrong SBOM package version is refused instead of attributing another installed version
+ok 339 - wrong SBOM package version is refused instead of attributing another installed version
   ---
-  duration_ms: 37.835177
+  duration_ms: 35.576614
   type: 'test'
   ...
 # Subtest: SBOM cannot point license discovery outside node_modules
-ok 333 - SBOM cannot point license discovery outside node_modules
+ok 340 - SBOM cannot point license discovery outside node_modules
   ---
-  duration_ms: 47.320095
+  duration_ms: 32.899211
   type: 'test'
   ...
-# (node:8865) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (node:23953) ExperimentalWarning: SQLite is an experimental feature and might change at any time
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: copies only schema and empty template; leaves local user DB unchanged
-ok 334 - copies only schema and empty template; leaves local user DB unchanged
+ok 341 - copies only schema and empty template; leaves local user DB unchanged
   ---
-  duration_ms: 26.742609
+  duration_ms: 17.77175
   type: 'test'
   ...
 # Subtest: missing template never falls back to local DB
-ok 335 - missing template never falls back to local DB
+ok 342 - missing template never falls back to local DB
   ---
-  duration_ms: 11.97726
+  duration_ms: 6.945619
   type: 'test'
   ...
 # Subtest: nonempty template is refused without changing it
-ok 336 - nonempty template is refused without changing it
+ok 343 - nonempty template is refused without changing it
   ---
-  duration_ms: 13.318387
+  duration_ms: 8.348418
   type: 'test'
   ...
 # Subtest: stale databases in output fail closed rather than being packaged or deleted
-ok 337 - stale databases in output fail closed rather than being packaged or deleted
+ok 344 - stale databases in output fail closed rather than being packaged or deleted
   ---
-  duration_ms: 10.911977
+  duration_ms: 6.246554
   type: 'test'
   ...
 # Subtest: packaging filter cannot wildcard local databases
-ok 338 - packaging filter cannot wildcard local databases
+ok 345 - packaging filter cannot wildcard local databases
   ---
-  duration_ms: 2.567536
+  duration_ms: 1.411063
   type: 'test'
   ...
 # Subtest: refuses an output directory junction without overwriting its external target
-ok 339 - refuses an output directory junction without overwriting its external target
+ok 346 - refuses an output directory junction without overwriting its external target
   ---
-  duration_ms: 9.333513
+  duration_ms: 6.04577
   type: 'test'
   ...
 # Subtest: refuses a source directory junction without touching its files
-ok 340 - refuses a source directory junction without touching its files
+ok 347 - refuses a source directory junction without touching its files
   ---
-  duration_ms: 9.141101
+  duration_ms: 4.983993
   type: 'test'
   ...
 # Subtest: historical trace transport roundtrips full ANSI, unicode, percent signs and failure stacks
-ok 341 - historical trace transport roundtrips full ANSI, unicode, percent signs and failure stacks
+ok 348 - historical trace transport roundtrips full ANSI, unicode, percent signs and failure stacks
   ---
-  duration_ms: 14.775076
+  duration_ms: 8.880562
   type: 'test'
   ...
 # Subtest: backup-code modulo has exactly eight preimages per symbol, not biased: real source alphabet has 32 unique symbols
-ok 342 - backup-code modulo has exactly eight preimages per symbol, not biased: real source alphabet has 32 unique symbols
+ok 349 - backup-code modulo has exactly eight preimages per symbol, not biased: real source alphabet has 32 unique symbols
   ---
-  duration_ms: 16.344588
+  duration_ms: 16.65372
   type: 'test'
   ...
 # Subtest: actual extracted Electron flush function: revoked consent performs no queue read and no send (unit, not packaged Electron)
-ok 343 - actual extracted Electron flush function: revoked consent performs no queue read and no send (unit, not packaged Electron)
+ok 350 - actual extracted Electron flush function: revoked consent performs no queue read and no send (unit, not packaged Electron)
   ---
-  duration_ms: 143.429844
+  duration_ms: 149.760461
   type: 'test'
   ...
 # Subtest: actual extracted Electron logger: redacts network URLs/secrets and emits a single controlled line (unit)
-ok 344 - actual extracted Electron logger: redacts network URLs/secrets and emits a single controlled line (unit)
+ok 351 - actual extracted Electron logger: redacts network URLs/secrets and emits a single controlled line (unit)
   ---
-  duration_ms: 64.175116
+  duration_ms: 71.928566
   type: 'test'
   ...
 # Subtest: historical closure writer uses real OS exclusive create: a pre-existing symlink cannot replace previous evidence
-ok 345 - historical closure writer uses real OS exclusive create: a pre-existing symlink cannot replace previous evidence
+ok 352 - historical closure writer uses real OS exclusive create: a pre-existing symlink cannot replace previous evidence
   ---
-  duration_ms: 3.853265
+  duration_ms: 4.013706
   type: 'test'
   ...
 # Subtest: actual extracted Electron flush function: continued consent preserves successful send and retains failed item (simulated transport)
-ok 346 - actual extracted Electron flush function: continued consent preserves successful send and retains failed item (simulated transport)
+ok 353 - actual extracted Electron flush function: continued consent preserves successful send and retains failed item (simulated transport)
   ---
-  duration_ms: 31.872601
+  duration_ms: 39.572962
   type: 'test'
   ...
 # Subtest: same-second backups preserve distinct real SQLite snapshots
-ok 347 - same-second backups preserve distinct real SQLite snapshots
+ok 354 - same-second backups preserve distinct real SQLite snapshots
   ---
-  duration_ms: 100.412912
+  duration_ms: 81.860123
   type: 'test'
   ...
 # Subtest: same-second copies never inherit another snapshot rollback journal
-ok 348 - same-second copies never inherit another snapshot rollback journal
+ok 355 - same-second copies never inherit another snapshot rollback journal
   ---
-  duration_ms: 36.34685
+  duration_ms: 35.937843
   type: 'test'
   ...
 # Subtest: retention removes all owned annexes including journal
-ok 349 - retention removes all owned annexes including journal
+ok 356 - retention removes all owned annexes including journal
   ---
-  duration_ms: 42.757174
+  duration_ms: 36.60503
   type: 'test'
   ...
 # Subtest: retention does not delete unrelated files with the application prefix
-ok 350 - retention does not delete unrelated files with the application prefix
+ok 357 - retention does not delete unrelated files with the application prefix
   ---
-  duration_ms: 32.660797
+  duration_ms: 20.913928
   type: 'test'
   ...
 # Subtest: same-second retention keeps the actual latest five snapshots
-ok 351 - same-second retention keeps the actual latest five snapshots
+ok 358 - same-second retention keeps the actual latest five snapshots
   ---
-  duration_ms: 275.617132
+  duration_ms: 227.101807
   type: 'test'
   ...
 # Subtest: copy permission failure blocks migration without attempting retention
-ok 352 - copy permission failure blocks migration without attempting retention
+ok 359 - copy permission failure blocks migration without attempting retention
   ---
-  duration_ms: 20.474127
+  duration_ms: 35.518475
   type: 'test'
   ...
 # Subtest: rotation failure is an explicit warning, not a lost valid backup
-ok 353 - rotation failure is an explicit warning, not a lost valid backup
+ok 360 - rotation failure is an explicit warning, not a lost valid backup
   ---
-  duration_ms: 37.241812
+  duration_ms: 35.15447
   type: 'test'
   ...
 # Subtest: collision retries are bounded and always use exclusive copy
-ok 354 - collision retries are bounded and always use exclusive copy
+ok 361 - collision retries are bounded and always use exclusive copy
   ---
-  duration_ms: 80.955129
+  duration_ms: 77.634774
   type: 'test'
   ...
 # Subtest: source permission error is not treated as a first-install skip
-ok 355 - source permission error is not treated as a first-install skip
+ok 362 - source permission error is not treated as a first-install skip
   ---
-  duration_ms: 0.864323
+  duration_ms: 0.833364
   type: 'test'
   ...
 # Subtest: orphan journal names are reserved without overwriting or reusing them
-ok 356 - orphan journal names are reserved without overwriting or reusing them
+ok 363 - orphan journal names are reserved without overwriting or reusing them
   ---
-  duration_ms: 22.255059
+  duration_ms: 20.288376
   type: 'test'
   ...
 # Subtest: cleanup onLicenseError preserves other subscribers
-ok 357 - cleanup onLicenseError preserves other subscribers
+ok 364 - cleanup onLicenseError preserves other subscribers
   ---
-  duration_ms: 3.378978
+  duration_ms: 4.42742
   type: 'test'
   ...
 # Subtest: cleanup windowAPI.onMaximizedChange preserves other subscribers
-ok 358 - cleanup windowAPI.onMaximizedChange preserves other subscribers
+ok 365 - cleanup windowAPI.onMaximizedChange preserves other subscribers
   ---
-  duration_ms: 0.880245
+  duration_ms: 1.333084
   type: 'test'
   ...
 # Subtest: cleanup windowAPI.onFullscreenChange preserves other subscribers
-ok 359 - cleanup windowAPI.onFullscreenChange preserves other subscribers
+ok 366 - cleanup windowAPI.onFullscreenChange preserves other subscribers
   ---
-  duration_ms: 1.887568
+  duration_ms: 2.837766
   type: 'test'
   ...
 # Subtest: cleanup onDesktopExportDone preserves other subscribers
-ok 360 - cleanup onDesktopExportDone preserves other subscribers
+ok 367 - cleanup onDesktopExportDone preserves other subscribers
   ---
-  duration_ms: 0.965504
+  duration_ms: 1.930963
   type: 'test'
   ...
 # Subtest: cleanup onLicenseRevoked preserves other subscribers
-ok 361 - cleanup onLicenseRevoked preserves other subscribers
+ok 368 - cleanup onLicenseRevoked preserves other subscribers
   ---
-  duration_ms: 0.93145
+  duration_ms: 1.671841
   type: 'test'
   ...
 # Subtest: cleanup onLicenseReactivated preserves other subscribers
-ok 362 - cleanup onLicenseReactivated preserves other subscribers
+ok 369 - cleanup onLicenseReactivated preserves other subscribers
   ---
-  duration_ms: 0.923219
+  duration_ms: 1.047588
   type: 'test'
   ...
 # Subtest: cleanup onOnlineStatus preserves other subscribers
-ok 363 - cleanup onOnlineStatus preserves other subscribers
+ok 370 - cleanup onOnlineStatus preserves other subscribers
   ---
-  duration_ms: 0.997385
+  duration_ms: 1.380494
   type: 'test'
   ...
 # Subtest: cleanup onEntitlements preserves other subscribers
-ok 364 - cleanup onEntitlements preserves other subscribers
+ok 371 - cleanup onEntitlements preserves other subscribers
   ---
-  duration_ms: 0.840377
+  duration_ms: 1.294988
   type: 'test'
   ...
 # Subtest: cleanup onNotifications preserves other subscribers
-ok 365 - cleanup onNotifications preserves other subscribers
+ok 372 - cleanup onNotifications preserves other subscribers
   ---
-  duration_ms: 1.189231
+  duration_ms: 1.642041
   type: 'test'
   ...
-# (node:8920) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (node:24008) ExperimentalWarning: SQLite is an experimental feature and might change at any time
 # (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: copies a real legacy SQLite database exclusively and keeps its original
-ok 366 - copies a real legacy SQLite database exclusively and keeps its original
+ok 373 - copies a real legacy SQLite database exclusively and keeps its original
   ---
-  duration_ms: 6.480176
+  duration_ms: 8.036787
   type: 'test'
   ...
 # Subtest: never deletes either distinct database or other nested files when canonical exists
-ok 367 - never deletes either distinct database or other nested files when canonical exists
+ok 374 - never deletes either distinct database or other nested files when canonical exists
   ---
-  duration_ms: 6.335894
+  duration_ms: 8.043756
   type: 'test'
   ...
 # Subtest: absent legacy database does not overwrite a canonical SQLite database
-ok 368 - absent legacy database does not overwrite a canonical SQLite database
+ok 375 - absent legacy database does not overwrite a canonical SQLite database
   ---
-  duration_ms: 4.767551
+  duration_ms: 7.851167
   type: 'test'
   ...
 # Subtest: actual setup-dev bootstrap preserves both databases and unrelated nested files
-ok 369 - actual setup-dev bootstrap preserves both databases and unrelated nested files
+ok 376 - actual setup-dev bootstrap preserves both databases and unrelated nested files
   ---
-  duration_ms: 43.269753
+  duration_ms: 53.7052
   type: 'test'
   ...
 # Subtest: legacy PowerShell API-key probe stays blocking and never sends a credential
-ok 370 - legacy PowerShell API-key probe stays blocking and never sends a credential
+ok 377 - legacy PowerShell API-key probe stays blocking and never sends a credential
   ---
-  duration_ms: 1.805857
+  duration_ms: 1.709797
   type: 'test'
   ...
 # Subtest: secret scanner retains default rules and never exempts whole critical auth/public-key sources
-ok 371 - secret scanner retains default rules and never exempts whole critical auth/public-key sources
+ok 378 - secret scanner retains default rules and never exempts whole critical auth/public-key sources
   ---
-  duration_ms: 1.604074
+  duration_ms: 1.209598
   type: 'test'
   ...
 # Subtest: three public OAuth headers and one frozen prose fingerprint are individually hash-locked
-ok 372 - three public OAuth headers and one frozen prose fingerprint are individually hash-locked
+ok 379 - three public OAuth headers and one frozen prose fingerprint are individually hash-locked
   ---
-  duration_ms: 11.920542
+  duration_ms: 11.135207
   type: 'test'
   ...
 # Subtest: every phase5 suppression is an exact hash-locked location; prior twenty individually retained
-ok 373 - every phase5 suppression is an exact hash-locked location; prior twenty individually retained
+ok 380 - every phase5 suppression is an exact hash-locked location; prior twenty individually retained
   ---
-  duration_ms: 460.056066
+  duration_ms: 428.376135
   type: 'test'
   ...
 # Subtest: changed receipt/source/line/prose or unknown classification invalidates suppression
-ok 374 - changed receipt/source/line/prose or unknown classification invalidates suppression
+ok 381 - changed receipt/source/line/prose or unknown classification invalidates suppression
   ---
-  duration_ms: 4.791139
+  duration_ms: 5.028507
   type: 'test'
   ...
 # Subtest: custom shell executes exactly the official workflow command and rejects extra commands
-ok 375 - custom shell executes exactly the official workflow command and rejects extra commands
+ok 382 - custom shell executes exactly the official workflow command and rejects extra commands
   ---
-  duration_ms: 26.373297
+  duration_ms: 20.33144
   type: 'test'
   ...
 # Subtest: literal environment secrets, private PEM, credentials and signed URLs are withheld
-ok 376 - literal environment secrets, private PEM, credentials and signed URLs are withheld
+ok 383 - literal environment secrets, private PEM, credentials and signed URLs are withheld
   ---
-  duration_ms: 2.202099
+  duration_ms: 1.611168
   type: 'test'
   ...
 # Subtest: exit codes cannot turn a failed, signalled or unspawned packaging command green
-ok 377 - exit codes cannot turn a failed, signalled or unspawned packaging command green
+ok 384 - exit codes cannot turn a failed, signalled or unspawned packaging command green
   ---
-  duration_ms: 0.205784
+  duration_ms: 0.209221
   type: 'test'
   ...
 # Subtest: annotations retain readable build diagnostics and lossless projected metadata
-ok 378 - annotations retain readable build diagnostics and lossless projected metadata
+ok 385 - annotations retain readable build diagnostics and lossless projected metadata
   ---
-  duration_ms: 3.577907
+  duration_ms: 2.095171
   type: 'test'
   ...
 # Subtest: large logs are explicitly incomplete, with bounded tails and a full-input digest
-ok 379 - large logs are explicitly incomplete, with bounded tails and a full-input digest
+ok 386 - large logs are explicitly incomplete, with bounded tails and a full-input digest
   ---
-  duration_ms: 0.651961
+  duration_ms: 0.549168
   type: 'test'
   ...
 # Subtest: secrets are removed before truncation, including incomplete private key blocks
-ok 380 - secrets are removed before truncation, including incomplete private key blocks
+ok 387 - secrets are removed before truncation, including incomplete private key blocks
   ---
-  duration_ms: 0.397076
+  duration_ms: 0.487655
   type: 'test'
   ...
-1..380
-# tests 380
+1..387
+# tests 387
 # suites 0
-# pass 380
+# pass 387
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 18861.896029
+# duration_ms 16511.063919
