@@ -101,6 +101,11 @@ function serializeEnv(env, names, profile) {
     `# Profil : ${profile}. Relancer node config --conserver-secrets pour compléter sans rotation.`,
     '# Les variables non applicables à ce profil ne sont pas exportées.', '']
   for (const name of names) {
+    // Values are quoted below, but identifiers cannot be quoted in dotenv.
+    // Do not let a provider/imported object key create a second assignment.
+    if (typeof name !== 'string' || !/^[\w.-]+$/.test(name)) {
+      throw new Error('Nom de variable environnement invalide.')
+    }
     const v = normalizeValue(name, env[name])
     if (!v) lines.push(`# ${name}=`)
     else lines.push(`${name}=${encodeValue(name, v)}`)

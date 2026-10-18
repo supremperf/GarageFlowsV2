@@ -35,3 +35,25 @@ test('packaged Electron never reads or creates a project dotenv file',()=>{
  vm.runInNewContext(loader.getText(ast),{fs:forbidden,path:forbidden,app:{isPackaged:true},process:processFixture})
  a.deepEqual(processFixture.env,{PHASE6_EXISTING:'preserved'})
 })
+
+test('dotenv serializer rejects injected identifiers before emitting any assignment',()=>{
+ for(const name of ['A\nINJECTED','A=INJECTED','A\rB','A\0B','#COMMENT',' A','A B','A$B','']) {
+  a.throws(()=>core.serializeEnv({[name]:'fixture-value'},[name],'desktop'),/Nom de variable environnement invalide/)
+ }
+ for(const name of ['GOOD_NAME','_PRIVATE','SystemRoot','custom.setting-0','1PREFIX'])a.match(core.serializeEnv({[name]:'fixture-value'},[name],'desktop'),new RegExp('^'+name+'=','m'))
+})
+test('bounded differential dotenv matrix preserves representable quote/backslash/dollar contexts',()=>{
+ const alphabet=['x','\\','$',"'",'"','`','#',' ']
+ let executed=0,rejected=0
+ for(let i=0;i<alphabet.length;i++)for(let j=0;j<alphabet.length;j++)for(let k=0;k<alphabet.length;k++) {
+  const value='prefix'+alphabet[i]+alphabet[j]+alphabet[k]+'suffix'
+  let contents
+  try{contents=core.serializeEnv({PHASE6_CONTEXT_FIXTURE:value},['PHASE6_CONTEXT_FIXTURE'],'desktop')}
+  catch(error){a.match(error.message,/non représentable sans ambiguïté/);a.ok((value.includes('"')||value.includes('\\'))&&value.includes("'")&&value.includes('`'));rejected++;continue}
+  const parsed=next.processEnv([{path:'synthetic-matrix.env',contents,env:{}}],undefined,undefined,true)[1]
+  a.equal(parsed.PHASE6_CONTEXT_FIXTURE,value);a.deepEqual(Object.keys(parsed),['PHASE6_CONTEXT_FIXTURE'])
+  a.equal(core.parseEnv(contents).PHASE6_CONTEXT_FIXTURE,value)
+  delete process.env.PHASE6_CONTEXT_FIXTURE;executed++
+ }
+ a.equal(executed+rejected,512);a.ok(executed>400)
+})

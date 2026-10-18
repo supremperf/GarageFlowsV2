@@ -21,3 +21,11 @@ Limite de menace : l’identité d’un descripteur n’immobilise pas les octet
 ## Diagnostic du précontrôle staging, sans changement de politique
 
 L’échec n’était visible en annotations que sous forme « exit1 », et les logs complets ne sont pas récupérables ici. Ajout d’annotations à codes fixes (MISSING_INPUT avec nom autorisé, INVALID_TARGET_URL, UNSAFE_TARGET, NON_PRODUCTION_APPROVAL_REQUIRED). Aucun contenu d’URL, email, mot de passe ou licence n’est publié. Les quatre inputs, HTTPS/non-production/sans credentials et l’approbation explicite restent obligatoires et inchangés ; les tests exécutent le vrai script extrait du workflow, positivement et négativement. Le diagnostic doit permettre de nommer le champ réellement bloquant, pas d’inventer une cible ou de masquer un test non exécuté.
+
+## Complément dotenv — compatibilité vérifiée, pas de changement d’algorithme aveugle
+
+Le remplacement naïf de tous les backslashes changerait les mots de passe/chemins littéraux : l’écrivain choisit d’abord double/single/backtick en fonction des caractères et les trois lecteurs réels ne traitent pas ces quotes pareil. Ajout d’une matrice déterministe de512combinaisons quotes/backslash/dollar/commentaire/espace, comparaison avec le vrai @next/env et parseEnv. Les combinaisons non représentables restent refusées, jamais altérées pour passer.
+
+Défense supplémentaire : les noms importés eux-mêmes sont validés avec **la grammaire existante du parseur dotenv** (`[\w.-]+`), pas une nouvelle règle qui casserait les noms personnalisés pointés/tiretés. Les noms contenant newline/CR/NUL/espaces/`=`/`#`/`$` sont refusés avant émission. Une première tentative trop restrictive et une attente de test sur les quotes ont été détectées par les tests existants/matrice puis corrigées avant commit. Les55tests concernés passent.
+
+Le SHA256 de config-credentials ne peut pas être remplacé globalement par bcrypt : il sert à reconnaître les empreintes de secrets déjà compromis **et** aux comparaisons/reçus de configuration. Ces reçus persistants constituent une revue distincte (oracle hors ligne possible sur des valeurs faibles, permissions/migration à préserver), pas une preuve que tout usage du hash est sûr. Aucun dismiss ni contournement de la détection de secrets compromis.
