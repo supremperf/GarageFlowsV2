@@ -84,3 +84,9 @@ Revalidation finale après le test portail : **4222tests /3370pass/3échecs TLS/
 Au job117738355401 du run39148916382 (SHA1494941), l’étape **npm run audit:strict** échoue. Les autres étapes de ce job avaient été franchies. Localement, les deux audits complets, npm du sandbox et npm11.16.0 épinglé, retournent0vulnérabilité/exit0. Le log CI complet reste inaccessible (exit1/zéro octet), et les annotations n’indiquent que l’exit1 : **ni nouvelle vulnérabilité ni panne réseau précise ne sont déduites** de ce seul élément.
 
 Ajout de diagnostics CI à valeurs contrôlées dans audit-ci : code de sortie, counts entiers s’ils existent, code d’erreur strict, verdict fail-closed. Aucun résumé/détail brut npm, URL ou token n’est exposé. Pas de retry automatique, d’exception de gravité ou de neutralisation du code de sortie. Un test protège ces limites. La prochaine exécution doit être lue ; ce check précédent demeure un échec documenté, pas un vert rétroactif.
+
+## Clôture du lot de reprise (pas clôture production)
+
+Dernière suite Node après diagnostics : **420/420**, test:audit **21/21**. Sur **7bc4c5b**, les jobs natifs/types/lint/build/budget, Gitleaks, audit complet et E2E publics sont **SUCCESS** ; la dernière recette Windows est encore queued au relevé, sans lui attribuer le PASS de6087458. [État exact du SHA](reprise/ci-7bc4c5b-observed.json). Le précédent échec audit1494941 est non reproduit et de cause non établie (log inaccessible) : le PASS ultérieur n’est pas une explication rétroactive. Les audits npm local/pinné retournent0, [local](reprise/audit-current.json)/[pinné](reprise/audit-pinned-current.json).
+
+Le rapport initial reste un historique du fichier5a10e96. Le candidat6087458 et les correctifs source de cette reprise sont poussés sur la même branche, PR11 toujours brouillon ; main n’a pas changé. **Aucun GO, aucune clé/certificat inventé ni configuration de production effectuée.**

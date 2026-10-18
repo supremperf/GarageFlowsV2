@@ -1,0 +1,44 @@
+{
+  "passed": 8,
+  "failed": 1,
+  "pending": 0,
+  "assertions": [
+    {
+      "name": "TEST F — un portail créé depuis le poste se résout côté cloud publie puis sert réellement le contenu",
+      "status": "passed"
+    },
+    {
+      "name": "TEST F — un portail créé depuis le poste se résout côté cloud republier CONSERVE le lien déjà distribué (GF-002)",
+      "status": "failed"
+    },
+    {
+      "name": "TEST F — un portail créé depuis le poste se résout côté cloud expiration 7 jours",
+      "status": "passed"
+    },
+    {
+      "name": "TEST F — un portail créé depuis le poste se résout côté cloud refuse une publication sans licence garage valide",
+      "status": "passed"
+    },
+    {
+      "name": "TEST G — jetons falsifiés ou croisés signature altérée → 403",
+      "status": "passed"
+    },
+    {
+      "name": "TEST G — jetons falsifiés ou croisés charge utile modifiée (jti d’un autre instantané) → 403",
+      "status": "passed"
+    },
+    {
+      "name": "TEST G — jetons falsifiés ou croisés instantané d’un AUTRE garage non servi (jti volé)",
+      "status": "passed"
+    },
+    {
+      "name": "TEST G — jetons falsifiés ou croisés instantané expiré → 403",
+      "status": "passed"
+    },
+    {
+      "name": "TEST G — jetons falsifiés ou croisés jeton absent / vide → 403",
+      "status": "passed"
+    }
+  ],
+  "tokensAndUrlsOmitted": true
+}

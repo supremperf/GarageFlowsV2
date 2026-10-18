@@ -1,0 +1,159 @@
+{
+  "missionComplete": false,
+  "productionGo": false,
+  "sourceHead": "5e33f90d8d9999a918d30f6a04abe2a151fac358",
+  "codeql": {
+    "before": {
+      "alerts": 19,
+      "high": 10,
+      "medium": 9
+    },
+    "afterIo": {
+      "alerts": 11,
+      "high": 2,
+      "medium": 9,
+      "commit": "432df609877c6eb04ba0cef7b93602f8fdc8ec07"
+    },
+    "afterPrivateWrite": {
+      "alerts": 10,
+      "high": 2,
+      "medium": 8,
+      "commit": "60874588440df6d2cf0bc7dd9344d897735ef21a"
+    },
+    "final": {
+      "alerts": 9,
+      "high": 2,
+      "medium": 7,
+      "commit": "5e33f90d8d9999a918d30f6a04abe2a151fac358"
+    },
+    "interpretation": "8 TOCTOU motifs removed; one network sink consolidated, not an extra vulnerability proved fixed; one XML test noop removed, not a product exploit. No suppressions/dismissals."
+  },
+  "local": {
+    "node": 420,
+    "failed": 0,
+    "releaseSafety": 102,
+    "privateFileTargets": 153,
+    "dotenvTargets": 55,
+    "xmlTargets": 29,
+    "typesExit": 0,
+    "lintExit": 0,
+    "consistencyExit": 0,
+    "npmAuditTotal": 0,
+    "global": {
+      "total": 4222,
+      "passed": 3370,
+      "failed": 3,
+      "pending": 849,
+      "failedFiles": 79
+    },
+    "docsBaselineGuards": 24,
+    "portal": {
+      "before": {
+        "passed": 8,
+        "failed": 1
+      },
+      "after": {
+        "passed": 9,
+        "failed": 0
+      },
+      "clockControlled": true,
+      "businessExpirationUnchanged": true
+    },
+    "auditDiagnosticTests": 21
+  },
+  "groupedCommand": {
+    "toolTimeoutSeconds": 90,
+    "nodeCompleted": true,
+    "typesCompletedBeforeLint": true,
+    "lintLaterReplayedSeparatelyExit": 0
+  },
+  "windows": {
+    "verifiedCommit": "60874588440df6d2cf0bc7dd9344d897735ef21a",
+    "run": 39147392047,
+    "job": 117734701194,
+    "result": "success"
+  },
+  "staging": {
+    "code": "MISSING_INPUT:BASE_URL",
+    "requiredSecret": "E2E_STAGING_URL",
+    "browserTestsNotReached": true,
+    "meaning": "BASE_URL missing/unavailable in actual job; cannot distinguish absent GitHub secret vs scope/context access with REST403"
+  },
+  "defaultBranch": {
+    "modified": false,
+    "lastReceivePackVulnerabilities": 151,
+    "dependabotRest": "HTTP403",
+    "zeroVerified": false
+  },
+  "productionActions": {
+    "merges": 0,
+    "deployments": 0,
+    "secretRotations": 0
+  },
+  "finalLocalSourceCommit": "149494173cf844d9eae0f6d40eb93375a702cd21",
+  "intermediateGlobalAdditionalFailure": "Portal JWT URL equality across seconds, explicitly reproduced and test contract corrected with actual signature/identity/expiration assertions",
+  "ciNewestObserved": {
+    "conclusion": "",
+    "headSha": "7bc4c5b5d38398d91b8641c2fc6e218ec32c2ae3",
+    "jobs": [
+      {
+        "conclusion": "success",
+        "databaseId": 117739533405,
+        "name": "Secret scan (Gitleaks)",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 117739533511,
+        "name": "Native base (TypeScript, standard build, fixed JS budget)",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 117739533529,
+        "name": "E2E (Playwright — responsive, auto-démarrage)",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 117739533609,
+        "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "databaseId": 117739533626,
+        "name": "Full dependency tree — zero vulnerabilities",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "databaseId": 117739534510,
+        "name": "Final release gate (full)",
+        "status": "completed"
+      },
+      {
+        "conclusion": "",
+        "databaseId": 117740614344,
+        "name": "Windows candidate packaging and inspection (not publication)",
+        "status": "queued"
+      },
+      {
+        "conclusion": "",
+        "databaseId": 117740614365,
+        "name": "Authenticated browser validation (approved staging only)",
+        "status": "queued"
+      }
+    ],
+    "status": "queued"
+  },
+  "ciAuditAnomaly": {
+    "commit": "149494173cf844d9eae0f6d40eb93375a702cd21",
+    "run": 39148916382,
+    "job": 117738355401,
+    "failedStep": "npm run audit:strict",
+    "cause": "NOT_ESTABLISHED: logs unavailable; local audits0; later 7bc4c5b job117739533626 succeeds",
+    "neverRetroactivelyCountedPass": true
+  },
+  "status": "NO-GO: 9 CodeQL results, authenticated staging input missing, latest Windows recipe queued at observation, main151/REST403"
+}

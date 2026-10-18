@@ -1,6 +1,8 @@
 <!-- doc-numbers: journal -->
 # GarageFlows-Setup.exe — rapport de fabrication et de recette
 
+**Reprise ultérieure : [correctifs sécurité, résultats CodeQL et nouveau candidat Windows6087458](02-REPRISE-SECURITE.md).** Les identités ci-dessous restent celles du build5a10e96, pas du nouveau fichier.
+
 ## Résultat technique : Setup réel fabriqué et recette Windows réussie
 
 **Candidat de distribution, pas une autorisation de publication production.** Le job Windows du commit **5a10e96396ba2a78e447a65959cf5491fa5d8a67** est **SUCCESS**, avec une véritable installation/lancement/recette serveur/réinstallation/désinstallation. Le verdict global du dépôt reste NO-GO (E2E authentifié et résultats CodeQL bloquants). Aucun merge, déploiement Vercel ou publication de release/update production.
