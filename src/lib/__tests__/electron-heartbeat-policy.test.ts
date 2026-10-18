@@ -112,6 +112,25 @@ describe('heartbeat licence — aucune réactivation automatique', () => {
     })
   })
 
+  describe('réactivation positive : autorisation et statut HTTP réel', () => {
+    for (const httpStatus of [301, 302, 400, 401, 403, 426, 429, 500, 502, 503, 504, null, '200']) {
+      it(`HTTP ${httpStatus} ne vaut pas autorisation malgré un corps active`, () => {
+        expect(decide({ ...ACTIVE, httpStatus }, 'remote', true).action).toBe('none')
+      })
+    }
+    it('active sans allowed explicite ne réactive pas', () => {
+      expect(decide({ status: 'active', httpStatus: 200 }, 'remote', true).action).toBe('none')
+    })
+    it('HTTP200 distant + accord explicite réactive, mais le repli local reste sans autorité', () => {
+      expect(decide({ ...ACTIVE, httpStatus: 200 }, 'remote', true).action).toBe('unblock')
+      expect(decide({ ...ACTIVE, httpStatus: 200 }, 'local', true).action).toBe('hold')
+    })
+    it('la politique de refus explicite et de version minimale est inchangée', () => {
+      expect(decide({ allowed: false, status: 'upgrade_required', httpStatus: 426 }, 'remote', false).action).toBe('block')
+      expect(decide({ allowed: false, status: 'revoked', httpStatus: 200 }, 'local', false).action).toBe('block')
+    })
+  })
+
   describe('les réponses indéterminées ne lèvent rien', () => {
     it('statut « unknown » (base non enregistrée / fail-open) pendant un blocage', () => {
       expect(decide({ allowed: true, status: 'unknown' }, 'remote', true).action).toBe('none')

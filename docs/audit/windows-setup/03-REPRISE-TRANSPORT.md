@@ -28,3 +28,11 @@ Exécution du vrai ancien httpGetJson extrait de8b760e5, sur un serveur loopback
 Dix tests du vrai nouveau module passent : encodageUTF8 multichunk, User-Agent, requête POST/statut réel, limite annoncée et mesurée, réponse lente, redirections relatives/budget/deadline, interruption/JSONmalformé, protocoles/downgrade, limites/options et surcharge en nombre de chunks.67tests Vitest de câblage/startup/licence passent, types/lint/cohérence0. Le garde de redirection texte a été remplacé par l’appel de la vraie politique partagée plus l’assertion de branchement, pas supprimé.
 
 Les erreurs gardent le contratnull et les mécanismes métier d’autorité/grâce/refus existants ; aucune nouvelle tentative automatique et aucun relâchement TLS. Le correctif ne prétend pas résoudre toutes les alertes réseau/fichier : les destinations, permissions et minimisations restent des dimensions distinctes.
+
+## Réactivation : le statut HTTP ne pouvait pas être ignoré
+
+Le test du vrai POST réseau + vraie heartbeatDecision a mis en évidence un défaut distinct : **HTTP503 + allowed:true/status:active pouvait lever un blocage distant**. Avant patch :10/11tests transport passent, ce nouveau cas échoue. Ce n’est pas attribué à un incident de production sans logs corrélés.
+
+Correction minimale de la seule branche positive : accord explicite allowed:true obligatoire ; quand le transport fournit httpStatus (toujours dans le vrai chemin), seul200 peut réactiver. Les anciens appelants directs sans champ HTTP restent compatibles s’ils fournissent l’accord explicite. Repli local jamais autorité, refus/révocation/expiration/minVersion toujours honorés, aucune rotation ni nouvelle émission de licence.
+
+Après :11/11transport,88/88heartbeat/infra/câblage ; matrice de13statuts invalides (3xx,4xx,5xx,null/typeerroné), réponse active sans accord, succès200 et refus426 inchangés. Types/lint0. Le résultat metadata HTTP réel prime toujours sur une propriété httpStatus reçue dans le JSON.

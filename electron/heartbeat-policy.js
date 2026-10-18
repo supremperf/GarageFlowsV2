@@ -56,7 +56,12 @@ function heartbeatDecision({ result, authority, blocked }) {
   // distante peut lever un blocage.
   if (result.status === 'active') {
     if (!blocked) return { action: 'none' }
-    if (authority === 'remote') return { action: 'unblock' }
+    if (authority === 'remote') {
+      // An error/redirect body is not an authorization, even if it looks active.
+      // Legacy direct callers omit httpStatus; the real transport always supplies it.
+      if (result.allowed !== true || (result.httpStatus !== undefined && result.httpStatus !== 200)) return { action: 'none' }
+      return { action: 'unblock' }
+    }
     return { action: 'hold' }
   }
 

@@ -99,3 +99,11 @@ test('chunk overhead is bounded as well as bytes (deterministic real-module tran
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../electron/http-json.js'), 'utf8'), { module, require: () => fake, Buffer, URL, setTimeout, clearTimeout })
   assert.equal(await module.exports.requestJson('http://fixture.invalid', { maxBytes: 100, maxChunks: 2 }), null)
 })
+
+test('real HTTP503 with an active-looking body cannot reactivate a blocked license', async t => {
+  const { heartbeatDecision } = require('../electron/heartbeat-policy')
+  const url = await endpoint(t, (_req, res) => { res.writeHead(503); res.end('{"allowed":true,"status":"active"}') })
+  const result = await requestJson(url, { method: 'POST', body: { fixture: true } })
+  assert.equal(result.httpStatus, 503)
+  assert.notEqual(heartbeatDecision({ result, authority: 'remote', blocked: true }).action, 'unblock')
+})
