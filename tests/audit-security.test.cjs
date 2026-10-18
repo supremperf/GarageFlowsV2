@@ -70,3 +70,17 @@ test('Sharp loads its actual platform binary and encodes/decodes PNG assets', as
 test('arrays of patterns cannot evade the aggregate output budget', () => {
   assert.throws(() => braces(Array(11).fill('{a,b}'.repeat(10)), { expand: true }), /aggregate output/)
 })
+
+test('failed audit diagnostics expose only numeric counts and strict error codes, never registry error bodies', () => {
+  const { failureSummary } = require('../scripts/audit-ci.js')
+  const report = { error: { code: 'EAI_AGAIN', summary: 'SYNTHETIC_PRIVATE_REGISTRY_URL', detail: 'SYNTHETIC_PRIVATE_TOKEN' } }
+  const summary = failureSummary({ status: 1 }, report)
+  assert.equal(summary.npmExitCode, 1)
+  assert.equal(summary.errorCode, 'EAI_AGAIN')
+  assert.equal(summary.counts, null)
+  assert.ok(!JSON.stringify(summary).includes('SYNTHETIC_PRIVATE'))
+  assert.equal(failureSummary({ status: 1 }, { error: { code: 'https://private.invalid/?token=fixture' } }).errorCode, null)
+  const zero = { low: 0, moderate: 0, high: 0, critical: 0, total: 0 }
+  assert.deepEqual(failureSummary({ status: 1 }, { metadata: { vulnerabilities: zero }, vulnerabilities: {} }).counts, zero)
+  assert.equal(assess(report).ok, false)
+})
