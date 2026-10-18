@@ -128,7 +128,9 @@ async function handlePOST(req: Request) {
     //     avait reçu, sans que personne n'ait rien demandé.
     //
     // On REMPLOIE donc l'instantané vivant de l'intervention au lieu d'en créer
-    // un autre : son identifiant, donc son URL, ne change plus. L'intention
+    // un autre : son identifiant ne change plus ; les anciens jetons restent résolubles
+    // jusqu’à leur propre expiration. Le JWT renvoyé renouvelle son exp et
+    // peut donc produire une URL différente. L'intention
     // d'origine reste entièrement satisfaite — le contenu est REMPLACÉ, donc ce
     // qui est retiré disparaît aussi de l'ancien lien. Ce qui disparaît, c'est
     // seulement la révocation ACCIDENTELLE d'une URL déjà distribuée.

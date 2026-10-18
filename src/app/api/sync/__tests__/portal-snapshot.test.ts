@@ -10,6 +10,7 @@
  * exercées, pas une imitation.
  */
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
+import { jwtVerify } from 'jose'
 
 process.env.GF_PORTAL_SECRET = 'secret-de-test-portail-suffisamment-long-1234567890'
 process.env.NEXTAUTH_SECRET  = 'secret-de-test-portail-suffisamment-long-1234567890'
@@ -188,18 +189,36 @@ describe('TEST F — un portail créé depuis le poste se résout côté cloud',
   })
 
   it('republier CONSERVE le lien déjà distribué (GF-002)', async () => {
-    // Formulation d'origine : « republier reste exploitable (nouveau jeton) »,
-    // avec la même attente 200/200 — mais elle ne tenait que parce que le
-    // simulacre ne supprimait rien. En production le premier lien mourait.
-    const a = await (await SYNC(publish())).json()
-    const b = await (await SYNC(publish())).json()
+    // The JWT expiration is renewed on publication. Cross a second boundary
+    // deterministically: resource identity and old-link validity must survive,
+    // not byte-for-byte equality of tokens with different exp claims.
+    const now = Math.floor(Date.now() / 1000) * 1000
+    vi.useFakeTimers({ toFake: ['Date'] })
+    try {
+      vi.setSystemTime(now)
+      const a = await (await SYNC(publish())).json()
+      vi.setSystemTime(now + 2000)
+      const b = await (await SYNC(publish())).json()
 
-    expect((await read(a.token)).status, 'le lien déjà remis au client').toBe(200)
-    expect((await read(b.token)).status).toBe(200)
-    // Le lien ne CHANGE plus d'une publication à l'autre : c'est ce qui rend le
-    // premier encore valide.
-    expect(b.url).toBe(a.url)
-    expect(cap.snapshots.size, 'une seule publication vivante par intervention').toBe(1)
+      expect((await read(a.token)).status, 'le lien déjà remis au client').toBe(200)
+      expect((await read(b.token)).status).toBe(200)
+      const key = new TextEncoder().encode(process.env.GF_PORTAL_SECRET!)
+      const first = (await jwtVerify(a.token, key, { algorithms: ['HS256'] })).payload
+      const second = (await jwtVerify(b.token, key, { algorithms: ['HS256'] })).payload
+      expect(second.jti).toBe(first.jti)
+      expect(second.jti).toBeTruthy()
+      for (const claims of [first, second]) {
+        expect(claims).toMatchObject({ typ: 'portal', jobId: JOB_ID, garageId: GARAGE_ID })
+      }
+      expect(Number(first.exp) - now / 1000).toBe(7 * 86_400)
+      expect(Number(second.exp) - Number(first.exp)).toBe(2)
+      expect(a.url).toBe(`https://app.garageflows.fr/clients/${a.token}`)
+      expect(b.url).toBe(`https://app.garageflows.fr/clients/${b.token}`)
+      expect(b.url).not.toBe(a.url)
+      expect(cap.snapshots.size, 'une seule publication vivante par intervention').toBe(1)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('expiration 7 jours', async () => {
