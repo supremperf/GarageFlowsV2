@@ -75,4 +75,6 @@ Les clés privées licence/update restent chez l’éditeur, jamais dans l’EXE
 
 ## Statut et limites
 
+**Candidat réellement fabriqué :** [Setup Windows 1.1.0 du commit 5a10e96](https://github.com/supremperf/GarageFlowsV2/actions/runs/39144372534/artifacts/12143410620). Recette installation/réinstallation/désinstallation réussie, EXE de 231 057 824 octets ; détails et SHA-256 dans le rapport ci-dessous. Cet artefact CI est temporaire (30 jours), pas une release production. Le workflow global reste rouge sur les E2E authentifiés ; aucun GO production implicite.
+
 Le [rapport de cette mission](audit/windows-setup/01-RAPPORT.md) contient les vrais SHA/builds, taille, hash, tests et limites. Les [blocages sécurité préexistants](audit/security-151/02-VERDICT-ET-INTEGRATION.md) ne disparaissent pas parce qu’un Setup est fabriqué. Ne pas confondre **candidat de packaging validé** et autorisation de distribution production, absence de toute régression métier ou correspondance prouvée de la clé privée de l’autorité réelle.
