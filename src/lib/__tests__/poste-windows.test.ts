@@ -194,9 +194,13 @@ describe('un double-clic pendant le démarrage fait quelque chose', () => {
 
 describe('le cycle de mise à jour', () => {
   it('une redirection ne peut pas faire passer la métadonnée en clair', () => {
-    const h = extrait(MAIN, 'function httpGetJson', 40)
-    expect(h, 'l’en-tête Location était suivi tel quel').toMatch(/https:/)
-    expect(h).toMatch(/new URL\(res\.headers\.location, url\)/)
+    const h = extrait(MAIN, 'function httpGetJson', 8)
+    expect(MAIN).toMatch(/require\(['"]\.\/http-json['"]\)/)
+    expect(h).toMatch(/requestJson/)
+    // Exercise the real shared policy, not a particular inline spelling.
+    const { redirectTarget } = require(racine('electron/http-json.js'))
+    expect(redirectTarget('/next', 'https://fixture.invalid/start')).toBe('https://fixture.invalid/next')
+    expect(redirectTarget('http://fixture.invalid/next', 'https://fixture.invalid/start')).toBeNull()
   })
 
   it('le nom de fichier vient de l’assainisseur, des DEUX côtés', () => {

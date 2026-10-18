@@ -249,47 +249,11 @@ const { heartbeatDecision } = require('./heartbeat-policy')
 // ── App-update helpers ────────────────────────────────────────────────────────
 
 // GET JSON avec timeout + suivi de redirections (jamais de throw → resolve(null)).
+const { requestJson } = require('./http-json')
 function httpGetJson(url, timeoutMs = 6000, redirects = 0) {
-  return new Promise(resolve => {
-    try {
-      if (redirects > 5) return resolve(null)
-      const mod = url.startsWith('https') ? require('https') : http
-      const req = mod.get(url, { timeout: timeoutMs, headers: { 'User-Agent': 'GarageFlow/' + app.getVersion() } }, res => {
-        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-          res.resume()
-          // ── Une redirection ne doit pas AFFAIBLIR le transport ────────────────
-          // L'en-tête `Location` était suivi tel quel. Deux conséquences :
-          //
-          //  · une redirection RELATIVE (« /api/update/latest-v2 ») n'était pas
-          //    résolue contre l'URL d'origine ; la chaîne partait au module
-          //    `http`, qui refusait, et la vérification de mise à jour échouait
-          //    en silence ;
-          //  · une redirection de `https:` vers `http:` était acceptée. La
-          //    métadonnée — dont l'URL de téléchargement et l'empreinte —
-          //    provenait alors d'une source en clair, modifiable en route. La
-          //    signature du manifeste protège encore les OCTETS installés quand
-          //    elle est configurée, mais elle ne protège rien lorsqu'elle ne
-          //    l'est pas, et un manifeste retiré par un tiers suffit à priver
-          //    durablement le poste de mises à jour.
-          let suivante = null
-          try { suivante = new URL(res.headers.location, url) } catch (_) {}
-          const protocoleAdmis = suivante && (suivante.protocol === 'https:' || suivante.protocol === 'http:')
-          const retrograde = url.startsWith('https') && suivante?.protocol !== 'https:'
-          if (!protocoleAdmis || retrograde) {
-            log('[update] redirection refusée:', String(res.headers.location).slice(0, 120))
-            return resolve(null)
-          }
-          resolve(httpGetJson(suivante.toString(), timeoutMs, redirects + 1))
-          return
-        }
-        let raw = ''
-        res.on('data', c => (raw += c))
-        res.on('end', () => { try { resolve(JSON.parse(raw)) } catch { resolve(null) } })
-      })
-      req.on('error', () => resolve(null))
-      req.on('timeout', () => { req.destroy(); resolve(null) })
-    } catch { resolve(null) }
-  })
+  if (redirects > 5) return Promise.resolve(null)
+  return requestJson(url, { timeoutMs, maxRedirects: 5 - redirects,
+    headers: { 'User-Agent': 'GarageFlow/' + app.getVersion() } })
 }
 
 // Réduit une chaîne à un NOM de fichier, jamais à un chemin (update-verify.js).
@@ -1638,32 +1602,7 @@ const LICENSE_CHECK_BLOCKED_MS  = 20 * 1_000       // faster cadence while block
 
 // Make an HTTP/HTTPS POST request, returns parsed JSON or null
 function httpPost(url, body) {
-  return new Promise((resolve) => {
-    try {
-      const bodyStr = JSON.stringify(body)
-      const parsed  = new URL(url)
-      const mod     = parsed.protocol === 'https:' ? require('https') : http
-      const req = mod.request(
-        {
-          hostname: parsed.hostname,
-          port:     parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
-          path:     parsed.pathname + parsed.search,
-          method:   'POST',
-          headers:  { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(bodyStr) },
-          timeout:  10_000,
-        },
-        res => {
-          let data = ''
-          res.on('data', chunk => { data += chunk })
-          res.on('end',  ()    => { try { resolve({ ...JSON.parse(data), httpStatus: res.statusCode }) } catch { resolve(null) } })
-        }
-      )
-      req.on('error',   () => resolve(null))
-      req.on('timeout', () => { req.destroy(); resolve(null) })
-      req.write(bodyStr)
-      req.end()
-    } catch { resolve(null) }
-  })
+  return requestJson(url, { method: 'POST', body, timeoutMs: 10000 })
 }
 
 // NB : httpGetJson est défini plus haut (avec timeout, User-Agent et suivi de
