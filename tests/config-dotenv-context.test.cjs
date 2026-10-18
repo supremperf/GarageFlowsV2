@@ -21,7 +21,17 @@ test('actual extracted Electron dotenv loader consumes config output without alt
  const source=fs.readFileSync('electron/main.js','utf8'),ast=ts.createSourceFile('main.js',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS)
  const loader=ast.statements.find(n=>ts.isExpressionStatement(n)&&n.getText(ast).includes('function loadDotEnv()'));a.ok(loader)
  const processFixture={env:{PHASE6_EXISTING:'original-process-value'}}
- vm.runInNewContext(loader.getText(ast),{fs,path,__dirname:path.join(dir,'electron'),process:processFixture,decodeDotenvValue})
+ vm.runInNewContext(loader.getText(ast),{fs,path,__dirname:path.join(dir,'electron'),process:processFixture,decodeDotenvValue,app:{isPackaged:false}})
  for(let i=0;i<values.length;i++)a.equal(processFixture.env['PHASE6_DESKTOP_FIXTURE_'+i],values[i])
  a.equal(processFixture.env.PHASE6_EXISTING,'original-process-value');a.equal(fs.readFileSync(file,'utf8'),contents)
+})
+
+test('packaged Electron never reads or creates a project dotenv file',()=>{
+ const fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm')
+ const source=fs.readFileSync('electron/main.js','utf8'),ast=ts.createSourceFile('main.js',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS)
+ const loader=ast.statements.find(n=>ts.isExpressionStatement(n)&&n.getText(ast).includes('function loadDotEnv()'))
+ const forbidden=new Proxy({}, {get(){throw Error('Packaged mode touched the project filesystem')}})
+ const processFixture={env:{PHASE6_EXISTING:'preserved'}}
+ vm.runInNewContext(loader.getText(ast),{fs:forbidden,path:forbidden,app:{isPackaged:true},process:processFixture})
+ a.deepEqual(processFixture.env,{PHASE6_EXISTING:'preserved'})
 })
