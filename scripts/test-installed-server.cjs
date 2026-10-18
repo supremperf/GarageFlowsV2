@@ -31,9 +31,17 @@ async function main() {
     NEXTAUTH_URL: `http://localhost:${port}`, DATABASE_URL: 'file:' + dbPath.replace(/\\/g, '/'),
     NEXTAUTH_SECRET: crypto.randomBytes(32).toString('hex'), GF_DB_MAC_SECRET: crypto.randomBytes(32).toString('hex'),
     GF_INTERNAL_EXPORT_KEY: proofKey, GF_PHOTOS_DIR: photos }
-  const child = spawn(process.execPath, ['--require', guard, path.join(standalone, 'server.js')], { cwd: standalone, env, stdio: 'ignore', windowsHide: true })
+  const child = spawn(process.execPath, ['--require', guard, path.join(standalone, 'server.js')], { cwd: standalone, env, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true })
   const report = { success: false, stage: 'startup', runtime: 'CI Node against installed standalone (not licensed Electron UI)', modulesRestrictedToInstalledPayload: true }
   let spawnFailed = false
+  const errorCodes = new Set(), missingModules = new Set()
+  child.stderr.on('data', chunk => {
+    const text = chunk.toString()
+    for (const code of ['MODULE_NOT_FOUND', 'EADDRINUSE', 'PrismaClientInitializationError', 'PrismaClientKnownRequestError', 'Module outside installed payload']) if (text.includes(code)) errorCodes.add(code)
+    for (const match of text.matchAll(/Cannot find module ['"]([^'"]+)['"]/g)) {
+      if (/^(@[a-z0-9._-]+\/)?[a-z0-9._-]+(\/[a-z0-9./_-]+)?$/i.test(match[1])) missingModules.add(match[1])
+    }
+  })
   child.on('error', () => { spawnFailed = true })
   const base = `http://127.0.0.1:${port}`, headers = { 'x-internal-key': proofKey, 'Content-Type': 'application/json' }
   try {
@@ -57,6 +65,17 @@ async function main() {
     const migrated = await fetch(base + '/api/internal/migrate', { method: 'POST', headers, body: '{}' })
     if (migrated.status !== 200 || !(await migrated.json()).ok) throw new Error('Installed SQLite migration API failed')
     report.stage = 'complete'; report.success = true
+  } catch (error) {
+    // Location/status-only diagnostics: never publish raw response or stderr.
+    report.errorCodes = [...errorCodes]; report.missingModules = [...missingModules]
+    report.serverExitCode = child.exitCode; report.spawnFailed = spawnFailed
+    try {
+      const challenge = crypto.randomBytes(16).toString('hex')
+      const probe = await fetch(base + '/api/health', { headers: { 'x-gf-startup-challenge': challenge }, signal: AbortSignal.timeout(2000) })
+      const value = await probe.json()
+      report.health = { status: probe.status, identityMatches: value.app === 'garageflows', ok: value.ok === true, connected: value.db === 'connected', proofMatches: value.startupProof === crypto.createHmac('sha256', proofKey).update('GF_DESKTOP_STARTUP_V1|' + challenge).digest('hex') }
+    } catch { report.health = 'unreachable-or-invalid' }
+    throw error
   } finally {
     child.kill()
     await new Promise(resolve => { if (child.exitCode !== null) return resolve(); child.once('exit', resolve); setTimeout(resolve, 10000).unref() })
