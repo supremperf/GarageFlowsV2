@@ -99,7 +99,7 @@ export async function cloudPost(
     })
     // All current sync handlers explicitly acknowledge success. A captive HTML
     // page, truncated body, scalar or empty envelope must never mark local work synced.
-    if (res.ok && data.ok !== false && (!Object.hasOwn(data, 'ok') || data.ok !== true)) {
+    if ((!res.ok && data.ok === true) || (res.ok && data.ok !== false && (!Object.hasOwn(data, 'ok') || data.ok !== true))) {
       throw new JsonResponseError('INVALID_RESPONSE')
     }
     return {

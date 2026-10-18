@@ -23,7 +23,7 @@ it('keeps explicit success, real status and refusal data without a redirect', as
 })
 it('HTTP503 cannot succeed even with a forged positive JSON acknowledgement', async () => {
   vi.stubGlobal('fetch', vi.fn(async () => new Response('{"ok":true}', { status: 503 })))
-  expect(await cloudPost('/fixture', {})).toMatchObject({ ok: false, status: 503 })
+  expect(await cloudPost('/fixture', {})).toMatchObject({ ok: false, status: 503, code: 'INVALID_RESPONSE', data: { ok: false } })
 })
 it('keeps the full existing maximum 8 MiB photo after base64 expansion', async () => {
   const { MECHANIC_PHOTO_MAX_BYTES } = await import('@/lib/mechanic-photo')
