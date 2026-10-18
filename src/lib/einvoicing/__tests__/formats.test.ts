@@ -25,7 +25,7 @@ import {
 
 const garage = {
   name: 'Garage Demo',
-  siret: '123 456 782 00010'.replace(/ /g, ' '), // espaces volontaires : normalisés par le builder
+  siret: '123 456 782 00010', // espaces volontaires : normalisés par le builder
   vatNumber: 'FR11 123 456 782',
   address: '12 rue de la Mécanique, 75001 Paris',
 }

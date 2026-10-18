@@ -35,3 +35,7 @@ Le SHA256 de config-credentials ne peut pas être remplacé globalement par bcry
 `writePrivate` changeait les permissions par `chmod(path)` après écriture/renommage. Un chemin remplacé entre ces opérations pouvait faire porter le chmod sur un autre objet ; un échec de permissions arrivait aussi après remplacement de l’ancien fichier. Nouveau chemin : création exclusive0600, écriture **et fchmod du même descripteur**, fermeture puis renommage atomique ; nettoyage uniquement d’un temporaire effectivement réservé par cette invocation. Les liens déjà présents restent refusés, les parents doivent être contrôlés.
 
 Trois nouveaux tests du vrai corps de fonction ont échoué avant patch (3/3), puis passent après : identité du descripteur dans les deux modes et maintien du fichier antérieur sur échec de permissions. Avec les tests configuration/gestionnaire/reconstruction existants :153/153. Les valeurs/chiffrements/clés ne sont pas modifiés, aucun script de configuration réel ni opération fournisseur n’a été exécuté.
+
+## Nettoyage du résultat CodeQL de fixture XML
+
+Le SIRET de fixture faisait `replace(espace, espace)`, sans effet et signalé par js/identity-replacement. Suppression de cette opération redondante seulement ; la chaîne avec espaces reste strictement identique pour continuer à tester la normalisation par le builder. Ce n’est pas présenté comme une correction d’une vulnérabilité exploitable dans le produit.
