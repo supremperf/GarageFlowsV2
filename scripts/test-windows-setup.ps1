@@ -19,6 +19,7 @@ New-Item -ItemType Directory -Force $ReportDir | Out-Null
 $Result = [ordered]@{ success = $false; stage = 'install'; installExecuted = $false; activationWindowOpened = $false; restrictedPathLaunch = $false; sqliteSentinelWritten = $false; installedServerComponentsPassed = $false; reinstallPreservedData = $false; uninstallPreservedData = $false; licensedBusinessWorkflowTested = $false; cleanOSWithoutBuildToolsTested = $false }
 function Install-Setup {
   $p = Start-Process -FilePath $Setup -ArgumentList @('/S', "/D=$InstallDir") -PassThru
+  $null = $p.Handle # Cache the OS handle before the process exits (ExitCode stays observable).
   if (-not $p.WaitForExit(120000)) { throw 'Installer timeout' }
   if ($p.ExitCode -ne 0 -or -not (Test-Path $Exe)) { throw 'Installer failed' }
 }
@@ -49,6 +50,7 @@ function Open-And-CloseInstalled {
   if ($remaining.Count -ne 0) { throw 'Application child process remained after shutdown' }
 }
 try {
+  $Result['authenticodeStatus'] = [string](Get-AuthenticodeSignature $Setup).Status
   Install-Setup
   $Result.installExecuted = $true
   $Result.stage = 'first-launch'

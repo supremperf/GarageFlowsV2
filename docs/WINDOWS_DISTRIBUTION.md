@@ -26,7 +26,7 @@ npm run dist
 2. Build Next et génération des clients Prisma, postbuild standalone/statics/public/schema/template ; Vercel ignore toujours ces opérations desktop.
 3. Contrôle standalone puis electron-builder : Windows x64, `nsis` offline (pas nsis-web), ASAR et ressources natives, appId `com.garageflow.app`, `artifactName: GarageFlows-Setup.exe`, perMachine/allowElevation/deleteAppDataOnUninstall=false.
 4. Contrôles secrets/fuses/intégrité existants conservés.
-5. Vérification PE du Setup et de l’EXE x64, extraction effective du NSIS puis de son unique `app-64.7z`, comparaison **de chaque fichier et SHA256** de la charge avec win-unpacked. Refus des outils keygen/états éditeur/env dans l’arbre et l’ASAR.
+5. Vérification PE du Setup et de l’EXE x64, extraction effective de la charge7z embarquée (directement si le lecteur reconnaît le flux SFX, sinon via l’archive NSIS identifiée par sa signature), comparaison **de chaque fichier et SHA256** de la charge avec win-unpacked. Refus des outils keygen/états éditeur/env dans l’arbre et l’ASAR.
 6. Copie atomique de l’EXE vérifié vers `release/GarageFlows-Setup.exe`. **release ne contient que ce fichier.** Les fichiers étrangers sont refusés et préservés, pas supprimés automatiquement.
 
 Sorties :

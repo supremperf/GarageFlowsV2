@@ -61,10 +61,21 @@ async function inspectNsis(root, installer) {
   try {
     const outer = path.join(temp, 'outer'), payload = path.join(temp, 'payload')
     extract(installer, outer)
-    const archives = regularFiles(outer).filter(f => /(^|\/)app-64\.7z$/i.test(f))
-    if (archives.length !== 1) throw new Error('A single embedded offline x64 payload is required (not nsis-web)')
+    // Some 7za toolsets detect the embedded 7z SFX stream directly rather
+    // than exposing the surrounding NSIS plugin files. Still compare EVERY
+    // extracted application file; a mere MZ/file-count check is not sufficient.
+    if (fs.existsSync(path.join(outer, 'GarageFlows.exe')) && fs.existsSync(path.join(outer, 'resources', 'app.asar'))) {
+      return { payloadFiles: await comparePayload(unpacked, outer), payloadVerified: true, offlinePayloadEmbedded: true, extractionMode: 'embedded-7z-sfx' }
+    }
+    // NSIS variable paths need not retain their original archive filename.
+    const archives = regularFiles(outer).filter(f => {
+      const fd = fs.openSync(path.join(outer, f), 'r'), magic = Buffer.alloc(6)
+      try { return fs.readSync(fd, magic, 0, 6, 0) === 6 && magic.toString('hex') === '377abcaf271c' }
+      finally { fs.closeSync(fd) }
+    })
+    if (archives.length !== 1) throw new Error('Expected exactly one embedded offline payload; extracted entries: ' + JSON.stringify(regularFiles(outer).slice(0, 24)))
     extract(path.join(outer, archives[0]), payload)
-    return { payloadFiles: await comparePayload(unpacked, payload), payloadVerified: true, offlinePayloadEmbedded: true }
+    return { payloadFiles: await comparePayload(unpacked, payload), payloadVerified: true, offlinePayloadEmbedded: true, extractionMode: 'nsis-archive' }
   } finally { fs.rmSync(temp, { recursive: true, force: true }) }
 }
 async function publish(root, verification) {

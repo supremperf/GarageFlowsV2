@@ -22,12 +22,13 @@
  *
  * Sortie : 0 = livrable, 1 = REFUSÉ.
  */
-import { readdirSync, statSync, readFileSync, existsSync, openSync, fstatSync, closeSync } from 'fs'
+import { readdirSync, statSync, readFileSync, existsSync, openSync, fstatSync, closeSync, readSync } from 'fs'
 import { spawnSync } from 'child_process'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { createRequire } from 'node:module'
 const require_ = createRequire(import.meta.url)
+const { containsPrivateKeyMaterial } = require_('./lib/private-key-material.cjs')
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -69,19 +70,26 @@ function inspect(file, rel) {
   }
   const ext = path.extname(base).toLowerCase()
   if (!TEXTLIKE.has(ext)) return
-  let text
+  let fd
   try {
-    const fd = openSync(file, 'r')
-    try {
-      if (fstatSync(fd).size > 220 * 1024 * 1024) return
-      text = readFileSync(fd).toString('latin1')
-    } finally { closeSync(fd) }
-  } catch { return }
-  scanned++
-  if (PRIVATE_BLOCK.test(text)) violations.push(`CORPS DE CLÉ PRIVÉE INLINÉ : ${rel}`)
-  for (const s of secrets) {
-    if (text.includes(s.value)) violations.push(`VALEUR DE SECRET (${s.name}) : ${rel}`)
-  }
+    fd = openSync(file, 'r')
+    if (!fstatSync(fd).isFile()) throw new Error('Non-regular artifact file')
+    const needles = secrets.flatMap(s => [s.value, Buffer.from(s.value, 'utf8').toString('latin1')].map(value => ({ name: s.name, value })))
+    const overlap = Math.max(65536, ...needles.map(s => s.value.length + 2048))
+    if (overlap > 8 * 1024 * 1024) throw new Error('Secret value too large for bounded inspection')
+    const buffer = Buffer.alloc(1024 * 1024)
+    let tail = '', length
+    while ((length = readSync(fd, buffer, 0, buffer.length, null)) > 0) {
+      const text = tail + buffer.subarray(0, length).toString('latin1')
+      // Keep the old rule as well: this strengthens, never narrows, detection.
+      if (PRIVATE_BLOCK.test(text) || containsPrivateKeyMaterial(text)) violations.push(`CORPS DE CLÉ PRIVÉE INLINÉ : ${rel}`)
+      for (const s of needles) if (text.includes(s.value)) violations.push(`VALEUR DE SECRET (${s.name}) : ${rel}`)
+      tail = text.slice(-overlap)
+    }
+    scanned++
+  } catch {
+    violations.push(`FICHIER NON INSPECTÉ : ${rel}`)
+  } finally { if (fd !== undefined) closeSync(fd) }
 }
 
 function walk(dir, baseDir) {
