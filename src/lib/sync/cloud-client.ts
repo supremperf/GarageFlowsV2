@@ -11,6 +11,7 @@
  * d'annoncer un succès qui n'a pas eu lieu.
  */
 import { isPostgresDatabase } from '@/lib/db'
+import { JsonResponseError, readJsonObject } from '@/lib/security/bounded-json-response'
 
 /** URL officielle compilée — même constante que electron/license-endpoint.js. */
 export const OFFICIAL_LICENSE_SERVER = 'https://app.garageflows.fr'
@@ -60,6 +61,13 @@ export interface CloudSyncOutcome {
 }
 
 const DEFAULT_TIMEOUT_MS = 8_000
+// Photo responses may contain an 8 MiB image in base64 (~10.67 MiB), plus JSON.
+// This budget is for response envelopes only; uploads/business limits are unchanged.
+export const MAX_CLOUD_RESPONSE_BYTES = 16 * 1024 * 1024
+const BOUNDED_REPLY_PATHS = new Set([
+  '/api/sync/job-photo', '/api/sync/mechanic-assignment', '/api/sync/mechanic-status',
+  '/api/sync/mechanic-avatar', '/api/sync/portal-account', '/api/sync/quote', '/api/sync/portal',
+])
 
 /** POST JSON borné dans le temps ; ne lève jamais. */
 export async function cloudPost(
@@ -69,6 +77,7 @@ export async function cloudPost(
 ): Promise<CloudSyncOutcome> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
+  let status: number | undefined
   try {
     const res = await fetch(`${cloudBaseUrl()}${path}`, {
       method: 'POST',
@@ -79,17 +88,34 @@ export async function cloudPost(
       signal: controller.signal,
       cache: 'no-store',
     })
-    let data: Record<string, unknown> = {}
-    try { data = await res.json() } catch { /* corps non JSON */ }
+    status = res.status
+    // Legacy bulk proofs/message histories can validly exceed 16 MiB. Do not
+    // break them with a silent global cap: preserve their budget until the
+    // producer/client pagination protocol is upgraded. They remain deadline-
+    // and chunk-bounded, but their total-byte risk is explicitly still open.
+    const data = await readJsonObject(res, {
+      maxBytes: !res.ok || BOUNDED_REPLY_PATHS.has(path) ? MAX_CLOUD_RESPONSE_BYTES : Infinity,
+      signal: controller.signal,
+    })
+    // All current sync handlers explicitly acknowledge success. A captive HTML
+    // page, truncated body, scalar or empty envelope must never mark local work synced.
+    if (res.ok && data.ok !== false && (!Object.hasOwn(data, 'ok') || data.ok !== true)) {
+      throw new JsonResponseError('INVALID_RESPONSE')
+    }
     return {
-      ok: res.ok && data.ok !== false,
+      ok: res.ok && data.ok === true,
       status: res.status,
       code: typeof data.code === 'string' ? data.code : undefined,
       data,
     }
   } catch (err) {
-    const aborted = err instanceof Error && err.name === 'AbortError'
-    return { ok: false, code: aborted ? 'TIMEOUT' : 'NETWORK' }
+    const aborted = controller.signal.aborted || err instanceof Error && err.name === 'AbortError'
+    if (aborted) return { ok: false, code: 'TIMEOUT' }
+    if (err instanceof JsonResponseError) {
+      return { ok: false, code: err.code, status: status !== undefined && status >= 400 ? status : 502,
+        data: { ok: false, code: err.code } }
+    }
+    return { ok: false, code: 'NETWORK' }
   } finally {
     clearTimeout(timer)
   }
