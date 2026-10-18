@@ -1,0 +1,17 @@
+{
+  "observedUtc": "2026-10-18T13:51:57.039Z",
+  "npmPackageAggregates": {
+    "info": 0,
+    "low": 1,
+    "moderate": 13,
+    "high": 34,
+    "critical": 2,
+    "total": 50
+  },
+  "advisoryPackageRelations": 174,
+  "uniqueGhsas": 163,
+  "criticalRelations": 3,
+  "candidateInstancesStillMatchingKnownRanges": [],
+  "missingIntroductionPaths": [],
+  "gitHub151Reconciliation": "BLOCKED: REST 403; npm aggregates/advisories cannot be substituted for GitHub alert IDs."
+}

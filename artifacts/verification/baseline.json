@@ -3,11 +3,11 @@
   "schemaVersion": 2,
   "product": "GarageFlows",
   "version": "1.1.0",
-  "commit": "aa90f89c059db58a4a3fe3c339a2dffbfbf10fad",
-  "commitShort": "aa90f89",
+  "commit": "1aa860dd3fcf2b55224f127a0ab4878b20b74fc8",
+  "commitShort": "1aa860d",
   "branch": "arena/55edbdc1-garageflowsv2",
   "gitIdentity": true,
-  "generatedAtUtc": "2026-10-17T21:06:48.480Z",
+  "generatedAtUtc": "2026-10-18T13:51:57.156Z",
   "toolchain": {
     "node": "v22.22.3",
     "npm": "10.9.8",
@@ -59,12 +59,12 @@
   },
   "tests": {
     "measured": true,
-    "files": 346,
-    "suites": 1300,
-    "total": 4204,
-    "discovered": 4204,
-    "passed": 3353,
+    "files": 347,
+    "suites": 1301,
+    "total": 4222,
+    "discovered": 4222,
+    "passed": 3368,
     "failed": 3,
-    "skipped": 848
+    "skipped": 851
   }
 }

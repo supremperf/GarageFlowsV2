@@ -6,6 +6,7 @@ import { can } from '@/lib/authz'
 import { parseAmountToScaled } from '@/lib/money'
 import { partToEuros } from '@/lib/money-db'
 import { CreatePartSchema } from '@/lib/schemas'
+import { parsePagination } from '@/lib/pagination'
 
 // GET /api/parts?lowStock=true&repairType=xxx
 export const GET = withAuth(async (req) => {
@@ -18,7 +19,9 @@ export const GET = withAuth(async (req) => {
   // If repairType requested, get default parts for that type
   if (repairType) {
     const defaults = await prisma.repairTypePart.findMany({
-      where: { repairType, garageId: session.user.garageId },
+      // Scope BOTH the association and the included part: legacy/imported links
+      // must not turn an own-garage relation into a cross-garage disclosure.
+      where: { repairType, garageId: session.user.garageId, part: { garageId: session.user.garageId } },
       include: { part: true },
     })
     return NextResponse.json(defaults)
@@ -28,11 +31,11 @@ export const GET = withAuth(async (req) => {
   // mémoire (déni de service sur une base pathologique). Cap élevé (5000) =
   // transparent pour un garage réel ; pagination explicite via ?page&?limit.
   const MAX_LIMIT = 5000
-  const limitParam = Number(searchParams.get('limit'))
-  const take = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, MAX_LIMIT) : MAX_LIMIT
-  const pageParam = Number(searchParams.get('page'))
-  const page = Number.isFinite(pageParam) && pageParam > 1 ? Math.floor(pageParam) : 1
-  const skip = (page - 1) * take
+  const pagination = parsePagination(searchParams, MAX_LIMIT, MAX_LIMIT)
+  if (!pagination) {
+    return NextResponse.json({ error: 'Pagination invalide', code: 'INVALID_PAGINATION' }, { status: 400 })
+  }
+  const { limit: take, skip } = pagination
 
   const parts = await prisma.part.findMany({
     where: {

@@ -7,7 +7,8 @@ Ce document et `artifacts/verification/baseline.json` reflètent la dernière
 mesure locale, y compris ses échecs. **Verdict : NO-GO.** Rapport de résolution :
 [phase 6](2026-10-17/05-RESOLUTION-BLOCAGES.md) ;
 [verdict détaillé](2026-10-17/06-VERDICT-FINAL.md) ;
-[diagnostic keygen PHASE 7](2026-10-17/07-DIAGNOSTIC-KEYGEN.md).
+[diagnostic keygen PHASE 7](2026-10-17/07-DIAGNOSTIC-KEYGEN.md) ;
+[mission sécurité 151 — NO-GO](security-151/02-VERDICT-ET-INTEGRATION.md).
 
 ## Identité et portée
 
@@ -54,13 +55,13 @@ nombre d’assertions échouées. Voir la ventilation nominative de la phase 6.
 
 | Champ | Valeur |
 |---|---|
-| Test files | 346 |
-| Tests discovered | 4204 |
-| Tests passed | 3353 |
+| Test files | 347 |
+| Tests discovered | 4222 |
+| Tests passed | 3368 |
 | Tests failed | 3 |
-| Tests skipped | 848 |
+| Tests skipped | 851 |
 
-Commit : `aa90f89` · Branche : `arena/55edbdc1-garageflowsv2` · Généré (UTC) : `2026-10-17T21:06:48.480Z`
+Commit : `1aa860d` · Branche : `arena/55edbdc1-garageflowsv2` · Généré (UTC) : `2026-10-18T13:51:57.156Z`
 
 <!-- END AUTO-GENERATED BASELINE -->
 

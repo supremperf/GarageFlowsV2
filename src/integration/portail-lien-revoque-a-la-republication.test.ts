@@ -42,6 +42,7 @@ type OriginalModule1 = typeof import('@/lib/license/verify')
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
+import { computeRecordMac } from '@/lib/license/record-mac'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-portail-republication.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -117,13 +118,14 @@ beforeAll(async () => {
   // défaut : c'est ce qui est arrivé à la première version de ce test.
   ids.job = 'job-qui-n-existe-que-sur-le-poste'
 
-  await prisma.licenseKey.create({
-    data: {
-      licenseId: LID, token: 'GF2.licence-garage-de-recette', customerId: 'c',
-      licenseType: 'premium', status: 'active', expiryAt: new Date(Date.now() + 86_400_000),
-      garageId: garage.id,
-    },
-  })
+  const licenseData = {
+    licenseId: LID, token: 'GF2.licence-garage-de-recette', customerId: 'c',
+    licenseType: 'premium', status: 'active', expiryAt: new Date(Date.now() + 86_400_000),
+    garageId: garage.id, hwid: null,
+  }
+  // The actual sync guard requires a real MAC even when only the GF2 signature
+  // is mocked. Keep this protection active, rather than bypassing it in tests.
+  await prisma.licenseKey.create({ data: { ...licenseData, recordMac: computeRecordMac(licenseData) } })
 }, 60_000)
 
 afterAll(async () => {
@@ -138,6 +140,19 @@ beforeEach(async () => {
 })
 
 describe('portail — republier ne doit pas tuer le lien déjà remis au client (GF-002)', () => {
+  it('MAC absent → publication refusée sans créer un instantané', async () => {
+    const original = await prisma.licenseKey.findUniqueOrThrow({ where: { licenseId: LID } })
+    try {
+      await prisma.licenseKey.update({ where: { licenseId: LID }, data: { recordMac: null } })
+      const response = await PUBLIER(requetePublication())
+      expect(response.status).toBe(403)
+      expect((await response.json()).code).toBe('LICENSE_TAMPERED')
+      expect(await prisma.portalSnapshot.count()).toBe(0)
+    } finally {
+      await prisma.licenseKey.update({ where: { licenseId: LID }, data: { recordMac: original.recordMac } })
+    }
+  })
+
   it('publication simple : le lien est lisible', async () => {
     const a = await publier()
     expect(a.ok).toBe(true)

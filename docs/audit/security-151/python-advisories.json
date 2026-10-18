@@ -1,0 +1,20 @@
+[
+  {
+    "package": "cryptography",
+    "version": "50.0.2",
+    "source": "https://pypi.org/pypi/cryptography/50.0.2/json",
+    "vulnerabilities": []
+  },
+  {
+    "package": "cffi",
+    "version": "2.1.1",
+    "source": "https://pypi.org/pypi/cffi/2.1.1/json",
+    "vulnerabilities": []
+  },
+  {
+    "package": "pycparser",
+    "version": "3.11",
+    "source": "https://pypi.org/pypi/pycparser/3.11/json",
+    "vulnerabilities": []
+  }
+]
