@@ -160,3 +160,7 @@ keys/bootstrap-*
 
 # Dated, non-secret audit evidence required by PHASE 6 (not application logs).
 !docs/audit/2026-10-17/phase6/*.log
+
+# Client installer and non-secret delivery/test receipts (generated, never Git).
+/release/
+/artifacts/windows-delivery/

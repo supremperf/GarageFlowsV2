@@ -53,4 +53,4 @@ function copyPrismaResources(root, standalone) {
   fs.copyFileSync(schema, path.join(destination, 'schema.prisma'))
   fs.copyFileSync(template, path.join(destination, 'garageflow-template.db'))
 }
-module.exports = { copyPrismaResources }
+module.exports = { copyPrismaResources, refuseLinkedPath }

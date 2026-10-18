@@ -46,6 +46,8 @@ try { process.stderr.on('error', () => {}) } catch (_) {}
 
 // ── Load .env for dev mode (Next.js reads it automatically, Electron doesn't) ─
 ;(function loadDotEnv() {
+  // Installed applications use only userData secrets and bundled defaults, never a project .env.
+  if (app.isPackaged) return
   const root    = path.join(__dirname, '..')
   const envFile = path.join(root, '.env')
 
@@ -1556,10 +1558,14 @@ function setupDatabase() {
 
   if (needsInit) {
     if (fs.existsSync(DB_PATH)) {
-      // Back up the corrupt/empty file before overwriting so we never silently lose data
-      const badPath = DB_PATH + '.bad-' + Date.now()
-      try { fs.renameSync(DB_PATH, badPath) } catch (_) {}
-      log('WARNING: Existing database was empty or corrupt — moved to', badPath)
+      // An installer/update must never reset an existing database, even if its
+      // header is damaged. Preserve the exact file for recovery, fail closed.
+      log('FATAL: existing database is unreadable; preserved without replacement')
+      ecarterSplash()
+      dialog.showErrorBox('GarageFlows — Base à récupérer',
+        'La base existante est illisible. Elle a été conservée intacte ; aucune réinitialisation ne sera effectuée. Contactez le support pour récupérer votre sauvegarde.')
+      app.exit(1)
+      return false
     }
 
     // Find the bundled empty database (template with schema applied)
@@ -1585,7 +1591,15 @@ function setupDatabase() {
     }
     const src = candidates.find(p => fs.existsSync(p) && isDbValid(p))
     if (src) {
-      fs.copyFileSync(src, DB_PATH)
+      try {
+        fs.copyFileSync(src, DB_PATH, fs.constants.COPYFILE_EXCL)
+      } catch (_) {
+        log('FATAL: first-run database could not be created exclusively; no existing data overwritten')
+        ecarterSplash()
+        dialog.showErrorBox('GarageFlows — Initialisation impossible', 'La base ne peut pas être créée sans risque. Aucune donnée existante n’a été écrasée. Vérifiez les permissions du dossier utilisateur.')
+        app.exit(1)
+        return false
+      }
       log('Database initialised from template:', src)
     } else {
       log('FATAL: No database template found in resources — installation may be corrupted')
@@ -1603,6 +1617,7 @@ function setupDatabase() {
   } else {
     log('Existing database:', DB_PATH)
   }
+  return true
 
 }
 
@@ -2503,40 +2518,8 @@ function resolveServerPaths() {
  * donc `/api/health`, qui porte un marqueur d'identite : sans lui, on continue
  * d'attendre, puis on le DIT clairement.
  */
-function waitForServer(timeoutMs = 30_000) {
-  return new Promise((resolve, reject) => {
-    const start = Date.now()
-    let etranger = false
-    const check = setInterval(() => {
-      const echoue = (raison) => {
-        if (Date.now() - start > timeoutMs) {
-          clearInterval(check)
-          reject(new Error(raison))
-        }
-      }
-      http.get(`http://127.0.0.1:${PORT}/api/health`, res => {
-        let acc = ''
-        res.setEncoding('utf8')
-        res.on('data', c => { acc += c })
-        res.on('end', () => {
-          let identite = null
-          try { identite = JSON.parse(acc).app } catch (_) { /* corps illisible */ }
-          if (identite === 'garageflows') {
-            clearInterval(check)
-            resolve(res.statusCode)
-            return
-          }
-          if (!etranger) {
-            etranger = true
-            log(`[demarrage] le port ${PORT} repond, mais ce n'est pas GarageFlows — on continue d'attendre`)
-          }
-          echoue(`Le port ${PORT} est occupe par une autre application. Fermez-la puis relancez GarageFlows.`)
-        })
-      }).on('error', () => {
-        echoue(`Server did not respond within ${timeoutMs / 1000}s`)
-      })
-    }, 400)
-  })
+function waitForServer(timeoutMs = 30_000, signal) {
+  return require('./server-ready').waitForHealth({ port: PORT, timeoutMs, expectedKey: INTERNAL_EXPORT_KEY, signal })
 }
 
 // ── Desktop CSV Export (20h quotidien) ───────────────────────────────────────
@@ -2852,10 +2835,11 @@ function startNextServer() {
         resolve()
         return
       }
-      reject(new Error(`server.js not found:\n${serverJs}\n\nRun: npm run build`))
+      reject(new Error(`Installation incomplète : serveur embarqué absent. Réinstallez GarageFlows.\n${serverJs}`))
       return
     }
 
+    arretVoulu = false
     log('Starting Next.js server on port', PORT)
 
     // Windows-safe path: use forward slashes in DATABASE_URL
@@ -2911,9 +2895,12 @@ function startNextServer() {
         }
       })
     }
+    let serverReady = false
+    const startupAbort = new AbortController()
     nextServer.on('exit', code => {
       log(`Next.js exited — code=${code}`)
       nextServer = null
+      if (!serverReady) { startupAbort.abort(); return }
 
       // ── Mort du serveur : détectée, ANNONCÉE, et rattrapable ─────────────────
       // Elle n'était que journalisée. Sur un poste de comptoir allumé toute la
@@ -2955,9 +2942,15 @@ function startNextServer() {
       }).catch(() => {})
     })
 
-    waitForServer(35_000)
-      .then(() => { log('Next.js server ready'); resolve() })
-      .catch(err  => { log('Server timeout:', err.message); resolve() })  // fail-open
+    waitForServer(35_000, startupAbort.signal)
+      .then(() => { serverReady = true; log('Next.js server ready'); resolve() })
+      .catch(err => {
+        log('Server unavailable:', err.message)
+        arretVoulu = true
+        try { nextServer?.kill() } catch (_) {}
+        nextServer = null
+        reject(err) // No migration or business window against an unavailable/foreign service.
+      })
   })
 }
 
@@ -4199,7 +4192,7 @@ app.whenReady().then(async () => {
   currentModules = loadEntitlements()
   setupIPC()
   createSplash()
-  setupDatabase()
+  if (!setupDatabase()) return
 
   // ── SAUVEGARDE PRÉ-MIGRATION (AVANT le serveur, AVANT toute migration) ─────
   // La base n'est ouverte par aucun processus ici → copie (db + -wal + -shm)
@@ -4406,6 +4399,12 @@ app.whenReady().then(async () => {
   // ce qui fera échouer la prochaine mise à jour.
   purgerTelechargementsMaj()
   startPeriodicUpdateCheck()
+})
+
+app.on('before-quit', () => {
+  arretVoulu = true
+  try { nextServer?.kill() } catch (_) {}
+  nextServer = null
 })
 
 app.on('window-all-closed', () => {

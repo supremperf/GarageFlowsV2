@@ -598,6 +598,21 @@ jobs:
         env:
           GF_REQUIRE_ARTIFACT_TEST: '1'
       - run: npm run release:verify-artifact
+      - name: Install, launch, reinstall and uninstall the actual single-file Setup
+        shell: pwsh
+        run: ./scripts/test-windows-setup.ps1
+        env:
+          GF_WINDOWS_SMOKE_ISOLATED: '1'
+      - name: Record the exact single-file delivery identity
+        run: node -e "const r=require('./artifacts/windows-delivery/delivery.json'); console.log('::notice title=GarageFlows Setup identity::'+JSON.stringify(r))"
+      - name: Windows validation receipts (never userData or application secrets)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: garageflows-windows-validation
+          path: artifacts/windows-delivery/*.json
+          if-no-files-found: error
+          retention-days: 30
       # Rend l'installeur RÉELLEMENT récupérable : la mission exige un `.exe`
       # utilisable sur un autre poste, pas seulement la preuve qu'il a été
       # construit. `if-no-files-found: error` est volontaire — un téléversement
@@ -608,10 +623,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: garageflows-installer-windows-x64
-          path: |
-            dist/*.exe
-            dist/*.blockmap
-            dist/*.yml
+          path: release/GarageFlows-Setup.exe
           if-no-files-found: error
           retention-days: 30
 

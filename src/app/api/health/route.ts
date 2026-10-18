@@ -184,8 +184,17 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Local startup challenge: proves ownership of the utility process without
+  // returning its internal API secret. The public PWA response is unchanged.
+  const challenge = req?.headers?.get('x-gf-startup-challenge') ?? ''
+  const startupKey = process.env.GF_INTERNAL_EXPORT_KEY
+  const startupProof = /^[a-f0-9]{32}$/.test(challenge) && startupKey && startupKey.length >= 32
+    ? crypto.createHmac('sha256', startupKey).update('GF_DESKTOP_STARTUP_V1|' + challenge).digest('hex')
+    : null
+
   return NextResponse.json(
     {
+      ...(startupProof ? { startupProof } : {}),
       // Identité EXPLICITE : le démarrage d'Electron tenait pour « prêt » tout
       // serveur répondant sur 127.0.0.1:4028. Si une autre application occupe
       // ce port, la fenêtre chargeait la sienne. Ce marqueur permet de le

@@ -193,13 +193,13 @@ function main() {
       if (empaquetageDesktop) {
         console.error('  ❌ keys/public.pem introuvable — artefact non distribuable.')
         console.error('     package.json (build.extraResources) et electron/integrity.js')
-        console.error('     considèrent ce fichier comme critique. Générez la paire avec :')
-        console.error('       python scripts/keygen.py --init')
-        console.error('     puis synchronisez les ancres du code :  npm run keys:sync')
+        console.error('     considèrent ce fichier comme critique. Restaurez l’ancre publique avec :')
+        console.error('       npm run preflight:release')
+        console.error('     Ne régénérez aucune clé privée pour dépanner un packaging.')
         process.exit(1)
       }
       console.warn('  ⚠  keys/public.pem absent — sortie NON distribuable en l’état (contexte non-empaquetage).')
-      console.warn('     Avant de produire un installateur : npm run keys:sync, puis npm run dist.')
+      console.warn('     Avant de produire un installateur : npm run preflight:release, puis npm run dist.')
     }
   }
 

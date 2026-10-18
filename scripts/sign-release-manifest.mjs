@@ -153,7 +153,8 @@ function genererPaire(keyId) {
  * n'ont pas été fournis explicitement.
  */
 function installeurDetecte() {
-  const dist = path.join(RACINE, 'dist')
+  const delivery = path.join(RACINE, 'release')
+  const dist = fs.existsSync(path.join(delivery, 'GarageFlows-Setup.exe')) ? delivery : path.join(RACINE, 'dist')
   let noms = []
   try { noms = fs.readdirSync(dist) } catch { return null }
   const candidats = noms
@@ -188,8 +189,8 @@ function argumentsManquants(manquants) {
     console.error(`      npm run release:sign -- --file "${trouve.argumentFile}" --version ${trouve.version} --download-url ${trouve.argumentUrl}`)
     console.error('\n    (remplacez l’URL si l’installeur n’est pas publié sur api.garageflows.fr)')
   } else {
-    console.error('\n    Aucun installeur détecté dans dist/ : lancez d’abord npm run dist,')
-    console.error('    puis relancez la signature avec --file <dist/GarageFlows Setup x.y.z.exe>.')
+    console.error('\n    Aucun installeur détecté dans release/ ou dist/ : lancez d’abord npm run dist,')
+    console.error('    puis relancez la signature avec --file <release/GarageFlows-Setup.exe>.')
   }
   console.error('\n    Aucun fichier n’a été signé (on ne signe jamais un fichier inexistant).')
   console.error('    Rappel : ne pas contourner ces contrôles avec --allow-mismatch.\n')

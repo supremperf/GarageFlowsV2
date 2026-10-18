@@ -24,6 +24,8 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const RACINE = path.resolve(__dirname, '..')
+// Public resource only: no new pair, rotation, or private key required.
+require('./materialize-build-public-key.cjs').materializePublicKey(RACINE)
 const PROBLEMES = []
 const AVERTISSEMENTS = []
 

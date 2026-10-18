@@ -101,7 +101,7 @@
     "keygen": "node scripts/config-keygen.cjs",
     "audit:strict": "node scripts/audit-ci.js",
     "test:audit": "node --max-old-space-size=256 --test --test-timeout=15000 tests/audit-security.test.cjs tests/critical-dependency-regressions.test.cjs tests/github-security-report.test.cjs",
-    "test:release-safety": "node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/ci-required-gate.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs tests/secret-scan-policy.test.cjs tests/pre-migration-backup-safety.test.cjs tests/gitleaks-ci.test.cjs tests/build-dist-chain.test.cjs",
+    "test:release-safety": "node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/ci-required-gate.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs tests/secret-scan-policy.test.cjs tests/pre-migration-backup-safety.test.cjs tests/gitleaks-ci.test.cjs tests/build-dist-chain.test.cjs tests/windows-delivery.test.cjs tests/desktop-server-ready.test.cjs tests/desktop-database-preservation.test.cjs",
     "postbuild": "node scripts/post-build.js",
     "verify:standalone": "node scripts/verify-standalone-build.cjs",
     "preflight:release": "node scripts/preflight-release.cjs",
@@ -237,7 +237,9 @@
       "createStartMenuShortcut": true,
       "shortcutName": "GarageFlows",
       "include": "scripts/installer.nsh",
-      "warningsAsErrors": false
+      "warningsAsErrors": false,
+      "artifactName": "GarageFlows-Setup.exe",
+      "deleteAppDataOnUninstall": false
     }
   },
   "overrides": {

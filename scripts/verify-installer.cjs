@@ -33,7 +33,9 @@ const DECOMPRESSE = path.join(DIST, 'win-unpacked')
 const TAILLE_MINIMALE_OCTETS = 20 * 1024 * 1024
 
 const { version, build } = JSON.parse(fs.readFileSync(path.join(RACINE, 'package.json'), 'utf8'))
-const nomAttendu = `${build?.productName ?? 'GarageFlows'} Setup ${version}.exe`
+const { INSTALLER_NAME, peInfo, inspectNsis, publish } = require('./lib/windows-delivery.cjs')
+const nomAttendu = INSTALLER_NAME
+if (build.nsis.artifactName !== INSTALLER_NAME) throw new Error('NSIS artifactName differs from the single-file delivery contract')
 
 function lister(dir, extension) {
   try {
@@ -53,7 +55,7 @@ function octets(n) {
   return `${(n / 1024).toFixed(0)} Ko`
 }
 
-function main() {
+async function main() {
   const problemes = []
   const remarques = []
 
@@ -93,16 +95,8 @@ function main() {
   }
 
   const cheminExe = path.join(DIST, cible)
-  const stat = fs.statSync(cheminExe)
-
-  // ── 2. Signature PE et taille ─────────────────────────────────────────────
-  const entete = Buffer.alloc(2)
-  const fd = fs.openSync(cheminExe, 'r')
-  fs.readSync(fd, entete, 0, 2, 0)
-  fs.closeSync(fd)
-  if (entete.toString('ascii') !== 'MZ') {
-    problemes.push('le fichier ne porte pas l’en-tête exécutable Windows (« MZ ») : il n’est pas lançable')
-  }
+  // Header and size are read from the same opened PE, not stat-then-open.
+  const stat = peInfo(cheminExe, TAILLE_MINIMALE_OCTETS)
 
   if (stat.size < TAILLE_MINIMALE_OCTETS) {
     problemes.push(
@@ -160,9 +154,13 @@ function main() {
   }
 
   console.log('')
-  console.log('✅ Installeur conforme. Étape suivante :')
-  console.log(`   npm run release:sign -- --file "dist/${cible}" --version ${version} --download-url <URL_HTTPS_PUBLIQUE>`)
+  // Inspect THIS NSIS executable, not only its neighboring unpacked folder.
+  const verification = await inspectNsis(RACINE, cheminExe)
+  const receipt = await publish(RACINE, verification)
+  console.log('WINDOWS_DELIVERY_RECEIPT ' + JSON.stringify(receipt))
+  console.log('✅ Installeur complet vérifié et copié seul dans release/. Étape suivante :')
+  console.log(`   npm run release:sign -- --file "release/${cible}" --version ${version} --download-url <URL_HTTPS_PUBLIQUE>`)
   console.log('')
 }
 
-main()
+main().catch(error => { console.error("Installeur non livrable : " + error.message); process.exitCode = 1 })
