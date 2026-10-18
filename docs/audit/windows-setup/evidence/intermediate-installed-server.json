@@ -1,0 +1,13 @@
+{
+  "commit": "6e72b04a4b2a4a65e783749ef4e54bb55eb838a7",
+  "annotations": [
+    {
+      "title": "Windows installed Setup smoke",
+      "message": "{\"success\":false,\"stage\":\"installed-standalone-components\",\"installExecuted\":true,\"activationWindowOpened\":true,\"restrictedPathLaunch\":true,\"sqliteSentinelWritten\":true,\"installedServerComponentsPassed\":false,\"reinstallPreservedData\":false,\"uninstallPreservedData\":false,\"licensedBusinessWorkflowTested\":false,\"cleanOSWithoutBuildToolsTested\":false,\"authenticodeStatus\":\"NotSigned\"}"
+    },
+    {
+      "title": "Installed standalone component test",
+      "message": "{\"success\":false,\"stage\":\"startup\",\"runtime\":\"CI Node against installed standalone (not licensed Electron UI)\",\"modulesRestrictedToInstalledPayload\":true,\"errorCodes\":[\"MODULE_NOT_FOUND\"],\"missingModules\":[\"next\"],\"redactedStderrTail\":\"node:internal/modules/cjs/loader:1433\\r\\n  throw err;\\r\\n  ^\\r\\n\\r\\nError: Cannot find module 'next'\\r\\nRequire stack:\\r\\n- D:\\\\a\\\\_temp\\\\GarageFlows installed 61cfc1986ebc4311945d4b9b1b918657\\\\resources\\\\standalone\\\\server.js\\r\\n    at Function.<anonymous> (node:internal/modules/cjs/loader:1430:15)\\r\\n    at M._resolveFilename (C:\\\\Users\\\\RUNNER~1\\\\AppData\\\\Local\\\\Temp\\\\gf-installed-server-cSyhD0\\\\guard.cjs:1:248)\\r\\n    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)\\r\\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)\\r\\n    at Function._load (node:internal/modules/cjs/loader:1216:25)\\r\\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\\r\\n    at Module.require (node:internal/modules/cjs/loader:1527:12)\\r\\n    at require (node:internal/modules/helpers:147:16)\\r\\n    at Object.<anonymous> (D:\\\\a\\\\_temp\\\\GarageFlows installed 61cfc1986ebc4311945d4b9b1b918657\\\\resources\\\\standalone\\\\server.js:16:1)\\r\\n    at Module._compile (node:internal/modules/cjs/loader:1781:14) {\\r\\n  code: 'MODULE_NOT_FOUND',\\r\\n  requireStack: [\\r\\n    'D:\\\\\\\\a\\\\\\\\_temp\\\\\\\\GarageFlows installed 61cfc1986ebc4311945d4b9b1b918657\\\\\\\\resources\\\\\\\\standalone\\\\\\\\server.js'\\r\\n  ]\\r\\n}\\r\\n\\r\\nNode.js v22.23.3\\r\\n\",\"serverExitCode\":1,\"spawnFailed\":false,\"health\":\"unreachable-or-invalid\"}"
+    }
+  ]
+}

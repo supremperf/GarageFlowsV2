@@ -1,0 +1,62 @@
+{
+  "testedCommit": "5a10e96396ba2a78e447a65959cf5491fa5d8a67",
+  "scope": "Bytes from the actual tested Git commit, not uncommitted follow-up documentation",
+  "sources": [
+    {
+      "file": "electron/main.js",
+      "sha256": "ae71e752f8209b220eb36be363d3b23fc2a605654aedb8743a52ea63c72659ab"
+    },
+    {
+      "file": "electron/preload.js",
+      "sha256": "fa4e09d0375154aade6500c564d4a6df2a5a491f23186a948d0f43b2669fc750"
+    },
+    {
+      "file": "electron/server-ready.js",
+      "sha256": "8ef966b8d1c9ff6044cc7969bd3b562f618f6c08230fec389ea60fc7ef96cff3"
+    },
+    {
+      "file": "src/app/api/health/route.ts",
+      "sha256": "558eb48d04da980743ce43f9a0d0bcb84194b11b9caf59bdeba25f127adc7af3"
+    },
+    {
+      "file": "scripts/afterPack.js",
+      "sha256": "f874410c129c31cc012aa9d5d985684ff7119e6f34a2a0a8d247aa5fc96e68ba"
+    },
+    {
+      "file": "scripts/lib/installed-runtime-modules.cjs",
+      "sha256": "d58c4f6e592b23b6a35cb4a4e0cb170d86570ecfe7a6d873444a00bca28ece85"
+    },
+    {
+      "file": "scripts/verify-installer.cjs",
+      "sha256": "14991fa9d85cf97c46933dd1a03581cefbcb0eae02c2886adb198e3c1e200b4f"
+    },
+    {
+      "file": "scripts/lib/windows-delivery.cjs",
+      "sha256": "233a6677c5ec57e23e47bfabb03b5568c795e85cce81e6a5575da650488bb092"
+    },
+    {
+      "file": "scripts/check-artifact-secrets.mjs",
+      "sha256": "7cc3391c30264f0fcb15849f4d1f6535d1abf466453f928945f477604ec5bb5b"
+    },
+    {
+      "file": "scripts/lib/private-key-material.cjs",
+      "sha256": "220ad832f7b7e7a4cf3393ab64d54567e06190b6dfcfa24f220c189d42d8f088"
+    },
+    {
+      "file": "scripts/test-windows-setup.ps1",
+      "sha256": "6f0e7847473412193a4e6591f457874fb90ac87cc6c61a4d041c388a4c44e593"
+    },
+    {
+      "file": "scripts/test-installed-server.cjs",
+      "sha256": "b5d509b492697a9f6d357032e57cceadf06c8add372a1f3ab6657258e82d706a"
+    },
+    {
+      "file": "package.json",
+      "sha256": "013f9360aacb0e12794623d8bf5b420c56152ff1680b66b124edf781c6f8d2a2"
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "sha256": "84052e7c0def11067d3526fbe9c1b342106ad3520ca23f240edae817acbec558"
+    }
+  ]
+}

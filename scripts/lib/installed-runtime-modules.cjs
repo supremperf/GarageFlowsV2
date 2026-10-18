@@ -1,9 +1,9 @@
 'use strict'
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os')
 const { createRequire } = require('node:module')
-/** Builder already collected the production dependency closure for app.asar.
- * Project it outside ASAR for the plain Node utility server. extraResources'
- * copy of the traced tree alone can omit runtime package entry files.
+/** Preserve Next's traced closure outside ASAR after resource filtering.
+ * Fall back to Builder's collected production closure if its core entries are
+ * incomplete. Never borrow modules from the development checkout.
  * No dev dependency installation and no resolution fallback to the checkout.
  */
 function projectRuntimeModules(resourcesPath, projectRoot = path.resolve(__dirname, '../..')) {

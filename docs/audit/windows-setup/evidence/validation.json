@@ -1,0 +1,92 @@
+{
+  "observedUtc": "2026-10-18T16:35:05.020Z",
+  "testedCommit": "5a10e96396ba2a78e447a65959cf5491fa5d8a67",
+  "buildAndWindowsRecipePassed": true,
+  "productionGo": false,
+  "entireMissionUnconditionallyComplete": false,
+  "delivery": {
+    "schema": 1,
+    "file": "release/GarageFlows-Setup.exe",
+    "version": "1.1.0",
+    "commit": "5a10e96396ba2a78e447a65959cf5491fa5d8a67",
+    "dirty": false,
+    "size": 231057824,
+    "sha256": "faf8c3e6ddb8534125469795f70cefd5b75d596431775f6d122d62a08d615c59",
+    "platform": "win32",
+    "arch": "x64",
+    "payloadFiles": 3045,
+    "payloadVerified": true,
+    "offlinePayloadEmbedded": true,
+    "extractionMode": "embedded-7z-sfx",
+    "authenticodeVerified": false,
+    "cleanMachineLicensedBusinessWorkflowVerified": false
+  },
+  "windows": {
+    "success": true,
+    "stage": "complete",
+    "installExecuted": true,
+    "activationWindowOpened": true,
+    "restrictedPathLaunch": true,
+    "sqliteSentinelWritten": true,
+    "installedServerComponentsPassed": true,
+    "reinstallPreservedData": true,
+    "uninstallPreservedData": true,
+    "licensedBusinessWorkflowTested": false,
+    "cleanOSWithoutBuildToolsTested": false,
+    "authenticodeStatus": "NotSigned",
+    "installerProcessExited": true,
+    "installerExitCode": 0,
+    "installedExePresent": true
+  },
+  "installedServer": {
+    "success": true,
+    "stage": "complete",
+    "runtime": "CI Node against installed standalone (not licensed Electron UI)",
+    "modulesRestrictedToInstalledPayload": true
+  },
+  "local": {
+    "nodePassed": 407,
+    "nodeFailed": 0,
+    "global": {
+      "total": 4222,
+      "passed": 3370,
+      "failed": 3,
+      "pending": 849,
+      "failedFiles": 79
+    },
+    "lintExit": 0,
+    "typesExit": 0,
+    "consistencyExit": 0,
+    "environment": {
+      "canonical": 126,
+      "platform": 53,
+      "problems": 0
+    }
+  },
+  "github": {
+    "run": 39144372534,
+    "windowsJob": 117726161834,
+    "overallConclusion": "failure",
+    "installerArtifact": 12143410620,
+    "installerArtifactZipSize": 230787648,
+    "validationArtifact": 12141969997,
+    "defaultBranchUnchanged": true,
+    "lastReceivePackDefaultBranchVulnerabilities": 151
+  },
+  "localInstallerDownload": {
+    "exitCode": 1,
+    "bytes": 0,
+    "notMaterializedInSandbox": true,
+    "artifactRemainsDownloadableFromGitHub": true
+  },
+  "dependenciesChanged": false,
+  "privateKeysIncluded": false,
+  "privateKeyChecks": "filename/ASAR/known environment values and actual multiline/short/encrypted PEM material; not a mathematical proof against arbitrary malicious obfuscation",
+  "limits": [
+    "NotSigned Authenticode; SmartScreen/MOTW behavior not tested",
+    "No actual production license/authority business UI activation",
+    "Not factory-clean physical Windows without installed build tools",
+    "Same-version reinstall, not every historical-version migration",
+    "CI required gate and CodeQL results still failing; no production distribution approved"
+  ]
+}

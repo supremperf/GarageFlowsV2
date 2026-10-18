@@ -57,11 +57,11 @@ nombre d’assertions échouées. Voir la ventilation nominative de la phase 6.
 |---|---|
 | Test files | 347 |
 | Tests discovered | 4222 |
-| Tests passed | 3368 |
+| Tests passed | 3370 |
 | Tests failed | 3 |
-| Tests skipped | 851 |
+| Tests skipped | 849 |
 
-Commit : `1aa860d` · Branche : `arena/55edbdc1-garageflowsv2` · Généré (UTC) : `2026-10-18T13:51:57.156Z`
+Commit : `8056e9b` · Branche : `arena/55edbdc1-garageflowsv2` · Généré (UTC) : `2026-10-18T15:19:29.389Z`
 
 <!-- END AUTO-GENERATED BASELINE -->
 

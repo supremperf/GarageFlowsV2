@@ -3,7 +3,7 @@ const { test } = require('node:test'), assert = require('node:assert/strict')
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os')
 const asar = require('@electron/asar')
 const { projectRuntimeModules } = require('../scripts/lib/installed-runtime-modules.cjs')
-test('real ASAR production closure is projected to standalone, preserving the generated native client', async t => {
+for (const mode of ['builder-production-closure', 'next-traced-closure']) test(mode + ' is projected outside ASAR without checkout fallback', async t => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-runtime-modules-test-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   const input = path.join(root, 'input'), resources = path.join(root, 'resources')
@@ -20,7 +20,9 @@ test('real ASAR production closure is projected to standalone, preserving the ge
   const generated = path.join(root, 'node_modules/.prisma/client')
   fs.mkdirSync(generated, { recursive: true })
   for (const file of ['index.js', 'schema.prisma', 'query_engine-windows.dll.node']) fs.writeFileSync(path.join(generated, file), 'native-fixture-marker')
+  if (mode === 'next-traced-closure') fs.cpSync(path.join(input, 'node_modules'), path.join(root, '.next/standalone/node_modules'), { recursive: true })
   const result = projectRuntimeModules(resources, root)
+  assert.equal(result.sourceMode, mode)
   assert.equal(result.outsideAsar, true)
   assert.ok(fs.existsSync(path.join(resources, 'standalone/node_modules/fixture-transitive/index.js')))
   assert.equal(fs.readFileSync(path.join(client, 'query_engine-windows.dll.node'), 'utf8'), 'native-fixture-marker')
