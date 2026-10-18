@@ -6,6 +6,7 @@ const crypto = require('node:crypto'), net = require('node:net')
 const { spawn } = require('node:child_process')
 const { DatabaseSync } = require('node:sqlite')
 const { waitForHealth } = require('../electron/server-ready')
+const { redact } = require('./windows-package-diagnostic.cjs')
 async function main() {
   if (process.platform !== 'win32' || process.env.GITHUB_ACTIONS !== 'true' || process.env.GF_WINDOWS_SMOKE_ISOLATED !== '1') throw new Error('Disposable Windows CI required')
   const install = process.argv[2], dbPath = process.argv[3]
@@ -33,11 +34,12 @@ async function main() {
     GF_INTERNAL_EXPORT_KEY: proofKey, GF_PHOTOS_DIR: photos }
   const child = spawn(process.execPath, ['--require', guard, path.join(standalone, 'server.js')], { cwd: standalone, env, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true })
   const report = { success: false, stage: 'startup', runtime: 'CI Node against installed standalone (not licensed Electron UI)', modulesRestrictedToInstalledPayload: true }
-  let spawnFailed = false
+  let spawnFailed = false, safeStderr = ''
   const errorCodes = new Set(), missingModules = new Set()
   child.stderr.on('data', chunk => {
     const text = chunk.toString()
-    for (const code of ['MODULE_NOT_FOUND', 'EADDRINUSE', 'PrismaClientInitializationError', 'PrismaClientKnownRequestError', 'Module outside installed payload']) if (text.includes(code)) errorCodes.add(code)
+    safeStderr = (safeStderr + redact(text, { ...env, STARTUP_API_KEY: proofKey })).slice(-3000)
+    for (const code of ['MODULE_NOT_FOUND', 'ERR_MODULE_NOT_FOUND', 'ERR_DLOPEN_FAILED', 'ENOENT', 'EADDRINUSE', 'PrismaClientInitializationError', 'PrismaClientKnownRequestError', 'Module outside installed payload']) if (text.includes(code)) errorCodes.add(code)
     for (const match of text.matchAll(/Cannot find module ['"]([^'"]+)['"]/g)) {
       if (/^(@[a-z0-9._-]+\/)?[a-z0-9._-]+(\/[a-z0-9./_-]+)?$/i.test(match[1])) missingModules.add(match[1])
     }
@@ -68,6 +70,7 @@ async function main() {
   } catch (error) {
     // Location/status-only diagnostics: never publish raw response or stderr.
     report.errorCodes = [...errorCodes]; report.missingModules = [...missingModules]
+    report.redactedStderrTail = safeStderr
     report.serverExitCode = child.exitCode; report.spawnFailed = spawnFailed
     try {
       const challenge = crypto.randomBytes(16).toString('hex')
@@ -82,7 +85,7 @@ async function main() {
     fs.rmSync(temp, { recursive: true, force: true })
     const evidence = path.join(__dirname, '..', 'artifacts/windows-delivery')
     fs.mkdirSync(evidence, { recursive: true }); fs.writeFileSync(path.join(evidence, 'installed-server.json'), JSON.stringify(report, null, 2) + '\n')
-    console.log('::notice title=Installed standalone component test::' + JSON.stringify(report))
+    console.log('::notice title=Installed standalone component test::' + JSON.stringify(report).replace(/%/g, '%25'))
   }
 }
 main().catch(() => { console.error('Installed standalone component test failed; see stage in receipt, no raw credentials logged.'); process.exitCode = 1 })
