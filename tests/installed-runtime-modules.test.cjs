@@ -1,0 +1,25 @@
+'use strict'
+const { test } = require('node:test'), assert = require('node:assert/strict')
+const fs = require('node:fs'), path = require('node:path'), os = require('node:os')
+const asar = require('@electron/asar')
+const { projectRuntimeModules } = require('../scripts/lib/installed-runtime-modules.cjs')
+test('real ASAR production closure is projected to standalone, preserving the generated native client', async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-runtime-modules-test-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const input = path.join(root, 'input'), resources = path.join(root, 'resources')
+  for (const name of ['next', 'react', 'react-dom', '@prisma/client', 'fixture-transitive']) {
+    const dir = path.join(input, 'node_modules', name); fs.mkdirSync(dir, { recursive: true })
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name, version: '1.0.0', main: 'index.js' }))
+    fs.writeFileSync(path.join(dir, 'index.js'), 'module.exports = {}')
+  }
+  fs.mkdirSync(resources)
+  await asar.createPackage(input, path.join(resources, 'app.asar'))
+  const client = path.join(resources, 'standalone/node_modules/.prisma/client')
+  fs.mkdirSync(client, { recursive: true })
+  fs.writeFileSync(path.join(client, 'query_engine-windows.dll.node'), 'native-fixture-marker')
+  const result = projectRuntimeModules(resources)
+  assert.equal(result.outsideAsar, true)
+  assert.ok(fs.existsSync(path.join(resources, 'standalone/node_modules/fixture-transitive/index.js')))
+  assert.equal(fs.readFileSync(path.join(client, 'query_engine-windows.dll.node'), 'utf8'), 'native-fixture-marker')
+  assert.equal(fs.readFileSync(path.join(resources, 'standalone/node_modules/next/index.js'), 'utf8'), 'module.exports = {}')
+})

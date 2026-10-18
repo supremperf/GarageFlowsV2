@@ -34,11 +34,14 @@ async function main() {
     GF_INTERNAL_EXPORT_KEY: proofKey, GF_PHOTOS_DIR: photos }
   const child = spawn(process.execPath, ['--require', guard, path.join(standalone, 'server.js')], { cwd: standalone, env, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true })
   const report = { success: false, stage: 'startup', runtime: 'CI Node against installed standalone (not licensed Electron UI)', modulesRestrictedToInstalledPayload: true }
-  let spawnFailed = false, safeStderr = ''
+  let spawnFailed = false, rawStderr = '', stderrOverflow = false
   const errorCodes = new Set(), missingModules = new Set()
   child.stderr.on('data', chunk => {
     const text = chunk.toString()
-    safeStderr = (safeStderr + redact(text, { ...env, STARTUP_API_KEY: proofKey })).slice(-3000)
+    if (!stderrOverflow) {
+      rawStderr += text
+      if (rawStderr.length > 65536) { rawStderr = ''; stderrOverflow = true }
+    }
     for (const code of ['MODULE_NOT_FOUND', 'ERR_MODULE_NOT_FOUND', 'ERR_DLOPEN_FAILED', 'ENOENT', 'EADDRINUSE', 'PrismaClientInitializationError', 'PrismaClientKnownRequestError', 'Module outside installed payload']) if (text.includes(code)) errorCodes.add(code)
     for (const match of text.matchAll(/Cannot find module ['"]([^'"]+)['"]/g)) {
       if (/^(@[a-z0-9._-]+\/)?[a-z0-9._-]+(\/[a-z0-9./_-]+)?$/i.test(match[1])) missingModules.add(match[1])
@@ -70,7 +73,7 @@ async function main() {
   } catch (error) {
     // Location/status-only diagnostics: never publish raw response or stderr.
     report.errorCodes = [...errorCodes]; report.missingModules = [...missingModules]
-    report.redactedStderrTail = safeStderr
+    report.redactedStderrTail = stderrOverflow ? '[OVERSIZE_DIAGNOSTIC_WITHHELD]' : redact(rawStderr, { ...env, STARTUP_API_KEY: proofKey }).slice(-3000)
     report.serverExitCode = child.exitCode; report.spawnFailed = spawnFailed
     try {
       const challenge = crypto.randomBytes(16).toString('hex')

@@ -28,6 +28,11 @@ exports.default = async function afterPack(context) {
       ? path.join(appOutDir, `${packager.appInfo.productFilename}.app`, 'Contents', 'Resources')
       : path.join(appOutDir, 'resources')
 
+  // Complete the installed Node server's production closure BEFORE sealing resources.
+  const { projectRuntimeModules } = require('./lib/installed-runtime-modules.cjs')
+  const runtime = projectRuntimeModules(resourcesPath)
+  console.log('  ✓ Standalone production modules projected outside ASAR:', runtime.runtimeModules.join(', '))
+
   // ── Durcissement des Electron Fuses sur le binaire packagé ──────────────────
   // Grave les bits qui désactivent RunAsNode, --inspect, NODE_OPTIONS, etc. Échec
   // BLOQUANT : un binaire non durci est un build défectueux.
