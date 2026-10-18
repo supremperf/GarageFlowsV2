@@ -6,7 +6,9 @@ if ($env:GITHUB_ACTIONS -ne 'true' -or $env:RUNNER_OS -ne 'Windows' -or $env:GF_
 }
 $Root = Split-Path -Parent $PSScriptRoot
 $Setup = Join-Path $Root 'release/GarageFlows-Setup.exe'
-$UserData = Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'GarageFlow'
+$LegacyDataName = & node -p "require('./electron/user-data-path').LEGACY_DATA_DIR_NAME"
+if ($LASTEXITCODE -ne 0 -or -not $LegacyDataName) { throw 'Historical data path could not be determined' }
+$UserData = Join-Path ([Environment]::GetFolderPath('ApplicationData')) $LegacyDataName
 if (Test-Path $UserData) { throw 'Refused: userData already exists; no existing profile may be modified by this test.' }
 $InstallDir = Join-Path $env:RUNNER_TEMP ('GarageFlows installed ' + [guid]::NewGuid().ToString('N'))
 $EmptyCwd = Join-Path $env:RUNNER_TEMP ('gf-empty-cwd-' + [guid]::NewGuid().ToString('N'))

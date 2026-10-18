@@ -4,19 +4,30 @@ Application de gestion et de planning d'atelier automobile — bureau Windows (E
 
 ---
 
-## Prérequis
+## Installation client Windows — un seul fichier
+
+Le client reçoit **`GarageFlows-Setup.exe`**, l’exécute puis utilise le raccourci GarageFlows.
+Il n’a besoin ni des sources/dist/node_modules, ni de Node.js, npm, Python ou d’un .env.
+La licence reste requise ; les données persistent dans `%APPDATA%\GarageFlow` (nom historique).
+La sortie client est `release/GarageFlows-Setup.exe` ; dist reste un intermédiaire de build.
+
+**[Guide de distribution et limites de validation](docs/WINDOWS_DISTRIBUTION.md)** ·
+**[Rapport de fabrication Windows](docs/audit/windows-setup/01-RAPPORT.md)**.
+Une candidature de packaging n’est pas une autorisation de publication production.
+
+## Prérequis développeur / éditeur (pas chez le client)
 
 | Outil | Version minimale |
 |-------|-----------------|
 | Node.js | 22.x |
-| npm | 9 |
-| Python | 3.10 |
-| `cryptography` (pip) | 41 |
+| npm | 11.16.0 (épinglé) |
+| Python | 3.10+ pour les outils éditeur/keygen et tests seulement |
+| `cryptography` (pip) | versions/hashs de `tests/requirements-keygen.txt` |
 | Electron Builder | inclus via `devDependencies` |
 
 ---
 
-## Installation
+## Checkout développeur uniquement
 
 ```bash
 npm install
@@ -202,7 +213,7 @@ Couverture : utilitaires planning, calculs TVA, rate limiter, format des tokens 
 npm run dist          # Build Next.js + packaging Electron Builder (.exe)
 ```
 
-L'installateur est généré dans `dist/`. Le hook `afterPack`
+Le seul fichier client est généré dans **`release/GarageFlows-Setup.exe`**, après extraction et vérification du contenu réel du NSIS ; `dist/` conserve les intermédiaires, pas un dossier à distribuer. Le hook `afterPack`
 (`scripts/afterPack.js`) écrit automatiquement le **manifeste d'intégrité**
 signé (voir Sécurité ci-dessous).
 
