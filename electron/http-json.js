@@ -44,6 +44,9 @@ function requestJson(url, { method = 'GET', body, headers = {}, timeoutMs = 6000
       const transport = parsed.protocol === 'https:' ? https : http
       let retired = false
       const received = res => {
+        // Install error handlers before any early size rejection or destroy.
+        res.on('aborted', () => { if (!retired) finish(null) })
+        res.on('error', () => { if (!retired) finish(null) })
         if (done) { res.destroy(); return }
         response = res
         if (method === 'GET' && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
@@ -64,8 +67,6 @@ function requestJson(url, { method = 'GET', body, headers = {}, timeoutMs = 6000
           if (bytes > maxBytes || count > maxChunks) { finish(null); return }
           chunks.push(chunk)
         })
-        res.on('aborted', () => finish(null))
-        res.on('error', () => finish(null))
         res.on('end', () => {
           if (done) return
           try {
