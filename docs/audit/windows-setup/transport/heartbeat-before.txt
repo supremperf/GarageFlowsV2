@@ -1,0 +1,92 @@
+TAP version 13
+# Subtest: keeps JSON, User-Agent and split UTF8 metadata intact
+ok 1 - keeps JSON, User-Agent and split UTF8 metadata intact
+  ---
+  duration_ms: 23.588218
+  type: 'test'
+  ...
+# Subtest: POST preserves request data and authoritative HTTP status, with no redirect following
+ok 2 - POST preserves request data and authoritative HTTP status, with no redirect following
+  ---
+  duration_ms: 5.250658
+  type: 'test'
+  ...
+# Subtest: rejects declared and chunked oversize responses instead of parsing truncation
+ok 3 - rejects declared and chunked oversize responses instead of parsing truncation
+  ---
+  duration_ms: 6.039233
+  type: 'test'
+  ...
+# Subtest: an active slow response cannot keep the request alive past its total deadline
+ok 4 - an active slow response cannot keep the request alive past its total deadline
+  ---
+  duration_ms: 101.005749
+  type: 'test'
+  ...
+# Subtest: relative GET redirects are supported with a fixed hop budget
+ok 5 - relative GET redirects are supported with a fixed hop budget
+  ---
+  duration_ms: 8.429039
+  type: 'test'
+  ...
+# Subtest: redirect chain shares one deadline rather than resetting it on every hop
+ok 6 - redirect chain shares one deadline rather than resetting it on every hop
+  ---
+  duration_ms: 102.05046
+  type: 'test'
+  ...
+# Subtest: malformed JSON and interrupted responses resolve null, never partial success
+ok 7 - malformed JSON and interrupted responses resolve null, never partial success
+  ---
+  duration_ms: 5.850659
+  type: 'test'
+  ...
+# Subtest: redirect policy rejects invalid protocols and HTTPS downgrades
+ok 8 - redirect policy rejects invalid protocols and HTTPS downgrades
+  ---
+  duration_ms: 0.409258
+  type: 'test'
+  ...
+# Subtest: invalid options and circular request bodies resolve null without making a request
+ok 9 - invalid options and circular request bodies resolve null without making a request
+  ---
+  duration_ms: 0.511449
+  type: 'test'
+  ...
+# Subtest: chunk overhead is bounded as well as bytes (deterministic real-module transport fixture)
+ok 10 - chunk overhead is bounded as well as bytes (deterministic real-module transport fixture)
+  ---
+  duration_ms: 4.069834
+  type: 'test'
+  ...
+# Subtest: real HTTP503 with an active-looking body cannot reactivate a blocked license
+not ok 11 - real HTTP503 with an active-looking body cannot reactivate a blocked license
+  ---
+  duration_ms: 6.76673
+  type: 'test'
+  location: '/home/user/GarageFlowsV2/tests/electron-http-json.test.cjs:103:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected "actual" to be strictly unequal to:
+
+    'unblock'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'unblock'
+  actual: 'unblock'
+  operator: 'notStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/home/user/GarageFlowsV2/tests/electron-http-json.test.cjs:108:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 10
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 330.548247

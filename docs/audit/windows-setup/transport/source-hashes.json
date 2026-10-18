@@ -1,0 +1,25 @@
+{
+  "sourceCommit": "66859cc063264e2fc3ae14f31971b7729f40ff89",
+  "sources": [
+    {
+      "file": "electron/main.js",
+      "sha256": "2a0bae96c5f8a6a278b5585dc2252534337014f9911820411aeab81c633da7d5"
+    },
+    {
+      "file": "electron/http-json.js",
+      "sha256": "2895349fa63adabdaec27bd7d49521b084a5855ddb898d4014ea5fdb8ab9f651"
+    },
+    {
+      "file": "electron/heartbeat-policy.js",
+      "sha256": "e40229a4540b22258f66f50a012b0845f83f681643b0ab7c379b4bbe2b12a293"
+    },
+    {
+      "file": "tests/electron-http-json.test.cjs",
+      "sha256": "3f85392270008f3033d634540ce064be65344c19ae5630faecb92977831cd738"
+    },
+    {
+      "file": "src/lib/__tests__/electron-heartbeat-policy.test.ts",
+      "sha256": "eb1867959d0fa6bbcb259dc3dc57c51947f3132cfe22470ab22fda258d18786b"
+    }
+  ]
+}

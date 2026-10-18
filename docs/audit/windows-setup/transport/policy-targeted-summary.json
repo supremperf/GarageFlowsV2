@@ -1,0 +1,359 @@
+{
+  "passed": 88,
+  "failed": 0,
+  "pending": 0,
+  "tests": [
+    {
+      "name": "heartbeat licence — aucune réactivation automatique le refus est honoré quelle que soit l'autorité (fail-secure) révocation annoncée par l'autorité « remote » → blocage",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique le refus est honoré quelle que soit l'autorité (fail-secure) suspension annoncée par l'autorité « remote » → blocage",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique le refus est honoré quelle que soit l'autorité (fail-secure) révocation annoncée par l'autorité « local » → blocage",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique le refus est honoré quelle que soit l'autorité (fail-secure) suspension annoncée par l'autorité « local » → blocage",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique le refus est honoré quelle que soit l'autorité (fail-secure) expiration → blocage, statut conservé tel quel",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique le refus est honoré quelle que soit l'autorité (fail-secure) un refus sans statut retombe sur « unknown » bloquant, sans inventer de révocation",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique le refus est honoré quelle que soit l'autorité (fail-secure) un refus contradictoire (allowed:false + status:active) bloque quand même",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique le repli LOCAL ne réactive jamais — cœur du bug « active » du repli local pendant un blocage → maintien du blocage",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique le repli LOCAL ne réactive jamais — cœur du bug « active » sans autorité identifiée pendant un blocage → maintien du blocage",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique le repli LOCAL ne réactive jamais — cœur du bug répéter le « active » local ne finit PAS par débloquer",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique le repli LOCAL ne réactive jamais — cœur du bug un « active » local NON bloqué reste sans effet (disponibilité hors ligne)",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique seule l'autorité distante réactive « active » distant pendant un blocage → levée du blocage",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique seule l'autorité distante réactive « active » distant hors blocage → aucun changement",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel HTTP 301 ne vaut pas autorisation malgré un corps active",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel HTTP 302 ne vaut pas autorisation malgré un corps active",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel HTTP 400 ne vaut pas autorisation malgré un corps active",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel HTTP 401 ne vaut pas autorisation malgré un corps active",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel HTTP 403 ne vaut pas autorisation malgré un corps active",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel HTTP 426 ne vaut pas autorisation malgré un corps active",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel HTTP 429 ne vaut pas autorisation malgré un corps active",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel HTTP 500 ne vaut pas autorisation malgré un corps active",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel HTTP 502 ne vaut pas autorisation malgré un corps active",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel HTTP 503 ne vaut pas autorisation malgré un corps active",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel HTTP 504 ne vaut pas autorisation malgré un corps active",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel HTTP null ne vaut pas autorisation malgré un corps active",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel HTTP 200 ne vaut pas autorisation malgré un corps active",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel active sans allowed explicite ne réactive pas",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel HTTP200 distant + accord explicite réactive, mais le repli local reste sans autorité",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique réactivation positive : autorisation et statut HTTP réel la politique de refus explicite et de version minimale est inchangée",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique les réponses indéterminées ne lèvent rien statut « unknown » (base non enregistrée / fail-open) pendant un blocage",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique les réponses indéterminées ne lèvent rien statut inattendu pendant un blocage",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique les réponses indéterminées ne lèvent rien `allowed:true` SANS statut ne vaut pas réactivation",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique les réponses indéterminées ne lèvent rien aucune réponse (les deux autorités injoignables) → état courant conservé",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique les réponses indéterminées ne lèvent rien réponse non-objet (corps HTML d'un portail captif, chaîne, tableau)",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique séquence complète — le scénario rapporté révocation admin puis serveur distant injoignable : le blocage tient",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique séquence complète — le scénario rapporté une licence SUSPENDUE ne se relève pas non plus toute seule",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique pureté — la décision ne dépend que de ses arguments n'altère pas le résultat qu'on lui passe",
+      "status": "passed"
+    },
+    {
+      "name": "heartbeat licence — aucune réactivation automatique pureté — la décision ne dépend que de ses arguments deux appels identiques rendent la même décision",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier Prisma fermé → DB_UNAVAILABLE",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier Prisma fermé → DB_UNAVAILABLE",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier Prisma fermé → DB_UNAVAILABLE",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier un bug inconnu reste INTERNAL_ERROR, pas une panne DB supposée",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier activation Electron=1 : DB down → aucune session ni appareil",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier activation Electron=0 : DB down → aucune session ni appareil",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier activation Electron=1 : erreur appareil → aucune session",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier activation Electron=0 : erreur appareil → aucune session",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier clé mécanicien Electron=1 : DB down ≠ clé non attribuée",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier clé mécanicien Electron=0 : DB down ≠ clé non attribuée",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier refus siège/appareil ferme la session",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier refus siège/appareil ferme la session",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier secret absent/faible → SERVER_MISCONFIGURED avant toute écriture",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier secret absent/faible → SERVER_MISCONFIGURED avant toute écriture",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier MAC invalide → LICENSE_TAMPERED, jamais LICENSE_INVALID",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier check conserve HTTP 200 + allowed:false sur révocation métier",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier status conserve HTTP 200 + allowed:false sur révocation métier",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier check/deactivate DB down → 503 sur Electron aussi",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier status/devices : secret absent distinct d’un JWT invalide",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier status/devices : DB down ≠ révocation",
+      "status": "passed"
+    },
+    {
+      "name": "frontière technique : pas de confusion avec un refus métier configuration explicitement typée",
+      "status": "passed"
+    },
+    {
+      "name": "clé publique mal configurée : route activation → 500 SERVER_MISCONFIGURED",
+      "status": "passed"
+    },
+    {
+      "name": "la mort du serveur interne ne passe plus inaperçue une sortie non voulue ouvre une boîte de dialogue",
+      "status": "passed"
+    },
+    {
+      "name": "la mort du serveur interne ne passe plus inaperçue la boîte propose de RELANCER, pas seulement de fermer",
+      "status": "passed"
+    },
+    {
+      "name": "la mort du serveur interne ne passe plus inaperçue une fermeture VOULUE ne déclenche pas l’annonce de panne",
+      "status": "passed"
+    },
+    {
+      "name": "la mort du serveur interne ne passe plus inaperçue chaque arrêt délibéré pose le drapeau avant de tuer le processus",
+      "status": "passed"
+    },
+    {
+      "name": "l’échec des sauvegardes est dit à quelqu’un le module de décision est branché",
+      "status": "passed"
+    },
+    {
+      "name": "l’échec des sauvegardes est dit à quelqu’un la boucle horaire passe par la fonction qui AVERTIT",
+      "status": "passed"
+    },
+    {
+      "name": "l’échec des sauvegardes est dit à quelqu’un l’avertissement aboutit à une boîte de dialogue",
+      "status": "passed"
+    },
+    {
+      "name": "l’export du soir ne dépend plus d’un compte à rebours le module d’échéance est branché",
+      "status": "passed"
+    },
+    {
+      "name": "l’export du soir ne dépend plus d’un compte à rebours la vérification est périodique, pas un unique délai de dix heures",
+      "status": "passed"
+    },
+    {
+      "name": "l’export du soir ne dépend plus d’un compte à rebours seul un export RÉUSSI est mémorisé",
+      "status": "passed"
+    },
+    {
+      "name": "l’export du soir ne dépend plus d’un compte à rebours le minuteur est bien annulé comme un intervalle",
+      "status": "passed"
+    },
+    {
+      "name": "les sondes matérielles ne gèlent plus le processus principal le numéro de série du disque n’est lu qu’une fois",
+      "status": "passed"
+    },
+    {
+      "name": "les sondes matérielles ne gèlent plus le processus principal l’identifiant machine n’est lu qu’une fois",
+      "status": "passed"
+    },
+    {
+      "name": "les sondes matérielles ne gèlent plus le processus principal les deux empreintes sont calculées une seule fois par exécution",
+      "status": "passed"
+    },
+    {
+      "name": "les sondes matérielles ne gèlent plus le processus principal la collecte V1 ne sonde plus le disque deux fois dans la même expression",
+      "status": "passed"
+    },
+    {
+      "name": "le journal a une borne, et on ne le charge plus en entier une taille maximale est définie et la rotation existe",
+      "status": "passed"
+    },
+    {
+      "name": "le journal a une borne, et on ne le charge plus en entier la rotation conserve la génération précédente",
+      "status": "passed"
+    },
+    {
+      "name": "le journal a une borne, et on ne le charge plus en entier le rapport d’incident ne lit que la QUEUE du journal",
+      "status": "passed"
+    },
+    {
+      "name": "un double-clic pendant le démarrage fait quelque chose le splash sert RÉELLEMENT de repli, pas seulement de variable examinée",
+      "status": "passed"
+    },
+    {
+      "name": "un double-clic pendant le démarrage fait quelque chose un splash volontairement masqué n’est pas ramené devant",
+      "status": "passed"
+    },
+    {
+      "name": "le cycle de mise à jour une redirection ne peut pas faire passer la métadonnée en clair",
+      "status": "passed"
+    },
+    {
+      "name": "le cycle de mise à jour le nom de fichier vient de l’assainisseur, des DEUX côtés",
+      "status": "passed"
+    },
+    {
+      "name": "le cycle de mise à jour une tentative d’installation est mémorisée pour ne pas boucler",
+      "status": "passed"
+    },
+    {
+      "name": "le cycle de mise à jour une mise à jour OBLIGATOIRE n’est jamais tue par cette mémoire",
+      "status": "passed"
+    },
+    {
+      "name": "le cycle de mise à jour les installateurs abandonnés sont purgés au démarrage",
+      "status": "passed"
+    },
+    {
+      "name": "le cycle de mise à jour l’application ne se ferme pas quand l’installateur n’a pas démarré",
+      "status": "passed"
+    },
+    {
+      "name": "l’installateur ne désinstalle plus avant confirmation aucune macro ne lance l’ancien désinstalleur depuis customInit",
+      "status": "passed"
+    },
+    {
+      "name": "l’installateur ne désinstalle plus avant confirmation la raison du retrait est écrite, pour qu’on ne le remette pas",
+      "status": "passed"
+    }
+  ]
+}

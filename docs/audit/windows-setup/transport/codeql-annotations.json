@@ -1,0 +1,56 @@
+[
+  {
+    "path": "scripts/config-core.cjs",
+    "line": 97,
+    "title": "Incomplete string escaping or encoding",
+    "message": "This does not escape backslash characters in the input."
+  },
+  {
+    "path": "scripts/lib/config-credentials.cjs",
+    "line": 11,
+    "title": "Use of password hash with insufficient computational effort",
+    "message": "Password from [an access to PGPASSWORD](1) is hashed insecurely.\nPassword from [an access to password](2) is hashed insecurely.\nPassword from [an access to password](3) is hashed insecurely.\nPassword from [an access to password](4) is hashed insecurely.\nPassword from [an access to password](5) is hashed insecurely.\nPassword from [an access to password](6) is hashed insecurely.\nPassword from [a call to neonVariables](7) is hashed insecurely.\nPassword from [an access to password](8) is hashed insecurely.\nPassword from [a call to neonVariables](9) is hashed insecurely.\nPassword from [an access to password](10) is hashed insecurely."
+  },
+  {
+    "path": "electron/http-json.js",
+    "line": 92,
+    "title": "File data in outbound network request",
+    "message": "Outbound network request depends on [file data](1)."
+  },
+  {
+    "path": "electron/main.js",
+    "line": 614,
+    "title": "Network data written to file",
+    "message": "Write to file system depends on [Untrusted data](1)."
+  },
+  {
+    "path": "electron/main.js",
+    "line": 2118,
+    "title": "Network data written to file",
+    "message": "Write to file system depends on [Untrusted data](1)."
+  },
+  {
+    "path": "scripts/config-core.cjs",
+    "line": 147,
+    "title": "Network data written to file",
+    "message": "Write to file system depends on [Untrusted data](1)."
+  },
+  {
+    "path": "scripts/config-services.cjs",
+    "line": 153,
+    "title": "File data in outbound network request",
+    "message": "Outbound network request depends on [file data](1)."
+  },
+  {
+    "path": "scripts/test-installed-server.cjs",
+    "line": 90,
+    "title": "Network data written to file",
+    "message": "Write to file system depends on [Untrusted data](1)."
+  },
+  {
+    "path": "src/lib/sync/cloud-client.ts",
+    "line": 78,
+    "title": "File data in outbound network request",
+    "message": "Outbound network request depends on [file data](1)."
+  }
+]

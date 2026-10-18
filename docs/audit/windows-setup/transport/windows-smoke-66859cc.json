@@ -1,0 +1,17 @@
+{
+  "success": true,
+  "stage": "complete",
+  "installExecuted": true,
+  "activationWindowOpened": true,
+  "restrictedPathLaunch": true,
+  "sqliteSentinelWritten": true,
+  "installedServerComponentsPassed": true,
+  "reinstallPreservedData": true,
+  "uninstallPreservedData": true,
+  "licensedBusinessWorkflowTested": false,
+  "cleanOSWithoutBuildToolsTested": false,
+  "authenticodeStatus": "NotSigned",
+  "installerProcessExited": true,
+  "installerExitCode": 0,
+  "installedExePresent": true
+}

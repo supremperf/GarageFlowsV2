@@ -1,0 +1,8 @@
+{
+  "fixture": "finite loopback JSON drip, no large payload",
+  "configuredTimeoutMs": 100,
+  "legacyAcceptedAfterMs": 308,
+  "legacyParsed": true,
+  "newReturnedNullAtDeadline": true,
+  "productionEndpointContacted": false
+}

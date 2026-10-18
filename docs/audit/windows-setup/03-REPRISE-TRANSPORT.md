@@ -36,3 +36,21 @@ Le test du vrai POST réseau + vraie heartbeatDecision a mis en évidence un dé
 Correction minimale de la seule branche positive : accord explicite allowed:true obligatoire ; quand le transport fournit httpStatus (toujours dans le vrai chemin), seul200 peut réactiver. Les anciens appelants directs sans champ HTTP restent compatibles s’ils fournissent l’accord explicite. Repli local jamais autorité, refus/révocation/expiration/minVersion toujours honorés, aucune rotation ni nouvelle émission de licence.
 
 Après :11/11transport,88/88heartbeat/infra/câblage ; matrice de13statuts invalides (3xx,4xx,5xx,null/typeerroné), réponse active sans accord, succès200 et refus426 inchangés. Types/lint0. Le résultat metadata HTTP réel prime toujours sur une propriété httpStatus reçue dans le JSON.
+
+## Résultats finaux du SHA66859cc
+
+- **431/431 Node**, **113/113 release-safety**, **88/88 ciblés** de politique/licence/câblage, **11/11 transport**, types/lint/cohérence0 ;24guards baseline/docs0échec. La globale locale réelle est **4238total/3386pass/3échecs TLSPrisma/849pending**, mêmes79fichiers empêchés ; aucune erreur supplémentaire attribuée au réseau.
+- CI [39150958125](https://github.com/supremperf/GarageFlowsV2/actions/runs/39150958125) : tests natifs SQLite/PostgreSQL/Redis, build/budget standard, audit complet, Gitleaks et E2E publics **SUCCESS**. La [recette Windows117745065119](https://github.com/supremperf/GarageFlowsV2/actions/runs/39150958125/job/117745065119) passe : vraie installation/lancement sécurisé, serveur installé, SQLite/export/backup/migration, relance/réinstallation/désinstallation et conservation des données vérifiées.
+- **CodeQL reste9résultats (2high/7medium)**. Le déplacement du transport dans un module n’est pas revendiqué comme résolution de ces flows. E2E authentifié toujours rouge au précontrôle de staging, Required validation rouge, release gate manuel skipped par événement.
+
+### Setup réel de ce correctif
+
+[Artefact client](https://github.com/supremperf/GarageFlowsV2/actions/runs/39150958125/artifacts/12144369832), transport ZIP GitHub contenant seulement **GarageFlows-Setup.exe**. Fichier produit dans **release/GarageFlows-Setup.exe**, version1.1.0, Windowsx64/NSIS offline ; **231058681octets (220.4Mio)**, SHA256 **d77b1aa7a99c47b0bee5e8c7f3d125f41cfbf2a0a7aafd54093154bb088e88df**.3045fichiers/hashs de payload vérifiés,7fuses conformes et scan de clés privées passé. [Identité](transport/delivery-66859cc.json), [smokeWindows](transport/windows-smoke-66859cc.json), [serveur installé](transport/installed-server-66859cc.json). GitHub enveloppe l’EXE dans un ZIP pour l’éditeur ; le client ne reçoit que l’EXE, pas les sources/dist/ressources séparées.
+
+**NotSigned Authenticode**, pas de validation d’un PC d’usine sans outils ni d’une session métier avec licence/autorité de production. Pas de nouveau certificat/clé généré pour prétendre le contraire. Aucun artefact binaire ajouté à Git, aucune publication production/merge/déploiement/migration/rotation. Les données/templates, chemins historiques, ancres publiques,14langues et PWA/PostgreSQL n’ont pas été remplacés.
+
+### Preuves et limites
+
+[Reproduction ancien/nouveau](transport/legacy-deadline-reproduction.json), [tests transport](transport/heartbeat-after.txt), [ciblés](transport/policy-targeted-summary.json), [Node](transport/node.txt), [globale locale](transport/global-failures.json), [CI exacte](transport/ci-66859cc-final.json), [CodeQL](transport/codeql-66859cc.json), [validation structurée](transport/validation.json).
+
+**NO-GO production maintenu**, malgré ces deux défauts structurels corrigés et un candidat Windows réel revalidé. Les151alertes annoncées sur main/REST403 et les conditions de staging/CodeQL/signature/recette métier ne sont pas effacées par un packaging réussi. Les preuves sont celles du SHA66859cc ; les mises à jour de rapport ultérieures ne reçoivent pas artificiellement ses checks.

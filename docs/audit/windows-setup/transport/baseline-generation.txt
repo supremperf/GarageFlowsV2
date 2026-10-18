@@ -1,0 +1,5 @@
+✅ artifacts/verification/baseline.json écrit :
+   commit 66859cc · version 1.1.0 · Node v22.22.3
+   Prisma résolu 5.22.0 (déclaré ^5.16.1)
+   tests : 3386/4238 (849 ignorés)
+   doc canonique : bloc AUTO mis à jour
