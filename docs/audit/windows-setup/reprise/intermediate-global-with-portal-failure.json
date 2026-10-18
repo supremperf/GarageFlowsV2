@@ -447,7 +447,7 @@
           "title": "republier CONSERVE le lien déjà distribué (GF-002)",
           "duration": 94.007519,
           "failureMessages": [
-            "AssertionError: expected 'https://app.garageflows.fr/clients/ey…' to be 'https://app.garageflows.fr/clients/ey…' // Object.is equality\n    at /home/user/GarageFlowsV2/src/app/api/sync/__tests__/portal-snapshot.test.ts:201:19\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+            "AssertionError: expected '[SYNTHETIC_PORTAL_URL_REDACTED]' to be '[SYNTHETIC_PORTAL_URL_REDACTED]' // Object.is equality\n    at /home/user/GarageFlowsV2/src/app/api/sync/__tests__/portal-snapshot.test.ts:201:19\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
           ],
           "meta": {},
           "tags": []
