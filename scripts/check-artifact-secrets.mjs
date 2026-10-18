@@ -26,6 +26,8 @@ import { readdirSync, statSync, readFileSync, existsSync, openSync, fstatSync, c
 import { spawnSync } from 'child_process'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { createRequire } from 'node:module'
+const require_ = createRequire(import.meta.url)
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -93,15 +95,12 @@ function walk(dir, baseDir) {
 }
 
 /** Inspecte l'INTÉRIEUR d'un installateur NSIS via 7-Zip (liste des entrées). */
-function inspectInstaller(exe) {
-  const sevenZip = path.join(ROOT, 'node_modules', '7zip-bin', 'win', 'x64', '7za.exe')
-  if (!existsSync(sevenZip)) {
-    console.warn('  ⚠  7za introuvable — contenu de l’installateur NON inspecté.')
-    return
-  }
+async function inspectInstaller(exe) {
+  // Reuse builder26's checksummed toolset, not its removed legacy dependency.
+  const sevenZip = await require_('app-builder-lib/out/toolsets/7zip').getPath7za()
   const res = spawnSync(sevenZip, ['l', exe], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
   const listing = res.stdout || ''
-  if (!listing.trim()) { console.warn('  ⚠  listing vide — installateur non inspecté.'); return }
+  if (res.status !== 0 || res.error || res.signal || !listing.trim()) throw new Error('NSIS listing failed: installer NOT inspected')
   for (const line of listing.split(/\r?\n/)) {
     const m = line.match(/\s(\S+\.(?:pem|key|pkcs8))\s*$/i)
     if (!m) continue
@@ -133,7 +132,7 @@ console.log(`🔎 check:artifact-secrets — ${secrets.length} valeur(s) secrèt
 for (const t of targets) {
   if (!existsSync(t)) continue
   if (statSync(t).isDirectory()) { walk(t, t); console.log(`  ✓ dossier inspecté : ${path.basename(t)} (${scanned} fichiers)`) }
-  else if (t.toLowerCase().endsWith('.exe')) inspectInstaller(t)
+  else if (t.toLowerCase().endsWith('.exe')) await inspectInstaller(t)
 }
 
 if (violations.length > 0) {

@@ -55,3 +55,12 @@ test('actual payload comparison rejects missing, extra and altered files', async
   fs.writeFileSync(path.join(b, 'foreign'), 'extra')
   await assert.rejects(comparePayload(a, b), /inventory differs/)
 })
+
+test('NSIS inspection uses the current pinned builder toolset, not removed 7zip-bin', () => {
+  assert.equal(typeof require('app-builder-lib/out/toolsets/7zip').getPath7za, 'function')
+  const source = fs.readFileSync(path.join(__dirname, '../scripts/lib/windows-delivery.cjs'), 'utf8')
+  assert.ok(!source.includes("require('7zip-bin')"))
+  const scan = fs.readFileSync(path.join(__dirname, '../scripts/check-artifact-secrets.mjs'), 'utf8')
+  assert.match(scan, /await inspectInstaller/)
+  assert.match(scan, /res.status !== 0/)
+})

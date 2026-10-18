@@ -52,7 +52,7 @@ async function inspectNsis(root, installer) {
   const asar = require('@electron/asar')
   const entries = [...regularFiles(unpacked), ...asar.listPackage(path.join(unpacked, 'resources', 'app.asar'))]
   if (entries.some(entry => forbidden.test(entry.replace(/\\/g, '/')))) throw new Error('Publisher-only file or environment found in application payload')
-  const sevenZip = require('7zip-bin').path7za
+  const sevenZip = await require('app-builder-lib/out/toolsets/7zip').getPath7za()
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-nsis-inspect-'))
   function extract(archive, destination) {
     const run = spawnSync(sevenZip, ['x', '-y', '-o' + destination, archive], { encoding: 'utf8', shell: false, maxBuffer: 16 * 1024 * 1024, timeout: 180000 })
