@@ -11,9 +11,35 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
 
+def explain(receipt):
+    """Human explanation of a refusal (public fingerprints only), then the raw receipt."""
+    issuer = receipt.get("issuerFingerprint") or ""
+    anchors = receipt.get("anchors") or {}
+    expected = {a.get("fingerprint") for a in anchors.values() if a.get("fingerprint")}
+    lines = []
+    if receipt.get("code") == "KEY_MISMATCH_OR_ANCHOR_UNAVAILABLE" and issuer and len(expected) == 1:
+        lines += [
+            "La clé privée de ce keygen (keys/private.pem, empreinte " + issuer[:16] + "…) n'est PAS",
+            "la clé de licence de production (" + next(iter(expected))[:16] + "…) : une licence signée",
+            "avec elle serait refusée par le logiciel. Signature bloquée, rien n'a été écrit.",
+            "",
+            "Correctif automatique : dans le dossier du projet, lancer",
+            "    npm run keys:find-issuer",
+            "(retrouve la clé de production sur ce poste — anciens dossiers du projet, .env.server.local —,",
+            "vérifiée par empreinte, et l'installe ; la clé actuelle est mise de côté hors du projet).",
+            "Ne pas régénérer de clé pour contourner ce contrôle.",
+        ]
+    elif receipt.get("code") == "KEY_MISMATCH_OR_ANCHOR_UNAVAILABLE":
+        lines += [
+            "Ancres de clé publique incohérentes ou illisibles : lancer `npm run keys:restore`,",
+            "puis `npm run keys:find-issuer`.",
+        ]
+    return "\n".join(lines + ["", "Détail : " + json.dumps(receipt, ensure_ascii=False)]) if lines else json.dumps(receipt, ensure_ascii=False)
+
+
 class KeyMatchError(ValueError):
     def __init__(self, receipt):
-        super().__init__(json.dumps(receipt, ensure_ascii=False))
+        super().__init__(explain(receipt))
         self.receipt = receipt
 
 

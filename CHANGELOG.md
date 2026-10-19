@@ -13,6 +13,19 @@
   privée, jamais d’adoption de la clé divergente, jamais de modification de `REFERENCE_FP`
   (`scripts/restore-public-anchors.cjs`, `npm run keys:restore`,
   `tests/restore-public-anchors.test.cjs`).
+- **Keygen : clé privée non conforme retrouvée automatiquement.** Constaté sur le poste du
+  signalement après la remise des ancres : le keygen refusait de signer
+  (`KEY_MISMATCH_OR_ANCHOR_UNAVAILABLE`), `keys/private.pem` portant une clé `29cc486d…`
+  jamais publiée. `npm run keys:find-issuer` cherche sur le poste la clé privée dont
+  l'empreinte est exactement `REFERENCE_FP` (anciens dossiers du projet, `.env*.local`),
+  l'installe pour le keygen et met l'ancienne de côté hors du projet ; aucune clé affichée
+  ni générée (`scripts/find-issuer-key.cjs`, `tests/find-issuer-key.test.cjs`). Le message
+  du keygen explique désormais le refus et ce correctif au lieu d'un JSON brut.
+- **Pas de choix automatique face à une autorité locale.** Si la clé divergente est détenue
+  par une autorité créée sur ce poste (reçu `config` ou `keys/private.pem` non apparié à la
+  clé de référence), la remise automatique ne s'applique pas : `config` la défairait au
+  passage suivant. Le message expose les deux décisions (revenir à la production / adopter
+  la nouvelle autorité par `keys:sync`).
 - Diagnostic : un dépôt git **parent** faisait apparaître les trois fichiers comme
   « modifiés localement » et le remède proposait `git restore` dans un dossier sans git ;
   l’état git n’est plus lu que si le projet est lui-même la racine du dépôt.

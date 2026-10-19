@@ -208,6 +208,29 @@ function systemTrustFetch(url, { headers = {}, signal } = {}) {
   })
 }
 
+/**
+ * Preuve, SANS lire de clé privée, qu'une autorité locale détient l'une des clés
+ * divergentes : reçu de création de `config` portant cette empreinte, ou
+ * keys/private.pem dont la moitié publique voisine (keys/public.pem, écrite avec
+ * elle par config/keygen) n'est pas la clé de référence.
+ */
+function localAuthority(root, divergentFps, referenceFp) {
+  const reasons = []
+  // Reçu de création de `config` : lu par SON module (chemin et schéma définis une seule fois).
+  try {
+    const receipt = require('./config-keys.cjs').readState(root)
+    if (receipt && divergentFps.includes(receipt.licensePublicFingerprint)) reasons.push('reçu de création de clés de `config` portant cette empreinte')
+  } catch (error) {
+    if (error && error.code !== 'MODULE_NOT_FOUND') reasons.push(`reçu de création de clés de \`config\` illisible (${error.message})`)
+  }
+  if (fs.existsSync(path.join(root, 'keys', 'private.pem'))) {
+    let publicFp = null
+    try { publicFp = fingerprintOf(fs.readFileSync(path.join(root, 'keys', 'public.pem'), 'utf8')) } catch { /* absent */ }
+    if (publicFp !== referenceFp) reasons.push(`keys/private.pem présent (clé publique associée : ${publicFp ? `${publicFp.slice(0, 16)}…` : 'inconnue'})`)
+  }
+  return reasons.length ? reasons.join(' ; ') : null
+}
+
 function stamp() {
   return new Date().toISOString().replace(/[:.]/g, '-')
 }
@@ -252,6 +275,22 @@ async function restorePublicAnchors(root, options = {}) {
     // Une clé illisible dans un littéral UNIQUE, elle, peut être remplacée.
     if (anchor.error && !anchor.error.startsWith('clé publique illisible')) {
       return { restored: false, reason: `${anchor.file} : ${anchor.error} — aucune réécriture approximative` }
+    }
+  }
+
+  // Une autorité de licence LOCALE qui détient la clé divergente (créée par
+  // `config`/keygen sur ce poste) signifie une création ou une rotation NON
+  // TERMINÉE, pas une copie parasite : revenir à l'ancienne clé ici serait
+  // défait au prochain `config` (qui resynchronise vers sa clé), et la poursuivre
+  // changerait l'autorité de toutes les licences. Les deux sont des décisions.
+  const divergentFps = inspection.anchors.filter(a => a.kind === 'literal' && a.fingerprint && a.fingerprint !== inspection.expected).map(a => a.fingerprint)
+  const authority = localAuthority(root, divergentFps, inspection.expected)
+  if (authority) {
+    return {
+      restored: false,
+      decision: true,
+      reason: `une autorité de licence LOCALE détient la clé divergente (${authority}) : création ou rotation lancée sur ce poste et non terminée — choix requis`,
+      divergent: [...new Set(divergentFps)],
     }
   }
 
@@ -326,6 +365,19 @@ function describe(result) {
       lines.push('      `npm run keys:sync` (les trois ancres ensemble), pas en modifiant deux fichiers sur trois.')
       break
     }
+  } else if (result.decision) {
+    const fp = (result.divergent || [])[0] || ''
+    lines.push(`Réparation automatique NON appliquée : ${result.reason}.`,
+      `   Clé de la nouvelle autorité locale : ${fp.slice(0, 16)}…   Clé de référence (production) : REFERENCE_FP.`,
+      '   A. Revenir à la clé de PRODUCTION (licences existantes et serveur conservés — cas habituel) :',
+      '      déplacer hors du projet (ne pas supprimer) le dossier keys\\ et le reçu de création de',
+      '      clés de `config` (generated-keys.json, dossier de configuration), puis relancer',
+      '      `npm run dist` : la remise automatique s\'appliquera. Le keygen devra utiliser la clé',
+      '      privée de production (`npm run keys:find-issuer` la cherche sur ce poste).',
+      '   B. ADOPTER la nouvelle autorité (toutes les licences existantes deviendront invalides,',
+      '      serveur Vercel et vitrine à aligner) : `npm run keys:sync`, puis déplacer',
+      '      keys\\private.pem hors du projet (un installeur ne se construit jamais à côté d\'une',
+      '      clé privée), puis `npm run dist`.')
   } else {
     lines.push(`Réparation automatique impossible : ${result.reason}.`)
     for (const t of result.tried || []) lines.push(`   – ${t.source} : ${t.outcome}`)
