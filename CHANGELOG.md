@@ -13,6 +13,23 @@
   privée, jamais d’adoption de la clé divergente, jamais de modification de `REFERENCE_FP`
   (`scripts/restore-public-anchors.cjs`, `npm run keys:restore`,
   `tests/restore-public-anchors.test.cjs`).
+- **Serveur : plus de licence signée avec une clé qui n'est pas celle de production.**
+  `POST /api/admin/licenses/generate` signait avec la première clé trouvée
+  (`GF_PRIVATE_KEY`, sinon `keys/private.pem`) sans la comparer à la clé publique
+  embarquée : une clé locale produisait des licences « générées » côté administration,
+  toutes refusées à l'activation. La clé est désormais vérifiée par empreinte avant toute
+  signature (`src/lib/license/issuer-key.ts`, `ISSUER_KEY_MISMATCH`), comme dans le keygen ;
+  le PEM brut dans `GF_PRIVATE_KEY` est lu comme le faisait déjà `/api/admin/diagnostics`.
+- **Keygen graphique : la clé de production se retrouve sans terminal.** Au démarrage (clé
+  absente ou non conforme), après un refus de signature et via l'onglet « Clés ECC », le
+  keygen propose « Rechercher la clé de production sur ce PC » (`keys:find-issuer`,
+  passphrase par l'entrée standard). Détection corrigée quand `keys/public.pem` est la
+  moitié publique de la paire locale (seules les ancres source définissent la production).
+  Clé chiffrée : installée telle quelle et relue réellement avec sa passphrase ; une clé de
+  production chiffrée déjà en place n'est plus mise de côté. « Initialiser les clés »
+  avertit qu'une nouvelle paire ne signe aucune licence acceptée sans rotation.
+  Tests : `scripts/test_keygen_issuer_recovery.py` (17), `tests/find-issuer-key.test.cjs` (8),
+  `src/lib/license/__tests__/issuer-key.test.ts` (5).
 - **Keygen : clé privée non conforme retrouvée automatiquement.** Constaté sur le poste du
   signalement après la remise des ancres : le keygen refusait de signer
   (`KEY_MISMATCH_OR_ANCHOR_UNAVAILABLE`), `keys/private.pem` portant une clé `29cc486d…`

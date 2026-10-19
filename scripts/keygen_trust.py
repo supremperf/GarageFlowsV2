@@ -3,7 +3,10 @@ import argparse
 import getpass
 import hashlib
 import json
+import os
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -11,20 +14,32 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
 
+# Ancres SOURCE : ce que le logiciel vérifie réellement. keys/public.pem n'en est
+# qu'une copie de travail (souvent la moitié publique d'une paire locale) : il ne
+# définit PAS la production.
+SOURCE_ANCHORS = ("pwa-source", "electron-source")
+
+
+def production_fingerprint(receipt):
+    """Empreinte des ancres source si elles concordent, sinon None."""
+    anchors = (receipt or {}).get("anchors") or {}
+    fps = {(anchors.get(name) or {}).get("fingerprint") for name in SOURCE_ANCHORS}
+    return next(iter(fps)) if len(fps) == 1 and None not in fps else None
+
+
 def explain(receipt):
     """Human explanation of a refusal (public fingerprints only), then the raw receipt."""
     issuer = receipt.get("issuerFingerprint") or ""
-    anchors = receipt.get("anchors") or {}
-    expected = {a.get("fingerprint") for a in anchors.values() if a.get("fingerprint")}
+    production = production_fingerprint(receipt)
     lines = []
-    if receipt.get("code") == "KEY_MISMATCH_OR_ANCHOR_UNAVAILABLE" and issuer and len(expected) == 1:
+    if receipt.get("code") == "KEY_MISMATCH_OR_ANCHOR_UNAVAILABLE" and issuer and production and issuer != production:
         lines += [
             "La clé privée de ce keygen (keys/private.pem, empreinte " + issuer[:16] + "…) n'est PAS",
-            "la clé de licence de production (" + next(iter(expected))[:16] + "…) : une licence signée",
+            "la clé de licence de production (" + production[:16] + "…) : une licence signée",
             "avec elle serait refusée par le logiciel. Signature bloquée, rien n'a été écrit.",
             "",
-            "Correctif automatique : dans le dossier du projet, lancer",
-            "    npm run keys:find-issuer",
+            "Correctif automatique : keygen → onglet « Clés ECC » → « Rechercher la clé de production »,",
+            "ou, dans le dossier du projet :  npm run keys:find-issuer",
             "(retrouve la clé de production sur ce poste — anciens dossiers du projet, .env.server.local —,",
             "vérifiée par empreinte, et l'installe ; la clé actuelle est mise de côté hors du projet).",
             "Ne pas régénérer de clé pour contourner ce contrôle.",
@@ -41,6 +56,44 @@ class KeyMatchError(ValueError):
     def __init__(self, receipt):
         super().__init__(explain(receipt))
         self.receipt = receipt
+
+
+def is_issuer_mismatch(error):
+    """True when the SOURCE anchors agree and the loaded private key is another key (e.g. 29cc… ≠ production)."""
+    receipt = getattr(error, "receipt", None) or {}
+    issuer = receipt.get("issuerFingerprint")
+    production = production_fingerprint(receipt)
+    return (receipt.get("code") == "KEY_MISMATCH_OR_ANCHOR_UNAVAILABLE" and bool(issuer)
+            and production is not None and issuer != production)
+
+
+def run_find_issuer(root, passphrase="", dry_run=False, timeout=240, node=None, script=None):
+    """Run scripts/find-issuer-key.cjs (search the PRODUCTION key on this PC, verify, install).
+
+    Returns (exit_code, output). The passphrase travels on stdin only — never in argv,
+    the environment or the output. Nothing is generated; see the script for guarantees.
+    """
+    root = Path(root)
+    node = node or shutil.which("node") or shutil.which("node.exe")
+    if not node:
+        return 127, ("Node.js est introuvable sur ce poste : ouvrir un terminal dans le dossier du projet et lancer\n"
+                     "    npm run keys:find-issuer")
+    args = [node, str(script or root / "scripts" / "find-issuer-key.cjs")]
+    if dry_run:
+        args.append("--dry-run")
+    if passphrase:
+        args.append("--passphrase-stdin")
+    kwargs = {}
+    if os.name == "nt":
+        kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    try:
+        proc = subprocess.run(args, cwd=str(root), input=(passphrase or ""), capture_output=True,
+                              text=True, encoding="utf-8", errors="replace", timeout=timeout, **kwargs)
+    except subprocess.TimeoutExpired:
+        return 124, "Recherche interrompue (durée maximale dépassée). Relancer `npm run keys:find-issuer` dans un terminal."
+    except OSError as exc:
+        return 126, f"Impossible de lancer Node.js ({exc.__class__.__name__}). Lancer `npm run keys:find-issuer` dans un terminal."
+    return proc.returncode, (proc.stdout + ("\n" + proc.stderr if proc.stderr.strip() else "")).strip()
 
 
 def fingerprint(public_key):

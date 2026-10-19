@@ -20,7 +20,8 @@
  *   - installation seulement si UNE clé vérifiée est trouvée ; la clé privée
  *     remplacée est DÉPLACÉE hors du projet (~/GarageFlows-cles-ecartees/<date>/),
  *     jamais supprimée ; `--dry-run` n'installe rien.
- *   - clé chiffrée : vérifiable avec `--ask-passphrase` (saisie masquée, en mémoire).
+ *   - clé chiffrée : vérifiable avec `--ask-passphrase` (saisie masquée, en mémoire) ou
+ *     `--passphrase-stdin` (keygen graphique : passphrase sur l'entrée standard).
  */
 
 const fs = require('node:fs')
@@ -126,7 +127,8 @@ function classify(candidates, referenceFp, passphrase) {
 function stamp() { return new Date().toISOString().replace(/[:.]/g, '-') }
 
 /** Installe la clé vérifiée dans keys/private.pem ; l'ancienne est déplacée hors du projet. */
-function install(root, match, referenceFp, { backupBase = path.join(os.homedir(), 'GarageFlows-cles-ecartees') } = {}) {
+function install(root, match, referenceFp, { backupBase = path.join(os.homedir(), 'GarageFlows-cles-ecartees'), passphrase } = {}) {
+  const readKey = pem => createPrivateKey(/ENCRYPTED/.test(pem) ? { key: pem, passphrase: passphrase ?? '' } : pem)
   const keysDir = path.join(root, 'keys')
   const target = path.join(keysDir, 'private.pem')
   const publicTarget = path.join(keysDir, 'public.pem')
@@ -145,7 +147,7 @@ function install(root, match, referenceFp, { backupBase = path.join(os.homedir()
 
   if (fs.existsSync(target)) {
     let currentFp = null
-    try { currentFp = publicFingerprint(createPrivateKey(fs.readFileSync(target, 'utf8'))) } catch { /* chiffrée/illisible */ }
+    try { currentFp = publicFingerprint(readKey(fs.readFileSync(target, 'utf8'))) } catch { /* chiffrée sans passphrase / illisible */ }
     if (currentFp === referenceFp) return { installed: false, already: true, moved }
     setAside(target, 'keys/private.pem (clé non conforme)')
   }
@@ -156,7 +158,8 @@ function install(root, match, referenceFp, { backupBase = path.join(os.homedir()
 
   // Contenu exact du PEM vérifié (les octets d'origine pour un fichier PEM).
   fs.writeFileSync(target, match.pem.endsWith('\n') ? match.pem : `${match.pem}\n`, { flag: 'wx', mode: 0o600 })
-  const check = /ENCRYPTED/.test(match.pem) ? referenceFp : publicFingerprint(createPrivateKey(fs.readFileSync(target, 'utf8')))
+  // Relecture RÉELLE, clé chiffrée comprise (elle a été vérifiée avec cette passphrase).
+  const check = publicFingerprint(readKey(fs.readFileSync(target, 'utf8')))
   if (check !== referenceFp) throw new Error('relecture de keys/private.pem divergente')
   materializePublicKey(root) // keys/public.pem = clé de référence (depuis les ancres concordantes)
   return { installed: true, moved, backupDir: moved.length ? backupDir : null }
@@ -180,6 +183,16 @@ async function askHidden(prompt) {
   })
 }
 
+function readStdin() {
+  return new Promise((resolve, reject) => {
+    let data = ''
+    process.stdin.setEncoding('utf8')
+    process.stdin.on('data', c => { data += c; if (data.length > 4096) reject(new Error('passphrase trop longue')) })
+    process.stdin.on('end', () => resolve(data))
+    process.stdin.on('error', reject)
+  })
+}
+
 async function main(argv = process.argv.slice(2), { root = ROOT, roots, log = console.log, error = console.error, backupBase, passphrase } = {}) {
   const dryRun = argv.includes('--dry-run')
   const inspection = inspectAnchors(root)
@@ -189,6 +202,8 @@ async function main(argv = process.argv.slice(2), { root = ROOT, roots, log = co
   }
   const referenceFp = inspection.expected
   if (argv.includes('--ask-passphrase') && passphrase === undefined) passphrase = await askHidden('Passphrase des clés chiffrées (masquée, en mémoire uniquement) : ')
+  // Keygen graphique : passphrase transmise par stdin (jamais en argument, jamais affichée).
+  if (argv.includes('--passphrase-stdin') && passphrase === undefined) passphrase = (await readStdin()).replace(/\r?\n$/, '') || undefined
   const searchRoots = roots || defaultRoots(os.homedir(), root)
   log(`🔎 Recherche de la clé privée de licence de production (empreinte ${referenceFp.slice(0, 16)}…)`)
   for (const r of searchRoots) log(`   • ${r}`)
@@ -221,9 +236,10 @@ async function main(argv = process.argv.slice(2), { root = ROOT, roots, log = co
   }
   if (dryRun) { log('\n(--dry-run : rien installé)'); return 0 }
 
-  const outcome = install(root, distinct[0], referenceFp, { backupBase })
+  const outcome = install(root, distinct[0], referenceFp, { backupBase, passphrase })
   if (outcome.already) { log('\n✅ keys/private.pem est déjà la clé de production : rien à faire.'); return 0 }
   log('\n🔧 Clé de production installée dans keys/private.pem (empreinte revérifiée) ; keys/public.pem aligné.')
+  if (/ENCRYPTED/.test(distinct[0].pem)) log('   Clé CHIFFRÉE (installée telle quelle, jamais déchiffrée sur disque) : saisir sa passphrase dans le keygen (Clés ECC → Passphrase).')
   for (const m of outcome.moved) log(`   ↪ ${m.label} déplacée hors du projet : ${m.to}`)
   log('   Le keygen peut signer. Rappel : `npm run dist` refuse un keys/private.pem dans le projet —')
   log('   déplacer keys\\private.pem hors du dossier avant de construire l\'installeur.')

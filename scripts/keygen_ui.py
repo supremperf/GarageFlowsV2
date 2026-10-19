@@ -20,6 +20,7 @@ import json as _json
 
 import keygen_core as core
 import keygen_db   as db
+from keygen_trust import is_issuer_mismatch, run_find_issuer
 
 # Types de licence "garage" (le type mechanic se génère via les modes dédiés)
 GARAGE_TYPES = [t for t in core.LICENSE_TYPES if t != "mechanic"]
@@ -185,6 +186,79 @@ def _ui(widget, fn):
         # (application en cours de fermeture). Rien à afficher, mais on le trace
         # plutôt que de perdre le retour en silence.
         print(f"[keygen] retour UI non délivré (boucle Tk arrêtée) : {exc}", file=sys.stderr)
+
+
+# ── Clé de PRODUCTION introuvable / non conforme ──────────────────────────────
+# Cas réel : dossier neuf (ZIP) sans keys/, ou keys/private.pem créé localement
+# (« Initialiser les clés », config) → la clé n'est pas celle que le logiciel
+# vérifie et TOUTE signature est refusée (KEY_MISMATCH_OR_ANCHOR_UNAVAILABLE).
+# Le keygen propose alors de retrouver la clé de production sur le poste
+# (scripts/find-issuer-key.cjs : vérification par empreinte, aucune clé générée,
+# la clé remplacée est déplacée hors du projet). Le contrôle n'est jamais levé.
+
+SEARCH_SCOPE = ("anciens dossiers du projet, Bureau, Documents, Téléchargements, OneDrive ;\n"
+                "seule une clé dont l'empreinte est celle de production est retenue ; aucune clé générée")
+
+
+def _show_report(title: str, text: str, *parents):
+    """Rapport texte défilant (chemins et empreintes publiques uniquement)."""
+    parent = _live_parent(*parents)
+    win = tk.Toplevel(parent) if parent is not None else tk.Toplevel()
+    win.title(title)
+    win.configure(bg=BG)
+    win.geometry("820x460")
+    box = tk.Text(win, bg=CARD2, fg=TEXT, font=(MONO[0], 9), wrap="word",
+                  relief="flat", bd=0, padx=10, pady=8)
+    box.insert("1.0", text)
+    box.config(state="disabled")
+    box.pack(fill="both", expand=True, padx=12, pady=(12, 6))
+    _btn(win, "OK", win.destroy).pack(pady=(0, 12))
+    return win
+
+
+def search_production_key(widget, passphrase: str = "", on_found=None):
+    """Recherche + installation de la clé de production, dans un thread ; rapport ensuite."""
+    def _do():
+        code, output = run_find_issuer(core.ROOT_DIR, passphrase)
+
+        def _done():
+            if code == 0:
+                head = "✅ Clé de production en place : vous pouvez générer et signer.\n\n"
+            else:
+                head = ("❌ Clé de production non trouvée sur ce PC — rien n'a été modifié ni généré.\n"
+                        "Restaurez-la depuis une sauvegarde (clé USB, ancien PC, coffre) puis relancez la recherche.\n\n")
+            _show_report("Recherche de la clé de production", head + output, widget)
+            if code == 0 and on_found:
+                on_found()
+        _ui(widget, _done)
+
+    threading.Thread(target=_do, daemon=True).start()
+
+
+def offer_production_key_search(widget, passphrase: str, intro: str, on_found=None) -> bool:
+    parent = _live_parent(widget)
+    ask = dict(parent=parent) if parent is not None else {}
+    if messagebox.askyesno(
+        "Clé de licence de production",
+        intro + "\n\nRechercher maintenant la clé de production sur ce PC ?\n(" + SEARCH_SCOPE + ")",
+        **ask,
+    ):
+        search_production_key(widget, passphrase, on_found)
+        return True
+    return False
+
+
+def _signature_failed(widget, exc_msg: str, mismatch: bool, passphrase: str):
+    """Erreur de signature ; si la clé n'est pas celle de production, proposer de la retrouver."""
+    if not mismatch:
+        _error("Erreur de signature", exc_msg, widget)
+        return
+    offer_production_key_search(
+        widget, passphrase,
+        "Signature refusée : la clé privée de ce keygen n'est pas la clé de licence de production.\n"
+        "Une licence signée avec elle serait refusée par le logiciel. Rien n'a été écrit.\n\n"
+        "Détail technique : voir « Clés ECC » → Appliquer.",
+    )
 
 
 # ── Remote API helper ────────────────────────────────────────────────────────
@@ -714,8 +788,9 @@ class TabGenerate(tk.Frame):
                 # `exc` est supprimé à la sortie du bloc `except` (Python 3) :
                 # capturé par défaut d'argument, sinon le callback différé lève
                 # NameError et l'utilisateur ne voit JAMAIS l'erreur réelle.
-                _ui(self, lambda msg=str(exc): (self._set_busy(False),
-                                                _error("Erreur de signature", msg, self)))
+                _ui(self, lambda msg=str(exc), mm=is_issuer_mismatch(exc): (
+                    self._set_busy(False),
+                    _signature_failed(self, msg, mm, self._passphrase)))
 
         threading.Thread(target=_do, daemon=True).start()
 
@@ -762,8 +837,9 @@ class TabGenerate(tk.Frame):
                     children.append(minfo)
                 _ui(self, lambda: self._on_mechanics_success(parent, children))
             except Exception as exc:
-                _ui(self, lambda msg=str(exc): (self._set_busy(False),
-                                                _error("Erreur de signature", msg, self)))
+                _ui(self, lambda msg=str(exc), mm=is_issuer_mismatch(exc): (
+                    self._set_busy(False),
+                    _signature_failed(self, msg, mm, self._passphrase)))
 
         threading.Thread(target=_do, daemon=True).start()
 
@@ -1151,14 +1227,26 @@ class TabKeys(tk.Frame):
         _btn(pp_row, "Appliquer", self._apply_pp, bg=CARD2, fg=TEXT,
              font=FONTS, padx=10, pady=4).pack(side="left", padx=(6, 0))
 
+        # Retrouver la clé de production (cas ZIP / nouveau PC / clé locale)
+        find_frame = _frame(self, bg=CARD, padx=16, pady=14)
+        find_frame.pack(fill="x", padx=20, pady=(0, 12))
+        _lbl(find_frame, "Retrouver la clé de production", font=FONTB).pack(anchor="w")
+        _lbl(find_frame,
+             "Cherche sur ce PC la clé privée qui signe les licences acceptées par le logiciel\n(" +
+             SEARCH_SCOPE + ") et l'installe ;\nla clé actuelle, si elle diffère, est déplacée hors du projet.",
+             fg=MUTED, font=FONTS, justify="left").pack(anchor="w", pady=(4, 10))
+        _btn(find_frame, "🔎  Rechercher la clé de production", self._find_production_key,
+             bg="#1e3a5f", fg=BLUE, font=FONTB).pack(anchor="w")
+
         # Init / Régénérer
         init_frame = _frame(self, bg=CARD, padx=16, pady=14)
         init_frame.pack(fill="x", padx=20, pady=(0, 12))
 
         _lbl(init_frame, "Initialiser / Régénérer les clés", font=FONTB).pack(anchor="w")
         _lbl(init_frame,
-             "⚠️  Régénérer invalide toutes les licences existantes.\n"
-             "Les clés seront créées dans le dossier  keys/  à la racine du projet.",
+             "⚠️  Crée une NOUVELLE autorité : elle ne signe aucune licence acceptée par le logiciel\n"
+             "tant qu'une rotation complète n'est pas faite (keys:sync, rebuild, serveur), et cette\n"
+             "rotation invalide toutes les licences existantes. Clé perdue ? Utilisez la recherche ci-dessus.",
              fg=AMBER, font=FONTS, justify="left").pack(anchor="w", pady=(4, 10))
 
         btn_row = _frame(init_frame, bg=CARD)
@@ -1224,10 +1312,37 @@ class TabKeys(tk.Frame):
                 receipt = check_key_match(key, core.ROOT_DIR)
                 messagebox.showinfo("Correspondance locale", _json.dumps(receipt, indent=2, ensure_ascii=False))
             except Exception as exc:
-                messagebox.showerror("Erreur passphrase", str(exc))
+                if is_issuer_mismatch(exc):
+                    offer_production_key_search(
+                        self, pp,
+                        "La clé privée de ce keygen n'est pas la clé de licence de production :\n"
+                        "toute signature sera refusée.\n\n" + str(exc).split("\n\nDétail")[0],
+                        on_found=self._find_done,
+                    )
+                else:
+                    messagebox.showerror("Erreur passphrase", str(exc))
+
+    def _find_done(self):
+        self._refresh_status()
+        self._load_pub_display()
+
+    def _find_production_key(self):
+        search_production_key(self, self.v_pp.get(), on_found=self._find_done)
 
     def _init_keys(self):
         # A partial pair must not be overwritten without the rotation warning either.
+        if not (core.PRIV_FILE.exists() or core.PUB_FILE.exists()):
+            if not messagebox.askyesno(
+                "Nouvelle autorité de licence ?",
+                "Vous allez créer une NOUVELLE paire de clés.\n\n"
+                "Elle ne pourra signer AUCUNE licence acceptée par le logiciel actuel : le keygen\n"
+                "refusera de signer tant qu'une rotation complète n'est pas faite (keys:sync,\n"
+                "reconstruction, serveur), et cette rotation invalide toutes les licences existantes.\n\n"
+                "Si la clé de production existe ailleurs, utilisez plutôt « Rechercher la clé de production ».\n\n"
+                "Créer quand même une nouvelle autorité ?",
+                icon="warning",
+            ):
+                return
         if core.PRIV_FILE.exists() or core.PUB_FILE.exists():
             if not messagebox.askyesno(
                 "Régénérer ?",
@@ -1511,12 +1626,36 @@ class App(tk.Tk):
             )
             return
         if not core.keys_exist():
-            messagebox.showwarning(
-                "Clés ECC manquantes",
-                "Aucune paire de clés n'est configurée.\n\n"
-                "Allez dans l'onglet  🔑 Clés ECC  et cliquez\n"
-                "Restaurer d’abord les clés de l’autorité existante ; initialiser seulement une nouvelle autorité approuvée.",
+            # Dossier neuf (ZIP, nouveau PC) : la clé de production existe peut-être
+            # ailleurs sur le poste. On propose de la retrouver AVANT toute
+            # initialisation — une nouvelle paire ne signerait aucune licence valide.
+            offer_production_key_search(
+                self, self._passphrase,
+                "Aucune clé privée de licence dans ce dossier (keys/private.pem).\n"
+                "N'utilisez PAS « Initialiser les clés » pour cela : une nouvelle paire\n"
+                "ne signe aucune licence acceptée par le logiciel.",
+                on_found=self._keys_changed,
             )
+            return
+        # Paire présente : vérifier tout de suite qu'elle est bien celle de
+        # production, plutôt que de le découvrir au premier « Générer ».
+        try:
+            from keygen_trust import check_key_match
+            check_key_match(core.load_private_key(self._passphrase), core.ROOT_DIR)
+        except Exception as exc:
+            if is_issuer_mismatch(exc):
+                offer_production_key_search(
+                    self, self._passphrase,
+                    "La clé privée de ce keygen (keys/private.pem) n'est pas la clé de licence\n"
+                    "de production : toute signature sera refusée.",
+                    on_found=self._keys_changed,
+                )
+            # Autres cas (clé chiffrée sans passphrase, ancres à restaurer) : signalés
+            # à la signature, avec leur message propre — rien à imposer au démarrage.
+
+    def _keys_changed(self):
+        self.tab_keys._refresh_status()
+        self.tab_keys._load_pub_display()
 
 
 # ── Point d'entrée ────────────────────────────────────────────────────────────

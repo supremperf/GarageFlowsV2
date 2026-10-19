@@ -91,3 +91,40 @@ test('already the production key: nothing to do', () => world(async ({ base, pro
   assert.equal(await run(), 0)
   assert.equal(fs.existsSync(path.join(base, 'aside')), false)
 }))
+
+test('keygen GUI path: passphrase on STDIN (never argv), encrypted key installed as-is and really re-verified', () => world(async ({ base, project }) => {
+  const { spawnSync } = require('node:child_process')
+  // Real CLI, run from a copy of the project (its own ROOT), HOME pointing at the fixture.
+  fs.mkdirSync(path.join(project, 'scripts'), { recursive: true })
+  for (const f of ['find-issuer-key.cjs', 'materialize-build-public-key.cjs']) fs.copyFileSync(path.join(__dirname, '..', 'scripts', f), path.join(project, 'scripts', f))
+  const enc = pair('phrase-de-test')
+  // Re-pin the fixture anchors on the ENCRYPTED pair (stands for production).
+  const literal = (v, pem) => `const ${v} = [\n${pem.trim().split('\n').map(l => `  '${l}',`).join('\n')}\n]\n`
+  fs.writeFileSync(path.join(project, 'electron/main.js'), literal('_PK', enc.publicKey))
+  fs.writeFileSync(path.join(project, 'src/lib/license/public-key.ts'), literal('_LINES', enc.publicKey))
+  fs.writeFileSync(path.join(project, 'src/lib/license/__tests__/public-key-consistency.test.ts'), `const REFERENCE_FP = '${enc.fp}'\n`)
+  const old = path.join(base, 'Desktop', 'GarageFlowsV2-old', 'keys')
+  fs.mkdirSync(old, { recursive: true })
+  fs.writeFileSync(path.join(old, 'private.pem'), enc.privateKey)
+  const r = spawnSync(process.execPath, [path.join(project, 'scripts', 'find-issuer-key.cjs'), '--passphrase-stdin'],
+    { cwd: project, input: 'phrase-de-test\n', encoding: 'utf8', env: { ...process.env, HOME: base, USERPROFILE: base }, timeout: 60000 })
+  assert.equal(r.status, 0, r.stdout + r.stderr)
+  const installed = fs.readFileSync(path.join(project, 'keys/private.pem'), 'utf8')
+  assert.match(installed, /ENCRYPTED/, 'never decrypted to disk')
+  assert.equal(createHash('sha256').update(createPublicKey(createPrivateKey({ key: installed, passphrase: 'phrase-de-test' })).export({ type: 'spki', format: 'der' })).digest('hex'), enc.fp)
+  assert.ok(!(r.stdout + r.stderr).includes('phrase-de-test'), 'passphrase never echoed')
+  assert.match(r.stdout, /Clé CHIFFRÉE/)
+}))
+
+test('encrypted production key already in place + passphrase: no-op, nothing set aside', () => world(async ({ base, project, run }) => {
+  const enc = pair('pp')
+  const literal = (v, pem) => `const ${v} = [\n${pem.trim().split('\n').map(l => `  '${l}',`).join('\n')}\n]\n`
+  fs.writeFileSync(path.join(project, 'electron/main.js'), literal('_PK', enc.publicKey))
+  fs.writeFileSync(path.join(project, 'src/lib/license/public-key.ts'), literal('_LINES', enc.publicKey))
+  fs.writeFileSync(path.join(project, 'src/lib/license/__tests__/public-key-consistency.test.ts'), `const REFERENCE_FP = '${enc.fp}'\n`)
+  fs.writeFileSync(path.join(project, 'keys/private.pem'), enc.privateKey)
+  fs.writeFileSync(path.join(project, 'keys/public.pem'), enc.publicKey)
+  assert.equal(await run([], { passphrase: 'pp' }), 0)
+  assert.equal(fs.readFileSync(path.join(project, 'keys/private.pem'), 'utf8'), enc.privateKey)
+  assert.ok(!fs.existsSync(path.join(base, 'aside')), 'a valid production key is never set aside')
+}))

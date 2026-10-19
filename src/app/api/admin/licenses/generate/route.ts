@@ -4,9 +4,9 @@ export const dynamic = 'force-dynamic'
  * POST /api/admin/licenses/generate
  *
  * Server-side license generation — signs a new token with the private key.
- * The private key is loaded from:
- *  1. GF_PRIVATE_KEY env var (base64-encoded PEM, for production/Docker)
- *  2. keys/private.pem file (for local development)
+ * The private key is loaded from GF_PRIVATE_KEY (base64 PEM), else keys/private.pem,
+ * and MUST match the embedded public key (src/lib/license/issuer-key.ts) —
+ * otherwise nothing is signed.
  *
  * Requires admin cookie.
  *
@@ -16,35 +16,16 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import fs from 'fs'
-import path from 'path'
 import { isAdminSession, adminSessionActor } from '@/lib/api-helpers'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { prisma } from '@/lib/db'
 import { logger } from '@/lib/logger'
 import { computeRecordMac } from '@/lib/license/record-mac'
+import { loadIssuerPrivateKey, describeIssuerKeyFailure } from '@/lib/license/issuer-key'
 
 // ── Base64url helpers ─────────────────────────────────────────────────────────
 function b64uEnc(buf: Buffer): string {
   return buf.toString('base64url')
-}
-
-// ── Load private key (PEM) from env or file ───────────────────────────────────
-function loadPrivateKeyPem(): string | null {
-  // Env var takes priority (production deployments / Docker)
-  if (process.env.GF_PRIVATE_KEY) {
-    try {
-      return Buffer.from(process.env.GF_PRIVATE_KEY, 'base64').toString('utf8')
-    } catch {
-      return null
-    }
-  }
-  // Fallback: file (local dev)
-  const keyPath = path.join(process.cwd(), 'keys', 'private.pem')
-  if (fs.existsSync(keyPath)) {
-    return fs.readFileSync(keyPath, 'utf8')
-  }
-  return null
 }
 
 // ── License token builder ──────────────────────────────────────────────────────
@@ -106,13 +87,24 @@ export async function POST(req: NextRequest) {
   const rl = await enforceRateLimit('admin', `license-generate:${clientIpFrom(req)}`)
   if (!rl.ok) return rateLimitResponse(rl)
 
-  const privKeyPem = loadPrivateKeyPem()
-  if (!privKeyPem) {
+  // La clé est VÉRIFIÉE contre la clé publique embarquée avant toute signature :
+  // une clé qui n'est pas celle de production émettrait des licences que
+  // l'application refuse (même règle que le keygen, KEY_MISMATCH…).
+  const issuer = loadIssuerPrivateKey()
+  if (!issuer.ok) {
+    if (issuer.reason === 'mismatch') {
+      logger.error('[admin/generate] clé d’émission non conforme', {
+        source: issuer.source,
+        issuerFingerprint: issuer.issuerFingerprint,
+        expectedFingerprint: issuer.expectedFingerprint,
+      })
+    }
     return NextResponse.json(
-      { error: 'Clé privée introuvable — lancez d\'abord: python scripts/keygen_gui.py (onglet Clés) puis copiez la clé publique dans verify.ts et main.js' },
+      { error: describeIssuerKeyFailure(issuer), code: `ISSUER_KEY_${issuer.reason.toUpperCase()}` },
       { status: 500 },
     )
   }
+  const privKeyPem = issuer.pem
 
   let body: {
     customerId:  string
