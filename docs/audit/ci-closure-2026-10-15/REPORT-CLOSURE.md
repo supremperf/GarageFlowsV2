@@ -73,6 +73,8 @@ Les diagnostics expurgés et leur provenance sont dans [CI-CLOSURE.md](CI-CLOSUR
 
 **Établi** : un glob de compilation Next parcourt le profil Windows hors dépôt et est refusé. **Non établi** : le point précis qui produit ce parcours, la racine effective de traçage sur le runner et le correctif de build approprié. La configuration Next et son mécanisme de racine/traçage ont été examinés, mais aucune modification spéculative d’exclusion, de permissions, de dépendance ou d’environnement utilisateur n’a été faite pour cacher l’échec.
 
+> **Suite (2026-10-19) — point établi.** Origine du parcours : `dotenv` embarqué par le runtime Prisma (`readFileSync(path.join(os.homedir(), …))`), que nft transforme en glob `<profil>/**` ; racine de traçage effective : la racine du projet (`outputFileTracingRoot`) ; le glob n’est écarté que si le profil est sur le même lecteur que le projet, ce qui n’est pas le cas sur le runner (`D:` / `C:`). Correctif dans le dépôt, éprouvé sur Windows sans substitution d’environnement : [../windows-dist-2026-10-19/RAPPORT.md](../windows-dist-2026-10-19/RAPPORT.md).
+
 | Vérification réelle Windows | État |
 |---|---|
 | npm ci, ancre publique existante, cohérence clés, quatre tests de ressources/compatibilité préalables | étapes CI réussies, **pas** vérification de contenu d’un paquet |

@@ -318,6 +318,16 @@ personnel y est accessible, et la compilation s'y déroule normalement — c'est
 d'ailleurs ce que montre l'échec d'origine signalé par l'utilisateur
 (« server.js NOT found »), qui suppose une compilation Next.js **réussie**.
 
+> **Rectification (2026-10-19).** Le paragraphe ci-dessus n'est exact que si le
+> projet et le profil sont sur le **même lecteur**. nft n'abandonne le glob que si
+> `path.relative(outputFileTracingRoot, <profil>/**)` commence par `..\` ; sur deux
+> lecteurs (runner : `D:\a\…` / `C:\Users\runneradmin`, ou poste rangeant ses
+> projets sur `D:`), le chemin relatif reste absolu et le profil est parcouru — le
+> contournement fonctionnait parce que `D:\gf-build-home` est sur le lecteur du
+> projet. Le correctif est désormais dans le dépôt (`scripts/next-build.cjs`,
+> appelé par `npm run build`) et le contournement a été retiré du workflow : voir
+> [docs/audit/windows-dist-2026-10-19/RAPPORT.md](audit/windows-dist-2026-10-19/RAPPORT.md).
+
 ### Note de mesure : `tsc --noEmit` et les substituts Prisma locaux
 
 `npx tsc --noEmit` donne **249 erreurs** avec l'arbre tel qu'il est livré —
