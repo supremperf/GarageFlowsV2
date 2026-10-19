@@ -107,14 +107,22 @@ dépréciations restantes sont transitives et de développement uniquement
 (`glob@7`/`inflight` via electron-builder/asar, `rimraf@2` via
 electron-winstaller, `eslint` 8) ; aucune montée de version majeure à l'aveugle.
 
-## 5. Sur le poste du signalement
+## 5. Sur le poste du signalement — constat du 2026-10-19 et rétablissement automatique
 
-1. Récupérer la branche, puis `node scripts/materialize-build-public-key.cjs` :
-   le diagnostic indique l'ancre divergente et si le fichier est modifié selon git.
-2. Ancre modifiée sans rotation voulue :
-   `git restore --source=HEAD -- electron/main.js src/lib/license/public-key.ts src/lib/license/__tests__/public-key-consistency.test.ts`.
-   Rotation approuvée : `npm run keys:sync` avec la clé privée correspondante.
-3. `npm ci`, puis `npm run dist`.
+Sortie réelle (dossier `C:\Users\Mathys\Desktop\GarageFlowsV2-arena-642ba7c2-garageflowsv2`,
+extrait d'un ZIP) : `_PK` = `_LINES` = `048c53df…`, `REFERENCE_FP` = `bd8c0845…` ✓.
+`048c53df…` n'apparaît dans **aucun** commit d'aucune branche GitHub : clé générée sur le
+poste. Les trois fichiers étaient signalés « modifiés (git status) » alors que le dossier
+n'a pas de `.git` : un dossier **parent** est un dépôt git (défaut de diagnostic corrigé).
+
+`npm run dist` rétablit désormais `_PK`/`_LINES` sur `REFERENCE_FP` quand le texte de cette
+clé est prouvé (voir docs/VERIFICATION_CLE_EMETTRICE.md). Reproduction dans ce scénario exact
+(ZIP sous dépôt parent, deux ancres sur une clé locale) : hors ligne → refus bloquant, rien
+écrit ; en ligne → texte récupéré via l'API GitHub, empreinte vérifiée, fichiers redevenus
+identiques octet pour octet au commit, originaux sauvegardés, preflight poursuivi.
+
+À savoir : `preflight:release` refuse aussi un `keys/private.pem` présent dans le projet
+(contrôle de sécurité conservé) ; un keygen lancé dans ce dossier l'y crée.
 
 ## 6. Pistes non traitées (hors périmètre, à décider)
 

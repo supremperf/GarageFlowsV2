@@ -34,7 +34,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 
 ## Contrat par catégorie
 
-### Configuration fonctionnelle (65)
+### Configuration fonctionnelle (67)
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
@@ -49,6 +49,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `GARAGEFLOW_LLM` | CONFIGURATION | non | server | Explicit opt-in: off (default) or anthropic. Constrained read planning/help/handoff selection, current query and nonpersonal topic metadata only; nev… |
 | `GARAGEFLOW_LLM_MODEL` | CONFIGURATION | non | server | Optional Anthropic model ID, default claude-haiku-4-5-20251001. Availability and quality require live validation. No arbitrary endpoint. |
 | `GF_ALLOW_DEBUG` | CONFIGURATION | non | desktop | Development override; must not be enabled in production builds. |
+| `GF_ANCHOR_RESTORE_NETWORK` | CONFIGURATION | non | release-tooling | `0` interdit à la restauration automatique des ancres de clé publique (preflight / keys:restore) de télécharger le texte de la clé de référence sur G… |
 | `GF_ANTIDEBUG` | CONFIGURATION | non | desktop | Enables anti-debug enforcement only with integrity enforcement. |
 | `GF_BRAND_ACCENT_COLOR` | CONFIGURATION | non | build-time | Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour évi… *(aucun consommateur dans ce dépôt)* |
 | `GF_BRAND_APP_DOMAIN` | CONFIGURATION | non | build-time | Optional white-label build configuration. — Audit 2026-08-03 : aucun consommateur présent dans ce dépôt ; autoGenerate/autoManage désactivés pour évi… *(aucun consommateur dans ce dépôt)* |
@@ -86,6 +87,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `GF_MECHANIC_TIMER_AUTOCOMPLETE` | CONFIGURATION | non | server | Bascule l'achèvement automatique d'une intervention à l'arrêt du chronomètre mécanicien. |
 | `GF_MIN_ELECTRON_VERSION` | CONFIGURATION | non | server | — |
 | `GF_MIN_PWA_VERSION` | CONFIGURATION | non | server | — |
+| `GF_NO_ANCHOR_RESTORE` | CONFIGURATION | non | release-tooling | `1` désactive la remise automatique de _PK/_LINES sur la clé de REFERENCE_FP : une divergence d'ancres bloque alors `npm run dist` sans tentative de … |
 | `GF_PACKAGE_DESKTOP` | CONFIGURATION | non | release-tooling | Posé par `npm run dist` (cross-env GF_PACKAGE_DESKTOP=1) pour dire au post-build que la sortie standalone part dans un INSTALLEUR : dans ce contexte … |
 | `GF_PROBE_NAMES` | CONFIGURATION | non | maintenance-tool | Liste de noms, separes par des virgules, que la sonde de verification post-rotation doit mesurer. Posee par reset-garageflow.ps1 juste avant `vercel … |
 | `GF_UPDATE_CHANNEL` | CONFIGURATION | non | desktop | — |

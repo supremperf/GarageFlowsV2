@@ -3,6 +3,19 @@
 
 ## [Non publié] — 2026-10-19 — `npm run dist` : « Public anchors disagree » diagnostiqué et ses causes fermées
 
+- **Rétablissement automatique et prouvé.** Constaté sur le poste du signalement (dossier
+  extrait d’un ZIP, placé sous un dépôt git parent) : `_PK` et `_LINES` portaient une clé
+  `048c53df…` absente de tout l’historique GitHub, `REFERENCE_FP` la clé de production.
+  `npm run dist` remet désormais `_PK`/`_LINES` sur la clé dont l’empreinte est exactement
+  `REFERENCE_FP` — texte pris dans une ancre restée correcte, `keys/public.pem`, `git HEAD`
+  ou le dépôt public GitHub, toujours vérifié par empreinte —, sauvegarde les originaux dans
+  `.gf-anchor-backups/`, puis continue. Sans preuve, refus bloquant inchangé. Jamais de clé
+  privée, jamais d’adoption de la clé divergente, jamais de modification de `REFERENCE_FP`
+  (`scripts/restore-public-anchors.cjs`, `npm run keys:restore`,
+  `tests/restore-public-anchors.test.cjs`).
+- Diagnostic : un dépôt git **parent** faisait apparaître les trois fichiers comme
+  « modifiés localement » et le remède proposait `git restore` dans un dossier sans git ;
+  l’état git n’est plus lu que si le projet est lui-même la racine du dépôt.
 - **Constat.** Le dépôt est cohérent : à chaque commit portant le matérialiseur, `_PK`
   (`electron/main.js`), `_LINES` (`src/lib/license/public-key.ts`) et `REFERENCE_FP`
   désignent la clé de production `bd8c0845…`, et le job Windows de la CI exécute

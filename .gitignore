@@ -138,6 +138,8 @@ dist-artifact/
 
 # Configuration complète : licences d’administration bootstrap (jetons réels)
 keys/bootstrap-*
+# Sauvegardes des ancres de clé publique remplacées par keys:restore / preflight
+.gf-anchor-backups/
 
 # Bases desktop personnalisées : données utilisateur, jamais dans les sources.
 *.db

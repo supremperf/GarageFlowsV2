@@ -567,7 +567,7 @@ jobs:
       - run: node scripts/materialize-build-public-key.cjs
       - run: npm run check:public-key
       - run: npm run keys:check
-      - run: node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs tests/next-build-home.test.cjs
+      - run: node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs tests/next-build-home.test.cjs tests/restore-public-anchors.test.cjs
       - name: Validate redacted packaging diagnostic
         run: node --test tests/windows-package-diagnostic.test.cjs
       # Pas de USERPROFILE substitué ici : le checkout (D:) et le profil (C:) sont

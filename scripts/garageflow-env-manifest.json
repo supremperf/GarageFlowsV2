@@ -1992,6 +1992,37 @@
         "scripts/lib/config-cloud.cjs"
       ],
       "notes": "Entrée fournisseur privée des outils de configuration et de validation Blob. Aucun consommateur applicatif actuel ; ne pas exposer au navigateur ni inventer une dépendance runtime."
+    },
+    {
+      "name": "GF_ANCHOR_RESTORE_NETWORK",
+      "classification": "configuration",
+      "scope": "release-tooling",
+      "requiredProduction": false,
+      "format": "enum:0,1",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/restore-public-anchors.cjs"
+      ],
+      "notes": "`0` interdit à la restauration automatique des ancres de clé publique (preflight / keys:restore) de télécharger le texte de la clé de référence sur GitHub. Le texte téléchargé n'est de toute façon accepté que si son empreinte SHA-256 SPKI est exactement REFERENCE_FP."
+    },
+    {
+      "name": "GF_NO_ANCHOR_RESTORE",
+      "classification": "configuration",
+      "scope": "release-tooling",
+      "requiredProduction": false,
+      "format": "enum:1",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/preflight-release.cjs",
+        "scripts/restore-public-anchors.cjs"
+      ],
+      "notes": "`1` désactive la remise automatique de _PK/_LINES sur la clé de REFERENCE_FP : une divergence d'ancres bloque alors `npm run dist` sans tentative de réparation (refus pur, comme avant)."
     }
   ],
   "auditCleanup": {

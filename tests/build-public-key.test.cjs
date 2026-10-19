@@ -70,9 +70,40 @@ test('names the divergent anchors and refuses when _PK and _LINES share a locall
   assert.ok(error.message.includes(other.fp), 'the divergent fingerprint is reported')
   assert.match(error.message, /electron\/main\.js \(_PK\)/)
   assert.match(error.message, /keys:sync/)
-  assert.match(error.message, /git restore --source=HEAD/)
+  // Fixture outside any git repository (ZIP-like): no `git restore` advice, no "modified" claim.
+  assert.doesNotMatch(error.message, /git restore --source=HEAD/)
+  assert.doesNotMatch(error.message, /modifié localement/)
+  assert.match(error.message, /dossier sans git \(ZIP\)/)
   assert.equal(fs.existsSync(path.join(root, 'keys/public.pem')), false)
 }))
+
+test('inside its OWN git repository, locally modified anchors are reported and git restore is advised', () => fixture(root => {
+  const git = (...args) => spawnSync('git', args, { cwd: root, encoding: 'utf8' })
+  if (git('init', '-q').status !== 0) return
+  git('-c', 'user.email=t@t', '-c', 'user.name=t', 'add', '-A')
+  git('-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'init')
+  const other = otherKeyLines()
+  writeLiteral(root, 'electron/main.js', '_PK', other.lines)
+  const error = (() => { try { materializePublicKey(root) } catch (e) { return e } })()
+  assert.match(error.message, /electron\/main\.js \(_PK\)\n\s+[0-9a-f]{64}  ✗ DIFFÉRENTE  — modifié localement/)
+  assert.match(error.message, /git restore --source=HEAD/)
+}))
+
+test('a PARENT git repository does not make project files look "modified"', () => {
+  const parent = fs.mkdtempSync(path.join(os.tmpdir(), 'gf-parent-'))
+  try {
+    if (spawnSync('git', ['init', '-q'], { cwd: parent }).status !== 0) return
+    fixture(root => {
+      const nested = path.join(parent, 'Desktop', 'GarageFlowsV2-zip')
+      fs.mkdirSync(path.dirname(nested), { recursive: true })
+      fs.cpSync(root, nested, { recursive: true })
+      writeLiteral(nested, 'electron/main.js', '_PK', otherKeyLines().lines)
+      const error = (() => { try { materializePublicKey(nested) } catch (e) { return e } })()
+      assert.doesNotMatch(error.message, /modifié localement/)
+      assert.match(error.message, /hors dépôt git/)
+    })
+  } finally { fs.rmSync(parent, { recursive: true, force: true }) }
+})
 
 test('a partial update (only one literal changed) is diagnosed as partial and refused', () => fixture(root => {
   writeLiteral(root, 'src/lib/license/public-key.ts', '_LINES', otherKeyLines().lines)
@@ -105,12 +136,19 @@ test('a retired key is flagged as such in the diagnostic', () => fixture(root =>
 
 test('preflight stops with the full diagnostic and exit code 1, not a bare stack trace', () => fixture(root => {
   fs.mkdirSync(path.join(root, 'scripts'))
-  for (const f of ['preflight-release.cjs', 'materialize-build-public-key.cjs']) fs.copyFileSync(path.join(__dirname, '..', 'scripts', f), path.join(root, 'scripts', f))
-  writeLiteral(root, 'electron/main.js', '_PK', otherKeyLines().lines)
-  const run = spawnSync(process.execPath, [path.join(root, 'scripts/preflight-release.cjs')], { cwd: root, encoding: 'utf8' })
+  for (const f of ['preflight-release.cjs', 'materialize-build-public-key.cjs', 'restore-public-anchors.cjs']) fs.copyFileSync(path.join(__dirname, '..', 'scripts', f), path.join(root, 'scripts', f))
+  // Both literals on a foreign key and NO proof of the reference key available offline.
+  const other = otherKeyLines()
+  writeLiteral(root, 'electron/main.js', '_PK', other.lines)
+  writeLiteral(root, 'src/lib/license/public-key.ts', '_LINES', other.lines)
+  const run = spawnSync(process.execPath, [path.join(root, 'scripts/preflight-release.cjs')], {
+    cwd: root, encoding: 'utf8', env: { ...process.env, GF_ANCHOR_RESTORE_NETWORK: '0' },
+  })
   assert.equal(run.status, 1)
   assert.match(run.stderr, /Empaquetage refusé/)
   assert.match(run.stderr, /Public anchors disagree/)
+  assert.match(run.stderr, /Réparation automatique impossible/)
+  assert.ok(fs.readFileSync(path.join(root, 'electron/main.js'), 'utf8').includes(other.lines[1]), 'nothing rewritten without proof')
   assert.doesNotMatch(run.stderr, /at materializePublicKey/)
   assert.equal(fs.existsSync(path.join(root, 'keys/public.pem')), false)
 }))

@@ -69,18 +69,22 @@ function retiredFingerprints(root) {
 
 /**
  * Best-effort, read-only: which anchor files differ from the checked-out commit?
- * Returns null when git is unavailable (ZIP download, no PATH). Never blocks.
+ * Returns null when this project is not ITSELF a git repository (ZIP download,
+ * no git on PATH, or a PARENT folder that happens to be a repository — where
+ * every project file would show up as untracked, not "modified"). Never blocks.
  */
 function locallyModified(root, files) {
   try {
-    const run = spawnSync('git', ['status', '--porcelain', '--', ...files], {
-      cwd: root, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'],
-    })
+    const opts = { cwd: root, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] }
+    const top = spawnSync('git', ['rev-parse', '--show-toplevel'], opts)
+    if (top.status !== 0 || top.error) return null
+    const norm = p => { const r = fs.realpathSync.native(p); return process.platform === 'win32' ? r.toLowerCase() : r }
+    if (norm(top.stdout.trim()) !== norm(root)) return null
+    const run = spawnSync('git', ['status', '--porcelain', '--', ...files], opts)
     if (run.status !== 0 || run.error) return null
-    // Porcelain paths are relative to the repository root, which may be a parent
-    // of this project: compare by path suffix.
-    const changed = run.stdout.split(/\r?\n/).filter(Boolean).map(line => line.slice(3).trim().replace(/\\/g, '/'))
-    return new Map(files.map(file => [file, changed.some(entry => entry === file || entry.endsWith(`/${file}`))]))
+    // Untracked ("??") is not "modified compared with the commit".
+    const changed = run.stdout.split(/\r?\n/).filter(line => line && !line.startsWith('??')).map(line => line.slice(3).trim().replace(/\\/g, '/'))
+    return new Map(files.map(file => [file, changed.includes(file)]))
   } catch { return null }
 }
 
@@ -110,7 +114,7 @@ function explainDisagreement(root, inspection) {
     if (modified && modified.get(anchor.file)) notes.push('modifié localement (git status)')
     lines.push(`  • ${anchor.file} (${anchor.variable})`, `      ${state}${notes.length ? `  — ${notes.join(' ; ')}` : ''}`)
   }
-  if (!modified) lines.push('  (git indisponible : état local des fichiers non déterminé)')
+  if (!modified) lines.push('  (dossier hors dépôt git — ZIP ou dépôt parent : état local des fichiers non déterminé)')
 
   lines.push('', 'Cause probable :')
   if (!expected) {
@@ -127,11 +131,19 @@ function explainDisagreement(root, inspection) {
   }
 
   const files = anchors.map(a => a.file).join(' ')
-  lines.push('', 'Correctif sûr (aucune clé n’est générée ni remplacée automatiquement) :',
-    '  A. Aucune rotation de clé n’a été APPROUVÉE (cas normal) — revenir aux ancrages du commit :',
-    `       git diff -- ${files}`,
-    '       (conserver ailleurs toute autre modification de ces fichiers, puis)',
-    `       git restore --source=HEAD -- ${files}`,
+  lines.push('', 'Correctif sûr (aucune clé n’est générée ; seule la clé de référence peut être rétablie) :',
+    '  `npm run dist` / `npm run keys:restore` rétablissent _PK et _LINES automatiquement dès que le',
+    '  texte de la clé de REFERENCE_FP est prouvé (ancre restée correcte, keys/public.pem, git, GitHub).',
+    '  A. Aucune rotation de clé n’a été APPROUVÉE (cas normal) — revenir aux ancrages d’origine :',
+    ...(modified ? [
+      `       git diff -- ${files}`,
+      '       (conserver ailleurs toute autre modification de ces fichiers, puis)',
+      `       git restore --source=HEAD -- ${files}`,
+    ] : [
+      '       dossier sans git (ZIP) : relancer `npm run dist` avec un accès Internet (texte de la clé',
+      '       récupéré sur GitHub puis vérifié par empreinte), ou ré-extraire electron/main.js et',
+      '       src/lib/license/public-key.ts depuis l’archive d’origine.',
+    ]),
     '  B. Une rotation a été approuvée ET la clé privée correspondante est détenue :',
     '       placer SA clé publique dans keys/public.pem, puis `npm run keys:sync` et `npm run keys:check`,',
     '       vérifier `python scripts/keygen_trust.py --verify-key-match`, et mettre à jour la vitrine.',
