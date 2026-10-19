@@ -159,7 +159,8 @@ const PHOTOS_DIR  = path.join(APP_DATA, 'photos')
 const ROOT     = path.join(__dirname, '..')               // project root (dev) or app dir (prod)
 
 // ── Embedded ECC Public Key (P-256 / secp256r1) ───────────────────────────────
-// Generated ONCE by: python scripts\keygen.py --init
+// Generated ONCE by: python scripts\keygen.py --init — then propagated ONLY by
+// `npm run keys:sync` (never pasted by hand: _PK, _LINES and REFERENCE_FP move together).
 // This is a PUBLIC key — distributing it is safe; you cannot forge signatures without private.pem
 //
 // SOURCE DE VÉRITÉ UNIQUE : ces lignes DOIVENT rester identiques à keys/public.pem

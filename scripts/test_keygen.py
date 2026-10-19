@@ -201,5 +201,45 @@ class KeygenCliValidationTests(unittest.TestCase):
         self.assertEqual(parent["lid"], self.parent["lid"])
 
 
+class KeygenInitNeverReplacesTests(unittest.TestCase):
+    """--init cree une PREMIERE autorite ; il ne remplace jamais une cle existante."""
+
+    def setUp(self):
+        import keygen
+        self.keygen = keygen
+        self.tmp = tempfile.TemporaryDirectory()
+        keys_dir = Path(self.tmp.name) / "keys"
+        self.saved = (keygen.KEYS_DIR, keygen.PRIV_FILE, keygen.PUB_FILE)
+        keygen.KEYS_DIR = keys_dir
+        keygen.PRIV_FILE = keys_dir / "private.pem"
+        keygen.PUB_FILE = keys_dir / "public.pem"
+
+    def tearDown(self):
+        self.keygen.KEYS_DIR, self.keygen.PRIV_FILE, self.keygen.PUB_FILE = self.saved
+        self.tmp.cleanup()
+
+    def test_first_init_creates_pair(self):
+        self.keygen.cmd_init(None)
+        self.assertTrue(self.keygen.PRIV_FILE.read_bytes().startswith(b"-----BEGIN PRIVATE KEY-----"))
+        self.assertTrue(self.keygen.PUB_FILE.read_bytes().startswith(b"-----BEGIN PUBLIC KEY-----"))
+
+    def test_existing_private_key_is_never_overwritten(self):
+        self.keygen.KEYS_DIR.mkdir()
+        self.keygen.PRIV_FILE.write_bytes(b"production-key-placeholder")
+        with self.assertRaises(SystemExit) as ctx:
+            self.keygen.cmd_init(None)
+        self.assertNotEqual(ctx.exception.code, 0)
+        self.assertEqual(self.keygen.PRIV_FILE.read_bytes(), b"production-key-placeholder")
+        self.assertFalse(self.keygen.PUB_FILE.exists())
+
+    def test_existing_public_key_also_blocks(self):
+        self.keygen.KEYS_DIR.mkdir()
+        self.keygen.PUB_FILE.write_bytes(b"pinned-public")
+        with self.assertRaises(SystemExit):
+            self.keygen.cmd_init(None)
+        self.assertFalse(self.keygen.PRIV_FILE.exists())
+        self.assertEqual(self.keygen.PUB_FILE.read_bytes(), b"pinned-public")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

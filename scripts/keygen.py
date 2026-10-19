@@ -65,7 +65,24 @@ _HEADER_B64 = b64u_enc(json.dumps(HEADER, separators=(",", ":")).encode())
 
 # ── Key management ─────────────────────────────────────────────────────────────
 def cmd_init(passphrase):
+    """Create the FIRST key pair of a new licence authority — never a replacement.
+
+    An existing keys/private.pem may be the production issuer key: overwriting
+    it would make every licence ever signed unverifiable and is irreversible.
+    Both files are therefore created exclusively ('xb'); an existing file aborts
+    the command without touching anything. A rotation is an operator decision
+    (docs/VERIFICATION_CLE_EMETTRICE.md), not a side effect of --init.
+    """
     KEYS_DIR.mkdir(exist_ok=True)
+    existing = [p for p in (PRIV_FILE, PUB_FILE) if p.exists()]
+    if existing:
+        print("\nRefus : une autorite de licence existe deja :")
+        for p in existing:
+            print(f"  - {p}")
+        print("--init ne remplace JAMAIS une cle (la cle privee peut etre celle de production).")
+        print("Verifier la correspondance : python scripts/keygen_trust.py --verify-key-match")
+        sys.exit(2)
+
     priv = ec.generate_private_key(ec.SECP256R1(), default_backend())
     enc  = (serialization.BestAvailableEncryption(passphrase.encode())
             if passphrase else serialization.NoEncryption())
@@ -75,17 +92,18 @@ def cmd_init(passphrase):
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=enc,
     )
-    PRIV_FILE.write_bytes(priv_pem)
-    try:
-        PRIV_FILE.chmod(0o600)
-    except Exception:
-        pass
-
     pub_pem = priv.public_key().public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
-    PUB_FILE.write_bytes(pub_pem)
+    with open(PRIV_FILE, "xb") as fh:
+        fh.write(priv_pem)
+    try:
+        PRIV_FILE.chmod(0o600)
+    except Exception:
+        pass
+    with open(PUB_FILE, "xb") as fh:
+        fh.write(pub_pem)
 
     print("\n" + "="*60)
     print("  ECC P-256 key pair generated")
@@ -94,17 +112,19 @@ def cmd_init(passphrase):
     print(f"  Public key  : {PUB_FILE}")
     print()
     print("  CRITICAL — keep private.pem PRIVATE:")
-    print("  • Add  keys/  to .gitignore immediately")
-    print("  • Never commit private.pem to any repository")
+    print("  • keys/ is git-ignored: never commit private.pem to any repository")
     print("  • Back it up in a secure offline location")
     print()
-    pub_lines = pub_pem.decode().strip().splitlines()
-    inner = [l for l in pub_lines if not l.startswith("-----")]
-    print("  Paste into src\\lib\\license\\verify.ts  (_K array)")
-    print("  and into electron\\main.js  (_PK array):")
-    print()
-    for line in inner:
-        print(f"  '{line}',")
+    # Ne JAMAIS recopier les lignes a la main : la cle publique est ancree a TROIS
+    # endroits (electron/main.js `_PK`, src/lib/license/public-key.ts `_LINES`,
+    # REFERENCE_FP du test de coherence) et une copie partielle bloque
+    # `npm run dist` (« Public anchors disagree »). Seul keys:sync les deplace
+    # ensemble, apres approbation de la nouvelle autorite par l'exploitant.
+    print("  Nouvelle autorite = les licences existantes ne seront plus valides.")
+    print("  Apres approbation, propager la cle PUBLIQUE a tous les ancrages :")
+    print("    npm run keys:sync")
+    print("    npm run keys:check")
+    print("  Ne copiez aucun tableau a la main.")
     print("\n" + "="*60 + "\n")
 
 

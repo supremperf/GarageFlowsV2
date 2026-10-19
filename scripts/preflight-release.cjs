@@ -25,7 +25,19 @@ const path = require('node:path')
 
 const RACINE = path.resolve(__dirname, '..')
 // Public resource only: no new pair, rotation, or private key required.
-require('./materialize-build-public-key.cjs').materializePublicKey(RACINE)
+// BLOCKING: any anchor disagreement stops packaging here (exit 1). The error is
+// printed with its full diagnostic instead of a bare stack trace, so the operator
+// sees WHICH anchor differs and the safe remedy — never a downgrade to a warning.
+try {
+  require('./materialize-build-public-key.cjs').materializePublicKey(RACINE)
+} catch (error) {
+  console.error('')
+  console.error('❌ Empaquetage refusé — clé publique de licence incohérente :')
+  console.error('')
+  console.error(String(error && error.message || error).split('\n').map(l => `   ${l}`).join('\n'))
+  console.error('')
+  process.exit(1)
+}
 const PROBLEMES = []
 const AVERTISSEMENTS = []
 

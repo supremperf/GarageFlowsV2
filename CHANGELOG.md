@@ -1,6 +1,36 @@
 <!-- doc-numbers: journal — comptes datés point-dans-le-temps, exempts du contrôle de compte courant (V13.1) -->
 # Changelog
 
+## [Non publié] — 2026-10-19 — `npm run dist` : « Public anchors disagree » diagnostiqué et ses causes fermées
+
+- **Constat.** Le dépôt est cohérent : à chaque commit portant le matérialiseur, `_PK`
+  (`electron/main.js`), `_LINES` (`src/lib/license/public-key.ts`) et `REFERENCE_FP`
+  désignent la clé de production `bd8c0845…`, et le job Windows de la CI exécute
+  `npm run dist` jusqu’au bout sur ce même contenu. L’échec vient donc d’ancres
+  **modifiées localement** — mais le message ne disait ni lesquelles ni comment réparer,
+  et plusieurs outils du dépôt pouvaient fabriquer cet état.
+- `scripts/materialize-build-public-key.cjs` : contrôle **inchangé et toujours bloquant** ;
+  le message liste chaque ancre et son empreinte publique, signale une clé retirée et un
+  fichier modifié localement (`git status`, lecture seule), distingue mise à jour partielle
+  et régénération locale, et donne le correctif sûr. Une ancre déclarée deux fois est
+  désormais refusée au lieu de retenir la première occurrence.
+- `scripts/preflight-release.cjs` : le refus s’affiche avec ce diagnostic et `exit 1`, au
+  lieu d’une pile d’appels brute.
+- `scripts/sync-public-key.mjs` (`keys:sync`) : écriture **tout ou rien** (temporaires,
+  remplacement, relecture, restauration) — un fichier verrouillé sous Windows laissait
+  `_PK`, `_LINES` et `REFERENCE_FP` sur des clés différentes. Ancres ambiguës refusées.
+- `scripts/keygen.py --init` : n’écrase plus jamais `keys/private.pem` / `keys/public.pem`
+  (création exclusive) et ne demande plus de coller la clé à la main dans `verify.ts (_K)`
+  — fichier disparu — et `_PK` en oubliant `REFERENCE_FP` : il renvoie vers `keys:sync`.
+  `keygen_ui.py` : même avertissement sur l’extrait affiché.
+- `scripts/reset-garageflow.ps1` : `[regex]::Replace(…, 1)` passait `1` comme
+  `RegexOptions.IgnoreCase`, pas comme nombre de remplacements ; remplacement unique
+  sensible à la casse, et refus d’un tableau ambigu.
+- `package.json` : `license:gen` utilise un chemin `scripts/keygen.py` valide sous Windows
+  comme sous Linux/macOS.
+- Tests : `tests/build-public-key.test.cjs` (diagnostic, ambiguïté, clé retirée, preflight,
+  `keys:sync` tout-ou-rien) et `scripts/test_keygen.py` (`--init` ne remplace jamais).
+
 ## [Non publié] — 2026-10-19 — livraison Windows : diagnostic de l’artefact réparé, reçus du HEAD archivés
 
 ### `verify:installer` nomme enfin le défaut qu’il refusait

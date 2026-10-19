@@ -21,7 +21,7 @@
  * RAPPEL : la vitrine (garagesite3) vit dans un AUTRE dépôt — aucun script local
  * ne peut l'atteindre. Après une rotation, elle reste à mettre à jour à la main.
  */
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, renameSync, unlinkSync } from 'node:fs'
 import { createPublicKey, createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -79,7 +79,13 @@ const changes = []
 /** Réécrit un littéral `const <varName> = [ '…', … ]` en conservant son indentation. */
 function syncLiteral({ file, varName, label }) {
   const source = readFileSync(file, 'utf8')
-  const block = source.match(new RegExp(`(const\\s+${varName}\\s*=\\s*\\[)([\\s\\S]*?)(\\])`))
+  const pattern = `(const\\s+${varName}\\s*=\\s*\\[)([\\s\\S]*?)(\\])`
+  const count = source.match(new RegExp(pattern, 'g'))?.length ?? 0
+  if (count > 1) {
+    fail(`${count} littéraux \`const ${varName} = [...]\` dans ${label} — ancrage AMBIGU :\n` +
+      '   aucun n\'est choisi « au premier trouvé ». Supprimez le doublon, puis relancez.')
+  }
+  const block = source.match(new RegExp(pattern))
   if (!block) {
     fail(`littéral \`const ${varName} = [...]\` introuvable dans ${label} — la clé publique\n` +
       '   embarquée a changé de forme : METTEZ CE SCRIPT À JOUR, ne le contournez pas.')
@@ -93,19 +99,22 @@ function syncLiteral({ file, varName, label }) {
   // Indentation reprise de la première entrée existante, sinon deux espaces.
   const indent = block[2].match(/\n([ \t]+)'/)?.[1] ?? '  '
   const body = `\n${pemLines.map((l) => `${indent}'${l}',`).join('\n')}\n`
-  changes.push({ label, from: currentFp, file, next: source.replace(block[0], `${block[1]}${body}${block[3]}`) })
+  // Function replacer: the replacement text is never interpreted as `$&`/`$1` patterns.
+  changes.push({ label, from: currentFp, file, previous: source, next: source.replace(block[0], () => `${block[1]}${body}${block[3]}`) })
 }
 
 /** Réécrit `const REFERENCE_FP = '<hex>'` en conservant le commentaire de fin de ligne. */
 function syncFingerprintAnchor({ file, varName, label }) {
   const source = readFileSync(file, 'utf8')
+  const count = source.match(new RegExp(`const\\s+${varName}\\s*=`, 'g'))?.length ?? 0
+  if (count > 1) fail(`${count} déclarations de ${varName} dans ${label} — ancrage AMBIGU, aucune réécriture.`)
   const m = source.match(new RegExp(`(const\\s+${varName}\\s*=\\s*')([0-9a-f]{64})(')`))
   if (!m) {
     fail(`\`const ${varName} = '<64 hex>'\` introuvable dans ${label} — l'ancre d'empreinte\n` +
       '   a changé de forme : METTEZ CE SCRIPT À JOUR, ne le contournez pas.')
   }
   if (m[2] === referenceFp) return
-  changes.push({ label, from: m[2], file, next: source.replace(m[0], `${m[1]}${referenceFp}${m[3]}`) })
+  changes.push({ label, from: m[2], file, previous: source, next: source.replace(m[0], () => `${m[1]}${referenceFp}${m[3]}`) })
 }
 
 /**
@@ -144,7 +153,8 @@ function retireOutgoing(outgoingFp) {
     label: 'scripts/check-critical-files.js (RETIRED_FINGERPRINTS)',
     from: '(liste)',
     file,
-    next: source.replace(m[0], `${m[1]}${body}${m[3]}`),
+    previous: source,
+    next: source.replace(m[0], () => `${m[1]}${body}${m[3]}`),
     note: notes.join(' ; '),
   })
 }
@@ -174,8 +184,46 @@ if (CHECK_ONLY) {
   process.exit(1)
 }
 
+/**
+ * Applique TOUTES les modifications, ou AUCUNE.
+ *
+ * Écrire les fichiers l'un après l'autre laissait un état PARTIEL dès qu'une
+ * écriture échouait — cas courant sous Windows (fichier verrouillé par un IDE,
+ * un antivirus ou OneDrive : EPERM/EBUSY). `_PK` portait alors la nouvelle clé,
+ * `_LINES` ou `REFERENCE_FP` l'ancienne, et `npm run dist` s'arrêtait sur
+ * « Public anchors disagree ». Désormais : (1) chaque contenu est écrit dans un
+ * fichier temporaire voisin, (2) les temporaires remplacent les originaux,
+ * (3) le résultat est relu et revérifié ; tout échec restaure les originaux.
+ */
+function applyAtomically(list) {
+  const staged = []
+  const committed = []
+  try {
+    for (const c of list) {
+      const temp = `${c.file}.gf-sync-${process.pid}.tmp`
+      writeFileSync(temp, c.next, { flag: 'wx' })
+      staged.push({ ...c, temp })
+    }
+    for (const c of staged) {
+      renameSync(c.temp, c.file)
+      committed.push(c)
+    }
+    for (const c of committed) {
+      if (readFileSync(c.file, 'utf8') !== c.next) throw new Error(`relecture divergente : ${c.label}`)
+    }
+  } catch (error) {
+    const unrestored = []
+    for (const c of committed.reverse()) {
+      try { writeFileSync(c.file, c.previous) } catch { unrestored.push(c.label) }
+    }
+    for (const c of staged) { try { unlinkSync(c.temp) } catch { /* déjà renommé ou absent */ } }
+    fail(`écriture interrompue (${error.code || error.message}) — ${unrestored.length ? `RESTAURATION INCOMPLÈTE : ${unrestored.join(', ')}` : 'aucun fichier modifié (originaux restaurés)'}.\n` +
+      '   Fermez le programme qui verrouille le fichier (IDE, antivirus, synchronisation), puis relancez.')
+  }
+}
+
+applyAtomically(changes)
 for (const c of changes) {
-  writeFileSync(c.file, c.next)
   console.log(`✔ ${c.label}\n    ${c.note ?? `${c.from ?? '(illisible)'} → ${referenceFp}`}`)
 }
 console.log(`\n✅ sync:public-key — ${changes.length} ancrage(s) réalignés sur ${referenceFp.slice(0, 16)}…`)

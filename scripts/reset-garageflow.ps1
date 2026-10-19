@@ -397,7 +397,12 @@ function Set-LicensePublicKeyInProject {
         $name = [regex]::Escape([string]$target.Name)
         $pattern = "(?s)(?:const|let|var)\s+$name\s*=\s*\[.*?\]"
         $replacement = "const $([string]$target.Name) = [`r`n$arrayLines`r`n]"
-        $patched = [regex]::Replace($raw, $pattern, $replacement, 1)
+        # [regex]::Replace(input, pattern, replacement, 1) passait 1 comme RegexOptions
+        # (IgnoreCase), PAS comme nombre de remplacements : toutes les occurrences, casse
+        # ignorée, étaient réécrites. Instance + compte = une seule occurrence, sensible à la casse.
+        $literalCount = [regex]::Matches($raw, $pattern).Count
+        if ($literalCount -gt 1) { throw "Tableau $([string]$target.Name) AMBIGU dans $path ($literalCount déclarations) : aucun patch." }
+        $patched = ([regex]::new($pattern)).Replace($raw, $replacement, 1)
         if ($patched -eq $raw) { throw "Tableau $([string]$target.Name) introuvable dans $path" }
         & $writePatched $path $patched
     }

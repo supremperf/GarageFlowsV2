@@ -1259,8 +1259,11 @@ class TabKeys(tk.Frame):
         lines = [ln for ln in core.PUB_FILE.read_text().strip().splitlines() if ln.strip()]
         items = ",\n  ".join(f"'{ln}'" for ln in lines)
         return (
-            "// src/lib/license/public-key.ts  &  electron/main.js\n"
-            "// Remplacez le tableau _LINES / _PK existant par ceci :\n"
+            "// LECTURE SEULE — ne pas coller a la main.\n"
+            "// La cle est ancree a 3 endroits (electron/main.js _PK,\n"
+            "// src/lib/license/public-key.ts _LINES, REFERENCE_FP du test).\n"
+            "// Une copie partielle bloque `npm run dist`. Apres approbation :\n"
+            "//   npm run keys:sync   puis   npm run keys:check\n"
             f"[\n  {items},\n]"
         )
 

@@ -46,3 +46,24 @@ Ne pas confondre cette paire ECDSA avec `NEXTAUTH_SECRET` (session JWT), `GF_DB_
 8. À la moindre divergence/erreur/SKIP, arrêter la promotion. Collecter les empreintes **publiques**, pas les clés privées ; décider humainement de l’alignement nécessaire et de l’impact sur les licences déjà émises. Une synchronisation/rotation n’est jamais la conséquence automatique de ce test.
 
 Rejeu local sans production : `PATH="$PWD/.venv/bin:$PATH" npx vitest run src/lib/__tests__/issuer-fixture-roundtrip.test.ts` et `node --test tests/issuer-correspondence.test.cjs`. Python/cryptography se préparent avec `tests/requirements-keygen.txt` hash-locké ; aucun SKIP ajouté pour masquer l’absence de cet outil.
+
+## Construction Windows : « Public anchors disagree; no key file written »
+
+`npm run dist` commence par `preflight:release`, qui appelle `scripts/materialize-build-public-key.cjs`. Ce script recrée **uniquement** la ressource publique `keys/public.pem` (non versionnée) à partir des ancres du dépôt, après avoir vérifié que les trois ancres désignent la même clé :
+
+| Ancre | Fichier | Rôle |
+|---|---|---|
+| `_PK` | `electron/main.js` | clé embarquée dans le binaire desktop |
+| `_LINES` | `src/lib/license/public-key.ts` | clé du serveur Next.js / PWA |
+| `REFERENCE_FP` | `src/lib/license/__tests__/public-key-consistency.test.ts` | empreinte SHA-256 (SPKI DER) épinglée de la clé de l’émetteur de production — l’arbitre |
+
+La source de vérité est la **clé privée de l’émetteur de production** (`GF_PRIVATE_KEY` côté serveur, `keys/private.pem` sur le poste de signature) ; le dépôt en épingle la moitié publique via ces trois ancres, qui ne se déplacent **qu’ensemble**, par `npm run keys:sync`, après une rotation approuvée. Une ancre déclarée deux fois est refusée (aucun « premier trouvé »).
+
+Le désaccord reste **bloquant** : un binaire dont `_PK` diffère de la clé qui signe les licences les refuse toutes, sans message. Le message d’erreur liste chaque ancre, son empreinte (donnée publique), signale une clé retirée (`RETIRED_FINGERPRINTS` de `scripts/check-critical-files.js`) et un fichier modifié localement (`git status`), puis indique le correctif :
+
+- **Aucune rotation approuvée (cas normal)** : la copie de travail a été modifiée localement (ex. `keygen.py --init` suivi d’une copie manuelle des tableaux, synchronisation interrompue, fusion git). Examiner `git diff` des trois fichiers, mettre de côté toute autre modification, puis `git restore --source=HEAD --` sur ces trois fichiers.
+- **Rotation approuvée et clé privée détenue** : placer la clé publique dérivée de cette clé privée dans `keys/public.pem`, lancer `npm run keys:sync` puis `npm run keys:check`, vérifier la correspondance avec `python scripts/keygen_trust.py --verify-key-match`, et mettre à jour la vitrine (autre dépôt).
+
+Si la clé privée de production est inaccessible, **ne pas en générer une nouvelle pour faire passer la construction** : un binaire signé par une autorité de remplacement refuserait toutes les licences en circulation. Récupérer la clé depuis le coffre de l’exploitant (ou décider formellement d’une rotation, avec ses conséquences sur les licences émises).
+
+`keys:sync` écrit désormais ses ancres de façon **transactionnelle** (fichiers temporaires, remplacement, relecture ; restauration des originaux en cas d’échec — fichier verrouillé sous Windows par un IDE, un antivirus ou OneDrive), et `keygen.py --init` refuse de remplacer une clé existante.
