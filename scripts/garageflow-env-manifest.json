@@ -199,6 +199,20 @@
       "notes": "Affiche le catalogue des plateformes (lecture seule, aucun secret). Defaut true."
     },
     {
+      "name": "EINVOICING_QUEUE_TOKEN",
+      "classification": "secret",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "string",
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "src/app/api/internal/einvoicing/queue/route.ts"
+      ],
+      "notes": "Jeton Bearer (>=32 caracteres) autorisant la reprise automatique des transmissions e-facturation en echec. Absent = route fermee (503)."
+    },
+    {
       "name": "EINVOICING_SANDBOX_ONLY",
       "classification": "configuration",
       "scope": "server",

@@ -5,7 +5,11 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { getEInvoicingFlags } from '../flags'
-import { normalizePlatformSearch, searchPlatforms, isPlatformConnectable, type ApprovedEInvoicePlatform } from '../catalog'
+import {
+  normalizePlatformSearch, searchPlatforms, isPlatformConnectable,
+  presentIntegrationStatus, isPlatformConfigurable,
+  type ApprovedEInvoicePlatform,
+} from '../catalog'
 import { EINVOICE_PLATFORM_CATALOG } from '../catalog-data'
 import { EInvoiceAdapterRegistry, einvoiceAdapterRegistry, type EInvoiceProviderAdapter } from '../adapter'
 import { encryptCredential, decryptCredential, envelopeKeyVersion, isCredentialKeyConfigured, EInvoiceCipherError } from '../credentials-cipher'
@@ -134,5 +138,42 @@ describe('chiffrement des identifiants (AES-256-GCM)', () => {
     delete process.env.GF_EINVOICE_CREDENTIALS_KEY
     expect(isCredentialKeyConfigured()).toBe(false)
     expect(() => encryptCredential('x')).toThrow(EInvoiceCipherError)
+  })
+})
+
+describe('statut AFFICHÉ — le connecteur générique ne doit pas laisser « À venir »', () => {
+  const plateforme: ApprovedEInvoicePlatform = {
+    ...EINVOICE_PLATFORM_CATALOG[0],
+    integrationStatus: 'coming_soon',
+  }
+
+  it('sans aucun connecteur : le statut du catalogue est conservé', () => {
+    expect(presentIntegrationStatus(plateforme, () => false, false)).toBe('coming_soon')
+    expect(isPlatformConfigurable(plateforme, () => false, false)).toBe(false)
+  })
+
+  it('avec le connecteur générique : « configuration requise », pas « à venir »', () => {
+    expect(presentIntegrationStatus(plateforme, () => false, true)).toBe('configuration_required')
+    expect(isPlatformConfigurable(plateforme, () => false, true)).toBe(true)
+  })
+
+  it('un connecteur DÉDIÉ réellement enregistré prime', () => {
+    const dediee: ApprovedEInvoicePlatform = {
+      ...plateforme,
+      integrationStatus: 'available',
+      adapterId: 'fournisseur-dedie',
+    }
+    expect(presentIntegrationStatus(dediee, (id) => id === 'fournisseur-dedie', false)).toBe('available')
+    expect(isPlatformConfigurable(dediee, (id) => id === 'fournisseur-dedie', false)).toBe(true)
+  })
+
+  it('un adaptateur annoncé mais absent du registre ne rend rien disponible', () => {
+    const fantome: ApprovedEInvoicePlatform = {
+      ...plateforme,
+      integrationStatus: 'available',
+      adapterId: 'annonce-mais-absent',
+    }
+    expect(presentIntegrationStatus(fantome, () => false, false)).toBe('coming_soon')
+    expect(isPlatformConfigurable(fantome, () => false, false)).toBe(false)
   })
 })

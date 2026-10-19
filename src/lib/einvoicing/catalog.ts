@@ -162,3 +162,43 @@ export function searchPlatforms(
 export function isPlatformConnectable(p: ApprovedEInvoicePlatform, hasAdapter: (id: string) => boolean): boolean {
   return p.integrationStatus === 'available' && typeof p.adapterId === 'string' && hasAdapter(p.adapterId)
 }
+
+/**
+ * Statut d'intégration AFFICHÉ — distinct du statut du catalogue.
+ *
+ * Le catalogue décrit la présence d'un connecteur DÉDIÉ : aucune plateforme du
+ * registre n'en a, d'où `coming_soon` partout. Mais GarageFlows embarque un
+ * connecteur GÉNÉRIQUE réel (`generic-pa`) qui permet de configurer n'importe
+ * quelle plateforme avec les identifiants fournis par son contrat. Afficher
+ * « À venir » sur une plateforme que l'utilisateur peut réellement connecter
+ * en deux minutes est faux — et c'est exactement ce que voyait le garage.
+ *
+ * Règles :
+ *   - connecteur dédié réellement enregistré → `available` ;
+ *   - sinon, connecteur générique disponible → `configuration_required` ;
+ *   - sinon, statut du catalogue inchangé (`coming_soon`).
+ */
+export function presentIntegrationStatus(
+  p: ApprovedEInvoicePlatform,
+  hasAdapter: (id: string) => boolean,
+  genericAvailable: boolean,
+): EInvoiceIntegrationStatus {
+  if (isPlatformConnectable(p, hasAdapter)) return 'available'
+  if (genericAvailable) return 'configuration_required'
+  // Le catalogue ne peut pas revendiquer « disponible » pour un adaptateur
+  // absent du registre : c'est le registre qui décide, pas la donnée d'entrée.
+  return p.integrationStatus === 'available' ? 'coming_soon' : p.integrationStatus
+}
+
+/**
+ * La plateforme est-elle utilisable DEPUIS GarageFlows (dédié ou générique) ?
+ * Sert au message affiché, jamais à décider d'un envoi : le serveur reste seul
+ * juge de l'existence de la connexion et de l'adaptateur au moment de l'envoi.
+ */
+export function isPlatformConfigurable(
+  p: ApprovedEInvoicePlatform,
+  hasAdapter: (id: string) => boolean,
+  genericAvailable: boolean,
+): boolean {
+  return isPlatformConnectable(p, hasAdapter) || genericAvailable
+}

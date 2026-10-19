@@ -145,6 +145,7 @@ async function handlePOST(req: Request) {
           apiKey: chaine(p.apiKey),
           extraHeaderName: chaine(p.extraHeaderName),
           extraHeaderValue: chaine(p.extraHeaderValue),
+          webhookSecret: chaine(p.webhookSecret),
         }
         const { id, clair } = await enregistrerConnexion({
           garageId,

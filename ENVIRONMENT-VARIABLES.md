@@ -207,11 +207,12 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `NODE_INSPECTOR_IPC` | CONFIGURATION | non | runtime-system | Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually. |
 | `VERCEL` | CONFIGURATION | non | runtime-system | Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually. |
 
-### Secrets générés par GarageFlows (1)
+### Secrets générés par GarageFlows (2)
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
 | `BLOB_READ_WRITE_TOKEN` | SECRET | non | release-tooling | Entrée fournisseur privée des outils de configuration et de validation Blob. Aucun consommateur applicatif actuel ; ne pas exposer au navigateur ni i… |
+| `EINVOICING_QUEUE_TOKEN` | SECRET | non | server | Jeton Bearer (>=32 caracteres) autorisant la reprise automatique des transmissions e-facturation en echec. Absent = route fermee (503). |
 
 ### Harnais de test (4)
 

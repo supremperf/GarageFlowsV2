@@ -20,7 +20,7 @@ Usage (Windows — run from project root):
   python scripts\keygen.py --gen-mechanic --parent-lid <LID> --count 3 --names "A,B,C"
                                                                     # Mechanic keys for a garage
   python scripts\keygen.py --verify <token>                         # Verify any token
-  python scripts\keygen.py --hwid                                   # Print this machine's HWID
+  python scripts\keygen.py --hwid                                   # LOCAL keygen fingerprint (NOT the app HWID)
 
 Requirements (run once):
   pip install cryptography
@@ -156,6 +156,14 @@ def make_license(priv_key, customer_id: str, license_type: str,
                  years=1, seats=1, hwid=None, label=None) -> dict:
     if license_type not in LICENSE_TYPES:
         raise ValueError(f"Invalid type. Choose from: {sorted(LICENSE_TYPES)}")
+
+    if hwid is not None:
+        hwid = keygen_core.normalize_license_hwid(hwid)
+        if not keygen_core.is_valid_license_hwid(hwid):
+            raise ValueError(
+                "HWID invalide : attendu 64 hex (v0) ou 'HWID1-' + 64 hex (v1). "
+                "Utiliser l'empreinte produite par le poste client (--bind-hwid)."
+            )
 
     now = int(time.time())
     exp = now + years * 365 * 24 * 3600
@@ -406,8 +414,23 @@ def main():
     args = p.parse_args()
 
     if args.hwid:
-        print(f"\nHWID: {get_hwid()}\n")
+        # Diagnostic LOCAL uniquement. Cette empreinte n'est pas celle calculée
+        # par Electron (cpu/platform/mac collectés différemment) : la signer
+        # dans une licence produirait un rejet à l'activation.
+        print(
+            "\nEmpreinte LOCALE du keygen (diagnostic) :\n"
+            f"  {get_hwid()}\n\n"
+            "ATTENTION : ce n'est PAS l'empreinte du poste client. Pour lier une\n"
+            "licence, relever le HWID dans GarageFlows sur le poste à activer et\n"
+            "le passer à --bind-hwid.\n"
+        )
         return
+
+    if args.bind_hwid is not None:
+        normalized = keygen_core.normalize_license_hwid(args.bind_hwid)
+        if not keygen_core.is_valid_license_hwid(normalized):
+            p.error("--bind-hwid : HWID invalide (64 hex v0, ou 'HWID1-' + 64 hex v1)")
+        args.bind_hwid = normalized
 
     if args.init:
         pp = args.passphrase

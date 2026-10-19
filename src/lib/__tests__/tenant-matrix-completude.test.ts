@@ -78,6 +78,16 @@ const HORS_MATRICE: Record<string, { motif: string; couverture?: string }> = {
     motif: 'réservée au déploiement serveur (PostgreSQL) : refuse 501 sur la base du poste',
     couverture: 'src/lib/einvoicing/__tests__/submit-replay.test.ts',
   },
+  '/api/einvoicing/webhooks/[providerId]': {
+    // `providerId` n'est PAS un identifiant de tenant : c'est le nom du
+    // connecteur (ex. `generic-pa`), identique pour tous les garages. La
+    // transmission est retrouvée par `(providerId, externalId)`, puis bornée à
+    // SON garage ; si plusieurs garages partagent l'identifiant externe, la
+    // requête est refusée (409) au lieu de choisir. L'authentification est la
+    // signature HMAC du secret de la connexion, jamais une session.
+    motif: 'webhook serveur à serveur : `providerId` désigne le connecteur, pas un garage ; résolution par (providerId, externalId) puis refus si ambigu',
+    couverture: 'src/lib/einvoicing/__tests__/webhook-route.test.ts',
+  },
 
   // ── PWA mécanicien : l'isolation n'est pas « par garage » mais « par
   // AFFECTATION ». Un mécanicien n'atteint que les interventions qui lui sont

@@ -74,6 +74,21 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
   '/api/auth/[...nextauth]': { motif: 'cadre', note: 'point d’entrée NextAuth, atteint par signIn()' },
 
   '/api/ping': { motif: 'exploitation', note: 'sonde de disponibilité ; Electron interroge le serveur de licences, pas celle-ci' },
+  // DÉCLENCHEUR RÉEL : tâche planifiée de l'exploitant (cron), authentifiée par
+  // `EINVOICING_QUEUE_TOKEN` (Bearer, comparaison à temps constant). Aucun écran
+  // ne la déclenche — une reprise automatique ne se clique pas.
+  '/api/internal/einvoicing/queue': {
+    motif: 'exploitation',
+    note: 'reprise planifiée des transmissions e-facturation en échec (cron + jeton dédié)',
+  },
+  // DÉCLENCHEUR RÉEL : la plateforme agréée du garage POSTE l'URL configurée
+  // chez elle (documentée dans docs/EINVOICING_SECURITY.md). Aucun écran ne
+  // l'appelle — c'est un point d'entrée serveur à serveur, authentifié par la
+  // signature HMAC de la connexion, jamais par une session.
+  '/api/einvoicing/webhooks/[providerId]': {
+    motif: 'exploitation',
+    note: 'webhook entrant d’une plateforme agréée ; signature HMAC vérifiée avec le secret de la connexion du garage',
+  },
   '/api/admin/backups': { motif: 'exploitation', note: 'liste et déclenche les sauvegardes ; pilotée par script d’exploitation' },
   '/api/admin/backups/[id]/download': { motif: 'exploitation', note: 'récupération d’une archive par l’exploitant, hors interface' },
   '/api/admin/backups/[id]/restore': { motif: 'exploitation', note: 'restauration : geste délibérément sans bouton, jamais à un clic' },

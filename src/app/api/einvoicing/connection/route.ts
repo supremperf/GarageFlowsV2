@@ -120,6 +120,7 @@ export const PUT = withAuth(async (req) => {
     apiKey: chaine(body.apiKey),
     extraHeaderName: chaine(body.extraHeaderName),
     extraHeaderValue: chaine(body.extraHeaderValue),
+    webhookSecret: chaine(body.webhookSecret),
   }
 
   const env = environnement()

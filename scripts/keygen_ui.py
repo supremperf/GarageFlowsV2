@@ -537,13 +537,27 @@ class TabGenerate(tk.Frame):
         # HWID
         row_hwid = _frame(right, bg=BG)
         row_hwid.pack(fill="x", pady=(0, 6))
-        _lbl(row_hwid, "HWID (optionnel — lie au matériel)", fg=MUTED, font=FONTS).pack(anchor="w")
+        _lbl(row_hwid, "HWID du POSTE CLIENT (optionnel — lie au matériel)",
+             fg=MUTED, font=FONTS).pack(anchor="w")
         fr_hwid = _frame(row_hwid, bg=BG)
         fr_hwid.pack(fill="x")
         _entry(fr_hwid, textvariable=self.v_hwid,
                font=(MONO[0], 9)).pack(side="left", fill="x", expand=True, ipady=4)
-        _btn(fr_hwid, "Ce PC", self._fill_hwid, bg=CARD2, fg=MUTED,
+        # Ne JAMAIS fabriquer l'empreinte ici : le keygen et l'application la
+        # calculent différemment (voir keygen_core.get_hwid). Le bouton
+        # « Ce PC » produisait une licence systématiquement refusée à
+        # l'activation, ce qui obligeait l'opérateur à « réessayer ».
+        _btn(fr_hwid, "Coller", self._paste_hwid, bg=CARD2, fg=MUTED,
              font=FONTS, padx=8, pady=4).pack(side="left", padx=(4, 0))
+        _btn(fr_hwid, "Fichier…", self._import_hwid_file, bg=CARD2, fg=MUTED,
+             font=FONTS, padx=8, pady=4).pack(side="left", padx=(4, 0))
+        _lbl(
+            row_hwid,
+            "À relever sur le poste à activer (GarageFlows → Licence → "
+            "Empreinte du poste). L'empreinte calculée localement ici n'est "
+            "pas celle de l'application et serait refusée.",
+            fg=MUTED, font=("Segoe UI", 8), wraplength=320,
+        ).pack(anchor="w", pady=(3, 0))
 
         # ─── BLOC MÉCANICIEN (visible seulement en mode garage_meca / meca_only) ──
         self.meca_frame = _frame(right, bg=BG)
@@ -638,8 +652,53 @@ class TabGenerate(tk.Frame):
         val = self.v_type.get()
         self.v_type.set(val.split("  —")[0].strip())
 
-    def _fill_hwid(self):
-        self.v_hwid.set(core.get_hwid())
+    def _set_hwid_from_text(self, raw: str) -> bool:
+        """Renseigne le champ après validation ; refuse tout format invalide."""
+        normalized = core.normalize_license_hwid(raw)
+        if not core.is_valid_license_hwid(normalized):
+            messagebox.showerror(
+                "HWID invalide",
+                "Format attendu : 64 caractères hexadécimaux (v0) ou "
+                "« HWID1- » suivi de 64 hexadécimaux (v1).\n\n"
+                "Cette valeur doit être produite par le POSTE CLIENT, pas par "
+                "le keygen : une empreinte locale serait refusée à l'activation.",
+                parent=self,
+            )
+            return False
+        self.v_hwid.set(normalized)
+        return True
+
+    def _paste_hwid(self):
+        """Colle le HWID depuis le presse-papiers (sans jamais le calculer ici)."""
+        try:
+            raw = self.clipboard_get()
+        except tk.TclError:
+            messagebox.showinfo(
+                "Presse-papiers vide",
+                "Copiez d'abord l'empreinte affichée par le poste client.",
+                parent=self,
+            )
+            return
+        if self._set_hwid_from_text(raw):
+            messagebox.showinfo("HWID importé", "Empreinte du poste client chargée.", parent=self)
+
+    def _import_hwid_file(self):
+        """Importe un HWID depuis un fichier texte exporté par le poste client."""
+        path = filedialog.askopenfilename(
+            parent=self,
+            title="Empreinte du poste client",
+            filetypes=[("Texte", "*.txt"), ("Tous les fichiers", "*.*")],
+        )
+        if not path:
+            return
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                raw = f.readline()
+        except Exception as exc:
+            messagebox.showerror("Lecture impossible", str(exc), parent=self)
+            return
+        if self._set_hwid_from_text(raw):
+            messagebox.showinfo("HWID importé", "Empreinte du poste client chargée.", parent=self)
 
     def set_passphrase(self, pp: str):
         self._passphrase = pp
@@ -751,7 +810,22 @@ class TabGenerate(tk.Frame):
         raw_type = self.v_type.get().split("  —")[0].strip()
         years  = int(self.v_years.get() or 1)
         seats  = int(self.v_seats.get() or 1)
-        hwid   = self.v_hwid.get().strip() or None
+        hwid   = core.normalize_license_hwid(self.v_hwid.get()) or None
+
+        # Refus AVANT signature : un HWID mal formé produisait une licence
+        # signée mais impossible à activer (« Licence invalide ou modifiée »).
+        if hwid is not None and not core.is_valid_license_hwid(hwid):
+            messagebox.showerror(
+                "HWID invalide",
+                "Le HWID doit être l'empreinte du POSTE CLIENT : 64 caractères "
+                "hexadécimaux (v0) ou « HWID1- » suivi de 64 hexadécimaux (v1).\n\n"
+                "Utilisez « Coller » ou « Fichier… » avec la valeur affichée par "
+                "le poste à activer. Ne laissez pas le keygen la calculer : son "
+                "empreinte diffère de celle de l'application.",
+                parent=self,
+            )
+            return
+
         cid, label, client = self._build_client_and_cid()
 
         meca = None

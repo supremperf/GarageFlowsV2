@@ -3,10 +3,11 @@ export const dynamic = 'force-dynamic'
 /**
  * GET /api/einvoicing/status — état (drapeaux) + catalogue PUBLIC des plateformes.
  *
- * Lecture seule, Phase 2. Aucun secret, aucune donnée d'un autre garage : renvoie
- * uniquement des booléens de configuration et le catalogue public. Réservé au
- * staff gestionnaire (OWNER/MANAGER) — les mécaniciens sont exclus (§30). La
- * gestion des connexions (déchiffrement, test, envoi) arrive en Phase 3.
+ * Aucun secret, aucune donnée d'un autre garage : renvoie uniquement des
+ * booléens de configuration, le catalogue public et la liste des connecteurs
+ * réellement enregistrés. Réservé au staff gestionnaire (OWNER/MANAGER) — les
+ * mécaniciens sont exclus (§30). La connexion, son test et l'envoi vivent dans
+ * les routes dédiées (`/api/einvoicing/connection*`, `/invoices/[id]/submit`).
  */
 
 import { NextResponse } from 'next/server'
@@ -14,7 +15,7 @@ import { requireSession, withAuth } from '@/lib/api-helpers'
 import { getEInvoicingFlags } from '@/lib/einvoicing/flags'
 import { drapeauxDuService } from '@/lib/einvoicing/desktop-bridge'
 import { isPostgresDatabase } from '@/lib/db'
-import { isPlatformConnectable } from '@/lib/einvoicing/catalog'
+import { isPlatformConnectable, presentIntegrationStatus, isPlatformConfigurable } from '@/lib/einvoicing/catalog'
 // Données du registre : module SERVEUR, jamais importé par le navigateur.
 import {
   EINVOICE_PLATFORM_CATALOG,
@@ -50,13 +51,18 @@ export const GET = withAuth(async () => {
   // lever « Cannot read properties of undefined (reading 'localeCompare') » —
   // dans un useMemo, donc pendant le rendu : l'error boundary emportait tout
   // l'écran des réglages, de façon systématique.
+  const adapters = einvoiceAdapterRegistry.listAvailableAdapters()
+  const hasAdapter = (id: string) => einvoiceAdapterRegistry.hasAdapter(id)
+  const genericAvailable = adapters.length > 0
   const platforms = EINVOICE_PLATFORM_CATALOG.map((p) => ({
     id: p.id,
     officialName: p.officialName,
     normalizedName: p.normalizedName,
     slug: p.slug,
     approvalStatus: p.approvalStatus,
-    integrationStatus: p.integrationStatus,
+    // Statut AFFICHÉ : « À venir » est faux quand le connecteur générique
+    // permet déjà de configurer la plateforme (voir catalog.ts).
+    integrationStatus: presentIntegrationStatus(p, hasAdapter, genericAvailable),
     authenticationMethods: p.authenticationMethods,
     capabilities: p.capabilities,
     // Provenance de l'entrée (registre officiel) et formats ANNONCÉS par la
@@ -65,7 +71,8 @@ export const GET = withAuth(async () => {
     officialWebsite: p.officialWebsite ?? null,
     declaredFormats: p.declaredFormats ?? null,
     // Connectable UNIQUEMENT si un adaptateur réel est enregistré.
-    connectable: isPlatformConnectable(p, (id) => einvoiceAdapterRegistry.hasAdapter(id)),
+    connectable: isPlatformConfigurable(p, hasAdapter, genericAvailable),
+    dedicatedAdapter: isPlatformConnectable(p, hasAdapter),
   }))
 
   return NextResponse.json({
@@ -79,7 +86,7 @@ export const GET = withAuth(async () => {
     catalogSource: { ...EINVOICE_CATALOG_SOURCE, importedAt: EINVOICE_CATALOG_IMPORTED_AT },
     // Connecteurs RÉELLEMENT disponibles — la liste est vide tant qu'aucun
     // adaptateur n'est inscrit, et l'interface s'y fie.
-    adapters: einvoiceAdapterRegistry.listAvailableAdapters().map((a) => ({
+    adapters: adapters.map((a) => ({
       providerId: a.providerId, displayName: a.displayName,
     })),
     // L'état de connexion vit sur /api/einvoicing/connection (secrets exclus).

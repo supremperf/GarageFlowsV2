@@ -52,6 +52,7 @@ const CHAMPS_SECRETS: Array<{ cle: string; libelle: string }> = [
   { cle: 'clientSecret', libelle: 'Secret client (OAuth2)' },
   { cle: 'apiKey', libelle: 'Clé API' },
   { cle: 'extraHeaderValue', libelle: 'Valeur de l’en-tête supplémentaire' },
+  { cle: 'webhookSecret', libelle: 'Secret de webhook (HMAC-SHA256)' },
 ]
 
 export function EInvoicingConnectionForm({ connectionsEnabled, adapters }: Props) {

@@ -25,9 +25,22 @@ vi.mock('@/lib/license/public-key', () => ({ getPublicKeyPem: () => h.pubPem }))
 import { verifyLicenseToken, isValidHwidFormat, verifyHwid } from '@/lib/license/verify'
 
 interface Fixture { name: string; token: string; expectValid: boolean; typ?: string; hwidBound?: boolean; hwidV1Bound?: boolean }
+interface HwidCase {
+  input: string
+  normalized: string
+  formatAccepted: boolean
+  signed: boolean
+  refused: string | null
+  signedHwid: string | null
+}
+interface HwidBindingFixture {
+  checks: HwidCase[]
+  keygenSelfHwid: string
+}
 let fixtures: {
   publicPem: string; machineHwid: string; wrongHwid: string
   machineHwidV1: string; wrongHwidV1: string; licenses: Fixture[]
+  hwidBinding: HwidBindingFixture
 }
 let fixtureDirectory: string | undefined
 
@@ -35,7 +48,12 @@ beforeAll(() => {
   fixtureDirectory = mkdtempSync(join(tmpdir(), 'gf-lic-'))
   const out = join(fixtureDirectory, 'fixtures.json')
   const driver = join(__dirname, '../../../../scripts/gen_test_licenses.py')
-  const py = spawnSync('python3', [driver, out], { encoding: 'utf8' })
+  // Le virtualenv documenté (tests/requirements-keygen.txt) est prioritaire :
+  // `python3` seul n'a pas `cryptography` sur une machine nue, et le test doit
+  // échouer pour la BONNE raison (dépendance absente), pas ignorer le venv.
+  const localPython = join(__dirname, '../../../../.venv/bin/python')
+  const python = existsSync(localPython) ? localPython : 'python3'
+  const py = spawnSync(python, [driver, out], { encoding: 'utf8' })
   if (py.error) throw new Error('Python/keygen indisponible', { cause: py.error })
   if (py.status !== 0) throw new Error(`gen_test_licenses.py a échoué: ${py.stderr}`)
   if (!existsSync(out)) throw new Error('Keygen a terminé sans produire les fixtures attendues')
@@ -83,7 +101,7 @@ describe('licence E2E — keygen_core.py officiel → verifyLicenseToken', () =>
     expect(mech.isAdmin).toBe(false)
   })
 
-  it('HWID de la machine (keygen get_hwid) — format valide, lié à la licence L5', () => {
+  it('empreinte locale du keygen (fixture) — format v0 valide, liée à L5', () => {
     const f = fixtures
     expect(isValidHwidFormat(f.machineHwid)).toBe(true)
     expect(verifyHwid(f.machineHwid, f.machineHwid)).toBe(true)     // même machine
@@ -116,5 +134,55 @@ describe('licence E2E — keygen_core.py officiel → verifyLicenseToken', () =>
     // Un HWID v0 stocké ne matche pas un HWID v1 client, et réciproquement.
     expect(verifyHwid(f.machineHwid, f.machineHwidV1)).toBe(false)
     expect(verifyHwid(f.machineHwidV1, f.machineHwid)).toBe(false)
+  })
+})
+
+/**
+ * Liaison matérielle — le générateur refuse AVANT de signer.
+ *
+ * Défaut corrigé : un HWID quelconque (tronqué, entre guillemets, non
+ * hexadécimal) était signé sans erreur, puis refusé par l'application à
+ * l'activation. L'opérateur voyait « Licence invalide ou modifiée » sur une
+ * licence qui venait d'être créée, et en régénérait plusieurs avant d'obtenir
+ * un jeton accepté.
+ *
+ * Le bouton « Ce PC » du GUI produisait en outre l'empreinte LOCALE du keygen
+ * (`platform.processor()` / `platform.machine()` / `uuid.getnode()`), qui
+ * n'est jamais celle d'Electron (`os.cpus()` / `os.platform()-os.arch()` /
+ * `os.networkInterfaces()`) : toute licence ainsi liée était rejetée. Le GUI
+ * n'appelle plus cette fonction ; le HWID doit venir du poste client.
+ */
+describe('liaison matérielle — refus avant signature (keygen_core.py)', () => {
+  it('les HWID valides (v0/v1) sont signés normalisés', () => {
+    const [v0, v1] = fixtures.hwidBinding.checks
+    expect(v0.signed).toBe(true)
+    expect(v0.signedHwid).toBe(fixtures.machineHwid.toLowerCase())
+    expect(v1.signed).toBe(true)
+    expect(v1.signedHwid).toBe(fixtures.machineHwidV1)
+    // L'application normalise de la même façon : la licence reste acceptée.
+    expect(verifyHwid(v0.signedHwid!, fixtures.machineHwid)).toBe(true)
+    expect(verifyHwid(v1.signedHwid!, fixtures.machineHwidV1)).toBe(true)
+  })
+
+  it('aucun HWID mal formé ne produit de jeton signé', () => {
+    const malformed = fixtures.hwidBinding.checks.slice(2, 7)
+    expect(malformed.length).toBe(5)
+    for (const c of malformed) {
+      expect(c.formatAccepted, JSON.stringify(c.input)).toBe(false)
+      expect(c.signed, JSON.stringify(c.input)).toBe(false)
+      expect(c.refused, JSON.stringify(c.input)).toBeTruthy()
+    }
+  })
+
+  it('un champ vide reste une licence NON liée (aucun hwid signé)', () => {
+    const empty = fixtures.hwidBinding.checks[7]
+    expect(empty.signed).toBe(true)
+    expect(empty.signedHwid).toBeNull()
+  })
+
+  it('l’empreinte locale du keygen a un format valide mais n’est pas une preuve', () => {
+    // Format v0 valide (elle serait signable) — c'est précisément le piège que
+    // le GUI ne propose plus : sa valeur diffère de celle de l'application.
+    expect(isValidHwidFormat(fixtures.hwidBinding.keygenSelfHwid)).toBe(true)
   })
 })

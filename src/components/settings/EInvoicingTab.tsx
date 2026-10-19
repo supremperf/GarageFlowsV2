@@ -1,17 +1,21 @@
 'use client'
 
 /**
- * Onglet « Facturation électronique » — Phase 2, LECTURE SEULE.
+ * Onglet « Facturation électronique ».
  *
- * Affiche l'état (drapeaux de configuration) et le catalogue PUBLIC des
- * plateformes, avec une recherche insensible à la casse/accents (préfixe d'abord).
+ * Affiche l'état (drapeaux de configuration), le catalogue PUBLIC des plateformes
+ * (recherche insensible à la casse/accents, préfixe d'abord) et le formulaire de
+ * connexion RÉEL à la plateforme du garage.
+ *
+ * Le statut « À venir » ne doit apparaître que si AUCUN connecteur ne permet de
+ * configurer la plateforme. GarageFlows embarque un connecteur générique réel
+ * (`generic-pa`) : une plateforme sans connecteur dédié est donc affichée
+ * « Configuration requise », pas « À venir ». Le serveur calcule ce statut
+ * (`presentIntegrationStatus`) et l'interface le rend tel quel — elle ne le
+ * réinvente pas.
+ *
  * AUCUN secret, AUCUNE donnée d'un autre garage : les données proviennent de
  * `GET /api/einvoicing/status`, réservé au propriétaire/responsable (OWNER/MANAGER).
- *
- * IMPORTANT — rien n'est « connectable » ici : aucune plateforme n'expose de bouton
- * de connexion/envoi tant qu'un adaptateur réel et testé n'existe pas (Phase 3+).
- * Les statuts affichés sont ceux du catalogue (`coming_soon` par défaut) — on ne
- * feint aucune connexion ni aucun envoi.
  */
 
 import { useEffect, useMemo, useState } from 'react'
@@ -29,7 +33,12 @@ import { ouvrirLienExterne, messageRefusLien } from '@/lib/lien-externe'
 
 interface StatusResponse {
   flags: EInvoicingFlags
-  platforms: Array<ApprovedEInvoicePlatform & { connectable?: boolean; officialWebsite?: string | null }>
+  platforms: Array<ApprovedEInvoicePlatform & {
+    connectable?: boolean
+    /** Un connecteur DÉDIÉ existe pour cette plateforme (sinon : générique). */
+    dedicatedAdapter?: boolean
+    officialWebsite?: string | null
+  }>
   /** Provenance du catalogue — affichée, jamais masquée (§82). */
   catalogSource?: {
     jeuDeDonnees: string; portail: string; licence: string
@@ -187,12 +196,14 @@ export function EInvoicingTab() {
                 ))}
               </div>
 
-              {/* Statut RÉEL : une plateforme n'est connectable que si un
-                  adaptateur existe côté serveur — la réponse de l'API fait foi. */}
+              {/* Statut RÉEL, calculé côté serveur : connecteur DÉDIÉ, sinon
+                  connecteur GÉNÉRIQUE réel, sinon rien. L'API fait foi. */}
               <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-slate-500">
-                {p.connectable
-                  ? <>{"Connectable via le connecteur configurable ci-dessous."}</>
-                  : <><Lock className="w-3.5 h-3.5" />{"Pas de connecteur dédié : utilisez la connexion configurable ci-dessous."}</>}
+                {p.dedicatedAdapter
+                  ? <>{"Connecteur dédié disponible : configurez-le ci-dessous."}</>
+                  : p.connectable
+                    ? <>{"Configurable via le connecteur générique ci-dessous, avec les identifiants fournis par votre plateforme."}</>
+                    : <><Lock className="w-3.5 h-3.5" />{"Aucun connecteur disponible : la connexion n’est pas proposée."}</>}
               </div>
               {p.officialWebsite && (
                 <a

@@ -3,7 +3,7 @@ keygen_core.py — GarageFlows Licence ECC P-256
 Gestion des clés, signature et vérification ECDSA-SHA256.
 """
 
-import os, json, base64, uuid, time, hashlib, platform, socket, subprocess
+import os, json, base64, uuid, time, hashlib, platform, socket, subprocess, re
 from pathlib import Path
 
 try:
@@ -37,6 +37,55 @@ def b64u_dec(s: str) -> bytes:
     return base64.urlsafe_b64decode(s + "=" * pad)
 
 _HEADER_B64 = b64u_enc(json.dumps(HEADER, separators=(",", ":")).encode())
+
+
+# ── Liaison matérielle (HWID) ────────────────────────────────────────────────
+#
+# DEUX formats sont acceptés par le vérificateur de l'application
+# (`src/lib/license/verify.ts`) : v0 (64 hex) et v1 canonique
+# (`HWID1-<64 hex>`). Un HWID quelconque — texte libre, guillemets, espaces
+# internes, valeur tronquée — est SIGNÉ sans erreur par le générateur, puis
+# REFUSÉ à l'activation : le garage voit « Licence invalide ou modifiée » sur
+# une licence qui vient d'être créée. On refuse donc ici, AVANT de signer.
+_HWID_V0_RE = re.compile(r"^[0-9a-f]{64}$")
+_HWID_V1_RE = re.compile(r"^HWID1-[0-9a-f]{64}$")
+
+
+def normalize_license_hwid(value) -> str:
+    """Normalisation identique au vérificateur, en conservant la forme canonique.
+
+    - v0 : espaces de bord retirés, hexadécimal en minuscules ;
+    - v1 : préfixe « HWID1- » conservé tel quel, digest en minuscules
+      (`verifyHwid` normalise les deux côtés, la casse du préfixe est donc
+      indifférente à la vérification, mais le jeton reste lisible).
+    """
+    raw = str(value or "").strip()
+    if raw[:6].lower() == "hwid1-":
+        return "HWID1-" + raw[6:].lower()
+    return raw.lower()
+
+
+def is_valid_license_hwid(value) -> bool:
+    """Le HWID est-il au format accepté par l'application (v0 ou v1) ?"""
+    normalized = normalize_license_hwid(value)
+    return bool(_HWID_V0_RE.match(normalized) or _HWID_V1_RE.match(normalized))
+
+
+def _checked_hwid(hwid):
+    """Valide et normalise un HWID avant signature ; vide/None = non lié."""
+    if hwid is None:
+        return None
+    normalized = normalize_license_hwid(hwid)
+    if not normalized:
+        return None
+    if not is_valid_license_hwid(normalized):
+        raise ValueError(
+            "HWID invalide : attendu 64 caractères hexadécimaux (v0) ou "
+            "'HWID1-' suivi de 64 hexadécimaux (v1). "
+            "Copier l'empreinte produite par le POSTE CLIENT — l'empreinte "
+            "calculée localement par le keygen est différente et serait refusée."
+        )
+    return normalized
 
 
 # ── Clés ─────────────────────────────────────────────────────────────────────
@@ -121,6 +170,8 @@ def make_license(priv_key, customer_id: str, license_type: str,
     if license_type not in LICENSE_TYPES:
         raise ValueError(f"Type invalide. Choisir parmi: {LICENSE_TYPES}")
 
+    hwid = _checked_hwid(hwid)
+
     now = int(time.time())
     exp = now + years * 365 * 24 * 3600
     lid = str(uuid.uuid4())
@@ -157,6 +208,8 @@ def make_mechanic_license(priv_key, parent_lid: str, customer_id: str,
     d'attribution optionnel (nom du mécanicien)."""
     if not parent_lid or not str(parent_lid).strip():
         raise ValueError("parent_lid est obligatoire pour une licence mécanicien.")
+
+    hwid = _checked_hwid(hwid)
 
     now = int(time.time())
     exp = now + years * 365 * 24 * 3600
@@ -238,7 +291,23 @@ def _get_disk_serial() -> str:
 
 
 def get_hwid() -> str:
-    """Empreinte matérielle SHA-256 : CPU + MAC + plateforme + hostname + disque."""
+    """Empreinte LOCALE du keygen — DIAGNOSTIC uniquement, jamais une liaison.
+
+    ATTENTION : ce n'est PAS l'empreinte calculée par l'application.
+
+    Electron (`electron/main.js` / `src/lib/license/hwid.ts`) part de
+    `os.cpus()[0].model`, `os.platform()-os.arch()` (ex. « win32-x64 ») et
+    `os.networkInterfaces()` ; cette fonction Python part de
+    `platform.processor()`, `platform.system()-platform.machine()` (ex.
+    « Windows-AMD64 ») et `uuid.getnode()` (qui peut être aléatoire quand aucune
+    MAC n'est disponible). Les deux valeurs DIFFÈRENT sur la même machine, au
+    minimum par la chaîne de plateforme. Une licence signée avec cette valeur est
+    donc refusée à l'activation (« Licence invalide ou modifiée »).
+
+    Le HWID d'une licence DOIT être produit par le POSTE CLIENT (HWID V1
+    canonique) puis collé/importé dans le keygen, ou fourni par `--bind-hwid`.
+    Conservé ici pour les fixtures et le diagnostic local uniquement.
+    """
     import uuid as _uuid
     cpu      = platform.processor() or platform.machine() or "unknown"
     mac      = ":".join(

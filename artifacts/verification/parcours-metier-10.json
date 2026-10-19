@@ -1,0 +1,305 @@
+{
+  "generatedAt": "2026-10-19T17:39:30.690Z",
+  "environnement": {
+    "node": "v22.22.3",
+    "plateforme": "linux-x64",
+    "vitest": "4.1.11",
+    "moteurPrisma": "indisponible (aucun binaire natif) — suites à base réelle NON exécutées"
+  },
+  "methode": "Un seul run Vitest sur l’union des fichiers non dépendants d’une base ; agrégation par parcours. Les suites d’intégration à base réelle sont listées séparément et ne comptent pas comme vertes.",
+  "total": {
+    "fichiers": 76,
+    "tests": 897,
+    "passes": 890,
+    "echoues": 0,
+    "ignores": 7,
+    "dureeMs": 20351,
+    "codeSortieVitest": 0
+  },
+  "parcours": [
+    {
+      "id": "client",
+      "titre": "Client — fiche, rattachement, accès portail",
+      "fichiers": 6,
+      "tests": 78,
+      "passes": 78,
+      "echoues": 0,
+      "ignores": 0,
+      "dureeMs": 68.537109375,
+      "fichiersExecutes": 6,
+      "suitesBaseNonExecutees": 3,
+      "suitesBase": [
+        {
+          "fichier": "src/integration/client-email-garage-portail.test.ts",
+          "existe": true,
+          "dbDependante": true
+        },
+        {
+          "fichier": "src/integration/intervention-rattache-client-vehicule.test.ts",
+          "existe": true,
+          "dbDependante": true
+        },
+        {
+          "fichier": "src/integration/portal-access-lifecycle.test.ts",
+          "existe": true,
+          "dbDependante": true
+        }
+      ],
+      "horsRun": [],
+      "constat": null,
+      "complement": null,
+      "verdict": "VERT_EXECUTE"
+    },
+    {
+      "id": "vehicule",
+      "titre": "Véhicule — VIN, immatriculation, contrôle technique",
+      "fichiers": 4,
+      "tests": 63,
+      "passes": 63,
+      "echoues": 0,
+      "ignores": 0,
+      "dureeMs": 45.573486328125,
+      "fichiersExecutes": 4,
+      "suitesBaseNonExecutees": 1,
+      "suitesBase": [
+        {
+          "fichier": "src/integration/intervention-rattache-client-vehicule.test.ts",
+          "existe": true,
+          "dbDependante": true
+        }
+      ],
+      "horsRun": [],
+      "constat": null,
+      "complement": null,
+      "verdict": "VERT_EXECUTE"
+    },
+    {
+      "id": "devis",
+      "titre": "Devis — totaux, numérotation, conversion en facture",
+      "fichiers": 6,
+      "tests": 66,
+      "passes": 66,
+      "echoues": 0,
+      "ignores": 0,
+      "dureeMs": 58.065185546875,
+      "fichiersExecutes": 6,
+      "suitesBaseNonExecutees": 3,
+      "suitesBase": [
+        {
+          "fichier": "src/integration/quotes-generate.test.ts",
+          "existe": true,
+          "dbDependante": true
+        },
+        {
+          "fichier": "src/app/api/sync/__tests__/quote-publication.test.ts",
+          "existe": true,
+          "dbDependante": true
+        },
+        {
+          "fichier": "src/integration/quote-acceptance-proof.test.ts",
+          "existe": true,
+          "dbDependante": true
+        }
+      ],
+      "horsRun": [],
+      "constat": null,
+      "complement": null,
+      "verdict": "VERT_EXECUTE"
+    },
+    {
+      "id": "intervention",
+      "titre": "Intervention (OR) — main-d’œuvre, pièces, pointage",
+      "fichiers": 6,
+      "tests": 50,
+      "passes": 50,
+      "echoues": 0,
+      "ignores": 0,
+      "dureeMs": 95.94140625,
+      "fichiersExecutes": 6,
+      "suitesBaseNonExecutees": 3,
+      "suitesBase": [
+        {
+          "fichier": "src/integration/intervention-rattache-client-vehicule.test.ts",
+          "existe": true,
+          "dbDependante": true
+        },
+        {
+          "fichier": "src/integration/business-workflow-e2e.test.ts",
+          "existe": true,
+          "dbDependante": true
+        },
+        {
+          "fichier": "src/integration/scenario-maitre.test.ts",
+          "existe": true,
+          "dbDependante": true
+        }
+      ],
+      "horsRun": [],
+      "constat": null,
+      "complement": null,
+      "verdict": "VERT_EXECUTE"
+    },
+    {
+      "id": "facture",
+      "titre": "Facture — calculs, immutabilité, PDF, export FEC",
+      "fichiers": 8,
+      "tests": 70,
+      "passes": 70,
+      "echoues": 0,
+      "ignores": 0,
+      "dureeMs": 83.063232421875,
+      "fichiersExecutes": 8,
+      "suitesBaseNonExecutees": 3,
+      "suitesBase": [
+        {
+          "fichier": "src/integration/invoice-document-integrity-p3.test.ts",
+          "existe": true,
+          "dbDependante": true
+        },
+        {
+          "fichier": "src/integration/invoice-stock-sync.test.ts",
+          "existe": true,
+          "dbDependante": true
+        },
+        {
+          "fichier": "src/app/api/sync/__tests__/invoice-publication.test.ts",
+          "existe": true,
+          "dbDependante": true
+        }
+      ],
+      "horsRun": [],
+      "constat": null,
+      "complement": null,
+      "verdict": "VERT_EXECUTE"
+    },
+    {
+      "id": "facturation-electronique",
+      "titre": "Facturation électronique — validation, format, envoi, rejeu",
+      "fichiers": 14,
+      "tests": 206,
+      "passes": 206,
+      "echoues": 0,
+      "ignores": 0,
+      "dureeMs": 310.406005859375,
+      "fichiersExecutes": 14,
+      "suitesBaseNonExecutees": 2,
+      "suitesBase": [
+        {
+          "fichier": "src/lib/einvoicing/__tests__/desktop-bridge.test.ts",
+          "existe": true,
+          "dbDependante": true
+        },
+        {
+          "fichier": "src/app/api/sync/__tests__/einvoicing-tunnel.test.ts",
+          "existe": true,
+          "dbDependante": true
+        }
+      ],
+      "horsRun": [],
+      "constat": null,
+      "complement": null,
+      "verdict": "VERT_EXECUTE"
+    },
+    {
+      "id": "licence",
+      "titre": "Licence — signature, HWID, activation, révocation",
+      "fichiers": 14,
+      "tests": 149,
+      "passes": 142,
+      "echoues": 0,
+      "ignores": 7,
+      "dureeMs": 417.105224609375,
+      "fichiersExecutes": 14,
+      "suitesBaseNonExecutees": 2,
+      "suitesBase": [
+        {
+          "fichier": "src/lib/__tests__/license-devices.postgres.int.test.ts",
+          "existe": true,
+          "dbDependante": false
+        },
+        {
+          "fichier": "src/lib/__tests__/licensed-session.postgres.int.test.ts",
+          "existe": true,
+          "dbDependante": false
+        }
+      ],
+      "horsRun": [
+        {
+          "parcours": "licence",
+          "fichier": "src/lib/__tests__/license-devices-unit.test.ts",
+          "assertionsPasses": 16,
+          "assertionsEchouees": null,
+          "codeSortie": 1,
+          "erreurEnvironnementale": "PrismaClientInitializationError (moteur natif absent)",
+          "verdict": "ASSERTIONS_VERTES_ERREUR_ENV"
+        }
+      ],
+      "constat": null,
+      "complement": "node scripts/campagne-100-licences.mjs (campagne 100 licences)",
+      "verdict": "VERT_EXECUTE"
+    },
+    {
+      "id": "abonnement",
+      "titre": "Abonnement / droits — aucun module de paiement récurrent dans ce dépôt",
+      "fichiers": 2,
+      "tests": 24,
+      "passes": 24,
+      "echoues": 0,
+      "ignores": 0,
+      "dureeMs": 30.1025390625,
+      "fichiersExecutes": 2,
+      "suitesBaseNonExecutees": 0,
+      "suitesBase": [],
+      "horsRun": [],
+      "constat": "Aucune dépendance Stripe, aucun modèle d’abonnement, aucune route de paiement récurrent. Le seul droit payant modélisé est la LICENCE (module « licence »). Ce parcours n’est donc pas simulé : il n’existe pas dans le produit à cette révision.",
+      "complement": null,
+      "verdict": "VERT_EXECUTE"
+    },
+    {
+      "id": "sauvegarde",
+      "titre": "Sauvegarde / restauration — chiffrement, snapshot, scripts",
+      "fichiers": 6,
+      "tests": 48,
+      "passes": 48,
+      "echoues": 0,
+      "ignores": 0,
+      "dureeMs": 334.45556640625,
+      "fichiersExecutes": 6,
+      "suitesBaseNonExecutees": 2,
+      "suitesBase": [
+        {
+          "fichier": "src/lib/backup/__tests__/restore-roundtrip.test.ts",
+          "existe": true,
+          "dbDependante": true
+        },
+        {
+          "fichier": "src/app/api/internal/__tests__/backup-coherent.test.ts",
+          "existe": true,
+          "dbDependante": true
+        }
+      ],
+      "horsRun": [],
+      "constat": null,
+      "complement": null,
+      "verdict": "VERT_EXECUTE"
+    },
+    {
+      "id": "installation-windows",
+      "titre": "Installation Windows — installateur, raccourcis, mises à jour, fuses",
+      "fichiers": 13,
+      "tests": 176,
+      "passes": 176,
+      "echoues": 0,
+      "ignores": 0,
+      "dureeMs": 1262.749267578125,
+      "fichiersExecutes": 13,
+      "suitesBaseNonExecutees": 0,
+      "suitesBase": [],
+      "horsRun": [],
+      "constat": null,
+      "complement": "npm run test:release-safety (contrats installateur / livraison, 155 tests)",
+      "verdict": "VERT_EXECUTE"
+    }
+  ],
+  "toutVert": true
+}

@@ -75,6 +75,12 @@ export interface GenericPaCredentials {
   /** En-tête supplémentaire éventuel (ex. compte technique). */
   extraHeaderName?: string
   extraHeaderValue?: string
+  /**
+   * Secret HMAC-SHA256 des webhooks entrants (`X-GF-Signature`). Facultatif :
+   * sans lui, le connecteur fonctionne en sortant mais refuse tout webhook
+   * (aucune modification de statut ne peut être prouvée).
+   */
+  webhookSecret?: string
 }
 
 /** Champs jamais renvoyés au client, même tronqués. */
@@ -82,6 +88,7 @@ export const CHAMPS_SECRETS: ReadonlyArray<keyof GenericPaCredentials> = [
   'clientSecret',
   'apiKey',
   'extraHeaderValue',
+  'webhookSecret',
 ]
 
 /** Champs de configuration, sûrs à réafficher pour diagnostic. */
@@ -270,7 +277,10 @@ export const genericPaAdapter: EInvoiceProviderAdapter = {
       outgoingInvoices: true,
       incomingInvoices: false,
       invoiceStatuses: true,
-      webhooks: false,
+      // Réception HMAC-SHA256 implémentée dans `webhook.ts` (route
+      // /api/einvoicing/webhooks/[providerId]). Sans secret configuré, la route
+      // refuse — la capacité est donc réelle mais opt-in par connexion.
+      webhooks: true,
       eReporting: false,
       paymentReporting: false,
       sandbox: true,

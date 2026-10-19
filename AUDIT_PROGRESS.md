@@ -2769,3 +2769,74 @@ cycle de mise à jour de bout en bout. Les modules de décision sont testés pou
 vrai ; le câblage dans `electron/main.js` est vérifié par gardes de source, faute
 de pouvoir charger ce fichier hors d'Electron. Statut : **PARTIALLY_VERIFIED**.
 C'est consigné dans `docs/BLOCAGES_EXTERNES.md`.
+
+---
+
+## 2026-10-19 — licences : le HWID du keygen n'est pas celui de l'application
+
+Le symptôme « il faut générer plusieurs licences avant d'en obtenir une valide »
+avait une cause mesurable, pas une cause probabiliste : le bouton **« Ce PC »**
+du GUI remplissait le champ HWID avec `keygen_core.get_hwid()`. L'application
+calcule la sienne avec `os.cpus()[0].model`, `os.platform()-os.arch()` et
+`os.networkInterfaces()` ; le keygen avec `platform.processor()`,
+`platform.system()-platform.machine()` (« Windows-AMD64 » contre « win32-x64 »)
+et `uuid.getnode()`. **Les deux valeurs diffèrent toujours** : toute licence
+liée depuis le keygen était refusée à l'activation.
+
+Corrigé : le GUI ne calcule plus l'empreinte (boutons « Coller » / « Fichier… »),
+`make_license` et `make_mechanic_license` refusent AVANT signature tout HWID mal
+formé, `--bind-hwid` est validé, et `docs/KEYGEN.md` documente la divergence.
+
+Campagne : `node scripts/campagne-100-licences.mjs` → **100 licences garage +
+5 mécanicien valides**, 20 contrôles négatifs, 40 cas HWID, re-vérification
+110/110 dans un processus séparé. Preuve :
+`artifacts/verification/campagne-100-licences.json`.
+
+Facturation électronique : le module existe (adaptateur `generic-pa` réel,
+chiffrement, idempotence, tunnel poste→cloud) mais le catalogue affichait
+« À venir » sur les 135 plateformes. Le statut AFFICHÉ est désormais
+`configuration_required` dès qu'un connecteur générique est enregistré ;
+`available` n'est jamais affiché sans adaptateur réel. 4 tests ajoutés.
+
+Réserves : moteur Prisma non téléchargeable ici (132 fichiers de test avec base
+non exécutés), pas de Windows, pas d'identifiants PDP. Détail :
+`docs/audit/2026-10-19/RAPPORT-LICENCES-ET-EINVOICING.md`.
+
+---
+
+## 2026-10-19 (suite) — webhooks signés, dix parcours, sécurité
+
+**Webhooks e-facturation** — le point P2 « aucun webhook » est traité :
+`POST /api/einvoicing/webhooks/[providerId]`, signature HMAC-SHA256 du corps
+brut (`X-GF-Timestamp` / `X-GF-Signature`), secret **par connexion** chiffré
+AES-256-GCM, fenêtre anti-rejeu de 5 min, idempotence par `eventId`, refus des
+régressions de statut, isolation par `(providerId, externalId)` avec refus si
+l'identifiant est ambigu entre garages. 27 tests dédiés, 189/189 sur le
+parcours e-facturation. Un webhook réel d'une PDP reste NON VÉRIFIÉ.
+
+**Garde CI réparée** — `test:release-safety` échouait sur 29 empreintes
+Gitleaks en dérive après l'ajout des tests HWID. Correction sans élargir la
+règle : snapshot public du fichier avant modification
+(`docs/audit/2026-10-19/snapshots/license-keygen-e2e.before.ts.txt`) référencé
+par les 29 entrées. Reçus historiques inchangés. 155/155.
+
+**Dix parcours métier** — `npm run rapport:parcours` : 75 fichiers, 880
+assertions, 873 réussies, 0 échec, 7 ignorées (clé publique/Python). Les 78
+suites à base réelle restent NON EXÉCUTÉES (moteur Prisma absent) et ne sont
+pas comptées vertes. Rapport :
+`docs/audit/2026-10-19/RAPPORT-TESTS-10-PARCOURS.md`.
+
+**Sécurité** — `npm audit` (dev + optional + peer) : 0 vulnérabilité sur 832
+entrées verrouillées ; `audit:strict` 0 ; 216 tests de sécurité au vert ;
+`npm audit signatures` NON VÉRIFIÉ (réseau). Aucune montée de version
+aveugle. Rapport : `docs/audit/2026-10-19/RAPPORT-SECURITE-DEPENDANCES.md`.
+
+**Baseline élargie** — 270 fichiers hors base : 3 460 assertions, 3 439
+réussies, 0 échec, 21 ignorées ; seul échec de processus :
+`tenant-isolation.test.ts` (Prisma natif absent, 7 tests sautés avant
+exécution). `tsc` 0, ESLint 0, `next-build` exit 0.
+
+**File de reprise e-facturation** — `queue.ts` + route cron protégée par
+`EINVOICING_QUEUE_TOKEN` : reprise uniquement des `error` sans identifiant
+externe, backoff 5 min → 24 h, cinq tentatives. `unknown` et `rejected` restent
+des décisions humaines. 17 tests.

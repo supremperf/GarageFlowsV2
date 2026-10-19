@@ -5,7 +5,7 @@ gen_test_licenses.py — fixtures de licences pour le test E2E keygen(Python)→
 Utilise l'OUTIL OFFICIEL scripts/keygen_core.py : génère une paire de clés ECC
 P-256 ÉPHÉMÈRE (jamais keys/private.pem de production, jamais commitée), signe une
 matrice de licences (valides + invalides) et écrit un JSON de fixtures contenant
-la clé PUBLIQUE, le HWID de la machine et les jetons.
+la clé PUBLIQUE, l’empreinte LOCALE de la machine (fixture de format, PAS le HWID de l’application) et les jetons.
 
 Sécurité : la clé PRIVÉE n'est ni affichée, ni journalisée, ni écrite dans les
 fixtures ; son fichier temporaire est supprimé en fin d'exécution.
@@ -30,7 +30,7 @@ kc.KEYS_DIR, kc.PRIV_FILE, kc.PUB_FILE = tmp, tmp / 'private.pem', tmp / 'public
 kc.generate_keys()                       # génération par l'outil officiel
 priv = kc.load_private_key()
 pub_pem = kc.PUB_FILE.read_text()
-machine_hwid = kc.get_hwid()             # HWID réel de la machine (hash, non sensible)
+machine_hwid = kc.get_hwid()             # empreinte LOCALE du keygen (fixture de format — PAS le HWID de l'app)
 
 lics = []
 def add(name, token, expect_valid, **extra):
@@ -72,9 +72,51 @@ p = json.loads(kc.b64u_dec(parts[2])); p['seats'] = 9999
 parts[2] = kc.b64u_enc(json.dumps(p, separators=(',', ':')).encode())
 add('I3 payload modifie (sieges gonfles)', '.'.join(parts), False)
 
+# ── Liaison matérielle : validation AVANT signature ─────────────────────────
+# Un HWID mal formé était signé sans erreur puis refusé par l'application
+# (« Licence invalide ou modifiée »). Chaque cas consigne ce que le générateur
+# a réellement fait : accepté+normalisé, ou refusé avant production de jeton.
+def _hwid_case(raw):
+    normalized = kc.normalize_license_hwid(raw)
+    case = {
+        'input': raw,
+        'normalized': normalized,
+        'formatAccepted': kc.is_valid_license_hwid(normalized),
+        'signed': False,
+        'refused': None,
+        'signedHwid': None,
+    }
+    try:
+        info = kc.make_license(priv, 'CUST-HWID', 'premium', years=1, hwid=raw)
+        case['signed'] = True
+        if info['token']:
+            payload = json.loads(kc.b64u_dec(info['token'].split('.')[2]))
+            case['signedHwid'] = payload.get('hwid')
+    except ValueError as exc:
+        case['refused'] = str(exc)
+    return case
+
+hwid_binding = {
+    'checks': [
+        _hwid_case(machine_hwid.upper()),
+        _hwid_case('  ' + machine_hwid_v1.upper() + '\n'),
+        _hwid_case(machine_hwid[:63]),
+        _hwid_case(machine_hwid + '0'),
+        _hwid_case('g' * 64),
+        _hwid_case('"' + machine_hwid + '"'),
+        _hwid_case('HWID1-' + 'a' * 63),
+        _hwid_case(''),
+    ],
+    # Empreinte calculée LOCALEMENT par le keygen : format v0 valide, mais ce
+    # n'est PAS celle de l'application (cpu/plateforme/MAC collectés autrement).
+    # Conservée comme preuve de la divergence, jamais comme valeur à signer.
+    'keygenSelfHwid': kc.get_hwid(),
+}
+
 Path(sys.argv[1]).write_text(json.dumps(
     {'publicPem': pub_pem, 'machineHwid': machine_hwid, 'wrongHwid': 'f' * 64,
      'machineHwidV1': machine_hwid_v1, 'wrongHwidV1': 'HWID1-' + 'f' * 64,
+     'hwidBinding': hwid_binding,
      'licenses': lics}, indent=1))
 
 kc.PRIV_FILE.unlink()  # ne jamais conserver la clé privée

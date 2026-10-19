@@ -74,7 +74,11 @@ insensible casse/accents (préfixe d'abord), badges de statut (`coming_soon` par
 défaut), **aucune** action de connexion/envoi (bloc « Connexion indisponible pour
 l'instant »), placeholder « Aucune connexion configurée ». Rien n'est feint.
 
-## Phases suivantes (planifiées, non livrées)
+## Phases 3 à 5 — livrées et testées localement (état au 2026-10-19)
+
+> Les éléments ci-dessous existent dans le code et sont couverts par des tests
+> hors base. Ce qui reste **NON VÉRIFIÉ** est l'échange avec une plateforme
+> agréée réelle, faute d'identifiants (voir [BLOCAGES_EXTERNES.md](BLOCAGES_EXTERNES.md)).
 
 3. **Connexions par garage** — routes serveur (`requireSession`, filtre `garageId`,
    rôles OWNER/ADMIN/COMPTABLE ; mécanicien **bloqué**), identifiants chiffrés via
@@ -84,9 +88,16 @@ l'instant »), placeholder « Aucune connexion configurée ». Rien n'est feint.
 4. **Adaptateurs réels** — un par plateforme certifiée, à partir de ses specs API,
    enregistrés dans le registre **uniquement une fois testés**.
 5. **Envoi électronique** — génération Factur‑X/UBL/CII, hash SHA‑256, clé
-   d'**idempotence** `garage:<id>:invoice:<id>:version:<v>` + contrainte unique +
+   d'**idempotence** `sha256(garageId + invoiceId)` + contrainte unique +
    transaction + état `submission_pending` (anti double‑envoi), suivi de statuts,
-   webhooks signés, chronologie.
+   webhooks signés (HMAC‑SHA256, fenêtre anti‑rejeu, voir
+   [EINVOICING_SECURITY.md](EINVOICING_SECURITY.md)), chronologie.
+6. **File de reprise** — `src/lib/einvoicing/queue.ts` +
+   `POST /api/internal/einvoicing/queue` : reprise planifiée (cron, jeton
+   `EINVOICING_QUEUE_TOKEN`) des seules transmissions `error` sans identifiant
+   externe, backoff 5 min / 15 min / 1 h / 4 h / 24 h, cinq tentatives maximum.
+   Une transmission d'issue inconnue ou refusée n'est jamais reprise
+   automatiquement.
 6. **Rubrique UI** « Paramètres › Facturation électronique » (combobox recherchable
    accessible, état de connexion, transmissions, journal d'audit) et bouton
    « Envoyer électroniquement » **conditionné** (feature ON, plateforme connectée,
