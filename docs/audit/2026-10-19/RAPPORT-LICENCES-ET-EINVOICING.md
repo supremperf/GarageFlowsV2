@@ -222,7 +222,7 @@ référencent désormais ce snapshot (`sourceSnapshot`). Aucun reçu historique 
 été réécrit ; aucune ligne du scan n'a été ajoutée ou retirée.
 
 Preuve : `node --test tests/secret-scan-policy.test.cjs` → **4/4** ;
-`npm run test:release-safety` → **155/155**.
+`npm run test:release-safety` → **164/164**.
 
 ## 5. Fichiers modifiés dans cette session
 

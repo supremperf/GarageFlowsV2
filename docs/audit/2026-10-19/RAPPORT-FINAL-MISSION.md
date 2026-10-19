@@ -139,14 +139,76 @@ neuf, avec ses propres choix de fournisseur et de facturation.
 | `npm run build` (étape Next) | **exit 0**, 18 pages, route webhook et file présentes |
 | `npm run rapport:parcours` | **890/897** assertions, 0 échec, 7 ignorées |
 | Baseline hors base élargie | **3 439/3 460**, 0 échec, 21 ignorées ; 1 suite non chargée (Prisma) |
-| `npm run test:release-safety` | **155/155** |
+| `npm run test:release-safety` | **164/164** |
 | `npm run test:audit` | **21/21** |
 | `npm run check:consistency` | **exit 0** (13 contrôles) |
 | `npm audit` (dev+optional+peer) | **0** vulnérabilité sur 832 paquets verrouillés |
+| `node scripts/package-artifact.mjs --verify` | **exit 0**, ZIP 2 622 fichiers sans `.git` |
+| `npm run release:gate:fast` | **ÉCHEC** — 1 contrôle rouge (vitest), cause environnementale ci-dessous |
 
-Limites : 78 fichiers de test exigent une base réelle et n'ont pas été
-exécutés ; le build Next a nécessité le moteur Prisma **WASM** et un client
-régénéré localement, car `binaries.prisma.sh` est inaccessible.
+Limites mesurées, aucune n'est maquillée :
+
+- Le moteur Prisma **natif** ne peut pas être téléchargé dans cet
+  environnement (`binaries.prisma.sh` : TLS interrompu). Conséquence exacte sur
+  la suite complète : **79 fichiers de test refusés à l'import** (78 via le
+  `globalSetup` qui lance `prisma db push`, 1 fichier de test dédié) et
+  **3 assertions en échec** dans `src/test-utils/__tests__/prepare-test-db.test.ts`
+  — toutes les trois parce que `prisma db push` échoue au téléchargement. Le
+  reste de la suite : **3 475 succès, 0 échec applicatif, 851 sautées**
+  (suites conditionnelles PostgreSQL/Redis). Ce n'est **pas** un vert, et ce
+  n'est pas un défaut du code : la preuve est dans le message d'erreur
+  (`libquery_engine.so.node.gz.sha256`, TLS).
+- Le build Next a nécessité le moteur Prisma **WASM** et un client régénéré
+  localement, pour la même raison.
+
+### F bis. Porte de release — ce qui a été corrigé, ce qui reste rouge
+
+`npm run release:gate:fast` a été exécuté deux fois, sans complaisance.
+
+**Défaut réel trouvé et corrigé.** La première exécution échouait à l'étape
+« Empaquetage + vérification d'artefact RÉEL » avec :
+
+```
+Fuite de secrets : .env.storage.example présent dans l'artefact.
+```
+
+`.env.storage.example` est un **modèle fournisseur** tracké, dont toutes les
+valeurs sont vides (`DATABASE_URL=`, `DIRECT_URL=`, …). Le vérificateur ne
+reconnaissait que les noms **exacts** `.env.example|sample|template`, donc tout
+artefact de release était refusé — un faux positif qui bloquait la livraison.
+
+La correction (`scripts/lib/env-artifact-check.mjs`) n'élargit **pas** la garde :
+un nom étendu `.env.<qualificatif>.example|sample|template` n'est accepté que si
+son **contenu** le prouve — uniquement des commentaires, des lignes vides et des
+affectations sans valeur. Un `.env.production.example` contenant un secret
+reste une fuite, et 9 tests le vérifient, dont le refus d'un gabarit étendu
+avec valeur, d'un `export`, d'une ligne de continuation, et le scan forcé des
+dossiers `standalone` même en mode dépôt.
+
+Preuve après correction : `node scripts/package-artifact.mjs --verify` →
+**exit 0**, ZIP de 2 622 fichiers extrait **sans `.git`**, manifeste
+`1.1.0+dba42a65a`, « Aucun .env réel embarqué (gabarits sans valeur
+acceptés) ». À la seconde exécution du gate, l'étape d'empaquetage passe en 3 s.
+
+**Ce qui reste rouge, et pourquoi.** La seconde exécution du gate :
+9 contrôles obligatoires OK (tsc, ESLint, cohérence, audit dépendances, audit
+runtime desktop, manifeste, vérification d'artefact, empaquetage réel), 1 rouge
+— la suite vitest — et 6 non exécutés (PostgreSQL/Redis absents, `--fast`
+saute build et budget de performance). Le rouge vitest est intégralement
+environnemental :
+
+- `prisma db push` télécharge `libquery_engine.so.node.gz` depuis
+  `binaries.prisma.sh` ; la connexion TLS est coupée dans ce bac à sable ;
+- 79 fichiers refusés à l'import + 3 assertions en échec, toutes avec cette
+  même erreur de téléchargement ;
+- 3 475 succès d'assertions, aucun échec applicatif.
+
+`@prisma/engines` ne contient pas les binaires (95 Ko, simple téléchargeur) et
+aucun paquet npm ne les publie : il n'existe **aucun moyen honnête** de rendre
+ce contrôle vert ici. Le déclarer vert serait un mensonge ; le contourner
+(`/bin/true` comme moteur) produirait de fausses bases. En CI avec réseau, le
+même gate doit pouvoir télécharger le moteur — c'est une hypothèse, pas une
+preuve, et elle est présentée comme telle.
 
 ## G. Version finale
 
@@ -187,6 +249,8 @@ npx eslint src
 npm run check:consistency
 npm run test:release-safety
 npm run test:audit
+npm run release:gate:fast
+node scripts/package-artifact.mjs --verify
 npm run rapport:parcours
 node scripts/campagne-100-licences.mjs
 .venv/bin/python scripts/test_keygen_hwid_binding.py

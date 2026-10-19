@@ -2840,3 +2840,33 @@ exécution). `tsc` 0, ESLint 0, `next-build` exit 0.
 `EINVOICING_QUEUE_TOKEN` : reprise uniquement des `error` sans identifiant
 externe, backoff 5 min → 24 h, cinq tentatives. `unknown` et `rejected` restent
 des décisions humaines. 17 tests.
+
+---
+
+## 2026-10-19 (fin) — porte de release : artefact réparé, vitest bloqué par le réseau
+
+**Faux positif corrigé (bloquant release).** `npm run release:gate:fast`
+échouait à l'empaquetage : `Fuite de secrets : .env.storage.example présent
+dans l'artefact.` Le fichier est un modèle fournisseur tracké, toutes valeurs
+vides. La garde ne connaissait que les noms exacts `.env.example|sample|template`.
+
+Correction : `scripts/lib/env-artifact-check.mjs` (logique pure) + branchement
+dans `scripts/verify-artifact.mjs`. Un nom étendu n'est accepté que si son
+**contenu** ne porte aucune valeur ; un `.env.production.example` avec secret
+reste une fuite. 9 tests (`tests/env-artifact-check.test.cjs`), portés par
+`test:release-safety` (155 → **164/164**). Preuve :
+`node scripts/package-artifact.mjs --verify` → **exit 0**, 2 622 fichiers,
+extraction sans `.git`, manifeste `1.1.0+dba42a65a` ; l'étape d'empaquetage du
+gate passe en 3 s.
+
+**Second passage du gate** : 9 contrôles obligatoires OK, **1 rouge** — vitest.
+Cause intégralement environnementale : `prisma db push` télécharge
+`libquery_engine.so.node.gz` sur `binaries.prisma.sh`, TLS coupé ici. 79
+fichiers refusés à l'import, 3 assertions en échec
+(`src/test-utils/__tests__/prepare-test-db.test.ts`), 3 475 succès d'assertions,
+0 échec applicatif, 851 sautées (PostgreSQL/Redis absents). 6 contrôles NON
+EXÉCUTÉS (bases réelles absentes, `--fast` saute build/perf).
+
+Aucun contournement (`/bin/true` comme moteur) n'a été appliqué : il
+produirait de fausses bases vertes. Le gate reste donc **ÉCHOUÉ** et le rapport
+final le dit. Détail : `docs/audit/2026-10-19/RAPPORT-FINAL-MISSION.md` §F bis.
