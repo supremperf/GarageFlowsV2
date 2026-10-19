@@ -1,6 +1,73 @@
 <!-- doc-numbers: journal — comptes datés point-dans-le-temps, exempts du contrôle de compte courant (V13.1) -->
 # Changelog
 
+## [Non publié] — 2026-10-19 — livraison Windows : diagnostic de l’artefact réparé, reçus du HEAD archivés
+
+### `verify:installer` nomme enfin le défaut qu’il refusait
+
+- `scripts/verify-installer.cjs` annonçait en tête nommer un par un l’installeur
+  d’une version précédente, « une archive vide ou tronquée », un fichier qui
+  n’est pas un exécutable Windows et une charge utile incomplète. Les contrôles
+  de taille et d’en-tête vivaient en réalité dans `peInfo()`, qui **lève** :
+  l’exception quittait `main()` avant l’assemblage de la liste des problèmes.
+  Un Setup tronqué à 1 Mio — copie ou téléchargement interrompu, la façon la
+  plus courante dont un installateur atteint un client — rendait
+  « Invalid Windows executable », sans taille, sans seuil, sans étape suivante.
+  Le contrôle de taille écrit juste après était du **code mort**.
+- Nouveau `describePe()` dans `scripts/lib/windows-delivery.cjs` : diagnostic
+  sans exception, à code stable — `ABSENT`, `UNREADABLE`, `NOT_A_FILE`, `EMPTY`,
+  `TRUNCATED_SIZE`, `NOT_MZ`, `PE_OFFSET_OUT_OF_RANGE`, `BAD_PE_SIGNATURE`,
+  `SHORT_READ`. Le seuil de **livraison** y est distingué du seuil de
+  **validité** : un fichier sous le minimum reste analysé, donc une souche de
+  40 Ko est annoncée tronquée avec les deux nombres au lieu d’être refusée sans
+  explication. Un en-tête PE annoncé au-delà de la fin du fichier est classé
+  **troncature** et non « en-tête invalide » — la nuance dit de reprendre le
+  fichier plutôt que de reconstruire.
+- `peInfo()` **garde son contrat de refus** (`inspectNsis()` et `publish()`
+  doivent arrêter la chaîne) et porte désormais la cause précise dans son
+  message. Le vérificateur calcule l’empreinte **même sur un fichier tronqué** :
+  c’est elle qui prouve la copie interrompue. L’inspection réelle de la charge
+  utile NSIS n’est atteinte que si l’exécutable est sain, et l’en-tête du verdict
+  dit « Artefact inspecté — NON livrable » quand des problèmes existent.
+- **+3 tests** (`tests/windows-delivery.test.cjs`) : les neuf codes sur fixtures
+  réelles, la conservation du refus `peInfo()` avec sa cause, et un garde de
+  câblage portant sur le **code** commentaires retirés — sa première version
+  échouait sur la prose qui explique pourquoi `peInfo()` n’a plus sa place ici.
+- Aucune dépendance ajoutée ou retirée (`package.json` et `package-lock.json`
+  inchangés), aucun seuil relâché, aucune règle métier touchée : le refus de
+  livrer un exécutable invalide est strictement identique, seul son énoncé
+  change. Suite Node **434/434** verts (431 avant), Vitest ciblé
+  distribution/licence **66/66**, `test:release-safety`, ESLint, cohérence
+  documentaire et marque à 0.
+
+### Preuves et canal de récupération
+
+- Reçus CI du HEAD `f2370a3` archivés dans
+  `docs/audit/windows-setup/finalisation/` : identité du livrable
+  (**231 063 440 octets**, SHA-256
+  `5f24a555f325be7ecae61c0478a5f80368bc552598af2e7a26fba37db8d6a4a1`,
+  **3 045 fichiers** de charge utile comparés par empreinte, `embedded-7z-sfx`,
+  `NotSigned`), recette d’installation réelle, serveur installé, jobs exacts et
+  validation locale. Seuls les build antérieurs (`5a10e96`, `6087458`, `66859cc`,
+  `7e6891e`) étaient archivés.
+- `docs/WINDOWS_DISTRIBUTION.md` documente la récupération de l’EXE depuis la CI
+  (`gh run download`, rétention 30 jours, artefact ne contenant que le fichier,
+  comparaison d’empreinte avant remise) : aucune release publique ni publication
+  automatique n’a été ajoutée, c’est un choix explicite du propriétaire.
+- Rapport de mission §12 : `docs/audit/windows-setup/05-REPRISE-LIVRAISON.md`.
+  Il consigne aussi ce qui n’a **pas** pu être exécuté ici — `prisma generate`
+  (hôte `binaries.prisma.sh` injoignable, d’où un `tsc` non concluant à 224
+  erreurs d’absence du client et 84 fichiers de tests non collectables), ni
+  Windows/Wine, ni le rapatriement du binaire — et le blocage **levé** :
+  `.venv` restauré depuis `tests/requirements-keygen.txt` avec hachages exigés,
+  ce qui fait réellement passer l’aller-retour keygen Python → vérificateurs
+  Node/Electron (5/5).
+- Limites ouvertes, non masquées : Authenticode absent (SmartScreen), aucune
+  session métier licenciée exercée, `Required validation` rouge sur
+  `MISSING_INPUT:BASE_URL` (staging approuvé non provisionné), CodeQL 9
+  résultats (2 high, 7 medium) sans suppression ni *dismissal*, volumes bulk de
+  synchronisation non bornés.
+
 ## [Non publié] — 2026-10-16 — chaîne build → installeur Windows réparée à la cause, page unique, vue globale des rendez-vous
 
 ### `node config` — enchaîner la réparation sans commande supplémentaire

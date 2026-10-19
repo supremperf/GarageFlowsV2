@@ -33,9 +33,12 @@ const DECOMPRESSE = path.join(DIST, 'win-unpacked')
 const TAILLE_MINIMALE_OCTETS = 20 * 1024 * 1024
 
 const { version, build } = JSON.parse(fs.readFileSync(path.join(RACINE, 'package.json'), 'utf8'))
-const { INSTALLER_NAME, peInfo, inspectNsis, publish } = require('./lib/windows-delivery.cjs')
+const { INSTALLER_NAME, describePe, inspectNsis, publish } = require('./lib/windows-delivery.cjs')
 const nomAttendu = INSTALLER_NAME
 if (build.nsis.artifactName !== INSTALLER_NAME) throw new Error('NSIS artifactName differs from the single-file delivery contract')
+
+/** Remedy shown next to each structural defect of the executable. */
+const SECOURS_PE = 'Correctif : relancer `npm run dist` sur un poste Windows ; si le fichier a été copié ou téléchargé, le reprendre à la source et vérifier son empreinte.'
 
 function lister(dir, extension) {
   try {
@@ -95,12 +98,23 @@ async function main() {
   }
 
   const cheminExe = path.join(DIST, cible)
-  // Header and size are read from the same opened PE, not stat-then-open.
-  const stat = peInfo(cheminExe, TAILLE_MINIMALE_OCTETS)
+  // L'en-tête et la taille sont lus sur le MÊME descripteur ouvert, pas par un
+  // `stat` suivi d'une ouverture.
+  //
+  // `describePe` NE LÈVE PAS : c'est délibéré. Un installeur tronqué — copie ou
+  // téléchargement interrompu, le cas le plus fréquent quand un Setup circule —
+  // doit arriver jusqu'au verdict ci-dessous et y être NOMMÉ avec sa taille, le
+  // seuil et la sortie de secours. Auparavant le contrôle de taille vivait
+  // uniquement dans `peInfo()`, qui lève : l'exception quittait `main()` avant
+  // que `problemes` ne soit assemblé, et l'éditeur lisait « Invalid Windows
+  // executable » sans rien d'autre. Le diagnostic promis en tête de ce fichier
+  // n'existait donc que dans son commentaire.
+  const verdict = describePe(cheminExe, TAILLE_MINIMALE_OCTETS)
+  const tailleReelle = (() => { try { return fs.statSync(cheminExe).size } catch { return 0 } })()
 
-  if (stat.size < TAILLE_MINIMALE_OCTETS) {
+  if (!verdict.ok) {
     problemes.push(
-      `installeur de ${octets(stat.size)} : trop petit pour contenir l’application (minimum ${octets(TAILLE_MINIMALE_OCTETS)})`,
+      `exécutable Windows invalide (${verdict.code}) : ${verdict.message}\n     ${SECOURS_PE}`,
     )
   }
 
@@ -132,11 +146,16 @@ async function main() {
   }
 
   // ── 4. Verdict ────────────────────────────────────────────────────────────
-  const empreinte = sha256(cheminExe)
+  // L'empreinte est calculée sur le fichier réellement présent, y compris quand
+  // il est tronqué : c'est elle qui permet de comparer à la source et de prouver
+  // qu'une copie a été interrompue. Une lecture impossible ne doit pas masquer le
+  // diagnostic déjà établi.
+  let empreinte = null
+  try { empreinte = sha256(cheminExe) } catch { empreinte = 'indisponible (fichier illisible)' }
   console.log('')
-  console.log('📦 Artefact vérifié')
+  console.log(problemes.length ? '📦 Artefact inspecté — NON livrable' : '📦 Artefact vérifié')
   console.log(`   ${path.relative(RACINE, cheminExe)}`)
-  console.log(`   Taille : ${octets(stat.size)}`)
+  console.log(`   Taille : ${octets(tailleReelle)}`)
   console.log(`   SHA-256 : ${empreinte}`)
   console.log(`   Version : ${version} (source : package.json)`)
 

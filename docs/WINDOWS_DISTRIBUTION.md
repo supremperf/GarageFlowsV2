@@ -39,6 +39,28 @@ artifacts/windows-delivery/         # reçus techniques JSON, pas de données ut
 
 Ces sorties sont ignorées par Git. Aucun installateur n’est ajouté aux commits. Taille/SHA/version/commit se trouvent dans `artifacts/windows-delivery/delivery.json`, et sont aussi annoncés en CI. Ne pas faire passer un simple fichier MZ ou un ancien EXE renommé pour une nouvelle fabrication.
 
+`verify:installer` nomme le défaut avant de refuser : un Setup tronqué par une copie ou un téléchargement interrompu est annoncé `TRUNCATED_SIZE` avec sa taille réelle, le seuil attendu et l’étape suivante, au lieu d’un « Invalid Windows executable » sans aucune indication. Les codes possibles sont `ABSENT`, `UNREADABLE`, `NOT_A_FILE`, `EMPTY`, `TRUNCATED_SIZE`, `NOT_MZ`, `PE_OFFSET_OUT_OF_RANGE`, `BAD_PE_SIGNATURE`, `SHORT_READ`. L’empreinte est calculée même sur un fichier refusé : c’est elle qui prouve la copie interrompue.
+
+## Récupérer le Setup fabriqué par la CI
+
+Aucune release GitHub publique n’est publiée et aucun workflow ne publie à la place de l’éditeur : c’est un choix explicite, pas un oubli. Le job Windows dépose néanmoins le fichier réel en artefact à chaque poussée sur `main`, `master`, `develop`, `claude/**`, `integration/**` et `arena/**`.
+
+```bash
+gh run list --workflow ci.yml --branch main --limit 5
+gh run download <run-id> --name garageflows-installer-windows-x64 --dir ./recu
+# ./recu/GarageFlows-Setup.exe — l’archive ZIP de transport GitHub est déjà défaite par gh
+```
+
+L’artefact ne contient **que** l’EXE. Sa rétention est de **30 jours** : au-delà, il faut relancer le job plutôt que de ressortir un ancien fichier. Les reçus techniques (identité, recette d’installation, serveur installé) sont dans l’artefact séparé `garageflows-windows-validation`, jamais dans celui du client.
+
+Vérifier avant de distribuer, sans faire confiance au nom du fichier :
+
+```bash
+sha256sum ./recu/GarageFlows-Setup.exe   # à comparer au SHA-256 du reçu delivery.json du même run
+```
+
+Le canal de distribution vers les garages reste celui de l’éditeur (hébergement sur un domaine autorisé par `electron/update-verify.js` pour que la mise à jour intégrée fonctionne, ou remise directe du fichier). Publier l’EXE sur un hôte qui n’est pas dans cette liste ne casse pas l’installation manuelle, mais l’application refusera cette URL comme source de mise à jour.
+
 ## Démarrage autonome et sécurité
 
 Le processus principal crée/relit ses secrets locaux, vérifie l’intégrité enforced, conserve/crée la base utilisateur puis prépare sa sauvegarde. L’activation ECDSA-P256/HWID/appareil reste obligatoire. Le serveur s’exécute via `utilityProcess.fork`, **avec le Node d’Electron**, et écoute uniquement127.0.0.1. L’origine du navigateur reste localhost, résolue vers127.0.0.1 pour rester compatible avec les redirections Next et les cookies.
@@ -75,4 +97,10 @@ Les clés privées licence/update restent chez l’éditeur, jamais dans l’EXE
 
 ## Statut et limites
 
-Le [rapport de cette mission](audit/windows-setup/01-RAPPORT.md) contient les vrais SHA/builds, taille, hash, tests et limites. Les [blocages sécurité préexistants](audit/security-151/02-VERDICT-ET-INTEGRATION.md) ne disparaissent pas parce qu’un Setup est fabriqué. Ne pas confondre **candidat de packaging validé** et autorisation de distribution production, absence de toute régression métier ou correspondance prouvée de la clé privée de l’autorité réelle.
+Le rapport le plus récent est [la reprise de livraison](audit/windows-setup/05-REPRISE-LIVRAISON.md) : identité réelle du fichier fabriqué sur le HEAD courant, tests effectivement exécutés, ce que l’environnement ne pouvait pas faire, et limites ouvertes. Les rapports précédents — [fabrication et recette](audit/windows-setup/01-RAPPORT.md), [sécurité](audit/windows-setup/02-REPRISE-SECURITE.md), [transport](audit/windows-setup/03-REPRISE-TRANSPORT.md), [synchronisation](audit/windows-setup/04-REPRISE-SYNCHRONISATION.md) — restent valables pour les identités de build qu’ils attestent, qui ne sont pas les mêmes fichiers. Les [blocages sécurité préexistants](audit/security-151/02-VERDICT-ET-INTEGRATION.md) ne disparaissent pas parce qu’un Setup est fabriqué. Ne pas confondre **candidat de packaging validé** et autorisation de distribution production, absence de toute régression métier ou correspondance prouvée de la clé privée de l’autorité réelle.
+
+Trois faits à ne pas perdre de vue avant de remettre ce fichier à un garage :
+
+- l’installateur est **`NotSigned`** — SmartScreen avertira « Éditeur inconnu » après un téléchargement Internet ; lever ce point exige un certificat Authenticode, pas du code ;
+- la recette CI s’arrête à la **fenêtre d’activation réelle** : aucune session métier licenciée n’a été ouverte, ni sur autorité de production, ni sur un PC physique d’usine dépourvu d’outils de build ;
+- la version produit reste **1.1.0** : un parc déjà en 1.1.0 refusera cette candidature à juste titre (anti-downgrade). Augmenter la version avant toute nouvelle publication réelle.

@@ -14,16 +14,86 @@ function digest(file) {
     stream.on('end', () => resolve(hash.digest('hex')))
   })
 }
-function peInfo(file, minimum = 20 * 1024 * 1024) {
-  refuseLinkedPath(file)
-  const fd = fs.openSync(file, 'r')
+/**
+ * Diagnose a candidate executable WITHOUT throwing, so the caller can name the
+ * exact defect and its remedy.
+ *
+ * Why this exists: `verify-installer.cjs` documents that it names, one by one,
+ * an installer from a previous version, "une archive vide ou tronquée
+ * (téléchargement/copie interrompue)", a file that is not a Windows executable
+ * and an installer built from an incomplete standalone output. But the size and
+ * header checks lived only inside `peInfo()`, which throws — and that throw
+ * escaped `main()` before the problem list was ever assembled. A truncated copy
+ * (the single most common way a Setup reaches a customer: an interrupted
+ * download) was therefore reported as a bare "Invalid Windows executable", with
+ * no size, no threshold and no next step. The promised diagnosis existed in the
+ * docstring only.
+ *
+ * Returns `{ ok: true, size, machine }`, or `{ ok: false, code, message }` with
+ * a stable code: ABSENT · UNREADABLE · NOT_A_FILE · EMPTY · TRUNCATED_SIZE ·
+ * NOT_MZ · PE_OFFSET_OUT_OF_RANGE · BAD_PE_SIGNATURE · SHORT_READ.
+ *
+ * `minimum` is the delivery threshold, not a validity threshold: a file below it
+ * is still parsed, so a genuine 40 Ko stub is reported as TRUNCATED_SIZE with
+ * both numbers rather than as an unexplained rejection.
+ */
+function describePe(file, minimum = 20 * 1024 * 1024) {
+  const fail = (code, message) => ({ ok: false, code, message })
+  let fd = null
   try {
-    const stat = fs.fstatSync(fd), head = Buffer.alloc(64)
-    if (!stat.isFile() || stat.size < minimum || fs.readSync(fd, head, 0, 64, 0) !== 64 || head.toString('ascii', 0, 2) !== 'MZ') throw new Error('Invalid Windows executable')
-    const offset = head.readUInt32LE(60), pe = Buffer.alloc(6)
-    if (offset < 64 || offset > 1024 * 1024 || offset + 6 > stat.size || fs.readSync(fd, pe, 0, 6, offset) !== 6 || pe.readUInt32LE(0) !== 0x4550) throw new Error('Invalid PE header')
-    return { size: stat.size, machine: pe.readUInt16LE(4) }
-  } finally { fs.closeSync(fd) }
+    refuseLinkedPath(file)
+  } catch (error) {
+    return fail('UNREADABLE', `chemin refusé (${error.message})`)
+  }
+  try {
+    fd = fs.openSync(file, 'r')
+  } catch (error) {
+    return fail(error.code === 'ENOENT' ? 'ABSENT' : 'UNREADABLE',
+      error.code === 'ENOENT' ? 'fichier absent' : `lecture impossible (${error.code || 'erreur'})`)
+  }
+  try {
+    const stat = fs.fstatSync(fd)
+    if (!stat.isFile()) return fail('NOT_A_FILE', 'ce n’est pas un fichier régulier')
+    if (stat.size === 0) return fail('EMPTY', 'fichier vide (0 octet)')
+    const head = Buffer.alloc(64)
+    if (fs.readSync(fd, head, 0, 64, 0) !== 64 && stat.size >= 64) return fail('SHORT_READ', 'en-tête illisible')
+    if (head.toString('ascii', 0, 2) !== 'MZ') return fail('NOT_MZ', 'signature MZ absente — ce n’est pas un exécutable Windows')
+    const offset = head.readUInt32LE(60)
+    if (offset < 64 || offset > 1024 * 1024) return fail('PE_OFFSET_OUT_OF_RANGE', `offset d’en-tête PE hors bornes (${offset})`)
+    const pe = Buffer.alloc(6)
+    if (offset + 6 > stat.size || fs.readSync(fd, pe, 0, 6, offset) !== 6) {
+      return fail('TRUNCATED_SIZE',
+        `tronqué à ${stat.size} octets : l’en-tête PE annoncé à l’offset ${offset} dépasse la fin du fichier`)
+    }
+    if (pe.readUInt32LE(0) !== 0x4550) return fail('BAD_PE_SIGNATURE', 'signature PE absente à l’offset déclaré')
+    if (stat.size < minimum) {
+      return fail('TRUNCATED_SIZE',
+        `${stat.size} octets, sous le minimum de ${minimum} octets attendu d’un installeur complet`)
+    }
+    return { ok: true, size: stat.size, machine: pe.readUInt16LE(4) }
+  } catch (error) {
+    return fail('UNREADABLE', `inspection impossible (${error.code || error.message})`)
+  } finally {
+    if (fd !== null) { try { fs.closeSync(fd) } catch (_) {} }
+  }
+}
+
+/**
+ * Same inspection, but as a hard refusal: an installer that cannot be parsed is
+ * never delivered. Kept throwing because `inspectNsis()` and `publish()` must
+ * stop the chain — and because a caller that only wants a verdict should not
+ * have to branch on a code. The precise cause from `describePe()` is now carried
+ * in the message instead of being flattened into one generic sentence.
+ */
+function peInfo(file, minimum = 20 * 1024 * 1024) {
+  const verdict = describePe(file, minimum)
+  if (!verdict.ok) {
+    throw new Error(verdict.code === 'NOT_MZ' || verdict.code === 'EMPTY' || verdict.code === 'NOT_A_FILE'
+      || verdict.code === 'ABSENT' || verdict.code === 'UNREADABLE' || verdict.code === 'SHORT_READ'
+      ? `Invalid Windows executable — ${verdict.message}`
+      : `Invalid PE header — ${verdict.message}`)
+  }
+  return { size: verdict.size, machine: verdict.machine }
 }
 function regularFiles(dir, prefix = '') {
   const out = []
@@ -101,4 +171,4 @@ async function publish(root, verification) {
   fs.writeFileSync(path.join(evidence, 'delivery.json'), JSON.stringify(receipt, null, 2) + '\n')
   return receipt
 }
-module.exports = { INSTALLER_NAME, digest, peInfo, regularFiles, comparePayload, inspectNsis, publish }
+module.exports = { INSTALLER_NAME, digest, describePe, peInfo, regularFiles, comparePayload, inspectNsis, publish }
