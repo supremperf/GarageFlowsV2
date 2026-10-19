@@ -1,0 +1,160 @@
+{
+  "push_branch": {
+    "run_id": 39191332001,
+    "head_sha": "887c212a806b64db1b8c10e9b7e9fe01ef06ef3b",
+    "event": "push",
+    "conclusion": "failure",
+    "jobs": [
+      {
+        "name": "Secret scan (Gitleaks)",
+        "conclusion": "success",
+        "id": 117864601022,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191332001/job/117864601022"
+      },
+      {
+        "name": "Full dependency tree — zero vulnerabilities",
+        "conclusion": "success",
+        "id": 117864601174,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191332001/job/117864601174"
+      },
+      {
+        "name": "Native base (TypeScript, standard build, fixed JS budget)",
+        "conclusion": "success",
+        "id": 117864601232,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191332001/job/117864601232"
+      },
+      {
+        "name": "E2E (Playwright — responsive, auto-démarrage)",
+        "conclusion": "success",
+        "id": 117864601282,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191332001/job/117864601282"
+      },
+      {
+        "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+        "conclusion": "success",
+        "id": 117864601322,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191332001/job/117864601322"
+      },
+      {
+        "name": "Final release gate (full)",
+        "conclusion": "skipped",
+        "id": 117864602358,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191332001/job/117864602358"
+      },
+      {
+        "name": "Windows candidate packaging and inspection (not publication)",
+        "conclusion": "success",
+        "id": 117865755234,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191332001/job/117865755234"
+      },
+      {
+        "name": "Authenticated browser validation (approved staging only)",
+        "conclusion": "failure",
+        "id": 117865755241,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191332001/job/117865755241"
+      },
+      {
+        "name": "Required validation",
+        "conclusion": "failure",
+        "id": 117867019303,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191332001/job/117867019303"
+      }
+    ],
+    "artifacts": [
+      {
+        "name": "garageflows-installer-windows-x64",
+        "size_in_bytes": 230792870,
+        "id": 12160621315,
+        "expired": false,
+        "created_at": "2026-10-19T02:54:09Z"
+      },
+      {
+        "name": "garageflows-windows-validation",
+        "size_in_bytes": 1108,
+        "id": 12160561664,
+        "expired": false,
+        "created_at": "2026-10-19T02:54:03Z"
+      }
+    ]
+  },
+  "pull_request": {
+    "run_id": 39191380473,
+    "head_sha": "887c212a806b64db1b8c10e9b7e9fe01ef06ef3b",
+    "event": "pull_request",
+    "conclusion": "failure",
+    "jobs": [
+      {
+        "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+        "conclusion": "success",
+        "id": 117864743368,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191380473/job/117864743368"
+      },
+      {
+        "name": "Secret scan (Gitleaks)",
+        "conclusion": "success",
+        "id": 117864743533,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191380473/job/117864743533"
+      },
+      {
+        "name": "Native base (TypeScript, standard build, fixed JS budget)",
+        "conclusion": "success",
+        "id": 117864743560,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191380473/job/117864743560"
+      },
+      {
+        "name": "E2E (Playwright — responsive, auto-démarrage)",
+        "conclusion": "success",
+        "id": 117864743581,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191380473/job/117864743581"
+      },
+      {
+        "name": "Full dependency tree — zero vulnerabilities",
+        "conclusion": "success",
+        "id": 117864743609,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191380473/job/117864743609"
+      },
+      {
+        "name": "Final release gate (full)",
+        "conclusion": "skipped",
+        "id": 117864744748,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191380473/job/117864744748"
+      },
+      {
+        "name": "Authenticated browser validation (approved staging only)",
+        "conclusion": "failure",
+        "id": 117865663543,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191380473/job/117865663543"
+      },
+      {
+        "name": "Windows candidate packaging and inspection (not publication)",
+        "conclusion": "success",
+        "id": 117865663560,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191380473/job/117865663560"
+      },
+      {
+        "name": "Required validation",
+        "conclusion": "failure",
+        "id": 117867764437,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39191380473/job/117867764437"
+      }
+    ],
+    "artifacts": [
+      {
+        "name": "garageflows-windows-validation",
+        "size_in_bytes": 1105,
+        "id": 12160731293,
+        "expired": false,
+        "created_at": "2026-10-19T02:57:08Z"
+      },
+      {
+        "name": "garageflows-installer-windows-x64",
+        "size_in_bytes": 230792965,
+        "id": 12160159077,
+        "expired": false,
+        "created_at": "2026-10-19T02:57:17Z"
+      }
+    ]
+  },
+  "codeql_pull_request_check": null,
+  "note": "Relevé lu depuis api.github.com le 19/10/2026. Le run 'push_branch' porte head_sha 887c212 = le commit de cette reprise, arbre propre (dirty:false) : c'est le reçu qui fait foi pour le correctif de diagnostic. Le run 'pull_request' porte le commit de fusion généré par GitHub. Le binaire n'est pas téléchargeable depuis ce sandbox : artefacts et journaux redirigent vers des hôtes de stockage hors liste autorisée (EOF, zéro octet)."
+}

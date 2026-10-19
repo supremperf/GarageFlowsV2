@@ -124,30 +124,61 @@ seul son énoncé change.
 
 ## 3. Livrable : identité réelle du fichier
 
-Reçus lus depuis `api.github.com` (annotations du job Windows `117756832929`,
-run `39154857220`, push de `f2370a3`) et archivés dans
-[`finalisation/`](finalisation/) — ils n'étaient pas dans le dépôt.
+Deux identités sont archivées dans [`finalisation/`](finalisation/), et il ne
+faut pas les confondre.
 
-| Champ | Valeur attestée par la CI Windows sur `f2370a3` |
+**Celle qui fait foi pour cette reprise : le commit `887c212`**, c'est-à-dire
+l'arbre qui contient le correctif de diagnostic. Reçu lu depuis `api.github.com`
+(annotations du job Windows `117865755234`, run `push` `39191332001`,
+`head_sha 887c212a806b64db1b8c10e9b7e9fe01ef06ef3b`, `dirty: false`).
+
+| Champ | Valeur attestée par la CI Windows sur `887c212` |
 |---|---|
 | Chemin produit | `release/GarageFlows-Setup.exe` |
-| Version | 1.1.0 · `commit f2370a3` · `dirty: false` |
+| Version | 1.1.0 · `commit 887c212` · `dirty: false` |
 | Cible | `win32` / `x64`, NSIS offline embarqué |
-| **Taille** | **231 063 440 octets** (220,4 Mio) |
-| **SHA-256** | **`5f24a555f325be7ecae61c0478a5f80368bc552598af2e7a26fba37db8d6a4a1`** |
+| **Taille** | **231 063 118 octets** (220,4 Mio) |
+| **SHA-256** | **`727cbdc37a435754c7a96eeb552d19a6574e44824ce758240804756ceb9a2383`** |
 | Charge utile | **3 045 fichiers**, inventaire **et** empreinte de chacun comparés à `win-unpacked` |
 | Extraction | `embedded-7z-sfx` · `payloadVerified: true` · `offlinePayloadEmbedded: true` |
 | Signature Authenticode | **`NotSigned`** (`authenticodeVerified: false`) |
-| Artefact récupérable | `garageflows-installer-windows-x64`, id `12146208705`, ZIP de transport 230 793 025 octets, rétention 30 jours |
+| Artefact récupérable | `garageflows-installer-windows-x64`, ZIP de transport 230 792 870 octets, rétention 30 jours |
 
-Recette d'installation réelle sur l'exécuteur Windows
-([`windows-smoke-f2370a3.json`](finalisation/windows-smoke-f2370a3.json)) :
+Ce reçu a une portée précise : `verify:installer` est la **dernière** étape de
+`npm run dist`, donc `describePe()` et la promotion atomique dans `release/` ont
+réellement tourné dans un build Windows, sur un exécutable de 220 Mio valide,
+sans faire échouer la chaîne. Ce qui n'est **pas** démontré par ce run : le
+chemin d'erreur. Aucun installeur tronqué n'a été soumis au vérificateur sur
+l'exécuteur Windows — ce cas est couvert par les fixtures des tests ajoutés, qui
+sont réelles mais locales.
+
+Recette d'installation sur le même commit
+([`windows-smoke-887c212.json`](finalisation/windows-smoke-887c212.json)) :
 `installExecuted`, `activationWindowOpened`, `restrictedPathLaunch` (CWD vide,
 PATH réduit à System32), `sqliteSentinelWritten`,
 `installedServerComponentsPassed`, `reinstallPreservedData`,
 `uninstallPreservedData`, `installerExitCode: 0`, `installedExePresent` — tous
 **vrais**. `licensedBusinessWorkflowTested` et
 `cleanOSWithoutBuildToolsTested` restent **faux**, et le reçu le dit lui-même.
+
+**Référence antérieure : `f2370a3`** (HEAD au début de cette reprise), déjà
+archivée parce qu'elle manquait au dépôt — taille 231 063 440 octets, SHA-256
+`5f24a555f325be7ecae61c0478a5f80368bc552598af2e7a26fba37db8d6a4a1`, mêmes
+3 045 fichiers et mêmes conclusions de recette
+([reçu](finalisation/delivery-f2370a3.json)). Les deux fichiers diffèrent de
+322 octets : le code du vérificateur a changé entre les deux, pas la charge
+utile applicative.
+
+Le run `pull_request` de la PR #13 porte un **commit de fusion** généré par
+GitHub (`refs/pull/13/merge`), pas la tête de branche : son reçu est archivé
+séparément avec cette mise en garde
+([`delivery-pr13-merge-commit.json`](finalisation/delivery-pr13-merge-commit.json)),
+parce que confondre les deux ferait attribuer à une branche une empreinte qui
+n'est pas la sienne.
+
+Le commit qui archive ces reçus est postérieur au SHA qu'ils attestent, et
+**n'hérite pas** de sa validation CI : il ne modifie que des documents et des
+preuves.
 
 **Le binaire n'a pas été rapatrié dans ce sandbox** : les artefacts et journaux
 d'actions redirigent vers `productionresultssa1.blob.core.windows.net` et
