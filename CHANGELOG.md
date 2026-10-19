@@ -30,6 +30,19 @@
   comme sous Linux/macOS.
 - Tests : `tests/build-public-key.test.cjs` (diagnostic, ambiguïté, clé retirée, preflight,
   `keys:sync` tout-ou-rien) et `scripts/test_keygen.py` (`--init` ne remplace jamais).
+- **Étape suivante du même `npm run dist` : `next build` en EPERM sur le profil Windows.**
+  Le runtime Prisma embarque `dotenv` (`readFileSync(path.join(os.homedir(), …))`) ; le
+  traçage nft de Next en fait un glob `<profil>/**` qu'il n'abandonne que si le chemin
+  relatif à la racine du projet commence par `..\`. Projet et profil sur deux lecteurs
+  (runner CI `D:` / `C:`, ou poste rangeant ses projets sur `D:`) : le glob énumère le
+  profil et échoue sur les jonctions `Application Data` / `Cookies`. La CI masquait le cas
+  en substituant `USERPROFILE` dans le workflow, et le rapport du 2026-10-16 le disait sans
+  objet sur un poste ordinaire — ce n'est vrai que sur le même lecteur.
+  `scripts/next-build.cjs` (appelé par `npm run build`) donne alors à `next build`, et à lui
+  seul, un profil vide sous `node_modules/.cache/gf-build-home`, déjà exclu du traçage par
+  Next ; rien d'autre ne change, et l'exit de `next build` est conservé. Le contournement est
+  retiré du workflow : le job Windows éprouve désormais le correctif du dépôt dans la
+  topologie multi-lecteurs réelle. Test : `tests/next-build-home.test.cjs`.
 
 ## [Non publié] — 2026-10-19 — livraison Windows : diagnostic de l’artefact réparé, reçus du HEAD archivés
 
