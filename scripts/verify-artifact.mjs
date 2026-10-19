@@ -21,6 +21,7 @@
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { fichiersEnvFuite } from './lib/env-artifact-check.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const REQUIRED_MANIFEST_FIELDS = ['productName', 'packageVersion', 'buildId', 'git', 'generatedAt']
@@ -78,32 +79,31 @@ if (existsSync(path.join(ROOT, '.git')) && commit) {
 }
 
 // 4. Aucune fuite .env dans l'ARTEFACT distribué.
-//    - Les modèles `.env.example|sample|template` sont des gabarits SANS secret → jamais signalés.
-//    - Le `.env` de DÉVELOPPEMENT à la racine du dépôt est légitime (gitignored, non distribué) :
-//      on ne le signale QU'EN mode artifact (ZIP extrait, sans .git), là où sa présence
-//      signifierait une vraie fuite.
-//    - Dans le standalone/resources EMPAQUETÉ, tout `.env` réel est TOUJOURS une fuite.
+//    - Les gabarits SANS VALEUR sont acceptés : `.env.example|sample|template`
+//      (noms historiques) et tout `.env.<qualificatif>.example|sample|template`
+//      dont le CONTENU ne porte aucune valeur (voir lib/env-artifact-check.mjs).
+//      Un nom étendu qui contient une vraie valeur reste une fuite : c'est le
+//      contournement que la règle doit voir.
+//    - Le `.env` de DÉVELOPPEMENT à la racine du dépôt est légitime (gitignored,
+//      non distribué) : on ne le signale QU'EN mode artifact (ZIP extrait, sans
+//      .git), là où sa présence signifierait une vraie fuite.
+//    - Dans le standalone/resources EMPAQUETÉ, tout `.env` réel est TOUJOURS
+//      une fuite.
 const isRepo = existsSync(path.join(ROOT, '.git'))
-const isEnvTemplate = (n) => /^\.env\.(example|sample|template)$/.test(n)
-const isRealEnv = (n) => (n === '.env' || n.startsWith('.env.')) && !isEnvTemplate(n)
 const scanDirs = [
   { dir: path.join(ROOT, '.next', 'standalone'), always: true },
   { dir: path.join(ROOT, 'resources', 'standalone'), always: true },
   { dir: path.join(ROOT, 'standalone'), always: true },
   { dir: ROOT, always: false }, // racine : uniquement en mode artifact
 ]
-let envLeaks = 0
-for (const { dir, always } of scanDirs) {
-  if (!existsSync(dir)) continue
-  if (!always && isRepo) continue // .env de dev à la racine = légitime en mode repository
-  for (const name of readdirSync(dir)) {
-    if (isRealEnv(name) && statSync(path.join(dir, name)).isFile()) {
-      fail(`Fuite de secrets : ${path.relative(ROOT, path.join(dir, name)) || name} présent dans l'artefact.`)
-      envLeaks++
-    }
-  }
+const fuites = fichiersEnvFuite(scanDirs, (f) => readFileSync(f, 'utf8'), {
+  racine: ROOT, modeArtifact: !isRepo,
+  exists: existsSync, readdir: readdirSync, stat: statSync, join: path.join,
+})
+for (const fuite of fuites) {
+  fail(`Fuite de secrets : ${path.relative(ROOT, fuite) || fuite} présent dans l'artefact.`)
 }
-if (!envLeaks) ok('Aucun .env réel embarqué (gabarits .env.example ignorés).')
+if (!fuites.length) ok('Aucun .env réel embarqué (gabarits sans valeur acceptés).')
 
 // 5. Fichiers critiques
 const critical = [
