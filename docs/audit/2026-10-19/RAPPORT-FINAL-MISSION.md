@@ -239,6 +239,26 @@ corrigés dans la foulée (le run suivant doit le confirmer) :
 
 `test:release-safety` : **166/166** (les deux nouveaux gardes inclus).
 
+**Run CI suivant (commit `551f04d`, événement `pull_request`)** — vérification
+des trois correctifs :
+
+| Contrôle CI | Résultat |
+|---|---|
+| Secret scan (Gitleaks) | **✅ pass** (8 s) — plus aucune alerte |
+| Type-check, Lint & Test (SQLite + PostgreSQL natif) | **✅ pass** (3 min 17) |
+| Analyze (CodeQL javascript-typescript) | **✅ pass** (2 min 21) |
+| E2E Playwright, Native base, dépendances, packaging Windows | **✅ pass** |
+| Authenticated browser validation (staging approuvé) | **❌ rouge pré-existant** |
+| Required validation (agrégateur) | ❌ par conséquence du précédent |
+
+Le seul rouge restant n'est **pas** causé par cette branche : le job exige les
+secrets `E2E_STAGING_URL`, `E2E_EMAIL`, `E2E_PASSWORD`, `E2E_LICENSE` et la
+variable `E2E_NON_PRODUCTION`, absents du dépôt ; il échoue avec
+`MISSING_INPUT:BASE_URL`. Le même job échoue à l'identique sur `main` au run du
+2026-10-19 (03:14). Il n'a **pas** été neutralisé : le contourner reviendrait à
+présenter des tests publics comme une preuve d'authentification. Il reste à
+fournir un environnement de staging approuvé (action humaine).
+
 ## G. Version finale
 
 - Source corrigée, tests ajoutés, scripts de build inchangés.

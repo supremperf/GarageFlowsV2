@@ -2883,3 +2883,11 @@ stat/existsSync-puis-read dans `find-issuer-key.cjs` — lecture par un seul
 descripteur et traitement direct de `ENOENT`. `test:release-safety` 166/166.
 Le run CI suivant doit confirmer ; aucun vert n'est revendiqué avant sa
 conclusion.
+
+**Run CI 551f04d — correctifs vérifiés.** Gitleaks ✅, Type-check/Lint/Test ✅
+(SQLite + PostgreSQL natif), Analyze CodeQL ✅, E2E ✅, Native base ✅,
+dépendances ✅, packaging Windows ✅. Seul rouge : « Authenticated browser
+validation », qui exige des secrets de staging absents (`MISSING_INPUT:BASE_URL`)
+et échoue à l'identique sur `main` (run du 2026-10-19 03:14). Il n'est ni
+neutralisé ni compté vert : sans staging approuvé, ce contrôle doit rester
+rouge.
