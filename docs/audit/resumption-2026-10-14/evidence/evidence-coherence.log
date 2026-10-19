@@ -1,0 +1,11 @@
+{
+  "at": "2026-10-14T14:30:18.150652+00:00",
+  "timezone": "Europe/Paris",
+  "oldEvidenceFilesUnchanged": 100,
+  "currentReviewedSourceHashesVerified": 1247,
+  "issues": 25,
+  "commandsWithExistingLogs": 57,
+  "dagNodes": 19,
+  "fixedBudgetVerified": true,
+  "limitations": "Coherence/hash validation only, not functional/native/security certification."
+}

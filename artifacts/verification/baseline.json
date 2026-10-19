@@ -1,0 +1,70 @@
+{
+  "_note": "Généré par scripts/generate-verification-baseline.mjs — NE PAS éditer à la main. Source machine unique du commit/toolchain/comptes de tests (anti-divergence).",
+  "schemaVersion": 2,
+  "product": "GarageFlows",
+  "version": "1.1.0",
+  "commit": "e28acd82e4ad3afafdf4cf19ba4e15ae5c7cbb93",
+  "commitShort": "e28acd8",
+  "branch": "arena/55edbdc1-garageflowsv2",
+  "gitIdentity": true,
+  "generatedAtUtc": "2026-10-18T18:33:28.129Z",
+  "toolchain": {
+    "node": "v22.22.3",
+    "npm": "10.9.8",
+    "os": "linux x64",
+    "dependencies": {
+      "next": {
+        "declared": "15.5.27",
+        "resolved": "15.5.27",
+        "source": "node_modules"
+      },
+      "react": {
+        "declared": "^18.3.1",
+        "resolved": "18.3.1",
+        "source": "node_modules"
+      },
+      "react-dom": {
+        "declared": "^18.3.1",
+        "resolved": "18.3.1",
+        "source": "node_modules"
+      },
+      "typescript": {
+        "declared": "^5",
+        "resolved": "5.9.3",
+        "source": "node_modules"
+      },
+      "prisma": {
+        "declared": "^5.16.1",
+        "resolved": "5.22.0",
+        "source": "node_modules"
+      },
+      "@prisma/client": {
+        "declared": "^5.16.1",
+        "resolved": "5.22.0",
+        "source": "node_modules"
+      },
+      "electron": {
+        "declared": "41.10.6",
+        "resolved": "41.10.6",
+        "source": "node_modules"
+      },
+      "vitest": {
+        "declared": "4.1.11",
+        "resolved": "4.1.11",
+        "source": "node_modules"
+      }
+    },
+    "postgresTested": "not in this run",
+    "redisTested": "not in this run"
+  },
+  "tests": {
+    "measured": true,
+    "files": 351,
+    "suites": 1306,
+    "total": 4272,
+    "discovered": 4272,
+    "passed": 3420,
+    "failed": 3,
+    "skipped": 849
+  }
+}

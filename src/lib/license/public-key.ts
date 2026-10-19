@@ -1,20 +1,20 @@
 /**
  * Embedded ECC P-256 public key — single source of truth for Next.js context.
  *
- * Generated once by: python scripts/keygen_gui.py → "Initialiser les clés"
- * The private key NEVER leaves keys/private.pem (server-only).
- *
- * After regenerating keys, update both:
- *   1. The _LINES array below (from keys/public.pem)
- *   2. The _PK array in electron/main.js (same content)
+ * Issuer: GF_PRIVATE_KEY (base64 PEM) on the server, or keys/private.pem
+ * on the authorized Python signing workstation. Never package a private key.
+ * Read-only checks: scripts/verify-license-issuer.mjs, check:public-key,
+ * keys:check. See docs/VERIFICATION_CLE_EMETTRICE.md. No automatic rotation.
+ * After an operator-approved change, keys:sync propagates the PUBLIC key;
+ * do not edit just one anchor or regenerate keys as a diagnostic shortcut.
  *
  * Key is split into segments assembled at runtime — minor obfuscation so a
  * simple grep for "BEGIN PUBLIC KEY" won't trivially locate it in the bundle.
  */
 const _LINES = [
   '-----BEGIN PUBLIC KEY-----',
-  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEDvMVU9vdgTvQu1S2w6amt5UyFWhR',
-  'E+KEHZzdx5v4WLubA5mSjFdI6TS1L67Qq8ulJ9fUoOF6n2zzKO7o6DbbgA==',
+  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXKiGHY7aFcS/uMbVz2hP2FptYJxH',
+  'cAmacvNlLuzalHkssxU7kNZcY0T4UD1ilFOecW+d/YvnoDlRMxS5uTjWDA==',
   '-----END PUBLIC KEY-----',
 ]
 

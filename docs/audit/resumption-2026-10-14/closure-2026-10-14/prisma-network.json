@@ -1,0 +1,97 @@
+{
+  "at": "2026-10-14T16:16:25.445Z",
+  "head": "4989b53d4a8f10cf8afb2f7c579d1de354f58508",
+  "node": "v22.22.3",
+  "npm": "11.16.0",
+  "platform": "linux",
+  "arch": "x64",
+  "release": "6.1.158+",
+  "openssl": "3.5.6",
+  "requestedUrl": "https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256",
+  "versions": {
+    "prisma": "5.22.0",
+    "@prisma/client": "5.22.0",
+    "@prisma/engines": "5.22.0"
+  },
+  "security": {
+    "rejectUnauthorized": true,
+    "NODE_TLS_REJECT_UNAUTHORIZED": "not disabled",
+    "NODE_EXTRA_CA_CERTS_configured": false,
+    "NODE_USE_SYSTEM_CA": "1"
+  },
+  "proxy": {
+    "HTTP_PROXY": {
+      "configured": false,
+      "valueWithheld": true
+    },
+    "HTTPS_PROXY": {
+      "configured": false,
+      "valueWithheld": true
+    },
+    "ALL_PROXY": {
+      "configured": false,
+      "valueWithheld": true
+    },
+    "NO_PROXY": {
+      "configured": false,
+      "valueWithheld": true
+    },
+    "http_proxy": {
+      "configured": false,
+      "valueWithheld": true
+    },
+    "https_proxy": {
+      "configured": false,
+      "valueWithheld": true
+    }
+  },
+  "npm_strict-ssl": {
+    "exitCode": 0,
+    "value": "true"
+  },
+  "npm_proxy": {
+    "exitCode": 0,
+    "configured": false,
+    "valueWithheld": true
+  },
+  "npm_https-proxy": {
+    "exitCode": 0,
+    "configured": false,
+    "valueWithheld": true
+  },
+  "npm_cafile": {
+    "exitCode": 0,
+    "configured": false,
+    "valueWithheld": true
+  },
+  "dns": {
+    "addresses": [
+      {
+        "address": "104.20.43.103",
+        "family": 4
+      },
+      {
+        "address": "172.66.156.100",
+        "family": 4
+      },
+      {
+        "address": "2606:4700:10::6814:2b67",
+        "family": 6
+      },
+      {
+        "address": "2606:4700:10::ac42:9c64",
+        "family": 6
+      }
+    ]
+  },
+  "networkError": {
+    "code": "ECONNRESET",
+    "message": "Socket disconnected before secure TLS connection was established"
+  },
+  "integrity": {
+    "binaryDownloaded": false,
+    "binaryChecksumVerified": false,
+    "reason": "This diagnostic requests only the official SHA256; binary validation requires a successful official download and checksum comparison."
+  },
+  "limitation": "No TLS bypass, CA replacement or alternate mirror used; no peer certificate is available if TLS never completes. Platform network policy permits only GitHub/npm/PyPI hosts, not binaries.prisma.sh."
+}

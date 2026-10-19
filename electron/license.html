@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GarageFlow — Activation</title>
+  <title>GarageFlows — Activation</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -87,13 +87,13 @@
 </head>
 <body>
   <div class="tb">
-    <span class="tb-title">GarageFlow · Activation</span>
+    <span class="tb-title">GarageFlows · Activation</span>
     <button class="tb-close" id="btn-x">✕</button>
   </div>
 
   <div class="content">
     <div class="logo">GF</div>
-    <h1>Garage<span>Flow</span></h1>
+    <h1>Garage<span>Flows</span></h1>
     <p class="tag">Activation de la licence</p>
 
     <div class="card">
@@ -111,7 +111,7 @@
 
       <p class="hint">
         Format&nbsp;: <code>GF2.&lt;header&gt;.&lt;payload&gt;.&lt;signature&gt;</code><br/>
-        Générez des clés avec&nbsp;: <code>python scripts\keygen.py --gen --customer MON-CLIENT</code>
+        Cette clé vous est fournie par votre revendeur GarageFlows.
       </p>
 
       <div class="ebox" id="ebox">
@@ -128,14 +128,14 @@
           <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          Activer GarageFlow
+          Activer GarageFlows
         </button>
       </div>
     </div>
 
     <p class="help">
       Pas de licence ?&nbsp;
-      <a href="mailto:contact@garageflow.fr">contact@garageflow.fr</a>
+      <a href="mailto:contact@garageflows.fr">contact@garageflows.fr</a>
     </p>
   </div>
 
@@ -156,7 +156,7 @@
       btnAct.disabled = v; btnQuit.disabled = v
       btnAct.innerHTML = v
         ? '<div class="spin"></div>Vérification…'
-        : '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Activer GarageFlow'
+        : '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Activer GarageFlows'
     }
 
     tk.addEventListener('input', () => { clearErr(); btnAct.disabled = !ok(tk.value) })

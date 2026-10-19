@@ -8,9 +8,9 @@
  * duplicate-repair-type de-duplication (the double-count fix).
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { execSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-itest-quotes.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -39,17 +39,12 @@ async function call(body: unknown): Promise<{ status: number; json: any }> {
 }
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', {
-    cwd: path.resolve(__dirname, '../..'),
-    env: { ...process.env, DATABASE_URL: `file:${DB_PATH}` },
-    stdio: 'ignore',
-  })
+  prepareTestDb(DB_PATH)
 
   ;({ prisma } = await import('@/lib/db'))
   ;({ POST } = await import('@/app/api/quotes/generate/route') as any)
 
-  const a = await prisma.garage.create({ data: { name: 'Garage A', slug: 'a', hourlyRate: 60, taxRate: 20 } })
+  const a = await prisma.garage.create({ data: { name: 'Garage A', slug: 'a', hourlyRateTenThousandths: 600000, taxRate: 20 } })
   const b = await prisma.garage.create({ data: { name: 'Garage B', slug: 'b' } })
   garageA = a.id
   garageB = b.id
@@ -57,7 +52,7 @@ beforeAll(async () => {
   clientB = cb.id
 
   // A default part (BOM) for oil_change in garage A.
-  const part = await prisma.part.create({ data: { name: 'Filtre à huile', reference: 'OIL-9', unitPrice: 8, unitCost: 4, garageId: garageA } })
+  const part = await prisma.part.create({ data: { name: 'Filtre à huile', reference: 'OIL-9', unitPriceTenThousandths: 80000, unitCostTenThousandths: 40000, garageId: garageA } })
   await prisma.repairTypePart.create({ data: { repairType: 'oil_change', partId: part.id, defaultQty: 1, garageId: garageA } })
 
   h.session = { user: { id: 'user-a', name: 'Alice', garageId: garageA } }
@@ -94,6 +89,37 @@ describe('POST /api/quotes/generate (integration)', () => {
 
     const persisted = await prisma.quote.findFirst({ where: { id: json.quote.id }, include: { lines: true } })
     expect(persisted.lines).toHaveLength(2)
+  })
+
+  it('la ligne de pièce PORTE son rattachement au stock (GF-040)', async () => {
+    // Seul `InvoiceLine.partId` engage l'inventaire, et la conversion recopie
+    // fidèlement `QuoteLine.partId`. Sans lui, la facture issue d'un devis
+    // généré ne décrémentait JAMAIS rien : les pièces sortaient de l'atelier
+    // sans quitter l'inventaire.
+    const piece = await prisma.part.findFirst({ where: { garageId: garageA, reference: 'OIL-9' } })
+    const { status, json } = await call({ repairTypes: ['oil_change'], confirm: true })
+    expect(status).toBe(201)
+
+    const persisted = await prisma.quote.findFirst({
+      where: { id: json.quote.id }, include: { lines: true },
+    })
+    const lignePiece = persisted.lines.find((l: any) => !l.isLabor)
+    expect(lignePiece.partId, 'le lien vers le catalogue était perdu').toBe(piece.id)
+
+    const ligneMo = persisted.lines.find((l: any) => l.isLabor)
+    expect(ligneMo.partId, 'la main-d’œuvre ne consomme aucun stock').toBeNull()
+  })
+
+  it('une pièce hors catalogue reste sans rattachement', async () => {
+    // Le rattachement ne s'invente pas : une ligne sans pièce connue doit
+    // rester libre, sinon la validation de la facture décrémenterait au hasard.
+    const { json } = await call({ repairTypes: ['brake_pads'], confirm: true })
+    const persisted = await prisma.quote.findFirst({
+      where: { id: json.quote.id }, include: { lines: true },
+    })
+    for (const l of persisted.lines) {
+      if (!l.isLabor) expect(l.partId).toBeNull()
+    }
   })
 
   it('drops a clientId that belongs to another garage (tenant isolation)', async () => {

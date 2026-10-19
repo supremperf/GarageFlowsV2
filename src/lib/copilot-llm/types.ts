@@ -9,6 +9,9 @@
  * (deterministic classification + verbatim facts).
  */
 
+import type { SemanticUnderstanding, SemanticRequest } from '@/lib/copilot/semantic'
+import type { ModelPlan, PlanningRequest } from '@/lib/copilot/planning'
+
 export type LlmRole = 'system' | 'user' | 'assistant'
 export interface LlmMessage {
   role: LlmRole
@@ -45,7 +48,16 @@ export interface ClassifyResult extends LlmClassification {
 }
 
 export interface PhraseInput {
-  /** The user's question — for tone/context and as an allowed number source. */
+  /**
+   * The user's question — for tone and context ONLY.
+   *
+   * NOT an allowed number source, contrary to what this comment claimed until
+   * the 15/08/2026. `phrase.ts:23` grounds against `facts` alone, and the header
+   * of that file states why: a number typed by the user must never become an
+   * allow-list entry that launders a fabrication. The doc said the opposite of
+   * the code — an invitation to "fix" the code to match it, which would have
+   * removed the guarantee.
+   */
   query: string
   /** Deterministic facts the answer MUST stick to (numbers & text). */
   facts: string
@@ -70,6 +82,8 @@ export interface PhraseResult {
 export interface LlmProvider {
   readonly id: string
   readonly name: string
+  interpret?(request: SemanticRequest, options?: { signal?: AbortSignal }): Promise<SemanticUnderstanding | null>
+  plan?(request: PlanningRequest, options?: { signal?: AbortSignal }): Promise<ModelPlan | null>
   classify?(query: string, intents: IntentSpec[]): Promise<LlmClassification | null>
   phrase?(input: PhraseInput): Promise<string | null>
   complete?(messages: LlmMessage[], opts?: LlmCompletionOptions): Promise<LlmCompletion>

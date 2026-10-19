@@ -1,0 +1,85 @@
+{
+  "appId": "com.garageflow.app",
+  "productName": "GarageFlows",
+  "copyright": "Copyright © 2026 GarageFlows",
+  "afterPack": "scripts/afterPack.js",
+  "asar": true,
+  "asarUnpack": [
+    "node_modules/.prisma/client/query_engine-windows*",
+    "node_modules/@prisma/engines/**"
+  ],
+  "directories": {
+    "output": "dist"
+  },
+  "files": [
+    "electron/**/*",
+    "package.json",
+    "THIRD_PARTY_NOTICES.md",
+    "!**/*.before-*",
+    "!**/*.bak",
+    "!**/*.backup",
+    "!**/*.old",
+    "!**/*.orig",
+    "!**/*.rej",
+    "!**/*~",
+    "!**/*.tmp",
+    "!**/.env*",
+    "!**/*.pem",
+    "!**/*.key",
+    "!**/*.log",
+    "!**/*.map"
+  ],
+  "extraResources": [
+    {
+      "from": ".next/standalone",
+      "to": "standalone"
+    },
+    {
+      "from": "prisma",
+      "to": "prisma",
+      "filter": [
+        "schema.prisma",
+        "garageflow-template.db"
+      ]
+    },
+    {
+      "from": "keys",
+      "to": "keys",
+      "filter": [
+        "public.pem"
+      ]
+    },
+    {
+      "from": "icon.ico",
+      "to": "icon.ico"
+    }
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "icon": "icon.ico",
+    "requestedExecutionLevel": "asInvoker"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowElevation": false,
+    "allowToChangeInstallationDirectory": false,
+    "installerIcon": "icon.ico",
+    "uninstallerIcon": "icon.ico",
+    "installerHeaderIcon": "icon.ico",
+    "createDesktopShortcut": "always",
+    "createStartMenuShortcut": true,
+    "shortcutName": "GarageFlows",
+    "include": "scripts/installer.nsh",
+    "warningsAsErrors": false,
+    "artifactName": "GarageFlows-Setup.exe",
+    "deleteAppDataOnUninstall": false
+  }
+}

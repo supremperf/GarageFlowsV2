@@ -6,6 +6,8 @@
  * logique d'orchestration DB + HWID de la route : on stube verifyLicenseToken
  * (couche crypto) mais on utilise le VRAI verifyHwid/isValidHwidFormat.
  */
+type OriginalModule1 = typeof import('../license/verify')
+
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Secret fort requis par getAuthSecret() (pas de repli en dur).
@@ -103,14 +105,17 @@ vi.mock('@/lib/security/rate-limit', () => ({
 
 // Intégrité MAC toujours OK.
 vi.mock('@/lib/license/record-mac', () => ({
-  verifyRecordMac: () => ({ tampered: false, missing: false }),
+  verifyRecordMac: () => ({ ok: true, tampered: false, missing: false }),
   computeRecordMac: () => 'mac',
+  // Politique d'intégrité centralisée (GF31-AUD-005) — doit être exportée ici
+  // aussi, faute de quoi la route importe `undefined`.
+  recordIntegrityUsable: (v: { tampered: boolean; missing: boolean }) => !v.tampered && !v.missing,
 }))
 
 // Couche crypto stubée — garde le VRAI verifyHwid/isValidHwidFormat.
 const verifyMock = vi.hoisted(() => ({ payload: null as Record<string, unknown> | null }))
 vi.mock('@/lib/license/verify', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../license/verify')>()
+  const actual = await importOriginal<OriginalModule1>()
   return {
     ...actual,
     verifyLicenseToken: () => ({
@@ -180,6 +185,57 @@ describe('POST /api/license/activate — table de vérité HWID (licence LIÉE)'
     const body = await res.json()
     expect(body.ok).toBe(true)
     expect(licenseKey.update).toHaveBeenCalled()
+  })
+})
+
+/**
+ * NON-RÉGRESSION GF31-AUD-008.
+ *
+ * La liaison matérielle existe à DEUX endroits : la colonne `hwid` de la ligne
+ * `LicenseKey`, et le claim `hwid` du jeton — ce dernier étant SIGNÉ, donc
+ * infalsifiable. Seule la première était contrôlée quand la ligne existait déjà.
+ *
+ * Or `record.hwid` peut être nul sans la moindre altération de base :
+ *  - `/api/admin/licenses/revoke-by-key` crée une pierre tombale `hwid: null`
+ *    pour une licence pas encore enregistrée ; une réactivation ultérieure part
+ *    donc d'une ligne sans liaison ;
+ *  - `PATCH /api/admin/licenses/[id]` accepte `hwid: null` explicitement.
+ *
+ * Dans ces deux cas, un jeton volé — dont la signature le liait pourtant à une
+ * machine précise — s'activait sur n'importe quel poste.
+ */
+describe('GF31-AUD-008 — la liaison matérielle SIGNÉE fait autorité', () => {
+  beforeEach(() => {
+    // Ligne existante SANS liaison, jeton signé AVEC liaison : le cas réel.
+    licenseKey.record = {
+      id: 1, licenseId: 'lid-1', status: 'active', hwid: null,
+      token: 't', expiryAt: new Date(9_999_999_999_000),
+    }
+    verifyMock.payload = { ...basePayload, hwid: BOUND_HWID }
+  })
+
+  it('refuse une machine différente de celle inscrite dans le jeton signé', async () => {
+    const res = await POST(req({ license: 'GF2.x.y.z', hwid: OTHER_HWID }) as never)
+    expect(res.status).toBe(403)
+    expect((await res.json()).code).toBe('HWID_MISMATCH')
+  })
+
+  it('refuse une activation sans identifiant matériel', async () => {
+    const res = await POST(req({ license: 'GF2.x.y.z' }) as never)
+    expect(res.status).toBe(403)
+    expect((await res.json()).code).toBe('HWID_REQUIRED')
+  })
+
+  it('autorise la machine à laquelle le jeton est signé', async () => {
+    const res = await POST(req({ license: 'GF2.x.y.z', hwid: BOUND_HWID }) as never)
+    expect(res.status).toBe(200)
+    expect((await res.json()).ok).toBe(true)
+  })
+
+  it('une licence sans liaison NULLE PART reste activable partout (non-régression)', async () => {
+    verifyMock.payload = { ...basePayload } // aucun hwid signé
+    const res = await POST(req({ license: 'GF2.x.y.z', hwid: OTHER_HWID }) as never)
+    expect(res.status).toBe(200)
   })
 })
 

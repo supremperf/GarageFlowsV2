@@ -1,0 +1,104 @@
+[
+  {
+    "name": "Authenticated browser validation (approved staging only)",
+    "conclusion": "failure",
+    "id": 117694853168,
+    "steps": [
+      {
+        "conclusion": "success",
+        "name": "Set up job",
+        "status": "completed"
+      },
+      {
+        "conclusion": "failure",
+        "name": "Require explicitly approved non-production test target and fixtures",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "name": "Run npm install --global npm@11.16.0",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "name": "Run npm ci",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "name": "Run npx playwright install --with-deps chromium",
+        "status": "completed"
+      },
+      {
+        "conclusion": "skipped",
+        "name": "Run npx playwright test",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "name": "Complete job",
+        "status": "completed"
+      }
+    ],
+    "annotations": [
+      {
+        "title": "",
+        "message": "Process completed with exit code 1.",
+        "path": ".github",
+        "start_line": 39
+      },
+      {
+        "title": "",
+        "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+        "path": ".github",
+        "start_line": 1
+      }
+    ]
+  },
+  {
+    "name": "Required validation",
+    "conclusion": "failure",
+    "id": 117696278701,
+    "steps": [
+      {
+        "conclusion": "success",
+        "name": "Set up job",
+        "status": "completed"
+      },
+      {
+        "conclusion": "failure",
+        "name": "Refuse failed, cancelled or skipped mandatory jobs",
+        "status": "completed"
+      },
+      {
+        "conclusion": "success",
+        "name": "Complete job",
+        "status": "completed"
+      }
+    ],
+    "annotations": [
+      {
+        "title": "",
+        "message": "Process completed with exit code 1.",
+        "path": ".github",
+        "start_line": 11
+      },
+      {
+        "title": "",
+        "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\"",
+        "path": ".github",
+        "start_line": 1
+      }
+    ]
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "ok": false,
+  "status": "ACCESS_OR_QUERY_UNAVAILABLE",
+  "repository": "supremperf/GarageFlowsV2",
+  "count": null,
+  "httpStatus": "403",
+  "missionComplete": false,
+  "message": "No zero inferred. Restore GitHub security read permission or provide an authorized export. No credential or API error body printed."
+}

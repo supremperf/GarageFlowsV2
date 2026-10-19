@@ -1,0 +1,522 @@
+[
+  {
+    "id": "FUP-20261014-001",
+    "requirement": "B1 \u2014 Installation normale et natifs reproductibles",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "previousStatus": "PARTIELLEMENT VALID\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-001",
+    "previousAssessment": "Local engines absent/TLS blocked. Current remote npm ci and two Prisma generations succeed, per job metadata; no artifact/checksum inventory retrieved.",
+    "currentAssessment": "CLI/client/engines package 5.22.0 and generated engine commit agree; official local requests reset before TLS, no native artifact/checksum loaded. Remote 4989 normal install/generation succeeds, scoped to that SHA.",
+    "currentProof": [
+      "prisma-network.json",
+      "prisma-compatibility.json",
+      "evidence/prisma-generate.log",
+      "ci-job-details.json"
+    ],
+    "requiredProof": "Autoriser cha\u00eene de t\u00e9l\u00e9chargement officielle compl\u00e8te et int\u00e9grit\u00e9 ; refaire npm ci normal puis les deux prisma generate. Les changements post\u00e9rieurs test/docs/CI ne constituent pas une seconde installation normale valid\u00e9e.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-002",
+    "requirement": "B2 \u2014 Suite Vitest enti\u00e8re sans \u00e9chec ni non-ex\u00e9cution critique",
+    "priority": "P0",
+    "status": "\u00c9CHOU\u00c9",
+    "previousStatus": "\u00c9CHOU\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-002",
+    "previousAssessment": "Fresh local full suite3829/2982pass/3fail/844skips/4errors. Remote646 tests job fails after successful native setup; do NOT attribute that remote failure to local TLS without logs.",
+    "currentAssessment": "Final local dual-reporter run: 3841 cases, 2994 pass/3 fail/844 skips/4 global errors. Remote 4989 test job succeeds, but earlier 646 failure is traced to cost substring in generated garageId; deterministic fixture correction retains all assertions and is not yet validated with native Prisma.",
+    "currentProof": [
+      "tests-summary.json",
+      "tests-failed.jsonl",
+      "tests-global-errors.json",
+      "fixture-correction.json",
+      "ci-assertion-analysis.json",
+      "evidence/invoice-authz-isolated.json"
+    ],
+    "requiredProof": "Rejouer les 3 cas et les 77 fichiers apr\u00e8s installation des vrais moteurs ; diagnostiquer les \u00e9checs m\u00e9tier \u00e9ventuellement r\u00e9v\u00e9l\u00e9s, sans supposer que le r\u00e9seau explique tout comportement futur.",
+    "dependencies": [
+      "FUP-20261014-001",
+      "FUP-20261014-007",
+      "FUP-20261014-013",
+      "FUP-20261014-017"
+    ],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-003",
+    "requirement": "B3 \u2014 Chromium officiel et E2E r\u00e9els",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "previousStatus": "PARTIELLEMENT VALID\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-003",
+    "previousAssessment": "Historical local Chromium absent. Remote387/258 public E2E fail,646 public E2E succeeds. Case-level logs unavailable; authenticated E2E remains skipped.",
+    "currentAssessment": "Remote 4989 responsive E2E succeeds; authenticated guard fails before browser test; no authenticated or packaged browser validation on changed candidate.",
+    "currentProof": [
+      "ci-job-details.json",
+      "external-access.json"
+    ],
+    "requiredProof": "Installer Chromium et d\u00e9pendances depuis sources officielles v\u00e9rifi\u00e9es, rejouer le harness puis les parcours authentifi\u00e9s isol\u00e9s. Aucun rendu fonctionnel n\u2019est valid\u00e9.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-004",
+    "requirement": "B4 \u2014 Budget JS inchang\u00e9",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "previousStatus": "PARTIELLEMENT VALID\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-004",
+    "previousAssessment": "UI lossless optimization retained and tested; fixed budget 3625984 unchanged. Previous diagnostic 3609457 is NOT a current standard production build, especially after source edits.",
+    "currentAssessment": "Budget remains 3625984 total / 524288 chunk. Remote 4989 build and official budget step succeed. Local standard build cannot reach Next. Pre-existing 12:42 output without BUILD_ID fails a diagnostic budget measurement and is not bound to current candidate.",
+    "currentProof": [
+      "ci-job-details.json",
+      "evidence/standard-build-candidate.log",
+      "stale-build-provenance.json",
+      "evidence/budget-diagnostic.log"
+    ],
+    "requiredProof": "R\u00e9solution born\u00e9e \u00e0 la mesure comparative r\u00e9elle. Les deux builds Next directs contiennent une erreur Prisma malgr\u00e9 exit0 ; standard build/dist toujours non valid\u00e9s. Le serveur dev E2E a ensuite r\u00e9utilis\u00e9 .next : refaire une mesure sur build standard neuf avant livraison.",
+    "dependencies": [
+      "FUP-20261014-018"
+    ],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-005",
+    "requirement": "B5 \u2014 Revue s\u00e9mantique exhaustive et durable par fichier",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "previousStatus": "PARTIELLEMENT VALID\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-005",
+    "previousAssessment": "1250 distinct applicable files:69 full source reviews,13 partial,1168 pending; no functional/exhaustive claim.",
+    "currentAssessment": "1250 files: 72 bounded completed semantic reviews, 43 partial, 1135 pending. 85 full-text reads include 13 partial assessments. Found/fixed inherited role-name exceptions; other backup/auth boundaries remain open.",
+    "currentProof": [
+      "review-progress-final.json",
+      "review-ledger-final.jsonl",
+      "manual-review-notes-final.json",
+      "evidence/authz-before.json",
+      "evidence/authz-after.json"
+    ],
+    "requiredProof": "Continuer P0 puis P1/P2, contr\u00f4ler le SHA avant reprise et relire si changement. Full source reading ne vaut pas validation fonctionnelle ou absence de d\u00e9fauts.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-006",
+    "requirement": "Paquet Prisma sans DB locale/client ni reset destructeur",
+    "priority": "P0",
+    "status": "R\u00c9SOLU",
+    "previousStatus": "R\u00c9SOLU",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-006",
+    "previousAssessment": "Bounded package/template/no-reset regressions retained and passed. Native packaged artifact still open separately.",
+    "currentAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Bounded package/template/no-reset regressions retained and passed. Native packaged artifact still open separately.",
+    "currentProof": [
+      "../investigation-2026-10-14/../evidence/release-safety-final.log"
+    ],
+    "requiredProof": "Ne certifie pas le paquet Windows complet ou les autres copies g\u00e9n\u00e9riques ; voir 013/018/019.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-007",
+    "requirement": "Authenticit\u00e9 ind\u00e9pendante de l\u2019autorit\u00e9 de licence",
+    "priority": "P0",
+    "status": "BLOQU\u00c9",
+    "previousStatus": "BLOQU\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-007",
+    "previousAssessment": "Previous scoped finding remains open; source/evidence integrity retained, no independent official issuer proof.",
+    "currentAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Previous scoped finding remains open; source/evidence integrity retained, no independent official issuer proof.",
+    "currentProof": [
+      "../investigation-2026-10-14/../../followup-2026-10-14/ISSUE-MATRIX.md"
+    ],
+    "requiredProof": "Sur poste autoris\u00e9, attester empreinte/cl\u00e9 publique externe et ex\u00e9cuter cas n\u00e9cessitant signature/jeton sans copier la cl\u00e9 priv\u00e9e dans CI/chat/d\u00e9p\u00f4t. Aucune rotation effectu\u00e9e.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-008",
+    "requirement": "CI effectivement obligatoire",
+    "priority": "P0",
+    "status": "\u00c9CHOU\u00c9",
+    "previousStatus": "PARTIELLEMENT VALID\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-008",
+    "previousAssessment": "Actual Required validation refuses failed tests on646. Protection API403; mandatory branch protections still not attested.",
+    "currentAssessment": "Required validation fails on 4989 because authenticated and Windows jobs fail. Guard preserves mandatory requirements. Effective rules endpoint returns [] but classic branch/main protection returns 403; actual server-enforced required checks unverified. No remote CI exists for unpublished local patch.",
+    "currentProof": [
+      "ci-job-details.json",
+      "external-access.json",
+      "candidate-source.json"
+    ],
+    "requiredProof": "Apr\u00e8s autorisation de publication de la branche : ex\u00e9cuter la CI, configurer/attester la protection exigeant Required validation et examiner les logs. Aucun r\u00e9glage distant modifi\u00e9.",
+    "dependencies": [
+      "FUP-20261014-001",
+      "FUP-20261014-002",
+      "FUP-20261014-003",
+      "FUP-20261014-009",
+      "FUP-20261014-013",
+      "FUP-20261014-014",
+      "FUP-20261014-015",
+      "FUP-20261014-016",
+      "FUP-20261014-017",
+      "FUP-20261014-018"
+    ],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-009",
+    "requirement": "Scan de secrets officiel complet",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "previousStatus": "VALID\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-009",
+    "previousAssessment": "Four258 findings classified: one invalid fixture, three public OAuth client IDs. Exact fingerprint exceptions hash/header guarded; official646 scan inventory0/exit0. Scope current tree only, not Git history or production closure.",
+    "currentAssessment": "Remote 4989 current-tree scan has actual findings=0/scannerExit=0; no Git-history assertion. Local official cached files are empty, so no verified scanner execution exists on changed working tree. Historical 4989 criterion remains VALID\u00c9 only for its SHA.",
+    "currentProof": [
+      "ci-annotations.json",
+      "ci-job-details.json",
+      "local-gitleaks-prerequisite.json"
+    ],
+    "requiredProof": "R\u00e9cup\u00e9rer binaire et checksum officiels avec TLS/int\u00e9grit\u00e9, ex\u00e9cuter gitleaks dir avec redaction et traiter chaque r\u00e9sultat. Ne pas d\u00e9duire z\u00e9ro secret du seul YAML.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-010",
+    "requirement": "Bootstrap ne supprimant jamais une DB historique distincte",
+    "priority": "P0",
+    "status": "R\u00c9SOLU",
+    "previousStatus": "R\u00c9SOLU",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-010",
+    "previousAssessment": "Legacy preservation regression retained and passed, owned real fixtures only.",
+    "currentAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Legacy preservation regression retained and passed, owned real fixtures only.",
+    "currentProof": [
+      "../investigation-2026-10-14/../evidence/release-safety-final.log"
+    ],
+    "requiredProof": "R\u00e9conciliation de doublons laiss\u00e9e \u00e0 une inspection autoris\u00e9e, jamais effectu\u00e9e automatiquement.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-011",
+    "requirement": "D\u00e9sabonnement IPC isol\u00e9 par composant",
+    "priority": "P1",
+    "status": "R\u00c9SOLU",
+    "previousStatus": "R\u00c9SOLU",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-011",
+    "previousAssessment": "All nine unsubscribe regressions retained and passed; real Electron runtime remains open.",
+    "currentAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. All nine unsubscribe regressions retained and passed; real Electron runtime remains open.",
+    "currentProof": [
+      "../investigation-2026-10-14/../evidence/release-safety-final.log"
+    ],
+    "requiredProof": "Preuve unitaire du bridge en VM/EventEmitter ; fum\u00e9e Electron native encore requise en018.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-012",
+    "requirement": "Sept tests keygen ne doivent pas r\u00e9ussir sans assertions",
+    "priority": "P0",
+    "status": "R\u00c9SOLU",
+    "previousStatus": "R\u00c9SOLU",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-012",
+    "previousAssessment": "Actual isolated Python keygen cases execute in final suite; no assertion-free pass reintroduced. Not official issuer attestation.",
+    "currentAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Actual isolated Python keygen cases execute in final suite; no assertion-free pass reintroduced. Not official issuer attestation.",
+    "currentProof": [
+      "../investigation-2026-10-14/../evidence/vitest-final.json"
+    ],
+    "requiredProof": "Cl\u00e9 publique \u00e9ph\u00e9m\u00e8re inject\u00e9e dans le v\u00e9rificateur pour cette preuve cross-language ; l\u2019autorit\u00e9 r\u00e9elle demeure007. Provisionnement Python3.12 en CI configur\u00e9, pas ex\u00e9cut\u00e9.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-013",
+    "requirement": "Test d\u2019int\u00e9grit\u00e9 r\u00e9el non vert sans paquet",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "previousStatus": "PARTIELLEMENT VALID\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-013",
+    "previousAssessment": "Real artifact case remains intentionally unvalidated locally; required-mode absence is still fail-closed in prior negative proof.",
+    "currentAssessment": "Windows package failed at npm run dist; integrity/artifact checks skipped. No actual packaged resources or runtime certified. Existing fail-closed artifact test unchanged.",
+    "currentProof": [
+      "ci-job-details.json"
+    ],
+    "requiredProof": "Preuve positive sur resources r\u00e9els et inspection binaire non ex\u00e9cut\u00e9es puisque dist est bloqu\u00e9. Le skip suppl\u00e9mentaire explique 844 contre843 ant\u00e9rieurs.",
+    "dependencies": [
+      "FUP-20261014-018"
+    ],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-014",
+    "requirement": "Z\u00e9ro vuln\u00e9rabilit\u00e9 npm \u00e0 tous niveaux",
+    "priority": "P0",
+    "status": "VALID\u00c9",
+    "previousStatus": "VALID\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-014",
+    "previousAssessment": "Fresh current npm audit0. Independent main lockfile audit50 distinct from151 unexported Dependabot alerts; no main integration.",
+    "currentAssessment": "Fresh strict npm audit returns LOW=0 MODERATE=0 HIGH=0 CRITICAL=0 TOTAL=0; manifests/lockfile unchanged. Branch dependency-audit criterion only, not main alerts or universal supply-chain/native assurance.",
+    "currentProof": [
+      "evidence/audit-strict.log",
+      "evidence/release-safety.log"
+    ],
+    "requiredProof": "R\u00e9sultat scanner dat\u00e9, pas garantie universelle. Fork braces n\u00e9cessite suivi explicite de l\u2019advisory upstream ; natifs et compatibilit\u00e9 SMTP ne sont pas valid\u00e9s par npm audit.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-015",
+    "requirement": "SAST/CodeQL et blocage r\u00e9el des alertes",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "previousStatus": "PARTIELLEMENT VALID\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-015",
+    "previousAssessment": "Fresh996/996 targets,865 raw signals/845 exact-range groups/20 duplicate occurrences retained;17 scoped triages/848pending,15parser gaps. No rule disabled.",
+    "currentAssessment": "Final strict Semgrep 1.180.0: 996 selected, 865 raw/845 exact groups/20 aliases, all historical IDs retained, 0 parser errors after equivalent type aliases. 27 per-occurrence triages (13 VALID\u00c9,14 partial),838 pending. Scan exit 1, no global security pass.",
+    "currentProof": [
+      "sast-summary-final.json",
+      "sast-findings-final.jsonl",
+      "sast-location-groups-final.json",
+      "sast-triage-final.jsonl",
+      "parser-gaps-final.json",
+      "parser-refactor.json"
+    ],
+    "requiredProof": "Obtenir permissions de lecture n\u00e9cessaires, ex\u00e9cuter CodeQL, traiter alertes et v\u00e9rifier politique bloquant les niveaux requis. Ne pas confondre succ\u00e8s de publication SARIF et z\u00e9ro alerte.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-016",
+    "requirement": "Parcours navigateur authentifi\u00e9s sans test de production",
+    "priority": "P0",
+    "status": "BLOQU\u00c9",
+    "previousStatus": "BLOQU\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-016",
+    "previousAssessment": "No approved authenticated isolated staging fixtures. No contact with production. Discovery alone is not auth E2E execution.",
+    "currentAssessment": "4989 authenticated job fails prerequisite guard; Playwright step skipped. Exact missing input/approval not inferable from generic annotation and inaccessible logs. Approved HTTPS non-production target, test identity/license and approval still required; never production.",
+    "currentProof": [
+      "ci-job-details.json",
+      "ci-log-access.json"
+    ],
+    "requiredProof": "Configurer apr\u00e8s autorisation environnement prot\u00e9g\u00e9 et fixtures synth\u00e9tiques sur backend r\u00e9ellement isol\u00e9. Le bool\u00e9en E2E_NON_PRODUCTION ne prouve pas l\u2019isolation du backend. Certaines specs simulent des API : ne pas y voir preuve transactionnelle int\u00e9grale.",
+    "dependencies": [
+      "FUP-20261014-003",
+      "FUP-20261014-007",
+      "FUP-20261014-017"
+    ],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-017",
+    "requirement": "PostgreSQL/Redis r\u00e9els isol\u00e9s",
+    "priority": "P0",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "previousStatus": "PARTIELLEMENT VALID\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-017",
+    "previousAssessment": "Redis 8.10.2 compiled from official source, isolated loopback instance, 5/5 real cases passed and service stopped. PostgreSQL absent; CI Redis 7 and managed Upstash not attested. Remote CI c53d8e5 job metadata shows relevant test/E2E job success; detailed counts/artifacts inaccessible. Local failures/status retained, no inherited full closure.",
+    "currentAssessment": "Five real isolated Redis8.10.2 tests pass again; binary hash matches prior official-source build, server stopped. Not managed Upstash/CI Redis7 or local PostgreSQL validation; final full suite still records five Redis skips.",
+    "currentProof": [
+      "evidence/redis-real.json",
+      "redis-runtime.json",
+      "tests-summary.json",
+      "ci-job-details.json"
+    ],
+    "requiredProof": "Provisionner services jetables avec droits minimaux n\u00e9cessaires aux tests ; lancer migrations vides puis tests multi-instance, conserver r\u00e9sultats r\u00e9els.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-018",
+    "requirement": "Build/dist/compatibilit\u00e9 native et services externes",
+    "priority": "P0",
+    "status": "\u00c9CHOU\u00c9",
+    "previousStatus": "BLOQU\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-018",
+    "previousAssessment": "Standard build/dist still depend on unavailable official Prisma/Electron binaries. No production budget, Windows package/runtime or external provider validation.",
+    "currentAssessment": "4989 Linux build succeeds but Windows npm run dist fails. Its budget/artifact inspections skipped; detailed logs download fails EOF. New local official build still exits1 before Next at Prisma checksum request. No Windows candidate runtime certified.",
+    "currentProof": [
+      "ci-job-details.json",
+      "ci-log-access.json",
+      "evidence/standard-build-candidate.log"
+    ],
+    "requiredProof": "Apr\u00e8s001 : build/dist Windows, inspecter secrets/fuses/int\u00e9grit\u00e9/manifeste/DB puis lancement/sauvegarde/migrations/proxy/MAJ. Recettes SMTP/IA/licences/configuration fournisseurs seulement avec acc\u00e8s autoris\u00e9 non productif.",
+    "dependencies": [
+      "FUP-20261014-001",
+      "FUP-20261014-006",
+      "FUP-20261014-007",
+      "FUP-20261014-013",
+      "FUP-20261014-014"
+    ],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-019",
+    "requirement": "Copie Prisma ne suivant pas les jonctions de sortie/source",
+    "priority": "P0",
+    "status": "R\u00c9SOLU",
+    "previousStatus": "R\u00c9SOLU",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-019",
+    "previousAssessment": "Scoped link/junction packaging guards retained with 7 passing filesystem tests. Concurrent hostile directory mutation remains separate limitation.",
+    "currentAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Scoped link/junction packaging guards retained with 7 passing filesystem tests. Concurrent hostile directory mutation remains separate limitation.",
+    "currentProof": [
+      "../investigation-2026-10-14/../evidence/release-safety-final.log"
+    ],
+    "requiredProof": "Pas de garantie atomique contre un utilisateur hostile modifiant le filesystem simultan\u00e9ment ; le workspace de build doit rester contr\u00f4l\u00e9.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-020",
+    "requirement": "\u00c9viter les exclusions int\u00e9grales des sources de s\u00e9curit\u00e9",
+    "priority": "P1",
+    "status": "PARTIELLEMENT VALID\u00c9",
+    "previousStatus": "PARTIELLEMENT VALID\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-020",
+    "previousAssessment": "Default rules and source guards retained; three exact immutable public-header exceptions, no whole new file exemption. Actual646 Gitleaks0, wider security criteria open.",
+    "currentAssessment": "No rules/exclusions disabled. Fifteen parser errors resolved with type-preserving aliases; explicit JS/TS/Python scope still excludes unsupported languages, which require other analysis/manual review.",
+    "currentProof": [
+      "parser-refactor.json",
+      "parser-gaps-final.json",
+      "semgrep-targets-final.json",
+      "semgrep-exact-command-final.json"
+    ],
+    "requiredProof": "Ex\u00e9cuter scanner r\u00e9el et traiter chaque alerte sans r\u00e9introduire d\u2019exclusion globale. Exemptions r\u00e9siduelles fixtures/doc restent explicites, pas certification z\u00e9ro secret.",
+    "dependencies": [
+      "FUP-20261014-009"
+    ],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-021",
+    "requirement": "Politique d\u2019autorisation des appelants IPC Electron",
+    "priority": "P1",
+    "status": "EN ATTENTE DE REVUE",
+    "previousStatus": "EN ATTENTE DE REVUE",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-021",
+    "previousAssessment": "Main IPC boundary remains partial. Additional lifecycle/license callers reviewed, no full senderFrame/role policy closure.",
+    "currentAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. Main IPC boundary remains partial. Additional lifecycle/license callers reviewed, no full senderFrame/role policy closure.",
+    "currentProof": [
+      "../investigation-2026-10-14/../review-ledger.jsonl"
+    ],
+    "requiredProof": "Revoir tous producteurs/consommateurs, fen\u00eatres licence/repli et frames ; d\u00e9finir politique de confiance, ajouter tests refus/acceptation puis valider sous Electron r\u00e9el.",
+    "dependencies": [
+      "FUP-20261014-005",
+      "FUP-20261014-001"
+    ],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-022",
+    "requirement": "Backup collision, stale annexes and overbroad retention",
+    "priority": "P0",
+    "status": "R\u00c9SOLU",
+    "previousStatus": "R\u00c9SOLU",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-022",
+    "previousAssessment": "Bounded exclusive sequence allocation including orphan annexes; exact generated-name filter; chronological numeric ordering; all three annexes retained/rotated. Literal NUL escaped with runtime-value equivalence proof.",
+    "currentAssessment": "Previous bounded pre-migration backup correction unchanged; ten real SQLite/FS regression tests pass again. Does not close distinct internal-backup route ownership/race risks.",
+    "currentProof": [
+      "evidence/backup-regression.log",
+      "manual-review-notes-final.json"
+    ],
+    "requiredProof": "Targeted root-cause and regression proof, then native/functional closure in approved environment.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-023",
+    "requirement": "Quoted and environment-prefixed secrets leaked in logging/crash sinks",
+    "priority": "P1",
+    "status": "R\u00c9SOLU",
+    "previousStatus": "R\u00c9SOLU",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-023",
+    "previousAssessment": "Both text sinks preserve separators/quotes and redact quoted/escaped/truncated values; recursive server key detection extended. No business payload modified.",
+    "currentAssessment": "Quoted/prefixed masking correction unchanged;33 dedicated cases plus existing crash/redaction cases pass again within122-case preserved suite.",
+    "currentProof": [
+      "evidence/preserved-corrections.json"
+    ],
+    "requiredProof": "Targeted root-cause and regression proof, then native/functional closure in approved environment.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-024",
+    "requirement": "Four GCM decryptors accepted shortened authentication tags",
+    "priority": "P1",
+    "status": "R\u00c9SOLU",
+    "previousStatus": "R\u00c9SOLU",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-024",
+    "previousAssessment": "Force authTagLength:16 only in backup, SMTP, e-invoice and SMTP migration decryptors. Genuine 16-byte data and legacy/rotation behavior retained; no migration or key rotation run.",
+    "currentAssessment": "Four corrected GCM decryptors unchanged;54 dedicated tag cases pass, with65 total tag/cipher cases inside122 composite regressions. Historical94/94 was an aggregate targeted run, not94 dedicated new GCM cases.",
+    "currentProof": [
+      "evidence/preserved-corrections.json"
+    ],
+    "requiredProof": "Targeted root-cause and regression proof, then native/functional closure in approved environment.",
+    "dependencies": [],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-025",
+    "requirement": "Offline grace anchored to recreatable database birthtime",
+    "priority": "P0",
+    "status": "BLOQU\u00c9",
+    "previousStatus": "BLOQU\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-025",
+    "previousAssessment": "No silent licensing behavior change. Recorded failing counterexample: simulated 200h-old origin locks, actual fresh copied DB origin permits, equal bytes/SQL marker. Requires approved durable anchor/new-install/restore policy.",
+    "currentAssessment": "Historical bounded assessment retained for unchanged affected source; no broader release closure inferred. No silent licensing behavior change. Recorded failing counterexample: simulated 200h-old origin locks, actual fresh copied DB origin permits, equal bytes/SQL marker. Requires approved durable anchor/new-install/restore policy.",
+    "currentProof": [
+      "../investigation-2026-10-14/../evidence/grace-anchor-counterexample.json",
+      "../investigation-2026-10-14/../evidence/grace-counterexample.log"
+    ],
+    "requiredProof": "Targeted root-cause and regression proof, then native/functional closure in approved environment.",
+    "dependencies": [
+      "FUP-20261014-007"
+    ],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  },
+  {
+    "id": "FUP-20261014-026",
+    "requirement": "Default branch Dependabot vulnerabilities distinct from session npm audit",
+    "priority": "P0",
+    "status": "BLOQU\u00c9",
+    "previousStatus": "BLOQU\u00c9",
+    "historicalRecord": "../investigation-2026-10-14/issue-matrix.json#FUP-20261014-026",
+    "previousAssessment": "Dependabot read403 persists. Read-only main e3ac5f5 manifests compared:390lock entries/14direct declaration differences; snapshot npm audit50 (2critical34high13moderate1low). Not151 alerts or installed main version attestation.",
+    "currentAssessment": "Dependabot REST still403 Resource not accessible by integration. Historical151 notifications/two critical not currently individually exportable; no package, affected/fixed version or present total inferred. Branch npm0 does not resolve main.",
+    "currentProof": [
+      "external-access.json",
+      "evidence/audit-strict.log"
+    ],
+    "requiredProof": "Authorized read-only main alert inventory, component/root-cause comparison, regression and full audit after separately authorized integration.",
+    "dependencies": [
+      "FUP-20261014-014",
+      "FUP-20261014-008"
+    ],
+    "releaseClosed": false,
+    "scope": "Latest local candidate unless explicitly labelled remote4989/historical; R\u00c9SOLU/VALID\u00c9 are bounded individual criteria, not production authorization."
+  }
+]

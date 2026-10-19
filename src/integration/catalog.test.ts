@@ -7,9 +7,9 @@
  * Read-only: seed once, only the session changes.
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { execSync } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs'
+import { prepareTestDb } from '../test-utils/prepare-test-db'
 
 const DB_PATH = path.resolve(__dirname, '../../.tmp-itest-catalog.db')
 process.env.DATABASE_URL = `file:${DB_PATH}`
@@ -31,8 +31,7 @@ const asB = () => { h.session = { user: { id: 'ub', name: 'B', garageId: garageB
 const ids = (json: any) => json.results.map((r: any) => r.article.id)
 
 beforeAll(async () => {
-  if (fs.existsSync(DB_PATH)) fs.rmSync(DB_PATH)
-  execSync('npx prisma db push --skip-generate --accept-data-loss', { cwd: path.resolve(__dirname, '../..'), env: { ...process.env, DATABASE_URL: `file:${DB_PATH}` }, stdio: 'ignore' })
+  prepareTestDb(DB_PATH)
   ;({ prisma } = await import('@/lib/db'))
   ;({ GET } = await import('@/app/api/catalog/route') as any)
 

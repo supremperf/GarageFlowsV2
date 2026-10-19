@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withPortalAuth } from '@/lib/portal/auth-helpers'
 import { verifyTotp } from '@/lib/portal/totp'
+import { lireSecretTotp } from '@/lib/portal/totp-storage'
 import { generateBackupCodes } from '@/lib/portal/backup-codes'
 
 export const POST = withPortalAuth(async (req, { user }) => {
@@ -20,7 +21,10 @@ export const POST = withPortalAuth(async (req, { user }) => {
   try { body = (await req.json()) as Record<string, unknown> } catch { return NextResponse.json({ error: 'Corps invalide' }, { status: 400 }) }
   const token = typeof body.token === 'string' ? body.token : ''
 
-  if (!verifyTotp(token, user.twoFactorPending)) {
+  // Le secret est stocké CHIFFRÉ (GF-DUR-022) : il faut le relire avant de
+  // vérifier le code. Une valeur héritée en clair reste rendue telle quelle.
+  const secretEnAttente = lireSecretTotp(user.twoFactorPending)
+  if (!secretEnAttente || !verifyTotp(token, secretEnAttente)) {
     return NextResponse.json({ error: 'Code invalide' }, { status: 401 })
   }
 

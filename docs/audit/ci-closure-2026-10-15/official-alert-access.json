@@ -1,0 +1,43 @@
+{
+  "at": "2026-10-15T17:20:18.908940+02:00",
+  "head": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+  "rows": [
+    {
+      "service": "CodeQL",
+      "officialEndpoint": "repos/supremperf/GarageFlowsV2/code-scanning/alerts?state=open&per_page=100",
+      "command": [
+        "gh",
+        "api",
+        "--include",
+        "repos/supremperf/GarageFlowsV2/code-scanning/alerts?state=open&per_page=100"
+      ],
+      "exitCode": 1,
+      "httpStatus": 403,
+      "inventoryAccessible": false,
+      "officialAlertNumbersAvailable": false,
+      "alertCount": null,
+      "severityCounts": null,
+      "status": "BLOCKED_HTTP_403_NOT_ZERO",
+      "required": "Official administrator export or approved security-alert API access; do not send credentials in chat."
+    },
+    {
+      "service": "Dependabot",
+      "officialEndpoint": "repos/supremperf/GarageFlowsV2/dependabot/alerts?state=open&per_page=100",
+      "command": [
+        "gh",
+        "api",
+        "--include",
+        "repos/supremperf/GarageFlowsV2/dependabot/alerts?state=open&per_page=100"
+      ],
+      "exitCode": 1,
+      "httpStatus": 403,
+      "inventoryAccessible": false,
+      "officialAlertNumbersAvailable": false,
+      "alertCount": null,
+      "severityCounts": null,
+      "status": "BLOCKED_HTTP_403_NOT_ZERO",
+      "required": "Official administrator export or approved security-alert API access; do not send credentials in chat."
+    }
+  ],
+  "limits": "403 does not establish absence or resolution. npm audit zero is independent. Private responses/headers not published. No suppression, dismissal, rotation or change of permissions performed."
+}

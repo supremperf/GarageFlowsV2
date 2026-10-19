@@ -7,9 +7,13 @@ import {
   ChevronDown, ChevronRight, ZoomIn,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { reduirePhoto } from '@/lib/photo-client'
+import { groupPendingUpdates, pendingKeysForItem } from '@/lib/inspection-autosave'
 import toast from 'react-hot-toast'
 import { useTranslation } from '@/lib/i18n'
 import { inspectionCategoryLabel } from '@/lib/i18n/labels'
+import { InspectionPrintDocument, type PrintGarage } from '@/components/inspection/InspectionPrintDocument'
+import { renderElementToA4Pdf, PRINT_HOST_STYLE } from '@/lib/pdf/render-a4'
 
 interface InspectionItem {
   id: string
@@ -65,6 +69,17 @@ const CATEGORY_CONFIG: Record<string, { label: string; icon: string; color: stri
   filters:    { label: 'Filtres',          icon: '🌀', color: 'bg-teal-50 border-teal-200' },
 }
 
+/**
+ * Champ de saisie de la modale — la modale est une SURFACE CLAIRE (`bg-white`,
+ * cf. `.gf-surface-light` dans globals.css) : le texte saisi doit rester sombre
+ * quel que soit le thème de l'application. La couleur vient des variables
+ * `--input-text` / `--input-placeholder` héritées de la surface ; les classes
+ * ci-dessous fixent la géométrie et documentent l'intention.
+ */
+const INSP_INPUT =
+  'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 ' +
+  'placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-300'
+
 const STATUS_CONFIG = {
   ok:       { label: 'OK',       icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-50 border-emerald-200', dot: 'bg-emerald-500' },
   warning:  { label: 'Attention',icon: AlertTriangle,color: 'text-amber-600 bg-amber-50 border-amber-200',    dot: 'bg-amber-500' },
@@ -91,28 +106,8 @@ function ItemRow({
     if (!file) return
     setUploading(true)
     try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = ev => {
-          const img = new Image()
-          img.onload = () => {
-            const canvas = document.createElement('canvas')
-            const MAX = 600
-            let { width, height } = img
-            if (width > MAX || height > MAX) {
-              if (width > height) { height = Math.round(height * MAX / width); width = MAX }
-              else { width = Math.round(width * MAX / height); height = MAX }
-            }
-            canvas.width = width; canvas.height = height
-            canvas.getContext('2d')?.drawImage(img, 0, 0, width, height)
-            resolve(canvas.toDataURL('image/jpeg', 0.8))
-          }
-          img.onerror = reject
-          img.src = ev.target?.result as string
-        }
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
+      // Réduction par le module partagé (GF-038) — vignette de contrôle : 600 px.
+      const base64 = await reduirePhoto(file, { coteMax: 600, qualite: 0.8 })
       onUpdate(item.id, 'photoBase64', base64)
     } finally {
       setUploading(false)
@@ -145,7 +140,7 @@ function ItemRow({
           value={item.notes ?? ''}
           onChange={e => onUpdate(item.id, 'notes', e.target.value)}
           placeholder={t.insObservationPh}
-          className="mt-1 w-full text-xs border-0 bg-transparent text-gray-500 placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-300 rounded px-1"
+          className="mt-1 w-full text-xs border-0 bg-transparent text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-300 rounded px-1"
         />
       </div>
 
@@ -207,45 +202,122 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
   const [saving, setSaving] = useState(false)
   const [printing, setPrinting] = useState(false)
   const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set())
+  const [garage, setGarage] = useState<PrintGarage | null>(null)
   const pendingUpdates = useRef<Map<string, string | null>>(new Map())
   const saveTimer = useRef<NodeJS.Timeout | null>(null)
+  /** Nœud du document d'impression, rendu hors écran (jamais l'interface). */
+  const printRef = useRef<HTMLDivElement>(null)
+
+  // En-tête du PDF : sans ces informations le document ne ressemble pas à une
+  // pièce de garage. Chargé une fois, sans bloquer l'ouverture de la modale.
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/garages')
+      .then(r => r.ok ? r.json() : null)
+      .then((g) => { if (!cancelled && g) setGarage(g) })
+      .catch(() => { /* le PDF reste imprimable sans en-tête */ })
+    return () => { cancelled = true }
+  }, [])
+
+  /** Véhicule réellement rattaché, résolu par le serveur (jamais deviné ici). */
+  const [resolvedVehicleId, setResolvedVehicleId] = useState<string | null>(vehicleId ?? null)
+
+  function applyInspection(d: Inspection) {
+    setInspection(d)
+    setItems(d.items)
+    setForm({
+      clientName: d.clientName,
+      vehicleModel: d.vehicleModel ?? '',
+      licensePlate: d.licensePlate ?? '',
+      mileage: d.mileage?.toString() ?? '',
+      notes: d.notes ?? '',
+    })
+  }
 
   useEffect(() => {
     if (inspectionId) {
       fetch(`/api/inspections/${inspectionId}`)
         .then(r => r.ok ? r.json() : null)
-        .then((d: Inspection | null) => {
-          if (!d) return
-          setInspection(d)
-          setItems(d.items)
-          setForm({
-            clientName: d.clientName,
-            vehicleModel: d.vehicleModel ?? '',
-            licensePlate: d.licensePlate ?? '',
-            mileage: d.mileage?.toString() ?? '',
-            notes: d.notes ?? '',
-          })
-        })
+        .then((d: Inspection | null) => { if (d) applyInspection(d) })
     }
   }, [inspectionId])
 
-  // Debounced auto-save of item updates
-  const flushItemUpdates = useCallback(async (id: string) => {
+  // Ouverture depuis une intervention / un véhicule : on REPREND le contrôle en
+  // cours s'il existe (rouvrir la modale créait sinon un doublon et perdait la
+  // saisie), sinon on préremplit depuis les RELATIONS RÉELLES résolues côté
+  // serveur — et non depuis les seuls libellés recopiés en props.
+  useEffect(() => {
+    if (inspectionId) return
+    if (!jobId && !vehicleId) return
+    let cancelled = false
+    const qs = new URLSearchParams()
+    if (jobId) qs.set('jobId', jobId)
+    if (vehicleId) qs.set('vehicleId', vehicleId)
+
+    ;(async () => {
+      try {
+        const existingRes = await fetch(`/api/inspections?${qs.toString()}`)
+        const existing: Inspection[] = existingRes.ok ? await existingRes.json() : []
+        const draft = Array.isArray(existing) ? existing.find(i => i.status === 'draft') : undefined
+        if (cancelled) return
+        if (draft) { applyInspection(draft); return }
+
+        const ctxRes = await fetch(`/api/inspections/prefill?${qs.toString()}`)
+        if (!ctxRes.ok || cancelled) return
+        const ctx = await ctxRes.json() as {
+          vehicleId: string | null; clientName: string
+          vehicleModel: string; licensePlate: string; mileage: number | null
+        }
+        if (cancelled) return
+        setResolvedVehicleId(ctx.vehicleId ?? null)
+        // Les valeurs serveur complètent le formulaire sans écraser une saisie
+        // déjà faite par l'utilisateur.
+        setForm(f => ({
+          ...f,
+          clientName:   f.clientName   || ctx.clientName   || '',
+          vehicleModel: f.vehicleModel || ctx.vehicleModel || '',
+          licensePlate: f.licensePlate || ctx.licensePlate || '',
+          mileage:      f.mileage      || (ctx.mileage != null ? String(ctx.mileage) : ''),
+        }))
+      } catch {
+        /* hors ligne : le préremplissage par props reste affiché */
+      }
+    })()
+
+    return () => { cancelled = true }
+  }, [inspectionId, jobId, vehicleId])
+
+  // Auto-sauvegarde débouncée. On flushe TOUS les items en attente (pas seulement
+  // le dernier édité) : un timer partagé ne ciblant qu'un id orphelinait sinon
+  // les modifications des autres items. Les clés d'un item ne sont retirées
+  // qu'APRÈS envoi réussi (une erreur réseau les conserve pour un re-flush).
+  const flushAll = useCallback(async () => {
     if (!inspection || pendingUpdates.current.size === 0) return
-    const updates: Record<string, string | null> = {}
-    pendingUpdates.current.forEach((val, key) => {
-      if (key.startsWith(id + ':')) updates[key.split(':')[1]] = val
-    })
-    if (Object.keys(updates).length === 0) return
-    await fetch(`/api/inspections/${inspection.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemId: id, ...updates }),
-    })
-    Array.from(pendingUpdates.current.keys()).forEach(key => {
-      if (key.startsWith(id + ':')) pendingUpdates.current.delete(key)
-    })
+    const patches = groupPendingUpdates(pendingUpdates.current)
+    for (const patch of patches) {
+      try {
+        const res = await fetch(`/api/inspections/${inspection.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ itemId: patch.itemId, ...patch.fields }),
+        })
+        if (res.ok) {
+          for (const key of pendingKeysForItem(patch)) pendingUpdates.current.delete(key)
+        }
+      } catch {
+        /* on garde les clés en attente pour un re-flush ultérieur (fermeture) */
+      }
+    }
   }, [inspection])
+
+  // Flush à l'unmount (fermeture de la modale, navigation) — via une ref pour
+  // toujours appeler la dernière version sans re-souscrire le cleanup.
+  const flushRef = useRef(flushAll)
+  flushRef.current = flushAll
+  useEffect(() => () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    void flushRef.current()
+  }, [])
 
   function updateItem(id: string, field: string, value: string | null) {
     setItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } as InspectionItem : item))
@@ -253,9 +325,16 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
     if (inspection) {
       pendingUpdates.current.set(`${id}:${field}`, value)
       if (saveTimer.current) clearTimeout(saveTimer.current)
-      saveTimer.current = setTimeout(() => flushItemUpdates(id), 800)
+      saveTimer.current = setTimeout(() => { void flushAll() }, 800)
     }
   }
+
+  // Fermeture sûre : on flushe les dernières modifications AVANT de fermer.
+  const handleClose = useCallback(async () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    await flushAll()
+    onClose()
+  }, [flushAll, onClose])
 
   async function handleCreate() {
     setSaving(true)
@@ -265,7 +344,9 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           jobId: jobId ?? null,
-          vehicleId: vehicleId ?? null,
+          // Le serveur re-résout de toute façon le rattachement depuis
+          // l'intervention ; on transmet ce qu'il nous a déjà répondu.
+          vehicleId: resolvedVehicleId ?? null,
           clientName: form.clientName,
           vehicleModel: form.vehicleModel || null,
           licensePlate: form.licensePlate || null,
@@ -290,12 +371,9 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
     if (!inspection) return
     setSaving(true)
     try {
-      // Flush any pending item updates first
-    const ids = new Set<string>()
-    pendingUpdates.current.forEach((_, key) => ids.add(key.split(':')[0]))
-    for (const id of Array.from(ids)) {
-        await flushItemUpdates(id)
-      }
+      // Flush toutes les modifications en attente avant de finaliser.
+      if (saveTimer.current) clearTimeout(saveTimer.current)
+      await flushAll()
       const r = await fetch(`/api/inspections/${inspection.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -314,27 +392,17 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
   }
 
   async function handleDownloadPDF() {
-    const el = document.getElementById('inspection-print')
+    // On n'imprime PAS l'interface : un document dédié est rendu hors écran,
+    // en thème clair déterministe, avec l'en-tête garage, l'identification du
+    // véhicule et TOUTES les catégories (même celles repliées à l'écran).
+    const el = printRef.current
     if (!el) return
     setPrinting(true)
     try {
-      const { default: html2canvas } = await import('html2canvas')
-      const { default: jsPDF } = await import('jspdf')
-      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false })
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const pageW = 210, pageH = 297
-      const imgW = pageW - 20
-      const imgH = (canvas.height * imgW) / canvas.width
-      let remaining = imgH, yOffset = 10
-      while (remaining > 0) {
-        const sliceH = Math.min(remaining, pageH - 20)
-        if (yOffset !== 10) pdf.addPage()
-        pdf.addImage(imgData, 'PNG', 10, yOffset, imgW, sliceH)
-        remaining -= sliceH
-        yOffset = 10
-      }
-      pdf.save(`inspection-${form.licensePlate || 'vehicule'}.pdf`)
+      // Rendu A4 mutualisé (lib/pdf/render-a4) : largeur fixe + découpe en
+      // bandes. Contrôle véhicule, devis et facture partagent la même géométrie,
+      // donc le même comportement sur téléphone.
+      await renderElementToA4Pdf(el, { fileName: `controle-${form.licensePlate || 'vehicule'}` })
     } catch {
       toast.error(t.insPdfError)
     } finally {
@@ -350,7 +418,10 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-modal flex flex-col">
+      {/* `gf-surface-light` : déclare explicitement une surface claire — les
+          champs de tout le sous-arbre héritent d'un texte sombre lisible,
+          dans les quatre thèmes (cf. globals.css § Surfaces). */}
+      <div className="gf-surface-light bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-modal flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -381,7 +452,7 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
                 {t.insFinalize}
               </button>
             )}
-            <button onClick={onClose} className="gf-close p-2 hover:bg-gray-100 rounded-lg text-gray-400">
+            <button onClick={() => { void handleClose() }} aria-label="Fermer" title="Fermer" className="gf-close p-2 hover:bg-gray-100 rounded-lg text-gray-400">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -397,22 +468,22 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
                   <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">{t.vmClient} *</label>
                     <input value={form.clientName} onChange={e => setForm(f => ({ ...f, clientName: e.target.value }))}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder={t.lnClientNamePh} />
+                      className={INSP_INPUT} placeholder={t.lnClientNamePh} />
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">{t.jmVehicle}</label>
                     <input value={form.vehicleModel} onChange={e => setForm(f => ({ ...f, vehicleModel: e.target.value }))}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder={t.insMakeModelPh} />
+                      className={INSP_INPUT} placeholder={t.insMakeModelPh} />
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">{t.woPlate}</label>
                     <input value={form.licensePlate} onChange={e => setForm(f => ({ ...f, licensePlate: e.target.value.toUpperCase() }))}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono" placeholder="AB-123-CD" />
+                      className={cn(INSP_INPUT, 'font-mono')} placeholder="AB-123-CD" />
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">{t.vmMileage}</label>
                     <input type="number" value={form.mileage} onChange={e => setForm(f => ({ ...f, mileage: e.target.value }))}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder={t.insMileagePh} />
+                      className={INSP_INPUT} placeholder={t.insMileagePh} />
                   </div>
                 </div>
                 <button
@@ -528,7 +599,7 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
                   value={form.notes}
                   onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                   rows={2}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  className={cn(INSP_INPUT, 'resize-none')}
                   placeholder={t.insGeneralNotesPh}
                 />
               </div>
@@ -536,6 +607,34 @@ export default function InspectionModal({ jobId, vehicleId, prefill, inspectionI
           </div>
         </div>
       </div>
+
+      {/* Document d'impression — rendu HORS ÉCRAN, jamais visible.
+          `left:-10000px` le sort du champ de vision sans le retirer du flux :
+          `display:none` ou `visibility:hidden` donneraient un canevas vide,
+          html2canvas ayant besoin d'un nœud réellement mis en page. */}
+      {inspection && (
+        <div
+          aria-hidden="true"
+          data-gf-print="inspection"
+          style={PRINT_HOST_STYLE}
+        >
+          <div ref={printRef}>
+            <InspectionPrintDocument
+              garage={garage}
+              clientName={form.clientName}
+              vehicleModel={form.vehicleModel}
+              licensePlate={form.licensePlate}
+              mileage={form.mileage}
+              notes={form.notes}
+              items={items}
+              createdAt={inspection.createdAt}
+              categoryLabel={(cat) =>
+                inspectionCategoryLabel(t, cat, CATEGORY_CONFIG[cat]?.label ?? cat)
+              }
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

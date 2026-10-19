@@ -1,5 +1,17 @@
 # Module Premium — Optimisation intelligente des prix
 
+> **MOTEUR NON EXPOSÉ EN HTTP.** La route `/api/pricing` a été **supprimée le
+> 14/08/2026** (GF-DUR-043). Le moteur reste en place : `src/lib/pricing/`,
+> `recommendPrice()`, déterministe et couvert par ses tests.
+>
+> Motif : l'historique complet du dépôt (`git log --all -S`) montre qu'**aucune
+> interface n'a jamais appelé cette route**, à aucun moment. Ce n'était pas « on
+> ne trouve pas d'appelant » mais « il n'y en a jamais eu » — une route
+> authentifiée sans consommateur n'est que de la surface exposée.
+>
+> Le contrat HTTP décrit plus bas est donc **historique**. Le rétablir demande un
+> seul fichier de route ; ce document reste la référence de ce qu'il servirait.
+
 Recommande un **prix conseillé** à partir du coût et d'une **marge cible**, en
 tenant compte du positionnement concurrentiel, de la saison et de la fidélité,
 avec **marge estimée**, **impact ventes** (élasticité) et **simulation de

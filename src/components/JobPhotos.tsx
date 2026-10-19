@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Camera, Trash2, Plus, X, ZoomIn } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { reduirePhoto } from '@/lib/photo-client'
 import toast from 'react-hot-toast'
 
 interface Photo {
@@ -50,30 +51,9 @@ export default function JobPhotos({ jobId }: Props) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Resize to max 800px for storage efficiency
-    const base64 = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = ev => {
-        const img = new Image()
-        img.onload = () => {
-          const canvas = document.createElement('canvas')
-          const MAX = 800
-          let { width, height } = img
-          if (width > MAX || height > MAX) {
-            if (width > height) { height = Math.round(height * MAX / width); width = MAX }
-            else { width = Math.round(width * MAX / height); height = MAX }
-          }
-          canvas.width = width
-          canvas.height = height
-          canvas.getContext('2d')?.drawImage(img, 0, 0, width, height)
-          resolve(canvas.toDataURL('image/jpeg', 0.82))
-        }
-        img.onerror = reject
-        img.src = ev.target?.result as string
-      }
-      reader.onerror = reject
-      reader.readAsDataURL(file)
-    })
+    // Réduction par le module partagé — même passage canvas pour les quatre
+    // écrans qui déposent une photo (GF-038).
+    const base64 = await reduirePhoto(file, { coteMax: 800, qualite: 0.82 })
 
     setUploading(true)
     try {

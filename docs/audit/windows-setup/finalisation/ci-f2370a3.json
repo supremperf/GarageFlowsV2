@@ -1,0 +1,156 @@
+{
+  "push": {
+    "run_id": 39154857220,
+    "jobs": [
+      {
+        "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+        "conclusion": "success",
+        "id": 117755864710,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154857220/job/117755864710"
+      },
+      {
+        "name": "Secret scan (Gitleaks)",
+        "conclusion": "success",
+        "id": 117755864864,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154857220/job/117755864864"
+      },
+      {
+        "name": "Full dependency tree — zero vulnerabilities",
+        "conclusion": "success",
+        "id": 117755864933,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154857220/job/117755864933"
+      },
+      {
+        "name": "Native base (TypeScript, standard build, fixed JS budget)",
+        "conclusion": "success",
+        "id": 117755864966,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154857220/job/117755864966"
+      },
+      {
+        "name": "E2E (Playwright — responsive, auto-démarrage)",
+        "conclusion": "success",
+        "id": 117755864972,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154857220/job/117755864972"
+      },
+      {
+        "name": "Final release gate (full)",
+        "conclusion": "skipped",
+        "id": 117755865851,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154857220/job/117755865851"
+      },
+      {
+        "name": "Windows candidate packaging and inspection (not publication)",
+        "conclusion": "success",
+        "id": 117756832929,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154857220/job/117756832929"
+      },
+      {
+        "name": "Authenticated browser validation (approved staging only)",
+        "conclusion": "failure",
+        "id": 117756832973,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154857220/job/117756832973"
+      },
+      {
+        "name": "Required validation",
+        "conclusion": "failure",
+        "id": 117758402922,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154857220/job/117758402922"
+      }
+    ]
+  },
+  "pull_request": {
+    "run_id": 39154862746,
+    "jobs": [
+      {
+        "name": "Full dependency tree — zero vulnerabilities",
+        "conclusion": "success",
+        "id": 117755880505,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154862746/job/117755880505"
+      },
+      {
+        "name": "E2E (Playwright — responsive, auto-démarrage)",
+        "conclusion": "success",
+        "id": 117755880668,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154862746/job/117755880668"
+      },
+      {
+        "name": "Secret scan (Gitleaks)",
+        "conclusion": "success",
+        "id": 117755880733,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154862746/job/117755880733"
+      },
+      {
+        "name": "Native base (TypeScript, standard build, fixed JS budget)",
+        "conclusion": "success",
+        "id": 117755880765,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154862746/job/117755880765"
+      },
+      {
+        "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+        "conclusion": "success",
+        "id": 117755880800,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154862746/job/117755880800"
+      },
+      {
+        "name": "Final release gate (full)",
+        "conclusion": "skipped",
+        "id": 117755881420,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154862746/job/117755881420"
+      },
+      {
+        "name": "Windows candidate packaging and inspection (not publication)",
+        "conclusion": "success",
+        "id": 117756971716,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154862746/job/117756971716"
+      },
+      {
+        "name": "Authenticated browser validation (approved staging only)",
+        "conclusion": "failure",
+        "id": 117756971786,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154862746/job/117756971786"
+      },
+      {
+        "name": "Required validation",
+        "conclusion": "failure",
+        "id": 117759016100,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154862746/job/117759016100"
+      }
+    ]
+  },
+  "codeql": {
+    "run_id": 39154862775,
+    "jobs": [
+      {
+        "name": "Analyze (javascript-typescript)",
+        "conclusion": "success",
+        "id": 117755880523,
+        "html_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/39154862775/job/117755880523"
+      }
+    ]
+  },
+  "codeql_pull_request_check": {
+    "id": 117756352630,
+    "name": "CodeQL",
+    "conclusion": "failure",
+    "title": "9 new alerts including 2 high severity security vulnerabilities",
+    "summary": "### New alerts in code changed by this pull request\n\nSecurity Alerts:\n * 2 high\n * 7 medium\n\n\n_Alerts not introduced by this pull request might have been detected because the code changes were too large._\n\nSee annotations below for details.\n\n[View all branch alerts](/supremperf/GarageFlowsV2/security/code-scanning?query=pr%3A11+tool%3ACodeQL+is%3Aopen).",
+    "html_url": "https://github.com/supremperf/GarageFlowsV2/runs/117756352630"
+  },
+  "artifacts": [
+    {
+      "name": "garageflows-windows-validation",
+      "size_in_bytes": 1105,
+      "id": 12146313212,
+      "expired": false,
+      "created_at": "2026-10-18T18:46:31Z"
+    },
+    {
+      "name": "garageflows-installer-windows-x64",
+      "size_in_bytes": 230793025,
+      "id": 12146208705,
+      "expired": false,
+      "created_at": "2026-10-18T18:46:37Z"
+    }
+  ],
+  "note": "Relevé lu depuis l'API GitHub le 19/10/2026 pour le commit f2370a3 (HEAD de la branche reprise). Le binaire lui-même n'est pas téléchargeable depuis ce sandbox : les artefacts et journaux d'actions redirigent vers des hôtes de stockage hors liste autorisée (productionresultssa1.blob.core.windows.net, results-receiver.actions.githubusercontent.com) — échec EOF, zéro octet reçu. Aucun EXE local n'a été créé."
+}

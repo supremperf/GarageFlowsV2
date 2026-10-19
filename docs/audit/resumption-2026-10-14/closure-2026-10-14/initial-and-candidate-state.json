@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-14T16:19:10.510939+00:00",
+  "branch": "arena/c9eaae15-garageflowsv2",
+  "head": "4989b53d4a8f10cf8afb2f7c579d1de354f58508",
+  "remoteRef": "4989b53d4a8f10cf8afb2f7c579d1de354f58508\trefs/heads/arena/c9eaae15-garageflowsv2",
+  "initialObservation": "Before any mutation this turn: local and remote 4989b53d4a8f10cf8afb2f7c579d1de354f58508, no commits or diff since 4989b53, clean worktree (initial terminal receipt).",
+  "currentWorktree": " M src/lib/__tests__/authz.test.ts\n M src/lib/authz.ts\n?? docs/audit/resumption-2026-10-14/closure-2026-10-14/\n",
+  "historicalManifest": {
+    "path": "../investigation-2026-10-14/EVIDENCE-SHA256.jsonl",
+    "sha256": "cf1b86aaac4d9d44ec8cc4adef68eb9bf4f0037752e99b1d047e70fdcd10d429"
+  },
+  "productDeltaSha256": "e79caa64c299e0f65486d13d3171ac0c2415218143e4469180b124f8ce432ca9",
+  "sourceChanges": [
+    {
+      "path": "src/lib/authz.ts",
+      "sha256": "0d2775dd6b51e4d22a3d59e291628ceccb17482005b115eed46096efabb6718c"
+    },
+    {
+      "path": "src/lib/__tests__/authz.test.ts",
+      "sha256": "7e4f04df459bb9e46a673b73f6623824abc54a43a6a4ace6d9052bfdcb63a7c0"
+    }
+  ],
+  "permissions": "No commit/push/merge/deployment/release/rotation authorized in this turn."
+}

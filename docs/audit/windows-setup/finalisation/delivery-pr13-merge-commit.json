@@ -1,0 +1,37 @@
+{
+  "note": "Run pull_request : GitHub construit le COMMIT DE FUSION refs/pull/13/merge, pas la tête de branche. Le champ commit n'est donc pas 887c212. Les deux reçus sont conservés pour éviter toute confusion entre l'identité de la branche et celle de la PR.",
+  "delivery": {
+    "schema": 1,
+    "file": "release/GarageFlows-Setup.exe",
+    "version": "1.1.0",
+    "commit": "650a8ef378b4fd05f3ae191cab9c40d2cad48aa8",
+    "dirty": false,
+    "size": 231063389,
+    "sha256": "675e89cf6a593f9849a3e6cf8b83444cc5c77bed385674a334dde92906fd54c8",
+    "platform": "win32",
+    "arch": "x64",
+    "payloadFiles": 3045,
+    "payloadVerified": true,
+    "offlinePayloadEmbedded": true,
+    "extractionMode": "embedded-7z-sfx",
+    "authenticodeVerified": false,
+    "cleanMachineLicensedBusinessWorkflowVerified": false
+  },
+  "smoke": {
+    "success": true,
+    "stage": "complete",
+    "installExecuted": true,
+    "activationWindowOpened": true,
+    "restrictedPathLaunch": true,
+    "sqliteSentinelWritten": true,
+    "installedServerComponentsPassed": true,
+    "reinstallPreservedData": true,
+    "uninstallPreservedData": true,
+    "licensedBusinessWorkflowTested": false,
+    "cleanOSWithoutBuildToolsTested": false,
+    "authenticodeStatus": "NotSigned",
+    "installerProcessExited": true,
+    "installerExitCode": 0,
+    "installedExePresent": true
+  }
+}

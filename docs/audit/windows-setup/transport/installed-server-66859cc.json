@@ -1,0 +1,6 @@
+{
+  "success": true,
+  "stage": "complete",
+  "runtime": "CI Node against installed standalone (not licensed Electron UI)",
+  "modulesRestrictedToInstalledPayload": true
+}

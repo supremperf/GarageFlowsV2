@@ -3,37 +3,63 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { assertRelations } from '@/lib/tenant'
+import { parseWorksJson, parsePartsJson, serializeWorksJsonV2, serializePartsJsonV2, workOrderTotalHtCents, workLinesToEuros, partLinesToEuros } from '@/lib/money-json'
+import { workOrderToEuros } from '@/lib/money-db'
+import { taxCentsFromBasis } from '@/lib/money'
+import { checkStatusTransition, isDeletable } from '@/lib/document-status'
 
-interface WorkLine {
-  description: string
-  durationMin: number
-  unitPrice: number
-  laborOpId?: string
-}
 
-interface PartLine {
-  name: string
-  reference?: string
-  qty: number
-  unitPrice: number
-}
-
-/** Returns null when worksJson/partsJson are not valid JSON arrays. */
-function computeTotals(worksJson: string, partsJson: string, taxRate: number): { totalHT: number; totalTTC: number } | null {
-  let works: WorkLine[]
-  let parts: PartLine[]
+/**
+ * Normalise l'entrée client (tableaux euros v1 OU objet v2 OU chaîne JSON) en
+ * lignes EXACTES via lib/money-json (validation STRICTE — NaN/Infinity/formes
+ * inattendues rejetées), calcule les totaux en centimes et produit les chaînes
+ * V2 persistées (AUCUN flottant monétaire stocké). Renvoie null si invalide.
+ */
+function normalizeWorkOrderJson(
+  worksInput: unknown,
+  partsInput: unknown,
+  taxRate: number,
+): {
+  worksJson: string
+  partsJson: string
+  totalHtCents: number
+  totalTtcCents: number
+} | null {
   try {
-    works = JSON.parse(worksJson)
-    parts = JSON.parse(partsJson)
+    const worksRaw = typeof worksInput === 'string' ? worksInput : JSON.stringify(worksInput ?? [])
+    const partsRaw = typeof partsInput === 'string' ? partsInput : JSON.stringify(partsInput ?? [])
+    const works = parseWorksJson(worksRaw).lines
+    const parts = parsePartsJson(partsRaw).lines
+    const totalHtCents = workOrderTotalHtCents(works, parts)
+    const rate = Number(taxRate) || 0
+    // TVA via la règle centrale (entiers exacts, arrondi fiscal unique) — cf.
+    // work-orders/route.ts : la formule flottante dérivait d'un centime.
+    const totalTtcCents = totalHtCents + taxCentsFromBasis(totalHtCents, rate)
+    return {
+      worksJson: serializeWorksJsonV2(works),
+      partsJson: serializePartsJsonV2(parts),
+      totalHtCents,
+      totalTtcCents,
+    }
   } catch {
     return null
   }
-  if (!Array.isArray(works) || !Array.isArray(parts)) return null
-  const worksHT = works.reduce((s, w) => s + (Number(w.unitPrice) || 0), 0)
-  const partsHT = parts.reduce((s, p) => s + (Number(p.qty) || 0) * (Number(p.unitPrice) || 0), 0)
-  const totalHT = Math.round((worksHT + partsHT) * 100) / 100
-  const totalTTC = Math.round(totalHT * (1 + taxRate / 100) * 100) / 100
-  return { totalHT, totalTTC }
+}
+
+
+/** Vue API d'un OR : euros dérivés + lignes euros parsées (v1 signés / v2). */
+function workOrderView(wo: Parameters<typeof workOrderToEuros>[0] & { worksJson: string; partsJson: string }) {
+  const base = workOrderToEuros(wo)
+  try {
+    return {
+      ...base,
+      works: workLinesToEuros(parseWorksJson(wo.worksJson).lines),
+      parts: partLinesToEuros(parsePartsJson(wo.partsJson).lines),
+    }
+  } catch {
+    // Ligne au JSON illisible : on n'écrase rien, on signale (jamais de crash de liste).
+    return { ...base, works: [], parts: [], jsonError: true }
+  }
 }
 
 // GET /api/work-orders/[id]
@@ -47,7 +73,7 @@ export const GET = withAuth(async (_req, { params }) => {
     },
   })
   if (!wo) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(wo)
+  return NextResponse.json(wo ? workOrderView(wo) : wo)
 })
 
 // PATCH /api/work-orders/[id]
@@ -60,24 +86,48 @@ export const PATCH = withAuth(async (req, { params }) => {
   })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  // Resolve current JSON strings for recompute
-  const worksJson = body.worksJson !== undefined
-    ? (typeof body.worksJson === 'string' ? body.worksJson : JSON.stringify(body.worksJson))
-    : existing.worksJson
-  const partsJson = body.partsJson !== undefined
-    ? (typeof body.partsJson === 'string' ? body.partsJson : JSON.stringify(body.partsJson))
-    : existing.partsJson
-  const taxRate = body.taxRate !== undefined ? body.taxRate : existing.taxRate
-
-  const totals = computeTotals(worksJson, partsJson, taxRate)
-  if (!totals) {
-    return NextResponse.json({ error: 'worksJson/partsJson invalides' }, { status: 400 })
+  // ── DOCUMENT SIGNÉ = SCELLÉ ────────────────────────────────────────────────
+  // Le JSON d'un OR signé est canonicalisé VERBATIM dans le document signé
+  // (lib/signature/document.ts) : le ré-écrire — même à contenu équivalent —
+  // invaliderait la signature. Lignes et taux sont donc VERROUILLÉS ; seuls les
+  // champs non scellés (statut, notes, contact…) restent modifiables, et le
+  // JSON stocké n'est JAMAIS ré-sérialisé.
+  const isSigned = Boolean(existing.signedAt || existing.signatureData)
+  if (isSigned && (body.worksJson !== undefined || body.partsJson !== undefined || body.taxRate !== undefined)) {
+    return NextResponse.json(
+      { error: 'Ordre signé : lignes et taux de TVA sont verrouillés (document scellé)' },
+      { status: 400 },
+    )
   }
-  const { totalHT, totalTTC } = totals
 
-  const updateData: Record<string, unknown> = { worksJson, partsJson, taxRate, totalHT, totalTTC }
+  const updateData: Record<string, unknown> = {}
+  if (!isSigned) {
+    // Entrées : nouvelles valeurs OU JSON stocké ; validation stricte +
+    // re-sérialisation V2 systématique (les écritures sont TOUJOURS v2).
+    const worksInput = body.worksJson !== undefined ? body.worksJson : existing.worksJson
+    const partsInput = body.partsJson !== undefined ? body.partsJson : existing.partsJson
+    const taxRate = body.taxRate !== undefined ? body.taxRate : existing.taxRate
 
-  if (body.status !== undefined) updateData.status = body.status
+    const normalized = normalizeWorkOrderJson(worksInput, partsInput, taxRate)
+    if (!normalized) {
+      return NextResponse.json({ error: 'worksJson/partsJson invalides' }, { status: 400 })
+    }
+    // Centimes entiers = UNIQUE source de vérité (colonnes Float supprimées).
+    updateData.worksJson = normalized.worksJson
+    updateData.partsJson = normalized.partsJson
+    updateData.taxRate = taxRate
+    updateData.totalHtCents = normalized.totalHtCents
+    updateData.totalTtcCents = normalized.totalTtcCents
+  }
+
+  if (body.status !== undefined) {
+    // Machine à états : un OR ne revient jamais à « draft » (sinon le DELETE
+    // « brouillon uniquement » serait contournable et permettrait d'effacer un
+    // ordre signé — document scellé — en deux appels).
+    const transitionError = checkStatusTransition('workOrder', existing.status, body.status)
+    if (transitionError) return NextResponse.json({ error: transitionError }, { status: 409 })
+    updateData.status = body.status
+  }
   if (body.clientName !== undefined) updateData.clientName = body.clientName
   if (body.clientPhone !== undefined) updateData.clientPhone = body.clientPhone
   if (body.clientEmail !== undefined) updateData.clientEmail = body.clientEmail
@@ -105,12 +155,37 @@ export const PATCH = withAuth(async (req, { params }) => {
   ])
   if (relErr) return relErr
 
-  // Atomique (anti-TOCTOU) : la portée garageId est dans le where.
+  // Atomique (anti-TOCTOU) : la portée garageId est dans le where. Quand on écrit
+  // des champs SCELLÉS (worksJson/partsJson/taxRate/totaux — branche !isSigned),
+  // on exige `signedAt: null` DANS le where : si l'OR a été signé sur une tablette
+  // ENTRE la lecture (ligne 84) et cette écriture, la mise à jour n'affecte aucune
+  // ligne (count=0) plutôt que d'écraser le JSON scellé (invalidant la signature).
+  // Miroir du garde de work-orders/[id]/sign (where signedAt: null).
+  const writesSealedFields = !isSigned
   const res = await prisma.workOrder.updateMany({
-    where: { id: params.id, garageId: session.user.garageId },
+    where: {
+      id: params.id,
+      garageId: session.user.garageId,
+      ...(writesSealedFields ? { signedAt: null } : {}),
+    },
     data: updateData,
   })
-  if (res.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  if (res.count === 0) {
+    // Distinguer « signé entre-temps » (TOCTOU) d'un vrai 404.
+    if (writesSealedFields) {
+      const now = await prisma.workOrder.findFirst({
+        where: { id: params.id, garageId: session.user.garageId },
+        select: { signedAt: true, signatureData: true },
+      })
+      if (now && (now.signedAt || now.signatureData)) {
+        return NextResponse.json(
+          { error: 'Ordre signé entre-temps : lignes et taux de TVA sont verrouillés (document scellé)' },
+          { status: 409 },
+        )
+      }
+    }
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
   const wo = await prisma.workOrder.findFirst({
     where: { id: params.id, garageId: session.user.garageId },
     include: {
@@ -118,7 +193,7 @@ export const PATCH = withAuth(async (req, { params }) => {
       job: { select: { id: true, customerName: true, vehicleModel: true, licensePlate: true } },
     },
   })
-  return NextResponse.json(wo)
+  return NextResponse.json(wo ? workOrderView(wo) : wo)
 })
 
 // DELETE /api/work-orders/[id]
@@ -128,8 +203,16 @@ export const DELETE = withAuth(async (_req, { params }) => {
     where: { id: params.id, garageId: session.user.garageId },
   })
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  if (existing.status !== 'draft') {
-    return NextResponse.json({ error: 'Seuls les ordres en brouillon peuvent être supprimés' }, { status: 400 })
+  // Un OR signé est SCELLÉ (preuve juridique) : jamais supprimable, quel que
+  // soit son statut. Sinon, seuls les brouillons le sont.
+  const signed = Boolean(existing.signedAt || existing.signatureData)
+  if (!isDeletable('workOrder', existing.status, { signed })) {
+    return NextResponse.json(
+      { error: signed
+          ? 'Un ordre de réparation signé ne peut pas être supprimé (document scellé).'
+          : 'Seuls les ordres en brouillon peuvent être supprimés' },
+      { status: 400 },
+    )
   }
   await prisma.workOrder.deleteMany({ where: { id: params.id, garageId: session.user.garageId } })
   return NextResponse.json({ success: true })

@@ -2,9 +2,11 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { LANGUAGES, LangCode, T, translations } from './i18n/translations'
+import { applyLangAttributes } from './i18n/apply-lang'
 
 export type { LangCode, T }
 export { LANGUAGES, translations }
+export { applyLangAttributes }
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 
@@ -52,7 +54,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as LangCode | null
-    if (stored && translations[stored]) setLangState(stored)
+    if (stored && translations[stored]) {
+      setLangState(stored)
+      // AUD-026 : restaurer AUSSI lang/dir sur <html> au rechargement — sinon
+      // une langue RTL (arabe) reste affichée en LTR avec lang="fr", ce qui
+      // dégrade la mise en page et les lecteurs d'écran.
+      applyLangAttributes(stored)
+    }
 
     const storedTheme = localStorage.getItem(THEME_KEY) as Theme | null
     const t: Theme = (storedTheme && ALL_THEMES.includes(storedTheme)) ? storedTheme : 'dark'
@@ -63,11 +71,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const setLang = useCallback((code: LangCode) => {
     setLangState(code)
     localStorage.setItem(STORAGE_KEY, code)
-    const langDef = LANGUAGES.find(l => l.code === code)
-    if (langDef) {
-      document.documentElement.setAttribute('lang', code)
-      document.documentElement.setAttribute('dir', langDef.dir)
-    }
+    applyLangAttributes(code)
   }, [])
 
   const setTheme = useCallback((t: Theme) => {

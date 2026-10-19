@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "noEmit": false,
+    // CRITIQUE : ne JAMAIS laisser ts-node recompiler le client Prisma généré
+    // (src/generated/server-client/*.js) — le downlevel ES5 casse son Proxy
+    // (modèles « undefined »). Les .js sont exécutés tels quels par Node.
+    "allowJs": false
+  },
+  "include": ["scripts/migrate-money-json.ts"]
+}

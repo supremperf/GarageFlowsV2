@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-14",
+  "branch": "arena/c9eaae15-garageflowsv2",
+  "total": 1243,
+  "manualReview": {
+    "VALIDÉ": 32,
+    "PARTIELLEMENT VALIDÉ": 11,
+    "EN ATTENTE DE REVUE": 1200
+  },
+  "nextBatch": [
+    {
+      "order": 1,
+      "path": "electron/activation-backoff.js",
+      "sha256": "2d26e848f56745657d885b97f52305b7a561c5f02cfcbb938122df53fafbbce7",
+      "priority": "P0"
+    },
+    {
+      "order": 2,
+      "path": "electron/activation-report.js",
+      "sha256": "d2f5e040e17494f99da3151de5c792e7b97bc0d0613b653fa6fe6eb795daa168",
+      "priority": "P0"
+    },
+    {
+      "order": 3,
+      "path": "electron/control-plane.js",
+      "sha256": "68fe743fbab1b4ae22c0bdb06dfe78dc7a92a47e9986e6f56698d13e802ee062",
+      "priority": "P0"
+    },
+    {
+      "order": 4,
+      "path": "electron/echeance-export.js",
+      "sha256": "d6eea4b31b6acbab6a8d66f2ddb2a2ede3e5a49a3252610efd92cda6046db8bc",
+      "priority": "P0"
+    },
+    {
+      "order": 5,
+      "path": "electron/grace-hors-ligne.js",
+      "sha256": "06d57b8f63bceffc5293c2cd7a0565ea0d9691b5d4ff63449f9f8189382ddf7a",
+      "priority": "P0"
+    },
+    {
+      "order": 6,
+      "path": "electron/heartbeat-policy.js",
+      "sha256": "e8622287250d9ce122e4a26fde388c1c1b40c9943590a35e317d8329a28a3804",
+      "priority": "P0"
+    },
+    {
+      "order": 7,
+      "path": "electron/integrity.js",
+      "sha256": "55b1d7ac0afcda6c92357b6acfc73f3b1fd006e337182eb73c355abeee34fe91",
+      "priority": "P0"
+    },
+    {
+      "order": 8,
+      "path": "electron/license-endpoint.js",
+      "sha256": "160eec72423f2a1aafbe04e03bb14f5fcace53d11ada1dd9c5625e4873403eb2",
+      "priority": "P0"
+    },
+    {
+      "order": 9,
+      "path": "electron/license.html",
+      "sha256": "ba782754ac0cfa59e343598ae349e187aaaecc242e7ce6b5535ddbc69aef218d",
+      "priority": "P0"
+    },
+    {
+      "order": 10,
+      "path": "electron/main.js",
+      "sha256": "2813b1473c3a4396f27924d7d5dbf5c11a4c75119c65fb707004825a30e1217b",
+      "priority": "P0"
+    },
+    {
+      "order": 11,
+      "path": "electron/nav-guard.js",
+      "sha256": "5bf4462a6fa972474f488c11ae6384a22a5017e97b2e1064a599719cd2c79d8a",
+      "priority": "P0"
+    },
+    {
+      "order": 12,
+      "path": "electron/pre-migration-backup.js",
+      "sha256": "855b04a42352ab5213fa1e1c2ddd7b7eb1062d3f3ede976f1ca9ca2d69a55120",
+      "priority": "P0"
+    }
+  ],
+  "exclusions": [
+    "Git internal metadata and ignored dependencies/runtime/generated/private configuration (git ls-files --exclude-standard)",
+    "docs/audit/followup-2026-10-14/",
+    "docs/audit/inventory.jsonl",
+    "docs/audit/inventory-current.jsonl",
+    "docs/audit/module-map.jsonl",
+    "docs/audit/scope.json"
+  ],
+  "limitation": "Coverage is explicit SOURCE-reading progress only. No inferred certification from inventory, AST, test counts or digests; prior targeted work without durable per-file attestation remains pending here."
+}

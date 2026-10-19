@@ -1,0 +1,13 @@
+{
+  "frozenSha256": "7b23aa75f2f08b6b23e9bf65a64d1051c95aef0bac33168257f562feb1227092",
+  "original48Unmodified": true,
+  "original31ClassificationsUnmodified": true,
+  "phase4And5EvidenceUnmodified": true,
+  "exactTriagesVerified": 959,
+  "publicSourceHashesAndPrior20Unmodified": true,
+  "gitleaksPolicyUnmodified": true,
+  "clientJsLimit": 3625984,
+  "localSelectionPassed": 17,
+  "localSelectionFailed": 31,
+  "paidCalls": 0
+}

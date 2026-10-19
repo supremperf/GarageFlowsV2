@@ -2,13 +2,51 @@ import { describe, it, expect } from 'vitest'
 // Helpers du processus principal (CommonJS) — logique pure, testable ici.
 import cp from '../../../electron/control-plane.js'
 
+/**
+ * GF31-AUD-043 — le plan de contrôle était mort sur tout le parc packagé.
+ *
+ * `resolveRemoteBase` ne lisait que `GF_LICENSE_SERVER`. Une application
+ * packagée n'embarque aucun `.env` : la variable est absente en production, la
+ * fonction rendait `null`, et ses trois consommateurs — file de crash,
+ * récupération des notifications, accusé de réception — sortaient EN SILENCE.
+ *
+ * L'ancienne version de ce test verrouillait le défaut : elle exigeait
+ * `resolveRemoteBase({}) === null` sans distinguer développement et production.
+ */
 describe('resolveRemoteBase', () => {
   it('supprime le slash final', () => {
     expect(cp.resolveRemoteBase({ GF_LICENSE_SERVER: 'https://app.garageflows.fr/' })).toBe('https://app.garageflows.fr')
   })
-  it('renvoie null si absent', () => {
+
+  it('développement sans configuration : null (aucune télémétrie de mise au point en production)', () => {
     expect(cp.resolveRemoteBase({})).toBeNull()
     expect(cp.resolveRemoteBase({ GF_LICENSE_SERVER: '   ' })).toBeNull()
+    expect(cp.resolveRemoteBase({}, { isPackaged: false })).toBeNull()
+  })
+
+  it('PRODUCTION packagée sans configuration : autorité officielle compilée', () => {
+    const base = cp.resolveRemoteBase({}, { isPackaged: true })
+    expect(base).toBe('https://app.garageflows.fr')
+    expect(base).not.toBeNull()
+  })
+
+  it('la surcharge d’environnement fait foi quand elle est en HTTPS', () => {
+    expect(cp.resolveRemoteBase({ GF_LICENSE_SERVER: 'https://staging.example.fr' }, { isPackaged: true }))
+      .toBe('https://staging.example.fr')
+    // Hors packaging, tout est permis (dev local en clair).
+    expect(cp.resolveRemoteBase({ GF_LICENSE_SERVER: 'http://127.0.0.1:3000' }, { isPackaged: false }))
+      .toBe('http://127.0.0.1:3000')
+  })
+
+  it('en production packagée, une surcharge NON https est refusée (anti-downgrade)', () => {
+    expect(cp.resolveRemoteBase({ GF_LICENSE_SERVER: 'http://mechant.example' }, { isPackaged: true }))
+      .toBe('https://app.garageflows.fr')
+  })
+
+  it('la même autorité que la licence — les deux ne peuvent pas diverger', async () => {
+    const le = await import('../../../electron/license-endpoint.js')
+    expect(cp.resolveRemoteBase({}, { isPackaged: true }))
+      .toBe((le as unknown as { OFFICIAL_LICENSE_SERVER: string }).OFFICIAL_LICENSE_SERVER)
   })
 })
 

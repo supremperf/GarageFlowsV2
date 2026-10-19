@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
+import { decryptSecret } from '@/lib/security/secret-cipher'
 import nodemailer from 'nodemailer'
 import { logger } from '@/lib/logger'
 
@@ -81,9 +82,12 @@ ${garage?.name ?? 'Votre garage'}${garage?.phone ? `\nTél : ${garage.phone}` : 
 </body></html>`
 
   // SMTP configuration is stored on the garage (Paramètres › Email), NOT in env vars.
+  // The password is stored encrypted at rest (AES-256-GCM) — decrypt before use.
+  // A wrong/missing key throws → treated as "no SMTP" (no plaintext ever leaks).
   const smtpHost   = garage?.smtpHost
   const smtpUser   = garage?.smtpUser
-  const smtpPass   = garage?.smtpPass
+  let   smtpPass: string | null = null
+  try { smtpPass = decryptSecret(garage?.smtpPass) } catch { smtpPass = null }
   const smtpPort   = garage?.smtpPort ?? 587
   const smtpSecure = garage?.smtpSecure ?? (smtpPort === 465)
   const smtpFrom   = garage?.smtpFrom || garage?.email || smtpUser
@@ -109,7 +113,7 @@ ${garage?.name ?? 'Votre garage'}${garage?.phone ? `\nTél : ${garage.phone}` : 
 
   try {
     await transporter.sendMail({
-      from: `${garage?.name ?? 'GarageFlow'} <${smtpFrom}>`,
+      from: `${garage?.name ?? 'GarageFlows'} <${smtpFrom}>`,
       to: reminder.email,
       subject,
       text: textBody,

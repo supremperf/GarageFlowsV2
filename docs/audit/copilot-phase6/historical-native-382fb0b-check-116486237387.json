@@ -1,0 +1,28 @@
+{
+  "scope": "HISTORICAL_NEGATIVE_DIAGNOSTIC_NOT_CANDIDATE_PASS",
+  "baseline": "0d64899ed81ab32ab99fa32fbd6cde0c55d5ec63",
+  "childExitCode": 1,
+  "caseStatuses": [
+    "failed",
+    "failed",
+    "passed",
+    "passed",
+    "passed"
+  ],
+  "failures": [
+    {
+      "name": "le copilote ne livre pas le prix d\u2019achat \u00e0 un r\u00f4le non financier un MECHANIC obtient la liste, jamais le co\u00fbt",
+      "fullTrace": [
+        "TypeError: .toMatch() expects to receive a string, but got undefined\n    at Proxy.<anonymous> (file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/@vitest/expect/dist/index.js:1293:10)\n    at Proxy.<anonymous> (file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/chai/index.js:1737:25)\n    at /home/runner/work/GarageFlowsV2/GarageFlowsV2/src/integration/phase6-historical-cout-achat.test.ts:70:59\n    at async file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    },
+    {
+      "name": "le copilote ne livre pas le prix d\u2019achat \u00e0 un r\u00f4le non financier le m\u00e9canicien garde ce dont il a besoin : quoi commander, et combien",
+      "fullTrace": [
+        "TypeError: undefined is not iterable (cannot read property Symbol(Symbol.iterator))\n    at /home/runner/work/GarageFlowsV2/GarageFlowsV2/src/integration/phase6-historical-cout-achat.test.ts:79:20\n    at async file:///home/runner/work/GarageFlowsV2/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+      ]
+    }
+  ],
+  "stdout": "JSON report written to /tmp/gf-phase6-baseline-hXH633/results.json\n",
+  "stderr": "\u001b[33m(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:\n  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `\"type\": \"module\"` in the closest package.json\nSet `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.\u001b[39m\n"
+}

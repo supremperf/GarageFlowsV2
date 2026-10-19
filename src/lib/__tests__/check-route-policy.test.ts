@@ -9,17 +9,29 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 process.env.NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || 'x'.repeat(48)
 
-const state = vi.hoisted(() => ({ tokenValid: true, licenseFound: true }))
+const state = vi.hoisted(() => ({
+  tokenValid: true,
+  licenseFound: true,
+  failCode: 'device_unknown' as string,
+  lastOpts: null as { hwid?: string; installId?: string } | null,
+}))
 
 vi.mock('@/lib/security/rate-limit', () => ({
   clientIpFrom: () => 'local',
   enforceRateLimit: async () => ({ ok: true, remaining: 99 }),
   rateLimitResponse: () => { throw new Error('unexpected') },
 }))
-vi.mock('@/lib/license/record-mac', () => ({ verifyRecordMac: () => ({ tampered: false, missing: false }) }))
+vi.mock('@/lib/license/record-mac', () => ({
+  verifyRecordMac: () => ({ ok: true, tampered: false, missing: false }),
+  // La politique d'intégrité est centralisée depuis GF31-AUD-005 : le simulacre
+  // doit l'exporter aussi, sinon la route importe `undefined` et lève.
+  recordIntegrityUsable: (v: { tampered: boolean; missing: boolean }) => !v.tampered && !v.missing,
+}))
 vi.mock('@/lib/license/devices', () => ({
-  validateDeviceToken: async () =>
-    state.tokenValid ? { ok: true, licenseId: 'lid-1', deviceId: 'dev-1' } : { ok: false, code: 'device_unknown' },
+  validateDeviceToken: async (_token: string, opts: { hwid?: string; installId?: string } = {}) => {
+    state.lastOpts = opts
+    return state.tokenValid ? { ok: true, licenseId: 'lid-1', deviceId: 'dev-1' } : { ok: false, code: state.failCode }
+  },
 }))
 vi.mock('@/lib/db', () => ({
   prisma: {
@@ -46,6 +58,7 @@ const saved: Record<string, string | undefined> = {}
 beforeEach(() => {
   for (const k of ENVK) saved[k] = process.env[k]
   state.tokenValid = true; state.licenseFound = true
+  state.failCode = 'device_unknown'; state.lastOpts = null
 })
 afterEach(() => {
   for (const k of ENVK) { if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k] }
@@ -93,5 +106,38 @@ describe('/api/license/check — fin du contournement sans jeton', () => {
     const body = await res.json()
     // device_unknown ⇒ le client doit réactiver (jamais un blocage à tort).
     expect(body.deviceRequired).toBe(true)
+  })
+})
+
+describe('/api/license/check — empreinte d\'appareil au heartbeat (item 3)', () => {
+  it('transmet installId à validateDeviceToken (empreinte PWA vérifiée)', async () => {
+    process.env.GF_MIN_PWA_VERSION = '1.0.0'
+    const res = await POST(
+      req({ licenseId: 'lid-1', deviceToken: 't', installId: 'pwa-install-123', version: '1.2.0' }) as never,
+    )
+    expect(res.status).toBe(200)
+    expect(state.lastOpts).toMatchObject({ installId: 'pwa-install-123' })
+  })
+
+  it('transmet hwid à validateDeviceToken (empreinte Electron)', async () => {
+    process.env.ELECTRON = '1'
+    process.env.GF_MIN_ELECTRON_VERSION = '1.0.0'
+    const res = await POST(
+      req({ licenseId: 'lid-1', deviceToken: 't', hwid: 'HWID-abcdef012345', version: '1.2.0' }) as never,
+    )
+    expect(state.lastOpts).toMatchObject({ hwid: 'HWID-abcdef012345' })
+  })
+
+  it('installId ne correspondant pas (device_hwid_mismatch) → jamais allowed:true', async () => {
+    process.env.GF_MIN_PWA_VERSION = '1.0.0'
+    state.tokenValid = false
+    state.failCode = 'device_hwid_mismatch'
+    const res = await POST(
+      req({ licenseId: 'lid-1', deviceToken: 't', installId: 'mauvais-install', version: '1.2.0' }) as never,
+    )
+    const body = await res.json()
+    expect(body.allowed).not.toBe(true)
+    // L'empreinte a bien été soumise à la vérification.
+    expect(state.lastOpts).toMatchObject({ installId: 'mauvais-install' })
   })
 })

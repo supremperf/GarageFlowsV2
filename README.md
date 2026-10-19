@@ -1,22 +1,33 @@
-# GarageFlow
+# GarageFlows
 
 Application de gestion et de planning d'atelier automobile — bureau Windows (Electron + Next.js).
 
 ---
 
-## Prérequis
+## Installation client Windows — un seul fichier
+
+Le client reçoit **`GarageFlows-Setup.exe`**, l’exécute puis utilise le raccourci GarageFlows.
+Il n’a besoin ni des sources/dist/node_modules, ni de Node.js, npm, Python ou d’un .env.
+La licence reste requise ; les données persistent dans `%APPDATA%\GarageFlow` (nom historique).
+La sortie client est `release/GarageFlows-Setup.exe` ; dist reste un intermédiaire de build.
+
+**[Guide de distribution et limites de validation](docs/WINDOWS_DISTRIBUTION.md)** ·
+**[Rapport de fabrication Windows](docs/audit/windows-setup/01-RAPPORT.md)**.
+Une candidature de packaging n’est pas une autorisation de publication production.
+
+## Prérequis développeur / éditeur (pas chez le client)
 
 | Outil | Version minimale |
 |-------|-----------------|
-| Node.js | 18 LTS |
-| npm | 9 |
-| Python | 3.10 |
-| `cryptography` (pip) | 41 |
+| Node.js | 22.x |
+| npm | 11.16.0 (épinglé) |
+| Python | 3.10+ pour les outils éditeur/keygen et tests seulement |
+| `cryptography` (pip) | versions/hashs de `tests/requirements-keygen.txt` |
 | Electron Builder | inclus via `devDependencies` |
 
 ---
 
-## Installation
+## Checkout développeur uniquement
 
 ```bash
 npm install
@@ -26,11 +37,46 @@ npm run db:seed       # Insère les données de démo
 
 ---
 
+## Configuration assistée (desktop / Neon / Vercel)
+
+```bash
+npm run config
+```
+
+Ou double-cliquer sur `config.cmd` sous Windows. `config` lance maintenant le
+**plan complet automatique** : dépendances, accès Neon/Vercel/Upstash, secrets,
+licences/keygen, profils desktop/cloud, bases, migrations, déploiement et signature
+locale des mises à jour. Saisir `AUTORISER` pour lancer le plan ; les demandes
+suivantes concernent des accès, une cible ambiguë ou une opération risquée.
+Il conserve les clés existantes et n'affiche jamais les secrets.
+
+Sur une **première installation** (base vide, aucune ligne métier), **toutes les
+clés absentes sont générées automatiquement** — secrets 256 bits, paire de
+licence P-256, clé Ed25519 de publication — puis écrites aux endroits réellement
+lus : `.env`, `.env.server.local`, `keys/private.pem`, `keys/public.pem`,
+`keys/server_config.json` (keygen), coffre hors dépôt, ancrages publics et
+**Vercel production** (ajouts en Sensitive, jamais de remplacement). Une base
+contenant de vraies **données métier** (les registres `_gf_migrations` /
+`_prisma_migrations` ne comptent pas) exige l'original du coffre : `GENERER` y
+reste une décision explicite et confirmée.
+
+**Analyse et couverture des 118 variables : [CONFIG_REPOSITORY_AUDIT.md](docs/CONFIG_REPOSITORY_AUDIT.md).**
+
+**Guide et limites d'automatisation : [docs/CONFIG.md](docs/CONFIG.md).**
+Le serveur utilise `.env.server.local` (isolé du build Electron) ; le desktop
+conserve `.env`. Les accès non récupérables doivent être fournis localement. Le rapport distingue
+les étapes réussies des fonctions exigeant encore un accès ou une adaptation
+(notamment stockage durable sur Vercel et service de publication externe).
+
+---
+
 ## Développement
 
 ```bash
-npm run dev           # Serveur Next.js (port 3000)
-npm run electron:dev  # Lance Electron en mode dev (pointe vers :3000)
+npm run dev           # Serveur Next.js seul (port 3000)
+# Desktop en développement — deux terminaux :
+npm run dev:electron  # Terminal 1 : Next.js sur le port 4028 (celui d'Electron)
+npm run electron:dev  # Terminal 2 : Electron en mode dev (pointe vers :4028)
 ```
 
 ---
@@ -38,7 +84,7 @@ npm run electron:dev  # Lance Electron en mode dev (pointe vers :3000)
 ## Architecture
 
 ```
-GarageFlow/
+GarageFlows/ (racine du depot)
 ├── electron/
 │   ├── main.js        # Processus principal Electron (IPC, backup, export)
 │   └── preload.js     # Pont sécurisé contextBridge ↔ renderer
@@ -62,7 +108,7 @@ GarageFlow/
 │   ├── keygen_core.py # Crypto ECC P-256 + HWID
 │   ├── keygen_db.py   # Base de données locale des licences (JSON)
 │   ├── keygen_ui.py   # Interface tkinter (génération, gestion, révocation)
-│   └── keygen_gui.py  # Point d'entrée GUI keygen
+│   └── keygen.py  # Point d'entrée GUI keygen
 └── keys/              # private.pem + public.pem (jamais committé)
 ```
 
@@ -70,15 +116,32 @@ GarageFlow/
 
 ## Système de licences
 
+### Diagnostic keygen → activation (à lire avant toute initialisation)
+
+**Le GUI utilise `keys/private.pem`, pas `GF_PRIVATE_KEY`. Cette clé privée doit
+appartenir à la même paire que l’ancre publique de l’instance cible. Ne jamais
+régénérer une paire pour corriger « Licence invalide ou modifiée ».**
+
+```sh
+python scripts/keygen_ui.py --verify-key-match
+# Ajouter --ask-passphrase pour un PEM chiffré ; aucun secret en argument.
+node scripts/diagnose-license.mjs --print-public-fingerprint
+```
+
+Contrôle automatique bloquant des ancres locales avant toute signature GUI ;
+aucune preuve du serveur distant sans provenance/PEM public attesté. Voir la
+[procédure immédiate et les diagnostics](docs/KEYGEN.md), puis la
+[preuve de reproduction et ses limites](docs/audit/2026-10-17/07-DIAGNOSTIC-KEYGEN.md).
+
 ### Initialisation (première fois)
 
 ```bash
-python scripts/keygen_gui.py
+python scripts/keygen.py
 ```
 
-Dans l'onglet **Clés** : cliquer **Initialiser les clés** → copier la clé publique dans :
-- `src/lib/license/public-key.ts` → tableau `_LINES`
-- `electron/main.js` → tableau `_PK`
+Conserver les clés existantes. Ne jamais réinitialiser la paire sur un parc actif.
+Après une initialisation explicitement approuvée, utiliser `npm run keys:sync`,
+puis `npm run keys:check` (pas de copie manuelle des tableaux embarqués).
 
 ### Types de licence
 
@@ -117,7 +180,7 @@ Sélection dans **Paramètres → Thèmes**.
 Chaque soir à **20 h**, l'application crée un dossier horodaté sur le Bureau :
 
 ```
-Bureau/GarageFlow_Export_AAAA-MM-JJ/
+Bureau/GarageFlows_Export_AAAA-MM-JJ/
 ├── clients.csv
 ├── vehicules.csv
 ├── interventions.csv
@@ -150,7 +213,7 @@ Couverture : utilitaires planning, calculs TVA, rate limiter, format des tokens 
 npm run dist          # Build Next.js + packaging Electron Builder (.exe)
 ```
 
-L'installateur est généré dans `dist/`. Le hook `afterPack`
+Le seul fichier client est généré dans **`release/GarageFlows-Setup.exe`**, après extraction et vérification du contenu réel du NSIS ; `dist/` conserve les intermédiaires, pas un dossier à distribuer. Le hook `afterPack`
 (`scripts/afterPack.js`) écrit automatiquement le **manifeste d'intégrité**
 signé (voir Sécurité ci-dessous).
 
@@ -239,3 +302,13 @@ Côté serveur : voir le dépôt `garagesite3`, `docs/CONTROL_PLANE.md`.
 ## Langues supportées
 
 Français · English · Español · Deutsch · Italiano · Português · Nederlands · Polski · Русский · العربية · 中文 · 日本語 · Türkçe · 한국어
+
+### Contrat des entrées fournisseur
+
+`.env.example` décrit le runtime ; `.env.storage.example` contient uniquement les
+noms canoniques des saisies fournisseur. `node config` accepte les exports de
+dashboard à une frontière de normalisation : un alias direct est retiré de la
+sortie, une contradiction avec `DIRECT_URL` bloque avant toute écriture. Les
+variables d’outillage (dont le token Blob) ne deviennent pas une dépendance
+applicative implicite. Voir [configuration](docs/CONFIG.md) et
+[registre d’environnement](ENVIRONMENT-VARIABLES.md).

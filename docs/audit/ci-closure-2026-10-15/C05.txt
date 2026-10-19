@@ -1,0 +1,53 @@
+TAP version 13
+# Subtest: literal environment secrets, private PEM, credentials and signed URLs are withheld
+ok 1 - literal environment secrets, private PEM, credentials and signed URLs are withheld
+  ---
+  duration_ms: 1.635362
+  type: 'test'
+  ...
+# Subtest: exit codes cannot turn a failed, signalled or unspawned packaging command green
+ok 2 - exit codes cannot turn a failed, signalled or unspawned packaging command green
+  ---
+  duration_ms: 0.238533
+  type: 'test'
+  ...
+# Subtest: annotations retain readable build diagnostics and lossless projected metadata
+ok 3 - annotations retain readable build diagnostics and lossless projected metadata
+  ---
+  duration_ms: 2.239927
+  type: 'test'
+  ...
+# Subtest: large logs are explicitly incomplete, with bounded tails and a full-input digest
+ok 4 - large logs are explicitly incomplete, with bounded tails and a full-input digest
+  ---
+  duration_ms: 0.627939
+  type: 'test'
+  ...
+# Subtest: secrets are removed before truncation, including incomplete private key blocks
+ok 5 - secrets are removed before truncation, including incomplete private key blocks
+  ---
+  duration_ms: 0.52362
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 66.12265
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /home/user/GarageFlowsV2
+
+ ✓ src/lib/einvoicing/__tests__/submit-chain.test.ts (17 tests) 36ms
+ ✓ src/lib/einvoicing/__tests__/dns-deadline.test.ts (4 tests) 16ms
+
+ Test Files  2 passed (2)
+      Tests  21 passed (21)
+   Start at  15:15:04
+   Duration  633ms (transform 219ms, setup 0ms, import 279ms, tests 52ms, environment 0ms)

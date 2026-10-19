@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-14T16:19:09.401731+00:00",
+  "platform": "Linux-6.1.158+-x86_64-with-glibc2.36",
+  "architecture": "x86_64",
+  "python": "3.11.2",
+  "node": "v22.22.3",
+  "npm": "11.16.0",
+  "gh": "gh version 2.23.0 (2023-02-27 Debian 2.23.0+dfsg1-1)",
+  "semgrep": "1.180.0",
+  "packages": {
+    "prisma": "5.22.0",
+    "@prisma/client": "5.22.0",
+    "vitest": "4.1.11",
+    "typescript": "5.9.3",
+    "electron": "41.10.6",
+    "@playwright/test": "1.62.1"
+  },
+  "limits": "Package metadata does not attest native executable availability."
+}

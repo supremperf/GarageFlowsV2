@@ -1,0 +1,37 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /home/user/GarageFlowsV2
+
+ ✓ src/lib/copilot/__tests__/semantic.test.ts (40 tests) 172ms
+ ✓ src/lib/copilot/__tests__/planning-execution.test.ts (44 tests) 91ms
+ ✓ src/lib/copilot-llm/__tests__/provider.test.ts (15 tests) 123ms
+ ✓ src/lib/copilot/__tests__/phase3-security.test.ts (18 tests) 46ms
+ ✓ src/lib/copilot-llm/__tests__/planning-provider.test.ts (6 tests) 42ms
+ ✓ src/lib/copilot/__tests__/conversation.test.ts (26 tests) 27ms
+ ✓ src/lib/copilot-llm/__tests__/copilot-llm.test.ts (25 tests) 20ms
+ ✓ src/lib/copilot/__tests__/copilot.test.ts (12 tests) 13ms
+ ✓ src/lib/copilot/__tests__/copilot-chaine-complete.test.ts (16 tests) 13ms
+ ✓ src/lib/copilot-llm/__tests__/paid-block.test.ts (3 tests) 13ms
+
+ Test Files  10 passed (10)
+      Tests  205 passed (205)
+   Start at  14:26:35
+   Duration  3.46s (transform 394ms, setup 0ms, import 1.18s, tests 559ms, environment 1ms)
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /home/user/GarageFlowsV2
+
+ ✓ src/lib/__tests__/authz-full-matrix.test.ts (139 tests) 17ms
+ ✓ src/lib/__tests__/authz.test.ts (43 tests) 9ms
+ ✓ src/lib/__tests__/authz-mechanic-matrix.test.ts (17 tests) 6ms
+
+ Test Files  3 passed (3)
+      Tests  199 passed (199)
+   Start at  14:26:39
+   Duration  636ms (transform 64ms, setup 0ms, import 113ms, tests 32ms, environment 0ms)
+

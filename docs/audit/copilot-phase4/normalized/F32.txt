@@ -1,0 +1,14 @@
+
+> garageflow@1.1.0 check:docs
+> node scripts/check-docs-consistency.mjs
+
+✅ Cohérence docs : source canonique unique, comptes & statuts cohérents (190 .md scannés).
+✅ Contrat d'environnement : 121 variables canoniques, 8 alias interdits absents du code actif, 48 variables plateforme, 1015 fichiers balayés.
+{
+  "status": "METADATA_ONLY_PASS",
+  "receipts": 30,
+  "normalizedLogs": 27,
+  "reviewedFiles": 21,
+  "preservedHistoricalDocuments": 8,
+  "limits": "No runtime/SQL/auth/paid-model/production validation; index self-hash closed by containing Git commit, final verification receipt intentionally outside this index."
+}

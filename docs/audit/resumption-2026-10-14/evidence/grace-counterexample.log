@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-14T14:11:54.628Z",
+  "timezone": "Europe/Paris",
+  "status": "ÉCHOUÉ",
+  "issueId": "FUP-20261014-025",
+  "sourcePath": "electron/grace-hors-ligne.js",
+  "sourceSha256": "06d57b8f63bceffc5293c2cd7a0565ea0d9691b5d4ff63449f9f8189382ddf7a",
+  "oldCreationTimeWasSimulated": true,
+  "actualOldFileBirthtimeMs": 1791987114578.8884,
+  "actualCopiedFileBirthtimeMs": 1791987114606.8887,
+  "originalSha256": "2b06482153138df233d3fa38264a2ae38f81d5339b2d9d5fd2e1be4e3539d6d2",
+  "copySha256": "2b06482153138df233d3fa38264a2ae38f81d5339b2d9d5fd2e1be4e3539d6d2",
+  "oldSqliteMarker": "17",
+  "copiedSqliteMarker": "17",
+  "before": {
+    "decision": "verrou",
+    "motif": "hors-ligne",
+    "offlineMs": 720000000,
+    "origine": 1791267114628,
+    "premierLancement": true
+  },
+  "after": {
+    "decision": "ok",
+    "motif": null,
+    "offlineMs": 21.111328125,
+    "origine": 1791987114606.8887,
+    "premierLancement": true
+  },
+  "limitations": [
+    "The 200-hour OLD age is an arithmetic fixture, not a 200-hour physical run or a backdated inode.",
+    "The copy is an actual complete SQLite file with integrity_check and identical bytes/data. It disproves the comment that recreation necessarily loses all data.",
+    "Policy called with no signed last-online record and coherent clock; Electron startup, official authority, and revocation flow are not executed.",
+    "No product policy changed: approved durable licensing anchor and restoration/new-install behavior require design validation."
+  ]
+}

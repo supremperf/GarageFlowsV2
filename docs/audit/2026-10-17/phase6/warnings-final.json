@@ -1,0 +1,52 @@
+[
+  {
+    "source": "vitest-global",
+    "scope": "runtime warning headers in the captured test output; not a claim of exhaustive dependency/OS warnings",
+    "count": 6,
+    "warnings": [
+      {
+        "line": 1,
+        "text": "(node:26382) ExperimentalWarning: SQLite is an experimental feature and might change at any time"
+      },
+      {
+        "line": 19,
+        "text": "(node:28228) ExperimentalWarning: SQLite is an experimental feature and might change at any time"
+      },
+      {
+        "line": 21,
+        "text": "(node:28612) ExperimentalWarning: SQLite is an experimental feature and might change at any time"
+      },
+      {
+        "line": 23,
+        "text": "(node:28957) ExperimentalWarning: SQLite is an experimental feature and might change at any time"
+      },
+      {
+        "line": 25,
+        "text": "(node:29200) ExperimentalWarning: SQLite is an experimental feature and might change at any time"
+      },
+      {
+        "line": 27,
+        "text": "(node:29450) ExperimentalWarning: SQLite is an experimental feature and might change at any time"
+      }
+    ]
+  },
+  {
+    "source": "node-tests",
+    "scope": "runtime warning headers in the captured test output; not a claim of exhaustive dependency/OS warnings",
+    "count": 3,
+    "warnings": [
+      {
+        "line": 5819,
+        "text": "# (node:25227) ExperimentalWarning: SQLite is an experimental feature and might change at any time"
+      },
+      {
+        "line": 6264,
+        "text": "# (node:25422) ExperimentalWarning: SQLite is an experimental feature and might change at any time"
+      },
+      {
+        "line": 6458,
+        "text": "# (node:25477) ExperimentalWarning: SQLite is an experimental feature and might change at any time"
+      }
+    ]
+  }
+]

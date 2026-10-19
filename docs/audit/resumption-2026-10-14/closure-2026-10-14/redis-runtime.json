@@ -1,0 +1,26 @@
+{
+  "sourceProvenance": "../redis-source-provenance.json",
+  "sourceCommit": "498ecd0d6d007db11ddb3aea9428552598a78622",
+  "version": "8.10.2",
+  "binarySha256Verified": "3c6b31cbeafc02d603ba631c8efe32dddf3bebc9a915bd46db0f93abab1c3000",
+  "argv": [
+    "/home/user/audit-resumption/.cache/upstreams/redis/redis-498ecd0d6d007db11ddb3aea9428552598a78622/src/redis-server",
+    "--bind",
+    "127.0.0.1",
+    "--port",
+    "16380",
+    "--protected-mode",
+    "yes",
+    "--save",
+    "",
+    "--appendonly",
+    "no",
+    "--dir",
+    "/home/user/audit-resumption/.cache/closure-redis-runtime"
+  ],
+  "processId": "redis-de-test-isol-sans-persista-3d0d958f",
+  "serverStartedAt": "2026-10-14T16:20:38.903Z",
+  "serverStoppedAt": "2026-10-14T16:24:04.597Z",
+  "state": "stopped",
+  "limits": "Real isolated loopback Redis; no persistence, no production connection, no sysctl changes. Not CI Redis 7, not managed Upstash."
+}

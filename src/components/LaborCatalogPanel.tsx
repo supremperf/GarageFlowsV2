@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { LABOR_DEFAULTS } from '@/lib/labor-defaults'
 import { useTranslation } from '@/lib/i18n'
+import { useBrouillonPersistant } from '@/lib/ui/brouillon'
 
 interface LaborOp {
   id: string; name: string; category: string | null; durationMin: number
@@ -43,7 +44,11 @@ export default function LaborCatalogPanel({ onClose }: { onClose: () => void }) 
   const [q, setQ]             = useState('')
   const [editId, setEditId]   = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm]       = useState(emptyForm)
+  /**
+   * Nouvelle opération en cours de saisie, conservée d'une page à l'autre —
+   * souvent interrompue par un appel du comptoir.
+   */
+  const [form, setForm] = useBrouillonPersistant('labor:form', emptyForm)
   const [saving, setSaving]   = useState(false)
   const [importing, setImporting] = useState(false)
 
@@ -68,20 +73,39 @@ export default function LaborCatalogPanel({ onClose }: { onClose: () => void }) 
     if (!form.name.trim()) return
     setSaving(true)
     try {
-      if (editId) {
-        await fetch(`/api/labor-operations/${editId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
-      } else {
-        await fetch('/api/labor-operations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      // ── La fermeture du formulaire n'est plus le signal de succès (GF-024) ──
+      // Ni `res.ok` ni le corps n'étaient consultés : un refus du serveur — une
+      // durée à zéro renvoie 400 — refermait le formulaire, effaçait la saisie,
+      // et le barème gardait l'ancien tarif que le garage croyait corrigé. Toute
+      // facturation ultérieure partait sur ce tarif-là.
+      const res = editId
+        ? await fetch(`/api/labor-operations/${editId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+        : await fetch('/api/labor-operations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({} as { error?: string }))
+        toast.error(d?.error ?? 'Enregistrement refusé par le serveur.')
+        return
       }
       await load()
       setShowAdd(false); setEditId(null); setForm(emptyForm)
+    } catch {
+      toast.error('Serveur injoignable — l’opération n’a pas été enregistrée.')
     } finally { setSaving(false) }
   }
 
   async function del(id: string) {
     if (!confirm(t.lcConfirmDelete)) return
-    await fetch(`/api/labor-operations/${id}`, { method: 'DELETE' })
-    setOps(o => o.filter(x => x.id !== id))
+    try {
+      const res = await fetch(`/api/labor-operations/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({} as { error?: string }))
+        toast.error(d?.error ?? 'Suppression refusée par le serveur.')
+        return
+      }
+      setOps(o => o.filter(x => x.id !== id))
+    } catch {
+      toast.error('Serveur injoignable — l’opération n’a pas été supprimée.')
+    }
   }
 
   async function importDefaults() {
@@ -133,7 +157,7 @@ export default function LaborCatalogPanel({ onClose }: { onClose: () => void }) 
             className="flex items-center gap-1 px-3 py-1.5 text-xs rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium">
             <Plus className="w-3.5 h-3.5" /> {t.uiAdd}
           </button>
-          <button onClick={onClose} className="gf-close p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-400"><X className="w-5 h-5" /></button>
+          <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-400"><X className="w-5 h-5" /></button>
         </div>
       </div>
 

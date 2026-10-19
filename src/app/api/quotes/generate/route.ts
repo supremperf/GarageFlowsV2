@@ -1,5 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
+import { fromScaled } from '@/lib/money'
+import { lineToScaled } from '@/lib/money-db'
 import { z } from 'zod'
 import { format } from 'date-fns'
 import { prisma } from '@/lib/db'
@@ -46,12 +48,13 @@ export const POST = withAuth(async (req) => {
   if (validTypes.length === 0) return NextResponse.json({ error: 'Aucun type de réparation reconnu.' }, { status: 400 })
 
   const [garage, repairTypeParts, parts] = await Promise.all([
-    prisma.garage.findUnique({ where: { id: garageId }, select: { hourlyRate: true, taxRate: true, currency: true } }),
+    prisma.garage.findUnique({ where: { id: garageId }, select: { hourlyRateTenThousandths: true, taxRate: true, currency: true } }),
     prisma.repairTypePart.findMany({
       where: { garageId, repairType: { in: validTypes } },
-      select: { repairType: true, defaultQty: true, part: { select: { name: true, reference: true, unitPrice: true, unitCost: true } } },
+      // `id` manquait : c'est lui qui rattache la ligne au stock (GF-040).
+      select: { repairType: true, defaultQty: true, part: { select: { id: true, name: true, reference: true, unitPriceTenThousandths: true, unitCostTenThousandths: true } } },
     }),
-    prisma.part.findMany({ where: { garageId }, select: { name: true, reference: true, unitPrice: true }, take: 5000 }),
+    prisma.part.findMany({ where: { garageId }, select: { id: true, name: true, reference: true, unitPriceTenThousandths: true }, take: 5000 }),
   ])
 
   // Default parts (BOM) grouped by repair type.
@@ -60,10 +63,11 @@ export const POST = withAuth(async (req) => {
     if (!rtp.part) continue
     const list = partsByType.get(rtp.repairType) ?? []
     list!.push({
+      partId: rtp.part.id,
       name: rtp.part.name,
       reference: rtp.part.reference,
-      unitPrice: rtp.part.unitPrice,
-      unitCost: rtp.part.unitCost,
+      unitPrice: fromScaled(rtp.part.unitPriceTenThousandths),
+      unitCost: fromScaled(rtp.part.unitCostTenThousandths),
       quantity: rtp.defaultQty,
     })
     partsByType.set(rtp.repairType, list)
@@ -80,9 +84,20 @@ export const POST = withAuth(async (req) => {
   let suggestions: QuoteSuggestionInput[] = []
   if (body.includeSuggestions !== false) {
     const catalog = new Map<string, number>()
+    // Index parallèle nom/référence → identifiant de pièce. Le moteur de
+    // suggestions ne connaît que des PRIX ; sans cette table, la ligne suggérée
+    // arrivait dépourvue de `partId` et la facture issue de la conversion ne
+    // décrémentait rien (GF-040).
+    const idsCatalogue = new Map<string, string>()
     for (const p of parts) {
-      if (p.name) catalog.set(p.name.toLowerCase(), p.unitPrice)
-      if (p.reference) catalog.set(p.reference.toLowerCase(), p.unitPrice)
+      if (p.name) {
+        catalog.set(p.name.toLowerCase(), fromScaled(p.unitPriceTenThousandths))
+        idsCatalogue.set(p.name.toLowerCase(), p.id)
+      }
+      if (p.reference) {
+        catalog.set(p.reference.toLowerCase(), fromScaled(p.unitPriceTenThousandths))
+        idsCatalogue.set(p.reference.toLowerCase(), p.id)
+      }
     }
     const partsOnJob = operations.flatMap((o) => (o.parts ?? []).map((p) => ({ name: p.name, reference: p.reference })))
     const recs = forgottenPartsEngine.analyze({
@@ -92,6 +107,9 @@ export const POST = withAuth(async (req) => {
       currency: garage?.currency ?? 'EUR',
     })
     suggestions = recs.map((r) => ({
+      partId: idsCatalogue.get(r.name.toLowerCase())
+        ?? (r.reference ? idsCatalogue.get(r.reference.toLowerCase()) : undefined)
+        ?? null,
       name: r.name,
       reference: r.reference ?? null,
       unitPrice: r.estimatedImpact.unitPrice,
@@ -108,9 +126,14 @@ export const POST = withAuth(async (req) => {
     })
   }
 
+  // Un devis chiffré sur un tarif inventé serait remis au client. Le repli
+  // `: 60` produisait exactement cela quand le garage de la session était
+  // introuvable — sans que rien ne le distingue d'un devis correct.
+  if (!garage) return NextResponse.json({ error: 'Garage introuvable' }, { status: 404 })
+
   const proposal = generateQuote(operations, suggestions, {
-    laborRatePerHour: body.laborRatePerHour ?? garage?.hourlyRate ?? 60,
-    vatRate: body.vatRate ?? garage?.taxRate ?? 20,
+    laborRatePerHour: body.laborRatePerHour ?? fromScaled(garage.hourlyRateTenThousandths),
+    vatRate: body.vatRate ?? garage.taxRate ?? 20,
     currency: garage?.currency ?? 'EUR',
   })
 
@@ -164,9 +187,14 @@ export const POST = withAuth(async (req) => {
         lines: {
           create: proposal.lines.map((l, i) => ({
             description: l.description,
-            quantity: l.quantity,
-            unitPrice: l.unitPrice,
-            unitCost: l.unitCost,
+            // Proposition en euros → entiers exacts (dix-millièmes) au stockage.
+            ...lineToScaled(l),
+            // ── Le rattachement au stock est PERSISTÉ (GF-040) ───────────────
+            // Seul `InvoiceLine.partId` engage l'inventaire, et la conversion
+            // recopie fidèlement `QuoteLine.partId`. Sans cette ligne, la
+            // facture issue d'un devis généré ne décrémentait jamais rien : les
+            // pièces sortaient de l'atelier sans quitter l'inventaire.
+            partId: l.partId ?? null,
             isLabor: l.isLabor,
             sortOrder: i,
           })),

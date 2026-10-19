@@ -1,5 +1,5 @@
 """
-keygen_core.py — GarageFlow Licence ECC P-256
+keygen_core.py — GarageFlows Licence ECC P-256
 Gestion des clés, signature et vérification ECDSA-SHA256.
 """
 
@@ -20,12 +20,13 @@ PRIV_FILE = KEYS_DIR / "private.pem"
 PUB_FILE  = KEYS_DIR / "public.pem"
 
 HEADER        = {"alg": "ES256", "typ": "GF-LIC", "v": 2}
-LICENSE_TYPES = ["trial", "premium", "enterprise", "admin"]
+LICENSE_TYPES = ["trial", "premium", "enterprise", "admin", "mechanic"]
 TYPE_LABELS   = {
     "trial":      "Standard",
     "premium":    "Premium",
     "enterprise": "Pro / Entreprise",
     "admin":      "Admin",
+    "mechanic":   "Mécanicien",
 }
 
 def b64u_enc(data: bytes) -> str:
@@ -79,11 +80,22 @@ def generate_keys(passphrase: str = "") -> dict:
 
 def load_private_key(passphrase: str = ""):
     if not PRIV_FILE.exists():
-        raise FileNotFoundError(f"Clé privée introuvable: {PRIV_FILE}\nLancez d'abord 'Initialiser les clés'.")
+        raise FileNotFoundError(f"Clé privée introuvable: {PRIV_FILE}\nRestaurer la clé privée autorisée ; ne pas initialiser pour contourner un incident.")
     pw = passphrase.encode() if passphrase else None
     return serialization.load_pem_private_key(
         PRIV_FILE.read_bytes(), password=pw, backend=default_backend()
     )
+
+
+def load_checked_private_key(passphrase: str = ""):
+    """GUI signing boundary: fail before minting/persisting if any local anchor differs.
+
+    Does not attest a remote deployment. Never regenerate keys to bypass this check.
+    """
+    from keygen_trust import check_key_match
+    key = load_private_key(passphrase)
+    check_key_match(key, ROOT_DIR)
+    return key
 
 
 def load_public_key():
@@ -104,6 +116,8 @@ def _sign(priv_key, payload: dict) -> str:
 def make_license(priv_key, customer_id: str, license_type: str,
                  years: int = 1, seats: int = 1,
                  hwid: str = None, label: str = None) -> dict:
+    if license_type == "mechanic":
+        raise ValueError("Utilisez make_mechanic_license pour les licences mécanicien.")
     if license_type not in LICENSE_TYPES:
         raise ValueError(f"Type invalide. Choisir parmi: {LICENSE_TYPES}")
 
@@ -135,6 +149,48 @@ def make_license(priv_key, customer_id: str, license_type: str,
     }
 
 
+def make_mechanic_license(priv_key, parent_lid: str, customer_id: str,
+                          years: int = 1, mechanic_name: str | None = None,
+                          hwid: str | None = None, label: str | None = None) -> dict:
+    """Génère une licence mécanicien (typ='mechanic', ver='2.1', seats=1)
+    liée à une licence garage parente via 'plid'. 'mn' est un indice
+    d'attribution optionnel (nom du mécanicien)."""
+    if not parent_lid or not str(parent_lid).strip():
+        raise ValueError("parent_lid est obligatoire pour une licence mécanicien.")
+
+    now = int(time.time())
+    exp = now + years * 365 * 24 * 3600
+    lid = str(uuid.uuid4())
+
+    wm_raw = {"c": customer_id, "t": now, "r": os.urandom(6).hex(), "l": label or ""}
+    wm     = b64u_enc(json.dumps(wm_raw, separators=(",", ":")).encode())
+
+    payload = {
+        "lid": lid, "cid": customer_id, "typ": "mechanic",
+        "iss": now, "exp": exp, "seats": 1,
+        "wm": wm, "ver": "2.1",
+        "plid": parent_lid,
+    }
+    if mechanic_name:
+        payload["mn"] = mechanic_name
+    if hwid:
+        payload["hwid"] = hwid
+
+    return {
+        "token":         _sign(priv_key, payload),
+        "lid":           lid,
+        "cid":           customer_id,
+        "type":          "mechanic",
+        "issued_at":     time.strftime("%Y-%m-%d", time.gmtime(now)),
+        "expires_at":    time.strftime("%Y-%m-%d", time.gmtime(exp)),
+        "seats":         1,
+        "hwid":          hwid,
+        "label":         label,
+        "parent_lid":    parent_lid,
+        "mechanic_name": mechanic_name,
+    }
+
+
 # ── Vérification ──────────────────────────────────────────────────────────────
 
 def verify_token(token: str) -> dict | None:
@@ -152,6 +208,11 @@ def verify_token(token: str) -> dict | None:
         return json.loads(b64u_dec(payload_b64).decode())
     except Exception:
         return None
+
+
+def is_mechanic_payload(payload) -> bool:
+    """Retourne True si le payload décodé est celui d'une licence mécanicien."""
+    return isinstance(payload, dict) and payload.get("typ") == "mechanic"
 
 
 # ── HWID ─────────────────────────────────────────────────────────────────────

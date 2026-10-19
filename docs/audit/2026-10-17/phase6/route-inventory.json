@@ -1,0 +1,2900 @@
+[
+  {
+    "file": "src/app/api/admin/backups/[id]/download/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 18,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/admin/backups/[id]/restore/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 19,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/admin/backups/[id]/verify/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 18,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/admin/backups/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 30,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 48,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/admin/diagnostics/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 149,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "enforceRateLimit"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/admin/licenses/[id]/devices/[deviceId]/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 23,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "isAdminSession",
+      "enforceRateLimit"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/admin/licenses/[id]/devices/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 18,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "isAdminSession",
+      "enforceRateLimit"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/admin/licenses/[id]/route.ts",
+    "methods": [
+      {
+        "name": "PATCH",
+        "line": 78,
+        "kind": "function"
+      },
+      {
+        "name": "DELETE",
+        "line": 244,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "isAdminSession",
+      "enforceRateLimit"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/admin/licenses/create/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 39,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/admin/licenses/generate/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 97,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "isAdminSession",
+      "enforceRateLimit"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/admin/licenses/revoke-by-key/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 14,
+        "kind": "function"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/admin/licenses/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 29,
+        "kind": "function"
+      },
+      {
+        "name": "POST",
+        "line": 43,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "isAdminSession"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/admin/monitoring/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 16,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/admin/updates/file/[name]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 22,
+        "kind": "function"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/admin/updates/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 85,
+        "kind": "function"
+      },
+      {
+        "name": "POST",
+        "line": 92,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "isAdminSession"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/adresse/recherche/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 20,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/analytics/health/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 18,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/appointments/[id]/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 22,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 129,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/appointments/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 57,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/auth/[...nextauth]/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 16,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "enforceRateLimit"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/catalog/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 91,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/clients/[id]/portal-access/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 117,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 129,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PUT",
+        "line": 224,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 297,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/clients/[id]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 68,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 79,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/clients/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 10,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 41,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/copilot/report/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 20,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/copilot/reports/[id]/export/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 15,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/copilot/reports/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 17,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 32,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/copilot/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 14,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 29,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/dashboard/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 15,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/diagnostic/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 18,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/einvoicing/connection/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 66,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PUT",
+        "line": 82,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 159,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/einvoicing/connection/test/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 24,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/einvoicing/invoices/[id]/submit/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 42,
+        "kind": "withAuth"
+      },
+      {
+        "name": "GET",
+        "line": 159,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/einvoicing/status/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 27,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/email/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 16,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 32,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 62,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/estimate/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 10,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/export/fec/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 10,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/finance/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 13,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/forecast/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 56,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 86,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/forgotten-parts/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 17,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/garages/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 13,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 53,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 186,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/health/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 99,
+        "kind": "function"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/inspections/[id]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 8,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 19,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 92,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/inspections/prefill/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 14,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/inspections/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 9,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 29,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/internal/backup/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 60,
+        "kind": "function"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/internal/export/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 15,
+        "kind": "function"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/internal/license-status/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 34,
+        "kind": "function"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/internal/migrate/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 150,
+        "kind": "function"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/invoices/[id]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 18,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 31,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 214,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/invoices/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 16,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 53,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/jobs/[id]/parts/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 34,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 70,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 179,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/jobs/[id]/photos/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 8,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 18,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 64,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/jobs/[id]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 13,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PUT",
+        "line": 23,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 93,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 135,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/jobs/[id]/timer/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 8,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/jobs/pulse/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 51,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/jobs/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 32,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 63,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/labor-operations/[id]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 9,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 19,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 56,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/labor-operations/bulk-import/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 11,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/labor-operations/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 10,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 38,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/license/activate/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 562,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/license/check/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 231,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "enforceRateLimit"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/license/deactivate/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 52,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "enforceRateLimit"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/license/devices/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 70,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "enforceRateLimit"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/license/status/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 97,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "enforceRateLimit"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/license/type/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 13,
+        "kind": "function"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/loaner-reservations/[id]/route.ts",
+    "methods": [
+      {
+        "name": "PATCH",
+        "line": 9,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 109,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/loaner-reservations/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 10,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 43,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/loaner-vehicles/[id]/route.ts",
+    "methods": [
+      {
+        "name": "PATCH",
+        "line": 6,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 25,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/loaner-vehicles/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 6,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 27,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/[lid]/assign/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 15,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/[lid]/disconnect/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 13,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/[lid]/status/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 25,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/[lid]/token/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 32,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanic-licenses/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 27,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 124,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanic/jobs/[id]/checklist/[itemId]/route.ts",
+    "methods": [
+      {
+        "name": "PATCH",
+        "line": 12,
+        "kind": "withMechanic"
+      }
+    ],
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanic/jobs/[id]/notes/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 18,
+        "kind": "withMechanic"
+      }
+    ],
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanic/jobs/[id]/photos/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 14,
+        "kind": "withMechanic"
+      }
+    ],
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanic/jobs/[id]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 11,
+        "kind": "withMechanic"
+      }
+    ],
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanic/jobs/[id]/timer/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 34,
+        "kind": "withMechanic"
+      }
+    ],
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanic/logout/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 11,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanic/me/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 9,
+        "kind": "withMechanic"
+      }
+    ],
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanic/photos/[...path]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 14,
+        "kind": "withMechanic"
+      }
+    ],
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanic/schedule/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 29,
+        "kind": "withMechanic"
+      }
+    ],
+    "markers": [
+      "requireMechanic",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanics/[id]/avatar/route.ts",
+    "methods": [
+      {
+        "name": "PUT",
+        "line": 48,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 135,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanics/[id]/route.ts",
+    "methods": [
+      {
+        "name": "PATCH",
+        "line": 10,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 87,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/mechanics/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 22,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 42,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/notifications/dispatch/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 61,
+        "kind": "withAuth"
+      },
+      {
+        "name": "GET",
+        "line": 138,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/ocr/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 27,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/parts/[id]/route.ts",
+    "methods": [
+      {
+        "name": "PATCH",
+        "line": 12,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 123,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/parts/low-stock/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 6,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/parts/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 11,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 53,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/parts/search/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 30,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/photos/[...path]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 16,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/ping/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 3,
+        "kind": "function"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/plate-lookup/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 7,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/plate-ocr/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 10,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/[token]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 10,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/appointments/[id]/route.ts",
+    "methods": [
+      {
+        "name": "PATCH",
+        "line": 17,
+        "kind": "withPortalAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 46,
+        "kind": "withPortalAuth"
+      }
+    ],
+    "markers": [
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/appointments/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 15,
+        "kind": "withPortalAuth"
+      },
+      {
+        "name": "POST",
+        "line": 40,
+        "kind": "withPortalAuth"
+      }
+    ],
+    "markers": [
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/auth/2fa/disable/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 13,
+        "kind": "withPortalAuth"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/auth/2fa/enable/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 16,
+        "kind": "withPortalAuth"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/auth/2fa/setup/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 16,
+        "kind": "withPortalAuth"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/auth/2fa/verify/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 19,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "enforceRateLimit"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/auth/devices/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 13,
+        "kind": "withPortalAuth"
+      },
+      {
+        "name": "POST",
+        "line": 32,
+        "kind": "withPortalAuth"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/auth/email/route.ts",
+    "methods": [
+      {
+        "name": "PUT",
+        "line": 35,
+        "kind": "withPortalAuth"
+      }
+    ],
+    "markers": [
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/auth/login/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 27,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/auth/logout/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 12,
+        "kind": "withPortalAuth"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/auth/me/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 10,
+        "kind": "withPortalAuth"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/auth/password/route.ts",
+    "methods": [
+      {
+        "name": "PUT",
+        "line": 36,
+        "kind": "withPortalAuth"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/auth/register/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 40,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/auth/verify-email/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 17,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/generate/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 15,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/me/dashboard/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 20,
+        "kind": "withPortalAuth"
+      }
+    ],
+    "markers": [
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/quote/[token]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 16,
+        "kind": "function"
+      },
+      {
+        "name": "POST",
+        "line": 132,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/tickets/[id]/close/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 15,
+        "kind": "withPortalAuth"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/tickets/[id]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 16,
+        "kind": "withPortalAuth"
+      },
+      {
+        "name": "POST",
+        "line": 25,
+        "kind": "withPortalAuth"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/portal/tickets/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 14,
+        "kind": "withPortalAuth"
+      },
+      {
+        "name": "POST",
+        "line": 30,
+        "kind": "withPortalAuth"
+      }
+    ],
+    "markers": [
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/profitability/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 12,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/purchase-orders/[id]/receive/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 21,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/purchase-orders/[id]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 9,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 16,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 44,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/purchase-orders/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 9,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 19,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/quotes/[id]/convert/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 14,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/quotes/[id]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 14,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 28,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 156,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/quotes/[id]/signature-token/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 28,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/quotes/generate/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 30,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/quotes/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 16,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 52,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/reminders/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 8,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 29,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 68,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 83,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/reminders/send/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 25,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/reminders/suggestions/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 7,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/reports/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 61,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 67,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/signatures/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 55,
+        "kind": "withAuth"
+      },
+      {
+        "name": "GET",
+        "line": 118,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/stats/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 12,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/stock-forecast/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 12,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/suggestions/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 11,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/suppliers/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 87,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 128,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/sync/appointments/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 128,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "authenticateGarage",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/sync/einvoicing/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 304,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "authenticateGarage",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/sync/invoice/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 188,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "authenticateGarage",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/sync/job-photo/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 105,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "authenticateGarage",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/sync/jobs/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 289,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "authenticateGarage",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/sync/mechanic-assignment/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 234,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "authenticateGarage",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/sync/mechanic-avatar/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 188,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "authenticateGarage",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/sync/mechanic-status/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 132,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "authenticateGarage",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/sync/portal-account/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 138,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "authenticateGarage",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/sync/portal/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 189,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "authenticateGarage",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/sync/quote-return/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 127,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "authenticateGarage",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/sync/quote/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 220,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "authenticateGarage",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/sync/tickets/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 155,
+        "kind": "function"
+      }
+    ],
+    "markers": [
+      "authenticateGarage",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/tickets/[id]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 23,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 36,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/tickets/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 12,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/users/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 10,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 26,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/vehicles/[id]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 11,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 35,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/vehicles/[id]/timeline/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 7,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/vehicles/ct-alerts/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 9,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/vehicles/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 10,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 52,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/version/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 32,
+        "kind": "function"
+      }
+    ],
+    "markers": [],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/vin/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 15,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "enforceRateLimit",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/warranties/[id]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 7,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 14,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 36,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/warranties/alerts/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 7,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/warranties/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 8,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 34,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/work-orders/[id]/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 66,
+        "kind": "withAuth"
+      },
+      {
+        "name": "PATCH",
+        "line": 80,
+        "kind": "withAuth"
+      },
+      {
+        "name": "DELETE",
+        "line": 200,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/work-orders/[id]/sign/route.ts",
+    "methods": [
+      {
+        "name": "POST",
+        "line": 7,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  },
+  {
+    "file": "src/app/api/work-orders/route.ts",
+    "methods": [
+      {
+        "name": "GET",
+        "line": 66,
+        "kind": "withAuth"
+      },
+      {
+        "name": "POST",
+        "line": 89,
+        "kind": "withAuth"
+      }
+    ],
+    "markers": [
+      "withAuth",
+      "requireSession",
+      "assertRelations",
+      "garageId"
+    ],
+    "semanticStatus": "not certified by marker presence; delegated guards may exist"
+  }
+]

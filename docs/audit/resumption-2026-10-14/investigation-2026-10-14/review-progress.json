@@ -1,0 +1,100 @@
+{
+  "at": "2026-10-14T15:29:18.796630+00:00",
+  "total": 1250,
+  "manualReview": {
+    "EN ATTENTE DE REVUE": 1168,
+    "VALID\u00c9": 69,
+    "PARTIELLEMENT VALID\u00c9": 13
+  },
+  "mutuallyExclusive": true,
+  "exclusions": {
+    "documentedGeneratedEvidenceDirectories": [
+      "docs/audit/followup-2026-10-14/",
+      "docs/audit/resumption-2026-10-14/"
+    ],
+    "automaticInventories": [
+      "docs/audit/inventory-current.jsonl",
+      "docs/audit/inventory.jsonl",
+      "docs/audit/module-map.jsonl",
+      "docs/audit/scope.json"
+    ],
+    "gitIgnored": "Private configuration, installed dependencies and generated outputs remain ignored; not a product source exemption."
+  },
+  "nextBatch": [
+    {
+      "path": "electron/main.js",
+      "sha256": "2813b1473c3a4396f27924d7d5dbf5c11a4c75119c65fb707004825a30e1217b",
+      "priority": "P0"
+    },
+    {
+      "path": "electron/secure-key.js",
+      "sha256": "46166da673e8356d9ea599f9c3edf7e6536d18dff21364053b3772647fff309a",
+      "priority": "P0"
+    },
+    {
+      "path": "electron/splash.html",
+      "sha256": "58698c68b51f01ee4ff8c205013b417e69b530b00750e98270b6a281c9a6a7dc",
+      "priority": "P0"
+    },
+    {
+      "path": "electron/update-verify.js",
+      "sha256": "c2eab6aff6e959e2832a747111656368d0f054b9ddd734dd58fc1debdf881983",
+      "priority": "P0"
+    },
+    {
+      "path": "prisma/demo-tenant.ts",
+      "sha256": "6d205e0881b7a830edd3de8f078722d00513f83a32dd9164401f592c34f1eff2",
+      "priority": "P0"
+    },
+    {
+      "path": "prisma/garageflow-template.db",
+      "sha256": "2434c43f0333a3be258a88157cd60109fcc10cc7857fb177c95e5bd8aff2c757",
+      "priority": "P0"
+    },
+    {
+      "path": "prisma/migrations/20260424000000_add_record_mac/migration.sql",
+      "sha256": "efc69c7355fe15a68456617c9d85e49ecfe4558b4367faf32345755b697e0214",
+      "priority": "P0"
+    },
+    {
+      "path": "prisma/migrations/20260425000000_add_audit_log_and_indexes/migration.sql",
+      "sha256": "701a3937da5d81d536cb72603e0ee9260b9409ee5be7961ca43a9f6bccce9d5a",
+      "priority": "P0"
+    },
+    {
+      "path": "prisma/schema.prisma",
+      "sha256": "dde9715787f2e299e6781cac0b2d6641be449d097559ad90aa8f204c6ea7f620",
+      "priority": "P0"
+    },
+    {
+      "path": "prisma/seed.ts",
+      "sha256": "abbae3ae9aabafc7e45563f426532c7c18d13cb496125adac3c90ab93030d5b4",
+      "priority": "P0"
+    },
+    {
+      "path": "prisma/server/migrations/20260730120000_init_server/migration.sql",
+      "sha256": "a3cff81c9abde79ed7a88517feec2f3d2ae7df220cc484ee08146efe0871ee86",
+      "priority": "P0"
+    },
+    {
+      "path": "prisma/server/migrations/20260730160000_link_license_garage/migration.sql",
+      "sha256": "b2a67bfb85b369f05979f2233cdff14b439aaa2dc302b295fc588f461b6fd861",
+      "priority": "P0"
+    }
+  ],
+  "limits": "Not exhaustive; no counts of reading/AST/hash presented as functionality.",
+  "reviewedCurrentFiles": [
+    "package.json",
+    ".github/workflows/ci.yml",
+    "scripts/gitleaks-ci.cjs",
+    "tests/gitleaks-ci.test.cjs",
+    "tests/secret-scan-policy.test.cjs",
+    ".gitleaksignore",
+    "electron/secret.js",
+    "electron/semver.js",
+    "electron/startup-gate.js",
+    "electron/user-data-path.js",
+    "electron/sauvegarde-en-souffrance.js",
+    "e2e/inspection-contrast.spec.ts"
+  ]
+}

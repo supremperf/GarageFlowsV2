@@ -1,7 +1,9 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
+import { fromScaled } from '@/lib/money'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { can, redactReorderCosts } from '@/lib/authz'
 import { subMonths, format } from 'date-fns'
 import { planReorders, type StockItemInput } from '@/lib/stock-forecast'
 
@@ -21,7 +23,7 @@ export const GET = withAuth(async (req) => {
   const [parts, jobParts, garage] = await Promise.all([
     prisma.part.findMany({
       where: { garageId },
-      select: { id: true, name: true, reference: true, quantity: true, unitCost: true, minQuantity: true },
+      select: { id: true, name: true, reference: true, quantity: true, unitCostTenThousandths: true, minQuantity: true },
     }),
     prisma.jobPart.findMany({
       where: { job: { garageId, date: { gte: startDate } } },
@@ -46,7 +48,7 @@ export const GET = withAuth(async (req) => {
       name: p.name,
       reference: p.reference,
       currentStock: p.quantity,
-      unitCost: p.unitCost,
+      unitCost: fromScaled(p.unitCostTenThousandths),
       minStock: p.minQuantity,
       leadTimeDays,
       periodDays: 30,
@@ -55,5 +57,21 @@ export const GET = withAuth(async (req) => {
   })
 
   const report = planReorders(items, garage?.currency ?? 'EUR')
+
+  // Le coût d'achat révèle la marge : même projection que sur les lignes de
+  // devis et de facture (GF31-AUD-009) et que sur la réponse du copilote. Cette
+  // route rendait `estimatedCost` par pièce ET `totalOrderCost` en résumé à tout
+  // utilisateur authentifié — le contrôle posé sur /api/finance et
+  // /api/profitability se contournait donc en la lisant.
+  //
+  // Le plan lui-même reste rendu : la quantité à commander et l'urgence sont des
+  // informations d'atelier.
+  if (!can(session.user.role, 'financial:read')) {
+    const { totalOrderCost: _cout, ...resume } = report.summary
+    return NextResponse.json({
+      plans: redactReorderCosts(report.plans as unknown as Record<string, unknown>[], session.user.role),
+      summary: resume,
+    })
+  }
   return NextResponse.json(report)
 })

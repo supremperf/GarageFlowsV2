@@ -1,0 +1,34 @@
+TAP version 13
+# Subtest: all installed Next instances include the Windows RCE and AVIF fixes, without removing Next
+ok 1 - all installed Next instances include the Windows RCE and AVIF fixes, without removing Next
+  ---
+  duration_ms: 3.809044
+  type: 'test'
+  ...
+# Subtest: all tar instances include the critical decompression fix and later traversal fixes; builder resolves this tar
+ok 2 - all tar instances include the critical decompression fix and later traversal fixes; builder resolves this tar
+  ---
+  duration_ms: 3.672133
+  type: 'test'
+  ...
+# Subtest: patched tar aborts a bounded high-compression fixture without extracting or exhausting disk
+ok 3 - patched tar aborts a bounded high-compression fixture without extracting or exhausting disk
+  ---
+  duration_ms: 16.187928
+  type: 'test'
+  ...
+# Subtest: patched tar still accepts a normal uncompressed archive and preserves file content
+ok 4 - patched tar still accepts a normal uncompressed archive and preserves file content
+  ---
+  duration_ms: 2.01048
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 101.890188

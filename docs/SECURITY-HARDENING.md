@@ -6,7 +6,7 @@ normalement, et les fichiers/ressources internes sont protégés contre la
 consultation, la modification, la suppression et la rétro-ingénierie.
 
 > **Honnêteté technique.** Aucune protection logicielle côté client n'est
-> inviolable : un attaquant déterminé disposant d'un accès administrateur à la
+> réellement « inviolable » : un attaquant déterminé disposant d'un accès administrateur à la
 > machine peut, en théorie, contourner n'importe quelle protection locale. Ces
 > couches **élèvent fortement la barre** (elles arrêtent les manipulations
 > ordinaires et la rétro-ingénierie triviale) et doivent être **combinées** —

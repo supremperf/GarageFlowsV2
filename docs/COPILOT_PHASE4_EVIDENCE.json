@@ -1,0 +1,725 @@
+{
+  "recordedAt": "2026-10-15T14:33:54.215243+02:00",
+  "timezone": "Europe/Paris",
+  "status": "PARTIELLEMENT_VALIDÉ — NON PRÊT POUR LA PRODUCTION",
+  "localHeadAtChecks": "c4a2cca2cf446f96be580e99cca8afbca45396c5",
+  "publishedParent": "bd05cd521917cc059fc21780d1b562c020534942",
+  "phase3SourceReviewCountAtIntake": 36,
+  "externalHistoricalLogsAvailable": false,
+  "receipts": [
+    {
+      "id": "F01",
+      "path": "docs/audit/copilot-phase4/F01.json",
+      "sha256": "3c7a6379ece1061bd5bfcf410144134e415bb1409989608098a982c8b7330ccf",
+      "exitCode": 0,
+      "status": "EXECUTED_PASS"
+    },
+    {
+      "id": "F02",
+      "path": "docs/audit/copilot-phase4/F02.json",
+      "sha256": "cb5bede36bca4fcbeb4e594f7f24becb92b2e28f1f279c1e474c7b78cfdf7ee2",
+      "exitCode": 0,
+      "status": "EXECUTED_PASS"
+    },
+    {
+      "id": "F03",
+      "path": "docs/audit/copilot-phase4/F03.json",
+      "sha256": "6fca836e622a2e0ee6ebfa757307e469f759063add24141dc11eb3fd28201269",
+      "exitCode": 1,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F04",
+      "path": "docs/audit/copilot-phase4/F04.json",
+      "sha256": "a7b7fe68efed915d0eb9f9d27184ade353f27a5fc16d499759077507bfb686d8",
+      "exitCode": 1,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F05",
+      "path": "docs/audit/copilot-phase4/F05.json",
+      "sha256": "a453b0ab699fae2e12eefdd3be889a2d5029986ea1e1b3618831ee9df8cdcf0c",
+      "exitCode": 0,
+      "status": "EXECUTED_PASS"
+    },
+    {
+      "id": "F06",
+      "path": "docs/audit/copilot-phase4/F06.json",
+      "sha256": "92a7a2a704e7f44b72bb2b55ee3a195f9659022679a150c443f55b7353061cf3",
+      "exitCode": 1,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F07",
+      "path": "docs/audit/copilot-phase4/F07.json",
+      "sha256": "6fd1052de7756f0250a351537fc3d9ac2cf3d677adb7b72121ea9b540b8f00be",
+      "exitCode": 0,
+      "status": "EXECUTED_PASS"
+    },
+    {
+      "id": "F08",
+      "path": "docs/audit/copilot-phase4/F08.json",
+      "sha256": "fff5fe4a65638aee94c6902154fd715c3646ffbbb0e27e04e5e8eddf95c6a9ac",
+      "exitCode": 2,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F09",
+      "path": "docs/audit/copilot-phase4/F09.json",
+      "sha256": "03aa37fbf2207dcb5db06a83680d9041d971a1a462f6cfe6b8634f2a1159fe74",
+      "exitCode": 0,
+      "status": "EXECUTED_PASS"
+    },
+    {
+      "id": "F10",
+      "path": "docs/audit/copilot-phase4/F10.json",
+      "sha256": "b1e31856e1b57e1109fdfe675bf70dffc4f0fed817dce2c8cb60bfe7e5366dcb",
+      "exitCode": 2,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F11",
+      "path": "docs/audit/copilot-phase4/F11.json",
+      "sha256": "99cd12c10c32801e6ce4d6698db7a441ee229b329474033c6946ee0fd1e5ffc5",
+      "exitCode": 0,
+      "status": "EXECUTED_PASS"
+    },
+    {
+      "id": "F12",
+      "path": "docs/audit/copilot-phase4/F12.json",
+      "sha256": "83affff7e52c3ee743836c509fd04ca6555cb662f6a9dbf8dd920e158ad2e5ff",
+      "exitCode": 0,
+      "status": "EXECUTED_PASS"
+    },
+    {
+      "id": "F13",
+      "path": "docs/audit/copilot-phase4/F13.json",
+      "sha256": "00fad355540d5de059bc01dd12a601cb546e3d5c46cf187aa17ab0ea7e11bcfd",
+      "exitCode": 1,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F14",
+      "path": "docs/audit/copilot-phase4/F14.json",
+      "sha256": "43ca293c980b28a55d8203677e57d723f51e85e0485b787eb211c0c9bfbba91f",
+      "exitCode": 1,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F15",
+      "path": "docs/audit/copilot-phase4/F15.json",
+      "sha256": "d3d1168b904d2d449d8c5c5619aaefe8d8d398f111c9123d863809d8a81b97dc",
+      "exitCode": 0,
+      "status": "EXECUTED_PASS"
+    },
+    {
+      "id": "F16",
+      "path": "docs/audit/copilot-phase4/F16.json",
+      "sha256": "bced94db36a77dbac6d8191f5b0f8325f00f690d9dab78218750242ae90c2def",
+      "exitCode": 1,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F17",
+      "path": "docs/audit/copilot-phase4/F17.json",
+      "sha256": "4442561c7cac3b0d16f50cd3f8160ae91e35dc758288dc2c05daf237b722c0c5",
+      "exitCode": 1,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F18",
+      "path": "docs/audit/copilot-phase4/F18.json",
+      "sha256": "23db71689bf997ddb9339ee0e739a2eed354fcf933d912df82ceb359699740d7",
+      "exitCode": 1,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F19",
+      "path": "docs/audit/copilot-phase4/F19.json",
+      "sha256": "561c87f345248bef5c4669769494f30d71162f8300e939f1fd483f78fcda41f2",
+      "exitCode": 2,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F20",
+      "path": "docs/audit/copilot-phase4/F20.json",
+      "sha256": "ec37ff974eecab59cd3eb2a3eca1d296c3c8634ee99ced1d05e45ac89e6319b5",
+      "exitCode": 1,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F21",
+      "path": "docs/audit/copilot-phase4/F21.json",
+      "sha256": "872fa93d2df31c54a1fce0e56f102420f732bedf02fd8dbce3a654e303c30607",
+      "exitCode": 1,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F22",
+      "path": "docs/audit/copilot-phase4/F22.json",
+      "sha256": "27127640dd7386829d97dc78986044f23a53d5f162dcc3d11119928c18f543a7",
+      "exitCode": 0,
+      "status": "EXECUTED_PASS"
+    },
+    {
+      "id": "F23",
+      "path": "docs/audit/copilot-phase4/F23.json",
+      "sha256": "6bb176e50c2b974152851c19a42ee45cb2d60f59a0b2ec05fcaf37d4b086894e",
+      "exitCode": 0,
+      "status": "EXECUTED_PASS"
+    },
+    {
+      "id": "F24",
+      "path": "docs/audit/copilot-phase4/F24.json",
+      "sha256": "47d89dc088387d8d807b5db991fa8c3f0f31c613bd61ea889ee79bc90b974ed4",
+      "exitCode": 1,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F25",
+      "path": "docs/audit/copilot-phase4/F25.json",
+      "sha256": "52f8cd27615544892a99dd6751f33f86ec22ac99f8d9e1d69e47c83b52ceb561",
+      "exitCode": 0,
+      "status": "EXECUTED_PASS"
+    },
+    {
+      "id": "F26",
+      "path": "docs/audit/copilot-phase4/F26.json",
+      "sha256": "d8a5060625b24ac40d14560fd8b6c5a81c0daf84505df6a4cb6a01718a917504",
+      "exitCode": 1,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F27",
+      "path": "docs/audit/copilot-phase4/F27.json",
+      "sha256": "92cfc8a3c57d8e591aeae81a5de133bccebe1e7f5642ef8ab3c05778a729c7cd",
+      "exitCode": 2,
+      "status": "EXECUTED_NONZERO; see report for failed vs blocked vs intentional guard"
+    },
+    {
+      "id": "F28",
+      "path": "docs/audit/copilot-phase4/F28.json",
+      "sha256": "0f0fafae0e9ef242ba157bd0b88d7907aeaad1c935d4b2d03a84903972827d03",
+      "exitCode": 0,
+      "status": "EXECUTED_PASS"
+    },
+    {
+      "id": "F30",
+      "path": "docs/audit/copilot-phase4/F30.json",
+      "sha256": "72e57b103477d9796406e6f9a07f210976a52698d250fbc394926f4aa17184f5",
+      "exitCode": 1,
+      "status": "PUBLICATION_PREPARATION_FAILED; no commit/push then"
+    },
+    {
+      "id": "F31",
+      "path": "docs/audit/copilot-phase4/F31.json",
+      "sha256": "aee10aced120b266a888d6541eb0b0148a8ec4318f904760c49ef00e959525fc",
+      "exitCode": 1,
+      "status": "PUBLICATION_PREPARATION_FAILED; no commit/push then"
+    }
+  ],
+  "normalizedLogs": [
+    {
+      "id": "F01",
+      "path": "docs/audit/copilot-phase4/normalized/F01.txt",
+      "sha256": "4c950f59237ba01ab0ec806b2c37ad18f27e41cc8a2b95117b1bfed68aba6f26",
+      "originalPrivateSha256": "4c950f59237ba01ab0ec806b2c37ad18f27e41cc8a2b95117b1bfed68aba6f26",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F02",
+      "path": "docs/audit/copilot-phase4/normalized/F02.txt",
+      "sha256": "6053a6de6e81c4f92ea9b0989d988aeade267910480e38747ba49b44299efb87",
+      "originalPrivateSha256": "5e52af8b07f68351e52f0ad0a0353baf7a506598cf0c494778fc676c03ad33c3",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F03",
+      "path": "docs/audit/copilot-phase4/normalized/F03.txt",
+      "sha256": "c9b66d85526d2b58a2cb6b406153834944df7dfa5b11d2a10fd70421605056a8",
+      "originalPrivateSha256": "c9b66d85526d2b58a2cb6b406153834944df7dfa5b11d2a10fd70421605056a8",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F04",
+      "path": "docs/audit/copilot-phase4/normalized/F04.txt",
+      "sha256": "ec26ba24993adce873db24b216de89be42afd8e971ce000f68079423b2c4cd5b",
+      "originalPrivateSha256": "ec26ba24993adce873db24b216de89be42afd8e971ce000f68079423b2c4cd5b",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F05",
+      "path": "docs/audit/copilot-phase4/normalized/F05.txt",
+      "sha256": "f89a2633a6df0de280d38781f4b3f65b47cc9708cf2c669bb292200e0e17c579",
+      "originalPrivateSha256": "f4fe52e3218aacb9f93dd112c67ed157c4003c6918f19f99f503144ed2fe172c",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F06",
+      "path": "docs/audit/copilot-phase4/normalized/F06.txt",
+      "sha256": "8d5007e4eca18157d0430a1a06ec2eaeee458ff9185508ca607d66283b953ee0",
+      "originalPrivateSha256": "577b439e42f19b4788f894cf061226971aece01a96c8ab0a7a2147f85e408eca",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F07",
+      "path": "docs/audit/copilot-phase4/normalized/F07.txt",
+      "sha256": "b690ebe519f1ca848e0a9b6bd0f08553e84a03f1a7a4cb139d7e408067cd779a",
+      "originalPrivateSha256": "c6498891d610ba4a2fb5d8258037fd485ffad7f4a8b331f5ef65757293d65b6f",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F08",
+      "path": "docs/audit/copilot-phase4/normalized/F08.txt",
+      "sha256": "1a8fc95c96707eb8465330efc9789f9ffc81ce9a61c0dac833591d9beb347120",
+      "originalPrivateSha256": "1a8fc95c96707eb8465330efc9789f9ffc81ce9a61c0dac833591d9beb347120",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F09",
+      "path": "docs/audit/copilot-phase4/normalized/F09.txt",
+      "sha256": "4e5bf050d00bf669a23f8d1d7b73f09b1609180b43aefeb7f6ad38da95673c26",
+      "originalPrivateSha256": "4e5bf050d00bf669a23f8d1d7b73f09b1609180b43aefeb7f6ad38da95673c26",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F10",
+      "path": "docs/audit/copilot-phase4/normalized/F10.txt",
+      "sha256": "799f5d0dbd5dc3de19f7f4d2a473705aedb519f8f358002fed9aa76e30da55ce",
+      "originalPrivateSha256": "799f5d0dbd5dc3de19f7f4d2a473705aedb519f8f358002fed9aa76e30da55ce",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F11",
+      "path": "docs/audit/copilot-phase4/normalized/F11.txt",
+      "sha256": "306ff1a022015f9a95a69e61e4bdc38b4e065496e8d57fcb17fa779ad58152b9",
+      "originalPrivateSha256": "8fffec4fe6593af6d468e40725466627e5f5904f3d0952ae1256f516daad51e8",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F12",
+      "path": "docs/audit/copilot-phase4/normalized/F12.txt",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "originalPrivateSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F13",
+      "path": "docs/audit/copilot-phase4/normalized/F13.txt",
+      "sha256": "7a95d396c07b6492884d221dce751c2b5e5c33039e2f98b8d3b926f404d37e98",
+      "originalPrivateSha256": "7a95d396c07b6492884d221dce751c2b5e5c33039e2f98b8d3b926f404d37e98",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F14",
+      "path": "docs/audit/copilot-phase4/normalized/F14.txt",
+      "sha256": "626e83a6509e2140a1ca7767edd214fab4b45ed6d509af5c35e08cfc4d210c8c",
+      "originalPrivateSha256": "626e83a6509e2140a1ca7767edd214fab4b45ed6d509af5c35e08cfc4d210c8c",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F15",
+      "path": "docs/audit/copilot-phase4/normalized/F15.txt",
+      "sha256": "7465d576946f5d694a9e6ab0ad52538a17a8fce56599f9f79cb24bd6830be32b",
+      "originalPrivateSha256": "97d63adbfec3caac8ab8e125bcc8caa57a11d115108c945aeb8ad111a6e574cf",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F16",
+      "path": "docs/audit/copilot-phase4/normalized/F16.txt",
+      "sha256": "df79f99a0eed23ff313420ccce3b8ce55844a2857082da6334a421f379457832",
+      "originalPrivateSha256": "df79f99a0eed23ff313420ccce3b8ce55844a2857082da6334a421f379457832",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F17",
+      "path": "docs/audit/copilot-phase4/normalized/F17.txt",
+      "sha256": "17eee76e4820ee9331122f952ce282cdb1a43825c3a420f17b1cef6af22d0a95",
+      "originalPrivateSha256": "17eee76e4820ee9331122f952ce282cdb1a43825c3a420f17b1cef6af22d0a95",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F18",
+      "path": "docs/audit/copilot-phase4/normalized/F18.txt",
+      "sha256": "45e86f6e834db25dd2cba73d0977365759571f25683240b68ebe3624bc27cfcc",
+      "originalPrivateSha256": "f73fd8d5900d46a97c2be2509a4607b13f5b1118ae8e0d2eed0aa594cdc8ce70",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F19",
+      "path": "docs/audit/copilot-phase4/normalized/F19.txt",
+      "sha256": "e5da4c344ce01fc8a8f97d5d5bb6917b68f3907c43c387bbdb487e0260cf8b4e",
+      "originalPrivateSha256": "e5da4c344ce01fc8a8f97d5d5bb6917b68f3907c43c387bbdb487e0260cf8b4e",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F20",
+      "path": "docs/audit/copilot-phase4/normalized/F20.txt",
+      "sha256": "b4dce524be0aaa5c68e371705821f424f50271872e0673ff9a1393e497380b18",
+      "originalPrivateSha256": "b4dce524be0aaa5c68e371705821f424f50271872e0673ff9a1393e497380b18",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F21",
+      "path": "docs/audit/copilot-phase4/normalized/F21.txt",
+      "sha256": "274cfa7ecb9870e48bec5c42f066b0ed65cbab9f35a2abbbb179cf98764ea170",
+      "originalPrivateSha256": "274cfa7ecb9870e48bec5c42f066b0ed65cbab9f35a2abbbb179cf98764ea170",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F22",
+      "path": "docs/audit/copilot-phase4/normalized/F22.txt",
+      "sha256": "087041936e4e16f25e55a36f3b90321da847ce65522b9972720b29495579f40b",
+      "originalPrivateSha256": "087041936e4e16f25e55a36f3b90321da847ce65522b9972720b29495579f40b",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F23",
+      "path": "docs/audit/copilot-phase4/normalized/F23.txt",
+      "sha256": "be9b011b2f20d339c74f3b20b62efee16071d20bcbe59ea640d96eb07059b256",
+      "originalPrivateSha256": "5f9f41ab59d228951d0562ff172e3e9cbed0ced5beff28a5c18d7460438f3fad",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F25",
+      "path": "docs/audit/copilot-phase4/normalized/F25.txt",
+      "sha256": "c5201411b28b06d3ac6a7edd8e2fd1a3407add32195d1bd37149194cc898284e",
+      "originalPrivateSha256": "c5201411b28b06d3ac6a7edd8e2fd1a3407add32195d1bd37149194cc898284e",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F26",
+      "path": "docs/audit/copilot-phase4/normalized/F26.txt",
+      "sha256": "1a7c01cac7879f0016d1a6dc36905e16f0f956bb73353d5e7ddcd8f1b10835c0",
+      "originalPrivateSha256": "1a7c01cac7879f0016d1a6dc36905e16f0f956bb73353d5e7ddcd8f1b10835c0",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F27",
+      "path": "docs/audit/copilot-phase4/normalized/F27.txt",
+      "sha256": "1c97ec08a96b17a2f0ffc7dadd853616c9ee075acd4116325768eec2000df47a",
+      "originalPrivateSha256": "1c97ec08a96b17a2f0ffc7dadd853616c9ee075acd4116325768eec2000df47a",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    },
+    {
+      "id": "F28",
+      "path": "docs/audit/copilot-phase4/normalized/F28.txt",
+      "sha256": "89e6a315bb9afbad2bb5cf6211fac78cf4e9516a783b60580fe01f97ed5bdf11",
+      "originalPrivateSha256": "89e6a315bb9afbad2bb5cf6211fac78cf4e9516a783b60580fe01f97ed5bdf11",
+      "normalization": "ANSI removed; credential assignments/PEM/DSN patterns redacted; synthetic test queries may occur in historical-development runner output; not a raw log; trailing blank lines normalized in new .txt archive (v1 ignored .log retained privately)"
+    }
+  ],
+  "semanticReview": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "e53f335104adcd76fe5e82d49d56ca507c65e1e41726bd245e222aa242a283c3",
+      "range": {
+        "start": 1,
+        "end": 433
+      },
+      "category": "CI policy",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Adds offline budget tests/freeze integrity only; existing jobs/mandatory gates retained. YAML/local checks are not effective-CI proof.",
+      "tests": "F28; effective GitHub pending",
+      "status": "PARTIALLY_VALIDATED"
+    },
+    {
+      "path": "src/lib/copilot/semantic.ts",
+      "sha256": "021a7bebecd3df1c47908fd0b52e9e4a7cea774021ff4e94cd0dd3f2b8aa6c19",
+      "range": {
+        "start": 1,
+        "end": 177
+      },
+      "category": "security boundary / IR compiler",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Strict schema; untrusted intent/entity evidence; source priority; clause coverage; fixed periods/statuses; no arbitrary params/tenant/SQL/writes; whole plan validated. Understanding truth remains unproven.",
+      "tests": "F11/F12/F19; native blocked F18",
+      "status": "PARTIALLY_VALIDATED"
+    },
+    {
+      "path": "src/lib/copilot/conversation.ts",
+      "sha256": "dbc8641d3067cc009bc7204fd69ad9cbcfd35f0eaa7e4e196e0e42feda3ef3a7",
+      "range": {
+        "start": 1,
+        "end": 215
+      },
+      "category": "orchestration",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "IR preferred only when interpret exists; bounded single call; no paid plan fallback; legacy protections/162 tests retained; local heuristics still fail validation.",
+      "tests": "F02/F11/F14/F15/F19",
+      "status": "PARTIALLY_VALIDATED"
+    },
+    {
+      "path": "src/lib/copilot/planning.ts",
+      "sha256": "6e5cc5a7623c4602acd22a8c871ae3bc05c11d9cbfd4c195f5a169392e78b23d",
+      "range": {
+        "start": 1,
+        "end": 112
+      },
+      "category": "constraint safety",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Temporal unit morphology, exact-day margin rejected because subMonths is not fixed days. No new intent synonyms/tool IDs.",
+      "tests": "F06 negative then F11/F14/F15/F19",
+      "status": "PARTIALLY_VALIDATED"
+    },
+    {
+      "path": "src/app/api/copilot/route.ts",
+      "sha256": "e20ee7bfa931565a165dfcb09e5aee269f1aa657c562fe964a541b9d28c75833",
+      "range": {
+        "start": 1,
+        "end": 87
+      },
+      "category": "server execution reporting",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Only completes processing metadata after existing confirmed observations. Session/auth/license/tenant/RBAC/result assembly unchanged; native HTTP not exercised.",
+      "tests": "F19 static type diagnostics absent here; F18 blocked",
+      "status": "PARTIALLY_VALIDATED"
+    },
+    {
+      "path": "src/lib/copilot-llm/provider.ts",
+      "sha256": "b72785435b3eaef9228c1e570475790f80c765120033fe051ae5fc738e22fc4b",
+      "range": {
+        "start": 1,
+        "end": 140
+      },
+      "category": "external transport / privacy",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Fixed endpoint, opt-in, 512 output tokens, no retries, 2500ms/16KiB/circuit retained. Diagnostics only usage/counts/status/duration; no body or key. Real endpoint not called.",
+      "tests": "F11/F12/F19 transport simulations only",
+      "status": "PARTIALLY_VALIDATED"
+    },
+    {
+      "path": "src/lib/copilot-llm/prompts.ts",
+      "sha256": "518b12952034c1f5d166fc5e55259ddb5640a2c847ccff01bfd59bd5533bd36f",
+      "range": {
+        "start": 1,
+        "end": 88
+      },
+      "category": "untrusted interpretation protocol",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Requests IR rather than results/permissions; metadata only history; spans not values; no golds; strict validator—not prompt—enforces catalogue. Longer input cost not approved.",
+      "tests": "F11/F12/F19; live not executed",
+      "status": "PARTIALLY_VALIDATED"
+    },
+    {
+      "path": "src/lib/copilot-llm/types.ts",
+      "sha256": "2637e187788c25349f68844ff8cd3f37f48fcfb84b4e0250e7667b94230045ce",
+      "range": {
+        "start": 1,
+        "end": 90
+      },
+      "category": "optional provider contract",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Adds optional interpret seam/types without extra runtime dependency or dropping compatibility methods.",
+      "tests": "F11/F19",
+      "status": "PARTIALLY_VALIDATED"
+    },
+    {
+      "path": "src/lib/copilot/__tests__/semantic.test.ts",
+      "sha256": "a69abd953b548010bca29c63bf717654eec0745d342c0136e89d1cd21751fa37",
+      "range": {
+        "start": 1,
+        "end": 158
+      },
+      "category": "unit / adversarial simulations",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "40 additional tests; seven original development requests scripted, NOT model comprehension. Does not import frozen validation. Includes evidence, roles, tenant-field injection, missing context, period/status, crop/duplicate/max calls, no facts from failures.",
+      "tests": "F11 202/202 overall",
+      "status": "PARTIALLY_VALIDATED"
+    },
+    {
+      "path": "scripts/evaluate-copilot-phase4.cjs",
+      "sha256": "82e03f6ccacd0bde13b15b906cf178963d3464a45e197a413080e68af1454ad3",
+      "range": {
+        "start": 1,
+        "end": 113
+      },
+      "category": "evaluation / financial guard",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Frozen criteria digest and development-overlap check; selection vs facts separated; one-use manifest/cost/cap gates; no gold sent, raw answers logged or live run here. Local failure denominator preserved.",
+      "tests": "F09/F10/F13/F28; paid path simulated guard tests only",
+      "status": "PARTIALLY_VALIDATED"
+    },
+    {
+      "path": "tests/copilot-phase4-evaluation.test.cjs",
+      "sha256": "028d373ae2ecb8f9c841f82c081af7f15639acf100889685d03db873a2900acb",
+      "range": {
+        "start": 1,
+        "end": 22
+      },
+      "category": "financial guard unit simulations",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Reject missing/unbounded/output-increase metadata, caps and insufficient budgets before calls; null latency with no samples. No provider/network.",
+      "tests": "F09/F11/F28 4/4",
+      "status": "PARTIALLY_VALIDATED"
+    },
+    {
+      "path": "scripts/verify-copilot-phase4-evidence.cjs",
+      "sha256": "f541366cfd77c7774a06181cd370238ec0661e7beae129363b55d633808ae10c",
+      "range": {
+        "start": 1,
+        "end": 19
+      },
+      "category": "metadata verifier",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Checks listed source/receipt/normalized-log hashes and frozen corpus; no dynamic source execution beyond trusted repo helper; no functional/native certificate.",
+      "tests": "F28 lint; final metadata verification",
+      "status": "PARTIALLY_VALIDATED"
+    },
+    {
+      "path": "src/lib/copilot/evaluation-phase4-validation.json",
+      "sha256": "7b23aa75f2f08b6b23e9bf65a64d1051c95aef0bac33168257f562feb1227092",
+      "range": {
+        "start": 1,
+        "end": 2213
+      },
+      "category": "validation data / frozen criteria",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "48 manually annotated synthetic cases; allowed/forbidden tools, params, periods/status, clarifications and unexecuted business oracle. Same-author non-independent; no post-measure tuning.",
+      "tests": "F09 freeze; F13 17/48 local",
+      "status": "REVIEWED_WITH_LIMITS"
+    },
+    {
+      "path": "docs/COPILOT_PHASE4_VALIDATION_FREEZE.json",
+      "sha256": "e6f65ee7ab26c532166c5948ff40bb3d867ef5eb9ee04d4e62bba24c6232f992",
+      "range": {
+        "start": 1,
+        "end": 22
+      },
+      "category": "criteria provenance",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Digest/time/count and independence limits frozen before F13; no post-measure changes.",
+      "tests": "F09/F28",
+      "status": "REVIEWED_WITH_LIMITS"
+    },
+    {
+      "path": "docs/COPILOT_PHASE4_LOCAL_RESULTS.json",
+      "sha256": "7a95d396c07b6492884d221dce751c2b5e5c33039e2f98b8d3b926f404d37e98",
+      "range": {
+        "start": 1,
+        "end": 1175
+      },
+      "category": "execution result",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Verbatim structured F13 result (no questions/answers/secrets); local selection, not real/provider/SQL. Failure list preserved.",
+      "tests": "F13",
+      "status": "REVIEWED_WITH_LIMITS"
+    },
+    {
+      "path": "docs/COPILOT_PHASE4_OPERATOR_RUNBOOK.md",
+      "sha256": "9081888d8e715f8d34d1c582417ac1621381ca2d62da66f37d9eb3f194c196a6",
+      "range": {
+        "start": 1,
+        "end": 95
+      },
+      "category": "operator safety protocol",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Official Prisma distribution/5.22/native gates, no TLS/mirror/types bypass, explicit paid grant/cap/privacy and external end-to-end requirements. Not an approval.",
+      "tests": "F28 docs/env",
+      "status": "REVIEWED_WITH_LIMITS"
+    },
+    {
+      "path": "docs/COPILOT_PHASE4_VALIDATION.md",
+      "sha256": "6d9702d03632938a2b3a857863dd8f33ac2831d0a1459153f44de357c305faca",
+      "range": {
+        "start": 1,
+        "end": 136
+      },
+      "category": "status / claims",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Reports seven roots, actual failures and modes, simulations vs live/native; partial/nonproduction, no paid consent. Publication outcome separately confirmed by Git/response.",
+      "tests": "F28 docs/env plus final recheck; F31 staged-whitespace finding corrected, final recheck required",
+      "status": "REVIEWED_WITH_LIMITS"
+    },
+    {
+      "path": "docs/COPILOT.md",
+      "sha256": "84fb8ce9ebceb4f65a54699367780f2ae4d17652ae6a02cf4a6d6d436846fbbf",
+      "range": {
+        "start": 1,
+        "end": 67
+      },
+      "category": "active docs",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Append-only phase4 links/limitations; historical phase2/3 reports unchanged.",
+      "tests": "F28",
+      "status": "REVIEWED_WITH_LIMITS"
+    },
+    {
+      "path": "docs/COPILOT_LLM.md",
+      "sha256": "f5652b7d030e3a5c7f119b33d1cc5c0af455444e30b67bab36be2b7637e5d3a7",
+      "range": {
+        "start": 1,
+        "end": 52
+      },
+      "category": "active docs",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Append-only interpret/compatibility/cost/approval limitations.",
+      "tests": "F28",
+      "status": "REVIEWED_WITH_LIMITS"
+    },
+    {
+      "path": "docs/audit/copilot-phase4/provenance.json",
+      "sha256": "5564b8458a2872174477229a4bafd05b99ea373dc259d7a6928819a2d3a20f3a",
+      "range": {
+        "start": 1,
+        "end": 16
+      },
+      "category": "intake metadata",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Physical bytes against fetched published tree, phase3 hashes, external log gap, no-destructive-publication strategy. Not functional evidence.",
+      "tests": "Read-only intake Git/gh/hash inspection",
+      "status": "REVIEWED_WITH_LIMITS"
+    },
+    {
+      "path": "docs/audit/copilot-phase4/tools.json",
+      "sha256": "6c1fcd1c01e8b8ae65bb47fbd7b396caa263068228790809fa844bf3ff9e09ed",
+      "range": {
+        "start": 1,
+        "end": 10
+      },
+      "category": "tool versions",
+      "depth": "Manual semantic/data/claim review of phase4 change, not inventory/AST functional proof",
+      "risksAndFindings": "Node/npm/Prisma/client/TS/Vitest/Zod versions read locally, not authentication/native availability.",
+      "tests": "Direct local version metadata",
+      "status": "REVIEWED_WITH_LIMITS"
+    }
+  ],
+  "preservedHistoricalDocuments": [
+    {
+      "path": "docs/COPILOT_PHASE2_AUDIT.md",
+      "sha256": "7e45ed0bfbbb91de6d0f917da535226b83b3469e600427367859ceb931b438f3"
+    },
+    {
+      "path": "docs/COPILOT_PHASE2_EVIDENCE.json",
+      "sha256": "d0fc7df196a5a029a701c87c996ef08c360cc4525ecfb8686260539f4cc71546"
+    },
+    {
+      "path": "docs/COPILOT_PHASE2_REVIEW.json",
+      "sha256": "7be557be7a0a73419c861d0bd67691784b66ddbc4fb1d7d506c366a52c088e1d"
+    },
+    {
+      "path": "docs/COPILOT_PHASE2_VALIDATION.md",
+      "sha256": "fbe64330386cc0fc4cfab43f290f18f19076cfd6b3f55bfe88831bf55ef0cd6f"
+    },
+    {
+      "path": "docs/COPILOT_PHASE3_EVIDENCE.json",
+      "sha256": "37759e8d7732b9758345e690e3ba8afd1ddc00775525ef14d1a61342748aa8b8"
+    },
+    {
+      "path": "docs/COPILOT_PHASE3_MODEL_PROTOCOL.md",
+      "sha256": "d78ddfd26c0d002429c59eba3f044b4feecbdd801458b852c8fac179cd3c5cfa"
+    },
+    {
+      "path": "docs/COPILOT_PHASE3_TYPESCRIPT.json",
+      "sha256": "980502b9a7eb33beaa8345f581f966513e3dc5b251487639edf7ed7bbc6c2f37"
+    },
+    {
+      "path": "docs/COPILOT_PHASE3_VALIDATION.md",
+      "sha256": "3b9315a786bef0bae5c9d10e89121a9c54c95f398c3a453769b433f524799140"
+    }
+  ],
+  "applicationSourceDriftSinceF13": [],
+  "liveCallsExecuted": 0,
+  "nativeAssertionsExecuted": 0,
+  "limits": "New execution records, no historical log reconstruction. Source hashes/inventory are metadata only; simulations are not real-model/native evidence. Raw logs outside Git, normalized archives public. Evidence index self hash closed by containing Git commit. Final check receipt/log intentionally outside index to avoid recursion; no production gate bypass. Prepublication metadata was revised after F30/F31 archive-format/whitespace findings; original raw/log digests preserved; final closing receipt follows."
+}

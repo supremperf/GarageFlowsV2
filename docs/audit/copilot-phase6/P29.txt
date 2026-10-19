@@ -1,0 +1,8 @@
+docs/audit/copilot-phase6/P06.txt:37: new blank line at EOF.
+docs/audit/copilot-phase6/P10.txt:60: new blank line at EOF.
+docs/audit/copilot-phase6/P11.txt:35: new blank line at EOF.
+docs/audit/copilot-phase6/P12.txt:69: new blank line at EOF.
+docs/audit/copilot-phase6/P16.txt:50: new blank line at EOF.
+docs/audit/copilot-phase6/P18.txt:27: new blank line at EOF.
+docs/audit/copilot-phase6/P21.txt:52: new blank line at EOF.
+docs/audit/copilot-phase6/P24.txt:52: new blank line at EOF.

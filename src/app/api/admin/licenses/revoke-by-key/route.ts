@@ -1,168 +1,31 @@
 export const dynamic = 'force-dynamic'
 
 /**
- * POST /api/admin/licenses/revoke-by-key
- *
- * Programmatic endpoint used by the keygen_gui.py admin tool to update
- * license status in real-time without a browser session.
- *
- * Auth: x-gf-key header must match GARAGEFLOW_API_KEY.
- * Body: { licenseId: string, status: 'active' | 'revoked' | 'suspended' }
+ * Retiré : une clé partagée ne constitue pas une authentification admin forte.
+ * Fermeture permanente, y compris si un ancien flag/secret est présent.
+ * Aucun flag ne réactive cette route. Utiliser les routes admin de session
+ * existantes après validation opérationnelle, jamais cet ancien point d'entrée.
  */
-
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
-import { prisma } from '@/lib/db'
-import { computeRecordMac } from '@/lib/license/record-mac'
-
-const VALID_STATUSES = ['active', 'revoked', 'suspended'] as const
-type Status = typeof VALID_STATUSES[number]
-
-/** Comparaison à temps constant (évite l'oracle de timing sur la clé API). */
-function safeEqual(a: string, b: string): boolean {
-  const ba = Buffer.from(a, 'utf8')
-  const bb = Buffer.from(b, 'utf8')
-  if (ba.length !== bb.length) return false
-  return crypto.timingSafeEqual(ba, bb)
-}
+import { randomUUID } from 'node:crypto'
+import { logger } from '@/lib/logger'
+import { clientIpFrom } from '@/lib/security/rate-limit'
 
 export async function POST(req: NextRequest) {
-  // Auth : compare x-gf-key à GARAGEFLOW_API_KEY (temps constant).
-  const apiKey = req.headers.get('x-gf-key')?.trim() ?? ''
-  const serverApiKey = process.env.GARAGEFLOW_API_KEY?.trim() ?? ''
-
-  // Refuse une clé serveur absente OU trop faible (pas de contrôle d'accès mou).
-  if (!serverApiKey || serverApiKey.length < 16) {
-    console.error('[admin/licenses/revoke-by-key] GARAGEFLOW_API_KEY absente ou trop faible')
-    return NextResponse.json(
-      { error: 'Configuration serveur incomplète (GARAGEFLOW_API_KEY).' },
-      { status: 500 }
-    )
-  }
-
-  if (!apiKey || !safeEqual(apiKey, serverApiKey)) {
-    return NextResponse.json(
-      { error: 'Accès refusé — clé API invalide' },
-      { status: 403 }
-    )
-  }
-
-  let licenseId: string
-  let status: Status
-
-  try {
-    const body = await req.json()
-
-    licenseId = String(body.licenseId ?? '').trim()
-    status = body.status as Status
-    // SÉCURITÉ : ne jamais journaliser DATABASE_URL ni de secret. Trace minimale.
-  } catch {
-    return NextResponse.json(
-      { error: 'Corps de requête invalide' },
-      { status: 400 }
-    )
-  }
-
-  if (!licenseId) {
-    return NextResponse.json(
-      { error: 'licenseId manquant' },
-      { status: 400 }
-    )
-  }
-
-  if (!VALID_STATUSES.includes(status)) {
-    return NextResponse.json(
-      { error: `status invalide — valeurs autorisées : ${VALID_STATUSES.join(', ')}` },
-      { status: 400 }
-    )
-  }
-
-  try {
-    const record = await prisma.licenseKey.findUnique({
-      where: { licenseId },
-    })
-
-    // Licence non encore enregistrée côté serveur
-    if (!record) {
-      if (status === 'active') {
-        return NextResponse.json({
-          ok: true,
-          licenseId,
-          status,
-          note: 'not_registered',
-        })
-      }
-
-      const expiryAt = new Date('2099-12-31T23:59:59.000Z')
-      const token = `pending:${licenseId}`
-
-      const tombMac = computeRecordMac({
-        licenseId,
-        token,
-        status,
-        expiryAt,
-        hwid: null,
-      })
-
-      const created = await prisma.licenseKey.create({
-        data: {
-          licenseId,
-          token,
-          customerId: 'pending',
-          licenseType: 'standard',
-          expiryAt,
-          status,
-          revokedAt: status === 'revoked' ? new Date() : null,
-          recordMac: tombMac,
-          label:
-            status === 'revoked'
-              ? 'Révoquée avant activation'
-              : 'Suspendue avant activation',
-        },
-      })
-
-      return NextResponse.json({
-        ok: true,
-        created: true,
-        licenseId: created.licenseId,
-        status: created.status,
-        label: created.label,
-      })
-    }
-
-    const newMac = computeRecordMac({
-      licenseId: record.licenseId,
-      token: record.token,
-      status,
-      expiryAt: record.expiryAt,
-      hwid: record.hwid ?? null,
-    })
-
-    const updated = await prisma.licenseKey.update({
-      where: {
-        id: record.id,
-      },
-      data: {
-        status,
-        revokedAt:
-          status === 'revoked'
-            ? new Date()
-            : status === 'active'
-            ? null
-            : undefined,
-        recordMac: newMac,
-      },
-    })
-
-    return NextResponse.json({
-      ok: true,
-      licenseId: updated.licenseId,
-      status: updated.status,
-      label: updated.label,
-    })
-  } catch (err) {
-    // Ne jamais renvoyer le message d'erreur brut (fuite d'infos internes).
-    console.error('[admin/licenses/revoke-by-key] erreur base de données')
-    return NextResponse.json({ error: 'Erreur base de données' }, { status: 500 })
-  }
+  const requestId = randomUUID() // Ne pas faire confiance à un ID fourni par le client.
+  // Aucun corps/en-tête d'authentification ni identifiant de licence journalisé.
+  // Ce journal doit être collecté vers le SIEM avec rétention et accès restreint.
+  logger.warn('[admin-security] endpoint retiré', {
+    requestId,
+    ip: clientIpFrom(req),
+    userAgent: (req.headers.get('user-agent') ?? '').replace(/[\r\n\x00-\x1f]/g, '').slice(0, 256),
+    actor: 'unauthenticated',
+    timestamp: new Date().toISOString(),
+    action: 'revoke-by-key.denied',
+    outcome: 'disabled',
+  })
+  // Aucun appel DB ni limiteur requis : même une panne du limiteur ne peut ouvrir une écriture.
+  return NextResponse.json({ ok: false, code: 'ENDPOINT_DISABLED', requestId }, {
+    status: 404, headers: { 'X-Request-ID': requestId, 'Cache-Control': 'no-store' },
+  })
 }

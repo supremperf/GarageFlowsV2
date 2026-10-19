@@ -1,0 +1,16 @@
+{
+  "repository": "redis/redis",
+  "resolvedCommit": "498ecd0d6d007db11ddb3aea9428552598a78622",
+  "url": "https://codeload.github.com/redis/redis/tar.gz/498ecd0d6d007db11ddb3aea9428552598a78622",
+  "archiveSha256": "5c710d5b0167a97df57a85254d833eb6968e757926dec714a9f3196c59991383",
+  "bytes": 4782274,
+  "sourceDirectory": "/home/user/audit-resumption/.cache/upstreams/redis/redis-498ecd0d6d007db11ddb3aea9428552598a78622",
+  "commitVerification": {
+    "payload": null,
+    "reason": "unsigned",
+    "signature": null,
+    "verified": false,
+    "verified_at": null
+  },
+  "limitation": "Official HTTPS + API-resolved commit provenance; archive SHA256 recorded locally, not represented as an upstream published signature."
+}

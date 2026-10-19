@@ -1,0 +1,32 @@
+HTTP/2.0 200 OK
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset, Warning
+Cache-Control: private, max-age=60, s-maxage=60
+Content-Length: 2
+Content-Security-Policy: default-src 'none'
+Content-Type: application/json; charset=utf-8
+Date: Wed, 14 Oct 2026 13:42:31 GMT
+Etag: "770c22afdd162ee477e5e70b54a6884cc6d9a605e8aefd9f24e06a9fd62a2979"
+Github-Authentication-Token-Expiration: 2026-10-14 21:28:14 UTC
+Referrer-Policy: origin-when-cross-origin, strict-origin-when-cross-origin
+Server: github.com
+Strict-Transport-Security: max-age=31536000; includeSubdomains; preload
+Vary: Accept, Authorization, Cookie, X-GitHub-OTP,Accept-Encoding, Accept, X-Requested-With
+X-Accepted-Github-Permissions: metadata=read
+X-Accepted-Oauth-Scopes: repo
+X-Content-Type-Options: nosniff
+X-Frame-Options: deny
+X-Github-Api-Version-Selected: 2022-11-28
+X-Github-Edge-Region: westus2
+X-Github-Media-Type: github.v3; format=json
+X-Github-Request-Id: C6BC:1F5A3A:193B4:293F8:6ACF86C6
+X-Oauth-Client-Id: Iv23lifFg4c9eT1T6hLC
+X-Oauth-Scopes: 
+X-Ratelimit-Limit: 5000
+X-Ratelimit-Remaining: 4998
+X-Ratelimit-Reset: 1791988948
+X-Ratelimit-Resource: core
+X-Ratelimit-Used: 2
+X-Xss-Protection: 0
+
+[]

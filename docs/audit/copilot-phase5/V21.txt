@@ -1,0 +1,14 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /home/user/GarageFlowsV2
+
+ ✓ src/lib/__tests__/authz-full-matrix.test.ts (139 tests) 17ms
+ ✓ src/lib/__tests__/authz.test.ts (43 tests) 11ms
+ ✓ src/lib/__tests__/authz-mechanic-matrix.test.ts (17 tests) 6ms
+
+ Test Files  3 passed (3)
+      Tests  199 passed (199)
+   Start at  13:48:26
+   Duration  712ms (transform 68ms, setup 0ms, import 105ms, tests 34ms, environment 0ms)

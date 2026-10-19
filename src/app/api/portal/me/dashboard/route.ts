@@ -13,6 +13,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withPortalAuth } from '@/lib/portal/auth-helpers'
 import { withTotals } from '@/lib/billing'
+import { billingLines } from '@/lib/money-db'
 import { repairTimeline } from '@/lib/portal/repair-timeline'
 import { TERMINAL_JOB_STATUSES } from '@/lib/analytics/types'
 
@@ -41,13 +42,13 @@ export const GET = withPortalAuth(async (_req, { user }) => {
     }),
     prisma.quote.findMany({
       where: { clientId, garageId: user.garageId },
-      select: { id: true, number: true, status: true, issueDate: true, validUntil: true, taxRate: true, lines: { select: { quantity: true, unitPrice: true } } },
+      select: { id: true, number: true, status: true, issueDate: true, validUntil: true, taxRate: true, lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true } } },
       orderBy: { createdAt: 'desc' },
       take: 50,
     }),
     prisma.invoice.findMany({
       where: { clientId, garageId: user.garageId },
-      select: { id: true, number: true, status: true, issueDate: true, dueDate: true, taxRate: true, lines: { select: { quantity: true, unitPrice: true } } },
+      select: { id: true, number: true, status: true, issueDate: true, dueDate: true, taxRate: true, lines: { select: { quantityTenThousandths: true, unitPriceTenThousandths: true } } },
       orderBy: { createdAt: 'desc' },
       take: 50,
     }),
@@ -77,8 +78,8 @@ export const GET = withPortalAuth(async (_req, { user }) => {
     linkedClient: true,
     vehicles,
     activeRepairs,
-    quotes: quotes.map(q => withTotals(q)),
-    invoices: invoices.map(i => withTotals(i)),
+    quotes: quotes.map(q => withTotals({ ...q, lines: billingLines(q.lines) })),
+    invoices: invoices.map(i => withTotals({ ...i, lines: billingLines(i.lines) })),
     warranties,
   })
 })

@@ -3,9 +3,13 @@
  */
 import { INTENTS } from './intents'
 import type { Classification, Confidence, Slots } from './types'
+import { plierApostrophes } from '@/lib/text/apostrophes'
 
 function normalize(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+  // Les mots-clés portent l'apostrophe droite ; l'utilisateur tape presque
+  // toujours la typographique. Sans ce pliage, « chiffre d’affaires » ne
+  // reconnaissait aucune intention.
+  return plierApostrophes(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 }
 
 function extractSlots(raw: string): Slots {
@@ -35,7 +39,8 @@ export function classify(text: string): Classification {
     let score = 0
     for (const kw of intent.keywords) {
       const nk = normalize(kw)
-      if (n.includes(nk)) score += nk.split(/\s+/).length // multi-word = more specific
+      const escaped = nk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      if (new RegExp(`(^|[^a-z0-9])${escaped}($|[^a-z0-9])`).test(n)) score += nk.split(/\s+/).length
     }
     // A VIN/OBD in the text corroborates the matching read intent.
     if (intent.id === 'vin_decode' && slots.vin) score += 2

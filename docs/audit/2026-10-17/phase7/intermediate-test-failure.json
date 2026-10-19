@@ -1,0 +1,116 @@
+{
+  "note": "New AST guard used a nonexistent method name; corrected to the actual second GUI issuance method, no production code bypass.",
+  "failedFiles": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "reproducible script exercises actual checked Python signing and actual TypeScript verification (19 positive/negative steps)",
+          "status": "passed",
+          "title": "reproducible script exercises actual checked Python signing and actual TypeScript verification (19 positive/negative steps)",
+          "duration": 1669.835611,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "both real GUI issuance branches use the checked loader before signing/persistence",
+          "status": "failed",
+          "title": "both real GUI issuance branches use the checked loader before signing/persistence",
+          "duration": 54.45685000000003,
+          "failureMessages": [
+            "AssertionError: expected { _generate_garage: true } to deeply equal { _generate_garage: true, \u2026(1) }\n    at /home/user/GarageFlowsV2/src/lib/__tests__/keygen-activation-roundtrip.test.ts:50:82\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2956:64"
+          ],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "activation logs signature stage with correlation but no token/payload in production",
+          "status": "passed",
+          "title": "activation logs signature stage with correlation but no token/payload in production",
+          "duration": 9.866393000000016,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "activation logs signature stage with correlation but no token/payload in development",
+          "status": "passed",
+          "title": "activation logs signature stage with correlation but no token/payload in development",
+          "duration": 2.4910279999999148,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "production keeps FORMAT_INVALID internal rather than exposing a verification oracle",
+          "status": "passed",
+          "title": "production keeps FORMAT_INVALID internal rather than exposing a verification oracle",
+          "duration": 1.5568650000000162,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "production keeps HEADER_UNSUPPORTED internal rather than exposing a verification oracle",
+          "status": "passed",
+          "title": "production keeps HEADER_UNSUPPORTED internal rather than exposing a verification oracle",
+          "duration": 1.3434019999999691,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "production keeps SIGNATURE_INVALID internal rather than exposing a verification oracle",
+          "status": "passed",
+          "title": "production keeps SIGNATURE_INVALID internal rather than exposing a verification oracle",
+          "duration": 2.0213599999999587,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "development distinguishes unrecognized format without returning the input",
+          "status": "passed",
+          "title": "development distinguishes unrecognized format without returning the input",
+          "duration": 0.9835069999999178,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "a real checked Python token crosses the actual activation crypto barrier and reaches DB, without pretending DB activation succeeded",
+          "status": "passed",
+          "title": "a real checked Python token crosses the actual activation crypto barrier and reaches DB, without pretending DB activation succeeded",
+          "duration": 1622.348951,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "unusable trust anchor stays a technical configuration failure, not an invalid license",
+          "status": "passed",
+          "title": "unusable trust anchor stays a technical configuration failure, not an invalid license",
+          "duration": 1.8978440000000774,
+          "failureMessages": [],
+          "meta": {},
+          "tags": []
+        }
+      ],
+      "startTime": 1792270545966,
+      "endTime": 1792270549332.898,
+      "status": "failed",
+      "message": "",
+      "name": "/home/user/GarageFlowsV2/src/lib/__tests__/keygen-activation-roundtrip.test.ts"
+    }
+  ]
+}

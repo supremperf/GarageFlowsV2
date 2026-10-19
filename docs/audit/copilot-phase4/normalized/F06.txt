@@ -1,0 +1,80 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /home/user/GarageFlowsV2
+
+ ✓ src/lib/copilot/__tests__/planning-execution.test.ts (44 tests) 88ms
+ ❯ src/lib/copilot/__tests__/semantic.test.ts (38 tests | 1 failed) 113ms
+     ✓ keeps the exact catalogue and bounds; does not authorize operations 9ms
+     ✓ rejects model-provided sql in the IR 2ms
+     ✓ rejects model-provided url in the IR 1ms
+     ✓ rejects model-provided garageId in the IR 1ms
+     ✓ rejects model-provided facts in the IR 1ms
+     ✓ rejects model-provided answer in the IR 1ms
+     ✓ rejects model-provided input in the IR 1ms
+     ✓ rejects unauthorized financial candidate for MECHANIC 0ms
+     ✓ rejects unauthorized financial candidate for ADMIN 1ms
+     ✓ rejects unauthorized financial candidate for  0ms
+     ✓ rejects unauthorized financial candidate for RECEPTIONIST 0ms
+     ✓ binds a Unicode customer name by source span, without synonym extraction 6ms
+     ✓ normalizes a plate only from an exact current-question span 1ms
+     ✓ rejects invalid evidence boundaries {"start":0,"end":501} 1ms
+     ✓ rejects invalid evidence boundaries {"start":10,"end":2} 0ms
+     ✓ rejects invalid evidence boundaries {"start":-1,"end":2} 0ms
+     ✓ rejects invalid evidence boundaries {"start":0,"end":0} 0ms
+     ✓ rejects injected customer-name syntax even when present literally in user text 2ms
+     ✓ requires clarification for two current plates before selecting a historical one 0ms
+     ✓ does not replace an explicit new reference with an old one 1ms
+     ✓ resolves historical reference locally, not cached business results 2ms
+     ✓ rejects invented historical spans and current values without evidence 0ms
+     ✓ cannot silently relabel the requested period for today_revenue 1ms
+     ✓ cannot silently relabel the requested period for margin 1ms
+     × cannot silently relabel the requested period for forecast_revenue 7ms
+     ✓ keeps historical period constraints for followups 4ms
+     ✓ rejects a status filter the closed reader cannot implement 0ms
+     ✓ uses semantic operation spans for independent mixed fixed periods 2ms
+     ✓ rejects all of an overlong/duplicate/partially forbidden plan before dispatch 3ms
+     ✓ does not treat other-tenant selection or dependent tasks as executable 1ms
+     ✓ negated reads and actions do not run; explanation can remain available 0ms
+     ✓ prevents explanation from becoming a read or unauthorized article 1ms
+     ✓ handles each historical development failure using scripted semantic IR, not lexical patches 22ms
+     ✓ invalid IR falls back without a second model call or accepting model params 1ms
+     ✓ hard guards do not transmit secrets/assent or run model after cancellation 1ms
+     ✓ sends derived context metadata only, six turns, filtered by permissions 3ms
+     ✓ keeps failed reads distinct from business facts (scripted reader) 3ms
+     ✓ uses one bounded production-transport simulation and retains token-only diagnostics 31ms
+ ✓ src/lib/copilot/__tests__/phase3-security.test.ts (18 tests) 60ms
+ ✓ src/lib/copilot-llm/__tests__/provider.test.ts (15 tests) 57ms
+ ✓ src/lib/copilot-llm/__tests__/planning-provider.test.ts (6 tests) 42ms
+ ✓ src/lib/copilot/__tests__/conversation.test.ts (26 tests) 33ms
+ ✓ src/lib/copilot-llm/__tests__/copilot-llm.test.ts (25 tests) 21ms
+ ✓ src/lib/copilot/__tests__/copilot.test.ts (12 tests) 16ms
+ ✓ src/lib/copilot/__tests__/copilot-chaine-complete.test.ts (16 tests) 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/lib/copilot/__tests__/semantic.test.ts > semantic IR contract and backend binding — simulations, not comprehension/SQL proof > cannot silently relabel the requested period for forecast_revenue
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ src/lib/copilot/__tests__/semantic.test.ts:69:161
+     67|     x.candidates[0].period = 'today'
+     68|     if (tool !== 'today_revenue') expect(() => compile(x, input(), 'OW…
+     69|     expect(() => compile(ir(tool), input(tool === 'margin' ? 'Marge ce…
+       |                                                                                                                                                                 ^
+     70|   })
+     71|   it('keeps historical period constraints for followups', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 8 passed (9)
+      Tests  1 failed | 199 passed (200)
+   Start at  12:22:26
+   Duration  2.47s (transform 310ms, setup 0ms, import 910ms, tests 444ms, environment 1ms)

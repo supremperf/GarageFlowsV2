@@ -1,0 +1,93 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /home/user/GarageFlowsV2
+
+ ✓ src/lib/copilot/__tests__/semantic.test.ts (40 tests) 108ms
+ ✓ src/lib/copilot-llm/__tests__/provider.test.ts (15 tests) 47ms
+ ✓ src/lib/copilot/__tests__/phase3-security.test.ts (18 tests) 42ms
+ ✓ src/lib/copilot-llm/__tests__/planning-provider.test.ts (6 tests) 36ms
+ ✓ src/lib/copilot-llm/__tests__/paid-block.test.ts (3 tests) 12ms
+
+ Test Files  5 passed (5)
+      Tests  82 passed (82)
+   Start at  14:22:55
+   Duration  1.54s (transform 195ms, setup 0ms, import 558ms, tests 245ms, environment 0ms)
+
+TAP version 13
+# Subtest: operator signature binds scope, model, corpus, runner and bounded time; not a billing enforcement proof
+ok 1 - operator signature binds scope, model, corpus, runner and bounded time; not a billing enforcement proof
+  ---
+  duration_ms: 10.297678
+  type: 'test'
+  ...
+# Subtest: copying or renaming a grant cannot reset its exclusive authorization-ID claim
+ok 2 - copying or renaming a grant cannot reset its exclusive authorization-ID claim
+  ---
+  duration_ms: 2.826642
+  type: 'test'
+  ...
+# Subtest: unsafe state permissions and traversal IDs fail closed
+ok 3 - unsafe state permissions and traversal IDs fail closed
+  ---
+  duration_ms: 0.332672
+  type: 'test'
+  ...
+# Subtest: budget manifest refuses unbounded/missing/extra/increased output fields
+ok 4 - budget manifest refuses unbounded/missing/extra/increased output fields
+  ---
+  duration_ms: 3.714951
+  type: 'test'
+  ...
+# Subtest: reserves the worst cost before dispatch, no automatic replenishment
+ok 5 - reserves the worst cost before dispatch, no automatic replenishment
+  ---
+  duration_ms: 0.715591
+  type: 'test'
+  ...
+# Subtest: cost or input limit blocks before consuming any call
+ok 6 - cost or input limit blocks before consuming any call
+  ---
+  duration_ms: 0.28708
+  type: 'test'
+  ...
+# Subtest: empty latency samples stay null, not synthetic zeros
+ok 7 - empty latency samples stay null, not synthetic zeros
+  ---
+  duration_ms: 0.676283
+  type: 'test'
+  ...
+# Subtest: live gate refuses before any provider/network setup even with CLI approval flag
+ok 8 - live gate refuses before any provider/network setup even with CLI approval flag
+  ---
+  duration_ms: 3.534549
+  type: 'test'
+  ...
+# Subtest: model JSON, local fallback, no-call guards and accepted interpretation remain separate
+ok 9 - model JSON, local fallback, no-call guards and accepted interpretation remain separate
+  ---
+  duration_ms: 0.24058
+  type: 'test'
+  ...
+# Subtest: corrupt/missing accounting, absent/invalid/exceeded cap never grants a reservation
+ok 10 - corrupt/missing accounting, absent/invalid/exceeded cap never grants a reservation
+  ---
+  duration_ms: 0.617915
+  type: 'test'
+  ...
+# Subtest: concurrent reservations and uncertain failure/timeouts do not replenish allowance
+ok 11 - concurrent reservations and uncertain failure/timeouts do not replenish allowance
+  ---
+  duration_ms: 1.108
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 157.845066

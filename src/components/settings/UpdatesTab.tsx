@@ -4,21 +4,45 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from '@/lib/i18n'
 import { RefreshCw, Download, CheckCircle, AlertCircle, Upload, Shield, FileUp, HardDriveDownload } from 'lucide-react'
 
+/**
+ * Version compilée dans le bundle, injectée par `next.config.mjs` depuis
+ * `package.json`. Lue ICI plutôt que via `@/lib/version` : ce module importe
+ * `MIGRATIONS`, du code serveur qui n'a rien à faire dans le paquet client.
+ */
+const VERSION_COMPILEE = process.env.NEXT_PUBLIC_GF_VERSION ?? '0.0.0'
+
 interface UpdateInfo {
   hasUpdate: boolean
   latestVersion?: string
   releaseUrl?: string
   downloadUrl?: string
+  /**
+   * Chemin relatif du fichier publié, tel que l'API le renvoie. Electron le
+   * transforme en `downloadUrl` absolue ; un navigateur ne reçoit que celui-ci.
+   */
+  downloadPath?: string
   releaseNotes?: string
   fileName?: string
   sha256?: string | null
   size?: number | null
   mandatory?: boolean
+  /**
+   * Manifeste SIGNÉ publié par le serveur de mise à jour. Obligatoire côté
+   * processus principal dès qu'une clé de vérification est embarquée : sans
+   * lui, `app:install-update` refuse l'installation (GF31-AUD-013). Il était
+   * absent de ce type comme de l'appel, donc jamais transmis.
+   */
+  manifest?: unknown
+  /** Faux quand la source ne fournit pas de manifeste signé et qu'il est exigé. */
+  installable?: boolean
+  unsignedReason?: string | null
 }
 
 export function UpdatesTab() {
   const { t } = useTranslation()
-  const [currentVersion, setCurrentVersion] = useState('1.0.0')
+  // Version RÉELLE compilée dans le bundle : « 1.0.0 » en dur était faux à
+  // chaque release, et hors Electron rien ne venait jamais la corriger.
+  const [currentVersion, setCurrentVersion] = useState(VERSION_COMPILEE)
   const [checking, setChecking] = useState(false)
   const [info, setInfo]         = useState<UpdateInfo | null>(null)
   const [error, setError]       = useState<string | null>(null)
@@ -33,6 +57,7 @@ export function UpdatesTab() {
   const [adminVersion,   setAdminVersion]  = useState('')
   const [adminNotes,     setAdminNotes]    = useState('')
   const [file,           setFile]          = useState<File | null>(null)
+  const [manifestFile,   setManifestFile] = useState<File | null>(null)
   const [publishing,     setPublishing]    = useState(false)
   const [uploadPct,      setUploadPct]     = useState<number | null>(null)
   const [publishResult,  setPublishResult] = useState<{ ok: boolean; msg: string } | null>(null)
@@ -73,7 +98,18 @@ export function UpdatesTab() {
     setChecking(true); setError(null); setInfo(null)
     try {
       if (electron?.checkUpdates) {
-        setInfo(await electron.checkUpdates())
+        // ── « À jour » n'est affirmé que si une source a RÉPONDU (GF-024) ────
+        // Quand aucune source n'était joignable, le processus principal rendait
+        // exactement le même objet que pour « vous êtes à jour » : l'écran
+        // affichait un bandeau vert rassurant sur une vérification qui n'avait
+        // pas eu lieu. Le champ `checked` les distingue désormais.
+        const r = await electron.checkUpdates()
+        if (r?.error || r?.checked === false) {
+          setError(r?.error ?? 'Vérification impossible : serveur de mise à jour injoignable.')
+          setInfo(null)
+          return
+        }
+        setInfo(r)
       } else {
         // En dehors d'Electron : lit l'info publiée par l'admin.
         const r = await fetch('/api/admin/updates')
@@ -88,8 +124,26 @@ export function UpdatesTab() {
   }
 
   async function installUpdate() {
-    const url = info?.downloadUrl ?? info?.releaseUrl
-    if (!url) return
+    // ── Hors Electron, le lien s'appelle `downloadPath` (GF-039) ─────────────
+    // `downloadUrl` et `releaseUrl` ne sont FABRIQUÉS que par le processus
+    // principal d'Electron. Dans un navigateur, `GET /api/admin/updates` rend le
+    // méta brut, qui porte `downloadPath` : les deux lectures échouaient et le
+    // bouton « Mettre à jour » sortait en silence — un clic, rien, aucun
+    // message. Le chemin est explicitement public et neutralise la traversée de
+    // répertoire côté serveur.
+    const url = info?.downloadUrl ?? info?.releaseUrl ?? info?.downloadPath
+    if (!url) {
+      setError('Aucun lien de téléchargement publié pour cette version.')
+      return
+    }
+    // Une mise à jour sans manifeste signé ne PEUT pas s'installer : on ouvre
+    // directement le téléchargement plutôt que de lancer une opération dont on
+    // sait déjà qu'elle sera refusée (GF31-AUD-042).
+    if (info?.installable === false) {
+      window.open(url, '_blank')
+      setError(info.unsignedReason ?? 'Mise à jour non signée : installation manuelle requise.')
+      return
+    }
     if (!electron?.installUpdate) { window.open(url, '_blank'); return }
     setInstalling(true); setProgress(0); setError(null)
     try {
@@ -100,6 +154,9 @@ export function UpdatesTab() {
         sha256: info?.sha256 ?? undefined,
         fileName: info?.fileName ?? undefined,
         version: info?.latestVersion,
+        // Autorité de confiance de l'installation — transmise telle quelle,
+        // seul le processus principal la valide (GF31-AUD-013).
+        manifest: info?.manifest ?? undefined,
       })
       if (res && res.ok === false) throw new Error(res.reason || 'Échec de la mise à jour')
       // Succès : l'installeur est lancé — les données (userData) sont conservées.
@@ -118,6 +175,9 @@ export function UpdatesTab() {
     fd.append('version', adminVersion.trim())
     fd.append('releaseNotes', adminNotes.trim())
     fd.append('file', file)
+    // Le manifeste signé accompagne l'installeur : sans lui, les postes dont la
+    // vérification de signature est active refuseront l'installation.
+    if (manifestFile) fd.append('manifest', manifestFile)
 
     const xhr = new XMLHttpRequest()
     xhr.open('POST', '/api/admin/updates')
@@ -129,8 +189,13 @@ export function UpdatesTab() {
       let data: any = null
       try { data = JSON.parse(xhr.responseText) } catch { /* ignore */ }
       if (xhr.status >= 200 && xhr.status < 300) {
-        setPublishResult({ ok: true, msg: `Mise à jour v${adminVersion} publiée (${(file.size / 1e6).toFixed(1)} Mo). Les utilisateurs pourront l'installer depuis « Vérifier les mises à jour ».` })
-        setAdminVersion(''); setAdminNotes(''); setFile(null)
+        setPublishResult({
+          ok: !data?.warning,
+          msg: data?.warning
+            ? `Mise à jour v${adminVersion} publiée — ${data.warning}`
+            : `Mise à jour v${adminVersion} publiée (${(file.size / 1e6).toFixed(1)} Mo). Les utilisateurs pourront l'installer depuis « Vérifier les mises à jour ».`,
+        })
+        setAdminVersion(''); setAdminNotes(''); setFile(null); setManifestFile(null)
         if (fileInputRef.current) fileInputRef.current.value = ''
       } else {
         setPublishResult({ ok: false, msg: data?.error ?? `Erreur ${xhr.status}` })
@@ -189,7 +254,7 @@ export function UpdatesTab() {
               <div className="flex items-center gap-2 text-sm text-blue-300">
                 <HardDriveDownload className="w-4 h-4 animate-pulse" />
                 {closing
-                  ? 'GarageFlow va se fermer pour installer la mise à jour…'
+                  ? 'GarageFlows va se fermer pour installer la mise à jour…'
                   : progress != null && progress < 100
                   ? `Téléchargement… ${progress}%`
                   : 'Préparation de l\'installation…'}
@@ -231,9 +296,9 @@ export function UpdatesTab() {
           <div className="flex items-start gap-2 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
             <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <span>
-              Important : téléversez le fichier <strong>« GarageFlow&nbsp;Setup&nbsp;X.Y.Z.exe »</strong> généré
+              Important : téléversez le fichier <strong>« GarageFlows&nbsp;Setup&nbsp;X.Y.Z.exe »</strong> généré
               par le build (dossier <em>dist</em>), et non l&apos;exécutable de l&apos;application
-              (<em>win-unpacked/GarageFlow.exe</em>) qui nécessite ses fichiers annexes et ne peut pas
+              (<em>win-unpacked/GarageFlows.exe</em>) qui nécessite ses fichiers annexes et ne peut pas
               s&apos;installer seul.
             </span>
           </div>
@@ -263,7 +328,7 @@ export function UpdatesTab() {
                     {file.name} <span className="text-slate-500">({(file.size / 1e6).toFixed(1)} Mo)</span>
                   </span>
                 ) : (
-                  <span className="text-sm text-slate-500">Cliquez pour choisir le fichier GarageFlow-Setup.exe…</span>
+                  <span className="text-sm text-slate-500">Cliquez pour choisir le fichier GarageFlows-Setup.exe…</span>
                 )}
               </button>
               <input
@@ -273,6 +338,37 @@ export function UpdatesTab() {
                 className="hidden"
                 onChange={e => setFile(e.target.files?.[0] ?? null)}
               />
+            </div>
+
+            {/* Manifeste signé — produit par l'ÉDITEUR à la release avec
+                `npm run release:sign`. Sans lui, les postes dont la vérification
+                de signature est active refusent l'installation : le bouton
+                « Mettre à jour » y échouait systématiquement sans que rien ne
+                l'annonce à la publication (GF31-AUD-042).
+
+                L'étiquette indiquait « release-manifest.json » — le fichier de
+                PROVENANCE DE BUILD produit par `npm run release:manifest`, qui
+                ne contient ni `manifest` ni `signature`. L'administrateur
+                téléversait donc exactement le fichier nommé, et l'API le
+                refusait (GF-FINAL-021). */}
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1">
+                Manifeste signé <span className="text-slate-600">(*.manifest.json — <code>npm run release:sign</code>)</span>
+              </label>
+              <label className="w-full flex items-center gap-3 rounded-lg border border-dashed border-white/15 bg-white/[0.02] hover:bg-white/[0.05] px-3 py-3 text-left transition-colors cursor-pointer">
+                <FileUp className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                {manifestFile ? (
+                  <span className="text-sm text-slate-200 truncate">{manifestFile.name}</span>
+                ) : (
+                  <span className="text-sm text-slate-500">Sans manifeste, l’installation automatique sera refusée sur les postes signés</span>
+                )}
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  className="hidden"
+                  onChange={e => setManifestFile(e.target.files?.[0] ?? null)}
+                />
+              </label>
             </div>
 
             <div>

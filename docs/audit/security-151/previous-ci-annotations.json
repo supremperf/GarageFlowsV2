@@ -1,0 +1,104 @@
+{
+  "headSha": "1aa860dd3fcf2b55224f127a0ab4878b20b74fc8",
+  "checkRun": 117505311870,
+  "annotations": [
+    {
+      "title": "",
+      "path": ".github",
+      "start_line": 2,
+      "annotation_level": "warning",
+      "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11d5960a326750d5838078e36cf38b85af677262, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+    },
+    {
+      "title": "src/lib/__tests__/license-devices.postgres.int.test.ts > appareils par licence \u2014 PostgreSQL r\u00e9el (migrations + concurrence) > reset admin \u2192 la machine r\u00e9voqu\u00e9e peut se r\u00e9activer (si un si\u00e8ge est libre)",
+      "path": "src/lib/__tests__/license-devices.postgres.int.test.ts",
+      "start_line": 190,
+      "annotation_level": "failure",
+      "message": "AssertionError: expected false to be true // Object.is equality\n\n- Expected\n+ Received\n\n- true\n+ false\n\n \u276f src/lib/__tests__/license-devices.postgres.int.test.ts:190:71\n\n"
+    },
+    {
+      "title": "src/lib/__tests__/license-devices.postgres.int.test.ts > appareils par licence \u2014 PostgreSQL r\u00e9el (migrations + concurrence) > refus au-del\u00e0 du plafond, puis r\u00e9vocation d'un appareil \u2192 le si\u00e8ge se lib\u00e8re",
+      "path": "src/lib/__tests__/license-devices.postgres.int.test.ts",
+      "start_line": 177,
+      "annotation_level": "failure",
+      "message": "AssertionError: expected false to be true // Object.is equality\n\n- Expected\n+ Received\n\n- true\n+ false\n\n \u276f src/lib/__tests__/license-devices.postgres.int.test.ts:177:72\n\n"
+    },
+    {
+      "title": "src/lib/__tests__/license-devices.postgres.int.test.ts > appareils par licence \u2014 PostgreSQL r\u00e9el (migrations + concurrence) > r\u00e9activation m\u00eame HWID \u2192 rotation du jeton, toujours UN SEUL appareil",
+      "path": "src/lib/__tests__/license-devices.postgres.int.test.ts",
+      "start_line": 117,
+      "annotation_level": "failure",
+      "message": "AssertionError: expected false to be true // Object.is equality\n\n- Expected\n+ Received\n\n- true\n+ false\n\n \u276f src/lib/__tests__/license-devices.postgres.int.test.ts:117:68\n\n"
+    },
+    {
+      "title": "src/integration/portail-lien-revoque-a-la-republication.test.ts > portail \u2014 republier ne doit pas tuer le lien d\u00e9j\u00e0 remis au client (GF-002) > l\u2019instantan\u00e9 d\u2019un autre garage n\u2019est jamais servi",
+      "path": "src/integration/portail-lien-revoque-a-la-republication.test.ts",
+      "start_line": 203,
+      "annotation_level": "failure",
+      "message": "TypeError: Cannot read properties of undefined (reading 'split')\n \u276f src/integration/portail-lien-revoque-a-la-republication.test.ts:203:51\n\n"
+    },
+    {
+      "title": "src/integration/portail-lien-revoque-a-la-republication.test.ts > portail \u2014 republier ne doit pas tuer le lien d\u00e9j\u00e0 remis au client (GF-002) > un instantan\u00e9 p\u00e9rim\u00e9 reste refus\u00e9",
+      "path": "src/integration/portail-lien-revoque-a-la-republication.test.ts",
+      "start_line": 193,
+      "annotation_level": "failure",
+      "message": "TypeError: Cannot read properties of undefined (reading 'split')\n \u276f src/integration/portail-lien-revoque-a-la-republication.test.ts:193:51\n\n"
+    },
+    {
+      "title": "src/integration/portail-lien-revoque-a-la-republication.test.ts > portail \u2014 republier ne doit pas tuer le lien d\u00e9j\u00e0 remis au client (GF-002) > la r\u00e9tractation fonctionne : le contenu retir\u00e9 dispara\u00eet AUSSI de l\u2019ancien lien",
+      "path": "src/integration/portail-lien-revoque-a-la-republication.test.ts",
+      "start_line": 182,
+      "annotation_level": "failure",
+      "message": "AssertionError: expected '{\"error\":\"Token invalide ou expir\u00e9\"}' to contain 'LITIGIEUSE'\n\nExpected: \"LITIGIEUSE\"\nReceived: \"{\"error\":\"Token invalide ou expir\u00e9\"}\"\n\n \u276f src/integration/portail-lien-revoque-a-la-republication.test.ts:182:67\n\n"
+    },
+    {
+      "title": "src/integration/portail-lien-revoque-a-la-republication.test.ts > portail \u2014 republier ne doit pas tuer le lien d\u00e9j\u00e0 remis au client (GF-002) > une seule publication VIVANTE par intervention (pas d\u2019accumulation sans borne)",
+      "path": "src/integration/portail-lien-revoque-a-la-republication.test.ts",
+      "start_line": 173,
+      "annotation_level": "failure",
+      "message": "AssertionError: un instantan\u00e9 et un seul par intervention: expected +0 to be 1 // Object.is equality\n\n- Expected\n+ Received\n\n- 1\n+ 0\n\n \u276f src/integration/portail-lien-revoque-a-la-republication.test.ts:173:66\n\n"
+    },
+    {
+      "title": "src/integration/portail-lien-revoque-a-la-republication.test.ts > portail \u2014 republier ne doit pas tuer le lien d\u00e9j\u00e0 remis au client (GF-002) > republication s\u00e9quentielle : le lien d\u00e9j\u00e0 distribu\u00e9 survit",
+      "path": "src/integration/portail-lien-revoque-a-la-republication.test.ts",
+      "start_line": 166,
+      "annotation_level": "failure",
+      "message": "AssertionError: lien remis au client la semaine pass\u00e9e: expected 403 to be 200 // Object.is equality\n\n- Expected\n+ Received\n\n- 200\n+ 403\n\n \u276f src/integration/portail-lien-revoque-a-la-republication.test.ts:166:90\n\n"
+    },
+    {
+      "title": "src/integration/portail-lien-revoque-a-la-republication.test.ts > portail \u2014 republier ne doit pas tuer le lien d\u00e9j\u00e0 remis au client (GF-002) > DEUX publications concurrentes (QR + lien \u00ab copier \u00bb) : les DEUX jetons restent lisibles",
+      "path": "src/integration/portail-lien-revoque-a-la-republication.test.ts",
+      "start_line": 155,
+      "annotation_level": "failure",
+      "message": "AssertionError: expected false to be true // Object.is equality\n\n- Expected\n+ Received\n\n- true\n+ false\n\n \u276f src/integration/portail-lien-revoque-a-la-republication.test.ts:155:18\n\n"
+    },
+    {
+      "title": "src/integration/portail-lien-revoque-a-la-republication.test.ts > portail \u2014 republier ne doit pas tuer le lien d\u00e9j\u00e0 remis au client (GF-002) > publication simple : le lien est lisible",
+      "path": "src/integration/portail-lien-revoque-a-la-republication.test.ts",
+      "start_line": 143,
+      "annotation_level": "failure",
+      "message": "AssertionError: expected false to be true // Object.is equality\n\n- Expected\n+ Received\n\n- true\n+ false\n\n \u276f src/integration/portail-lien-revoque-a-la-republication.test.ts:143:18\n\n"
+    },
+    {
+      "title": "Copilot native summary",
+      "path": ".github",
+      "start_line": 5,
+      "annotation_level": "notice",
+      "message": "{\"schema\":1,\"scope\":\"SIX_NATIVE_PRISMA_SUITES_54_ASSERTIONS\",\"exitCode\":0,\"passed\":true,\"executed\":54,\"expected\":54,\"files\":[{\"path\":\"src/integration/copilot-conversation.test.ts\",\"passed\":9,\"failed\":0,\"caseStatuses\":[\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\"],\"unexecuted\":0},{\"path\":\"src/integration/copilot-cout-achat.test.ts\",\"passed\":5,\"failed\":0,\"caseStatuses\":[\"passed\",\"passed\",\"passed\",\"passed\",\"passed\"],\"unexecuted\":0},{\"path\":\"src/integration/copilot-ecusson-verifie.test.ts\",\"passed\":9,\"failed\":0,\"caseStatuses\":[\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\"],\"unexecuted\":0},{\"path\":\"src/integration/copilot-financial-authz-v15.test.ts\",\"passed\":6,\"failed\":0,\"caseStatuses\":[\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\"],\"unexecuted\":0},{\"path\":\"src/integration/copilot-portee-et-porte-financiere.test.ts\",\"passed\":18,\"failed\":0,\"caseStatuses\":[\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\"],\"unexecuted\":0},{\"path\":\"src/integration/copilot.test.ts\",\"passed\":7,\"failed\":0,\"caseStatuses\":[\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\",\"passed\"],\"unexecuted\":0}],\"paidCalls\":0,\"limits\":\"Native fixture tests only; not production issuer/tenant/auth HTTP/model campaign. Setup-blocked/skipped assertions are NOT passes.\"}"
+    },
+    {
+      "title": "Phase6 native baseline page 1/1",
+      "path": ".github",
+      "start_line": 5,
+      "annotation_level": "notice",
+      "message": "{\"page\":1,\"pages\":1,\"complete\":true,\"encoding\":\"deflate-base64\",\"payload\":\"eJzFVM1uG0cMfhViTjYgafVTydGiKCrIqq0ikYNISIE0hsCdoaRxZodbDteWEAToa/SWa++99eg36ZMUK6dpEBQFChjNaUiCP99HDvnWJMsVmdxczperqxfz6eTpejG7mKzmL2fr8/nkYnG1XM2n68XVaj2dLM7n55PVbP18slyalikwUfCxCe+60VdPxmNyT3pYDPpYjMcbHPQ3hRtZR107HLoh2dHAtIzd+eBme69TdmTyXstYTLRU1DpRMvmPZoM+kDOtv4UKU/pH4frBqZZj5FsTsWzgBALLlQ+sBJEg+FshqDBBIKjE78H98fMvaHeocP8e6ghy/1sgiBxh4yNG60ka87PZ9HKymE+BC/UUFQJC8EmpBTdYoj8mtHz/uzZo6xBWgpYaDqtDRTMRlhw6ys9Q7e7kFGhfkdUEyiBkyd8SICQVH7ctKGqFLSvU0dHGR3KvIwAAKjwX3h86X2PkeCi5Tt/AycYHyrMs23FJmdQxkmR3LG+yCxTc0neB79LL/mdaZEfrkl0dKGXf3nqlpNkDpsz5pJmPjvadm5T3+uNB3uuefkkIveEo7w0/h1CS7tj9IFhVJI8Bwu7Qf1L1bHCW9z+p+t8yJ7GZj0pbQfUcs2qHiUbtnU/K4i2GtuVa28ev12m4dzTlZ918OP5YENMhWni85n4IPjbX7ur4po2ifoNWj3zH3UHe75rrd63H3Z5AUN7/ajF66ynCFsURWALHUcEHQCgosY+Qw081e7BclhgdSQtIG63wFP9lqz5uCfgEkRW8kmARCE4sxsYghA4q4YpED7A8lAWHk4enc3RWltP/d9DjvN/94oO+bpmkjms1ufl+ebUAoYpF4U68KsXmOGVaVtl20/7A6q9D337Fry5Gl5lQqoOmzk3i+LoZUlJHIiY35t2faiI5DA==\"}"
+    },
+    {
+      "title": "",
+      "path": ".github",
+      "start_line": 1,
+      "annotation_level": "notice",
+      "message": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\""
+    }
+  ]
+}

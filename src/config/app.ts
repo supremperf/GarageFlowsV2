@@ -4,8 +4,10 @@
  */
 
 export const APP_CONFIG = {
-  name:    'GarageFlow',
-  version: '2.0',
+  name:    'GarageFlows',
+  // Aligné sur package.json (source de vérité de la version). L'ancienne valeur
+  // '2.0' contredisait package.json (1.1.0) — voir docs/PRODUCTION-READINESS.md.
+  version: '1.1.0',
 
   /** Default pagination limit when ?limit is not specified */
   defaultPageLimit: 20,

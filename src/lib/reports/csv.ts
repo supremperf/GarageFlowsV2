@@ -11,7 +11,14 @@ export interface CsvOptions {
 }
 
 function escapeField(value: unknown, delimiter: string): string {
-  const s = value === null || value === undefined ? '' : String(value)
+  let s = value === null || value === undefined ? '' : String(value)
+  // Anti-injection de formule (CSV injection) : une cellule débutant par
+  // = + - @ (ou TAB/CR) est interprétée comme une FORMULE par Excel/LibreOffice
+  // (=HYPERLINK, DDE `=cmd|...`, etc.). Les cellules contiennent des données
+  // saisies par l'utilisateur (nom/email/adresse client…) → on préfixe une
+  // apostrophe (texte). Exception : un NOMBRE fini (ex. « -50 » pour un avoir)
+  // est laissé intact pour rester numérique dans le tableur.
+  if (/^[=+\-@\t\r]/.test(s) && !Number.isFinite(Number(s))) s = "'" + s
   if (s.includes(delimiter) || s.includes('"') || s.includes('\n') || s.includes('\r')) {
     return '"' + s.replace(/"/g, '""') + '"'
   }

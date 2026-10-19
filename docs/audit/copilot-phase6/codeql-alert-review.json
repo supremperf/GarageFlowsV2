@@ -1,0 +1,4977 @@
+{
+  "schema": 1,
+  "at": "2026-10-15T14:42:49.545644+00:00",
+  "testedApplicationCommit": "94ab650f087459b21c2a2b5b79028eeb53b7d05e",
+  "reviewedTreeCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de",
+  "originalAlertCount": 17,
+  "originalHighCount": 7,
+  "originalAlertNumberInventoryComplete": false,
+  "originalLocationsIndividuallyReviewed": 17,
+  "rulesAndAllPhysicalCodeThreadFlowLocations": "Read-only safe SARIF metadata; absent flow means scanner emitted none, not proof of absent taint. No source snippets/messages exported. Original removed build-key result unavailable.",
+  "currentSarifResultCountAtE64914d": 14,
+  "sourceSarifInventory": "codeql-flows-c1f6a5c-check-116488851076.json",
+  "rows": [
+    {
+      "localReviewId": "P6-CQ-01",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "scripts/materialize-build-public-key.cjs",
+        "start_line": 32,
+        "end_line": 32,
+        "annotation_level": "failure",
+        "title": "Potential file system race condition"
+      },
+      "baselineSeverityContext": "HIGH in the seven failure-level annotations of the original 17",
+      "ruleId": "js/file-system-race",
+      "ruleProvenance": "Family inferred from original title/pattern; original alert SARIF/API unavailable",
+      "baselineEquivalentSarifResult": null,
+      "currentEquivalentSarifResults": [],
+      "reviewStatus": "FIXED_TARGET_DESCRIPTOR_RACE_NOT_DISMISSED",
+      "contextExploitabilityAndLimits": "Le contrôle et la lecture utilisent désormais le même descripteur avec fstat/read(fd)/close. Création exclusive, ancrages publics inchangés; refus de dossier symlink et échange du pathname éprouvés. Absent du SARIF 3eb7c5f. Pas une preuve portable openat/absence de toute course sur les parents ni validation de l’autorité privée externe.",
+      "proofs": "P02,P03,P19; tests/build-public-key.test.cjs",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "7ada359f19d6afb9529338abe1009cf3dff2b1d3963205f35569c33fad6ae356",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-02",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "scripts/config-core.cjs",
+        "start_line": 97,
+        "end_line": 97,
+        "annotation_level": "failure",
+        "title": "Incomplete string escaping or encoding"
+      },
+      "baselineSeverityContext": "HIGH in the seven failure-level annotations of the original 17",
+      "ruleId": "js/incomplete-sanitization",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 1,
+        "ruleId": "js/incomplete-sanitization",
+        "locations": [
+          {
+            "path": "scripts/config-core.cjs",
+            "startLine": 97,
+            "endLine": 97
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "c61e95d0586a01af:1"
+        },
+        "flows": [],
+        "related": []
+      },
+      "currentEquivalentSarifResults": [
+        {
+          "index": 1,
+          "ruleId": "js/incomplete-sanitization",
+          "ruleMetadata": {
+            "securitySeverity": "7.8",
+            "level": "warning"
+          },
+          "locations": [
+            {
+              "path": "scripts/config-core.cjs",
+              "startLine": 97,
+              "endLine": 97
+            }
+          ],
+          "fingerprints": {
+            "primaryLocationLineHash": "c61e95d0586a01af:1",
+            "primaryLocationStartColumnFingerprint": "15"
+          },
+          "flows": [],
+          "related": []
+        }
+      ],
+      "reviewStatus": "NEXT_INJECTION_NOT_REPRODUCED_DESKTOP_COMPATIBILITY_DEFECT_FIXED",
+      "contextExploitabilityAndLimits": "Encodage dotenv, pas encodeur générique JS/SQL/shell: les vecteurs Next/parseEnv et les rejets CR/LF/NUL passent. La revue du second consommateur actif Electron a trouvé un vrai défaut de fidélité: son chargeur gardait un backslash avant $ et ignorait les guillemets backtick. P25 reproduit la corruption; P26 décode les formes émises par config sans interpolation/eval, préserve env existant et fichier original. La ligne 97 reste signalée et inchangée; ce correctif du consommateur ne prouve ni une injection Next ni une sécurité universelle pour d’autres parseurs. Pas de dismiss ni acceptation implicite.",
+      "proofs": "P05,P19 Next; P25 FAIL pré-correctif, P26 PASS chargeur Electron réel extrait/FS réel; P27 Config78 + Release58",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "0eb7dae2cf0af5025e95b8d0a67af88201d125b9b2b9bc6b0a790cdbd2b3cb56",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "codeqlRuleSecuritySeverity": "7.8",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-03",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "docs/audit/resumption-2026-10-14/run-command.cjs",
+        "start_line": 11,
+        "end_line": 11,
+        "annotation_level": "failure",
+        "title": "Potential file system race condition"
+      },
+      "baselineSeverityContext": "HIGH in the seven failure-level annotations of the original 17",
+      "ruleId": "js/file-system-race",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 6,
+        "ruleId": "js/file-system-race",
+        "locations": [
+          {
+            "path": "docs/audit/resumption-2026-10-14/run-command.cjs",
+            "startLine": 11,
+            "endLine": 11
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "847d294a07ed7aeb:1"
+        },
+        "flows": [],
+        "related": [
+          {
+            "path": "docs/audit/resumption-2026-10-14/run-command.cjs",
+            "startLine": 6,
+            "endLine": 6
+          }
+        ]
+      },
+      "currentEquivalentSarifResults": [
+        {
+          "index": 7,
+          "ruleId": "js/file-system-race",
+          "ruleMetadata": {
+            "securitySeverity": "7.7",
+            "level": "warning"
+          },
+          "locations": [
+            {
+              "path": "docs/audit/resumption-2026-10-14/run-command.cjs",
+              "startLine": 11,
+              "endLine": 11
+            }
+          ],
+          "fingerprints": {
+            "primaryLocationLineHash": "847d294a07ed7aeb:1",
+            "primaryLocationStartColumnFingerprint": "0"
+          },
+          "flows": [],
+          "related": [
+            {
+              "path": "docs/audit/resumption-2026-10-14/run-command.cjs",
+              "startLine": 6,
+              "endLine": 6
+            }
+          ]
+        }
+      ],
+      "reviewStatus": "OPEN_UNACCEPTED_HISTORICAL_LOCAL_TOCTOU",
+      "contextExploitabilityAndLimits": "Course lstat/exists puis accès par pathname réelle dans cet utilitaire CLI d’audit historique. Précondition: acteur capable de modifier le checkout/répertoire de preuve pendant exécution; pas d’entrée HTTP ni de privilège externe nouveau démontré. Preuves historiques conservées, aucune réécriture pour faire disparaître le signal. Ne pas réexécuter ce runner comme validateur sécurisé; remplacement et acceptation explicite éventuelle encore requis. Le risque n’est PAS accepté par cet audit.",
+      "proofs": "Lecture ciblée du fichier original; P20 intégrité historique",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "01a77d2762d12815754b97beb7361411f6612ea4c85e09950ff892c774968980",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "codeqlRuleSecuritySeverity": "7.7",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-04",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "docs/audit/resumption-2026-10-14/publication-preflight.cjs",
+        "start_line": 8,
+        "end_line": 8,
+        "annotation_level": "failure",
+        "title": "Potential file system race condition"
+      },
+      "baselineSeverityContext": "HIGH in the seven failure-level annotations of the original 17",
+      "ruleId": "js/file-system-race",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 7,
+        "ruleId": "js/file-system-race",
+        "locations": [
+          {
+            "path": "docs/audit/resumption-2026-10-14/publication-preflight.cjs",
+            "startLine": 8,
+            "endLine": 8
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "ebac621ae4e223f6:1"
+        },
+        "flows": [],
+        "related": [
+          {
+            "path": "docs/audit/resumption-2026-10-14/publication-preflight.cjs",
+            "startLine": 8,
+            "endLine": 8
+          }
+        ]
+      },
+      "currentEquivalentSarifResults": [
+        {
+          "index": 6,
+          "ruleId": "js/file-system-race",
+          "ruleMetadata": {
+            "securitySeverity": "7.7",
+            "level": "warning"
+          },
+          "locations": [
+            {
+              "path": "docs/audit/resumption-2026-10-14/publication-preflight.cjs",
+              "startLine": 8,
+              "endLine": 8
+            }
+          ],
+          "fingerprints": {
+            "primaryLocationLineHash": "ebac621ae4e223f6:1",
+            "primaryLocationStartColumnFingerprint": "119"
+          },
+          "flows": [],
+          "related": [
+            {
+              "path": "docs/audit/resumption-2026-10-14/publication-preflight.cjs",
+              "startLine": 8,
+              "endLine": 8
+            }
+          ]
+        }
+      ],
+      "reviewStatus": "OPEN_UNACCEPTED_HISTORICAL_LOCAL_TOCTOU",
+      "contextExploitabilityAndLimits": "Course lstat/exists puis accès par pathname réelle dans cet utilitaire CLI d’audit historique. Précondition: acteur capable de modifier le checkout/répertoire de preuve pendant exécution; pas d’entrée HTTP ni de privilège externe nouveau démontré. Preuves historiques conservées, aucune réécriture pour faire disparaître le signal. Ne pas réexécuter ce runner comme validateur sécurisé; remplacement et acceptation explicite éventuelle encore requis. Le risque n’est PAS accepté par cet audit.",
+      "proofs": "Lecture ciblée du fichier original; P20 intégrité historique",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "b671cefb5d586486e094ebb357693c3850f89a359d0e291ff71f0fbcbb3da20a",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "codeqlRuleSecuritySeverity": "7.7",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-05",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "docs/audit/resumption-2026-10-14/investigation-2026-10-14/run-command.cjs",
+        "start_line": 11,
+        "end_line": 11,
+        "annotation_level": "failure",
+        "title": "Potential file system race condition"
+      },
+      "baselineSeverityContext": "HIGH in the seven failure-level annotations of the original 17",
+      "ruleId": "js/file-system-race",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 5,
+        "ruleId": "js/file-system-race",
+        "locations": [
+          {
+            "path": "docs/audit/resumption-2026-10-14/investigation-2026-10-14/run-command.cjs",
+            "startLine": 11,
+            "endLine": 11
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "847d294a07ed7aeb:1"
+        },
+        "flows": [],
+        "related": [
+          {
+            "path": "docs/audit/resumption-2026-10-14/investigation-2026-10-14/run-command.cjs",
+            "startLine": 6,
+            "endLine": 6
+          }
+        ]
+      },
+      "currentEquivalentSarifResults": [
+        {
+          "index": 5,
+          "ruleId": "js/file-system-race",
+          "ruleMetadata": {
+            "securitySeverity": "7.7",
+            "level": "warning"
+          },
+          "locations": [
+            {
+              "path": "docs/audit/resumption-2026-10-14/investigation-2026-10-14/run-command.cjs",
+              "startLine": 11,
+              "endLine": 11
+            }
+          ],
+          "fingerprints": {
+            "primaryLocationLineHash": "847d294a07ed7aeb:1",
+            "primaryLocationStartColumnFingerprint": "0"
+          },
+          "flows": [],
+          "related": [
+            {
+              "path": "docs/audit/resumption-2026-10-14/investigation-2026-10-14/run-command.cjs",
+              "startLine": 6,
+              "endLine": 6
+            }
+          ]
+        }
+      ],
+      "reviewStatus": "OPEN_UNACCEPTED_HISTORICAL_LOCAL_TOCTOU",
+      "contextExploitabilityAndLimits": "Course lstat/exists puis accès par pathname réelle dans cet utilitaire CLI d’audit historique. Précondition: acteur capable de modifier le checkout/répertoire de preuve pendant exécution; pas d’entrée HTTP ni de privilège externe nouveau démontré. Preuves historiques conservées, aucune réécriture pour faire disparaître le signal. Ne pas réexécuter ce runner comme validateur sécurisé; remplacement et acceptation explicite éventuelle encore requis. Le risque n’est PAS accepté par cet audit.",
+      "proofs": "Lecture ciblée du fichier original; P20 intégrité historique",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "37841c9906795cc5d7d689cdcd13a694ec35e2234912d3b0804aa1680c0dee2f",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "codeqlRuleSecuritySeverity": "7.7",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-06",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "docs/audit/resumption-2026-10-14/closure-2026-10-14/run-command.cjs",
+        "start_line": 11,
+        "end_line": 11,
+        "annotation_level": "failure",
+        "title": "Potential file system race condition"
+      },
+      "baselineSeverityContext": "HIGH in the seven failure-level annotations of the original 17",
+      "ruleId": "js/file-system-race",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 4,
+        "ruleId": "js/file-system-race",
+        "locations": [
+          {
+            "path": "docs/audit/resumption-2026-10-14/closure-2026-10-14/run-command.cjs",
+            "startLine": 11,
+            "endLine": 11
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "8ff2db6c128a9689:1"
+        },
+        "flows": [],
+        "related": [
+          {
+            "path": "docs/audit/resumption-2026-10-14/closure-2026-10-14/run-command.cjs",
+            "startLine": 6,
+            "endLine": 6
+          }
+        ]
+      },
+      "currentEquivalentSarifResults": [
+        {
+          "index": 4,
+          "ruleId": "js/file-system-race",
+          "ruleMetadata": {
+            "securitySeverity": "7.7",
+            "level": "warning"
+          },
+          "locations": [
+            {
+              "path": "docs/audit/resumption-2026-10-14/closure-2026-10-14/run-command.cjs",
+              "startLine": 11,
+              "endLine": 11
+            }
+          ],
+          "fingerprints": {
+            "primaryLocationLineHash": "8ff2db6c128a9689:1",
+            "primaryLocationStartColumnFingerprint": "0"
+          },
+          "flows": [],
+          "related": [
+            {
+              "path": "docs/audit/resumption-2026-10-14/closure-2026-10-14/run-command.cjs",
+              "startLine": 6,
+              "endLine": 6
+            }
+          ]
+        }
+      ],
+      "reviewStatus": "DISPROVED_EXCLUSIVE_CREATION_NOT_DISMISSED",
+      "contextExploitabilityAndLimits": "Le vrai appel historique writeFileSync comporte flag wx: le noyau refuse EEXIST y compris une symlink, malgré le existsSync préalable redondant. Test sur vrai FS: la cible précédente reste intacte. Le fichier historique n’est pas modifié; ce test porte sur cet appel exact, pas l’ensemble du runner ni sa journalisation.",
+      "proofs": "P17,P23; tests/phase6-security-context.test.cjs",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "31561b84da3060fd802c3020fbee1ec312cd87bbf47a9b605bca20b9fe82142a",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "codeqlRuleSecuritySeverity": "7.7",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-07",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "docs/audit/followup-2026-10-14/build-review-ledger.cjs",
+        "start_line": 61,
+        "end_line": 61,
+        "annotation_level": "failure",
+        "title": "Potential file system race condition"
+      },
+      "baselineSeverityContext": "HIGH in the seven failure-level annotations of the original 17",
+      "ruleId": "js/file-system-race",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 3,
+        "ruleId": "js/file-system-race",
+        "locations": [
+          {
+            "path": "docs/audit/followup-2026-10-14/build-review-ledger.cjs",
+            "startLine": 61,
+            "endLine": 61
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "73b4bb96fd01b36a:1"
+        },
+        "flows": [],
+        "related": [
+          {
+            "path": "docs/audit/followup-2026-10-14/build-review-ledger.cjs",
+            "startLine": 59,
+            "endLine": 59
+          }
+        ]
+      },
+      "currentEquivalentSarifResults": [
+        {
+          "index": 3,
+          "ruleId": "js/file-system-race",
+          "ruleMetadata": {
+            "securitySeverity": "7.7",
+            "level": "warning"
+          },
+          "locations": [
+            {
+              "path": "docs/audit/followup-2026-10-14/build-review-ledger.cjs",
+              "startLine": 61,
+              "endLine": 61
+            }
+          ],
+          "fingerprints": {
+            "primaryLocationLineHash": "73b4bb96fd01b36a:1",
+            "primaryLocationStartColumnFingerprint": "75"
+          },
+          "flows": [],
+          "related": [
+            {
+              "path": "docs/audit/followup-2026-10-14/build-review-ledger.cjs",
+              "startLine": 59,
+              "endLine": 59
+            }
+          ]
+        }
+      ],
+      "reviewStatus": "OPEN_UNACCEPTED_HISTORICAL_LOCAL_TOCTOU",
+      "contextExploitabilityAndLimits": "Course lstat/exists puis accès par pathname réelle dans cet utilitaire CLI d’audit historique. Précondition: acteur capable de modifier le checkout/répertoire de preuve pendant exécution; pas d’entrée HTTP ni de privilège externe nouveau démontré. Preuves historiques conservées, aucune réécriture pour faire disparaître le signal. Ne pas réexécuter ce runner comme validateur sécurisé; remplacement et acceptation explicite éventuelle encore requis. Le risque n’est PAS accepté par cet audit.",
+      "proofs": "Lecture ciblée du fichier original; P20 intégrité historique",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "e45dc8420aabf78279b0776c0776af61840e43a9b96a58bc88abd2f1b1c41794",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "codeqlRuleSecuritySeverity": "7.7",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-08",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "electron/main.js",
+        "start_line": 642,
+        "end_line": 642,
+        "annotation_level": "warning",
+        "title": "Network data written to file"
+      },
+      "baselineSeverityContext": "Non-high original annotation; full official alert severity inventory unavailable",
+      "ruleId": "js/http-to-file-access",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 14,
+        "ruleId": "js/http-to-file-access",
+        "locations": [
+          {
+            "path": "electron/main.js",
+            "startLine": 642,
+            "endLine": 642
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "58a7bafa79191156:1"
+        },
+        "flows": [
+          [
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1543,
+              "endLine": 1543
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1543,
+              "endLine": 1568
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1719,
+              "endLine": 1719
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1719,
+              "endLine": 1719
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1719,
+              "endLine": 1719
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1731,
+              "endLine": 1731
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1731,
+              "endLine": 1731
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 633,
+              "endLine": 633
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 634,
+              "endLine": 634
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 634,
+              "endLine": 634
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 634,
+              "endLine": 634
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 642,
+              "endLine": 642
+            }
+          ],
+          [
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1543,
+              "endLine": 1543
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1543,
+              "endLine": 1568
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1887,
+              "endLine": 1887
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1887,
+              "endLine": 1887
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1887,
+              "endLine": 1887
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1892,
+              "endLine": 1892
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1892,
+              "endLine": 1892
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 633,
+              "endLine": 633
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 634,
+              "endLine": 634
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 634,
+              "endLine": 634
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 634,
+              "endLine": 634
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 642,
+              "endLine": 642
+            }
+          ],
+          [
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1543,
+              "endLine": 1543
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1543,
+              "endLine": 1568
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1903,
+              "endLine": 1903
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1903,
+              "endLine": 1903
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1903,
+              "endLine": 1903
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1906,
+              "endLine": 1906
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1906,
+              "endLine": 1906
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 633,
+              "endLine": 633
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 634,
+              "endLine": 634
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 634,
+              "endLine": 634
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 634,
+              "endLine": 634
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 642,
+              "endLine": 642
+            }
+          ],
+          [
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1543,
+              "endLine": 1543
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1543,
+              "endLine": 1568
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1839,
+              "endLine": 1839
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1839,
+              "endLine": 1839
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1839,
+              "endLine": 1839
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1839,
+              "endLine": 1839
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1850,
+              "endLine": 1850
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1850,
+              "endLine": 1850
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 633,
+              "endLine": 633
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 634,
+              "endLine": 634
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 634,
+              "endLine": 634
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 634,
+              "endLine": 634
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 642,
+              "endLine": 642
+            }
+          ]
+        ],
+        "related": [
+          {
+            "path": "electron/main.js",
+            "startLine": 1559,
+            "endLine": 1559
+          },
+          {
+            "path": "electron/main.js",
+            "startLine": 1559,
+            "endLine": 1559
+          }
+        ]
+      },
+      "currentEquivalentSarifResults": [
+        {
+          "index": 11,
+          "ruleId": "js/http-to-file-access",
+          "ruleMetadata": {
+            "securitySeverity": "6.3",
+            "level": "warning"
+          },
+          "locations": [
+            {
+              "path": "electron/main.js",
+              "startLine": 645,
+              "endLine": 645
+            }
+          ],
+          "fingerprints": {
+            "primaryLocationLineHash": "58a7bafa79191156:1",
+            "primaryLocationStartColumnFingerprint": "28"
+          },
+          "flows": [
+            [
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1548,
+                "endLine": 1548
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1548,
+                "endLine": 1573
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1724,
+                "endLine": 1724
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1724,
+                "endLine": 1724
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1724,
+                "endLine": 1724
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1736,
+                "endLine": 1736
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1736,
+                "endLine": 1736
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 631,
+                "endLine": 631
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 141,
+                "endLine": 141
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 143,
+                "endLine": 143
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 143,
+                "endLine": 143
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 143,
+                "endLine": 143
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 147,
+                "endLine": 147
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 147,
+                "endLine": 147
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 147,
+                "endLine": 147
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 150,
+                "endLine": 150
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 150,
+                "endLine": 150
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 150,
+                "endLine": 150
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 154,
+                "endLine": 154
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 154,
+                "endLine": 154
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 154,
+                "endLine": 154
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 158,
+                "endLine": 158
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 158,
+                "endLine": 164
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 158,
+                "endLine": 158
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 167,
+                "endLine": 167
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 167,
+                "endLine": 167
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 167,
+                "endLine": 167
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 170,
+                "endLine": 170
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 170,
+                "endLine": 170
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 170,
+                "endLine": 170
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 173,
+                "endLine": 173
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 173,
+                "endLine": 173
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 173,
+                "endLine": 173
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 175,
+                "endLine": 175
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 635
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 636
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 637,
+                "endLine": 637
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 637,
+                "endLine": 637
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 645,
+                "endLine": 645
+              }
+            ],
+            [
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1548,
+                "endLine": 1548
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1548,
+                "endLine": 1573
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1892,
+                "endLine": 1892
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1892,
+                "endLine": 1892
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1892,
+                "endLine": 1892
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1897,
+                "endLine": 1897
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1897,
+                "endLine": 1897
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 631,
+                "endLine": 631
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 141,
+                "endLine": 141
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 143,
+                "endLine": 143
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 143,
+                "endLine": 143
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 143,
+                "endLine": 143
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 147,
+                "endLine": 147
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 147,
+                "endLine": 147
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 147,
+                "endLine": 147
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 150,
+                "endLine": 150
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 150,
+                "endLine": 150
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 150,
+                "endLine": 150
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 154,
+                "endLine": 154
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 154,
+                "endLine": 154
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 154,
+                "endLine": 154
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 158,
+                "endLine": 158
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 158,
+                "endLine": 164
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 158,
+                "endLine": 158
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 167,
+                "endLine": 167
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 167,
+                "endLine": 167
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 167,
+                "endLine": 167
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 170,
+                "endLine": 170
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 170,
+                "endLine": 170
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 170,
+                "endLine": 170
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 173,
+                "endLine": 173
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 173,
+                "endLine": 173
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 173,
+                "endLine": 173
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 175,
+                "endLine": 175
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 635
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 636
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 637,
+                "endLine": 637
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 637,
+                "endLine": 637
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 645,
+                "endLine": 645
+              }
+            ],
+            [
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1548,
+                "endLine": 1548
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1548,
+                "endLine": 1573
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1908,
+                "endLine": 1908
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1908,
+                "endLine": 1908
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1908,
+                "endLine": 1908
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1911,
+                "endLine": 1911
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1911,
+                "endLine": 1911
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 631,
+                "endLine": 631
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 141,
+                "endLine": 141
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 143,
+                "endLine": 143
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 143,
+                "endLine": 143
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 143,
+                "endLine": 143
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 147,
+                "endLine": 147
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 147,
+                "endLine": 147
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 147,
+                "endLine": 147
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 150,
+                "endLine": 150
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 150,
+                "endLine": 150
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 150,
+                "endLine": 150
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 154,
+                "endLine": 154
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 154,
+                "endLine": 154
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 154,
+                "endLine": 154
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 158,
+                "endLine": 158
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 158,
+                "endLine": 164
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 158,
+                "endLine": 158
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 167,
+                "endLine": 167
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 167,
+                "endLine": 167
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 167,
+                "endLine": 167
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 170,
+                "endLine": 170
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 170,
+                "endLine": 170
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 170,
+                "endLine": 170
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 173,
+                "endLine": 173
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 173,
+                "endLine": 173
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 173,
+                "endLine": 173
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 175,
+                "endLine": 175
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 635
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 636
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 637,
+                "endLine": 637
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 637,
+                "endLine": 637
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 645,
+                "endLine": 645
+              }
+            ],
+            [
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1548,
+                "endLine": 1548
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1548,
+                "endLine": 1573
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1844,
+                "endLine": 1844
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1844,
+                "endLine": 1844
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1844,
+                "endLine": 1844
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1844,
+                "endLine": 1844
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1855,
+                "endLine": 1855
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1855,
+                "endLine": 1855
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 631,
+                "endLine": 631
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 141,
+                "endLine": 141
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 143,
+                "endLine": 143
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 143,
+                "endLine": 143
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 143,
+                "endLine": 143
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 147,
+                "endLine": 147
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 147,
+                "endLine": 147
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 147,
+                "endLine": 147
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 150,
+                "endLine": 150
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 150,
+                "endLine": 150
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 150,
+                "endLine": 150
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 154,
+                "endLine": 154
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 154,
+                "endLine": 154
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 154,
+                "endLine": 154
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 158,
+                "endLine": 158
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 158,
+                "endLine": 164
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 158,
+                "endLine": 158
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 167,
+                "endLine": 167
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 167,
+                "endLine": 167
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 167,
+                "endLine": 167
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 170,
+                "endLine": 170
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 170,
+                "endLine": 170
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 170,
+                "endLine": 170
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 173,
+                "endLine": 173
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 173,
+                "endLine": 173
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 173,
+                "endLine": 173
+              },
+              {
+                "path": "electron/control-plane.js",
+                "startLine": 175,
+                "endLine": 175
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 635
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 636
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 634,
+                "endLine": 634
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 637,
+                "endLine": 637
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 637,
+                "endLine": 637
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 645,
+                "endLine": 645
+              }
+            ]
+          ],
+          "related": [
+            {
+              "path": "electron/main.js",
+              "startLine": 1564,
+              "endLine": 1564
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1564,
+              "endLine": 1564
+            }
+          ]
+        }
+      ],
+      "reviewStatus": "CONFIRMED_DIAGNOSTIC_DISCLOSURE_FIXED_LOCALLY_FLOW_STILL_REPORTED",
+      "contextExploitabilityAndLimits": "Destination de log fixe, non dérivée du réseau. Défaut réel démontré: journalisation de signature URL et caractères terminal. P15 échoue avant correctif; P16 réussit après redaction centralisée, suppression des URL HTTP(S) et contrôles C0/C1/CR/LF/séparateurs Unicode avant console et append. Le flux HTTP→fichier intentionnel reste détecté; pas de fermeture automatique ni preuve que tout secret imaginable est masqué.",
+      "proofs": "P15 FAIL attendu; P16,P17,P23; tests/phase6-security-context.test.cjs",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "51e1197a9cf4d5ad09f6c8eac08a3554744d9ee9cb05a9efa4f176185a69b356",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "codeqlRuleSecuritySeverity": "6.3",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-09",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "electron/main.js",
+        "start_line": 1565,
+        "end_line": 1565,
+        "annotation_level": "warning",
+        "title": "File data in outbound network request"
+      },
+      "baselineSeverityContext": "Non-high original annotation; full official alert severity inventory unavailable",
+      "ruleId": "js/file-access-to-http",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 8,
+        "ruleId": "js/file-access-to-http",
+        "locations": [
+          {
+            "path": "electron/main.js",
+            "startLine": 1565,
+            "endLine": 1565
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "1b6ce0815a6e16e2:1"
+        },
+        "flows": [
+          [
+            {
+              "path": "electron/main.js",
+              "startLine": 1218,
+              "endLine": 1218
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1218,
+              "endLine": 1218
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1218,
+              "endLine": 1218
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1218,
+              "endLine": 1218
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1218,
+              "endLine": 1218
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1270,
+              "endLine": 1270
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1270,
+              "endLine": 1270
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1273,
+              "endLine": 1273
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1273,
+              "endLine": 1273
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1274,
+              "endLine": 1274
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1542,
+              "endLine": 1542
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1545,
+              "endLine": 1545
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1545,
+              "endLine": 1545
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1545,
+              "endLine": 1545
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1565,
+              "endLine": 1565
+            }
+          ]
+        ],
+        "related": [
+          {
+            "path": "electron/main.js",
+            "startLine": 1218,
+            "endLine": 1218
+          },
+          {
+            "path": "electron/main.js",
+            "startLine": 1218,
+            "endLine": 1218
+          }
+        ]
+      },
+      "currentEquivalentSarifResults": [
+        {
+          "index": 8,
+          "ruleId": "js/file-access-to-http",
+          "ruleMetadata": {
+            "securitySeverity": "6.5",
+            "level": "warning"
+          },
+          "locations": [
+            {
+              "path": "electron/main.js",
+              "startLine": 1570,
+              "endLine": 1570
+            }
+          ],
+          "fingerprints": {
+            "primaryLocationLineHash": "1b6ce0815a6e16e2:1",
+            "primaryLocationStartColumnFingerprint": "10"
+          },
+          "flows": [
+            [
+              {
+                "path": "electron/main.js",
+                "startLine": 1221,
+                "endLine": 1221
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1221,
+                "endLine": 1221
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1221,
+                "endLine": 1221
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1221,
+                "endLine": 1221
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1221,
+                "endLine": 1221
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1275,
+                "endLine": 1275
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1275,
+                "endLine": 1275
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1278,
+                "endLine": 1278
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1278,
+                "endLine": 1278
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1279,
+                "endLine": 1279
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1547,
+                "endLine": 1547
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1550,
+                "endLine": 1550
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1550,
+                "endLine": 1550
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1550,
+                "endLine": 1550
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1570,
+                "endLine": 1570
+              }
+            ]
+          ],
+          "related": [
+            {
+              "path": "electron/main.js",
+              "startLine": 1221,
+              "endLine": 1221
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1221,
+              "endLine": 1221
+            }
+          ]
+        }
+      ],
+      "reviewStatus": "PARTIALLY_FIXED_REVOKED_CRASH_CONSENT_INTENDED_TRANSFER",
+      "contextExploitabilityAndLimits": "Le flux exact part de readCrashQueue vers httpPost /api/crash. Création initiale minimisée via sanitizeCrashReport, destination résolue, HTTP Node sans suivi automatique de redirection. Défaut corrigé: consentement courant revérifié avant lecture/envoi d’une file persistée. Tests négatif révocation et positif livraison/rétention en échec. Transport simulé de fonction réelle extraite, pas Electron packagé/autorité réelle; intégrité/réassainissement d’une file modifiée localement non démontrés.",
+      "proofs": "P12,P16,P17,P23; electron/control-plane.js:141-203",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "51e1197a9cf4d5ad09f6c8eac08a3554744d9ee9cb05a9efa4f176185a69b356",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "codeqlRuleSecuritySeverity": "6.5",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-10",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "electron/main.js",
+        "start_line": 2106,
+        "end_line": 2106,
+        "annotation_level": "warning",
+        "title": "Network data written to file"
+      },
+      "baselineSeverityContext": "Non-high original annotation; full official alert severity inventory unavailable",
+      "ruleId": "js/http-to-file-access",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 15,
+        "ruleId": "js/http-to-file-access",
+        "locations": [
+          {
+            "path": "electron/main.js",
+            "startLine": 2106,
+            "endLine": 2106
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "25dc3758a5ea9f8a:1"
+        },
+        "flows": [
+          [
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1543,
+              "endLine": 1543
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1543,
+              "endLine": 1568
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1887,
+              "endLine": 1887
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1887,
+              "endLine": 1887
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1887,
+              "endLine": 1887
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1989,
+              "endLine": 1989
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1989,
+              "endLine": 1989
+            },
+            {
+              "path": "electron/heartbeat-policy.js",
+              "startLine": 41,
+              "endLine": 41
+            },
+            {
+              "path": "electron/heartbeat-policy.js",
+              "startLine": 41,
+              "endLine": 41
+            },
+            {
+              "path": "electron/heartbeat-policy.js",
+              "startLine": 41,
+              "endLine": 41
+            },
+            {
+              "path": "electron/heartbeat-policy.js",
+              "startLine": 49,
+              "endLine": 49
+            },
+            {
+              "path": "electron/heartbeat-policy.js",
+              "startLine": 49,
+              "endLine": 49
+            },
+            {
+              "path": "electron/heartbeat-policy.js",
+              "startLine": 47,
+              "endLine": 51
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1989,
+              "endLine": 1989
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1989,
+              "endLine": 1989
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 2000,
+              "endLine": 2000
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 2000,
+              "endLine": 2000
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 2100,
+              "endLine": 2100
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 2106,
+              "endLine": 2106
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 2106,
+              "endLine": 2106
+            },
+            {
+              "path": "electron/signed-state.js",
+              "startLine": 37,
+              "endLine": 37
+            },
+            {
+              "path": "electron/signed-state.js",
+              "startLine": 39,
+              "endLine": 39
+            },
+            {
+              "path": "electron/signed-state.js",
+              "startLine": 39,
+              "endLine": 39
+            },
+            {
+              "path": "electron/signed-state.js",
+              "startLine": 39,
+              "endLine": 39
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 2106,
+              "endLine": 2106
+            }
+          ],
+          [
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1559,
+              "endLine": 1559
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1543,
+              "endLine": 1543
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1543,
+              "endLine": 1568
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1903,
+              "endLine": 1903
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1903,
+              "endLine": 1903
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1903,
+              "endLine": 1903
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1989,
+              "endLine": 1989
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1989,
+              "endLine": 1989
+            },
+            {
+              "path": "electron/heartbeat-policy.js",
+              "startLine": 41,
+              "endLine": 41
+            },
+            {
+              "path": "electron/heartbeat-policy.js",
+              "startLine": 41,
+              "endLine": 41
+            },
+            {
+              "path": "electron/heartbeat-policy.js",
+              "startLine": 41,
+              "endLine": 41
+            },
+            {
+              "path": "electron/heartbeat-policy.js",
+              "startLine": 50,
+              "endLine": 50
+            },
+            {
+              "path": "electron/heartbeat-policy.js",
+              "startLine": 50,
+              "endLine": 50
+            },
+            {
+              "path": "electron/heartbeat-policy.js",
+              "startLine": 47,
+              "endLine": 51
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1989,
+              "endLine": 1989
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1989,
+              "endLine": 1989
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 2000,
+              "endLine": 2000
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 2000,
+              "endLine": 2000
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 2100,
+              "endLine": 2100
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 2106,
+              "endLine": 2106
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 2106,
+              "endLine": 2106
+            },
+            {
+              "path": "electron/signed-state.js",
+              "startLine": 37,
+              "endLine": 37
+            },
+            {
+              "path": "electron/signed-state.js",
+              "startLine": 39,
+              "endLine": 39
+            },
+            {
+              "path": "electron/signed-state.js",
+              "startLine": 39,
+              "endLine": 39
+            },
+            {
+              "path": "electron/signed-state.js",
+              "startLine": 39,
+              "endLine": 39
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 2106,
+              "endLine": 2106
+            }
+          ]
+        ],
+        "related": [
+          {
+            "path": "electron/main.js",
+            "startLine": 1559,
+            "endLine": 1559
+          },
+          {
+            "path": "electron/main.js",
+            "startLine": 1559,
+            "endLine": 1559
+          }
+        ]
+      },
+      "currentEquivalentSarifResults": [
+        {
+          "index": 12,
+          "ruleId": "js/http-to-file-access",
+          "ruleMetadata": {
+            "securitySeverity": "6.3",
+            "level": "warning"
+          },
+          "locations": [
+            {
+              "path": "electron/main.js",
+              "startLine": 2111,
+              "endLine": 2111
+            }
+          ],
+          "fingerprints": {
+            "primaryLocationLineHash": "25dc3758a5ea9f8a:1",
+            "primaryLocationStartColumnFingerprint": "39"
+          },
+          "flows": [
+            [
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1548,
+                "endLine": 1548
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1548,
+                "endLine": 1573
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1892,
+                "endLine": 1892
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1892,
+                "endLine": 1892
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1892,
+                "endLine": 1892
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1994,
+                "endLine": 1994
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1994,
+                "endLine": 1994
+              },
+              {
+                "path": "electron/heartbeat-policy.js",
+                "startLine": 41,
+                "endLine": 41
+              },
+              {
+                "path": "electron/heartbeat-policy.js",
+                "startLine": 41,
+                "endLine": 41
+              },
+              {
+                "path": "electron/heartbeat-policy.js",
+                "startLine": 41,
+                "endLine": 41
+              },
+              {
+                "path": "electron/heartbeat-policy.js",
+                "startLine": 49,
+                "endLine": 49
+              },
+              {
+                "path": "electron/heartbeat-policy.js",
+                "startLine": 49,
+                "endLine": 49
+              },
+              {
+                "path": "electron/heartbeat-policy.js",
+                "startLine": 47,
+                "endLine": 51
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1994,
+                "endLine": 1994
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1994,
+                "endLine": 1994
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 2005,
+                "endLine": 2005
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 2005,
+                "endLine": 2005
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 2105,
+                "endLine": 2105
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 2111,
+                "endLine": 2111
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 2111,
+                "endLine": 2111
+              },
+              {
+                "path": "electron/signed-state.js",
+                "startLine": 37,
+                "endLine": 37
+              },
+              {
+                "path": "electron/signed-state.js",
+                "startLine": 39,
+                "endLine": 39
+              },
+              {
+                "path": "electron/signed-state.js",
+                "startLine": 39,
+                "endLine": 39
+              },
+              {
+                "path": "electron/signed-state.js",
+                "startLine": 39,
+                "endLine": 39
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 2111,
+                "endLine": 2111
+              }
+            ],
+            [
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1564,
+                "endLine": 1564
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1548,
+                "endLine": 1548
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1548,
+                "endLine": 1573
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1908,
+                "endLine": 1908
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1908,
+                "endLine": 1908
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1908,
+                "endLine": 1908
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1994,
+                "endLine": 1994
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1994,
+                "endLine": 1994
+              },
+              {
+                "path": "electron/heartbeat-policy.js",
+                "startLine": 41,
+                "endLine": 41
+              },
+              {
+                "path": "electron/heartbeat-policy.js",
+                "startLine": 41,
+                "endLine": 41
+              },
+              {
+                "path": "electron/heartbeat-policy.js",
+                "startLine": 41,
+                "endLine": 41
+              },
+              {
+                "path": "electron/heartbeat-policy.js",
+                "startLine": 50,
+                "endLine": 50
+              },
+              {
+                "path": "electron/heartbeat-policy.js",
+                "startLine": 50,
+                "endLine": 50
+              },
+              {
+                "path": "electron/heartbeat-policy.js",
+                "startLine": 47,
+                "endLine": 51
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1994,
+                "endLine": 1994
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 1994,
+                "endLine": 1994
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 2005,
+                "endLine": 2005
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 2005,
+                "endLine": 2005
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 2105,
+                "endLine": 2105
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 2111,
+                "endLine": 2111
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 2111,
+                "endLine": 2111
+              },
+              {
+                "path": "electron/signed-state.js",
+                "startLine": 37,
+                "endLine": 37
+              },
+              {
+                "path": "electron/signed-state.js",
+                "startLine": 39,
+                "endLine": 39
+              },
+              {
+                "path": "electron/signed-state.js",
+                "startLine": 39,
+                "endLine": 39
+              },
+              {
+                "path": "electron/signed-state.js",
+                "startLine": 39,
+                "endLine": 39
+              },
+              {
+                "path": "electron/main.js",
+                "startLine": 2111,
+                "endLine": 2111
+              }
+            ]
+          ],
+          "related": [
+            {
+              "path": "electron/main.js",
+              "startLine": 1564,
+              "endLine": 1564
+            },
+            {
+              "path": "electron/main.js",
+              "startLine": 1564,
+              "endLine": 1564
+            }
+          ]
+        }
+      ],
+      "reviewStatus": "INTENDED_SIGNED_LICENSE_STATE_PERSISTENCE_NOT_FULLY_VALIDATED",
+      "contextExploitabilityAndLimits": "La réponse de heartbeat est classée par heartbeatDecision puis status/reason/lid/ts sont signés HMAC et écrits au chemin fixe LICENSE_BLOCK_FILE. Aucun chemin ou code exécutable fourni par le serveur. Tests signed-state/startup/activation existants passent; absence d’UI injection et bornes de taille sur toute réponse autorité non établies par cette revue ciblée. Aucun risque accepté à la place de l’utilisateur.",
+      "proofs": "P16,P21; electron/heartbeat-policy.js; electron/signed-state.js",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "51e1197a9cf4d5ad09f6c8eac08a3554744d9ee9cb05a9efa4f176185a69b356",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "codeqlRuleSecuritySeverity": "6.3",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-11",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "scripts/config-services.cjs",
+        "start_line": 136,
+        "end_line": 136,
+        "annotation_level": "warning",
+        "title": "File data in outbound network request"
+      },
+      "baselineSeverityContext": "Non-high original annotation; full official alert severity inventory unavailable",
+      "ruleId": "js/file-access-to-http",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 9,
+        "ruleId": "js/file-access-to-http",
+        "locations": [
+          {
+            "path": "scripts/config-services.cjs",
+            "startLine": 136,
+            "endLine": 136
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "64539b5f16c782ff:1"
+        },
+        "flows": [
+          [
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 107,
+              "endLine": 107
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 107,
+              "endLine": 107
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 107,
+              "endLine": 107
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 108,
+              "endLine": 108
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 108,
+              "endLine": 108
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 108,
+              "endLine": 108
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 108,
+              "endLine": 108
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 114,
+              "endLine": 114
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 131,
+              "endLine": 131
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            }
+          ],
+          [
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 107,
+              "endLine": 107
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 107,
+              "endLine": 107
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 107,
+              "endLine": 107
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 108,
+              "endLine": 108
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 108,
+              "endLine": 108
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 108,
+              "endLine": 108
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 108,
+              "endLine": 108
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 114,
+              "endLine": 114
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 131,
+              "endLine": 131
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            }
+          ],
+          [
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 107,
+              "endLine": 107
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 107,
+              "endLine": 107
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 107,
+              "endLine": 107
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 108,
+              "endLine": 108
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 108,
+              "endLine": 108
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 108,
+              "endLine": 108
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 108,
+              "endLine": 108
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 114,
+              "endLine": 114
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 131,
+              "endLine": 131
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            }
+          ]
+        ],
+        "related": [
+          {
+            "path": "scripts/config-services.cjs",
+            "startLine": 107,
+            "endLine": 107
+          },
+          {
+            "path": "scripts/config-services.cjs",
+            "startLine": 107,
+            "endLine": 107
+          }
+        ]
+      },
+      "currentEquivalentSarifResults": [
+        {
+          "index": 9,
+          "ruleId": "js/file-access-to-http",
+          "ruleMetadata": {
+            "securitySeverity": "6.5",
+            "level": "warning"
+          },
+          "locations": [
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 136,
+              "endLine": 136
+            }
+          ],
+          "fingerprints": {
+            "primaryLocationLineHash": "64539b5f16c782ff:1",
+            "primaryLocationStartColumnFingerprint": "9"
+          },
+          "flows": [
+            [
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 107,
+                "endLine": 107
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 107,
+                "endLine": 107
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 107,
+                "endLine": 107
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 108,
+                "endLine": 108
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 108,
+                "endLine": 108
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 108,
+                "endLine": 108
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 108,
+                "endLine": 108
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 114,
+                "endLine": 114
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 131,
+                "endLine": 131
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              }
+            ],
+            [
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 107,
+                "endLine": 107
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 107,
+                "endLine": 107
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 107,
+                "endLine": 107
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 108,
+                "endLine": 108
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 108,
+                "endLine": 108
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 108,
+                "endLine": 108
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 108,
+                "endLine": 108
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 114,
+                "endLine": 114
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 131,
+                "endLine": 131
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              }
+            ],
+            [
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 107,
+                "endLine": 107
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 107,
+                "endLine": 107
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 107,
+                "endLine": 107
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 108,
+                "endLine": 108
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 108,
+                "endLine": 108
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 108,
+                "endLine": 108
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 108,
+                "endLine": 108
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 114,
+                "endLine": 114
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 131,
+                "endLine": 131
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              },
+              {
+                "path": "scripts/config-services.cjs",
+                "startLine": 136,
+                "endLine": 136
+              }
+            ]
+          ],
+          "related": [
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 107,
+              "endLine": 107
+            },
+            {
+              "path": "scripts/config-services.cjs",
+              "startLine": 107,
+              "endLine": 107
+            }
+          ]
+        }
+      ],
+      "reviewStatus": "INTENDED_EXPLICIT_AUTHORIZED_VENDOR_CREDENTIAL_TRANSFER",
+      "contextExploitabilityAndLimits": "Flux du fichier de session CLI Upstash après demande d’autorisation de création gratuite vers Basic Authorization du seul endpoint HTTPS api.upstash.com/v2/redis/database. redirect:error, délai 15s, corps plan free; aucun mot de passe compte demandé. Événement d’authentification intentionnel et nécessaire, non exfiltration arbitraire démontrée. Config78 simulés; aucun appel réel/création/permission fournisseur vérifié ici.",
+      "proofs": "P07,P19; scripts/config-services.cjs:92-143",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "a334a8eeb5f10d952b8e21ccb88119263bd099c4ffcbf77691cc012ccc7fa7c1",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "codeqlRuleSecuritySeverity": "6.5",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-12",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "src/lib/einvoicing/__tests__/formats.test.ts",
+        "start_line": 28,
+        "end_line": 28,
+        "annotation_level": "warning",
+        "title": "Replacement of a substring with itself"
+      },
+      "baselineSeverityContext": "Non-high original annotation; full official alert severity inventory unavailable",
+      "ruleId": "js/identity-replacement",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 0,
+        "ruleId": "js/identity-replacement",
+        "locations": [
+          {
+            "path": "src/lib/einvoicing/__tests__/formats.test.ts",
+            "startLine": 28,
+            "endLine": 28
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "2f6646453e878b02:1"
+        },
+        "flows": [],
+        "related": []
+      },
+      "currentEquivalentSarifResults": [
+        {
+          "index": 0,
+          "ruleId": "js/identity-replacement",
+          "ruleMetadata": {
+            "securitySeverity": "5.0",
+            "level": "warning"
+          },
+          "locations": [
+            {
+              "path": "src/lib/einvoicing/__tests__/formats.test.ts",
+              "startLine": 28,
+              "endLine": 28
+            }
+          ],
+          "fingerprints": {
+            "primaryLocationLineHash": "2f6646453e878b02:1",
+            "primaryLocationStartColumnFingerprint": "35"
+          },
+          "flows": [],
+          "related": []
+        }
+      ],
+      "reviewStatus": "DISPROVED_NON_SECURITY_LITERAL_FIXTURE_NOOP_NOT_DISMISSED",
+      "contextExploitabilityAndLimits": "Remplacement de l’espace par lui-même dans un littéral de fixture; les espaces sont volontairement remis au builder pour éprouver sa normalisation. Aucun input de production, escaping ou droit impliqué. Littéral et assertions conservés; 29 tests formats passent. Signal de qualité, pas vulnérabilité démontrée.",
+      "proofs": "P12,P21",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "e376a37397af53538011eebc931789d0998445a5121428859614cae5091545e5",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "codeqlRuleSecuritySeverity": "5.0",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-13",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "src/lib/photo-store.ts",
+        "start_line": 89,
+        "end_line": 89,
+        "annotation_level": "warning",
+        "title": "Network data written to file"
+      },
+      "baselineSeverityContext": "Non-high original annotation; full official alert severity inventory unavailable",
+      "ruleId": "js/http-to-file-access",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 16,
+        "ruleId": "js/http-to-file-access",
+        "locations": [
+          {
+            "path": "src/lib/photo-store.ts",
+            "startLine": 89,
+            "endLine": 89
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "682240e07b23855d:1"
+        },
+        "flows": [
+          [
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 61,
+              "endLine": 61
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 61,
+              "endLine": 61
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 61,
+              "endLine": 61
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 115,
+              "endLine": 115
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 115,
+              "endLine": 115
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 146,
+              "endLine": 146
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 190,
+              "endLine": 190
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 194,
+              "endLine": 194
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 194,
+              "endLine": 194
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 194,
+              "endLine": 194
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 204,
+              "endLine": 204
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 204,
+              "endLine": 204
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 204,
+              "endLine": 204
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 228,
+              "endLine": 228
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 228,
+              "endLine": 228
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 233,
+              "endLine": 233
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 230,
+              "endLine": 237
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 146,
+              "endLine": 146
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 146,
+              "endLine": 146
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 152,
+              "endLine": 152
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 152,
+              "endLine": 152
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 152,
+              "endLine": 152
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 152,
+              "endLine": 152
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 153,
+              "endLine": 153
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 58,
+              "endLine": 58
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 65,
+              "endLine": 65
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 65,
+              "endLine": 65
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 65,
+              "endLine": 65
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 67,
+              "endLine": 67
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 67,
+              "endLine": 67
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 67,
+              "endLine": 67
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 89,
+              "endLine": 89
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 89,
+              "endLine": 89
+            }
+          ],
+          [
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 61,
+              "endLine": 61
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 61,
+              "endLine": 61
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 61,
+              "endLine": 61
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 115,
+              "endLine": 115
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 115,
+              "endLine": 115
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 146,
+              "endLine": 146
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 190,
+              "endLine": 190
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 194,
+              "endLine": 194
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 194,
+              "endLine": 194
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 194,
+              "endLine": 194
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 204,
+              "endLine": 204
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 204,
+              "endLine": 204
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 204,
+              "endLine": 204
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 228,
+              "endLine": 228
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 159,
+              "endLine": 159
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 160,
+              "endLine": 160
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 228,
+              "endLine": 228
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 228,
+              "endLine": 228
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 233,
+              "endLine": 233
+            },
+            {
+              "path": "src/lib/mechanics/avatar-image.ts",
+              "startLine": 230,
+              "endLine": 237
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 146,
+              "endLine": 146
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 146,
+              "endLine": 146
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 152,
+              "endLine": 152
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 152,
+              "endLine": 152
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 152,
+              "endLine": 152
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 152,
+              "endLine": 152
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 153,
+              "endLine": 153
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 58,
+              "endLine": 58
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 65,
+              "endLine": 65
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 65,
+              "endLine": 65
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 65,
+              "endLine": 65
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 67,
+              "endLine": 67
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 67,
+              "endLine": 67
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 67,
+              "endLine": 67
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 89,
+              "endLine": 89
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 89,
+              "endLine": 89
+            }
+          ]
+        ],
+        "related": [
+          {
+            "path": "src/app/api/sync/mechanic-avatar/route.ts",
+            "startLine": 61,
+            "endLine": 61
+          },
+          {
+            "path": "src/app/api/sync/mechanic-avatar/route.ts",
+            "startLine": 61,
+            "endLine": 61
+          }
+        ]
+      },
+      "currentEquivalentSarifResults": [
+        {
+          "index": 13,
+          "ruleId": "js/http-to-file-access",
+          "ruleMetadata": {
+            "securitySeverity": "6.3",
+            "level": "warning"
+          },
+          "locations": [
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 89,
+              "endLine": 89
+            }
+          ],
+          "fingerprints": {
+            "primaryLocationLineHash": "682240e07b23855d:1",
+            "primaryLocationStartColumnFingerprint": "27"
+          },
+          "flows": [
+            [
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 61,
+                "endLine": 61
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 61,
+                "endLine": 61
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 61,
+                "endLine": 61
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 115,
+                "endLine": 115
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 115,
+                "endLine": 115
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 190,
+                "endLine": 190
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 194,
+                "endLine": 194
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 194,
+                "endLine": 194
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 194,
+                "endLine": 194
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 204,
+                "endLine": 204
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 204,
+                "endLine": 204
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 204,
+                "endLine": 204
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 228,
+                "endLine": 228
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 228,
+                "endLine": 228
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 233,
+                "endLine": 233
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 230,
+                "endLine": 237
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 152,
+                "endLine": 152
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 152,
+                "endLine": 152
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 152,
+                "endLine": 152
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 152,
+                "endLine": 152
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 153,
+                "endLine": 153
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 58,
+                "endLine": 58
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 65,
+                "endLine": 65
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 65,
+                "endLine": 65
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 65,
+                "endLine": 65
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 67,
+                "endLine": 67
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 67,
+                "endLine": 67
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 67,
+                "endLine": 67
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 89,
+                "endLine": 89
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 89,
+                "endLine": 89
+              }
+            ],
+            [
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 61,
+                "endLine": 61
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 61,
+                "endLine": 61
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 61,
+                "endLine": 61
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 115,
+                "endLine": 115
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 115,
+                "endLine": 115
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 190,
+                "endLine": 190
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 194,
+                "endLine": 194
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 194,
+                "endLine": 194
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 194,
+                "endLine": 194
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 204,
+                "endLine": 204
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 204,
+                "endLine": 204
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 204,
+                "endLine": 204
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 228,
+                "endLine": 228
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 159,
+                "endLine": 159
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 160,
+                "endLine": 160
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 228,
+                "endLine": 228
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 228,
+                "endLine": 228
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 233,
+                "endLine": 233
+              },
+              {
+                "path": "src/lib/mechanics/avatar-image.ts",
+                "startLine": 230,
+                "endLine": 237
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 146,
+                "endLine": 146
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 152,
+                "endLine": 152
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 152,
+                "endLine": 152
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 152,
+                "endLine": 152
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 152,
+                "endLine": 152
+              },
+              {
+                "path": "src/app/api/sync/mechanic-avatar/route.ts",
+                "startLine": 153,
+                "endLine": 153
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 58,
+                "endLine": 58
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 65,
+                "endLine": 65
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 65,
+                "endLine": 65
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 65,
+                "endLine": 65
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 67,
+                "endLine": 67
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 67,
+                "endLine": 67
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 67,
+                "endLine": 67
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 89,
+                "endLine": 89
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 89,
+                "endLine": 89
+              }
+            ]
+          ],
+          "related": [
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 61,
+              "endLine": 61
+            },
+            {
+              "path": "src/app/api/sync/mechanic-avatar/route.ts",
+              "startLine": 61,
+              "endLine": 61
+            }
+          ]
+        }
+      ],
+      "reviewStatus": "OPEN_UNACCEPTED_FILESYSTEM_TRUST_AND_FORMAT_LIMITS",
+      "contextExploitabilityAndLimits": "Enregistrement image intentionnel: MIME fermé, extension choisie côté serveur, segments alphanumériques bornés, chemin relatif sous base. 20 tests réels de traversée/MIME/destination passent. Le bornage est lexical, pas openat: symlinks de répertoires et mutations locales concurrentes non couverts; MIME déclaré ne prouve pas les octets image. Pas de RCE HTTP démontrée, ni de faux positif global/risk acceptance déclaré. Contrôle des appelants authentifiés/tenant à compléter en préproduction.",
+      "proofs": "P12,P21; src/lib/__tests__/photo-store-traversal.test.ts",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "d768f702d69232eee023343a2f7fab033ff1a4e4491037d7e043ea1861782230",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "codeqlRuleSecuritySeverity": "6.3",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-14",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "src/lib/sync/cloud-client.ts",
+        "start_line": 76,
+        "end_line": 76,
+        "annotation_level": "warning",
+        "title": "File data in outbound network request"
+      },
+      "baselineSeverityContext": "Non-high original annotation; full official alert severity inventory unavailable",
+      "ruleId": "js/file-access-to-http",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 10,
+        "ruleId": "js/file-access-to-http",
+        "locations": [
+          {
+            "path": "src/lib/sync/cloud-client.ts",
+            "startLine": 76,
+            "endLine": 76
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "f07b4c436deabb6:1"
+        },
+        "flows": [
+          [
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 131,
+              "endLine": 131
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 131,
+              "endLine": 131
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 131,
+              "endLine": 131
+            },
+            {
+              "path": "src/lib/sync/mechanic-avatar-sync.ts",
+              "startLine": 71,
+              "endLine": 71
+            },
+            {
+              "path": "src/lib/sync/mechanic-avatar-sync.ts",
+              "startLine": 71,
+              "endLine": 71
+            },
+            {
+              "path": "src/lib/sync/mechanic-avatar-sync.ts",
+              "startLine": 79,
+              "endLine": 79
+            },
+            {
+              "path": "src/lib/sync/mechanic-avatar-sync.ts",
+              "startLine": 75,
+              "endLine": 85
+            },
+            {
+              "path": "src/lib/sync/cloud-client.ts",
+              "startLine": 67,
+              "endLine": 67
+            },
+            {
+              "path": "src/lib/sync/cloud-client.ts",
+              "startLine": 76,
+              "endLine": 76
+            },
+            {
+              "path": "src/lib/sync/cloud-client.ts",
+              "startLine": 76,
+              "endLine": 76
+            }
+          ]
+        ],
+        "related": [
+          {
+            "path": "src/lib/photo-store.ts",
+            "startLine": 131,
+            "endLine": 131
+          },
+          {
+            "path": "src/lib/photo-store.ts",
+            "startLine": 131,
+            "endLine": 131
+          }
+        ]
+      },
+      "currentEquivalentSarifResults": [
+        {
+          "index": 10,
+          "ruleId": "js/file-access-to-http",
+          "ruleMetadata": {
+            "securitySeverity": "6.5",
+            "level": "warning"
+          },
+          "locations": [
+            {
+              "path": "src/lib/sync/cloud-client.ts",
+              "startLine": 78,
+              "endLine": 78
+            }
+          ],
+          "fingerprints": {
+            "primaryLocationLineHash": "f07b4c436deabb6:1",
+            "primaryLocationStartColumnFingerprint": "6"
+          },
+          "flows": [
+            [
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 131,
+                "endLine": 131
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 131,
+                "endLine": 131
+              },
+              {
+                "path": "src/lib/photo-store.ts",
+                "startLine": 131,
+                "endLine": 131
+              },
+              {
+                "path": "src/lib/sync/mechanic-avatar-sync.ts",
+                "startLine": 71,
+                "endLine": 71
+              },
+              {
+                "path": "src/lib/sync/mechanic-avatar-sync.ts",
+                "startLine": 71,
+                "endLine": 71
+              },
+              {
+                "path": "src/lib/sync/mechanic-avatar-sync.ts",
+                "startLine": 79,
+                "endLine": 79
+              },
+              {
+                "path": "src/lib/sync/mechanic-avatar-sync.ts",
+                "startLine": 75,
+                "endLine": 85
+              },
+              {
+                "path": "src/lib/sync/cloud-client.ts",
+                "startLine": 67,
+                "endLine": 67
+              },
+              {
+                "path": "src/lib/sync/cloud-client.ts",
+                "startLine": 78,
+                "endLine": 78
+              },
+              {
+                "path": "src/lib/sync/cloud-client.ts",
+                "startLine": 78,
+                "endLine": 78
+              }
+            ]
+          ],
+          "related": [
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 131,
+              "endLine": 131
+            },
+            {
+              "path": "src/lib/photo-store.ts",
+              "startLine": 131,
+              "endLine": 131
+            }
+          ]
+        }
+      ],
+      "reviewStatus": "PARTIALLY_FIXED_REDIRECT_DISCLOSURE_INTENDED_AVATAR_SYNC",
+      "contextExploitabilityAndLimits": "Flux exact readPhotoAsDataUrl → pushMechanicAvatar → cloudPost: photo et licence garage vers synchronisation métier. Défaut général corrigé: fetch refuse désormais toute redirection, évitant la retransmission du corps privé (dont licence) vers un destinataire 307. Deux vrais serveurs HTTP locaux démontrent 1 origine/0 destinataire. Pas d’autorité HTTPS réelle ni preuve exhaustive des appelants/permissions de sync; destination configurée reste une autorité opérateur.",
+      "proofs": "P12,P21; src/lib/sync/__tests__/redirect-security.test.ts",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "1e9bbd7e0f02f5290812082085ecbffa89aba913c06db04aa409a98178b7b25d",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "codeqlRuleSecuritySeverity": "6.5",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-15",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "src/middleware.ts",
+        "start_line": 95,
+        "end_line": 95,
+        "annotation_level": "warning",
+        "title": "Log injection"
+      },
+      "baselineSeverityContext": "Non-high original annotation; full official alert severity inventory unavailable",
+      "ruleId": "js/log-injection",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 11,
+        "ruleId": "js/log-injection",
+        "locations": [
+          {
+            "path": "src/middleware.ts",
+            "startLine": 95,
+            "endLine": 95
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "962da8a7612c4658:1"
+        },
+        "flows": [
+          [
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 215,
+              "endLine": 215
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 88,
+              "endLine": 88
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 95,
+              "endLine": 95
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 77,
+              "endLine": 77
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 95,
+              "endLine": 95
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 95,
+              "endLine": 95
+            }
+          ],
+          [
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 215,
+              "endLine": 215
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 88,
+              "endLine": 88
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 95,
+              "endLine": 95
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 77,
+              "endLine": 77
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 95,
+              "endLine": 95
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 95,
+              "endLine": 95
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 95,
+              "endLine": 95
+            }
+          ]
+        ],
+        "related": [
+          {
+            "path": "src/middleware.ts",
+            "startLine": 176,
+            "endLine": 176
+          },
+          {
+            "path": "src/middleware.ts",
+            "startLine": 176,
+            "endLine": 176
+          }
+        ]
+      },
+      "currentEquivalentSarifResults": [],
+      "reviewStatus": "FIXED_STATIC_AUTH_DIAGNOSTICS_NOT_DISMISSED",
+      "contextExploitabilityAndLimits": "Les trois événements de diagnostic restent journalisés mais uniquement comme littéraux fixes: aucune interpolation de pathname, cookie, nom/code/message d’erreur. La garde CR/LF précédente ne couvrait pas contrôles terminal et minimisation des chemins sensibles. Tests des trois branches: refus et diagnostics maintenus sans donnée de requête. 47 tests middleware passent, règles de connexion/licence/mécanicien inchangées. Les trois résultats sont absents des SARIF b4894c7/e64914d; aucun dismiss API et aucune inférence de sécurité globale.",
+      "proofs": "P11,P21,P24; src/__tests__/middleware.test.ts; actual complete 3eb7c5f flows retained in this row",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "3611c5452fe97ff31958cb8e4464938eb484106f47d1334ea85bd3b0932c6f81",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-16",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "src/middleware.ts",
+        "start_line": 124,
+        "end_line": 124,
+        "annotation_level": "warning",
+        "title": "Log injection"
+      },
+      "baselineSeverityContext": "Non-high original annotation; full official alert severity inventory unavailable",
+      "ruleId": "js/log-injection",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 12,
+        "ruleId": "js/log-injection",
+        "locations": [
+          {
+            "path": "src/middleware.ts",
+            "startLine": 124,
+            "endLine": 124
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "dcf62b15ba3e183:1"
+        },
+        "flows": [
+          [
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 215,
+              "endLine": 215
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 88,
+              "endLine": 88
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 124,
+              "endLine": 124
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 77,
+              "endLine": 77
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 124,
+              "endLine": 124
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 124,
+              "endLine": 124
+            }
+          ],
+          [
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 215,
+              "endLine": 215
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 88,
+              "endLine": 88
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 124,
+              "endLine": 124
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 77,
+              "endLine": 77
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 124,
+              "endLine": 124
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 124,
+              "endLine": 124
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 124,
+              "endLine": 124
+            }
+          ]
+        ],
+        "related": [
+          {
+            "path": "src/middleware.ts",
+            "startLine": 176,
+            "endLine": 176
+          },
+          {
+            "path": "src/middleware.ts",
+            "startLine": 176,
+            "endLine": 176
+          }
+        ]
+      },
+      "currentEquivalentSarifResults": [],
+      "reviewStatus": "FIXED_STATIC_AUTH_DIAGNOSTICS_NOT_DISMISSED",
+      "contextExploitabilityAndLimits": "Les trois événements de diagnostic restent journalisés mais uniquement comme littéraux fixes: aucune interpolation de pathname, cookie, nom/code/message d’erreur. La garde CR/LF précédente ne couvrait pas contrôles terminal et minimisation des chemins sensibles. Tests des trois branches: refus et diagnostics maintenus sans donnée de requête. 47 tests middleware passent, règles de connexion/licence/mécanicien inchangées. Les trois résultats sont absents des SARIF b4894c7/e64914d; aucun dismiss API et aucune inférence de sécurité globale.",
+      "proofs": "P11,P21,P24; src/__tests__/middleware.test.ts; actual complete 3eb7c5f flows retained in this row",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "3611c5452fe97ff31958cb8e4464938eb484106f47d1334ea85bd3b0932c6f81",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    },
+    {
+      "localReviewId": "P6-CQ-17",
+      "githubAlertNumber": null,
+      "githubAlertNumberStatus": "OFFICIAL_ALERT_API_HTTP_403_NOT_INVENTED",
+      "baseline": {
+        "path": "src/middleware.ts",
+        "start_line": 204,
+        "end_line": 204,
+        "annotation_level": "warning",
+        "title": "Log injection"
+      },
+      "baselineSeverityContext": "Non-high original annotation; full official alert severity inventory unavailable",
+      "ruleId": "js/log-injection",
+      "ruleProvenance": "Actual 3eb7c5f SARIF",
+      "baselineEquivalentSarifResult": {
+        "index": 13,
+        "ruleId": "js/log-injection",
+        "locations": [
+          {
+            "path": "src/middleware.ts",
+            "startLine": 204,
+            "endLine": 204
+          }
+        ],
+        "fingerprints": {
+          "primaryLocationLineHash": "e1d3a60fc84d1095:1"
+        },
+        "flows": [
+          [
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 204,
+              "endLine": 204
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 77,
+              "endLine": 77
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 204,
+              "endLine": 204
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 204,
+              "endLine": 204
+            }
+          ],
+          [
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 176,
+              "endLine": 176
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 204,
+              "endLine": 204
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 77,
+              "endLine": 77
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 78,
+              "endLine": 78
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 204,
+              "endLine": 204
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 204,
+              "endLine": 204
+            },
+            {
+              "path": "src/middleware.ts",
+              "startLine": 204,
+              "endLine": 204
+            }
+          ]
+        ],
+        "related": [
+          {
+            "path": "src/middleware.ts",
+            "startLine": 176,
+            "endLine": 176
+          },
+          {
+            "path": "src/middleware.ts",
+            "startLine": 176,
+            "endLine": 176
+          }
+        ]
+      },
+      "currentEquivalentSarifResults": [],
+      "reviewStatus": "FIXED_STATIC_AUTH_DIAGNOSTICS_NOT_DISMISSED",
+      "contextExploitabilityAndLimits": "Les trois événements de diagnostic restent journalisés mais uniquement comme littéraux fixes: aucune interpolation de pathname, cookie, nom/code/message d’erreur. La garde CR/LF précédente ne couvrait pas contrôles terminal et minimisation des chemins sensibles. Tests des trois branches: refus et diagnostics maintenus sans donnée de requête. 47 tests middleware passent, règles de connexion/licence/mécanicien inchangées. Les trois résultats sont absents des SARIF b4894c7/e64914d; aucun dismiss API et aucune inférence de sécurité globale.",
+      "proofs": "P11,P21,P24; src/__tests__/middleware.test.ts; actual complete 3eb7c5f flows retained in this row",
+      "riskAcceptedByUser": false,
+      "dismissed": false,
+      "sourceSha256": "3611c5452fe97ff31958cb8e4464938eb484106f47d1334ea85bd3b0932c6f81",
+      "manualReviewDepth": "TARGETED_FLOW_AND_RELEVANT_CALLSITE_REVIEW_NOT_WHOLE_PROGRAM_VALIDATION",
+      "sourceSnapshotCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de"
+    }
+  ],
+  "additionalSarifResult": {
+    "githubAlertNumber": null,
+    "result": {
+      "index": 2,
+      "ruleId": "js/biased-cryptographic-random",
+      "ruleMetadata": {
+        "securitySeverity": "7.5",
+        "level": "warning"
+      },
+      "locations": [
+        {
+          "path": "src/lib/portal/backup-codes.ts",
+          "startLine": 29,
+          "endLine": 29
+        }
+      ],
+      "fingerprints": {
+        "primaryLocationLineHash": "c0cdc7f8bae5016e:1"
+      },
+      "flows": [],
+      "related": [
+        {
+          "path": "src/lib/portal/backup-codes.ts",
+          "startLine": 28,
+          "endLine": 28
+        }
+      ]
+    },
+    "reviewStatus": "DISPROVED_MODULO_BIAS_FOR_CURRENT_32_SYMBOL_ALPHABET_NOT_DISMISSED",
+    "reason": "32 unique alphabet symbols divide 256 exactly. Each output symbol has eight byte preimages; eight uniform crypto.randomBytes give 40 bits. P12/P17/P23 finite proof tied to real source plus P12/P21 real crypto/verification/single-use-store tests. This is NOT a claim that 40 bits alone provides unlimited online/offline security or that a new GitHub regression was introduced.",
+    "riskAcceptedByUser": false
+  },
+  "acceptedRisks": [],
+  "limits": "No alert dismissed/deleted, no query/config exclusions, no historical source rewritten. Open/local/intentional/partially proven findings are not resolved merely because lower alert counts or build/analysis jobs pass.",
+  "currentInventoryCommit": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de",
+  "currentSarifResultCountAt5b7fe4f": 14,
+  "currentHighSeveritySarifResults": 7,
+  "githubAlertCountsNotInferredFromSarif": true,
+  "currentSarifResultCount": 14
+}

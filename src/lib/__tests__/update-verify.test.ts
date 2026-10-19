@@ -108,3 +108,94 @@ describe('electron/update-verify — manifeste signé', () => {
     expect(updateVerify.validateManifest(sign(baseManifest({ sha256: 'xyz' })), OPTS).ok).toBe(false)
   })
 })
+
+/**
+ * Palier obligatoire — `minVersion` était SIGNÉ et IGNORÉ.
+ *
+ * `scripts/sign-release-manifest.mjs` sait poser le champ (« version minimale
+ * pouvant appliquer cette mise à jour ») et le serveur central le transmet, mais
+ * aucun code ne le lisait. Il existe pour les publications qui ne savent pas
+ * partir de n'importe où : migrations de base enchaînées, format de licence
+ * changé, dossier de données déplacé. Un poste resté longtemps sur une vieille
+ * version sautait le palier, l'installation RÉUSSISSAIT, et c'est au premier
+ * démarrage que les données ne se lisaient plus.
+ */
+describe('electron/update-verify — palier minVersion', () => {
+  it('REFUSE une mise à jour dont le palier dépasse la version installée', () => {
+    const r = updateVerify.validateManifest(
+      sign(baseManifest({ version: '3.0.0', minVersion: '2.0.0' })),
+      { ...OPTS, currentVersion: '1.5.0' },
+    )
+    expect(r.ok, 'un poste en 1.5.0 ne peut pas sauter le palier 2.0.0').toBe(false)
+    expect(r.reason).toMatch(/2\.0\.0/)
+  })
+
+  it('ACCEPTE quand la version installée atteint EXACTEMENT le palier', () => {
+    const r = updateVerify.validateManifest(
+      sign(baseManifest({ version: '3.0.0', minVersion: '2.0.0' })),
+      { ...OPTS, currentVersion: '2.0.0' },
+    )
+    expect(r.ok, 'le palier est un minimum, pas une exclusion').toBe(true)
+  })
+
+  it('ACCEPTE quand la version installée dépasse le palier', () => {
+    const r = updateVerify.validateManifest(
+      sign(baseManifest({ version: '3.0.0', minVersion: '2.0.0' })),
+      { ...OPTS, currentVersion: '2.4.1' },
+    )
+    expect(r.ok).toBe(true)
+  })
+
+  it('un manifeste SANS palier reste accepté (la majorité des publications)', () => {
+    expect(updateVerify.validateManifest(sign(baseManifest()), OPTS).ok).toBe(true)
+  })
+
+  it('le palier est SIGNÉ : le modifier après coup invalide le manifeste', () => {
+    const signed = sign(baseManifest({ version: '3.0.0', minVersion: '2.0.0' }))
+    // Un serveur compromis qui voudrait faire sauter le palier ne peut pas.
+    ;(signed.manifest as Record<string, unknown>).minVersion = '1.0.0'
+    expect(updateVerify.validateManifest(signed, { ...OPTS, currentVersion: '1.5.0' }).ok).toBe(false)
+  })
+})
+
+/**
+ * Nom de l'installateur — le repli n'était pas assaini.
+ *
+ * Le téléchargeur nommait le fichier d'après le dernier segment de l'URL, décodé
+ * par `decodeURIComponent` puis passé tel quel à `path.join`. Un chemin se
+ * terminant par « %2E%2E%5CGarageFlows.exe » redevenait « ..\GarageFlows.exe » :
+ * les octets s'écrivaient HORS du dossier temporaire, à un emplacement choisi
+ * par celui qui sert l'URL.
+ */
+describe('electron/update-verify — nom de fichier d’installateur', () => {
+  const sur = (v: unknown) => updateVerify.nomFichierInstallateur(v, 'GarageFlows-Setup.exe')
+
+  it.each([
+    ['remontée POSIX décodée', '../../Startup/evil.exe', 'evil.exe'],
+    ['remontée Windows décodée', '..\\..\\evil.exe', 'evil.exe'],
+    ['chemin absolu', 'C:\\Windows\\System32\\cmd.exe', 'cmd.exe'],
+    ['séparateur en fin', 'dossier/', 'GarageFlows-Setup.exe'],
+  ])('%s : aucun séparateur ne survit', (_cas, entree, attendu) => {
+    const nom = sur(entree)
+    expect(nom).toBe(attendu)
+    expect(nom).not.toMatch(/[\\/]/)
+  })
+
+  it.each([
+    ['points seuls', '..'],
+    ['point seul', '.'],
+    ['chaîne vide', ''],
+    ['absent', null],
+    ['caractères tous filtrés', '<>|?*'],
+  ])('%s : retombe sur le nom par défaut', (_cas, entree) => {
+    expect(sur(entree)).toBe('GarageFlows-Setup.exe')
+  })
+
+  it('un nom légitime reste reconnaissable', () => {
+    expect(sur('GarageFlows-Setup-1.2.0.exe')).toBe('GarageFlows-Setup-1.2.0.exe')
+  })
+
+  it('un nom démesuré est borné', () => {
+    expect(sur('a'.repeat(500) + '.exe').length).toBeLessThanOrEqual(120)
+  })
+})

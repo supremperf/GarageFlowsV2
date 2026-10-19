@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "generatedAtUtc": "2026-10-19T02:37:01.675Z",
+  "commit": "f2370a3a8d411b704193dea78b062d85b5f537d9",
+  "branch": "arena/7ad7aa15-garageflowsv2",
+  "dirty": true,
+  "platform": "linux x64",
+  "node": "22.22.3",
+  "checks": [
+    {
+      "label": "Suite Node (tests/*.cjs)",
+      "exitCode": 0,
+      "durationMs": 19460,
+      "summary": {
+        "tests": 434,
+        "pass": 434,
+        "fail": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "label": "Vitest ciblé (mise à jour, signature, données, licence)",
+      "exitCode": 0,
+      "durationMs": 3660,
+      "files": "6 passed (6)",
+      "tests": "66 passed (66)",
+      "cibles": [
+        "src/lib/__tests__/update-verify.test.ts",
+        "src/lib/__tests__/release-signing-chain.test.ts",
+        "src/lib/__tests__/user-data-path.test.ts",
+        "src/lib/__tests__/pre-migration-backup.test.ts",
+        "src/lib/__tests__/issuer-fixture-roundtrip.test.ts",
+        "src/lib/__tests__/money-document-consistency.test.ts"
+      ]
+    },
+    {
+      "label": "ESLint (src)",
+      "exitCode": 0,
+      "durationMs": 15912,
+      "tail": "> garageflow@1.1.0 lint | > eslint src --ext .ts,.tsx"
+    },
+    {
+      "label": "Cohérence docs",
+      "exitCode": 0,
+      "durationMs": 287,
+      "tail": "✅ Cohérence docs : source canonique unique, comptes & statuts cohérents (225 .md scannés)."
+    },
+    {
+      "label": "Marque",
+      "exitCode": 0,
+      "durationMs": 195,
+      "tail": "   • src/lib/__tests__/user-data-path.test.ts — assertion de compat : le dossier historique ne doit JAMAIS être renommé  (1) |    • src/lib/__tests__/user-data-path.test.ts — intitulé du test de compat du dossier historique  (1) |    • src/lib/signature/__tests__/signature.test.ts — User-Agent HTTP « GarageFlow/<version> »  (1) | ✅ Marque cohérente : « GarageFlows » dans tout le visible (1089 fichiers). Exceptions techniques uniquement."
+    },
+    {
+      "label": "Sécurité release (tests Node ciblés)",
+      "exitCode": 0,
+      "durationMs": 5421,
+      "tail": "# cancelled 0 | # skipped 0 | # todo 0 | # duration_ms 5254.852585"
+    },
+    {
+      "label": "TypeScript --noEmit",
+      "exitCode": 1,
+      "durationMs": 5309,
+      "errorCount": 224,
+      "sample": [
+        "prisma/demo-tenant.ts(29,10): error TS2305: Module '\"@prisma/client\"' has no exported member 'PrismaClient'.",
+        "prisma/seed.ts(1,10): error TS2305: Module '\"@prisma/client\"' has no exported member 'PrismaClient'.",
+        "scripts/migrate-money-json.ts(35,30): error TS2307: Cannot find module '../src/generated/server-client' or its corresponding type declarations."
+      ],
+      "concluant": false,
+      "note": "NON CONCLUANT dans ce sandbox et NON attribuable au code : @prisma/client n’est pas généré parce que binaries.prisma.sh est hors de la liste d’hôtes autorisée (`prisma generate` et `prisma generate --no-engine` échouent tous deux sur le TLS). Les erreurs sont des TS2305 « no exported member PrismaClient/Prisma/… », c’est-à-dire l’absence du client, pas des défauts de typage. Les jobs CI « Type-check, Lint & Test » et « Native base (TypeScript, standard build, fixed JS budget) » sont SUCCESS sur ce même arbre."
+    }
+  ],
+  "environmentBlockers": [
+    {
+      "resource": "binaries.prisma.sh",
+      "effect": "prisma generate/db push impossibles → 84 fichiers de tests d’intégration non collectables et tsc non concluant ici"
+    },
+    {
+      "resource": "wine / Windows",
+      "effect": "electron-builder --win impossible localement ; la fabrication et la recette du Setup ne peuvent avoir lieu que sur un exécuteur Windows"
+    },
+    {
+      "resource": "productionresultssa1.blob.core.windows.net, results-receiver.actions.githubusercontent.com",
+      "effect": "artefacts et journaux d’actions non téléchargeables (EOF, 0 octet) ; les reçus sont lus via api.github.com uniquement, aucun EXE local créé"
+    }
+  ]
+}

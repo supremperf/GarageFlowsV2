@@ -1,0 +1,401 @@
+{
+  "at": "2026-10-15T13:44:00.914171+00:00",
+  "checks": [
+    {
+      "checkId": 116455801952,
+      "headSha": "ce879b1ff936a4b6d6ad7bd0e816c5bef20eba22",
+      "conclusion": "failure",
+      "url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38744880406/job/116455801952",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Initialize containers",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "conclusion": "success"
+        },
+        {
+          "name": "Use pinned npm",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install dependencies (reproducible)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Version consistency (SemVer)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Validate Prisma schemas (desktop + serveur)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Generate Prisma clients (desktop + serveur)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Copilot native regressions (six suites, 54 assertions)",
+          "conclusion": "failure"
+        },
+        {
+          "name": "TypeScript",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "ESLint",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Branding consistency (strict)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "PWA manifests & icon dimensions",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Money fields (ZERO monetary Float)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Money calculations (no direct float math)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Money JSON (v2 writers only)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Migration safety invariants",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "SQLite template (integrity + baseline + checksums)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "PostgreSQL migrations (per-column verification)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Docs consistency",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Critical security/licence files present & coherent",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "PostgreSQL migrations on empty database + smoke test",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Python for real keygen integration (no silent fallback)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Install hash-locked keygen test dependencies",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Copilot budget guards and frozen validation integrity (offline)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Tests (unit + integration)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Build",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Performance budget (client bundle)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Dependency security regression tests",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Dependency audit gate (all packages, LOW through CRITICAL)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stop containers",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "nativeSummaries": [
+        {
+          "schema": 1,
+          "scope": "SIX_NATIVE_PRISMA_SUITES_54_ASSERTIONS",
+          "exitCode": 1,
+          "passed": false,
+          "executed": 54,
+          "expected": 54,
+          "files": [
+            {
+              "path": "src/integration/copilot-conversation.test.ts",
+              "passed": 9,
+              "failed": 0,
+              "unexecuted": 0
+            },
+            {
+              "path": "src/integration/copilot-cout-achat.test.ts",
+              "passed": 3,
+              "failed": 2,
+              "unexecuted": 0
+            },
+            {
+              "path": "src/integration/copilot-ecusson-verifie.test.ts",
+              "passed": 9,
+              "failed": 0,
+              "unexecuted": 0
+            },
+            {
+              "path": "src/integration/copilot-financial-authz-v15.test.ts",
+              "passed": 6,
+              "failed": 0,
+              "unexecuted": 0
+            },
+            {
+              "path": "src/integration/copilot-portee-et-porte-financiere.test.ts",
+              "passed": 18,
+              "failed": 0,
+              "unexecuted": 0
+            },
+            {
+              "path": "src/integration/copilot.test.ts",
+              "passed": 7,
+              "failed": 0,
+              "unexecuted": 0
+            }
+          ],
+          "paidCalls": 0,
+          "limits": "Native fixture tests only; not production issuer/tenant/auth HTTP/model campaign. Setup-blocked/skipped assertions are NOT passes."
+        }
+      ]
+    },
+    {
+      "checkId": 116455768540,
+      "headSha": "ce879b1ff936a4b6d6ad7bd0e816c5bef20eba22",
+      "conclusion": "failure",
+      "url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38744870776/job/116455768540",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Initialize containers",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "conclusion": "success"
+        },
+        {
+          "name": "Use pinned npm",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install dependencies (reproducible)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Version consistency (SemVer)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Validate Prisma schemas (desktop + serveur)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Generate Prisma clients (desktop + serveur)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Copilot native regressions (six suites, 54 assertions)",
+          "conclusion": "failure"
+        },
+        {
+          "name": "TypeScript",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "ESLint",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Branding consistency (strict)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "PWA manifests & icon dimensions",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Money fields (ZERO monetary Float)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Money calculations (no direct float math)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Money JSON (v2 writers only)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Migration safety invariants",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "SQLite template (integrity + baseline + checksums)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "PostgreSQL migrations (per-column verification)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Docs consistency",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Critical security/licence files present & coherent",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "PostgreSQL migrations on empty database + smoke test",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Python for real keygen integration (no silent fallback)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Install hash-locked keygen test dependencies",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Copilot budget guards and frozen validation integrity (offline)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Tests (unit + integration)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Build",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Performance budget (client bundle)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Dependency security regression tests",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Dependency audit gate (all packages, LOW through CRITICAL)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+          "conclusion": "success"
+        },
+        {
+          "name": "Stop containers",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "nativeSummaries": [
+        {
+          "schema": 1,
+          "scope": "SIX_NATIVE_PRISMA_SUITES_54_ASSERTIONS",
+          "exitCode": 1,
+          "passed": false,
+          "executed": 54,
+          "expected": 54,
+          "files": [
+            {
+              "path": "src/integration/copilot-conversation.test.ts",
+              "passed": 9,
+              "failed": 0,
+              "unexecuted": 0
+            },
+            {
+              "path": "src/integration/copilot-cout-achat.test.ts",
+              "passed": 3,
+              "failed": 2,
+              "unexecuted": 0
+            },
+            {
+              "path": "src/integration/copilot-ecusson-verifie.test.ts",
+              "passed": 9,
+              "failed": 0,
+              "unexecuted": 0
+            },
+            {
+              "path": "src/integration/copilot-financial-authz-v15.test.ts",
+              "passed": 6,
+              "failed": 0,
+              "unexecuted": 0
+            },
+            {
+              "path": "src/integration/copilot-portee-et-porte-financiere.test.ts",
+              "passed": 18,
+              "failed": 0,
+              "unexecuted": 0
+            },
+            {
+              "path": "src/integration/copilot.test.ts",
+              "passed": 7,
+              "failed": 0,
+              "unexecuted": 0
+            }
+          ],
+          "paidCalls": 0,
+          "limits": "Native fixture tests only; not production issuer/tenant/auth HTTP/model campaign. Setup-blocked/skipped assertions are NOT passes."
+        }
+      ]
+    }
+  ]
+}

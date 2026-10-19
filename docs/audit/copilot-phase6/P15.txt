@@ -1,0 +1,54 @@
+TAP version 13
+# Subtest: historical trace transport roundtrips full ANSI, unicode, percent signs and failure stacks
+ok 1 - historical trace transport roundtrips full ANSI, unicode, percent signs and failure stacks
+  ---
+  duration_ms: 11.14133
+  type: 'test'
+  ...
+# Subtest: backup-code modulo has exactly eight preimages per symbol, not biased: real source alphabet has 32 unique symbols
+ok 2 - backup-code modulo has exactly eight preimages per symbol, not biased: real source alphabet has 32 unique symbols
+  ---
+  duration_ms: 18.189165
+  type: 'test'
+  ...
+# Subtest: actual extracted Electron flush function: revoked consent performs no queue read and no send (unit, not packaged Electron)
+ok 3 - actual extracted Electron flush function: revoked consent performs no queue read and no send (unit, not packaged Electron)
+  ---
+  duration_ms: 140.028814
+  type: 'test'
+  ...
+# Subtest: actual extracted Electron logger: redacts network URLs/secrets and emits a single controlled line (unit)
+not ok 4 - actual extracted Electron logger: redacts network URLs/secrets and emits a single controlled line (unit)
+  ---
+  duration_ms: 61.244524
+  type: 'test'
+  location: '/home/user/GarageFlowsV2/tests/phase6-security-context.test.cjs:29:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+
+      a.ok(!writes[0].includes('SYNTHETIC_PRIVATE_SIGNATURE'))
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/home/user/GarageFlowsV2/tests/phase6-security-context.test.cjs:36:4)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 3
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 490.614604

@@ -1,3 +1,4 @@
+import { licenseApiBoundary } from '@/lib/license/api-boundary'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -15,11 +16,9 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { deactivateByToken } from '@/lib/license/devices'
-import { logger } from '@/lib/logger'
 
-const IS_ELECTRON = () => process.env.ELECTRON === '1'
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const rl = await enforceRateLimit('license_status', clientIpFrom(req))
   if (!rl.ok) return rateLimitResponse(rl)
 
@@ -46,11 +45,10 @@ export async function POST(req: NextRequest) {
     await deactivateByToken(deviceToken)
     return NextResponse.json({ ok: true })
   } catch (err) {
-    if (IS_ELECTRON()) return NextResponse.json({ ok: true })
-    logger.error('[license/deactivate] erreur infra', err)
-    return NextResponse.json(
-      { ok: false, code: 'SERVICE_UNAVAILABLE', reason: 'Service temporairement indisponible.' },
-      { status: 503 },
-    )
+    throw err
   }
+}
+
+export async function POST(req: NextRequest) {
+  return licenseApiBoundary(() => handlePOST(req))
 }

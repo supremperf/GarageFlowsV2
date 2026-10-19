@@ -19,7 +19,8 @@ function readMeta() {
 // GET /api/admin/updates/file/<name> — sert l'installeur .exe publié.
 // Public : les clients téléchargent la mise à jour sans licence admin.
 // On ne sert que le fichier référencé dans gf_update.json (pas de path traversal).
-export async function GET(_req: NextRequest, { params }: { params: { name: string } }) {
+export async function GET(_req: NextRequest, { params: pendingParams }: { params: Promise<{ name: string }> }) {
+  const params = await pendingParams
   const requested = path.basename(params.name || '')      // neutralise tout ../
   const meta = readMeta()
 

@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-14T16:35:09.954530+00:00",
+  "runId": "38589332331",
+  "headSha": "64619b6270d7923167130246c061ad5773e3f29a",
+  "jobId": 115939685204,
+  "argv": [
+    "gh",
+    "api",
+    "repos/supremperf/GarageFlowsV2/check-runs/115939685204/annotations?per_page=100"
+  ],
+  "exitCode": 0,
+  "analysis": [
+    {
+      "path": "src/integration/invoice-authz.test.ts",
+      "line": 170,
+      "messageCharacters": 992,
+      "assertionClass": "AssertionError",
+      "negatedContainmentAssertion": true,
+      "completeResponseObjectsParsed": 1,
+      "fixtureMarkerLocations": [
+        {
+          "jsonPath": "$.data[0].garageId",
+          "valueType": "str",
+          "exactNumberOrString": false,
+          "valueWithheld": true
+        }
+      ],
+      "rawMessageWithheld": true
+    }
+  ],
+  "limits": "Only paths/types of occurrences of the known cost fixture marker exported, never response values. Empty parsed objects do not establish absence of disclosure. No speculative root-cause correction from incomplete annotations."
+}

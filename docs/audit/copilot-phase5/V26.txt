@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: validates structural intake without pretending unit fixtures are independent
+ok 1 - validates structural intake without pretending unit fixtures are independent
+  ---
+  duration_ms: 304.047336
+  type: 'test'
+  ...
+# Subtest: rejects overlap, duplicate IDs, incomplete strata, false independence and extra fields
+ok 2 - rejects overlap, duplicate IDs, incomplete strata, false independence and extra fields
+  ---
+  duration_ms: 178.665422
+  type: 'test'
+  ...
+# Subtest: rejects fabricated tool/parameters, unauthorized gold calls and missing fact oracle
+ok 3 - rejects fabricated tool/parameters, unauthorized gold calls and missing fact oracle
+  ---
+  duration_ms: 128.211648
+  type: 'test'
+  ...
+# Subtest: freeze is exclusive, hash-bearing, offline and never overwrites an existing gold
+ok 4 - freeze is exclusive, hash-bearing, offline and never overwrites an existing gold
+  ---
+  duration_ms: 63.10659
+  type: 'test'
+  ...
+# Subtest: native summary accepts only six actual suites and all 54 passed assertions
+ok 5 - native summary accepts only six actual suites and all 54 passed assertions
+  ---
+  duration_ms: 1.455613
+  type: 'test'
+  ...
+# Subtest: setup failure skips, missing/duplicate suites, killed Vitest or fewer assertions never pass
+ok 6 - setup failure skips, missing/duplicate suites, killed Vitest or fewer assertions never pass
+  ---
+  duration_ms: 3.321783
+  type: 'test'
+  ...
+# Subtest: summary never projects failure messages or raw fields
+ok 7 - summary never projects failure messages or raw fields
+  ---
+  duration_ms: 0.552142
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 842.371867

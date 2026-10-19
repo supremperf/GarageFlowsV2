@@ -2,21 +2,49 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession, MAX_LOGO_BASE64_LENGTH } from '@/lib/api-helpers'
+import { parseAmountToScaled } from '@/lib/money'
+import { garageToEuros } from '@/lib/money-db'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import bcrypt from 'bcryptjs'
-import { savePhoto } from '@/lib/photo-store'
+import { savePhoto, deletePhoto } from '@/lib/photo-store'
+import { UpdateGarageSchema } from '@/lib/schemas'
 
 // GET /api/garages  — returns the current user's garage info
 export const GET = withAuth(async () => {
   const session = await requireSession()
 
+  // L'ANNUAIRE DU PERSONNEL n'est pas une information de garage.
+  //
+  // `GET /api/users` le réserve à OWNER/MANAGER (`user:manage`), mais cette
+  // route le servait — noms, e-mails, rôles de TOUS les comptes — à n'importe
+  // quel rôle authentifié : le contrôle d'accès posé sur une porte se
+  // contournait par la porte d'à côté (GF31-AUD-059). On le conditionne à la
+  // même permission, sans fermer la route : les autres rôles ont besoin des
+  // informations du garage lui-même.
+  // Exactement la même règle que `GET /api/users` — c'est le point : deux
+  // portes vers la même donnée ne doivent pas avoir deux serrures différentes.
+  const peutVoirLePersonnel = ['OWNER', 'MANAGER'].includes(session.user.role)
   const garage = await prisma.garage.findUnique({
     where: { id: session.user.garageId },
     include: {
-      users: { select: { id: true, name: true, email: true, role: true, createdAt: true } },
+      ...(peutVoirLePersonnel
+        ? { users: { select: { id: true, name: true, email: true, role: true, createdAt: true } } }
+        : {}),
       _count: { select: { mechanics: true, jobs: true } },
     },
   })
+
+  // Ne JAMAIS exposer le mot de passe SMTP (stocké en clair) dans la réponse :
+  // aucun rôle n'en a besoin côté client (le champ de saisie est en écriture
+  // seule). Défense contre la lecture par des rôles bas (MECHANIC/VIEWER).
+  if (garage) {
+    const { smtpPass: _smtpPass, ...safe } = garage as typeof garage & { smtpPass?: unknown }
+    // …mais TOUJOURS en repassant par garageToEuros : ce retour anticipé
+    // court-circuitait la conversion, si bien que la réponse ne portait que
+    // `hourlyRateTenThousandths` et que `hourlyRate` arrivait `undefined` côté
+    // client — l'appel à garageToEuros plus bas était devenu inatteignable.
+    return NextResponse.json(garageToEuros(safe))
+  }
 
   return NextResponse.json(garage)
 })
@@ -28,12 +56,71 @@ export const PATCH = withAuth(async (req) => {
     return NextResponse.json({ error: 'Réservé au propriétaire' }, { status: 403 })
   }
 
-  const body = await req.json()
+  const raw = await req.json()
 
   // Reject oversized logos (very generous — the client already downscales)
-  if (body.logoBase64 && body.logoBase64.length > MAX_LOGO_BASE64_LENGTH) {
+  if (raw.logoBase64 && raw.logoBase64.length > MAX_LOGO_BASE64_LENGTH) {
     return NextResponse.json({ error: 'Logo trop grand' }, { status: 413 })
   }
+
+  // VALIDATION — `UpdateGarageSchema` existait déjà mais n'était pas appliqué :
+  // le corps de requête partait tel quel en base. Un taux de TVA de 150 %, une
+  // devise « EUROS » ou une adresse e-mail malformée étaient acceptés et
+  // persistés, et le taux de TVA du garage alimente CHAQUE document facturé.
+  const parsed = UpdateGarageSchema.safeParse(raw)
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Réglages invalides', code: 'VALIDATION_ERROR', details: parsed.error.flatten() },
+      { status: 400 },
+    )
+  }
+  const body = parsed.data
+
+  // Le schéma garantit ≤ 4 décimales, donc une conversion exacte. On la fait
+  // AVANT l'écriture, et on refuse explicitement en cas d'échec : le code
+  // précédent retombait sur `?? 600000`, écrivant 60 €/h en silence quand la
+  // saisie n'était pas convertible — le garage facturait alors un tarif qu'il
+  // n'avait jamais choisi.
+  let scaledHourlyRate: number | undefined
+  if (body.hourlyRate !== undefined) {
+    const scaled = parseAmountToScaled(body.hourlyRate)
+    if (scaled === null) {
+      return NextResponse.json(
+        { error: 'Tarif horaire invalide', code: 'VALIDATION_ERROR' },
+        { status: 400 },
+      )
+    }
+    scaledHourlyRate = scaled
+  }
+
+  // ── Le logo (GF-006) ────────────────────────────────────────────────────────
+  // Quand le logo est stocké en FICHIER, `GET /api/garages` renvoie
+  // `logoBase64: null` et `logoPath: 'logos/…'`. L'écran des réglages charge
+  // cela dans son état (`logoBase64: data.logoBase64 ?? ''`) puis renvoie TOUT
+  // son état à chaque enregistrement. Le serveur recevait donc `logoBase64: ''`
+  // — vide — et l'interprétait comme « supprime le logo » : corriger un numéro
+  // de téléphone effaçait le logo du garage de toutes les factures, de tous les
+  // devis et du portail client. Le fichier restait sur le disque, orphelin,
+  // sans aucun moyen de le retrouver depuis l'application.
+  //
+  // Un champ vide ne dit pas « supprime » : il dit « je n'apporte pas d'image ».
+  // La SUPPRESSION, elle, est explicite — l'écran vide les DEUX champs (la
+  // croix de CompanyTab fait `set('logoBase64','')` ET `set('logoPath','')`).
+  //
+  // `raw.logoPath` sert de simple SIGNAL DE PRÉSENCE et n'est jamais écrit : il
+  // est retiré par le schéma zod, donc il ne peut désigner ni un chemin
+  // arbitraire ni le fichier d'un autre garage. Au pire, un appelant malveillant
+  // empêche la suppression de SON propre logo.
+  const logoConserve = typeof raw.logoPath === 'string' && raw.logoPath.trim() !== ''
+  const logoTouche = body.logoBase64 !== undefined && (Boolean(body.logoBase64) || !logoConserve)
+
+  // Chemin actuel, lu AVANT l'écriture : sans lui, remplacer ou supprimer un
+  // logo laissait l'ancien fichier sur le disque pour toujours.
+  const ancienLogoPath = logoTouche
+    ? (await prisma.garage.findUnique({
+        where: { id: session.user.garageId }, select: { logoPath: true },
+      }))?.logoPath ?? null
+    : null
 
   const garage = await prisma.garage.update({
     where: { id: session.user.garageId },
@@ -45,7 +132,7 @@ export const PATCH = withAuth(async (req) => {
       ...(body.website !== undefined && { website: body.website || null }),
       ...(body.siret !== undefined && { siret: body.siret || null }),
       ...(body.vatNumber !== undefined && { vatNumber: body.vatNumber || null }),
-      ...(body.taxRate !== undefined && { taxRate: parseFloat(body.taxRate) || 20 }),
+      ...(body.taxRate !== undefined && { taxRate: body.taxRate }),
       ...(body.iban !== undefined && { iban: body.iban || null }),
       ...(body.bic !== undefined && { bic: body.bic || null }),
       ...(body.bankName !== undefined && { bankName: body.bankName || null }),
@@ -54,8 +141,8 @@ export const PATCH = withAuth(async (req) => {
       ...(body.invoicePrefix !== undefined && { invoicePrefix: body.invoicePrefix }),
       ...(body.quotePrefix !== undefined && { quotePrefix: body.quotePrefix }),
       ...(body.invoiceFooter !== undefined && { invoiceFooter: body.invoiceFooter || null }),
-      ...(body.logoBase64 !== undefined && (() => {
-        // Suppression du logo → on efface les deux champs
+      ...(logoTouche && (() => {
+        // Suppression EXPLICITE (les deux champs vides) → on efface les deux.
         if (!body.logoBase64) return { logoBase64: null, logoPath: null }
         // Sinon : on stocke de préférence en fichier (logoPath), repli base64
         const logoPath = savePhoto(body.logoBase64, 'logos')
@@ -65,19 +152,27 @@ export const PATCH = withAuth(async (req) => {
       })()),
       ...(body.language !== undefined && { language: body.language }),
       ...(body.onboardingComplete !== undefined && { onboardingComplete: body.onboardingComplete }),
-      ...(body.hourlyRate !== undefined && { hourlyRate: parseFloat(body.hourlyRate) || 60 }),
-      ...(body.workshopStartHour !== undefined && { workshopStartHour: parseInt(body.workshopStartHour, 10) || 8 }),
-      ...(body.workshopEndHour   !== undefined && { workshopEndHour:   parseInt(body.workshopEndHour,   10) || 18 }),
+      // Saisie euros -> entier exact (dix-milliemes) ; parsing STRICT (jamais parseFloat monétaire).
+      ...(body.hourlyRate !== undefined && { hourlyRateTenThousandths: scaledHourlyRate }),
+      ...(body.workshopStartHour !== undefined && { workshopStartHour: body.workshopStartHour }),
+      ...(body.workshopEndHour   !== undefined && { workshopEndHour:   body.workshopEndHour }),
+      ...(body.workshopStartMinute !== undefined && { workshopStartMinute: body.workshopStartMinute }),
+      ...(body.workshopEndMinute   !== undefined && { workshopEndMinute:   body.workshopEndMinute }),
       ...(body.smsPhone !== undefined && { smsPhone: body.smsPhone || null }),
       ...(body.workOrderPrefix        !== undefined && { workOrderPrefix:        body.workOrderPrefix }),
-      ...(body.warrantyMonthsDefault  !== undefined && { warrantyMonthsDefault:  parseInt(body.warrantyMonthsDefault,  10) || 12 }),
-      ...(body.loanerEnabled          !== undefined && { loanerEnabled:          Boolean(body.loanerEnabled) }),
-      ...(body.smartReminderMonths    !== undefined && { smartReminderMonths:    parseInt(body.smartReminderMonths,    10) || 11 }),
+      ...(body.warrantyMonthsDefault  !== undefined && { warrantyMonthsDefault:  body.warrantyMonthsDefault }),
+      ...(body.loanerEnabled          !== undefined && { loanerEnabled:          body.loanerEnabled }),
+      ...(body.smartReminderMonths    !== undefined && { smartReminderMonths:    body.smartReminderMonths }),
       ...(body.purchaseOrderPrefix    !== undefined && { purchaseOrderPrefix:    body.purchaseOrderPrefix }),
     },
   })
 
-  return NextResponse.json(garage)
+  // L'ancien fichier n'est retiré qu'APRÈS que la base ne le référence plus :
+  // dans l'autre ordre, un échec d'écriture laisserait la fiche pointant sur un
+  // fichier supprimé, donc un logo cassé sur les documents déjà émis.
+  if (ancienLogoPath && ancienLogoPath !== garage.logoPath) deletePhoto(ancienLogoPath)
+
+  return NextResponse.json(garage ? garageToEuros(garage) : garage)
 })
 
 // POST /api/garages/register  — public endpoint: create new garage + owner account

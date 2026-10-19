@@ -6,6 +6,8 @@
  * level, a justification and an estimated financial impact.
  */
 import { DEFAULT_RULES } from './rules'
+import { lineCents, fromCents } from '@/lib/money'
+import { plierApostrophes } from '@/lib/text/apostrophes'
 import type {
   AnalyzeInput,
   ConfidenceLevel,
@@ -14,7 +16,9 @@ import type {
 } from './types'
 
 function normalize(s: string): string {
-  return s
+  // Les règles nomment des pièces telles que « joint d'huile » : plier les
+  // apostrophes évite qu'un catalogue saisi avec la typographique passe à côté.
+  return plierApostrophes(s)
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '') // strip diacritics (combining marks)
     .toLowerCase()
@@ -76,7 +80,7 @@ export class ForgottenPartsEngine {
           (rec.reference ? catalog.get(normalize(rec.reference)) : undefined) ??
           catalog.get(nName) ??
           null
-        const total = price != null ? Math.round(price * qty * 100) / 100 : null
+        const total = price != null ? fromCents(lineCents(price, qty)) : null
 
         const justification = inHabit
           ? `${rec.reason} (habituellement ajouté dans votre garage.)`

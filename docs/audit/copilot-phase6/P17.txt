@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: historical trace transport roundtrips full ANSI, unicode, percent signs and failure stacks
+ok 1 - historical trace transport roundtrips full ANSI, unicode, percent signs and failure stacks
+  ---
+  duration_ms: 9.082501
+  type: 'test'
+  ...
+# Subtest: backup-code modulo has exactly eight preimages per symbol, not biased: real source alphabet has 32 unique symbols
+ok 2 - backup-code modulo has exactly eight preimages per symbol, not biased: real source alphabet has 32 unique symbols
+  ---
+  duration_ms: 14.667999
+  type: 'test'
+  ...
+# Subtest: actual extracted Electron flush function: revoked consent performs no queue read and no send (unit, not packaged Electron)
+ok 3 - actual extracted Electron flush function: revoked consent performs no queue read and no send (unit, not packaged Electron)
+  ---
+  duration_ms: 141.879601
+  type: 'test'
+  ...
+# Subtest: actual extracted Electron logger: redacts network URLs/secrets and emits a single controlled line (unit)
+ok 4 - actual extracted Electron logger: redacts network URLs/secrets and emits a single controlled line (unit)
+  ---
+  duration_ms: 63.697252
+  type: 'test'
+  ...
+# Subtest: historical closure writer uses real OS exclusive create: a pre-existing symlink cannot replace previous evidence
+ok 5 - historical closure writer uses real OS exclusive create: a pre-existing symlink cannot replace previous evidence
+  ---
+  duration_ms: 4.151409
+  type: 'test'
+  ...
+# Subtest: actual extracted Electron flush function: continued consent preserves successful send and retains failed item (simulated transport)
+ok 6 - actual extracted Electron flush function: continued consent preserves successful send and retains failed item (simulated transport)
+  ---
+  duration_ms: 29.833799
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 502.518462

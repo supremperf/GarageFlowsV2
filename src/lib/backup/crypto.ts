@@ -50,7 +50,7 @@ export function encrypt(plaintext: Buffer | string, key: Buffer): EncryptedEnvel
 /** Decrypt with a raw 32-byte key. Throws if the key is wrong or data tampered. */
 export function decrypt(env: EncryptedEnvelope, key: Buffer): Buffer {
   if (key.length !== KEY_BYTES) throw new Error(`key must be ${KEY_BYTES} bytes`)
-  const decipher = crypto.createDecipheriv(ALGORITHM, key, Buffer.from(env.iv, 'base64'))
+  const decipher = crypto.createDecipheriv(ALGORITHM, key, Buffer.from(env.iv, 'base64'), { authTagLength: 16 })
   decipher.setAuthTag(Buffer.from(env.tag, 'base64'))
   return Buffer.concat([decipher.update(Buffer.from(env.ct, 'base64')), decipher.final()])
 }

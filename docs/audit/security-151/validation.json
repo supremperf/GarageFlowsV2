@@ -1,0 +1,123 @@
+{
+  "observedUtc": "2026-10-18T14:18:41.985Z",
+  "missionComplete": false,
+  "verdict": "NO-GO",
+  "repository": "supremperf/GarageFlowsV2",
+  "branch": "arena/55edbdc1-garageflowsv2",
+  "pullRequest": 11,
+  "defaultBranch": "main",
+  "defaultCommitObserved": "e3ac5f5a55284906531dcc5d4a620cb0ff072313",
+  "defaultBranchModified": false,
+  "defaultDependabot": {
+    "lastReceivePackNotice": {
+      "total": 151,
+      "critical": 2,
+      "high": 63,
+      "moderate": 71,
+      "low": 15
+    },
+    "restAccess": "HTTP403",
+    "enumerated": false,
+    "zeroVerified": false
+  },
+  "npm": {
+    "candidate": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "main": {
+      "info": 0,
+      "low": 1,
+      "moderate": 13,
+      "high": 34,
+      "critical": 2,
+      "total": 50
+    },
+    "advisoryPackageRelations": 174,
+    "uniqueGhsas": 163,
+    "forkStatus": "MANUAL_SOURCE_REVIEW_AND_UPSTREAM_MONITORING_REQUIRED"
+  },
+  "local": {
+    "global": {
+      "total": 4222,
+      "passed": 3368,
+      "failed": 3,
+      "pending": 851,
+      "files": 347,
+      "filesFailed": 79,
+      "exitCode": 1
+    },
+    "node": {
+      "passed": 387,
+      "failed": 0,
+      "skipped": 0
+    },
+    "securityGate": {
+      "passed": 20,
+      "failed": 0
+    },
+    "partsBefore": {
+      "passed": 3,
+      "failed": 12
+    },
+    "partsAfter": {
+      "passed": 15,
+      "failed": 0
+    },
+    "targetedWithPaginationContracts": {
+      "passed": 30,
+      "failed": 0
+    },
+    "lintExit": 0,
+    "typecheckExit": 0,
+    "normalInstallExit": 1,
+    "localBuildExit": 1
+  },
+  "githubCi": {
+    "verifiedCommit": "7ff1a6ecc4b88fdb779de62af21cdb1d32930888",
+    "run": 39133705536,
+    "conclusion": "failure",
+    "successfulJobs": [
+      "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "Full dependency tree — zero vulnerabilities",
+      "Native base (TypeScript, standard build, fixed JS budget)",
+      "E2E (Playwright — responsive, auto-démarrage)",
+      "Secret scan (Gitleaks)",
+      "Windows candidate packaging and inspection (not publication)"
+    ],
+    "failedJobs": [
+      "Authenticated browser validation (approved staging only)",
+      "Required validation"
+    ],
+    "warning": "Subsequent report/REST-tool changes do not inherit this SHA-specific CI validation."
+  },
+  "codeql": {
+    "analysisJobSucceeded": true,
+    "prResultCheckConclusion": "failure",
+    "prAlertCount": 19,
+    "prHigh": 11,
+    "prMedium": 8,
+    "projectedSarifResults": 20,
+    "restAlertApi": "HTTP403",
+    "alertsDismissed": 0,
+    "findingsSuppressed": 0
+  },
+  "stagingMetadataAccess": "HTTP403; precise failed preflight field not verified",
+  "remaining": [
+    "REST Dependabot inventory and post-main-integration verification",
+    "Authenticated staging preflight and functional scenarios",
+    "Open CodeQL semantic triage/corrections; do not confuse analyze success with zero findings",
+    "Confidentiality of catalog cost snapshots and admin/MFA/diagnostics protocol",
+    "Overall source/runtime/artifact completeness beyond registry audit and basic CI"
+  ],
+  "production": {
+    "mutations": 0,
+    "deployments": 0,
+    "secretRotations": 0,
+    "migrations": 0
+  }
+}

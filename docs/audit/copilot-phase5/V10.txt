@@ -1,0 +1,130 @@
+TAP version 13
+# Subtest: empty successful report preserves scanner exit zero
+ok 1 - empty successful report preserves scanner exit zero
+  ---
+  duration_ms: 2.334507
+  type: 'test'
+  ...
+# Subtest: official nil-slice JSON null is empty, but exit one remains inconsistent
+ok 2 - official nil-slice JSON null is empty, but exit one remains inconsistent
+  ---
+  duration_ms: 0.808354
+  type: 'test'
+  ...
+# Subtest: finding metadata preserves exit one and never prints secret/match/child output
+ok 3 - finding metadata preserves exit one and never prints secret/match/child output
+  ---
+  duration_ms: 0.941101
+  type: 'test'
+  ...
+# Subtest: workflow command characters are escaped in file/rule/commit metadata
+ok 4 - workflow command characters are escaped in file/rule/commit metadata
+  ---
+  duration_ms: 0.598045
+  type: 'test'
+  ...
+# Subtest: scanner failure is fail-closed
+ok 5 - scanner failure is fail-closed
+  ---
+  duration_ms: 0.380908
+  type: 'test'
+  ...
+# Subtest: spawn failure is fail-closed
+ok 6 - spawn failure is fail-closed
+  ---
+  duration_ms: 0.349724
+  type: 'test'
+  ...
+# Subtest: killed scanner is fail-closed
+ok 7 - killed scanner is fail-closed
+  ---
+  duration_ms: 0.354784
+  type: 'test'
+  ...
+# Subtest: missing report is fail-closed
+ok 8 - missing report is fail-closed
+  ---
+  duration_ms: 0.364171
+  type: 'test'
+  ...
+# Subtest: bad JSON is fail-closed
+ok 9 - bad JSON is fail-closed
+  ---
+  duration_ms: 0.599815
+  type: 'test'
+  ...
+# Subtest: non-array report is fail-closed
+ok 10 - non-array report is fail-closed
+  ---
+  duration_ms: 0.615016
+  type: 'test'
+  ...
+# Subtest: success with finding is fail-closed
+ok 11 - success with finding is fail-closed
+  ---
+  duration_ms: 0.52613
+  type: 'test'
+  ...
+# Subtest: failure without finding is fail-closed
+ok 12 - failure without finding is fail-closed
+  ---
+  duration_ms: 1.532969
+  type: 'test'
+  ...
+# Subtest: invalid location is fail-closed
+ok 13 - invalid location is fail-closed
+  ---
+  duration_ms: 0.357266
+  type: 'test'
+  ...
+# Subtest: only whitelisted fields survive report projection
+ok 14 - only whitelisted fields survive report projection
+  ---
+  duration_ms: 0.171126
+  type: 'test'
+  ...
+# Subtest: complete inventory pages precede capped per-finding annotations without changing scanner exit
+ok 15 - complete inventory pages precede capped per-finding annotations without changing scanner exit
+  ---
+  duration_ms: 4.397281
+  type: 'test'
+  ...
+# Subtest: metadata overflow is explicitly incomplete, never reported as full inventory
+ok 16 - metadata overflow is explicitly incomplete, never reported as full inventory
+  ---
+  duration_ms: 25.876984
+  type: 'test'
+  ...
+# Subtest: secret scanner retains default rules and never exempts whole critical auth/public-key sources
+ok 17 - secret scanner retains default rules and never exempts whole critical auth/public-key sources
+  ---
+  duration_ms: 1.152342
+  type: 'test'
+  ...
+# Subtest: three public OAuth headers and one frozen prose fingerprint are individually hash-locked
+ok 18 - three public OAuth headers and one frozen prose fingerprint are individually hash-locked
+  ---
+  duration_ms: 10.459352
+  type: 'test'
+  ...
+# Subtest: every phase5 suppression is an exact hash-locked location; prior twenty individually retained
+ok 19 - every phase5 suppression is an exact hash-locked location; prior twenty individually retained
+  ---
+  duration_ms: 312.433473
+  type: 'test'
+  ...
+# Subtest: changed receipt/source/line/prose or unknown classification invalidates suppression
+ok 20 - changed receipt/source/line/prose or unknown classification invalidates suppression
+  ---
+  duration_ms: 3.9591
+  type: 'test'
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 472.339938

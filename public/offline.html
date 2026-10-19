@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GarageFlow — Hors ligne</title>
+  <title>GarageFlows — Hors ligne</title>
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
@@ -14,22 +14,59 @@
     }
     .card { max-width: 420px; }
     .dot { width: 12px; height: 12px; border-radius: 50%; background: #f59e0b; display: inline-block; margin-right: 8px; }
+    .dot.ok { background: #22c55e; }
     h1 { font-size: 20px; margin: 0 0 8px; }
     p { color: #94a3b8; line-height: 1.6; font-size: 14px; margin: 0 0 20px; }
-    button {
+    .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    button, a.bouton {
       background: #2563eb; color: #fff; border: none; border-radius: 10px; padding: 11px 20px;
-      font-size: 14px; font-weight: 600; cursor: pointer;
+      font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block;
+      min-height: 44px; line-height: 22px;
     }
+    a.secondaire { background: transparent; border: 1px solid rgba(255,255,255,0.18); color: #cbd5e1; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1><span class="dot"></span>Vous êtes hors ligne</h1>
-    <p>
-      GarageFlow n'a pas pu joindre le serveur. Vérifiez votre connexion internet.
-      Vos actions ne sont enregistrées sur le serveur qu'une fois la connexion rétablie.
+    <h1><span class="dot" id="pastille"></span><span id="titre">Vous êtes hors ligne</span></h1>
+    <!--
+      Ce texte affirmait : « Vos actions ne sont enregistrées sur le serveur
+      qu'une fois la connexion rétablie. » Il décrivait une file d'attente
+      différée qui N'EXISTE PAS — ni localStorage, ni IndexedDB, ni file d'envoi
+      nulle part dans le code. Un mécanicien pouvait donc croire son travail mis
+      de côté alors qu'il était perdu. On dit désormais ce qui se passe vraiment.
+    -->
+    <p id="message">
+      GarageFlows n'a pas pu joindre le serveur. Vérifiez votre connexion internet.
+      Ce qui n'a pas été envoyé n'est pas conservé : notez-le, puis ressaisissez-le
+      une fois la connexion revenue.
     </p>
-    <button onclick="location.reload()">Réessayer</button>
+    <div class="actions">
+      <button onclick="location.reload()">Réessayer</button>
+      <a class="bouton secondaire" href="/mechanic">Retour au planning</a>
+    </div>
   </div>
+  <script>
+    // Le retour du réseau est DÉTECTÉ : la page ne restait vivante que si
+    // quelqu'un appuyait sur « Réessayer », et un mécanicien qui repasse dans une
+    // zone couverte n'a aucune raison de deviner qu'il doit le faire.
+    (function () {
+      var pastille = document.getElementById('pastille')
+      var titre = document.getElementById('titre')
+      var message = document.getElementById('message')
+      function revenu() {
+        pastille.className = 'dot ok'
+        titre.textContent = 'Connexion rétablie'
+        message.textContent = 'Le réseau est revenu. Rechargement…'
+        setTimeout(function () { location.reload() }, 600)
+      }
+      window.addEventListener('online', revenu)
+      // `navigator.onLine` ment parfois (réseau présent, serveur injoignable) :
+      // on ne l'utilise donc que comme déclencheur, jamais comme preuve.
+      if (navigator.onLine) {
+        fetch('/manifest.webmanifest', { cache: 'no-store' }).then(revenu).catch(function () {})
+      }
+    })()
+  </script>
 </body>
 </html>

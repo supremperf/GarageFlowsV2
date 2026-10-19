@@ -53,23 +53,3 @@ export const CAR_DATABASE: CarMake[] = [
 
 // Sorted by make for easy binary search / prefix lookup
 CAR_DATABASE.sort((a, b) => a.make.localeCompare(b.make))
-
-export function searchMakes(query: string): string[] {
-  if (!query.trim()) return []
-  const q = query.trim().toLowerCase()
-  return CAR_DATABASE
-    .map(c => c.make)
-    .filter(make => make.toLowerCase().startsWith(q))
-    .slice(0, 8)
-}
-
-export function searchModels(make: string, query: string): string[] {
-  if (!make) return []
-  const entry = CAR_DATABASE.find(c => c.make.toLowerCase() === make.toLowerCase())
-  if (!entry) return []
-  if (!query.trim()) return entry.models.slice(0, 8)
-  const q = query.trim().toLowerCase()
-  return entry.models
-    .filter(m => m.toLowerCase().includes(q))
-    .slice(0, 8)
-}

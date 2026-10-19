@@ -1,3 +1,4 @@
+import { licenseApiBoundary } from '@/lib/license/api-boundary'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -17,12 +18,12 @@ import { prisma } from '@/lib/db'
 import { getAuthSecret } from '@/lib/auth-secret'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { listDevices, countActiveDevices } from '@/lib/license/devices'
-import { logger } from '@/lib/logger'
 
-export async function GET(req: NextRequest) {
+async function handleGET(req: NextRequest) {
   const rl = await enforceRateLimit('license_status', clientIpFrom(req))
   if (!rl.ok) return rateLimitResponse(rl)
 
+  const secret = new TextEncoder().encode(getAuthSecret())
   const raw = req.cookies.get('gf_session')?.value
   if (!raw) {
     return NextResponse.json(
@@ -33,7 +34,6 @@ export async function GET(req: NextRequest) {
 
   let licenseId = ''
   try {
-    const secret = new TextEncoder().encode(getAuthSecret())
     const { payload } = await jwtVerify(raw, secret)
     licenseId = typeof payload.lid === 'string' ? payload.lid : ''
   } catch {
@@ -63,10 +63,10 @@ export async function GET(req: NextRequest) {
     ])
     return NextResponse.json({ ok: true, seats: record.seats, activeCount, devices })
   } catch (err) {
-    logger.error('[license/devices] erreur infra', err)
-    return NextResponse.json(
-      { ok: false, code: 'SERVICE_UNAVAILABLE', reason: 'Service temporairement indisponible.' },
-      { status: 503 },
-    )
+    throw err
   }
+}
+
+export async function GET(req: NextRequest) {
+  return licenseApiBoundary(() => handleGET(req))
 }

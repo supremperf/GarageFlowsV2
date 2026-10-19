@@ -1,3 +1,8 @@
+<!-- doc-status: historique -->
+> **⚠️ DOCUMENT HISTORIQUE — instantané daté, ne fait plus foi.**
+> Ne pas utiliser comme source de vérité pour un déploiement actuel.
+> Source de vérité : **[./PRODUCTION-READINESS.md](./PRODUCTION-READINESS.md)**.
+
 # GarageFlow — État de livraison (plateforme avancée)
 
 Récapitulatif de la transformation de GarageFlow en plateforme de gestion de

@@ -1,0 +1,94 @@
+TAP version 13
+# Subtest: restores same public key idempotently, never creates private key
+ok 1 - restores same public key idempotently, never creates private key
+  ---
+  duration_ms: 7.38783
+  type: 'test'
+  ...
+# Subtest: preserves existing mismatched resource and refuses overwrite
+ok 2 - preserves existing mismatched resource and refuses overwrite
+  ---
+  duration_ms: 2.168067
+  type: 'test'
+  ...
+# Subtest: rejects disagreement between anchors before writing any resource
+ok 3 - rejects disagreement between anchors before writing any resource
+  ---
+  duration_ms: 1.64685
+  type: 'test'
+  ...
+# Subtest: refuses a symlink directory without writing outside the fixture
+ok 4 - refuses a symlink directory without writing outside the fixture
+  ---
+  duration_ms: 2.117233
+  type: 'test'
+  ...
+# Subtest: a replaced pathname cannot change the descriptor already being checked
+ok 5 - a replaced pathname cannot change the descriptor already being checked
+  ---
+  duration_ms: 2.677787
+  type: 'test'
+  ...
+# Subtest: mandatory gate rejects any failed, cancelled or skipped upstream job
+ok 6 - mandatory gate rejects any failed, cancelled or skipped upstream job
+  ---
+  duration_ms: 48.102797
+  type: 'test'
+  ...
+# Subtest: workflow graph pins actions, retains strict security and packages Windows before gate
+ok 7 - workflow graph pins actions, retains strict security and packages Windows before gate
+  ---
+  duration_ms: 1.844206
+  type: 'test'
+  ...
+# Subtest: authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+ok 8 - authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+  ---
+  duration_ms: 424.764264
+  type: 'test'
+  ...
+# Subtest: SARIF projection retains rules and all source/sink locations, never code snippets/messages
+ok 9 - SARIF projection retains rules and all source/sink locations, never code snippets/messages
+  ---
+  duration_ms: 1.993239
+  type: 'test'
+  ...
+# Subtest: bounded pages preserve all results and reject overflow rather than fake completeness
+ok 10 - bounded pages preserve all results and reject overflow rather than fake completeness
+  ---
+  duration_ms: 2.989607
+  type: 'test'
+  ...
+# Subtest: secret scanner retains default rules and never exempts whole critical auth/public-key sources
+ok 11 - secret scanner retains default rules and never exempts whole critical auth/public-key sources
+  ---
+  duration_ms: 1.246182
+  type: 'test'
+  ...
+# Subtest: three public OAuth headers and one frozen prose fingerprint are individually hash-locked
+ok 12 - three public OAuth headers and one frozen prose fingerprint are individually hash-locked
+  ---
+  duration_ms: 11.860422
+  type: 'test'
+  ...
+# Subtest: every phase5 suppression is an exact hash-locked location; prior twenty individually retained
+ok 13 - every phase5 suppression is an exact hash-locked location; prior twenty individually retained
+  ---
+  duration_ms: 357.803681
+  type: 'test'
+  ...
+# Subtest: changed receipt/source/line/prose or unknown classification invalidates suppression
+ok 14 - changed receipt/source/line/prose or unknown classification invalidates suppression
+  ---
+  duration_ms: 4.410351
+  type: 'test'
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1087.363801

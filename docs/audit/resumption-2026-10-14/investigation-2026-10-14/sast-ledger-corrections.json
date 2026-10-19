@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-14T15:34:10.013749+00:00",
+  "superseded": [
+    "sast-findings.jsonl",
+    "sast-summary.json",
+    "draft-line-key-*",
+    "draft-span-*"
+  ],
+  "authoritative": [
+    "sast-findings-final.jsonl",
+    "sast-summary-final.json",
+    "sast-location-groups-final.json"
+  ],
+  "corrections": [
+    "Normalize pinned absolute rule-directory prefix for historical ID matching.",
+    "Use column and line boundaries, retain all duplicate occurrence IDs.",
+    "Pre-scan manifest hashes and current hashes distinct.",
+    "First exact-span generator failed in grouping unpacking; failed proof kept; final generator reconciles all865 IDs."
+  ],
+  "rawSignals": 865,
+  "uniqueExactRuleRanges": 845,
+  "duplicateOccurrencesRetained": 20,
+  "historicalIdsRetained": 864,
+  "triageRecords": 17,
+  "pendingRawSignals": 848,
+  "limits": "Draft files retained, not used to claim closure."
+}

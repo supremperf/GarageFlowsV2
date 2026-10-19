@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { lineCents, fromCents } from '@/lib/money'
 import { generateQuote, billedHours, type QuoteOperation, type QuoteSuggestionInput } from '../index'
 
 const oilChange: QuoteOperation = {
@@ -97,7 +98,7 @@ describe('generateQuote', () => {
     const op: QuoteOperation = { repairType: 'x', label: 'X', laborMinutes: 0, parts: [{ name: 'P', unitPrice: 10.005, quantity: 3 }] }
     const q = generateQuote([op], [], { laborRatePerHour: 60 })
     const line = q.lines[0]
-    expect(Math.round(line.quantity * line.unitPrice * 100) / 100).toBe(line.lineTotalHT)
+    expect(fromCents(lineCents(line.unitPrice, line.quantity))).toBe(line.lineTotalHT)
   })
 
   it('never emits NaN or negative money from an invalid rate', () => {

@@ -1,3 +1,4 @@
+import { licenseApiBoundary } from '@/lib/license/api-boundary'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -17,36 +18,19 @@ export const dynamic = 'force-dynamic'
  *     la licence par licenseId + indication deviceRequired pour que les clients
  *     récents obtiennent un jeton.
  *
- * Politique d'erreur infra :
- *  - Electron (base SQLite locale) : fail-open documenté — hors ligne, l'app
- *    reste utilisable ; le client applique ses propres verrous 48 h/72 h.
- *  - Serveur/PWA : 503 générique — on n'affirme JAMAIS allowed:true sans
- *    vérification réussie. (Le client Electron traite toute réponse sans
- *    allowed=false ni status='active' comme indéterminée et conserve son état.)
+ * Erreurs techniques : DB_UNAVAILABLE (503), SERVER_MISCONFIGURED (500),
+ * INTERNAL_ERROR (500). Aucun succès implicite sur panne, sur toutes plateformes.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { verifyRecordMac } from '@/lib/license/record-mac'
+import { verifyRecordMac, recordIntegrityUsable } from '@/lib/license/record-mac'
 import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 import { validateDeviceToken, type DeviceTokenFailure } from '@/lib/license/devices'
-import { isVersionSupported, seatlessCheckTolerated, type ClientPlatform } from '@/lib/license/client-policy'
+import { isVersionSupported, seatlessCheckTolerated, parseClientPlatform, type ClientPlatform } from '@/lib/license/client-policy'
 import { logger } from '@/lib/logger'
 
 const IS_ELECTRON = () => process.env.ELECTRON === '1'
-
-const FAIL_OPEN_UNKNOWN = { allowed: true, status: 'unknown' as const }
-
-function infraFailure(): NextResponse {
-  if (IS_ELECTRON()) {
-    // Fail-open Electron : base locale indisponible ≠ licence invalide.
-    return NextResponse.json(FAIL_OPEN_UNKNOWN)
-  }
-  return NextResponse.json(
-    { error: 'Service temporairement indisponible.', code: 'SERVICE_UNAVAILABLE' },
-    { status: 503 },
-  )
-}
 
 /** Réponse de blocage pour un échec de validation de jeton d'appareil. */
 function deviceFailureResponse(code: DeviceTokenFailure): NextResponse {
@@ -77,6 +61,8 @@ function deviceFailureResponse(code: DeviceTokenFailure): NextResponse {
         allowed: false, status: 'suspended',
         reason: 'Cette licence est temporairement suspendue.',
       })
+    case 'license_tampered':
+      return NextResponse.json({ allowed: false, status: 'tampered', code: 'LICENSE_TAMPERED' })
     case 'license_expired':
       return NextResponse.json({
         allowed: false, status: 'expired',
@@ -85,13 +71,14 @@ function deviceFailureResponse(code: DeviceTokenFailure): NextResponse {
   }
 }
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const rl = await enforceRateLimit('license_status', clientIpFrom(req))
   if (!rl.ok) return rateLimitResponse(rl)
 
   let licenseId:   string
   let deviceToken: string
   let hwid:        string | undefined
+  let installId:   string | undefined
   let version:     string | undefined
   let platform:    ClientPlatform
   try {
@@ -99,8 +86,20 @@ export async function POST(req: NextRequest) {
     licenseId   = String(body.licenseId ?? '').trim()
     deviceToken = String(body.deviceToken ?? '').trim()
     hwid        = body.hwid ? String(body.hwid) : undefined
+    // Identifiant d'installation PWA (navigateur) : lié à l'empreinte d'appareil
+    // au heartbeat — sinon un jeton d'appareil volé serait rejouable depuis un
+    // autre navigateur sans contrôle (voir validateDeviceToken).
+    installId   = body.installId ? String(body.installId) : undefined
     version     = body.version ? String(body.version) : undefined
-    platform    = body.installId ? 'pwa' : IS_ELECTRON() ? 'electron' : 'unknown'
+      // La plateforme vient de la REQUÊTE. La déduire de `process.env.ELECTRON`
+      // côté serveur ne pouvait pas fonctionner : cette variable n'est jamais
+      // positionnée sur le cloud, si bien que TOUT client Electron était classé
+      // « unknown » et échappait à la politique de version (GF31-AUD-053).
+      // `installId` reste un indice fiable de PWA quand rien n'est annoncé.
+      const annoncee = parseClientPlatform(body.platform)
+      platform    = annoncee !== 'unknown'
+        ? annoncee
+        : installId ? 'pwa' : IS_ELECTRON() ? 'electron' : 'unknown'
   } catch {
     return NextResponse.json(
       { allowed: false, code: 'VALIDATION_ERROR', reason: 'Requête invalide' },
@@ -120,24 +119,29 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Chemin 1 : preuve d'appareil (clients récents) ──────────────────────────
+  // La décision repose sur le RÉSULTAT de validateDeviceToken (preuve
+  // cryptographique, révocation, liaison HWID), jamais sur la simple
+  // présence du jeton fourni : l'omettre mène au chemin 2, refus par défaut.
+  let validationAppareil: Awaited<ReturnType<typeof validateDeviceToken>> | null = null
   if (deviceToken) {
     try {
-      const validation = await validateDeviceToken(deviceToken, { hwid })
-      if (!validation.ok) return deviceFailureResponse(validation.code)
-
-      // Jeton valide, licence active — bump lastSeenAt licence (best-effort).
-      try {
-        await prisma.licenseKey.update({
-          where: { licenseId: validation.licenseId },
-          data:  { lastSeenAt: new Date() },
-        })
-      } catch { /* best-effort */ }
-
-      return NextResponse.json({ allowed: true, status: 'active' })
+      validationAppareil = await validateDeviceToken(deviceToken, { hwid, installId })
     } catch (err) {
-      logger.error('[license/check] erreur infra (validation jeton)', err)
-      return infraFailure()
+      throw err
     }
+  }
+  if (validationAppareil) {
+    if (!validationAppareil.ok) return deviceFailureResponse(validationAppareil.code)
+
+    // Jeton valide, licence active — bump lastSeenAt licence (best-effort).
+    try {
+      await prisma.licenseKey.update({
+        where: { licenseId: validationAppareil.licenseId },
+        data:  { lastSeenAt: new Date() },
+      })
+    } catch { /* best-effort */ }
+
+    return NextResponse.json({ allowed: true, status: 'active' })
   }
 
   // ── Chemin 2 : SANS jeton d'appareil ────────────────────────────────────────
@@ -171,18 +175,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ allowed: true, status: 'unknown', deviceRequired: true })
     }
 
-    // DB integrity check — detect SQLite tampering
+    // DB integrity check — detect SQLite tampering.
+    // Un MAC absent n'est pas un vestige tolérable mais le contournement le plus
+    // simple de cette protection : refus, au même titre qu'un MAC invalide
+    // (GF31-AUD-005). Remise en conformité d'un parc existant :
+    // `scripts/repair-after-secret-rotation.js`.
     const mac = verifyRecordMac(record)
-    if (mac.tampered) {
-      logger.error('[license/check] intégrité DB compromise', { lid: record.licenseId })
+    if (!recordIntegrityUsable(mac)) {
+      logger.error('[license/check] intégrité DB compromise', {
+        cause: mac.missing ? 'mac-absent' : 'mac-invalide',
+      })
       return NextResponse.json({
         allowed: false,
-        status:  'tampered',
+        status:  'tampered', code: 'LICENSE_TAMPERED',
         reason:  'Intégrité de la base de données compromise.',
       })
-    }
-    if (mac.missing) {
-      logger.warn('[license/check] enregistrement sans MAC (legacy)', { lid: record.licenseId })
     }
 
     if (record.status === 'revoked') {
@@ -217,7 +224,10 @@ export async function POST(req: NextRequest) {
     // les anciens ignorent ce champ et continuent sur le statut seul.
     return NextResponse.json({ allowed: true, status: 'active', deviceRequired: true })
   } catch (err) {
-    logger.error('[license/check] erreur infra', err)
-    return infraFailure()
+    throw err
   }
+}
+
+export async function POST(req: NextRequest) {
+  return licenseApiBoundary(() => handlePOST(req))
 }

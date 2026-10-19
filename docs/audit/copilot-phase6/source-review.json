@@ -1,0 +1,672 @@
+{
+  "head": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de",
+  "at": "2026-10-15T14:47:55.112217+00:00",
+  "scope": "PHASE6_CHANGED_SOURCE_ONLY_APPEND_TO_PRIOR_REVIEWS",
+  "rows": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sourceSha256": "2ef8f8c5c5b0b70a12df2303dd9b3aaa16c2ae3ded4e7ade2953dcfe0ab43f80",
+      "lines": 484,
+      "reviewedChangedLineRanges": [
+        [
+          103,
+          103
+        ],
+        [
+          191,
+          193
+        ],
+        [
+          267,
+          267
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "workflow",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": ".github/workflows/codeql.yml",
+      "sourceSha256": "9d9101a83a55cc9fd363b80604179cb4aae710c1e7a13f8d2f173d43a5b4c87c",
+      "lines": 62,
+      "reviewedChangedLineRanges": [
+        [
+          56,
+          62
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "workflow",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "electron/dotenv-value.js",
+      "sourceSha256": "47767eae85a3e4dba702cb1f4d5f15c5c3074b1f3b8dc0d21b8c45aa928e3093",
+      "lines": 11,
+      "reviewedChangedLineRanges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "fullFileRead": true,
+      "reviewDepth": "COMPLETE_SMALL_MODULE_REVIEW_WITH_TARGETED_TESTS",
+      "category": "configuration",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "electron/main.js",
+      "sourceSha256": "51e1197a9cf4d5ad09f6c8eac08a3554744d9ee9cb05a9efa4f176185a69b356",
+      "lines": 4381,
+      "reviewedChangedLineRanges": [
+        [
+          34,
+          34
+        ],
+        [
+          75,
+          76
+        ],
+        [
+          632,
+          637
+        ],
+        [
+          1264,
+          1265
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "security/runtime",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "scripts/capture-phase6-native-baseline.cjs",
+      "sourceSha256": "d2ac1b95b6e30623759889de1a63a41287c2195dbb02099cd81b42629dac1086",
+      "lines": 33,
+      "reviewedChangedLineRanges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "fullFileRead": true,
+      "reviewDepth": "COMPLETE_SMALL_MODULE_REVIEW_WITH_TARGETED_TESTS",
+      "category": "security/runtime",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "scripts/evaluate-copilot-phase4.cjs",
+      "sourceSha256": "ab2c168026427df829e6d554be1472ae25c0e7b35ea6db1deba9d8f2859998ad",
+      "lines": 140,
+      "reviewedChangedLineRanges": [
+        [
+          35,
+          49
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "security/runtime",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "scripts/materialize-build-public-key.cjs",
+      "sourceSha256": "7ada359f19d6afb9529338abe1009cf3dff2b1d3963205f35569c33fad6ae356",
+      "lines": 48,
+      "reviewedChangedLineRanges": [
+        [
+          27,
+          27
+        ],
+        [
+          32,
+          38
+        ]
+      ],
+      "fullFileRead": true,
+      "reviewDepth": "COMPLETE_SMALL_MODULE_REVIEW_WITH_TARGETED_TESTS",
+      "category": "security/runtime",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "scripts/report-codeql-locations.cjs",
+      "sourceSha256": "8515abe97a182390823f95d254ca7b047bf7766bd33a1dcb948c368f1873cc48",
+      "lines": 28,
+      "reviewedChangedLineRanges": [
+        [
+          1,
+          28
+        ]
+      ],
+      "fullFileRead": true,
+      "reviewDepth": "COMPLETE_SMALL_MODULE_REVIEW_WITH_TARGETED_TESTS",
+      "category": "security/runtime",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "src/__tests__/middleware.test.ts",
+      "sourceSha256": "1803dd1bf665bf36308c5d75aca8f0c9bc394ffa0ffcbdc5511af95a3b3b3da7",
+      "lines": 405,
+      "reviewedChangedLineRanges": [
+        [
+          379,
+          405
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "test",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "src/integration/copilot-cout-achat.test.ts",
+      "sourceSha256": "81b32f276c036c2f43bfcb8977619255983857dd52d50eaf2607df349e4229ef",
+      "lines": 120,
+      "reviewedChangedLineRanges": [
+        [
+          18,
+          20
+        ],
+        [
+          40,
+          41
+        ],
+        [
+          43,
+          43
+        ],
+        [
+          45,
+          45
+        ],
+        [
+          67,
+          83
+        ],
+        [
+          86,
+          87
+        ],
+        [
+          89,
+          91
+        ],
+        [
+          94,
+          94
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "test",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "src/lib/copilot-llm/__tests__/paid-block.test.ts",
+      "sourceSha256": "b6f55af6bf1b5c9b7e6c93e9a0d3f411c0a94c60203c385898165721691ce78a",
+      "lines": 55,
+      "reviewedChangedLineRanges": [
+        [
+          1,
+          55
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "test",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "src/lib/copilot-llm/__tests__/planning-provider.test.ts",
+      "sourceSha256": "5594564053aed825e3b48f7a2b4abdeb738776b7f8c8ec7fe7347cc7e4c49e1f",
+      "lines": 34,
+      "reviewedChangedLineRanges": [
+        [
+          12,
+          12
+        ],
+        [
+          25,
+          25
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "test",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "src/lib/copilot-llm/__tests__/provider.test.ts",
+      "sourceSha256": "2a80648cf04d66598ce1cde8107e9a47bc4b223dbe10bb853b1f1e99dc291ee4",
+      "lines": 78,
+      "reviewedChangedLineRanges": [
+        [
+          18,
+          18
+        ],
+        [
+          27,
+          27
+        ],
+        [
+          34,
+          34
+        ],
+        [
+          48,
+          48
+        ],
+        [
+          53,
+          53
+        ],
+        [
+          64,
+          64
+        ],
+        [
+          71,
+          71
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "test",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "src/lib/copilot-llm/provider.ts",
+      "sourceSha256": "a772b23383f89e14097d4f97de14fcab499950dafe3be031c89b2cf0955edf80",
+      "lines": 156,
+      "reviewedChangedLineRanges": [
+        [
+          16,
+          16
+        ],
+        [
+          27,
+          35
+        ],
+        [
+          37,
+          37
+        ],
+        [
+          62,
+          68
+        ],
+        [
+          82,
+          82
+        ],
+        [
+          132,
+          132
+        ],
+        [
+          152,
+          152
+        ]
+      ],
+      "fullFileRead": true,
+      "reviewDepth": "COMPLETE_SMALL_MODULE_REVIEW_WITH_TARGETED_TESTS",
+      "category": "security/runtime",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "src/lib/copilot/__tests__/phase3-security.test.ts",
+      "sourceSha256": "6dd4698a5d5f2920bec816013409e3a9bd874a7c6f6986939c10cc0e82dafde4",
+      "lines": 85,
+      "reviewedChangedLineRanges": [
+        [
+          71,
+          71
+        ],
+        [
+          81,
+          81
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "test",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "src/lib/copilot/__tests__/semantic.test.ts",
+      "sourceSha256": "e8c71379d2275873e8e66a925bbb8d3fd0d964e469980c34f94e5f77902a8f0f",
+      "lines": 158,
+      "reviewedChangedLineRanges": [
+        [
+          152,
+          152
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "test",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "src/lib/sync/__tests__/redirect-security.test.ts",
+      "sourceSha256": "2500a27ba7475549d5780d1a238c56f6e0bba42871a51c3e9b05acd390f2728e",
+      "lines": 21,
+      "reviewedChangedLineRanges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "test",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "src/lib/sync/cloud-client.ts",
+      "sourceSha256": "1e9bbd7e0f02f5290812082085ecbffa89aba913c06db04aa409a98178b7b25d",
+      "lines": 96,
+      "reviewedChangedLineRanges": [
+        [
+          75,
+          76
+        ]
+      ],
+      "fullFileRead": true,
+      "reviewDepth": "COMPLETE_SMALL_MODULE_REVIEW_WITH_TARGETED_TESTS",
+      "category": "security/runtime",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "src/middleware.ts",
+      "sourceSha256": "3611c5452fe97ff31958cb8e4464938eb484106f47d1334ea85bd3b0932c6f81",
+      "lines": 303,
+      "reviewedChangedLineRanges": [
+        [
+          75,
+          75
+        ],
+        [
+          78,
+          78
+        ],
+        [
+          82,
+          82
+        ],
+        [
+          89,
+          89
+        ],
+        [
+          105,
+          106
+        ],
+        [
+          118,
+          118
+        ],
+        [
+          196,
+          198
+        ],
+        [
+          209,
+          209
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "security/runtime",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "tests/build-public-key.test.cjs",
+      "sourceSha256": "839c36220609644a1e96f0646f344babbeb41b4ae88c45060e0c24c6f440de32",
+      "lines": 47,
+      "reviewedChangedLineRanges": [
+        [
+          35,
+          47
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "test",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "tests/codeql-inventory.test.cjs",
+      "sourceSha256": "f5f4b812e15bb53e50841a547cc74a252cdbf63b5d08df2d23287be4f8e854e6",
+      "lines": 32,
+      "reviewedChangedLineRanges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "test",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "tests/config-dotenv-context.test.cjs",
+      "sourceSha256": "46ddfaf3cd6ad41c99b501ffe54ca4a2f1ccb065eeeb1944a83e03aebd77876d",
+      "lines": 27,
+      "reviewedChangedLineRanges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "test",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "tests/copilot-phase4-evaluation.test.cjs",
+      "sourceSha256": "d8ab9b7224109bf4d95eb5d370bf47fd88cd043904d4c95e9835627f9fdcbfb1",
+      "lines": 54,
+      "reviewedChangedLineRanges": [
+        [
+          40,
+          54
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "test",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    },
+    {
+      "path": "tests/phase6-security-context.test.cjs",
+      "sourceSha256": "bef573a85cd287259020996548d8edc348fa2be86746a5791a10ba35da6e1e41",
+      "lines": 53,
+      "reviewedChangedLineRanges": [
+        [
+          1,
+          53
+        ]
+      ],
+      "fullFileRead": false,
+      "reviewDepth": "CHANGED_HUNKS_AND_RELEVANT_CONTEXT_ONLY",
+      "category": "test",
+      "risk": "Security/auth/spend/secret-handling regression; limits are specified in REPORT.md and codeql-alert-review.json. No whole-program correctness assertion.",
+      "proofs": [
+        "P27",
+        "P26",
+        "P23",
+        "P20"
+      ],
+      "limits": "Line/hash/diff coverage is metadata, not functional or semantic validation by itself. CI/native/simulated/live remain separate."
+    }
+  ],
+  "unchangedHistoricalReviews": "No phase4/5 evidence/source registry rewritten; see P20. This review does not promote all prior unreviewed files to validated."
+}

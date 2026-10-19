@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "file": "release/GarageFlows-Setup.exe",
+  "version": "1.1.0",
+  "commit": "66859cc063264e2fc3ae14f31971b7729f40ff89",
+  "dirty": false,
+  "size": 231058681,
+  "sha256": "d77b1aa7a99c47b0bee5e8c7f3d125f41cfbf2a0a7aafd54093154bb088e88df",
+  "platform": "win32",
+  "arch": "x64",
+  "payloadFiles": 3045,
+  "payloadVerified": true,
+  "offlinePayloadEmbedded": true,
+  "extractionMode": "embedded-7z-sfx",
+  "authenticodeVerified": false,
+  "cleanMachineLicensedBusinessWorkflowVerified": false
+}

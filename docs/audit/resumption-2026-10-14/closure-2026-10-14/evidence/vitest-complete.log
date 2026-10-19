@@ -1,0 +1,32 @@
+JSON report written to /home/user/GarageFlowsV2/docs/audit/resumption-2026-10-14/closure-2026-10-14/evidence/vitest-complete.json
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+(node:72172) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  ✗ Domaine « cdn.exemple.test » absent de la liste blanche des postes.
+    Autorisés : api.garageflows.fr, garageflows.fr, app.garageflows.fr
+    (voir ALLOWED_DOWNLOAD_HOSTS dans electron/update-verify.js)
+
+
+  ✗ --download-url doit être en HTTPS.
+
+
+  ✗ Version non SemVer : derniere
+
+
+  ✗ Clé privée de signature absente.
+    Renseignez GF_UPDATE_SIGNING_KEY (PEM PKCS#8) ou GF_UPDATE_SIGNING_KEY_FILE.
+    Pour créer une paire : node scripts/sign-release-manifest.mjs --gen-key --key-id <id>
+
+(node:80563) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:81565) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82412) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82716) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:83209) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

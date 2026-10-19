@@ -1,0 +1,449 @@
+{
+  "exitCode": 1,
+  "total": 4238,
+  "passed": 3386,
+  "failed": 3,
+  "pending": 849,
+  "files": 347,
+  "failedFiles": [
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/business-workflow-e2e.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/catalog.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/client-email-garage-portail.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/copilot-conversation.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/copilot-cout-achat.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/copilot-ecusson-verifie.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/copilot-financial-authz-v15.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/copilot-portee-et-porte-financiere.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/copilot.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/dashboard.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/devis-signature-depuis-un-poste.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/document-integrity-v15.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/fec-injection-v15.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/finance-margin.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/intervention-rattache-client-vehicule.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/invoice-authz.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/invoice-document-integrity-p3.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/invoice-stock-sync.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/licence-admin-durcissement.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/loaner-availability.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/mechanic-avatar-archive.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/mechanic-avatar-sync.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/mechanic-scope-realtime.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/messagerie-client-garage.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/part-deletion-history.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/part-inventory-adjustment.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/planning-journee-complete.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/portail-2fa-cycle.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/portail-2fa-idor.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/portail-instantane-borne.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/portail-lien-revoque-a-la-republication.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/portail-mot-de-passe-provisoire.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/portal-access-lifecycle.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/portal-account-takeover-v15.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/portal-email-sync.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/portal-password-enforcement.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/portal-rbac-p3.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/portal-token-isolation.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/pulse-boucle-de-synchronisation.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/purchase-order-receive-returned.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/pwa-fenetre-et-photos.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/quote-acceptance-proof.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/quotes-generate.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/rbac-enforcement-e2e.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/reglages-appliques.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/reglages-enfin-lus.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/reglages-logo-et-cout-achat.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/rendez-vous-client-garage.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/schema-engine.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/robustness-v15.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/scenario-maitre.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/statistiques-au-centime.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/status-mass-assignment-v15.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/stock-money-p3.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/stock-suppression-et-entrees.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/stock-tracabilite-et-suppression.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/supplier-linkage.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/suppliers.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/synchro-voie-de-retour.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/tenant-idor-patch.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/integration/tenant-isolation-matrix.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/lib/__tests__/tenant-isolation.test.ts",
+      "message": "\nInvalid `prisma.garage.create()` invocation in\n/home/user/GarageFlowsV2/src/lib/__tests__/tenant-isolation.test.ts:22:33\n\n  19 const ids = { garageA: '', garageB: '', mechA: '', mechB: '', jobA: '', jobB: '', clientB: '' }\n  20 \n  21 async function seedGarage(slug: string) {\n→ 22   const g = await prisma.garage.create(\nError validating datasource `db`: the URL must start with the protocol `prisma://`",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/test-utils/__tests__/prepare-test-db.test.ts",
+      "message": "",
+      "failedAssertions": [
+        {
+          "ancestorTitles": [
+            "GF31-AUD-024 — modèle de base de test partagé"
+          ],
+          "fullName": "GF31-AUD-024 — modèle de base de test partagé produit une base exploitable, et le modèle porte l’empreinte du schéma",
+          "status": "failed",
+          "title": "produit une base exploitable, et le modèle porte l’empreinte du schéma",
+          "duration": 4613.606472,
+          "failureMessages": [
+            "Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n\n    at genericNodeError (node:internal/errors:983:15)\n    at wrappedFn (node:internal/errors:537:14)\n    at checkExecSyncError (node:child_process:916:11)\n    at execFileSync (node:child_process:952:15)\n    at construireModele (/home/user/GarageFlowsV2/src/test-utils/prepare-test-db.ts:52:3)\n    at prepareTestDb (/home/user/GarageFlowsV2/src/test-utils/prepare-test-db.ts:72:7)\n    at /home/user/GarageFlowsV2/src/test-utils/__tests__/prepare-test-db.test.ts:28:7\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20"
+          ],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GF31-AUD-024 — modèle de base de test partagé"
+          ],
+          "fullName": "GF31-AUD-024 — modèle de base de test partagé le second appel réutilise le modèle au lieu de reconstruire",
+          "status": "failed",
+          "title": "le second appel réutilise le modèle au lieu de reconstruire",
+          "duration": 4423.313707,
+          "failureMessages": [
+            "Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n\n    at genericNodeError (node:internal/errors:983:15)\n    at wrappedFn (node:internal/errors:537:14)\n    at checkExecSyncError (node:child_process:916:11)\n    at execFileSync (node:child_process:952:15)\n    at construireModele (/home/user/GarageFlowsV2/src/test-utils/prepare-test-db.ts:52:3)\n    at prepareTestDb (/home/user/GarageFlowsV2/src/test-utils/prepare-test-db.ts:72:7)\n    at /home/user/GarageFlowsV2/src/test-utils/__tests__/prepare-test-db.test.ts:46:7\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20"
+          ],
+          "meta": {},
+          "tags": []
+        },
+        {
+          "ancestorTitles": [
+            "GF31-AUD-024 — modèle de base de test partagé"
+          ],
+          "fullName": "GF31-AUD-024 — modèle de base de test partagé une base déjà présente est REMPLACÉE, jamais réutilisée telle quelle",
+          "status": "failed",
+          "title": "une base déjà présente est REMPLACÉE, jamais réutilisée telle quelle",
+          "duration": 3367.736223,
+          "failureMessages": [
+            "Error: Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n\n    at genericNodeError (node:internal/errors:983:15)\n    at wrappedFn (node:internal/errors:537:14)\n    at checkExecSyncError (node:child_process:916:11)\n    at execFileSync (node:child_process:952:15)\n    at construireModele (/home/user/GarageFlowsV2/src/test-utils/prepare-test-db.ts:52:3)\n    at prepareTestDb (/home/user/GarageFlowsV2/src/test-utils/prepare-test-db.ts:72:7)\n    at /home/user/GarageFlowsV2/src/test-utils/__tests__/prepare-test-db.test.ts:68:7\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///home/user/GarageFlowsV2/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20"
+          ],
+          "meta": {},
+          "tags": []
+        }
+      ]
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/lib/backup/__tests__/restore-roundtrip.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/lib/einvoicing/__tests__/desktop-bridge.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/lib/sync/__tests__/job-tombstones.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/lib/sync/__tests__/mechanic-rattrapage.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/lib/sync/__tests__/messages-voie-de-retour.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/lib/sync/__tests__/passe-lecture-seule.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/lib/sync/__tests__/quote-return.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/lib/sync/__tests__/rendez-vous-voie-de-retour.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/app/api/clients/__tests__/portal-access-publication.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/app/api/internal/__tests__/backup-coherent.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/app/api/parts/__tests__/parts-pagination.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/app/api/sync/__tests__/appointments-sync.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/app/api/sync/__tests__/einvoicing-tunnel.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/app/api/sync/__tests__/invoice-publication.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/app/api/sync/__tests__/portal-account-publication.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/app/api/sync/__tests__/quote-publication.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    },
+    {
+      "name": "/home/user/GarageFlowsV2/src/app/api/sync/__tests__/tickets-sync.test.ts",
+      "message": "Command failed: /usr/local/bin/node /home/user/GarageFlowsV2/node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss\nError: request to https://binaries.prisma.sh/all_commits/605197351a3c8bdd595af2d2a9bc3025bca48ea2/debian-openssl-3.0.x/libquery_engine.so.node.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established\n",
+      "failedAssertions": []
+    }
+  ],
+  "rawSha256": "0c0ab2ad07274473d8d1d612a022093d59af016bb6d7d13c3acbde7febe3f063"
+}

@@ -1,0 +1,169 @@
+{
+  "at": "2026-10-14T15:23:00.678037+00:00",
+  "run": 38588275520,
+  "commit": "258eff34343e1919c0bad91d2680bf788e98b1ce",
+  "runConclusion": "failure",
+  "jobs": [
+    {
+      "id": 115936047011,
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "conclusion": "failure",
+      "url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38588275520/job/115936047011",
+      "apiExit": 0,
+      "annotations": [
+        {
+          "path": ".github",
+          "start_line": 2,
+          "end_line": 2,
+          "annotation_level": "warning",
+          "title": "",
+          "messageWithheld": true
+        },
+        {
+          "path": ".github",
+          "start_line": 364,
+          "end_line": 364,
+          "annotation_level": "failure",
+          "title": "",
+          "safeMessage": "Process completed with exit code 1."
+        },
+        {
+          "path": ".github",
+          "start_line": 1,
+          "end_line": 1,
+          "annotation_level": "notice",
+          "title": "",
+          "messageWithheld": true
+        }
+      ],
+      "checkRunUrl": "https://api.github.com/repos/supremperf/GarageFlowsV2/check-runs/115936047011",
+      "declaredAnnotationCount": 3
+    },
+    {
+      "id": 115936047329,
+      "name": "Secret scan (Gitleaks)",
+      "conclusion": "failure",
+      "url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38588275520/job/115936047329",
+      "apiExit": 0,
+      "annotations": [
+        {
+          "path": ".github",
+          "start_line": 2,
+          "end_line": 2,
+          "annotation_level": "warning",
+          "title": "",
+          "messageWithheld": true
+        },
+        {
+          "path": ".github",
+          "start_line": 11,
+          "end_line": 11,
+          "annotation_level": "failure",
+          "title": "",
+          "safeMessage": "Process completed with exit code 1."
+        },
+        {
+          "path": ".github",
+          "start_line": 9,
+          "end_line": 9,
+          "annotation_level": "notice",
+          "title": "Gitleaks inventory",
+          "safeMessage": "Gitleaks inventory: findings=4; scannerExit=1; commit=258eff34343e1919c0bad91d2680bf788e98b1ce"
+        },
+        {
+          "path": "tests/config.test.cjs",
+          "start_line": 98,
+          "end_line": 98,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key",
+          "safeMessage": "EN ATTENTE DE REVUE; scope=working-tree; commit=258eff34343e1919c0bad91d2680bf788e98b1ce"
+        },
+        {
+          "path": "docs/audit/resumption-2026-10-14/evidence/gh-rulesets.log",
+          "start_line": 23,
+          "end_line": 23,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key",
+          "safeMessage": "EN ATTENTE DE REVUE; scope=working-tree; commit=258eff34343e1919c0bad91d2680bf788e98b1ce"
+        },
+        {
+          "path": "docs/audit/resumption-2026-10-14/evidence/gh-protection.log",
+          "start_line": 20,
+          "end_line": 20,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key",
+          "safeMessage": "EN ATTENTE DE REVUE; scope=working-tree; commit=258eff34343e1919c0bad91d2680bf788e98b1ce"
+        },
+        {
+          "path": "docs/audit/resumption-2026-10-14/evidence/gh-code-scanning.log",
+          "start_line": 20,
+          "end_line": 20,
+          "annotation_level": "notice",
+          "title": "Gitleaks generic-api-key",
+          "safeMessage": "EN ATTENTE DE REVUE; scope=working-tree; commit=258eff34343e1919c0bad91d2680bf788e98b1ce"
+        },
+        {
+          "path": ".github",
+          "start_line": 30,
+          "end_line": 30,
+          "annotation_level": "notice",
+          "title": "Gitleaks installer",
+          "messageWithheld": true
+        },
+        {
+          "path": ".github",
+          "start_line": 28,
+          "end_line": 28,
+          "annotation_level": "notice",
+          "title": "Gitleaks installer",
+          "messageWithheld": true
+        },
+        {
+          "path": ".github",
+          "start_line": 27,
+          "end_line": 27,
+          "annotation_level": "notice",
+          "title": "Gitleaks installer",
+          "messageWithheld": true
+        },
+        {
+          "path": ".github",
+          "start_line": 1,
+          "end_line": 1,
+          "annotation_level": "notice",
+          "title": "",
+          "messageWithheld": true
+        }
+      ],
+      "checkRunUrl": "https://api.github.com/repos/supremperf/GarageFlowsV2/check-runs/115936047329",
+      "declaredAnnotationCount": 11
+    },
+    {
+      "id": 115937726369,
+      "name": "Required validation",
+      "conclusion": "failure",
+      "url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38588275520/job/115937726369",
+      "apiExit": 0,
+      "annotations": [
+        {
+          "path": ".github",
+          "start_line": 10,
+          "end_line": 10,
+          "annotation_level": "failure",
+          "title": "",
+          "safeMessage": "Process completed with exit code 1."
+        },
+        {
+          "path": ".github",
+          "start_line": 1,
+          "end_line": 1,
+          "annotation_level": "notice",
+          "title": "",
+          "messageWithheld": true
+        }
+      ],
+      "checkRunUrl": "https://api.github.com/repos/supremperf/GarageFlowsV2/check-runs/115937726369",
+      "declaredAnnotationCount": 2
+    }
+  ]
+}

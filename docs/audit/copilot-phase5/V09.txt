@@ -1,0 +1,163 @@
+TAP version 13
+# Subtest: empty successful report preserves scanner exit zero
+ok 1 - empty successful report preserves scanner exit zero
+  ---
+  duration_ms: 2.352524
+  type: 'test'
+  ...
+# Subtest: official nil-slice JSON null is empty, but exit one remains inconsistent
+ok 2 - official nil-slice JSON null is empty, but exit one remains inconsistent
+  ---
+  duration_ms: 0.84779
+  type: 'test'
+  ...
+# Subtest: finding metadata preserves exit one and never prints secret/match/child output
+ok 3 - finding metadata preserves exit one and never prints secret/match/child output
+  ---
+  duration_ms: 0.908429
+  type: 'test'
+  ...
+# Subtest: workflow command characters are escaped in file/rule/commit metadata
+ok 4 - workflow command characters are escaped in file/rule/commit metadata
+  ---
+  duration_ms: 0.529617
+  type: 'test'
+  ...
+# Subtest: scanner failure is fail-closed
+ok 5 - scanner failure is fail-closed
+  ---
+  duration_ms: 0.438845
+  type: 'test'
+  ...
+# Subtest: spawn failure is fail-closed
+ok 6 - spawn failure is fail-closed
+  ---
+  duration_ms: 0.290925
+  type: 'test'
+  ...
+# Subtest: killed scanner is fail-closed
+ok 7 - killed scanner is fail-closed
+  ---
+  duration_ms: 0.404845
+  type: 'test'
+  ...
+# Subtest: missing report is fail-closed
+ok 8 - missing report is fail-closed
+  ---
+  duration_ms: 0.336548
+  type: 'test'
+  ...
+# Subtest: bad JSON is fail-closed
+ok 9 - bad JSON is fail-closed
+  ---
+  duration_ms: 0.589688
+  type: 'test'
+  ...
+# Subtest: non-array report is fail-closed
+ok 10 - non-array report is fail-closed
+  ---
+  duration_ms: 0.497641
+  type: 'test'
+  ...
+# Subtest: success with finding is fail-closed
+ok 11 - success with finding is fail-closed
+  ---
+  duration_ms: 1.312881
+  type: 'test'
+  ...
+# Subtest: failure without finding is fail-closed
+ok 12 - failure without finding is fail-closed
+  ---
+  duration_ms: 0.290234
+  type: 'test'
+  ...
+# Subtest: invalid location is fail-closed
+ok 13 - invalid location is fail-closed
+  ---
+  duration_ms: 0.255276
+  type: 'test'
+  ...
+# Subtest: only whitelisted fields survive report projection
+ok 14 - only whitelisted fields survive report projection
+  ---
+  duration_ms: 0.118271
+  type: 'test'
+  ...
+# Subtest: complete inventory pages precede capped per-finding annotations without changing scanner exit
+ok 15 - complete inventory pages precede capped per-finding annotations without changing scanner exit
+  ---
+  duration_ms: 4.036996
+  type: 'test'
+  ...
+# Subtest: metadata overflow is explicitly incomplete, never reported as full inventory
+ok 16 - metadata overflow is explicitly incomplete, never reported as full inventory
+  ---
+  duration_ms: 22.156575
+  type: 'test'
+  ...
+# Subtest: secret scanner retains default rules and never exempts whole critical auth/public-key sources
+ok 17 - secret scanner retains default rules and never exempts whole critical auth/public-key sources
+  ---
+  duration_ms: 1.030607
+  type: 'test'
+  ...
+# Subtest: three public OAuth headers and one frozen prose fingerprint are individually hash-locked
+ok 18 - three public OAuth headers and one frozen prose fingerprint are individually hash-locked
+  ---
+  duration_ms: 4.435651
+  type: 'test'
+  ...
+# Subtest: phase4 digest exception requires exact receipt path AND exact hash-locked source line; no secret-shaped substitution
+ok 19 - phase4 digest exception requires exact receipt path AND exact hash-locked source line; no secret-shaped substitution
+  ---
+  duration_ms: 2.215658
+  type: 'test'
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 142.632194
+
+> garageflow@1.1.0 check:branding
+> node scripts/check-branding.mjs
+
+Marque — exceptions techniques ACTIVES (précises, documentées) :
+   • electron/main.js — User-Agent HTTP « GarageFlow/<version> »  (2)
+   • electron/main.js — sel de MAC base — NE PAS changer  (1)
+   • electron/main.js — sel de chiffrement (KDF) — NE PAS changer  (1)
+   • electron/main.js — serviceName Electron (keytar/identité OS)  (1)
+   • electron/secure-key.js — sel KDF secure-key — NE PAS changer  (1)
+   • electron/update-verify.js — doit correspondre au champ « product » du flux de MàJ (identité interne, non visible)  (1)
+   • electron/user-data-path.js — nom du dossier de données HISTORIQUE — compat installations existantes  (1)
+   • scripts/config-full.cjs — chemin physique du coffre de configuration existant — compat des plans/reprises  (3)
+   • scripts/config-keygen.cjs — chemin physique du runtime keygen existant — compat config  (1)
+   • scripts/config-keys.cjs — chemin physique du registre de clés existant — ne pas orpheliner les originaux  (1)
+   • scripts/config-policy.cjs — destination physique du coffre éditeur existant — compat des plans config  (1)
+   • scripts/config-release.cjs — chemin physique du coffre éditeur existant — compat signature  (1)
+   • scripts/config-services.cjs — chemin physique du coffre éditeur existant — compat signature  (1)
+   • scripts/keygen_ui.py — User-Agent keygen (compat control-plane)  (2)
+   • scripts/lib/repository-audit-map.cjs — chemin physique du coffre local exclu de la lecture d’inventaire — compat config  (1)
+   • scripts/restore.js — chemin du dossier de données historique (restore.js / userData pin)  (3)
+   • scripts/sign-release-manifest.mjs — le manifeste signé DOIT porter la même identité « product » que EXPECTED_PRODUCT, sinon chaque poste rejette la mise à jour (identité interne, non visible)  (1)
+   • src/app/admin/licenses/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/license/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/login/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/register/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (4)
+   • src/components/GarageFlowLogo.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/Header.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/LicenseChangeModal.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/UpdateModal.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/integration/publication-mise-a-jour.test.ts — manifeste de test de PUBLICATION : le champ « product » doit valoir EXPECTED_PRODUCT, sinon le poste rejette la mise à jour — écrire « GarageFlows » ici ferait affirmer au test un contrat que la production refuse  (1)
+   • src/lib/__tests__/release-signing-chain.test.ts — chemin du dossier de données historique (restore.js / userData pin)  (1)
+   • src/lib/__tests__/update-verify.test.ts — reflète l'identité « product » du flux de MàJ (voir EXPECTED_PRODUCT)  (1)
+   • src/lib/__tests__/user-data-path.test.ts — assertion de compat : le dossier historique ne doit JAMAIS être renommé  (1)
+   • src/lib/__tests__/user-data-path.test.ts — intitulé du test de compat du dossier historique  (1)
+   • src/lib/signature/__tests__/signature.test.ts — User-Agent HTTP « GarageFlow/<version> »  (1)
+
+✅ Marque cohérente : « GarageFlows » dans tout le visible (1023 fichiers). Exceptions techniques uniquement.

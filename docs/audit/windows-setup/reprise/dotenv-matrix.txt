@@ -1,0 +1,369 @@
+TAP version 13
+# Subtest: real Next dotenv consumer preserves dollar/backslash/quote attack strings and cannot create extra keys
+ok 1 - real Next dotenv consumer preserves dollar/backslash/quote attack strings and cannot create extra keys
+  ---
+  duration_ms: 3.620464
+  type: 'test'
+  ...
+# Subtest: actual extracted Electron dotenv loader consumes config output without altering dollars, backticks or pre-existing environment (real FS unit)
+ok 2 - actual extracted Electron dotenv loader consumes config output without altering dollars, backticks or pre-existing environment (real FS unit)
+  ---
+  duration_ms: 327.770365
+  type: 'test'
+  ...
+# Subtest: packaged Electron never reads or creates a project dotenv file
+ok 3 - packaged Electron never reads or creates a project dotenv file
+  ---
+  duration_ms: 70.228895
+  type: 'test'
+  ...
+# Subtest: dotenv serializer rejects injected identifiers before emitting any assignment
+ok 4 - dotenv serializer rejects injected identifiers before emitting any assignment
+  ---
+  duration_ms: 0.974683
+  type: 'test'
+  ...
+# Subtest: bounded differential dotenv matrix preserves representable quote/backslash/dollar contexts
+ok 5 - bounded differential dotenv matrix preserves representable quote/backslash/dollar contexts
+  ---
+  duration_ms: 13.246534
+  type: 'test'
+  ...
+# Réponse attendue : oui ou non. Aucun autre texte ne vaut autorisation.
+# Diagnostic SQL en lecture seule : profil .env.server.local, sans migration, reset, synchronisation ni déploiement.
+# Code Prisma 0 : schéma conforme, aucune différence détectée.
+# Diagnostic SQL en lecture seule : profil .env.server.local, sans migration, reset, synchronisation ni déploiement.
+# Code Prisma 1 : comparaison impossible (erreur technique, pas une preuve de drift). Vérifier accès réseau, URLs, droits et installation Prisma. Sorties brutes masquées.
+# Diagnostic SQL en lecture seule : profil .env.server.local, sans migration, reset, synchronisation ni déploiement.
+# Code Prisma 2 : différence de schéma (drift) détectée. Les migrations appliquées et/ou la base diffèrent du schéma Prisma attendu. Aucun correctif appliqué.
+# Résumé indisponible dans cette exécution.
+# Subtest: extracts every documented variable including commented fields
+ok 6 - extracts every documented variable including commented fields
+  ---
+  duration_ms: 1.244749
+  type: 'test'
+  ...
+# Subtest: profiles exclude publication private key and keep server credentials out of desktop
+ok 7 - profiles exclude publication private key and keep server credentials out of desktop
+  ---
+  duration_ms: 0.266312
+  type: 'test'
+  ...
+# Subtest: generates independent 32-byte keys and never replaces existing values
+ok 8 - generates independent 32-byte keys and never replaces existing values
+  ---
+  duration_ms: 1.59835
+  type: 'test'
+  ...
+# Subtest: dotenv roundtrip preserves dollars, hashes, empty lines, comments and CRLF
+ok 9 - dotenv roundtrip preserves dollars, hashes, empty lines, comments and CRLF
+  ---
+  duration_ms: 1.010958
+  type: 'test'
+  ...
+# Subtest: malformed quoted secrets fail closed rather than triggering regeneration
+ok 10 - malformed quoted secrets fail closed rather than triggering regeneration
+  ---
+  duration_ms: 0.461117
+  type: 'test'
+  ...
+# Subtest: does not serialize PEM multiline values or unsafe quoting
+ok 11 - does not serialize PEM multiline values or unsafe quoting
+  ---
+  duration_ms: 0.208415
+  type: 'test'
+  ...
+# Subtest: production validator requires PostgreSQL, direct endpoint, HTTPS, Redis and pepper
+ok 12 - production validator requires PostgreSQL, direct endpoint, HTTPS, Redis and pepper
+  ---
+  duration_ms: 39.485367
+  type: 'test'
+  ...
+# Subtest: self-hosted production requires declared trusted proxy, Vercel does not
+ok 13 - self-hosted production requires declared trusted proxy, Vercel does not
+  ---
+  duration_ms: 2.836309
+  type: 'test'
+  ...
+# Subtest: desktop uses SQLite defaults and has no server dependency
+ok 14 - desktop uses SQLite defaults and has no server dependency
+  ---
+  duration_ms: 1.625782
+  type: 'test'
+  ...
+# Subtest: checks AES lengths, old keys, weak secrets, limits and optional enums
+ok 15 - checks AES lengths, old keys, weak secrets, limits and optional enums
+  ---
+  duration_ms: 21.095866
+  type: 'test'
+  ...
+# Subtest: electronic invoicing never enables itself or silently generates its encryption key
+ok 16 - electronic invoicing never enables itself or silently generates its encryption key
+  ---
+  duration_ms: 5.344332
+  type: 'test'
+  ...
+# Subtest: license signing import must be P-256 and match embedded public key
+ok 17 - license signing import must be P-256 and match embedded public key
+  ---
+  duration_ms: 8.841259
+  type: 'test'
+  ...
+# Subtest: sync plan only adds absent values; conflicts are not overwritten
+ok 18 - sync plan only adds absent values; conflicts are not overwritten
+  ---
+  duration_ms: 0.181894
+  type: 'test'
+  ...
+# Subtest: private writes are atomic, replace existing files and refuse symlinks
+ok 19 - private writes are atomic, replace existing files and refuse symlinks
+  ---
+  duration_ms: 2.031248
+  type: 'test'
+  ...
+# Subtest: CLI --check is offline/read-only and reports names, never secret values
+ok 20 - CLI --check is offline/read-only and reports names, never secret values
+  ---
+  duration_ms: 93.294914
+  type: 'test'
+  ...
+# Subtest: CLI rejects unknown profiles and provides help without a TTY or network
+ok 21 - CLI rejects unknown profiles and provides help without a TTY or network
+  ---
+  duration_ms: 149.044754
+  type: 'test'
+  ...
+# Subtest: all secret output paths are ignored by Git and Vercel
+ok 22 - all secret output paths are ignored by Git and Vercel
+  ---
+  duration_ms: 21.749945
+  type: 'test'
+  ...
+# Subtest: interactive confirmations pass their visible label to readline (Windows redraw regression)
+ok 23 - interactive confirmations pass their visible label to readline (Windows redraw regression)
+  ---
+  duration_ms: 7.702386
+  type: 'test'
+  ...
+# Subtest: SQL diagnostic is read-only, uses the server profile and distinguishes drift from technical failure
+ok 24 - SQL diagnostic is read-only, uses the server profile and distinguishes drift from technical failure
+  ---
+  duration_ms: 3.93091
+  type: 'test'
+  ...
+# Subtest: subprocess failures retain exit status without exposing stdout or stderr
+ok 25 - subprocess failures retain exit status without exposing stdout or stderr
+  ---
+  duration_ms: 43.501896
+  type: 'test'
+  ...
+# Subtest: SQL difference summaries identify canonical structures without disclosing defaults, URLs or unknown names
+ok 26 - SQL difference summaries identify canonical structures without disclosing defaults, URLs or unknown names
+  ---
+  duration_ms: 2.262914
+  type: 'test'
+  ...
+# URLs PostgreSQL manquantes : récupération depuis votre compte Neon, sans création de projet/base ni génération de secrets.
+# DATABASE_URL et DIRECT_URL récupérées et sauvegardées localement (valeurs masquées). Les autres paramètres/secrets restent inchangés.
+# Diagnostic SQL en lecture seule : profil .env.server.local, sans migration, reset, synchronisation ni déploiement.
+# Code Prisma 0 : schéma conforme, aucune différence détectée.
+# URLs PostgreSQL manquantes : récupération depuis votre compte Neon, sans création de projet/base ni génération de secrets.
+# Connexion Neon via le CLI officiel. Aucun jeton Neon stocké par config.
+# DATABASE_URL poolée et DIRECT_URL directe récupérées (valeurs masquées).
+# Connexion Neon via le CLI officiel. Aucun jeton Neon stocké par config.
+# Connexion Neon via le CLI officiel. Aucun jeton Neon stocké par config.
+# 5 clés absentes à générer (256 bits, valeurs jamais affichées) :
+#   GF_SMTP_CIPHER_KEY → .env (desktop)
+#   GF_DB_MAC_SECRET → .env (desktop)
+#   GF_SIGNATURE_SECRET → .env (desktop)
+#   GF_BACKUP_KEY → .env (desktop)
+#   GF_TOTP_ENC_KEY → .env (desktop)
+# Générer une nouvelle clé rend illisibles les données/jetons chiffrés ou signés avec une ancienne clé. À réserver aux clés qui n’ont jamais existé (première installation).
+# 5 clé(s) générée(s) et masquée(s) : GF_SMTP_CIPHER_KEY, GF_DB_MAC_SECRET, GF_SIGNATURE_SECRET, GF_BACKUP_KEY, GF_TOTP_ENC_KEY.
+# Facturation électronique : les drapeaux restent OFF même si la clé de chiffrement vient d’être préparée.
+# Aucune clé symétrique absente : rien à générer (les valeurs existantes ne sont jamais remplacées).
+# (node:160399) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: Prisma drift exit code retains only a redacted structural summary
+ok 27 - Prisma drift exit code retains only a redacted structural summary
+  ---
+  duration_ms: 32.757713
+  type: 'test'
+  ...
+# Subtest: missing diagnostic URLs request access, recover an existing Neon pair and preserve other local secrets verbatim
+ok 28 - missing diagnostic URLs request access, recover an existing Neon pair and preserve other local secrets verbatim
+  ---
+  duration_ms: 3.505122
+  type: 'test'
+  ...
+# Subtest: URL recovery cancellation never creates files or runs a SQL query
+ok 29 - URL recovery cancellation never creates files or runs a SQL query
+  ---
+  duration_ms: 0.643078
+  type: 'test'
+  ...
+# Subtest: Neon recovery authenticates, selects existing resources, gets both connection strings and never creates a project
+ok 30 - Neon recovery authenticates, selects existing resources, gets both connection strings and never creates a project
+  ---
+  duration_ms: 1.32607
+  type: 'test'
+  ...
+# Subtest: saving missing URLs keeps existing URLs and handles UTF-8 BOM without resetting the profile
+ok 31 - saving missing URLs keeps existing URLs and handles UTF-8 BOM without resetting the profile
+  ---
+  duration_ms: 1.349702
+  type: 'test'
+  ...
+# Subtest: Windows data directories can be configured and serialized without interpreting path escapes
+ok 32 - Windows data directories can be configured and serialized without interpreting path escapes
+  ---
+  duration_ms: 1.025143
+  type: 'test'
+  ...
+# Subtest: public HTTP endpoints reject embedded credentials and URL query secrets
+ok 33 - public HTTP endpoints reject embedded credentials and URL query secrets
+  ---
+  duration_ms: 6.095519
+  type: 'test'
+  ...
+# Subtest: custom local passwords and credential variables are masked by the configurator
+ok 34 - custom local passwords and credential variables are masked by the configurator
+  ---
+  duration_ms: 0.439529
+  type: 'test'
+  ...
+# Subtest: configuration enforces the supported Node runtime before operational actions
+ok 35 - configuration enforces the supported Node runtime before operational actions
+  ---
+  duration_ms: 0.395435
+  type: 'test'
+  ...
+# Subtest: local custom settings are editable but known runtime and publisher variables stay separated
+ok 36 - local custom settings are editable but known runtime and publisher variables stay separated
+  ---
+  duration_ms: 0.952396
+  type: 'test'
+  ...
+# Subtest: environment coverage lists every template setting with a destination without printing values
+ok 37 - environment coverage lists every template setting with a destination without printing values
+  ---
+  duration_ms: 10.347081
+  type: 'test'
+  ...
+# Subtest: dotenv codec preserves custom names, quotes, literal backslashes and dollars without silent deletion
+ok 38 - dotenv codec preserves custom names, quotes, literal backslashes and dollars without silent deletion
+  ---
+  duration_ms: 0.450036
+  type: 'test'
+  ...
+# Subtest: CLI --list is offline and read-only, covers existing custom names and never prints values
+ok 39 - CLI --list is offline and read-only, covers existing custom names and never prints values
+  ---
+  duration_ms: 89.007595
+  type: 'test'
+  ...
+# Subtest: CLI --list fails when a new template name has no declared configuration destination
+ok 40 - CLI --list fails when a new template name has no declared configuration destination
+  ---
+  duration_ms: 50.232356
+  type: 'test'
+  ...
+# Subtest: CLI --check rejects publisher/runtime settings in application profiles without leaking or changing files
+ok 41 - CLI --check rejects publisher/runtime settings in application profiles without leaking or changing files
+  ---
+  duration_ms: 47.458979
+  type: 'test'
+  ...
+# Subtest: Windows launcher forwards arguments from its own directory and preserves failure without pausing CLI invocations (static)
+ok 42 - Windows launcher forwards arguments from its own directory and preserves failure without pausing CLI invocations (static)
+  ---
+  duration_ms: 0.476906
+  type: 'test'
+  ...
+# Subtest: masked input is initialized before its prompt becomes visible (immediate-paste echo regression)
+ok 43 - masked input is initialized before its prompt becomes visible (immediate-paste echo regression)
+  ---
+  duration_ms: 0.962959
+  type: 'test'
+  ...
+# Subtest: exclusive first-key writes never replace an existing file or concurrent creation
+ok 44 - exclusive first-key writes never replace an existing file or concurrent creation
+  ---
+  duration_ms: 1.118666
+  type: 'test'
+  ...
+# Subtest: Copilot settings are preserved for desktop and server, never activated by default
+ok 45 - Copilot settings are preserved for desktop and server, never activated by default
+  ---
+  duration_ms: 0.672191
+  type: 'test'
+  ...
+# Subtest: les registres de migrations ne comptent pas comme données métier
+ok 46 - les registres de migrations ne comptent pas comme données métier
+  ---
+  duration_ms: 1.604103
+  type: 'test'
+  ...
+# Subtest: inspectDesktop classe une base neuve issue du modèle comme vide malgré _gf_migrations
+ok 47 - inspectDesktop classe une base neuve issue du modèle comme vide malgré _gf_migrations
+  ---
+  duration_ms: 0.884441
+  type: 'test'
+  ...
+# Subtest: generateMissing ne crée que les secrets symétriques absents et jamais de valeur affichée
+ok 48 - generateMissing ne crée que les secrets symétriques absents et jamais de valeur affichée
+  ---
+  duration_ms: 0.407285
+  type: 'test'
+  ...
+# Subtest: chaque clé générée annonce ses destinations réelles, par profil
+ok 49 - chaque clé générée annonce ses destinations réelles, par profil
+  ---
+  duration_ms: 0.150025
+  type: 'test'
+  ...
+# Subtest: la commande GENERER (nom de variable ou valeur) est reconnue sans jamais être une valeur de secret
+ok 50 - la commande GENERER (nom de variable ou valeur) est reconnue sans jamais être une valeur de secret
+  ---
+  duration_ms: 0.246981
+  type: 'test'
+  ...
+# Subtest: generateSecrets génère tout l'absent, préserve l'existant et n'exige aucune saisie
+ok 51 - generateSecrets génère tout l'absent, préserve l'existant et n'exige aucune saisie
+  ---
+  duration_ms: 0.607199
+  type: 'test'
+  ...
+# Subtest: le modèle SQLite livré ne contient aucune ligne métier : seul _gf_migrations est peuplé
+ok 52 - le modèle SQLite livré ne contient aucune ligne métier : seul _gf_migrations est peuplé
+  ---
+  duration_ms: 10.025266
+  type: 'test'
+  ...
+# Subtest: visible secret entry is explicit, session-only and preserves hidden defaults and raw input
+ok 53 - visible secret entry is explicit, session-only and preserves hidden defaults and raw input
+  ---
+  duration_ms: 0.79407
+  type: 'test'
+  ...
+# Subtest: provider prompts normalize dashboard assignments and retry a wrong field without leaking its contents
+ok 54 - provider prompts normalize dashboard assignments and retry a wrong field without leaking its contents
+  ---
+  duration_ms: 0.596425
+  type: 'test'
+  ...
+# Subtest: long Windows prompts print explanations separately and keep the actual readline prompt short
+ok 55 - long Windows prompts print explanations separately and keep the actual readline prompt short
+  ---
+  duration_ms: 0.324866
+  type: 'test'
+  ...
+1..55
+# tests 55
+# suites 0
+# pass 55
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1249.081411

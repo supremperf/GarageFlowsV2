@@ -2,9 +2,14 @@
  * Normalisation helpers shared across the catalogue. Pure & deterministic.
  */
 
+import { plierApostrophes } from '@/lib/text/apostrophes'
+
 /** Accent- & case-insensitive text key (for name/brand/model matching). */
 export function normalizeText(s: string | null | undefined): string {
-  return (s ?? '')
+  // Apostrophes pliées sur une forme unique : sans cela, un libellé saisi avec
+  // l'apostrophe typographique ne correspond jamais au même libellé stocké avec
+  // l'apostrophe droite.
+  return plierApostrophes(s ?? '')
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()

@@ -1,0 +1,18 @@
+{
+  "commit": "5a557644ad20974d45361c7c2e1b246aa710e163",
+  "run": 39146845286,
+  "job": 117733342402,
+  "stage": "Require explicitly approved non-production test target and fixtures",
+  "code": "MISSING_INPUT",
+  "field": "BASE_URL",
+  "mappedRepositorySecret": "E2E_STAGING_URL",
+  "metadataReadHttpStatus": 403,
+  "existingDeploymentRecordsAreNotAWorkingStagingService": true,
+  "latestInspectedDeployment": {
+    "id": 7157776052,
+    "environment": "e2e-staging",
+    "state": "failure",
+    "environmentUrlProvided": false
+  },
+  "noSecretValueReadOrWritten": true
+}

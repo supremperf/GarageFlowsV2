@@ -1,0 +1,964 @@
+{
+  "at": "2026-10-15T16:02:37.590189+02:00",
+  "timezone": "Europe/Paris",
+  "reviewedAgainst": "c8441a13574030555cb82e01741f47fe1a7a9cfc",
+  "sourceHead": "4a335c1e3429f02dc34f2ef3d682f3d5f82a1a32",
+  "status": "PARTIELLEMENT VALIDE; NON PRET PRODUCTION",
+  "reviewer": "Implementation agent; NOT independent external reviewer",
+  "sourceFiles": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "afdc0d8c9402f082e011988addef8e51d841594495338e1f51adbe569d4a425d",
+      "lines": 481,
+      "changedRanges": [
+        {
+          "start": 84,
+          "end": 127,
+          "addedLineCount": 44
+        },
+        {
+          "start": 191,
+          "end": 193,
+          "addedLineCount": 3
+        },
+        {
+          "start": 264,
+          "end": 264,
+          "addedLineCount": 1
+        },
+        {
+          "start": 335,
+          "end": 335,
+          "addedLineCount": 1
+        },
+        {
+          "start": 441,
+          "end": 441,
+          "addedLineCount": 1
+        },
+        {
+          "start": 469,
+          "end": 469,
+          "addedLineCount": 1
+        },
+        {
+          "start": 477,
+          "end": 477,
+          "addedLineCount": 1
+        }
+      ],
+      "risk": "HIGH",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Added real six-suite native execution and independent standard build job; kept original gates, pinned actions/read-only permissions; seven upstream statuses now explicitly required, failure/cancel/skip checked. No deployment.",
+      "proofs": [
+        "V14",
+        "V17",
+        "V26",
+        "V29",
+        "V30",
+        "ci-70450d3.json",
+        "ci-4a335c1.json"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": ".gitleaks.toml",
+      "sha256": "a5caf14e255f3321cc16b41edd12891dedb21c633267556631c85dd74eb4a60a",
+      "lines": 58,
+      "changedRanges": [
+        {
+          "start": 58,
+          "end": 58,
+          "addedLineCount": 0
+        }
+      ],
+      "risk": "HIGH",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Removed phase4 ten-digest regex extension and restored byte-identical earlier policy; no new global path/rule control exclusions.",
+      "proofs": [
+        "V10",
+        "V29",
+        "V30",
+        "gitleaks-remediation-proof.json"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": ".gitleaksignore",
+      "sha256": "4520ce6b0f2f4ab3b7985679f2810748e39cd59845ffca98d8bc6fe72d4d7d20",
+      "lines": 972,
+      "changedRanges": [
+        {
+          "start": 11,
+          "end": 972,
+          "addedLineCount": 962
+        }
+      ],
+      "risk": "HIGH",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "959 individually verified exact location fingerprints, not file/directory/all-hash exclusions; four earlier independent locations retained. Whole receipt/source/line hash tests precede official scan.",
+      "proofs": [
+        "V10",
+        "V30",
+        "gitleaks-triage.json",
+        "gitleaks-remediation-proof.json"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": "scripts/check-branding.mjs",
+      "sha256": "43dd7404c8c8fa34e4e5b985c939fa92a3077373310ba5d9d961238b3237dd03",
+      "lines": 207,
+      "changedRanges": [
+        {
+          "start": 55,
+          "end": 56,
+          "addedLineCount": 2
+        }
+      ],
+      "risk": "LOW",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Only two exact file+vault-path technical exceptions; storage originals preserved and visible UI branding unchanged.",
+      "proofs": [
+        "V09",
+        "V23"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": "scripts/evaluate-copilot-phase4.cjs",
+      "sha256": "83848717b13938514baeff12dd614574130b5336be61edc48a034faf1f21fc7c",
+      "lines": 133,
+      "changedRanges": [
+        {
+          "start": 10,
+          "end": 13,
+          "addedLineCount": 4
+        },
+        {
+          "start": 15,
+          "end": 17,
+          "addedLineCount": 3
+        },
+        {
+          "start": 53,
+          "end": 53,
+          "addedLineCount": 1
+        },
+        {
+          "start": 56,
+          "end": 56,
+          "addedLineCount": 1
+        },
+        {
+          "start": 68,
+          "end": 68,
+          "addedLineCount": 1
+        },
+        {
+          "start": 70,
+          "end": 71,
+          "addedLineCount": 2
+        },
+        {
+          "start": 75,
+          "end": 75,
+          "addedLineCount": 1
+        },
+        {
+          "start": 80,
+          "end": 83,
+          "addedLineCount": 4
+        },
+        {
+          "start": 108,
+          "end": 110,
+          "addedLineCount": 3
+        },
+        {
+          "start": 114,
+          "end": 114,
+          "addedLineCount": 1
+        },
+        {
+          "start": 118,
+          "end": 118,
+          "addedLineCount": 1
+        },
+        {
+          "start": 124,
+          "end": 132,
+          "addedLineCount": 9
+        }
+      ],
+      "risk": "HIGH",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Evaluation only, no src/runtime tuning: signed scope/expiry/ID claim, attempt accounting before dispatch and separate strata. Live blocked unconditionally pending independently verified external monetary enforcement; no claim reservation==invoice bound. Frozen data unchanged.",
+      "proofs": [
+        "V15",
+        "V16",
+        "V17",
+        "V30"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": "scripts/gitleaks-ci.cjs",
+      "sha256": "39df1c5af5cef564ca7d5b6d991e34e7cb32e9ee72c34136b2824c2a51500cd0",
+      "lines": 106,
+      "changedRanges": [
+        {
+          "start": 29,
+          "end": 57,
+          "addedLineCount": 29
+        },
+        {
+          "start": 85,
+          "end": 87,
+          "addedLineCount": 3
+        },
+        {
+          "start": 105,
+          "end": 105,
+          "addedLineCount": 1
+        }
+      ],
+      "risk": "HIGH",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Metadata projection only, grouped schema2 transport below API truncation; explicit incomplete overflow. Official scanner args/binary/scope/normal exit unchanged; no raw fields/child output. Actual complete 669 and official zero follow-up, not just mocked wrapper.",
+      "proofs": [
+        "V05",
+        "V09",
+        "V10",
+        "V30",
+        "gitleaks-full-inventory.json",
+        "gitleaks-remediation-proof.json"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": "scripts/lib/copilot-evaluation-approval.cjs",
+      "sha256": "84ea0e0c76cd86e952e0041c902b5e963e091ac6b6a073015facda7d8ff8d3c3",
+      "lines": 21,
+      "changedRanges": [
+        {
+          "start": 1,
+          "end": 21,
+          "addedLineCount": 21
+        }
+      ],
+      "risk": "HIGH",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Canonical Ed25519 verification, model/runner/corpus/time scope, fixed home OS state keyed signed ID with exclusive owner-only claim; replay-copy tests. Trusted admin boundary acknowledged; no live/cost enforcement claim.",
+      "proofs": [
+        "V15",
+        "V17",
+        "V30"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": "scripts/lib/copilot-receipt-triage.cjs",
+      "sha256": "2b3d8c676aaf464fbec01e48bd314791285ad12c12d682d432c54192ec4084f1",
+      "lines": 32,
+      "changedRanges": [
+        {
+          "start": 1,
+          "end": 32,
+          "addedLineCount": 32
+        }
+      ],
+      "risk": "HIGH",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Offline verification of every exact receipt map entry, whole file/source SHA and frozen public assertion; rejects unknown class/changed bytes/path drift. Does not replace official scan.",
+      "proofs": [
+        "V10",
+        "V29",
+        "V30"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": "scripts/prepare-copilot-blind-set.cjs",
+      "sha256": "cfe5843c584b2144c14cd580abfb6a245546628f8fef3607182a1295e8cbc3cf",
+      "lines": 29,
+      "changedRanges": [
+        {
+          "start": 1,
+          "end": 29,
+          "addedLineCount": 29
+        }
+      ],
+      "risk": "MEDIUM",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Offline strict 32-case/8-stratum intake, closed schema/role tools, normalized overlap checks and exclusive freeze. No model/gold generation, no claim human independence proven.",
+      "proofs": [
+        "V18",
+        "V26",
+        "V30"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": "scripts/validate-copilot-native.cjs",
+      "sha256": "997b8f732eaefffdb70a376fc58b401b58ea6a83d4175c1eb6cf3a646a1b2903",
+      "lines": 26,
+      "changedRanges": [
+        {
+          "start": 1,
+          "end": 26,
+          "addedLineCount": 26
+        }
+      ],
+      "risk": "HIGH",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Executes actual installed Vitest, model disabled/key removed, private raw JSON cleanup only own temp. Requires six distinct expected suites and all 54 test cases actually passed; safe counts/enum index statuses; nonzero/skip/missing report cannot pass.",
+      "proofs": [
+        "V14",
+        "V26",
+        "V30",
+        "native-ci-initial.json",
+        "ci-70450d3.json",
+        "ci-4a335c1.json"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": "tests/ci-required-gate.test.cjs",
+      "sha256": "3bbc06dab76ae5ecba1264ae37a3dd098e8c235d32517b8586e7ff028562f29f",
+      "lines": 68,
+      "changedRanges": [
+        {
+          "start": 6,
+          "end": 6,
+          "addedLineCount": 1
+        },
+        {
+          "start": 19,
+          "end": 23,
+          "addedLineCount": 5
+        }
+      ],
+      "risk": "HIGH",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Expanded exact graph expectation from six to seven mandatory gates, retained every original, checked new standard compile/build/immutable budget commands and rejects every failure/cancel/skip. This fixes introduced test/graph regression without relaxing assertions.",
+      "proofs": [
+        "V28",
+        "V29",
+        "V30"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": "tests/copilot-blind-intake.test.cjs",
+      "sha256": "b00aac0529ba2341c451acbee475bcf8493411009b09137ccdf8398695503991",
+      "lines": 18,
+      "changedRanges": [
+        {
+          "start": 1,
+          "end": 18,
+          "addedLineCount": 18
+        }
+      ],
+      "risk": "MEDIUM",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Schema fixtures only: external corpus not claimed. Overlap, missing strata/oracle, unauthorized calls, exclusive freeze covered.",
+      "proofs": [
+        "V18",
+        "V26",
+        "V30"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": "tests/copilot-evaluation-approval.test.cjs",
+      "sha256": "c5108bded01b3280c2396710b159a0675846113b8bb558d710c6f97711c24349",
+      "lines": 20,
+      "changedRanges": [
+        {
+          "start": 1,
+          "end": 20,
+          "addedLineCount": 20
+        }
+      ],
+      "risk": "HIGH",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Ephemeral in-memory synthetic signer only; signature/scope/clock/replay/owner permissions tested, no production key or consent fabricated.",
+      "proofs": [
+        "V15",
+        "V17",
+        "V30"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": "tests/copilot-native-runner.test.cjs",
+      "sha256": "950632c71304b9caeda9d7a87b4415765e476d6d61836418bd1b22fe5e21721a",
+      "lines": 16,
+      "changedRanges": [
+        {
+          "start": 1,
+          "end": 16,
+          "addedLineCount": 16
+        }
+      ],
+      "risk": "MEDIUM",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Synthetic reporter fixtures prove summary fail-closed behavior and private field exclusion, explicitly not native results.",
+      "proofs": [
+        "V14",
+        "V26",
+        "V30"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": "tests/copilot-phase4-evaluation.test.cjs",
+      "sha256": "b9b9d1dc631c83926397199f2862c118954066a858d06e77c92632cd87d35180",
+      "lines": 39,
+      "changedRanges": [
+        {
+          "start": 5,
+          "end": 5,
+          "addedLineCount": 1
+        },
+        {
+          "start": 23,
+          "end": 39,
+          "addedLineCount": 17
+        }
+      ],
+      "risk": "HIGH",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Kept four original budget/stats assertions with version2 fixture; added pre-network live block and strata separation. No actual provider invocation.",
+      "proofs": [
+        "V15",
+        "V17",
+        "V30"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": "tests/gitleaks-ci.test.cjs",
+      "sha256": "e03f25b1ab04200c22a811a712f9382b84c7e20f4faa48927900c2aed37a3889",
+      "lines": 73,
+      "changedRanges": [
+        {
+          "start": 6,
+          "end": 6,
+          "addedLineCount": 1
+        },
+        {
+          "start": 55,
+          "end": 73,
+          "addedLineCount": 19
+        }
+      ],
+      "risk": "MEDIUM",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Preserved original scanner/privacy/exit tests; added full 900-row transport and explicit overflow. Unit fixtures not official scanner evidence.",
+      "proofs": [
+        "V05",
+        "V09",
+        "V30"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    },
+    {
+      "path": "tests/secret-scan-policy.test.cjs",
+      "sha256": "30a14b7d7b483393309f901bdd11412516e275ec7cb60a5648b8ef1b53e257ee",
+      "lines": 77,
+      "changedRanges": [
+        {
+          "start": 34,
+          "end": 35,
+          "addedLineCount": 2
+        },
+        {
+          "start": 46,
+          "end": 73,
+          "addedLineCount": 28
+        },
+        {
+          "start": 75,
+          "end": 76,
+          "addedLineCount": 2
+        }
+      ],
+      "risk": "HIGH",
+      "depth": "Changed data/control flow and full new helpers/tests reviewed; not a whole-repository independent review",
+      "semanticReview": "Preserved four earlier hash-locked exemptions/default critical scope; extended phase4 narrow metadata test to all 959 with negative tamper tests and explicit prior20. Test literal line unchanged; entire current test pinned in registry.",
+      "proofs": [
+        "V10",
+        "V29",
+        "V30"
+      ],
+      "limits": "Assertions/fixtures/metadata coverage not interchangeable with native/issuer/authenticated/model proof; published CI result SHA must be matched."
+    }
+  ],
+  "artifactIntegrity": [
+    {
+      "path": "docs/audit/copilot-phase5/V01.json",
+      "sha256": "3bd5728544a2e10816da4c40eb5de14fdf48a4c49805fe6e7094ee1127b42399",
+      "bytes": 327690,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V01.txt",
+      "sha256": "b7ab3d4162b848d49bfc408f1cc3bb95312edd88f1d11fe8763be086d3672043",
+      "bytes": 1242,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V02.json",
+      "sha256": "df8bc9dc2d723b63fab2d77d17467d6430f06b52ff116b476dc884f6c8b1ba10",
+      "bytes": 327687,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V02.txt",
+      "sha256": "2e5b9abb5c0840ed0ad23072d8f872c6631d3a09169290faf4bd4d9f164842e6",
+      "bytes": 3642,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V03.json",
+      "sha256": "16194877ec0a39fa8ad0f68bece828de1c2b22646fe36f3be688df821a955042",
+      "bytes": 327665,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V03.txt",
+      "sha256": "2789918e3087ed7eeb5584310e91683cfd1a804a7214170b8f2c8e9d10f37810",
+      "bytes": 239,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V04.json",
+      "sha256": "c8253ea067ecc430fe5dae5dc62448e2a7b490795dba6cf2f013f29871c98560",
+      "bytes": 327702,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V04.txt",
+      "sha256": "2789918e3087ed7eeb5584310e91683cfd1a804a7214170b8f2c8e9d10f37810",
+      "bytes": 239,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V05.json",
+      "sha256": "08835faeb977cf743b553a656a62dc8f98d2f73e10a539412b766fcee63a531c",
+      "bytes": 327803,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V05.txt",
+      "sha256": "045bef2767ccdae4beaa676b7ebfc0ceff4f588ccce23c1ab564ae9e7902a7c5",
+      "bytes": 3595,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V06.json",
+      "sha256": "9cd309a42e5fce5e7a11f87bb58ee5a388a047833369ea2f18d00bdf8f22e795",
+      "bytes": 327715,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V06.txt",
+      "sha256": "dadeead6d4ffff96ef06184fc3aeb5b45da6c785ba4f19a840c168e4de60312e",
+      "bytes": 1222,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V07.json",
+      "sha256": "065b2969a0937a8e8da42ea518bb721ffb5702fe3f07aca22ea22edbc165c407",
+      "bytes": 327685,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V07.txt",
+      "sha256": "0b760e9bb8590b5deac258f3d37a9fc86d6b8d31129b70b1c885d7d38e451834",
+      "bytes": 32165,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V08.json",
+      "sha256": "76d14fc452b1338eab28b79ebb5d3da364a12fef67cf9170ddaf06ae46c08dc9",
+      "bytes": 327667,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V08.txt",
+      "sha256": "130a6226c4a952300b0bc652c98612aafc0aa0e96a7bbf827f4fd6efd48d87e4",
+      "bytes": 3970,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V09.json",
+      "sha256": "034be5c60841dc0e3941c8a8a14b2c8c4cd50972106019c53d9bdf6c806c5ad7",
+      "bytes": 327856,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V09.txt",
+      "sha256": "0ccff6b394a42f081b94f765025fd5389d8d21a096e8b7036ef79920ead47868",
+      "bytes": 7455,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V10.json",
+      "sha256": "3a59f8f25f856d72b00eb8a1941829fbf8fc662cbf7bb2843917d0263095257f",
+      "bytes": 327977,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V10.txt",
+      "sha256": "dfd18e2105df83ab0edd64ee45f062f8461f06b9ee6f78613e220996210dcbbc",
+      "bytes": 3790,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V11.json",
+      "sha256": "a57f12a81cfb336c436804d59088918551b442835e962dc7863e1859f9a4d7f9",
+      "bytes": 327905,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V11.txt",
+      "sha256": "e2069fb5a7cce6d7ad230a5ec61934fe2a617409b426c7aa9714ea666d9667fa",
+      "bytes": 113817,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V12.json",
+      "sha256": "d29eee11052409db9b267219211de3dad6fceaf72d988d2bda62b145728b8e46",
+      "bytes": 327814,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V12.txt",
+      "sha256": "087041936e4e16f25e55a36f3b90321da847ce65522b9972720b29495579f40b",
+      "bytes": 367,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V13.json",
+      "sha256": "6012f6c855aa4f37033cd2307b028b2e54507d125ca1533ad72883fbe880d795",
+      "bytes": 328091,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V13.txt",
+      "sha256": "92278ddc6134757a09b013717d4321cab473cd0ce243cf201d13e8a8cfc9e47c",
+      "bytes": 10579,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V14.json",
+      "sha256": "f71e8d34f1dc86862a7c96d2abc1866b8c6bcfe3f48788368b2725b49fa910c0",
+      "bytes": 328252,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V14.txt",
+      "sha256": "9b47da7455589650ed4b60adaf914a41f3ad648984916bfbe934432e99cd875c",
+      "bytes": 766,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V15.json",
+      "sha256": "3921de8636c243425c1ac80000dee63d7afa69b5f0b469e359973946abbb3479",
+      "bytes": 328702,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V15.txt",
+      "sha256": "c9b499ae0980b0bd6bc157b40190aa95cd3d60360832096ba2d21f580a39331b",
+      "bytes": 2039,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V16.json",
+      "sha256": "639ffd4613d7076232551caf851c4c82006c129819ad2cc50ef344d13da91e53",
+      "bytes": 328450,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V16.txt",
+      "sha256": "32b08135d07538e85b32029b68abebab67d4b6551539b5dfcb4e504a242e1d7e",
+      "bytes": 34278,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V17.json",
+      "sha256": "1d0263f28fff470042d8c0a355170104083c82f0452b2f5c9c7a5391945b7397",
+      "bytes": 328796,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V17.txt",
+      "sha256": "a9a1a9bb3cc9b097013d0bf882a0c64358c3f16bdb705a99cd1fb2e79183068d",
+      "bytes": 3092,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V18.json",
+      "sha256": "fe29df3460444fdff366ec9b2adab230dad80837465b3a95aeef9617c7dc838b",
+      "bytes": 328864,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V18.txt",
+      "sha256": "29db9dd866de53491200c5990b2b1161bc7eaa8a53d3b66f7ad527ec20364d87",
+      "bytes": 1060,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V19.json",
+      "sha256": "37eb77d02b9b59a2ffa87cc15368bf06df00284b2b8da69fedd738b98c6ee6c1",
+      "bytes": 328729,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V19.txt",
+      "sha256": "a9f4dadb2f387eb9d64433607fff14bcd2fa94f6b22a0caf3e1d0b5077269178",
+      "bytes": 95398,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V20.json",
+      "sha256": "632bd1f3db1ee10d6b82afbea14dc178e9f006dc855431becb46cbd7b138f9d8",
+      "bytes": 328728,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V20.txt",
+      "sha256": "d7fffee96aaa716e8851781bb0ced8a7cccd292117949032e031384d09a10a8a",
+      "bytes": 2339,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V21.json",
+      "sha256": "e523460d9963a7c854c0dde8d60c25c523ac8c89877cf2cd13abb58a0ff6a848",
+      "bytes": 328848,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V21.txt",
+      "sha256": "1404389823db1a37b3a6ab55e908fa1f4566710c58a4eacd2e4d3966dc1f7de4",
+      "bytes": 772,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V22.json",
+      "sha256": "383f56fdbfe5ad034dd360a23ee27d424e2f489f8bdf3e11baa6a7a511ae955f",
+      "bytes": 329169,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V22.txt",
+      "sha256": "79b3d9c338b6db27cd4266d3bab48f0607e056c6df6a9cc2aae99adfe54e46ea",
+      "bytes": 1079,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V23.json",
+      "sha256": "4f09917dbf20aa908b6b51b7d5bef6d54b47b9e19ec93f158a153e5031a57816",
+      "bytes": 328757,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V23.txt",
+      "sha256": "4841846e9a98ed3047555712d0cfafd74d9b2de4c5e3fb182f544df199bf62c0",
+      "bytes": 3841,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V24.json",
+      "sha256": "c43498824c58e47b3bc3c7f3060f3b8fc625345b168aff3feb5deb0475baa6fa",
+      "bytes": 328745,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V24.txt",
+      "sha256": "d6534348e11a044ca2d14cc773f8bba9b765240be03ca699c4b2166c9947dda5",
+      "bytes": 148300,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V25.json",
+      "sha256": "6427f8c66f1afe082906b17992b575edbb454045f7d998f5ad7cd5d13dd24499",
+      "bytes": 328779,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V25.txt",
+      "sha256": "21e5c08298e22609067ff09a982943036716211d0fdc3d248c12590c9075780d",
+      "bytes": 1222,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V26.json",
+      "sha256": "279cd42b8106ba0b54a18be780625bf8483f37bfb6dcf88ccd4b623c892a77fc",
+      "bytes": 328938,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V26.txt",
+      "sha256": "325be8f7eb4ce5af3784f6f87bf5cbe3722cfae268f603574e8ed13a9e034d49",
+      "bytes": 1708,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V27.json",
+      "sha256": "bb01ff22a6ad871d6e05a5f796fff811a46b73f81742b239740ecd48aca5bc56",
+      "bytes": 329063,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V27.txt",
+      "sha256": "cf8ea7b423cb59e7ca70e84219e04ae828129e5be77e4ad56a55ad2eb630dead",
+      "bytes": 73602,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V28.json",
+      "sha256": "a32d6781cff6e7f32f6e0791cc551f393e28c792d28f980ff278dc6a427dbb3c",
+      "bytes": 329054,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V28.txt",
+      "sha256": "3307e2a13e3995241509085d1f3f137a25e5d10b6eba355fb58eae28a8959dd1",
+      "bytes": 12891,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V29.json",
+      "sha256": "6f795d1b5ab9e6705ef8ac8341735daa9fa8645ce723b90bb4df516660a24c9d",
+      "bytes": 329119,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V29.txt",
+      "sha256": "426271eccc965aef9784b7f0e40f36b850fe2ef026006a4c3fab298693d73f95",
+      "bytes": 11644,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V30.json",
+      "sha256": "371a5b9d14c52faf88c027acb7860c621bfd3ad231d8eca73fafa2f715daaff0",
+      "bytes": 329814,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/V30.txt",
+      "sha256": "5cee594faf423e1b3981d2c2d1adc6b6af41f6f4c23a9ccd906fc627a69bb06a",
+      "bytes": 8051,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/ci-4a335c1.json",
+      "sha256": "78a93f026f49e59a138a5d161e525582d12981d9a131c415489030c619036f9b",
+      "bytes": 36489,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/ci-70450d3.json",
+      "sha256": "f11009ec78aea343228be3b529b25ed22b7f2d83118b2574e6e5e6fc73d7144b",
+      "bytes": 54749,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/codeql-locations.json",
+      "sha256": "bf62f94de2cc14493caf5469ccb19a7c4de12f5f67de0adda509264140e613c9",
+      "bytes": 4185,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/dependabot-access.json",
+      "sha256": "be2f76a7a1d18203855a4fae952d356c5e1bea7f92276b09e1ea9e02cd08df19",
+      "bytes": 177,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/dependabot-current.json",
+      "sha256": "988a01562e5eebcfdd0d77a8ade44fb2a238191df6e27e263baffc112c7f98a1",
+      "bytes": 370,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/dependency-ci-failed-steps.json",
+      "sha256": "7fd10c913334b5e4b50326bfb04e5f8b25ccc2f14619d2728446360023575e27",
+      "bytes": 495,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/dependency-default-candidate-matrix.json",
+      "sha256": "64d08f57f625355bb74ecd3a8f3344c5b1ea403ed5fe7a4f8811f65ebceeb179",
+      "bytes": 219807,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/frozen48-failure-taxonomy.json",
+      "sha256": "b36d038ead552489d7634728f6555ea0c9b15ce859e26d51f5ce06c12b1b6091",
+      "bytes": 44683,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/gitleaks-full-inventory.json",
+      "sha256": "ef8f46fcde4b0719cee26a75710a9eec10535176906a4276f3e7766d10d6c5ec",
+      "bytes": 356609,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/gitleaks-remediation-proof.json",
+      "sha256": "836363a1da995c1a2a0f1a6cedb399f82765c51732935959899654a898d24667",
+      "bytes": 1287,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/gitleaks-triage-summary.json",
+      "sha256": "94136438d828c75333a02eb63c3d42df613518b08d4a7ae8209f7ee9388ea263",
+      "bytes": 695,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/gitleaks-triage.json",
+      "sha256": "b9b520baa283662bd838ab25f54847ff80da34e93ccc887b9151c3aceea41bd0",
+      "bytes": 1095035,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/initial-ci-failed-steps.json",
+      "sha256": "4ab84f083f55398a141aaf2c64efb29b7f2f7d39fbb435ec7e7b3ec2c444b15a",
+      "bytes": 9840,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/audit/copilot-phase5/native-ci-initial.json",
+      "sha256": "98a7e2def477c120eece465a31eff646a2fa992a68317d1e1d84ec245c75490f",
+      "bytes": 11657,
+      "depth": "Integrity/JSON parse where applicable; not independent functional validation"
+    },
+    {
+      "path": "docs/COPILOT_PHASE5_BLIND_EVALUATION_PROTOCOL.md",
+      "sha256": "7bd2e5add7bd45ad07d931a397c2b398db7d32be815c02b24e67c04f82a89a49",
+      "bytes": 6583,
+      "depth": "Authored synthesis and limits checked against cited results; not independent review"
+    },
+    {
+      "path": "docs/COPILOT_PHASE5_NETWORK_AND_NATIVE.md",
+      "sha256": "5683bd09acd91940c8ce10054e62656ad526988cfa3bdf97cc53033503f8dd2c",
+      "bytes": 5098,
+      "depth": "Authored synthesis and limits checked against cited results; not independent review"
+    },
+    {
+      "path": "docs/COPILOT_PHASE5_VALIDATION.md",
+      "sha256": "77b06394c14212b8d95e87a6166bcc1ff10947a04aea24b3bc5b00756c1de00f",
+      "bytes": 18847,
+      "depth": "Authored synthesis and limits checked against cited results; not independent review"
+    }
+  ],
+  "scopeLimits": "Hashes/ranges are inventory evidence; semantic notes are scoped review, not proof all functionality passes. No file under src/, package lock, Prisma schema or budget changed in phase5. Historical evidence never rewritten. Final documentary commits need fresh scanner evidence; full production gates remain open."
+}

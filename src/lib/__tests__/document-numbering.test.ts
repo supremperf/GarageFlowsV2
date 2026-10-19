@@ -65,7 +65,11 @@ vi.mock('@/lib/db', () => {
 vi.mock('@/lib/api-helpers', async () => {
   const { NextResponse } = await import('next/server')
   return {
-    requireSession: async () => ({ user: { id: 'u1', name: 'U', garageId: 'A' } }),
+    // Le rôle fait partie de TOUTE session NextAuth réelle. Il manquait ici, et
+    // depuis que les routes de facturation appliquent la matrice `authz.ts`
+    // (refus par défaut, GF31-AUD-009), une session sans rôle est légitimement
+    // refusée : la fixture décrivait une session qui n'existe pas en production.
+    requireSession: async () => ({ user: { id: 'u1', name: 'U', role: 'OWNER', garageId: 'A' } }),
     // Réplique le comportement réel : capture les throw → 500, laisse passer les NextResponse.
     withAuth: (h: any) => async (req: any, ctx: any) => {
       try { return await h(req, ctx) } catch (e) {

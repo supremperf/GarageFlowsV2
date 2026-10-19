@@ -1,0 +1,12 @@
+{
+  "id": "F30",
+  "recordedAt": "2026-10-15T14:35:55.815206+02:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "command": "python3 /home/user/copilot-phase4-2026-10-15/prepare-publication.py",
+  "head": "c4a2cca2cf446f96be580e99cca8afbca45396c5",
+  "exitCode": 1,
+  "toolDurationMs": 4607,
+  "summary": "Preparation refused ignored normalized .log archives; only separate index partially staged, no commit/push/working-file change.",
+  "limits": "Normalized tool outcome, not raw process log/exact start timestamp. Duration includes surrounding tool shell. No working application source changed; separate publication index only."
+}

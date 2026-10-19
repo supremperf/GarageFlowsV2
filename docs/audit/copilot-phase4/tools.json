@@ -1,0 +1,10 @@
+{
+  "node": "v22.22.3",
+  "openssl": "3.5.6",
+  "typescript": "5.9.3",
+  "vitest": "4.1.11",
+  "prisma": "5.22.0",
+  "prismaClient": "5.22.0",
+  "zod": "4.3.6",
+  "npm": "10.9.8"
+}

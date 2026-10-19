@@ -2,17 +2,57 @@ name: CI
 
 on:
   push:
-    branches: [main, master, develop, 'claude/**', 'integration/**']
+    branches: [main, master, develop, 'claude/**', 'integration/**', 'arena/**']
   pull_request:
     branches: [main, master, develop]
+  # Déclenchement manuel du release gate complet (validation avant tag/release).
+  workflow_dispatch:
+
+# Moindre privilège : aucun job ne pousse, ne commente ni n'appelle l'API GitHub
+# (Gitleaks scanne l'arbre local). Le GITHUB_TOKEN n'a donc besoin que de la
+# lecture du contenu — on retire tout droit d'écriture par défaut.
+permissions:
+  contents: read
 
 jobs:
+  dependency-security:
+    name: Full dependency tree — zero vulnerabilities
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Use pinned npm
+        run: npm install --global npm@11.16.0
+      # This independent audit needs no native engines or install hooks.
+      # Other jobs retain normal npm ci, Prisma generation and functional tests.
+      - run: npm ci --ignore-scripts
+      - run: npm ls --all
+      - run: npm run test:audit
+      - name: Release safety tests (nommés en annotations)
+        run: |
+          set +e
+          npm run test:release-safety > /tmp/release-safety.txt 2>&1
+          statut=$?
+          set -e
+          cat /tmp/release-safety.txt
+          if [ $statut -ne 0 ]; then
+            while IFS= read -r ligne; do
+              echo "::error title=Release safety::${ligne}"
+            done < <(grep -aE '^not ok ' /tmp/release-safety.txt | head -n 10)
+          fi
+          exit $statut
+      - run: npm run audit:strict
+
   secrets:
     name: Secret scan (Gitleaks)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       # Scan de l'ARBRE COURANT (fichiers suivis), PAS de l'historique git. Les
       # secrets historiques sont documentés comme rotés (docs/SECRETS_ROTATION.md).
       # Ce mode est IDENTIQUE sur push et pull_request et n'appelle aucune API
@@ -23,12 +63,109 @@ jobs:
       # s'applique.
       - name: Install gitleaks
         run: |
-          curl -sSL -o /tmp/gitleaks.tar.gz \
+          # No root-owned installation directory or secret-bearing redirect URL.
+          tool_dir="$RUNNER_TEMP/garageflows-gitleaks"
+          mkdir -p "$tool_dir"
+          download() {
+            label="$1"; target="$2"; url="$3"
+            if http=$(curl -fsSL --write-out '%{http_code}' -o "$target" "$url" 2>/dev/null); then
+              echo "::notice title=Gitleaks installer::$label downloaded; HTTP $http"
+            else
+              code=$?
+              echo "::error title=Gitleaks installer::$label download failed; curl exit $code; HTTP $http. Redirect URLs and response bodies withheld."
+              exit "$code"
+            fi
+          }
+          download archive "$tool_dir/gitleaks_8.24.3_linux_x64.tar.gz" \
             https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz
-          tar -xzf /tmp/gitleaks.tar.gz -C /usr/local/bin gitleaks
-          gitleaks version
+          download checksums "$tool_dir/checksums.txt" \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_checksums.txt
+          cd "$tool_dir"
+          grep '  gitleaks_8.24.3_linux_x64.tar.gz$' checksums.txt | sha256sum --check --strict
+          echo "::notice title=Gitleaks installer::Official archive checksum verified"
+          tar -xzf gitleaks_8.24.3_linux_x64.tar.gz gitleaks
+          echo "$tool_dir" >> "$GITHUB_PATH"
+          "$tool_dir/gitleaks" version
       - name: Gitleaks — scan working tree
-        run: gitleaks dir . --config .gitleaks.toml --redact --no-banner
+        # Same official scope/exit, plus location-only annotations readable through
+        # GitHub API when the signed log-download endpoint is unavailable.
+        run: |
+          node --test tests/secret-scan-policy.test.cjs
+          node scripts/gitleaks-ci.cjs
+
+  # Independent mandatory evidence: native integration failures must not hide
+  # whether the unchanged standard compiler/build/fixed client budget pass.
+  # The original check job and all its gates remain mandatory and unchanged.
+  base-verification:
+    name: Native base (TypeScript, standard build, fixed JS budget)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Use pinned npm
+        run: npm install --global npm@11.16.0
+      - name: Install dependencies and generate official Prisma clients
+        run: npm ci
+      - name: Copilot evaluation safety (offline only)
+        run: |
+          node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs tests/copilot-blind-intake.test.cjs tests/phase6-security-context.test.cjs tests/codeql-inventory.test.cjs tests/config-dotenv-context.test.cjs
+          node scripts/evaluate-copilot-phase4.cjs --preflight
+      - name: Standard TypeScript (no diagnostic declarations)
+        # Le diagnostic complet reste dans le journal du run ; les dix premières
+        # lignes sont EN PLUS remontées en annotations, donc lisibles directement
+        # depuis l'onglet du run (et par API) sans télécharger le journal complet.
+        # Utile ici plus qu'ailleurs : ce poste n'a pas de client Prisma généré,
+        # la vérification de type y est donc aveugle aux appels Prisma, alors que
+        # la CI les contrôle réellement. Le code de sortie de `tsc` est conservé
+        # tel quel — une étape qui échoue reste une étape qui échoue.
+        run: |
+          set +e
+          npx tsc --noEmit > /tmp/tsc.txt 2>&1
+          statut=$?
+          set -e
+          if [ $statut -ne 0 ]; then
+            cat /tmp/tsc.txt
+            head -n 10 /tmp/tsc.txt | while IFS= read -r ligne; do
+              echo "::error::${ligne//$'\r'/}"
+            done
+          fi
+          exit $statut
+      - name: Standard production build (no alternate flags)
+        run: npm run build
+        env:
+          DATABASE_URL: file:./dev.db
+          NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
+          NEXTAUTH_URL: http://localhost:4028
+      - name: Immutable client JS budget (3829408 bytes)
+        # Les MESURES sont remontées en annotations : le journal du runner est
+        # téléchargeable seulement via un point de terminaison signé
+        # (results-receiver.actions.githubusercontent.com) qui n'est pas toujours
+        # joignable — un « over-budget » sans chiffre obligerait à deviner de
+        # combien. Même pratique que la Gitleaks ci-dessous.
+        run: |
+          set +e
+          npm run check:perf-budget > /tmp/budget.txt 2>&1
+          statut=$?
+          set -e
+          cat /tmp/budget.txt
+          if [ $statut -ne 0 ]; then
+            while IFS= read -r ligne; do echo "::error title=Budget client::${ligne}"; done < <(head -n 6 /tmp/budget.txt)
+          fi
+          node <<'NODE'
+          const fs = require('node:fs'), path = require('node:path')
+          const budget = JSON.parse(fs.readFileSync('perf-budget.json','utf8'))
+          if (budget.totalClientJsBytes !== 3829408) throw new Error('Immutable budget changed')
+          function files(dir) { return fs.readdirSync(dir).flatMap(n => {
+            const p=path.join(dir,n);return fs.statSync(p).isDirectory()?files(p):p.endsWith('.js')?[p]:[]
+          }) }
+          const js=files('.next/static'), totalBytes=js.reduce((s,p)=>s+fs.statSync(p).size,0)
+          if (!js.length || totalBytes>3829408) throw new Error('Incomplete/over-budget build')
+          console.log('::notice title=Copilot build budget::'+JSON.stringify({totalBytes,maxBytes:3829408,files:js.length,scope:'STANDARD_NEXT_BUILD_CLIENT_JS_ONLY'}))
+          NODE
 
   check:
     name: Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)
@@ -61,12 +198,16 @@ jobs:
           --health-retries 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 20
+          # Node ≥ 22.5 OBLIGATOIRE : node:sqlite est utilisé par les tests de
+          # migration (vitest) et les gardes du modèle SQLite (check:sqlite-template).
+          node-version: 22
           cache: npm
+      - name: Use pinned npm
+        run: npm install --global npm@11.16.0
 
       - name: Install dependencies (reproducible)
         run: npm ci
@@ -89,11 +230,85 @@ jobs:
             DIRECT_URL="postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres" \
             npx prisma generate --schema prisma/server/schema.prisma
 
+      - name: Phase6 historical native failures (negative diagnostic, not candidate PASS)
+        run: node scripts/capture-phase6-native-baseline.cjs
+
+      - name: Copilot native regressions (six suites, 54 assertions)
+        run: node scripts/validate-copilot-native.cjs
+
       - name: TypeScript
-        run: npx tsc --noEmit
+        # Le diagnostic complet reste dans le journal du run ; les dix premières
+        # lignes sont EN PLUS remontées en annotations, donc lisibles directement
+        # depuis l'onglet du run (et par API) sans télécharger le journal complet.
+        # Utile ici plus qu'ailleurs : ce poste n'a pas de client Prisma généré,
+        # la vérification de type y est donc aveugle aux appels Prisma, alors que
+        # la CI les contrôle réellement. Le code de sortie de `tsc` est conservé
+        # tel quel — une étape qui échoue reste une étape qui échoue.
+        run: |
+          set +e
+          npx tsc --noEmit > /tmp/tsc.txt 2>&1
+          statut=$?
+          set -e
+          if [ $statut -ne 0 ]; then
+            cat /tmp/tsc.txt
+            head -n 10 /tmp/tsc.txt | while IFS= read -r ligne; do
+              echo "::error::${ligne//$'\r'/}"
+            done
+          fi
+          exit $statut
 
       - name: ESLint
-        run: npx next lint
+        run: npm run lint
+
+      # Garde-fou marque : « GarageFlows » partout dans le visible (exceptions techniques précises).
+      - name: Branding consistency (strict)
+        run: node scripts/check-branding.mjs
+
+      # Garde-fou PWA : manifestes cohérents + icônes aux dimensions RÉELLES déclarées.
+      - name: PWA manifests & icon dimensions
+        run: node scripts/check-pwa.mjs
+
+      # Garde-fou monnaie STRICT : ZÉRO champ monétaire Float dans les schémas.
+      - name: Money fields (ZERO monetary Float)
+        run: node scripts/check-money-fields.mjs
+
+      # Garde-fou calculs : aucun calcul financier direct hors couche centrale.
+      - name: Money calculations (no direct float math)
+        run: node scripts/check-money-calculations.mjs
+
+      # Garde-fou JSON monétaires : toute écriture de worksJson/partsJson/linesJson
+      # passe par les sérialiseurs v2 (entiers exacts) — zéro flottant persisté.
+      - name: Money JSON (v2 writers only)
+        run: node scripts/check-money-json.mjs
+
+      # Garde-fou sûreté migrations : runner atomique fail-closed, DROP prouvé,
+      # ordre Electron sauvegarde → serveur → migration → fenêtre.
+      - name: Migration safety invariants
+        run: node scripts/check-migration-safety.mjs
+
+      # Garde-fou modèle SQLite : intégrité réelle + baseline complète + checksums
+      # + schéma final (exécute node:sqlite sur prisma/garageflow-template.db).
+      - name: SQLite template (integrity + baseline + checksums)
+        run: node scripts/check-sqlite-template.mjs
+
+      # Garde-fou migrations PostgreSQL : chaque DROP COLUMN a sa vérification
+      # bloquante (bijection stricte, bloc de contrôle avant tout DROP).
+      - name: PostgreSQL migrations (per-column verification)
+        run: node scripts/check-postgres-migration-verification.mjs
+
+      # Garde-fou docs : aucune affirmation de statut contradictoire dans un doc actif.
+      - name: Docs consistency
+        run: node scripts/check-docs-consistency.mjs
+
+      # `node config` face aux variables Vercel « Sensitive » (jamais relisibles) :
+      # la résolution doit générer puis remplacer sur une installation neuve, et
+      # REFUSER de tourner en silence sur une installation établie. Aucun réseau,
+      # aucune écriture hors bac à sable.
+      - name: Configuration — résolution automatique des secrets (offline)
+        run: node --test tests/config-secrets-auto.test.cjs tests/config.test.cjs tests/config-full.test.cjs tests/config-rebuild.test.cjs tests/config-storage-discovery.test.cjs tests/config-manager.test.cjs
+
+      - name: Critical security/licence files present & coherent
+        run: node scripts/check-critical-files.js
 
       # ── Migrations PostgreSQL sur base VIDE (échec CI si une migration casse) ──
       - name: PostgreSQL migrations on empty database + smoke test
@@ -106,10 +321,42 @@ jobs:
       # TEST_POSTGRES_URL active les tests de concurrence seats (base neuve par
       # exécution) ; TEST_REDIS_URL active la preuve multi-instance du rate
       # limiting. La CI ÉCHOUE si le plafond d'appareils peut être dépassé.
+      - name: Python for real keygen integration (no silent fallback)
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Install hash-locked keygen test dependencies
+        run: |
+          python -m pip install --index-url https://pypi.org/simple --require-hashes --only-binary=:all: -r tests/requirements-keygen.txt
+
+      - name: Copilot budget guards and frozen validation integrity (offline)
+        run: |
+          node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs tests/copilot-blind-intake.test.cjs tests/phase6-security-context.test.cjs tests/codeql-inventory.test.cjs tests/config-dotenv-context.test.cjs
+          node scripts/evaluate-copilot-phase4.cjs --verify-freeze
+
       - name: Tests (unit + integration)
-        run: npm test
+        # Un échec de suite doit être NOMMÉ. Les lignes « FAIL »/« × » sont
+        # remontées en annotations (lisibles par API), et le journal complet
+        # reste disponible. Le code de sortie est conservé tel quel.
+        run: |
+          set +e
+          npm test > /tmp/tests.txt 2>&1
+          statut=$?
+          set -e
+          cat /tmp/tests.txt
+          if [ $statut -ne 0 ]; then
+            trouve=0
+            while IFS= read -r ligne; do
+              echo "::error title=Test en échec::${ligne}"
+              trouve=1
+            done < <(grep -aE 'FAIL |× ' /tmp/tests.txt | sed 's/^[[:space:]]*//' | sort -u | head -n 10)
+            if [ "$trouve" -eq 0 ]; then
+              echo "::error::Suite de tests en échec — aucune ligne FAIL reconnue (voir journal)."
+            fi
+          fi
+          exit $statut
         env:
-          DATABASE_URL: file:./prisma/dev.db
+          DATABASE_URL: file:./dev.db
           NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
           NEXTAUTH_URL: http://localhost:4028
           TEST_POSTGRES_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres
@@ -118,17 +365,286 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          DATABASE_URL: file:./prisma/dev.db
+          DATABASE_URL: file:./dev.db
           NEXTAUTH_SECRET: ci-test-secret-not-for-production-0123456789
           NEXTAUTH_URL: http://localhost:4028
 
-      # Porte bloquante : toute vulnérabilité high/critical en dépendance de
-      # PRODUCTION échoue la CI, sauf dérogations documentées/datées
-      # (scripts/audit-ci.js). Une nouvelle vuln prod casse le build.
-      - name: Dependency audit gate (production high/critical)
+      # Budget de performance du bundle client (fail-closed : exige le build
+      # ci-dessus). Échoue si le JS client régresse au-delà de perf-budget.json.
+      - name: Performance budget (client bundle)
+        run: npm run check:perf-budget
+
+      # Full tree, all severities, no allowlist and no swallowed exit status.
+      - name: Dependency security regression tests
+        run: npm run test:audit
+      - name: Dependency audit gate (all packages, LOW through CRITICAL)
         run: node scripts/audit-ci.js
 
-      # Audit complet (dev inclus) — informatif, non bloquant.
-      - name: Dependency audit (full, informational)
-        run: npm audit || true
-        continue-on-error: true
+  e2e:
+    name: E2E (Playwright — responsive, auto-démarrage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Use pinned npm
+        run: npm install --global npm@11.16.0
+      - name: Install dependencies (reproducible)
+        run: npm ci
+      - name: Install Playwright Chromium (+ deps)
+        run: npx playwright install --with-deps chromium
+      - name: Prepare local SQLite database
+        run: cp prisma/garageflow-template.db prisma/dev.db
+      # `npx playwright test` démarre l'app en mode dev via le webServer de
+      # playwright.config.ts (mode production interdit SQLite — fail-closed).
+      # Sans E2E_EMAIL/E2E_PASSWORD, seuls les tests PUBLICS (page de connexion,
+      # responsive) s'exécutent ; les parcours authentifiés sont ignorés (skip).
+      - name: Run E2E (public responsive suite)
+        # Un échec Playwright doit être NOMMÉ : le rapport HTML est téléversé en
+        # artefact, mais son téléchargement peut être indisponible — sans ces
+        # annotations, un échec ne se lisait que comme « exit code 1 », sur une
+        # suite à 6 gabarits d'écran. Les en-têtes de tests en échec et la
+        # première ligne d'erreur remontent donc en annotations.
+        run: |
+          set +e
+          npx playwright test > /tmp/e2e.txt 2>&1
+          statut=$?
+          set -e
+          cat /tmp/e2e.txt
+          if [ $statut -ne 0 ]; then
+            while IFS= read -r ligne; do
+              echo "::error title=E2E::${ligne}"
+            done < <(grep -aE '^[[:space:]]+[0-9]+\) |^(Error|expect\.)|Reading the error|Timed out' /tmp/e2e.txt | sed 's/^[[:space:]]*//' | head -n 10)
+            if ! grep -qaE '^[[:space:]]+[0-9]+\) ' /tmp/e2e.txt; then
+              echo "::error::Suite E2E en échec — aucune ligne de test reconnue (voir le rapport HTML en artefact)."
+            fi
+          fi
+          exit $statut
+        env:
+          DATABASE_URL: file:./dev.db
+          NEXTAUTH_SECRET: ci-e2e-secret-not-for-production-0123456789
+          NEXTAUTH_URL: http://localhost:3000
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # Dedicated non-production environment only; missing approval/fixtures fail
+  # the aggregate gate instead of treating public responsive tests as auth proof.
+  e2e-authenticated:
+    name: Authenticated browser validation (approved staging only)
+    runs-on: ubuntu-latest
+    needs: [dependency-security, secrets, base-verification, check, e2e]
+    environment: e2e-staging
+    timeout-minutes: 20
+    env:
+      BASE_URL: ${{ secrets.E2E_STAGING_URL }}
+      E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      E2E_LICENSE: ${{ secrets.E2E_LICENSE }}
+      E2E_NON_PRODUCTION: ${{ vars.E2E_NON_PRODUCTION }}
+    steps:
+      - name: Require explicitly approved non-production test target and fixtures
+        shell: bash
+        run: |
+          node <<'NODE'
+          function refuse(code, field = '') {
+            // Fixed codes and allowlisted names only: no URL, credential or token.
+            console.error('::error title=Authenticated staging prerequisite::' + code + (field ? ':' + field : ''))
+            throw new Error(code)
+          }
+          for (const name of ['BASE_URL', 'E2E_EMAIL', 'E2E_PASSWORD', 'E2E_LICENSE']) {
+            if (!process.env[name]) refuse('MISSING_INPUT', name)
+          }
+          let target
+          try { target = new URL(process.env.BASE_URL) } catch { refuse('INVALID_TARGET_URL') }
+          const production = new Set(['garageflows.fr', 'www.garageflows.fr', 'app.garageflows.fr', 'api.garageflows.fr'])
+          if (target.protocol !== 'https:' || target.username || target.password || production.has(target.hostname.toLowerCase().replace(/\.+$/, ''))) {
+            refuse('UNSAFE_TARGET')
+          }
+          if (process.env.E2E_NON_PRODUCTION !== 'true') refuse('NON_PRODUCTION_APPROVAL_REQUIRED')
+          NODE
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install --global npm@11.16.0
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # No deployment, seed/reset or real production license is permitted here.
+      # Use synthetic fixtures on the approved isolated staging environment.
+      # Traces/storageState can contain session tokens: never upload them here.
+      - run: npx playwright test
+
+  # ── Release gate complet (manuel) ──────────────────────────────────────────
+  # Porte de sortie V13 : une seule commande qui enchaîne tsc, lint, les 10
+  # gardes, la suite de tests, les tests PostgreSQL/Redis RÉELS (services),
+  # l'audit de dépendances, le build et le budget de perf. À déclencher avant
+  # tout tag/release (workflow_dispatch) — les jobs par-PR ci-dessus restent
+  # les « fast checks ».
+  release-gate:
+    name: Final release gate (full)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: garageflow
+          POSTGRES_PASSWORD: garageflow_ci
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U garageflow"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Use pinned npm
+        run: npm install --global npm@11.16.0
+      - name: Install dependencies (reproducible)
+        run: npm ci
+      - name: Generate Prisma clients
+        run: |
+          npx prisma generate
+          npx prisma generate --schema prisma/server/schema.prisma
+      - name: Python for real keygen integration (no silent fallback)
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Install hash-locked keygen test dependencies
+        run: |
+          python -m pip install --index-url https://pypi.org/simple --require-hashes --only-binary=:all: -r tests/requirements-keygen.txt
+
+      - name: Run final release gate
+        run: node scripts/final-release-gate.mjs
+        env:
+          DATABASE_URL: file:./dev.db
+          NEXTAUTH_SECRET: ci-gate-secret-not-for-production-0123456789
+          NEXTAUTH_URL: http://localhost:4028
+          TEST_POSTGRES_URL: postgresql://garageflow:garageflow_ci@127.0.0.1:5432/postgres
+          TEST_REDIS_URL: 127.0.0.1:6379
+
+  windows-package:
+    name: Windows candidate packaging and inspection (not publication)
+    needs: [dependency-security, secrets, base-verification, check, e2e]
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install --global npm@11.16.0
+      - run: npm ci
+      # Restores the existing public anchor only: no private key, no rotation,
+      # no independent attestation of the external publisher and no release.
+      - run: node scripts/materialize-build-public-key.cjs
+      - run: npm run check:public-key
+      - run: npm run keys:check
+      - run: node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs
+      - name: Validate redacted packaging diagnostic
+        run: node --test tests/windows-package-diagnostic.test.cjs
+      # ── Pourquoi ce dossier vide devient le « dossier personnel » du build ──
+      # Next.js trace ses dépendances avec @vercel/nft. nft DÉPLIE `os.homedir()`
+      # en chemin littéral, puis, ne pouvant résoudre ce qu'on lui donne, élargit
+      # la recherche à « <dossier personnel>/**/* » et la confie à `glob`.
+      #
+      # Sur un exécuteur Windows, le profil de l'utilisateur contient deux
+      # jonctions héritées — `Application Data` et `Cookies` — que le système
+      # REFUSE d'énumérer : la recherche échoue en EPERM et la compilation
+      # s'arrête (« glob error … Failed to compile »), alors que le produit n'a
+      # jamais lu ce dossier. C'était déjà le cas AVANT la réparation de la
+      # chaîne de livraison (voir le diagnostic du run 38870935220) : ce n'est ni
+      # une régression, ni un défaut applicatif, mais un artefact de l'exécuteur.
+      #
+      # On pointe donc `os.homedir()` vers un dossier vide et accessible, pour
+      # cette SEULE étape. Aucun contrôle n'est désactivé : la trace reste
+      # complète côté projet, et si elle était réellement incomplète,
+      # `verify:standalone` puis `verify:installer` échoueraient bruyamment.
+      - name: Prepare a clean home directory for the tracing step
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path D:\gf-build-home | Out-Null
+      - name: Official npm run dist (redacted diagnostic, original exit code)
+        shell: node scripts/windows-package-diagnostic.cjs {0}
+        run: npm run dist
+        env:
+          USERPROFILE: D:\gf-build-home
+          HOMEDRIVE: D:\
+          HOMEPATH: \gf-build-home
+      - run: npm run check:perf-budget
+      - name: Verify integrity against the actual packaged resources (required)
+        run: npx vitest run src/__tests__/integrity-diagnostics.test.ts
+        env:
+          GF_REQUIRE_ARTIFACT_TEST: '1'
+      - run: npm run release:verify-artifact
+      - name: Install, launch, reinstall and uninstall the actual single-file Setup
+        shell: pwsh
+        run: ./scripts/test-windows-setup.ps1
+        env:
+          GF_WINDOWS_SMOKE_ISOLATED: '1'
+      - name: Record the exact single-file delivery identity
+        run: node -e "const r=require('./artifacts/windows-delivery/delivery.json'); console.log('::notice title=GarageFlows Setup identity::'+JSON.stringify(r))"
+      - name: Windows validation receipts (never userData or application secrets)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: garageflows-windows-validation
+          path: artifacts/windows-delivery/*.json
+          if-no-files-found: error
+          retention-days: 30
+      # Rend l'installeur RÉELLEMENT récupérable : la mission exige un `.exe`
+      # utilisable sur un autre poste, pas seulement la preuve qu'il a été
+      # construit. `if-no-files-found: error` est volontaire — un téléversement
+      # muet sur un artefact absent rejouerait exactement le défaut d'origine
+      # (« server.js NOT found » masqué) : une étape crie, ou elle disparaît.
+      - name: Publish installer (Windows x64, NSIS)
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: garageflows-installer-windows-x64
+          path: release/GarageFlows-Setup.exe
+          if-no-files-found: error
+          retention-days: 30
+
+  required-validation:
+    name: Required validation
+    if: ${{ always() }}
+    needs: [dependency-security, secrets, base-verification, check, e2e, e2e-authenticated, windows-package]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse failed, cancelled or skipped mandatory jobs
+        shell: bash
+        run: |
+          test '${{ needs.dependency-security.result }}' = success
+          test '${{ needs.secrets.result }}' = success
+          test '${{ needs.base-verification.result }}' = success
+          test '${{ needs.check.result }}' = success
+          test '${{ needs.e2e.result }}' = success
+          test '${{ needs.e2e-authenticated.result }}' = success
+          test '${{ needs.windows-package.result }}' = success

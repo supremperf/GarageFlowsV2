@@ -5,11 +5,32 @@ import { immer } from 'zustand/middleware/immer'
 import { Job, Mechanic, Suggestion } from '@/lib/types'
 import { runAIEngine } from '@/lib/ai-engine'
 import { getTodayString } from '@/lib/utils'
+import { bornesAtelier } from '@/lib/planning/horaires'
 import toast from 'react-hot-toast'
+
+/**
+ * Réglages du garage nécessaires au PLANNING.
+ *
+ * Les horaires d'atelier étaient enregistrés et jamais lus : la grille du
+ * planning naissait des constantes `WORKSHOP_START_HOUR` / `WORKSHOP_END_HOUR`,
+ * évaluées au chargement du module. Un garage ouvrant à 7 h voyait donc
+ * toujours 8 h – 18 h, et ses interventions matinales tombaient hors grille
+ * (GF-021).
+ */
+export interface HorairesAtelier {
+  workshopStartHour: number
+  workshopEndHour: number
+  workshopStartMinute: number
+  workshopEndMinute: number
+}
 
 interface ScheduleState {
   jobs:          Job[]
   mechanics:     Mechanic[]
+  /** `null` tant que les réglages ne sont pas chargés (repli 8 h – 18 h). */
+  horaires:      HorairesAtelier | null
+  /** Module « véhicules de prêt » activé par le garage (`loanerEnabled`). */
+  loanerActif:   boolean
   suggestions:   Suggestion[]
   selectedDate:  string
   selectedJobId: string | null
@@ -29,17 +50,21 @@ interface ScheduleState {
   // Data fetching
   fetchData:      (date?: string) => Promise<void>
   fetchMechanics: () => Promise<void>
+  /** Charge les horaires d'atelier ; sans effet en cas d'échec (repli). */
+  fetchHoraires:  () => Promise<void>
   /** Full hard reload: mechanics + jobs for current date + AI */
   refreshAll:     () => Promise<void>
   /** Notify all stat consumers that billing data changed */
   invalidateStats: () => void
 
   // Job mutations (optimistic + API)
+  // `updateJob` et `moveJob` rendent le VERDICT du serveur : l'écran ne doit
+  // pas annoncer un déplacement ou une modification que la base a refusés.
   addJob:                (job: Omit<Job, 'id' | 'createdAt'>) => Promise<void>
-  updateJob:             (id: string, updates: Partial<Job>)  => Promise<void>
+  updateJob:             (id: string, updates: Partial<Job>)  => Promise<boolean>
   deleteJob:             (id: string)                         => Promise<void>
   updateJobDurationLocal:(id: string, duration: number)       => void
-  moveJob:               (jobId: string, mechanicId: string, startTime: string) => Promise<void>
+  moveJob:               (jobId: string, mechanicId: string, startTime: string) => Promise<boolean>
 
   // Mechanic mutations
   toggleMechanicAbsence:      (mechanicId: string) => Promise<void>
@@ -78,6 +103,8 @@ export const useScheduleStore = create<ScheduleState>()(
   immer((set, get) => ({
     jobs:           [],
     mechanics:      [],
+    horaires:       null,
+    loanerActif:    true,
     suggestions:    [],
     selectedDate:   getTodayString(),
     selectedJobId:  null,
@@ -101,8 +128,18 @@ export const useScheduleStore = create<ScheduleState>()(
       set(s => { s.isLoading = true; s.error = null })
       try {
         const [mechanics, jobsResult] = await Promise.all([
-          apiFetch('/api/mechanics'),
+          // ── Les ARCHIVÉS sont chargés eux aussi (GF-040) ──────────────────
+          // Le planning répartit les interventions par mécanicien connu :
+          // celles d'un mécanicien absent de la liste ne trouvaient plus de
+          // colonne et disparaissaient purement de l'écran. Archiver quelqu'un
+          // effaçait donc visuellement son travail. Les colonnes des archivés
+          // n'apparaissent que s'il leur reste des interventions — la
+          // pagination des colonnes s'en charge.
+          apiFetch('/api/mechanics?includeArchived=1'),
           apiFetch(`/api/jobs?date=${selectedDate}`),
+          // Les horaires bornent la GRILLE : les recharger avec le reste évite
+          // qu'un changement de réglage ne prenne effet qu'au prochain démarrage.
+          get().fetchHoraires(),
         ])
         const jobs = jobsResult?.data ?? jobsResult ?? []
         set(s => {
@@ -139,11 +176,35 @@ export const useScheduleStore = create<ScheduleState>()(
 
     fetchMechanics: async () => {
       try {
-        const mechanics = await apiFetch('/api/mechanics')
+        const mechanics = await apiFetch('/api/mechanics?includeArchived=1')
         set(s => { s.mechanics = mechanics })
       } catch (e: any) {
         set(s => { s.error = e.message })
       }
+    },
+
+    fetchHoraires: async () => {
+      // Échec silencieux ASSUMÉ : le planning doit s'afficher même si les
+      // réglages sont indisponibles. Il retombe alors sur 8 h – 18 h, ce qu'il
+      // faisait de toute façon avant — mais cette fois par défaut, pas par
+      // construction.
+      try {
+        const g = await apiFetch('/api/garages')
+        if (!g) return
+        set(s => {
+          s.horaires = {
+            workshopStartHour:   Number(g.workshopStartHour ?? 8),
+            workshopEndHour:     Number(g.workshopEndHour ?? 18),
+            workshopStartMinute: Number(g.workshopStartMinute ?? 0),
+            workshopEndMinute:   Number(g.workshopEndMinute ?? 0),
+          }
+          // `loanerEnabled` était validé, persisté… et n'avait aucun lecteur :
+          // l'entrée « Véhicules de prêt » s'affichait quoi qu'ait décidé le
+          // garage (GF-039). Le repli est `true` — un réglage indisponible ne
+          // doit pas faire disparaître un module en cours d'utilisation.
+          s.loanerActif = g.loanerEnabled !== false
+        })
+      } catch { /* repli sur les bornes par défaut */ }
     },
 
     // ── Job mutations ──────────────────────────────────────────────────────
@@ -179,9 +240,15 @@ export const useScheduleStore = create<ScheduleState>()(
         get().runAI()
         // If status changed to completed → refresh stats
         if (updates.status === 'completed') get().invalidateStats()
+        return true
       } catch (e: any) {
         get().fetchData()
         toast.error(e.message)
+        // Verdict RENDU à l'appelant (GF-024) : sans lui, l'écran annonçait
+        // « Intervention mise à jour » alors que le serveur avait refusé, et
+        // l'utilisateur voyait la ligne revenir à sa place sans explication.
+        // Un booléen plutôt qu'une exception : aucun appelant existant ne casse.
+        return false
       }
     },
 
@@ -223,9 +290,11 @@ export const useScheduleStore = create<ScheduleState>()(
           body: JSON.stringify({ mechanicId, startTime }),
         })
         get().runAI()
+        return true
       } catch (e: any) {
         get().fetchData()
         toast.error(e.message)
+        return false
       }
     },
 
@@ -254,21 +323,37 @@ export const useScheduleStore = create<ScheduleState>()(
     },
 
     redistributeAbsentMechanic: (mechanicId) => {
-      import('@/lib/ai-engine').then(({ redistributeAfterAbsence }) => {
-        const { jobs, mechanics, selectedDate } = get()
-        const updatedJobs = redistributeAfterAbsence(mechanicId, jobs, mechanics, selectedDate)
+      import('@/lib/ai-engine').then(async ({ redistributeAfterAbsence }) => {
+        const { jobs, mechanics, horaires, selectedDate } = get()
+        // La redistribution replace les interventions DANS les horaires du
+        // garage : sans bornes, elle les repoussait dans une journée 8 h – 18 h
+        // imaginaire, hors de la grille affichée.
+        const updatedJobs = redistributeAfterAbsence(
+          mechanicId, jobs, mechanics, selectedDate, bornesAtelier(horaires),
+        )
         set(s => { s.jobs = updatedJobs })
-        updatedJobs
-          .filter(j => {
-            const orig = jobs.find(o => o.id === j.id)
-            return orig && (orig.mechanicId !== j.mechanicId || orig.startTime !== j.startTime)
-          })
-          .forEach(j => {
-            apiFetch(`/api/jobs/${j.id}`, {
-              method: 'PATCH',
-              body: JSON.stringify({ mechanicId: j.mechanicId, startTime: j.startTime }),
-            }).catch(() => null)
-          })
+
+        const aDeplacer = updatedJobs.filter(j => {
+          const orig = jobs.find(o => o.id === j.id)
+          return orig && (orig.mechanicId !== j.mechanicId || orig.startTime !== j.startTime)
+        })
+
+        // ── Les écritures ne partent plus à l'aveugle (GF-024) ───────────────
+        // Le `forEach` d'origine lançait les PATCH sans les attendre et écrasait
+        // chaque échec par `.catch(() => null)`. Le toast partait donc AVANT la
+        // première réponse, et — contrairement à `moveJob` et `updateJob` — rien
+        // ne rechargeait l'état : l'écran restait durablement faux, montrant une
+        // redistribution qui n'avait pas eu lieu en base.
+        const resultats = await Promise.allSettled(aDeplacer.map(j => apiFetch(`/api/jobs/${j.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ mechanicId: j.mechanicId, startTime: j.startTime }),
+        })))
+
+        if (resultats.some(r => r.status === 'rejected')) {
+          await get().fetchData()
+          toast.error('Certaines interventions n’ont pas pu être déplacées — la liste a été rechargée.')
+          return
+        }
         get().runAI()
         toast.success('Interventions redistribuées !')
       })
@@ -307,9 +392,12 @@ export const useScheduleStore = create<ScheduleState>()(
     },
 
     runAI: () => {
-      const { jobs, mechanics, selectedDate, suggestions } = get()
+      const { jobs, mechanics, horaires, selectedDate, suggestions } = get()
       const dismissed = new Set(suggestions.filter(s => s.dismissed).map(s => s.id))
-      const next = runAIEngine({ jobs, mechanics, date: selectedDate })
+      // Les suggestions parlent de créneaux libres et de surcharge : mesurées
+      // sur une journée de 8 h à 18 h, elles annonçaient des trous inexistants
+      // et manquaient la surcharge d'un atelier à l'amplitude plus courte.
+      const next = runAIEngine({ jobs, mechanics, date: selectedDate, bornes: bornesAtelier(horaires) })
       set(s => { s.suggestions = next.filter(s => !dismissed.has(s.id)) })
     },
 

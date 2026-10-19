@@ -1,0 +1,27 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /home/user/GarageFlowsV2
+
+ ✓ src/lib/copilot/__tests__/semantic.test.ts (40 tests) 114ms
+ ✓ src/lib/copilot/__tests__/planning-execution.test.ts (44 tests) 79ms
+stderr | src/lib/__tests__/env.test.ts > env — validation & fail-fast > assertEnv NE lève PAS en développement (avertit seulement)
+[env] Configuration incomplète (dev) : DATABASE_URL (absente ou vide), NEXTAUTH_SECRET (absente, trop courte ou générique)
+
+ ✓ src/lib/__tests__/env.test.ts (24 tests) 14ms
+ ✓ src/lib/copilot-llm/__tests__/provider.test.ts (15 tests) 56ms
+ ✓ src/lib/copilot/__tests__/phase3-security.test.ts (18 tests) 43ms
+ ✓ src/lib/copilot-llm/__tests__/planning-provider.test.ts (6 tests) 40ms
+ ✓ src/lib/copilot-llm/__tests__/copilot-llm.test.ts (25 tests) 20ms
+ ✓ src/lib/copilot/__tests__/copilot-chaine-complete.test.ts (16 tests) 18ms
+ ✓ src/lib/__tests__/env-contract.test.ts (10 tests) 8ms
+ ✓ src/lib/copilot/__tests__/conversation.test.ts (26 tests) 33ms
+ ✓ src/lib/copilot-llm/__tests__/paid-block.test.ts (5 tests) 18ms
+ ✓ src/lib/copilot/__tests__/copilot.test.ts (12 tests) 14ms
+
+ Test Files  12 passed (12)
+      Tests  241 passed (241)
+   Start at  14:37:06
+   Duration  2.99s (transform 316ms, setup 0ms, import 963ms, tests 455ms, environment 1ms)
+

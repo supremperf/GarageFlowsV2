@@ -1,0 +1,19 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /home/user/GarageFlowsV2
+
+ ✓ src/lib/copilot/__tests__/planning-execution.test.ts (44 tests) 82ms
+ ✓ src/lib/copilot/__tests__/phase3-security.test.ts (18 tests) 49ms
+ ✓ src/lib/copilot-llm/__tests__/provider.test.ts (15 tests) 48ms
+ ✓ src/lib/copilot-llm/__tests__/planning-provider.test.ts (6 tests) 37ms
+ ✓ src/lib/copilot/__tests__/conversation.test.ts (26 tests) 31ms
+ ✓ src/lib/copilot/__tests__/copilot.test.ts (12 tests) 16ms
+ ✓ src/lib/copilot-llm/__tests__/copilot-llm.test.ts (25 tests) 21ms
+ ✓ src/lib/copilot/__tests__/copilot-chaine-complete.test.ts (16 tests) 14ms
+
+ Test Files  8 passed (8)
+      Tests  162 passed (162)
+   Start at  12:18:02
+   Duration  2.13s (transform 238ms, setup 0ms, import 716ms, tests 297ms, environment 1ms)

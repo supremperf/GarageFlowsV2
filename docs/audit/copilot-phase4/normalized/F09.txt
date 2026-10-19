@@ -1,0 +1,62 @@
+TAP version 13
+# Subtest: budget manifest refuses unbounded/missing/extra/increased output fields
+ok 1 - budget manifest refuses unbounded/missing/extra/increased output fields
+  ---
+  duration_ms: 4.127255
+  type: 'test'
+  ...
+# Subtest: reserves the worst cost before dispatch, no automatic replenishment
+ok 2 - reserves the worst cost before dispatch, no automatic replenishment
+  ---
+  duration_ms: 0.325486
+  type: 'test'
+  ...
+# Subtest: cost or input limit blocks before consuming any call
+ok 3 - cost or input limit blocks before consuming any call
+  ---
+  duration_ms: 0.198273
+  type: 'test'
+  ...
+# Subtest: empty latency samples stay null, not synthetic zeros
+ok 4 - empty latency samples stay null, not synthetic zeros
+  ---
+  duration_ms: 0.718199
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 140.256196
+{
+  "freeze": {
+    "count": 48,
+    "sha256": "7b23aa75f2f08b6b23e9bf65a64d1051c95aef0bac33168257f562feb1227092"
+  },
+  "configuration": {
+    "explicitAnthropic": false,
+    "keyPresent": false,
+    "modelPresent": false
+  },
+  "networkAttempted": false,
+  "paidApproval": "NOT_GRANTED_BY_PREFLIGHT_OR_FLAG",
+  "nativeFacts": "NOT_EXECUTED"
+}
+{
+  "freeze": {
+    "count": 48,
+    "sha256": "7b23aa75f2f08b6b23e9bf65a64d1051c95aef0bac33168257f562feb1227092"
+  },
+  "configuration": {
+    "explicitAnthropic": false,
+    "keyPresent": false,
+    "modelPresent": false
+  },
+  "networkAttempted": false,
+  "paidApproval": "NOT_GRANTED_BY_PREFLIGHT_OR_FLAG",
+  "nativeFacts": "NOT_EXECUTED"
+}

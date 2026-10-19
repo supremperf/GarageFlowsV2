@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: keeps JSON, User-Agent and split UTF8 metadata intact
+ok 1 - keeps JSON, User-Agent and split UTF8 metadata intact
+  ---
+  duration_ms: 21.972843
+  type: 'test'
+  ...
+# Subtest: POST preserves request data and authoritative HTTP status, with no redirect following
+ok 2 - POST preserves request data and authoritative HTTP status, with no redirect following
+  ---
+  duration_ms: 4.678771
+  type: 'test'
+  ...
+# Subtest: rejects declared and chunked oversize responses instead of parsing truncation
+ok 3 - rejects declared and chunked oversize responses instead of parsing truncation
+  ---
+  duration_ms: 5.546763
+  type: 'test'
+  ...
+# Subtest: an active slow response cannot keep the request alive past its total deadline
+ok 4 - an active slow response cannot keep the request alive past its total deadline
+  ---
+  duration_ms: 101.352597
+  type: 'test'
+  ...
+# Subtest: relative GET redirects are supported with a fixed hop budget
+ok 5 - relative GET redirects are supported with a fixed hop budget
+  ---
+  duration_ms: 8.237224
+  type: 'test'
+  ...
+# Subtest: redirect chain shares one deadline rather than resetting it on every hop
+ok 6 - redirect chain shares one deadline rather than resetting it on every hop
+  ---
+  duration_ms: 101.239078
+  type: 'test'
+  ...
+# Subtest: malformed JSON and interrupted responses resolve null, never partial success
+ok 7 - malformed JSON and interrupted responses resolve null, never partial success
+  ---
+  duration_ms: 4.106966
+  type: 'test'
+  ...
+# Subtest: redirect policy rejects invalid protocols and HTTPS downgrades
+ok 8 - redirect policy rejects invalid protocols and HTTPS downgrades
+  ---
+  duration_ms: 0.246375
+  type: 'test'
+  ...
+# Subtest: invalid options and circular request bodies resolve null without making a request
+ok 9 - invalid options and circular request bodies resolve null without making a request
+  ---
+  duration_ms: 0.342764
+  type: 'test'
+  ...
+# Subtest: chunk overhead is bounded as well as bytes (deterministic real-module transport fixture)
+ok 10 - chunk overhead is bounded as well as bytes (deterministic real-module transport fixture)
+  ---
+  duration_ms: 2.66942
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 327.71235

@@ -1,0 +1,472 @@
+{
+  "at": "2026-10-15T14:52:32.100909+00:00",
+  "sourceHead": "c1f6a5cc53a6ea4a7346f747567b8a585bc4a7de",
+  "files": [
+    {
+      "sha256": "b71760c6dca04e78d23fcc3e2a7e5e27b1111aabd954b68c8efe357a27617b06",
+      "bytes": 4498,
+      "path": "docs/audit/copilot-phase6/CI-c1f6a5c.md"
+    },
+    {
+      "sha256": "ef381b7bfb772017ac451ea75052c9fce5ac0cbeaa96969c2a1f9eac4f865e34",
+      "bytes": 3733,
+      "path": "docs/audit/copilot-phase6/CODEQL.md"
+    },
+    {
+      "sha256": "0a1991d22662d88d5f4b0bd04c8c5422565e98c05895264d44f313b00b01d7cd",
+      "bytes": 192433,
+      "path": "docs/audit/copilot-phase6/P01.json"
+    },
+    {
+      "sha256": "00fd9913eee1e70e3d51dc9036a5517fff7dfe7d184746e4cd9668519de83dae",
+      "bytes": 606,
+      "path": "docs/audit/copilot-phase6/P01.txt"
+    },
+    {
+      "sha256": "6c28922843880b0d0647df74f8fed2c7bf737a5b41c8a955e3394fb695dc9b3e",
+      "bytes": 192554,
+      "path": "docs/audit/copilot-phase6/P02.json"
+    },
+    {
+      "sha256": "0b08a74ca8a4701582743e8b5f84f5249f49f53c288f0805777a26f741fb226c",
+      "bytes": 2118,
+      "path": "docs/audit/copilot-phase6/P02.txt"
+    },
+    {
+      "sha256": "887e50ff0d644c37dfe7d573970d19a7d65446855b67b6e0f05fbbb0ab880525",
+      "bytes": 192683,
+      "path": "docs/audit/copilot-phase6/P03.json"
+    },
+    {
+      "sha256": "faa7eb72bc46071ddf681b65f6fb1baf231036efc45d9e5bcbd94388d71a38cb",
+      "bytes": 3342,
+      "path": "docs/audit/copilot-phase6/P03.txt"
+    },
+    {
+      "sha256": "ef485a32a2e303e5ab20487cdc6e35a5157fcc1cb895dc234b786c588e37abeb",
+      "bytes": 193115,
+      "path": "docs/audit/copilot-phase6/P04.json"
+    },
+    {
+      "sha256": "385d4e1f28e3ab4e3478a0e2adc86f160c1ee9d946897b3e83d04581cfc6cd8a",
+      "bytes": 3444,
+      "path": "docs/audit/copilot-phase6/P04.txt"
+    },
+    {
+      "sha256": "76ff3ebabb2da669bccc90f6f5885cbed20dc4368fffb1901b9507cd53163d74",
+      "bytes": 193044,
+      "path": "docs/audit/copilot-phase6/P05.json"
+    },
+    {
+      "sha256": "4162485660b57eeaf598737fe54579bae463d8945dc761dfd7858942e0ae0574",
+      "bytes": 1117,
+      "path": "docs/audit/copilot-phase6/P05.txt"
+    },
+    {
+      "sha256": "67095f7c3819c12549a00b5f90a08e9882ac35d6397fc81d123d2dac342154b7",
+      "bytes": 192988,
+      "path": "docs/audit/copilot-phase6/P06.json"
+    },
+    {
+      "sha256": "11e9bbbe320daae5b44c5b70d9ece66ad423dd01e79f2ab78a3571d6daa6be4a",
+      "bytes": 2067,
+      "path": "docs/audit/copilot-phase6/P06.txt"
+    },
+    {
+      "sha256": "139125f4a4236f75e72946ad02289ea495e469d5735d480b3d5844c19302b895",
+      "bytes": 192826,
+      "path": "docs/audit/copilot-phase6/P07.json"
+    },
+    {
+      "sha256": "8166ea3ac64a0127850cd5d77ba997afdc44d2b3443ae6efe645e4ab9d159909",
+      "bytes": 107467,
+      "path": "docs/audit/copilot-phase6/P07.txt"
+    },
+    {
+      "sha256": "cea01b81a743e3d769922e833ece3ee446ea1dcff8554137b49b2d1678d33ddf",
+      "bytes": 192835,
+      "path": "docs/audit/copilot-phase6/P08.json"
+    },
+    {
+      "sha256": "1a6e3524a3492ff91b0c7fc7d8b0029e2fb51c9b24f1b1ca871f81dd5c560a79",
+      "bytes": 75940,
+      "path": "docs/audit/copilot-phase6/P08.txt"
+    },
+    {
+      "sha256": "f010b1ff83fa4676e96ec06d706bf366489994c3ecf60c40ec58d72d1d23c753",
+      "bytes": 192817,
+      "path": "docs/audit/copilot-phase6/P09.json"
+    },
+    {
+      "sha256": "88de500de08ae3d774676e16a449abe3705588c36ef5f77ff2f706bb713d0ebe",
+      "bytes": 34268,
+      "path": "docs/audit/copilot-phase6/P09.txt"
+    },
+    {
+      "sha256": "f8844e7b7507afe963130c5e50fdb7246f55e4667fd2c9081ac7ee822476bcfd",
+      "bytes": 193045,
+      "path": "docs/audit/copilot-phase6/P10.json"
+    },
+    {
+      "sha256": "4bda6da7678fe37b7d357b199f5fa9699c6258de369fc5779e69639621ac7d6e",
+      "bytes": 3245,
+      "path": "docs/audit/copilot-phase6/P10.txt"
+    },
+    {
+      "sha256": "3bf67ab824f3bcb539c1b61d4c454696ad8bcefd66f7c467f68026f634d24889",
+      "bytes": 193045,
+      "path": "docs/audit/copilot-phase6/P11.json"
+    },
+    {
+      "sha256": "4ac9198d8364000558b3e56b0ccc1a7314b74ec91971b77e700e6589cd9d8903",
+      "bytes": 2153,
+      "path": "docs/audit/copilot-phase6/P11.txt"
+    },
+    {
+      "sha256": "ee5c6f3db9ce43ce5a8dc1634baf9a49a4225977ea886bfaed706f8473bca769",
+      "bytes": 193639,
+      "path": "docs/audit/copilot-phase6/P12.json"
+    },
+    {
+      "sha256": "0f3dd8a069980e385de12e031fba5acb409b3ed55fc33bdd57d2906285c1d6a9",
+      "bytes": 2908,
+      "path": "docs/audit/copilot-phase6/P12.txt"
+    },
+    {
+      "sha256": "9c14b47bf61c23640a5a28ecb9d6cc3dd0a4e742d3536505d7532296d65c5611",
+      "bytes": 193451,
+      "path": "docs/audit/copilot-phase6/P13.json"
+    },
+    {
+      "sha256": "b10f5985ff69e6b06907d89a5a688f848c81c2e7097ec37ef20ff5dc073f4f26",
+      "bytes": 6711,
+      "path": "docs/audit/copilot-phase6/P13.txt"
+    },
+    {
+      "sha256": "a7c2445da1b3b321ff06fbebff209f732d22f7a91a760c870763317e258984bf",
+      "bytes": 193312,
+      "path": "docs/audit/copilot-phase6/P14.json"
+    },
+    {
+      "sha256": "c8becbd2755b4b6a3e428a6b53a2d1ab9762f8e896de4407f609c4c72b5ef6e3",
+      "bytes": 2714,
+      "path": "docs/audit/copilot-phase6/P14.txt"
+    },
+    {
+      "sha256": "6031e8346645f6941c8a60c20487cd4e0dd3cb5208a4665b9743afa4dfca8b30",
+      "bytes": 193141,
+      "path": "docs/audit/copilot-phase6/P15.json"
+    },
+    {
+      "sha256": "dcabeb2f6e557ede3f5cdeaa5dd4f622c7cff13d77bc55a54870e2658c6677e2",
+      "bytes": 2085,
+      "path": "docs/audit/copilot-phase6/P15.txt"
+    },
+    {
+      "sha256": "a9a211860d6e4d8938c70540ba74710b8c6541d48b1057fdbcf576c0bbed7394",
+      "bytes": 193452,
+      "path": "docs/audit/copilot-phase6/P16.json"
+    },
+    {
+      "sha256": "8f277aa06a72c052ba627e1003407093aa7d347c21b7218eeaed3f1ab0a1e821",
+      "bytes": 2117,
+      "path": "docs/audit/copilot-phase6/P16.txt"
+    },
+    {
+      "sha256": "25e5774ad46f359ad33d745d103d4a17c31d2ceccbe072e699eadf643dcde18c",
+      "bytes": 193213,
+      "path": "docs/audit/copilot-phase6/P17.json"
+    },
+    {
+      "sha256": "2dcb9e65be283ce764d5d90ea8279f481deafc2c96019b4aeb31a4a0286a2a93",
+      "bytes": 1894,
+      "path": "docs/audit/copilot-phase6/P17.txt"
+    },
+    {
+      "sha256": "101901523a69de39d69ec9bf5a800d889aee831676ec45bcf096033728cabb72",
+      "bytes": 193344,
+      "path": "docs/audit/copilot-phase6/P18.json"
+    },
+    {
+      "sha256": "278782bf65f8e5325f874ec8b3fbb2090601456ce3438bced79f2e0e75c7471b",
+      "bytes": 1666,
+      "path": "docs/audit/copilot-phase6/P18.txt"
+    },
+    {
+      "sha256": "95a3b20dde8f1ba884882f3423344967962f4deea3e4bf30caa86616e8008289",
+      "bytes": 193344,
+      "path": "docs/audit/copilot-phase6/P19.json"
+    },
+    {
+      "sha256": "e2a6745a20aba6a7ec195dc785d60e140ef25f75b2d6a185b8fcd4c67c6bd74b",
+      "bytes": 110569,
+      "path": "docs/audit/copilot-phase6/P19.txt"
+    },
+    {
+      "sha256": "25962046f778bfda77e3de5f6a2448ee2cf075cfabf50005a5b52f3fa034b412",
+      "bytes": 194631,
+      "path": "docs/audit/copilot-phase6/P20.json"
+    },
+    {
+      "sha256": "f79b7c999ba547456cb06cd748978ff829c7bc20597eea6d535b4cec8391ed9d",
+      "bytes": 431,
+      "path": "docs/audit/copilot-phase6/P20.txt"
+    },
+    {
+      "sha256": "cf468f38dd4bc8d098d4e4e4ea5450251a3c31f116db6ef00ab8b009a4682daa",
+      "bytes": 193813,
+      "path": "docs/audit/copilot-phase6/P21.json"
+    },
+    {
+      "sha256": "41511adb8484b7d270b23d8f389e75c2e7ba7edba92fd291539357f2eec89ff3",
+      "bytes": 3322,
+      "path": "docs/audit/copilot-phase6/P21.txt"
+    },
+    {
+      "sha256": "7d0fb0fcea38f4d38926f00cb93f2a8f27faac9d530659e27d01a6ba079a7425",
+      "bytes": 194048,
+      "path": "docs/audit/copilot-phase6/P22.json"
+    },
+    {
+      "sha256": "997e64a9499ddd950d12aab2bd543fe01338ab05b767e31867d51dfd675091a2",
+      "bytes": 777,
+      "path": "docs/audit/copilot-phase6/P22.txt"
+    },
+    {
+      "sha256": "76aceb1bfc8700522eb72b0a05533dc771778531780af793726754a1d1a9b341",
+      "bytes": 193312,
+      "path": "docs/audit/copilot-phase6/P23.json"
+    },
+    {
+      "sha256": "275d0a15c890cd97d5b4a4313486f28f71e5aa7e5e78f21f415da7569f384f5f",
+      "bytes": 3391,
+      "path": "docs/audit/copilot-phase6/P23.txt"
+    },
+    {
+      "sha256": "c79639cf4a2e6f50fe0d187eafe620e16a6c4b621d7cb76a9a8062bbbcc59e64",
+      "bytes": 193812,
+      "path": "docs/audit/copilot-phase6/P24.json"
+    },
+    {
+      "sha256": "abb61d2a964188f5ea98ac53cf070fe60087af93128d9f008df03828070ec783",
+      "bytes": 3322,
+      "path": "docs/audit/copilot-phase6/P24.txt"
+    },
+    {
+      "sha256": "1f423fc47d3de0fb21f0c27fe1bc621172e82ed3ef546583931707c02d1d65ff",
+      "bytes": 193277,
+      "path": "docs/audit/copilot-phase6/P25.json"
+    },
+    {
+      "sha256": "f45a937399d09c621d3e7305743b181c5e7f15d8d64b88f6cae04bad3c53867a",
+      "bytes": 1542,
+      "path": "docs/audit/copilot-phase6/P25.txt"
+    },
+    {
+      "sha256": "a039c50c43a135f24a7f0dc786377f106ec6d990653f45a5ad40d09e35b9512c",
+      "bytes": 193530,
+      "path": "docs/audit/copilot-phase6/P26.json"
+    },
+    {
+      "sha256": "a77ca3ea8e14b4ce9415cbf193beb65b70499e92316349ba4a8fbc1bee1b9099",
+      "bytes": 111201,
+      "path": "docs/audit/copilot-phase6/P26.txt"
+    },
+    {
+      "sha256": "9cd7d4272b46baf39c61cc439a2e09e45ab8bcb716a71b9838800f30920e3888",
+      "bytes": 194367,
+      "path": "docs/audit/copilot-phase6/P27.json"
+    },
+    {
+      "sha256": "5f1ece006c6eb82aa6bae57a4ab220c9a2df0a25756b5ef4289ba8f148f1adec",
+      "bytes": 194464,
+      "path": "docs/audit/copilot-phase6/P27.txt"
+    },
+    {
+      "sha256": "6b2873aa02a84ef7cc52e8c9f05c0caec09abf6944afad46bade1739911c29d0",
+      "bytes": 194901,
+      "path": "docs/audit/copilot-phase6/P28.json"
+    },
+    {
+      "sha256": "8b975c5482873eab746a42156614ef4aba0ce3f28e5a0ae1a01b9c1b5b3d6eff",
+      "bytes": 374,
+      "path": "docs/audit/copilot-phase6/P28.txt"
+    },
+    {
+      "sha256": "ddac6504bc5e583efcf93195a15722c1259881b0d2ac6679e87e27b1fe84bdd0",
+      "bytes": 19346,
+      "path": "docs/audit/copilot-phase6/REPORT.md"
+    },
+    {
+      "sha256": "dabe1e26862df7fa66ecb9608b53882d4770346ba827b8a68f62dfd78944b65a",
+      "bytes": 22856,
+      "path": "docs/audit/copilot-phase6/ci-382fb0b.json"
+    },
+    {
+      "sha256": "02969678f29ae392ae5e637006489f8c8dc6a4130f1044c2fb09b0c1211335c9",
+      "bytes": 10766,
+      "path": "docs/audit/copilot-phase6/ci-3eb7c5f.json"
+    },
+    {
+      "sha256": "8bded991deb1deab8c2efacba8278bd3c4942c97f2f41320908dc98a641599a6",
+      "bytes": 10858,
+      "path": "docs/audit/copilot-phase6/ci-5b7fe4f.json"
+    },
+    {
+      "sha256": "0e4fa09bcc61cf31ccd5e47ed7e9e1673fe9ece9bfe64a231f70e3b004319e86",
+      "bytes": 23004,
+      "path": "docs/audit/copilot-phase6/ci-8270e3a.json"
+    },
+    {
+      "sha256": "6f3d1e18f71419fc037c627fce40ac3f1caf7fc0443db8b0b6d855ee1616c705",
+      "bytes": 22736,
+      "path": "docs/audit/copilot-phase6/ci-94ab650.json"
+    },
+    {
+      "sha256": "71b0d9d48b0c7eaef33dd2571259e98c5631c0bffc2d1883e6df264063593d36",
+      "bytes": 24826,
+      "path": "docs/audit/copilot-phase6/ci-b4894c7.json"
+    },
+    {
+      "sha256": "d969985f90ad45ada4d35e78fe00b11692bf5a937261d5724e32b4d250467582",
+      "bytes": 16136,
+      "path": "docs/audit/copilot-phase6/ci-b7e155e.json"
+    },
+    {
+      "sha256": "72ed3c79ab723f5becc05f7e4947b323c741b845d417db3bc5e65d1504417e91",
+      "bytes": 17338,
+      "path": "docs/audit/copilot-phase6/ci-c1f6a5c.json"
+    },
+    {
+      "sha256": "bda92ba093ba420828112fd554abf41ade5ca276aeba7eb05a33b32121ab8481",
+      "bytes": 22406,
+      "path": "docs/audit/copilot-phase6/ci-da5e292.json"
+    },
+    {
+      "sha256": "45f92c53053eac078aa67ebf7bb345dda49a62375c252ef95c026c7c23912cb1",
+      "bytes": 10826,
+      "path": "docs/audit/copilot-phase6/ci-e64914d.json"
+    },
+    {
+      "sha256": "1a5f252706d548565368423be760b9a2006ec35efa0be43cec20adfb9c74f454",
+      "bytes": 155,
+      "path": "docs/audit/copilot-phase6/code-scanning-access.json"
+    },
+    {
+      "sha256": "bc1d546d4504647aa482dce3abbc400983916029dc990acb5320d0f2e36e04eb",
+      "bytes": 158033,
+      "path": "docs/audit/copilot-phase6/codeql-alert-review.json"
+    },
+    {
+      "sha256": "ed2ab119c1b7838426a76c9bae6aefddd57c68382f407b5bd20f88cc1589f3c0",
+      "bytes": 57396,
+      "path": "docs/audit/copilot-phase6/codeql-flows-382fb0b-check-116486274855.json"
+    },
+    {
+      "sha256": "05fe9989219dcf47dd4fda63325baa31ef4458c3b26f7f075151a04bcdb1a9dc",
+      "bytes": 47426,
+      "path": "docs/audit/copilot-phase6/codeql-flows-3eb7c5f-check-116478171251.json"
+    },
+    {
+      "sha256": "895e5bc115cb34155e1df5c0b096885c70a1ec0911108ead125666902c48a9a2",
+      "bytes": 56658,
+      "path": "docs/audit/copilot-phase6/codeql-flows-5b7fe4f-check-116485264888.json"
+    },
+    {
+      "sha256": "d986a039436e11615256c8ff339e967d1c7e087bf3dee8e637264d48cf308c59",
+      "bytes": 56574,
+      "path": "docs/audit/copilot-phase6/codeql-flows-94ab650-check-116484088828.json"
+    },
+    {
+      "sha256": "1ff984a2ce02fede79a389198e4ee66b81fb6a2c0d9d4d5f734dfc6f36d8b767",
+      "bytes": 37820,
+      "path": "docs/audit/copilot-phase6/codeql-flows-b4894c7-check-116480151347.json"
+    },
+    {
+      "sha256": "8520588a86d7a86d226ab806ca660041d25bef15b68154f855dc6e63dea3c636",
+      "bytes": 37820,
+      "path": "docs/audit/copilot-phase6/codeql-flows-b7e155e-check-116481335118.json"
+    },
+    {
+      "sha256": "d5fbf5415100bd3ff8918f146c8adc34a45d469717dc9fe9a84430eff7ea0009",
+      "bytes": 57396,
+      "path": "docs/audit/copilot-phase6/codeql-flows-c1f6a5c-check-116488851076.json"
+    },
+    {
+      "sha256": "9f239000fa0e6b2d76b36519648fe706b0f637f708c4c0050de6d2dbbea258aa",
+      "bytes": 38954,
+      "path": "docs/audit/copilot-phase6/codeql-flows-da5e292-check-116481710394.json"
+    },
+    {
+      "sha256": "d986a039436e11615256c8ff339e967d1c7e087bf3dee8e637264d48cf308c59",
+      "bytes": 56574,
+      "path": "docs/audit/copilot-phase6/codeql-flows-e64914d-check-116482269624.json"
+    },
+    {
+      "sha256": "417aec3575f382b8dd8346562b9dbcb53d3b9cf6f498c473601626f664d1a5de",
+      "bytes": 3719,
+      "path": "docs/audit/copilot-phase6/codeql-initial-metadata.json"
+    },
+    {
+      "sha256": "b75576dc3a7235743a112e09f8abac8ec54d3bec0dbef37b246aa2fcff7ae993",
+      "bytes": 152,
+      "path": "docs/audit/copilot-phase6/dependabot-access.json"
+    },
+    {
+      "sha256": "13152a67090c593c750218d1177726612d5a87ab0d8a610986f683a6739d12c0",
+      "bytes": 2196,
+      "path": "docs/audit/copilot-phase6/historical-native-382fb0b-check-116486237387.json"
+    },
+    {
+      "sha256": "f4b4f9a2102a6ffa4c3c33459fd26b54d186b761a4b877d125d1d3e01e5356f7",
+      "bytes": 2196,
+      "path": "docs/audit/copilot-phase6/historical-native-382fb0b-check-116486274573.json"
+    },
+    {
+      "sha256": "19e5ac7c8b2675b6b76e225f0031782eaa248478ef9a75135768745e1505d09c",
+      "bytes": 2196,
+      "path": "docs/audit/copilot-phase6/historical-native-94ab650-check-116484044737.json"
+    },
+    {
+      "sha256": "75edda2d219cf40d9f836b3c5a1780be938254d8a13d56a0a341aeb21d697840",
+      "bytes": 2196,
+      "path": "docs/audit/copilot-phase6/historical-native-94ab650-check-116484094311.json"
+    },
+    {
+      "sha256": "aa42d4be6f03d696396a53a0300873612b8a5765c4fb96ab6d475556cf9b0d62",
+      "bytes": 2196,
+      "path": "docs/audit/copilot-phase6/historical-native-b7e155e-check-116481296263.json"
+    },
+    {
+      "sha256": "bd66703eb781ed6137aba9e2a96c1746730eb3061006a80b08455fce5d05795d",
+      "bytes": 2196,
+      "path": "docs/audit/copilot-phase6/historical-native-c1f6a5c-check-116488851902.json"
+    },
+    {
+      "sha256": "c15c4b05563751c402659dcba2f9965e101d852863bec677c82ff96bf118af8c",
+      "bytes": 2196,
+      "path": "docs/audit/copilot-phase6/historical-native-da5e292-check-116481678802.json"
+    },
+    {
+      "sha256": "a44d896c2d404d983dfc04f2c968dde1a960bf56d01e8e34df8d128c482b9710",
+      "bytes": 2196,
+      "path": "docs/audit/copilot-phase6/historical-native-da5e292-check-116481711430.json"
+    },
+    {
+      "sha256": "ee5494e4f1dbdd13a22217ba666029f23940ccc371ad4c7099967ca15a3a7aa7",
+      "bytes": 32033,
+      "path": "docs/audit/copilot-phase6/proof-index.json"
+    },
+    {
+      "sha256": "1d92a6ed4b5ec977b21bd0d90a7093cca9e13bcdc504d6a29728bfd509c1fe46",
+      "bytes": 2762,
+      "path": "docs/audit/copilot-phase6/semantic-results.json"
+    },
+    {
+      "sha256": "a6d93ddffc0d194bf3ac7eac265ad85ad1d19a1aeb93e45e307c82e8e72bb2b9",
+      "bytes": 21096,
+      "path": "docs/audit/copilot-phase6/source-review.json"
+    }
+  ],
+  "limits": "Publication integrity snapshot only; not functional/security/production proof. This manifest does not hash itself. Later CI observations must be appended as new artifacts, not overwrite this snapshot."
+}

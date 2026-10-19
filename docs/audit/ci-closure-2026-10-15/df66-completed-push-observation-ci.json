@@ -1,0 +1,2700 @@
+{
+  "at": "2026-10-15T17:25:51.639139+02:00",
+  "branch": "arena/c9eaae15-garageflowsv2",
+  "branchCandidateSha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+  "query": "gh api repos/supremperf/GarageFlowsV2/commits/df66ebb2a92263091a60206725f1fed8c9e3b87c/check-runs?per_page=100",
+  "checks": [
+    {
+      "id": 116508982443,
+      "name": "Required validation",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759124969/job/116508982443",
+      "started_at": "2026-10-15T15:25:16Z",
+      "completed_at": "2026-10-15T15:25:19Z",
+      "job": {
+        "id": 116508982443,
+        "run_id": 38759124969,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:25:16Z",
+            "completed_at": "2026-10-15T15:25:16Z"
+          },
+          {
+            "name": "Refuse failed, cancelled or skipped mandatory jobs",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 2,
+            "started_at": "2026-10-15T15:25:16Z",
+            "completed_at": "2026-10-15T15:25:17Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:25:17Z",
+            "completed_at": "2026-10-15T15:25:17Z"
+          }
+        ]
+      },
+      "projectedNotices": [],
+      "annotationCounts": {
+        "failure": 1,
+        "warning": 0,
+        "notice": 1
+      }
+    },
+    {
+      "id": 116508789948,
+      "name": "Required validation",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759135140/job/116508789948",
+      "started_at": "2026-10-15T15:24:53Z",
+      "completed_at": "2026-10-15T15:24:56Z",
+      "job": {
+        "id": 116508789948,
+        "run_id": 38759135140,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:24:54Z",
+            "completed_at": "2026-10-15T15:24:54Z"
+          },
+          {
+            "name": "Refuse failed, cancelled or skipped mandatory jobs",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 2,
+            "started_at": "2026-10-15T15:24:54Z",
+            "completed_at": "2026-10-15T15:24:54Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:24:54Z",
+            "completed_at": "2026-10-15T15:24:54Z"
+          }
+        ]
+      },
+      "projectedNotices": [],
+      "annotationCounts": {
+        "failure": 1,
+        "warning": 0,
+        "notice": 1
+      }
+    },
+    {
+      "id": 116507945231,
+      "name": "Windows candidate packaging and inspection (not publication)",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759135140/job/116507945231",
+      "started_at": "2026-10-15T15:23:17Z",
+      "completed_at": "2026-10-15T15:24:50Z",
+      "job": {
+        "id": 116507945231,
+        "run_id": 38759135140,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "windows-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:23:18Z",
+            "completed_at": "2026-10-15T15:23:18Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-15T15:23:18Z",
+            "completed_at": "2026-10-15T15:23:23Z"
+          },
+          {
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:23:23Z",
+            "completed_at": "2026-10-15T15:23:38Z"
+          },
+          {
+            "name": "Run npm install --global npm@11.16.0",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-15T15:23:38Z",
+            "completed_at": "2026-10-15T15:23:57Z"
+          },
+          {
+            "name": "Run npm ci",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-15T15:23:57Z",
+            "completed_at": "2026-10-15T15:24:25Z"
+          },
+          {
+            "name": "Run node scripts/materialize-build-public-key.cjs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-15T15:24:25Z",
+            "completed_at": "2026-10-15T15:24:25Z"
+          },
+          {
+            "name": "Run npm run check:public-key",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-15T15:24:25Z",
+            "completed_at": "2026-10-15T15:24:26Z"
+          },
+          {
+            "name": "Run npm run keys:check",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-15T15:24:26Z",
+            "completed_at": "2026-10-15T15:24:27Z"
+          },
+          {
+            "name": "Run node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-15T15:24:27Z",
+            "completed_at": "2026-10-15T15:24:28Z"
+          },
+          {
+            "name": "Validate redacted packaging diagnostic",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-15T15:24:28Z",
+            "completed_at": "2026-10-15T15:24:28Z"
+          },
+          {
+            "name": "Official npm run dist (redacted diagnostic, original exit code)",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 11,
+            "started_at": "2026-10-15T15:24:28Z",
+            "completed_at": "2026-10-15T15:24:46Z"
+          },
+          {
+            "name": "Run npm run check:perf-budget",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-10-15T15:24:46Z",
+            "completed_at": "2026-10-15T15:24:46Z"
+          },
+          {
+            "name": "Verify integrity against the actual packaged resources (required)",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-10-15T15:24:46Z",
+            "completed_at": "2026-10-15T15:24:46Z"
+          },
+          {
+            "name": "Run npm run release:verify-artifact",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-10-15T15:24:46Z",
+            "completed_at": "2026-10-15T15:24:46Z"
+          },
+          {
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 27,
+            "started_at": "2026-10-15T15:24:46Z",
+            "completed_at": "2026-10-15T15:24:46Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 28,
+            "started_at": "2026-10-15T15:24:46Z",
+            "completed_at": "2026-10-15T15:24:49Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 29,
+            "started_at": "2026-10-15T15:24:49Z",
+            "completed_at": "2026-10-15T15:24:49Z"
+          }
+        ]
+      },
+      "projectedNotices": [
+        {
+          "title": "Windows packaging diagnostic 1/1",
+          "level": "notice",
+          "payload": {
+            "page": 1,
+            "pages": 1,
+            "encoding": "deflate-base64",
+            "payload": "eJytVc2OGzcMfhVCh7gF7InttfdnDk1SZ9tLEix2ExRFJghoieNRV0MNKI292yBvUfRQ9NBn6CPlSQpp7GSbLHpp4MuYFL+P/ERS71TQDbWoytlYad+2yEaVirsWpGcwNkQ1Vp3DWHtpVal2lo/maqzYG1Kl2s7nxfyoOFJjRTc2rrJ1NlbBbhidKrl3bqxChzs+F/EyHBisgrurBufLY1Wq5RyPUE/nJ2fT+eKsrpd4UtPxeoGayOjp0fSYaEoG6+niZFqbkzODuKDTUzOrl/XxLPEHZBvtr2RWDQrqSBJUOTtZnI5VROu+tGrfdo4iXR0Cn/mNKqP0NFYufaqKv4MNCm6odn73eFbMimnWJDkOGq176ww8eABJEghabBfDw86HOMmu4peQvORIR/E8GElgMtlZhsnk5niRo/dwuiF9XaJEW6OOk0BaKIb/OFH3gULF6XdPtpkteTqxoUXYEJNgpAT4uWkyGZph73gYSLYkDwdjsT+dEqGbeACu+Jy3Vjy3xBG2KBbXjgI4j4YM1OJbKIi3FV8M8XuKu/4Buar+RZSgP/z5G/y4z87AHmDlbKL6Zrss5vNi+i1ED0VVJfXftt70jkJVPT5g6uG0ZTg6PW2zTlcRJcL6FmzbeYmWN3Dre/kc/4qohNevLp+9vTx/+mT18vzpmxT90nYl/IQcE2/shcHXNUTbBUA24GNDAo3lGB7dE/0VxcqX8z9FC6Kr6nD/5gA6uSPa2fSriyaEOn8YjLjGQKAb5A2FRJhBsesAA8SGbqHBriN+BE9t0H6btPU72NnYwEXvwr1sH/74C174/WBq1A1B7Xs2BVw4ynyea7vphe6cSRXVXqDGEElAKLtCAZeEBlov91A9iZE4Ws8lvKCbmCad/Q60d2nYAxw2jLsFZM+3re8DRHLUUpRbENqgmETcB9xQUfHLxiYV0q7FhAs2QB/IJLVCgx0deEYgHk2LXW66TqyXvMOgJoy9UCgq/tn3oJHBEQrnCsZgWbs+UyYZowffxYnvI9g6ST8ywD6Cs9eUnF1aMtp2aTlYhpiy+1RIJ34j2I5TV2xtsLkpYhbbOb9L/15dPisr/vKGAODD739/FG22LJbF/CTbJ3BnRkK5n4fsWglhJkFOeds2Le2Uhul1Vmu4zaIoUsDG+TVQenTgdX57Sji/OL98XoLvUr+ngFRsR9LaGMmMIWhkYwVGq7KqXgWSUFXScxoP01quqpX315bC6A28SxmRCPsSJovp4nScDNobKmGUeUbZEm6DRudKGO3BB3OHsSkHno9Mn3F9Yqv4fcU/oHVDI6Suso5ykV+7sMM78n1Wsh4416SxDwS+hh2tO9TXg66hYvX+HzOb6Lo="
+          }
+        }
+      ],
+      "annotationCounts": {
+        "failure": 1,
+        "warning": 1,
+        "notice": 1
+      }
+    },
+    {
+      "id": 116507944698,
+      "name": "Authenticated browser validation (approved staging only)",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759135140/job/116507944698",
+      "started_at": "2026-10-15T15:23:18Z",
+      "completed_at": "2026-10-15T15:23:23Z",
+      "job": {
+        "id": 116507944698,
+        "run_id": 38759135140,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:23:19Z",
+            "completed_at": "2026-10-15T15:23:19Z"
+          },
+          {
+            "name": "Require explicitly approved non-production test target and fixtures",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 2,
+            "started_at": "2026-10-15T15:23:19Z",
+            "completed_at": "2026-10-15T15:23:21Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 3,
+            "started_at": "2026-10-15T15:23:21Z",
+            "completed_at": "2026-10-15T15:23:21Z"
+          },
+          {
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 4,
+            "started_at": "2026-10-15T15:23:21Z",
+            "completed_at": "2026-10-15T15:23:21Z"
+          },
+          {
+            "name": "Run npm install --global npm@11.16.0",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 5,
+            "started_at": "2026-10-15T15:23:21Z",
+            "completed_at": "2026-10-15T15:23:21Z"
+          },
+          {
+            "name": "Run npm ci",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6,
+            "started_at": "2026-10-15T15:23:21Z",
+            "completed_at": "2026-10-15T15:23:21Z"
+          },
+          {
+            "name": "Run npx playwright install --with-deps chromium",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 7,
+            "started_at": "2026-10-15T15:23:21Z",
+            "completed_at": "2026-10-15T15:23:21Z"
+          },
+          {
+            "name": "Run npx playwright test",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 8,
+            "started_at": "2026-10-15T15:23:21Z",
+            "completed_at": "2026-10-15T15:23:21Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-15T15:23:21Z",
+            "completed_at": "2026-10-15T15:23:21Z"
+          }
+        ]
+      },
+      "projectedNotices": [],
+      "annotationCounts": {
+        "failure": 1,
+        "warning": 0,
+        "notice": 1
+      }
+    },
+    {
+      "id": 116507743486,
+      "name": "Authenticated browser validation (approved staging only)",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759124969/job/116507743486",
+      "started_at": "2026-10-15T15:22:54Z",
+      "completed_at": "2026-10-15T15:22:59Z",
+      "job": {
+        "id": 116507743486,
+        "run_id": 38759124969,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:22:55Z",
+            "completed_at": "2026-10-15T15:22:55Z"
+          },
+          {
+            "name": "Require explicitly approved non-production test target and fixtures",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 2,
+            "started_at": "2026-10-15T15:22:55Z",
+            "completed_at": "2026-10-15T15:22:57Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 3,
+            "started_at": "2026-10-15T15:22:57Z",
+            "completed_at": "2026-10-15T15:22:57Z"
+          },
+          {
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 4,
+            "started_at": "2026-10-15T15:22:57Z",
+            "completed_at": "2026-10-15T15:22:57Z"
+          },
+          {
+            "name": "Run npm install --global npm@11.16.0",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 5,
+            "started_at": "2026-10-15T15:22:57Z",
+            "completed_at": "2026-10-15T15:22:57Z"
+          },
+          {
+            "name": "Run npm ci",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 6,
+            "started_at": "2026-10-15T15:22:57Z",
+            "completed_at": "2026-10-15T15:22:57Z"
+          },
+          {
+            "name": "Run npx playwright install --with-deps chromium",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 7,
+            "started_at": "2026-10-15T15:22:57Z",
+            "completed_at": "2026-10-15T15:22:57Z"
+          },
+          {
+            "name": "Run npx playwright test",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 8,
+            "started_at": "2026-10-15T15:22:57Z",
+            "completed_at": "2026-10-15T15:22:57Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-15T15:22:57Z",
+            "completed_at": "2026-10-15T15:22:57Z"
+          }
+        ]
+      },
+      "projectedNotices": [],
+      "annotationCounts": {
+        "failure": 1,
+        "warning": 0,
+        "notice": 1
+      }
+    },
+    {
+      "id": 116507743106,
+      "name": "Windows candidate packaging and inspection (not publication)",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759124969/job/116507743106",
+      "started_at": "2026-10-15T15:22:53Z",
+      "completed_at": "2026-10-15T15:25:13Z",
+      "job": {
+        "id": 116507743106,
+        "run_id": 38759124969,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "windows-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:22:54Z",
+            "completed_at": "2026-10-15T15:22:55Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-15T15:22:55Z",
+            "completed_at": "2026-10-15T15:23:02Z"
+          },
+          {
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:23:02Z",
+            "completed_at": "2026-10-15T15:23:22Z"
+          },
+          {
+            "name": "Run npm install --global npm@11.16.0",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-15T15:23:22Z",
+            "completed_at": "2026-10-15T15:23:41Z"
+          },
+          {
+            "name": "Run npm ci",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-15T15:23:41Z",
+            "completed_at": "2026-10-15T15:24:29Z"
+          },
+          {
+            "name": "Run node scripts/materialize-build-public-key.cjs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-15T15:24:29Z",
+            "completed_at": "2026-10-15T15:24:30Z"
+          },
+          {
+            "name": "Run npm run check:public-key",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-15T15:24:30Z",
+            "completed_at": "2026-10-15T15:24:31Z"
+          },
+          {
+            "name": "Run npm run keys:check",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-15T15:24:31Z",
+            "completed_at": "2026-10-15T15:24:32Z"
+          },
+          {
+            "name": "Run node --test tests/package-prisma-resources.test.cjs tests/build-public-key.test.cjs tests/preload-listeners.test.cjs tests/preserve-legacy-dev-db.test.cjs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-15T15:24:32Z",
+            "completed_at": "2026-10-15T15:24:33Z"
+          },
+          {
+            "name": "Validate redacted packaging diagnostic",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-15T15:24:33Z",
+            "completed_at": "2026-10-15T15:24:34Z"
+          },
+          {
+            "name": "Official npm run dist (redacted diagnostic, original exit code)",
+            "status": "completed",
+            "conclusion": "failure",
+            "number": 11,
+            "started_at": "2026-10-15T15:24:34Z",
+            "completed_at": "2026-10-15T15:25:09Z"
+          },
+          {
+            "name": "Run npm run check:perf-budget",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-10-15T15:25:09Z",
+            "completed_at": "2026-10-15T15:25:09Z"
+          },
+          {
+            "name": "Verify integrity against the actual packaged resources (required)",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-10-15T15:25:09Z",
+            "completed_at": "2026-10-15T15:25:09Z"
+          },
+          {
+            "name": "Run npm run release:verify-artifact",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-10-15T15:25:09Z",
+            "completed_at": "2026-10-15T15:25:09Z"
+          },
+          {
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 27,
+            "started_at": "2026-10-15T15:25:09Z",
+            "completed_at": "2026-10-15T15:25:09Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 28,
+            "started_at": "2026-10-15T15:25:09Z",
+            "completed_at": "2026-10-15T15:25:11Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 29,
+            "started_at": "2026-10-15T15:25:11Z",
+            "completed_at": "2026-10-15T15:25:11Z"
+          }
+        ]
+      },
+      "projectedNotices": [
+        {
+          "title": "Windows packaging diagnostic 1/1",
+          "level": "notice",
+          "payload": {
+            "page": 1,
+            "pages": 1,
+            "encoding": "deflate-base64",
+            "payload": "eJy1Vc2O2zYQfpUBD3ELSIot/6yjQ5t0d9tLGix2ExRFFAQjciSxoUiCpOx1g7xF0UPRQ5+hj5QnKUjZSZosChRN4Ys8P98383E4fM0872lAVi0yxs0woBasYtoO4EYNQvrAMmYVhta4gVVsL/WyZBnTRhCr2K4si3JZLFnG6FaG82RdZMzLTqNilR6Vypi3uNeXzhk3BUxWh/ubHsv1hlVMbNrlhh5suSi3RKvl2bwpqW227Xa9bdar9XK5FivBFw9WS9Eg8rIRc7HZlM3ZXKxwKVjGPGoZ5M8kznt0yAM5z6rFtlxnLKBUn1q5GayiQDenxMemY1VwI2VMxU9W66+gQ4cdtcrsHy6KRTFPmkTHSaNmlErAvXsQJQHPnbTB37fGhzy5ip989JIiHpzRk5Ec5Pleasjz280qZR/heE/8VYUuyBZ5yD1xR8H/Q0Q7evK1jr87qk1s0WOd9ANCR5ocBoqAH5vyfBqGo+O+J7cjd38yFsfoWAjdhhNwrS/1TjqjB9IBdugkNoo8KIOCBLTODFCQ3tX6aso/Unzon5Dr+m9EEfrt77/Ad8fqBBwBzpWMVF/s1kVZFvMvIRgo6jqq/3IwYlTk6/rhCZNP0VLDZr0ekk43AV2A5gBysMYFqTs4mNF9jH9DVMHzZ9ePX15fXjw6f3p58SJmP5W2gh9QB3CEKg9yIBitwEA+VpKQBAZs0BPsZejNGGBAPaICa5SSuvsaLqTnZkcOerNPQXA1Kn8n32eUNx3nf5TZO17Xp4kRJ9D8vcxn87PPK3MwUWmePt4Jy3vUHflImEDRWkAPoacD9Ggt6X8l8tvf/oAn5niVOfKeoDWjFgVcKUp8RreyGx19EBM7ao2DFn0gB46SyxdwTShgMO4OqkchkA7S6Aqe0G2Iu0GbPXCj4nrwcNpJ6gCojT4MZvQQSNFAwR3AUYdOROLRY0dFrZ/2MqoQtzNGXJAeRk8iquV7tHTimYEzKAa0gFrEmTAubT1oCcPoyBe1/tGMwFGDInQ6dZCB1FyNiTLKGAwYG/I407KN0s8EaBNAyVcUnTauJS5tXCdSQ4jVvW/EOtM5HLI4FTvpZRqKkMRWyuzjv2fXj6taf3pCAPD21z/fibZYF+uiPEv2HD64I7463ofkOneEiQR1rFsOcc3HMsTIk1rTaRZFERM6ZRqg+EzB8/RaVXB5dXn9fQXGxnmPCbFZS26QIZDIwHPUQjqYnVd1/cyT83XtRh2vhxikrutH1irJp9wLDDh7Aa9jaeScNhXkq/lqm0UDN4IqmCXCWbL4g+eoVAWzI8tkthj6aiJ8R/kR6R20tX5T629Rqmk04pxJRant/63V06P0TRK5ncgb4jh6AtPCnhqL/NUkua81e/MXzDEFGg=="
+          }
+        }
+      ],
+      "annotationCounts": {
+        "failure": 1,
+        "warning": 1,
+        "notice": 1
+      }
+    },
+    {
+      "id": 116506483787,
+      "name": "CodeQL",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/runs/116506483787",
+      "started_at": "2026-10-15T15:20:24Z",
+      "completed_at": "2026-10-15T15:20:30Z",
+      "job": null,
+      "projectedNotices": [],
+      "annotationCounts": {
+        "failure": 6,
+        "warning": 7,
+        "notice": 0
+      }
+    },
+    {
+      "id": 116505424151,
+      "name": "Final release gate (full)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759135140/job/116505424151",
+      "started_at": "2026-10-15T15:18:20Z",
+      "completed_at": "2026-10-15T15:18:20Z",
+      "job": {
+        "id": 116505424151,
+        "run_id": 38759135140,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": []
+      },
+      "projectedNotices": [],
+      "annotationCounts": {
+        "failure": 0,
+        "warning": 0,
+        "notice": 0
+      }
+    },
+    {
+      "id": 116505422238,
+      "name": "Full dependency tree \u2014 zero vulnerabilities",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759135140/job/116505422238",
+      "started_at": "2026-10-15T15:18:23Z",
+      "completed_at": "2026-10-15T15:18:49Z",
+      "job": {
+        "id": 116505422238,
+        "run_id": 38759135140,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:18:24Z",
+            "completed_at": "2026-10-15T15:18:24Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-15T15:18:24Z",
+            "completed_at": "2026-10-15T15:18:26Z"
+          },
+          {
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:18:26Z",
+            "completed_at": "2026-10-15T15:18:29Z"
+          },
+          {
+            "name": "Use pinned npm",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-15T15:18:29Z",
+            "completed_at": "2026-10-15T15:18:31Z"
+          },
+          {
+            "name": "Run npm ci --ignore-scripts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-15T15:18:31Z",
+            "completed_at": "2026-10-15T15:18:43Z"
+          },
+          {
+            "name": "Run npm ls --all",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-15T15:18:43Z",
+            "completed_at": "2026-10-15T15:18:44Z"
+          },
+          {
+            "name": "Run npm run test:audit",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-15T15:18:44Z",
+            "completed_at": "2026-10-15T15:18:45Z"
+          },
+          {
+            "name": "Run npm run test:release-safety",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-15T15:18:45Z",
+            "completed_at": "2026-10-15T15:18:46Z"
+          },
+          {
+            "name": "Run npm run audit:strict",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-15T15:18:46Z",
+            "completed_at": "2026-10-15T15:18:47Z"
+          },
+          {
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-10-15T15:18:47Z",
+            "completed_at": "2026-10-15T15:18:47Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-10-15T15:18:47Z",
+            "completed_at": "2026-10-15T15:18:47Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-10-15T15:18:47Z",
+            "completed_at": "2026-10-15T15:18:47Z"
+          }
+        ]
+      },
+      "projectedNotices": [],
+      "annotationCounts": {
+        "failure": 0,
+        "warning": 1,
+        "notice": 1
+      }
+    },
+    {
+      "id": 116505422142,
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759135140/job/116505422142",
+      "started_at": "2026-10-15T15:18:23Z",
+      "completed_at": "2026-10-15T15:20:01Z",
+      "job": {
+        "id": 116505422142,
+        "run_id": 38759135140,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:18:23Z",
+            "completed_at": "2026-10-15T15:18:24Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-15T15:18:24Z",
+            "completed_at": "2026-10-15T15:18:26Z"
+          },
+          {
+            "name": "Setup Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:18:26Z",
+            "completed_at": "2026-10-15T15:18:28Z"
+          },
+          {
+            "name": "Use pinned npm",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-15T15:18:28Z",
+            "completed_at": "2026-10-15T15:18:30Z"
+          },
+          {
+            "name": "Install dependencies (reproducible)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-15T15:18:30Z",
+            "completed_at": "2026-10-15T15:18:45Z"
+          },
+          {
+            "name": "Install Playwright Chromium (+ deps)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-15T15:18:45Z",
+            "completed_at": "2026-10-15T15:19:04Z"
+          },
+          {
+            "name": "Prepare local SQLite database",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-15T15:19:04Z",
+            "completed_at": "2026-10-15T15:19:04Z"
+          },
+          {
+            "name": "Run E2E (public responsive suite)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-15T15:19:04Z",
+            "completed_at": "2026-10-15T15:19:59Z"
+          },
+          {
+            "name": "Upload Playwright report on failure",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-10-15T15:19:59Z",
+            "completed_at": "2026-10-15T15:19:59Z"
+          },
+          {
+            "name": "Post Setup Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-10-15T15:19:59Z",
+            "completed_at": "2026-10-15T15:19:59Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-10-15T15:19:59Z",
+            "completed_at": "2026-10-15T15:19:59Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-10-15T15:19:59Z",
+            "completed_at": "2026-10-15T15:19:59Z"
+          }
+        ]
+      },
+      "projectedNotices": [],
+      "annotationCounts": {
+        "failure": 0,
+        "warning": 1,
+        "notice": 1
+      }
+    },
+    {
+      "id": 116505421878,
+      "name": "Native base (TypeScript, standard build, fixed JS budget)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759135140/job/116505421878",
+      "started_at": "2026-10-15T15:18:22Z",
+      "completed_at": "2026-10-15T15:20:22Z",
+      "job": {
+        "id": 116505421878,
+        "run_id": 38759135140,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:18:23Z",
+            "completed_at": "2026-10-15T15:18:23Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-15T15:18:23Z",
+            "completed_at": "2026-10-15T15:18:25Z"
+          },
+          {
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:18:25Z",
+            "completed_at": "2026-10-15T15:18:27Z"
+          },
+          {
+            "name": "Use pinned npm",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-15T15:18:27Z",
+            "completed_at": "2026-10-15T15:18:28Z"
+          },
+          {
+            "name": "Install dependencies and generate official Prisma clients",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-15T15:18:28Z",
+            "completed_at": "2026-10-15T15:18:45Z"
+          },
+          {
+            "name": "Copilot evaluation safety (offline only)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-15T15:18:45Z",
+            "completed_at": "2026-10-15T15:18:46Z"
+          },
+          {
+            "name": "Standard TypeScript (no diagnostic declarations)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-15T15:18:46Z",
+            "completed_at": "2026-10-15T15:19:03Z"
+          },
+          {
+            "name": "Standard production build (no alternate flags)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-15T15:19:03Z",
+            "completed_at": "2026-10-15T15:20:20Z"
+          },
+          {
+            "name": "Immutable client JS budget (3625984 bytes)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-15T15:20:20Z",
+            "completed_at": "2026-10-15T15:20:20Z"
+          },
+          {
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-10-15T15:20:20Z",
+            "completed_at": "2026-10-15T15:20:20Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-10-15T15:20:20Z",
+            "completed_at": "2026-10-15T15:20:21Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-10-15T15:20:21Z",
+            "completed_at": "2026-10-15T15:20:21Z"
+          }
+        ]
+      },
+      "projectedNotices": [
+        {
+          "title": "Copilot build budget",
+          "level": "notice",
+          "payload": {
+            "totalBytes": 3612476,
+            "maxBytes": 3625984,
+            "files": 237,
+            "scope": "STANDARD_NEXT_BUILD_CLIENT_JS_ONLY"
+          }
+        }
+      ],
+      "annotationCounts": {
+        "failure": 0,
+        "warning": 1,
+        "notice": 2
+      }
+    },
+    {
+      "id": 116505421830,
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759135140/job/116505421830",
+      "started_at": "2026-10-15T15:18:23Z",
+      "completed_at": "2026-10-15T15:23:14Z",
+      "job": {
+        "id": 116505421830,
+        "run_id": 38759135140,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:18:24Z",
+            "completed_at": "2026-10-15T15:18:25Z"
+          },
+          {
+            "name": "Initialize containers",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-15T15:18:25Z",
+            "completed_at": "2026-10-15T15:18:44Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:18:44Z",
+            "completed_at": "2026-10-15T15:18:45Z"
+          },
+          {
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-15T15:18:45Z",
+            "completed_at": "2026-10-15T15:18:52Z"
+          },
+          {
+            "name": "Use pinned npm",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-15T15:18:52Z",
+            "completed_at": "2026-10-15T15:18:56Z"
+          },
+          {
+            "name": "Install dependencies (reproducible)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-15T15:18:56Z",
+            "completed_at": "2026-10-15T15:19:18Z"
+          },
+          {
+            "name": "Version consistency (SemVer)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-15T15:19:18Z",
+            "completed_at": "2026-10-15T15:19:18Z"
+          },
+          {
+            "name": "Validate Prisma schemas (desktop + serveur)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-15T15:19:18Z",
+            "completed_at": "2026-10-15T15:19:20Z"
+          },
+          {
+            "name": "Generate Prisma clients (desktop + serveur)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-15T15:19:20Z",
+            "completed_at": "2026-10-15T15:19:24Z"
+          },
+          {
+            "name": "Phase6 historical native failures (negative diagnostic, not candidate PASS)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-15T15:19:24Z",
+            "completed_at": "2026-10-15T15:19:27Z"
+          },
+          {
+            "name": "Copilot native regressions (six suites, 54 assertions)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-10-15T15:19:27Z",
+            "completed_at": "2026-10-15T15:19:30Z"
+          },
+          {
+            "name": "TypeScript",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-10-15T15:19:30Z",
+            "completed_at": "2026-10-15T15:19:52Z"
+          },
+          {
+            "name": "ESLint",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-10-15T15:19:52Z",
+            "completed_at": "2026-10-15T15:20:04Z"
+          },
+          {
+            "name": "Branding consistency (strict)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-10-15T15:20:04Z",
+            "completed_at": "2026-10-15T15:20:04Z"
+          },
+          {
+            "name": "PWA manifests & icon dimensions",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-10-15T15:20:04Z",
+            "completed_at": "2026-10-15T15:20:04Z"
+          },
+          {
+            "name": "Money fields (ZERO monetary Float)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-10-15T15:20:04Z",
+            "completed_at": "2026-10-15T15:20:04Z"
+          },
+          {
+            "name": "Money calculations (no direct float math)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-10-15T15:20:04Z",
+            "completed_at": "2026-10-15T15:20:04Z"
+          },
+          {
+            "name": "Money JSON (v2 writers only)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-10-15T15:20:04Z",
+            "completed_at": "2026-10-15T15:20:04Z"
+          },
+          {
+            "name": "Migration safety invariants",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-10-15T15:20:04Z",
+            "completed_at": "2026-10-15T15:20:04Z"
+          },
+          {
+            "name": "SQLite template (integrity + baseline + checksums)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20,
+            "started_at": "2026-10-15T15:20:04Z",
+            "completed_at": "2026-10-15T15:20:05Z"
+          },
+          {
+            "name": "PostgreSQL migrations (per-column verification)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21,
+            "started_at": "2026-10-15T15:20:05Z",
+            "completed_at": "2026-10-15T15:20:05Z"
+          },
+          {
+            "name": "Docs consistency",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-10-15T15:20:05Z",
+            "completed_at": "2026-10-15T15:20:05Z"
+          },
+          {
+            "name": "Critical security/licence files present & coherent",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23,
+            "started_at": "2026-10-15T15:20:05Z",
+            "completed_at": "2026-10-15T15:20:05Z"
+          },
+          {
+            "name": "PostgreSQL migrations on empty database + smoke test",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 24,
+            "started_at": "2026-10-15T15:20:05Z",
+            "completed_at": "2026-10-15T15:20:09Z"
+          },
+          {
+            "name": "Python for real keygen integration (no silent fallback)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 25,
+            "started_at": "2026-10-15T15:20:09Z",
+            "completed_at": "2026-10-15T15:20:09Z"
+          },
+          {
+            "name": "Install hash-locked keygen test dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 26,
+            "started_at": "2026-10-15T15:20:09Z",
+            "completed_at": "2026-10-15T15:20:14Z"
+          },
+          {
+            "name": "Copilot budget guards and frozen validation integrity (offline)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 27,
+            "started_at": "2026-10-15T15:20:14Z",
+            "completed_at": "2026-10-15T15:20:15Z"
+          },
+          {
+            "name": "Tests (unit + integration)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 28,
+            "started_at": "2026-10-15T15:20:15Z",
+            "completed_at": "2026-10-15T15:21:23Z"
+          },
+          {
+            "name": "Build",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 29,
+            "started_at": "2026-10-15T15:21:23Z",
+            "completed_at": "2026-10-15T15:23:07Z"
+          },
+          {
+            "name": "Performance budget (client bundle)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 30,
+            "started_at": "2026-10-15T15:23:07Z",
+            "completed_at": "2026-10-15T15:23:07Z"
+          },
+          {
+            "name": "Dependency security regression tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 31,
+            "started_at": "2026-10-15T15:23:07Z",
+            "completed_at": "2026-10-15T15:23:08Z"
+          },
+          {
+            "name": "Dependency audit gate (all packages, LOW through CRITICAL)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 32,
+            "started_at": "2026-10-15T15:23:08Z",
+            "completed_at": "2026-10-15T15:23:09Z"
+          },
+          {
+            "name": "Post Python for real keygen integration (no silent fallback)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 61,
+            "started_at": "2026-10-15T15:23:09Z",
+            "completed_at": "2026-10-15T15:23:09Z"
+          },
+          {
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 62,
+            "started_at": "2026-10-15T15:23:09Z",
+            "completed_at": "2026-10-15T15:23:09Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 63,
+            "started_at": "2026-10-15T15:23:09Z",
+            "completed_at": "2026-10-15T15:23:09Z"
+          },
+          {
+            "name": "Stop containers",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 64,
+            "started_at": "2026-10-15T15:23:09Z",
+            "completed_at": "2026-10-15T15:23:10Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 65,
+            "started_at": "2026-10-15T15:23:10Z",
+            "completed_at": "2026-10-15T15:23:10Z"
+          }
+        ]
+      },
+      "projectedNotices": [
+        {
+          "title": "Copilot native summary",
+          "level": "notice",
+          "payload": {
+            "schema": 1,
+            "scope": "SIX_NATIVE_PRISMA_SUITES_54_ASSERTIONS",
+            "exitCode": 0,
+            "passed": true,
+            "executed": 54,
+            "expected": 54,
+            "files": [
+              {
+                "path": "src/integration/copilot-conversation.test.ts",
+                "passed": 9,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-cout-achat.test.ts",
+                "passed": 5,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-ecusson-verifie.test.ts",
+                "passed": 9,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-financial-authz-v15.test.ts",
+                "passed": 6,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-portee-et-porte-financiere.test.ts",
+                "passed": 18,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot.test.ts",
+                "passed": 7,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              }
+            ],
+            "paidCalls": 0,
+            "limits": "Native fixture tests only; not production issuer/tenant/auth HTTP/model campaign. Setup-blocked/skipped assertions are NOT passes."
+          }
+        },
+        {
+          "title": "Phase6 native baseline page 1/1",
+          "level": "notice",
+          "payload": {
+            "page": 1,
+            "pages": 1,
+            "complete": true,
+            "encoding": "deflate-base64",
+            "payload": "eJzFVU1vGzcQ/SvTvUQGJK0+KjtatEUFWXFkxFJgqQ6KyJBmyVktZS65JWdlCUGA/o3eeu29tx79T/pLCkpOGgRFgQJGc1qSmOF7895w9l3khS0pSqKX49l8ej0eDl4tJ6OLwXx8M1qejwcXk+lsPh4uJ9P5cjiYnI/PB/PR8vVgNovqUYqetDIhvSVPv37e75N83sa028G038+w28lSeSoktUSvJ3skTrtRPRK50nK0Uzy0kqKkXY8EepoxcuXJR8nbKEOlSUb1vxclev+Pi9tjUOUOme8ig0WgowmELZW2TGAItNo6ghI9aILSqR3IP3/+BUWODA+/QmXAPfyuCYw1kCmDRihy4fhqNHw5mIyHYFNWZBg0glaeqQ4bLFAdLhT24Q8ObCut5w4FhRrm+5JGzlmXQJPtFbLIaydAu5IEe2ALjgSpLQGCZ6fMug5pxbC2DJWRlClDcmEAAJDhtbO7ffMbNNbsC1v576CWKU1JHMe5LSh2lTHk4nvr7uILdLimF9re+5vOZztjJS0LKytNPv5+q5g8x0dOsVSeY2Uk7Zobn7Q7/W7Sbp18SQrt3mnS7n1OoSDOrXzjsCzJPQUJkaP6BPWse5Z0PkH9bzd7J2JlmNYOWVkTlzl6Om3kyrN1SqBuCFtx49B6zVB7k31y1kp6/Y+A6PdGwNOJ+5h8EFfklblroGOVoeBDvf1WN+m0otv39ad9PZqgePhNoFFCkYE1OkkgCKQ1DEoDQkreKgMJ/FRZBcIWBRpJrg7EYZcqMv/yqj6+ElAejGVQTA5TTVATaMKBI5RQOluS4z3M9kVqde34aR6C2bqT/9foftJpfXGjb+uRZ2krjpLocjadgKPSOoZ7p5jJhOEUc1HG66zxWNWHQd/YDq9bl5vYka80++bGW7MIJnmW5FyURIuq1Wqnb7vdovbVCfxoKwc3ikM/mUytIUx4yAg5DGzg0EHoCCrjqzJwIAnpHlbH6FcWJbkEnhlktaVnqzrc50rkwfBSownes4WUhC0IOCeQlGGlGZQBhKwKKFDgxjrYkvPKGrDZgU8STGjAaHYFfm8Yd48pShPoACsBPQxtUVhzOYPaUeHmkVdwsp20T5rwgw/ze9UsNn4FtGMyRxAHnhhWi4j3JS2iBBbR0axFtApIgavQ1pNnKFHc4ZoetZyFvJvxfLQcTicvxhfLyfFXPL6YTK9HyzeD68l4cvEtu4pWofigmyMftFQe7tEZZdbNDy70i4WJ3v8FA77ECA=="
+          }
+        }
+      ],
+      "annotationCounts": {
+        "failure": 0,
+        "warning": 1,
+        "notice": 3
+      }
+    },
+    {
+      "id": 116505421487,
+      "name": "Secret scan (Gitleaks)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759135140/job/116505421487",
+      "started_at": "2026-10-15T15:18:23Z",
+      "completed_at": "2026-10-15T15:18:33Z",
+      "job": {
+        "id": 116505421487,
+        "run_id": 38759135140,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:18:24Z",
+            "completed_at": "2026-10-15T15:18:25Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-15T15:18:25Z",
+            "completed_at": "2026-10-15T15:18:26Z"
+          },
+          {
+            "name": "Install gitleaks",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:18:26Z",
+            "completed_at": "2026-10-15T15:18:27Z"
+          },
+          {
+            "name": "Gitleaks \u2014 scan working tree",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-15T15:18:27Z",
+            "completed_at": "2026-10-15T15:18:31Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-15T15:18:31Z",
+            "completed_at": "2026-10-15T15:18:31Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-15T15:18:31Z",
+            "completed_at": "2026-10-15T15:18:31Z"
+          }
+        ]
+      },
+      "projectedNotices": [
+        {
+          "title": "Gitleaks inventory",
+          "level": "notice",
+          "payload": {
+            "findings": 0,
+            "scannerExit": 0,
+            "commit": "e1ce72a94845d1f60eba101b44aac2d39064903e"
+          }
+        },
+        {
+          "title": "Gitleaks inventory page 1/1",
+          "level": "notice",
+          "payload": {
+            "schemaVersion": 2,
+            "commit": "e1ce72a94845d1f60eba101b44aac2d39064903e",
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "coverageComplete": true,
+            "groups": []
+          }
+        }
+      ],
+      "annotationCounts": {
+        "failure": 0,
+        "warning": 1,
+        "notice": 6
+      }
+    },
+    {
+      "id": 116505421070,
+      "name": "Analyze (javascript-typescript)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759135102/job/116505421070",
+      "started_at": "2026-10-15T15:18:23Z",
+      "completed_at": "2026-10-15T15:20:34Z",
+      "job": {
+        "id": 116505421070,
+        "run_id": 38759135102,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:18:23Z",
+            "completed_at": "2026-10-15T15:18:25Z"
+          },
+          {
+            "name": "Checkout",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-15T15:18:25Z",
+            "completed_at": "2026-10-15T15:18:27Z"
+          },
+          {
+            "name": "Initialize CodeQL",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:18:27Z",
+            "completed_at": "2026-10-15T15:18:42Z"
+          },
+          {
+            "name": "Autobuild",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-15T15:18:42Z",
+            "completed_at": "2026-10-15T15:18:45Z"
+          },
+          {
+            "name": "Perform CodeQL Analysis",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-15T15:18:45Z",
+            "completed_at": "2026-10-15T15:20:30Z"
+          },
+          {
+            "name": "Safe complete CodeQL rule and data-flow inventory (no snippets)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-15T15:20:30Z",
+            "completed_at": "2026-10-15T15:20:30Z"
+          },
+          {
+            "name": "Post Perform CodeQL Analysis",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-15T15:20:30Z",
+            "completed_at": "2026-10-15T15:20:31Z"
+          },
+          {
+            "name": "Post Initialize CodeQL",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-10-15T15:20:31Z",
+            "completed_at": "2026-10-15T15:20:31Z"
+          },
+          {
+            "name": "Post Checkout",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-10-15T15:20:31Z",
+            "completed_at": "2026-10-15T15:20:32Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-10-15T15:20:32Z",
+            "completed_at": "2026-10-15T15:20:32Z"
+          }
+        ]
+      },
+      "projectedNotices": [
+        {
+          "title": "CodeQL flow inventory 2/2",
+          "level": "notice",
+          "payload": {
+            "page": 2,
+            "pages": 2,
+            "total": 14,
+            "encoding": "deflate-base64",
+            "payload": "8TCeG4OgP6l0l9fBIohFRtjDfH5mbCu3lcj9VjN9WJGBCXx8/n4b34+zaDTObo03mEfdjOaeQXEz2vk5wDLR+CrRVTjcjOZmNAtmpOvNaNZp6ugmmnrKESxJ3+6J4UdqSBKGcSACmoVRgnFudpoJPX6CEmuaNWvk6Ak9a1Xv9WFHhh90Wb1/QoTAuiIanktkCeUb+1ffI/Q7U7v+dgqT3LHtCFUawNrmFCo4PcXvjSoMYjAPvj8q+FWqcOw0rBtQRf3tgjCKTqEKANXwyLALjEVLKDFYlMOhozyBEmxf4bF4fKs+ABureGxgvIUmYLtj7Nw8a9E/PK3PVvSwojsNDQ4stqTusZ/QVWZW1EB2UllaTllZmSHwFUuEx9LZVCoCQpScEKKu9LSjTnSlp92UrvR0pecJpefxg6ltqPEOviD9ev8P3O5VmA==",
+            "coverageComplete": true
+          }
+        },
+        {
+          "title": "CodeQL flow inventory 1/2",
+          "level": "notice",
+          "payload": {
+            "page": 1,
+            "pages": 2,
+            "total": 14,
+            "encoding": "deflate-base64",
+            "payload": "eJztXV2PnDYU/S88DzsYsA3zWqlqpfQpj9FqZYyZdcoAMp7dbqP97xVp0nIZZoOZL7PxU8RmzsG+9/r6HhvMpy+erHLxl7cJVp7al+L33Nt4n9u1zEWlpX7xlWhKxsVOVNr79yd/CM1yppm3+eK1gu+V1C8fxZPo/vU2Hr4LvJVXiidRehvvmalKVlvvdeWVNWda1lXrbT598RqmH72N1yq+LmW2FrJ6qiWX1Xb98KBFq9uHh3VRqx3T7V13fadbb+W1min9QVbC24TJyhNV/v3i9X7lFbLaCtUoWem2a12j5I6plw/fbtz99DfWdrcNC0JiEuNIJDTJgnCDvNXw5x+7e/1Sl/td9ev/xN7Gi3DXnaKsn7uu3K88JUqmRd5dvK7+sygaWLTi9a4phRZ+yyqp5d9f7zLNqPQuMTEqV7LR7ZrXVSG3Pq+VuOOfB/ZLac9+KTWzHydIpDgPcEJYgFhhZD80zX4htF8mWStyn6uXRtdbxZpHyX3FqrzeTbUhnhGYTa00K9cZ43/uG5/XuWgPQzHth2JqaMqA55wWScYEDhARRqYk6Kgp5/VkOKh6/oigPwpZCr99abXY+YpxMdUJ1MAJec3bNdvnUq+Luizr533jh0FIfBT4KF5ne1nmvhJPUjz7pci3Qh3GOUG9LhFk5hwaZXGWpaTIA5RFhBk5hx6P87P2EPfDD6fAafFNnaZEu9813S/6neJl3e6V6P9J7Suf17sdq/LD/qG+B5GhB5OiCPOMcBQmLCVJauTBwMiB5+kt6Ycr8CW20JeyehKtlls2/I8LejSmeZjGLKAip0xkV/fovD4f9yux0K/NPivlv0C/UaIo5fZRH3aqP10YlmAiY5yEiIlYhGFUELMSAqVncOS8TvY8Ry303DseeDPHVzLiJca5aFtf1/6j1s00RxGjAlKUgmtVV+sdk9XdgSMwDfquwDQwcwbKCBdBgjAjAhFhpmAQ8MbkNochCJ8wRJ2VHXYUSzHAUnwtbAKxybWwKcSm07E4pmAsxNQAi+E4wsECsCNjfzwlXje4+0kzvUnSHKxctEI9SS7akYks6ud7FBGz7Nkt/aQZLhDhNAkLs/WLdDx5Tm97AMI96Ef7IklA1ggSR7JBKAaFVjyLJAIjNELzSIYDxZFciOR+5ZKBRUPQHhKXDH4+EpcMrBqC9pC4ZPDzkRxRd7ce0mC3OriN4Pu2Odm+VLzbKtnnPi+lqA73+8HaBDVcbC4CmsU8jkguWJaZrTWTI3Lv+7bqY61rv9XdJvuwzW+OU0vwXy2/E/yRVZL77Ilppvzuj4ce6JNRi7j6K09g3WkGV3/lLcHHuN6MVNIfZ4TO4hhG+zk4jmWhmwQiyD2DR2W6ZNMlnV4Ompp7orOt0JO4HwokxmYZByeMZqxgNEUpQtgs5YTJrPV5TEBtgUm/uLAVG4OiCscGa85DLI2mY2kI2kxDgzbfDAsLCwrKk8thCRi8JJq+yEyiGCCn9/XCSF5XWtWl35SsEofGikG2ikc7/COKCFCMRuYyKEDcxKNhswwKUP6O7zEtgmKw8zS68bQMCjhtzBmpllDAeWh0CjOiGJ9BL98KULoiMic67aCAO6x0TnRaQhHBaXu5FOCZBoNHGqwtIiYh5/fTpECb31qgVaPpD16cgBwRVk7iXEDiJGnYxyZpuAQshViDR4FOwDqJs1x94iSOZfrESRzr9ImTOJbpEydxrNMnTuI4ieMkzrIkTgofyUkDg/veDAtfwkqRwUP7J2CdxFmuPnESxzJ94iSOdfrESRzL9ImTONbpEydxnMRxEmdZEieJQZuT2KDNi8RikGISbPDy+wlYJ4+Wq22cPLJM2zh5ZJ22cfLIMm3j5JF12sbJIyePLiePZp3wc2a1A966Ci186ypEYIejuzQ82RnnPKI4YViwtEjMTmyNjhztY6skXaKcXeBDiWkK7JymBnaehn0UTOlMMO03dSn5ywEPEGvjWm05HP33dePRc+Kuw9FP7thkF/bi",
+            "coverageComplete": true
+          }
+        }
+      ],
+      "annotationCounts": {
+        "failure": 0,
+        "warning": 3,
+        "notice": 3
+      }
+    },
+    {
+      "id": 116505385543,
+      "name": "Final release gate (full)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759124969/job/116505385543",
+      "started_at": "2026-10-15T15:18:16Z",
+      "completed_at": "2026-10-15T15:18:15Z",
+      "job": {
+        "id": 116505385543,
+        "run_id": 38759124969,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": []
+      },
+      "projectedNotices": [],
+      "annotationCounts": {
+        "failure": 0,
+        "warning": 0,
+        "notice": 0
+      }
+    },
+    {
+      "id": 116505383497,
+      "name": "Native base (TypeScript, standard build, fixed JS budget)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759124969/job/116505383497",
+      "started_at": "2026-10-15T15:18:19Z",
+      "completed_at": "2026-10-15T15:20:36Z",
+      "job": {
+        "id": 116505383497,
+        "run_id": 38759124969,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:18:20Z",
+            "completed_at": "2026-10-15T15:18:21Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-15T15:18:21Z",
+            "completed_at": "2026-10-15T15:18:23Z"
+          },
+          {
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:18:23Z",
+            "completed_at": "2026-10-15T15:18:31Z"
+          },
+          {
+            "name": "Use pinned npm",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-15T15:18:31Z",
+            "completed_at": "2026-10-15T15:18:36Z"
+          },
+          {
+            "name": "Install dependencies and generate official Prisma clients",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-15T15:18:36Z",
+            "completed_at": "2026-10-15T15:18:54Z"
+          },
+          {
+            "name": "Copilot evaluation safety (offline only)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-15T15:18:54Z",
+            "completed_at": "2026-10-15T15:18:55Z"
+          },
+          {
+            "name": "Standard TypeScript (no diagnostic declarations)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-15T15:18:55Z",
+            "completed_at": "2026-10-15T15:19:12Z"
+          },
+          {
+            "name": "Standard production build (no alternate flags)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-15T15:19:12Z",
+            "completed_at": "2026-10-15T15:20:32Z"
+          },
+          {
+            "name": "Immutable client JS budget (3625984 bytes)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-15T15:20:32Z",
+            "completed_at": "2026-10-15T15:20:32Z"
+          },
+          {
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-10-15T15:20:32Z",
+            "completed_at": "2026-10-15T15:20:33Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-10-15T15:20:33Z",
+            "completed_at": "2026-10-15T15:20:33Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-10-15T15:20:33Z",
+            "completed_at": "2026-10-15T15:20:33Z"
+          }
+        ]
+      },
+      "projectedNotices": [
+        {
+          "title": "Copilot build budget",
+          "level": "notice",
+          "payload": {
+            "totalBytes": 3612476,
+            "maxBytes": 3625984,
+            "files": 237,
+            "scope": "STANDARD_NEXT_BUILD_CLIENT_JS_ONLY"
+          }
+        }
+      ],
+      "annotationCounts": {
+        "failure": 0,
+        "warning": 1,
+        "notice": 2
+      }
+    },
+    {
+      "id": 116505383362,
+      "name": "Secret scan (Gitleaks)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759124969/job/116505383362",
+      "started_at": "2026-10-15T15:18:19Z",
+      "completed_at": "2026-10-15T15:18:36Z",
+      "job": {
+        "id": 116505383362,
+        "run_id": 38759124969,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:18:20Z",
+            "completed_at": "2026-10-15T15:18:20Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-15T15:18:20Z",
+            "completed_at": "2026-10-15T15:18:23Z"
+          },
+          {
+            "name": "Install gitleaks",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:18:23Z",
+            "completed_at": "2026-10-15T15:18:24Z"
+          },
+          {
+            "name": "Gitleaks \u2014 scan working tree",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-15T15:18:24Z",
+            "completed_at": "2026-10-15T15:18:33Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-15T15:18:33Z",
+            "completed_at": "2026-10-15T15:18:34Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-15T15:18:34Z",
+            "completed_at": "2026-10-15T15:18:34Z"
+          }
+        ]
+      },
+      "projectedNotices": [
+        {
+          "title": "Gitleaks inventory",
+          "level": "notice",
+          "payload": {
+            "findings": 0,
+            "scannerExit": 0,
+            "commit": "df66ebb2a92263091a60206725f1fed8c9e3b87c"
+          }
+        },
+        {
+          "title": "Gitleaks inventory page 1/1",
+          "level": "notice",
+          "payload": {
+            "schemaVersion": 2,
+            "commit": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "coverageComplete": true,
+            "groups": []
+          }
+        }
+      ],
+      "annotationCounts": {
+        "failure": 0,
+        "warning": 1,
+        "notice": 6
+      }
+    },
+    {
+      "id": 116505383085,
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759124969/job/116505383085",
+      "started_at": "2026-10-15T15:18:18Z",
+      "completed_at": "2026-10-15T15:20:02Z",
+      "job": {
+        "id": 116505383085,
+        "run_id": 38759124969,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:18:19Z",
+            "completed_at": "2026-10-15T15:18:21Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-15T15:18:21Z",
+            "completed_at": "2026-10-15T15:18:23Z"
+          },
+          {
+            "name": "Setup Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:18:23Z",
+            "completed_at": "2026-10-15T15:18:25Z"
+          },
+          {
+            "name": "Use pinned npm",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-15T15:18:25Z",
+            "completed_at": "2026-10-15T15:18:27Z"
+          },
+          {
+            "name": "Install dependencies (reproducible)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-15T15:18:27Z",
+            "completed_at": "2026-10-15T15:18:44Z"
+          },
+          {
+            "name": "Install Playwright Chromium (+ deps)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-15T15:18:44Z",
+            "completed_at": "2026-10-15T15:19:02Z"
+          },
+          {
+            "name": "Prepare local SQLite database",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-15T15:19:02Z",
+            "completed_at": "2026-10-15T15:19:02Z"
+          },
+          {
+            "name": "Run E2E (public responsive suite)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-15T15:19:02Z",
+            "completed_at": "2026-10-15T15:20:00Z"
+          },
+          {
+            "name": "Upload Playwright report on failure",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-10-15T15:20:00Z",
+            "completed_at": "2026-10-15T15:20:00Z"
+          },
+          {
+            "name": "Post Setup Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-10-15T15:20:00Z",
+            "completed_at": "2026-10-15T15:20:00Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-10-15T15:20:00Z",
+            "completed_at": "2026-10-15T15:20:00Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-10-15T15:20:00Z",
+            "completed_at": "2026-10-15T15:20:00Z"
+          }
+        ]
+      },
+      "projectedNotices": [],
+      "annotationCounts": {
+        "failure": 0,
+        "warning": 1,
+        "notice": 1
+      }
+    },
+    {
+      "id": 116505383050,
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759124969/job/116505383050",
+      "started_at": "2026-10-15T15:18:19Z",
+      "completed_at": "2026-10-15T15:22:50Z",
+      "job": {
+        "id": 116505383050,
+        "run_id": 38759124969,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:18:20Z",
+            "completed_at": "2026-10-15T15:18:21Z"
+          },
+          {
+            "name": "Initialize containers",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-15T15:18:21Z",
+            "completed_at": "2026-10-15T15:18:48Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:18:48Z",
+            "completed_at": "2026-10-15T15:18:51Z"
+          },
+          {
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-15T15:18:51Z",
+            "completed_at": "2026-10-15T15:18:55Z"
+          },
+          {
+            "name": "Use pinned npm",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-15T15:18:55Z",
+            "completed_at": "2026-10-15T15:18:58Z"
+          },
+          {
+            "name": "Install dependencies (reproducible)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-15T15:18:58Z",
+            "completed_at": "2026-10-15T15:19:17Z"
+          },
+          {
+            "name": "Version consistency (SemVer)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-15T15:19:17Z",
+            "completed_at": "2026-10-15T15:19:17Z"
+          },
+          {
+            "name": "Validate Prisma schemas (desktop + serveur)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-15T15:19:17Z",
+            "completed_at": "2026-10-15T15:19:18Z"
+          },
+          {
+            "name": "Generate Prisma clients (desktop + serveur)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-15T15:19:18Z",
+            "completed_at": "2026-10-15T15:19:22Z"
+          },
+          {
+            "name": "Phase6 historical native failures (negative diagnostic, not candidate PASS)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-15T15:19:22Z",
+            "completed_at": "2026-10-15T15:19:26Z"
+          },
+          {
+            "name": "Copilot native regressions (six suites, 54 assertions)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-10-15T15:19:26Z",
+            "completed_at": "2026-10-15T15:19:29Z"
+          },
+          {
+            "name": "TypeScript",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-10-15T15:19:29Z",
+            "completed_at": "2026-10-15T15:19:46Z"
+          },
+          {
+            "name": "ESLint",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-10-15T15:19:46Z",
+            "completed_at": "2026-10-15T15:19:55Z"
+          },
+          {
+            "name": "Branding consistency (strict)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-10-15T15:19:55Z",
+            "completed_at": "2026-10-15T15:19:55Z"
+          },
+          {
+            "name": "PWA manifests & icon dimensions",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-10-15T15:19:55Z",
+            "completed_at": "2026-10-15T15:19:55Z"
+          },
+          {
+            "name": "Money fields (ZERO monetary Float)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-10-15T15:19:55Z",
+            "completed_at": "2026-10-15T15:19:55Z"
+          },
+          {
+            "name": "Money calculations (no direct float math)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-10-15T15:19:55Z",
+            "completed_at": "2026-10-15T15:19:56Z"
+          },
+          {
+            "name": "Money JSON (v2 writers only)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-10-15T15:19:56Z",
+            "completed_at": "2026-10-15T15:19:56Z"
+          },
+          {
+            "name": "Migration safety invariants",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-10-15T15:19:56Z",
+            "completed_at": "2026-10-15T15:19:56Z"
+          },
+          {
+            "name": "SQLite template (integrity + baseline + checksums)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20,
+            "started_at": "2026-10-15T15:19:56Z",
+            "completed_at": "2026-10-15T15:19:56Z"
+          },
+          {
+            "name": "PostgreSQL migrations (per-column verification)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21,
+            "started_at": "2026-10-15T15:19:56Z",
+            "completed_at": "2026-10-15T15:19:56Z"
+          },
+          {
+            "name": "Docs consistency",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-10-15T15:19:56Z",
+            "completed_at": "2026-10-15T15:19:56Z"
+          },
+          {
+            "name": "Critical security/licence files present & coherent",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23,
+            "started_at": "2026-10-15T15:19:56Z",
+            "completed_at": "2026-10-15T15:19:56Z"
+          },
+          {
+            "name": "PostgreSQL migrations on empty database + smoke test",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 24,
+            "started_at": "2026-10-15T15:19:56Z",
+            "completed_at": "2026-10-15T15:20:00Z"
+          },
+          {
+            "name": "Python for real keygen integration (no silent fallback)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 25,
+            "started_at": "2026-10-15T15:20:00Z",
+            "completed_at": "2026-10-15T15:20:00Z"
+          },
+          {
+            "name": "Install hash-locked keygen test dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 26,
+            "started_at": "2026-10-15T15:20:00Z",
+            "completed_at": "2026-10-15T15:20:04Z"
+          },
+          {
+            "name": "Copilot budget guards and frozen validation integrity (offline)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 27,
+            "started_at": "2026-10-15T15:20:04Z",
+            "completed_at": "2026-10-15T15:20:05Z"
+          },
+          {
+            "name": "Tests (unit + integration)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 28,
+            "started_at": "2026-10-15T15:20:05Z",
+            "completed_at": "2026-10-15T15:21:20Z"
+          },
+          {
+            "name": "Build",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 29,
+            "started_at": "2026-10-15T15:21:20Z",
+            "completed_at": "2026-10-15T15:22:44Z"
+          },
+          {
+            "name": "Performance budget (client bundle)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 30,
+            "started_at": "2026-10-15T15:22:44Z",
+            "completed_at": "2026-10-15T15:22:45Z"
+          },
+          {
+            "name": "Dependency security regression tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 31,
+            "started_at": "2026-10-15T15:22:45Z",
+            "completed_at": "2026-10-15T15:22:45Z"
+          },
+          {
+            "name": "Dependency audit gate (all packages, LOW through CRITICAL)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 32,
+            "started_at": "2026-10-15T15:22:45Z",
+            "completed_at": "2026-10-15T15:22:46Z"
+          },
+          {
+            "name": "Post Python for real keygen integration (no silent fallback)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 61,
+            "started_at": "2026-10-15T15:22:46Z",
+            "completed_at": "2026-10-15T15:22:46Z"
+          },
+          {
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 62,
+            "started_at": "2026-10-15T15:22:46Z",
+            "completed_at": "2026-10-15T15:22:46Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 63,
+            "started_at": "2026-10-15T15:22:46Z",
+            "completed_at": "2026-10-15T15:22:46Z"
+          },
+          {
+            "name": "Stop containers",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 64,
+            "started_at": "2026-10-15T15:22:46Z",
+            "completed_at": "2026-10-15T15:22:47Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 65,
+            "started_at": "2026-10-15T15:22:47Z",
+            "completed_at": "2026-10-15T15:22:47Z"
+          }
+        ]
+      },
+      "projectedNotices": [
+        {
+          "title": "Copilot native summary",
+          "level": "notice",
+          "payload": {
+            "schema": 1,
+            "scope": "SIX_NATIVE_PRISMA_SUITES_54_ASSERTIONS",
+            "exitCode": 0,
+            "passed": true,
+            "executed": 54,
+            "expected": 54,
+            "files": [
+              {
+                "path": "src/integration/copilot-conversation.test.ts",
+                "passed": 9,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-cout-achat.test.ts",
+                "passed": 5,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-ecusson-verifie.test.ts",
+                "passed": 9,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-financial-authz-v15.test.ts",
+                "passed": 6,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot-portee-et-porte-financiere.test.ts",
+                "passed": 18,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              },
+              {
+                "path": "src/integration/copilot.test.ts",
+                "passed": 7,
+                "failed": 0,
+                "caseStatuses": [
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed",
+                  "passed"
+                ],
+                "unexecuted": 0
+              }
+            ],
+            "paidCalls": 0,
+            "limits": "Native fixture tests only; not production issuer/tenant/auth HTTP/model campaign. Setup-blocked/skipped assertions are NOT passes."
+          }
+        },
+        {
+          "title": "Phase6 native baseline page 1/1",
+          "level": "notice",
+          "payload": {
+            "page": 1,
+            "pages": 1,
+            "complete": true,
+            "encoding": "deflate-base64",
+            "payload": "eJzFVU1vGzcQ/SvTvUQGJK0+KttatEVVWVE2iOXAUhwUkSHNkrNaOlxyS87aEoIA/Ru99dp7bz36n/SXFJScNAiKAgWM5rQkMcP35r3h7LvIC1tRlETP0vni4jIdj16sZpPpaJFeTVZn6Wg6u5gv0vFqdrFYjUezs/RstJisXo7m86gZZehJKxPSO/L469PhkORpF7N+D7PhMMd+L8/ksZDUEYOBHJA47kfNSBRKy8lW8dhKipJuMxLoac7ItScfJW+iHJUmGTX/XlTo/T8urg9BtdtnvosMloGOJhC2UtoygSHQ6tYRVOhBE1RObUH++fMvKApkuP8VagPu/ndNYKyBXBk0QpELx+eT8bPRLB2DzViRYdAIWnmmJtxgiWp/obD3f3BgW2u9cCgo1LDYVTRxzroE2mzPkUXROALaViTYA1twJEjdEiB4dspsmpDVDBvLUBtJuTIklwYAABleOrvdtb9BY82utLX/Dhq50pTEcVzYkmJXG0MuvrPubTxFhxt6qu2dv+p9tjNW0qq0stbk4+9vFZPn+MAplspzrIykbfvGJ93esJ90O0dfkkJ3cJx0B59TKIkLK187rCpyj0FCFKg+QT3pnyS9T1D/283eiVgZpo1DVtbEVYGejluF8mydEqhbwtbc2rdeO9TeZp+cdJLB8CMg+p0R8HjiPiTvxRVFbd620LHKUfC+3mGnn/Q60fX75uO+Hk1Q3v8m0CihyMAGnSQQBNIaBqUBISNvlYEEfqqtAmHLEo0k1wTisMsUmX95VR9fCSgPxjIoJoeZJmgINOHAEUqonK3I8Q7muzKzunH4tPfBbN3R/2v0MOl1vrjR183Is7Q1R0n0fH4xA0eVdQx3TjGTCcMp5rKKN3nroaoPg76Vbl/9UJ7Gjnyt2bdvvDXLYJJnSc5FSbSsO51u9qbfLxtfHcGPtnZwpTj0k8nVBsKEh5yQw8AGDh2EjqA2vq4CB5KQ7WB9iH5hUZJL4IlBVrf0ZN2Eu0KJIhheaTTBe7aQkbAlARcEknKsNYMygJDXAQVKvLEObsl5ZQ3YfM8nCSa0YDI/B78zjNuHFKUJdICVgB7GtiyteT6HxkHh9oFXcLKbdI/a8MqH+b1ulzd+DbRlMgcQB54Y1suIdxUtowSW0cGsZbQOSIGr0NaTZ6hQvMUNPWg5D3lX6WKyGl/MnqbT1ezwK06ns4vLyer16HKWzqbfsqtpHYoPujnyQUvl4Q6dUWbT/uDCsFya6P1fG6HEFg=="
+          }
+        }
+      ],
+      "annotationCounts": {
+        "failure": 0,
+        "warning": 1,
+        "notice": 3
+      }
+    },
+    {
+      "id": 116505382701,
+      "name": "Full dependency tree \u2014 zero vulnerabilities",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38759124969/job/116505382701",
+      "started_at": "2026-10-15T15:18:18Z",
+      "completed_at": "2026-10-15T15:18:40Z",
+      "job": {
+        "id": 116505382701,
+        "run_id": 38759124969,
+        "head_sha": "df66ebb2a92263091a60206725f1fed8c9e3b87c",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-15T15:18:19Z",
+            "completed_at": "2026-10-15T15:18:19Z"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-15T15:18:19Z",
+            "completed_at": "2026-10-15T15:18:21Z"
+          },
+          {
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-15T15:18:21Z",
+            "completed_at": "2026-10-15T15:18:24Z"
+          },
+          {
+            "name": "Use pinned npm",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-15T15:18:24Z",
+            "completed_at": "2026-10-15T15:18:26Z"
+          },
+          {
+            "name": "Run npm ci --ignore-scripts",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-15T15:18:26Z",
+            "completed_at": "2026-10-15T15:18:34Z"
+          },
+          {
+            "name": "Run npm ls --all",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-15T15:18:34Z",
+            "completed_at": "2026-10-15T15:18:34Z"
+          },
+          {
+            "name": "Run npm run test:audit",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-15T15:18:34Z",
+            "completed_at": "2026-10-15T15:18:35Z"
+          },
+          {
+            "name": "Run npm run test:release-safety",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-15T15:18:35Z",
+            "completed_at": "2026-10-15T15:18:36Z"
+          },
+          {
+            "name": "Run npm run audit:strict",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-15T15:18:36Z",
+            "completed_at": "2026-10-15T15:18:37Z"
+          },
+          {
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-10-15T15:18:37Z",
+            "completed_at": "2026-10-15T15:18:37Z"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-10-15T15:18:37Z",
+            "completed_at": "2026-10-15T15:18:37Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-10-15T15:18:37Z",
+            "completed_at": "2026-10-15T15:18:37Z"
+          }
+        ]
+      },
+      "projectedNotices": [],
+      "annotationCounts": {
+        "failure": 0,
+        "warning": 1,
+        "notice": 1
+      }
+    }
+  ]
+}

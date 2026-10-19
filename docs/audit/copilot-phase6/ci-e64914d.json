@@ -1,0 +1,242 @@
+{
+  "retrievedAt": "2026-10-15T14:37:58.298911+00:00",
+  "source": "OFFICIAL_GITHUB_CHECKS_API",
+  "requestedCommit": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+  "checks": [
+    {
+      "id": 116483690841,
+      "name": "CodeQL",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_sha": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "started_at": "2026-10-15T14:36:34Z",
+      "completed_at": "2026-10-15T14:36:39Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/runs/116483690841",
+      "notices": []
+    },
+    {
+      "id": 116482271536,
+      "name": "Final release gate (full)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "started_at": "2026-10-15T14:33:49Z",
+      "completed_at": "2026-10-15T14:33:48Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38752509178/job/116482271536",
+      "notices": []
+    },
+    {
+      "id": 116482269624,
+      "name": "Analyze (javascript-typescript)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "started_at": "2026-10-15T14:34:29Z",
+      "completed_at": "2026-10-15T14:36:46Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38752509396/job/116482269624",
+      "notices": [
+        {
+          "title": "CodeQL flow inventory 2/2",
+          "metadata": {
+            "page": 2,
+            "pages": 2,
+            "total": 14,
+            "encoding": "deflate-base64",
+            "payload": "vrFAPuZYlNS0eDrxvSM0xTiJIGI5jlNCikMHFfG2XfJWjh6Es+yard5t2/BNHYuPT4iQNeOHhsf/OEJ5YGXp3enemdTyx2FHcsPXI1SZXahE51BZKt4S8R+CCkeJldQ+HpX9oiE8dujUHaispXxsLeVPpoosquHJXFcYi45QDs6Rx57yDEprYYmM+eOhlG8teZKxgXEITc1sQseOp3MW/dND8VxFD4u089DWKb+O1D3uE/rKzIkayE0qR8spJyszROzX4IyFs2OpqOWi9AwX9aWnG3WiLz3dpvSlpy89zyg995//7EKNt/Nq4LfHfwGTD2Zm",
+            "coverageComplete": true
+          }
+        },
+        {
+          "title": "CodeQL flow inventory 1/2",
+          "metadata": {
+            "page": 1,
+            "pages": 2,
+            "total": 14,
+            "encoding": "deflate-base64",
+            "payload": "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",
+            "coverageComplete": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 116482269512,
+      "name": "Secret scan (Gitleaks)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "started_at": "2026-10-15T14:34:27Z",
+      "completed_at": "2026-10-15T14:34:39Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38752509178/job/116482269512",
+      "notices": [
+        {
+          "title": "Gitleaks inventory",
+          "metadata": {
+            "scannerSummary": "Gitleaks inventory: findings=0; scannerExit=0; commit=a3aa2678fe4eec628e1628672f16b16ba2ed9e99"
+          }
+        },
+        {
+          "title": "Gitleaks inventory page 1/1",
+          "metadata": {
+            "schemaVersion": 2,
+            "commit": "a3aa2678fe4eec628e1628672f16b16ba2ed9e99",
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "coverageComplete": true,
+            "groups": []
+          }
+        }
+      ]
+    },
+    {
+      "id": 116482269172,
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "status": "in_progress",
+      "conclusion": null,
+      "head_sha": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "started_at": "2026-10-15T14:34:18Z",
+      "completed_at": null,
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38752509178/job/116482269172",
+      "notices": []
+    },
+    {
+      "id": 116482269149,
+      "name": "Native base (TypeScript, standard build, fixed JS budget)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "started_at": "2026-10-15T14:34:07Z",
+      "completed_at": "2026-10-15T14:35:56Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38752509178/job/116482269149",
+      "notices": [
+        {
+          "title": "Copilot build budget",
+          "metadata": {
+            "totalBytes": 3612476,
+            "maxBytes": 3625984,
+            "files": 237,
+            "scope": "STANDARD_NEXT_BUILD_CLIENT_JS_ONLY"
+          }
+        }
+      ]
+    },
+    {
+      "id": 116482269135,
+      "name": "Full dependency tree \u2014 zero vulnerabilities",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "started_at": "2026-10-15T14:34:01Z",
+      "completed_at": "2026-10-15T14:34:29Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38752509178/job/116482269135",
+      "notices": []
+    },
+    {
+      "id": 116482268580,
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "started_at": "2026-10-15T14:33:57Z",
+      "completed_at": "2026-10-15T14:36:19Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38752509178/job/116482268580",
+      "notices": []
+    },
+    {
+      "id": 116482212313,
+      "name": "Final release gate (full)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "started_at": "2026-10-15T14:33:42Z",
+      "completed_at": "2026-10-15T14:33:41Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38752492373/job/116482212313",
+      "notices": []
+    },
+    {
+      "id": 116482210358,
+      "name": "Full dependency tree \u2014 zero vulnerabilities",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "started_at": "2026-10-15T14:33:55Z",
+      "completed_at": "2026-10-15T14:34:26Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38752492373/job/116482210358",
+      "notices": []
+    },
+    {
+      "id": 116482210294,
+      "name": "E2E (Playwright \u2014 responsive, auto-d\u00e9marrage)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "started_at": "2026-10-15T14:33:44Z",
+      "completed_at": "2026-10-15T14:36:02Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38752492373/job/116482210294",
+      "notices": []
+    },
+    {
+      "id": 116482210265,
+      "name": "Type-check, Lint & Test (desktop SQLite + serveur PostgreSQL)",
+      "status": "in_progress",
+      "conclusion": null,
+      "head_sha": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "started_at": "2026-10-15T14:33:44Z",
+      "completed_at": null,
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38752492373/job/116482210265",
+      "notices": []
+    },
+    {
+      "id": 116482210248,
+      "name": "Native base (TypeScript, standard build, fixed JS budget)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "started_at": "2026-10-15T14:33:44Z",
+      "completed_at": "2026-10-15T14:36:16Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38752492373/job/116482210248",
+      "notices": [
+        {
+          "title": "Copilot build budget",
+          "metadata": {
+            "totalBytes": 3612476,
+            "maxBytes": 3625984,
+            "files": 237,
+            "scope": "STANDARD_NEXT_BUILD_CLIENT_JS_ONLY"
+          }
+        }
+      ]
+    },
+    {
+      "id": 116482209816,
+      "name": "Secret scan (Gitleaks)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+      "started_at": "2026-10-15T14:33:44Z",
+      "completed_at": "2026-10-15T14:33:55Z",
+      "details_url": "https://github.com/supremperf/GarageFlowsV2/actions/runs/38752492373/job/116482209816",
+      "notices": [
+        {
+          "title": "Gitleaks inventory",
+          "metadata": {
+            "scannerSummary": "Gitleaks inventory: findings=0; scannerExit=0; commit=e64914d5a2e8cb85c0aaf94a017781747ab03270"
+          }
+        },
+        {
+          "title": "Gitleaks inventory page 1/1",
+          "metadata": {
+            "schemaVersion": 2,
+            "commit": "e64914d5a2e8cb85c0aaf94a017781747ab03270",
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "coverageComplete": true,
+            "groups": []
+          }
+        }
+      ]
+    }
+  ]
+}

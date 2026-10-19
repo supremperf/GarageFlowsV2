@@ -86,7 +86,7 @@ export default function FinancialDashboard({ onClose }: Props) {
                 <option key={m} value={m} className="bg-[#111827]">{m} mois</option>
               ))}
             </select>
-            <button onClick={onClose} className="gf-close p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
+            <button aria-label="Fermer" title="Fermer" onClick={onClose} className="gf-close p-1.5 rounded-lg hover:bg-white/[0.07] text-slate-400 transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -103,7 +103,11 @@ export default function FinancialDashboard({ onClose }: Props) {
             <>
               {/* KPI row */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <KpiCard label="CA TTC total" value={fmt(data.totals.caTTC)} sub={`HT: ${fmt(data.totals.caHT)}`} />
+                {/* Encaissé : factures au statut « payée ». À distinguer du
+                    « CA potentiel atelier » du tableau de bord, valorisé depuis
+                    le planning — deux grandeurs de nature différente qui
+                    portaient toutes deux le mot « CA ». */}
+                <KpiCard label="CA facturé encaissé" value={fmt(data.totals.caTTC)} sub={`TTC · HT : ${fmt(data.totals.caHT)}`} />
                 <KpiCard label="TVA collectée" value={fmt(data.totals.tva)} />
                 <KpiCard
                   label="Marge pièces moy."

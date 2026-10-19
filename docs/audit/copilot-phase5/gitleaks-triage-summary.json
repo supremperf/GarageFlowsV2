@@ -1,0 +1,14 @@
+{
+  "officialFindings": 669,
+  "previousExactSuppressionLocations": 290,
+  "triagedTotal": 959,
+  "uniqueSourceDigestPairs": 33,
+  "earlierTwentyIndividuallyVerified": true,
+  "classifications": {
+    "VERIFIED_PUBLIC_FILE_SHA256": 957,
+    "DOCUMENTATION_ASSERTION_LITERAL": 2
+  },
+  "history": "Every receipt verified byte-identical to public Git blob at c8441a1; sources recomputed at recorded public commit; not a full history scan",
+  "unknownOrSecrets": 0,
+  "limits": "Zero unclassified among this complete current-policy scan plus explicit phase4 suppressions ONLY; not absence of all historical/previously exempted/repository/default-branch secrets. Original scan failure preserved."
+}

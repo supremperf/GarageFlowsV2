@@ -2,6 +2,8 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { withAuth, requireSession } from '@/lib/api-helpers'
 import { enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
+import { normaliserPlaque } from '@/lib/plate-format'
+import { logger } from '@/lib/logger'
 import Anthropic from '@anthropic-ai/sdk'
 
 // POST /api/plate-ocr  body: { imageBase64: "data:image/...;base64,..." }
@@ -55,8 +57,10 @@ export const POST = withAuth(async (req: Request) => {
     })
     text = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : ''
   } catch (e) {
-    // Degrade gracefully instead of surfacing a 500 with the raw provider error.
-    console.error('[plate-ocr] provider call failed', e)
+    // Dégradation propre plutôt qu'un 500 portant l'erreur brute du fournisseur.
+    // `logger` et non `console` : lui seul applique la rédaction centralisée, et
+    // une erreur de SDK peut transporter des en-têtes de requête (§15).
+    logger.error('[plate-ocr] appel au fournisseur en échec', e)
     return NextResponse.json({ error: 'OCR temporairement indisponible' }, { status: 503 })
   }
 
@@ -64,7 +68,22 @@ export const POST = withAuth(async (req: Request) => {
     return NextResponse.json({ error: 'Plaque non détectée' }, { status: 422 })
   }
 
-  // Normalize to French plate format
-  const normalized = text.toUpperCase().replace(/\s+/g, '-').replace(/[^A-Z0-9-]/g, '')
-  return NextResponse.json({ plate: normalized })
+  // Le modèle rend du TEXTE LIBRE : il peut très bien répondre « je ne distingue
+  // pas la plaque ». Sans contrôle de forme, cette phrase devenait la plaque —
+  // `PlateSearchField` la recopie dans le champ ET déclenche la recherche
+  // véhicule, donc elle partait dans l'intervention, le devis et la facture.
+  // C'est exactement le défaut GF-FINAL-020, par une autre porte : une sortie de
+  // modèle présentée comme une LECTURE alors qu'elle n'en est pas une.
+  //
+  // On refuse donc tout ce qui n'est pas une immatriculation française :
+  //   · SIV (depuis 2009) — AB-123-CD ;
+  //   · FNI (véhicules antérieurs, toujours en circulation) — 1234-AB-75.
+  // Mieux vaut « non détectée », qui invite à ressaisir, qu'une valeur inventée
+  // que personne ne relira.
+  const plaque = normaliserPlaque(text)
+  if (!plaque) {
+    logger.info('[plate-ocr] sortie du modèle non conforme, refusée')
+    return NextResponse.json({ error: 'Plaque non détectée' }, { status: 422 })
+  }
+  return NextResponse.json({ plate: plaque })
 })

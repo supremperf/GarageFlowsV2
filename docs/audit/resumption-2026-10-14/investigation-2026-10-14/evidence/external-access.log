@@ -1,0 +1,26 @@
+[
+  {
+    "id": "dependabot",
+    "exitCode": 1,
+    "diagnostic": "gh: Resource not accessible by integration (HTTP 403)\n",
+    "alertCount": null
+  },
+  {
+    "id": "protection",
+    "exitCode": 1,
+    "diagnostic": "gh: Resource not accessible by integration (HTTP 403)\n",
+    "alertCount": null
+  },
+  {
+    "id": "logs-77558ca",
+    "exitCode": 1,
+    "diagnostic": "failed to get run log: Get \"https://results-receiver.actions.githubusercontent.com/rest/runs/ffe8cf14-bace-8a13-ae40-24fb7e4ba97f/logs[query omitted]\": EOF\n",
+    "alertCount": null
+  },
+  {
+    "id": "gitleaks-json-source",
+    "exitCode": 0,
+    "diagnostic": null,
+    "alertCount": null
+  }
+]

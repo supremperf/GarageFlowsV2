@@ -1,0 +1,61 @@
+{
+  "recordedAt": "2026-10-14T15:10:15.759409+00:00",
+  "results": [
+    {
+      "id": "dependabot",
+      "argv": [
+        "gh",
+        "api",
+        "repos/supremperf/GarageFlowsV2/dependabot/alerts?state=open&per_page=100"
+      ],
+      "startedAt": "2026-10-14T15:10:12.830003+00:00",
+      "finishedAt": "2026-10-14T15:10:13.367245+00:00",
+      "exitCode": 1,
+      "sanitizedDiagnostic": "gh: Resource not accessible by integration (HTTP 403)\n",
+      "stdoutOmitted": true
+    },
+    {
+      "id": "protection",
+      "argv": [
+        "gh",
+        "api",
+        "repos/supremperf/GarageFlowsV2/branches/arena%2Fc9eaae15-garageflowsv2/protection"
+      ],
+      "startedAt": "2026-10-14T15:10:13.367391+00:00",
+      "finishedAt": "2026-10-14T15:10:13.719769+00:00",
+      "exitCode": 1,
+      "sanitizedDiagnostic": "gh: Resource not accessible by integration (HTTP 403)\n",
+      "stdoutOmitted": true
+    },
+    {
+      "id": "logs-77558ca",
+      "argv": [
+        "gh",
+        "run",
+        "view",
+        "38583146598",
+        "--log-failed"
+      ],
+      "startedAt": "2026-10-14T15:10:13.719799+00:00",
+      "finishedAt": "2026-10-14T15:10:15.457988+00:00",
+      "exitCode": 1,
+      "sanitizedDiagnostic": "failed to get run log: Get \"https://results-receiver.actions.githubusercontent.com/rest/runs/ffe8cf14-bace-8a13-ae40-24fb7e4ba97f/logs[query omitted]\": EOF\n",
+      "stdoutOmitted": true
+    },
+    {
+      "id": "gitleaks-json-source",
+      "argv": [
+        "gh",
+        "api",
+        "repos/gitleaks/gitleaks/contents/report/json.go?ref=v8.24.3"
+      ],
+      "startedAt": "2026-10-14T15:10:15.458095+00:00",
+      "finishedAt": "2026-10-14T15:10:15.758523+00:00",
+      "exitCode": 0,
+      "upstreamBlobSha": "867c98a9ea6759e77d43490e111bebd26caa140b",
+      "sourceSha256": "7cce5d031a4b6fde50e52bd9cd551781a0f00f9a0de79852cfa10ac3385ff733",
+      "sourceText": "package report\n\nimport (\n\t\"encoding/json\"\n\t\"io\"\n)\n\ntype JsonReporter struct {\n}\n\nvar _ Reporter = (*JsonReporter)(nil)\n\nfunc (t *JsonReporter) Write(w io.WriteCloser, findings []Finding) error {\n\tencoder := json.NewEncoder(w)\n\tencoder.SetIndent(\"\", \" \")\n\treturn encoder.Encode(findings)\n}\n"
+    }
+  ],
+  "limitations": "No raw scanner log/secret persisted. URL query omission is not a general secret detector."
+}

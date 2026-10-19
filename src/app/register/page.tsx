@@ -98,7 +98,7 @@ export default function RegisterPage() {
             <GarageFlowLogo size={64} />
           </div>
           <h1 className="text-2xl font-black text-white">
-            Garage<span className="text-blue-400">Flow</span>
+            Garage<span className="text-blue-400">Flows</span>
           </h1>
           <p className="text-slate-500 text-xs mt-1 tracking-widest uppercase">Créer votre espace</p>
         </div>
@@ -200,7 +200,10 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                    // Cible tactile de 44 px, icône inchangée (GF-042) : mesuré
+                    // à 16 × 16 px en navigateur réel — un doigt le rate.
+                    className="absolute right-1 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center text-slate-500 hover:text-slate-300"
+                    aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>

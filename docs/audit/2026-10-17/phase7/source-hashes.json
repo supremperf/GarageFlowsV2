@@ -1,0 +1,34 @@
+[
+  {
+    "path": "scripts/keygen_core.py",
+    "sha256": "57a81aab17bdcf0f36a82069b824c2d5b579156d70f731753c5f8de8d076efe3"
+  },
+  {
+    "path": "scripts/keygen_ui.py",
+    "sha256": "7e3df922d6cf8d8d56b1349bc1662fd1816efa78865a422f461479034b892c29"
+  },
+  {
+    "path": "scripts/keygen_trust.py",
+    "sha256": "85c3b485e1a2e1ae9d5c7a68bb233e8b47c133fa9724e40f9881b1c2213c1232"
+  },
+  {
+    "path": "scripts/diagnose-license.mjs",
+    "sha256": "a6f98661ffae92eb8b5072470a28c2fd07a782a1f3a260e0e3a4bea14e46612b"
+  },
+  {
+    "path": "scripts/reproduce-keygen-roundtrip.mjs",
+    "sha256": "4f913ea493df50c135a96a28939e7591f868ee81d54ab59241b8e01467018964"
+  },
+  {
+    "path": "src/lib/license/verify.ts",
+    "sha256": "afbed2df6d94fbccf3ce0e7e17b96116a524f8175e75587c9f96c69bd83eb894"
+  },
+  {
+    "path": "src/app/api/license/activate/route.ts",
+    "sha256": "6e13e19327acbd767da8f7f41477c6f776f21d7b96909b73c39d6f86a2d0108a"
+  },
+  {
+    "path": "src/lib/__tests__/keygen-activation-roundtrip.test.ts",
+    "sha256": "c402d4659a17be6cac0e21859cec6a3439611036528c2f628939070d3b159342"
+  }
+]

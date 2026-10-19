@@ -2,6 +2,8 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireSession, withAuth } from '@/lib/api-helpers'
+import { jobPartToEuros } from '@/lib/money-db'
+import { assertRelations } from '@/lib/tenant'
 import { UpdateVehicleSchema } from '@/lib/schemas'
 import { logAudit } from '@/lib/audit'
 
@@ -25,7 +27,8 @@ export const GET = withAuth(async (_req, { params }: { params: { id: string } })
   })
 
   if (!vehicle) return NextResponse.json({ error: 'Introuvable' }, { status: 404 })
-  return NextResponse.json(vehicle)
+  // jobParts : + unitPrice/unitCost dérivés (euros) pour l'UI historique véhicule.
+  return NextResponse.json({ ...vehicle, jobs: vehicle.jobs.map(j => ({ ...j, jobParts: j.jobParts.map(jobPartToEuros) })) })
 })
 
 // PATCH /api/vehicles/:id
@@ -46,6 +49,14 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
   const allowed = ['vin', 'make', 'model', 'year', 'mileage', 'color', 'notes', 'clientId', 'ctDate']
   const data: Record<string, unknown> = {}
   for (const f of allowed) { if (f in parsed.data) data[f] = (parsed.data as Record<string, unknown>)[f] }
+
+  // Isolation multi-tenant : un clientId fourni doit appartenir au garage de la
+  // session (sinon IDOR de 2nd ordre — le GET renvoie la PII du client via
+  // include:{client}). Le POST validait déjà ; le PATCH l'omettait.
+  const relCheck = await assertRelations(session.user.garageId, [
+    { model: 'client', id: data.clientId as string | null | undefined, label: 'Client' },
+  ])
+  if (relCheck) return relCheck
 
   const updated = await prisma.vehicle.update({ where: { id: params.id, garageId: session.user.garageId }, data })
 

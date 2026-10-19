@@ -1,0 +1,152 @@
+
+> garageflow@1.1.0 check:consistency
+> npm run check:branding && npm run check:docs && npm run check:pwa && npm run check:money && npm run check:money-calculations && npm run check:money-json && npm run check:env-consistency && npm run check:migration-safety && npm run check:sqlite-template && npm run check:pg-migrations && npm run check:converge-additive && npm run check:critical-files && npm run check:public-key && npm run keys:check
+
+
+> garageflow@1.1.0 check:branding
+> node scripts/check-branding.mjs
+
+Marque — exceptions techniques ACTIVES (précises, documentées) :
+   • electron/main.js — User-Agent HTTP « GarageFlow/<version> »  (2)
+   • electron/main.js — sel de MAC base — NE PAS changer  (1)
+   • electron/main.js — sel de chiffrement (KDF) — NE PAS changer  (1)
+   • electron/main.js — serviceName Electron (keytar/identité OS)  (1)
+   • electron/secure-key.js — sel KDF secure-key — NE PAS changer  (1)
+   • electron/update-verify.js — doit correspondre au champ « product » du flux de MàJ (identité interne, non visible)  (1)
+   • electron/user-data-path.js — nom du dossier de données HISTORIQUE — compat installations existantes  (1)
+   • scripts/config-full.cjs — chemin physique du coffre de configuration existant — compat des plans/reprises  (3)
+   • scripts/config-keygen.cjs — chemin physique du runtime keygen existant — compat config  (1)
+   • scripts/config-release.cjs — chemin physique du coffre éditeur existant — compat signature  (1)
+   • scripts/config-services.cjs — chemin physique du coffre éditeur existant — compat signature  (1)
+   • scripts/keygen_ui.py — User-Agent keygen (compat control-plane)  (2)
+   • scripts/lib/repository-audit-map.cjs — chemin physique du coffre local exclu de la lecture d’inventaire — compat config  (1)
+   • scripts/restore.js — chemin du dossier de données historique (restore.js / userData pin)  (3)
+   • scripts/sign-release-manifest.mjs — le manifeste signé DOIT porter la même identité « product » que EXPECTED_PRODUCT, sinon chaque poste rejette la mise à jour (identité interne, non visible)  (1)
+   • src/app/admin/licenses/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/license/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/login/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/app/register/page.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (4)
+   • src/components/GarageFlowLogo.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/Header.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/LicenseChangeModal.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/components/UpdateModal.tsx — identifiant de composant React (GarageFlowLogo/Icon)  (3)
+   • src/integration/publication-mise-a-jour.test.ts — manifeste de test de PUBLICATION : le champ « product » doit valoir EXPECTED_PRODUCT, sinon le poste rejette la mise à jour — écrire « GarageFlows » ici ferait affirmer au test un contrat que la production refuse  (1)
+   • src/lib/__tests__/release-signing-chain.test.ts — chemin du dossier de données historique (restore.js / userData pin)  (1)
+   • src/lib/__tests__/update-verify.test.ts — reflète l'identité « product » du flux de MàJ (voir EXPECTED_PRODUCT)  (1)
+   • src/lib/__tests__/user-data-path.test.ts — assertion de compat : le dossier historique ne doit JAMAIS être renommé  (1)
+   • src/lib/__tests__/user-data-path.test.ts — intitulé du test de compat du dossier historique  (1)
+   • src/lib/signature/__tests__/signature.test.ts — User-Agent HTTP « GarageFlow/<version> »  (1)
+
+✅ Marque cohérente : « GarageFlows » dans tout le visible (1011 fichiers). Exceptions techniques uniquement.
+
+> garageflow@1.1.0 check:docs
+> node scripts/check-docs-consistency.mjs
+
+✅ Cohérence docs : source canonique unique, comptes & statuts cohérents (167 .md scannés).
+
+> garageflow@1.1.0 check:pwa
+> node scripts/check-pwa.mjs
+
+✅ PWA : manifestes valides, marque GarageFlows, icônes présentes aux dimensions exactes déclarées.
+
+> garageflow@1.1.0 check:money
+> node scripts/check-money-fields.mjs
+
+Schémas analysés : prisma/schema.prisma, prisma/server/schema.prisma
+Champs Float NON monétaires classés (autorisés) : 4
+   • Garage.taxRate — taux de TVA (%) — non monétaire, valeurs exactes en binaire
+   • Invoice.taxRate — taux de TVA (%) — non monétaire
+   • Quote.taxRate — taux de TVA (%) — non monétaire
+   • WorkOrder.taxRate — taux de TVA (%) — non monétaire
+
+✅ 0 champ monétaire Float (RÈGLE : zéro). Stockage monétaire 100 % en entiers exacts.
+
+> garageflow@1.1.0 check:money-calculations
+> node scripts/check-money-calculations.mjs
+
+✅ Calculs financiers : aucun calcul direct interdit hors couche centrale (875 fichiers).
+
+> garageflow@1.1.0 check:money-json
+> node scripts/check-money-json.mjs
+
+✅ JSON monétaires : écritures de worksJson/partsJson/linesJson via les sérialiseurs v2 ET lectures via les parseurs versionnés (5 exceptions justifiées, 4 fichiers de fixtures v1).
+
+> garageflow@1.1.0 check:env-consistency
+> node scripts/check-env-consistency.mjs
+
+✅ Contrat d'environnement : 120 variables canoniques, 8 alias interdits absents du code actif, 47 variables plateforme, 985 fichiers balayés.
+
+> garageflow@1.1.0 check:migration-safety
+> node scripts/check-migration-safety.mjs
+
+✅ Sûreté des migrations : runner atomique fail-closed (enregistrement en transaction, zéro catch toléré), DROP toujours prouvé, ordre Electron sauvegarde → serveur → migration → fenêtre, contrôle HTTP+métier, sauvegarde vérifiée avec rétention sûre.
+
+> garageflow@1.1.0 check:sqlite-template
+> node scripts/check-sqlite-template.mjs
+
+✅ Modèle SQLite : intégrité + clés étrangères OK, baseline complète (214 migrations enregistrées, 0 en attente), checksums conformes, schéma final.
+
+> garageflow@1.1.0 check:pg-migrations
+> node scripts/check-postgres-migration-verification.mjs
+
+✅ Migrations PostgreSQL : 17 colonnes supprimées, chacune avec backfill + vérification bloquante (scaled_units) et re-vérification pré-DROP (drop_floats), bloc de contrôle avant tout DROP.
+
+> garageflow@1.1.0 check:converge-additive
+> node scripts/check-converge-additive.mjs
+
+✅ Convergence additive par colonne : 8 tables CREATE-IF-NOT-EXISTS, 84 colonnes toutes couvertes par ADD COLUMN.
+
+> garageflow@1.1.0 check:critical-files
+> node scripts/check-critical-files.js
+
+→ Vérification des fichiers critiques…
+  ✓ electron/license-endpoint.js
+  ✓ electron/signed-state.js
+  ✓ electron/nav-guard.js
+  ✓ electron/integrity.js
+  ✓ electron/activation-report.js
+  ✓ scripts/fuse-config.js
+  ✓ src/lib/security/secret-cipher.ts
+  ✓ scripts/encrypt-smtp-secrets.js
+  ✓ src/lib/security/rate-limit.ts
+  ✓ src/lib/auth.ts
+  ✓ src/middleware.ts
+  ✓ src/lib/license/public-key.ts
+  ✓ src/lib/license/mechanic-session.ts
+  ✓ src/lib/license/mechanic-admin.ts
+  ✓ src/lib/license/record-mac.ts
+  ✓ src/lib/mechanic-api.ts
+  ✓ src/lib/license/__tests__/public-key-consistency.test.ts
+  ✓ src/__tests__/middleware.test.ts
+  ✓ src/lib/__tests__/auth-authorize.test.ts
+  ✓ src/lib/security/__tests__/secret-cipher.test.ts
+  ✓ scripts/garageflow-env-manifest.json
+  ✓ docs/RESTAURATION_GARAGEFLOW.md
+  ✓ docs/ROTATION_SECRETS.md
+  ✓ .vercelignore
+→ Vérification de la clé publique embarquée…
+  ✓ clé publique embarquée cohérente et non retirée (bd8c08451489fb83…)
+  ✓ REFERENCE_FP du test de cohérence alignée sur la clé embarquée
+
+✓ Tous les fichiers critiques sont présents et cohérents.
+
+> garageflow@1.1.0 check:public-key
+> node scripts/check-public-key.mjs
+
+⏭️  check:public-key — NON EXÉCUTÉ : keys/public.pem absent (gitignoré).
+   Clé embarquée valide, empreinte bd8c08451489fb83… — mais AUCUNE
+   comparaison n'a eu lieu. Sur la machine de build, placez keys/public.pem
+   pour que la correspondance soit réellement vérifiée.
+
+> garageflow@1.1.0 keys:check
+> node scripts/sync-public-key.mjs --check
+
+⏭️  sync:public-key --check — NON EXÉCUTÉ : keys/public.pem absent (gitignoré).
+   AUCUNE comparaison n'a eu lieu. La cohérence interne des ancrages reste,
+   elle, vérifiée par check:critical-files.
+(node:22257) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:22257) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/user/GarageFlowsV2/src/lib/migrations.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/user/GarageFlowsV2/package.json.

@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: operator signature binds scope, model, corpus, runner and bounded time; not a billing enforcement proof
+ok 1 - operator signature binds scope, model, corpus, runner and bounded time; not a billing enforcement proof
+  ---
+  duration_ms: 11.775961
+  type: 'test'
+  ...
+# Subtest: copying or renaming a grant cannot reset its exclusive authorization-ID claim
+ok 2 - copying or renaming a grant cannot reset its exclusive authorization-ID claim
+  ---
+  duration_ms: 3.31111
+  type: 'test'
+  ...
+# Subtest: unsafe state permissions and traversal IDs fail closed
+ok 3 - unsafe state permissions and traversal IDs fail closed
+  ---
+  duration_ms: 0.528304
+  type: 'test'
+  ...
+# Subtest: budget manifest refuses unbounded/missing/extra/increased output fields
+ok 4 - budget manifest refuses unbounded/missing/extra/increased output fields
+  ---
+  duration_ms: 3.920548
+  type: 'test'
+  ...
+# Subtest: reserves the worst cost before dispatch, no automatic replenishment
+ok 5 - reserves the worst cost before dispatch, no automatic replenishment
+  ---
+  duration_ms: 0.28155
+  type: 'test'
+  ...
+# Subtest: cost or input limit blocks before consuming any call
+ok 6 - cost or input limit blocks before consuming any call
+  ---
+  duration_ms: 0.134873
+  type: 'test'
+  ...
+# Subtest: empty latency samples stay null, not synthetic zeros
+ok 7 - empty latency samples stay null, not synthetic zeros
+  ---
+  duration_ms: 0.559868
+  type: 'test'
+  ...
+# Subtest: live gate refuses before any provider/network setup even with CLI approval flag
+ok 8 - live gate refuses before any provider/network setup even with CLI approval flag
+  ---
+  duration_ms: 3.687746
+  type: 'test'
+  ...
+# Subtest: model JSON, local fallback, no-call guards and accepted interpretation remain separate
+ok 9 - model JSON, local fallback, no-call guards and accepted interpretation remain separate
+  ---
+  duration_ms: 0.231338
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 167.591003

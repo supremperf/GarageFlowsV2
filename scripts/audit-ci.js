@@ -1,109 +1,61 @@
 #!/usr/bin/env node
-/**
- * audit-ci.js — porte de sécurité des dépendances (CI, bloquante).
- *
- * Politique : toute vulnérabilité HIGH ou CRITICAL dans les dépendances de
- * PRODUCTION (`npm audit --omit=dev`) fait ÉCHOUER la CI, SAUF les dérogations
- * explicitement documentées ci-dessous — chacune précise, motivée, TEMPORAIRE
- * (date de réexamen). Une dérogation expirée fait aussi échouer la CI (elle
- * force la réévaluation). Les vulnérabilités des dépendances de développement
- * (outillage de build/test) ne sont pas bloquantes ici mais restent visibles
- * via `npm audit`.
- *
- * Ce n'est PAS un `continue-on-error` silencieux : une NOUVELLE vulnérabilité
- * high/critical en production casse la CI.
- */
-
 'use strict'
+// Full installed/locked dependency tree: no severity exceptions or omit=dev.
+const fs = require('node:fs')
+const path = require('node:path')
+const { spawnSync } = require('node:child_process')
 
-const { execFileSync } = require('child_process')
-
-// ── Dérogations documentées ──────────────────────────────────────────────────
-// Clé = nom du paquet. Chaque entrée DOIT porter un motif et une date de
-// réexamen (YYYY-MM-DD). Correctifs disponibles uniquement via montée de version
-// majeure (Next 15, etc.) — planifiée hors de ce lot de sécurité pour ne pas
-// introduire de régression non testée. Exploitabilité réelle jugée faible dans
-// ce contexte applicatif (voir motifs).
-const ALLOW = {
-  next: {
-    reason:
-      'Advisories liées à des fonctionnalités non exposées ici (Image Optimizer ' +
-      'remotePatterns non utilisé, pas de reverse-proxy de cache). Correctif = ' +
-      'montée Next 15 (majeure), planifiée séparément avec tests.',
-    until: '2026-10-31',
-  },
-  nodemailer: {
-    reason:
-      'Injection via envelope.size : la taille d\'enveloppe n\'est jamais dérivée ' +
-      'd\'une entrée attaquant (SMTP configuré par le garage). Correctif = montée ' +
-      'majeure, planifiée séparément.',
-    until: '2026-10-31',
-  },
-  postcss: {
-    reason:
-      'XSS au stringify CSS : outillage de build, aucune CSS d\'origine attaquant ' +
-      'au runtime. Instance de prod tirée transitivement par Next.',
-    until: '2026-10-31',
-  },
+function assess(report) {
+  const counts = report?.metadata?.vulnerabilities
+  if (report?.error || !counts || !report.vulnerabilities || typeof report.vulnerabilities !== 'object' || Array.isArray(report.vulnerabilities) ||
+      !['low', 'moderate', 'high', 'critical', 'total'].every(k => Number.isInteger(counts[k]) && counts[k] >= 0)) {
+    return { ok: false, reason: 'Audit indisponible ou réponse incomplète : validation bloquée.' }
+  }
+  const total = counts.low + counts.moderate + counts.high + counts.critical + (counts.info || 0)
+  if (total !== counts.total || Object.keys(report.vulnerabilities).length !== counts.total) {
+    return { ok: false, reason: 'Comptages incohérents : validation bloquée.' }
+  }
+  return { ok: counts.total === 0, reason: `LOW=${counts.low} MODERATE=${counts.moderate} HIGH=${counts.high} CRITICAL=${counts.critical} TOTAL=${counts.total}` }
 }
-
-function auditJson() {
-  try {
-    const out = execFileSync('npm', ['audit', '--omit=dev', '--json'], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    })
-    return JSON.parse(out)
-  } catch (err) {
-    // `npm audit` sort en code ≠ 0 quand des vulnérabilités existent : on relit
-    // quand même le JSON produit sur stdout.
-    if (err.stdout) return JSON.parse(err.stdout.toString())
-    throw err
+// Only fixed state, numeric counts and a strict error-code token are emitted.
+// Never publish npm's raw error summary/detail/URLs or authentication material.
+function failureSummary(run, report) {
+  const counts = report?.metadata?.vulnerabilities
+  return {
+    npmExitCode: Number.isInteger(run.status) ? run.status : null,
+    responseHasError: !!report?.error,
+    errorCode: typeof report?.error?.code === 'string' && /^[A-Z0-9_]{1,40}$/.test(report.error.code) ? report.error.code : null,
+    counts: counts && ['low', 'moderate', 'high', 'critical', 'total'].every(k => Number.isInteger(counts[k]) && counts[k] >= 0)
+      ? Object.fromEntries(['low', 'moderate', 'high', 'critical', 'total'].map(k => [k, counts[k]])) : null,
+    verdict: assess(report).reason,
   }
 }
-
+function npmPath() {
+  const candidates = [process.env.npm_execpath,
+    path.join(path.dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js'),
+    path.join(path.dirname(process.execPath), '../lib/node_modules/npm/bin/npm-cli.js'),
+    '/usr/share/nodejs/npm/bin/npm-cli.js']
+  const found = candidates.find(p => p && /npm-cli\.js$/.test(p) && fs.existsSync(p))
+  if (!found) throw new Error('npm introuvable : validation bloquée.')
+  return found
+}
 function main() {
-  const report = auditJson()
-  const vulns = report.vulnerabilities || {}
-  const today = new Date().toISOString().slice(0, 10)
-
-  const blocking = []
-  const derogated = []
-  const expired = []
-
-  for (const [name, info] of Object.entries(vulns)) {
-    if (!['high', 'critical'].includes(info.severity)) continue
-    const allow = ALLOW[name]
-    if (!allow) {
-      blocking.push({ name, severity: info.severity })
-    } else if (allow.until < today) {
-      expired.push({ name, until: allow.until })
-    } else {
-      derogated.push({ name, severity: info.severity, until: allow.until })
-    }
+  const run = spawnSync(process.execPath, [npmPath(), 'audit', '--json', '--audit-level=low',
+    '--include=dev', '--include=optional', '--include=peer'], {
+    cwd: path.resolve(__dirname, '..'), encoding: 'utf8', maxBuffer: 16 * 1024 * 1024,
+    stdio: ['ignore', 'pipe', 'pipe'], shell: false,
+  })
+  if (run.error || run.signal) throw new Error('Audit non exécuté : validation bloquée.')
+  let report
+  try { report = JSON.parse(run.stdout) } catch { throw new Error('Audit illisible : validation bloquée.') }
+  const result = assess(report)
+  console.log(result.reason)
+  if (!result.ok || run.status !== 0) {
+    console.error('::error title=Npm dependency audit::' + JSON.stringify(failureSummary(run, report)))
+    process.exitCode = 1
   }
-
-  if (derogated.length) {
-    console.log('Dérogations actives (high/critical, prod) :')
-    for (const d of derogated) console.log(`  • ${d.name} (${d.severity}) — réexamen avant ${d.until}`)
-  }
-
-  if (expired.length) {
-    console.error('\n❌  Dérogations EXPIRÉES — réévaluation requise :')
-    for (const e of expired) console.error(`  • ${e.name} (échéance ${e.until})`)
-  }
-
-  if (blocking.length) {
-    console.error('\n❌  Vulnérabilités high/critical NON dérogées en production :')
-    for (const b of blocking) console.error(`  • ${b.name} (${b.severity})`)
-  }
-
-  if (blocking.length || expired.length) {
-    console.error('\nCI bloquée. Corrigez, ou ajoutez une dérogation motivée et datée dans scripts/audit-ci.js.')
-    process.exit(1)
-  }
-
-  console.log('\n✅  Aucune vulnérabilité high/critical non dérogée dans les dépendances de production.')
 }
-
-main()
+module.exports = { assess, failureSummary, main }
+if (require.main === module) {
+  try { main() } catch (error) { console.error('::error title=Npm dependency audit::' + error.message); process.exitCode = 1 }
+}

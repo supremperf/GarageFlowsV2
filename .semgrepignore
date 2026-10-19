@@ -1,0 +1,3 @@
+# Audit: no source/test exclusions. Override Semgrep's built-in default ignore list.
+# Targets are enumerated explicitly in docs/audit/resumption-2026-10-14/semgrep-targets.json.
+# Dependency/runtime/generated evidence applicability is documented in the review ledger.

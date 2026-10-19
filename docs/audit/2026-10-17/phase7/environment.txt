@@ -1,0 +1,1 @@
+✅ Contrat d'environnement : 126 variables canoniques, 8 alias interdits absents du code actif, 48 variables plateforme, 1066 fichiers balayés.

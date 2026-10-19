@@ -1,0 +1,26 @@
+[
+  {
+    "file": "scripts/lib/file-snapshot.cjs",
+    "sha256": "d839661dcfeec62e6066ce254b7e5dcbc8c95065fdb625ba60888900f6b658fe"
+  },
+  {
+    "file": "scripts/lib/standalone-layout.cjs",
+    "sha256": "3bb8dbd4c0a1d66d2adaf10e7b3d9f03e7ad37df141e9c8a5b0db83a38e73e8b"
+  },
+  {
+    "file": "scripts/config-core.cjs",
+    "sha256": "b5cc0831506f3245bc4419aa4fed74b02c807b118b82c43004ddb1582f3ba143"
+  },
+  {
+    "file": "scripts/audit-ci.js",
+    "sha256": "c6193cbba40cf26fb2225283441c85dff0844fe9616972a486ebefb36d79abe2"
+  },
+  {
+    "file": ".github/workflows/ci.yml",
+    "sha256": "bee0c8c2348ac87fc55d2411807228c233967e2366eb307b69b672b24888fe27"
+  },
+  {
+    "file": "src/app/api/sync/__tests__/portal-snapshot.test.ts",
+    "sha256": "1ec5a9d5b5af4508ddbb34178371ecfee34e4997d3510aafe63e2bf4bb0071e3"
+  }
+]

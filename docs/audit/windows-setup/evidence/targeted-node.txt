@@ -1,0 +1,242 @@
+TAP version 13
+# Subtest: next.config.mjs verrouille la racine de tracing sur le dossier du projet
+ok 1 - next.config.mjs verrouille la racine de tracing sur le dossier du projet
+  ---
+  duration_ms: 1.344377
+  type: 'test'
+  ...
+# Subtest: sortie saine : server.js à la racine, ressources au bon endroit
+ok 2 - sortie saine : server.js à la racine, ressources au bon endroit
+  ---
+  duration_ms: 3.325771
+  type: 'test'
+  ...
+# Subtest: sortie IMBRIQUÉE (lockfile parent) : refusée avec la cause exacte, jamais « server.js NOT found »
+ok 3 - sortie IMBRIQUÉE (lockfile parent) : refusée avec la cause exacte, jamais « server.js NOT found »
+  ---
+  duration_ms: 1.874098
+  type: 'test'
+  ...
+# Subtest: sortie absente ou sans server.js : diagnostic explicite
+ok 4 - sortie absente ou sans server.js : diagnostic explicite
+  ---
+  duration_ms: 2.032703
+  type: 'test'
+  ...
+# Subtest: détecte les copies périmées de l’application à purger avant empaquetage
+ok 5 - détecte les copies périmées de l’application à purger avant empaquetage
+  ---
+  duration_ms: 2.292885
+  type: 'test'
+  ...
+# Subtest: le post-build dirige les copies vers le dossier d’application (pas un chemin supposé)
+ok 6 - le post-build dirige les copies vers le dossier d’application (pas un chemin supposé)
+  ---
+  duration_ms: 0.465853
+  type: 'test'
+  ...
+# Subtest: le vérificateur standalone analyse la RACINE du projet, pas le dossier standalone
+ok 7 - le vérificateur standalone analyse la RACINE du projet, pas le dossier standalone
+  ---
+  duration_ms: 0.287917
+  type: 'test'
+  ...
+# Subtest: la liste des modules d’exécution se résout sans double préfixe node_modules
+ok 8 - la liste des modules d’exécution se résout sans double préfixe node_modules
+  ---
+  duration_ms: 1.99671
+  type: 'test'
+  ...
+# Subtest: verify:standalone ACCEPTE une sortie saine (le garde-fou ne bloque pas un installeur valide)
+ok 9 - verify:standalone ACCEPTE une sortie saine (le garde-fou ne bloque pas un installeur valide)
+  ---
+  duration_ms: 35.578806
+  type: 'test'
+  ...
+# Subtest: verify:standalone REFUSE une sortie absente, incomplète ou sans moteur Prisma
+ok 10 - verify:standalone REFUSE une sortie absente, incomplète ou sans moteur Prisma
+  ---
+  duration_ms: 68.10924
+  type: 'test'
+  ...
+# Subtest: next-auth est accepté COPIÉ ou EMBARQUÉ, et signalé s’il a disparu des deux côtés
+ok 11 - next-auth est accepté COPIÉ ou EMBARQUÉ, et signalé s’il a disparu des deux côtés
+  ---
+  duration_ms: 1.9496
+  type: 'test'
+  ...
+# Subtest: le post-build ne casse pas les builds cloud (Vercel) et distingue l’empaquetage desktop
+ok 12 - le post-build ne casse pas les builds cloud (Vercel) et distingue l’empaquetage desktop
+  ---
+  duration_ms: 0.228929
+  type: 'test'
+  ...
+# Subtest: package.json : dist vérifie tout et échoue clairement à chaque étape
+ok 13 - package.json : dist vérifie tout et échoue clairement à chaque étape
+  ---
+  duration_ms: 0.562924
+  type: 'test'
+  ...
+# Subtest: la chaîne n’essaie JAMAIS de publier une release toute seule
+ok 14 - la chaîne n’essaie JAMAIS de publier une release toute seule
+  ---
+  duration_ms: 0.305168
+  type: 'test'
+  ...
+# Subtest: release:sign explique quoi fournir au lieu d’un « --file obligatoire » sec
+ok 15 - release:sign explique quoi fournir au lieu d’un « --file obligatoire » sec
+  ---
+  duration_ms: 0.240407
+  type: 'test'
+  ...
+# Subtest: mandatory gate rejects any failed, cancelled or skipped upstream job
+ok 16 - mandatory gate rejects any failed, cancelled or skipped upstream job
+  ---
+  duration_ms: 53.968098
+  type: 'test'
+  ...
+# Subtest: workflow graph pins actions, retains strict security and packages Windows before gate
+ok 17 - workflow graph pins actions, retains strict security and packages Windows before gate
+  ---
+  duration_ms: 1.5235
+  type: 'test'
+  ...
+# Subtest: authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+ok 18 - authenticated gate refuses missing fixtures, HTTP and known production targets without printing secrets
+  ---
+  duration_ms: 442.019993
+  type: 'test'
+  ...
+# Subtest: a valid preexisting customer DB is never copied over or moved by startup
+ok 19 - a valid preexisting customer DB is never copied over or moved by startup
+  ---
+  duration_ms: 2.57738
+  type: 'test'
+  ...
+# Subtest: an unreadable customer DB remains exactly in place; no silent reset or rename
+ok 20 - an unreadable customer DB remains exactly in place; no silent reset or rename
+  ---
+  duration_ms: 1.576182
+  type: 'test'
+  ...
+# Subtest: first-run DB copy is exclusive and a concurrent existing file is preserved
+ok 21 - first-run DB copy is exclusive and a concurrent existing file is preserved
+  ---
+  duration_ms: 1.304422
+  type: 'test'
+  ...
+# Subtest: readiness proves the owned process and real healthy DB, not merely an open port
+ok 22 - readiness proves the owned process and real healthy DB, not merely an open port
+  ---
+  duration_ms: 20.206833
+  type: 'test'
+  ...
+# Subtest: bounded failure on foreign
+ok 23 - bounded failure on foreign
+  ---
+  duration_ms: 152.087345
+  type: 'test'
+  ...
+# Subtest: bounded failure on unhealthy
+ok 24 - bounded failure on unhealthy
+  ---
+  duration_ms: 152.088268
+  type: 'test'
+  ...
+# Subtest: bounded failure on forged-proof
+ok 25 - bounded failure on forged-proof
+  ---
+  duration_ms: 151.192584
+  type: 'test'
+  ...
+# Subtest: bounded failure on hang
+ok 26 - bounded failure on hang
+  ---
+  duration_ms: 152.421168
+  type: 'test'
+  ...
+# Subtest: utility-process exit aborts startup without waiting for its full deadline
+ok 27 - utility-process exit aborts startup without waiting for its full deadline
+  ---
+  duration_ms: 3.080958
+  type: 'test'
+  ...
+# (node:25443) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: copies only schema and empty template; leaves local user DB unchanged
+ok 28 - copies only schema and empty template; leaves local user DB unchanged
+  ---
+  duration_ms: 12.670787
+  type: 'test'
+  ...
+# Subtest: missing template never falls back to local DB
+ok 29 - missing template never falls back to local DB
+  ---
+  duration_ms: 7.396225
+  type: 'test'
+  ...
+# Subtest: nonempty template is refused without changing it
+ok 30 - nonempty template is refused without changing it
+  ---
+  duration_ms: 9.01177
+  type: 'test'
+  ...
+# Subtest: stale databases in output fail closed rather than being packaged or deleted
+ok 31 - stale databases in output fail closed rather than being packaged or deleted
+  ---
+  duration_ms: 7.029479
+  type: 'test'
+  ...
+# Subtest: packaging filter cannot wildcard local databases
+ok 32 - packaging filter cannot wildcard local databases
+  ---
+  duration_ms: 1.18283
+  type: 'test'
+  ...
+# Subtest: refuses an output directory junction without overwriting its external target
+ok 33 - refuses an output directory junction without overwriting its external target
+  ---
+  duration_ms: 6.262824
+  type: 'test'
+  ...
+# Subtest: refuses a source directory junction without touching its files
+ok 34 - refuses a source directory junction without touching its files
+  ---
+  duration_ms: 5.80669
+  type: 'test'
+  ...
+# (node:25450) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: single offline NSIS per-user contract preserves identity, data and protections
+ok 35 - single offline NSIS per-user contract preserves identity, data and protections
+  ---
+  duration_ms: 3.213479
+  type: 'test'
+  ...
+# Subtest: publication requires actual payload inspection, validates PE and keeps release to one EXE
+ok 36 - publication requires actual payload inspection, validates PE and keeps release to one EXE
+  ---
+  duration_ms: 194.410042
+  type: 'test'
+  ...
+# Subtest: foreign release files and invalid PE are refused without deleting user files
+ok 37 - foreign release files and invalid PE are refused without deleting user files
+  ---
+  duration_ms: 2.030708
+  type: 'test'
+  ...
+# Subtest: actual payload comparison rejects missing, extra and altered files
+ok 38 - actual payload comparison rejects missing, extra and altered files
+  ---
+  duration_ms: 4.216719
+  type: 'test'
+  ...
+1..38
+# tests 38
+# suites 0
+# pass 38
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1874.186141

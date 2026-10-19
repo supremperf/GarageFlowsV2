@@ -1,0 +1,92 @@
+{
+  "scope": "TOOL_SELECTION_ONLY_NOT_INTENT_OR_BUSINESS_FACT_ACCURACY",
+  "executionProof": "P09",
+  "originalCorpusSha256": "7b23aa75f2f08b6b23e9bf65a64d1051c95aef0bac33168257f562feb1227092",
+  "cases": 48,
+  "passed": 17,
+  "failed": 31,
+  "runtimeTuned": false,
+  "goldModified": false,
+  "baselineFailureTaxonomy": "../copilot-phase5/frozen48-failure-taxonomy.json",
+  "baselinePrimaryCounts": {
+    "LIMITE_FALLBACK_LOCAL": 20,
+    "ENTITE_MAL_EXTRAITE": 1,
+    "CONTRAINTE_PERDUE": 3,
+    "INFORMATION_MANQUANTE_NON_DETECTEE": 1,
+    "INTENTION_INCORRECTE": 1,
+    "CLARIFICATION_NECESSAIRE": 4,
+    "MAUVAIS_OUTIL": 1
+  },
+  "perGoldIntentCategory": {
+    "lookup": {
+      "cases": 17,
+      "passed": 3,
+      "toolTruePositive": 3,
+      "toolFalsePositive": 0,
+      "toolFalseNegative": 16
+    },
+    "diagnose": {
+      "cases": 2,
+      "passed": 0,
+      "toolTruePositive": 0,
+      "toolFalsePositive": 0,
+      "toolFalseNegative": 2
+    },
+    "clarify": {
+      "cases": 16,
+      "passed": 8,
+      "toolTruePositive": 0,
+      "toolFalsePositive": 4,
+      "toolFalseNegative": 0
+    },
+    "explain": {
+      "cases": 3,
+      "passed": 0,
+      "toolTruePositive": 0,
+      "toolFalsePositive": 0,
+      "toolFalseNegative": 0
+    },
+    "propose_action": {
+      "cases": 2,
+      "passed": 0,
+      "toolTruePositive": 0,
+      "toolFalsePositive": 0,
+      "toolFalseNegative": 0
+    },
+    "compare": {
+      "cases": 2,
+      "passed": 0,
+      "toolTruePositive": 0,
+      "toolFalsePositive": 0,
+      "toolFalseNegative": 4
+    },
+    "mixed": {
+      "cases": 1,
+      "passed": 1,
+      "toolTruePositive": 0,
+      "toolFalsePositive": 0,
+      "toolFalseNegative": 0
+    },
+    "out_of_scope": {
+      "cases": 5,
+      "passed": 5,
+      "toolTruePositive": 0,
+      "toolFalsePositive": 0,
+      "toolFalseNegative": 0
+    }
+  },
+  "semanticIntentEvaluated": 0,
+  "businessFactsEvaluated": 0,
+  "finalResponsesEvaluated": 0,
+  "authenticatedViolationsMeasured": null,
+  "secondCorpus": {
+    "status": "NOT_CONSTITUTED_INDEPENDENT_PROVENANCE_ABSENT",
+    "score": null,
+    "perCategoryFalsePositives": null,
+    "perCategoryFalseNegatives": null,
+    "independence": "No external human gold/questions supplied; not fabricated or derived from frozen failures",
+    "intake": "scripts/prepare-copilot-blind-set.cjs; 32 cases, eight dimensions, four cases per dimension",
+    "overlapLimits": "Existing intake checks exact/normalized overlap only; human semantic independence remains mandatory"
+  },
+  "limits": "Tool-set TP/FP/FN are descriptive micro counts against unchanged expected.tools, grouped by original gold intent; they are not a measured understanding/intent score. No score for an absent independent corpus."
+}

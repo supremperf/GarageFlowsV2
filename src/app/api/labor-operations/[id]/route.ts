@@ -2,6 +2,8 @@ export const dynamic = "force-dynamic"
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { withAuth, requireSession } from '@/lib/api-helpers'
+import { toScaled } from '@/lib/money'
+import { laborOpToEuros } from '@/lib/money-db'
 
 // GET /api/labor-operations/[id]
 export const GET = withAuth(async (_req, { params }: { params: { id: string } }) => {
@@ -10,7 +12,7 @@ export const GET = withAuth(async (_req, { params }: { params: { id: string } })
     where: { id: params.id, garageId: session.user.garageId },
   })
   if (!operation) return NextResponse.json({ error: 'Introuvable' }, { status: 404 })
-  return NextResponse.json(operation)
+  return NextResponse.json(laborOpToEuros(operation))
 })
 
 // PATCH /api/labor-operations/[id]
@@ -38,7 +40,8 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
   if (body.name !== undefined)        data.name        = String(body.name).trim()
   if (body.category !== undefined)    data.category    = body.category || null
   if (body.durationMin !== undefined) data.durationMin = Number(body.durationMin)
-  if (body.unitPrice !== undefined)   data.unitPrice   = Number(body.unitPrice)
+  // Saisie euros -> entier exact (dix-milliemes).
+  if (body.unitPrice !== undefined)   data.unitPriceTenThousandths = toScaled(Number(body.unitPrice))
   if (body.description !== undefined) data.description = body.description || null
   if (body.isActive !== undefined)    data.isActive    = Boolean(body.isActive)
 
@@ -46,7 +49,7 @@ export const PATCH = withAuth(async (req, { params }: { params: { id: string } }
     where: { id: params.id, garageId: session.user.garageId },
     data,
   })
-  return NextResponse.json(updated)
+  return NextResponse.json(laborOpToEuros(updated))
 })
 
 // DELETE /api/labor-operations/[id]

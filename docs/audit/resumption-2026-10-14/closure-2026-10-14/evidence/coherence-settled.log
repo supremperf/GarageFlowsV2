@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-14T16:51:46.665331+00:00",
+  "sourceDeltaSha256": "075562ac7cc0ebbd36a04f0d883157dc40a5ebcc4bc8e4e0839dd4810b55e80e",
+  "historicalEvidence": "unchanged",
+  "sourceHashes": 1250,
+  "semanticStatuses": {
+    "EN ATTENTE DE REVUE": 1135,
+    "VALID\u00c9": 72,
+    "PARTIELLEMENT VALID\u00c9": 43
+  },
+  "sastSignals": 865,
+  "exactGroups": 845,
+  "triages": 27,
+  "parserErrors": 0,
+  "testCases": 3841,
+  "skips": 844,
+  "globalErrors": 4,
+  "issues": 26,
+  "ci4989": "completed/failure; 4 success,3 failure,1 skipped",
+  "budget": "unchanged",
+  "limitations": "Coherence only, no security certification, no production readiness."
+}

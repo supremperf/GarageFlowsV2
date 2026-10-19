@@ -1,0 +1,27 @@
+{
+  "id": "patch-verification-v2",
+  "startedAt": "2026-10-14T17:03:42.763038+00:00",
+  "timezone": "Europe/Paris",
+  "cwd": "/home/user/GarageFlowsV2",
+  "argv": [
+    "node",
+    "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/verify-patch-v2.cjs"
+  ],
+  "timeoutSeconds": 600,
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+  "trackedNonAuditFiles": 1220,
+  "environmentOverrides": {
+    "PATH": "pinned npm 11.16.0 first",
+    "NODE_USE_SYSTEM_CA": "1"
+  },
+  "proof": "evidence/patch-verification-v2.log",
+  "exitCode": 0,
+  "finishedAt": "2026-10-14T17:03:44.534874+00:00",
+  "afterIdentity": {
+    "head": "f88f2832eb256310852ed86040057c062d44433e",
+    "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+    "trackedNonAuditFiles": 1220
+  },
+  "logSha256": "6639eb330be6e78bb5dc2ebefa9c37387f01a199dee83028388693ab57d54c91"
+}

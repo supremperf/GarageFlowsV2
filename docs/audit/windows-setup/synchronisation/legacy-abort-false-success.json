@@ -1,0 +1,7 @@
+{
+  "fixture": "local HTTP200 headers, incomplete JSON body, existing timeout150ms",
+  "legacyReturnedSuccessAfterBodyAbort": true,
+  "legacyStatus": 200,
+  "legacyDataKeys": [],
+  "productionEndpointContacted": false
+}

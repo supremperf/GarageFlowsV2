@@ -1,0 +1,81 @@
+Source: git show c4a2cca2cf446f96be580e99cca8afbca45396c5:scripts/post-build.js
+Excerpt lines 135-212
+
+    if (fs.existsSync(schemaSrc)) {
+      fs.copyFileSync(schemaSrc, path.join(prismaDst, 'schema.prisma'))
+      console.log('  ✅ schema.prisma copied   → standalone/prisma')
+    }
+
+    // Copy DB template — prefer the committed template, fall back to prisma db push
+    // garageflow-template.db is committed to git (valid SQLite, empty schema)
+    // so Windows builds never need to run prisma db push locally.
+    const candidates = [
+      'garageflow-template.db',
+      'garageflow.db',
+      'dev.db',
+    ]
+
+    let dbCopied = false
+    for (const dbName of candidates) {
+      const src = path.join(prismaSrc, dbName)
+      if (fs.existsSync(src) && isValidSqliteFile(src)) {
+        // Always copy as garageflow-template.db so main.js finds it consistently
+        const dst = path.join(prismaDst, 'garageflow-template.db')
+        fs.copyFileSync(src, dst)
+        console.log(`  ✅ DB template copied (from ${dbName}) → standalone/prisma/garageflow-template.db`)
+        dbCopied = true
+        break
+      }
+      if (fs.existsSync(src)) {
+        console.warn(`  ⚠  ${dbName} exists but is not valid SQLite — skipping`)
+      }
+    }
+
+    if (!dbCopied) {
+      // Last resort: run prisma db push to create a fresh schema DB
+      const devDbPath = path.join(prismaSrc, 'dev.db')
+      const dbPushUrl = `file:${devDbPath.replace(/\\/g, '/')}`
+      console.log('  ⏳ No valid DB template found — running npx prisma db push…')
+      try {
+        if (fs.existsSync(devDbPath)) fs.unlinkSync(devDbPath)  // remove stale empty file
+        execSync('npx prisma db push --skip-generate', {
+          cwd:   ROOT,
+          stdio: 'inherit',
+          env:   { ...process.env, DATABASE_URL: dbPushUrl },
+        })
+        if (fs.existsSync(devDbPath) && isValidSqliteFile(devDbPath)) {
+          const templateDst = path.join(prismaDst, 'garageflow-template.db')
+          fs.copyFileSync(devDbPath, templateDst)
+          // BASELINE OBLIGATOIRE : une base neuve au schéma final ne doit rejouer
+          // AUCUNE migration historique (registre _gf_migrations pré-rempli).
+          execSync(`node --experimental-strip-types scripts/baseline-template.mjs "${templateDst}"`, { cwd: ROOT, stdio: 'inherit' })
+          console.log('  ✅ dev.db created + copied + baseliné → standalone/prisma/garageflow-template.db')
+          dbCopied = true
+        } else {
+          console.error('  ❌ prisma db push ran but produced no valid DB — check prisma/schema.prisma')
+          process.exit(1)
+        }
+      } catch (err) {
+        console.error('  ❌ prisma db push failed:', err.message)
+        process.exit(1)
+      }
+    }
+  }
+
+  // 6. Copy public key (if it exists) into standalone
+  {
+    const pubKey = path.join(ROOT, 'keys', 'public.pem')
+    if (fs.existsSync(pubKey)) {
+      const dst = path.join(ROOT, '.next', 'standalone', 'keys')
+      fs.mkdirSync(dst, { recursive: true })
+      fs.copyFileSync(pubKey, path.join(dst, 'public.pem'))
+      console.log('  ✅ public.pem copied      → standalone/keys')
+    } else {
+      // Échec DUR, et non simple avertissement : sans ce fichier, electron-builder
+      // se contente d'un « file source doesn't exist » non bloquant, et
+      // electron/integrity.js (criticalFiles) ignore silencieusement l'ancre
+      // keys/public.pem. Résultat observé : un installateur d'apparence normale
+      // dont le manifeste d'intégrité ne couvre que 10 fichiers critiques au lieu
+      // de 11, sans qu'aucune étape de la chaîne n'ait signalé d'erreur.
+      console.error('  ❌ keys/public.pem introuvable — artefact non distribuable.')
+      console.error('     package.json (build.extraResources) et electron/integrity.js')

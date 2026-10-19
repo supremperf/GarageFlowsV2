@@ -1,0 +1,133 @@
+{
+  "at": "2026-10-15T13:46:42.113464+00:00",
+  "checks": [
+    {
+      "checkId": 116456546679,
+      "headSha": "ce879b1ff936a4b6d6ad7bd0e816c5bef20eba22",
+      "conclusion": "failure",
+      "title": "17 new alerts including 7 high severity security vulnerabilities",
+      "annotationsCount": 17,
+      "locations": [
+        {
+          "path": "scripts/materialize-build-public-key.cjs",
+          "start_line": 32,
+          "end_line": 32,
+          "annotation_level": "failure",
+          "title": "Potential file system race condition"
+        },
+        {
+          "path": "scripts/config-core.cjs",
+          "start_line": 97,
+          "end_line": 97,
+          "annotation_level": "failure",
+          "title": "Incomplete string escaping or encoding"
+        },
+        {
+          "path": "docs/audit/resumption-2026-10-14/run-command.cjs",
+          "start_line": 11,
+          "end_line": 11,
+          "annotation_level": "failure",
+          "title": "Potential file system race condition"
+        },
+        {
+          "path": "docs/audit/resumption-2026-10-14/publication-preflight.cjs",
+          "start_line": 8,
+          "end_line": 8,
+          "annotation_level": "failure",
+          "title": "Potential file system race condition"
+        },
+        {
+          "path": "docs/audit/resumption-2026-10-14/investigation-2026-10-14/run-command.cjs",
+          "start_line": 11,
+          "end_line": 11,
+          "annotation_level": "failure",
+          "title": "Potential file system race condition"
+        },
+        {
+          "path": "docs/audit/resumption-2026-10-14/closure-2026-10-14/run-command.cjs",
+          "start_line": 11,
+          "end_line": 11,
+          "annotation_level": "failure",
+          "title": "Potential file system race condition"
+        },
+        {
+          "path": "docs/audit/followup-2026-10-14/build-review-ledger.cjs",
+          "start_line": 61,
+          "end_line": 61,
+          "annotation_level": "failure",
+          "title": "Potential file system race condition"
+        },
+        {
+          "path": "electron/main.js",
+          "start_line": 642,
+          "end_line": 642,
+          "annotation_level": "warning",
+          "title": "Network data written to file"
+        },
+        {
+          "path": "electron/main.js",
+          "start_line": 1565,
+          "end_line": 1565,
+          "annotation_level": "warning",
+          "title": "File data in outbound network request"
+        },
+        {
+          "path": "electron/main.js",
+          "start_line": 2106,
+          "end_line": 2106,
+          "annotation_level": "warning",
+          "title": "Network data written to file"
+        },
+        {
+          "path": "scripts/config-services.cjs",
+          "start_line": 136,
+          "end_line": 136,
+          "annotation_level": "warning",
+          "title": "File data in outbound network request"
+        },
+        {
+          "path": "src/lib/einvoicing/__tests__/formats.test.ts",
+          "start_line": 28,
+          "end_line": 28,
+          "annotation_level": "warning",
+          "title": "Replacement of a substring with itself"
+        },
+        {
+          "path": "src/lib/photo-store.ts",
+          "start_line": 89,
+          "end_line": 89,
+          "annotation_level": "warning",
+          "title": "Network data written to file"
+        },
+        {
+          "path": "src/lib/sync/cloud-client.ts",
+          "start_line": 76,
+          "end_line": 76,
+          "annotation_level": "warning",
+          "title": "File data in outbound network request"
+        },
+        {
+          "path": "src/middleware.ts",
+          "start_line": 95,
+          "end_line": 95,
+          "annotation_level": "warning",
+          "title": "Log injection"
+        },
+        {
+          "path": "src/middleware.ts",
+          "start_line": 124,
+          "end_line": 124,
+          "annotation_level": "warning",
+          "title": "Log injection"
+        },
+        {
+          "path": "src/middleware.ts",
+          "start_line": 204,
+          "end_line": 204,
+          "annotation_level": "warning",
+          "title": "Log injection"
+        }
+      ]
+    }
+  ]
+}

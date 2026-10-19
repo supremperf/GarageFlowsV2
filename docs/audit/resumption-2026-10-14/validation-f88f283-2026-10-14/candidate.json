@@ -1,0 +1,36 @@
+{
+  "head": "f88f2832eb256310852ed86040057c062d44433e",
+  "sourceFingerprint": "de3a75edb7e53fcb48b1f20555f47b1f51e663250a55b2b0a2b2a9e0188bb67d",
+  "trackedNonAuditFiles": 1220,
+  "at": "2026-10-14T17:12:11.748813+00:00",
+  "branch": "arena/c9eaae15-garageflowsv2",
+  "remote": "f88f2832eb256310852ed86040057c062d44433e\trefs/heads/arena/c9eaae15-garageflowsv2",
+  "localSourceDeltaSha256": "cae162fcff57054d0c695930a14c68e179a316ed14661f0ecdc76e3f1307267f",
+  "sourceChanges": [
+    {
+      "path": ".gitleaksignore",
+      "sha256": "2c4cd78c2e8d8ec1ef2678b053da964083bdaf55302fe84e9cfb8e2ccde3440f"
+    },
+    {
+      "path": "tests/secret-scan-policy.test.cjs",
+      "sha256": "3e728bd7cf4e854bedb92dcda8b7b2c92010850d1dd9d650b94eb7c622da6434"
+    }
+  ],
+  "criticalEvidenceDependencies": [
+    {
+      "path": "docs/audit/resumption-2026-10-14/validation-f88f283-2026-10-14/gitleaks-triage.jsonl",
+      "sha256": "08be3afa196e9506d873172505e09f86464ecc72fbaa06a93b00b6b0a33dd699"
+    },
+    {
+      "path": "docs/audit/resumption-2026-10-14/closure-2026-10-14/REPORT.md",
+      "sha256": "842f5517f28d471a8d8c38f6ecb2fa3bf351c80621abe763bd67ff0703eaa7d7"
+    },
+    {
+      "path": "docs/audit/resumption-2026-10-14/closure-2026-10-14/EVIDENCE-SHA256.jsonl",
+      "sha256": "7f6c460702f20ea90a4a9f75f23a529a8e4a81bcfe22171d876b2a2674725a7b"
+    }
+  ],
+  "originalPublishedSourceChangesVerified": true,
+  "newCommitOrPush": false,
+  "limits": "Source fingerprint covers tracked non-audit files; full evidence manifest separately binds this dossier and metadata used by policy tests. f88 CI cannot validate this local delta."
+}

@@ -2,7 +2,7 @@
 
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
-import { Job, REPAIR_TYPES } from '@/lib/types'
+import { Job, REPAIR_TYPES, repairConfig as repairConfigFor } from '@/lib/types'
 import { cn, formatDuration, getStatusColor, getStatusLabel, getJobEndTime } from '@/lib/utils'
 import { AlertTriangle, Clock, Zap, GripHorizontal, Play, Square } from 'lucide-react'
 import { useScheduleStore } from '@/store/schedule-store'
@@ -65,7 +65,8 @@ export default function JobCard({
     disabled: job.status === 'completed' || job.status === 'cancelled',
   })
 
-  const repairConfig = REPAIR_TYPES[job.repairType]
+  // Type inconnu toléré (voir repairConfig dans lib/types) — jamais de crash.
+  const repairConfig = repairConfigFor(job.repairType)
   const isSmall = heightPx < 50
   const isTiny = heightPx < 35
   const canResize = job.status !== 'completed' && job.status !== 'cancelled'

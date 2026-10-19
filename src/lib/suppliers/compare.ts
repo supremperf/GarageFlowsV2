@@ -8,6 +8,7 @@
  *   3. shorter lead time
  *   4. favourite flag, then supplier name (stable tie-break)
  */
+import { lineCents, fromCents } from '@/lib/money'
 import type {
   CompareOptions,
   LineComparison,
@@ -111,7 +112,7 @@ export function buildGroupedOrders(comparisons: LineComparison[]): Order[] {
       supplierRef: offer.supplierRef ?? null,
       quantity,
       unitPrice: offer.unitPrice,
-      lineTotal: roundMoney(quantity * offer.unitPrice),
+      lineTotal: fromCents(lineCents(offer.unitPrice, quantity)),
     }
 
     const order = bySupplier.get(offer.supplierId) ?? {

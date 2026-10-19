@@ -3,18 +3,105 @@ export const dynamic = 'force-dynamic'
 /**
  * GET /api/portal/auth/verify-email?token=... — confirm a portal account's email.
  * The token was generated at registration and dispatched via the garage mailer.
+ *
+ * C'est ICI — et seulement ici — que le rattachement à un Client existant du
+ * garage (même email) est effectué : la possession de l'email vient d'être
+ * prouvée par le clic sur le lien porteur du jeton. Le rattachement à
+ * l'inscription est volontairement absent (anti-prise de contrôle de compte).
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { cheminPortail } from '@/lib/portal/routes'
 
 export async function GET(req: NextRequest) {
+  // Cette route est ouverte depuis un CLIENT DE MESSAGERIE : ses réponses sont
+  // lues par un humain dans un navigateur, jamais par du code. Les chemins de
+  // succès redirigeaient déjà vers une page ; les échecs, eux, rendaient du JSON
+  // brut — un cul-de-sac pour le client à qui l'on venait d'écrire « ouvrez le
+  // lien reçu, sinon vos documents ne s'affichent pas ». Ils redirigent
+  // désormais eux aussi, avec le motif.
+  const versConnexion = (motif: string) =>
+    NextResponse.redirect(new URL(`${cheminPortail('login')}?lien=${motif}`, req.url), { status: 303 })
+
   const token = req.nextUrl.searchParams.get('token')?.trim()
-  if (!token) return NextResponse.json({ error: 'Jeton manquant' }, { status: 400 })
+  if (!token) return versConnexion('absent')
 
-  const user = await prisma.portalUser.findFirst({ where: { emailVerifyToken: token }, select: { id: true } })
-  if (!user) return NextResponse.json({ error: 'Lien invalide ou déjà utilisé' }, { status: 400 })
+  const user = await prisma.portalUser.findFirst({
+    where: { emailVerifyToken: token },
+    select: { id: true, garageId: true, email: true, clientId: true, pendingEmail: true },
+  })
+  if (!user) return versConnexion('utilise')
 
-  await prisma.portalUser.update({ where: { id: user.id }, data: { emailVerified: true, emailVerifyToken: null } })
-  return NextResponse.json({ ok: true })
+  // ── CHANGEMENT d'adresse confirmé (GF-PORT-006) ────────────────────────────
+  // Le clic prouve la possession de la NOUVELLE adresse : elle devient
+  // l'identifiant de connexion. C'est aussi ici que la fiche client du garage
+  // est mise à jour — sinon le garage continuerait d'écrire à l'ancienne adresse
+  // et les deux vérités divergeraient en silence (§47).
+  if (user.pendingEmail) {
+    const nouvelle = user.pendingEmail
+    try {
+      await prisma.$transaction([
+        prisma.portalUser.update({
+          where: { id: user.id },
+          data: { email: nouvelle, pendingEmail: null, emailVerified: true, emailVerifyToken: null },
+        }),
+        // Propagation vers la fiche GARAGE, uniquement si le compte y est
+        // rattaché. Le filtre porte aussi sur `garageId` : un identifiant de
+        // client ne suffit jamais à désigner une ligne.
+        ...(user.clientId
+          ? [prisma.client.updateMany({
+              where: { id: user.clientId, garageId: user.garageId },
+              data: { email: nouvelle },
+            })]
+          : []),
+      ])
+    } catch {
+      // Collision avec un autre compte du même garage (@@unique[garageId,email])
+      // survenue entre la demande et la confirmation. L'ancienne adresse reste
+      // valide : le client n'est pas enfermé dehors.
+      await prisma.portalUser.update({
+        where: { id: user.id },
+        data: { pendingEmail: null, emailVerifyToken: null },
+      }).catch(() => {})
+      const echec = `${cheminPortail('account')}?email=conflit`
+      return NextResponse.redirect(new URL(echec, req.url), { status: 303 })
+    }
+
+    const g = await prisma.garage.findUnique({ where: { id: user.garageId }, select: { slug: true } })
+    const ok = g?.slug
+      ? `${cheminPortail('login')}?garage=${encodeURIComponent(g.slug)}&email=modifie`
+      : `${cheminPortail('login')}?email=modifie`
+    return NextResponse.redirect(new URL(ok, req.url), { status: 303 })
+  }
+
+  // Rattachement DIFFÉRÉ : email désormais prouvé → on peut lier le compte au
+  // Client du même garage/email s'il existe et si le compte n'est pas déjà lié.
+  let clientId = user.clientId
+  if (!clientId) {
+    const client = await prisma.client.findFirst({
+      where: { garageId: user.garageId, email: user.email },
+      select: { id: true },
+    })
+    clientId = client?.id ?? null
+  }
+
+  await prisma.portalUser.update({
+    where: { id: user.id },
+    data: { emailVerified: true, emailVerifyToken: null, ...(clientId ? { clientId } : {}) },
+  })
+  // Le client arrive ici depuis son logiciel de messagerie : lui répondre un
+  // JSON brut serait un cul-de-sac. On le renvoie vers la connexion du portail,
+  // EN PORTANT le slug de son garage — c'est le seul moment où le lien est
+  // fabriqué côté serveur, donc le seul où la convention `?garage=<slug>` peut
+  // être produite sans que personne ait à la connaître.
+  const garage = await prisma.garage.findUnique({
+    where: { id: user.garageId },
+    select: { slug: true },
+  })
+  const connexion = cheminPortail('login')
+  const cible = garage?.slug
+    ? `${connexion}?garage=${encodeURIComponent(garage.slug)}&verified=1`
+    : `${connexion}?verified=1`
+  return NextResponse.redirect(new URL(cible, req.url), { status: 303 })
 }
