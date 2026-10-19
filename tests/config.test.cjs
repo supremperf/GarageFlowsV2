@@ -421,7 +421,13 @@ test('CLI --list is offline and read-only, covers existing custom names and neve
   const run = spawnSync(process.execPath, [path.join(dir, 'config'), '--list'], { cwd: dir, encoding: 'utf8' })
   assert.equal(run.status, 0, run.stderr)
   assert.match(run.stdout, /custom.setting/)
-  assert.match(run.stdout, /50 variables du template/)
+  // Le nombre de variables du template est DÉRIVÉ de `.env.example` (commentées
+  // comprises, comme le CLI) : il ne peut plus dériver silencieusement quand une
+  // variable documentée est ajoutée (EINVOICING_QUEUE_TOKEN a fait 50 → 51).
+  const templateVars = fs.readFileSync(path.join(root, '.env.example'), 'utf8')
+    .split(/\r?\n/).filter(line => /^(#\s*)?[A-Za-z_][A-Za-z0-9_]*=/.test(line))
+  assert.ok(templateVars.length >= 50)
+  assert.match(run.stdout, new RegExp(`${templateVars.length} variables du template`))
   assert.ok(!`${run.stdout}${run.stderr}`.includes(value))
   assert.equal(fs.readFileSync(file, 'utf8'), original)
   assert.ok(!fs.existsSync(path.join(dir, 'GarageFlow-configuration')))

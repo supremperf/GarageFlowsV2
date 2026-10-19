@@ -128,7 +128,7 @@ La somme des colonnes dépasse 897 : certains fichiers couvrent deux parcours.
 | `npx tsc --noEmit` | **0 erreur** |
 | `npx eslint src` | **0 erreur** |
 | `npm run build` (`next-build.cjs`) | **exit 0**, compilation réussie, 18 pages générées |
-| `npm run test:release-safety` | **164/164** |
+| `npm run test:release-safety` | **166/166** |
 | `npm run test:audit` | **21/21** |
 | `npm run check:consistency` | **exit 0** (13 contrôles) |
 | `node scripts/campagne-100-licences.mjs` | **`allPassed: true`** |

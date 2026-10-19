@@ -48,7 +48,7 @@ export function sourceVerifier(root = ROOT, publicKeyPem) {
 export function diagnoseToken(token, options = {}) {
   let code
   const base = { scope: options.publicKeyPem === undefined ? 'LOCAL_SOURCE_ONLY' : 'OPERATOR_SUPPLIED_PUBLIC_ANCHOR_ONLY',
-    deployedRuntimeVerified: false, tokenSha256: hash(token) }
+    deployedRuntimeVerified: false, empreinteJetonSha256: hash(token) }
   try {
     const { verify, ...identity } = sourceVerifier(options.root, options.publicKeyPem)
     Object.assign(base, identity)

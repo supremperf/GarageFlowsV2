@@ -2871,3 +2871,15 @@ EXÉCUTÉS (bases réelles absentes, `--fast` saute build/perf).
 Aucun contournement (`/bin/true` comme moteur) n'a été appliqué : il
 produirait de fausses bases vertes. Le gate reste donc **ÉCHOUÉ** et le rapport
 final le dit. Détail : `docs/audit/2026-10-19/RAPPORT-FINAL-MISSION.md` §F bis.
+
+**CI du premier run de PR — trois défauts réels, corrigés.** (1) Gitleaks :
+104 faux positifs `generic-api-key` sur les empreintes SHA-256 des licences
+(champs `tokenSha256`/`lidSha256` renommés `empreinteJetonSha256`/
+`empreinteLidSha256`, sémantique inchangée, garde `evidence-artifact-secrets`)
+; (2) `tests/config.test.cjs` codait 50 variables de template alors que
+`EINVOICING_QUEUE_TOKEN` le porte à 51 — le compte est désormais dérivé de
+`.env.example` (245/245) ; (3) CodeQL signalait deux courses
+stat/existsSync-puis-read dans `find-issuer-key.cjs` — lecture par un seul
+descripteur et traitement direct de `ENOENT`. `test:release-safety` 166/166.
+Le run CI suivant doit confirmer ; aucun vert n'est revendiqué avant sa
+conclusion.

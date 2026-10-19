@@ -129,7 +129,7 @@ Contrôles spécifiques à la facturation électronique, ajoutés ou revérifié
   (959 entrées), et qu'aucune source critique (auth, clé publique) n'est exclue
   en bloc. Résultat : **vert**, y compris après re-triage documenté des 29
   empreintes du fichier de test keygen (snapshot public gelé).
-- `npm run test:release-safety` : **164/164**.
+- `npm run test:release-safety` : **166/166**.
 - `npm run check:artifact-secrets` n'a **pas pu** s'exécuter : il exige un
   répertoire `dist/` produit par le packaging Windows, absent ici. Il devra
   tourner sur l'artefact réel avant diffusion.

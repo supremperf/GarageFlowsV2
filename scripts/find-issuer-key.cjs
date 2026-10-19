@@ -94,12 +94,20 @@ function scan(roots, { now = Date.now } = {}) {
       if (!entry.isFile()) continue
       const isPem = /\.(pem|key)$/i.test(entry.name), isEnv = ENV_NAMES.has(entry.name)
       if (!isPem && !isEnv) continue
-      let size = 0
-      try { size = fs.statSync(full).size } catch { continue }
-      if (size > (isEnv ? 1024 * 1024 : 64 * 1024)) continue
-      let text
-      try { text = fs.readFileSync(full, 'utf8') } catch { continue }
-      found.push(...candidatesFromFile(full, text))
+      // Un SEUL descripteur : taille et contenu proviennent du même fichier
+      // ouvert. Un stat-puis-read sur le chemin laissait une fenêtre de course
+      // (le fichier pouvait être remplacé entre les deux appels).
+      let fd
+      try { fd = fs.openSync(full, 'r') } catch { continue }
+      try {
+        const size = fs.fstatSync(fd).size
+        if (size > (isEnv ? 1024 * 1024 : 64 * 1024)) continue
+        let text
+        try { text = fs.readFileSync(fd, 'utf8') } catch { continue }
+        found.push(...candidatesFromFile(full, text))
+      } finally {
+        fs.closeSync(fd)
+      }
     }
   }
   for (const root of roots) walk(root, 0)
@@ -145,9 +153,16 @@ function install(root, match, referenceFp, { backupBase = path.join(os.homedir()
     moved.push({ label, to: dest })
   }
 
-  if (fs.existsSync(target)) {
+  // Pas de existsSync-puis-read : on lit directement et on traite ENOENT.
+  // Le fichier peut changer entre les deux appels, et une clé apparue après le
+  // test serait écrasée sans être mise de côté.
+  let currentPem = null
+  try { currentPem = fs.readFileSync(target, 'utf8') } catch (e) {
+    if (e.code !== 'ENOENT') throw e
+  }
+  if (currentPem !== null) {
     let currentFp = null
-    try { currentFp = publicFingerprint(readKey(fs.readFileSync(target, 'utf8'))) } catch { /* chiffrée sans passphrase / illisible */ }
+    try { currentFp = publicFingerprint(readKey(currentPem)) } catch { /* chiffrée sans passphrase / illisible */ }
     if (currentFp === referenceFp) return { installed: false, already: true, moved }
     setAside(target, 'keys/private.pem (clé non conforme)')
   }

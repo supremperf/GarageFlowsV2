@@ -139,7 +139,7 @@ neuf, avec ses propres choix de fournisseur et de facturation.
 | `npm run build` (étape Next) | **exit 0**, 18 pages, route webhook et file présentes |
 | `npm run rapport:parcours` | **890/897** assertions, 0 échec, 7 ignorées |
 | Baseline hors base élargie | **3 439/3 460**, 0 échec, 21 ignorées ; 1 suite non chargée (Prisma) |
-| `npm run test:release-safety` | **164/164** |
+| `npm run test:release-safety` | **166/166** |
 | `npm run test:audit` | **21/21** |
 | `npm run check:consistency` | **exit 0** (13 contrôles) |
 | `npm audit` (dev+optional+peer) | **0** vulnérabilité sur 832 paquets verrouillés |
@@ -211,6 +211,33 @@ ce contrôle vert ici. Le déclarer vert serait un mensonge ; le contourner
 (`/bin/true` comme moteur) produirait de fausses bases. En CI avec réseau, le
 même gate doit pouvoir télécharger le moteur — c'est une hypothèse, pas une
 preuve, et elle est présentée comme telle.
+
+### F ter. CI GitHub — ce que le premier run a révélé (et qui est corrigé)
+
+Le premier run CI de la PR a échoué sur trois points, tous réels et tous
+corrigés dans la foulée (le run suivant doit le confirmer) :
+
+1. **Secret scan (Gitleaks) — 104 faux positifs.** La preuve publique
+   `campagne-100-licences.json` publiait des **empreintes SHA-256** sous les
+   champs `tokenSha256` / `lidSha256`. La règle `generic-api-key` associe le
+   mot-clé anglais « token » suivi d'une valeur hexadécimale de 64 caractères à
+   une clé d'API. Les champs sont renommés `empreinteJetonSha256` /
+   `empreinteLidSha256` : l'évidence reste identique (mêmes digests), plus de
+   faux positif. Un test (`tests/evidence-artifact-secrets.test.cjs`) verrouille
+   la cause — et vérifie qu'aucun jeton signé brut n'est publié.
+2. **Type-check, Lint & Test — `tests/config.test.cjs`.** Le test codait
+   « 50 variables du template » alors que `EINVOICING_QUEUE_TOKEN`, ajouté et
+   documenté dans `.env.example`, porte le template à 51. Le compte est
+   désormais **dérivé** de `.env.example` (commentées comprises, comme le CLI) :
+   il ne peut plus dériver en silence. `test:config` : **245/245**.
+3. **CodeQL — 2 alertes hautes (course de fichiers).** `find-issuer-key.cjs`
+   faisait `stat` puis `read`, et `existsSync` puis `read` : un fichier pouvait
+   être remplacé entre les deux appels. La lecture passe par **un seul
+   descripteur** (`openSync` → `fstatSync` → `readSync`) et le `existsSync` est
+   remplacé par une lecture directe traitant `ENOENT`. Les 8 tests du
+   récupérateur de clé passent.
+
+`test:release-safety` : **166/166** (les deux nouveaux gardes inclus).
 
 ## G. Version finale
 

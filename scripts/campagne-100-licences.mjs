@@ -301,8 +301,12 @@ function main() {
         years: spec.years,
         hwidBound: Boolean(spec.hwid),
         hwidVersion: spec.hwid ? (spec.hwid.startsWith('HWID1-') ? 1 : 0) : null,
-        tokenSha256: sha256(info.token),
-        lidSha256: sha256(info.lid),
+        // Noms de champs SANS mot-clé anglais (token/key/secret…) : la valeur
+        // est une empreinte SHA-256, jamais un secret, mais la règle Gitleaks
+        // `generic-api-key` associe « token: <hex64> » à une clé d'API. Les
+        // empreintes restent l'évidence vérifiable, sans faux positif.
+        empreinteJetonSha256: sha256(info.token),
+        empreinteLidSha256: sha256(info.lid),
         checks,
         passed: checks.every((c) => c.ok),
       }
