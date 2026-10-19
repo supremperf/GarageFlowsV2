@@ -150,10 +150,12 @@ Limites mesurées, aucune n'est maquillée :
 
 - Le moteur Prisma **natif** ne peut pas être téléchargé dans cet
   environnement (`binaries.prisma.sh` : TLS interrompu). Conséquence exacte sur
-  la suite complète : **79 fichiers de test refusés à l'import** (78 via le
-  `globalSetup` qui lance `prisma db push`, 1 fichier de test dédié) et
-  **3 assertions en échec** dans `src/test-utils/__tests__/prepare-test-db.test.ts`
-  — toutes les trois parce que `prisma db push` échoue au téléchargement. Le
+  la suite complète : **79 fichiers de test refusés à l'import** — 77 par le
+  `globalSetup` qui lance `prisma db push`, 1 par l'instanciation directe de
+  Prisma (`tenant-isolation.test.ts`), 1 fichier de test dédié — et **3
+  assertions en échec** dans `src/test-utils/__tests__/prepare-test-db.test.ts`.
+  Les 82 occurrences (79 fichiers + 3 assertions) portent toutes la même
+  erreur de téléchargement du moteur. Le
   reste de la suite : **3 475 succès, 0 échec applicatif, 851 sautées**
   (suites conditionnelles PostgreSQL/Redis). Ce n'est **pas** un vert, et ce
   n'est pas un défaut du code : la preuve est dans le message d'erreur

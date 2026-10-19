@@ -2862,7 +2862,8 @@ gate passe en 3 s.
 **Second passage du gate** : 9 contrôles obligatoires OK, **1 rouge** — vitest.
 Cause intégralement environnementale : `prisma db push` télécharge
 `libquery_engine.so.node.gz` sur `binaries.prisma.sh`, TLS coupé ici. 79
-fichiers refusés à l'import, 3 assertions en échec
+fichiers refusés à l'import (77 via `prisma db push`, 1 instanciation
+Prisma, 1 fichier dédié), 3 assertions en échec
 (`src/test-utils/__tests__/prepare-test-db.test.ts`), 3 475 succès d'assertions,
 0 échec applicatif, 851 sautées (PostgreSQL/Redis absents). 6 contrôles NON
 EXÉCUTÉS (bases réelles absentes, `--fast` saute build/perf).
