@@ -136,6 +136,21 @@ const HORS_MATRICE: Record<string, { motif: string; couverture?: string }> = {
     couverture: 'src/lib/__tests__/mechanic-session.test.ts',
   },
 
+  // ── Exploitation Keygen : routes machine à machine, AUCUNE session garage.
+  // L'isolation n'y est pas « par garage » mais « par machine autorisée » :
+  // l'en-tête `x-gf-key`, comparé en temps constant, est vérifié AVANT tout
+  // accès à la base. La matrice par garage ne sait pas exprimer cela ; la
+  // preuve dédiée montre qu'aucune session n'est lue et que la base n'est
+  // jamais touchée sans la clé.
+  '/api/keygen/licenses/[lid]/status': {
+    motif: 'exploitation serveur à serveur : `lid` désigne une licence, accès borné par la clé API d’administration (x-gf-key), aucune session garage',
+    couverture: 'src/app/api/keygen/__tests__/admin-scope.test.ts',
+  },
+  '/api/keygen/licenses/[lid]/hwid': {
+    motif: 'exploitation serveur à serveur : `lid` désigne une licence, accès borné par la clé API d’administration (x-gf-key), aucune session garage',
+    couverture: 'src/app/api/keygen/__tests__/admin-scope.test.ts',
+  },
+
   // ── Portail client : l'isolation n'y est pas « par garage » mais « par
   // COMPTE ». Un client ne doit pas atteindre le fil d'un autre, fût-il du même
   // garage — la matrice garage ne sait pas exprimer cela.

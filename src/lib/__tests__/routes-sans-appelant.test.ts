@@ -120,6 +120,24 @@ const INVENTAIRE: Record<string, { motif: Motif; note: string; classe?: Classe }
   // servent `scripts/keygen_gui.py`, pas l'interface web.
   '/api/admin/licenses/create': { motif: 'exploitation', note: 'enregistrement d’une licence par l’outil keygen (en-tête x-gf-key)' },
   '/api/admin/licenses/revoke-by-key': { motif: 'exploitation', note: 'révocation par l’outil keygen, par clé et non par identifiant' },
+  // ── Contrat Keygen ↔ serveur (x-gf-key), appelé depuis le Python ───────────
+  // DÉCLENCHEUR RÉEL : `scripts/keygen_server.py`, appelé par
+  // `scripts/keygen_ui.py`. Le corpus de cette garde ne balaie que `src` et
+  // `electron` (ts/tsx/js/jsx) : un appelant Python n'y est PAS visible, d'où
+  // la déclaration explicite. Ces trois routes remplacent des capacités mortes
+  // (statut distant indisponible depuis le retrait de `revoke-by-key`).
+  '/api/keygen/licenses': {
+    motif: 'exploitation',
+    note: 'état serveur des licences (statut, appareils, liaison matérielle) consulté par l’outil keygen ; contrat vérifié par keygen-api-contract.test.ts',
+  },
+  '/api/keygen/licenses/[lid]/status': {
+    motif: 'exploitation',
+    note: 'changement de statut depuis l’outil keygen (machine à états + recordMac), en remplacement de revoke-by-key retiré',
+  },
+  '/api/keygen/licenses/[lid]/hwid': {
+    motif: 'exploitation',
+    note: 'réinitialisation matérielle administrative depuis l’outil keygen (SAV, changement de poste)',
+  },
 
   '/api/vin': { motif: 'double', note: 'vinEngine atteint via /api/copilot, /api/ocr et /api/catalog' },
   '/api/diagnostic': { motif: 'double', note: 'diagnose() atteint via /api/copilot' },

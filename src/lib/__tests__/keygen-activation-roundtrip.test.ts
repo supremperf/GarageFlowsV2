@@ -53,12 +53,54 @@ it('reproducible script exercises actual checked Python signing and actual TypeS
   expect(report.steps.length).toBe(19)
   expect(report.steps.every((s: { passed: boolean }) => s.passed)).toBe(true)
 })
-it('both real GUI issuance branches use the checked loader before signing/persistence', () => {
+it('every real GUI issuance branch uses the checked loader before signing/persistence', () => {
   const gui = fs.readFileSync('scripts/keygen_ui.py', 'utf8')
-  expect(gui).toMatch(/def _init_keys\(self\):[\s\S]*?if core\.PRIV_FILE\.exists\(\) or core\.PUB_FILE\.exists\(\):/)
+  // Régénérer une paire est irréversible (toutes les licences signées avec
+  // l'autorité précédente cessent d'être valides) : l'IHM doit demander
+  // confirmation, jamais écraser silencieusement.
+  expect(gui).toMatch(/def _init_keys\(self\):[\s\S]{0,900}askyesno/)
+  expect(gui).toMatch(/def _init_keys\(self\):[\s\S]{0,1600}core\.generate_keys\(/)
+
   const python = fs.existsSync('.venv/bin/python') ? path.resolve('.venv/bin/python') : 'python3'
-  const script = `import ast,json\nt=ast.parse(open('scripts/keygen_ui.py',encoding='utf-8').read())\nr={}\nfor n in ast.walk(t):\n if isinstance(n,ast.FunctionDef) and n.name in ['_generate_garage','_generate_mechanics_existing']:\n  calls=[x for x in ast.walk(n) if isinstance(x,ast.Call) and isinstance(x.func,ast.Attribute) and isinstance(x.func.value,ast.Name) and x.func.value.id=='core']\n  checked=[x.lineno for x in calls if x.func.attr=='load_checked_private_key']\n  mint=[x.lineno for x in calls if x.func.attr in ['make_license','make_mechanic_license']]\n  r[n.name]=bool(checked) and bool(mint) and max(checked)<min(mint) and not any(x.func.attr=='load_private_key' for x in calls)\nprint(json.dumps(r))`
-  expect(JSON.parse(execFileSync(python, ['-c', script], { encoding: 'utf8' }))).toEqual({ _generate_garage: true, _generate_mechanics_existing: true })
+  // L'IHM refondue regroupe garage et mécanicien dans une même méthode
+  // `_generate` (avec une closure `_work` asynchrone) : plutôt que de figer des
+  // noms de fonctions, on éprouve TOUTE fonction du GUI qui appelle
+  // `core.make_license` / `core.make_mechanic_license`. L'invariant, lui, ne
+  // change pas : le chargeur CONTRÔLÉ est appelé avant la signature, et
+  // `core.load_private_key` (non contrôlé) n'est appelé nulle part.
+  const script = [
+    "import ast,json",
+    "t=ast.parse(open('scripts/keygen_ui.py',encoding='utf-8').read())",
+    "def core_calls(n):",
+    "    return [x for x in ast.walk(n) if isinstance(x,ast.Call) and isinstance(x.func,ast.Attribute) and isinstance(x.func.value,ast.Name) and x.func.value.id=='core']",
+    "r={}",
+    "mint_fns=set()",
+    "unchecked_fns=set()",
+    "for n in ast.walk(t):",
+    "    if not isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)): continue",
+    "    c=core_calls(n)",
+    "    if any(x.func.attr in ['make_license','make_mechanic_license'] for x in c): mint_fns.add(f'{n.name}:{n.lineno}')",
+    "    if any(x.func.attr=='load_private_key' for x in c): unchecked_fns.add(f'{n.name}:{n.lineno}')",
+    "for n in ast.walk(t):",
+    "    if not isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)): continue",
+    "    c=core_calls(n)",
+    "    mint=[x.lineno for x in c if x.func.attr in ['make_license','make_mechanic_license']]",
+    "    if not mint: continue",
+    "    checked=[x.lineno for x in c if x.func.attr=='load_checked_private_key']",
+    "    r[f'{n.name}:{n.lineno}']=bool(checked) and max(checked)<min(mint) and not any(x.func.attr=='load_private_key' for x in c)",
+    "module_level=[x.lineno for x in t.body if isinstance(x,ast.Expr)]",
+    "print(json.dumps({'branches':r,'mint_fns':sorted(mint_fns),'unchecked_fns':sorted(unchecked_fns)}))",
+  ].join('\n')
+  const out = JSON.parse(execFileSync(python, ['-c', script], { encoding: 'utf8' }))
+  // Au moins une branche d'émission doit exister : un résultat vide rendrait
+  // l'assertion suivante vraie pour rien.
+  expect(Object.keys(out.branches).length).toBeGreaterThan(0)
+  expect(Object.values(out.branches).every(Boolean)).toBe(true)
+  // `core.load_private_key` (chargeur NON contrôlé) reste autorisé pour le
+  // DIAGNOSTIC de correspondance — il ne fait que lire la clé pour comparer
+  // des empreintes publiques. Ce qui est interdit, c'est de s'en servir pour
+  // SIGNER : aucune fonction qui émet ne doit y toucher.
+  expect(out.unchecked_fns.filter((n: string) => out.mint_fns.includes(n))).toEqual([])
 })
 it.each(['production', 'development'])('activation logs signature stage with correlation but no token/payload in %s', async (environment) => {
   vi.stubEnv('NODE_ENV', environment)

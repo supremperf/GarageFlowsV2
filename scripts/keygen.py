@@ -15,8 +15,13 @@ Usage (Windows — run from project root):
   python scripts\keygen.py --init                                   # First time: generate key pair
   python scripts\keygen.py --admin                                  # Generate admin license
   python scripts\keygen.py --gen --customer CUST-001                # Single user license
-  python scripts\keygen.py --gen --customer CUST-001 --type trial --years 1
+  python scripts\keygen.py --gen --customer CUST-001 --type premium --duration "90 jours"
+  python scripts\keygen.py --gen --customer CUST-002 --type enterprise --duration-days 365
   python scripts\keygen.py --batch 10 --type premium --years 2      # Bulk generation
+
+OFFRES COMMERCIALES : PREMIUM et ENTREPRISE uniquement. Les types `trial`,
+`admin` et `mechanic` restent signables pour le parc installé et les outils
+internes, ils ne sont plus proposés à la vente.
   python scripts\keygen.py --gen-mechanic --parent-lid <LID> --count 3 --names "A,B,C"
                                                                     # Mechanic keys for a garage
   python scripts\keygen.py --verify <token>                         # Verify any token
@@ -26,7 +31,7 @@ Requirements (run once):
   pip install cryptography
 """
 
-import os, sys, json, base64, uuid, time, hashlib, argparse, getpass, platform
+import os, sys, json, base64, uuid, time, hashlib, argparse, getpass, platform, re
 from pathlib import Path
 
 # ── Dependency check ───────────────────────────────────────────────────────────
@@ -153,49 +158,25 @@ def _sign(priv_key, payload: dict) -> str:
 
 
 def make_license(priv_key, customer_id: str, license_type: str,
-                 years=1, seats=1, hwid=None, label=None) -> dict:
-    if license_type not in LICENSE_TYPES:
-        raise ValueError(f"Invalid type. Choose from: {sorted(LICENSE_TYPES)}")
+                 years=1, seats=1, hwid=None, label=None,
+                 duration=None, enforce_offer: bool = False) -> dict:
+    """Signe une licence GARAGE.
 
-    if hwid is not None:
-        hwid = keygen_core.normalize_license_hwid(hwid)
-        if not keygen_core.is_valid_license_hwid(hwid):
-            raise ValueError(
-                "HWID invalide : attendu 64 hex (v0) ou 'HWID1-' + 64 hex (v1). "
-                "Utiliser l'empreinte produite par le poste client (--bind-hwid)."
-            )
+    Implémentation UNIQUE : ce module délègue à `keygen_core.make_license`.
+    Deux chemins de signature divergents produiraient des jetons différents
+    (champs, filigrane, durées) pour la même autorité — c'est exactement le
+    défaut qui rendait un jeton « invalide » selon l'outil qui l'avait émis.
+    La délégation est donc une obligation de cohérence, pas un style.
 
-    now = int(time.time())
-    exp = now + years * 365 * 24 * 3600
+    `duration` accepte {"value": int, "unit": "jours"|"mois"|"annees"} : durée
+    exacte en jours, prioritaire sur `years`.
+    """
+    return keygen_core.make_license(
+        priv_key, customer_id, license_type,
+        years=years, seats=seats, hwid=hwid, label=label,
+        duration=duration, enforce_offer=enforce_offer,
+    )
 
-    # Watermark: opaque forensic marker. Decode it later to identify leaks.
-    wm_raw = {"c": customer_id, "t": now, "r": os.urandom(6).hex(), "l": label or ""}
-    wm     = b64u_enc(json.dumps(wm_raw, separators=(",", ":")).encode())
-
-    payload = {
-        "lid":   str(uuid.uuid4()),
-        "cid":   customer_id,
-        "typ":   license_type,
-        "iss":   now,
-        "exp":   exp,
-        "seats": seats,
-        "wm":    wm,
-        "ver":   "2.0",
-    }
-    if hwid:
-        payload["hwid"] = hwid
-
-    return {
-        "token":      _sign(priv_key, payload),
-        "lid":        payload["lid"],
-        "cid":        customer_id,
-        "type":       license_type,
-        "issued_at":  time.strftime("%Y-%m-%d", time.gmtime(now)),
-        "expires_at": time.strftime("%Y-%m-%d", time.gmtime(exp)),
-        "seats":      seats,
-        "hwid":       hwid,
-        "label":      label,
-    }
 
 # ── Mechanic license generation ────────────────────────────────────────────────
 DEFAULT_MAX_MECHANIC = 20
@@ -268,6 +249,7 @@ def cmd_gen_mechanic(args):
         info  = keygen_core.make_mechanic_license(
             pk, parent["lid"], cid, years=args.years,
             mechanic_name=name, label=label,
+            duration=cli_duration(args),
         )
         keygen_db.add_license(info, {})
         keygen_db.audit_log("gen_mechanic", info["lid"],
@@ -382,6 +364,30 @@ def decode_watermark(wm: str):
         return None
 
 # ── CLI ────────────────────────────────────────────────────────────────────────
+def cli_duration(args):
+    """Traduit --duration-days / --duration / --years en durée canonique (jours).
+
+    Retourne {"days": int, "label": str}. Refuse une saisie non numérique,
+    nulle, négative ou hors bornes plutôt que de signer une licence absurde.
+    """
+    if getattr(args, "duration_days", None) is not None:
+        days = keygen_core.duration_days(args.duration_days, "jours")
+        return {"value": days, "unit": "jours"}
+    if getattr(args, "duration", None):
+        raw = str(args.duration).strip().lower()
+        m = re.match(r"^\s*(\d+)\s*(jour|jours|jour\(s\)|mois|an|ans|an\(s\)|annee|annees)\s*$", raw)
+        if not m:
+            sys.exit("\nERREUR: --duration invalide. Formes acceptees : "
+                     "\"30 jours\", \"6 mois\", \"2 ans\".\n")
+        unite = {"jour": "jours", "jours": "jours", "jour(s)": "jours",
+                 "mois": "mois",
+                 "an": "annees", "ans": "annees", "an(s)": "annees",
+                 "annee": "annees", "annees": "annees"}[m.group(2)]
+        days = keygen_core.duration_days(int(m.group(1)), unite)
+        return {"value": days, "unit": "jours"}
+    return None
+
+
 def main():
     p = argparse.ArgumentParser(
         description="GarageFlows License Keygen v2 — ECC P-256",
@@ -406,12 +412,23 @@ def main():
     p.add_argument("--customer",   type=str)
     p.add_argument("--type",       type=str, default="premium",
                    choices=sorted(LICENSE_TYPES))
-    p.add_argument("--years",      type=int, default=1)
+    p.add_argument("--years",      type=int, default=1,
+                   help="Durée en ANNÉES (1 an = 365 j). Historique, conservé "
+                        "pour les outils et fixtures existants.")
+    p.add_argument("--duration",   type=str, default=None, metavar='"N jour(s)|mois|an(s)"',
+                   help='Durée exacte : "30 jours", "6 mois", "2 ans". '
+                        "Prioritaire sur --years.")
+    p.add_argument("--duration-days", type=int, default=None, metavar="N",
+                   help="Durée exacte en JOURS (1..36500). Prioritaire sur --duration et --years.")
     p.add_argument("--seats",      type=int, default=1)
     p.add_argument("--bind-hwid",  type=str, default=None, metavar="HWID",
                    dest="bind_hwid")
     p.add_argument("--label",      type=str, default=None)
     args = p.parse_args()
+
+    # Durée canonique : --duration-days > --duration > --years. Calculée une
+    # seule fois, puis transmise telle quelle au signeur.
+    _duree_cli = cli_duration(args)
 
     if args.hwid:
         # Diagnostic LOCAL uniquement. Cette empreinte n'est pas celle calculée
@@ -490,7 +507,8 @@ def main():
         for i in range(args.batch):
             cid  = args.customer or f"CUST-{i+1:04d}"
             info = make_license(pk, cid, args.type, args.years, args.seats,
-                                args.bind_hwid, args.label)
+                                args.bind_hwid, args.label,
+                                duration=_duree_cli)
             keygen_db.add_license(info, {})
             keygen_db.audit_log("gen_batch", info["lid"], f"cid={cid}")
             print(f"[{i+1:>3}] {info['token']}")
@@ -502,7 +520,8 @@ def main():
             p.error("--customer required")
         pk   = _load_private(args.passphrase)
         info = make_license(pk, args.customer, args.type, args.years,
-                            args.seats, args.bind_hwid, args.label)
+                            args.seats, args.bind_hwid, args.label,
+                            duration=_duree_cli)
         # Enregistrement dans la base locale du keygen (keys/licenses_db.json).
         # Sans lui, « --gen-mechanic --parent-lid <LID> » — pourtant documenté
         # dans l'en-tête de ce fichier — échouait TOUJOURS avec « Licence parente

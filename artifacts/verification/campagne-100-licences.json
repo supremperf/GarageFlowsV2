@@ -1,7 +1,7 @@
 {
- "generatedAt": "2026-10-19T18:17:42.522Z",
+ "generatedAt": "2026-10-19T21:13:29.801Z",
  "scope": "FIXTURE_KEY_ONLY; verify.ts réel; activation DB et application Windows NON exécutées",
- "fixturePublicFingerprint": "4bb2530a0a3d659eb1426dcec0cfce6a5c8efcf0e88f9aa9cde87e1af806cd41",
+ "fixturePublicFingerprint": "3b8b85e583f5b4ef565791ffcb8d7a127a81d1be4e91cdb057f58dea9abd43e3",
  "verifierSourceSha256": "afbed2df6d94fbccf3ce0e7e17b96116a524f8175e75587c9f96c69bd83eb894",
  "totals": {
   "garageLicenses": 100,
@@ -431,8 +431,8 @@
    "years": 1,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "3fda4badd6ffcbe33c693cd7c9184768f5a9ea24de235c745a092f961fda1f9c",
-   "empreinteLidSha256": "39213a78756b25d98242ce4b569dd0c7100c7783669c27771742aa3f9d10e426",
+   "empreinteJetonSha256": "31a84de09ddfed992898c42ae46b61a12cf92127790bb62ccd55f5c7ca34434d",
+   "empreinteLidSha256": "d33f09df9958e35d8853230b3f4469e6e8463372fc4ad4380b3d99ec0cad0162",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -519,8 +519,8 @@
    "years": 2,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "14c8951e509be1cf5a46bd23cf9d302193c729c94e8bff254d3ae8dc8c12c425",
-   "empreinteLidSha256": "f4f464e96f0084ee343751e789f8dde094fe4bde5f2eb5205ad0b9cb51e82eb3",
+   "empreinteJetonSha256": "c4321d7648f383d90ad5d7170fe3bc78ce35286388f730a7739de7bd4798d6f5",
+   "empreinteLidSha256": "589842b057da0dddde1bf39043f1182c9a3ae7bcdf28a2ee8fc646eda39183e3",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -607,8 +607,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "9f8f6d632f86a13c0d0c1dee80c0971797b5153ec92dea4ea6cea906c04f720d",
-   "empreinteLidSha256": "adc87d081a9ab208e3441abe16e5ba3c2b145076d26aab1caa47dee6e0e60ee9",
+   "empreinteJetonSha256": "5677c35a3a38870c44e8ebdf13de1c6b3695376357cfe8f31b92e2a2943729f8",
+   "empreinteLidSha256": "05a29386f74ce4e2e7eb600d6b1c3184e33ee2b31273d61922c14be77150c9a0",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -695,8 +695,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "310859ee89a81fe86713c8bbfbfb44fb9f620607c1a5c7f21a69367193d4a5de",
-   "empreinteLidSha256": "f0a6b6f9b3807cb342521482e73ca8282f73a9c9102417857161a586f3a82489",
+   "empreinteJetonSha256": "46aaa78aa90b07d585a3a6ac52341a9ef4242d2dedc7ba751b6d8f2fc41248dd",
+   "empreinteLidSha256": "ed2cb86f7b8aeb65ea03855981f6424e0e5be514abd8070085c2c40fc8f2d757",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -783,8 +783,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "c64dbec63022d745b76687a6bd6e0b8ddec5b6a3535a9ef60dba26a5164b9263",
-   "empreinteLidSha256": "1a3928f518040d4c72c81689be5b89683de6455475b69a3ab1360cff094ddb3d",
+   "empreinteJetonSha256": "69bceea474ed99e82fb38cc8a1b81930510c8ba5c02b7969d6e2ae400922dbd5",
+   "empreinteLidSha256": "4926484c1a0567913b5562265f441c36c960afa3b6dab3591a320583bf549aa8",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -871,8 +871,8 @@
    "years": 3,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "7f9f6636d34f51c329d635053c8c57e56d2a4d572c7bde8e412eeac2ffb3ae4b",
-   "empreinteLidSha256": "d375aa75a4595c08d25388c8fcadf5939105121ea92bef1ae2714fd897297184",
+   "empreinteJetonSha256": "2a302186a2deb4804d767eaea35d70efa97244966c708edfe2a74cc4b7674739",
+   "empreinteLidSha256": "28965468f636434f37559a953dc71a97caaaee62fef1a57ae81538e8e6f76e71",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -959,8 +959,8 @@
    "years": 1,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "49c5ec8a15f5523172a34b7710d8588a98b110567ce40fbc136203fa7e6117e0",
-   "empreinteLidSha256": "e45b46e54b74d180ed3eec2bdf70fc8cda8117804e1406515c226cc50c2885fe",
+   "empreinteJetonSha256": "5e3f80711af43a1c5bcbb894410b3fa2cc887a07a8621cc861365ebbb0ba4ec6",
+   "empreinteLidSha256": "6d23eafa426e0570c2aa634fcb9c68bc84a016debc6ce1fa7455966309fb716e",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -1047,8 +1047,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "3cb77a330cd496a326bd113f3f4ff2f8f1622fa0bec74db0cf7eb1c77f8d54b8",
-   "empreinteLidSha256": "bc8c933ba6c085603cc82be18d61b3dd49b2382eff599d9e6b0b9e40c4e732bd",
+   "empreinteJetonSha256": "0827e5080982153fc2621791491b1a941685a9510d16aedc77eb4909cdb23c06",
+   "empreinteLidSha256": "bcfff70b12d05774a99b9fbe8beef53034003fcc3a52a5dce65f6360b5e017ab",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -1135,8 +1135,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "e147c1a99d4474caac5d69370ccc35c0e94afcc677949b61403025a4de074b11",
-   "empreinteLidSha256": "ddf3c7fbcbf1ceba69b284db1a63343a307b79a71a81b035d2d73bab647b6a4f",
+   "empreinteJetonSha256": "029c1e25625f1018f2175ed2c22e4b9625e73cfe7117cb5765066c716d7a150b",
+   "empreinteLidSha256": "e7c57179f4fa872b297000da8a44e1246bcde1344a56dfbea9ed0dc7d88c261f",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -1223,8 +1223,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "d5f0cd718eac2dd927cfe3dd8eff029379bb9305a031d26f18d5ab5d656060cc",
-   "empreinteLidSha256": "ab3f3e70aea27299f2df4ef93bba2510338d1d1a658fbd2e0bfb25f2b18c4b3b",
+   "empreinteJetonSha256": "98c9130bd5ffae42eb0f69a6ba1311f8c3af937502b50083080b72b2e5268603",
+   "empreinteLidSha256": "160616527135192c58cf1a8785ee824eb38ff3439b58d531b0c9584c634649a8",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -1311,8 +1311,8 @@
    "years": 2,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "6ce8d462d01925ea0657bc366547e2767be7a3e0339078819c2e64026932260e",
-   "empreinteLidSha256": "d8ec721e1bde1595735ec1001523271b497e40efbabfad6e66e0966a36ec7266",
+   "empreinteJetonSha256": "43b9fffac2a0c2c4df00804504b3482f4d283f274082d08505ecc2a908522f1a",
+   "empreinteLidSha256": "ea3b5c7bd123dd5e666f623f171eaa966b32fd8e5a809d4fc923222de985df25",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -1399,8 +1399,8 @@
    "years": 3,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "940275dd7bc1c64f6123579741d5beced7f33525f99d955cc5f04044bf9887f9",
-   "empreinteLidSha256": "6b7c78597090bffbd3105c8829c9240776b3c1297a2d61770b07623aa4d552bf",
+   "empreinteJetonSha256": "d8a9c5b93c75c894960db0d3ac8e9f14e6b35f929caa41d4db874430c728c261",
+   "empreinteLidSha256": "a4e6cf9937e08edb5177c10319fdee216c82b24c0f656a9908192319d904dad1",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -1487,8 +1487,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "ab15a162d382e870479158828017df0aee2d8b68e283d939f27aac198ffb3a46",
-   "empreinteLidSha256": "421abd3fd6474499a83f239dde7cac822cbcd61f271b35a561dec55e574681c3",
+   "empreinteJetonSha256": "d805066dfd36ed93414259c6112a2c8ef31d884579477ad0a2329c28f38a944d",
+   "empreinteLidSha256": "fa95e8a45b760e34c353bbba486134a4f48f644ac729a7bcff0a13902b3d706b",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -1575,8 +1575,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "57c28aa4b2344b47f7b5abf0b85af115d57e09c5cec6f285879e8f28b5c3b139",
-   "empreinteLidSha256": "0953eca91c6173be767254bae3b27f276789dbdc126417d60e5d78648ac2a038",
+   "empreinteJetonSha256": "570eee18ae4520e0bcb6a4e22d8442cfb971c7f3b10d15aa7c2ff5cae0036d44",
+   "empreinteLidSha256": "ba48fd1f1bd4161e79e6c965e65c756249a2e40db9d9effdafeace5f1a75f776",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -1663,8 +1663,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "943a46c5d6abd0c5384a396ab9c603e5721dbfc3774c52562f1930410c251419",
-   "empreinteLidSha256": "4501fab3fadf862bfbf904fd9c06017e6816b884fef08e49850efa10db8282b4",
+   "empreinteJetonSha256": "d662ce0216f209192a3523eccce0fa942f02540732687408eb08d04dbae0d928",
+   "empreinteLidSha256": "da71ae8f31f204eb9634142cb9371c3130b313afb7c335ce31b5c8d1fc5b76dc",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -1751,8 +1751,8 @@
    "years": 1,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "627ca1d1e2f5c255c4fbaa03518f4daa1074c5e174456de116d153759665c7b3",
-   "empreinteLidSha256": "522763eab342a80339831b3659b403a60e3a4c86820aee407699642ca20e7a98",
+   "empreinteJetonSha256": "a6754a2f7059f49767040b1d44e19ad0651e48761f3f4d223e380672b76df0af",
+   "empreinteLidSha256": "4fea36ab49e0f77bcff14283b8ea272aeffc21ea7ddb983006d52e3063fdd47b",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -1839,8 +1839,8 @@
    "years": 2,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "13cccaa29be7a43eab501c5abb0f8384c532bfeea1567ffcb91cbd046fc889ce",
-   "empreinteLidSha256": "94f5e5cd798ebbc923fa14fd671a0c53a8851b7bdf25fc7b234aec03fd4c8969",
+   "empreinteJetonSha256": "827b31460d144cc9d609e8cd45ecf67ee300ad70fe44eb4aa1f31c5147c1d186",
+   "empreinteLidSha256": "4b0c64bcc1995eed425af91e6ce2c95ebcc77107196130de6da869a556338f6c",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -1927,8 +1927,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "463101035eb2bb962bf5ecc411247e1ad5260bb26c1560848e874eb58cbded20",
-   "empreinteLidSha256": "b75134497eaba7b0db75db44c6a1ec5c9eaa12e8622fa318943200c7478c765d",
+   "empreinteJetonSha256": "a513f375e7c85efcbee9138e8a2d64dfda5b3f04c4bd46464e8bddeab9cdc418",
+   "empreinteLidSha256": "80d227e9853eceb7eec0c2165cb29c82e878dcfc54e8107a5bde605d1a4aba37",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -2015,8 +2015,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "e98f44377ca4754043134fce9f5ddf6d5c2e9565a11d8c1b02d5e5efa281e3d5",
-   "empreinteLidSha256": "469705cd2265dbf90e57e885504657873e40d1ce68afcfb1b8bdc7af09223dee",
+   "empreinteJetonSha256": "cf42294e1bca979be512e7504b3541ecdb1967fafc216b9d03531ad765413c75",
+   "empreinteLidSha256": "9bc966b60c86110e1d5369c2614db6b95496ced4957088facbf96aefff69a77c",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -2103,8 +2103,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "e6743921714e0dee84efa7cbe9f857c3855e19fb7bd81ec521bb759513f801b6",
-   "empreinteLidSha256": "496eb36788049497465d36a3dc911506b4180bd191fdd706b21bab44f313bf76",
+   "empreinteJetonSha256": "799fce3af7af7ffc740b82a1ece0e79b33c81b8f5bf25354324813ba3b7b1171",
+   "empreinteLidSha256": "5210124320cdec421bea4070b1af75f647b4da96537df042ca0bc2802fceca83",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -2191,8 +2191,8 @@
    "years": 3,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "77769d29529127735cdd217be3b9ffb04a14fb6d17a7444b74981b1886a8fb0c",
-   "empreinteLidSha256": "c305ea6ca6af34d2068d897ce379ed23d555387e9a25fbc91770a3057b27ec24",
+   "empreinteJetonSha256": "a781414a86f1b481b4d761ed817bfddfe99ae19e224974e231a5ec53cd739626",
+   "empreinteLidSha256": "3bde5736978b489481dfef74601e382dfc393a7628237fe9d0b8d21d4c6c22ea",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -2279,8 +2279,8 @@
    "years": 1,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "60b776bbcff8f44205ec9f531611baf235ff55bb4c9e5519f550c205de3c630a",
-   "empreinteLidSha256": "6c5ec5a77056c113ebc456723196f52a1566cf647adb505bbb9479e4108f7c64",
+   "empreinteJetonSha256": "aab1f146fd865ada7e77b0f7996e3d32b5b589ae2be7f6063b120f8ab94505e2",
+   "empreinteLidSha256": "1f2d8c843ce2b4752a5407d6885d9ee1b2943389b2f1641d7992015f8566351c",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -2367,8 +2367,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "39c1b9ba388b8947d38c1565f9070e946d260508cc2ee8696d3d0a38423ce3a5",
-   "empreinteLidSha256": "1f1e5e39246c2e100b6bb1a6662e86c82d366275dc6d0a9c76ea7d97bfc1328f",
+   "empreinteJetonSha256": "953253a1aa6c7264a9cc86ec204c94761375c1e22110191901ad23980b29daa7",
+   "empreinteLidSha256": "023ee1fe4236280e4db15e110787df0f5902c1a4ca9937b206fc8d5bdb4b949d",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -2455,8 +2455,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "1d18d983518b8d4e64aaf269b43228092431604059b9546eef29498b1e844993",
-   "empreinteLidSha256": "9c82d225d3392a7e668d952b2ed6168a37bfc14bbb4caa566806967f32387f14",
+   "empreinteJetonSha256": "41f1fa9851a568e46f98adbfb26c7587a012ca947f5294f735e992447d26c937",
+   "empreinteLidSha256": "f171c605a230a3857e4b2b813e8e8b93617b01f232f25db4f4246cd2b063cba4",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -2543,8 +2543,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "5f8eaea0f965a291a13eeca7503984831ecd7fe7f67fc444734a2f0f85abf275",
-   "empreinteLidSha256": "c0f40524119194dbb8919f8f554156bbbd10d37f0cffb55699b5381247af2f08",
+   "empreinteJetonSha256": "34730de28db86155ba5e67eeddbf1c2d6ed83a34c16d41a8532480562c24a691",
+   "empreinteLidSha256": "226ba0c8ca9e14de4ea7c800d64cc81d8f4620f1b9be52a78fe5605f9e1b122d",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -2631,8 +2631,8 @@
    "years": 2,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "1c6b9f199afd45dd798a6329113b008dcef6d647d1a25fe17596b429a23f9e3a",
-   "empreinteLidSha256": "d5dd9bb9dc659c45266f73b3380b0597063544d3205cdb30bb73acd801874900",
+   "empreinteJetonSha256": "ea154e500f7b14a5fcd5f4898d96416e3aefaba3b4f484bc352aea828e9d4fb5",
+   "empreinteLidSha256": "c3eac44a53be198b2dfc09e2d5a421aa9f1b33e0b0379056b79d3070a14207a0",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -2719,8 +2719,8 @@
    "years": 3,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "6aec70e56b639daf91fa56d21b53e57bae5405cdad63ce33bdd97594e1bfcfc4",
-   "empreinteLidSha256": "c1521bf53687639f666e12756cc70a76f6e53d7b080488fe19a9aba34698d8b2",
+   "empreinteJetonSha256": "1b824d17f835bd107da98b6f7fe3595d5c9b5d56f67c76ced1971148250920ec",
+   "empreinteLidSha256": "6eca3a62c9dc25a1838a714eda3267a5f83ebab90f9b0b0dd77b21eb374a36c1",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -2807,8 +2807,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "e5551808c2d1daa5791831098ebda062e599e5f2ecbf6a53e3b92f54d6b05a3f",
-   "empreinteLidSha256": "abac2fa6bd947f7ba33e74ac3b5dde979d4daa7f8829a3d82f41ec834c27053f",
+   "empreinteJetonSha256": "185ca6353538cb5f8e57b116f83570728114e10a6abffb7f8e8dac3b2866bc96",
+   "empreinteLidSha256": "1894bb78fa9ae59a28db28912007825554a442b23a0875b1f23f69e75fb71412",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -2895,8 +2895,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "dc5cdcf1a3055adba6c74341cab729ada43d668893aaaa674586308ecc80cc01",
-   "empreinteLidSha256": "a6c8e685fccd09df9e04f7158cd3e5072dd41c5e139975ade856d0461e0460ed",
+   "empreinteJetonSha256": "d4a103269089221c146f55da6475e3b7d200403fb44deb5cd646596e14771e43",
+   "empreinteLidSha256": "08449a1ee7a2b41c7a675f0915c270d74ddf8564890f6888bc527b77f32eee5a",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -2983,8 +2983,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "b73db94bab824dc27f182a1d081d065d17fcf5dcbac8c2ed245aa419a37e1ef6",
-   "empreinteLidSha256": "a130403def56b9d4940b95a56d531d6f9f94ecfcee46f8bc721ebc82a43b60af",
+   "empreinteJetonSha256": "bf02dcaefb5a39c146a91078a0d1bcd855ea8c416bbe57b5ad4100700603ea44",
+   "empreinteLidSha256": "bdddcb1c54ed18f418502a179e60b17a807ccac19add5bb1ebe128c95d4e4766",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -3071,8 +3071,8 @@
    "years": 1,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "f4f7215b62788915078f94a3ed45b6e7ae9e0179d419457f444a60f790bbe340",
-   "empreinteLidSha256": "d48327e21e9aaf41cab60d5f5cb84f68d9530dcadba3b1ab348351ae2b1adea6",
+   "empreinteJetonSha256": "c12d1f31ab4652aaefe713f9a85a38a95a09672f9a091ad23bb43ddfe0616af2",
+   "empreinteLidSha256": "ff67fa074e0bdace774cdad8bbdd9e654f63a4ceb6acf5618a06bf1959366ad6",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -3159,8 +3159,8 @@
    "years": 2,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "5bfb91c395460540bc49a46e21d305dcda201721951d5a39c4e218b5bcd862aa",
-   "empreinteLidSha256": "ea9ef3ec7a1ae16b2c577021de2c4ff9a8a002e9e1fc56e8b7025fad78c93da2",
+   "empreinteJetonSha256": "6136fb8231021549abac9149d96339cb08ef0da4b1dd2f49c5851d4478f306d6",
+   "empreinteLidSha256": "d0a1fb0d942bfd0b9d032cfbe8db42f5a81f16bf54ca343e635fcfc3418aaed6",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -3247,8 +3247,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "f409402a0190947084f7a72b2e12958f47db23cd43b8b8724575101a6b94fb30",
-   "empreinteLidSha256": "3521caab0717cb293f850c450fa013586b42f56f7224ee1c58f6e4d794f9f75f",
+   "empreinteJetonSha256": "8728cb98d772e0341def2f0d3bf722808dbec9738c5165e9522623b7ec00db46",
+   "empreinteLidSha256": "85ffdee4dd9be57a453de72efbf13a9397103f3c0843bfef3119debaf674c363",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -3335,8 +3335,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "7374160454d9de8d0d4d5538256f86b92f0dd3694eb00961b3f5d3ea7e3a00db",
-   "empreinteLidSha256": "262730f391447a0928fb9c9320608eed8ba41f16d59ac9904f9bf78fc78efe6b",
+   "empreinteJetonSha256": "2f05974a6d1a7c00b42e30d0e685b7c195feaca27ac2efce78c1b8113f1a153c",
+   "empreinteLidSha256": "64633fedcdbcfd2a954cf336add9e2135f84b7a4876cf527c8fa5139ed4e6d2c",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -3423,8 +3423,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "83d3c1c04a878bd3d31719aa17e18798cba0c11e4eb973d310efe7ff5157b02a",
-   "empreinteLidSha256": "09c584ce0ec27392cb4d41ca8a4b17f13ce52eafed4c2e14f563a0b6023b1605",
+   "empreinteJetonSha256": "7fce6ed2e27c4df8a1d98044496b3005923b92bfc203c3bee8716f1f3a817600",
+   "empreinteLidSha256": "3829a6ed97143031ecf0076c969f876996f13b5fdd5acf4826bc1972f2e10251",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -3511,8 +3511,8 @@
    "years": 3,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "2d1c8ac31982dad02e90f4273937020a544e36aa74f0fd016c899aa94ffb6d26",
-   "empreinteLidSha256": "cca3f27ef04a3f5cbd0fbc1a6497d1b715b7daa6ef06d930d16119dc50524a2a",
+   "empreinteJetonSha256": "6ebf81dbfe327d68d867fcfe0a0cef9cbd08d02282d7b3cce45afcab26f0a2c3",
+   "empreinteLidSha256": "446c00e8ad09f56b0f74812b5cd6282208687e837fd8293478fd870eca2685fa",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -3599,8 +3599,8 @@
    "years": 1,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "88f236c523a6e26a3001db894933602a000450cceff9e4173bae325ba3df756d",
-   "empreinteLidSha256": "078b6b75a62d159fa91d7e40d266973b89f5c756c0ae9d6952268abe4b682cff",
+   "empreinteJetonSha256": "30bd868cbdeb20c22a5778e5eb55f02248d1db7d360989fb7b7d3c8f1965ca63",
+   "empreinteLidSha256": "dc89504a9e7a78de7c26c5346a23cf75caab6616753ed01360d0fcbb9d42729e",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -3687,8 +3687,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "dda80285b86e5ea48a2c1e88c0d1a734f7535dbdae731d3c6793adbb52864fe2",
-   "empreinteLidSha256": "fa22eefca40c933100f385b94492724953fbb3a52000c29bf1871cf153dc31fd",
+   "empreinteJetonSha256": "37600b3c1f7309d92186ab4da1b6c4a1a7833fd2d65f5bf15be60afd618bf292",
+   "empreinteLidSha256": "739cf0d42388ed3e23932ffdbc9e2b6c98aa9f38c71d427bbbfbd7536e5aa091",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -3775,8 +3775,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "68d1efa8465c2fa52619b963af25fe15dd9f97a2deca995a476e164a0fe894bb",
-   "empreinteLidSha256": "b0748b7a71d120cf16a3529c569e2afaeb1d895e4ba50037de5f55ef4d636150",
+   "empreinteJetonSha256": "89900d70f3e39affffd550138712d7c7dca23528ac4600ce971437e4c4c76f82",
+   "empreinteLidSha256": "16260f1633fbc4d6716d090accec85d16f911c93546ee97374d728f86207b50f",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -3863,8 +3863,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "fca7905602be3ea533a2e43db0e014f155a0ddad33429489e09e2501f784f451",
-   "empreinteLidSha256": "19ab72e1c55b199221c79ad849f5b309a147f33cc61d1351e3fecdfce9446281",
+   "empreinteJetonSha256": "ceabd19c5174c1cbce45a4c7362ab24bc3a77ac69521670f900c8a1ae3fa2ec1",
+   "empreinteLidSha256": "8cb77e8e05ca5bead9fbb5dfe130e25ee20f10be1d92bc1d1773b6577bb0968e",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -3951,8 +3951,8 @@
    "years": 2,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "73eaefba7e4e3bd3c5fa4aa07103c5fd6846769085828878e0787e947dfb588b",
-   "empreinteLidSha256": "eabfbd47814fe058b77caffa249ba30934e121a9dfe76f0a089928d62d4af9c3",
+   "empreinteJetonSha256": "1ee1f1832e5a0c8a66bb29b871b99edf6ea48a71368d27d958c500f0e1ffbe35",
+   "empreinteLidSha256": "8327ce08bf8a364b0c7425e4842b4838ec1f824e90774a2f3beb8f391f78b126",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -4039,8 +4039,8 @@
    "years": 3,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "7e85c677c4aee4c524b4f849e8ece0efe3d347d85d1464c8f0da6c65f5284b85",
-   "empreinteLidSha256": "ec0a68f565bbba8c6cc6659da99100d75a5155b2931d5cab93e48ab9219f90e4",
+   "empreinteJetonSha256": "1b67689ea762527d4bebd35163f8760c4c73d2ec6846948710b5072544772d74",
+   "empreinteLidSha256": "9257cdad596a2589ec31bd4e8531912917adc2f2142908bd77f8b6f83ece503a",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -4127,8 +4127,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "1609b47b57bfc8f5fe74a3516a1567f084ba0ae3bfdb562157587385170d3ed8",
-   "empreinteLidSha256": "61dd297a0ea44297ed9e684d2d68b42e7c2fd3f0f14701396dbfd9c920a40b57",
+   "empreinteJetonSha256": "4111479f086338857e0181226a12a8cb97ffe292be751cf403b650711d842769",
+   "empreinteLidSha256": "8ad1ce6a987da0202cc28f08ab578d95835b5686e4623b1dd8aaa5ad0e490c07",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -4215,8 +4215,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "1a645eda23d1ac08f49dbd01f5960471239b978fe44055cfe997d0bab9c48ed0",
-   "empreinteLidSha256": "f922eb1eed36d4228e36b77901c8d65a35a30b1927c152d8fe70006f50d36247",
+   "empreinteJetonSha256": "27938b70fde8b725d53f6781d9a7e9f86bb65cbf7ea7d404efa809af308fa685",
+   "empreinteLidSha256": "b1a1d22a79bfb0a8fa27dfde7abed7be3cd38914c05d9ce507e88af42e02e814",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -4303,8 +4303,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "4f3799c55b4da65d057dbd8692d91da7a110fc27c5ecd81bf89c13af5a8b9052",
-   "empreinteLidSha256": "742d37829e90c9b5ee5078712cd5ef0885e482223e5c126204175a97304a1efd",
+   "empreinteJetonSha256": "12485ff2b835be64b6cff70c43467d2604da2f45b7a8c9c5e92f06568dd82531",
+   "empreinteLidSha256": "51185af0a91a34989b710ba1061a799eed95d9df508256e7de4e294ff4dc666d",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -4391,8 +4391,8 @@
    "years": 1,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "2a63caa86dd4c6b1f6cf573ffc681c17255d8dee273078d4998539f620519faf",
-   "empreinteLidSha256": "9838d2f37cae54d8ef32d6f7064fe2030ef27cd54a5d7afe1839dd89f80b895d",
+   "empreinteJetonSha256": "8dd9c825ed728d56b5e8816454954b92d3eab67d8bd9138f66db3da23d87765f",
+   "empreinteLidSha256": "0e7a3a12efe4296f8c6dbf37a0aa2aefa16ec98bcf2fa8634262b452318320b7",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -4479,8 +4479,8 @@
    "years": 2,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "d209e4dfd256fa5ab8ef763a3b19e47fbe3be2c36bcf1284eda9d8a3701bf722",
-   "empreinteLidSha256": "1987bc35229bda909a7daec8ef411836c043592a4cd3038d1b583f95a135885d",
+   "empreinteJetonSha256": "19a6a7d6b541d358b4215d339132c13f86eb077b93208f19c4baa9d792fee640",
+   "empreinteLidSha256": "c8ef24c4ee9e1e10c0cddeaa15d8dcd9e02f9be8608833ec4e3a6b464dca83ae",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -4567,8 +4567,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "075826c48c1a0c9cd7cc9d08030490865203ce0ff786fdfc47c87694e43e11fc",
-   "empreinteLidSha256": "b9d88a6c3e23e6eef9a6f2679034806321aa6f5d118ceca50afb141525c31149",
+   "empreinteJetonSha256": "f6fcf8c28ba13304b16eecadc8fe594c4ac8977054de54043b717af0da78e968",
+   "empreinteLidSha256": "9181516e34e921bbe0e7d23b51f51730a685aee3ed82e625ee6eccf458f7cd86",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -4655,8 +4655,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "ba8baed1404f07e28cd7e952ecd590828dfc63c93c7a1876ad1488e74353dab5",
-   "empreinteLidSha256": "962e78b10ae5182ce650ade5160430e16d262e5ee731bc4b197d0f707c0e3ad6",
+   "empreinteJetonSha256": "d1bcdbb2aa61d7d2017788d1cdbb8a33ece8a32b8c74ef7488efceeee61ffd75",
+   "empreinteLidSha256": "5badf162e003c9d0e0d027e5c278d6235fce20682ee5c1d582e116c09e579c28",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -4743,8 +4743,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "79dae98d70425a2d61c2c61ba85f9c1d21157d6e388806c11fee8f2507a1ee73",
-   "empreinteLidSha256": "0b299ad27293e2e44a1d5aaed106d4c59f3cd6229bd316218d14f8ba3b03319a",
+   "empreinteJetonSha256": "68df4f310461282362bf91ae9d4786b59cec65f094d76648dd0b726225496e46",
+   "empreinteLidSha256": "b7dbb055faf2471635ed52b8f90d0cf4808debfdc71fc44ef75872a05ddae77a",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -4831,8 +4831,8 @@
    "years": 3,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "2939f76d916e32ab8bbda73bd3c8bb363dd008c2ed72f089bbf3d19f2d76ee5e",
-   "empreinteLidSha256": "8f4842a8b7937745c51bff60c3cc88bc417672b1b9fd8d6185350543bd70e6b9",
+   "empreinteJetonSha256": "6d55fcbb2a221fbd90c32a8736b8e810dd65b3f9fe79212a48c323299d9e0164",
+   "empreinteLidSha256": "5ab4610836f08292859d61fa5bc56f58c83b659bb9582c300623c15cba78c530",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -4919,8 +4919,8 @@
    "years": 1,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "579777f1273aa427b370532dddaa5547a472ebcbb74b989a5bc5aa3f0879f230",
-   "empreinteLidSha256": "21888c618eb988b494c97d555c85c0589546cc97a6c73f7cb20df5a294177a8a",
+   "empreinteJetonSha256": "dff071565a3f8a8541e82ea2cea096cd3348da54f4501e703d80b75faf61b02e",
+   "empreinteLidSha256": "cb12f3a3683ea5a3e4cf6631d28f3ddcf52a789ae64457dc7670e66cbe3d6e8b",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -5007,8 +5007,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "3f093e100827fe21753ce01b2cc810527700a805fe76b1283253a21d284d2c6c",
-   "empreinteLidSha256": "f1b8ca91df6e156e1193c88d5413e9e37a66aaffed9470139c861d746cd6ca1d",
+   "empreinteJetonSha256": "e319144314a7710feea456fa5feb476dfa88dcf8692a0a861e17226c5abb9a8d",
+   "empreinteLidSha256": "b2e566022c4155bf11416f4a624ece45245c60dc4d79f6a2a626ecfc3109f73b",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -5095,8 +5095,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "a3aae38b7210dedde11ecf2265ad5ef2af3f09c9e0b58c588e2628f3f0a0cd23",
-   "empreinteLidSha256": "9bec4db4ca2c54ac31c038d4e31a71c52a9c08bc6c0816b66dd83a3b8eb434a8",
+   "empreinteJetonSha256": "fcbe7c85818e34f6ba1d79ce5a3ff72733c6651db667af4532012339d0dd4dbc",
+   "empreinteLidSha256": "4de40b7480cd9676694c1ca23fc8a356b156f681c4b0c9220973babdfed47202",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -5183,8 +5183,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "f277345d1479b31913f1a813fec4ddac2e060a64882b71e37c6125cdfe3f8799",
-   "empreinteLidSha256": "f664acec3627f87e6987d60b0c669be337c37072b0c2c37dd4336dc21a99aab2",
+   "empreinteJetonSha256": "505a3c860e197d6f7bd4dd6395b3a1cd87e7a4c8a0d008b605ea02f18378af67",
+   "empreinteLidSha256": "e38237ddd32910b57b720a97faad14c33481655f3206ada9bcbb6a0edfb32ca8",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -5271,8 +5271,8 @@
    "years": 2,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "3ddc70df052fb29e94fb4bfbdd4217885bfdcebc776d6f46953fef123a7ef149",
-   "empreinteLidSha256": "26d79bc6a91aa60638aa4043f18e847fab587557c7c2c2d11c560ab0c617b2ec",
+   "empreinteJetonSha256": "4b28c617fcaa7ca0612b9ca6db37c0d63f745c0ece0426fa1ec4cfb511dc4b86",
+   "empreinteLidSha256": "4f7be11c221093f6763eef8a03fc7c0fb7ec978ef07a0193371d8c3595d109fc",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -5359,8 +5359,8 @@
    "years": 3,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "fd0ee13de8809cdf6d511f24c41a9bcd204d9f44d424d492e0498d526fb45f31",
-   "empreinteLidSha256": "9e6d03c9bf6017e981acc2cb0ac6acbbd7aa46717f78518014567bb4ad4f24c2",
+   "empreinteJetonSha256": "434c15d791f21470cd80cc321d8ecab23639e5b92936d50483fc8772c15a581f",
+   "empreinteLidSha256": "6c9e92bd2b414df513df77c58856f5675766c76959540b021cb23b2e09480082",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -5447,8 +5447,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "a62b212763d252920d421dc167c89d2446fcd05debc26d92525fa2443acad9dd",
-   "empreinteLidSha256": "c49b3d86c97adf2a6105816609c91545736ba954596882a9c0f5ed18b67f495a",
+   "empreinteJetonSha256": "b01749b62b709138797273d50be6f3f60f4578f9314550a33e52e05dd50d80dd",
+   "empreinteLidSha256": "ea9a4c907a3d3a59856aad353cc79471296b7a9e12b54db0018142d3025ca22b",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -5535,8 +5535,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "69343048efaffdd17c10c1de1667c455569f2d90e0d6d9129e12649859df6b01",
-   "empreinteLidSha256": "305bf90d5893f38eb3596e23bd99bb5c703866483f027dbf91c002c063b4ea96",
+   "empreinteJetonSha256": "d71f024ebfe589cacbc521fcfcec7398f66a2894289fe3caa01ba68682ae8fdd",
+   "empreinteLidSha256": "103ee72fc0c0ccf987ce0d77bcd2502d7e0db59381029c389b8a5c7f81bfef7e",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -5623,8 +5623,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "cda4c187f1d6731e79997e6d35527f3bdd088bd4ca4328e179db6569c474f6b0",
-   "empreinteLidSha256": "312fc48f69fb6ec26f0410b9b3f4346c264aba62be4e8c3b3662be83b19362e8",
+   "empreinteJetonSha256": "178957af4ca34ac693e0b754ad1fb0fbed47a80a043aa8e4068d9b9a68c287ca",
+   "empreinteLidSha256": "c61539c68b532b1d3db2841cf4aaee1cfb8e780aafcf8c50b928e81b646e690c",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -5711,8 +5711,8 @@
    "years": 1,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "eff4154be0cd0ddeb0387922557bb238a4c6a5178f66b27945a9bba7bedd24c0",
-   "empreinteLidSha256": "ea8c85246e141a592157c83a578ce4f1ea8d8e64521dd4b47fe1f0951449a6b9",
+   "empreinteJetonSha256": "3801ef88c339d16495519bd0d0befc437d45ff1f1366c25394f8a1c7ac53953f",
+   "empreinteLidSha256": "4a4f75f15e10ab2720d820e281adb4babb6aad80d7a255581060855d9d6fa74f",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -5799,8 +5799,8 @@
    "years": 2,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "fa8b4295f5f4d0af34cda3fc9f03fb2bfdbbd2d7d5a395da1ffb680dab05e1de",
-   "empreinteLidSha256": "2bc694065d60764741af179246ba83d38de74427ef19ed0764d9f11e2c452f5a",
+   "empreinteJetonSha256": "a9855f4aa296a013ff9acf37d11668d58328beb4788362e474905a8debbfe6c2",
+   "empreinteLidSha256": "a037104f9d310d3988e3cc01362e1fc39b22c9ae4467fb9aa18952d32a565875",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -5887,8 +5887,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "da02aff53baca93705fbd4648514f040e71fb62643835008b0bdfcbb1bcfc83a",
-   "empreinteLidSha256": "eacdc644751b2e6df73cc450a6661bc9dbe97130321a49eb4d690bd5d9d5963a",
+   "empreinteJetonSha256": "7ae5303757a1310c77a32d2dd4170b940ae44475727a7654c38691f0384f9a3c",
+   "empreinteLidSha256": "040e4e6b1097170434e0c4517832dd52977f4cdbc716b0aba0e41046c41af355",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -5975,8 +5975,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "55957f21af01b09c9295469c98e302a401ba654a75bea96f7e55f2dae9956e7f",
-   "empreinteLidSha256": "113bfed22430a4d7be89726692997b4b225c4e20cf5e32dc14b8a346e0010d41",
+   "empreinteJetonSha256": "4c4dee53abbcdd0a7d3268cd3abc131a0547e43156843fe16866b84f0d85ea9c",
+   "empreinteLidSha256": "e1c91f8f1c18e25cf31e8ab998150dea9d576ab0b78815f5c2a6f21d3cdc3f41",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -6063,8 +6063,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "13627a4417c3cbc0976cd3fc788de5b96a5cad3e48c9c40b1366cd3ef73662af",
-   "empreinteLidSha256": "51fffbbe0fedeabdc39719d76bdc7f8894afc13bb3d54ace233616ccd28fa59f",
+   "empreinteJetonSha256": "5670f607458497b972f487c12bd989dfc7f8787649dd84dac93c656e5cdc66b5",
+   "empreinteLidSha256": "adcd1d3d0c7038395dc38e644df9ed3be5a2742650d1558a24708d3b46444673",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -6151,8 +6151,8 @@
    "years": 3,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "0e1301676cc855b134e42733682dd6f3731a107aede88679d7c8335ff4b2a46f",
-   "empreinteLidSha256": "8a07c26ebf27b886f9bbb582d6cb7e246efcc1138e3fa355673a83296c242a35",
+   "empreinteJetonSha256": "97369f44330892afaf928aa14f3481f22d2df09204bfff0d68749c4191253923",
+   "empreinteLidSha256": "df52e9fbd122b501c43b282d3b2898ec6b2c5836592def0755c7e1aae16a12cf",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -6239,8 +6239,8 @@
    "years": 1,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "e9aa56d945fd88e982036a4231b3912e23e4a9d87e86f4d381c8d341a9e3f478",
-   "empreinteLidSha256": "6179ffe386174db976278b788e1d05c594054b90a54d3a09d3f1ce38dc0a6742",
+   "empreinteJetonSha256": "acb29e86774fae58c45f0bb777489b30b50fbc5e6f449c86fc6f6348196e62a1",
+   "empreinteLidSha256": "fa426305c0f2b61fc4893c92b3e0684bd85eaef28fd4b4389157b5332907e29e",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -6327,8 +6327,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "9f653a93420785aec047cb12e9db5dc46c9651274b11c96150e6226e45f79b14",
-   "empreinteLidSha256": "3671115d4b28a6f35e48123d2662f25fc42a23f8aadbda5c0259a392d2efcda6",
+   "empreinteJetonSha256": "2e4eaba5a8c58ee641dadc92a7e7e6933b11a14aaf8a051e028f4f2ed6c1c1dc",
+   "empreinteLidSha256": "c11c4a18703adcd858e8b983bcd219b68f33a48c227ebf3e2d79300dd503dbf5",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -6415,8 +6415,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "09eb1b7b1e9f2b21ff8afb7bc13a5ccbc17b014b3725a100e246f8541e750ec5",
-   "empreinteLidSha256": "243b2d417db489103c086b71a9e024a9b9e618133d18a338afc67172c77edb26",
+   "empreinteJetonSha256": "9ec1d84a04972159145ed12980f6ecbb0183b2f06ea9b069a8725629ba6eb828",
+   "empreinteLidSha256": "ca81ab2b7fd79b39cca63cfc2c9315af3ec31367d39bd598cc80a1eb9fb69097",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -6503,8 +6503,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "ea147ead9ef65c5524f7b1203f0513444cb6a34bc7178baba115695ebce6d216",
-   "empreinteLidSha256": "6252a85a47830855c5ad9d09671ade31f0eb2ea62bc1b5d786a55c0914a37080",
+   "empreinteJetonSha256": "b67a643509d2c844cac8d2ef35eada3ce53bea4ca83bec50631a428d7e81d15a",
+   "empreinteLidSha256": "4d1b4f890ede966bae116d18f41efed71e46de62653eaa1e6c5390d1f9650aee",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -6591,8 +6591,8 @@
    "years": 2,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "036d9142e0d9b2f2abda89667a301b03f2eb5596346be292b9a17b90cd7bf420",
-   "empreinteLidSha256": "d241836a368129fcacc07f96b4036ced98af52b9b1fdd90237f4a3988fe028ef",
+   "empreinteJetonSha256": "76567f22331b5a7969c61b3f080a752e12cde0d4d53678969be577e56622e796",
+   "empreinteLidSha256": "e5cc49a47098a52d4be013d238ee6def5a8ea0b6effe358e57b97bb56f3e611e",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -6679,8 +6679,8 @@
    "years": 3,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "4e954f39e0aac12c4b3f3c2b685d28d335b36eb89f6c82806b8d147b963af8b6",
-   "empreinteLidSha256": "80d4b540ef3eeabb0c027a549b5c822ff5f5218c18819601a0af8451aa51b3fd",
+   "empreinteJetonSha256": "a74ba68c3440f65318cfa1ca377e39addf204df15d2ab1afb862daf542d4d265",
+   "empreinteLidSha256": "9138c39394ae17c8d3855448f5e5fdccff2d98981e6016e9f0aeaab1d454c3ae",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -6767,8 +6767,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "dcb9a2b099a1b60c4de0937ab38320fab0727dbc60a82afed51ade62741828df",
-   "empreinteLidSha256": "8992c5f5670996b12a66c1e9e0940a86fda39e49b0a21166e3af3ab0a074dce6",
+   "empreinteJetonSha256": "f86b542c96e5324fd37795bcddf6ace60c3c5a8adf853c5e6a21f9f37fb1811b",
+   "empreinteLidSha256": "be433c45d04c3359b40ec1b9cdbb7cf3f3820df5ea1cfbe754cb7b6943bd237b",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -6855,8 +6855,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "9a5decf0e5776e08b27afc9f0547b1916ade9dd6b789fbbb0de3db4c7fa4e848",
-   "empreinteLidSha256": "244e792194db31feeb41a24846bc865917d3045a66bee1ae13709fa31d5ed81c",
+   "empreinteJetonSha256": "292cb128ab154bae2d0c5d73a91bcc3888d7d011cc154d05e7e4df56211231dc",
+   "empreinteLidSha256": "578ed979338a8c7cb03074aa88a032a12a55b424b45941c0342717c471948327",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -6943,8 +6943,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "a744ecde40da812683d7882ba7d5d858d08eab3e07ca20afebb310c34d78a98b",
-   "empreinteLidSha256": "933adc51091683e14307e7adf706cd31b11232faa5d1f3b8e6f27cb97fdb2b8e",
+   "empreinteJetonSha256": "eb4f942749d849f42c36dcd2c7feb0738b2440e86749f5d919e316680c02c2d2",
+   "empreinteLidSha256": "6a1cffc335e281cb7028bd43c1ba9d44ea06476cf47ecf2e0e268f122b33d562",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -7031,8 +7031,8 @@
    "years": 1,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "780191c17af4fbe1ce889884cace8ec2a22b99c950a956c445109b8d49541300",
-   "empreinteLidSha256": "50533aca7917b1ebc589011bd55540bf13eb9420f54ea6f27f7eaab731d74677",
+   "empreinteJetonSha256": "9dcacd144e0851b19b8afdaf2c8dd9d7f73e721b4a4840c80e0125e314cf6446",
+   "empreinteLidSha256": "c93acaf7c827ca67a6064d3f12e7aaf28f82fb389d54de0c68d3507ef54b8600",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -7119,8 +7119,8 @@
    "years": 2,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "95991304594ad5ef39b876ddee986b072d8a760c2bbd5c56903c65b7fe263397",
-   "empreinteLidSha256": "f833b093d4a7eb140e4bb59fee58af566ab72f94015195d414e13577d76fc97a",
+   "empreinteJetonSha256": "ee026eff00ee998beb3f98b2bd9c16214a571667bed3fa83595b949101c3b216",
+   "empreinteLidSha256": "9f3be02f9b1f6082d216998f95bfbc4397c0f5c80be5d3541e3cce2ca5647c3a",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -7207,8 +7207,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "6a03f7ccbfef9eabc56c6a6acad3b523ca886b4bd123219dd4d4a07dac0f0899",
-   "empreinteLidSha256": "cb33c1af1c28426489666ee74c2c22a315585e115d05973d8acf339de2ac3cc1",
+   "empreinteJetonSha256": "9ead564c1f11ad47dd6035cb009538f461f33729066b4d2abd4495d1eb639376",
+   "empreinteLidSha256": "c85a6aa100bae89677d2ec98e5e43729d4758ac08bbc17d2dbb5ba55d71a4155",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -7295,8 +7295,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "576a63a5528e2e219adc7c8f7b8c8fb56c9119a91093478163e507d42b27966d",
-   "empreinteLidSha256": "de44e403fbb8955fa7de5e6562d5b510e63751846c4b1fdb85945310f44fa0cf",
+   "empreinteJetonSha256": "8e6dd18c0ffff652882cc9422e5f6d6f04f698b1a393d28e45f7ca0784944878",
+   "empreinteLidSha256": "03afdd862b665f270230cdce9c842044175e756e37ff625a6fa9bc7ced6be5e7",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -7383,8 +7383,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "1cb98eb6594227107b3b0f18b5cfeec92ddfa5f791e1d70aaeae47c36efa1acc",
-   "empreinteLidSha256": "a4592d3c25897f2e893a74ede87d3a2ccd1d40e86a7fc157ae07615c11241355",
+   "empreinteJetonSha256": "4ac2ccbb726a2ad98d31188c0668149d59bb237349c0fcbdf941599180af7fbe",
+   "empreinteLidSha256": "9e9f303d3b0f920df422c43c43d655c88a5d5b3973fd872199f37450dcfe9895",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -7471,8 +7471,8 @@
    "years": 3,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "179917b334fd3ddc03940a137e49e39ed1d83402c0a12f858afdf1dc3f1e35d1",
-   "empreinteLidSha256": "29a525014132add2f9f0dc1cdfaad6173f3f5db66bb8510665d8922b0c1548be",
+   "empreinteJetonSha256": "b5e9abd6a684d2ffd400f40b8f2b291a44a880350f9b1b9d4717956c97b465e1",
+   "empreinteLidSha256": "83a79e68fb64eac5eaa592fe37d107f83175d89102442a9a1836ec6f5c6db9ef",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -7559,8 +7559,8 @@
    "years": 1,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "e2527ce0d13967fb9ec061d229eca7bc2f017b38cd3bb20a984ff2074b7aa8d9",
-   "empreinteLidSha256": "798002e9d9c527efdc427506f9fe322786a3b18480d283119ec707651d8bb589",
+   "empreinteJetonSha256": "811bff0da157e2752fbca5676a22cf80163baaeaacf5efb8244d530c3f8a7f14",
+   "empreinteLidSha256": "3d8f7096249543639b3312e8803b54744a161eb43589765c13c476e3e72be912",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -7647,8 +7647,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "584486fa3d3f1d7f841ab754ca5f7bbf545e9f48abcda4be6af620662d9501f3",
-   "empreinteLidSha256": "5aea786adc342943eec8604a521bce629e9e157a19d0dc10fe85465dc70876d5",
+   "empreinteJetonSha256": "f81460f0e3a9a5ab9fecf4929fc98c90c48024b8ca5dfa990a20bc40ce83d793",
+   "empreinteLidSha256": "42df9f3edd165e63fcc77e9d884ed408f671448e6070058e85b2eecc105ff4a7",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -7735,8 +7735,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "2f3fd4792b3a0501c4797a1cf9b3e9ddddce58202241e9c3ba6b5a5b8db28d0c",
-   "empreinteLidSha256": "402dc0aa5d924da614c440e0b5d3b75b135ed48ff68559774fe040be690650b7",
+   "empreinteJetonSha256": "1c29640cf80b66eade9c7655da2c76a1801eb4ca89ad0f5bea365dfee0684d9a",
+   "empreinteLidSha256": "888d322d8aac6833e4768bbf2ae437741fa6e204f2402a8ca5fc8ea8d88004d8",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -7823,8 +7823,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "7b85f347d499b13dc780c2c559dbd8055ac38107e446e4918e69ba92f5138390",
-   "empreinteLidSha256": "42a0b92a898e94ce50b97552ffa97729113d78a2db36f2e60c14d8cc6319aacd",
+   "empreinteJetonSha256": "2c8518015259f559b642c73935d0130f53e668893f2d72296545a5b508b5fdb2",
+   "empreinteLidSha256": "b765f037b770a9b690b896494879160d464f476e459f8882cf84a6eb449e6681",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -7911,8 +7911,8 @@
    "years": 2,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "41ce38cc5db65726a1dd7f1fc2a1dcdc124281f9e7443b30f37be15b5e53f733",
-   "empreinteLidSha256": "04c0d098b7832555d5a083e3c778bc426b30995977069f22e32ce78b7ef4f5a2",
+   "empreinteJetonSha256": "f3894c21aebd5f6a81eb00315e6eb39de68914a362e413a4e6d587ad0af82477",
+   "empreinteLidSha256": "1efde9c2ed148b799a3295b9bb838bc77a44dd730657b3866040eac7e2528206",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -7999,8 +7999,8 @@
    "years": 3,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "243645c067827b7e30dcd6035d74a8d5af90647783bdca8fe4910157bc3719ab",
-   "empreinteLidSha256": "b1542ee1f16d8c0e27a57f3e6281c156f0d35efb10f7c17539e7f91cff5e4353",
+   "empreinteJetonSha256": "528eb3627cf68b92ff842e318f95989e10d6373f19798e4f0bff43d27f032b49",
+   "empreinteLidSha256": "16d93c9efdb1dc8c3b28a62da466346bd4e7627c97b02f8d602476e20c633d67",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -8087,8 +8087,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "17cd45ff76e4ec30f44c5bbccfd35497cb649b8a4d905c6dc3d76c87178b961c",
-   "empreinteLidSha256": "b39570e0848074aa86d801a0829ec1998ced07b047dd5437316da830a1407caa",
+   "empreinteJetonSha256": "aca1a84a33c36083b70882a705388582ee1a46193b72168016aa6b8c3d8fc8b4",
+   "empreinteLidSha256": "47bd9baf8c2940596582bd8da1006ad0038861631e4b27bfa6e632c4cfba0efd",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -8175,8 +8175,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "823a0502f2683824e07b065aa054d2d1cac04bb7c73664ef4e0ca87026ee0e1b",
-   "empreinteLidSha256": "93bd8b3f37d170cc86c73ddd0a765e3d6f0595b66426324334354d4d717480a3",
+   "empreinteJetonSha256": "ab923fe862044bdef4962adea2968de5fbcdc4d582b9df7391a59683637f16fe",
+   "empreinteLidSha256": "d1623c219541b25d5b969d711f60c3b929e6675c633894da83fc7f86d126d0b7",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -8263,8 +8263,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "073b10d3803abe96e85ce8fce964753c809cab5a20beb18712e4a12b0481b16b",
-   "empreinteLidSha256": "ec6a74627a4f558b14a356e28f92cc03c54e0381811715cf2a6b9f34599c9dfd",
+   "empreinteJetonSha256": "f4cd811a7f27be672a42e932494d2ea06754e12ed2c28539a6ae19038a13ba73",
+   "empreinteLidSha256": "ea5b43ea94caeb18b1f74a7ec04d64a80bc26dbfff95f191b4a63a33a7948fca",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -8351,8 +8351,8 @@
    "years": 1,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "4bc9f496cb3837be905a606853a8ef5f6d131661e656f13bffbeadea1d7bd1c1",
-   "empreinteLidSha256": "3d1e1f508f6bd48d8d4018efbd47d06c1c321d8bb0853ddf8608775c855e1421",
+   "empreinteJetonSha256": "945eb308e0bdef9a2cb665ba4abb9195882cf06442eb52ce9bb3014e17175994",
+   "empreinteLidSha256": "f16275efec17d187458ee9d36a2dbe4e01679d397038017bbe1b7423552fe209",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -8439,8 +8439,8 @@
    "years": 2,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "e689be688f8d56c87d09a512ae274875c4c8a041f74c66c97d0b52052dab33bc",
-   "empreinteLidSha256": "8a4de65403d1c8e930cfb3c2300952491951dbf1d6e774333e70061f31e6b603",
+   "empreinteJetonSha256": "a413fc47c9dc4bdf571b869d85007aaa43fa660e842729ac46e7b26ebbacfdde",
+   "empreinteLidSha256": "352e0f32b5b7261acd55ecf6c59cc28e4240d74d5bd4500b383c69c9309e362f",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -8527,8 +8527,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "403cabb8f46067db2b65a3d015e8ccfa0a52811b36acb15e895ff4410668fdb4",
-   "empreinteLidSha256": "fd6373845066d5fa1646f621f3aeef79f4e89983e139be2d819cbf723d57db79",
+   "empreinteJetonSha256": "3397dde3372c5ae01e2e8573a260d2096b5234097196d403a4ec05f1bbccfe99",
+   "empreinteLidSha256": "8233fdba77186a41e2eb956e647adaa01d78a8e75277b9f40e25091508da9c99",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -8615,8 +8615,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "ff98431b01df8428eaa2de8af152a5a9406807958dfb6c40aa546b36d47335a5",
-   "empreinteLidSha256": "bf1f5abfa6f37be04efeec1f96bdf8465e938b4fc7c2d390d252c53e1b18ea66",
+   "empreinteJetonSha256": "84eaeab16ea9b3f237eb98c65e0aee422a61f0c5c535022e4e0600951b25c0ee",
+   "empreinteLidSha256": "a1a6e1d42541e7de3ed64a1ec11b737ba9b9a11ea107ac40c6187648a9c5f0ce",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -8703,8 +8703,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "89845c5700d93ca13dbcb28bad8b115277c8ce4cbf8122afb9166b3fccf5f84d",
-   "empreinteLidSha256": "a743fb5b4a45e4e2df3627cd917c2024387cf7c3f85443a9506476723201e20a",
+   "empreinteJetonSha256": "e17b974be1fbad9c76127810e7a4d5acbdae055ac17f716455dda77fac48a3e9",
+   "empreinteLidSha256": "da54f01f8cac0e42aea1db958c3d6ab7af5f6fdfac89b5873568439afda54470",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -8791,8 +8791,8 @@
    "years": 3,
    "hwidBound": true,
    "hwidVersion": 0,
-   "empreinteJetonSha256": "47e4634b7982892aa5d76457fdcc79e8b904c3b71afcc3d84a434903fd5d488d",
-   "empreinteLidSha256": "a7fb8812b011e24cebdad80a0b62c5f7af5935fca7c2644f58450fc71d2a83f9",
+   "empreinteJetonSha256": "15d76ca6b4764cf0894cf95fd21ddb88c11da0da99a84ecf7194e2d5f02a4518",
+   "empreinteLidSha256": "6a4b67ebc2ce9b4ea4b945dc2d34c81387d454b9b0a1a5f09aa1cfa10100b9e9",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -8879,8 +8879,8 @@
    "years": 1,
    "hwidBound": true,
    "hwidVersion": 1,
-   "empreinteJetonSha256": "35c3d889561e2d7419e2f7628be99a35d3ec9cd56a42231b5ded622446c653e8",
-   "empreinteLidSha256": "56be8e27bc9ef6541bdfdc4801d168fd995ff3f6f71a35a5d9d1872c5257da49",
+   "empreinteJetonSha256": "dd9d8e66ba0b770b8c8ca0b459698d0a947e6bdc7dfd18a8c15a3f2250996ff7",
+   "empreinteLidSha256": "bf2220fd182cf2ad529065fd0188ef20096a157c85dac4a4aa7a8895911f37d8",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -8967,8 +8967,8 @@
    "years": 2,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "c4191be982d0b61a0de7a891a5cc378f5e8613fe147e8e81612a1af300f9ab48",
-   "empreinteLidSha256": "8ea170d5836fcf51c40e2747cbdbf792fcb4e067b58a956974d1c76d60120756",
+   "empreinteJetonSha256": "8d23464252390ce9d3eab9c2bc873daf6e3bf9327fe1a54460d6afe42e11746a",
+   "empreinteLidSha256": "a2c0bb4b9f98e957400bc55c758ae17436a94d056431ad6e55c4e839ae787589",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -9055,8 +9055,8 @@
    "years": 3,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "a87b404700b139eb875e927387e5128e311c83e5f13941a681f356a0c6e691b8",
-   "empreinteLidSha256": "4c9e2e16c72455b65636c27a1be7c412dba789dbc8c6c6e9b9bfe6778c057b68",
+   "empreinteJetonSha256": "0ca9333cd2734a2bb6bdff8c05a82e7ca5b344bc3cd622d08f6f3eef86d8a83f",
+   "empreinteLidSha256": "c00a6b9e713cb685c7014ace84de9fd45be14510520de6494941d148dffd6d0c",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -9143,8 +9143,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "0b7deba0966b034f5b63953ebe84a7ac5608e2da7ac1c2297a720c5bf84cd261",
-   "empreinteLidSha256": "76ad87bfdbc673893b2eb9f3193b7949e63c8b5a5f9fc7bb780a561a65088a84",
+   "empreinteJetonSha256": "5a58a61c39d1e45cb6eb276f909a5e167d0c5d3378132d8c827bb600a16599c5",
+   "empreinteLidSha256": "187094e039e76a9f492553214b0d7942dfd2a5375091112dd16ce8a3a765d731",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -9231,8 +9231,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "8f11e0301ffbe0c83695821cfca5dc46c950f3dfb910d6da7ad60c4d8b6157c1",
-   "empreinteLidSha256": "49ee005ce9474335437db11f40aaac77a53356ca63f2df27ca4982742ce21d2b",
+   "empreinteJetonSha256": "f2dfe0d37f762d0966685bd6bf81caa51a0b3d7653e4db96f08f75d06192a555",
+   "empreinteLidSha256": "3827c8dd73aedbef37824908fce286981fe268ece64e9a7a66876102fd59ad5b",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -9319,8 +9319,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "7906a62b3a73ccf13dcb3cbdbf3e0098794bf72ffd76abe813a6c652a0b87318",
-   "empreinteLidSha256": "6a8e1962483b691bf03a698e30e7290f1eeb6114521de007c16fb11391b920f6",
+   "empreinteJetonSha256": "dda88b96f67782a3453f3163bf19b8a7788f303ee0034e8528325a2e83f8872f",
+   "empreinteLidSha256": "09f741e7d30c65d79c6a2bcde1e5b7477b377376a54156c3c40728e7fc57846a",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -9407,8 +9407,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "5dd56b23654ed21fc3619b8e74c905735acf3d81a636975a6a8949917434f84f",
-   "empreinteLidSha256": "c466ddfef946ad72e67eef407c38b780b41f10c2ab2c5718fb35c99c65b221fd",
+   "empreinteJetonSha256": "dae9c571d52c0c16259619eb854d46ebb4cb22d15f42496887d963ed35f72e5e",
+   "empreinteLidSha256": "1531e6377ef8ad0f5a48ead2cb9f3c1df7bd0b2aa78e61beeea7fd959d80e07a",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -9495,8 +9495,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "92ab10582b0ca6f2860daf6ef35f832ca129758a5aaea2cf3746f0eba73b8ed9",
-   "empreinteLidSha256": "328da58ea8b191fc1b5362cd6054d5960912e4c055b79bcb812304e56aa51c82",
+   "empreinteJetonSha256": "f2c68a6baa66f1ddfb62e7ccd633af4433963a01bd415ac45962980560b1beda",
+   "empreinteLidSha256": "3f3ad9cfb8b9d42714ad74be4f47c36a7d5e296313b55b8b0b1ba60ef638736c",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
@@ -9583,8 +9583,8 @@
    "years": 1,
    "hwidBound": false,
    "hwidVersion": null,
-   "empreinteJetonSha256": "b1a6e4c315feefe80523cb864c57e7a8de517f446b8def801ba69f5c564ae85f",
-   "empreinteLidSha256": "e5329b21163a1ef8edac81f14dfddb69921333b0d0490c8d4661b4638c90f042",
+   "empreinteJetonSha256": "01ad18bd74e38a0359c7a4251cd2398f81971712d206f1296f1284f4a820638c",
+   "empreinteLidSha256": "0e8eb5ed2b07eed352a78ca9d9f63678a9aa412e200d6c6a4c148ae3d475ba58",
    "checks": [
     {
      "name": "signature + en-tête + payload (verify.ts réel)",
