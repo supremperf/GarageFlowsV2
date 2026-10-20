@@ -166,3 +166,8 @@ keys/bootstrap-*
 # Client installer and non-secret delivery/test receipts (generated, never Git).
 /release/
 /artifacts/windows-delivery/
+
+# Outillage ajoute automatiquement par `vercel integration add` (agent skills
+# du fournisseur) : hors perimetre du produit, ne pas versionner.
+.agents/
+skills-lock.json
