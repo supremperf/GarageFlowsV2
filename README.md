@@ -136,26 +136,42 @@ aucune preuve du serveur distant sans provenance/PEM public attesté. Voir la
 ### Initialisation (première fois)
 
 ```bash
-python scripts/keygen.py
+npm run keygen          # ouvre l'interface graphique (scripts/keygen_ui.py)
+python scripts/keygen.py --verify-key-match   # diagnostic lecture seule
 ```
 
 Conserver les clés existantes. Ne jamais réinitialiser la paire sur un parc actif.
 Après une initialisation explicitement approuvée, utiliser `npm run keys:sync`,
 puis `npm run keys:check` (pas de copie manuelle des tableaux embarqués).
 
+L'IHM du Keygen expose dix sections réelles : **Tableau de bord · Générer une
+licence · Gérer les licences · Clients · Appareils et HWID · Clés ECC · Mises à
+jour · Détection des secrets · Journaux et diagnostics · Paramètres et serveur**.
+Guide complet : [docs/KEYGEN_UI.md](docs/KEYGEN_UI.md).
+
 ### Types de licence
 
-| Type | Accès |
-|------|-------|
-| `trial` | Standard — fonctions de base |
-| `premium` | Premium — toutes les fonctions |
-| `enterprise` | Pro / Entreprise — multi-postes |
-| `admin` | Accès panneau d'administration |
+Deux offres commerciales seulement sont proposées : **PREMIUM** et **ADMIN**.
+Les types `trial`, `enterprise` et `mechanic` restent décodables pour le parc
+déjà émis (et signables en CLI avec `--legacy-type` pour l'audit), mais ne sont
+plus proposés — `ENTREPRISE` n'est pas réintroduit.
+
+| Type | Statut | Accès |
+|------|--------|-------|
+| `premium` | **Offre** | Premium — toutes les fonctions |
+| `admin` | **Offre** | Accès panneau d'administration |
+| `trial` | Historique, non proposé | Standard — fonctions de base |
+| `enterprise` | Historique, non proposé | Ancien libellé Pro / Entreprise |
+| `mechanic` | Mode dédié | Clé rattachée à une licence garage |
 
 ### Sécurité
 
 - **ECDSA P-256** : la clé privée ne quitte jamais `keys/private.pem`
-- **HWID** : empreinte matérielle SHA-256 (CPU + MAC + OS + hostname + disque Windows)
+- **HWID V1** : `HWID1-<sha256>` calculé **par Electron** à partir de `cpu`,
+  `diskSerial`, `mac`, `machineId`, `platform` (NFC, espaces normalisés,
+  minuscules, ordre fixe, préfixe `GF-HWID-V1\n`) — le keygen et le serveur
+  reçoivent cette empreinte, ils ne la recalculent jamais. Vecteurs partagés :
+  `tests/fixtures/hwid-v1-vectors.json`.
 - **Record-MAC** : intégrité de la base SQLite (HMAC-SHA256)
 - **Session JWT HS256** : cookie `gf_session` signé avec `NEXTAUTH_SECRET`, vérifié en middleware Edge
 - **Rate limiting** : 5 tentatives / 15 min sur `/api/license/activate`, 10 / 15 min sur l'auth
@@ -229,12 +245,26 @@ propose l'installation en un clic (fenêtre `UpdateModal`) :
   défaut = `GF_LICENSE_SERVER`) ;
 - téléchargement **HTTPS reprenable** (Range) avec barre de progression ;
 - **vérification SHA-256** avant installation — un fichier altéré est refusé ;
+- **manifeste signé Ed25519** obligatoire : signature, `keyId`, domaine HTTPS,
+  version et anti-downgrade sont contrôlés avant tout téléchargement ;
 - l'app se ferme, l'installateur NSIS remplace les fichiers, les **données
   utilisateur** (`%APPDATA%\GarageFlow`) sont conservées.
 
 Publication et administration : voir le README de `garagesite3` et la page
 `/admin/updates`. **Configuration complète** (variables serveur/client,
 endpoints, procédure de publication) : **[docs/CONFIGURATION.md](docs/CONFIGURATION.md)**.
+
+Signature d'un installeur (une commande, clé privée jamais affichée) :
+
+```cmd
+npm run sign-update -- --file release/GarageFlows-Setup.exe
+```
+
+La version vient du nom de fichier ou de `package.json`, l'URL de
+`GF_UPDATE_DOWNLOAD_BASE_URL` (défaut `https://api.garageflows.fr/downloads`),
+et le manifeste produit est **immédiatement vérifié** par
+`electron/update-verify.js` (le module réellement embarqué sur les postes).
+Détails et rotation des clés : [docs/UPDATE_SIGNING.md](docs/UPDATE_SIGNING.md).
 
 ---
 
@@ -276,6 +306,18 @@ Liste complète et comportements : [`.env.example`](.env.example).
   par requête, révocation immédiate, politique de version, plan FREE.
 - **[`docs/PRODUCTION_DEPLOYMENT.md`](docs/PRODUCTION_DEPLOYMENT.md)** —
   déploiement Vercel, PostgreSQL/Redis, rollback, test machine propre.
+
+### Sécurité opérationnelle
+
+- **[`docs/KEYGEN_UI.md`](docs/KEYGEN_UI.md)** — les dix sections de l'IHM, offres
+  PREMIUM/ADMIN, emplacements des clés et pannes courantes.
+- **[`docs/UPDATE_SIGNING.md`](docs/UPDATE_SIGNING.md)** — signature Ed25519
+  (`npm run sign-update`), protocole signé, vérification client, rotation des ancres.
+- **[`docs/SECRET_SCAN.md`](docs/SECRET_SCAN.md)** — détection OCR de secrets,
+  service local 127.0.0.1:7070, masquage, refus fail-closed, limites réelles.
+- **[`docs/ROTATION_SECRETS.md`](docs/ROTATION_SECRETS.md)** — rotation
+  transactionnelle de `GARAGEFLOW_API_KEY`, plan Phase 2 (SMTP, sessions),
+  secrets à ne jamais roter aveuglément.
 
 ---
 

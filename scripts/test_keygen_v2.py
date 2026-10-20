@@ -476,15 +476,23 @@ class TestGenerationDurees(KeygenTestCase):
 
 class TestOffres(KeygenTestCase):
     def test_seules_deux_offres_sont_proposees(self):
-        self.assertEqual(core.KEYGEN_OFFER_TYPES, ["premium", "enterprise"])
+        self.assertEqual(core.KEYGEN_OFFER_TYPES, ["premium", "admin"])
 
     def test_les_autres_types_sont_refuses_en_mode_offre(self):
-        for t in ("trial", "admin", "mechanic"):
+        for t in ("trial", "enterprise", "mechanic"):
             with self.assertRaises(ValueError, msg=f"{t} ne doit pas être proposé"):
                 core.make_license(self.priv, "C", t, enforce_offer=True)
 
+    def test_entreprise_n_est_plus_une_offre_mais_reste_decodable(self):
+        """Le parc historique doit rester vérifiable sans réintroduire l'offre."""
+        with self.assertRaises(ValueError):
+            core.make_license(self.priv, "C", "enterprise", enforce_offer=True)
+        legacy = core.make_license(self.priv, "C", "enterprise",
+                                   duration={"value": 30, "unit": "jours"})
+        self.assertEqual(self.payload(legacy)["typ"], "enterprise")
+
     def test_les_deux_offres_sont_acceptees(self):
-        for t in ("premium", "enterprise"):
+        for t in ("premium", "admin"):
             info = core.make_license(self.priv, "C", t, duration={"value": 1, "unit": "jours"},
                                      enforce_offer=True)
             self.assertEqual(self.payload(info)["typ"], t)
@@ -638,15 +646,19 @@ class TestBase(KeygenTestCase):
 
     def test_filtres_type_et_statut(self):
         p = self._ajoute("premium")
-        e = self._ajoute("enterprise")
+        a = self._ajoute("admin")
+        e = self._ajoute("enterprise")          # fiche historique, non offerte
         rows = db.list_licenses()
         self.assertEqual(len(db.filter_licenses(rows, "PREMIUM")), 1)
         self.assertEqual(db.filter_licenses(rows, "PREMIUM")[0]["lid"], p["lid"])
-        self.assertEqual(db.filter_licenses(rows, "ENTREPRISE")[0]["lid"], e["lid"])
+        self.assertEqual(db.filter_licenses(rows, "ADMIN")[0]["lid"], a["lid"])
+        self.assertEqual(db.filter_licenses(rows, "ENTREPRISE (parc historique)")[0]["lid"],
+                         e["lid"])
         db.set_status(p["lid"], "revoked")
         rows = db.list_licenses()
         self.assertEqual([r["lid"] for r in db.filter_licenses(rows, "Tous", "revoked")], [p["lid"]])
-        self.assertEqual([r["lid"] for r in db.filter_licenses(rows, "Tous", "active")], [e["lid"]])
+        self.assertEqual({r["lid"] for r in db.filter_licenses(rows, "Tous", "active")},
+                         {a["lid"], e["lid"]})
 
     def test_tri_par_creation_et_expiration(self):
         a = self._ajoute(jours=365, label="A")
@@ -694,19 +706,19 @@ class TestParcoursInterface(KeygenTestCase):
         page = self._page()
         page.v_duree.set("30")
         page.v_unite.set("jours")
-        page.v_type.set("enterprise")
+        page.v_type.set("admin")
         self.assertTrue(page._validate()[0], page._validate()[1])
         page._generate()
         records = db.list_licenses()
         self.assertEqual(len(records), 1)
         record = records[0]
-        self.assertEqual(record["type"], "enterprise")
+        self.assertEqual(record["type"], "admin")
         self.assertEqual(record["duration_days"], 30)
         self.assertEqual(record["client"]["nom"], "Durand")
         self.assertEqual(record["client"]["code_postal"], "67000")
         self.assertEqual(record["client"]["pays"], "France")
         payload = core.verify_token(record["token"])
-        self.assertEqual(payload["typ"], "enterprise")
+        self.assertEqual(payload["typ"], "admin")
         self.assertEqual(int(payload["exp"]) - int(payload["iss"]), 30 * 86400)
         self.assertEqual(record["uuid"], json.loads(
             __import__("base64").urlsafe_b64decode(payload["wm"] + "=="))["u"])
@@ -827,8 +839,15 @@ class TestServeur(unittest.TestCase):
         self.assertIn("Clé API", message)
 
     def test_fusion_etat_serveur(self):
-        local = {"lid": "abc"}
+        local = {"lid": "abc", "token": "GF2.jeton.local"}
         merged = server.merge_server_state(local, {"status": "revoked", "activatedAt": "2026-01-01"})
+        # Contrat réel de la route : `expiryAt` doit devenir `expiresAt` dans la
+        # fiche locale, sans écraser le jeton.
+        merged = server.merge_server_state(merged, {"expiryAt": "2027-01-01T00:00:00.000Z",
+                                                     "deviceCount": 2})
+        self.assertEqual(merged["server"]["expiresAt"], "2027-01-01T00:00:00.000Z")
+        self.assertEqual(merged["server"]["deviceCount"], 2)
+        self.assertEqual(merged["token"], local["token"])
         self.assertEqual(merged["server"]["status"], "revoked")
         self.assertEqual(merged["lid"], "abc")
 
@@ -1123,6 +1142,165 @@ class TestCliDurees(KeygenTestCase):
     def test_le_cli_refuse_un_hwid_invalide(self):
         with self.assertRaises(ValueError):
             cli.make_license(self.priv, "C", "premium", hwid="PAS-UN-HWID")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  11 · Agrégations des pages Tableau de bord / Clients / Appareils
+# ══════════════════════════════════════════════════════════════════════════════
+
+class TestAgregations(KeygenTestCase):
+    def _rec(self, cid, typ="premium", statut="active", expires="2099-12-31T00:00:00Z",
+             hwid="", client=None, server=None, lid=None):
+        return db.normalize({
+            "lid": lid or f"lid-{cid}-{typ}-{statut}",
+            "cid": cid, "type": typ, "status": statut,
+            "expires_at_iso": expires, "hwid": hwid,
+            "client": client or {}, "server": server or {},
+            "created_at": "2026-01-01T10:00:00",
+        })
+
+    def _jeu(self):
+        client1 = {"nom": "Durand", "prenom": "Alice", "entreprise": "Garage Central",
+                   "email": "alice@example.fr", "tel": "03 88 00 00 00"}
+        client2 = {"nom": "Leroy", "prenom": "Camille", "entreprise": "Garage Sud",
+                   "email": "camille@example.fr"}
+        return [
+            self._rec("C1", "premium", "active", hwid="HWID1-" + "a" * 64, client=client1,
+                      server={"devices": [{"deviceId": "d1", "active": True}],
+                              "deviceCount": 1, "activeDeviceCount": 1, "seats": 2,
+                              "lastSeenAt": "2026-10-01T12:00:00Z"}),
+            self._rec("C1", "admin", "active", expires="2020-01-01T00:00:00Z", client=client1),
+            self._rec("C2", "premium", "revoked", client=client2),
+            self._rec("C2", "premium", "suspended", client=client2),
+            self._rec("C1", "mechanic", "active", client={"nom": "Durand"}),
+        ]
+
+    def test_tableau_de_bord(self):
+        stats = db.dashboard_stats(self._jeu())
+        self.assertEqual(stats["total"], 5)
+        self.assertEqual(stats["clients"], 2)
+        self.assertEqual(stats["expired"], 1)
+        self.assertEqual(stats["revoked"], 1)
+        self.assertEqual(stats["suspended"], 1)
+        self.assertEqual(stats["active"], 2)
+        self.assertEqual(stats["liees"], 1)
+        self.assertEqual(stats["non_liees"], 4)
+        self.assertEqual(stats["par_type"]["premium"], 3)
+        self.assertEqual(stats["par_type"]["admin"], 1)
+        self.assertEqual(stats["par_type"]["mechanic"], 1)
+
+    def test_clients_agreges(self):
+        clients = db.client_summary(self._jeu())
+        self.assertEqual([c["cid"] for c in clients], ["C1", "C2"])
+        c1, c2 = clients
+        self.assertEqual(c1["licences"], 3)
+        self.assertEqual(c1["actives"], 2)
+        self.assertEqual(c1["revoquees"], 0)
+        self.assertEqual(c1["entreprise"], "Garage Central")
+        self.assertEqual(c1["email"], "alice@example.fr")
+        self.assertEqual(c2["licences"], 2)
+        self.assertEqual(c2["actives"], 0)
+        self.assertEqual(c2["revoquees"], 1)
+
+    def test_clients_sans_cid_ignores(self):
+        rows = [db.normalize({"lid": "x", "type": "premium", "client": {"nom": "Sans CID"}})]
+        self.assertEqual(db.client_summary(rows), [])
+
+    def test_appareils(self):
+        lignes = db.device_summary(self._jeu())
+        liee = [l for l in lignes if l["lie"]]
+        self.assertEqual(len(liee), 1)
+        self.assertTrue(liee[0]["hwid"].startswith("HWID1-"))
+        self.assertEqual(liee[0]["appareils"], 1)
+        self.assertEqual(liee[0]["appareils_actifs"], 1)
+        self.assertEqual(liee[0]["sieges"], 2)
+        self.assertEqual(liee[0]["derniere_activite"], "2026-10-01T12:00:00Z")
+
+    def test_journal_audit_ordre_inverse(self):
+        db.AUDIT_FILE.write_text("2026-01-01T00:00:00 | a | 1 | x\n"
+                                 "2026-01-02T00:00:00 | b | 2 | y\n"
+                                 "2026-01-03T00:00:00 | c | 3 | z\n", encoding="utf-8")
+        journal = db.read_audit(2)
+        self.assertEqual(len(journal), 2)
+        self.assertTrue(journal[0].startswith("2026-01-03"))
+        self.assertTrue(journal[1].startswith("2026-01-02"))
+
+    def test_journal_absent_ne_leve_pas(self):
+        if db.AUDIT_FILE.exists():
+            db.AUDIT_FILE.unlink()
+        self.assertEqual(db.read_audit(), [])
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  12 · Pages ajoutées : tableau de bord, clients, appareils, secrets, journaux
+# ══════════════════════════════════════════════════════════════════════════════
+
+class TestNouvellesPages(KeygenTestCase):
+    def _ajoute(self, typ="premium", hwid="", nom="Durand", entreprise="Garage Central"):
+        info = core.make_license(self.priv, "CUST-PAGE", typ, seats=2, hwid=hwid or None,
+                                 duration={"value": 30, "unit": "jours"})
+        db.add_license(info, {"nom": nom, "prenom": "Alice", "entreprise": entreprise,
+                              "email": "alice@example.fr", "tel": "03 88 00 00 00",
+                              "ville": "Strasbourg", "code_postal": "67000", "pays": "France"})
+        return info
+
+    def test_navigation_complete(self):
+        cles = [k for k, _label, _cls in ui.App.PAGES]
+        self.assertEqual(cles, ["dashboard", "generate", "manage", "clients", "devices",
+                                "keys", "updates", "secrets", "logs", "server"])
+        for _k, label, _cls in ui.App.PAGES:
+            self.assertRegex(label, r"[A-Za-zÀ-ÿ]")
+
+    def test_tableau_de_bord_compte_les_fiches_reelles(self):
+        self._ajoute("premium")
+        self._ajoute("admin", hwid="HWID1-" + "b" * 64)
+        page = self.make_page(ui.PageDashboard)
+        page.refresh()
+        self.assertEqual(page._cards["total"].cget("text"), "2")
+        self.assertEqual(page._cards["liees"].cget("text"), "1")
+        self.assertEqual(page._cards["clients"].cget("text"), "1")
+
+    def test_clients_agreges_et_filtre(self):
+        self._ajoute("premium")
+        self._ajoute("admin")
+        page = self.make_page(ui.PageClients)
+        self.assertEqual(len(page.tree.get_children()), 1)
+        page.v_search.set("inexistant")
+        page.refresh()
+        self.assertEqual(len(page.tree.get_children()), 0)
+
+    def test_appareils_affiche_hwid_complet(self):
+        hwid = "HWID1-" + "c" * 64
+        self._ajoute("premium", hwid=hwid)
+        page = self.make_page(ui.PageDevices)
+        iid = page.tree.get_children()[0]
+        valeurs = page.tree.item(iid)["values"]
+        self.assertIn(hwid, valeurs)
+
+    def test_secrets_ne_contacte_pas_un_service_absent(self):
+        ancien = ui.urllib.request.urlopen
+        try:
+            ui.urllib.request.urlopen = lambda *a, **k: (_ for _ in ()).throw(OSError("absent"))
+            page = self.make_page(ui.PageSecrets)
+        finally:
+            ui.urllib.request.urlopen = ancien
+        self.assertIn("Règles", page.lbl_status.cget("text"))
+        self.assertIn("arrêté", page.lbl_service.cget("text"))
+
+    def test_journaux_lit_le_fichier_d_audit(self):
+        db.audit_log("gen_garage", "1234567890", "type=premium")
+        page = self.make_page(ui.PageLogs)
+        self.assertIn("gen_garage", page.txt.get("1.0", "end"))
+
+    def test_diagnostic_sans_secret(self):
+        self._ajoute("premium")
+        page = self.make_page(ui.PageLogs)
+        diag = page._diagnostic()
+        texte = json.dumps(diag, ensure_ascii=False)
+        self.assertIn("cles", diag)
+        self.assertNotIn("token", texte.lower())
+        self.assertNotIn("api_key", texte.lower())
+        self.assertNotIn("GF2.", texte)
 
 
 if __name__ == "__main__":

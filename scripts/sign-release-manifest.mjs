@@ -304,7 +304,16 @@ function main() {
   const nomFichier = path.basename(fichier)
   const versionNom = versionDans(nomFichier)
   if (!versionNom) {
-    avertir(`Le nom « ${nomFichier} » ne porte aucune version : impossible de vérifier qu'il s'agit bien de l'installeur ${version}.`)
+    // `artifactName` est fixé à `GarageFlows-Setup.exe` (nom de livraison
+    // stable, documenté). L'absence de version dans CE nom n'est donc pas une
+    // incohérence : c'est la version de package.json et le --version explicite
+    // qui font foi, et ils restent contrôlés ci-dessus. Tout AUTRE nom sans
+    // version reste une incohérence bruyante : elle exige --allow-mismatch.
+    if (nomFichier === 'GarageFlows-Setup.exe') {
+      console.warn(`  ⚠ Nom de livraison stable « ${nomFichier} » ; la cohérence repose sur --version (${version}) et package.json.`)
+    } else {
+      avertir(`Le nom « ${nomFichier} » ne porte aucune version : impossible de vérifier qu'il s'agit bien de l'installeur ${version}.`)
+    }
   } else if (versionNom !== version) {
     avertir(`Le fichier signé s'appelle « ${nomFichier} » (version ${versionNom}) alors que --version vaut ${version}.`)
   }

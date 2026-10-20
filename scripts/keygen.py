@@ -16,12 +16,12 @@ Usage (Windows — run from project root):
   python scripts\keygen.py --admin                                  # Generate admin license
   python scripts\keygen.py --gen --customer CUST-001                # Single user license
   python scripts\keygen.py --gen --customer CUST-001 --type premium --duration "90 jours"
-  python scripts\keygen.py --gen --customer CUST-002 --type enterprise --duration-days 365
+  python scripts\keygen.py --gen --customer CUST-002 --type premium --duration-days 365
   python scripts\keygen.py --batch 10 --type premium --years 2      # Bulk generation
 
-OFFRES COMMERCIALES : PREMIUM et ENTREPRISE uniquement. Les types `trial`,
-`admin` et `mechanic` restent signables pour le parc installé et les outils
-internes, ils ne sont plus proposés à la vente.
+OFFRES COMMERCIALES : PREMIUM et ADMIN uniquement. Les types `trial`,
+`enterprise` et `mechanic` restent signables pour le parc installé et les
+outils internes (option --legacy-type), ils ne sont plus proposés à la vente.
   python scripts\keygen.py --gen-mechanic --parent-lid <LID> --count 3 --names "A,B,C"
                                                                     # Mechanic keys for a garage
   python scripts\keygen.py --verify <token>                         # Verify any token
@@ -432,7 +432,13 @@ def main():
     p.add_argument("--watermark",  type=str, metavar="WM")
     p.add_argument("--customer",   type=str)
     p.add_argument("--type",       type=str, default="premium",
-                   choices=sorted(LICENSE_TYPES))
+                   choices=sorted(LICENSE_TYPES),
+                   help="Offres commerciales : premium ou admin. Les types "
+                        "historiques (trial, enterprise, mechanic) exigent "
+                        "--legacy-type et ne sont jamais proposés par l'IHM.")
+    p.add_argument("--legacy-type", action="store_true",
+                   help="Signe un type historique hors offre (parc déjà émis) : "
+                        "trial ou enterprise. Journalisé, jamais proposé par défaut.")
     p.add_argument("--years",      type=int, default=1,
                    help="Durée en ANNÉES (1 an = 365 j). Historique, conservé "
                         "pour les outils et fixtures existants.")
@@ -529,7 +535,8 @@ def main():
             cid  = args.customer or f"CUST-{i+1:04d}"
             info = make_license(pk, cid, args.type, args.years, args.seats,
                                 args.bind_hwid, args.label,
-                                duration=_duree_cli)
+                                duration=_duree_cli,
+                                enforce_offer=not args.legacy_type)
             keygen_db.add_license(info, {})
             keygen_db.audit_log("gen_batch", info["lid"], f"cid={cid}")
             print(f"[{i+1:>3}] {info['token']}")
@@ -542,7 +549,11 @@ def main():
         pk   = _load_private(args.passphrase)
         info = make_license(pk, args.customer, args.type, args.years,
                             args.seats, args.bind_hwid, args.label,
-                            duration=_duree_cli)
+                            duration=_duree_cli,
+                            enforce_offer=not args.legacy_type)
+        if args.legacy_type and args.type not in keygen_core.KEYGEN_OFFER_TYPES:
+            print(f"  ⚠ type historique « {args.type} » signé avec --legacy-type "
+                  "(hors offre commerciale, journalisé).")
         # Enregistrement dans la base locale du keygen (keys/licenses_db.json).
         # Sans lui, « --gen-mechanic --parent-lid <LID> » — pourtant documenté
         # dans l'en-tête de ce fichier — échouait TOUJOURS avec « Licence parente

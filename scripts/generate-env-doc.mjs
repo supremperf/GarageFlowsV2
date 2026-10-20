@@ -16,9 +16,13 @@ const RACINE = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const m = JSON.parse(readFileSync(path.join(RACINE, 'scripts', 'garageflow-env-manifest.json'), 'utf8'))
 
 const SENSIBILITE = (v) => {
-  if (/SECRET|KEY|TOKEN|PASSWORD|PEPPER/.test(v.name) && !v.name.startsWith('NEXT_PUBLIC_')) return 'SECRET'
-  if (/URL/.test(v.name) && v.classification === 'external') return 'SENSIBLE'
   if (v.name.startsWith('NEXT_PUBLIC_')) return 'PUBLIC'
+  // La classification du manifeste fait foi. Le nom n'est qu'un indice : un
+  // booléen nommé `..._SECRET_SCAN_ENABLED` n'est PAS un secret.
+  const metaSecrete = ['secret', 'dangerous', 'dangerous-external'].includes(v.classification)
+  const nomSecret = /SECRET|KEY|TOKEN|PASSWORD|PEPPER/.test(v.name) && v.format !== 'boolean'
+  if (metaSecrete || nomSecret) return 'SECRET'
+  if (/URL/.test(v.name) && v.classification === 'external') return 'SENSIBLE'
   return 'CONFIGURATION'
 }
 

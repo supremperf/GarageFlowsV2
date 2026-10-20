@@ -27,9 +27,12 @@ if __name__ == "__main__" and "--verify-key-match" in sys.argv[1:]:
 
 import json as _json
 import re
+import subprocess
 import threading
 import time
 import tkinter as tk
+import urllib.error
+import urllib.request
 from pathlib import Path
 from tkinter import ttk, messagebox, filedialog
 
@@ -483,14 +486,14 @@ class PageGenerate(tk.Frame):
         lic_card = Card(right)
         lic_card.pack(fill="x")
         _lbl(lic_card, "Offre et durée", font=FONT_H3, bg=SURFACE).pack(anchor="w")
-        _lbl(lic_card, "Deux offres commerciales : PREMIUM et ENTREPRISE.",
+        _lbl(lic_card, "Deux offres commerciales : PREMIUM et ADMIN.",
              fg=MUTED, font=FONT_XS, bg=SURFACE).pack(anchor="w", pady=(2, 12))
 
         _lbl(lic_card, "Type de licence", fg=MUTED, font=FONT_SM, bg=SURFACE).pack(anchor="w")
         self.v_type = tk.StringVar(value="premium")
         type_row = _frame(lic_card, bg=SURFACE)
         type_row.pack(fill="x", pady=(4, 12))
-        for value, label in (("premium", "PREMIUM"), ("enterprise", "ENTREPRISE")):
+        for value, label in (("premium", "PREMIUM"), ("admin", "ADMIN")):
             tk.Radiobutton(type_row, text=label, value=value, variable=self.v_type,
                            bg=SURFACE, fg=TEXT, selectcolor=SURFACE_2,
                            activebackground=SURFACE, activeforeground=TEXT,
@@ -950,7 +953,8 @@ class PageManage(tk.Frame):
         _lbl(grid, "Type", fg=MUTED, font=FONT_XS, bg=SURFACE).grid(row=0, column=1, sticky="w")
         self.v_type = tk.StringVar(value="Tous")
         ttk.Combobox(grid, textvariable=self.v_type, state="readonly", width=14,
-                     values=["Tous", "PREMIUM", "ENTREPRISE", "Mécaniciens"],
+                     values=["Tous", "PREMIUM", "ADMIN", "Mécaniciens",
+                             "ENTREPRISE (parc historique)"],
                      font=FONT_SM).grid(row=1, column=1, sticky="ew", padx=(0, 12), ipady=4)
         self.v_type.trace_add("write", lambda *_: self.refresh())
 
@@ -1895,6 +1899,645 @@ class PageUpdates(tk.Frame):
 
 # ── Page 5 — Serveur ─────────────────────────────────────────────────────────
 
+class PageDashboard(tk.Frame):
+    """Vue d'ensemble : uniquement des chiffres réels, aucun indicateur inventé."""
+
+    def __init__(self, master, app):
+        super().__init__(master, bg=BG)
+        self.app = app
+        self._cards = {}
+        self._build()
+
+    def _build(self):
+        head = _frame(self, bg=BG, padx=26, pady=20)
+        head.pack(fill="x")
+        _lbl(head, "Tableau de bord", font=FONT_H1).pack(anchor="w")
+        _lbl(head, "État réel de la base locale, de l'autorité de signature et du serveur.",
+             fg=MUTED, font=FONT_SM).pack(anchor="w", pady=(4, 0))
+        Button(head, "↻ Actualiser", self.refresh, style="ghost").pack(side="right")
+
+        scroll = ScrollFrame(self)
+        scroll.pack(fill="both", expand=True)
+        body = _frame(scroll.body, bg=BG, padx=26, pady=4)
+        body.pack(fill="both", expand=True)
+
+        cards = _frame(body, bg=BG)
+        cards.pack(fill="x", pady=(0, 14))
+        for key, label in (("total", "Licences"), ("active", "Actives"), ("expired", "Expirées"),
+                           ("revoked", "Révoquées"), ("clients", "Clients"), ("liees", "Matériel lié")):
+            card = Card(cards, pady=12)
+            card.pack(side="left", fill="x", expand=True, padx=(0, 8))
+            value = _lbl(card, "—", fg=ACCENT, font=("Segoe UI", 22, "bold"), bg=SURFACE)
+            value.pack(anchor="w")
+            _lbl(card, label, fg=MUTED, font=FONT_XS, bg=SURFACE).pack(anchor="w")
+            self._cards[key] = value
+
+        grid = _frame(body, bg=BG)
+        grid.pack(fill="x", pady=(0, 14))
+        grid.columnconfigure(0, weight=1)
+        grid.columnconfigure(1, weight=1)
+
+        keys = Card(grid)
+        keys.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        _lbl(keys, "Autorité de signature", font=FONT_H3, bg=SURFACE).pack(anchor="w", pady=(0, 8))
+        self.lbl_keys = _lbl(keys, "", fg=TEXT, font=FONT_SM, bg=SURFACE, justify="left", anchor="w")
+        self.lbl_keys.pack(fill="x")
+        self.lbl_paths = _lbl(keys, "", fg=MUTED, font=FONT_XS, bg=SURFACE, justify="left", anchor="w")
+        self.lbl_paths.pack(fill="x", pady=(8, 0))
+
+        srv = Card(grid)
+        srv.grid(row=0, column=1, sticky="nsew", padx=(8, 0))
+        _lbl(srv, "Serveur central", font=FONT_H3, bg=SURFACE).pack(anchor="w", pady=(0, 8))
+        self.lbl_srv = _lbl(srv, "", fg=TEXT, font=FONT_SM, bg=SURFACE, justify="left", anchor="w")
+        self.lbl_srv.pack(fill="x")
+        self.lbl_srv_cfg = _lbl(srv, "", fg=MUTED, font=FONT_XS, bg=SURFACE, justify="left", anchor="w")
+        self.lbl_srv_cfg.pack(fill="x", pady=(8, 0))
+
+        audit = Card(body)
+        audit.pack(fill="both", expand=True)
+        _lbl(audit, "Journal récent", font=FONT_H3, bg=SURFACE).pack(anchor="w", pady=(0, 8))
+        self.txt = tk.Text(audit, height=10, bg=SURFACE_2, fg=TEXT, font=(MONO[0], 9), relief="flat",
+                           bd=0, highlightthickness=1, highlightbackground=BORDER, padx=8, pady=6,
+                           wrap="none")
+        self.txt.pack(fill="both", expand=True)
+        self._set_journal("Aucun événement enregistré.")
+
+    def _set_journal(self, contenu):
+        if not _widget_alive(self.txt):
+            return
+        try:
+            self.txt.config(state="normal")
+            self.txt.delete("1.0", "end")
+            self.txt.insert("1.0", contenu)
+            self.txt.config(state="disabled")
+        except tk.TclError:
+            pass
+
+    def refresh(self, *_):
+        if not _widget_alive(self):
+            return
+        stats = db.dashboard_stats()
+        for key, label in self._cards.items():
+            valeur = stats.get(key, "—")
+            if _widget_alive(label):
+                label.config(text=str(valeur))
+        types = ", ".join(f"{k}: {v}" for k, v in sorted(stats.get("par_type", {}).items()))
+        if _widget_alive(self.lbl_keys):
+            if core.keys_exist():
+                etat = "Paire présente — signature opérationnelle."
+                couleur = GREEN
+            elif core.PRIV_FILE.exists() or core.PUB_FILE.exists():
+                etat = "Paire INCOMPLÈTE — signature impossible."
+                couleur = AMBER
+            else:
+                etat = "Aucune clé — restaurez l'autorité depuis sa sauvegarde."
+                couleur = RED
+            self.lbl_keys.config(text=etat + (f"\nRépartition : {types}" if types else ""), fg=couleur)
+            self.lbl_paths.config(text=f"Privée : {core.PRIV_FILE}\nPublique : {core.PUB_FILE}")
+        cfg = db.load_server_config()
+        if _widget_alive(self.lbl_srv):
+            if cfg.get("url") and cfg.get("api_key"):
+                self.lbl_srv.config(text=f"Connecté à {cfg.get('url')}", fg=GREEN)
+            elif cfg.get("url"):
+                self.lbl_srv.config(text=f"URL enregistrée ({cfg.get('url')}) — clé API manquante.", fg=AMBER)
+            else:
+                self.lbl_srv.config(text="Non configuré : la gestion reste locale.", fg=AMBER)
+            self.lbl_srv_cfg.config(
+                text=f"Base locale : {db.DB_FILE}\nDernière synchronisation : "
+                     f"{max((r.get('server_synced_at') or '' for r in db.list_licenses()), default='') or '—'}")
+        journal = db.read_audit(12)
+        self._set_journal("\n".join(journal) if journal else "Aucun événement enregistré.")
+
+
+class PageClients(tk.Frame):
+    """Clients agrégés depuis les licences : aucune fiche inventée."""
+
+    COLUMNS = (
+        ("cid", "ID client", 130), ("nom", "Nom", 170), ("entreprise", "Entreprise", 190),
+        ("email", "E-mail", 210), ("tel", "Téléphone", 130), ("ville", "Ville", 130),
+        ("licences", "Licences", 80), ("actives", "Actives", 70), ("emission", "Dernière émission", 160),
+    )
+
+    def __init__(self, master, app):
+        super().__init__(master, bg=BG)
+        self.app = app
+        self.rows = []
+        self._build()
+        self.refresh()
+
+    def _build(self):
+        head = _frame(self, bg=BG, padx=26, pady=20)
+        head.pack(fill="x")
+        _lbl(head, "Clients", font=FONT_H1).pack(anchor="w")
+        _lbl(head, "Agrégation par identifiant client, calculée depuis les licences de la base locale.",
+             fg=MUTED, font=FONT_SM).pack(anchor="w", pady=(4, 0))
+
+        toolbar = Card(_frame(self, bg=BG, padx=26), pady=12)
+        toolbar.pack(fill="x", pady=(0, 12))
+        bar = _frame(toolbar, bg=SURFACE)
+        bar.pack(fill="x")
+        _lbl(bar, "Recherche", fg=MUTED, font=FONT_XS, bg=SURFACE).pack(side="left", padx=(0, 8))
+        self.v_search = tk.StringVar()
+        Entry(bar, textvariable=self.v_search, placeholder="nom, entreprise, e-mail, identifiant…").pack(
+            side="left", fill="x", expand=True, ipady=5)
+        self.v_search.trace_add("write", lambda *_: self.refresh())
+        Button(bar, "↻ Actualiser", self.refresh, style="ghost").pack(side="left", padx=(8, 0))
+        Button(bar, "Voir les licences", self._open_licences, style="primary").pack(side="left", padx=(8, 0))
+        self.lbl_count = _lbl(bar, "", fg=MUTED, font=FONT_SM, bg=SURFACE)
+        self.lbl_count.pack(side="right")
+
+        table = Card(_frame(self, bg=BG, padx=26), padx=1, pady=1)
+        table.pack(fill="both", expand=True, pady=(0, 22))
+        wrap = _frame(table, bg=SURFACE)
+        wrap.pack(fill="both", expand=True)
+        self.tree = ttk.Treeview(wrap, columns=[c[0] for c in self.COLUMNS], show="headings",
+                                 selectmode="browse", height=16)
+        for name, title, width in self.COLUMNS:
+            self.tree.heading(name, text=title)
+            self.tree.column(name, width=width, anchor="w", stretch=False)
+        sy = ttk.Scrollbar(wrap, orient="vertical", command=self.tree.yview)
+        sx = ttk.Scrollbar(wrap, orient="horizontal", command=self.tree.xview)
+        self.tree.configure(yscrollcommand=sy.set, xscrollcommand=sx.set)
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        sy.grid(row=0, column=1, sticky="ns")
+        sx.grid(row=1, column=0, sticky="ew")
+        wrap.rowconfigure(0, weight=1)
+        wrap.columnconfigure(0, weight=1)
+        self.tree.bind("<Double-1>", lambda _e: self._open_licences())
+
+    def refresh(self, *_):
+        if not _widget_alive(self):
+            return
+        tous = db.client_summary()
+        requete = self.v_search.get().strip().lower() if hasattr(self, "v_search") else ""
+        if requete:
+            self.rows = [c for c in tous if requete in " ".join(
+                str(c.get(k) or "") for k in ("cid", "nom", "entreprise", "email", "tel", "ville")).lower()]
+        else:
+            self.rows = tous
+        for iid in self.tree.get_children():
+            self.tree.delete(iid)
+        for client in self.rows:
+            self.tree.insert("", "end", iid=client["cid"], values=(
+                client.get("cid") or "—", client.get("nom") or "—",
+                client.get("entreprise") or "—", client.get("email") or "—",
+                client.get("tel") or "—", client.get("ville") or "—",
+                client.get("licences"), client.get("actives"),
+                (client.get("derniere_emission") or "—")[:19].replace("T", " "),
+            ))
+        if _widget_alive(self.lbl_count):
+            self.lbl_count.config(text=f"{len(self.rows)} client(s)")
+
+    def _open_licences(self):
+        selection = self.tree.selection()
+        if not selection:
+            return
+        cid = selection[0]
+        page = getattr(self.app, "page_manage", None)
+        if page is None or not hasattr(page, "v_search"):
+            return
+        page.v_search.set(cid)
+        page.refresh()
+        if hasattr(self.app, "_show"):
+            self.app._show("manage")
+
+
+class PageDevices(tk.Frame):
+    """Appareils et HWID : liaison matérielle et sièges, sans jamais exposer un jeton."""
+
+    COLUMNS = (
+        ("lid", "LID", 250), ("client", "Client", 190), ("type", "Type", 100),
+        ("statut", "Statut", 100), ("hwid", "HWID", 420), ("sieges", "Sièges", 70),
+        ("actifs", "Appareils actifs", 110), ("activite", "Dernière activité", 170),
+    )
+
+    def __init__(self, master, app):
+        super().__init__(master, bg=BG)
+        self.app = app
+        self.rows = []
+        self._build()
+        self.refresh()
+
+    def _build(self):
+        head = _frame(self, bg=BG, padx=26, pady=20)
+        head.pack(fill="x")
+        _lbl(head, "Appareils et HWID", font=FONT_H1).pack(anchor="w")
+        _lbl(head, "Le HWID officiel est calculé par le poste (Electron). Le keygen le reçoit, "
+                   "ne le recalcule jamais.", fg=MUTED, font=FONT_SM).pack(anchor="w", pady=(4, 0))
+
+        toolbar = Card(_frame(self, bg=BG, padx=26), pady=12)
+        toolbar.pack(fill="x", pady=(0, 12))
+        bar = _frame(toolbar, bg=SURFACE)
+        bar.pack(fill="x")
+        self.v_search = tk.StringVar()
+        Entry(bar, textvariable=self.v_search, placeholder="LID, client, HWID…").pack(
+            side="left", fill="x", expand=True, ipady=5)
+        self.v_search.trace_add("write", lambda *_: self.refresh())
+        Button(bar, "↻ Actualiser", self.refresh, style="ghost").pack(side="left", padx=(8, 0))
+        Button(bar, "⇄ Synchroniser le serveur", self._sync, style="ghost").pack(side="left", padx=(8, 0))
+        Button(bar, "Réinitialiser le matériel", self._reset, style="warn").pack(side="left", padx=(8, 0))
+        self.lbl_count = _lbl(bar, "", fg=MUTED, font=FONT_SM, bg=SURFACE)
+        self.lbl_count.pack(side="right")
+
+        table = Card(_frame(self, bg=BG, padx=26), padx=1, pady=1)
+        table.pack(fill="both", expand=True, pady=(0, 12))
+        wrap = _frame(table, bg=SURFACE)
+        wrap.pack(fill="both", expand=True)
+        self.tree = ttk.Treeview(wrap, columns=[c[0] for c in self.COLUMNS], show="headings",
+                                 selectmode="browse", height=15)
+        for name, title, width in self.COLUMNS:
+            self.tree.heading(name, text=title)
+            self.tree.column(name, width=width, anchor="w", stretch=False)
+        sy = ttk.Scrollbar(wrap, orient="vertical", command=self.tree.yview)
+        sx = ttk.Scrollbar(wrap, orient="horizontal", command=self.tree.xview)
+        self.tree.configure(yscrollcommand=sy.set, xscrollcommand=sx.set)
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        sy.grid(row=0, column=1, sticky="ns")
+        sx.grid(row=1, column=0, sticky="ew")
+        wrap.rowconfigure(0, weight=1)
+        wrap.columnconfigure(0, weight=1)
+
+        self.lbl_hint = _lbl(_frame(self, bg=BG, padx=26), "Sélectionnez une licence pour agir sur son matériel.",
+                             fg=MUTED, font=FONT_SM)
+        self.lbl_hint.pack(fill="x", pady=(0, 20), anchor="w")
+
+    def refresh(self, *_):
+        if not _widget_alive(self):
+            return
+        tous = db.device_summary()
+        requete = self.v_search.get().strip().lower() if hasattr(self, "v_search") else ""
+        if requete:
+            self.rows = [r for r in tous if requete in " ".join(
+                str(r.get(k) or "") for k in ("lid", "client", "cid", "hwid")).lower()]
+        else:
+            self.rows = tous
+        for iid in self.tree.get_children():
+            self.tree.delete(iid)
+        for row in self.rows:
+            self.tree.insert("", "end", iid=row["lid"], values=(
+                row["lid"], row["client"], TYPE_LABEL.get(row["type"], row["type"] or "—"),
+                STATUS_LABEL.get(row["statut"], row["statut"]),
+                row["hwid"] or "— (non liée)", row["sieges"], row["appareils_actifs"],
+                (row["derniere_activite"] or "—")[:19].replace("T", " "),
+            ))
+        if _widget_alive(self.lbl_count):
+            liees = sum(1 for r in self.rows if r["lie"])
+            self.lbl_count.config(text=f"{len(self.rows)} licence(s) · {liees} liée(s) au matériel")
+
+    def _selected(self):
+        selection = self.tree.selection()
+        if not selection:
+            _info("Appareils", "Sélectionnez d'abord une licence.", self)
+            return None
+        return db.get_license(selection[0])
+
+    def _sync(self):
+        page = getattr(self.app, "page_manage", None)
+        if page is not None and hasattr(page, "_sync_server"):
+            page._sync_server()
+        else:
+            _info("Synchronisation", "Ouvrez « Gérer les licences » pour synchroniser.", self)
+
+    def _reset(self):
+        row = self._selected()
+        if not row:
+            return
+        url, key = self.app.server_config()
+        if not (url and key):
+            _warn("Serveur requis", "La réinitialisation matérielle se fait côté serveur : "
+                                    "renseignez l'URL et la clé API dans « Paramètres et serveur ».", self)
+            return
+        if not messagebox.askyesno(
+                "Réinitialiser le matériel",
+                "Libérer les appareils enregistrés pour cette licence ?\n\n"
+                "Un jeton signé portant lui-même un HWID restera lié à son matériel d'origine : "
+                "il faudra alors émettre une nouvelle licence.", parent=self):
+            return
+
+        def _work():
+            return server.reset_hwid(url, key, row["lid"], action="reset", reason="keygen:devices")
+
+        def _done(result):
+            ok, message = result
+            self.app.toast.show(message, "ok" if ok else "error", 8000)
+            if ok:
+                page = getattr(self.app, "page_manage", None)
+                if page is not None and hasattr(page, "_sync_server"):
+                    page._sync_server()
+
+        _background(self, _work, on_done=_done,
+                    on_error=lambda m: self.app.toast.show(m, "error", 8000))
+
+
+class PageSecrets(tk.Frame):
+    """Détection de secrets dans une capture — réutilise scripts/secret_scan.py."""
+
+    def __init__(self, master, app):
+        super().__init__(master, bg=BG)
+        self.app = app
+        self._last = None
+        self._service = None
+        self._patterns = None
+        self._build()
+        self.refresh()
+
+    def _module(self, silencieux: bool = False):
+        try:
+            import secret_scan
+            return secret_scan
+        except Exception as exc:                     # noqa: BLE001
+            if not silencieux and not getattr(self, "_module_error_shown", False):
+                self._module_error_shown = True
+                _error("Module indisponible",
+                       "scripts/secret_scan.py n'a pas pu être chargé.\n\n"
+                       f"{exc.__class__.__name__}", self)
+            return None
+
+    def _build(self):
+        head = _frame(self, bg=BG, padx=26, pady=20)
+        head.pack(fill="x")
+        _lbl(head, "Détection des secrets", font=FONT_H1).pack(anchor="w")
+        _lbl(head, "Analyse locale d'une capture avant partage. Les valeurs ne sont jamais affichées "
+                   "en clair et aucune image n'est conservée.", fg=MUTED, font=FONT_SM).pack(
+            anchor="w", pady=(4, 0))
+
+        status = Card(_frame(self, bg=BG, padx=26), pady=12)
+        status.pack(fill="x", pady=(0, 12))
+        self.lbl_status = _lbl(status, "", fg=TEXT, font=FONT_SM, bg=SURFACE, justify="left", anchor="w")
+        self.lbl_status.pack(fill="x")
+        self.lbl_service = _lbl(status, "", fg=MUTED, font=FONT_XS, bg=SURFACE, justify="left", anchor="w")
+        self.lbl_service.pack(fill="x", pady=(6, 0))
+
+        bar = _frame(status, bg=SURFACE)
+        bar.pack(fill="x", pady=(10, 0))
+        Button(bar, "Choisir une capture…", self._choose, style="primary").pack(side="left")
+        Button(bar, "Vérifier le service", self._health, style="ghost").pack(side="left", padx=(8, 0))
+        Button(bar, "Démarrer le service local", self._start_service, style="ghost").pack(side="left", padx=(8, 0))
+        Button(bar, "Arrêter", self._stop_service, style="ghost").pack(side="left", padx=(8, 0))
+        Button(bar, "Exporter le rapport", self._export, style="ghost").pack(side="left", padx=(8, 0))
+
+        verdict = Card(_frame(self, bg=BG, padx=26), pady=12)
+        verdict.pack(fill="x", pady=(0, 12))
+        self.lbl_verdict = _lbl(verdict, "Aucune analyse effectuée.", fg=MUTED, font=FONT_B, bg=SURFACE)
+        self.lbl_verdict.pack(anchor="w")
+
+        table = Card(_frame(self, bg=BG, padx=26), padx=1, pady=1)
+        table.pack(fill="both", expand=True, pady=(0, 20))
+        wrap = _frame(table, bg=SURFACE)
+        wrap.pack(fill="both", expand=True)
+        self.COLUMNS = (("type", "Type", 240), ("family", "Famille", 120), ("score", "Score", 70),
+                        ("valeur", "Valeur masquée", 170), ("position", "Position", 120))
+        self.tree = ttk.Treeview(wrap, columns=[c[0] for c in self.COLUMNS], show="headings",
+                                 height=10)
+        for name, title, width in self.COLUMNS:
+            self.tree.heading(name, text=title)
+            self.tree.column(name, width=width, anchor="w", stretch=False)
+        self.tree.pack(fill="both", expand=True)
+
+    def refresh(self, *_):
+        if not _widget_alive(self.lbl_status):
+            return
+        module = self._module(silencieux=True)
+        if module is None:
+            self.lbl_status.config(text="Module de scan indisponible.", fg=RED)
+            return
+        try:
+            self._patterns = self._patterns or module.load_patterns()
+            ocr = module.ocr_available()
+            self.lbl_status.config(
+                text=f"Règles : {len(self._patterns)} (version {self._patterns.version}) · "
+                     f"OCR : {'disponible' if ocr else 'indisponible (les scans image seront refusés)'} · "
+                     f"Persistance : aucune", fg=TEXT if ocr else AMBER)
+        except Exception as exc:                     # noqa: BLE001
+            self.lbl_status.config(text=f"Configuration de scan invalide : {exc}", fg=RED)
+        self._health(silencieux=True)
+
+    def _choose(self):
+        chemin = filedialog.askopenfilename(
+            parent=self, title="Capture à analyser",
+            filetypes=[("Images", "*.png *.jpg *.jpeg *.gif *.bmp"), ("Tous les fichiers", "*.*")])
+        if not chemin:
+            return
+        module = self._module()
+        if module is None:
+            return
+        self.lbl_verdict.config(text="Analyse en cours…", fg=MUTED)
+
+        def _work():
+            data = Path(chemin).read_bytes()
+            return module.scan_image(data, self._patterns or module.load_patterns())
+
+        def _done(resultat):
+            self._last = resultat
+            for iid in self.tree.get_children():
+                self.tree.delete(iid)
+            for secret in resultat.get("secrets", []):
+                self.tree.insert("", "end", values=(
+                    secret["type"], secret["family"], f"{secret['score']:.2f}",
+                    secret["value_redacted"], f"{secret['start']}..{secret['end']}"))
+            if resultat.get("blocked"):
+                self.lbl_verdict.config(
+                    text=f"PARTAGE BLOQUÉ — {resultat['count']} secret(s) détecté(s). "
+                         "Masquez la zone ou retirez le secret avant diffusion.", fg=RED)
+            else:
+                self.lbl_verdict.config(text="Aucun secret détecté dans cette capture.", fg=GREEN)
+            db.audit_log("secret_scan", "", f"n={resultat.get('count', 0)}")
+
+        def _failed(message):
+            self.lbl_verdict.config(text=message, fg=AMBER)
+
+        _background(self, _work, on_done=_done, on_error=_failed)
+
+    def _service_url(self) -> str:
+        # URL explicite si elle est sûre : boucle locale, ou HTTPS pour un
+        # service distant. Une URL HTTP distante enverrait la capture en clair.
+        explicite = (os.environ.get("GF_SCREENSHOT_SCAN_SERVER_URL") or "").strip().rstrip("/")
+        if explicite:
+            if explicite.startswith("https://") or explicite.startswith(
+                    ("http://127.0.0.1", "http://localhost", "http://[::1]")):
+                return explicite
+            return f"http://127.0.0.1:{int(os.environ.get('GF_SCREENSHOT_SCAN_PORT', '7070'))}"
+        return f"http://127.0.0.1:{int(os.environ.get('GF_SCREENSHOT_SCAN_PORT', '7070'))}"
+
+    def _health(self, silencieux: bool = False):
+        def _work():
+            try:
+                with urllib.request.urlopen(self._service_url() + "/health", timeout=0.6) as r:
+                    return True, _json.loads(r.read().decode("utf-8"))
+            except Exception:                        # noqa: BLE001
+                return False, None
+
+        def _done(result):
+            ok, payload = result
+            if not _widget_alive(self.lbl_service):
+                return
+            if ok and payload:
+                self.lbl_service.config(
+                    text=f"Service local actif sur {self._service_url()} · OCR "
+                         f"{'disponible' if payload.get('ocrAvailable') else 'indisponible'} · "
+                         f"persistance {payload.get('persist')}", fg=GREEN)
+            else:
+                self.lbl_service.config(
+                    text=f"Service local arrêté ({self._service_url()}). Le scan direct reste possible "
+                         "dans cette fenêtre.", fg=MUTED)
+
+        _background(self, _work, on_done=_done,
+                    on_error=(lambda m: None) if silencieux else
+                    (lambda m: self.lbl_service.config(text=m, fg=AMBER)))
+
+    def _start_service(self):
+        if self._service is not None and self._service.poll() is None:
+            self.app.toast.show("Le service local est déjà démarré.", "info")
+            return
+        script = HERE / "secret_scan.py"
+        if not script.exists():
+            _error("Fichier absent", f"{script} est introuvable.", self)
+            return
+        kwargs = {}
+        if os.name == "nt":
+            kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        try:
+            self._service = subprocess.Popen(
+                [sys.executable, str(script), "--serve",
+                 "--port", str(int(os.environ.get("GF_SCREENSHOT_SCAN_PORT", "7070")))],
+                cwd=str(HERE.parent), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **kwargs)
+        except OSError as exc:
+            _error("Démarrage impossible", exc.__class__.__name__, self)
+            return
+        self.after(400, lambda: self._health(silencieux=False))
+
+    def _stop_service(self):
+        if self._service is None or self._service.poll() is not None:
+            self.app.toast.show("Aucun service local démarré par le Keygen.", "info")
+            return
+        self._service.terminate()
+        try:
+            self._service.wait(timeout=3)
+        except Exception:                            # noqa: BLE001
+            self._service.kill()
+        self._service = None
+        self.app.toast.show("Service local arrêté.", "ok")
+        self._health(silencieux=True)
+
+    def _export(self):
+        if not self._last:
+            _info("Export", "Aucune analyse à exporter.", self)
+            return
+        chemin = filedialog.asksaveasfilename(parent=self, defaultextension=".json",
+                                              filetypes=[("JSON", "*.json")],
+                                              initialfile="rapport-secrets.json")
+        if not chemin:
+            return
+        try:
+            with open(chemin, "w", encoding="utf-8") as fh:
+                _json.dump({"generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                            "report": self._last}, fh, indent=2, ensure_ascii=False)
+        except OSError as exc:
+            _error("Export impossible", exc.__class__.__name__, self)
+            return
+        db.audit_log("secret_scan_export", "", "rapport masqué")
+        self.app.toast.show("Rapport exporté (valeurs masquées uniquement).", "ok")
+
+
+class PageLogs(tk.Frame):
+    """Journaux et diagnostic — aucun secret, aucun jeton de licence."""
+
+    def __init__(self, master, app):
+        super().__init__(master, bg=BG)
+        self.app = app
+        self._build()
+        self.refresh()
+
+    def _build(self):
+        head = _frame(self, bg=BG, padx=26, pady=20)
+        head.pack(fill="x")
+        _lbl(head, "Journaux et diagnostics", font=FONT_H1).pack(anchor="w")
+        _lbl(head, "Journal d'audit local et état des composants. Aucun secret n'y figure.",
+             fg=MUTED, font=FONT_SM).pack(anchor="w", pady=(4, 0))
+        bar = _frame(head, bg=BG)
+        bar.pack(fill="x", pady=(10, 0))
+        Button(bar, "↻ Actualiser", self.refresh, style="ghost").pack(side="left")
+        Button(bar, "Exporter le diagnostic", self._export, style="ghost").pack(side="left", padx=(8, 0))
+        Button(bar, "Effacer le journal", self._clear, style="danger").pack(side="left", padx=(8, 0))
+
+        card = Card(_frame(self, bg=BG, padx=26), pady=12)
+        card.pack(fill="both", expand=True, pady=(0, 22))
+        self.txt = tk.Text(card, bg=SURFACE_2, fg=TEXT, font=(MONO[0], 9), relief="flat", bd=0,
+                           highlightthickness=1, highlightbackground=BORDER, wrap="none",
+                           padx=8, pady=6)
+        self.txt.pack(fill="both", expand=True)
+
+    def refresh(self, *_):
+        if not _widget_alive(self.txt):
+            return
+        lignes = db.read_audit(400)
+        contenu = "\n".join(lignes) if lignes else "Aucun événement enregistré."
+        try:
+            self.txt.config(state="normal")
+            self.txt.delete("1.0", "end")
+            self.txt.insert("1.0", contenu)
+            self.txt.config(state="disabled")
+        except tk.TclError:
+            pass
+
+    def _diagnostic(self) -> dict:
+        cfg = db.load_server_config()
+        empreinte_pub = ""
+        try:
+            import hashlib
+            empreinte_pub = hashlib.sha256(core.PUB_FILE.read_bytes()).hexdigest()[:16]
+        except OSError:
+            pass
+        scan_etat = {}
+        try:
+            import secret_scan
+            scan_etat = {"patterns": len(secret_scan.load_patterns()),
+                         "ocrAvailable": secret_scan.ocr_available()}
+        except Exception as exc:                     # noqa: BLE001
+            scan_etat = {"error": exc.__class__.__name__}
+        return {
+            "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "keygen": {"licences_locales": len(db.list_licenses())},
+            "cles": {
+                "privee": str(core.PRIV_FILE), "privee_presente": core.PRIV_FILE.exists(),
+                "publique": str(core.PUB_FILE), "publique_presente": core.PUB_FILE.exists(),
+                "empreinte_publique": empreinte_pub,
+            },
+            "base": {"fichier": str(db.DB_FILE), "existe": db.DB_FILE.exists()},
+            "serveur": {"url": cfg.get("url", ""), "cle_configuree": bool(cfg.get("api_key"))},
+            "scan": scan_etat,
+            "journal": db.read_audit(100),
+        }
+
+    def _export(self):
+        chemin = filedialog.asksaveasfilename(parent=self, defaultextension=".json",
+                                              filetypes=[("JSON", "*.json")],
+                                              initialfile="diagnostic-garageflows.json")
+        if not chemin:
+            return
+        try:
+            with open(chemin, "w", encoding="utf-8") as fh:
+                _json.dump(self._diagnostic(), fh, indent=2, ensure_ascii=False)
+        except OSError as exc:
+            _error("Export impossible", exc.__class__.__name__, self)
+            return
+        self.app.toast.show("Diagnostic exporté (sans secret).", "ok")
+
+    def _clear(self):
+        if not messagebox.askyesno("Effacer le journal",
+                                   "Effacer TOUTES les lignes du journal d'audit local ?\n"
+                                   "Cette action est irréversible.", parent=self):
+            return
+        try:
+            db.AUDIT_FILE.write_text("", encoding="utf-8")
+        except OSError as exc:
+            _error("Effacement impossible", exc.__class__.__name__, self)
+            return
+        db.audit_log("journal_clear", "", "")
+        self.refresh()
+        self.app.toast.show("Journal effacé.", "ok")
+
+
 class PageServer(tk.Frame):
     """Configuration de l'instance GarageFlows : URL, clé API, test de connexion."""
 
@@ -1909,7 +2552,7 @@ class PageServer(tk.Frame):
     def _build(self):
         head = _frame(self, bg=BG, padx=26, pady=20)
         head.pack(fill="x")
-        _lbl(head, "Serveur GarageFlows", font=FONT_H1).pack(anchor="w")
+        _lbl(head, "Paramètres et serveur", font=FONT_H1).pack(anchor="w")
         _lbl(head, "Adresse de l'instance et clé d'administration. Une seule source : "
                    "keys/server_config.json.", fg=MUTED, font=FONT_SM).pack(anchor="w", pady=(4, 0))
 
@@ -1981,11 +2624,16 @@ class PageServer(tk.Frame):
 
 class App(tk.Tk):
     PAGES = (
-        ("generate", "⚡  Générer une licence", PageGenerate),
-        ("manage",   "📋  Gérer les licences",  PageManage),
-        ("keys",     "🔑  Clés ECC",            PageKeys),
-        ("updates",  "🖋  Mises à jour",        PageUpdates),
-        ("server",   "🌐  Serveur",             PageServer),
+        ("dashboard", "▦  Tableau de bord",       PageDashboard),
+        ("generate",  "⚡  Générer une licence",   PageGenerate),
+        ("manage",    "📋  Gérer les licences",    PageManage),
+        ("clients",   "👥  Clients",               PageClients),
+        ("devices",   "🖥  Appareils et HWID",    PageDevices),
+        ("keys",      "🔑  Clés ECC",              PageKeys),
+        ("updates",   "🖋  Mises à jour",          PageUpdates),
+        ("secrets",   "🛡  Détection des secrets", PageSecrets),
+        ("logs",      "🧾  Journaux et diagnostics", PageLogs),
+        ("server",    "⚙  Paramètres et serveur",  PageServer),
     )
 
     def __init__(self):
@@ -2078,12 +2726,11 @@ class App(tk.Tk):
                        fg=TEXT if active else MUTED,
                        relief="flat")
         self._active = key
-        if key == "manage" and hasattr(self._pages["manage"], "refresh"):
-            self._pages["manage"].refresh()
-        if key == "keys" and hasattr(self._pages["keys"], "refresh"):
-            self._pages["keys"].refresh()
+        page = self._pages[key]
+        if hasattr(page, "refresh"):
+            page.refresh()
         if key == "updates":
-            self._pages["updates"]._refresh_key_state()
+            page._refresh_key_state()
 
     def _refresh_key_state(self):
         if not _widget_alive(self.lbl_key_state):

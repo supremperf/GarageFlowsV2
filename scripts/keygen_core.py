@@ -30,14 +30,15 @@ TYPE_LABELS   = {
 }
 
 # ── Offre commerciale du keygen ──────────────────────────────────────────────
-# Seules deux offres sont vendues depuis le keygen. Les types `trial`, `admin`
-# et `mechanic` restent dans le format de jeton (compatibilité du parc installé
-# et des outils historiques) mais ne sont PLUS proposés à la génération :
-# une licence « mécanicien » se crée via le mode dédié, jamais via ce choix.
-KEYGEN_OFFER_TYPES = ["premium", "enterprise"]
+# Seules deux offres sont vendues depuis le keygen : PREMIUM et ADMIN.
+# Les types `trial`, `enterprise` et `mechanic` restent DÉCODABLES dans le format
+# de jeton (compatibilité du parc historique et des outils d'audit) mais ne sont
+# PLUS proposés à la génération : une licence « mécanicien » se crée via le mode
+# dédié, jamais via ce choix, et ENTREPRISE n'est jamais réintroduit comme offre.
+KEYGEN_OFFER_TYPES = ["premium", "admin"]
 KEYGEN_TYPE_LABELS = {
-    "premium":    "PREMIUM",
-    "enterprise": "ENTREPRISE",
+    "premium": "PREMIUM",
+    "admin":   "ADMIN",
 }
 
 # ── Durées ───────────────────────────────────────────────────────────────────
@@ -240,13 +241,13 @@ def make_license(priv_key, customer_id: str, license_type: str,
 
     duration : {"value": int, "unit": "jours"|"mois"|"annees"} — durée exacte en
     jours. `enforce_offer=True` restreint le type aux offres commerciales du
-    keygen (PREMIUM / ENTREPRISE) ; laissé à False pour les outils historiques.
+    keygen (PREMIUM / ADMIN) ; laissé à False pour les outils historiques.
     """
     if license_type == "mechanic":
         raise ValueError("Utilisez make_mechanic_license pour les licences mécanicien.")
     if enforce_offer and license_type not in KEYGEN_OFFER_TYPES:
         raise ValueError(
-            "Type commercial invalide. Seules les offres PREMIUM et ENTREPRISE "
+            "Type commercial invalide. Seules les offres PREMIUM et ADMIN "
             f"sont proposées : {KEYGEN_OFFER_TYPES}"
         )
     if license_type not in LICENSE_TYPES:

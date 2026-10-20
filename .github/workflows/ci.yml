@@ -329,6 +329,13 @@ jobs:
         run: |
           python -m pip install --index-url https://pypi.org/simple --require-hashes --only-binary=:all: -r tests/requirements-keygen.txt
 
+      - name: Keygen and screenshot secret-scan (Python, real crypto)
+        run: |
+          python scripts/test_keygen.py
+          python scripts/test_keygen_hwid_binding.py
+          python scripts/test_keygen_v2.py
+          python scripts/test_secret_scan.py
+
       - name: Copilot budget guards and frozen validation integrity (offline)
         run: |
           node --test tests/copilot-phase4-evaluation.test.cjs tests/copilot-evaluation-approval.test.cjs tests/copilot-native-runner.test.cjs tests/copilot-blind-intake.test.cjs tests/phase6-security-context.test.cjs tests/codeql-inventory.test.cjs tests/config-dotenv-context.test.cjs
@@ -539,6 +546,13 @@ jobs:
       - name: Install hash-locked keygen test dependencies
         run: |
           python -m pip install --index-url https://pypi.org/simple --require-hashes --only-binary=:all: -r tests/requirements-keygen.txt
+
+      - name: Keygen and screenshot secret-scan (Python, real crypto)
+        run: |
+          python scripts/test_keygen.py
+          python scripts/test_keygen_hwid_binding.py
+          python scripts/test_keygen_v2.py
+          python scripts/test_secret_scan.py
 
       - name: Run final release gate
         run: node scripts/final-release-gate.mjs

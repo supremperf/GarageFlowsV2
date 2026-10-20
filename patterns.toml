@@ -1,0 +1,231 @@
+# Patterns de détection de secrets — GarageFlows
+#
+# Ce fichier est la SEULE source de vérité des règles utilisées par
+# scripts/secret_scan.py. Il ne contient aucun secret : uniquement des
+# expressions régulières qui DÉCRIVENT la forme des secrets.
+#
+# Chaque règle :
+#   id                 identifiant stable, remonté dans la réponse
+#   family             famille (affichage / statistiques)
+#   description        explication lisible
+#   regex              expression Python (re) ; si elle contient un groupe
+#                      capturant, il délimite la VALEUR du secret (le contexte
+#                      autour n'est pas masqué)
+#   score              confiance 0..1 ; sous `min_score`, le match est ignoré
+#   mask_keep_prefix   caractères conservés en tête lors du masquage
+#   mask_keep_suffix   caractères conservés en queue
+#
+# RÈGLE DE SÉCURITÉ : la valeur complète n'est JAMAIS renvoyée par le service ;
+# seule `value_redacted` sort. Ne jamais ajouter ici une valeur réelle.
+
+version = 1
+
+[settings]
+min_score = 0.6
+# Une règle « générique » exige un mot-clé de contexte : sans lui, un simple
+# identifiant de 20 caractères serait signalé à tort (bruit insupportable).
+generic_min_length = 16
+
+# ── Fournisseurs à préfixe fort ──────────────────────────────────────────────
+
+[[rules]]
+id = "OPENAI_API_KEY"
+family = "openai"
+description = "Clé API OpenAI (sk-, sk-proj-, sk-svcacct-)"
+regex = '''\bsk-(?!ant-)(?:proj-|svcacct-|admin-)?[A-Za-z0-9_-]{20,}\b'''
+score = 0.98
+mask_keep_prefix = 3
+mask_keep_suffix = 0
+
+[[rules]]
+id = "ANTHROPIC_API_KEY"
+family = "anthropic"
+description = "Clé API Anthropic"
+regex = '''\bsk-ant-[A-Za-z0-9_-]{20,}\b'''
+score = 0.98
+mask_keep_prefix = 7
+mask_keep_suffix = 0
+
+[[rules]]
+id = "STRIPE_SECRET_KEY"
+family = "stripe"
+description = "Clé secrète Stripe (sk_live_ / rk_live_ / sk_test_ / rk_test_)"
+regex = '''\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}\b'''
+score = 0.97
+mask_keep_prefix = 8
+mask_keep_suffix = 0
+
+[[rules]]
+id = "GITHUB_TOKEN"
+family = "github"
+description = "Jeton GitHub (ghp_, gho_, ghu_, ghs_, ghr_)"
+regex = '''\bgh[pousr]_[A-Za-z0-9]{30,}\b'''
+score = 0.98
+mask_keep_prefix = 4
+mask_keep_suffix = 0
+
+[[rules]]
+id = "GITHUB_FINE_GRAINED_TOKEN"
+family = "github"
+description = "Jeton GitHub fine-grained (github_pat_)"
+regex = '''\bgithub_pat_[A-Za-z0-9_]{30,}\b'''
+score = 0.98
+mask_keep_prefix = 11
+mask_keep_suffix = 0
+
+[[rules]]
+id = "GITLAB_TOKEN"
+family = "gitlab"
+description = "Jeton d'accès GitLab (glpat-)"
+regex = '''\bglpat-[A-Za-z0-9_-]{20,}\b'''
+score = 0.96
+mask_keep_prefix = 6
+mask_keep_suffix = 0
+
+[[rules]]
+id = "AWS_ACCESS_KEY_ID"
+family = "aws"
+description = "Identifiant d'accès AWS (AKIA/ASIA + 16 caractères)"
+regex = '''\b(?:AKIA|ASIA)[0-9A-Z]{16}\b'''
+score = 0.95
+mask_keep_prefix = 4
+mask_keep_suffix = 0
+
+[[rules]]
+id = "AWS_SECRET_ACCESS_KEY"
+family = "aws"
+description = "Clé secrète AWS précédée de son nom de variable"
+regex = '''(?i)aws_?secret_?access_?key\s*[:=]\s*["']?([A-Za-z0-9/+=]{40})["']?'''
+score = 0.92
+mask_keep_prefix = 2
+mask_keep_suffix = 2
+
+[[rules]]
+id = "GOOGLE_API_KEY"
+family = "google"
+description = "Clé API Google (AIza…)"
+regex = '''\bAIza[0-9A-Za-z_-]{35}\b'''
+score = 0.95
+mask_keep_prefix = 4
+mask_keep_suffix = 0
+
+[[rules]]
+id = "SLACK_TOKEN"
+family = "slack"
+description = "Jeton Slack (xoxb-, xoxp-, xoxa-, xoxr-, xoxs-)"
+regex = '''\bxox[baprs]-[A-Za-z0-9-]{20,}\b'''
+score = 0.96
+mask_keep_prefix = 5
+mask_keep_suffix = 0
+
+[[rules]]
+id = "SENDGRID_API_KEY"
+family = "sendgrid"
+description = "Clé API SendGrid (SG.)"
+regex = '''\bSG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}\b'''
+score = 0.94
+mask_keep_prefix = 3
+mask_keep_suffix = 0
+
+[[rules]]
+id = "TWILIO_API_KEY"
+family = "twilio"
+description = "Clé API Twilio (SK + 32 hexadécimaux)"
+regex = '''\bSK[0-9a-f]{32}\b'''
+score = 0.9
+mask_keep_prefix = 4
+mask_keep_suffix = 0
+
+# ── Structures reconnaissables ───────────────────────────────────────────────
+
+[[rules]]
+id = "PRIVATE_KEY_BLOCK"
+family = "private-key"
+description = "Bloc de clé privée PEM"
+regex = '''-----BEGIN (?:RSA |EC |DSA |OPENSSH |ENCRYPTED )?PRIVATE KEY-----'''
+score = 1.0
+mask_keep_prefix = 11
+mask_keep_suffix = 5
+
+[[rules]]
+id = "JWT"
+family = "jwt"
+description = "Jeton JWT (trois segments base64url)"
+regex = '''\beyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b'''
+score = 0.85
+mask_keep_prefix = 6
+mask_keep_suffix = 0
+
+[[rules]]
+id = "POSTGRES_URL_WITH_PASSWORD"
+family = "database-url"
+description = "URL PostgreSQL/Neon contenant un mot de passe"
+regex = '''\bpostgres(?:ql)?(?:\+[a-z]+)?://[^\s:/@]+:([^\s@]{4,})@[^\s]+'''
+score = 0.93
+mask_keep_prefix = 2
+mask_keep_suffix = 0
+
+[[rules]]
+id = "REDIS_URL_WITH_PASSWORD"
+family = "database-url"
+description = "URL Redis/Upstash contenant un mot de passe"
+regex = '''\brediss?://[^\s:/@]*:([^\s@]{4,})@[^\s]+'''
+score = 0.9
+mask_keep_prefix = 2
+mask_keep_suffix = 0
+
+[[rules]]
+id = "BASIC_AUTH_URL"
+family = "basic-auth"
+description = "URL avec identifiants Basic (utilisateur:motdepasse@)"
+regex = '''\b[a-z][a-z0-9+.-]*://[^\s:/@]+:([^\s@/]{4,})@[^\s]+'''
+score = 0.8
+mask_keep_prefix = 2
+mask_keep_suffix = 0
+
+# ── Secrets génériques : contexte obligatoire ────────────────────────────────
+
+[[rules]]
+id = "GENERIC_API_KEY"
+family = "generic"
+description = "Valeur affectée à une variable dont le nom évoque une clé API"
+regex = '''(?i)(?:api[_-]?key|apikey|access[_-]?token|auth[_-]?token|client[_-]?secret)\s*[:=]\s*["']?([A-Za-z0-9_./+=-]{16,})["']?'''
+score = 0.72
+mask_keep_prefix = 3
+mask_keep_suffix = 0
+
+[[rules]]
+id = "GENERIC_SECRET"
+family = "generic"
+description = "Valeur affectée à une variable dont le nom évoque un secret"
+regex = '''(?i)(?:secret|password|passwd|pwd)\s*[:=]\s*["']?([^\s"'<>]{12,})["']?'''
+score = 0.65
+mask_keep_prefix = 2
+mask_keep_suffix = 0
+
+[[rules]]
+id = "SMTP_PASSWORD"
+family = "smtp"
+description = "Mot de passe SMTP affecté à une variable"
+regex = '''(?i)(?:smtp|email)[_-]?(?:pass|password|pwd)\s*[:=]\s*["']?([^\s"'<>]{8,})["']?'''
+score = 0.8
+mask_keep_prefix = 2
+mask_keep_suffix = 0
+
+[[rules]]
+id = "VERCEL_TOKEN"
+family = "vercel"
+description = "Jeton Vercel précédé de son nom de variable"
+regex = '''(?i)(?:vercel[_-]?token|VERCEL_TOKEN)\s*[:=]\s*["']?([A-Za-z0-9]{20,})["']?'''
+score = 0.85
+mask_keep_prefix = 3
+mask_keep_suffix = 0
+
+[[rules]]
+id = "UPSTASH_TOKEN"
+family = "upstash"
+description = "Jeton Upstash précédé de son nom de variable"
+regex = '''(?i)upstash[_-]?redis[_-]?rest[_-]?token\s*[:=]\s*["']?([A-Za-z0-9_=-]{20,})["']?'''
+score = 0.88
+mask_keep_prefix = 3
+mask_keep_suffix = 0

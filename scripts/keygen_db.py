@@ -229,11 +229,12 @@ def search_licenses(query: str, records: list | None = None) -> list:
     return out
 
 
-# Libellés d'interface → type interne. « ENTREPRISE » est le libellé commercial
-# du type `enterprise` : sans cette table, le filtre ne trouvait jamais rien et
-# l'utilisateur voyait une liste vide sans comprendre pourquoi.
+# Libellés d'interface → type interne. « ENTREPRISE (parc historique) » reste
+# consultable pour les licences déjà émises sous cet ancien libellé, mais n'est
+# plus une offre proposée à la génération (PREMIUM et ADMIN seulement).
 TYPE_ALIASES = {
     "premium": "premium",
+    "admin": "admin",
     "entreprise": "enterprise",
     "enterprise": "enterprise",
     "mécanicien": "mechanic",
@@ -241,12 +242,11 @@ TYPE_ALIASES = {
     "mechanic": "mechanic",
     "standard": "trial",
     "trial": "trial",
-    "admin": "admin",
 }
 
 
 def filter_licenses(records: list, type_filter: str = "Tous", status_filter: str = "Tous") -> list:
-    """Filtres « type » (Tous / PREMIUM / ENTREPRISE / Garages / Mécaniciens) et statut."""
+    """Filtres « type » (Tous / PREMIUM / ADMIN / parc historique) et statut."""
     rows = [normalize(r) for r in records]
     tf = (type_filter or "Tous").strip()
     sf = (status_filter or "Tous").strip()
@@ -254,7 +254,9 @@ def filter_licenses(records: list, type_filter: str = "Tous", status_filter: str
     for r in rows:
         is_mechanic = r.get("type") == "mechanic"
         if tf not in ("Tous", ""):
-            tf_low = tf.lower()
+            # « ENTREPRISE (parc historique) » → « entreprise » : le suffixe
+            # entre parenthèses qualifie l'affichage, jamais le type filtré.
+            tf_low = tf.lower().split("(", 1)[0].strip()
             if tf_low == "garages":
                 if is_mechanic:
                     continue
@@ -357,3 +359,126 @@ def audit_log(action: str, lid: str = "", detail: str = "") -> None:
             f.write(line)
     except Exception:
         pass  # le journal ne doit jamais bloquer une opération
+
+
+# ── Agrégations pour les pages Tableau de bord / Clients / Appareils ─────────
+
+def _client_label(record: dict) -> dict:
+    """Identité affichable d'un client, sans jamais inventer de valeur."""
+    c = record.get("client") or {}
+    nom = " ".join(x for x in (c.get("prenom", ""), c.get("nom", "")) if x).strip()
+    return {
+        "cid": record.get("cid") or "",
+        "nom": nom,
+        "entreprise": c.get("entreprise") or "",
+        "email": c.get("email") or "",
+        "tel": c.get("tel") or "",
+        "ville": c.get("ville") or "",
+        "code_postal": c.get("code_postal") or "",
+    }
+
+
+def _last_activity(record: dict) -> str:
+    serveur = record.get("server") or {}
+    candidats = [
+        str(record.get("created_at") or ""),
+        str(record.get("server_synced_at") or ""),
+        str(serveur.get("lastSeenAt") or ""),
+        str(serveur.get("activatedAt") or ""),
+    ]
+    return max((c for c in candidats if c), default="")
+
+
+def client_summary(records: list | None = None) -> list:
+    """Une ligne par identifiant client (cid), avec ses compteurs de licences."""
+    rows = [normalize(r) for r in (records if records is not None else list_licenses())]
+    groupes: dict[str, dict] = {}
+    for r in rows:
+        cid = r.get("cid") or ""
+        if not cid:
+            continue
+        identite = _client_label(r)
+        groupe = groupes.setdefault(cid, {
+            **identite,
+            "licences": 0, "actives": 0, "revoquees": 0,
+            "derniere_emission": "",
+        })
+        # Un garage et ses mécaniciens partagent le cid : on garde la fiche la
+        # plus complète rencontrée, sans écraser une valeur par du vide.
+        for champ in ("nom", "entreprise", "email", "tel", "ville", "code_postal"):
+            if not groupe.get(champ) and identite.get(champ):
+                groupe[champ] = identite[champ]
+        groupe["licences"] += 1
+        statut = effective_status(r)
+        if statut == "active":
+            groupe["actives"] += 1
+        elif statut == "revoked":
+            groupe["revoquees"] += 1
+        groupe["derniere_emission"] = max(groupe["derniere_emission"],
+                                         str(r.get("created_at") or ""))
+    return sorted(groupes.values(), key=lambda g: (
+        (g.get("entreprise") or g.get("nom") or g.get("cid") or "").lower(), g.get("cid") or ""))
+
+
+def device_summary(records: list | None = None) -> list:
+    """Une ligne par licence : liaison matérielle + appareils connus du serveur."""
+    rows = [normalize(r) for r in (records if records is not None else list_licenses())]
+    lignes = []
+    for r in rows:
+        serveur = r.get("server") or {}
+        appareils = serveur.get("devices")
+        if not isinstance(appareils, list):
+            appareils = []
+        identite = _client_label(r)
+        lignes.append({
+            "lid": r.get("lid") or "",
+            "client": identite["entreprise"] or identite["nom"] or identite["cid"] or "—",
+            "cid": r.get("cid") or "",
+            "type": r.get("type") or "",
+            "statut": effective_status(r),
+            "hwid": r.get("hwid") or serveur.get("hwid") or "",
+            "lie": bool(r.get("hwid") or serveur.get("hwid") or r.get("bound_hwid") or serveur.get("bound")),
+            "sieges": serveur.get("seats") if serveur.get("seats") is not None else r.get("seats") or 1,
+            "appareils": serveur.get("deviceCount") if serveur.get("deviceCount") is not None else len(appareils),
+            "appareils_actifs": (serveur.get("activeDeviceCount")
+                                 if serveur.get("activeDeviceCount") is not None
+                                 else sum(1 for a in appareils
+                                          if isinstance(a, dict) and a.get("active", True))),
+            "derniere_activite": (serveur.get("lastSeenAt") or ""),
+        })
+    return lignes
+
+
+def dashboard_stats(records: list | None = None) -> dict:
+    """Compteurs du tableau de bord. Aucun chiffre n'est inventé : tout vient
+    des fiches réellement présentes dans la base locale."""
+    rows = [normalize(r) for r in (records if records is not None else list_licenses())]
+    stats = {
+        "total": len(rows),
+        "active": 0, "expired": 0, "revoked": 0, "suspended": 0,
+        "clients": len({r.get("cid") for r in rows if r.get("cid")}),
+        "liees": 0, "non_liees": 0,
+        "par_type": {},
+    }
+    for r in rows:
+        statut = effective_status(r)
+        if statut in ("active", "expired", "revoked", "suspended"):
+            stats[statut] += 1
+        typ = r.get("type") or "inconnu"
+        stats["par_type"][typ] = stats["par_type"].get(typ, 0) + 1
+        if r.get("hwid") or (r.get("server") or {}).get("bound"):
+            stats["liees"] += 1
+        else:
+            stats["non_liees"] += 1
+    return stats
+
+
+def read_audit(limit: int = 200) -> list:
+    """Dernières lignes du journal local, de la plus récente à la plus ancienne."""
+    try:
+        lignes = AUDIT_FILE.read_text(encoding="utf-8", errors="replace").splitlines()
+    except FileNotFoundError:
+        return []
+    except OSError:
+        return []
+    return list(reversed(lignes[-max(0, int(limit)):]))

@@ -255,10 +255,15 @@ def merge_server_state(local_record: dict, server_row) -> dict:
     if not isinstance(server_row, dict):
         return local_record
     patch = {}
-    for key in ("status", "hwid", "activatedAt", "lastSeenAt", "seats", "expiresAt",
+    # Le contrat de collecte expose `expiryAt` (nom historique du serveur) ; la
+    # fiche locale et l'IHM lisent `expiresAt`. Les deux noms coexistaient sans
+    # conversion : la date d'expiration serveur n'arrivait jamais dans la fiche.
+    # Une seule normalisation, ici, pour tous les appelants.
+    aliases = {"expiryAt": "expiresAt"}
+    for key in ("status", "hwid", "activatedAt", "lastSeenAt", "seats", "expiresAt", "expiryAt",
                 "deviceCount", "activeDeviceCount", "bound"):
         if key in server_row:
-            patch[key] = server_row[key]
+            patch[aliases.get(key, key)] = server_row[key]
     if not patch:
         return local_record
     merged = dict(local_record)
