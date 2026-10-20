@@ -34,6 +34,23 @@
  * L'inventaire autoritatif est `src/lib/__tests__/routes-sans-appelant.test.ts`,
  * qui exige un « DÉCLENCHEUR RÉEL » nommé pour toute route sans appelant.
  *
+ * ─── Limite du plan Vercel : une seule exécution par jour ───────────────────
+ * Le compte est en plan **Hobby**, qui n'autorise qu'un déclenchement quotidien.
+ * L'expression horaire initiale (`17 * * * *`) faisait échouer le DÉPLOIEMENT
+ * ENTIER — pas seulement le cron :
+ *
+ *   « Hobby accounts are limited to daily cron jobs. This cron expression
+ *     (17 * * * *) would run more than once per day. »
+ *
+ * Seul un déploiement réel pouvait le révéler : rien dans le dépôt ne connaît le
+ * plan du compte. L'expression retenue est donc quotidienne (`17 3 * * *`).
+ *
+ * Conséquence assumée : une transmission e-facturation en échec peut attendre
+ * jusqu'à 24 h avant sa reprise, là où une reprise horaire serait préférable.
+ * Passer au plan Pro lèverait la contrainte ; c'est une décision d'exploitation,
+ * pas un défaut du code. Le test ci-dessous verrouille le caractère quotidien
+ * pour qu'une expression plus fréquente ne casse pas à nouveau le déploiement.
+ *
  * ─── Authentification du cron : point d'exploitation à ne pas rater ─────────
  * Vercel appelle un cron avec `Authorization: Bearer $CRON_SECRET` lorsque la
  * variable `CRON_SECRET` est définie. La route, elle, compare à
@@ -110,6 +127,16 @@ describe('vercel.json — tâches planifiées', () => {
       // Minute 0 : tous les planificateurs du monde s'y déclenchent. Décaler
       // réduit les files d'attente côté plateforme agréée.
       expect(c.schedule.trim().split(/\s+/)[0], 'éviter la minute 0').not.toBe('0')
+    }
+  })
+
+  it('la planification reste QUOTIDIENNE (contrainte du plan Hobby)', () => {
+    // Une expression plus fréquente fait échouer le déploiement entier, pas
+    // seulement le cron. Les champs heure et minute doivent donc être fixes.
+    for (const c of config().crons ?? []) {
+      const [minute, heure] = c.schedule.trim().split(/\s+/)
+      expect(minute, 'la minute doit être fixe').toMatch(/^\d+$/)
+      expect(heure, 'l’heure doit être fixe — « * » déclencherait 24 fois par jour').toMatch(/^\d+$/)
     }
   })
 
