@@ -214,3 +214,46 @@ Aucun store Preview n'a été créé : ce serait de la configuration sans usage.
 | `vitest run` | **exit 0 — 4342 réussis, 0 échec**, 37 ignorés |
 | `check-env-vercel` production | **exit 0** — 10/10 |
 | `check-env-vercel` preview | exit 1 — 9/10 (`NEXTAUTH_URL` volontairement absente) |
+
+## 16. Disparition des variables de Production — détectée et réparée
+
+**Fait mesuré.** Environ une heure après leur déclaration (12 variables, contrôle
+à exit 0), `vercel env ls production` répondait de nouveau « No Environment
+Variables found ». Relevé simultané :
+
+| Environnement | Variables |
+|---|---|
+| Production | **0** (était 12) |
+| Preview | 33 (intact) |
+| Development | 1 (intact) |
+
+**Cause : INDÉTERMINÉE.** Seule la Production a été vidée. Ce n'est donc pas un
+effet technique global : mes commandes de la période ne visaient que Preview
+(`-e preview`), et un rollback Vercel ne touche pas les variables d'un projet.
+Je ne peux pas l'attribuer avec certitude, et je ne l'invente pas.
+
+**Réparation.** Les 12 variables ont été redéclarées :
+
+- les 7 secrets en service, relus depuis le `.env` du poste ;
+- l'empreinte d'isolation, recalculée ;
+- `CRON_SECRET` / `EINVOICING_QUEUE_TOKEN` **régénérés** — l'ancienne valeur
+  n'avait jamais été persistée, et aucun cron n'avait encore tourné : aucune
+  conséquence ;
+- `gf_app` : mot de passe **renouvelé** (`ALTER ROLE`), l'ancien n'ayant jamais
+  touché le disque. Ce rôle n'étant utilisé par aucun déploiement actif — celui
+  du 17/10 tourne sous `neondb_owner` — l'opération est sans impact sur le
+  service. Vérifié : connexion comme `gf_app`, 21 garages lus.
+
+Contrôle après réparation : **exit 0**, 12 variables, 10/10 requises, aucun alias
+interdit. `/api/health` et `/api/version` à 200.
+
+**Ce que cet épisode démontre.** Le constat V-01 n'était pas théorique : la
+configuration de production *est* fragile, et des variables peuvent disparaître
+sans trace. Surtout, c'est le contrôle réparé en phase 3 qui l'a signalé
+immédiatement. Dans sa version d'origine, `presents.size === 0` était traité en
+« format de sortie inattendu / NON EFFECTUÉ » : la disparition complète des
+variables de production serait passée pour un contrôle non exécuté.
+
+**Recommandation.** Exécuter `node scripts/check-env-vercel.mjs --environnement
+production --projet app.garageflows.fr` avant **chaque** déploiement, et traiter
+tout exit non nul comme bloquant.
