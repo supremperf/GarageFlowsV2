@@ -18,7 +18,7 @@
  *
  * `checkDocsConsistency(root, { baseline })` → { ok, violations, scanned }.
  */
-import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
+import { readFileSync, readdirSync, statSync, existsSync, realpathSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { join, relative } from 'node:path'
 import { parseAutoBlock, COMPONENTS } from './baseline-doc.mjs'
@@ -101,7 +101,40 @@ function collectMarkdown(dir, out) {
  *
  * @returns {string[] | null} chemins absolus, ou null si git ne répond pas.
  */
+/**
+ * Vrai seulement si `root` EST la racine d'un dépôt git — pas un sous-dossier,
+ * pas un dossier quelconque sous un dépôt ENGLOBANT.
+ *
+ * Sans cette vérification, `git -C <root> ls-files` répond pour le dépôt
+ * englobant : un ZIP extrait sous un dossier personnel lui-même versionné (cas
+ * réel rencontré au cours de l'audit du 2026-10-20 : `C:/Users/<user>/.git`)
+ * recevait l'inventaire de CE dépôt, et le repli disque — la seule réponse
+ * correcte hors dépôt — n'était jamais atteint. Le verdict dépendait alors de
+ * fichiers étrangers au projet : exactement le « verdict irreproductible » que
+ * GF31-AUD-066 proscrit, déplacé d'un cran.
+ *
+ * Même garde que `scripts/restore-public-anchors.cjs` (`ownGitRepository`), pour
+ * la même raison.
+ */
+function racineDeDepot(root) {
+  try {
+    const r = spawnSync('git', ['-C', root, 'rev-parse', '--show-toplevel'], {
+      encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'],
+    })
+    if (!r || r.error || r.status !== 0 || typeof r.stdout !== 'string') return false
+    const norm = (chemin) => {
+      const reel = realpathSync.native(chemin)
+      return process.platform === 'win32' ? reel.toLowerCase() : reel
+    }
+    return norm(r.stdout.trim()) === norm(root)
+  } catch {
+    return false
+  }
+}
+
 function gitMarkdown(root) {
+  // Hors racine de dépôt, il n'y a pas d'inventaire git LÉGITIME pour ce dossier.
+  if (!racineDeDepot(root)) return null
   let r
   try {
     r = spawnSync('git', ['-C', root, 'ls-files', '--cached', '--others', '--exclude-standard', '-z'], {

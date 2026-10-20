@@ -34,7 +34,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 
 ## Contrat par catégorie
 
-### Configuration fonctionnelle (67)
+### Configuration fonctionnelle (68)
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
@@ -92,6 +92,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `GF_PROBE_NAMES` | CONFIGURATION | non | maintenance-tool | Liste de noms, separes par des virgules, que la sonde de verification post-rotation doit mesurer. Posee par reset-garageflow.ps1 juste avant `vercel … |
 | `GF_UPDATE_CHANNEL` | CONFIGURATION | non | desktop | — |
 | `GF_UPDATE_SIGNING_KEY_FILE` | SECRET | non | release-tooling | Chemin d'un fichier contenant la clé privée de signature, alternative à GF_UPDATE_SIGNING_KEY. Outillage de release uniquement. |
+| `GF_VERCEL_PROJECT` | CONFIGURATION | non | maintenance-tool | Nom du projet Vercel interroge par check:env-vercel (equivalent de l'option --projet). N'est PAS un secret : un nom de projet est public dans l'URL d… |
 | `LICENSE_ENFORCEMENT` | CONFIGURATION | non | development | — |
 | `RATE_LIMIT_ADMIN_MAX` | CONFIGURATION | non | server | Optional positive integer override; code has a safe default. |
 | `RATE_LIMIT_ADMIN_WINDOW_SECONDS` | CONFIGURATION | non | server | Optional positive integer override; code has a safe default. |

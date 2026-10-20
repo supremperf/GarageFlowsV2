@@ -27,7 +27,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -97,4 +97,9 @@ function main() {
 }
 
 // N'exécute la CLI que si lancé directement (pas à l'import depuis les tests).
-if (import.meta.url === `file://${process.argv[1]}`) main()
+// `pathToFileURL` est OBLIGATOIRE : sous Windows, process.argv[1] est un chemin
+// natif (C:\...) et `file://${argv[1]}` ne correspond JAMAIS à import.meta.url
+// (file:///C:/...). La garde échouait donc en silence : `npm run verify:rotation`
+// sortait 0 sans avoir comparé une seule empreinte — un vert trompeur sur un
+// contrôle de sécurité.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) main()

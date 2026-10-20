@@ -53,6 +53,7 @@ PUB_FILE  = KEYS_DIR / "public.pem"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import keygen_core
 import keygen_db
+import keygen_trust
 
 # ── Token constants ────────────────────────────────────────────────────────────
 HEADER        = {"alg": "ES256", "typ": "GF-LIC", "v": 2}
@@ -134,14 +135,34 @@ def cmd_init(passphrase):
 
 
 def _load_private(passphrase=None):
+    """Charge la cle de signature APRES avoir prouve qu'elle correspond aux ancres.
+
+    Tous les chemins de signature du CLI passent ici (--gen, --batch, --admin,
+    --gen-mechanic). Sans cette verification, une cle privee sans rapport avec la
+    cle publique embarquee dans le logiciel produisait des jetons d'allure
+    parfaitement normale, affiches comme un succes, et REFUSES a l'activation
+    sans aucun message : le defaut ne se decouvrait qu'au support client. Le
+    chemin graphique verifiait deja (keygen_core.load_checked_private_key) ; le
+    CLI, non. Deux frontieres de signature avec deux niveaux d'exigence, c'est la
+    plus permissive qui definit la securite reelle.
+
+    La verification est en LECTURE SEULE : elle ne cree, ne remplace ni ne roue
+    aucune cle. En cas de divergence, rien n'est signe ni ecrit en base.
+    """
     if not PRIV_FILE.exists():
         print(f"Private key not found: {PRIV_FILE}")
         print("Run:  python scripts/keygen.py --init")
         sys.exit(1)
-    pw = passphrase.encode() if passphrase else None
-    return serialization.load_pem_private_key(
-        PRIV_FILE.read_bytes(), password=pw, backend=default_backend()
-    )
+    try:
+        return keygen_core.load_checked_private_key(passphrase or "")
+    except keygen_trust.KeyMatchError as exc:
+        print()
+        print("="*70)
+        print("  SIGNATURE BLOQUEE — emetteur non conforme aux ancres de verification")
+        print("="*70)
+        print(exc)
+        print()
+        sys.exit(3)
 
 def _load_public():
     if not PUB_FILE.exists():

@@ -2037,6 +2037,36 @@
         "scripts/restore-public-anchors.cjs"
       ],
       "notes": "`1` désactive la remise automatique de _PK/_LINES sur la clé de REFERENCE_FP : une divergence d'ancres bloque alors `npm run dist` sans tentative de réparation (refus pur, comme avant)."
+    },
+    {
+      "name": "GF_VERCEL_PROJECT",
+      "classification": "configuration",
+      "scope": "maintenance-tool",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/check-env-vercel.mjs"
+      ],
+      "notes": "Nom du projet Vercel interroge par check:env-vercel (equivalent de l'option --projet). N'est PAS un secret : un nom de projet est public dans l'URL de deploiement. Necessaire parce qu'un dossier de travail extrait d'une archive n'est lie a aucun projet Vercel ; sans lui, `vercel env ls` echoue et le controle attribuait l'echec a un defaut d'authentification. Jamais requis en production : c'est un outil d'exploitation, pas une variable d'execution."
+    },
+    {
+      "name": "CRON_SECRET",
+      "classification": "secret",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "nonempty-secret",
+      "minLength": 32,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "vercel.json (crons)"
+      ],
+      "notes": "Jeton que Vercel envoie en « Authorization: Bearer » lors de l'appel d'un cron declare dans vercel.json. DOIT porter la MEME valeur que EINVOICING_QUEUE_TOKEN : la route /api/internal/einvoicing/queue compare a EINVOICING_QUEUE_TOKEN en temps constant et n'accepte aucun repli sur une autre cle (choix delibere, sa frontiere d'authentification n'a pas ete elargie pour le cron). Si les deux valeurs divergent, le cron recoit 401 et la reprise des transmissions e-facturation ne se fait pas, EN SILENCE : un cron en echec n'alerte personne par defaut. Verrouille par src/lib/__tests__/vercel-crons.test.ts. Non requis en production tant qu'aucun cron n'est declare."
     }
   ],
   "auditCleanup": {
