@@ -175,8 +175,8 @@ const ROOT     = path.join(__dirname, '..')               // project root (dev) 
 //  tandis que les licences émises l'étaient par celle de keys/public.pem.)
 const _PK = [
   '-----BEGIN PUBLIC KEY-----',
-  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXKiGHY7aFcS/uMbVz2hP2FptYJxH',
-  'cAmacvNlLuzalHkssxU7kNZcY0T4UD1ilFOecW+d/YvnoDlRMxS5uTjWDA==',
+  'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAED3fKl6e3lBR3VBif19m/osA9yYjl',
+  'xhwLwVddDl7kl7FfBybfNr9lv2iJ2NEfo1pJVYS2aBt2i+HIvtHhnYVJ+Q==',
   '-----END PUBLIC KEY-----',
 ]
 const PUBLIC_KEY_PEM = _PK.join('\n')
