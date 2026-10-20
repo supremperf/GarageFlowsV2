@@ -2067,6 +2067,21 @@
         "vercel.json (crons)"
       ],
       "notes": "Jeton que Vercel envoie en « Authorization: Bearer » lors de l'appel d'un cron declare dans vercel.json. DOIT porter la MEME valeur que EINVOICING_QUEUE_TOKEN : la route /api/internal/einvoicing/queue compare a EINVOICING_QUEUE_TOKEN en temps constant et n'accepte aucun repli sur une autre cle (choix delibere, sa frontiere d'authentification n'a pas ete elargie pour le cron). Si les deux valeurs divergent, le cron recoit 401 et la reprise des transmissions e-facturation ne se fait pas, EN SILENCE : un cron en echec n'alerte personne par defaut. Verrouille par src/lib/__tests__/vercel-crons.test.ts. Non requis en production tant qu'aucun cron n'est declare."
+    },
+    {
+      "name": "GF_PRODUCTION_DB_FINGERPRINT",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": true,
+      "format": "sha256-hex",
+      "minLength": 64,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/env.ts"
+      ],
+      "notes": "Empreinte SHA-256 de la CIBLE (hote + chemin, SANS identifiants) de la DATABASE_URL de production. N'EST PAS UN SECRET : elle ne contient ni utilisateur ni mot de passe et se declare en clair. Elle est insensible au mot de passe, donc elle survit a une rotation. A declarer sur LES TROIS environnements : en Preview, src/lib/env.ts refuse le demarrage si la base visee porte cette empreinte — c'est la seule protection empechant un deploiement de previsualisation d'ecrire dans les donnees reelles des clients, les integrations Neon/Upstash etant attachees au PROJET et donc injectees aussi en Preview (audit 2026-10-20, V-02). Requise en production precisement pour que son absence soit DETECTEE : une garde non provisionnee est une garde absente. Calcul : node -e \"const{createHash}=require('crypto');const u=new URL(process.env.DATABASE_URL);console.log(createHash('sha256').update(u.host+u.pathname).digest('hex'))\". Verrouille par src/lib/__tests__/isolation-preview.test.ts."
     }
   ],
   "auditCleanup": {

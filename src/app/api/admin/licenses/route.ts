@@ -14,6 +14,7 @@ import { logger } from '@/lib/logger'
 import { isAdminSession } from '@/lib/api-helpers'
 import { verifyLicenseToken } from '@/lib/license/verify'
 import { computeRecordMac } from '@/lib/license/record-mac'
+import { clientIpFrom, enforceRateLimit, rateLimitResponse } from '@/lib/security/rate-limit'
 
 function dbError(err: any): NextResponse {
   logger.error('[admin/licenses] DB error', err)
@@ -26,7 +27,19 @@ function dbError(err: any): NextResponse {
 }
 
 // ── GET — list all ─────────────────────────────────────────────────────────────
-export async function GET() {
+export async function GET(req: NextRequest) {
+  // Limiteur ALIGNÉ sur les cinq routes sœurs (create, [id], [id]/devices,
+  // generate) : celle-ci en était la seule dépourvue. Le commentaire de
+  // [id]/route.ts énonce la règle (GF-DUR-045) — « une session admin volée
+  // pouvait révoquer le parc entier en boucle ». Ici l'enjeu est symétrique :
+  // ce listing renvoie le jeton GF2 complet de CHAQUE licence, ce qui est
+  // voulu (la console admin l'affiche pour le transmettre au client, cf.
+  // src/app/admin/licenses/page.tsx) — raison de plus pour que son débit soit
+  // plafonné comme celui de ses sœurs. La catégorie 'admin' est critical,
+  // donc fail-closed si le backend de limitation tombe.
+  const rl = await enforceRateLimit('admin', `license-list:${clientIpFrom(req)}`)
+  if (!rl.ok) return rateLimitResponse(rl)
+
   if (!await isAdminSession()) {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
   }
@@ -41,6 +54,9 @@ export async function GET() {
 
 // ── POST — import an existing token ───────────────────────────────────────────
 export async function POST(req: NextRequest) {
+  const rl = await enforceRateLimit('admin', `license-import:${clientIpFrom(req)}`)
+  if (!rl.ok) return rateLimitResponse(rl)
+
   if (!await isAdminSession()) {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
   }
