@@ -340,8 +340,8 @@ test('node config writes one server API key and garageflows.fr to the Python UI 
   const python = fs.readFileSync(path.join(root, 'scripts/keygen_db.py'), 'utf8')
   assert.ok(python.includes('ROOT_DIR / "keys" / "server_config.json"'))
   const ui = fs.readFileSync(path.join(root, 'scripts/keygen_ui.py'), 'utf8')
-  assert.ok(ui.includes('value=cfg.get("url", "")'))
-  assert.ok(ui.includes('value=cfg.get("api_key", "")'))
+  assert.ok(ui.includes('value=cfg.get("url") or db.DEFAULT_SERVER_URL'))
+  assert.ok(ui.includes('value=cfg.get("api_key") or ""'))
 })
 
 test('JobPart snapshots stay mandatory and the corrective migration drops only their historical defaults', () => {
