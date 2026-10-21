@@ -36,10 +36,11 @@ l'autorité réelle, e-facturation interconnectée.
 ## 3. Tests
 
 - Réussis : 4 376 vitest, 483 Node, 168 Python (20 + 10 + 88 + 36 + 14),
-  18 Playwright, plus les contrôles de `TEST_RESULTS.md` §3.
+  54 Playwright, plus les contrôles de `TEST_RESULTS.md` §3 et le rejeu des
+  étapes de la CI (§4), Gitleaks compris.
 - Échoués à la fin de la session : **0**. Deux défauts réels ont échoué puis
   été corrigés (GF-1021-01, GF-1021-02).
-- Ignorés ou bloqués : 7 vitest (clé privée, build Windows), 30 Playwright
+- Ignorés ou bloqués : 7 vitest (clé privée, build Windows), 90 Playwright
   (session licenciée), packaging et installation Windows.
 
 ## 4. Actions obligatoires avant déploiement

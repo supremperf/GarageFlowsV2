@@ -94,3 +94,17 @@ n'est concerné (`git ls-files -ci --exclude-standard` : 0 fichier de ce type).
 **Test.** Fichiers témoins `scripts/zz.pem`, `zz.key`, `release-x.sig` créés
 puis supprimés : absents de `git status`. Gardes `secret-scan-policy` et
 `private-key-material` : 7/7.
+
+## GF-1021-06 — Scan Gitleaks de la CI (P2, CI)
+
+**Problème.** Rejoué localement avec gitleaks 8.24.3 sur l'arbre suivi (même
+périmètre que la CI), le scan relevait deux occurrences : le jeton factice
+`GF2.fixture.signature` de `src/app/api/keygen/__tests__/admin-scope.test.ts`,
+et l'exemple de sortie OCR de ce dossier, reconnu comme jeton Stripe.
+
+**Correction.** Ajout d'allowlist exact, contenu identique au commit 2a50a18
+de la PR #33 (mêmes empreintes de blob, donc aucun conflit entre les deux
+PR) ; exemple OCR tronqué.
+
+**Résultat.** `node scripts/gitleaks-ci.cjs` → 0 occurrence, exit 0 ;
+`secret-scan-policy` et `gitleaks-ci` : 20/20.

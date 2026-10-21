@@ -72,10 +72,29 @@ Statuts : **VALIDÉ** (exécuté, réussi) · **ÉCHEC** (exécuté, échoué) �
 | Serveur autonome : `/api/clients` sans session | Poste | 401 | 401 | VALIDÉ |
 | Serveur autonome : persistance après redémarrage | Poste | client toujours présent | présent | VALIDÉ |
 | Balayage des 169 routes sans session | API | aucune donnée sans authentification | 6 × 200 publics par conception, 196 × 401, 14 × 403, 20 × 400, 4 × 500 de configuration absente | VALIDÉ (voir AUDIT_API.md) |
-| Playwright `desktop` + `mobile-portrait` | E2E | parcours publics verts | 18 réussis, 30 ignorés | VALIDÉ (publics) |
+| Playwright, 6 gabarits (commande CI : `npx playwright test`) | E2E | parcours publics verts | 54 réussis, 90 ignorés, 0 échec | VALIDÉ (publics) |
 | Playwright parcours authentifiés | E2E | — | licence signée requise | BLOQUÉ |
 | `electron-builder --win --x64` | Packaging | installateur | téléchargement d'Electron refusé (TLS, github.com) | BLOQUÉ |
 | Installation / désinstallation / mise à jour Windows | Installation | — | aucun installateur, aucun Windows | BLOQUÉ |
 | Signature d'un vrai installeur (Ed25519) | Mises à jour | — | clé privée de mise à jour absente | BLOQUÉ |
 | Rotation de secrets sur Vercel / Neon / Upstash | Secrets | — | aucun accès (aucun jeton dans la session) | BLOQUÉ |
 | Interconnexion e-facturation (PDP, Chorus Pro) | E-facturation | — | aucun compte de plateforme | BLOQUÉ |
+
+## 4. Rejeu des étapes de la CI (`.github/workflows/ci.yml`)
+
+Exécutées localement avec les mêmes commandes et variables que la CI, après le
+dernier correctif.
+
+| Étape CI | Commande | Résultat | Statut |
+|---|---|---|---|
+| Arbre de dépendances | `npm ls --all` | exit 0 | VALIDÉ |
+| Audit strict | `npm run audit:strict`, `node scripts/audit-ci.js` | 0 / 0 / 0 / 0 | VALIDÉ |
+| Gitleaks (arbre suivi) | `node scripts/gitleaks-ci.cjs`, gitleaks 8.24.3 compilé depuis le module Go officiel | avant : 2 occurrences (fixture `GF2.fixture.signature`, exemple OCR de ce dossier) ; après : 0, exit 0 | VALIDÉ après correction |
+| Garde-fous copilote | 7 suites `node --test` + `evaluate-copilot-phase4.cjs --preflight` et `--verify-freeze` | 34/34, exit 0, exit 0 | VALIDÉ |
+| Régressions natives copilote | `node scripts/validate-copilot-native.cjs` | 54/54 | VALIDÉ |
+| Diagnostic phase 6 | `node scripts/capture-phase6-native-baseline.cjs` | exit 0 | VALIDÉ |
+| Version | `node scripts/check-version.js` | 1.1.0 cohérente | VALIDÉ |
+| Base serveur vierge | `node scripts/validate-server-db.js` | migrations, contraintes, cascade | VALIDÉ |
+| Tests unitaires et d'intégration | `npm test` avec l'environnement CI (SQLite + `TEST_POSTGRES_URL` + `TEST_REDIS_URL`) | 360 fichiers, 0 échec, 7 ignorés | VALIDÉ |
+| E2E publics | `npx playwright test` | 54 réussis, 90 ignorés | VALIDÉ |
+| CodeQL | — | non exécutable localement | NON TESTÉ |

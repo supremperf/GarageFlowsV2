@@ -19,7 +19,7 @@ porte sur ce qui a été **exécuté** dans cette session, en particulier ce qui
 | Redis réel | aucun | Redis local : limiteur de débit multi-instances |
 | OCR réel | Tesseract absent | Tesseract 5.3.4 : **défaut réel trouvé et corrigé** |
 | Interface Tk du keygen | non rendue | rendue sous Xvfb, 14 tests de cycle de vie |
-| E2E navigateur | non exécuté | Playwright + Chromium : 18 réussis, 30 ignorés (licence signée requise) |
+| E2E navigateur | non exécuté | Playwright + Chromium, 6 gabarits : 54 réussis, 90 ignorés (licence signée requise) |
 | `npm run build` | bloqué | **réussi**, budget de performance respecté |
 
 ## 2. Environnement d'exécution
@@ -63,6 +63,7 @@ L'inventaire fichier par fichier des campagnes précédentes reste valable
 | GF-1021-01 | P1 | Validations concurrentes d'une facture sur le poste : 9 sur 10 échouent en erreur après 5 à 10 s | Transactions SQLite différées : deux transactions lisent puis s'attendent mutuellement pour écrire (interblocage résolu par le délai d'attente) | **CORRIGÉ, VALIDÉ** |
 | GF-1021-02 | P1 (sécurité) | Une clé OpenAI ou Stripe visible sur une capture n'était pas détectée | Tesseract insère une espace parasite au milieu des longs jetons ; les règles s'appliquaient au texte brut | **CORRIGÉ, VALIDÉ** |
 | GF-1021-05 | P2 (sécurité) | `*.pem`, `*.key`, `*.sig` ignorés seulement sous `keys/` | Règle limitée à un répertoire | **CORRIGÉ** |
+| GF-1021-06 | P2 (CI) | Le scan Gitleaks de la CI aurait échoué : fixture `GF2.fixture.signature` non autorisée | Correctif existant sur la PR #33 (2a50a18), absent de cette branche | **PORTÉ** (contenu identique) |
 | GF-1021-03 | P3 | Keygen : texte tronqué à droite dans le panneau « Liaison matérielle » à 1 280 px de large | Largeur fixe du panneau | NON CORRIGÉ (cosmétique) |
 | GF-1021-04 | Info | Aucun modèle de paiement : « payée » est un statut de facture, sans paiement partiel ni rapprochement | Choix de conception existant | DOCUMENTÉ |
 
@@ -84,7 +85,7 @@ Le détail de chaque correction est dans `BUGFIX_CHANGELOG.md`.
 
 | Créés | Modifiés | Supprimés |
 |---|---|---|
-| `src/lib/sqlite-tx-queue.ts`, `src/lib/__tests__/sqlite-tx-queue.test.ts`, les 9 documents de `docs/audit/2026-10-21/` | `src/lib/db.ts`, `src/lib/__tests__/stock-double-deduction.int.test.ts`, `scripts/secret_scan.py`, `scripts/test_secret_scan.py`, `docs/SECRET_SCAN.md`, `.gitignore` | aucun |
+| `src/lib/sqlite-tx-queue.ts`, `src/lib/__tests__/sqlite-tx-queue.test.ts`, les 9 documents de `docs/audit/2026-10-21/` | `src/lib/db.ts`, `src/lib/__tests__/stock-double-deduction.int.test.ts`, `scripts/secret_scan.py`, `scripts/test_secret_scan.py`, `docs/SECRET_SCAN.md`, `.gitignore`, `.gitleaks.toml` | aucun |
 
 ## 6. Risques restants
 
