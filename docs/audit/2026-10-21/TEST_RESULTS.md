@@ -2,6 +2,9 @@
 
 Tous les résultats ci-dessous ont été **exécutés dans cette session**, sur le
 commit `ad127cd` (correctifs inclus), sauf mention « avant correctif ». Les
+lignes marquées « fin de campagne » ont été rejouées sur `aeddc95`, après les
+correctifs GF-1021-08 à GF-1021-10 trouvés par la vérification par captures
+(§5). Les
 journaux bruts sont restés dans le répertoire de travail de la session ; ils ne
 contiennent aucun secret.
 
@@ -28,18 +31,19 @@ Statuts : **VALIDÉ** (exécuté, réussi) · **ÉCHEC** (exécuté, échoué) �
 |---|---|---|---|
 | Vitest complet, SQLite seul (avant correctif) | `npx vitest run` | 4 340 réussis, **2 échecs** (`stock-double-deduction`), 37 ignorés | ÉCHEC → corrigé (GF-1021-01) |
 | Vitest complet, SQLite seul | `npx vitest run` | 4 346 réussis, 0 échec, 37 ignorés | VALIDÉ |
-| Vitest complet + PostgreSQL 16 + Redis | `TEST_POSTGRES_URL=… TEST_REDIS_URL=… npx vitest run` | **4 376 réussis, 0 échec, 7 ignorés** (360 fichiers) | VALIDÉ |
+| Vitest complet + PostgreSQL 16 + Redis | `TEST_POSTGRES_URL=… TEST_REDIS_URL=… npx vitest run` | 4 376 réussis, 0 échec, 7 ignorés (360 fichiers) | VALIDÉ |
+| Vitest complet + PostgreSQL 16 + Redis, fin de campagne | idem | **4 378 réussis, 0 échec, 7 ignorés** (361 fichiers, capture 88) | VALIDÉ |
 | Chaîne de livraison (Node) | `npm run test:release-safety` | 165 réussis, 1 ignoré, 0 échec | VALIDÉ |
 | Configuration / rotation | `npm run test:config` | 245/245 | VALIDÉ |
 | Audit de sécurité | `npm run test:audit` | 21/21 | VALIDÉ |
 | Tous les tests Node `tests/*.test.cjs` | `node --test tests/*.test.cjs` | 483 réussis, 1 ignoré, 0 échec | VALIDÉ |
 | Keygen historique | `python3 scripts/test_keygen.py` | 20/20 (Python 3.13 et 3.12) | VALIDÉ |
 | HWID V1 | `python3 scripts/test_keygen_hwid_binding.py` | 10/10 (3.13 et 3.12) | VALIDÉ |
-| Keygen V2 | `python3 scripts/test_keygen_v2.py` | 88/88 (3.13 et 3.12) | VALIDÉ |
+| Keygen V2 | `python3 scripts/test_keygen_v2.py` | 88/88 (3.13 et 3.12) ; **93/93** en fin de campagne (garde GF-1021-08, 4 tests GF-1021-09) | VALIDÉ |
 | Scan de secrets (avant correctif) | `python3 scripts/test_secret_scan.py` | 2 échecs sur les 4 nouveaux tests | ÉCHEC → corrigé (GF-1021-02) |
 | Scan de secrets, sans Pillow (environnement de la CI, avant correctif) | `python scripts/test_secret_scan.py` | **1 échec** (`test_image_corrompue`) — révélé par la CI | ÉCHEC → corrigé (GF-1021-07) |
 | Scan de secrets | `python3 scripts/test_secret_scan.py` | 39/39 avec Pillow (dont OCR réel) ; 39 dont 1 ignoré sans Pillow ni Tesseract | VALIDÉ |
-| Interface Tk du keygen | `xvfb-run python3.12 scripts/test_keygen_ui_lifecycle.py` | 14/14 | VALIDÉ |
+| Interface Tk du keygen | `xvfb-run python3.12 scripts/test_keygen_ui_lifecycle.py` | 14/14 ; **19/19** en fin de campagne (vrai keygen affiché : visibilité des pages, textes indicatifs) | VALIDÉ |
 
 ### Les 7 tests vitest encore ignorés
 
@@ -64,7 +68,7 @@ Statuts : **VALIDÉ** (exécuté, réussi) · **ÉCHEC** (exécuté, échoué) �
 | Capture en thème sombre | OCR | bloquée | OpenAI et GitHub détectés | VALIDÉ |
 | Service `/scan`, origine distante | OCR | 403 | 403 | VALIDÉ |
 | Service `/health` | OCR | `ocrAvailable: true`, `persist: false` | conforme | VALIDÉ |
-| Lancement du keygen sous affichage virtuel | Keygen | 10 sections, offres PREMIUM / ADMIN, pas de clé inventée | conforme ; bandeau « Aucune clé ECC : restaurez l'autorité » | VALIDÉ |
+| Lancement du keygen sous affichage virtuel | Keygen | 10 sections, offres PREMIUM / ADMIN, pas de clé inventée | lancement conforme ; bandeau « Aucune clé ECC : restaurez l'autorité ». Les captures ont ensuite montré 5 pages vides (GF-1021-08) et des textes indicatifs lus comme saisie (GF-1021-09) | ÉCHEC → corrigé |
 | Build production | Build | exit 0 | exit 0 | VALIDÉ |
 | Build d'empaquetage + `verify:standalone` | Build | sortie complète | « 4 éléments vérifiés — prête à être empaquetée » | VALIDÉ |
 | Recherche de secrets dans `.next/standalone` et `.next/static` | Sécurité | aucune clé privée, aucun `.env` | seulement `keys/public.pem` | VALIDÉ |
@@ -72,9 +76,10 @@ Statuts : **VALIDÉ** (exécuté, réussi) · **ÉCHEC** (exécuté, échoué) �
 | Serveur autonome : `/api/internal/export` sans clé, puis avec | Poste | 401, puis 200 | 401, puis 200 avec le client de test | VALIDÉ |
 | Serveur autonome : `/api/clients` sans session | Poste | 401 | 401 | VALIDÉ |
 | Serveur autonome : persistance après redémarrage | Poste | client toujours présent | présent | VALIDÉ |
-| Balayage des 169 routes sans session | API | aucune donnée sans authentification | 6 × 200 publics par conception, 196 × 401, 14 × 403, 20 × 400, 4 × 500 de configuration absente | VALIDÉ (voir AUDIT_API.md) |
+| Balayage des 169 routes sans session (245 des 246 couples méthode × route) | API | aucune donnée sans authentification | 6 × 200 publics par conception, 196 × 401, 14 × 403, 20 × 400, 4 × 500 de configuration absente | VALIDÉ (voir AUDIT_API.md) |
 | Playwright, 6 gabarits (commande CI : `npx playwright test`) | E2E | parcours publics verts | 54 réussis, 90 ignorés, 0 échec | VALIDÉ (publics) |
-| Playwright parcours authentifiés | E2E | — | licence signée requise | BLOQUÉ |
+| Playwright parcours authentifiés (suite de la CI) | E2E | — | licence signée requise | BLOQUÉ |
+| Cycle de vie d'une licence de bout en bout, autorité de **test** jetable, copie isolée, Chromium piloté par Playwright | Licences | création, activation, 2e appareil refusé, libération SAV, suspension, réactivation, révocation, réactivation avec motif | conforme (captures 51 à 91) ; GF-1021-09 et GF-1021-10 trouvés et corrigés, GF-1021-11 ouvert | VALIDÉ (autorité de test) |
 | `electron-builder --win --x64` dans le conteneur | Packaging | installateur | téléchargement d'Electron refusé (TLS, github.com) | BLOQUÉ |
 | `npm run dist` complet sur `windows-latest` (CI, run 39536734268, job Windows 119016439462, tête `9a244ad`) | Packaging | installateur vérifié | réussi : secrets d'artefact, fusibles, `verify:installer`, intégrité des ressources, `release:verify-artifact` | VALIDÉ |
 | Installation silencieuse, lancement jusqu'à l'activation, SQLite initialisée, serveur installé, réinstallation et désinstallation avec données préservées (`scripts/test-windows-setup.ps1`, CI) | Installation | toutes les étapes | réussies | VALIDÉ |
@@ -102,3 +107,18 @@ dernier correctif.
 | Tests unitaires et d'intégration | `npm test` avec l'environnement CI (SQLite + `TEST_POSTGRES_URL` + `TEST_REDIS_URL`) | 360 fichiers, 0 échec, 7 ignorés | VALIDÉ |
 | E2E publics | `npx playwright test` | 54 réussis, 90 ignorés | VALIDÉ |
 | CodeQL | — | non exécutable localement | NON TESTÉ |
+
+## 5. Vérification par captures d'écran (fin de campagne)
+
+Le dossier `preuves/` rassemble 91 captures réelles (terminal, keygen Tk,
+application dans Chromium, pages GitHub) et le rapport
+`preuves/RAPPORT_VALIDATION.md`, qui rapproche chaque exigence du brief de sa
+preuve. Cette vérification a trouvé quatre défauts que les suites
+automatisées ne voyaient pas :
+
+| Défaut | Comment il a été vu | Statut |
+|---|---|---|
+| GF-1021-08 : 5 pages du keygen vides | captures 38 à 44 | corrigé, captures 46 à 50 |
+| GF-1021-09 : textes indicatifs lus comme saisie | captures 53 à 56 | corrigé, captures 57 à 60, 90 |
+| GF-1021-10 : licence bloquée, chargement infini après rechargement | captures 72, 79 | corrigé, captures 80 à 83, 90 |
+| GF-1021-11 : appareil libéré bloqué jusqu'à 30 jours | captures 73, 85 | NON CORRIGÉ (action proposée) |

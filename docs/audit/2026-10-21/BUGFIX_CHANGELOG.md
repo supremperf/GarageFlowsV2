@@ -138,3 +138,142 @@ sans SOF, GIF 0×0 et BMP tronqué refusés. Sans le correctif et sans Pillow :
 **Résultat.** 39/39 sans Pillow (dépendances verrouillées de la CI, Python
 3.12.3), sous Python 3.13 et sous 3.12 avec Pillow. OCR réel rejoué sur des
 captures PNG, JPEG, BMP et GIF, avec et sans Pillow : résultats identiques.
+
+## GF-1021-08 — Keygen : cinq pages n'affichaient que leur titre (P1)
+
+Trouvé par la vérification par captures d'écran (dossier `preuves/`), pas par
+les tests : les 88 tests Python passaient.
+
+**Problème.** Sur le keygen livré, « Gérer les licences », « Clients »,
+« Appareils et HWID », « Détection des secrets » et « Journaux et
+diagnostics » n'affichaient que leur titre (captures 38, 39, 40, 43, 44) :
+impossible de consulter, suspendre ou révoquer une licence depuis le keygen.
+La fenêtre récapitulative des clés mécanicien cachait de même les clés
+générées.
+
+**Cause.** Chaque carte était créée dans un cadre de marge anonyme,
+`Card(_frame(self, padx=26))`, que personne ne plaçait. Tk ne dessine pas un
+widget dont le parent n'est pas placé. La sonde Tk des tests ne modélise pas
+la géométrie.
+
+**Correction** (`b4a291c`). `_gutter()` crée **et** place ce cadre ; les 12
+emplacements l'utilisent, avec les mêmes marges.
+
+**Tests.** `test_keygen_ui_lifecycle.py` : le vrai keygen, affiché, doit
+montrer pour chaque section au moins une carte et son tableau (échoue sur les
+5 pages avant correction). `test_keygen_v2.py` : garde statique, exécutée en
+CI, qui interdit `Card(_frame(`.
+
+**Résultat.** Captures 46 à 50 : les cinq pages affichent leur contenu.
+
+## GF-1021-09 — Keygen : texte indicatif lu comme une saisie (P1)
+
+Trouvé par les captures, sur le keygen réel (captures 53 à 56).
+
+**Problème.**
+- Licence sans liaison matérielle impossible à générer : « HWID invalide »
+  alors que le champ HWID, facultatif, était vide (capture 53).
+- Identifiant client laissé vide : la licence portait « ex. CUST-042 », signé
+  dans le jeton (capture 58).
+- « Gérer les licences » : « 0 licence(s) affichée(s) sur 1 » ; « Clients » :
+  « 0 client(s) » ; même filtre dans « Appareils et HWID » (captures 54 à 56).
+- « Mises à jour » : la version « ex. 1.2.0 », l'URL d'exemple et la version
+  minimale « facultatif » valaient saisie ; le contrôle « La version et l'URL
+  de téléchargement sont obligatoires » ne se déclenchait plus. Aucune
+  signature n'a été tentée (pas de clé de mise à jour dans la session).
+
+**Cause.** `Entry` insérait son texte indicatif **dans** le widget, donc dans
+la `StringVar` liée. Défaut présent depuis la refonte `4bfe1c0` (19/10).
+
+**Correction** (`5993010`). Le texte indicatif est un libellé posé par-dessus
+le champ, masqué dès que la variable a une valeur ou que le champ a le focus.
+La variable est lue directement : Tcl appelle la trace la plus récente en
+premier, avant que le champ n'ait recopié la nouvelle valeur.
+
+**Tests.** La sonde Tk de `test_keygen_v2.py` ne reliait pas un champ à sa
+variable : elle ne pouvait pas voir le défaut. Elle le fait désormais comme le
+vrai Tk. Nouvelle classe `TestTexteIndicatif` (exécutée en CI) : 4 tests,
+6 vérifications, qui échouent sur l'ancien code et passent avec le correctif
+(capture 90). Tests réels sous affichage (`PlaceholderTests`, 4 tests) : aucun
+champ ne contient son texte indicatif ; affichage et masquage selon la valeur
+et le focus ; licence générée puis listée ; trace retirée à la destruction.
+
+**Résultat.** 93/93 (sonde, CI), 19/19 (Tk réel). Captures 57 à 60 : la
+licence générée avant le correctif apparaît, une licence PREMIUM sans HWID se
+génère, l'identifiant client est calculé.
+
+**Action restante (hors dépôt).** Les licences émises depuis le 19/10 avec
+le champ « Identifiant client » vide portent `cid = "ex. CUST-042"`. Elles
+restent valides, mais leur rattachement client est faux et la page
+« Clients » les regroupe. À rechercher dans la base locale du keygen de
+production (`keys/licenses_db.json`), puis à réémettre si nécessaire.
+
+## GF-1021-10 — Licence bloquée : chargement infini après un rechargement (P2)
+
+Trouvé par les captures, dans un vrai navigateur, avec une autorité de test.
+
+**Problème.** Application ouverte, une suspension ou une révocation affiche
+bien « Compte suspendu » ou « Compte révoqué » (captures 71, 78). Mais après
+un rechargement de la page, l'application restait sur « Chargement du
+planning… » (20 s observées, sans fin), sans aucun message (captures 72, 79).
+L'accès était correctement refusé (403).
+
+**Cause.** `src/app/page.tsx` : le chargement initial (`/api/garages`) échoue
+en 403 et l'état « chargement » n'en sortait jamais ; `LicenseRevokedOverlay`,
+qui sait afficher ces états, n'était monté qu'après ce chargement.
+
+**Correction** (`aeddc95`). L'overlay est monté dès l'écran de chargement.
+Une réactivation recharge la page : rien n'avait été chargé derrière lui.
+
+**Tests.** `licence-bloquee-au-chargement.test.ts` : 2 gardes sur le source
+(l'environnement de test est `node`, sans testing-library), qui échouent sur
+l'ancien code et passent avec le correctif (capture 90). Vérification dans le
+navigateur : licence révoquée, la page rechargée affiche « Compte révoqué » en
+5 s (capture 80) ; réactivée avec motif, « Compte réactivé » puis planning
+rechargé seul (captures 82, 83). Suite complète : 4 378 réussis, 0 échec.
+
+## GF-1021-11 — Appareil libéré par le SAV : poste web bloqué (P2, NON CORRIGÉ)
+
+**Problème.** Après « Réinitialiser le matériel » dans le keygen, le
+navigateur dont l'appareil a été libéré reste sur « Chargement du
+planning… » (captures 73, 85). Les API répondent 401 `DEVICE_UNKNOWN`
+« Appareil inconnu. Réactivez votre licence. », mais la page ne l'affiche pas
+et ne propose pas l'activation. Le middleware renvoie `/license` vers `/` tant
+que le cookie `gf_session` (30 jours en web) reste valide.
+
+**Cause.** Aucun point d'accès ne retire `gf_session` côté garage. L'espace
+mécanicien a résolu le même problème (GF-DUR-035) avec
+`/api/mechanic/logout`.
+
+**Action corrective proposée.** Un point d'accès serveur qui expire
+`gf_session`, `gf_license_validated` et `gf_license_type`, appelé par la page
+d'accueil sur un 401 de licence ou d'appareil (`LICENSE_SESSION_MISSING`,
+`LICENSE_UNKNOWN`, `DEVICE_REQUIRED`, `DEVICE_UNKNOWN`), suivi d'un renvoi
+vers `/license`. Non fait ici : c'est une nouvelle route API (inventaire,
+limitation de débit, revue de sécurité), à décider par le responsable.
+Contournement : effacer les cookies du site, puis réactiver.
+
+## GF-1021-12 — Keygen : la molette ne fait pas défiler les formulaires (P3, NON CORRIGÉ)
+
+**Problème.** Sur « Générer une licence », la molette reste sans effet, que le
+pointeur soit sur un champ ou entre deux cartes ; seule la barre de
+défilement fonctionne (constaté pendant les captures).
+
+**Cause.** `ScrollFrame._bind_wheel` lie la molette au canevas et au cadre
+intérieur seulement. Tk remet l'événement au widget sous le pointeur et à ses
+balises (classe, fenêtre racine), pas à ses parents : le commentaire « Les
+enfants créés plus tard héritent du binding par propagation Tk » est inexact.
+
+**Action proposée.** Lier la molette sur la fenêtre racine et garder le
+filtrage existant par `winfo_containing`.
+
+## GF-1021-13 — Keygen : affichages rognés ou superposés en 1 280 × 860 (P3, NON CORRIGÉ)
+
+- « Gérer les licences » : la première ligne du panneau de synthèse est
+  masquée sous la barre de boutons (captures 64, 67, 76). La « Fiche
+  complète » affiche tout (capture 65).
+- Deux notifications simultanées se superposent (libération d'appareil puis
+  synchronisation, capture 91).
+- La colonne « Client / Entreprise » tronque les noms longs.
+
+Même famille que GF-1021-03 (largeurs fixes).

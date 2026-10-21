@@ -22,8 +22,8 @@ BLOQUÉ (licence signée requise).
 | Réglages appliqués | `src/lib/settings` | `reglages-*` | VALIDÉ |
 | Copilote | `src/lib/copilot*` | `copilot*` (6 fichiers) | VALIDÉ (logique, sans modèle distant) |
 | OCR plaques et documents | `src/lib/ocr` | `ocr` | VALIDÉ |
-| Licences : activation, plafond de sièges, révocation, session licenciée | `src/lib/license`, `src/app/api/license` | `license-devices.postgres` (concurrence réelle), `licensed-session.postgres`, `licence-admin-durcissement` | VALIDÉ ; licence signée par l'autorité de production : BLOQUÉ |
-| Keygen (10 sections, PREMIUM / ADMIN) | `scripts/keygen*.py` | 20 + 10 + 88 tests Python ; interface rendue sous Xvfb, 14 tests de cycle de vie | VALIDÉ |
+| Licences : activation, plafond de sièges, révocation, session licenciée | `src/lib/license`, `src/app/api/license` | `license-devices.postgres` (concurrence réelle), `licensed-session.postgres`, `licence-admin-durcissement` ; cycle de vie complet joué dans Chromium avec une autorité de test (`preuves/`, captures 51 à 91) | VALIDÉ après GF-1021-10 ; GF-1021-11 ouvert ; licence signée par l'autorité de production : BLOQUÉ |
+| Keygen (10 sections, PREMIUM / ADMIN) | `scripts/keygen*.py` | 20 + 10 + 93 tests Python ; vrai keygen affiché sous Xvfb, 19 tests ; captures de chaque section | VALIDÉ après GF-1021-08 et GF-1021-09 (trouvés par les captures) |
 | Mises à jour signées | `electron/update-verify.js`, `scripts/gf_sign_update.js` | `update-signing-cli`, `update-verify`, `release-signing-chain`, `publication-mise-a-jour` | VALIDÉ (clés de test) |
 | Détection de secrets dans les captures | `scripts/secret_scan.py`, `patterns.toml` | 39 tests dont OCR réel, avec et sans Pillow (**corrigés**, GF-1021-02 et GF-1021-07) | VALIDÉ |
 | Facturation électronique | `src/lib/einvoicing` | `formats`, `queue`, `submit-chain`, webhook signé | Fonctionnalité développée et formats générés ; **aucune interconnexion réelle** (PDP, Chorus Pro) ; conformité réglementaire **non vérifiée** |

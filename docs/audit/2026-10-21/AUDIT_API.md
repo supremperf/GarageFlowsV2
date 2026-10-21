@@ -2,8 +2,9 @@
 
 ## 1. Inventaire
 
-169 fichiers `route.ts` sous `src/app/api`, soit 244 couples méthode × route
-(GET, POST, PUT, PATCH, DELETE). Familles principales : `admin`, `auth`,
+169 fichiers `route.ts` sous `src/app/api`, soit 246 couples méthode × route
+(GET, POST, PUT, PATCH, DELETE ; recompté le 21/10 en fin de campagne, le
+chiffre de 244 donné ici auparavant était faux). Familles principales : `admin`, `auth`,
 `clients`, `vehicles`, `jobs`, `work-orders`, `quotes`, `invoices`, `parts`,
 `purchase-orders`, `suppliers`, `mechanics`, `mechanic-licenses`, `license`,
 `sync`, `portal`, `einvoicing`, `export`, `internal`, `keygen`, `copilot`.
@@ -23,7 +24,10 @@ Mécanismes d'authentification constatés :
 ## 2. Balayage dynamique sans authentification
 
 Serveur `next dev` local (SQLite), chaque méthode exportée appelée **sans cookie
-ni en-tête d'authentification**, corps `{}` pour les écritures.
+ni en-tête d'authentification**, corps `{}` pour les écritures : 245 couples
+sur 246 (capture 17). Le seul couple non balayé est `GET /api/auth/[...nextauth]`,
+exporté par `export { handler as GET }`, que la découverte automatique des
+méthodes n'a pas reconnu ; c'est le gestionnaire NextAuth lui-même.
 
 | Code | Nombre | Lecture |
 |---|---|---|
