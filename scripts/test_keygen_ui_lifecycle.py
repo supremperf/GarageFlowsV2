@@ -222,21 +222,15 @@ class ExceptionCaptureTests(unittest.TestCase):
         self.assertEqual(self._default_arg_bound()(), "échec de signature")
 
 
-class PageVisibilityTests(unittest.TestCase):
-    """Chaque section du VRAI keygen affiche réellement son contenu.
-
-    Cinq pages (licences, clients, appareils, détection des secrets, journaux)
-    créaient leurs cartes dans un cadre jamais placé : seul le titre
-    s'affichait. Les tests à sonde ne pouvaient pas le voir, ils ne simulent
-    pas la géométrie. Ici, la fenêtre est réellement affichée.
-    """
+class _RealAppTestCase(unittest.TestCase):
+    """Le VRAI keygen, réellement affiché, sur une base et des clés temporaires."""
 
     def setUp(self):
         import tempfile
         import keygen_core as core
         import keygen_db as db
         self.core, self.db = core, db
-        tmp = Path(tempfile.mkdtemp(prefix="gf-keygen-visibility-"))
+        tmp = Path(tempfile.mkdtemp(prefix="gf-keygen-ui-"))
         self._saved = ((core.KEYS_DIR, core.PRIV_FILE, core.PUB_FILE),
                        (db.DB_FILE, db.AUDIT_FILE, db.SERVER_CFG_FILE))
         core.KEYS_DIR, core.PRIV_FILE, core.PUB_FILE = tmp, tmp / "private.pem", tmp / "public.pem"
@@ -250,11 +244,20 @@ class PageVisibilityTests(unittest.TestCase):
         (self.core.KEYS_DIR, self.core.PRIV_FILE, self.core.PUB_FILE), \
             (self.db.DB_FILE, self.db.AUDIT_FILE, self.db.SERVER_CFG_FILE) = self._saved
 
-    def _cartes(self, widget):
+    def _descendants(self, widget):
         for enfant in widget.winfo_children():
-            if isinstance(enfant, ui.Card):
-                yield enfant
-            yield from self._cartes(enfant)
+            yield enfant
+            yield from self._descendants(enfant)
+
+
+class PageVisibilityTests(_RealAppTestCase):
+    """Chaque section du VRAI keygen affiche réellement son contenu.
+
+    Cinq pages (licences, clients, appareils, détection des secrets, journaux)
+    créaient leurs cartes dans un cadre jamais placé : seul le titre
+    s'affichait. Les tests à sonde ne pouvaient pas le voir, ils ne simulent
+    pas la géométrie. Ici, la fenêtre est réellement affichée.
+    """
 
     def test_chaque_page_affiche_ses_cartes(self):
         for cle, _libelle, _cls in ui.App.PAGES:
@@ -262,10 +265,72 @@ class PageVisibilityTests(unittest.TestCase):
                 self.app._show(cle)
                 self.app.update()
                 page = self.app._pages[cle]
-                visibles = [c for c in self._cartes(page) if c.winfo_viewable()]
+                visibles = [c for c in self._descendants(page)
+                            if isinstance(c, ui.Card) and c.winfo_viewable()]
                 self.assertTrue(visibles, f"page « {cle} » : aucune carte affichée")
                 if hasattr(page, "tree"):
                     self.assertTrue(page.tree.winfo_viewable(), f"page « {cle} » : tableau invisible")
+
+
+class PlaceholderTests(_RealAppTestCase):
+    """Le texte indicatif s'affiche, mais n'est jamais lu comme une saisie.
+
+    Écrit dans le champ, il valait saisie : génération refusée sur un HWID
+    vide, identifiant client « ex. CUST-042 » signé, tableaux filtrés sur le
+    texte indicatif de leur propre recherche, donc vides.
+    """
+
+    def _champs_indicatifs(self):
+        return [w for w in self._descendants(self.app)
+                if isinstance(w, ui.Entry) and w._hint is not None]
+
+    def test_aucun_champ_ne_contient_son_texte_indicatif(self):
+        champs = self._champs_indicatifs()
+        self.assertGreaterEqual(len(champs), 8)
+        for champ in champs:
+            self.assertEqual(champ.get(), "", champ._hint.cget("text"))
+
+    def test_texte_indicatif_seulement_sur_champ_vide_sans_focus(self):
+        self.app._show("generate")
+        self.app.update()
+        gen = self.app._pages["generate"]
+        champ = next(c for c in self._champs_indicatifs()
+                     if str(c.cget("textvariable")) == str(gen.v_cid))
+        self.assertEqual(champ._hint.winfo_manager(), "place")
+        gen.v_cid.set("CUST-007")
+        self.assertEqual(champ._hint.winfo_manager(), "")
+        gen.v_cid.set("")
+        self.assertEqual(champ._hint.winfo_manager(), "place")
+        champ.focus_force()
+        self.app.update()
+        self.assertEqual(champ._hint.winfo_manager(), "")
+        self.app.focus_force()
+        self.app.update()
+        self.assertEqual(champ._hint.winfo_manager(), "place")
+
+    def test_licence_generee_puis_listee(self):
+        self.core.generate_keys("")        # autorité éphémère du dossier temporaire
+        gen = self.app._pages["generate"]
+        self.assertEqual(gen._validate(), (True, ""))
+        cid, client = gen._cid_and_client()
+        self.assertNotIn("CUST-042", cid)
+        info = self.core.make_license(self.core.load_private_key(""), cid, "premium", seats=1,
+                                      duration={"value": 30, "unit": "jours"})
+        self.db.add_license(info, client)
+        for cle in ("manage", "clients"):
+            with self.subTest(page=cle):
+                page = self.app._pages[cle]
+                page.refresh()
+                self.app.update()
+                self.assertEqual(len(page.tree.get_children()), 1)
+
+    def test_trace_retiree_a_la_destruction(self):
+        var = tk.StringVar(master=self.app)
+        champ = ui.Entry(self.app, textvariable=var, placeholder="indice")
+        self.assertEqual(len(var.trace_info()), 1)
+        champ.destroy()
+        self.assertEqual(var.trace_info(), [])
+        var.set("valeur")                  # plus aucun rappel vers un champ détruit
 
 
 if __name__ == "__main__":

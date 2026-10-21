@@ -240,36 +240,44 @@ class Button(tk.Button):
 
 
 class Entry(tk.Entry):
-    """Champ de saisie sombre avec placeholder optionnel."""
+    """Champ de saisie sombre avec placeholder optionnel.
+
+    Le placeholder est un libellé posé PAR-DESSUS le champ, jamais écrit dedans.
+    Écrit dans le champ, il devenait la valeur de la variable liée : un HWID
+    laissé vide valait « HWID1-… (64 hex) ou 64 hex » (génération refusée),
+    l'identifiant client « ex. CUST-042 » (signé dans la licence), et chaque
+    recherche filtrait sur son propre texte indicatif (tableaux vides).
+    """
 
     def __init__(self, master, textvariable=None, placeholder="", show=None, font=FONT_UI):
         super().__init__(master, textvariable=textvariable, bg=SURFACE_2, fg=TEXT,
                          insertbackground=TEXT, relief="flat", bd=0, font=font,
                          highlightthickness=1, highlightbackground=BORDER,
                          highlightcolor=ACCENT, show=show or "")
-        self._placeholder = placeholder
         self._var = textvariable
+        self._hint = None
         if placeholder:
-            if not (textvariable and textvariable.get()):
-                self.insert(0, placeholder)
-                self.config(fg=MUTED)
-            self.bind("<FocusIn>", self._in)
-            self.bind("<FocusOut>", self._out)
+            self._hint = tk.Label(self, text=placeholder, bg=SURFACE_2, fg=MUTED, font=font,
+                                  bd=0, padx=0, pady=0, anchor="w", cursor="xterm")
+            self._hint.bind("<Button-1>", lambda _e: self.focus_set())
+            self.bind("<FocusIn>", self._sync_hint, add="+")
+            self.bind("<FocusOut>", self._sync_hint, add="+")
+            if textvariable is not None:
+                trace = textvariable.trace_add("write", self._sync_hint)
+                self.bind("<Destroy>", lambda _e: textvariable.trace_remove("write", trace), add="+")
+            self._sync_hint()
 
-    def _in(self, _e):
-        if self.get() == self._placeholder:
-            self.delete(0, "end")
-            self.config(fg=TEXT)
-
-    def _out(self, _e):
-        if not self.get():
-            self.insert(0, self._placeholder)
-            self.config(fg=MUTED)
-
-    def value(self) -> str:
-        """Valeur saisie, placeholder jamais compté comme une saisie."""
-        raw = self.get()
-        return "" if raw == self._placeholder else raw
+    def _sync_hint(self, *_):
+        """Affiche le texte indicatif seulement sur un champ vide et sans focus."""
+        if not _widget_alive(self):
+            return
+        # La variable, pas le champ : Tcl appelle la trace la plus récente en
+        # premier, avant que le champ n'ait recopié la nouvelle valeur.
+        valeur = self._var.get() if self._var is not None else self.get()
+        if valeur or str(self.tk.call("focus")) == str(self):
+            self._hint.place_forget()
+        else:
+            self._hint.place(x=1, rely=0.5, anchor="w")
 
 
 class ScrollFrame(tk.Frame):

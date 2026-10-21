@@ -77,10 +77,25 @@ class Var:
 
     def trace_add(self, _mode, callback):
         self._traces.append(callback)
+        return callback
+
+    def trace_remove(self, _mode, callback):
+        if callback in self._traces:
+            self._traces.remove(callback)
+
+
+class _Interpreter:
+    """Interpréteur Tcl minimal : dans une sonde, aucun widget n'a le focus."""
+
+    @staticmethod
+    def call(*_a):
+        return ""
 
 
 class Widget:
     """Widget factice : options mémorisées, méthodes de positionnement neutres."""
+
+    tk = _Interpreter()
 
     def __init__(self, master=None, **kw):
         self.master = master
@@ -132,7 +147,7 @@ class Widget:
     def columnconfigure(self, *_a, **_k):
         pass
 
-    def bind(self, event, callback=None):
+    def bind(self, event, callback=None, add=None):
         self._bindings[event] = callback
         return callback
 
@@ -194,14 +209,32 @@ class Widget:
         pass
 
     # ── Contenu (Entry, Text, Treeview) ──────────────────────────────────────
+    # Comme le vrai Tk, un champ lié à une variable affiche CETTE variable :
+    # écrire dans le champ, c'est écrire dans la variable. Sans ce lien, un
+    # texte indicatif inséré dans le champ restait invisible pour les tests.
+    def _textvariable(self):
+        var = self._opts.get("textvariable")
+        return var if isinstance(var, Var) else None
+
     def insert(self, index, text, *tags):
-        self._text = str(text)
+        var = self._textvariable()
+        if var is None:
+            self._text = str(text)
+        elif index in (0, "0"):
+            var.set(str(text) + var.get())
+        else:
+            var.set(var.get() + str(text))
 
     def delete(self, *_a):
-        self._text = ""
+        var = self._textvariable()
+        if var is None:
+            self._text = ""
+        else:
+            var.set("")
 
     def get(self, *_a):
-        return self._text
+        var = self._textvariable()
+        return self._text if var is None else var.get()
 
     def clipboard_clear(self):
         pass
@@ -1249,6 +1282,40 @@ class TestCartesPlacees(unittest.TestCase):
         fautifs = [n for n, ligne in enumerate(source.splitlines(), 1)
                    if re.search(r"Card\(\s*_frame\(", ligne)]
         self.assertEqual(fautifs, [], f"cartes dans un cadre jamais placé, lignes {fautifs}")
+
+
+class TestTexteIndicatif(KeygenTestCase):
+    """Un texte indicatif n'est jamais une saisie.
+
+    Écrit DANS le champ, il devenait la valeur de la variable liée : un HWID
+    laissé vide valait « HWID1-… (64 hex) ou 64 hex » (génération refusée),
+    l'identifiant client « ex. CUST-042 » (signé dans la licence), et chaque
+    recherche filtrait sur son propre texte indicatif (tableaux vides).
+    """
+
+    def test_generation_sans_hwid_ni_identifiant(self):
+        page = self.make_page(ui.PageGenerate)
+        self.assertEqual(page.v_hwid.get(), "")
+        self.assertEqual(page.v_cid.get(), "")
+        self.assertEqual(page._validate(), (True, ""))
+        self.assertNotIn("CUST-042", page._cid_and_client()[0])
+
+    def test_recherches_vides(self):
+        for cls in (ui.PageManage, ui.PageClients, ui.PageDevices):
+            with self.subTest(page=cls.__name__):
+                self.assertEqual(self.make_page(cls).v_search.get(), "")
+
+    def test_mise_a_jour_sans_valeur_d_exemple(self):
+        page = self.make_page(ui.PageUpdates)
+        self.assertEqual((page.v_version.get(), page.v_url.get(), page.v_min.get()), ("", "", ""))
+
+    def test_licence_existante_listee(self):
+        info = core.make_license(self.priv, "CUST-LISTE", "premium", seats=1,
+                                 duration={"value": 30, "unit": "jours"})
+        db.add_license(info, {"nom": "Durand", "entreprise": "Garage Central"})
+        page = self.make_page(ui.PageManage)
+        page.refresh()
+        self.assertEqual(page.tree.get_children(), [info["lid"]])
 
 
 class TestNouvellesPages(KeygenTestCase):
