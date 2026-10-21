@@ -1235,6 +1235,22 @@ class TestAgregations(KeygenTestCase):
 #  12 · Pages ajoutées : tableau de bord, clients, appareils, secrets, journaux
 # ══════════════════════════════════════════════════════════════════════════════
 
+class TestCartesPlacees(unittest.TestCase):
+    """Garde statique : une carte ne naît jamais dans un cadre anonyme.
+
+    `Card(_frame(self, …))` crée un cadre que personne ne place : la carte et
+    tout son contenu restent invisibles. Cinq pages du keygen n'affichaient
+    ainsi que leur titre. La sonde Tk de ce fichier ne modélise pas la
+    géométrie ; le test réel est dans test_keygen_ui_lifecycle.py.
+    """
+
+    def test_aucune_carte_dans_un_cadre_jamais_place(self):
+        source = (HERE / "keygen_ui.py").read_text(encoding="utf-8")
+        fautifs = [n for n, ligne in enumerate(source.splitlines(), 1)
+                   if re.search(r"Card\(\s*_frame\(", ligne)]
+        self.assertEqual(fautifs, [], f"cartes dans un cadre jamais placé, lignes {fautifs}")
+
+
 class TestNouvellesPages(KeygenTestCase):
     def _ajoute(self, typ="premium", hwid="", nom="Durand", entreprise="Garage Central"):
         info = core.make_license(self.priv, "CUST-PAGE", typ, seats=2, hwid=hwid or None,

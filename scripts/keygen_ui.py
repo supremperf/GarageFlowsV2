@@ -193,6 +193,18 @@ def _frame(parent, bg=None, padx=0, pady=0):
     return tk.Frame(parent, bg=bg if bg is not None else parent.cget("bg"), padx=padx, pady=pady)
 
 
+def _gutter(parent, padx=26, **pack):
+    """Cadre de marge horizontale, DÉJÀ placé : une carte créée dedans s'affiche.
+
+    Une carte créée directement dans un `_frame(...)` anonyme restait invisible
+    avec tout son contenu : personne ne plaçait ce cadre. Cinq pages et la
+    fenêtre des clés mécanicien n'affichaient que leur titre.
+    """
+    cadre = _frame(parent, bg=BG, padx=padx)
+    cadre.pack(**pack)
+    return cadre
+
+
 def _lbl(parent, text, fg=TEXT, font=FONT_UI, bg=None, **kw):
     return tk.Label(parent, text=text, fg=fg, bg=bg if bg is not None else parent.cget("bg"),
                     font=font, **kw)
@@ -939,8 +951,8 @@ class PageManage(tk.Frame):
         _lbl(head, "Recherche sur tous les champs, filtres, tri, et fiche complète sans troncature.",
              fg=MUTED, font=FONT_SM).pack(anchor="w", pady=(4, 0))
 
-        toolbar = Card(_frame(self, bg=BG, padx=26), pady=12)
-        toolbar.pack(fill="x", pady=(0, 12))
+        toolbar = Card(_gutter(self, fill="x", pady=(0, 12)), pady=12)
+        toolbar.pack(fill="x")
         grid = _frame(toolbar, bg=SURFACE)
         grid.pack(fill="x")
 
@@ -984,8 +996,8 @@ class PageManage(tk.Frame):
         self.lbl_count = _lbl(actions, "", fg=MUTED, font=FONT_SM, bg=SURFACE)
         self.lbl_count.pack(side="right")
 
-        table = Card(_frame(self, bg=BG, padx=26), padx=1, pady=1)
-        table.pack(fill="both", expand=True, pady=(0, 12))
+        table = Card(_gutter(self, fill="both", expand=True, pady=(0, 12)), padx=1, pady=1)
+        table.pack(fill="both", expand=True)
         wrap = _frame(table, bg=SURFACE)
         wrap.pack(fill="both", expand=True)
         cols = [c[0] for c in self.COLUMNS]
@@ -1008,8 +1020,8 @@ class PageManage(tk.Frame):
         self.tree.bind("<<TreeviewSelect>>", lambda _e: self._on_select())
         self.tree.bind("<Double-1>", lambda _e: self._open_detail())
 
-        panel = Card(_frame(self, bg=BG, padx=26), pady=12)
-        panel.pack(fill="x", pady=(0, 22))
+        panel = Card(_gutter(self, fill="x", pady=(0, 22)), pady=12)
+        panel.pack(fill="x")
         bar = _frame(panel, bg=SURFACE)
         bar.pack(fill="x")
         Button(bar, "Fiche complète", self._open_detail, style="primary").pack(side="left")
@@ -2032,8 +2044,8 @@ class PageClients(tk.Frame):
         _lbl(head, "Agrégation par identifiant client, calculée depuis les licences de la base locale.",
              fg=MUTED, font=FONT_SM).pack(anchor="w", pady=(4, 0))
 
-        toolbar = Card(_frame(self, bg=BG, padx=26), pady=12)
-        toolbar.pack(fill="x", pady=(0, 12))
+        toolbar = Card(_gutter(self, fill="x", pady=(0, 12)), pady=12)
+        toolbar.pack(fill="x")
         bar = _frame(toolbar, bg=SURFACE)
         bar.pack(fill="x")
         _lbl(bar, "Recherche", fg=MUTED, font=FONT_XS, bg=SURFACE).pack(side="left", padx=(0, 8))
@@ -2046,8 +2058,8 @@ class PageClients(tk.Frame):
         self.lbl_count = _lbl(bar, "", fg=MUTED, font=FONT_SM, bg=SURFACE)
         self.lbl_count.pack(side="right")
 
-        table = Card(_frame(self, bg=BG, padx=26), padx=1, pady=1)
-        table.pack(fill="both", expand=True, pady=(0, 22))
+        table = Card(_gutter(self, fill="both", expand=True, pady=(0, 22)), padx=1, pady=1)
+        table.pack(fill="both", expand=True)
         wrap = _frame(table, bg=SURFACE)
         wrap.pack(fill="both", expand=True)
         self.tree = ttk.Treeview(wrap, columns=[c[0] for c in self.COLUMNS], show="headings",
@@ -2125,8 +2137,8 @@ class PageDevices(tk.Frame):
         _lbl(head, "Le HWID officiel est calculé par le poste (Electron). Le keygen le reçoit, "
                    "ne le recalcule jamais.", fg=MUTED, font=FONT_SM).pack(anchor="w", pady=(4, 0))
 
-        toolbar = Card(_frame(self, bg=BG, padx=26), pady=12)
-        toolbar.pack(fill="x", pady=(0, 12))
+        toolbar = Card(_gutter(self, fill="x", pady=(0, 12)), pady=12)
+        toolbar.pack(fill="x")
         bar = _frame(toolbar, bg=SURFACE)
         bar.pack(fill="x")
         self.v_search = tk.StringVar()
@@ -2139,8 +2151,8 @@ class PageDevices(tk.Frame):
         self.lbl_count = _lbl(bar, "", fg=MUTED, font=FONT_SM, bg=SURFACE)
         self.lbl_count.pack(side="right")
 
-        table = Card(_frame(self, bg=BG, padx=26), padx=1, pady=1)
-        table.pack(fill="both", expand=True, pady=(0, 12))
+        table = Card(_gutter(self, fill="both", expand=True, pady=(0, 12)), padx=1, pady=1)
+        table.pack(fill="both", expand=True)
         wrap = _frame(table, bg=SURFACE)
         wrap.pack(fill="both", expand=True)
         self.tree = ttk.Treeview(wrap, columns=[c[0] for c in self.COLUMNS], show="headings",
@@ -2261,8 +2273,8 @@ class PageSecrets(tk.Frame):
                    "en clair et aucune image n'est conservée.", fg=MUTED, font=FONT_SM).pack(
             anchor="w", pady=(4, 0))
 
-        status = Card(_frame(self, bg=BG, padx=26), pady=12)
-        status.pack(fill="x", pady=(0, 12))
+        status = Card(_gutter(self, fill="x", pady=(0, 12)), pady=12)
+        status.pack(fill="x")
         self.lbl_status = _lbl(status, "", fg=TEXT, font=FONT_SM, bg=SURFACE, justify="left", anchor="w")
         self.lbl_status.pack(fill="x")
         self.lbl_service = _lbl(status, "", fg=MUTED, font=FONT_XS, bg=SURFACE, justify="left", anchor="w")
@@ -2276,13 +2288,13 @@ class PageSecrets(tk.Frame):
         Button(bar, "Arrêter", self._stop_service, style="ghost").pack(side="left", padx=(8, 0))
         Button(bar, "Exporter le rapport", self._export, style="ghost").pack(side="left", padx=(8, 0))
 
-        verdict = Card(_frame(self, bg=BG, padx=26), pady=12)
-        verdict.pack(fill="x", pady=(0, 12))
+        verdict = Card(_gutter(self, fill="x", pady=(0, 12)), pady=12)
+        verdict.pack(fill="x")
         self.lbl_verdict = _lbl(verdict, "Aucune analyse effectuée.", fg=MUTED, font=FONT_B, bg=SURFACE)
         self.lbl_verdict.pack(anchor="w")
 
-        table = Card(_frame(self, bg=BG, padx=26), padx=1, pady=1)
-        table.pack(fill="both", expand=True, pady=(0, 20))
+        table = Card(_gutter(self, fill="both", expand=True, pady=(0, 20)), padx=1, pady=1)
+        table.pack(fill="both", expand=True)
         wrap = _frame(table, bg=SURFACE)
         wrap.pack(fill="both", expand=True)
         self.COLUMNS = (("type", "Type", 240), ("family", "Famille", 120), ("score", "Score", 70),
@@ -2460,8 +2472,8 @@ class PageLogs(tk.Frame):
         Button(bar, "Exporter le diagnostic", self._export, style="ghost").pack(side="left", padx=(8, 0))
         Button(bar, "Effacer le journal", self._clear, style="danger").pack(side="left", padx=(8, 0))
 
-        card = Card(_frame(self, bg=BG, padx=26), pady=12)
-        card.pack(fill="both", expand=True, pady=(0, 22))
+        card = Card(_gutter(self, fill="both", expand=True, pady=(0, 22)), pady=12)
+        card.pack(fill="both", expand=True)
         self.txt = tk.Text(card, bg=SURFACE_2, fg=TEXT, font=(MONO[0], 9), relief="flat", bd=0,
                            highlightthickness=1, highlightbackground=BORDER, wrap="none",
                            padx=8, pady=6)
@@ -2791,8 +2803,8 @@ class App(tk.Tk):
         _lbl(head, f"{len(children)} clé(s) mécanicien", font=FONT_H2).pack(anchor="w")
         _lbl(head, f"Garage parent : {(parent or {}).get('label') or (parent or {}).get('cid') or '—'}",
              fg=MUTED, font=FONT_SM).pack(anchor="w", pady=(4, 0))
-        card = Card(_frame(win, bg=BG, padx=22), pady=14)
-        card.pack(fill="both", expand=True, pady=(0, 12))
+        card = Card(_gutter(win, padx=22, fill="both", expand=True, pady=(0, 12)), pady=14)
+        card.pack(fill="both", expand=True)
         text = tk.Text(card, bg=SURFACE_2, fg=TEXT, font=(MONO[0], 9), relief="flat", bd=0,
                        highlightthickness=1, highlightbackground=BORDER, wrap="none", padx=10, pady=8)
         sx = ttk.Scrollbar(card, orient="horizontal", command=text.xview)

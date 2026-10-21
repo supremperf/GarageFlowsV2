@@ -222,5 +222,51 @@ class ExceptionCaptureTests(unittest.TestCase):
         self.assertEqual(self._default_arg_bound()(), "échec de signature")
 
 
+class PageVisibilityTests(unittest.TestCase):
+    """Chaque section du VRAI keygen affiche réellement son contenu.
+
+    Cinq pages (licences, clients, appareils, détection des secrets, journaux)
+    créaient leurs cartes dans un cadre jamais placé : seul le titre
+    s'affichait. Les tests à sonde ne pouvaient pas le voir, ils ne simulent
+    pas la géométrie. Ici, la fenêtre est réellement affichée.
+    """
+
+    def setUp(self):
+        import tempfile
+        import keygen_core as core
+        import keygen_db as db
+        self.core, self.db = core, db
+        tmp = Path(tempfile.mkdtemp(prefix="gf-keygen-visibility-"))
+        self._saved = ((core.KEYS_DIR, core.PRIV_FILE, core.PUB_FILE),
+                       (db.DB_FILE, db.AUDIT_FILE, db.SERVER_CFG_FILE))
+        core.KEYS_DIR, core.PRIV_FILE, core.PUB_FILE = tmp, tmp / "private.pem", tmp / "public.pem"
+        db.DB_FILE, db.AUDIT_FILE, db.SERVER_CFG_FILE = (
+            tmp / "licenses_db.json", tmp / "keygen_audit.log", tmp / "server_config.json")
+        self.app = ui.App()
+        self.app.update()
+
+    def tearDown(self):
+        self.app.destroy()
+        (self.core.KEYS_DIR, self.core.PRIV_FILE, self.core.PUB_FILE), \
+            (self.db.DB_FILE, self.db.AUDIT_FILE, self.db.SERVER_CFG_FILE) = self._saved
+
+    def _cartes(self, widget):
+        for enfant in widget.winfo_children():
+            if isinstance(enfant, ui.Card):
+                yield enfant
+            yield from self._cartes(enfant)
+
+    def test_chaque_page_affiche_ses_cartes(self):
+        for cle, _libelle, _cls in ui.App.PAGES:
+            with self.subTest(page=cle):
+                self.app._show(cle)
+                self.app.update()
+                page = self.app._pages[cle]
+                visibles = [c for c in self._cartes(page) if c.winfo_viewable()]
+                self.assertTrue(visibles, f"page « {cle} » : aucune carte affichée")
+                if hasattr(page, "tree"):
+                    self.assertTrue(page.tree.winfo_viewable(), f"page « {cle} » : tableau invisible")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
