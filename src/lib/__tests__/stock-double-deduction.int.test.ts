@@ -123,6 +123,10 @@ describe('article à 10 unités — cycle complet sans double déduction', () =>
       (r) => r.status === 'fulfilled' && (r.value as any).changed === true)
 
     expect(gagnants).toHaveLength(1)
+    // Les neuf perdants répondent « déjà engagée », sans erreur : SQLite
+    // interbloquait les transactions concurrentes (P1008 après 5 s) avant la
+    // sérialisation de src/lib/sqlite-tx-queue.ts.
+    expect(resultats.filter((r) => r.status === 'rejected')).toEqual([])
     expect(await quantiteEnStock(part.id)).toBe(9)
     expect(await prisma.stockMovement.count({ where: { invoiceId: facture.id } })).toBe(1)
   })

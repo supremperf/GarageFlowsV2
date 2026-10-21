@@ -16,6 +16,7 @@
  */
 import { PrismaClient } from '@prisma/client'
 import { PrismaClient as ServerPrismaClient } from '@/generated/server-client'
+import { serializeTransactions } from '@/lib/sqlite-tx-queue'
 
 /** Vrai si DATABASE_URL désigne un PostgreSQL (déploiement serveur/PWA). */
 export function isPostgresDatabase(): boolean {
@@ -32,7 +33,9 @@ function createClient(): PrismaClient {
     // Client généré depuis le schéma PostgreSQL — API structurellement identique.
     return new ServerPrismaClient({ log: [...LOG_LEVELS] }) as unknown as PrismaClient
   }
-  return new PrismaClient({ log: [...LOG_LEVELS] })
+  // SQLite : un seul écrivain — les transactions concurrentes s'interbloquaient
+  // (voir src/lib/sqlite-tx-queue.ts).
+  return serializeTransactions(new PrismaClient({ log: [...LOG_LEVELS] }))
 }
 
 // Prevent multiple instances of Prisma Client in development
