@@ -54,7 +54,8 @@ Tesseract 5.3.4 :
 | `OPENAI_API_KEY=sk-proj-…` | bloquée | **non bloquée** |
 | jeton GitHub, clé AWS, clé Stripe | 3 secrets | **2 secrets** (Stripe manquée) |
 
-Texte OCR réel : `sk- proj -AbCd…` et `sk_live_51Habcdefghijk lmnopqrstuv`.
+Forme du texte OCR réel (valeurs factices tronquées) : `sk- proj -AbCd…` et
+`sk_live_51H… lmno…` — une espace au milieu du jeton.
 
 **Cause.** Les expressions de `patterns.toml` s'appliquaient au texte brut ; une
 espace parasite au milieu d'un jeton casse la correspondance.
