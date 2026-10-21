@@ -133,6 +133,14 @@ est ignoré. Un chevauchement est résolu en faveur du score le plus élevé, pu
 du match le plus long : une clé OpenAI reconnue par sa règle dédiée n'est pas
 re-masquée par la règle générique.
 
+**OCR imprécis.** Tesseract insère souvent une espace parasite au milieu d'un
+long jeton (`sk- proj -AbC…`, `sk_live_51Habc lmno…`). Pour une capture, chaque
+ligne OCR est donc analysée une seconde fois sans ses espaces, avec les seules
+règles à préfixe fort : les règles de la famille `generic` en sont exclues,
+car recoller les mots d'une phrase ordinaire y créerait des faux positifs. Les
+positions renvoyées restent celles du texte OCR d'origine. Une saisie de texte
+(`--text`, `scan_text`) n'est pas concernée.
+
 Ajouter une règle = éditer `patterns.toml` puis exécuter
 `python3 scripts/test_secret_scan.py`. Ne jamais y placer une valeur réelle.
 
@@ -173,13 +181,21 @@ GF_SCREENSHOT_TESSERACT_LANG="eng"
 python3 scripts/test_secret_scan.py
 ```
 
-Résultat de référence dans cet environnement : **32 tests OK**.
+Résultat de référence (2026-10-21, Tesseract 5.3.4 installé) : **36 tests OK**,
+dont `test_ocr_reel_tesseract`, qui produit de vraies captures PNG et les fait
+lire par Tesseract. Ce test est ignoré, et non réussi, quand Tesseract ou Pillow
+est absent.
 
 Limites honnêtes :
 
-- Tesseract n'est pas installé dans le conteneur d'audit : l'OCR réel n'a pas pu
-  être exécuté. Les tests injectent un moteur OCR pour prouver le pipeline, et
-  vérifient que l'absence d'OCR produit bien un refus 503.
+- Avant le 2026-10-21, l'OCR réel n'avait jamais été exécuté. Sa première
+  exécution a montré qu'une clé OpenAI et une clé Stripe affichées à l'écran
+  **n'étaient pas détectées** (espace parasite de l'OCR). C'est corrigé, et
+  couvert par `test_ocr_imprecis_espace_parasite_dans_le_jeton`.
+- Seule la langue `eng` a été testée : police à chasse fixe sur fond blanc, et
+  police proportionnelle 18 px en texte clair sur le fond sombre de
+  l'application (clé OpenAI et jeton GitHub détectés). Les faibles résolutions
+  et les captures compressées n'ont pas été mesurées.
 - Aucune image de production n'a été analysée.
 - Le masquage **d'image** (dessiner des rectangles) n'est pas implémenté : seule
   la détection et la rédaction de texte le sont. L'écran propose le blocage et

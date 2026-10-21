@@ -181,6 +181,65 @@ class TestScanImage(unittest.TestCase):
         self.assertNotIn("raw_text_sha256", resultat)
         self.assertNotIn(FAUX["OPENAI_API_KEY"], json.dumps(resultat))
 
+    def test_ocr_imprecis_espace_parasite_dans_le_jeton(self):
+        # Sortie réelle de Tesseract 5.3 sur une capture : espaces insérées
+        # au milieu des jetons. Elles masquaient la clé OpenAI et la clé Stripe.
+        openai = FAUX["OPENAI_API_KEY"]
+        stripe = FAUX["STRIPE_SECRET_KEY"]
+        texte = (f"export OPENAI_API_KEY={openai[:3]} {openai[3:8]} {openai[8:]}\n"
+                 f"{stripe[:20]} {stripe[20:]}\n")
+        resultat = scan.scan_image(PNG_1PX, PATTERNS, ocr=lambda _b: texte)
+        self.assertEqual(ids(resultat), ["OPENAI_API_KEY", "STRIPE_SECRET_KEY"])
+        self.assertTrue(resultat["blocked"])
+        # Les positions désignent le texte OCR d'origine, espaces comprises.
+        premier = resultat["secrets"][0]
+        self.assertEqual(texte[premier["start"]:premier["end"]].replace(" ", ""), openai)
+        self.assertNotIn(openai, json.dumps(resultat))
+        self.assertNotIn(stripe[8:], json.dumps(resultat))
+
+    def test_ocr_compactage_sans_faux_positif_generique(self):
+        # Recoller les mots d'une phrase ordinaire ne doit rien signaler.
+        texte = "password : mon chien est noir\nTotal TTC : 245,00 EUR\n"
+        resultat = scan.scan_image(PNG_1PX, PATTERNS, ocr=lambda _b: texte)
+        self.assertEqual(resultat["count"], 0)
+        self.assertFalse(resultat["blocked"])
+
+    def test_ocr_compactage_ne_dedouble_pas(self):
+        texte = f"cle {FAUX['GITHUB_TOKEN']} fin"
+        resultat = scan.scan_image(PNG_1PX, PATTERNS, ocr=lambda _b: texte)
+        self.assertEqual(ids(resultat), ["GITHUB_TOKEN"])
+
+    @unittest.skipUnless(scan.ocr_available(), "Tesseract absent : OCR réel non exécutable")
+    def test_ocr_reel_tesseract(self):
+        try:
+            from PIL import Image, ImageDraw, ImageFont
+        except ImportError:
+            self.skipTest("Pillow absent : impossible de produire une capture")
+        polices = [p for p in ("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+                               "/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf",
+                               "C:/Windows/Fonts/consola.ttf") if Path(p).exists()]
+        if not polices:
+            self.skipTest("Aucune police à chasse fixe disponible")
+        police = ImageFont.truetype(polices[0], 28)
+        import io
+
+        def capture(lignes):
+            img = Image.new("RGB", (1400, 60 + 50 * len(lignes)), "white")
+            dessin = ImageDraw.Draw(img)
+            for i, ligne in enumerate(lignes):
+                dessin.text((20, 20 + 50 * i), ligne, fill="black", font=police)
+            tampon = io.BytesIO()
+            img.save(tampon, "PNG")
+            return tampon.getvalue()
+
+        propre = scan.scan_image(capture(["Planning atelier : vidange Clio", "Total TTC : 245,00 EUR"]), PATTERNS)
+        self.assertFalse(propre["blocked"])
+        sale = scan.scan_image(capture([f"OPENAI_API_KEY={FAUX['OPENAI_API_KEY']}",
+                                        FAUX["STRIPE_SECRET_KEY"]]), PATTERNS)
+        self.assertTrue(sale["blocked"])
+        self.assertIn("OPENAI_API_KEY", ids(sale))
+        self.assertIn("STRIPE_SECRET_KEY", ids(sale))
+
     def test_ocr_indisponible(self):
         ancien = os.environ.get("GF_SCREENSHOT_TESSERACT")
         os.environ["GF_SCREENSHOT_TESSERACT"] = "/nonexistent/tesseract"

@@ -264,6 +264,57 @@ def redact_text(text: str, result: dict | None = None, patterns: PatternSet | No
 
 # ── OCR ──────────────────────────────────────────────────────────────────────
 
+def _compact_lines(text: str) -> tuple[str, list[int]]:
+    """Retire espaces et tabulations à l'intérieur des lignes.
+
+    Retourne le texte compacté et, pour chacun de ses caractères, sa position
+    dans le texte d'origine.
+    """
+    compact: list[str] = []
+    origine: list[int] = []
+    for i, c in enumerate(text):
+        if c in " \t":
+            continue
+        compact.append(c)
+        origine.append(i)
+    return "".join(compact), origine
+
+
+def _scan_ocr_text(text: str, jeux: PatternSet) -> dict:
+    """Détection sur un texte issu de l'OCR.
+
+    Tesseract coupe souvent les longs jetons par une espace parasite
+    (« sk- proj -AbC… », « sk_live_51Habc lmno… ») : sur une vraie capture, une
+    clé OpenAI ou Stripe passait inaperçue alors que le même texte tapé était
+    bloqué. On analyse donc aussi chaque ligne sans ses espaces, pour les
+    règles à préfixe fort uniquement : les règles génériques (« password = … »)
+    y produiraient des faux positifs en recollant des mots ordinaires. Les
+    positions renvoyées restent celles du texte OCR d'origine.
+    """
+    resultat = scan_text(text, jeux)
+    compact, origine = _compact_lines(text)
+    if compact == text:
+        return resultat
+    stricts = PatternSet(tuple(r for r in jeux.rules if r.family != "generic"),
+                         jeux.min_score, jeux.version, jeux.source)
+    if not stricts.rules:
+        return resultat
+    secrets = list(resultat["secrets"])
+    for hit in scan_text(compact, stricts)["secrets"]:
+        debut, fin = origine[hit["start"]], origine[hit["end"] - 1] + 1
+        if any(not (fin <= s["start"] or debut >= s["end"]) for s in secrets):
+            continue
+        secrets.append({**hit, "start": debut, "end": fin})
+    secrets.sort(key=lambda h: h["start"])
+    resultat.update(
+        secrets=secrets,
+        count=len(secrets),
+        blocked=bool(secrets),
+        highest_score=max((h["score"] for h in secrets), default=0.0),
+    )
+    return resultat
+
+
 def tesseract_path() -> str | None:
     configure = os.environ.get("GF_SCREENSHOT_TESSERACT", "tesseract").strip() or "tesseract"
     if os.path.sep in configure or "/" in configure:
@@ -340,7 +391,8 @@ def scan_image(data: bytes, patterns: PatternSet | None = None,
     if moteur is None:
         raise OcrUnavailable()
     texte = moteur(data)
-    resultat = scan_text(texte, patterns)
+    jeux = patterns or load_patterns()
+    resultat = _scan_ocr_text(texte, jeux)
     resultat["image_format"] = format_
     resultat["image_bytes"] = len(data)
     resultat["ocr_text_sha256"] = resultat["raw_text_sha256"]
