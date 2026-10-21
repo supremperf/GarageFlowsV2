@@ -274,7 +274,16 @@ function main() {
       if (fs.existsSync(src)) {
         const dst = path.join(APP_DIR, 'release-manifest.json')
         fs.copyFileSync(src, dst)
-        console.log('  ✅ release-manifest.json généré + inclus → standalone (artefact rattachable)')
+        // « Rattachable » n'est vrai que si le manifeste porte RÉELLEMENT un
+        // commit. Hors racine de dépôt git, le générateur écrit `git: null` à
+        // dessein (il empruntait auparavant le commit d'un dépôt englobant) :
+        // annoncer « artefact rattachable » contredirait alors l'avertissement
+        // qu'il vient lui-même d'afficher.
+        let rattachable = false
+        try { rattachable = JSON.parse(fs.readFileSync(dst, 'utf8')).buildId != null } catch { /* illisible */ }
+        console.log(rattachable
+          ? '  ✅ release-manifest.json généré + inclus → standalone (artefact rattachable)'
+          : '  ⚠️  release-manifest.json inclus → standalone, SANS identité git : artefact NON rattachable à une révision')
       } else {
         throw new Error('release-manifest.json non généré — artefact non rattachable')
       }

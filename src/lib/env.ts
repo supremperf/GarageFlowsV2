@@ -5,6 +5,7 @@
  * si une variable critique est absente, vide, trop courte ou générique.
  * En développement, on émet un avertissement clair — sans jamais exposer la valeur.
  */
+import { createHash } from 'node:crypto'
 import { isWeakSecret } from '@/lib/auth-secret'
 
 export type EnvIssue = { name: string; problem: string }
@@ -68,6 +69,64 @@ function checkPresent(name: string, min: number, issues: EnvIssue[]): void {
   else if (v.length < min) issues.push({ name, problem: `trop courte (< ${min} caractères)` })
 }
 
+/**
+ * Empreinte de la CIBLE d'une URL de base : hôte + chemin, SANS les identifiants.
+ *
+ * Deux propriétés la rendent utilisable comme variable d'environnement ordinaire :
+ *  · elle ne contient ni utilisateur ni mot de passe, donc ce n'est pas un secret
+ *    et elle peut être déclarée en clair ;
+ *  · elle est insensible au mot de passe, donc elle SURVIT à une rotation — la
+ *    garde ci-dessous ne se périme pas le jour où les identifiants changent.
+ *
+ * @returns empreinte hexadécimale, ou null si l'URL est absente ou illisible.
+ */
+export function empreinteCibleBase(url: string | undefined | null): string | null {
+  if (!url || !url.trim()) return null
+  try {
+    const u = new URL(url.trim())
+    if (!u.host) return null
+    return createHash('sha256').update(`${u.host}${u.pathname}`).digest('hex')
+  } catch {
+    return null
+  }
+}
+
+/**
+ * ISOLATION PREVIEW — un déploiement de prévisualisation ne doit JAMAIS écrire
+ * dans la base de PRODUCTION.
+ *
+ * Le risque est structurel sur Vercel : une intégration Marketplace (Neon,
+ * Upstash) est attachée au PROJET, donc ses variables sont injectées dans
+ * Production ET Preview. Sans surcharge au niveau Preview, chaque branche
+ * déployée écrit dans les données réelles des clients. Rien dans le code ne
+ * distinguait les deux environnements avant cette garde (audit du 2026-10-20,
+ * constat V-02) : `VERCEL_ENV` n'était lu que par la route de diagnostics.
+ *
+ * Fonctionnement : l'exploitant déclare `GF_PRODUCTION_DB_FINGERPRINT` (une
+ * empreinte, pas un secret) sur TOUS les environnements. En Preview, si la base
+ * visée porte cette empreinte, la configuration est refusée. Sur Vercel un
+ * Preview a NODE_ENV=production, donc `assertEnv` LÈVE et le déploiement ne sert
+ * aucune requête : fail-closed, jamais un avertissement qu'on finit par ignorer.
+ *
+ * Sans `GF_PRODUCTION_DB_FINGERPRINT`, la garde ne peut rien affirmer et se tait
+ * — c'est pourquoi `check:env-vercel` doit exiger sa présence : une garde non
+ * provisionnée est une garde absente.
+ */
+function verifierIsolationPreview(issues: EnvIssue[]): void {
+  if (process.env.VERCEL_ENV !== 'preview') return
+  const attendue = process.env.GF_PRODUCTION_DB_FINGERPRINT?.trim()
+  if (!attendue) return
+  const courante = empreinteCibleBase(process.env.DATABASE_URL)
+  if (courante && courante === attendue) {
+    issues.push({
+      name: 'DATABASE_URL',
+      problem:
+        'déploiement Preview pointant vers la base de PRODUCTION — surchargez ' +
+        'DATABASE_URL et DIRECT_URL au niveau Preview (branche Neon dédiée)',
+    })
+  }
+}
+
 /** Liste les problèmes détectés (vide = configuration valide). */
 export function validateEnv(): { ok: boolean; issues: EnvIssue[] } {
   const issues: EnvIssue[] = []
@@ -75,6 +134,8 @@ export function validateEnv(): { ok: boolean; issues: EnvIssue[] } {
   if (isWeakSecret(process.env.NEXTAUTH_SECRET)) {
     issues.push({ name: 'NEXTAUTH_SECRET', problem: 'absente, trop courte ou générique' })
   }
+
+  verifierIsolationPreview(issues)
 
   // ── Garde-fous PWA production (déploiement web multi-instance) ────────────────
   // Un déploiement PWA de production (NODE_ENV=production hors Electron) ne doit

@@ -33,7 +33,15 @@ let nsh: string
 
 beforeAll(() => {
   pkg = JSON.parse(readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
+  // Fins de ligne NORMALISEES. Git for Windows convertit en CRLF au checkout
+  // (.gitattributes ne couvre pas *.nsh) alors que les assertions ci-dessous
+  // raisonnent en LF. En particulier la regex des continuations de ligne NSIS
+  // cherche un antislash suivi d'un saut de ligne : en CRLF elle ne reconnait
+  // plus la continuation, l'instruction CreateShortCut est tronquee AVANT sa
+  // cible, et le test echouait sur TOUT clone Windows standard — un rouge qui
+  // dependait de la configuration git locale, pas du contenu du depot.
   nsh = readFileSync(path.join(ROOT, 'scripts/installer.nsh'), 'utf8')
+    .replace(/\r\n/g, '\n')
 })
 
 describe('configuration electron-builder', () => {

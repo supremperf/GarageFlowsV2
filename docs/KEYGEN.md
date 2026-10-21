@@ -91,6 +91,81 @@ Le nouveau code d’activation journalise le **stage fixe + request ID aléatoir
 
 Pour confirmer **votre** cause sans exporter de secrets, fournir uniquement : reçu `--verify-key-match`, provenance/SHA/digest de la cible, reçu `diagnose-license` (digest de jeton/empreinte/code), request ID/stage des logs autorisés. Les empreintes publiques peuvent être comparées hors chat si la politique interne l’impose. Sans ces éléments, une mauvaise paire reste une hypothèse.
 
+## Aucune récupération de clé privée — règle absolue
+
+Le dépôt ne contient, et ne doit plus contenir, **aucun mécanisme de
+recherche, d'extraction ou de reconstitution d'une clé privée de production**.
+
+- Aucun bouton, menu, fonction Python, script Node, route API ou option CLI ne
+  « retrouve » une clé privée. Une clé privée ne se déduit pas d'une clé
+  publique (ce serait la rupture de l'ECC) : tout outil prétendant le faire est
+  soit un mensonge, soit une recherche de fichiers sur le disque.
+- `scripts/keygen_trust.py` est **lecture seule** : il compare des empreintes
+  publiques et dit « concordance / divergence ». En cas de divergence, la seule
+  issue est la **restauration** de la bonne clé depuis le coffre de l'exploitant.
+- Si la clé privée de production est perdue, il n'existe pas de réparation
+  silencieuse : nouvelle autorité → nouvelles licences pour tout le parc, après
+  décision explicite de l'exploitant.
+
+## Interface refondue (2026-10-19)
+
+`scripts/keygen_ui.py` a été réécrite. Ce n'est pas un habillage : le code est
+découpé en modules testables, chacun avec une responsabilité unique.
+
+| Module | Rôle |
+|---|---|
+| `scripts/keygen_core.py` | **Seul** chemin de signature. Offres, durées en jours, LID/UUID, contrôle HWID. |
+| `scripts/keygen_db.py` | Base locale `keys/licenses_db.json` (chmod 600), config serveur, journal d'audit, recherche/filtres/tris. |
+| `scripts/keygen_server.py` | Client HTTP vers le serveur (création, statut, reset HWID), `x-gf-key`. |
+| `scripts/keygen_updates.py` | Signature des mises à jour, **via** les vrais outils du dépôt (`sign-release-manifest.mjs`, `electron/update-verify.js`). |
+| `scripts/keygen_trust.py` | Diagnostic de correspondance clé privée ↔ ancres, lecture seule. |
+| `scripts/keygen_ui.py` | IHM Tk : barre latérale, 5 pages, cartes, tables scrollables, toasts, confirmations, états occupés, fenêtre redimensionnable. |
+
+### Les 5 pages
+
+1. **Générer une licence** — tous les champs client (nom, prénom, entreprise,
+   adresse, CP, ville, pays, e-mail, téléphone, informations complémentaires),
+   type, durée, liaison matérielle optionnelle. Récapitulatif complet à
+   l'issue, jeton **jamais tronqué**, bouton de copie avec confirmation.
+2. **Gérer les licences** — tableau complet (client, licence, matériel),
+   recherche sur nom, prénom, entreprise, e-mail, clé, LID, UUID et HWID,
+   filtres PREMIUM/ENTREPRISE/active/non activée/expirée/révoquée, tri par
+   création ou expiration, fiche détaillée avec boutons de copie champ par champ.
+3. **Clés ECC** — état de l'autorité, vérification de correspondance,
+   propagation de la clé publique, et **« COPIER LA CLÉ PUBLIQUE PEM »** : le
+   PEM brut, distinct de la forme tableau JS utilisée dans le code.
+4. **Serveur** — URL préremplie `https://app.garageflows.fr` (source unique :
+   `keygen_db.DEFAULT_SERVER_URL`), éditable, validée, persistée, avec test de
+   connexion et affichage du statut.
+5. **Signature des mises à jour** — sélecteur de fichier + glisser-déposer,
+   nom/chemin/taille/extension/SHA-256, bouton **« SIGNER LA MISE À JOUR »**,
+   et vérification par le module client réel.
+
+### Offres et durées
+
+- Offres commerciales : **PREMIUM** et **ENTREPRISE** uniquement. `trial`,
+  `admin` et `mechanic` restent signables pour le parc installé et les outils
+  internes ; ils ne sont plus proposés.
+- La durée est saisie en **jours** : valeur libre + unité (jours / mois /
+  années), ou palier 1, 7, 30, 90, 180, 365, 730 jours. 1 mois = 30 j, 1 an =
+  365 j. La date d'expiration est calculée côté serveur d'émission, jamais
+  recopiée d'une saisie.
+- Le CLI suit la même règle : `--duration "90 jours"`, `--duration-days 365`
+  (prioritaires sur `--years`, conservé pour les outils existants).
+
+### Liaison matérielle (HWID) — jamais inventée
+
+Le keygen ne calcule plus aucune empreinte locale : le HWID est produit par le
+poste à activer, puis collé ou importé. Voir la section dédiée plus bas.
+
+### Vérification automatique
+
+```sh
+npm run test:keygen     # 3 suites Python — 100 tests
+npm run keygen          # ouvre l'IHM
+node scripts/campagne-100-licences.mjs   # 105 licences, contrôles négatifs, HWID
+```
+
 ## Liaison matérielle — ne JAMAIS calculer le HWID dans le keygen
 
 **Le HWID d'une licence doit venir du POSTE CLIENT.** Le keygen ne sait pas le
@@ -113,7 +188,8 @@ signalé.
 
 - Le bouton **« Ce PC »** du GUI (qui appelait `core.get_hwid()`) est remplacé
   par **« Coller »** et **« Fichier… »** : la valeur doit être produite par le
-  poste à activer, puis collée/importée.
+  poste à activer, puis collée/importée. Le GUI refondu conserve ces deux
+  entrées et n'en ajoute aucune qui fabriquerait une empreinte.
 - `keygen_core.make_license` / `make_mechanic_license` **refusent avant de
   signer** tout HWID qui n'est ni 64 hexadécimaux (v0) ni `HWID1-` + 64 hex
   (v1) : tronqué, entre guillemets, espace interne, texte libre. La valeur est

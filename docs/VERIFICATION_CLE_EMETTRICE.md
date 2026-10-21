@@ -80,9 +80,26 @@ Si la clé privée de production est inaccessible, **ne pas en générer une nou
 
 Le keygen refuse de signer quand `keys/private.pem` n’est pas la clé dont l’empreinte est `REFERENCE_FP` (`issuerFingerprint` ≠ empreinte des ancres). C’est voulu : une licence signée ainsi serait refusée par le logiciel. Cas typique : nouveau dossier extrait d’un ZIP (jamais de `keys/`), puis paire générée localement par `config` ou le keygen.
 
-Correctif, depuis le keygen : au démarrage (clé absente ou non conforme) et après un refus de signature, le keygen propose « Rechercher la clé de production sur ce PC » ; le même bouton figure dans l’onglet « Clés ECC ». La passphrase saisie dans le keygen est transmise par l’entrée standard, jamais en argument. « Initialiser les clés » avertit désormais qu’une nouvelle paire ne signe aucune licence acceptée sans rotation complète.
+Correctif, depuis le keygen : le refus s'affiche avec les empreintes publiques
+(« Erreur de signature »), et le diagnostic en ligne de commande
+`python scripts/keygen_ui.py --verify-key-match` donne le reçu complet. La
+résolution est une RESTAURATION : remettre en place `keys/private.pem` depuis la
+sauvegarde de l'exploitant (coffre, clé USB, poste autorisé), par le canal
+approuvé, puis relancer la vérification.
 
-Correctif équivalent en ligne de commande : `npm run keys:find-issuer` (`scripts/find-issuer-key.cjs`). Il parcourt, de façon bornée, le dossier parent du projet, Bureau, Documents, Téléchargements et OneDrive, à la recherche de PEM privés et de `GF_PRIVATE_KEY` (base64) dans les `.env*.local` ; il ne retient qu’une clé P-256 dont l’empreinte publique est **exactement** `REFERENCE_FP`, n’affiche que des chemins et des empreintes publiques, installe la clé dans `keys/private.pem` (relecture vérifiée, `keys/public.pem` aligné) et **déplace** la clé remplacée hors du projet (`~/GarageFlows-cles-ecartees/<date>/`). Options : `--dry-run` (rapport seul), `--ask-passphrase` (clés chiffrées, saisie masquée). S’il ne trouve rien, il n’installe ni ne génère rien : la clé de production doit être restaurée depuis une sauvegarde (clé USB, ancien PC, coffre) ; à défaut, changer d’autorité est une rotation décidée (licences existantes invalidées, serveur et vitrine à aligner).
+**Aucun outil du dépôt ne recherche, n'extrait ni ne reconstruit une clé privée.**
+L'ancien mécanisme de recherche de la clé de production sur le disque — script
+Node, commande npm associée, bouton du keygen, fonctions Python et tests — a été
+intégralement SUPPRIMÉ. Il parcourait le disque, les `.env` et les anciens
+dossiers du projet. Une clé
+privée perdue ne se recalcule pas depuis sa clé publique ; la remettre en
+production n'est pas une opération de dépannage automatique mais une décision
+d'exploitation, tracée, avec inventaire des versions et impact clients.
+
+« Initialiser les clés » reste disponible et avertit explicitement qu'une
+nouvelle paire ne signe aucune licence acceptée sans rotation complète
+(`keys:sync`, reconstruction, serveur, redistribution) — rotation qui invalide
+toutes les licences émises par l'autorité précédente.
 
 Rappel : `npm run dist` refuse un `keys/private.pem` présent dans le projet ; le keygen, lui, l’y lit. Déplacer la clé hors du dossier avant de construire l’installeur.
 

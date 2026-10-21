@@ -34,7 +34,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 
 ## Contrat par catégorie
 
-### Configuration fonctionnelle (67)
+### Configuration fonctionnelle (69)
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
@@ -90,8 +90,10 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `GF_NO_ANCHOR_RESTORE` | CONFIGURATION | non | release-tooling | `1` désactive la remise automatique de _PK/_LINES sur la clé de REFERENCE_FP : une divergence d'ancres bloque alors `npm run dist` sans tentative de … |
 | `GF_PACKAGE_DESKTOP` | CONFIGURATION | non | release-tooling | Posé par `npm run dist` (cross-env GF_PACKAGE_DESKTOP=1) pour dire au post-build que la sortie standalone part dans un INSTALLEUR : dans ce contexte … |
 | `GF_PROBE_NAMES` | CONFIGURATION | non | maintenance-tool | Liste de noms, separes par des virgules, que la sonde de verification post-rotation doit mesurer. Posee par reset-garageflow.ps1 juste avant `vercel … |
+| `GF_PRODUCTION_DB_FINGERPRINT` | CONFIGURATION | **oui** | server | Empreinte SHA-256 de la CIBLE (hote + chemin, SANS identifiants) de la DATABASE_URL de production. N'EST PAS UN SECRET : elle ne contient ni utilisat… |
 | `GF_UPDATE_CHANNEL` | CONFIGURATION | non | desktop | — |
 | `GF_UPDATE_SIGNING_KEY_FILE` | SECRET | non | release-tooling | Chemin d'un fichier contenant la clé privée de signature, alternative à GF_UPDATE_SIGNING_KEY. Outillage de release uniquement. |
+| `GF_VERCEL_PROJECT` | CONFIGURATION | non | maintenance-tool | Nom du projet Vercel interroge par check:env-vercel (equivalent de l'option --projet). N'est PAS un secret : un nom de projet est public dans l'URL d… |
 | `LICENSE_ENFORCEMENT` | CONFIGURATION | non | development | — |
 | `RATE_LIMIT_ADMIN_MAX` | CONFIGURATION | non | server | Optional positive integer override; code has a safe default. |
 | `RATE_LIMIT_ADMIN_WINDOW_SECONDS` | CONFIGURATION | non | server | Optional positive integer override; code has a safe default. |
@@ -207,11 +209,12 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `NODE_INSPECTOR_IPC` | CONFIGURATION | non | runtime-system | Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually. |
 | `VERCEL` | CONFIGURATION | non | runtime-system | Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually. |
 
-### Secrets générés par GarageFlows (2)
+### Secrets générés par GarageFlows (3)
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
 | `BLOB_READ_WRITE_TOKEN` | SECRET | non | release-tooling | Entrée fournisseur privée des outils de configuration et de validation Blob. Aucun consommateur applicatif actuel ; ne pas exposer au navigateur ni i… |
+| `CRON_SECRET` | SECRET | non | server | Jeton que Vercel envoie en « Authorization: Bearer » lors de l'appel d'un cron declare dans vercel.json. DOIT porter la MEME valeur que EINVOICING_QU… |
 | `EINVOICING_QUEUE_TOKEN` | SECRET | non | server | Jeton Bearer (>=32 caracteres) autorisant la reprise automatique des transmissions e-facturation en echec. Absent = route fermee (503). |
 
 ### Harnais de test (4)

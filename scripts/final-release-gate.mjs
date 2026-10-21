@@ -87,6 +87,28 @@ run('ESLint', 'npm run lint')
 // 3. Gardes de cohérence (10 : marque, docs, PWA, monnaie ×3, migrations ×3, fichiers critiques)
 run('Gardes de cohérence (check:consistency)', 'npm run check:consistency')
 
+// 3bis. PREUVE DE ROTATION DES SECRETS. Un secret exposé dans l'historique git
+// reste exploitable tant qu'il n'est pas roté : c'est un défaut de sécurité, pas
+// une dette documentaire. Le contrôle existait déjà (`npm run verify:rotation`)
+// mais n'était appelé par AUCUNE porte, et sa garde d'exécution ne se déclenchait
+// jamais sous Windows — il n'a donc jamais rien bloqué.
+//
+// Il lit les secrets dans l'environnement du PROCESSUS, d'où `--env-file=.env` :
+// la porte tourne sur le poste qui fabrique l'installateur, où ce fichier existe.
+// Sans `.env`, il n'a rien à comparer et le seul verdict honnête est
+// « NON EXÉCUTÉ » — pas « OK » (le récapitulatif rappelle qu'un contrôle non
+// exécuté n'est pas réputé vert).
+//
+// Volontairement SANS `--require-all` : un `.env` de build desktop n'a aucune
+// raison de porter les jetons du déploiement PWA, et faire échouer la porte sur
+// cette absence la rendrait inutilisable. Une valeur encore compromise, elle,
+// sort en code 1 et bloque.
+run('Preuve de rotation des secrets', null, {
+  argv: [process.execPath, '--env-file=.env', 'scripts/verify-rotation.mjs'],
+  skip: !existsSync('.env'),
+  skipReason: '.env absent — aucun secret à comparer (exécuter là où ils sont définis)',
+})
+
 // 4. Tests unitaires + intégration (inclut monnaie, e-invoicing/formats, isolation
 //    multi-tenant, autorisation, immuabilité, parcours métier E2E, sauvegardes).
 //    Émet le rapport JSON et RÉGÉNÈRE la baseline machine (comptes de tests +
