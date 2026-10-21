@@ -125,7 +125,9 @@ describe('article à 10 unités — cycle complet sans double déduction', () =>
     expect(gagnants).toHaveLength(1)
     expect(await quantiteEnStock(part.id)).toBe(9)
     expect(await prisma.stockMovement.count({ where: { invoiceId: facture.id } })).toBe(1)
-  })
+    // SQLite n'admet qu'un écrivain : les perdants attendent le verrou jusqu'au
+    // délai du connecteur (P1008), soit ~10 s mesurées — au-delà des 5 s de vitest.
+  }, 30_000)
 
   it('l’annulation restitue intégralement, et son rejeu ne restitue pas deux fois', async () => {
     const part = await creerArticle('Courroie', 10)
