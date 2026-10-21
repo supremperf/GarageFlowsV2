@@ -6,9 +6,11 @@
 2026-10-17. Le code est dans un état nettement mieux prouvé : suite complète
 sans échec (comptes dans `TEST_RESULTS.md`), PostgreSQL et Redis réels, OCR
 réel, interface du keygen rendue.
-Mais les preuves exigées pour la production ne peuvent pas être produites dans
-ce conteneur : installateur Windows, rotation des secrets exposés, licences de
-l'autorité réelle, e-facturation interconnectée.
+L'installateur Windows est désormais construit, installé, lancé, réinstallé et
+désinstallé avec succès par la CI de la PR #34. Restent hors de portée : la
+rotation des secrets exposés, les licences de l'autorité réelle, la mise à
+jour Vn → Vn+1 sur un vrai poste, Authenticode et l'e-facturation
+interconnectée.
 
 ## 2. Domaines
 
@@ -28,7 +30,9 @@ l'autorité réelle, e-facturation interconnectée.
 | Scan des captures | VALIDÉ | défaut OCR **corrigé** |
 | Build Next | VALIDÉ | build d'empaquetage + `verify:standalone` |
 | Serveur empaqueté (composant) | VALIDÉ | démarrage, auth, persistance sous Linux |
-| Setup.exe, installation Windows | BLOQUÉ | pas de Windows, Electron non téléchargeable |
+| Setup.exe : build, intégrité, installation, lancement jusqu'à l'activation, réinstallation, désinstallation | VALIDÉ (CI `windows-latest`) | job Windows de la PR #34 sur `9a244ad`, voir `AUDIT_BUILD_INSTALLATION.md` §4 |
+| Mise à jour Vn → Vn+1, Windows 10/11 vierge, parcours licencié | NON TESTÉ | — |
+| Signature Authenticode | BLOQUÉ | aucun certificat |
 | Frontend navigateur authentifié | BLOQUÉ | licence signée requise |
 | Rotation des secrets, Vercel, Neon, Upstash | BLOQUÉ | aucun accès |
 | Performances | VALIDÉ (budget bundle) / NON TESTÉ (charge) | — |
@@ -40,14 +44,16 @@ l'autorité réelle, e-facturation interconnectée.
   étapes de la CI (§4), Gitleaks compris.
 - Échoués à la fin de la session : **0**. Trois défauts réels ont échoué puis
   été corrigés (GF-1021-01, GF-1021-02, et GF-1021-07 révélé par la CI).
-- Ignorés ou bloqués : 7 vitest (clé privée, build Windows), 90 Playwright
-  (session licenciée), packaging et installation Windows.
+- Ignorés ou bloqués dans le conteneur : 7 vitest (clé privée ; le test du
+  build Windows, lui, passe dans la CI Windows), 90 Playwright (session
+  licenciée).
 
 ## 4. Actions obligatoires avant déploiement
 
-1. Sur Windows : `npm install`, `npm run dist`, puis la matrice
-   d'installation, de mise à jour et de désinstallation (`EXTERNAL_BLOCKERS.md`
-   n° 1), avec signature Authenticode (n° 2).
+1. Sur un vrai poste Windows 10/11 : la mise à jour Vn → Vn+1 et le parcours
+   licencié (`EXTERNAL_BLOCKERS.md` n° 1), puis la signature Authenticode
+   (n° 2). Build, installation, réinstallation et désinstallation sont déjà
+   prouvés par la CI.
 2. Rejouer les 7 tests ignorés avec la clé de l'autorité :
    `keys/private.pem` sur le poste de build et `GF_TEST_LICENSE`.
 3. Rotation des secrets exposés historiquement, selon `docs/ROTATION_SECRETS.md`

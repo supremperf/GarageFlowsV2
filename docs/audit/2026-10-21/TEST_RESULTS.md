@@ -45,7 +45,7 @@ Statuts : **VALIDÉ** (exécuté, réussi) · **ÉCHEC** (exécuté, échoué) �
 
 | Test | Condition | Statut |
 |---|---|---|
-| `integrity-diagnostics` G — build `dist/win-unpacked` réel | installateur Windows produit | BLOQUÉ |
+| `integrity-diagnostics` G — build `dist/win-unpacked` réel | installateur Windows produit | BLOQUÉ dans le conteneur ; **VALIDÉ** dans la CI Windows (`GF_REQUIRE_ARTIFACT_TEST=1`) |
 | `forgery-resistance` 1, 2, 5, 8 | clé privée d'émission (absente par conception) | BLOQUÉ |
 | `public-key-consistency` — jeton GF2 réel, accepté / altéré | `GF_TEST_LICENSE` signé par l'autorité | BLOQUÉ |
 
@@ -75,8 +75,10 @@ Statuts : **VALIDÉ** (exécuté, réussi) · **ÉCHEC** (exécuté, échoué) �
 | Balayage des 169 routes sans session | API | aucune donnée sans authentification | 6 × 200 publics par conception, 196 × 401, 14 × 403, 20 × 400, 4 × 500 de configuration absente | VALIDÉ (voir AUDIT_API.md) |
 | Playwright, 6 gabarits (commande CI : `npx playwright test`) | E2E | parcours publics verts | 54 réussis, 90 ignorés, 0 échec | VALIDÉ (publics) |
 | Playwright parcours authentifiés | E2E | — | licence signée requise | BLOQUÉ |
-| `electron-builder --win --x64` | Packaging | installateur | téléchargement d'Electron refusé (TLS, github.com) | BLOQUÉ |
-| Installation / désinstallation / mise à jour Windows | Installation | — | aucun installateur, aucun Windows | BLOQUÉ |
+| `electron-builder --win --x64` dans le conteneur | Packaging | installateur | téléchargement d'Electron refusé (TLS, github.com) | BLOQUÉ |
+| `npm run dist` complet sur `windows-latest` (CI, run 39536734268, job Windows 119016439462, tête `9a244ad`) | Packaging | installateur vérifié | réussi : secrets d'artefact, fusibles, `verify:installer`, intégrité des ressources, `release:verify-artifact` | VALIDÉ |
+| Installation silencieuse, lancement jusqu'à l'activation, SQLite initialisée, serveur installé, réinstallation et désinstallation avec données préservées (`scripts/test-windows-setup.ps1`, CI) | Installation | toutes les étapes | réussies | VALIDÉ |
+| Mise à jour Vn → Vn+1, Windows 10/11 vierge, parcours licencié | Installation | — | non couverts par la CI | NON TESTÉ |
 | Signature d'un vrai installeur (Ed25519) | Mises à jour | — | clé privée de mise à jour absente | BLOQUÉ |
 | Rotation de secrets sur Vercel / Neon / Upstash | Secrets | — | aucun accès (aucun jeton dans la session) | BLOQUÉ |
 | Interconnexion e-facturation (PDP, Chorus Pro) | E-facturation | — | aucun compte de plateforme | BLOQUÉ |

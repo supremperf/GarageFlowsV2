@@ -21,6 +21,7 @@ porte sur ce qui a été **exécuté** dans cette session, en particulier ce qui
 | Interface Tk du keygen | non rendue | rendue sous Xvfb, 14 tests de cycle de vie |
 | E2E navigateur | non exécuté | Playwright + Chromium, 6 gabarits : 54 réussis, 90 ignorés (licence signée requise) |
 | `npm run build` | bloqué | **réussi**, budget de performance respecté |
+| Installateur Windows | jamais produit | **produit, installé, lancé, réinstallé et désinstallé** par la CI de la PR #34 (`windows-latest`) |
 
 ## 2. Environnement d'exécution
 
@@ -90,8 +91,10 @@ Le détail de chaque correction est dans `BUGFIX_CHANGELOG.md`.
 
 ## 6. Risques restants
 
-Voir `PRODUCTION_READINESS.md` §5. Les principaux : aucun installateur Windows
-produit ni installé ; aucune rotation de secret de production rejouée (aucun
-accès Vercel, Neon ou Upstash) ; e-facturation réelle non interconnectée ;
+Voir `PRODUCTION_READINESS.md` §5. Les principaux : l'installateur Windows est
+construit et installé par la CI (`windows-latest`), mais ni la mise à jour
+Vn → Vn+1 sur un vrai poste ni le parcours licencié ne sont prouvés, et il
+n'est pas signé (Authenticode) ; aucune rotation de secret de production
+rejouée (aucun accès Vercel, Neon ou Upstash) ; e-facturation réelle non interconnectée ;
 licences signées par l'autorité de production non testées ici (clé privée
 volontairement absente).

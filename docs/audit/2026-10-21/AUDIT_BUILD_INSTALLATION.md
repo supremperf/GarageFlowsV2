@@ -46,12 +46,33 @@ modèle de version, secrets aléatoires propres au test.
 Ceci ne remplace pas `scripts/test-installed-server.cjs`, réservé à la CI
 Windows sur un installateur réellement installé.
 
-## 4. Non réalisé
+## 4. Preuve Windows : job CI « Windows candidate packaging and inspection »
+
+Ce que le conteneur ne pouvait pas faire, la CI de la PR #34 l'a fait sur un
+exécuteur `windows-latest` (run 39536734268, job Windows 119016439462, tête `9a244ad`). Toutes les étapes ont réussi :
+
+| Étape CI | Résultat |
+|---|---|
+| `npm ci`, ancrage public matérialisé, `check:public-key`, `keys:check` | réussi |
+| Tests d'empaquetage (`package-prisma-resources`, `build-public-key`, `preload-listeners`, `preserve-legacy-dev-db`, `next-build-home`, `restore-public-anchors`, `windows-package-diagnostic`) | réussi |
+| `npm run dist` officiel (préflight, build, `verify:standalone`, electron-builder, `check:artifact-secrets`, `check:artifact-fuses`, `verify:installer`) | réussi en 4 min 27 |
+| Intégrité contre les ressources réellement empaquetées (`integrity-diagnostics`, `GF_REQUIRE_ARTIFACT_TEST=1`) | réussi : c'est le test G, ignoré dans le conteneur |
+| `release:verify-artifact` | réussi |
+| `scripts/test-windows-setup.ps1` : installation silencieuse dans un dossier isolé, lancement depuis un dossier vide jusqu'à la fenêtre d'activation, base SQLite initialisée depuis les ressources installées, tests du serveur installé, réinstallation (données et secret d'installation préservés), désinstallation (exécutable retiré, données utilisateur intactes) | réussi en 1 min 24 |
+| Publication de `release/GarageFlows-Setup.exe` en artefact (30 jours) | réussi |
+
+Ce que ce job **ne prouve pas**, et que le script consigne lui-même :
+`licensedBusinessWorkflowTested: false` (aucun parcours licencié, faute de
+licence de l'autorité) et `cleanOSWithoutBuildToolsTested: false` (l'exécuteur
+CI est un Windows Server outillé, pas un Windows 10/11 vierge).
+
+## 5. Non réalisé
 
 | Élément | Statut | Pour lever le blocage |
 |---|---|---|
-| `dist/GarageFlows-Setup.exe` | BLOQUÉ | poste Windows ou CI avec accès à github.com |
-| Installation, lancement, désinstallation, réinstallation, mise à jour Vn → Vn+1 | BLOQUÉ | matrice `WINDOWS_INSTALL_UPDATE_MATRIX` sur Windows 10/11 |
+| `electron-builder` dans le conteneur | BLOQUÉ | téléchargement d'Electron refusé ; **couvert par la CI Windows (§4)** |
+| Mise à jour Vn → Vn+1 sans perte de données | NON TESTÉ | matrice `WINDOWS_INSTALL_UPDATE_MATRIX` |
+| Poste Windows 10/11 vierge, parcours licencié de bout en bout | NON TESTÉ | poste réel + licence de l'autorité |
 | Signature Authenticode | BLOQUÉ | certificat de signature de code |
 | Signature Ed25519 d'un vrai installeur | BLOQUÉ | `GF_UPDATE_SIGNING_KEY` ou `GF_UPDATE_SIGNING_KEY_FILE` |
 
@@ -59,7 +80,7 @@ Nom réel de l'artefact : `build.nsis.artifactName` vaut `GarageFlows-Setup.exe`
 (nom stable exigé par la chaîne de mise à jour), et non
 `GarageFlows Setup x.y.z.exe`.
 
-## 5. Commandes utilisateur (poste Windows connecté)
+## 6. Commandes utilisateur (poste Windows connecté)
 
 ```cmd
 cd chemin-vers-garageflows
