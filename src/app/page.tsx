@@ -43,6 +43,11 @@ import { GarageFlowIcon } from '@/components/GarageFlowLogo'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { viderBrouillons } from '@/lib/ui/brouillon'
 
+/** Réactivation survenue pendant le chargement initial : rien n'est chargé, on recharge. */
+function recharger() {
+  window.location.reload()
+}
+
 // ── Splash-loader shown while session + data load ─────────────────────────────
 const AppLoader = memo(function AppLoader() {
   return (
@@ -439,12 +444,20 @@ export default function Home() {
     )
   }
 
-  // Show loader while session resolves or first data loads
+  // Show loader while session resolves or first data loads. L'overlay de
+  // licence est monté dès ce stade : une licence suspendue, révoquée ou
+  // expirée fait échouer le chargement initial (403), et la page restait sinon
+  // sur « Chargement du planning… » sans jamais dire pourquoi.
   if (
     status === 'loading' ||
     (status === 'authenticated' && onboarding === 'loading')
   ) {
-    return <AppLoader />
+    return (
+      <>
+        <AppLoader />
+        {status === 'authenticated' && <LicenseRevokedOverlay onReactivated={recharger} />}
+      </>
+    )
   }
 
   if (status !== 'authenticated') return null
