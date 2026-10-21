@@ -47,9 +47,24 @@ const KEYGEN_SERVER = path.join(ROOT, 'scripts', 'keygen_server.py')
 
 /** Source Python du contrat HTTP : le module centralisÉ + l'IHM qui l'utilise. */
 let python = ''
+/** Source de l'IHM seule : certains contrats portent sur l'interface, pas sur le client HTTP. */
+let ihm = ''
 beforeAll(() => {
-  python = readFileSync(KEYGEN_SERVER, 'utf8') + '\n' + readFileSync(KEYGEN_UI, 'utf8')
+  ihm = readFileSync(KEYGEN_UI, 'utf8')
+  python = readFileSync(KEYGEN_SERVER, 'utf8') + '\n' + ihm
 })
+
+/**
+ * Corps d'une fonction Python du module client, de sa signature à la suivante.
+ * Permet d'exiger une propriété SUR LA BONNE fonction plutôt que sur le fichier
+ * entier — un `return True` ailleurs ne doit pas valider `set_status`.
+ */
+function extraireFonctionPython(nom: string): string {
+  const debut = python.indexOf(`def ${nom}(`)
+  if (debut < 0) throw new Error(`fonction Python introuvable : ${nom}`)
+  const suite = python.indexOf('\ndef ', debut + 1)
+  return python.slice(debut, suite < 0 ? undefined : suite)
+}
 
 /** Chemin du fichier de route Next.js pour un endpoint `/api/...`. */
 function routeFileFor(endpoint: string): string {
@@ -154,7 +169,55 @@ describe('POST /api/keygen/licenses/[lid]/status', () => {
   })
 
   it('traduit un 409 en refus explicite côté Keygen (jamais un faux succès)', () => {
-    expect(python).toMatch(/code == 409[\s\S]{0,400}Transition refusée|code == 409[\s\S]{0,400}return False/)
+    // Le classement par code HTTP est CENTRALISÉ dans `_http_message` : la
+    // branche 409 n'est plus recopiée chez chaque appelant, mais l'exigence
+    // reste la même — un 409 est un refus, et le motif du serveur (machine à
+    // états) est préféré au message générique.
+    expect(python).toMatch(/code == 409[\s\S]{0,200}Conflit \(409\)/)
+    expect(python).toMatch(/if code == 409:\s*\n\s*return serveur or/)
+    // Et aucun chemin de `set_status` ne renvoie un succès hors d'un 200.
+    const corpsSetStatus = extraireFonctionPython('set_status')
+    expect(corpsSetStatus).toMatch(/if resp\.code == 200:/)
+    const lignesSucces = corpsSetStatus.split('\n').filter((l) => l.includes('return True'))
+    expect(lignesSucces.length).toBeGreaterThan(0)
+    for (const ligne of lignesSucces) expect(ligne).not.toMatch(/40\d|50\d/)
+  })
+
+  it('un 404 porteur d’un corps JSON applicatif désigne la LICENCE, pas la route', () => {
+    // RÉGRESSION DU 2026-10-21. `_request` calculait un message pour TOUTE
+    // réponse d'erreur, et chaque appelant faisait `if err: return False, err`
+    // AVANT ses propres branches : un 404 « licence introuvable » s'affichait
+    // « Route absente sur ce serveur » — un défaut de routage imaginaire, sur
+    // une route qui venait de répondre correctement. L'erreur de TRANSPORT et
+    // le classement par CODE doivent rester séparés.
+    expect(python).toMatch(/erreur_transport/)
+    expect(python).not.toMatch(/if err:\s*\n\s*return False, err/)
+    // La route répond en JSON avec un code applicatif : son message est repris
+    // tel quel, et « Route absente » reste réservé à l'absence de corps JSON
+    // (page d'erreur HTML d'une instance qui ignore réellement la route).
+    expect(routeSource('/api/keygen/licenses/[lid]/status')).toMatch(/code: 'NOT_FOUND'/)
+    expect(python).toMatch(/Route absente sur ce serveur \(404\)/)
+    const corpsMessage = extraireFonctionPython('_http_message')
+    const indexRoute = corpsMessage.indexOf('Route absente')
+    const indexServeur = corpsMessage.indexOf('if serveur:')
+    expect(indexServeur).toBeGreaterThanOrEqual(0)
+    expect(indexServeur).toBeLessThan(indexRoute)
+  })
+})
+
+describe('Enregistrement serveur après génération', () => {
+  it('une licence garage générée est enregistrée sur le serveur, pas seulement en local', () => {
+    // Sans cet appel, le serveur ignore la licence : son activation et son
+    // changement de statut répondent 404, et aucun geste du Keygen n'y
+    // remédiait — seul le récapitulatif des clés MÉCANICIEN offrait un bouton
+    // d'enregistrement, jamais le parcours d'une licence GARAGE.
+    expect(ihm).toMatch(/server\.register_license\(srv_url, srv_key, info\["token"\]\)/)
+    expect(ihm).toMatch(/def _register_on_server/)
+    expect(ihm).toMatch(/db\.mark_server_synced/)
+  })
+
+  it('l’absence de serveur configuré est dite, pas masquée', () => {
+    expect(ihm).toMatch(/Serveur non configuré[\s\S]{0,160}activables/)
   })
 })
 

@@ -31,6 +31,10 @@ import sys
 import tempfile
 import types
 import unittest
+import unittest.mock
+import io
+import socket
+import urllib.error
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -372,14 +376,29 @@ import keygen_ui as ui                                                        # 
 
 
 class SyncThread:
-    """Remplace threading.Thread : exécution synchrone (aucune course dans les tests)."""
+    """Remplace threading.Thread : exécution synchrone (aucune course dans les tests).
 
-    def __init__(self, target=None, daemon=None, **_kw):
+    `args`/`kwargs` sont RELAYÉS. Python 3.14 fabrique ses propres threads de
+    lecture dans `subprocess._communicate` avec des arguments positionnels
+    (`Popen._readerthread(fh, buffer)`) : les ignorer faisait échouer tout appel
+    Node lancé depuis une page du Keygen, avec un TypeError sans rapport avec le
+    test. Un substitut de Thread doit respecter le contrat de Thread.
+    """
+
+    def __init__(self, target=None, daemon=None, args=(), kwargs=None, **_kw):
         self.target = target
+        self.args = args
+        self.kwargs = kwargs or {}
 
     def start(self):
         if self.target:
-            self.target()
+            self.target(*self.args, **self.kwargs)
+
+    def join(self, timeout=None):
+        return None
+
+    def is_alive(self):
+        return False
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1385,6 +1404,213 @@ class TestNouvellesPages(KeygenTestCase):
         self.assertNotIn("api_key", texte.lower())
         self.assertNotIn("GF2.", texte)
 
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  8 · Classement des réponses HTTP du client Keygen (régression du 404)
+# ══════════════════════════════════════════════════════════════════════════════
+
+class _FauxCorps:
+    """Corps de réponse lisible une seule fois, comme un vrai flux HTTP."""
+
+    def __init__(self, octets: bytes):
+        self._octets = octets
+
+    def read(self):
+        octets, self._octets = self._octets, b""
+        return octets
+
+
+class _FausseReponse(_FauxCorps):
+    def __init__(self, status: int, octets: bytes):
+        super().__init__(octets)
+        self.status = status
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return False
+
+
+def _fausse_erreur(code: int, octets: bytes, retry_after: str | None = None):
+    """urllib.error.HTTPError prêt à l'emploi, en-têtes inclus."""
+    import email.message
+    entetes = email.message.Message()
+    if retry_after:
+        entetes["Retry-After"] = retry_after
+    return urllib.error.HTTPError("https://exemple.test/x", code, "erreur", entetes,
+                                  io.BytesIO(octets))
+
+
+class TestClassementReponsesHttp(unittest.TestCase):
+    """Chaque code HTTP doit produire SA cause, jamais un défaut de routage par défaut.
+
+    Régression couverte : `_request` calculait un message pour toute réponse
+    d'erreur et les appelants faisaient `if err: return False, err` AVANT leurs
+    propres branches. Les cas 404 « ressource absente », 409 « déjà enregistrée »
+    et 400 « motif du serveur » étaient donc inatteignables, et une activation
+    sur licence non enregistrée affichait « Route absente sur ce serveur ».
+    """
+
+    URL = "https://instance.test"
+    CLE = "k" * 32
+    LID = "11111111-2222-3333-4444-555555555555"
+
+    def _avec_reponse(self, reponse):
+        """Remplace urlopen par une réponse fixe (aucun accès réseau)."""
+        appels = []
+
+        def _faux_urlopen(req, timeout=None):
+            appels.append({"url": req.full_url, "methode": req.get_method()})
+            if isinstance(reponse, Exception):
+                raise reponse
+            return reponse
+
+        return unittest.mock.patch.object(server.urllib.request, "urlopen",
+                                          side_effect=_faux_urlopen), appels
+
+    # ── 404 : la distinction qui manquait ─────────────────────────────────────
+    def test_404_avec_corps_json_designe_la_licence_pas_la_route(self):
+        corps = json.dumps({"error": "Licence introuvable sur le serveur.",
+                            "code": "NOT_FOUND"}).encode()
+        patch, appels = self._avec_reponse(_fausse_erreur(404, corps))
+        with patch:
+            ok, message = server.set_status(self.URL, self.CLE, self.LID, "active")
+        self.assertFalse(ok)
+        self.assertIn("enregistrez-la d'abord", message)
+        self.assertNotIn("Route absente", message)
+        self.assertEqual(appels[0]["methode"], "POST")
+        self.assertTrue(appels[0]["url"].endswith(f"/api/keygen/licenses/{self.LID}/status"))
+
+    def test_404_sans_corps_json_designe_bien_la_route(self):
+        """Page d'erreur HTML : là, l'instance ne connaît vraiment pas la route."""
+        patch, _ = self._avec_reponse(_fausse_erreur(404, b"<!DOCTYPE html><h1>404</h1>"))
+        with patch:
+            ok, message = server.set_status(self.URL, self.CLE, self.LID, "active")
+        self.assertFalse(ok)
+        self.assertIn("Route absente", message)
+
+    def test_404_sur_reinitialisation_materielle_reste_explicite(self):
+        corps = json.dumps({"error": "Appareil inconnu."}).encode()
+        patch, _ = self._avec_reponse(_fausse_erreur(404, corps))
+        with patch:
+            ok, message = server.reset_hwid(self.URL, self.CLE, self.LID)
+        self.assertFalse(ok)
+        self.assertEqual(message, "Appareil inconnu.")
+
+    # ── Enregistrement : 409 et 400 étaient morts ────────────────────────────
+    def test_409_est_un_succes_idempotent(self):
+        corps = json.dumps({"ok": True, "alreadyRegistered": True}).encode()
+        patch, _ = self._avec_reponse(_fausse_erreur(409, corps))
+        with patch:
+            ok, message = server.register_license(self.URL, self.CLE, "GF2.a.b.c")
+        self.assertTrue(ok)
+        self.assertIn("déjà enregistrée", message)
+
+    def test_400_remonte_le_motif_du_serveur(self):
+        """Le motif est la seule information utile : clé non déployée, jeton altéré…"""
+        corps = json.dumps({"error": "Licence invalide ou modifiée"}).encode()
+        patch, _ = self._avec_reponse(_fausse_erreur(400, corps))
+        with patch:
+            ok, message = server.register_license(self.URL, self.CLE, "GF2.a.b.c")
+        self.assertFalse(ok)
+        self.assertIn("Licence invalide ou modifiée", message)
+
+    def test_201_enregistre(self):
+        patch, _ = self._avec_reponse(_FausseReponse(201, json.dumps({"ok": True}).encode()))
+        with patch:
+            ok, message = server.register_license(self.URL, self.CLE, "GF2.a.b.c")
+        self.assertTrue(ok)
+
+    # ── Autres codes exigés par le contrat d'erreurs ─────────────────────────
+    def test_403_designe_la_cle_api(self):
+        patch, _ = self._avec_reponse(_fausse_erreur(403, json.dumps({"error": "refusé"}).encode()))
+        with patch:
+            ok, message = server.set_status(self.URL, self.CLE, self.LID, "revoked")
+        self.assertFalse(ok)
+        self.assertIn("Clé API invalide", message)
+
+    def test_405_designe_un_ecart_de_version(self):
+        patch, _ = self._avec_reponse(_fausse_erreur(405, b""))
+        with patch:
+            ok, message = server.set_status(self.URL, self.CLE, self.LID, "active")
+        self.assertFalse(ok)
+        self.assertIn("405", message)
+        self.assertIn("version", message)
+
+    def test_409_sur_transition_refusee_remonte_la_machine_a_etats(self):
+        corps = json.dumps({"error": "Réactivation d'une licence révoquée : motif requis.",
+                            "code": "REACTIVATION_REQUIRES_REASON"}).encode()
+        patch, _ = self._avec_reponse(_fausse_erreur(409, corps))
+        with patch:
+            ok, message = server.set_status(self.URL, self.CLE, self.LID, "active")
+        self.assertFalse(ok)
+        self.assertIn("motif requis", message)
+
+    def test_422_est_distingue(self):
+        patch, _ = self._avec_reponse(_fausse_erreur(422, b""))
+        with patch:
+            ok, message = server.set_status(self.URL, self.CLE, self.LID, "active")
+        self.assertFalse(ok)
+        self.assertIn("422", message)
+
+    def test_429_indique_le_delai_annonce(self):
+        patch, _ = self._avec_reponse(_fausse_erreur(429, b"", retry_after="42"))
+        with patch:
+            ok, message = server.set_status(self.URL, self.CLE, self.LID, "active")
+        self.assertFalse(ok)
+        self.assertIn("42", message)
+        self.assertIn("rate limit", message)
+
+    def test_503_est_une_indisponibilite(self):
+        patch, _ = self._avec_reponse(_fausse_erreur(503, b""))
+        with patch:
+            ok, _licences, message = server.fetch_licenses(self.URL, self.CLE)
+        self.assertFalse(ok)
+        self.assertIn("503", message)
+
+    def test_500_remonte_le_motif_quand_il_existe(self):
+        corps = json.dumps({"error": "Une erreur interne est survenue."}).encode()
+        patch, _ = self._avec_reponse(_fausse_erreur(500, corps))
+        with patch:
+            ok, message = server.set_status(self.URL, self.CLE, self.LID, "active")
+        self.assertFalse(ok)
+        self.assertIn("erreur interne", message.lower())
+
+    # ── Réponses structurellement inattendues ───────────────────────────────
+    def test_200_non_json_est_signale_comme_illisible(self):
+        """Une page d'accueil HTML en 200 n'est pas une liste de licences."""
+        patch, _ = self._avec_reponse(_FausseReponse(200, b"<html>bonjour</html>"))
+        with patch:
+            ok, _licences, message = server.fetch_licenses(self.URL, self.CLE)
+        self.assertFalse(ok)
+        self.assertIn("illisible", message)
+
+    def test_connexion_impossible_reste_une_erreur_de_transport(self):
+        patch, _ = self._avec_reponse(urllib.error.URLError("injoignable"))
+        with patch:
+            ok, message = server.set_status(self.URL, self.CLE, self.LID, "active")
+        self.assertFalse(ok)
+        self.assertIn("Connexion impossible", message)
+
+    def test_delai_depasse_est_nomme(self):
+        patch, _ = self._avec_reponse(socket.timeout())
+        with patch:
+            ok, message = server.set_status(self.URL, self.CLE, self.LID, "active")
+        self.assertFalse(ok)
+        self.assertIn("Délai dépassé", message)
+
+    # ── Aucun secret dans les messages ──────────────────────────────────────
+    def test_aucun_message_ne_contient_la_cle_api_ni_le_jeton(self):
+        jeton = "GF2.entete.charge-utile-secrete.signature"
+        cas = [_fausse_erreur(c, b"") for c in (400, 403, 404, 405, 409, 422, 429, 500, 503)]
+        for erreur in cas:
+            patch, _ = self._avec_reponse(erreur)
+            with patch:
+                _ok, message = server.register_license(self.URL, self.CLE, jeton)
+            self.assertNotIn(self.CLE, message)
+            self.assertNotIn("charge-utile-secrete", message)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

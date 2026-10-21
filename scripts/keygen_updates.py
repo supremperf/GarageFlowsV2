@@ -40,6 +40,33 @@ def node_executable() -> str | None:
     return shutil.which("node") or shutil.which("node.exe")
 
 
+# Variables que le système d'exploitation doit conserver quoi qu'il arrive.
+# Sous Windows, Node initialise son générateur aléatoire via RtlGenRandom : sans
+# SystemRoot, il s'interrompt sur « Assertion failed: ncrypto::CSPRNG » AVANT
+# d'exécuter la moindre instruction. Un appelant qui restreint l'environnement
+# pour maîtriser les variables GF_* ne doit pas, pour autant, empêcher Node de
+# démarrer : ces variables ne portent aucun secret.
+_ENV_SYSTEME = ("SystemRoot", "windir", "SystemDrive", "COMSPEC", "PATHEXT",
+                "NUMBER_OF_PROCESSORS", "PROCESSOR_ARCHITECTURE", "OS",
+                "TEMP", "TMP", "LOCALAPPDATA", "APPDATA", "USERPROFILE",
+                "HOME", "LANG", "LC_ALL")
+
+
+def _env_complet(env: dict | None) -> dict | None:
+    """Complète un environnement fourni par les variables système manquantes.
+
+    `None` (héritage complet) est laissé tel quel. Aucune variable applicative
+    n'est ajoutée : seules celles dont dépend le démarrage de l'interpréteur.
+    """
+    if env is None:
+        return None
+    complet = dict(env)
+    for nom in _ENV_SYSTEME:
+        if nom not in complet and os.environ.get(nom):
+            complet[nom] = os.environ[nom]
+    return complet
+
+
 def _run_node(args: list, timeout: int = NODE_TIMEOUT, stdin_data: str | None = None,
               env: dict | None = None) -> tuple[int, str]:
     """Lance Node dans la racine du projet. Retourne (code, sortie)."""
@@ -54,7 +81,7 @@ def _run_node(args: list, timeout: int = NODE_TIMEOUT, stdin_data: str | None = 
         proc = subprocess.run(
             [node, *args], cwd=str(ROOT_DIR), input=stdin_data,
             capture_output=True, text=True, encoding="utf-8", errors="replace",
-            timeout=timeout, env=(env or None), **kwargs,
+            timeout=timeout, env=_env_complet(env or None), **kwargs,
         )
     except subprocess.TimeoutExpired:
         return 124, "Opération interrompue : durée maximale dépassée."

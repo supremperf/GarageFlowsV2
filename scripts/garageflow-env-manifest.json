@@ -2233,6 +2233,66 @@
       ],
       "notes": "Base des URLs de téléchargement utilisée par scripts/gf_sign_update.js quand --download-url est omis. Le domaine reste contrôlé par la liste blanche du client. Outillage de release uniquement.",
       "autoManage": false
+    },
+    {
+      "name": "GF_E2E_URL",
+      "classification": "test-external",
+      "scope": "test-only",
+      "requiredProduction": false,
+      "format": "url",
+      "minLength": 8,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/test_keygen_e2e.py"
+      ],
+      "notes": "URL de l'instance de recette visee par le parcours de bout en bout du Keygen (generation, enregistrement, activation, revocation). Absente, le parcours ne teste rien et le dit. Jamais une URL de production : le script ecrit des licences."
+    },
+    {
+      "name": "GF_E2E_KEY",
+      "classification": "test-external",
+      "scope": "test-only",
+      "requiredProduction": false,
+      "format": "opaque",
+      "minLength": 16,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/test_keygen_e2e.py"
+      ],
+      "notes": "Cle API (x-gf-key) de l'instance de recette. Distincte de la cle de production ; ne sort jamais du poste d'execution et n'est jamais journalisee."
+    },
+    {
+      "name": "GF_E2E_ALLOW_REMOTE",
+      "classification": "test-external",
+      "scope": "test-only",
+      "requiredProduction": false,
+      "format": "enum:0,1",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/test_keygen_e2e.py"
+      ],
+      "notes": "Leve le garde-fou qui limite le parcours a une boucle locale. A poser UNIQUEMENT sur une instance de recette dediee : le parcours ecrit des licences de test, active des postes et revoque."
+    },
+    {
+      "name": "GF_E2E_ACTIVATE_MAX",
+      "classification": "test-external",
+      "scope": "test-only",
+      "requiredProduction": false,
+      "format": "integer",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/test_keygen_e2e.py"
+      ],
+      "notes": "Quota d'activations configure sur l'instance de recette (RATE_LIMIT_LICENSE_ACTIVATE_MAX), pour que le parcours puisse verifier que le limiteur de debit refuse bien au-dela. N'a aucun effet sur la production."
     }
   ],
   "auditCleanup": {

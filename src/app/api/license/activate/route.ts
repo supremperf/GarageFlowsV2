@@ -411,10 +411,25 @@ async function handlePOST(req: NextRequest) {
         )
       }
 
-      // Update last-seen timestamp
+      // Horodatage du dernier contact, et PREMIÈRE activation si elle manque.
+      //
+      // `activatedAt` n'était posé que dans la branche `create` ci-dessous, donc
+      // seulement pour une licence inconnue de la base. Dans le parcours normal
+      // le Keygen enregistre la licence AVANT son activation : cette branche-ci
+      // est prise, et la date de première mise en service restait nulle à vie —
+      // « Première activation » restait vide dans le Keygen, et le serveur ne
+      // distinguait pas une licence livrée d'une licence réellement activée.
+      //
+      // La date n'est écrite QUE si elle est absente : une première activation
+      // déjà historisée n'est jamais réécrite. `activatedAt` n'entre pas dans le
+      // MAC d'intégrité (voir record-mac.ts), l'écriture ne rompt donc aucune
+      // vérification.
       await prisma.licenseKey.update({
         where: { id: record.id },
-        data:  { lastSeenAt: new Date() },
+        data:  {
+          lastSeenAt: new Date(),
+          ...(record.activatedAt ? {} : { activatedAt: new Date() }),
+        },
       })
     } else {
       // First use — auto-register in DB with integrity MAC.

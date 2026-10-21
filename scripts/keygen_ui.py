@@ -878,17 +878,48 @@ class PageGenerate(tk.Frame):
                 db.add_license(minfo, {})
                 db.audit_log("gen_mechanic", minfo["lid"], f"parent={parent_lid[:8]}…")
                 children.append(minfo)
-            return generated, children
+
+            # ── Enregistrement serveur, dans la MÊME tâche de fond ────────────
+            # Une licence que le serveur ne connaît pas ne peut pas être activée :
+            # /api/keygen/licenses/[lid]/status répond 404 et le Keygen affichait
+            # un défaut de routage imaginaire. Le garage est enregistré AVANT ses
+            # clés mécanicien pour que le serveur puisse poser le lien parent.
+            srv_url, srv_key = self.app.server_config()
+            srv = {"configure": bool(srv_url and srv_key), "ok": 0, "echecs": 0, "motifs": []}
+            if srv["configure"]:
+                for info in generated + children:
+                    ok, message = server.register_license(srv_url, srv_key, info["token"])
+                    if ok:
+                        srv["ok"] += 1
+                        db.mark_server_synced(info["lid"])
+                        db.audit_log("register_server", info["lid"], "")
+                    else:
+                        srv["echecs"] += 1
+                        if message not in srv["motifs"]:
+                            srv["motifs"].append(message)
+            return generated, children, srv
 
         def _done(result):
             self._set_busy(False)
-            generated, children = result
+            generated, children, srv = result
             if generated:
                 self.result.set(generated[0]["token"])
             elif children:
                 self.result.set(children[0]["token"])
-            self.app.toast.show(
-                f"{len(generated) + len(children)} licence(s) signée(s) et enregistrée(s) localement.", "ok")
+            total = len(generated) + len(children)
+            if not srv["configure"]:
+                self.app.toast.show(
+                    f"{total} licence(s) signée(s) localement. Serveur non configuré : "
+                    "elles ne seront pas activables tant qu'elles n'y sont pas enregistrées.",
+                    "warn", 9000)
+            elif srv["echecs"] == 0:
+                self.app.toast.show(
+                    f"{total} licence(s) signée(s) et enregistrée(s) sur le serveur.", "ok")
+            else:
+                detail = (" — " + " · ".join(srv["motifs"][:2])) if srv["motifs"] else ""
+                self.app.toast.show(
+                    f"{total} licence(s) signée(s) localement ; {srv['echecs']} non "
+                    f"enregistrée(s) sur le serveur{detail}", "error", 12000)
             self.app.page_manage.refresh()
             if children:
                 self.app.show_recap(children, generated[0] if generated else None)
@@ -999,6 +1030,8 @@ class PageManage(tk.Frame):
         actions = _frame(toolbar, bg=SURFACE)
         actions.pack(fill="x", pady=(12, 0))
         Button(actions, "↻ Actualiser", self.refresh, style="ghost").pack(side="left")
+        Button(actions, "⇡ Enregistrer sur le serveur", self._register_on_server,
+               style="ghost").pack(side="left", padx=(8, 0))
         Button(actions, "⇄ Synchroniser le serveur", self._sync_server, style="ghost").pack(side="left", padx=(8, 0))
         Button(actions, "⤓ Exporter la sélection", self._export, style="ghost").pack(side="left", padx=(8, 0))
         self.lbl_count = _lbl(actions, "", fg=MUTED, font=FONT_SM, bg=SURFACE)
@@ -1248,6 +1281,47 @@ class PageManage(tk.Frame):
             return
         db.audit_log("export", "", f"n={len(rows)}")
         self.app.toast.show(f"{len(rows)} fiche(s) exportée(s).", "ok")
+
+    def _register_on_server(self):
+        """Enregistre le jeton SIGNÉ de la licence sélectionnée sur le serveur.
+
+        Sans cette étape, le serveur ignore la licence : l'activation et le
+        changement de statut répondent 404, et le poste client refuse une
+        licence que le keygen croit pourtant émise. L'opération est idempotente
+        (le serveur renvoie 409 « déjà enregistrée », traité comme un succès) :
+        la relancer ne crée jamais de doublon.
+        """
+        row = self._selected_row()
+        if not row:
+            _info("Enregistrer sur le serveur",
+                  "Sélectionnez d'abord une licence dans le tableau.", self)
+            return
+        url, key = self.app.server_config()
+        if not (url and key):
+            _warn("Serveur requis",
+                  "Renseignez l'URL et la clé API dans « Serveur GarageFlows » : "
+                  "l'enregistrement se fait côté serveur.", self)
+            return
+        if not (row.get("token") or "").strip():
+            _error("Jeton absent",
+                   "Cette fiche ne porte pas de jeton signé : rien à enregistrer.", self)
+            return
+
+        def _work():
+            return server.register_license(url, key, row["token"])
+
+        def _done(result):
+            ok, message = result
+            if ok:
+                db.mark_server_synced(row["lid"])
+                db.audit_log("register_server", row["lid"], "")
+                self.app.toast.show(message, "ok")
+                self._sync_server()
+            else:
+                self.app.toast.show(message, "error", 10000)
+
+        _background(self, _work, on_done=_done,
+                    on_error=lambda m: self.app.toast.show(m, "error", 9000))
 
     def _sync_server(self):
         url, key = self.app.server_config()

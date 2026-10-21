@@ -17,7 +17,10 @@
  * produire l'artefact de preuve.
  *
  * Codes de sortie :
- *   0 — aucun secret compromis détecté (rotation prouvée pour les secrets présents) ;
+ *   0 — aucun secret compromis détecté. ATTENTION : si AUCUN secret listé n'est
+ *       présent dans l'environnement, l'outil le DIT (« NON VÉRIFIÉ ») et sort
+ *       quand même en 0 — c'est une absence de preuve, pas une preuve. Utilisez
+ *       --require-all pour transformer cette absence en échec (code 2) ;
  *   1 — au moins un secret ACTUEL correspond à une valeur compromise (ROTATION MANQUANTE) ;
  *   2 — avec --require-all : un secret listé est absent de l'environnement (preuve incomplète).
  *
@@ -91,6 +94,18 @@ function main() {
   if (requireAll && unverified.length > 0) {
     console.error(`\n[verify-rotation] INCOMPLET : ${unverified.length} secret(s) absent(s) (--require-all). Exécuter dans l'environnement de production.`)
     process.exit(2)
+  }
+  // Zéro rotation prouvée n'est PAS un succès : c'est une absence de preuve.
+  // « OK » sur 0 vérifié se lit comme « rotation faite », alors que l'outil n'a
+  // simplement trouvé aucun secret à comparer dans cet environnement.
+  if (rotated.length === 0) {
+    console.log(
+      `\n[verify-rotation] NON VÉRIFIÉ : aucune rotation n'a pu être contrôlée ici — ` +
+      `0 prouvé(s) roté(s), ${unverified.length} non vérifiable(s) faute de secret présent. ` +
+      `Ce résultat ne prouve RIEN : relancez l'outil DANS l'environnement cible, ` +
+      `avec --require-all pour exiger la preuve complète.`,
+    )
+    process.exit(0)
   }
   console.log(`\n[verify-rotation] OK : aucun secret actuel ne correspond à une valeur compromise (${rotated.length} prouvé(s) roté(s), ${unverified.length} non vérifiable(s)).`)
   process.exit(0)

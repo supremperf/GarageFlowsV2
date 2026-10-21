@@ -15,13 +15,28 @@ Aucune route n'est inventée : toute route utilisée ici est déclarée dans
 
 Les messages d'erreur sont traduits en français et n'exposent JAMAIS le jeton de
 licence ni la clé API.
+
+PRÉCÉDENCE DES ERREURS (corrigé le 2026-10-21). `_request` calculait un message
+générique pour TOUTE réponse HTTP d'erreur, et chaque appelant commençait par
+`if err: return False, err` : les branches par code de chaque fonction
+(404 « licence introuvable », 409 « déjà enregistrée », 400 « jeton refusé »)
+étaient donc INATTEIGNABLES. Conséquence observée : une activation sur une
+licence non encore enregistrée répondait `404 {"code":"NOT_FOUND"}`, et le
+Keygen affichait « Route absente sur ce serveur » — un défaut de routage
+imaginaire, alors que la route existe et avait correctement répondu.
+
+`_request` ne renvoie plus désormais qu'une erreur de TRANSPORT (connexion,
+délai, réponse illisible). Le classement par code HTTP appartient à l'appelant,
+et un 404 est distingué selon qu'il porte ou non un corps JSON applicatif :
+  · corps JSON avec `error`/`code` → la route a répondu : RESSOURCE absente ;
+  · aucun corps JSON              → la ROUTE elle-même est absente.
 """
 
 import json
 import socket
 import urllib.error
 import urllib.request
-from typing import Optional
+from typing import NamedTuple, Optional
 
 USER_AGENT = "GarageFlow-KeygenGUI/3"
 DEFAULT_TIMEOUT = 10
@@ -51,9 +66,24 @@ def validate_server_url(url: str) -> tuple[bool, str]:
     return True, ""
 
 
+class Reponse(NamedTuple):
+    """Résultat d'un appel HTTP.
+
+    `erreur_transport` n'est renseignée QUE si la requête n'a pas abouti
+    (connexion, délai) : une réponse HTTP d'erreur est un succès de transport,
+    classée par l'appelant selon son code. Cette séparation est ce qui empêche
+    un message générique de masquer un refus métier.
+    """
+    code: int
+    body: dict | None
+    erreur_transport: str
+    retry_after: str = ""
+    corps_illisible: bool = False
+
+
 def _request(url: str, api_key: str, method: str = "GET", payload: dict | None = None,
-             timeout: int = DEFAULT_TIMEOUT) -> tuple[int, dict | None, str]:
-    """Requête JSON. Retourne (code_http, corps_ou_None, message_erreur)."""
+             timeout: int = DEFAULT_TIMEOUT) -> Reponse:
+    """Requête JSON. Voir `Reponse` : le code HTTP n'est JAMAIS traduit ici."""
     data = json.dumps(payload or {}).encode("utf-8") if payload is not None else None
     req = urllib.request.Request(
         url, data=data,
@@ -67,47 +97,97 @@ def _request(url: str, api_key: str, method: str = "GET", payload: dict | None =
     )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return resp.status, _json(resp), ""
+            body, illisible = _json(resp)
+            return Reponse(resp.status, body, "", "", illisible)
     except urllib.error.HTTPError as e:
-        body = _json(e)
-        return e.code, body, _http_message(e.code, body, e)
+        body, illisible = _json(e)
+        retry = ""
+        try:
+            retry = e.headers.get("Retry-After") or ""
+        except Exception:
+            retry = ""
+        return Reponse(e.code, body, "", retry, illisible)
     except socket.timeout:
-        return 0, None, "Délai dépassé — le serveur ne répond pas."
+        return Reponse(0, None, "Délai dépassé — le serveur ne répond pas.")
     except urllib.error.URLError as exc:
         if isinstance(exc.reason, socket.timeout):
-            return 0, None, "Délai dépassé — le serveur ne répond pas."
-        return 0, None, "Connexion impossible — vérifiez l'URL du serveur et le réseau."
+            return Reponse(0, None, "Délai dépassé — le serveur ne répond pas.")
+        return Reponse(0, None, "Connexion impossible — vérifiez l'URL du serveur et le réseau.")
     except Exception:
-        return 0, None, "Connexion impossible — vérifiez l'URL du serveur et le réseau."
+        return Reponse(0, None, "Connexion impossible — vérifiez l'URL du serveur et le réseau.")
 
 
-def _json(resp) -> Optional[dict]:
+def _json(resp) -> tuple[Optional[dict], bool]:
+    """(corps_json_ou_None, corps_illisible).
+
+    `corps_illisible` vaut True quand la réponse porte des octets qui ne sont
+    pas du JSON d'objet : c'est le cas d'une page d'erreur HTML, donc le signe
+    qu'on n'a pas parlé à la route attendue. Sans cette distinction, « aucun
+    corps » et « corps invalide » étaient confondus.
+    """
     try:
         raw = resp.read()
-        return json.loads(raw.decode("utf-8"))
     except Exception:
-        return None
+        return None, False
+    if not raw:
+        return None, False
+    try:
+        parsed = json.loads(raw.decode("utf-8"))
+    except Exception:
+        return None, True
+    return (parsed, False) if isinstance(parsed, dict) else (None, True)
 
 
-def _http_message(code: int, body: Optional[dict], error) -> str:
+def _message_serveur(body):
+    """Message applicatif porté par la réponse, s'il y en a un."""
+    if isinstance(body, dict):
+        for champ in ("error", "message"):
+            if body.get(champ):
+                return str(body[champ])
+    return ""
+
+
+def _http_message(resp: "Reponse", *, ressource: str = "La ressource demandée") -> str:
+    """Traduit un code HTTP en message précis, SANS jamais tout ramener à un 404.
+
+    Chaque code a sa cause et son geste correctif. Le message applicatif du
+    serveur est préféré quand il existe : c'est lui qui sait pourquoi il refuse.
+    """
+    code, body = resp.code, resp.body
+    serveur = _message_serveur(body)
+
+    if code == 400:
+        return serveur or "Requête invalide (400) — données refusées par le serveur."
     if code in (401, 403):
         return "Clé API invalide (GARAGEFLOW_API_KEY) — vérifiez la clé configurée sur le serveur."
     if code == 404:
-        return "Route absente sur ce serveur (404) — l'instance ne semble pas à jour."
+        # DISCRIMINATION ESSENTIELLE. Un corps JSON applicatif prouve que la
+        # route a été atteinte et a répondu : c'est la RESSOURCE qui manque.
+        # Sans corps JSON (page d'erreur HTML de Next.js), c'est la ROUTE.
+        if serveur:
+            return serveur
+        if isinstance(body, dict):
+            return ressource + " est introuvable sur le serveur (404)."
+        return ("Route absente sur ce serveur (404) — l'instance déployée ne connaît pas "
+                "cette route ; elle n'est probablement pas à jour.")
+    if code == 405:
+        return ("Méthode HTTP refusée par la route (405) — le Keygen et l'instance ne sont "
+                "pas de la même version.")
+    if code == 409:
+        return serveur or "Conflit (409) — l'état du serveur ne permet pas cette opération."
+    if code == 422:
+        return serveur or "Données non valides (422) — le serveur a refusé le contenu."
     if code == 429:
-        retry = ""
-        try:
-            retry = error.headers.get("Retry-After") or ""
-        except Exception:
-            retry = ""
-        return f"Trop de requêtes (rate limit) — réessayez{' dans ' + retry + ' s' if retry else ' dans quelques instants'}."
-    if code in (500, 502, 503, 504):
-        return f"Serveur indisponible (HTTP {code}) — réessayez plus tard."
-    if isinstance(body, dict) and body.get("error"):
-        return str(body["error"])
-    if isinstance(body, dict) and body.get("message"):
-        return str(body["message"])
-    return f"Erreur HTTP {code}"
+        suite = (" dans " + resp.retry_after + " s") if resp.retry_after else " dans quelques instants"
+        return "Trop de requêtes (rate limit) — réessayez" + suite + "."
+    if code == 500:
+        return serveur or "Erreur interne du serveur (500) — consultez les journaux de l'instance."
+    if code in (502, 503, 504):
+        return "Serveur indisponible (HTTP " + str(code) + ") — réessayez plus tard."
+    if resp.corps_illisible:
+        return ("Réponse inattendue du serveur (HTTP " + str(code) + ") : le contenu n'est "
+                "pas du JSON. L'URL ne pointe peut-être pas sur une instance GarageFlows.")
+    return serveur or ("Erreur HTTP " + str(code))
 
 
 def test_connection(server_url: str, api_key: str, timeout: int = 8) -> tuple[bool, str]:
@@ -123,17 +203,18 @@ def test_connection(server_url: str, api_key: str, timeout: int = 8) -> tuple[bo
     if not (api_key or "").strip():
         return False, "Clé API requise pour interroger le serveur."
     url = server_url.rstrip("/") + ROUTE_LICENSES
-    code, body, err = _request(url, api_key, "GET", timeout=timeout)
-    if err:
-        return False, err
-    if code == 200:
+    resp = _request(url, api_key, "GET", timeout=timeout)
+    if resp.erreur_transport:
+        return False, resp.erreur_transport
+    if resp.code == 200:
+        if not isinstance(resp.body, dict):
+            return False, ("Réponse du serveur illisible (JSON attendu) — l'URL ne pointe "
+                           "peut-être pas sur une instance GarageFlows.")
         count = ""
-        if isinstance(body, dict) and isinstance(body.get("licenses"), list):
-            count = f" — {len(body['licenses'])} licence(s) connue(s) du serveur."
-        return True, f"Connexion réussie (HTTP 200){count}"
-    if code == 403 or code == 401:
-        return False, "Clé API invalide (GARAGEFLOW_API_KEY) — vérifiez la clé du serveur."
-    return False, _http_message(code, body, None) or f"Réponse inattendue (HTTP {code})"
+        if isinstance(resp.body.get("licenses"), list):
+            count = " — %d licence(s) connue(s) du serveur." % len(resp.body["licenses"])
+        return True, "Connexion réussie (HTTP 200)" + count
+    return False, _http_message(resp, ressource="La route d'état des licences")
 
 
 def register_license(server_url: str, api_key: str, token: str) -> tuple[bool, str]:
@@ -146,16 +227,22 @@ def register_license(server_url: str, api_key: str, token: str) -> tuple[bool, s
     if not (token or "").strip():
         return False, "Jeton vide — rien à enregistrer."
     url = server_url.rstrip("/") + ROUTE_CREATE
-    code, body, err = _request(url, api_key, "POST", {"token": token.strip()})
-    if err:
-        return False, err
-    if code in (200, 201):
+    resp = _request(url, api_key, "POST", {"token": token.strip()})
+    if resp.erreur_transport:
+        return False, resp.erreur_transport
+    if resp.code in (200, 201):
         return True, "Licence enregistrée sur le serveur."
-    if code == 409:
+    if resp.code == 409:
+        # Idempotent côté serveur : la licence est déjà connue, l'objectif est atteint.
         return True, "Licence déjà enregistrée sur le serveur."
-    if code == 400:
-        return False, "Jeton refusé par le serveur (signature ou contenu invalide)."
-    return False, _http_message(code, body, None)
+    if resp.code == 400:
+        # Le serveur vérifie la SIGNATURE avant d'enregistrer : son motif est la
+        # seule information utile ici (clé de signature non déployée, jeton altéré,
+        # licence expirée…). Le masquer rendait le diagnostic impossible.
+        motif = _message_serveur(resp.body)
+        return False, ("Jeton refusé par le serveur : " + motif if motif
+                       else "Jeton refusé par le serveur (signature ou contenu invalide).")
+    return False, _http_message(resp, ressource="La route d'enregistrement")
 
 
 def fetch_licenses(server_url: str, api_key: str, timeout: int = DEFAULT_TIMEOUT) -> tuple[bool, list, str]:
@@ -166,16 +253,14 @@ def fetch_licenses(server_url: str, api_key: str, timeout: int = DEFAULT_TIMEOUT
     if not (api_key or "").strip():
         return False, [], "Clé API non configurée."
     url = server_url.rstrip("/") + ROUTE_LICENSES
-    code, body, err = _request(url, api_key, "GET", timeout=timeout)
-    if err:
-        return False, [], err
-    if code == 200 and isinstance(body, dict) and isinstance(body.get("licenses"), list):
-        return True, body["licenses"], ""
-    if code in (401, 403):
-        return False, [], "Clé API invalide (GARAGEFLOW_API_KEY) — vérifiez la clé du serveur."
-    if code == 404:
-        return False, [], "Route /api/keygen/licenses absente : instance GarageFlows trop ancienne."
-    return False, [], _http_message(code, body, None)
+    resp = _request(url, api_key, "GET", timeout=timeout)
+    if resp.erreur_transport:
+        return False, [], resp.erreur_transport
+    if resp.code == 200:
+        if isinstance(resp.body, dict) and isinstance(resp.body.get("licenses"), list):
+            return True, resp.body["licenses"], ""
+        return False, [], "Réponse du serveur illisible (liste de licences attendue)."
+    return False, [], _http_message(resp, ressource="La route d'état des licences")
 
 
 def reset_hwid(server_url: str, api_key: str, lid: str, *,
@@ -191,18 +276,16 @@ def reset_hwid(server_url: str, api_key: str, lid: str, *,
     if action not in ("reset", "revoke"):
         return False, "Action invalide (reset | revoke)."
     url = server_url.rstrip("/") + ROUTE_HWID.format(lid=lid.strip())
-    code, body, err = _request(url, api_key, "POST", {"action": action, "reason": reason or ""})
-    if err:
-        return False, err
-    if code == 200:
+    resp = _request(url, api_key, "POST", {"action": action, "reason": reason or ""})
+    if resp.erreur_transport:
+        return False, resp.erreur_transport
+    if resp.code == 200:
         note = ""
-        if isinstance(body, dict) and body.get("note"):
-            note = " " + str(body["note"])
+        if isinstance(resp.body, dict) and resp.body.get("note"):
+            note = " " + str(resp.body["note"])
         return True, ("Appareils réinitialisés : sièges libérés." if action == "reset"
                       else "Appareil révoqué.") + note
-    if code == 404:
-        return False, "Licence ou appareil introuvable sur le serveur."
-    return False, _http_message(code, body, None)
+    return False, _http_message(resp, ressource="Cette licence ou cet appareil")
 
 
 def set_status(server_url: str, api_key: str, lid: str, status: str, *,
@@ -228,26 +311,23 @@ def set_status(server_url: str, api_key: str, lid: str, status: str, *,
         payload["confirmReactivation"] = bool(confirm_reactivation)
     if reason:
         payload["reason"] = reason
-    code, body, err = _request(url, api_key, "POST", payload)
-    if err:
-        return False, err
-    if code == 200:
+    resp = _request(url, api_key, "POST", payload)
+    if resp.erreur_transport:
+        return False, resp.erreur_transport
+    if resp.code == 200:
         note = ""
-        if isinstance(body, dict):
-            if body.get("unchanged"):
+        if isinstance(resp.body, dict):
+            if resp.body.get("unchanged"):
                 return True, "Statut déjà à jour sur le serveur."
-            if body.get("note"):
-                note = " " + str(body["note"])
-        return True, f"Statut « {status} » appliqué sur le serveur.{note}"
-    if code == 404:
-        detail = ""
-        if isinstance(body, dict) and body.get("error"):
-            detail = " " + str(body["error"])
-        return False, "Licence introuvable sur le serveur (enregistrez-la d'abord)." + detail
-    if code == 409:
-        return False, (str(body.get("error")) if isinstance(body, dict) and body.get("error")
-                       else "Transition refusée par le serveur (machine à états).")
-    return False, _http_message(code, body, None)
+            if resp.body.get("note"):
+                note = " " + str(resp.body["note"])
+        return True, "Statut « " + status + " » appliqué sur le serveur." + note
+    if resp.code == 404 and isinstance(resp.body, dict):
+        # La route a répondu : c'est la LICENCE qui n'est pas enregistrée.
+        # Le geste correctif est explicite, et distinct d'un défaut de routage.
+        return False, ("Licence introuvable sur le serveur : enregistrez-la d'abord "
+                       "(bouton « Enregistrer sur le serveur »).")
+    return False, _http_message(resp, ressource="Cette licence")
 
 
 def merge_server_state(local_record: dict, server_row) -> dict:

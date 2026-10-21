@@ -139,6 +139,16 @@ def update_license(lid: str, patch: dict) -> bool:
     return False
 
 
+def mark_server_synced(lid: str) -> bool:
+    """Horodate l'enregistrement de la licence sur le serveur.
+
+    `server_synced_at` vide signifie « le serveur ignore cette licence » : son
+    activation et son changement de statut répondront 404. Ce marqueur est donc
+    l'état à lire avant de proposer une activation.
+    """
+    return update_license(lid, {"server_synced_at": time.strftime("%Y-%m-%dT%H:%M:%S")})
+
+
 def list_licenses() -> list:
     return _load()
 

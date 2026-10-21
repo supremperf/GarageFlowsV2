@@ -227,12 +227,16 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `CRON_SECRET` | SECRET | non | server | Jeton que Vercel envoie en « Authorization: Bearer » lors de l'appel d'un cron declare dans vercel.json. DOIT porter la MEME valeur que EINVOICING_QU… |
 | `EINVOICING_QUEUE_TOKEN` | SECRET | non | server | Jeton Bearer (>=32 caracteres) autorisant la reprise automatique des transmissions e-facturation en echec. Absent = route fermee (503). |
 
-### Harnais de test (4)
+### Harnais de test (8)
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
 | `E2E_NON_PRODUCTION` | CONFIGURATION | non | test-only | Approbation explicite de la cible de recette non productive. Le job authentifié échoue si cette approbation vaut autre chose que true ; ne prouve pas… |
 | `E2E_STAGING_URL` | CONFIGURATION | non | test-only | URL HTTPS de recette isolée pour le job E2E authentifié ; stockée dans l’environnement GitHub e2e-staging autorisé. Jamais la production ; aucune val… |
+| `GF_E2E_ACTIVATE_MAX` | CONFIGURATION | non | test-only | Quota d'activations configure sur l'instance de recette (RATE_LIMIT_LICENSE_ACTIVATE_MAX), pour que le parcours puisse verifier que le limiteur de de… |
+| `GF_E2E_ALLOW_REMOTE` | CONFIGURATION | non | test-only | Leve le garde-fou qui limite le parcours a une boucle locale. A poser UNIQUEMENT sur une instance de recette dediee : le parcours ecrit des licences … |
+| `GF_E2E_KEY` | SECRET | non | test-only | Cle API (x-gf-key) de l'instance de recette. Distincte de la cle de production ; ne sort jamais du poste d'execution et n'est jamais journalisee. |
+| `GF_E2E_URL` | CONFIGURATION | non | test-only | URL de l'instance de recette visee par le parcours de bout en bout du Keygen (generation, enregistrement, activation, revocation). Absente, le parcou… |
 | `TEST_POSTGRES_URL` | CONFIGURATION | non | test-only | Optional integration-test PostgreSQL URL; never copy to production. |
 | `TEST_REDIS_URL` | CONFIGURATION | non | test-only | Optional integration-test Redis URL; never copy to production. |
 

@@ -179,3 +179,12 @@ skills-lock.json
 *.pem
 *.key
 *.sig
+
+.vercel
+.env*
+
+# Rapports d'exécution du configurateur automatique : artefacts datés, propres à
+# un poste et à un instant. Le dossier est conservé (reports/.gitkeep), son
+# contenu non — versionner un rapport par exécution noierait l'historique et
+# publierait l'inventaire d'infrastructure d'une machine donnée.
+configuation automatique/reports/*.json
