@@ -69,6 +69,7 @@ const RETIRED_FINGERPRINTS = [
   { fp: '835c1e907fa5be21d50f0b283959340872bb32465f04ddfcee32ff6f637f775d', retired: '2026-08-14 (rotation 17:23 — valide 0/4 licences réelles)' },
   { fp: 'e6605999e336c28ee37102c721a93eafc08dfd79dee9db9f5e41ba8b76cff5a6', retired: '2026-08-16 (rotation)' },
   { fp: '2f3c1693a70d99ea3280e74a6b4c6d8c510019a984c1d50cd4f6d9966b1217ce', retired: '2026-08-16 (rotation)' },
+  { fp: 'bd8c08451489fb83cef0347b04801018c24cb026f88caffe8995bf9a7a9861e3', retired: '2026-10-20 (rotation)' },
 ]
 
 /** Reconstruit le PEM porté par un littéral `const <varName> = [ '…', … ]`. */

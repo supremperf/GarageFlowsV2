@@ -29,6 +29,57 @@ TYPE_LABELS   = {
     "mechanic":   "Mécanicien",
 }
 
+# ── Offre commerciale du keygen ──────────────────────────────────────────────
+# Seules deux offres sont vendues depuis le keygen : PREMIUM et ADMIN.
+# Les types `trial`, `enterprise` et `mechanic` restent DÉCODABLES dans le format
+# de jeton (compatibilité du parc historique et des outils d'audit) mais ne sont
+# PLUS proposés à la génération : une licence « mécanicien » se crée via le mode
+# dédié, jamais via ce choix, et ENTREPRISE n'est jamais réintroduit comme offre.
+KEYGEN_OFFER_TYPES = ["premium", "admin"]
+KEYGEN_TYPE_LABELS = {
+    "premium": "PREMIUM",
+    "admin":   "ADMIN",
+}
+
+# ── Durées ───────────────────────────────────────────────────────────────────
+# Exigence : une durée se saisit en JOURS (1, 7, 30, 90, 180, 365, 730…), pas
+# seulement en années. Le mois et l'année restent disponibles comme raccourcis
+# de saisie, convertis en jours selon une base EXPLICITE et documentée
+# (1 mois = 30 jours, 1 an = 365 jours) — aucune conversion calendaire implicite
+# qui produirait une expiration différente de celle annoncée au client.
+DURATION_UNITS = ("jours", "mois", "annees")
+DAYS_PER_UNIT  = {"jours": 1, "mois": 30, "annees": 365}
+DURATION_UNIT_LABELS = {"jours": "jour(s)", "mois": "mois", "annees": "an(s)"}
+DAY_SECONDS = 24 * 3600
+
+
+def duration_days(value, unit) -> int:
+    """Convertit (valeur, unité) en nombre ENTIER de jours. Lève si invalide."""
+    try:
+        amount = int(str(value).strip())
+    except (TypeError, ValueError):
+        raise ValueError("Durée invalide : la valeur doit être un nombre entier.") from None
+    unit = (unit or "").strip()
+    if unit not in DAYS_PER_UNIT:
+        raise ValueError(f"Unité de durée inconnue : {unit!r}. Attendu : {', '.join(DURATION_UNITS)}.")
+    if amount < 1:
+        raise ValueError("Durée invalide : la valeur doit être au moins 1.")
+    if amount > 36500:
+        raise ValueError("Durée invalide : 36 500 jours (100 ans) au maximum.")
+    return amount * DAYS_PER_UNIT[unit]
+
+
+def duration_label(days: int) -> str:
+    """Libellé lisible d'une durée exprimée en jours."""
+    days = int(days)
+    if days % 365 == 0 and days >= 365:
+        n = days // 365
+        return f"{n} an(s) ({days} jours)"
+    if days % 30 == 0 and days >= 30:
+        n = days // 30
+        return f"{n} mois ({days} jours)"
+    return f"{days} jour(s)"
+
 def b64u_enc(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
 
@@ -162,21 +213,58 @@ def _sign(priv_key, payload: dict) -> str:
     return f"GF2.{_HEADER_B64}.{payload_b64}.{b64u_enc(sig)}"
 
 
+def _resolve_duration(years, duration) -> int:
+    """Durée totale en jours. `duration` (dict {value, unit}) prime sur `years`.
+
+    `years` reste accepté pour la compatibilité des outils historiques
+    (scripts/keygen.py --years) ; il est converti en jours sur la même base
+    qu'avant (1 an = 365 jours), donc aucune licence existante ne change.
+    """
+    if duration:
+        return duration_days(duration.get("value"), duration.get("unit"))
+    try:
+        years = int(years)
+    except (TypeError, ValueError):
+        raise ValueError("Durée invalide : `years` doit être un nombre entier.") from None
+    # `years` N'EST PAS borné volontairement : les fixtures de test signent des
+    # licences déjà expirées avec `years=-1` (comportement historique conservé —
+    # c'est le seul moyen de produire un jeton périmé signé par la vraie clé).
+    # Seule la saisie GUI (`duration`) impose 1 jour minimum.
+    return years * 365
+
+
 def make_license(priv_key, customer_id: str, license_type: str,
                  years: int = 1, seats: int = 1,
-                 hwid: str = None, label: str = None) -> dict:
+                 hwid: str = None, label: str = None,
+                 duration: dict = None, enforce_offer: bool = False) -> dict:
+    """Signe une licence garage.
+
+    duration : {"value": int, "unit": "jours"|"mois"|"annees"} — durée exacte en
+    jours. `enforce_offer=True` restreint le type aux offres commerciales du
+    keygen (PREMIUM / ADMIN) ; laissé à False pour les outils historiques.
+    """
     if license_type == "mechanic":
         raise ValueError("Utilisez make_mechanic_license pour les licences mécanicien.")
+    if enforce_offer and license_type not in KEYGEN_OFFER_TYPES:
+        raise ValueError(
+            "Type commercial invalide. Seules les offres PREMIUM et ADMIN "
+            f"sont proposées : {KEYGEN_OFFER_TYPES}"
+        )
     if license_type not in LICENSE_TYPES:
         raise ValueError(f"Type invalide. Choisir parmi: {LICENSE_TYPES}")
 
     hwid = _checked_hwid(hwid)
+    days = _resolve_duration(years, duration)
 
     now = int(time.time())
-    exp = now + years * 365 * 24 * 3600
+    exp = now + days * DAY_SECONDS
     lid = str(uuid.uuid4())
+    # UUID d'identification DISTINCT du LID : même format, autre valeur. Il est
+    # SIGNÉ (champ `u` du filigrane) pour rester infalsifiable, et sert de
+    # référence de dossier côté éditeur quand le LID est déjà publié.
+    luid = str(uuid.uuid4())
 
-    wm_raw = {"c": customer_id, "t": now, "r": os.urandom(6).hex(), "l": label or ""}
+    wm_raw = {"c": customer_id, "t": now, "r": os.urandom(6).hex(), "l": label or "", "u": luid}
     wm     = b64u_enc(json.dumps(wm_raw, separators=(",", ":")).encode())
 
     payload = {
@@ -190,19 +278,26 @@ def make_license(priv_key, customer_id: str, license_type: str,
     return {
         "token":      _sign(priv_key, payload),
         "lid":        lid,
+        "uuid":       luid,
         "cid":        customer_id,
         "type":       license_type,
         "issued_at":  time.strftime("%Y-%m-%d", time.gmtime(now)),
         "expires_at": time.strftime("%Y-%m-%d", time.gmtime(exp)),
+        "issued_at_iso":  time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)),
+        "expires_at_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(exp)),
         "seats":      seats,
         "hwid":       hwid,
         "label":      label,
+        "duration_days":   days,
+        "duration_label":  duration_label(days),
+        "bound_hwid":      bool(hwid),
     }
 
 
 def make_mechanic_license(priv_key, parent_lid: str, customer_id: str,
                           years: int = 1, mechanic_name: str | None = None,
-                          hwid: str | None = None, label: str | None = None) -> dict:
+                          hwid: str | None = None, label: str | None = None,
+                          duration: dict = None) -> dict:
     """Génère une licence mécanicien (typ='mechanic', ver='2.1', seats=1)
     liée à une licence garage parente via 'plid'. 'mn' est un indice
     d'attribution optionnel (nom du mécanicien)."""
@@ -210,12 +305,14 @@ def make_mechanic_license(priv_key, parent_lid: str, customer_id: str,
         raise ValueError("parent_lid est obligatoire pour une licence mécanicien.")
 
     hwid = _checked_hwid(hwid)
+    days = _resolve_duration(years, duration)
 
     now = int(time.time())
-    exp = now + years * 365 * 24 * 3600
+    exp = now + days * DAY_SECONDS
     lid = str(uuid.uuid4())
+    luid = str(uuid.uuid4())
 
-    wm_raw = {"c": customer_id, "t": now, "r": os.urandom(6).hex(), "l": label or ""}
+    wm_raw = {"c": customer_id, "t": now, "r": os.urandom(6).hex(), "l": label or "", "u": luid}
     wm     = b64u_enc(json.dumps(wm_raw, separators=(",", ":")).encode())
 
     payload = {
@@ -232,15 +329,21 @@ def make_mechanic_license(priv_key, parent_lid: str, customer_id: str,
     return {
         "token":         _sign(priv_key, payload),
         "lid":           lid,
+        "uuid":          luid,
         "cid":           customer_id,
         "type":          "mechanic",
         "issued_at":     time.strftime("%Y-%m-%d", time.gmtime(now)),
         "expires_at":    time.strftime("%Y-%m-%d", time.gmtime(exp)),
+        "issued_at_iso":  time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)),
+        "expires_at_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(exp)),
         "seats":         1,
         "hwid":          hwid,
         "label":         label,
         "parent_lid":    parent_lid,
         "mechanic_name": mechanic_name,
+        "duration_days":   days,
+        "duration_label":  duration_label(days),
+        "bound_hwid":      bool(hwid),
     }
 
 

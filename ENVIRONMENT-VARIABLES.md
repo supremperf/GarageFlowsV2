@@ -34,7 +34,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 
 ## Contrat par catégorie
 
-### Configuration fonctionnelle (67)
+### Configuration fonctionnelle (79)
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
@@ -90,8 +90,20 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `GF_NO_ANCHOR_RESTORE` | CONFIGURATION | non | release-tooling | `1` désactive la remise automatique de _PK/_LINES sur la clé de REFERENCE_FP : une divergence d'ancres bloque alors `npm run dist` sans tentative de … |
 | `GF_PACKAGE_DESKTOP` | CONFIGURATION | non | release-tooling | Posé par `npm run dist` (cross-env GF_PACKAGE_DESKTOP=1) pour dire au post-build que la sortie standalone part dans un INSTALLEUR : dans ce contexte … |
 | `GF_PROBE_NAMES` | CONFIGURATION | non | maintenance-tool | Liste de noms, separes par des virgules, que la sonde de verification post-rotation doit mesurer. Posee par reset-garageflow.ps1 juste avant `vercel … |
+| `GF_PRODUCTION_DB_FINGERPRINT` | CONFIGURATION | **oui** | server | Empreinte SHA-256 de la CIBLE (hote + chemin, SANS identifiants) de la DATABASE_URL de production. N'EST PAS UN SECRET : elle ne contient ni utilisat… |
+| `GF_SCREENSHOT_SCAN_MAX_BYTES` | CONFIGURATION | non | server | Taille maximale d'une capture soumise au scan (octets). Au-delà : 413, partage bloqué. |
+| `GF_SCREENSHOT_SCAN_PATTERNS` | CONFIGURATION | non | server | Chemin du fichier de règles de détection. Aucun secret réel n'y figure. |
+| `GF_SCREENSHOT_SCAN_PERSIST` | CONFIGURATION | non | server | Doit rester false. Le service REFUSE de démarrer si la persistance est demandée : aucune image n'est conservée. |
+| `GF_SCREENSHOT_SCAN_PORT` | CONFIGURATION | non | both | Port du service local de scan (boucle locale uniquement). |
+| `GF_SCREENSHOT_SCAN_SERVER_URL` | CONFIGURATION | non | both | URL du service de scan utilisée par le Keygen. Boucle locale ou HTTPS uniquement : une URL HTTP distante enverrait la capture en clair. |
+| `GF_SCREENSHOT_SCAN_VERBOSE` | CONFIGURATION | non | server | Diagnostic uniquement : à 1, le service de scan journalise méthode/route/statut (jamais le corps, l'image ni le texte). |
+| `GF_SCREENSHOT_SECRET_SCAN_ENABLED` | CONFIGURATION | non | server | Active le scan des captures. Absent = actif quand le service est démarré ; toute indisponibilité bloque le partage (fail-closed). |
+| `GF_SCREENSHOT_TESSERACT` | CONFIGURATION | non | server | Binaire Tesseract utilisé pour l'OCR (lecture stdin/stdout, aucune image sur disque). |
+| `GF_SCREENSHOT_TESSERACT_LANG` | CONFIGURATION | non | server | Langue OCR Tesseract. « eng » suffit aux secrets ; une langue absente fait échouer le scan en fail-closed. |
 | `GF_UPDATE_CHANNEL` | CONFIGURATION | non | desktop | — |
+| `GF_UPDATE_DOWNLOAD_BASE_URL` | CONFIGURATION | non | publisher-only | Base des URLs de téléchargement utilisée par scripts/gf_sign_update.js quand --download-url est omis. Le domaine reste contrôlé par la liste blanche … |
 | `GF_UPDATE_SIGNING_KEY_FILE` | SECRET | non | release-tooling | Chemin d'un fichier contenant la clé privée de signature, alternative à GF_UPDATE_SIGNING_KEY. Outillage de release uniquement. |
+| `GF_VERCEL_PROJECT` | CONFIGURATION | non | maintenance-tool | Nom du projet Vercel interroge par check:env-vercel (equivalent de l'option --projet). N'est PAS un secret : un nom de projet est public dans l'URL d… |
 | `LICENSE_ENFORCEMENT` | CONFIGURATION | non | development | — |
 | `RATE_LIMIT_ADMIN_MAX` | CONFIGURATION | non | server | Optional positive integer override; code has a safe default. |
 | `RATE_LIMIT_ADMIN_WINDOW_SECONDS` | CONFIGURATION | non | server | Optional positive integer override; code has a safe default. |
@@ -110,16 +122,16 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
-| `DEMO_RESET_FORCE` | CONFIGURATION | non | development | Lève la protection du jeu de démonstration (effacement de données). Jamais en production. |
+| `DEMO_RESET_FORCE` | SECRET | non | development | Lève la protection du jeu de démonstration (effacement de données). Jamais en production. |
 | `DEVICE_TOKEN_PEPPER` | SECRET | **oui** | server | Rotation invalidates existing device tokens and HWID hashes. |
-| `GF_ALLOW_INSECURE_SYNC` | CONFIGURATION | non | development | DÉVELOPPEMENT UNIQUEMENT : autorise une autorité cloud en http:// (anti-downgrade désactivé). Doit rester absente ou à 0 en production. |
+| `GF_ALLOW_INSECURE_SYNC` | SECRET | non | development | DÉVELOPPEMENT UNIQUEMENT : autorise une autorité cloud en http:// (anti-downgrade désactivé). Doit rester absente ou à 0 en production. |
 | `GF_BACKUP_KEY` | SECRET | non | server | Doit décoder exactement 32 octets. CHIFFREMENT AU REPOS : la rotation rend ILLISIBLES toutes les sauvegardes déjà produites avec la clé brute. Jamais… |
 | `GF_DB_MAC_SECRET` | SECRET | **oui** | both | Electron derives this from the HWID. A server value protects LicenseKey records and must not be rotated blindly. |
-| `GF_DEBUG` | CONFIGURATION | non | desktop-runtime | Journalisation détaillée du poste. À laisser absente en production (verbosité et informations d'environnement). |
+| `GF_DEBUG` | SECRET | non | desktop-runtime | Journalisation détaillée du poste. À laisser absente en production (verbosité et informations d'environnement). |
 | `GF_EINVOICE_CREDENTIALS_KEY` | SECRET | non | server | Cle AES-256-GCM des identifiants de plateformes. NE JAMAIS roter automatiquement (rendrait les identifiants existants indechiffrables). Generee une s… |
 | `GF_PORTAL_SECRET` | SECRET | non | server | Rotation invalidates portal and quote-signature JWTs. |
 | `GF_SIGNATURE_SECRET` | SECRET | non | server | Rotation changes the derived signature-sealing key. |
-| `GF_SMTP_CIPHER_KEY` | SECRET | non | server | Existing gsmtp1.k1 values require the same key. No automatic multi-key migration exists. — Statut « absent-consumer » corrigé le 15/08/2026 : la vari… |
+| `GF_SMTP_CIPHER_KEY` | SECRET | non | server | Les valeurs existantes sont des enveloppes GFSEC1: (AES-256-GCM + kid), pas « gsmtp1 ». Rotation : fournir l'ancienne clé dans GF_SMTP_CIPHER_KEY_OLD… |
 | `GF_SMTP_CIPHER_KEY_OLD` | SECRET | non | server | MIGRATION DE ROTATION de GF_SMTP_CIPHER_KEY : anciennes clés (séparées par des virgules) conservées le temps de rechiffrer les mots de passe SMTP exi… |
 | `GF_TOTP_ENC_KEY` | SECRET | non | server | Chiffre les secrets TOTP du portail au repos (format gtotp1.<kid>.<iv>.<tag>.<ct>, AES-256-GCM avec AAD de domaine). DISTINCTE de GF_SMTP_CIPHER_KEY … |
 | `GF_TOTP_ENC_KEY_OLD` | SECRET | non | server | MIGRATION DE ROTATION de GF_TOTP_ENC_KEY : anciennes cles (separees par des virgules) conservees le temps de rechiffrer les secrets TOTP existants. S… |
@@ -127,7 +139,7 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `NEXT_PUBLIC_VERCEL_BLOB_API_URL` | PUBLIC | non | release-tooling | Garde négative publique : override Blob refusé ; ne pas définir ni exposer au navigateur. |
 | `NEXTAUTH_SECRET` | SECRET | **oui** | both | Rotation invalidates sessions and may make d1-encrypted TOTP/SMTP data unreadable. |
 | `SEED_ADMIN_PASSWORD` | SECRET | non | development | Mot de passe du compte administrateur créé par les jeux de données de démonstration. Ne JAMAIS réutiliser une valeur de production ; sans elle, l'amo… |
-| `VERCEL_BLOB_API_URL` | CONFIGURATION | non | release-tooling | Garde négative : override de destination Blob refusé pour empêcher la fuite du token. Ne pas définir. |
+| `VERCEL_BLOB_API_URL` | SECRET | non | release-tooling | Garde négative : override de destination Blob refusé pour empêcher la fuite du token. Ne pas définir. |
 
 ### dangerous-external (3)
 
@@ -207,19 +219,24 @@ ou chez Vercel — fait échouer `npm run check:env-consistency`.
 | `NODE_INSPECTOR_IPC` | CONFIGURATION | non | runtime-system | Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually. |
 | `VERCEL` | CONFIGURATION | non | runtime-system | Set by Windows, Node.js, Electron, Vercel or the test runner; never synchronize manually. |
 
-### Secrets générés par GarageFlows (2)
+### Secrets générés par GarageFlows (3)
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
 | `BLOB_READ_WRITE_TOKEN` | SECRET | non | release-tooling | Entrée fournisseur privée des outils de configuration et de validation Blob. Aucun consommateur applicatif actuel ; ne pas exposer au navigateur ni i… |
+| `CRON_SECRET` | SECRET | non | server | Jeton que Vercel envoie en « Authorization: Bearer » lors de l'appel d'un cron declare dans vercel.json. DOIT porter la MEME valeur que EINVOICING_QU… |
 | `EINVOICING_QUEUE_TOKEN` | SECRET | non | server | Jeton Bearer (>=32 caracteres) autorisant la reprise automatique des transmissions e-facturation en echec. Absent = route fermee (503). |
 
-### Harnais de test (4)
+### Harnais de test (8)
 
 | Nom | Sensibilité | Requise en production | Portée | Rôle |
 | --- | --- | --- | --- | --- |
 | `E2E_NON_PRODUCTION` | CONFIGURATION | non | test-only | Approbation explicite de la cible de recette non productive. Le job authentifié échoue si cette approbation vaut autre chose que true ; ne prouve pas… |
 | `E2E_STAGING_URL` | CONFIGURATION | non | test-only | URL HTTPS de recette isolée pour le job E2E authentifié ; stockée dans l’environnement GitHub e2e-staging autorisé. Jamais la production ; aucune val… |
+| `GF_E2E_ACTIVATE_MAX` | CONFIGURATION | non | test-only | Quota d'activations configure sur l'instance de recette (RATE_LIMIT_LICENSE_ACTIVATE_MAX), pour que le parcours puisse verifier que le limiteur de de… |
+| `GF_E2E_ALLOW_REMOTE` | CONFIGURATION | non | test-only | Leve le garde-fou qui limite le parcours a une boucle locale. A poser UNIQUEMENT sur une instance de recette dediee : le parcours ecrit des licences … |
+| `GF_E2E_KEY` | SECRET | non | test-only | Cle API (x-gf-key) de l'instance de recette. Distincte de la cle de production ; ne sort jamais du poste d'execution et n'est jamais journalisee. |
+| `GF_E2E_URL` | CONFIGURATION | non | test-only | URL de l'instance de recette visee par le parcours de bout en bout du Keygen (generation, enregistrement, activation, revocation). Absente, le parcou… |
 | `TEST_POSTGRES_URL` | CONFIGURATION | non | test-only | Optional integration-test PostgreSQL URL; never copy to production. |
 | `TEST_REDIS_URL` | CONFIGURATION | non | test-only | Optional integration-test Redis URL; never copy to production. |
 

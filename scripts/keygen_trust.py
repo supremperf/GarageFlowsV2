@@ -1,12 +1,17 @@
-"""Read-only P-256 correspondence checks. No network, key rotation or token logging."""
+"""Read-only P-256 correspondence checks. No network, key rotation or token logging.
+
+Aucun mécanisme de récupération de clé privée n'existe ici, et il ne doit pas en
+être réintroduit. Ce module ne fait que CONSTATER une divergence entre la clé
+privée chargée et les ancres publiques du dépôt : il ne recherche pas, n'extrait
+pas, ne reconstruit pas et n'installe pas de clé privée. Une clé privée perdue
+ne se reconstruit pas depuis sa clé publique : c'est une rotation décidée, avec
+impact client, jamais une opération de dépannage automatique.
+"""
 import argparse
 import getpass
 import hashlib
 import json
-import os
 import re
-import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -38,16 +43,19 @@ def explain(receipt):
             "la clé de licence de production (" + production[:16] + "…) : une licence signée",
             "avec elle serait refusée par le logiciel. Signature bloquée, rien n'a été écrit.",
             "",
-            "Correctif automatique : keygen → onglet « Clés ECC » → « Rechercher la clé de production »,",
-            "ou, dans le dossier du projet :  npm run keys:find-issuer",
-            "(retrouve la clé de production sur ce poste — anciens dossiers du projet, .env.server.local —,",
-            "vérifiée par empreinte, et l'installe ; la clé actuelle est mise de côté hors du projet).",
-            "Ne pas régénérer de clé pour contourner ce contrôle.",
+            "Correctif : restaurer, par le canal approuvé (coffre, sauvegarde, clé USB),",
+            "le fichier privé de l'autorité de production dans keys/private.pem, puis relancer",
+            "la vérification : python scripts/keygen_ui.py --verify-key-match",
+            "",
+            "Aucun outil de ce dépôt ne recherche, n'extrait ni ne reconstitue une clé privée",
+            "de production : une clé privée perdue ne se recalcule pas depuis sa clé publique.",
+            "Changer d'autorité est une rotation décidée (licences existantes invalidées,",
+            "serveur et vitrine à aligner), pas une opération de dépannage.",
         ]
     elif receipt.get("code") == "KEY_MISMATCH_OR_ANCHOR_UNAVAILABLE":
         lines += [
             "Ancres de clé publique incohérentes ou illisibles : lancer `npm run keys:restore`,",
-            "puis `npm run keys:find-issuer`.",
+            "puis `npm run keys:check` pour constater l'alignement des trois ancres.",
         ]
     return "\n".join(lines + ["", "Détail : " + json.dumps(receipt, ensure_ascii=False)]) if lines else json.dumps(receipt, ensure_ascii=False)
 
@@ -65,35 +73,6 @@ def is_issuer_mismatch(error):
     production = production_fingerprint(receipt)
     return (receipt.get("code") == "KEY_MISMATCH_OR_ANCHOR_UNAVAILABLE" and bool(issuer)
             and production is not None and issuer != production)
-
-
-def run_find_issuer(root, passphrase="", dry_run=False, timeout=240, node=None, script=None):
-    """Run scripts/find-issuer-key.cjs (search the PRODUCTION key on this PC, verify, install).
-
-    Returns (exit_code, output). The passphrase travels on stdin only — never in argv,
-    the environment or the output. Nothing is generated; see the script for guarantees.
-    """
-    root = Path(root)
-    node = node or shutil.which("node") or shutil.which("node.exe")
-    if not node:
-        return 127, ("Node.js est introuvable sur ce poste : ouvrir un terminal dans le dossier du projet et lancer\n"
-                     "    npm run keys:find-issuer")
-    args = [node, str(script or root / "scripts" / "find-issuer-key.cjs")]
-    if dry_run:
-        args.append("--dry-run")
-    if passphrase:
-        args.append("--passphrase-stdin")
-    kwargs = {}
-    if os.name == "nt":
-        kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-    try:
-        proc = subprocess.run(args, cwd=str(root), input=(passphrase or ""), capture_output=True,
-                              text=True, encoding="utf-8", errors="replace", timeout=timeout, **kwargs)
-    except subprocess.TimeoutExpired:
-        return 124, "Recherche interrompue (durée maximale dépassée). Relancer `npm run keys:find-issuer` dans un terminal."
-    except OSError as exc:
-        return 126, f"Impossible de lancer Node.js ({exc.__class__.__name__}). Lancer `npm run keys:find-issuer` dans un terminal."
-    return proc.returncode, (proc.stdout + ("\n" + proc.stderr if proc.stderr.strip() else "")).strip()
 
 
 def fingerprint(public_key):

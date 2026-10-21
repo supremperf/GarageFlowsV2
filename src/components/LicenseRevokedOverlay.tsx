@@ -87,7 +87,16 @@ const STATUS_CONFIG: Record<
   },
 }
 
-export default function LicenseRevokedOverlay() {
+interface LicenseRevokedOverlayProps {
+  /**
+   * Appelé quand la réactivation est confirmée et l'écran retiré. La page
+   * d'accueil s'en sert quand la licence était déjà bloquée à son chargement :
+   * rien n'a été chargé derrière l'overlay, il faut recharger la page.
+   */
+  onReactivated?: () => void
+}
+
+export default function LicenseRevokedOverlay({ onReactivated }: LicenseRevokedOverlayProps = {}) {
   const [info,        setInfo]        = useState<BlockedInfo | null>(null)
   const [reactivated, setReactivated] = useState(false)
 
@@ -196,10 +205,13 @@ export default function LicenseRevokedOverlay() {
     if (!reactivated) return
     const t = setTimeout(() => {
       setReactivated(false)
-      if (!blockedRef.current) setInfo(null)
+      if (!blockedRef.current) {
+        setInfo(null)
+        onReactivated?.()
+      }
     }, 3200)
     return () => clearTimeout(t)
-  }, [reactivated])
+  }, [reactivated, onReactivated])
 
   if (!info) return null
 

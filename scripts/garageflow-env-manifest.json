@@ -1231,7 +1231,7 @@
         "electron/main.js",
         "src/lib/env.ts"
       ],
-      "notes": "Existing gsmtp1.k1 values require the same key. No automatic multi-key migration exists. — Statut « absent-consumer » corrigé le 15/08/2026 : la variable est bel et bien lue (chiffrement au repos des identifiants SMTP). Rotation DESTRUCTIVE : régénérer cette clé rend illisibles les identifiants déjà chiffrés (voir GF_SMTP_CIPHER_KEY_OLD).",
+      "notes": "Les valeurs existantes sont des enveloppes GFSEC1: (AES-256-GCM + kid), pas « gsmtp1 ». Rotation : fournir l'ancienne clé dans GF_SMTP_CIPHER_KEY_OLD, puis exécuter scripts/encrypt-smtp-secrets.js --yes --rotate pour rechiffrer ; aucun rechiffrement n'est automatique. Retirer _OLD avant migration rend les identifiants déjà chiffrés DÉFINITIVEMENT illisibles.",
       "autoManage": false
     },
     {
@@ -2037,6 +2037,262 @@
         "scripts/restore-public-anchors.cjs"
       ],
       "notes": "`1` désactive la remise automatique de _PK/_LINES sur la clé de REFERENCE_FP : une divergence d'ancres bloque alors `npm run dist` sans tentative de réparation (refus pur, comme avant)."
+    },
+    {
+      "name": "GF_VERCEL_PROJECT",
+      "classification": "configuration",
+      "scope": "maintenance-tool",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 1,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/check-env-vercel.mjs"
+      ],
+      "notes": "Nom du projet Vercel interroge par check:env-vercel (equivalent de l'option --projet). N'est PAS un secret : un nom de projet est public dans l'URL de deploiement. Necessaire parce qu'un dossier de travail extrait d'une archive n'est lie a aucun projet Vercel ; sans lui, `vercel env ls` echoue et le controle attribuait l'echec a un defaut d'authentification. Jamais requis en production : c'est un outil d'exploitation, pas une variable d'execution."
+    },
+    {
+      "name": "CRON_SECRET",
+      "classification": "secret",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "nonempty-secret",
+      "minLength": 32,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "medium",
+      "consumers": [
+        "vercel.json (crons)"
+      ],
+      "notes": "Jeton que Vercel envoie en « Authorization: Bearer » lors de l'appel d'un cron declare dans vercel.json. DOIT porter la MEME valeur que EINVOICING_QUEUE_TOKEN : la route /api/internal/einvoicing/queue compare a EINVOICING_QUEUE_TOKEN en temps constant et n'accepte aucun repli sur une autre cle (choix delibere, sa frontiere d'authentification n'a pas ete elargie pour le cron). Si les deux valeurs divergent, le cron recoit 401 et la reprise des transmissions e-facturation ne se fait pas, EN SILENCE : un cron en echec n'alerte personne par defaut. Verrouille par src/lib/__tests__/vercel-crons.test.ts. Non requis en production tant qu'aucun cron n'est declare."
+    },
+    {
+      "name": "GF_PRODUCTION_DB_FINGERPRINT",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": true,
+      "format": "sha256-hex",
+      "minLength": 64,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "src/lib/env.ts"
+      ],
+      "notes": "Empreinte SHA-256 de la CIBLE (hote + chemin, SANS identifiants) de la DATABASE_URL de production. N'EST PAS UN SECRET : elle ne contient ni utilisateur ni mot de passe et se declare en clair. Elle est insensible au mot de passe, donc elle survit a une rotation. A declarer sur LES TROIS environnements : en Preview, src/lib/env.ts refuse le demarrage si la base visee porte cette empreinte — c'est la seule protection empechant un deploiement de previsualisation d'ecrire dans les donnees reelles des clients, les integrations Neon/Upstash etant attachees au PROJET et donc injectees aussi en Preview (audit 2026-10-20, V-02). Requise en production precisement pour que son absence soit DETECTEE : une garde non provisionnee est une garde absente. Calcul : node -e \"const{createHash}=require('crypto');const u=new URL(process.env.DATABASE_URL);console.log(createHash('sha256').update(u.host+u.pathname).digest('hex'))\". Verrouille par src/lib/__tests__/isolation-preview.test.ts."
+    },
+    {
+      "name": "GF_SCREENSHOT_SCAN_MAX_BYTES",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 0,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/secret_scan.py"
+      ],
+      "notes": "Taille maximale d'une capture soumise au scan (octets). Au-delà : 413, partage bloqué.",
+      "autoManage": true
+    },
+    {
+      "name": "GF_SCREENSHOT_SCAN_PATTERNS",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 0,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/secret_scan.py"
+      ],
+      "notes": "Chemin du fichier de règles de détection. Aucun secret réel n'y figure.",
+      "autoManage": true
+    },
+    {
+      "name": "GF_SCREENSHOT_SCAN_PERSIST",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "boolean",
+      "minLength": 0,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/secret_scan.py"
+      ],
+      "notes": "Doit rester false. Le service REFUSE de démarrer si la persistance est demandée : aucune image n'est conservée.",
+      "autoManage": true
+    },
+    {
+      "name": "GF_SCREENSHOT_SCAN_PORT",
+      "classification": "configuration",
+      "scope": "both",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 0,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/secret_scan.py",
+        "scripts/keygen_ui.py"
+      ],
+      "notes": "Port du service local de scan (boucle locale uniquement).",
+      "autoManage": true
+    },
+    {
+      "name": "GF_SCREENSHOT_SCAN_SERVER_URL",
+      "classification": "configuration",
+      "scope": "both",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 0,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/keygen_ui.py"
+      ],
+      "notes": "URL du service de scan utilisée par le Keygen. Boucle locale ou HTTPS uniquement : une URL HTTP distante enverrait la capture en clair.",
+      "autoManage": true
+    },
+    {
+      "name": "GF_SCREENSHOT_SCAN_VERBOSE",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 0,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/secret_scan.py"
+      ],
+      "notes": "Diagnostic uniquement : à 1, le service de scan journalise méthode/route/statut (jamais le corps, l'image ni le texte).",
+      "autoManage": true
+    },
+    {
+      "name": "GF_SCREENSHOT_SECRET_SCAN_ENABLED",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "boolean",
+      "minLength": 0,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/secret_scan.py"
+      ],
+      "notes": "Active le scan des captures. Absent = actif quand le service est démarré ; toute indisponibilité bloque le partage (fail-closed).",
+      "autoManage": true
+    },
+    {
+      "name": "GF_SCREENSHOT_TESSERACT",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 0,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/secret_scan.py"
+      ],
+      "notes": "Binaire Tesseract utilisé pour l'OCR (lecture stdin/stdout, aucune image sur disque).",
+      "autoManage": true
+    },
+    {
+      "name": "GF_SCREENSHOT_TESSERACT_LANG",
+      "classification": "configuration",
+      "scope": "server",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 0,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/secret_scan.py"
+      ],
+      "notes": "Langue OCR Tesseract. « eng » suffit aux secrets ; une langue absente fait échouer le scan en fail-closed.",
+      "autoManage": true
+    },
+    {
+      "name": "GF_UPDATE_DOWNLOAD_BASE_URL",
+      "classification": "configuration",
+      "scope": "publisher-only",
+      "requiredProduction": false,
+      "format": "string",
+      "minLength": 12,
+      "autoGenerate": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/gf_sign_update.js"
+      ],
+      "notes": "Base des URLs de téléchargement utilisée par scripts/gf_sign_update.js quand --download-url est omis. Le domaine reste contrôlé par la liste blanche du client. Outillage de release uniquement.",
+      "autoManage": false
+    },
+    {
+      "name": "GF_E2E_URL",
+      "classification": "test-external",
+      "scope": "test-only",
+      "requiredProduction": false,
+      "format": "url",
+      "minLength": 8,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/test_keygen_e2e.py"
+      ],
+      "notes": "URL de l'instance de recette visee par le parcours de bout en bout du Keygen (generation, enregistrement, activation, revocation). Absente, le parcours ne teste rien et le dit. Jamais une URL de production : le script ecrit des licences."
+    },
+    {
+      "name": "GF_E2E_KEY",
+      "classification": "test-external",
+      "scope": "test-only",
+      "requiredProduction": false,
+      "format": "opaque",
+      "minLength": 16,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/test_keygen_e2e.py"
+      ],
+      "notes": "Cle API (x-gf-key) de l'instance de recette. Distincte de la cle de production ; ne sort jamais du poste d'execution et n'est jamais journalisee."
+    },
+    {
+      "name": "GF_E2E_ALLOW_REMOTE",
+      "classification": "test-external",
+      "scope": "test-only",
+      "requiredProduction": false,
+      "format": "enum:0,1",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/test_keygen_e2e.py"
+      ],
+      "notes": "Leve le garde-fou qui limite le parcours a une boucle locale. A poser UNIQUEMENT sur une instance de recette dediee : le parcours ecrit des licences de test, active des postes et revoque."
+    },
+    {
+      "name": "GF_E2E_ACTIVATE_MAX",
+      "classification": "test-external",
+      "scope": "test-only",
+      "requiredProduction": false,
+      "format": "integer",
+      "minLength": 0,
+      "autoGenerate": false,
+      "autoManage": false,
+      "rotationRisk": "low",
+      "consumers": [
+        "scripts/test_keygen_e2e.py"
+      ],
+      "notes": "Quota d'activations configure sur l'instance de recette (RATE_LIMIT_LICENSE_ACTIVATE_MAX), pour que le parcours puisse verifier que le limiteur de debit refuse bien au-dela. N'a aucun effet sur la production."
     }
   ],
   "auditCleanup": {

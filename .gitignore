@@ -166,3 +166,25 @@ keys/bootstrap-*
 # Client installer and non-secret delivery/test receipts (generated, never Git).
 /release/
 /artifacts/windows-delivery/
+
+# Outillage ajoute automatiquement par `vercel integration add` (agent skills
+# du fournisseur) : hors perimetre du produit, ne pas versionner.
+.agents/
+skills-lock.json
+
+# Clés et signatures, où qu'elles soient : `keys/*.pem` ne couvrait que ce
+# répertoire. Une clé privée copiée ailleurs (racine, scripts/, %APPDATA%
+# recopié) serait partie dans un `git add -A`. Aucun fichier de ce type n'est
+# suivi ; la clé publique livrée est matérialisée au build depuis l'ancrage.
+*.pem
+*.key
+*.sig
+
+.vercel
+.env*
+
+# Rapports d'exécution du configurateur automatique : artefacts datés, propres à
+# un poste et à un instant. Le dossier est conservé (reports/.gitkeep), son
+# contenu non — versionner un rapport par exécution noierait l'historique et
+# publierait l'inventaire d'infrastructure d'une machine donnée.
+configuation automatique/reports/*.json

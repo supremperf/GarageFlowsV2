@@ -339,9 +339,10 @@ test('node config writes one server API key and garageflows.fr to the Python UI 
   assert.equal(keys[0], keys[1], 'rerun must preserve the existing server API key')
   const python = fs.readFileSync(path.join(root, 'scripts/keygen_db.py'), 'utf8')
   assert.ok(python.includes('ROOT_DIR / "keys" / "server_config.json"'))
+  // L'écran « Paramètres et serveur » lie les mêmes clés via tk.StringVar.
   const ui = fs.readFileSync(path.join(root, 'scripts/keygen_ui.py'), 'utf8')
-  assert.ok(ui.includes('value=cfg.get("url", "")'))
-  assert.ok(ui.includes('value=cfg.get("api_key", "")'))
+  assert.ok(ui.includes('cfg.get("url")'), 'URL serveur non lue depuis server_config.json')
+  assert.ok(ui.includes('cfg.get("api_key")'), 'clé API non lue depuis server_config.json')
 })
 
 test('JobPart snapshots stay mandatory and the corrective migration drops only their historical defaults', () => {

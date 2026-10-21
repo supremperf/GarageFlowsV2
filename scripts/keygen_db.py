@@ -1,6 +1,17 @@
 """
 keygen_db.py — GarageFlows Licence DB locale (JSON)
-Stockage, révocation, réactivation des licences générées.
+Stockage, révocation, réactivation, recherche et synchronisation des licences générées.
+
+Le fichier est un tableau JSON de fiches. Chaque fiche porte :
+  · les identifiants (lid, uuid, cid, type) ;
+  · la durée et les dates (duration_days, issued_at, expires_at) ;
+  · la liaison matérielle (hwid fourni au moment de la signature, état d'activation
+    relevé sur le serveur : activated_at, last_check_at) ;
+  · les informations CLIENT complètes (nom, prénom, entreprise, adresse, code
+    postal, ville, pays, e-mail, téléphone, informations complémentaires).
+
+Toute lecture tolère les anciennes fiches : les champs absents sont complétés
+par `normalize()` plutôt que de faire disparaître une licence déjà vendue.
 """
 
 import json, os, time
@@ -12,53 +23,130 @@ DB_FILE         = ROOT_DIR / "keys" / "licenses_db.json"
 SERVER_CFG_FILE = ROOT_DIR / "keys" / "server_config.json"
 AUDIT_FILE      = ROOT_DIR / "keys" / "keygen_audit.log"
 
+# Adresse préremplie de l'instance GarageFlows. Modifiable et persistée dans
+# keys/server_config.json — jamais codée en dur ailleurs (une seule source).
+DEFAULT_SERVER_URL = "https://app.garageflows.fr"
+
+CLIENT_FIELDS = ("prenom", "nom", "entreprise", "email", "tel",
+                 "adresse", "code_postal", "ville", "pays", "infos")
+
 
 def _load() -> list:
     if not DB_FILE.exists():
         return []
     try:
-        return json.loads(DB_FILE.read_text(encoding="utf-8"))
+        data = json.loads(DB_FILE.read_text(encoding="utf-8"))
     except Exception:
         return []
+    return [normalize(r) for r in data if isinstance(r, dict)]
 
 
 def _save(records: list) -> None:
     DB_FILE.parent.mkdir(exist_ok=True)
     DB_FILE.write_text(
-        json.dumps(records, indent=2, ensure_ascii=False),
+        json.dumps([normalize(r) for r in records], indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
+    try:
+        os.chmod(DB_FILE, 0o600)
+    except Exception:
+        pass
+
+
+def normalize(record: dict) -> dict:
+    """Complète une fiche ancienne ou partielle sans jamais rien perdre."""
+    r = dict(record or {})
+    client = r.get("client") or {}
+    full = {field: str(client.get(field, "") or "") for field in CLIENT_FIELDS}
+    # Anciennes fiches : « Ville / CP » était un seul champ. On le conserve tel
+    # quel dans `ville` et on NE fabrique pas de code postal : une valeur
+    # devinée serait fausse sur un document commercial.
+    if not full["code_postal"]:
+        full["code_postal"] = str(client.get("cp", "") or "")
+    if not full["pays"]:
+        full["pays"] = str(client.get("pays", "") or "")
+    full["infos"] = str(client.get("infos", "") or client.get("notes", "") or "")
+    r["client"] = full
+    r.setdefault("uuid", "")
+    r.setdefault("lid", "")
+    r.setdefault("token", "")
+    r.setdefault("cid", "")
+    r.setdefault("type", "")
+    r.setdefault("label", "")
+    r.setdefault("status", "active")
+    r.setdefault("hwid", "")
+    r.setdefault("parent_lid", "")
+    r.setdefault("mechanic_name", "")
+    r.setdefault("seats", 1)
+    r.setdefault("issued_at", "")
+    r.setdefault("expires_at", "")
+    r.setdefault("duration_days", 0)
+    r.setdefault("duration_label", "")
+    r.setdefault("bound_hwid", bool(r.get("hwid")))
+    r.setdefault("activated_at", "")
+    r.setdefault("last_check_at", "")
+    r.setdefault("server_synced_at", "")
+    r.setdefault("created_at", "")
+    r.setdefault("revoked_at", None)
+    return r
 
 
 def add_license(info: dict, client: dict) -> None:
-    """Ajoute une nouvelle licence avec les infos client."""
+    """Ajoute une nouvelle licence avec les infos client complètes."""
     records = _load()
-    records.insert(0, {
+    records.insert(0, normalize({
         "lid":        info["lid"],
+        "uuid":       info.get("uuid", ""),
         "token":      info["token"],
         "cid":        info["cid"],
         "type":       info["type"],
         "label":      info.get("label") or "",
         "issued_at":  info["issued_at"],
         "expires_at": info["expires_at"],
+        "issued_at_iso":  info.get("issued_at_iso", ""),
+        "expires_at_iso": info.get("expires_at_iso", ""),
         "seats":      info["seats"],
         "hwid":       info.get("hwid") or "",
+        "bound_hwid": info.get("bound_hwid", bool(info.get("hwid"))),
+        "duration_days":  info.get("duration_days", 0),
+        "duration_label": info.get("duration_label", ""),
         "parent_lid":    info.get("parent_lid") or "",
         "mechanic_name": info.get("mechanic_name") or "",
         "status":     "active",
-        "client": {
-            "prenom":    client.get("prenom", ""),
-            "nom":       client.get("nom", ""),
-            "entreprise":client.get("entreprise", ""),
-            "email":     client.get("email", ""),
-            "tel":       client.get("tel", ""),
-            "adresse":   client.get("adresse", ""),
-            "ville":     client.get("ville", ""),
-        },
+        "client": client,
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "revoked_at": None,
-    })
+    }))
     _save(records)
+
+
+def update_license(lid: str, patch: dict) -> bool:
+    """Met à jour des champs d'une fiche existante (synchronisation serveur, HWID…)."""
+    if not lid:
+        return False
+    records = _load()
+    for r in records:
+        if r.get("lid") == lid:
+            for key, value in (patch or {}).items():
+                if key == "client" and isinstance(value, dict):
+                    merged = dict(r.get("client") or {})
+                    merged.update(value)
+                    r["client"] = merged
+                else:
+                    r[key] = value
+            _save(records)
+            return True
+    return False
+
+
+def mark_server_synced(lid: str) -> bool:
+    """Horodate l'enregistrement de la licence sur le serveur.
+
+    `server_synced_at` vide signifie « le serveur ignore cette licence » : son
+    activation et son changement de statut répondront 404. Ce marqueur est donc
+    l'état à lire avant de proposer une activation.
+    """
+    return update_license(lid, {"server_synced_at": time.strftime("%Y-%m-%dT%H:%M:%S")})
 
 
 def list_licenses() -> list:
@@ -107,33 +195,154 @@ def get_license(lid: str) -> Optional[dict]:
     return None
 
 
+def get_by_uuid(uuid_value: str) -> Optional[dict]:
+    needle = (uuid_value or "").strip().lower()
+    if not needle:
+        return None
+    for r in _load():
+        if (r.get("uuid") or "").lower() == needle:
+            return r
+    return None
+
+
 def search(query: str) -> list:
-    q = query.lower()
-    return [
-        r for r in _load()
-        if q in r.get("cid", "").lower()
-        or q in r.get("label", "").lower()
-        or q in r["client"].get("nom", "").lower()
-        or q in r["client"].get("entreprise", "").lower()
-        or q in r["client"].get("email", "").lower()
-    ]
+    """Recherche large : identifiants ET informations client.
+
+    Couvre nom, prénom, entreprise, e-mail, téléphone, ville, code postal, pays,
+    ID client, étiquette, LID, UUID et HWID. Une recherche sur un identifiant
+    long (LID/UUID/HWID) fonctionne aussi sur un préfixe.
+    """
+    return search_licenses(query)
 
 
-# ── Server config (URL + API key for remote revocation) ──────────────────────
+def search_licenses(query: str, records: list | None = None) -> list:
+    q = (query or "").strip().lower()
+    rows = _load() if records is None else [normalize(r) for r in records]
+    if not q:
+        return rows
+    out = []
+    for r in rows:
+        c = r.get("client") or {}
+        haystack = " ".join([
+            str(r.get("cid", "")), str(r.get("label", "")), str(r.get("lid", "")),
+            str(r.get("uuid", "")), str(r.get("hwid", "")), str(r.get("type", "")),
+            # La CLÉ elle-même est cherchable : un client qui rappelle en
+            # dictant sa licence est le cas le plus fréquent au support.
+            str(r.get("token", "")),
+            str(c.get("nom", "")), str(c.get("prenom", "")), str(c.get("entreprise", "")),
+            str(c.get("email", "")), str(c.get("tel", "")), str(c.get("adresse", "")),
+            str(c.get("code_postal", "")), str(c.get("ville", "")), str(c.get("pays", "")),
+            str(c.get("infos", "")),
+        ]).lower()
+        if q in haystack:
+            out.append(r)
+    return out
+
+
+# Libellés d'interface → type interne. « ENTREPRISE (parc historique) » reste
+# consultable pour les licences déjà émises sous cet ancien libellé, mais n'est
+# plus une offre proposée à la génération (PREMIUM et ADMIN seulement).
+TYPE_ALIASES = {
+    "premium": "premium",
+    "admin": "admin",
+    "entreprise": "enterprise",
+    "enterprise": "enterprise",
+    "mécanicien": "mechanic",
+    "mecanicien": "mechanic",
+    "mechanic": "mechanic",
+    "standard": "trial",
+    "trial": "trial",
+}
+
+
+def filter_licenses(records: list, type_filter: str = "Tous", status_filter: str = "Tous") -> list:
+    """Filtres « type » (Tous / PREMIUM / ADMIN / parc historique) et statut."""
+    rows = [normalize(r) for r in records]
+    tf = (type_filter or "Tous").strip()
+    sf = (status_filter or "Tous").strip()
+    out = []
+    for r in rows:
+        is_mechanic = r.get("type") == "mechanic"
+        if tf not in ("Tous", ""):
+            # « ENTREPRISE (parc historique) » → « entreprise » : le suffixe
+            # entre parenthèses qualifie l'affichage, jamais le type filtré.
+            tf_low = tf.lower().split("(", 1)[0].strip()
+            if tf_low == "garages":
+                if is_mechanic:
+                    continue
+            elif tf_low in ("mécaniciens", "mecaniciens"):
+                if not is_mechanic:
+                    continue
+            else:
+                attendu = TYPE_ALIASES.get(tf_low, tf_low)
+                if str(r.get("type", "")).lower() != attendu:
+                    continue
+        if sf not in ("Tous", ""):
+            if str(r.get("status", "")).lower() != sf.lower():
+                continue
+        out.append(r)
+    return out
+
+
+def sort_licenses(records: list, key: str = "created_at", descending: bool = True) -> list:
+    """Tri par date de création ou d'expiration (les deux sont ISO → tri sûr)."""
+    rows = [normalize(r) for r in records]
+    if key == "expires_at":
+        def _k(r):
+            return r.get("expires_at_iso") or r.get("expires_at") or ""
+    elif key == "client":
+        def _k(r):
+            c = r.get("client") or {}
+            return (f"{c.get('nom','')} {c.get('prenom','')}".strip()
+                    or str(r.get("label", ""))).lower()
+    else:
+        def _k(r):
+            return r.get("created_at") or r.get("issued_at_iso") or ""
+    return sorted(rows, key=_k, reverse=descending)
+
+
+def is_expired(record: dict, now: float | None = None) -> bool:
+    """Expiration calculée sur la date du poste (le serveur reste l'autorité)."""
+    iso = record.get("expires_at_iso") or ""
+    if iso:
+        try:
+            import datetime as _dt
+            exp = _dt.datetime.strptime(iso, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=_dt.timezone.utc)
+            ref = _dt.datetime.fromtimestamp(now if now else time.time(), tz=_dt.timezone.utc)
+            return exp < ref
+        except Exception:
+            pass
+    date = record.get("expires_at") or ""
+    return bool(date) and date < time.strftime("%Y-%m-%d", time.gmtime(now or time.time()))
+
+
+def effective_status(record: dict, now: float | None = None) -> str:
+    """Statut affiché : révoqué/suspendu priment, sinon expirée si échéance passée."""
+    status = record.get("status") or "active"
+    if status in ("revoked", "suspended"):
+        return status
+    return "expired" if is_expired(record, now) else status
+
+
+# ── Server config (URL + API key for remote operations) ──────────────────────
 
 def load_server_config() -> dict:
-    if not SERVER_CFG_FILE.exists():
-        return {"url": "", "api_key": ""}
-    try:
-        return json.loads(SERVER_CFG_FILE.read_text(encoding="utf-8"))
-    except Exception:
-        return {"url": "", "api_key": ""}
+    cfg = {"url": DEFAULT_SERVER_URL, "api_key": ""}
+    if SERVER_CFG_FILE.exists():
+        try:
+            data = json.loads(SERVER_CFG_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                cfg["url"] = str(data.get("url") or DEFAULT_SERVER_URL)
+                cfg["api_key"] = str(data.get("api_key") or "")
+        except Exception:
+            pass
+    return cfg
 
 
 def save_server_config(url: str, api_key: str) -> None:
     SERVER_CFG_FILE.parent.mkdir(exist_ok=True)
     SERVER_CFG_FILE.write_text(
-        json.dumps({"url": url.strip().rstrip("/"), "api_key": api_key.strip()},
+        json.dumps({"url": (url or "").strip().rstrip("/"), "api_key": (api_key or "").strip()},
                    indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
@@ -149,7 +358,7 @@ def save_server_config(url: str, api_key: str) -> None:
 
 def audit_log(action: str, lid: str = "", detail: str = "") -> None:
     """Journalise un événement dans keys/keygen_audit.log.
-    Format : "ISO8601 | action | lid tronqué à 8 chars + '…' | detail".
+    Format : \"ISO8601 | action | lid tronqué à 8 chars + '…' | detail\".
     JAMAIS de token complet ni de données client dans ce journal."""
     ts       = time.strftime("%Y-%m-%dT%H:%M:%S")
     lid_safe = (lid[:8] + "…") if lid else ""
@@ -160,3 +369,126 @@ def audit_log(action: str, lid: str = "", detail: str = "") -> None:
             f.write(line)
     except Exception:
         pass  # le journal ne doit jamais bloquer une opération
+
+
+# ── Agrégations pour les pages Tableau de bord / Clients / Appareils ─────────
+
+def _client_label(record: dict) -> dict:
+    """Identité affichable d'un client, sans jamais inventer de valeur."""
+    c = record.get("client") or {}
+    nom = " ".join(x for x in (c.get("prenom", ""), c.get("nom", "")) if x).strip()
+    return {
+        "cid": record.get("cid") or "",
+        "nom": nom,
+        "entreprise": c.get("entreprise") or "",
+        "email": c.get("email") or "",
+        "tel": c.get("tel") or "",
+        "ville": c.get("ville") or "",
+        "code_postal": c.get("code_postal") or "",
+    }
+
+
+def _last_activity(record: dict) -> str:
+    serveur = record.get("server") or {}
+    candidats = [
+        str(record.get("created_at") or ""),
+        str(record.get("server_synced_at") or ""),
+        str(serveur.get("lastSeenAt") or ""),
+        str(serveur.get("activatedAt") or ""),
+    ]
+    return max((c for c in candidats if c), default="")
+
+
+def client_summary(records: list | None = None) -> list:
+    """Une ligne par identifiant client (cid), avec ses compteurs de licences."""
+    rows = [normalize(r) for r in (records if records is not None else list_licenses())]
+    groupes: dict[str, dict] = {}
+    for r in rows:
+        cid = r.get("cid") or ""
+        if not cid:
+            continue
+        identite = _client_label(r)
+        groupe = groupes.setdefault(cid, {
+            **identite,
+            "licences": 0, "actives": 0, "revoquees": 0,
+            "derniere_emission": "",
+        })
+        # Un garage et ses mécaniciens partagent le cid : on garde la fiche la
+        # plus complète rencontrée, sans écraser une valeur par du vide.
+        for champ in ("nom", "entreprise", "email", "tel", "ville", "code_postal"):
+            if not groupe.get(champ) and identite.get(champ):
+                groupe[champ] = identite[champ]
+        groupe["licences"] += 1
+        statut = effective_status(r)
+        if statut == "active":
+            groupe["actives"] += 1
+        elif statut == "revoked":
+            groupe["revoquees"] += 1
+        groupe["derniere_emission"] = max(groupe["derniere_emission"],
+                                         str(r.get("created_at") or ""))
+    return sorted(groupes.values(), key=lambda g: (
+        (g.get("entreprise") or g.get("nom") or g.get("cid") or "").lower(), g.get("cid") or ""))
+
+
+def device_summary(records: list | None = None) -> list:
+    """Une ligne par licence : liaison matérielle + appareils connus du serveur."""
+    rows = [normalize(r) for r in (records if records is not None else list_licenses())]
+    lignes = []
+    for r in rows:
+        serveur = r.get("server") or {}
+        appareils = serveur.get("devices")
+        if not isinstance(appareils, list):
+            appareils = []
+        identite = _client_label(r)
+        lignes.append({
+            "lid": r.get("lid") or "",
+            "client": identite["entreprise"] or identite["nom"] or identite["cid"] or "—",
+            "cid": r.get("cid") or "",
+            "type": r.get("type") or "",
+            "statut": effective_status(r),
+            "hwid": r.get("hwid") or serveur.get("hwid") or "",
+            "lie": bool(r.get("hwid") or serveur.get("hwid") or r.get("bound_hwid") or serveur.get("bound")),
+            "sieges": serveur.get("seats") if serveur.get("seats") is not None else r.get("seats") or 1,
+            "appareils": serveur.get("deviceCount") if serveur.get("deviceCount") is not None else len(appareils),
+            "appareils_actifs": (serveur.get("activeDeviceCount")
+                                 if serveur.get("activeDeviceCount") is not None
+                                 else sum(1 for a in appareils
+                                          if isinstance(a, dict) and a.get("active", True))),
+            "derniere_activite": (serveur.get("lastSeenAt") or ""),
+        })
+    return lignes
+
+
+def dashboard_stats(records: list | None = None) -> dict:
+    """Compteurs du tableau de bord. Aucun chiffre n'est inventé : tout vient
+    des fiches réellement présentes dans la base locale."""
+    rows = [normalize(r) for r in (records if records is not None else list_licenses())]
+    stats = {
+        "total": len(rows),
+        "active": 0, "expired": 0, "revoked": 0, "suspended": 0,
+        "clients": len({r.get("cid") for r in rows if r.get("cid")}),
+        "liees": 0, "non_liees": 0,
+        "par_type": {},
+    }
+    for r in rows:
+        statut = effective_status(r)
+        if statut in ("active", "expired", "revoked", "suspended"):
+            stats[statut] += 1
+        typ = r.get("type") or "inconnu"
+        stats["par_type"][typ] = stats["par_type"].get(typ, 0) + 1
+        if r.get("hwid") or (r.get("server") or {}).get("bound"):
+            stats["liees"] += 1
+        else:
+            stats["non_liees"] += 1
+    return stats
+
+
+def read_audit(limit: int = 200) -> list:
+    """Dernières lignes du journal local, de la plus récente à la plus ancienne."""
+    try:
+        lignes = AUDIT_FILE.read_text(encoding="utf-8", errors="replace").splitlines()
+    except FileNotFoundError:
+        return []
+    except OSError:
+        return []
+    return list(reversed(lignes[-max(0, int(limit)):]))

@@ -17,7 +17,10 @@
  * produire l'artefact de preuve.
  *
  * Codes de sortie :
- *   0 — aucun secret compromis détecté (rotation prouvée pour les secrets présents) ;
+ *   0 — aucun secret compromis détecté. ATTENTION : si AUCUN secret listé n'est
+ *       présent dans l'environnement, l'outil le DIT (« NON VÉRIFIÉ ») et sort
+ *       quand même en 0 — c'est une absence de preuve, pas une preuve. Utilisez
+ *       --require-all pour transformer cette absence en échec (code 2) ;
  *   1 — au moins un secret ACTUEL correspond à une valeur compromise (ROTATION MANQUANTE) ;
  *   2 — avec --require-all : un secret listé est absent de l'environnement (preuve incomplète).
  *
@@ -27,7 +30,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -92,9 +95,26 @@ function main() {
     console.error(`\n[verify-rotation] INCOMPLET : ${unverified.length} secret(s) absent(s) (--require-all). Exécuter dans l'environnement de production.`)
     process.exit(2)
   }
+  // Zéro rotation prouvée n'est PAS un succès : c'est une absence de preuve.
+  // « OK » sur 0 vérifié se lit comme « rotation faite », alors que l'outil n'a
+  // simplement trouvé aucun secret à comparer dans cet environnement.
+  if (rotated.length === 0) {
+    console.log(
+      `\n[verify-rotation] NON VÉRIFIÉ : aucune rotation n'a pu être contrôlée ici — ` +
+      `0 prouvé(s) roté(s), ${unverified.length} non vérifiable(s) faute de secret présent. ` +
+      `Ce résultat ne prouve RIEN : relancez l'outil DANS l'environnement cible, ` +
+      `avec --require-all pour exiger la preuve complète.`,
+    )
+    process.exit(0)
+  }
   console.log(`\n[verify-rotation] OK : aucun secret actuel ne correspond à une valeur compromise (${rotated.length} prouvé(s) roté(s), ${unverified.length} non vérifiable(s)).`)
   process.exit(0)
 }
 
 // N'exécute la CLI que si lancé directement (pas à l'import depuis les tests).
-if (import.meta.url === `file://${process.argv[1]}`) main()
+// `pathToFileURL` est OBLIGATOIRE : sous Windows, process.argv[1] est un chemin
+// natif (C:\...) et `file://${argv[1]}` ne correspond JAMAIS à import.meta.url
+// (file:///C:/...). La garde échouait donc en silence : `npm run verify:rotation`
+// sortait 0 sans avoir comparé une seule empreinte — un vert trompeur sur un
+// contrôle de sécurité.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) main()
