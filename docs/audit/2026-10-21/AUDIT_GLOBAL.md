@@ -64,6 +64,7 @@ L'inventaire fichier par fichier des campagnes précédentes reste valable
 | GF-1021-02 | P1 (sécurité) | Une clé OpenAI ou Stripe visible sur une capture n'était pas détectée | Tesseract insère une espace parasite au milieu des longs jetons ; les règles s'appliquaient au texte brut | **CORRIGÉ, VALIDÉ** |
 | GF-1021-05 | P2 (sécurité) | `*.pem`, `*.key`, `*.sig` ignorés seulement sous `keys/` | Règle limitée à un répertoire | **CORRIGÉ** |
 | GF-1021-06 | P2 (CI) | Le scan Gitleaks de la CI aurait échoué : fixture `GF2.fixture.signature` non autorisée | Correctif existant sur la PR #33 (2a50a18), absent de cette branche | **PORTÉ** (contenu identique) |
+| GF-1021-07 | P2 (sécurité) | Sans Pillow (CI, poste nu), une image falsifiée passait la validation et aucune limite de pixels ne protégeait Tesseract | Contrôles d'en-tête confiés à Pillow seul | **CORRIGÉ, VALIDÉ** (révélé par la CI de la PR #34) |
 | GF-1021-03 | P3 | Keygen : texte tronqué à droite dans le panneau « Liaison matérielle » à 1 280 px de large | Largeur fixe du panneau | NON CORRIGÉ (cosmétique) |
 | GF-1021-04 | Info | Aucun modèle de paiement : « payée » est un statut de facture, sans paiement partiel ni rapprochement | Choix de conception existant | DOCUMENTÉ |
 

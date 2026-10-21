@@ -37,7 +37,8 @@ Statuts : **VALIDÉ** (exécuté, réussi) · **ÉCHEC** (exécuté, échoué) �
 | HWID V1 | `python3 scripts/test_keygen_hwid_binding.py` | 10/10 (3.13 et 3.12) | VALIDÉ |
 | Keygen V2 | `python3 scripts/test_keygen_v2.py` | 88/88 (3.13 et 3.12) | VALIDÉ |
 | Scan de secrets (avant correctif) | `python3 scripts/test_secret_scan.py` | 2 échecs sur les 4 nouveaux tests | ÉCHEC → corrigé (GF-1021-02) |
-| Scan de secrets | `python3 scripts/test_secret_scan.py` | 36/36 (dont OCR réel) | VALIDÉ |
+| Scan de secrets, sans Pillow (environnement de la CI, avant correctif) | `python scripts/test_secret_scan.py` | **1 échec** (`test_image_corrompue`) — révélé par la CI | ÉCHEC → corrigé (GF-1021-07) |
+| Scan de secrets | `python3 scripts/test_secret_scan.py` | 39/39 avec Pillow (dont OCR réel) ; 39 dont 1 ignoré sans Pillow ni Tesseract | VALIDÉ |
 | Interface Tk du keygen | `xvfb-run python3.12 scripts/test_keygen_ui_lifecycle.py` | 14/14 | VALIDÉ |
 
 ### Les 7 tests vitest encore ignorés
@@ -95,6 +96,7 @@ dernier correctif.
 | Diagnostic phase 6 | `node scripts/capture-phase6-native-baseline.cjs` | exit 0 | VALIDÉ |
 | Version | `node scripts/check-version.js` | 1.1.0 cohérente | VALIDÉ |
 | Base serveur vierge | `node scripts/validate-server-db.js` | migrations, contraintes, cascade | VALIDÉ |
+| Étape Python de la CI | environnement virtuel Python 3.12.3, `pip install --require-hashes -r tests/requirements-keygen.txt` (sans Pillow), 4 scripts | 20, 10, 88, 39 (1 ignoré) | VALIDÉ |
 | Tests unitaires et d'intégration | `npm test` avec l'environnement CI (SQLite + `TEST_POSTGRES_URL` + `TEST_REDIS_URL`) | 360 fichiers, 0 échec, 7 ignorés | VALIDÉ |
 | E2E publics | `npx playwright test` | 54 réussis, 90 ignorés | VALIDÉ |
 | CodeQL | — | non exécutable localement | NON TESTÉ |

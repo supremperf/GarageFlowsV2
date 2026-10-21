@@ -112,6 +112,12 @@ démarrage).
   silencieuse n'existe.
 - Le journal HTTP est muet par défaut (méthode/route/statut uniquement si
   `GF_SCREENSHOT_SCAN_VERBOSE=1`).
+- Avant tout OCR, l'en-tête de l'image est lu avec la seule bibliothèque
+  standard (PNG avec contrôle CRC de l'IHDR, JPEG jusqu'au marqueur SOF, GIF,
+  BMP). Un en-tête falsifié ou tronqué est refusé (415 `INVALID_IMAGE`), et une
+  image de plus de 40 millions de pixels aussi (413 `IMAGE_TOO_LARGE`). Ces
+  contrôles ne dépendent pas de Pillow ; si Pillow est installé, il ajoute sa
+  propre vérification.
 
 ## 6. Règles
 
@@ -181,7 +187,8 @@ GF_SCREENSHOT_TESSERACT_LANG="eng"
 python3 scripts/test_secret_scan.py
 ```
 
-Résultat de référence (2026-10-21, Tesseract 5.3.4 installé) : **36 tests OK**,
+Résultat de référence (2026-10-21, Tesseract 5.3.4 installé) : **39 tests OK**,
+avec ou sans Pillow,
 dont `test_ocr_reel_tesseract`, qui produit de vraies captures PNG et les fait
 lire par Tesseract. Ce test est ignoré, et non réussi, quand Tesseract ou Pillow
 est absent.

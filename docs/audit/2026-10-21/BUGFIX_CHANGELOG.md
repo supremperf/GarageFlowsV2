@@ -108,3 +108,33 @@ PR) ; exemple OCR tronqué.
 
 **Résultat.** `node scripts/gitleaks-ci.cjs` → 0 occurrence, exit 0 ;
 `secret-scan-policy` et `gitleaks-ci` : 20/20.
+
+## GF-1021-07 — Image falsifiée acceptée sans Pillow (P2, sécurité)
+
+**Problème.** Premier passage de la PR #34 en CI : `test_image_corrompue`
+échoue (« ScanError not raised »). `validate_image` ne détectait une image
+corrompue, et n'appliquait la limite de 40 millions de pixels, **que si Pillow
+était installé**. La CI installe uniquement les dépendances verrouillées (sans
+Pillow), comme un poste nu : une image au contenu falsifié passait alors sur sa
+seule signature, et rien ne protégeait Tesseract d'une bombe de pixels. Mes
+exécutions locales ne l'avaient pas vu, car Pillow y était installé. Le défaut
+date de `3dc2293`, qui fait partie de cette PR et n'était jamais passé en CI.
+
+**Reproduction.** Environnement virtuel Python 3.12 sans Pillow :
+`test_secret_scan.py` → 1 échec, à l'identique de la CI.
+
+**Correction.** `scripts/secret_scan.py` : `_dimensions` lit l'en-tête avec la
+bibliothèque standard (PNG : longueur, type et CRC de l'IHDR ; JPEG : segments
+jusqu'au SOF ; GIF ; BMP 12 ou 40+ octets). En-tête invalide → 415
+`INVALID_IMAGE` ; plus de 40 millions de pixels → 413 `IMAGE_TOO_LARGE`, avant
+tout décodage. Pillow, s'il est présent, vérifie en plus.
+
+**Tests** (36 → 39) : quatre images 3×2 réelles (PNG, JPEG, GIF, BMP produites
+par Pillow et intégrées en base64) acceptées avec les bonnes dimensions ;
+en-tête PNG annonçant 50 000 × 50 000 pixels refusé ; PNG au CRC faux, JPEG
+sans SOF, GIF 0×0 et BMP tronqué refusés. Sans le correctif et sans Pillow :
+10 échecs ou erreurs.
+
+**Résultat.** 39/39 sans Pillow (dépendances verrouillées de la CI, Python
+3.12.3), sous Python 3.13 et sous 3.12 avec Pillow. OCR réel rejoué sur des
+captures PNG, JPEG, BMP et GIF, avec et sans Pillow : résultats identiques.

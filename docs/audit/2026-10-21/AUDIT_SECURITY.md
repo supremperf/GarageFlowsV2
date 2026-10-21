@@ -53,7 +53,10 @@ plafond de taille, limiteur par IP.
 ## 5. Scan des captures (fail-closed)
 
 Défaut réel trouvé à la première exécution de l'OCR : clés OpenAI et Stripe non
-détectées (GF-1021-02, corrigé). Confirmé avec Tesseract réel : service lié à la
+détectées (GF-1021-02, corrigé). Second défaut, révélé par la CI : sans Pillow,
+une image falsifiée était acceptée et aucune limite de pixels ne s'appliquait
+avant Tesseract (GF-1021-07, corrigé par une lecture d'en-tête sans
+dépendance). Confirmé avec Tesseract réel : service lié à la
 boucle locale, origine distante → 403, persistance refusée, aucune image
 écrite, aucun texte OCR brut renvoyé.
 

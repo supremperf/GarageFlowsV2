@@ -25,7 +25,7 @@ BLOQUÉ (licence signée requise).
 | Licences : activation, plafond de sièges, révocation, session licenciée | `src/lib/license`, `src/app/api/license` | `license-devices.postgres` (concurrence réelle), `licensed-session.postgres`, `licence-admin-durcissement` | VALIDÉ ; licence signée par l'autorité de production : BLOQUÉ |
 | Keygen (10 sections, PREMIUM / ADMIN) | `scripts/keygen*.py` | 20 + 10 + 88 tests Python ; interface rendue sous Xvfb, 14 tests de cycle de vie | VALIDÉ |
 | Mises à jour signées | `electron/update-verify.js`, `scripts/gf_sign_update.js` | `update-signing-cli`, `update-verify`, `release-signing-chain`, `publication-mise-a-jour` | VALIDÉ (clés de test) |
-| Détection de secrets dans les captures | `scripts/secret_scan.py`, `patterns.toml` | 36 tests dont OCR réel (**corrigé**, GF-1021-02) | VALIDÉ |
+| Détection de secrets dans les captures | `scripts/secret_scan.py`, `patterns.toml` | 39 tests dont OCR réel, avec et sans Pillow (**corrigés**, GF-1021-02 et GF-1021-07) | VALIDÉ |
 | Facturation électronique | `src/lib/einvoicing` | `formats`, `queue`, `submit-chain`, webhook signé | Fonctionnalité développée et formats générés ; **aucune interconnexion réelle** (PDP, Chorus Pro) ; conformité réglementaire **non vérifiée** |
 | PWA : fenêtre, photos, installation | `public/`, `PwaRegister.tsx` | `pwa-fenetre-et-photos`, `check:pwa` ; E2E publics responsive : 18 réussis | VALIDÉ (hors session authentifiée) |
 

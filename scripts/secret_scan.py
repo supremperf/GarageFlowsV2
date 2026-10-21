@@ -40,10 +40,12 @@ import json
 import os
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import threading
 import time
+import zlib
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -326,6 +328,59 @@ def ocr_available() -> bool:
     return tesseract_path() is not None
 
 
+def _dimensions(data: bytes, format_: str) -> tuple[int, int]:
+    """Largeur et hauteur lues dans l'en-tête, avec la seule bibliothèque standard.
+
+    Pillow est optionnel, et la CI comme un poste nu ne l'ont pas : sans lui,
+    une image au contenu falsifié passait la validation sur sa seule signature,
+    et aucune limite de pixels ne protégeait Tesseract.
+    """
+    try:
+        if format_ == "PNG":
+            longueur, type_ = struct.unpack(">I4s", data[8:16])
+            (crc,) = struct.unpack(">I", data[29:33])
+            if longueur != 13 or type_ != b"IHDR" or zlib.crc32(data[12:29]) != crc:
+                raise ValueError
+            largeur, hauteur = struct.unpack(">II", data[16:24])
+        elif format_ == "GIF":
+            largeur, hauteur = struct.unpack("<HH", data[6:10])
+        elif format_ == "BMP":
+            (taille_entete,) = struct.unpack("<I", data[14:18])
+            if taille_entete == 12:
+                largeur, hauteur = struct.unpack("<HH", data[18:22])
+            elif taille_entete >= 40:
+                largeur, hauteur = struct.unpack("<ii", data[18:26])
+                hauteur = abs(hauteur)  # négative : image stockée de haut en bas
+            else:
+                raise ValueError
+        else:  # JPEG : segments parcourus jusqu'au marqueur SOF (dimensions)
+            i = 2
+            while True:
+                if data[i] != 0xFF:
+                    raise ValueError
+                marqueur = data[i + 1]
+                if marqueur == 0xFF:  # octet de remplissage
+                    i += 1
+                    continue
+                if 0xD0 <= marqueur <= 0xD8 or marqueur == 0x01:  # marqueurs sans longueur
+                    i += 2
+                    continue
+                if marqueur in (0xD9, 0xDA):  # fin d'image ou données avant tout SOF
+                    raise ValueError
+                (longueur,) = struct.unpack(">H", data[i + 2:i + 4])
+                if longueur < 2:
+                    raise ValueError
+                if 0xC0 <= marqueur <= 0xCF and marqueur not in (0xC4, 0xC8, 0xCC):
+                    hauteur, largeur = struct.unpack(">HH", data[i + 5:i + 9])
+                    break
+                i += 2 + longueur
+    except (struct.error, IndexError, ValueError):
+        raise ScanError("Image illisible ou corrompue.", "INVALID_IMAGE", 415) from None
+    if largeur <= 0 or hauteur <= 0:
+        raise ScanError("Image illisible ou corrompue.", "INVALID_IMAGE", 415)
+    return largeur, hauteur
+
+
 def validate_image(data: bytes, max_bytes: int | None = None) -> str:
     """Valide format/taille sans écrire sur disque. Retourne le format détecté."""
     limite = max_bytes if max_bytes is not None else int(
@@ -342,8 +397,11 @@ def validate_image(data: bytes, max_bytes: int | None = None) -> str:
     if format_ is None:
         raise ScanError("Format d'image non pris en charge (PNG, JPEG, GIF ou BMP attendu).",
                         "UNSUPPORTED_FORMAT", 415)
+    largeur, hauteur = _dimensions(data, format_)
+    if largeur * hauteur > MAX_PIXELS:
+        raise ScanError("Image aux dimensions excessives.", "IMAGE_TOO_LARGE", 413)
     try:
-        from PIL import Image  # Pillow optionnel : contrôle anti-bombe uniquement
+        from PIL import Image  # Pillow optionnel : vérification approfondie en plus
         Image.MAX_IMAGE_PIXELS = MAX_PIXELS
         import io
         with Image.open(io.BytesIO(data)) as img:

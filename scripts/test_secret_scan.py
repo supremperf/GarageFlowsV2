@@ -13,11 +13,13 @@ Exécution :
 import base64
 import json
 import os
+import struct
 import sys
 import threading
 import unittest
 import urllib.error
 import urllib.request
+import zlib
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -30,6 +32,26 @@ import secret_scan as scan  # noqa: E402
 PNG_1PX = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
 )
+
+# Images 3×2 RÉELLES, produites une fois par Pillow 12.3 : elles servent à
+# prouver que l'analyse d'en-tête (seule active sans Pillow) lit les mêmes
+# dimensions que Pillow.
+IMAGES_3X2 = {
+    "PNG": "iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAIAAAASFvFNAAAAFUlEQVR4nGM8ISfHwMDAwMDAxAADABMuAQhqwGVhAAAAAElFTkSuQmCC",
+    "JPEG": (
+        "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/"
+        "2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wAARCAACAAMDASIAAhEBAxEB/8QA"
+        "HwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkK"
+        "FhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXG"
+        "x8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAEC"
+        "AxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOE"
+        "hYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDHooorhPqD"
+        "/9k="
+    ),
+    "GIF": "R0lGODdhAwACAIEAAMgeHgAAAAAAAAAAACwAAAAAAwACAAAIBgABCBwYEAA7",
+    "BMP": "Qk1OAAAAAAAAADYAAAAoAAAAAwAAAAIAAAABABgAAAAAABgAAADEDgAAxA4AAAAAAAAAAAAAHh7IHh7IHh7IAAAAHh7IHh7IHh7IAAAA",
+}
+IMAGES_3X2 = {f: base64.b64decode(b) for f, b in IMAGES_3X2.items()}
 
 # ── Valeurs FACTICES (jamais des credentials réels) ──────────────────────────
 FAUX = {
@@ -169,6 +191,36 @@ class TestValidationImage(unittest.TestCase):
         with self.assertRaises(scan.ScanError) as ctx:
             scan.validate_image(b"\x89PNG\r\n\x1a\n" + b"pas-un-png-valide")
         self.assertEqual(ctx.exception.code, "INVALID_IMAGE")
+
+    def test_formats_reels_acceptes(self):
+        for format_, donnees in IMAGES_3X2.items():
+            with self.subTest(format_=format_):
+                self.assertEqual(scan.validate_image(donnees), format_)
+                self.assertEqual(scan._dimensions(donnees, format_), (3, 2))
+
+    def test_bombe_de_pixels_refusee_sans_pillow(self):
+        # En-tête PNG valide annonçant 50 000 × 50 000 pixels : refusé avant
+        # tout décodage, que Pillow soit installé ou non.
+        ihdr = b"IHDR" + struct.pack(">IIBBBBB", 50_000, 50_000, 8, 2, 0, 0, 0)
+        png = b"\x89PNG\r\n\x1a\n" + struct.pack(">I", 13) + ihdr + struct.pack(">I", zlib.crc32(ihdr))
+        with self.assertRaises(scan.ScanError) as ctx:
+            scan.validate_image(png)
+        self.assertEqual(ctx.exception.code, "IMAGE_TOO_LARGE")
+
+    def test_entetes_falsifies_refuses(self):
+        png_crc_faux = bytearray(PNG_1PX)
+        png_crc_faux[17] ^= 0x01  # largeur modifiée, CRC d'origine conservé
+        cas = {
+            "PNG au CRC faux": bytes(png_crc_faux),
+            "JPEG sans SOF": b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00\xff\xd9",
+            "GIF 0×0": b"GIF89a\x00\x00\x00\x00\x00\x00\x00;",
+            "BMP tronqué": b"BM" + b"\x00" * 10,
+        }
+        for nom, donnees in cas.items():
+            with self.subTest(nom=nom):
+                with self.assertRaises(scan.ScanError) as ctx:
+                    scan.validate_image(donnees)
+                self.assertEqual(ctx.exception.code, "INVALID_IMAGE")
 
 
 class TestScanImage(unittest.TestCase):

@@ -35,11 +35,11 @@ l'autorité réelle, e-facturation interconnectée.
 
 ## 3. Tests
 
-- Réussis : 4 376 vitest, 483 Node, 168 Python (20 + 10 + 88 + 36 + 14),
+- Réussis : 4 376 vitest, 483 Node, 171 Python (20 + 10 + 88 + 39 + 14),
   54 Playwright, plus les contrôles de `TEST_RESULTS.md` §3 et le rejeu des
   étapes de la CI (§4), Gitleaks compris.
-- Échoués à la fin de la session : **0**. Deux défauts réels ont échoué puis
-  été corrigés (GF-1021-01, GF-1021-02).
+- Échoués à la fin de la session : **0**. Trois défauts réels ont échoué puis
+  été corrigés (GF-1021-01, GF-1021-02, et GF-1021-07 révélé par la CI).
 - Ignorés ou bloqués : 7 vitest (clé privée, build Windows), 90 Playwright
   (session licenciée), packaging et installation Windows.
 
