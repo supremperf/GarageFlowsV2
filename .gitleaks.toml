@@ -35,6 +35,7 @@ regexes = [
   '''GF2\.licence-garage-de-recette''',
   '''MonNouveauMotDePasse2026''',
   '''GF2\.jeton\.mecanicien''',
+  '''GF2\.fixture\.signature''',
   '''eyJhbGciOiJIUzI1NiJ9\.eyJ0eXAiOiJwb3J0YWwifQ\.sig''',
 ]
 # Les fichiers auth-secret, health et public-key ne sont PLUS exclus en entier :
