@@ -171,3 +171,11 @@ keys/bootstrap-*
 # du fournisseur) : hors perimetre du produit, ne pas versionner.
 .agents/
 skills-lock.json
+
+# Clés et signatures, où qu'elles soient : `keys/*.pem` ne couvrait que ce
+# répertoire. Une clé privée copiée ailleurs (racine, scripts/, %APPDATA%
+# recopié) serait partie dans un `git add -A`. Aucun fichier de ce type n'est
+# suivi ; la clé publique livrée est matérialisée au build depuis l'ancrage.
+*.pem
+*.key
+*.sig
